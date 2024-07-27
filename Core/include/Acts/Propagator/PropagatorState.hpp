@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
 
@@ -52,20 +53,26 @@ struct PropagatorState : private detail::Extendable<extension_state_t...> {
   using detail::Extendable<extension_state_t...>::get;
   using detail::Extendable<extension_state_t...>::tuple;
 
-  /// Propagation stage
-  PropagatorStage stage = PropagatorStage::invalid;
+  /// Context object for the geometry
+  std::reference_wrapper<const GeometryContext> geoContext;
 
   /// These are the options - provided for each propagation step
   propagator_options_t options;
+
+  /// Propagation stage
+  PropagatorStage stage = PropagatorStage::invalid;
+
+  /// The position of the propagation
+  Vector3 position = Vector3::Zero();
+
+  /// The direction of the propagation
+  Vector3 direction = Vector3::Zero();
 
   /// Stepper state - internal state of the Stepper
   stepper_state_t stepping;
 
   /// Navigation state - internal state of the Navigator
   navigator_state_t navigation;
-
-  /// Context object for the geometry
-  std::reference_wrapper<const GeometryContext> geoContext;
 
   /// Number of propagation steps that were carried out
   std::size_t steps = 0;

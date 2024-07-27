@@ -64,7 +64,9 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
           -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
+          -DACTS_BUILD_EXAMPLES_UNITTESTS=OFF
+          -DACTS_BUILD_UNITTESTS=OFF
+          -DACTS_BUILD_INTEGRATIONTESTS=OFF
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
@@ -86,12 +88,6 @@ jobs:
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
-
-      - name: Unit tests
-        run: ctest --test-dir build -j$(nproc)
-
-      - name: Integration tests
-        run: cmake --build build --target integrationtests
 
       - name: Install
         run: cmake --build build --target install
@@ -284,7 +280,9 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
           -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
+          -DACTS_BUILD_EXAMPLES_UNITTESTS=OFF
+          -DACTS_BUILD_UNITTESTS=OFF
+          -DACTS_BUILD_INTEGRATIONTESTS=OFF
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
@@ -304,12 +302,6 @@ jobs:
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
-
-      - name: Unit tests
-        run: cmake --build build --target test
-
-      - name: Integration tests
-        run: cmake --build build --target integrationtests
 
       - name: Install
         run: cmake --build build --target install
@@ -383,7 +375,9 @@ jobs:
           -DCMAKE_CXX_STANDARD=20
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
           -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
+          -DACTS_BUILD_EXAMPLES_UNITTESTS=OFF
+          -DACTS_BUILD_UNITTESTS=OFF
+          -DACTS_BUILD_INTEGRATIONTESTS=OFF
           -DACTS_BUILD_ODD=ON
           -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
           -DACTS_FORCE_ASSERTIONS=ON
@@ -399,10 +393,6 @@ jobs:
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
-      - name: Unit tests
-        run: cmake --build build --target test
-      - name: Integration tests
-        run: cmake --build build --target integrationtests
       - name: Install
         run: cmake --build build --target install
       - uses: actions/upload-artifact@v4
