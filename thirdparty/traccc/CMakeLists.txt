@@ -22,7 +22,7 @@ set( TRACCC_SETUP_VECMEM OFF CACHE BOOL
    "Do not set up Actsvg as part of Traccc" )
 set( TRACCC_SETUP_EIGEN3 OFF CACHE BOOL
    "Do not set up Eigen3 as part of Traccc" )
-set( TRACCC_SETUP_THRUST OFF CACHE BOOL
+set( TRACCC_SETUP_THRUST ON CACHE BOOL
     "Do not set up Thrust as part of Traccc" ) 
 set( TRACCC_SETUP_ALGEBRA_PLUGINS OFF CACHE BOOL
     "Do not set up Algebra Plugins as part of Traccc" ) 
