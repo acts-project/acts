@@ -35,8 +35,8 @@ SimSeed convertSeed(const traccc::seed& seed, const traccc::spacepoint_collectio
         spacePointMap.at(spacePoints[0]),
         spacePointMap.at(spacePoints[1]),
         spacePointMap.at(spacePoints[2]),
-        seed.z_vertex
-        //seed.weight
+        seed.z_vertex,
+        seed.weight
     );
 }
 
@@ -47,5 +47,19 @@ auto convertSeeds(std::vector<traccc::seed, allocator_t>& seeds, const traccc::s
     };
     return Util::convert<traccc::seed, SimSeed>(seeds, fn);
 }
+/*
+template <typename map_t>
+SimSeed convertSeed(SimSeed& seed, const map_t& spacePointMap){
+    const std::array<traccc::spacepoint, 3> spacePoints = seed.get_spacepoints(spacePointsView);
+    return traccc::seed{,,,seed.z(), seed.seedQuality()};
+}
+
+template <typename allocator_t, typename map_t>
+auto convertSeeds(SimSeedContainer& seeds, const map_t& spacePointMap){
+    auto fn = [&spacePointsView, &spacePointMap](auto& seed){
+        return convertSeed(seed, spacePointsView, spacePointMap);
+    };
+    return Util::convert<traccc::seed, SimSeed>(seeds, fn);
+}*/
 
 }  // namespace Acts::TracccPlugin

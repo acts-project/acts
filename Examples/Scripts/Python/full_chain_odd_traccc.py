@@ -118,10 +118,10 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--ar",
-    help="Enable ambiguity resolution for the traccc chain",
-    type=bool,
-    default=True
+    '--no-ambi-res',
+    help='Disable ambiguity resolution for the traccc chain',
+    action='store_true',
+    default=False
 )
 
 args = parser.parse_args()
@@ -280,8 +280,7 @@ addTracccChain(
     chainConfig=chainConfig,
     logLevel=acts.logging.INFO,
     platform=args.platform,
-    enableAmbiguityResolution=args.ar,
-    # outputDirCsv=outputDir,
+    enableAmbiguityResolution=not args.no_ambi_res,
 )
 
 s.run()

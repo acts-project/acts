@@ -103,6 +103,9 @@ ActsExamples::Traccc::Host::TracccChainAlgorithm::execute(
 
     ACTS_INFO("Ran the ambiguity resolution algorithm");
   }
+  else{
+    ACTS_INFO("Skipped the ambiguity resolution algorithm");
+  }
 
   auto result = converter.convertTracks(trackStates, measurementMap);
 

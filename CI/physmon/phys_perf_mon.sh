@@ -96,7 +96,7 @@ elif [ "$(uname)" == "Linux" ]; then
             echo "${wall_time},${max_rss},0"
         } > "$of"
         # restore exit code
-        (exit $rec)
+      (exit $rec)
     }
     export measure
 else
@@ -325,6 +325,47 @@ function simulation() {
         particles_${suffix}
 }
 
+function full_chain_traccc() {
+    suffix=$1
+    seeding=$2
+
+    if [[ "$seeding" == "y" ]]; then
+        run_histcmp \
+            $outdir/performance_seeding_traccc_${suffix}.root \
+            $refdir/performance_seeding_seeded.root \
+            "Seeding Performance Comparision (traccc (${suffix}) and acts)" \
+            performance_seeding_comparison_acts_traccc_${suffix}
+
+        run_histcmp \
+            $outdir/performance_seeding_traccc_${suffix}.root \
+            $refdir/performance_seeding_traccc_${suffix}.root \
+            "Seeding Performance Traccc (${suffix})" \
+            performance_seeding_comparison_acts_traccc_${suffix}
+    fi
+
+    run Examples/Scripts/generic_plotter.py \
+        $outdir/tracksummary_traccc_${suffix}.root \
+        tracksummary \
+        $outdir/tracksummary_traccc_${suffix}_hist.root \
+        --silent \
+        --config CI/physmon/tracksummary_ckf_config.yml
+    ec=$(($ec | $?))
+
+    rm $outdir/tracksummary_traccc_${suffix}.root
+
+    run_histcmp \
+        $outdir/tracksummary_traccc_${suffix}_hist.root \
+        $refdir/tracksummary_ckf_seeded_hist.root \
+        "Track Summary Comparision (traccc ${suffix} and acts)" \
+        tracksummary_comparison_acts_traccc_${suffix}
+
+    run_histcmp \
+        $outdir/tracksummary_traccc_${suffix}_hist.root \
+        $refdir/tracksummary_traccc_${suffix}_hist.root \
+        "Track Summary Traccc Chain (${suffix})" \
+        tracksummary_traccc_${suffix}
+}
+
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     full_chain truth_smeared
     full_chain truth_estimated
@@ -415,51 +456,11 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
 fi
 
 if [[ "$mode" == "all" || "$mode" == "traccc_host" ]]; then
-    run Examples/Scripts/generic_plotter.py \
-        $outdir/tracksummary_traccc_host.root \
-        tracksummary \
-        $outdir/tracksummary_traccc_host_hist.root \
-        --silent \
-        --config CI/physmon/tracksummary_ckf_config.yml
-    ec=$(($ec | $?))
-
-    rm $outdir/tracksummary_traccc_host.root
-
-    run_histcmp \
-        $outdir/tracksummary_traccc_host_hist.root \
-        $refdir/tracksummary_ckf_seeded_hist.root \
-        "Track Summary Comparision (traccc host and acts)" \
-        tracksummary_comparison_acts_traccc_host
-
-    run_histcmp \
-        $outdir/tracksummary_traccc_host_hist.root \
-        $refdir/tracksummary_traccc_host_hist.root \
-        "Track Summary Traccc Chain (Host)" \
-        tracksummary_traccc_host
+    full_chain_traccc host y
 fi
 
 if [[ "$mode" == "all" || "$mode" == "traccc_cuda" ]]; then
-    run Examples/Scripts/generic_plotter.py \
-        $outdir/tracksummary_traccc_cuda.root \
-        tracksummary \
-        $outdir/tracksummary_traccc_cuda_hist.root \
-        --silent \
-        --config CI/physmon/tracksummary_ckf_config.yml
-    ec=$(($ec | $?))
-
-    rm $outdir/tracksummary_traccc_cuda.root
-
-    run_histcmp \
-        $outdir/tracksummary_traccc_cuda_hist.root \
-        $refdir/tracksummary_ckf_seeded_hist.root \
-        "Track Summary Comparision (traccc cuda and acts)" \
-        tracksummary_comparison_acts_traccc_cuda
-
-    run_histcmp \
-        $outdir/tracksummary_traccc_cuda_hist.root \
-        $refdir/tracksummary_traccc_cuda_hist.root \
-        "Track Summary Traccc Chain (Cuda)" \
-        tracksummary_traccc_cuda
+    full_chain_traccc cuda y
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then

@@ -938,6 +938,7 @@ def addSeedPerformanceWriters(
     inputParticles: str,
     outputTrackParameters: str,
     logLevel: acts.logging.Level = None,
+    seedingPerformanceName: str = "performance_seeding"
 ):
     """Writes seeding related performance output"""
     customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
@@ -951,7 +952,7 @@ def addSeedPerformanceWriters(
             inputSeeds=seeds,
             inputParticles=selectedParticles,
             inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDirRoot / "performance_seeding.root"),
+            filePath=str(outputDirRoot / (seedingPerformanceName + ".root")),
         )
     )
 
@@ -2183,6 +2184,7 @@ def addTracccChain(
         "particles",
         parEstimateAlg.config.outputTrackParameters,
         logLevel,
+        seedingPerformanceName=f"performance_seeding_traccc_{platform}",
     )
     
     return s

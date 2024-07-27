@@ -99,5 +99,10 @@ def runTracccChain(platform):
 
         name = f"tracksummary_traccc_{platform}";
         perf_file = tp / f"{name}.root"
-        assert perf_file.exists(), "Performance file not found"
+        assert perf_file.exists(), "Tracksummary file not found"
+        shutil.copy(perf_file, setup.outdir / f"{name}.root")
+
+        name = f"performance_seeding_traccc_{platform}";
+        perf_file = tp / f"{name}.root"
+        assert perf_file.exists(), "Performance seeding file not found"
         shutil.copy(perf_file, setup.outdir / f"{name}.root")
