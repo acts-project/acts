@@ -26,9 +26,7 @@
 #include "detray/io/frontend/payloads.hpp"
 #include "detray/utils/consistency_checker.hpp"
 
-namespace Acts {
-
-namespace DetrayConverter {
+namespace Acts::DetrayConverter {
 
 using DetrayDetector = detray::detector<detray::default_metadata>;
 
@@ -130,10 +128,9 @@ std::tuple<detector_t, vecmem::memory_resource&> convertDetector(
 
   // checks and print
   detray::detail::check_consistency(detrayDetector);
-  converterPrint(detrayDetector, names);
+  writeToJson(detrayDetector, names);
 
   return {std::move(detrayDetector), mr};
 }
 
-}  // namespace DetrayConverter
-}  // namespace Acts
+}  // namespace Acts::DetrayConverter
