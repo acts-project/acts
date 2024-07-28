@@ -41,6 +41,8 @@ set( TRACCC_BUILD_TESTING OFF CACHE BOOL
     "Turn off the build of the Traccc unit tests" ) 
 set( TRACCC_BUILD_EXAMPLES OFF CACHE BOOL
     "Turn off the build of the Traccc examples" ) 
+set ( TRACCC_BUILD_IO OFF CACHE BOOL
+    "Turn off the build of Traccc io" )
 
 # Now set up its build.
 FetchContent_MakeAvailable( traccc )

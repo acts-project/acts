@@ -13,7 +13,6 @@ target_link_libraries(
   PUBLIC
     ActsCore
     traccc::core
-    traccc::io
     vecmem::core
     detray::utils
     detray::io

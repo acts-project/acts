@@ -14,6 +14,8 @@ message( STATUS "Building algebra-plugins as part of the Acts project" )
 
 FetchContent_Declare( AlgebraPlugins ${ACTS_ALGEBRAPLUGINS_SOURCE} )
 
+add_definitions(-DALGEBRA_PLUGINS_INCLUDE_ARRAY)
+
 # Options used in the build of Algebra Plugins.
 set(ALGEBRA_PLUGINS_BUILD_TESTING FALSE CACHE BOOL
    "Turn off the build of the Algebra Plugins unit tests")
