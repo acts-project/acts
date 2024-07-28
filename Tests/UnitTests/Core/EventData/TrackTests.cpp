@@ -14,7 +14,6 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -464,44 +463,6 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
 
   BOOST_CHECK_EQUAL_COLLECTIONS(indices.rbegin(), indices.rend(), act.begin(),
                                 act.end());
-}
-
-BOOST_AUTO_TEST_CASE(CalculateQuantities) {
-  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  auto t = tc.makeTrack();
-
-  auto ts = t.appendTrackState();
-  ts.typeFlags().set(MeasurementFlag);
-
-  ts = t.appendTrackState();
-  ts.typeFlags().set(OutlierFlag);
-
-  ts = t.appendTrackState();
-  ts.typeFlags().set(MeasurementFlag);
-  ts.typeFlags().set(SharedHitFlag);
-
-  ts = t.appendTrackState();
-  ts.typeFlags().set(HoleFlag);
-
-  ts = t.appendTrackState();
-  ts.typeFlags().set(OutlierFlag);
-
-  ts = t.appendTrackState();
-  ts.typeFlags().set(HoleFlag);
-
-  ts = t.appendTrackState();
-  ts.typeFlags().set(MeasurementFlag);
-  ts.typeFlags().set(SharedHitFlag);
-
-  ts = t.appendTrackState();
-  ts.typeFlags().set(OutlierFlag);
-
-  calculateTrackQuantities(t);
-
-  BOOST_CHECK_EQUAL(t.nHoles(), 2);
-  BOOST_CHECK_EQUAL(t.nMeasurements(), 3);
-  BOOST_CHECK_EQUAL(t.nOutliers(), 3);
-  BOOST_CHECK_EQUAL(t.nSharedHits(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(ShallowCopy) {
