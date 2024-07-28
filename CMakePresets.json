@@ -15,6 +15,7 @@
                 "ACTS_BUILD_ODD": "ON",
                 "ACTS_BUILD_UNITTESTS": "ON",
                 "ACTS_BUILD_INTEGRATIONTESTS": "ON",
+                "ACTS_BUILD_PLUGIN_LEGACY": "ON",
                 "ACTS_BUILD_EXAMPLES_DD4HEP": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
                 "ACTS_BUILD_EXAMPLES_UNITTESTS": "ON"
