@@ -35,7 +35,7 @@ struct VoidNavigator {
 
   /// @brief Nested State struct, minimal requirement
   struct State {
-    explicit State(const Options& options) : options(options) {}
+    explicit State(const Options& options_) : options(options_) {}
 
     Options options;
   };

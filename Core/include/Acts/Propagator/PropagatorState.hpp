@@ -45,10 +45,10 @@ struct PropagatorState : private detail::Extendable<extension_state_t...> {
   /// @param navigationIn Navigator state instance to begin with
   PropagatorState(const propagator_options_t& topts, stepper_state_t steppingIn,
                   navigator_state_t navigationIn)
-      : options(topts),
+      : geoContext(topts.geoContext),
+        options(topts),
         stepping{std::move(steppingIn)},
-        navigation{std::move(navigationIn)},
-        geoContext(topts.geoContext) {}
+        navigation{std::move(navigationIn)} {}
 
   using detail::Extendable<extension_state_t...>::get;
   using detail::Extendable<extension_state_t...>::tuple;
