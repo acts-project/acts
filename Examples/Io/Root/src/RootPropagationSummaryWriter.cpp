@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -76,25 +76,6 @@ RootPropagationSummaryWriter::RootPropagationSummaryWriter(
   m_outputTree->Branch("nSteps", &m_nSteps);
   m_outputTree->Branch("nStepTrials", &m_nStepTrials);
   m_outputTree->Branch("pathLength", &m_pathLength);
-
-  m_outputTree->Branch("step_volume_id", &m_stepVolumeID);
-  m_outputTree->Branch("step_boundary_id", &m_stepBoundaryID);
-  m_outputTree->Branch("step_layer_id", &m_stepLayerID);
-  m_outputTree->Branch("step_approach_id", &m_stepApproachID);
-  m_outputTree->Branch("step_sensitive_id", &m_stepSensitiveID);
-  m_outputTree->Branch("step_material", &m_stepMaterial);
-  m_outputTree->Branch("step_g_x", &m_stepX);
-  m_outputTree->Branch("step_g_y", &m_stepY);
-  m_outputTree->Branch("step_g_z", &m_stepZ);
-  m_outputTree->Branch("step_d_x", &m_stepDx);
-  m_outputTree->Branch("step_d_y", &m_stepDy);
-  m_outputTree->Branch("step_d_z", &m_stepDz);
-  m_outputTree->Branch("step_type", &m_stepType);
-  m_outputTree->Branch("step_acc", &m_stepAcc);
-  m_outputTree->Branch("step_act", &m_stepAct);
-  m_outputTree->Branch("step_abt", &m_stepAbt);
-  m_outputTree->Branch("step_usr", &m_stepUsr);
-  m_outputTree->Branch("step_trials", &m_stepTrials);
 }
 
 RootPropagationSummaryWriter::~RootPropagationSummaryWriter() {
@@ -126,32 +107,8 @@ ProcessCode RootPropagationSummaryWriter::writeT(
   // Get the event number
   m_eventNr = static_cast<int>(context.eventNumber);
 
-  // Initialize the last total trials
-  // This is used to calculate the number of trials per step
-  std::size_t lastTotalTrials = 0;
-
   // Loop over the step vector of each test propagation in this
   for (const auto& [trackNr, summary] : Acts::enumerate(summaries)) {
-    // Clear the vectors for each collection
-    m_stepVolumeID.clear();
-    m_stepBoundaryID.clear();
-    m_stepLayerID.clear();
-    m_stepApproachID.clear();
-    m_stepSensitiveID.clear();
-    m_stepMaterial.clear();
-    m_stepX.clear();
-    m_stepY.clear();
-    m_stepZ.clear();
-    m_stepDx.clear();
-    m_stepDy.clear();
-    m_stepDz.clear();
-    m_stepType.clear();
-    m_stepAcc.clear();
-    m_stepAct.clear();
-    m_stepAbt.clear();
-    m_stepUsr.clear();
-    m_stepTrials.clear();
-
     // Set the track number
     m_trackNr = static_cast<int>(trackNr);
 
@@ -176,61 +133,6 @@ ProcessCode RootPropagationSummaryWriter::writeT(
     m_nSteps = static_cast<int>(summary.steps.size());
     m_nStepTrials = static_cast<int>(summary.nStepTrials);
     m_pathLength = static_cast<int>(summary.pathLength);
-
-    // Loop over single steps
-    for (const auto& step : summary.steps) {
-      const auto& geoID = step.geoID;
-      m_stepVolumeID.push_back(static_cast<int>(geoID.volume()));
-      m_stepBoundaryID.push_back(static_cast<int>(geoID.boundary()));
-      m_stepLayerID.push_back(static_cast<int>(geoID.layer()));
-      m_stepApproachID.push_back(static_cast<int>(geoID.approach()));
-      m_stepSensitiveID.push_back(static_cast<int>(geoID.sensitive()));
-
-      int material = 0;
-      if (step.surface != nullptr &&
-          step.surface->surfaceMaterial() != nullptr) {
-        material = 1;
-      }
-      m_stepMaterial.push_back(material);
-
-      // kinematic information
-      m_stepX.push_back(static_cast<float>(step.position.x()));
-      m_stepY.push_back(static_cast<float>(step.position.y()));
-      m_stepZ.push_back(static_cast<float>(step.position.z()));
-      auto direction = step.momentum.normalized();
-      m_stepDx.push_back(static_cast<float>(direction.x()));
-      m_stepDy.push_back(static_cast<float>(direction.y()));
-      m_stepDz.push_back(static_cast<float>(direction.z()));
-
-      double accuracy = step.stepSize.accuracy();
-      double actor = step.stepSize.value(Acts::ConstrainedStep::actor);
-      double aborter = step.stepSize.value(Acts::ConstrainedStep::aborter);
-      double user = step.stepSize.value(Acts::ConstrainedStep::user);
-      double actAbs = std::abs(actor);
-      double accAbs = std::abs(accuracy);
-      double aboAbs = std::abs(aborter);
-      double usrAbs = std::abs(user);
-
-      if (actAbs < accAbs && actAbs < aboAbs && actAbs < usrAbs) {
-        m_stepType.push_back(0);
-      } else if (accAbs < aboAbs && accAbs < usrAbs) {
-        m_stepType.push_back(1);
-      } else if (aboAbs < usrAbs) {
-        m_stepType.push_back(2);
-      } else {
-        m_stepType.push_back(3);
-      }
-
-      // Step size information
-      m_stepAcc.push_back(Acts::clampValue<float>(accuracy));
-      m_stepAct.push_back(Acts::clampValue<float>(actor));
-      m_stepAbt.push_back(Acts::clampValue<float>(aborter));
-      m_stepUsr.push_back(Acts::clampValue<float>(user));
-
-      // Stepper efficiency
-      m_stepTrials.push_back(step.nTotalTrials - lastTotalTrials);
-      lastTotalTrials = step.nTotalTrials;
-    }
 
     m_outputTree->Fill();
   }
