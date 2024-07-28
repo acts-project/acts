@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include <Acts/Geometry/GeometryIdentifier.hpp>
@@ -56,6 +57,16 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
 
   // Set the branches
   m_outputTree->Branch("event_nr", &m_eventNr);
+  m_outputTree->Branch("track_nr", &m_trackNr);
+  m_outputTree->Branch("d0", &m_d0);
+  m_outputTree->Branch("z0", &m_z0);
+  m_outputTree->Branch("phi", &m_phi);
+  m_outputTree->Branch("theta", &m_theta);
+  m_outputTree->Branch("qOverP", &m_qOverP);
+  m_outputTree->Branch("t", &m_t);
+  m_outputTree->Branch("eta", &m_eta);
+  m_outputTree->Branch("pt", &m_pt);
+  m_outputTree->Branch("p", &m_p);
   m_outputTree->Branch("volume_id", &m_volumeID);
   m_outputTree->Branch("boundary_id", &m_boundaryID);
   m_outputTree->Branch("layer_id", &m_layerID);
@@ -65,6 +76,7 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("g_x", &m_x);
   m_outputTree->Branch("g_y", &m_y);
   m_outputTree->Branch("g_z", &m_z);
+  m_outputTree->Branch("g_r", &m_r);
   m_outputTree->Branch("d_x", &m_dx);
   m_outputTree->Branch("d_y", &m_dy);
   m_outputTree->Branch("d_z", &m_dz);
@@ -98,7 +110,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::finalize() {
 }
 
 ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
-    const AlgorithmContext& context, const PropagationSummaries& collection) {
+    const AlgorithmContext& context, const PropagationSummaries& summaries) {
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -110,7 +122,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
   std::size_t lastTotalTrials = 0;
 
   // Loop over the step vector of each test propagation in this
-  for (auto& summary : collection) {
+  for (const auto& [trackNr, summary] : Acts::enumerate(summaries)) {
     // Clear the vectors for each collection
     m_volumeID.clear();
     m_boundaryID.clear();
@@ -130,6 +142,26 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     m_step_abt.clear();
     m_step_usr.clear();
     m_nStepTrials.clear();
+
+    // Set the track number
+    m_trackNr = static_cast<int>(trackNr);
+
+    // Set the initial trajectory parameters
+    const auto& startParameters = summary.startParameters;
+    m_d0 = static_cast<float>(startParameters.parameters()[Acts::eBoundLoc0]);
+    m_z0 = static_cast<float>(startParameters.parameters()[Acts::eBoundLoc1]);
+    m_phi = static_cast<float>(startParameters.parameters()[Acts::eBoundPhi]);
+    m_theta =
+        static_cast<float>(startParameters.parameters()[Acts::eBoundTheta]);
+    m_qOverP =
+        static_cast<float>(startParameters.parameters()[Acts::eBoundQOverP]);
+    m_t = static_cast<float>(startParameters.parameters()[Acts::eBoundTime]);
+
+    // Derived initial trajectory parameters
+    m_eta = static_cast<float>(
+        Acts::VectorHelpers::eta(startParameters.direction()));
+    m_pt = static_cast<float>(startParameters.transverseMomentum());
+    m_p = static_cast<float>(startParameters.absoluteMomentum());
 
     // Loop over single steps
     for (auto& step : summary.steps) {
@@ -151,6 +183,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_x.push_back(step.position.x());
       m_y.push_back(step.position.y());
       m_z.push_back(step.position.z());
+      m_r.push_back(Acts::VectorHelpers::perp(step.position));
       auto direction = step.momentum.normalized();
       m_dx.push_back(direction.x());
       m_dy.push_back(direction.y());

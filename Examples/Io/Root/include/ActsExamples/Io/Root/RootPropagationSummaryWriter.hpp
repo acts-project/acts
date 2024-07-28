@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -108,44 +108,6 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   int m_nSteps = 0;
   int m_nStepTrials = 0;
   int m_pathLength = 0;
-
-  /// volume identifier
-  std::vector<int> m_stepVolumeID;
-  /// boundary identifier
-  std::vector<int> m_stepBoundaryID;
-  /// layer identifier if
-  std::vector<int> m_stepLayerID;
-  /// surface identifier
-  std::vector<int> m_stepApproachID;
-  /// surface identifier
-  std::vector<int> m_stepSensitiveID;
-  /// flag material if present
-  std::vector<int> m_stepMaterial;
-  /// global x
-  std::vector<float> m_stepX;
-  /// global y
-  std::vector<float> m_stepY;
-  /// global z
-  std::vector<float> m_stepZ;
-  /// global direction x
-  std::vector<float> m_stepDx;
-  /// global direction y
-  std::vector<float> m_stepDy;
-  /// global direction z
-  std::vector<float> m_stepDz;
-  /// step type
-  std::vector<int> m_stepType;
-  /// accuracy
-  std::vector<float> m_stepAcc;
-  /// actor check
-  std::vector<float> m_stepAct;
-  /// aborter
-  std::vector<float> m_stepAbt;
-  /// user
-  std::vector<float> m_stepUsr;
-  /// Number of iterations needed by the stepsize finder (e.g. Runge-Kutta) of
-  /// the stepper.
-  std::vector<int> m_stepTrials;
 };
 
 }  // namespace ActsExamples
