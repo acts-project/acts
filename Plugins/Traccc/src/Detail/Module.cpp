@@ -10,9 +10,9 @@
 #include "Acts/Plugins/Traccc/Detail/Module.hpp"
 
 // Acts include(s)
-#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 
 // Detray include(s)
 #include "detray/core/detector.hpp"

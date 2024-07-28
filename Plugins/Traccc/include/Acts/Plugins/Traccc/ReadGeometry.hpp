@@ -17,18 +17,17 @@ namespace Acts::TracccPlugin {
 /// Read in the detector geometry description from a detector object
 template <typename detector_t>
 traccc::geometry altReadGeometry(const detector_t& det) {
+  std::map<traccc::geometry_id, traccc::transform3> maps;
+  using cxt_t = typename detector_t::geometry_context;
+  const cxt_t ctx0{};
 
-    std::map<traccc::geometry_id, traccc::transform3> maps;
-    using cxt_t = typename detector_t::geometry_context;
-    const cxt_t ctx0{};
+  for (const auto& surfaceDesc : det.surfaces()) {
+    const detray::tracking_surface sf{det, surfaceDesc.barcode()};
 
-    for (const auto& surfaceDesc : det.surfaces()) {
-        const detray::tracking_surface sf{det, surfaceDesc.barcode()};
+    maps.insert({sf.barcode().value(), sf.transform(ctx0)});
+  }
 
-        maps.insert({sf.barcode().value(), sf.transform(ctx0)});
-    }
-
-    return maps;
+  return maps;
 }
 
-}
+}  // namespace Acts::TracccPlugin

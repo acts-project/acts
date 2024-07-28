@@ -7,20 +7,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // Acts include(s)
-#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 
 namespace Acts::TracccPlugin {
 
 /// Type describing the digitization configuration of a detector module
 struct ModuleDigitizationConfig {
-    Acts::BinUtility segmentation;
-    char dimensions = 2;
-    float variance_y = 0.f;
+  Acts::BinUtility segmentation;
+  char dimensions = 2;
+  float variance_y = 0.f;
 };
 
 /// Type describing the digitization configuration for the whole detector
-using DigitizationConfig =
-    Acts::GeometryHierarchyMap<ModuleDigitizationConfig>;
+using DigitizationConfig = Acts::GeometryHierarchyMap<ModuleDigitizationConfig>;
 
-}
+}  // namespace Acts::TracccPlugin
