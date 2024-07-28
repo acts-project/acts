@@ -10,6 +10,7 @@
 #include "Acts/Plugins/Traccc/Detail/Module.hpp"
 
 // Acts include(s)
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
@@ -19,9 +20,6 @@
 // Traccc include(s)
 #include "traccc/edm/cell.hpp"
 #include "traccc/geometry/geometry.hpp"
-#include "traccc/io/digitization_config.hpp"
-#include "traccc/io/read_geometry.hpp"
-#include "traccc/io/reader_edm.hpp"
 
 // System include(s)
 #include <cstdint>
@@ -35,7 +33,7 @@ namespace Acts::TracccPlugin::detail {
 
 traccc::cell_module getModule(
     const Acts::GeometryIdentifier::Value geometryID,
-    const traccc::geometry* geom, const traccc::digitization_config* dconfig,
+    const traccc::geometry* geom, const DigitizationConfig* dconfig,
     const Acts::GeometryIdentifier::Value originalGeometryID) {
   traccc::cell_module result;
   result.surface_link = detray::geometry::barcode{geometryID};
@@ -55,7 +53,7 @@ traccc::cell_module getModule(
   // Find/set the digitization configuration of the detector module.
   if (dconfig != nullptr) {
     // Check if the module ID is known.
-    const traccc::digitization_config::Iterator geoIt =
+    const DigitizationConfig::Iterator geoIt =
         dconfig->find(originalGeometryID);
     if (geoIt == dconfig->end()) {
       throw std::runtime_error(
@@ -72,8 +70,8 @@ traccc::cell_module getModule(
       result.pixel.min_corner_y = binning_data[1].min;
       result.pixel.pitch_y = binning_data[1].step;
     }
-    // result.pixel.dimension = geoIt->dimensions;
-    // result.pixel.variance_y = geoIt->variance_y;
+    result.pixel.dimension = geoIt->dimensions;
+    result.pixel.variance_y = geoIt->variance_y;
   }
 
   return result;

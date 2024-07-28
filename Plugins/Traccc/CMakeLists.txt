@@ -12,10 +12,9 @@ target_link_libraries(
   ActsPluginTraccc
   PUBLIC
     ActsCore
-    traccc::core
     vecmem::core
-    detray::utils
-    detray::io
+    detray::core
+    traccc::core
     ActsPluginCovfie)
 
 install(

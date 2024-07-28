@@ -15,6 +15,7 @@
 // Plugin include(s)
 #include "Acts/Plugins/Traccc/BarcodeMap.hpp"
 #include "Acts/Plugins/Traccc/Detail/Module.hpp"
+#include "Acts/Plugins/Traccc/DigitizationConfig.hpp"
 
 // Detray include(s)
 #include "detray/core/detector.hpp"
@@ -22,9 +23,6 @@
 // Traccc include(s)
 #include "traccc/edm/cell.hpp"
 #include "traccc/geometry/geometry.hpp"
-#include "traccc/io/digitization_config.hpp"
-#include "traccc/io/read_geometry.hpp"
-#include "traccc/io/reader_edm.hpp"
 
 // System include(s)
 #include <cstdint>
@@ -49,7 +47,7 @@ createCellsAndModules(
     vecmem::memory_resource* mr,
     std::map<Acts::GeometryIdentifier::Value, std::vector<traccc::cell>>
         cellsMap,
-    const traccc::geometry* geom, const traccc::digitization_config* dconfig,
+    const traccc::geometry* geom, const DigitizationConfig* dconfig,
     const std::map<Acts::GeometryIdentifier::Value, detray::geometry::barcode>*
         barcodeMap);
 

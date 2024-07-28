@@ -11,10 +11,12 @@
 // Acts include(s)
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
+// Plugin include(s)
+#include "Acts/Plugins/Traccc/DigitizationConfig.hpp"
+
 // Traccc include(s)
 #include "traccc/edm/cell.hpp"
 #include "traccc/geometry/geometry.hpp"
-#include "traccc/io/digitization_config.hpp"
 
 namespace Acts::TracccPlugin::detail {
 
@@ -23,7 +25,7 @@ namespace Acts::TracccPlugin::detail {
 /// properties.
 traccc::cell_module getModule(
     const Acts::GeometryIdentifier::Value geometryID,
-    const traccc::geometry* geom, const traccc::digitization_config* dconfig,
+    const traccc::geometry* geom, const DigitizationConfig* dconfig,
     const Acts::GeometryIdentifier::Value originalGeometryID);
 
 }  // namespace Acts::TracccPlugin::detail

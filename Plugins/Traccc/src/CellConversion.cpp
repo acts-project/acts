@@ -20,9 +20,6 @@
 // Traccc include(s)
 #include "traccc/edm/cell.hpp"
 #include "traccc/geometry/geometry.hpp"
-#include "traccc/io/digitization_config.hpp"
-#include "traccc/io/read_geometry.hpp"
-#include "traccc/io/reader_edm.hpp"
 
 // VecMem include(s)
 #include "vecmem/memory/memory_resource.hpp"
@@ -61,10 +58,11 @@ createCellsAndModules(
     vecmem::memory_resource* mr,
     std::map<Acts::GeometryIdentifier::Value, std::vector<traccc::cell>>
         cellsMap,
-    const traccc::geometry* geom, const traccc::digitization_config* dconfig,
+    const traccc::geometry* geom, const DigitizationConfig* dconfig,
     const std::map<Acts::GeometryIdentifier::Value, detray::geometry::barcode>*
         barcodeMap) {
-  traccc::io::cell_reader_output out(mr);
+  traccc::cell_collection_types::host tcells(mr);
+  traccc::cell_module_collection_types::host tmodules(mr);
 
   // Sort the cells.
   for (auto& [_, cells] : cellsMap) {
@@ -80,15 +78,15 @@ createCellsAndModules(
                                 : originalGeometryID;
 
     // Add the module and its cells to the output.
-    out.modules.push_back(
+    tmodules.push_back(
         detail::getModule(geometryID, geom, dconfig, originalGeometryID));
     for (auto& cell : cells) {
-      out.cells.push_back(cell);
+      tcells.push_back(cell);
       // Set the module link.
-      out.cells.back().module_link = out.modules.size() - 1;
+      tcells.back().module_link = tmodules.size() - 1;
     }
   }
-  return std::make_tuple(std::move(out.cells), std::move(out.modules));
+  return std::make_tuple(std::move(tcells), std::move(tmodules));
 }
 
 }  // namespace Acts::TracccPlugin

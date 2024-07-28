@@ -392,6 +392,9 @@ if (ACTS_BUILD_PLUGIN_TRACCC)
   endif()
 
   if (ACTS_SETUP_ALGEBRAPLUGINS)
+
+    add_definitions(-DALGEBRA_PLUGINS_INCLUDE_ARRAY)
+    
     if (ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
       find_package(algebra-plugins ${_acts_algebraplugins_version} REQUIRED)
     else()
