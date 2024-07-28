@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Propagator/PropagatorStatistics.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
 
 #include <functional>
@@ -72,6 +73,9 @@ struct PropagatorState : private detail::Extendable<extension_state_t...> {
 
   /// Signed distance over which the parameters were propagated
   double pathLength = 0.;
+
+  /// Statistics of the propagation
+  PropagatorStatistics statistics;
 };
 
 }  // namespace Acts

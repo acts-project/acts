@@ -127,8 +127,5 @@ if "__main__" == __name__:
     os.makedirs(os.getcwd() + "/propagation", exist_ok=True)
 
     runPropagation(
-        trackingGeometry,
-        field,
-        os.getcwd() + "/propagation",
-        decorators=contextDecorators,
+        trackingGeometry, field, os.getcwd() + "/propagation", decorators=contextDecorators
     ).run()
