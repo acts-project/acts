@@ -341,6 +341,8 @@ void Acts::Propagator<S, N>::moveStateToResult(propagator_state_t& state,
 
   result.steps = state.steps;
   result.pathLength = state.pathLength;
+
+  result.statistics = state.statistics;
 }
 
 template <typename derived_t>
