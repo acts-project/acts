@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#pragma once
+
 // Acts include(s)
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
