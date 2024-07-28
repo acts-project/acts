@@ -49,10 +49,7 @@ jobs:
           --preset=github-ci
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_CXX_FLAGS="-Werror --coverage -g -gz -g1"
-          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
-          -DACTS_BUILD_ANALYSIS_APPS=ON
-          -DACTS_BUILD_PLUGIN_ONNX=ON
-          -DACTS_BUILD_PLUGIN_ACTSVG=ON
+          -DACTS_BUILD_ODD=OFF
       - name: Build
         run: cmake --build build
       - name: ccache stats
