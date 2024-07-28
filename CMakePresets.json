@@ -8,8 +8,6 @@
             "generator": "Ninja",
             "binaryDir": "build/${presetName}",
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "clang",
-                "CMAKE_CXX_COMPILER": "clang",
                 "CMAKE_CXX_STANDARD": "20",
                 "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
