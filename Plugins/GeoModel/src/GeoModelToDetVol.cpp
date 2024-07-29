@@ -73,7 +73,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         std::make_shared<CuboidVolumeBounds>(box->getXHalfLength(),
                                              box->getYHalfLength(),
                                              box->getZHalfLength());
-        /*
+    constexpr double rotationAngle = M_PI / 2;
     GeoTrf::Transform3D newTransform =
         transform * GeoTrf::RotateX3D(rotationAngle);
     return Experimental::DetectorVolumeFactory::construct(
@@ -81,10 +81,11 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         sensSurfaces, a, 
         Experimental::tryNoVolumes(),
         Experimental::tryAllPortalsAndSurfaces());
-    */
+    /*
     return Experimental::DetectorVolumeFactory::construct(
         portalGenerator, context, name, transform, bounds,
         Experimental::tryAllPortalsAndSurfaces());
+    */
   } else if (shape->typeID() == GeoSimplePolygonBrep::getClassTypeID()) {
     const GeoSimplePolygonBrep* brep =
         static_cast<const GeoSimplePolygonBrep*>(shape);
