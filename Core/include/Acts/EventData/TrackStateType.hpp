@@ -43,8 +43,11 @@ class TrackStateType {
   /// @param raw the value container
   TrackStateType(raw_type& raw) : m_raw{&raw} { assert(m_raw != nullptr); }
 
-  // Disable copy constructor
-  TrackStateType(const TrackStateType&) = delete;
+  /// Copy constructor
+  /// @param other the other object to copy from
+  TrackStateType(const TrackStateType& other) : m_raw{other.m_raw} {
+    assert(m_raw != nullptr);
+  }
 
   /// Move constructor
   /// @param other the other object to move from
@@ -126,8 +129,11 @@ class ConstTrackStateType {
     assert(m_raw != nullptr);
   }
 
-  // Disable copy constructor
-  ConstTrackStateType(const ConstTrackStateType&) = delete;
+  /// Copy constructor
+  /// @param other the other object to copy from
+  ConstTrackStateType(const ConstTrackStateType& other) : m_raw{other.m_raw} {
+    assert(m_raw != nullptr);
+  }
 
   /// Move constructor
   /// @param other the other object to move from
