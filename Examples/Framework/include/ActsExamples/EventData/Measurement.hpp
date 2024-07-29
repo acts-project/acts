@@ -72,19 +72,15 @@ class FixedSizeMeasurement {
   ///   of parameters and covariance.
   template <typename parameters_t, typename covariance_t>
   FixedSizeMeasurement(Acts::SourceLink source,
-                       const std::array<std::uint8_t, kSize>& indices,
+                       const std::array<indices_t, kSize>& indices,
                        const Eigen::MatrixBase<parameters_t>& params,
                        const Eigen::MatrixBase<covariance_t>& cov)
-      : m_source(std::move(source)),
-        m_indices(indices),
-        m_params(params),
-        m_cov(cov) {
-    // TODO we should be able to support arbitrary ordering, by sorting the
-    //   indices and reordering parameters/covariance. since the parameter order
-    //   can be modified by the user, the user can not always know what the
-    //   right order is. another option is too remove the requirement for index
-    //   ordering from the subspace types, but that will make it harder to
-    //   refactor their implementation later on.
+      : m_source(std::move(source)), m_params(params), m_cov(cov) {
+    for (std::size_t i = 0u; i < kSize; ++i) {
+      assert(indices[i] >= 0 && indices[i] < kFullSize &&
+             "Index out of bounds");
+      m_indices[i] = static_cast<std::uint8_t>(indices[i]);
+    }
   }
   /// A measurement can only be constructed with valid parameters.
   FixedSizeMeasurement() = delete;
@@ -106,8 +102,12 @@ class FixedSizeMeasurement {
   }
 
   /// The measurement indices
-  constexpr const std::array<std::uint8_t, kSize>& indices() const {
-    return m_indices;
+  constexpr std::array<Acts::BoundIndices, kSize> indices() const {
+    std::array<Acts::BoundIndices, kSize> result;
+    for (std::size_t i = 0u; i < kSize; ++i) {
+      result[i] = static_cast<Acts::BoundIndices>(m_indices[i]);
+    }
+    return result;
   }
 
   /// Measured parameters values.
@@ -137,6 +137,20 @@ class FixedSizeMeasurement {
       expn(m_indices[i], i) = 1;
     }
     return expn;
+  }
+
+  /// Compute residuals in the measured subspace.
+  ///
+  /// @param reference Reference parameters in the full space.
+  ///
+  /// This computes the difference `measured - reference` taking into account
+  /// the allowed parameter ranges. Only the reference values in the measured
+  /// subspace are used for the computation.
+  ParametersVector residuals(const FullParametersVector& reference) const {
+    ParametersVector res = ParametersVector::Zero();
+    Acts::detail::calculateResiduals(static_cast<indices_t>(kSize), m_indices,
+                                     reference, m_params, res);
+    return res;
   }
 
   std::ostream& operator<<(std::ostream& os) const {

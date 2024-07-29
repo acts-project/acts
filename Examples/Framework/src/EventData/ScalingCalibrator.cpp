@@ -168,7 +168,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
 
         constexpr std::size_t kSize =
             std::remove_reference_t<decltype(meas)>::size();
-        std::array<std::uint8_t, kSize> indices = meas.indices();
+        std::array<Acts::BoundIndices, kSize> indices = meas.indices();
         Acts::ActsVector<kSize> cpar = P * fpar;
         Acts::ActsSquareMatrix<kSize> ccov = P * fcov * P.transpose();
 

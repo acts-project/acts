@@ -18,7 +18,6 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/detail/Subspace.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -41,9 +40,7 @@ BOOST_AUTO_TEST_SUITE(TrackFittingMbfSmoother)
 BOOST_AUTO_TEST_CASE(Smooth) {
   VectorMultiTrajectory traj;
 
-  auto projector = detail::FixedSizeSubspace<eBoundSize, 2>(
-                       std::array{eBoundLoc0, eBoundLoc1})
-                       .projector<double>();
+  std::array<BoundIndices, 2> projector{eBoundLoc0, eBoundLoc1};
 
   // Make dummy track parameter
   CovarianceMatrix covTrk;
