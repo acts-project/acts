@@ -58,6 +58,7 @@ jobs:
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DACTS_BUILD_PLUGIN_ONNX=ON
 
       - name: Build
         run: cmake --build build

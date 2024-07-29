@@ -195,6 +195,7 @@ build_linux_ubuntu:
     - >
       cmake -B build -S src
       --preset=gitlab-ci
+      -DACTS_BUILD_PLUGIN_ONNX=ON
 
     - ccache -z
     - cmake --build build -- -j2

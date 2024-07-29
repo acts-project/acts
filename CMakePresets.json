@@ -55,7 +55,6 @@
                 "ACTS_BUILD_ANALYSIS_APPS": "ON",
                 "ACTS_BUILD_ALIGNMENT": "ON",
                 "ACTS_BUILD_FATRAS_GEANT4": "ON",
-                "ACTS_BUILD_PLUGIN_ONNX": "ON",
                 "ACTS_BUILD_PLUGIN_ACTSVG": "ON",
                 "ACTS_BUILD_EXAMPLES_EDM4HEP": "ON",
                 "ACTS_BUILD_EXAMPLES_GEANT4": "ON",
