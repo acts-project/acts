@@ -977,7 +977,7 @@ class CombinatorialKalmanFilter {
           // Increment number of measurements
           newBranch.nMeasurements()++;
         } else {
-          ACTS_WARNING("Cannot handle track state with flags: " << typeFlags);
+          ACTS_WARNING("Cannot handle this track state flags");
           nStoppedBranches++;
           continue;
         }
