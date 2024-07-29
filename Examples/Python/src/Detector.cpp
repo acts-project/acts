@@ -43,10 +43,6 @@ void addDetector(Context& ctx) {
         .def("name", &IContextDecorator::name);
   }
 
-  py::enum_<Acts::BinningType>(m, "BinningType")
-      .value("equidistant", Acts::BinningType::equidistant)
-      .value("arbitrary", Acts::BinningType::arbitrary);
-
   {
     using Config = GenericDetector::Config;
 
@@ -155,6 +151,10 @@ void addDetector(Context& ctx) {
         .value("Negative", Config::SubVolume::Negative)
         .value("Central", Config::SubVolume::Central)
         .value("Positive", Config::SubVolume::Positive);
+
+    py::enum_<Acts::BinningType>(c, "BinningType")
+        .value("equidistant", Acts::BinningType::equidistant)
+        .value("arbitrary", Acts::BinningType::arbitrary);
 
     auto volume = py::class_<Config::Volume>(c, "Volume").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(volume, Config::Volume);

@@ -64,7 +64,6 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("g_x", &m_x);
   m_outputTree->Branch("g_y", &m_y);
   m_outputTree->Branch("g_z", &m_z);
-  m_outputTree->Branch("g_r", &m_r);
   m_outputTree->Branch("d_x", &m_dx);
   m_outputTree->Branch("d_y", &m_dy);
   m_outputTree->Branch("d_z", &m_dz);
@@ -122,7 +121,6 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     m_x.clear();
     m_y.clear();
     m_z.clear();
-    m_r.clear();
     m_dx.clear();
     m_dy.clear();
     m_dz.clear();
@@ -154,7 +152,6 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_x.push_back(step.position.x());
       m_y.push_back(step.position.y());
       m_z.push_back(step.position.z());
-      m_r.push_back(std::hypot(step.position.x(), step.position.y()));
       auto direction = step.momentum.normalized();
       m_dx.push_back(direction.x());
       m_dy.push_back(direction.y());
