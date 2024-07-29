@@ -113,16 +113,12 @@ std::unique_ptr<const Logger> makeDummyLogger() {
 std::unique_ptr<const Logger> getDefaultLogger(const std::string& name,
                                                const Logging::Level& lvl,
                                                std::ostream* log_stream) {
-  std::size_t maxWidth = 15;
-  if (auto cptr = std::getenv("ACTS_LOGGER_MAXWIDTH"); cptr != nullptr) {
-    maxWidth = std::stoul(std::string(cptr));
-  }
   using namespace Logging;
   auto output = std::make_unique<LevelOutputDecorator>(
       std::make_unique<NamedOutputDecorator>(
           std::make_unique<TimedOutputDecorator>(
               std::make_unique<DefaultPrintPolicy>(log_stream)),
-          name, maxWidth));
+          name));
   auto print = std::make_unique<DefaultFilterPolicy>(lvl);
   return std::make_unique<const Logger>(std::move(output), std::move(print));
 }
