@@ -146,7 +146,6 @@ def main():
     if args.output_obj:
         segments = 720
         gmBoxes = gmVolFactoryCache.boundingBoxes
-        print(len(gmBoxes))
         acts.examples.writeVolumesObj(
             gmBoxes,
             gContext,

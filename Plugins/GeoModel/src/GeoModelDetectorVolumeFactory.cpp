@@ -166,6 +166,15 @@ std::vector<GeoChildNodeWithTrf> Acts::GeoModelDetectorVolumeFactory::findAllSub
     }
     std::vector<GeoChildNodeWithTrf> senssubsubvolumes = findAllSubVolumes(subvolume.volume);
     sensitives.insert(sensitives.end(), senssubsubvolumes.begin(), senssubsubvolumes.end());
+  /*
+  std::transform(std::make_move_iterator(senssubsubvolumes.begin()),
+                 std::make_move_iterator(senssubsubvolumes.end()),
+                 std::back_inserter(sensitives),
+                 [&child](GeoChildNodeWithTrf &&vol) {
+                   vol.transform = subvolume.transform * vol.transform;
+                   return vol;
+                 });
+  */
   }
   return sensitives;
 }
