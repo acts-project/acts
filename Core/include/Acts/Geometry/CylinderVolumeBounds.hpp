@@ -14,6 +14,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <array>
+#include <cstdint>
 #include <initializer_list>
 #include <iosfwd>
 #include <memory>
@@ -69,7 +70,7 @@ class PlanarBounds;
 class CylinderVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for streaming and access
-  enum BoundValues : unsigned int {
+  enum BoundValues : std::uint8_t {
     eMinR = 0,
     eMaxR = 1,
     eHalfLengthZ = 2,

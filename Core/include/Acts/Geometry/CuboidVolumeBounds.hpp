@@ -15,6 +15,7 @@
 
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <iomanip>
 #include <iosfwd>
 #include <memory>
@@ -49,7 +50,7 @@ class RectangleBounds;
 class CuboidVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for streaming and access
-  enum BoundValues : unsigned int {
+  enum BoundValues : std::uint8_t {
     eHalfLengthX = 0,
     eHalfLengthY = 1,
     eHalfLengthZ = 2,

@@ -168,7 +168,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
 
         constexpr std::size_t kSize =
             std::remove_reference_t<decltype(meas)>::size();
-        std::array<Acts::BoundIndices, kSize> indices = meas.indices();
+        std::array<std::uint8_t, kSize> indices = meas.indices();
         Acts::ActsVector<kSize> cpar = P * fpar;
         Acts::ActsSquareMatrix<kSize> ccov = P * fcov * P.transpose();
 
@@ -178,7 +178,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
         trackState.allocateCalibrated(cmeas.size());
         trackState.calibrated<kSize>() = meas.parameters();
         trackState.calibratedCovariance<kSize>() = meas.covariance();
-        trackState.setProjector(meas.projector());
+        trackState.setProjector(meas.indices());
       },
       (measurements)[idxSourceLink.index()]);
 }

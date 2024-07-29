@@ -19,7 +19,7 @@ namespace Acts {
 /// This must be a regular `enum` and not a scoped `enum class` to allow
 /// implicit conversion to an integer. The enum value are thus visible directly
 /// in `namespace Acts` and are prefixed to avoid naming collisions.
-enum AlignmentIndices : unsigned int {
+enum AlignmentIndices : std::uint8_t {
   // Center of geometry object in global 3D cartesian coordinates
   eAlignmentCenter0 = 0u,
   eAlignmentCenter1 = eAlignmentCenter0 + 1u,

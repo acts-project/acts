@@ -52,10 +52,10 @@ Measurement createMeasurement(const DigitizedParameters& dParams,
 ///
 /// @return a tuple of constituents for a measurement
 template <std::size_t kMeasDIM>
-std::tuple<std::array<Acts::BoundIndices, kMeasDIM>, Acts::ActsVector<kMeasDIM>,
+std::tuple<std::array<std::uint8_t, kMeasDIM>, Acts::ActsVector<kMeasDIM>,
            Acts::ActsSquareMatrix<kMeasDIM>>
 measurementConstituents(const DigitizedParameters& dParams) {
-  std::array<Acts::BoundIndices, kMeasDIM> indices{};
+  std::array<std::uint8_t, kMeasDIM> indices{};
   Acts::ActsVector<kMeasDIM> par;
   Acts::ActsSquareMatrix<kMeasDIM> cov =
       Acts::ActsSquareMatrix<kMeasDIM>::Identity();

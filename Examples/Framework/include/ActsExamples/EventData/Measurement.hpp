@@ -13,7 +13,6 @@
 #include "Acts/EventData/detail/CalculateResiduals.hpp"
 #include "Acts/EventData/detail/ParameterTraits.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
-#include "Acts/Utilities/detail/Subspace.hpp"
 
 #include <array>
 #include <cstddef>
@@ -49,8 +48,6 @@ class FixedSizeMeasurement {
   static constexpr std::size_t kFullSize =
       Acts::detail::kParametersSize<indices_t>;
 
-  using Subspace = Acts::detail::FixedSizeSubspace<kFullSize, kSize>;
-
  public:
   using Scalar = Acts::ActsScalar;
   /// Vector type containing for measured parameter values.
@@ -75,11 +72,11 @@ class FixedSizeMeasurement {
   ///   of parameters and covariance.
   template <typename parameters_t, typename covariance_t>
   FixedSizeMeasurement(Acts::SourceLink source,
-                       const std::array<indices_t, kSize>& indices,
+                       const std::array<std::uint8_t, kSize>& indices,
                        const Eigen::MatrixBase<parameters_t>& params,
                        const Eigen::MatrixBase<covariance_t>& cov)
       : m_source(std::move(source)),
-        m_subspace(indices),
+        m_indices(indices),
         m_params(params),
         m_cov(cov) {
     // TODO we should be able to support arbitrary ordering, by sorting the
@@ -104,16 +101,13 @@ class FixedSizeMeasurement {
   static constexpr std::size_t size() { return kSize; }
 
   /// Check if a specific parameter is part of this measurement.
-  bool contains(indices_t i) const { return m_subspace.contains(i); }
+  bool contains(indices_t i) const {
+    return std::find(m_indices.begin(), m_indices.end(), i) != m_indices.end();
+  }
 
   /// The measurement indices
-  constexpr std::array<indices_t, kSize> indices() const {
-    std::array<std::uint8_t, kSize> subInds = m_subspace.indices();
-    std::array<indices_t, kSize> inds{};
-    for (std::size_t i = 0; i < kSize; i++) {
-      inds[i] = static_cast<indices_t>(subInds[i]);
-    }
-    return inds;
+  constexpr const std::array<std::uint8_t, kSize>& indices() const {
+    return m_indices;
   }
 
   /// Measured parameters values.
@@ -124,7 +118,11 @@ class FixedSizeMeasurement {
 
   /// Projection matrix from the full space into the measured subspace.
   ProjectionMatrix projector() const {
-    return m_subspace.template projector<Scalar>();
+    ProjectionMatrix proj = ProjectionMatrix::Zero();
+    for (std::size_t i = 0u; i < kSize; ++i) {
+      proj(i, m_indices[i]) = 1;
+    }
+    return proj;
   }
 
   /// Expansion matrix from the measured subspace into the full space.
@@ -134,34 +132,23 @@ class FixedSizeMeasurement {
   /// still recommended to use the expansion matrix directly in cases where it
   /// is explicitly used.
   ExpansionMatrix expander() const {
-    return m_subspace.template expander<Scalar>();
-  }
-
-  /// Compute residuals in the measured subspace.
-  ///
-  /// @param reference Reference parameters in the full space.
-  ///
-  /// This computes the difference `measured - reference` taking into account
-  /// the allowed parameter ranges. Only the reference values in the measured
-  /// subspace are used for the computation.
-  ParametersVector residuals(const FullParametersVector& reference) const {
-    ParametersVector res = ParametersVector::Zero();
-    Acts::detail::calculateResiduals(static_cast<indices_t>(kSize),
-                                     m_subspace.indices(), reference, m_params,
-                                     res);
-    return res;
+    ExpansionMatrix expn = ExpansionMatrix::Zero();
+    for (std::size_t i = 0u; i < kSize; ++i) {
+      expn(m_indices[i], i) = 1;
+    }
+    return expn;
   }
 
   std::ostream& operator<<(std::ostream& os) const {
     Acts::detail::printMeasurement(os, static_cast<indices_t>(kSize),
-                                   m_subspace.indices().data(), m_params.data(),
+                                   m_indices.data(), m_params.data(),
                                    m_cov.data());
     return os;
   }
 
  private:
   Acts::SourceLink m_source;
-  Subspace m_subspace;
+  std::array<std::uint8_t, kSize> m_indices;
   ParametersVector m_params;
   CovarianceMatrix m_cov;
 };

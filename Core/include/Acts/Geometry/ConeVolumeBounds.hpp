@@ -14,6 +14,7 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 
 #include <array>
+#include <cstdint>
 #include <iomanip>
 #include <memory>
 #include <ostream>
@@ -34,7 +35,7 @@ class PlanarBounds;
 class ConeVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for readability
-  enum BoundValues : unsigned int {
+  enum BoundValues : std::uint8_t {
     eInnerAlpha = 0,
     eInnerOffsetZ = 1,
     eOuterAlpha = 2,
