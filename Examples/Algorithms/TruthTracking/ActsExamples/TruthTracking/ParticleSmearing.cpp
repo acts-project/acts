@@ -77,6 +77,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       const auto pt = particle.transverseMomentum();
       const auto p = particle.absoluteMomentum();
       const auto q = particle.charge();
+      const auto qOverP = particle.qOverP();
       const auto particleHypothesis =
           m_cfg.particleHypothesis.value_or(particle.hypothesis());
 
@@ -87,16 +88,16 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       const double sigmaZ0 =
           m_cfg.sigmaZ0 +
           m_cfg.sigmaZ0PtA * std::exp(-1.0 * std::abs(m_cfg.sigmaZ0PtB) * pt);
-      const double sigmaP = m_cfg.sigmaPRel * p;
-      // var(q/p) = (d(1/p)/dp)² * var(p) = (-1/p²)² * var(p)
-      const double sigmaQOverP = sigmaP / (p * p);
       // shortcuts for other resolutions
       const double sigmaT0 = m_cfg.sigmaT0;
       const double sigmaPhi = m_cfg.sigmaPhi;
       const double sigmaTheta = m_cfg.sigmaTheta;
+      const double sigmaQOverP =
+          m_cfg.sigmaPtRel * qOverP + sigmaTheta * std::abs(qOverP * theta);
 
       Acts::BoundVector params = Acts::BoundVector::Zero();
       // smear the position/time
+      // note that we smear d0 and z0 in the perigee frame
       params[Acts::eBoundLoc0] = sigmaD0 * stdNormal(rng);
       params[Acts::eBoundLoc1] = sigmaZ0 * stdNormal(rng);
       params[Acts::eBoundTime] = time + sigmaT0 * stdNormal(rng);
@@ -105,9 +106,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
           phi + sigmaPhi * stdNormal(rng), theta + sigmaTheta * stdNormal(rng));
       params[Acts::eBoundPhi] = newPhi;
       params[Acts::eBoundTheta] = newTheta;
-      // compute smeared absolute momentum vector
-      const double newP = std::max(0.0, p + sigmaP * stdNormal(rng));
-      params[Acts::eBoundQOverP] = particleHypothesis.qOverP(newP, q);
+      // compute smeared q/p
+      params[Acts::eBoundQOverP] = qOverP + sigmaQOverP * stdNormal(rng);
 
       ACTS_VERBOSE("Smearing particle (pos, time, phi, theta, q/p):");
       ACTS_VERBOSE(" from: " << particle.position().transpose() << ", " << time
@@ -140,8 +140,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
             double covSigmaTheta =
                 std::sqrt(cov(Acts::eBoundTheta, Acts::eBoundTheta));
             double additionalSimga =
-                m_cfg.initialSigmaRelativePtResolution *
-                    params[Acts::eBoundQOverP] +
+                m_cfg.initialSigmaPtRel * params[Acts::eBoundQOverP] +
                 covSigmaTheta * std::abs(params[Acts::eBoundQOverP] *
                                          std::tan(params[Acts::eBoundTheta]));
 

@@ -80,8 +80,8 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
         1 * Acts::UnitConstants::degree,
         0 * Acts::UnitConstants::e / Acts::UnitConstants::GeV,
         1 * Acts::UnitConstants::ns};
-    /// Relative pt resolution for the initial sigma of the q/p.
-    double initialSigmaRelativePtResolution = 0.1;
+    /// Relative pt resolution used for the initial sigma of q/p.
+    double initialSigmaPtRel = 0.1;
     /// Inflate initial covariance.
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Inflate time covariance if no time measurement is available.

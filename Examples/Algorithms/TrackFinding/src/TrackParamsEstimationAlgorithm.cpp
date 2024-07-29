@@ -52,7 +52,7 @@ Acts::BoundSquareMatrix makeInitialCovariance(
       double sigmaTheta =
           std::sqrt(result(Acts::eBoundTheta, Acts::eBoundTheta));
       double additionalSimga =
-          config.initialSigmaRelativePtResolution * params[Acts::eBoundQOverP] +
+          config.initialSigmaPtRel * params[Acts::eBoundQOverP] +
           sigmaTheta * std::abs(params[Acts::eBoundQOverP] *
                                 std::tan(params[Acts::eBoundTheta]));
 

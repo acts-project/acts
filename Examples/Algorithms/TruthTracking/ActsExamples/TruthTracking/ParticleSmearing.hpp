@@ -62,14 +62,14 @@ class ParticleSmearing final : public IAlgorithm {
     double sigmaPhi = 1 * Acts::UnitConstants::degree;
     /// Theta angular resolution.
     double sigmaTheta = 1 * Acts::UnitConstants::degree;
-    /// Relative momentum resolution.
-    double sigmaPRel = 0.05;
+    /// Relative transverse momentum resolution.
+    double sigmaPtRel = 0.05;
 
     /// Optional. Initial sigmas for the track parameters which overwrites the
     /// smearing params if set.
     std::optional<std::array<double, 6>> initialSigmas;
-    /// Relative pt resolution for the initial sigma of the q/p.
-    double initialSigmaRelativePtResolution = 0.1;
+    /// Relative pt resolution used for the initial sigma of q/p.
+    double initialSigmaPtRel = 0.1;
     /// Inflate the initial covariance matrix
     std::array<double, 6> initialVarInflation = {1e4, 1e4, 1e4, 1e4, 1e4, 1e4};
 
