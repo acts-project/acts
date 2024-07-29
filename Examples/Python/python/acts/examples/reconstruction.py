@@ -478,7 +478,7 @@ def addTruthSmearedSeeding(
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
     initialSigmas: Optional[List[float]],
-    initialVarInflation: List[float],
+    initialVarInflation: Optional[List[float]],
     particleHypothesis: Optional[acts.ParticleHypothesis],
     logLevel: acts.logging.Level = None,
 ):
@@ -1184,6 +1184,7 @@ def addCKFTracks(
     ] = None,
     ckfConfig: CkfConfig = CkfConfig(),
     twoWay: bool = True,
+    reverseSearch: bool = False,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
@@ -1293,6 +1294,7 @@ def addCKFTracks(
             trackSelectorCfg=trkSelCfg,
             maxSteps=ckfConfig.maxSteps,
             twoWay=twoWay,
+            reverseSearch=reverseSearch,
             seedDeduplication=ckfConfig.seedDeduplication,
             stayOnSeed=ckfConfig.stayOnSeed,
             pixelVolumes=ckfConfig.pixelVolumes,
@@ -1951,7 +1953,7 @@ def addVertexFitting(
     tracks = tracks if tracks is not None else ""
     inputParticles = "particles_input"
     selectedParticles = "particles_selected"
-    inputVertices = "vertices_input"
+    inputTruthVertices = "vertices_input"
 
     if vertexFinder == VertexFinder.Truth:
         findVertices = TruthVertexFinder(
@@ -1984,6 +1986,8 @@ def addVertexFitting(
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
             inputTrackParameters=trackParameters,
+            inputTruthParticles=selectedParticles,
+            inputTruthVertices=inputTruthVertices,
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
             bField=field,
@@ -2009,7 +2013,7 @@ def addVertexFitting(
                 level=customLogLevel(),
                 inputVertices=outputVertices,
                 inputTracks=tracks,
-                inputTruthVertices=inputVertices,
+                inputTruthVertices=inputTruthVertices,
                 inputParticles=inputParticles,
                 inputSelectedParticles=selectedParticles,
                 inputTrackParticleMatching="track_particle_matching",
