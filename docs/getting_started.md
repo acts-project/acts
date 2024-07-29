@@ -327,13 +327,17 @@ components.
 | ACTS_LOG_FAILURE_THRESHOLD          | Log level above which an exception<br>should be automatically thrown. If<br>ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set<br>and this is unset, this will enable a<br>runtime check of the log level.<br> type: `string`, default: `""` |
 <!-- CMAKE_OPTS_END -->
 
-
 All ACTS-specific options are disabled or empty by default and must be
-specifically requested. Some of the options have interdependencies that are
-automatically handled, e.g. enabling any of the specific
-`ACTS_BUILD_EXAMPLES_...` options will also enable the overall
-`ACTS_BUILD_EXAMPLES` option. You only need to tell the build system what you
-want and it will figure out the rest.
+specifically requested.
+
+ACTS comes with a couple of CMakePresets which allow to collect and
+origanize common configuration workflows. On the surface the current
+list of presets contains:
+
+- `dev` as a base for developer configurations. This enables everything
+  necessary for running the ODD full chain examples with Fatras. It
+  sets the cpp standard to 20, the generator to ninja and enables ccache.
+- `perf` is similar to `dev` but tweaked for performance measurements.
 
 In addition to the ACTS-specific options, many generic options are available
 that modify various aspects of the build. The following options are some of the
