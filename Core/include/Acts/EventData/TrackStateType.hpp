@@ -99,7 +99,7 @@ class TrackStateType {
   /// @param pos the position of the bit to change
   void reset(std::size_t pos) { set(pos, false); }
 
-  friend std::ostream& operator<<(std::ostream& os, TrackStateType t) {
+  friend std::ostream& operator<<(std::ostream& os, const TrackStateType& t) {
     assert(t.m_raw != nullptr);
     std::bitset<kRawBits> bs{*t.m_raw};
     std::bitset<TrackStateFlag::NumTrackStateFlags> trunc;
@@ -157,7 +157,8 @@ class ConstTrackStateType {
     return bs.test(pos);
   }
 
-  friend std::ostream& operator<<(std::ostream& os, ConstTrackStateType t) {
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const ConstTrackStateType& t) {
     assert(t.m_raw != nullptr);
     std::bitset<kRawBits> bs{*t.m_raw};
     std::bitset<TrackStateFlag::NumTrackStateFlags> trunc;
