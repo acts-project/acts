@@ -11,7 +11,6 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
-#include "ActsExamples/TruthTracking/ProtoTrackTruthMatcher.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
 #include "ActsExamples/TruthTracking/TrackTruthMatcher.hpp"

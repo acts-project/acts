@@ -169,15 +169,13 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
     // write per-track performance measures
     {
       std::lock_guard<std::mutex> guardTrk(trkMutex);
-      for (std::size_t itrack = 0; itrack < tracks.size(); ++itrack) {
-        const auto& track = tracks[itrack];
-
+      for (auto track : tracks) {
         // Get the truth-matched particle
-        auto imatched = trackParticleMatching.find(itrack);
+        auto imatched = trackParticleMatching.find(track.index());
         if (imatched == trackParticleMatching.end()) {
           ACTS_DEBUG(
               "No truth particle associated with this proto track, index = "
-              << itrack);
+              << track.index());
           continue;
         }
         const auto& particleMatch = imatched->second;
@@ -202,8 +200,8 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
         }
 
         trkEventId = eventId;
-        trkTrackId = itrack;
-        trkNumHits = track.size();
+        trkTrackId = track.index();
+        trkNumHits = track.nMeasurements();
         trkNumParticles = particleMatch.contributingParticles.size();
         trkParticleId.clear();
         trkParticleNumHitsTotal.clear();
