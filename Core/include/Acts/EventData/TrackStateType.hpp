@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -41,7 +41,17 @@ class TrackStateType {
       std::numeric_limits<std::make_unsigned<raw_type>::type>::digits;
   /// Constructor from a reference to the underlying value container
   /// @param raw the value container
-  TrackStateType(raw_type& raw) : m_raw{&raw} {}
+  TrackStateType(raw_type& raw) : m_raw{&raw} { assert(m_raw != nullptr); }
+
+  // Disable copy constructor
+  TrackStateType(const TrackStateType&) = delete;
+
+  /// Move constructor
+  /// @param other the other object to move from
+  TrackStateType(TrackStateType&& other) : m_raw{other.m_raw} {
+    assert(m_raw != nullptr);
+    other.m_raw = nullptr;
+  }
 
   /// Assign the value from another set of flags
   /// @param other the other set of flags to assign
@@ -51,6 +61,9 @@ class TrackStateType {
     *m_raw = *other.m_raw;
     return *this;
   }
+
+  // Disable move assignment
+  TrackStateType& operator=(TrackStateType&&) = delete;
 
   /// Assign the value from another set of flags
   /// @param other the other set of flags to assign
@@ -109,7 +122,25 @@ class ConstTrackStateType {
 
   /// Constructor from a reference to the underlying value container
   /// @param raw the value container
-  ConstTrackStateType(const raw_type& raw) : m_raw{&raw} {}
+  ConstTrackStateType(const raw_type& raw) : m_raw{&raw} {
+    assert(m_raw != nullptr);
+  }
+
+  // Disable copy constructor
+  ConstTrackStateType(const ConstTrackStateType&) = delete;
+
+  /// Move constructor
+  /// @param other the other object to move from
+  ConstTrackStateType(ConstTrackStateType&& other) : m_raw{other.m_raw} {
+    assert(m_raw != nullptr);
+    other.m_raw = nullptr;
+  }
+
+  // Disable assignment
+  ConstTrackStateType& operator=(const ConstTrackStateType&) = delete;
+
+  // Disable move assignment
+  ConstTrackStateType& operator=(ConstTrackStateType&&) = delete;
 
   /// Return if the bit at position @p pos is 1
   /// @param pos the bit position
