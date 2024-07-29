@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 
 #include <algorithm>
@@ -42,9 +43,11 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     ACTS_VERBOSE("Calibrated measurement covariance:\n"
                  << calibratedCovariance);
 
-    const auto H = trackState.projector
-                       .template topLeftCorner<kMeasurementSize, eBoundSize>()
-                       .eval();
+    SubspaceHelper<eBoundSize> subspaceHelper(
+        {trackState.projector.begin(),
+         trackState.projector.begin() + kMeasurementSize});
+
+    const auto H = subspaceHelper.template projector<kMeasurementSize>();
 
     ACTS_VERBOSE("Measurement projector H:\n" << H);
 
