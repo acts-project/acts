@@ -39,10 +39,18 @@ class TrackStateType {
   using raw_type = std::uint64_t;
   static constexpr std::size_t kRawBits =
       std::numeric_limits<std::make_unsigned<raw_type>::type>::digits;
-
   /// Constructor from a reference to the underlying value container
   /// @param raw the value container
-  TrackStateType(raw_type& raw) : m_raw{&raw} { assert(m_raw != nullptr); }
+  TrackStateType(raw_type& raw) : m_raw{&raw} {}
+
+  /// Assign the value from another set of flags
+  /// @param other the other set of flags to assign
+  /// @return this object
+  TrackStateType& operator=(const TrackStateType& other) {
+    assert(other.m_raw != nullptr);
+    *m_raw = *other.m_raw;
+    return *this;
+  }
 
   /// Assign the value from another set of flags
   /// @param other the other set of flags to assign
@@ -101,9 +109,7 @@ class ConstTrackStateType {
 
   /// Constructor from a reference to the underlying value container
   /// @param raw the value container
-  ConstTrackStateType(const raw_type& raw) : m_raw{&raw} {
-    assert(m_raw != nullptr);
-  }
+  ConstTrackStateType(const raw_type& raw) : m_raw{&raw} {}
 
   /// Return if the bit at position @p pos is 1
   /// @param pos the bit position
@@ -133,6 +139,7 @@ class ConstTrackStateType {
 
 inline TrackStateType& TrackStateType::operator=(
     const ConstTrackStateType& other) {
+  assert(other.m_raw != nullptr);
   *m_raw = *other.m_raw;
   return *this;
 }
