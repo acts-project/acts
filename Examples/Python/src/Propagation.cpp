@@ -15,6 +15,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
@@ -124,6 +125,7 @@ void addPropagation(Context& ctx) {
              std::shared_ptr<ActsExamples::PropagatorInterface>>(
       mex, "PropagatorInterface");
 
+  // Eigen based stepper
   {
     auto stepper = py::class_<Acts::EigenStepper<>>(m, "EigenStepper");
     stepper.def(py::init<std::shared_ptr<const Acts::MagneticFieldProvider>>());
@@ -136,6 +138,7 @@ void addPropagation(Context& ctx) {
         prop, "EigenDetector");
   }
 
+  // ATLAS based stepper
   {
     auto stepper = py::class_<Acts::AtlasStepper>(m, "AtlasStepper");
     stepper.def(py::init<std::shared_ptr<const Acts::MagneticFieldProvider>>());
@@ -148,6 +151,20 @@ void addPropagation(Context& ctx) {
         prop, "AtlasDetector");
   }
 
+  // Sympy based stepper
+  {
+    auto stepper = py::class_<Acts::SympyStepper>(m, "SympyStepper");
+    stepper.def(py::init<std::shared_ptr<const Acts::MagneticFieldProvider>>());
+
+    addPropagator<Acts::SympyStepper, Acts::Navigator>(prop, "Sympy");
+  }
+
+  {
+    addPropagator<Acts::SympyStepper, Acts::Experimental::DetectorNavigator>(
+        prop, "SympyDetector");
+  }
+
+  // Straight line stepper
   {
     auto stepper =
         py::class_<Acts::StraightLineStepper>(m, "StraightLineStepper");

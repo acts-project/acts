@@ -254,7 +254,7 @@ class DirectNavigator {
                    << state.navigation.currentSurface->geometryId());
       // Move the sequence to the next surface
       ++state.navigation.surfaceIndex;
-      if (state.navigation.surfaceIndex >=
+      if (state.navigation.surfaceIndex <
           state.navigation.options.surfaces.size()) {
         ACTS_VERBOSE("Next surface candidate is  "
                      << state.navigation.options.surfaces
@@ -277,8 +277,8 @@ class DirectNavigator {
                                            boundaryTolerance, tolerance);
 
     for (auto& intersection : intersections.split()) {
-      if (detail::checkIntersection(intersection, nearLimit, farLimit,
-                                    logger())) {
+      if (detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                  farLimit, logger())) {
         return intersection;
       }
     }

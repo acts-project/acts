@@ -58,7 +58,22 @@ ScoreBasedAmbiguityResolution::computeInitialState(
       }
       auto detectorId = volume_it->second;
 
-      if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (ts.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
+        ACTS_DEBUG("Track state type is HoleFlag");
+        trackFeaturesVector[detectorId].nHoles++;
+      } else if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+        Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
+        ACTS_DEBUG("Track state type is OutlierFlag");
+        trackFeaturesVector[detectorId].nOutliers++;
+
+        // assign a new measurement index if the source link was not seen yet
+        auto emplace = MeasurementIndexMap.try_emplace(
+            sourceLink, MeasurementIndexMap.size());
+
+        bool isOutliner = true;
+
+        measurements.push_back({emplace.first->second, detectorId, isOutliner});
+      } else if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
         ACTS_DEBUG("Track state type is MeasurementFlag");
 
@@ -74,21 +89,6 @@ ScoreBasedAmbiguityResolution::computeInitialState(
         bool isoutliner = false;
 
         measurements.push_back({emplace.first->second, detectorId, isoutliner});
-      } else if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
-        Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
-        ACTS_DEBUG("Track state type is OutlierFlag");
-        trackFeaturesVector[detectorId].nOutliers++;
-
-        // assign a new measurement index if the source link was not seen yet
-        auto emplace = MeasurementIndexMap.try_emplace(
-            sourceLink, MeasurementIndexMap.size());
-
-        bool isOutliner = true;
-
-        measurements.push_back({emplace.first->second, detectorId, isOutliner});
-      } else if (ts.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
-        ACTS_DEBUG("Track state type is HoleFlag");
-        trackFeaturesVector[detectorId].nHoles++;
       }
     }
     measurementsPerTrack.push_back(std::move(measurements));
