@@ -1,8 +1,7 @@
 add_library(
   ActsExamplesDetectorDD4hep SHARED
   src/DD4hepDetector.cpp
-  src/DD4hepGeometryService.cpp
-  src/DetUtils.cpp)
+  src/DD4hepGeometryService.cpp)
 
 
 target_include_directories(

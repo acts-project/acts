@@ -14,7 +14,6 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -32,6 +31,7 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 
 #include <functional>
 #include <limits>
@@ -364,18 +364,6 @@ class KalmanFitter {
                    << " dir: " << stepper.direction(state.stepping).transpose()
                    << " momentum: "
                    << stepper.absoluteMomentum(state.stepping));
-
-      // Add the measurement surface as external surface to navigator.
-      // We will try to hit those surface by ignoring boundary checks.
-      if constexpr (!isDirectNavigator) {
-        if (result.processedStates == 0) {
-          for (auto measurementIt = inputMeasurements->begin();
-               measurementIt != inputMeasurements->end(); measurementIt++) {
-            navigator.insertExternalSurface(state.navigation,
-                                            measurementIt->first);
-          }
-        }
-      }
 
       // Update:
       // - Waiting for a current surface
@@ -1134,6 +1122,12 @@ class KalmanFitter {
     // Set the trivial propagator options
     propagatorOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
 
+    // Add the measurement surface as external surface to navigator.
+    // We will try to hit those surface by ignoring boundary checks.
+    for (const auto& [surfaceId, _] : inputMeasurements) {
+      propagatorOptions.navigation.insertExternalSurface(surfaceId);
+    }
+
     // Catch the actor and set the measurements
     auto& kalmanActor =
         propagatorOptions.actionList.template get<KalmanActor>();
@@ -1206,7 +1200,7 @@ class KalmanFitter {
     using KalmanActor = Actor<parameters_t>;
 
     using KalmanResult = typename KalmanActor::result_type;
-    using Actors = ActionList<DirectNavigator::Initializer, KalmanActor>;
+    using Actors = ActionList<KalmanActor>;
     using Aborters = AbortList<KalmanAborter>;
     using PropagatorOptions =
         typename propagator_t::template Options<Actors, Aborters>;
@@ -1233,9 +1227,7 @@ class KalmanFitter {
     kalmanActor.actorLogger = m_actorLogger.get();
 
     // Set the surface sequence
-    auto& dInitializer = propagatorOptions.actionList
-                             .template get<DirectNavigator::Initializer>();
-    dInitializer.navSurfaces = sSequence;
+    propagatorOptions.navigation.surfaces = sSequence;
 
     return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
                     track_container_t, holder_t>(sParameters, propagatorOptions,

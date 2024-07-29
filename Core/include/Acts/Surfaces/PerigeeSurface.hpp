@@ -14,7 +14,6 @@
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 
 #include <cstddef>
 #include <iosfwd>
@@ -94,6 +93,7 @@ class PerigeeSurface : public LineSurface {
                              std::ostream& sl) const final;
 };
 
-ACTS_STATIC_CHECK_CONCEPT(SurfaceConcept, PerigeeSurface);
+static_assert(SurfaceConcept<PerigeeSurface>,
+              "PerigeeSurface does not fulfill SurfaceConcept");
 
 }  // namespace Acts

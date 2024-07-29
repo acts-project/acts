@@ -17,12 +17,6 @@
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <any>
-#include <iterator>
-#include <type_traits>
-
-#if defined(__cpp_concepts)
-
-#include <concepts>
 
 namespace Acts {
 
@@ -144,5 +138,3 @@ concept MutableMultiTrajectoryBackend = CommonMultiTrajectoryBackend<T> &&
 };
 
 }  // namespace Acts
-
-#endif

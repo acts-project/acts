@@ -213,6 +213,7 @@ set(_acts_nlohmanjson_version 3.2.0)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
+set(_acts_pythia8_version 8.309)
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
@@ -221,10 +222,17 @@ set(_acts_boost_recommended_version 1.78.0)
 # Include the sources for the external dependencies.
 include(ActsExternSources)
 
+# Controls behavior of DOWNLOAD_EXTRACT_TIMESTAMP
+if(POLICY CMP0135)
+  cmake_policy(SET CMP0135 NEW)
+endif()
+
 # required packages
 if (ACTS_SETUP_BOOST)
   if (ACTS_USE_SYSTEM_BOOST)
-    # NOTE FindBoost.cmake looks for BoostConfig.cmake first, before running it's own logic.
+    if(POLICY CMP0167)
+      cmake_policy(SET CMP0167 NEW)
+    endif()
 
     # Enable both program_options and unit_test_framework to reduce complexity
     # Also Cuda tests seem to use program_options
@@ -436,15 +444,7 @@ if(ACTS_BUILD_EXAMPLES_HEPMC3)
   find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
-  find_package(Pythia8 REQUIRED)
-
-  if(DEFINED CMAKE_CXX_STANDARD)
-    if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
-      message(WARNING "ACTS is configured to build with C++20."
-        "As of version 309, Pythia8 does not compile under C++20."
-        "You can find a patch file at: https://gist.github.com/paulgessinger/7a823b4015d4511cf829472291c8ddcf")
-    endif()
-  endif()
+  find_package(Pythia8 ${_acts_pythia8_version} REQUIRED)
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)

@@ -326,6 +326,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(trackSelectorCfg);
     ACTS_PYTHON_MEMBER(maxSteps);
     ACTS_PYTHON_MEMBER(twoWay);
+    ACTS_PYTHON_MEMBER(reverseSearch);
     ACTS_PYTHON_MEMBER(seedDeduplication);
     ACTS_PYTHON_MEMBER(stayOnSeed);
     ACTS_PYTHON_MEMBER(pixelVolumes);
