@@ -39,6 +39,10 @@ class TrackStateType {
   using raw_type = std::uint64_t;
   static constexpr std::size_t kRawBits =
       std::numeric_limits<std::make_unsigned<raw_type>::type>::digits;
+
+  // Delete default constructor
+  TrackStateType() = delete;
+
   /// Constructor from a reference to the underlying value container
   /// @param raw the value container
   TrackStateType(raw_type& raw) : m_raw{&raw} { assert(m_raw != nullptr); }
@@ -123,6 +127,9 @@ class ConstTrackStateType {
   static constexpr std::size_t kRawBits =
       std::numeric_limits<std::make_unsigned<raw_type>::type>::digits;
 
+  // Delete default constructor
+  ConstTrackStateType() = delete;
+
   /// Constructor from a reference to the underlying value container
   /// @param raw the value container
   ConstTrackStateType(const raw_type& raw) : m_raw{&raw} {
@@ -181,6 +188,7 @@ inline TrackStateType& TrackStateType::operator=(
   *m_raw = *other.m_raw;
   return *this;
 }
+
 inline TrackStateType::operator ConstTrackStateType() {
   return {*m_raw};
 }
