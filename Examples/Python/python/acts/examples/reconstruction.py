@@ -21,7 +21,7 @@ TruthSeedRanges = namedtuple(
 
 ParticleSmearingSigmas = namedtuple(
     "ParticleSmearingSigmas",
-    ["d0", "d0PtA", "d0PtB", "z0", "z0PtA", "z0PtB", "t0", "phi", "theta", "pRel"],
+    ["d0", "d0PtA", "d0PtB", "z0", "z0PtA", "z0PtB", "t0", "phi", "theta", "ptRel"],
     defaults=[None] * 10,
 )
 
@@ -253,7 +253,7 @@ def addSeeding(
         TruthSeedSelector configuration. Each range is specified as a tuple of (min,max).
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TruthSeedSelector.hpp
         If specified as None, don't run ParticleSmearing at all (and use addCKFTracks(selectedParticles="particles"))
-    particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, pRel)
+    particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, ptRel)
         ParticleSmearing configuration.
         Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
     initialSigmas : list
@@ -508,7 +508,7 @@ def addTruthSmearedSeeding(
             sigmaT0=particleSmearingSigmas.t0,
             sigmaPhi=particleSmearingSigmas.phi,
             sigmaTheta=particleSmearingSigmas.theta,
-            sigmaPRel=particleSmearingSigmas.pRel,
+            sigmaPtRel=particleSmearingSigmas.ptRel,
             initialSigmas=initialSigmas,
             initialSigmaPtRel=initialSigmaPtRel,
             initialVarInflation=initialVarInflation,
