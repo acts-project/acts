@@ -222,7 +222,7 @@ void Acts::GeometryView3D::drawDetectorVolume(
   // draw the surfaces of the mother volume
   for (auto surface : volume.surfaces()) {
     drawSurface(helper, *surface, gctx, transform, viewConfig);
-    std::cout << "check" << std::endl;
+    std::cout << "check obj conversion" << std::endl;
   }
 
   // draw the envelope first
@@ -297,7 +297,6 @@ void Acts::GeometryView3D::drawTrackingVolume(
   std::string vname = tVolume.volumeName();
   if (writeIt) {
     std::vector<std::string> repChar = {"::" /*, "|", " ", "{", "}"*/};
-    // std::cout << "PRE: " << vname << std::endl;
     for (const auto& rchar : repChar) {
       while (vname.find(rchar) != std::string::npos) {
         vname.replace(vname.find(rchar), rchar.size(), std::string("_"));

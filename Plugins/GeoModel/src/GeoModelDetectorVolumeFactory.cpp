@@ -117,63 +117,14 @@ void Acts::GeoModelDetectorVolumeFactory::construct(Cache& cache, const Geometry
       for (auto surface : surfaces){
         convertSensitive(surface.volume, surface.transform, sensitives);
       }
+      cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(), sensitives.begin(), sensitives.end());
       const GeoLogVol *logVol = physVol->getLogVol();//get logVol for the shape of the volume
       const GeoShape *shape = logVol->getShape();//get shape
       const Acts::Transform3 &transform = fpv->getAbsoluteTransform(nullptr);
 
       //convert bounding boxes with surfaces inside
-      std::cout << sensitives.size() << std::endl;
       std::shared_ptr<Experimental::DetectorVolume> box = Acts::GeoModel::convertVolume(gctx, shape, name, transform, sensitives);
       cache.boundingBoxes.push_back(box);
-
-
-
-
-      //if children exist assume MDT
-      //convert fpvs to bounding boxes and grand children to surfaces
-      /*
-      if (subvolumes.size()>0){
-        std::vector<GeoModelSensitiveSurface> sensitives;
-        //Get the volumes from GeoModel
-        const GeoLogVol *logVol = physVol->getLogVol();//get logVol for the shape of the volume
-        const GeoShape *shape = logVol->getShape();//get shape
-        const Acts::Transform3 &transform = fpv->getAbsoluteTransform(nullptr);
-
-        //go through all grand children
-        for(int i = 0; i<subvolumes.size();i++){
-          // convert grandchildren to sensitive surfaces
-          std::vector<GeoChildNodeWithTrf> subsubvolumes = getChildrenWithRef(subvolumes[i].volume, false);
-          std::string matStr = subvolumes[i].volume->getLogVol()->getMaterial()->getName();
-          std::string sname = subvolumes[i].volume->getLogVol()->getName();
-          //std::cout << "  child name " << sname << " material " << matStr <<" number of grandchildren " << subsubvolumes.size() << std::endl;
-          const Transform3 &transform =fpv->getAbsoluteTransform() * subvolumes[i].transform;
-          for(int j=0;j<subsubvolumes.size();j++){
-            const Transform3 &subtransform =transform * subsubvolumes[j].transform;
-            //convert sensitive surfaces
-            convertSensitive(subsubvolumes[j].volume, subtransform, sensitives);
-            cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(), sensitives.begin(), sensitives.end());
-            std::vector<GeoChildNodeWithTrf> subsubsubvolumes = getChildrenWithRef(subsubvolumes[j].volume, false);
-             std::string matStr = subsubvolumes[j].volume->getLogVol()->getMaterial()->getName();
-            std::string sname = subsubvolumes[j].volume->getLogVol()->getName();
-            //std::cout << "    grandchildren name " << sname << " material " << matStr << " number of gggggggrand children " << subsubsubvolumes.size() << std::endl;
-            for (int k = 0; k<subsubsubvolumes.size();k++){
-              std::vector<GeoChildNodeWithTrf> subsubsubsubvolumes = getChildrenWithRef(subsubsubvolumes[k].volume, false);
-             std::string matStr = subsubsubvolumes[k].volume->getLogVol()->getMaterial()->getName();
-            std::string sname = subsubsubvolumes[k].volume->getLogVol()->getName();
-            //std::cout << "      gggggrand children name " << sname << " material " << matStr << " number of GGGGgggggggrand children " << subsubsubsubvolumes.size() << std::endl;
-            }
-          }
-        }
-        //convert bounding boxes with surfaces inside
-        std::shared_ptr<Experimental::DetectorVolume> box = Acts::GeoModel::convertVolume(gctx, shape, name, transform, sensitives);
-        cache.boundingBoxes.push_back(box);
-      }
-      //if no children are found assume ID and convert fpvs to surfaces
-      else{
-        //convert ID to surfaces
-        convertSensitive(physVol, fpv->getAbsoluteTransform(nullptr), cache.sensitiveSurfaces);
-      }
-      */
     }
   }
 }
@@ -212,7 +163,6 @@ std::vector<GeoChildNodeWithTrf> Acts::GeoModelDetectorVolumeFactory::findAllSub
   for (auto subvolume : subvolumes){
     if(sensitiveMatch(subvolume.volume)){
       sensitives.push_back(subvolume);
-      std::cout << "match" << std::endl;
     }
     std::vector<GeoChildNodeWithTrf> senssubsubvolumes = findAllSubVolumes(subvolume.volume);
     sensitives.insert(sensitives.end(), senssubsubvolumes.begin(), senssubsubvolumes.end());
@@ -224,7 +174,6 @@ std::vector<GeoChildNodeWithTrf> Acts::GeoModelDetectorVolumeFactory::findAllSub
 bool Acts::GeoModelDetectorVolumeFactory::sensitiveMatch(PVConstLink vol){
   std::string matStr = vol->getLogVol()->getMaterial()->getName();
   if(matStr=="RPCgas"){
-    std::cout << matStr << std::endl;
     return true;
   }
   else{

@@ -45,7 +45,6 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
          return std::get<1>(t);
     });
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
-  std::cout << shape->type() << std::endl;
   if (shape->typeID() == GeoTube::getClassTypeID()) {
     const GeoTube* tube = static_cast<const GeoTube*>(shape);
     std::shared_ptr<CylinderVolumeBounds> bounds =
@@ -67,7 +66,6 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         Experimental::tryAllPortalsAndSurfaces());
   } else if (shape->typeID() == GeoBox::getClassTypeID()) {
     //TODO do the surfaces
-    std::cout << "type found" << std::endl;
     const GeoBox* box = static_cast<const GeoBox*>(shape);
     std::shared_ptr<CuboidVolumeBounds> bounds =
         std::make_shared<CuboidVolumeBounds>(box->getXHalfLength(),
