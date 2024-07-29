@@ -104,9 +104,10 @@ namespace Acts::Python {
 void addOutput(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::ObjPropagationStepsWriter, mex,
-                             "ObjPropagationStepsWriter", collection, outputDir,
-                             outputScalor, outputPrecision);
+  ACTS_PYTHON_DECLARE_WRITER(
+      ActsExamples::ObjPropagationStepsWriter<Acts::detail::Step>, mex,
+      "ObjPropagationStepsWriter", collection, outputDir, outputScalor,
+      outputPrecision);
 
   {
     auto c = py::class_<ViewConfig>(m, "ViewConfig").def(py::init<>());
