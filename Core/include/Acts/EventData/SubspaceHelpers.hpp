@@ -23,11 +23,8 @@ template <std::size_t kFullSize>
 class SubspaceHelper {
  public:
   explicit SubspaceHelper(std::span<const std::uint8_t> indices)
-      : SubspaceHelper(indices, indices.size()) {}
-
-  SubspaceHelper(std::span<const std::uint8_t> indices, std::size_t size)
-      : m_indices(indices.begin(), indices.begin() + size) {
-    assert(check() && "Invalid subspace");
+      : m_indices(indices) {
+    assert(check() && "Invalid subspace indices");
   }
 
   std::size_t size() const { return m_indices.size(); }
@@ -129,6 +126,9 @@ class SubspaceHelper {
   std::span<const std::uint8_t> m_indices;
 
   bool check() const {
+    if (m_indices.size() == 0 || m_indices.size() > kFullSize) {
+      return false;
+    }
     for (std::size_t i = 0; i < m_indices.size(); ++i) {
       auto index = m_indices[i];
       if (index < 0 || index >= kFullSize) {
@@ -146,11 +146,12 @@ class SubspaceHelper {
 template <std::size_t kFullSize, typename Derived>
 std::array<std::uint8_t, kFullSize> projectorToIndices(
     const Eigen::DenseBase<Derived>& projector) {
-  assert(projector.cols() == kFullSize && projector.rows() <= kFullSize &&
-         "Invalid projector size");
+  auto rows = static_cast<std::size_t>(projector.rows());
+  auto cols = static_cast<std::size_t>(projector.cols());
+  assert(cols == kFullSize && rows <= kFullSize && "Invalid projector size");
   std::array<std::uint8_t, kFullSize> indices{};
-  for (std::size_t i = 0; i < projector.rows(); ++i) {
-    for (std::size_t j = 0; j < projector.cols(); ++j) {
+  for (std::size_t i = 0; i < rows; ++i) {
+    for (std::size_t j = 0; j < cols; ++j) {
       assert(projector(i, j) == 0 ||
              projector(i, j) == 1 && "Invalid projector value");
       if (projector(i, j) == 1) {

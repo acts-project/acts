@@ -19,7 +19,7 @@ namespace Acts {
 /// @note This must be a regular `enum` and not a scoped `enum class` to allow
 /// implicit conversion to an integer. The enum value are thus visible directly
 /// in `namespace Acts` and are prefixed to avoid naming collisions.
-enum LinIndices : std::uint8_t {
+enum LinIndices : unsigned int {
   // Global spatial position of a point on the track, must be stored as one
   // continuous block.
   eLinPos0 = 0u,

@@ -48,7 +48,8 @@ double MeasurementSelector::calculateChi2(
 
         using ParametersVector = ActsVector<kMeasurementSize>;
 
-        SubspaceHelper<eBoundSize> subspaceHelper(projector, kMeasurementSize);
+        SubspaceHelper<eBoundSize> subspaceHelper(
+            {projector.begin(), projector.begin() + kMeasurementSize});
 
         // Get the residuals
         ParametersVector res =

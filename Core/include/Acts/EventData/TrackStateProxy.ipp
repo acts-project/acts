@@ -66,7 +66,8 @@ inline auto TrackStateProxy<D, M, ReadOnly>::projector() const -> Projector {
   assert(has<hashString("projector")>());
   ProjectorMapping mapping =
       component<ProjectorMapping, hashString("projector")>();
-  SubspaceHelper<M> subspaceHelper(mapping, calibratedSize());
+  SubspaceHelper<M> subspaceHelper(
+      {mapping.begin(), mapping.begin() + calibratedSize()});
   return subspaceHelper.fullProjector();
 }
 

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <cstdint>
 #include <iosfwd>
 
 namespace Acts {
@@ -41,7 +40,7 @@ enum NoiseUpdateMode : int { removeNoise = -1, addNoise = 1 };
 /// This index enum is not user-configurable (in contrast e.g. to the track
 /// parameter index enums) since it must be compatible with varying
 /// dimensionality (2d-4d) and other access methods (`.{x,y,z}()` accessors).
-enum CoordinateIndices : std::uint8_t {
+enum CoordinateIndices : unsigned int {
   // generic position-like access
   ePos0 = 0,
   ePos1 = 1,

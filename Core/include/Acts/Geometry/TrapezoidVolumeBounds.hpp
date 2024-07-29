@@ -13,7 +13,6 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 
 #include <array>
-#include <cstdint>
 #include <iomanip>
 #include <iosfwd>
 #include <memory>
@@ -51,7 +50,7 @@ class TrapezoidBounds;
 class TrapezoidVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for access / streaming
-  enum BoundValues : std::uint8_t {
+  enum BoundValues : unsigned int {
     eHalfLengthXnegY = 0,  //!< halflength in x at negative y
     eHalfLengthXposY = 1,  //!< halflength in x at positive y
     eHalfLengthY = 2,      //!< halflength in y

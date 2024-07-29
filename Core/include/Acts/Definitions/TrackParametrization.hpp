@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
-#include <cstdint>
 #include <type_traits>
 
 // The user can override the track parameters ordering. If the preprocessor
@@ -35,7 +34,7 @@ namespace Acts {
 /// This must be a regular `enum` and not a scoped `enum class` to allow
 /// implicit conversion to an integer. The enum value are thus visible directly
 /// in `namespace Acts` and are prefixed to avoid naming collisions.
-enum BoundIndices : std::uint8_t {
+enum BoundIndices : unsigned int {
   // Local position on the reference surface.
   // This is intentionally named different from the position components in
   // the other data vectors, to clarify that this is defined on a surface
@@ -62,7 +61,7 @@ enum BoundIndices : std::uint8_t {
 /// This must be a regular `enum` and not a scoped `enum class` to allow
 /// implicit conversion to an integer. The enum value are thus visible directly
 /// in `namespace Acts` and are prefixed to avoid naming collisions.
-enum FreeIndices : std::uint8_t {
+enum FreeIndices : unsigned int {
   // Spatial position
   // The spatial position components must be stored as one continuous block.
   eFreePos0 = 0u,
