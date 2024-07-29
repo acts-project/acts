@@ -8,6 +8,7 @@
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -75,7 +76,7 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
     m_sourceLinks.emplace_back(std::nullopt);
     p.icalibratedsourcelink = m_sourceLinks.size() - 1;
 
-    m_projectors.emplace_back();
+    m_projectors.push_back(kProjectorMappingInvalid);
     p.iprojector = m_projectors.size() - 1;
   }
 
@@ -130,7 +131,7 @@ void VectorMultiTrajectory::addTrackStateComponents_impl(
     m_sourceLinks.emplace_back(std::nullopt);
     p.icalibratedsourcelink = m_sourceLinks.size() - 1;
 
-    m_projectors.emplace_back();
+    m_projectors.push_back(kProjectorMappingInvalid);
     p.iprojector = m_projectors.size() - 1;
   }
 

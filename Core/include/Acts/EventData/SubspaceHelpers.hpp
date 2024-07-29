@@ -131,7 +131,7 @@ class SubspaceHelper {
     }
     for (std::size_t i = 0; i < m_indices.size(); ++i) {
       auto index = m_indices[i];
-      if (index < 0 || index >= kFullSize) {
+      if (index >= kFullSize) {
         return false;
       }
       if (std::find(m_indices.begin() + i + 1, m_indices.end(), index) !=

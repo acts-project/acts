@@ -21,5 +21,7 @@ static constexpr TrackIndexType kTrackIndexInvalid =
 
 using ProjectorBitset = std::uint64_t;
 using ProjectorMapping = std::array<std::uint8_t, BoundIndices::eBoundSize>;
+static constexpr ProjectorMapping kProjectorMappingInvalid = {
+    eBoundSize, eBoundSize, eBoundSize, eBoundSize, eBoundSize, eBoundSize};
 
 }  // namespace Acts
