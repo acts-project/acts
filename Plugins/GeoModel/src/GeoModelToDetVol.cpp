@@ -35,7 +35,17 @@ namespace GeoModel {
 std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeometryContext& context, const GeoShape* shape,
     const std::string& name, const GeoTrf::Transform3D transform, std::vector<GeoModelSensitiveSurface> sensitives) {
+    //dummy volume for conversion with surfaces
+    std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> a;
+
+    //type conversion from GeoModelSensitiveSurface to Surface
+    std::vector<std::shared_ptr<Surface>> sensSurfaces(sensitives.size());
+    std::transform(sensitives.begin(), sensitives.end(), sensSurfaces.begin(),
+    [](const std::tuple<std::shared_ptr<GeoModelDetectorElement>, std::shared_ptr<Surface>>& t) {
+         return std::get<1>(t);
+    });
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
+  std::cout << shape->type() << std::endl;
   if (shape->typeID() == GeoTube::getClassTypeID()) {
     const GeoTube* tube = static_cast<const GeoTube*>(shape);
     std::shared_ptr<CylinderVolumeBounds> bounds =
@@ -56,11 +66,22 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         portalGenerator, context, name, newTransform, bounds,
         Experimental::tryAllPortalsAndSurfaces());
   } else if (shape->typeID() == GeoBox::getClassTypeID()) {
+    //TODO do the surfaces
+    std::cout << "type found" << std::endl;
     const GeoBox* box = static_cast<const GeoBox*>(shape);
     std::shared_ptr<CuboidVolumeBounds> bounds =
         std::make_shared<CuboidVolumeBounds>(box->getXHalfLength(),
                                              box->getYHalfLength(),
                                              box->getZHalfLength());
+        /*
+    GeoTrf::Transform3D newTransform =
+        transform * GeoTrf::RotateX3D(rotationAngle);
+    return Experimental::DetectorVolumeFactory::construct(
+        portalGenerator, context, name, newTransform, bounds,
+        sensSurfaces, a, 
+        Experimental::tryNoVolumes(),
+        Experimental::tryAllPortalsAndSurfaces());
+    */
     return Experimental::DetectorVolumeFactory::construct(
         portalGenerator, context, name, transform, bounds,
         Experimental::tryAllPortalsAndSurfaces());
@@ -83,15 +104,6 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     double y2 = trd->getYHalfLength2();
     double z = trd->getZHalfLength();
 
-    //dummy volume
-    std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> a;
-
-    //type conversion from GeoModelSensitiveSurface to Surface
-    std::vector<std::shared_ptr<Surface>> sensSurfaces(sensitives.size());
-    std::transform(sensitives.begin(), sensitives.end(), sensSurfaces.begin(),
-    [](const std::tuple<std::shared_ptr<GeoModelDetectorElement>, std::shared_ptr<Surface>>& t) {
-         return std::get<1>(t);
-    });
     if (y1 == y2) {
       if (x1 <= x2) {
         // y axis in ACTS is z axis in geomodel
