@@ -93,7 +93,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       const double sigmaPhi = m_cfg.sigmaPhi;
       const double sigmaTheta = m_cfg.sigmaTheta;
       const double sigmaQOverP =
-          m_cfg.sigmaPtRel * qOverP + sigmaTheta * std::abs(qOverP * theta);
+          m_cfg.sigmaPtRel * qOverP +
+          sigmaTheta * std::abs(qOverP * std::tan(theta));
 
       Acts::BoundVector params = Acts::BoundVector::Zero();
       // smear the position/time

@@ -100,13 +100,13 @@ addSeeding(
     initialSigmas=[
         1 * u.mm,
         1 * u.mm,
-        10 * u.degree,
-        10 * u.degree,
+        1 * u.degree,
+        1 * u.degree,
         0.1 * u.e / u.GeV,
         1 * u.ns,
     ],
     initialSigmaPtRel=0.1,
-    initialVarInflation=[1.0] * 6,
+    initialVarInflation=[2.0] * 6,
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
     outputDirRoot=outputDir,
 )
