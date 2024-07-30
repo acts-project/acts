@@ -93,7 +93,6 @@ def runTruthTrackingGx2f(
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.muon,
         truthSeedRanges=TruthSeedRanges(
-            pt=(0.9 * u.GeV, None),
             nHits=(7, None),
         ),
     )

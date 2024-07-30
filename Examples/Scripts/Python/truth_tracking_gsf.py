@@ -96,7 +96,6 @@ def runTruthTrackingGsf(
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.electron,
         truthSeedRanges=TruthSeedRanges(
-            pt=(0.9 * u.GeV, None),
             nHits=(7, None),
         ),
     )
