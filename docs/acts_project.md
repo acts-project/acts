@@ -1,6 +1,6 @@
 # The ACTS project
 
-The *A Common Tracking Software (ACTS)* project is an attempt to preserve and evolve the track reconstruction software of the LHC era towards HL-LHC and beyond. It has been initiated in 2016 starting from the [ATLAS Common Tracking Software](https://gitlab.cern.ch/atlas/athena/-/tree/main/Tracking). Given the changing computing landscape, dedicated care of parallel code execution is taken, and is written in `C++17`.
+The *A Common Tracking Software (ACTS)* project is an attempt to preserve and evolve the track reconstruction software of the LHC era towards HL-LHC and beyond. It has been initiated in 2016 starting from the [ATLAS Common Tracking Software](https://gitlab.cern.ch/atlas/athena/-/tree/main/Tracking). Given the changing computing landscape, dedicated care of parallel code execution is taken, and is written in `C++20`.
 
 A [coherent write-up of the project](https://link.springer.com/article/10.1007/s41781-021-00078-8) has been published in 2022 in Springer's CSBS.
 
@@ -33,4 +33,3 @@ ACTS should also provide a testbed for fruitful algorithm R&D, and hence is clos
 In addition, two dedicated R&D lines are part of the `acts-project`, one for machine learning based/inspired modules [acts-machine-learning](mailto:acts-machine-learning@cern.ch), and one for massively parallel code execution [acts-parallelization](mailto:acts-parallelization@cern.ch), which mainly focuses on GPU accelerators and portability.
 
 Code spill-over from the R&D lines into the main ACTS repository are performed on demand and depending on the maturity of the R&D projects.
-
