@@ -23,7 +23,8 @@ set( VECMEM_BUILD_TESTING FALSE CACHE BOOL
    "Turn off the build of the VecMem unit tests" )
 set( VECMEM_BUILD_BENCHMARKING FALSE CACHE BOOL
    "Turn off the build of VecMem benchmarking" )   
-
+set ( VECMEM_BUILD_CUDA_LIBRARY ${ACTS_BUILD_CUDA} CACHE BOOL
+   "Build CUDA if ACTS_BUILD_CUDA is on")
 # Now set up its build.
 FetchContent_MakeAvailable( VecMem )
 
