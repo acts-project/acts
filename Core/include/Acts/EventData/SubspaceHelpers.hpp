@@ -91,6 +91,7 @@ class VariableSubspaceHelper
   template <typename OtherContainer>
   explicit VariableSubspaceHelper(const OtherContainer& indices) {
     assert(checkSubspaceIndices(indices, kFullSize) && "Invalid indices");
+    m_indices.resize(indices.size());
     for (std::size_t i = 0; i < indices.size(); ++i) {
       m_indices[i] = static_cast<IndexType>(indices[i]);
     }
