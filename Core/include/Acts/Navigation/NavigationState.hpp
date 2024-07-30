@@ -16,9 +16,9 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
-#include <map>
 #include <any>
 #include <cstddef>
+#include <map>
 #include <vector>
 
 namespace Acts {
@@ -88,9 +88,9 @@ struct NavigationState {
   SurfaceCandidates surfaceCandidates = {};
   std::size_t surfaceCandidateIndex = 0;
 
-    /// Range of external surfaces to be considered
-    std::pair<ExternalSurfaces::const_iterator, ExternalSurfaces::const_iterator>
-        externalSurfaceRange;
+  /// Range of external surfaces to be considered
+  std::pair<ExternalSurfaces::const_iterator, ExternalSurfaces::const_iterator>
+      externalSurfaceRange;
 
   /// Boundary directives for surfaces
   BoundaryTolerance surfaceBoundaryTolerance = BoundaryTolerance::None();

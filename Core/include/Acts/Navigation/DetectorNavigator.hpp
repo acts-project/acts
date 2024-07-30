@@ -54,8 +54,8 @@ class DetectorNavigator {
     ExternalSurfaces externalSurfaces = {};
 
     void insertExternalSurface(GeometryIdentifier geoid) {
-        externalSurfaces.insert(
-            std::pair<std::uint64_t, GeometryIdentifier>(geoid.volume(), geoid));
+      externalSurfaces.insert(
+          std::pair<std::uint64_t, GeometryIdentifier>(geoid.volume(), geoid));
     }
 
     void setPlainOptions(const NavigatorPlainOptions& options) {
@@ -220,15 +220,15 @@ class DetectorNavigator {
                    << " (" << surface.center(state.geoContext).transpose()
                    << ")");
 
-        BoundaryTolerance boundaryTolerance = c.boundaryTolerance;
+      BoundaryTolerance boundaryTolerance = c.boundaryTolerance;
 
-        for (auto it = nState.externalSurfaceRange.first;
-            it != nState.externalSurfaceRange.second; it++) {
-                if (surface.geometryId() == it->second) {
-                    boundaryTolerance = BoundaryTolerance::Infinite();
-                    break;
-                }
+      for (auto it = nState.externalSurfaceRange.first;
+           it != nState.externalSurfaceRange.second; it++) {
+        if (surface.geometryId() == it->second) {
+          boundaryTolerance = BoundaryTolerance::Infinite();
+          break;
         }
+      }
 
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, c.objectIntersection.index(),
@@ -300,12 +300,11 @@ class DetectorNavigator {
     BoundaryTolerance boundaryTolerance =
         nState.surfaceCandidate().boundaryTolerance;
     for (auto it = nState.externalSurfaceRange.first;
-        it != nState.externalSurfaceRange.second; it++) {
-
-        if (nextSurface->geometryId() == it->second) {
-            boundaryTolerance = BoundaryTolerance::Infinite();
-            break;
-        }
+         it != nState.externalSurfaceRange.second; it++) {
+      if (nextSurface->geometryId() == it->second) {
+        boundaryTolerance = BoundaryTolerance::Infinite();
+        break;
+      }
     }
 
     // TODO not sure about the boundary check
@@ -431,7 +430,7 @@ class DetectorNavigator {
 
     auto volumeID = nState.currentVolume->geometryId().volume();
 
-    nState.externalSurfaceRange = 
+    nState.externalSurfaceRange =
         nState.options.externalSurfaces.equal_range(volumeID);
 
     // Here we get the candidate surfaces
