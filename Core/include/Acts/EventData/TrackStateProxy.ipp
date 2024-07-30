@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/SubspaceHelpers.hpp"
 namespace Acts {
+  
 template <typename D, std::size_t M, bool ReadOnly>
 inline TrackStateProxy<D, M, ReadOnly>::TrackStateProxy(
     detail_lt::ConstIf<MultiTrajectory<D>, ReadOnly>& trajectory,

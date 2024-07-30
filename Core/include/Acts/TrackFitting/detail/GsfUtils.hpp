@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,7 +13,6 @@
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -155,7 +154,9 @@ ActsScalar calculateDeterminant(
     const double *fullCalibratedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      true>::Covariance predictedCovariance,
-    ProjectorMapping projector, unsigned int calibratedSize);
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>::Projector
+        projector,
+    unsigned int calibratedSize);
 
 /// Reweight the components according to `R. Frühwirth, "Track fitting
 /// with non-Gaussian noise"`. See also the implementation in Athena at
@@ -189,8 +190,7 @@ void computePosteriorWeights(
             .template calibratedCovariance<
                 MultiTrajectoryTraits::MeasurementSizeMax>()
             .data(),
-        state.predictedCovariance(), state.projectorMapping(),
-        state.calibratedSize());
+        state.predictedCovariance(), state.projector(), state.calibratedSize());
 
     const auto factor = std::sqrt(1. / detR) * safeExp(-0.5 * chi2);
 

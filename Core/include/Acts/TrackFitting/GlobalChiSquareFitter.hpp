@@ -12,12 +12,10 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -250,12 +248,8 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
   ActsSquareMatrix<kMeasDim> covarianceMeasurement =
       trackState.template calibratedCovariance<kMeasDim>();
 
-  SubspaceHelper<eBoundSize> subspaceHelper(
-      {trackState.projectorMapping().begin(),
-       trackState.projectorMapping().begin() + kMeasDim});
-
   ActsMatrix<kMeasDim, eBoundSize> projector =
-      subspaceHelper.template projector<kMeasDim>();
+      trackState.projector().template topLeftCorner<kMeasDim, eBoundSize>();
 
   ActsMatrix<kMeasDim, eBoundSize> projJacobian = projector * jacobianFromStart;
 
