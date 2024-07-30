@@ -105,11 +105,11 @@ def run_vertexing(fitter, mu, events):
                 1 * u.mm,
                 1 * u.degree,
                 1 * u.degree,
-                0 * u.e / u.GeV,
+                0.1 * u.e / u.GeV,
                 1 * u.ns,
             ],
             initialSigmaPtRel=0.01,
-            initialVarInflation=[1e4] * 6,
+            initialVarInflation=[1e1] * 6,
             geoSelectionConfigFile=setup.geoSel,
         )
 
