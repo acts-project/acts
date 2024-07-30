@@ -21,14 +21,31 @@
 
 namespace Acts {
 
+template <typename Container>
+inline static bool checkSubspaceIndices(const Container& container,
+                                        std::size_t fullSize) {
+  if (container.size() == 0 || container.size() > fullSize) {
+    return false;
+  }
+  for (std::size_t i = 0; i < container.size(); ++i) {
+    auto index = container[i];
+    if (index >= fullSize) {
+      return false;
+    }
+    if (std::find(container.begin() + i + 1, container.end(), index) !=
+        container.end()) {
+      return false;
+    }
+  }
+  return true;
+}
+
 template <typename Derived, std::size_t FullSize>
 class SubspaceHelperBase {
  public:
   static constexpr std::size_t kFullSize = FullSize;
 
   using FullSquareMatrix = ActsSquareMatrix<kFullSize>;
-
-  SubspaceHelperBase() { assert(check() && "Invalid subspace indices"); }
 
   std::size_t size() const { return self().size(); }
 
@@ -59,22 +76,6 @@ class SubspaceHelperBase {
 
  private:
   const Derived& self() const { return static_cast<const Derived&>(*this); }
-
-  bool check() const {
-    if (size() == 0 || size() > kFullSize) {
-      return false;
-    }
-    for (std::size_t i = 0; i < size(); ++i) {
-      auto index = operator[](i);
-      if (index >= kFullSize) {
-        return false;
-      }
-      if (std::find(begin() + i + 1, end(), index) != end()) {
-        return false;
-      }
-    }
-    return true;
-  }
 };
 
 template <std::size_t FullSize, typename index_t = std::uint8_t>
@@ -89,6 +90,7 @@ class VariableSubspaceHelper
 
   template <typename OtherContainer>
   explicit VariableSubspaceHelper(const OtherContainer& indices) {
+    assert(checkSubspaceIndices(indices, kFullSize) && "Invalid indices");
     for (std::size_t i = 0; i < indices.size(); ++i) {
       m_indices[i] = static_cast<IndexType>(indices[i]);
     }
@@ -124,10 +126,11 @@ class FixedSubspaceHelper
   using ApplyRightResult = ActsMatrix<kSubspaceSize, kSubspaceSize>;
 
   using IndexType = index_t;
-  using Container = std::array<IndexType, SubspaceSize>;
+  using Container = std::array<IndexType, kSubspaceSize>;
 
   template <typename OtherContainer>
   explicit FixedSubspaceHelper(const OtherContainer& indices) {
+    assert(checkSubspaceIndices(indices, kFullSize) && "Invalid indices");
     for (std::size_t i = 0; i < kSubspaceSize; ++i) {
       m_indices[i] = static_cast<IndexType>(indices[i]);
     }
