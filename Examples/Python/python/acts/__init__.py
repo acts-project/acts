@@ -31,11 +31,6 @@ def Propagator(stepper, navigator, loglevel=ActsPythonBindings.logging.INFO):
     for prefix in ("Eigen", "Atlas", "StraightLine"):
         _stepper = getattr(ActsPythonBindings, f"{prefix}Stepper")
         if isinstance(stepper, _stepper):
-            _detectorNavigator = getattr(ActsPythonBindings, "DetectorNavigator")
-            if isinstance(navigator, _detectorNavigator):
-                return getattr(
-                    ActsPythonBindings._propagator, f"{prefix}DetectorPropagator"
-                )(stepper, navigator, loglevel)
             return getattr(ActsPythonBindings._propagator, f"{prefix}Propagator")(
                 stepper, navigator, loglevel
             )

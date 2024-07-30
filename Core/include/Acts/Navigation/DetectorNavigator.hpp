@@ -48,6 +48,9 @@ class DetectorNavigator {
   };
 
   struct Options : public NavigatorPlainOptions {
+    explicit Options(const GeometryContext& gctx)
+        : NavigatorPlainOptions(gctx) {}
+
     void setPlainOptions(const NavigatorPlainOptions& options) {
       static_cast<NavigatorPlainOptions&>(*this) = options;
     }
@@ -59,6 +62,8 @@ class DetectorNavigator {
   /// created for every propagation/extrapolation step
   /// and keep thread-local navigation information
   struct State : public NavigationState {
+    explicit State(const Options& options) : options(options) {}
+
     Options options;
 
     /// Navigation state - external state: the current surface
@@ -80,8 +85,7 @@ class DetectorNavigator {
       : m_cfg{cfg}, m_logger{std::move(_logger)} {}
 
   State makeState(const Options& options) const {
-    State state;
-    state.options = options;
+    State state(options);
     return state;
   }
 

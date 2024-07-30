@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
+
 #include <limits>
 
 namespace Acts {
@@ -20,7 +22,7 @@ struct StepperPlainOptions {
   double stepSizeCutOff = 0.;
 
   /// Absolute maximum step size
-  double maxStepSize = std::numeric_limits<double>::max();
+  double maxStepSize = 10 * Acts::UnitConstants::m;
 
   /// Maximum number of Runge-Kutta steps for the stepper step call
   unsigned int maxRungeKuttaStepTrials = 10000;
