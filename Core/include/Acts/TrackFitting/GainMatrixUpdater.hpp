@@ -29,7 +29,7 @@ class GainMatrixUpdater {
     // This is used to build a covariance matrix view in the .cpp file
     const double* calibrated;
     const double* calibratedCovariance;
-    ProjectorMapping projector;
+    FullProjectorMapping projector;
 
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Parameters predicted;
@@ -80,7 +80,7 @@ class GainMatrixUpdater {
             // shape later
             trackState.effectiveCalibrated().data(),
             trackState.effectiveCalibratedCovariance().data(),
-            trackState.projectorMapping(),
+            trackState.fullProjectorMapping(),
             trackState.predicted(),
             trackState.predictedCovariance(),
             trackState.filtered(),

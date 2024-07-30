@@ -40,7 +40,7 @@ void ActsExamples::PassThroughCalibrator::calibrate(
 
         trackState.calibrated<size>() = meas.parameters();
         trackState.calibratedCovariance<size>() = meas.covariance();
-        trackState.setProjector(meas.indices());
+        trackState.setCalibratedSubspace<size>(meas.indices());
       },
       measurements[idxSourceLink.index()]);
 }

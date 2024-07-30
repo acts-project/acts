@@ -17,49 +17,37 @@
 #include <bitset>
 #include <span>
 
+#include <boost/container/static_vector.hpp>
+
 namespace Acts {
 
-template <std::size_t kFullSize>
-class SubspaceHelper {
+template <typename Derived, std::size_t FullSize>
+class SubspaceHelperBase {
  public:
-  explicit SubspaceHelper(std::span<const std::uint8_t> indices)
-      : m_indices(indices) {
-    assert(check() && "Invalid subspace indices");
-  }
+  static constexpr std::size_t kFullSize = FullSize;
 
-  std::size_t size() const { return m_indices.size(); }
+  using FullSquareMatrix = ActsSquareMatrix<kFullSize>;
 
-  BoundMatrix fullProjector() const {
-    BoundMatrix result = BoundMatrix::Zero();
-    for (auto [i, index] : enumerate(m_indices)) {
+  SubspaceHelperBase() { assert(check() && "Invalid subspace indices"); }
+
+  std::size_t size() const { return self().size(); }
+
+  auto operator[](std::size_t i) const { return self()[i]; }
+
+  auto begin() const { return self().begin(); }
+  auto end() const { return self().end(); }
+
+  FullSquareMatrix fullProjector() const {
+    FullSquareMatrix result = FullSquareMatrix::Zero();
+    for (auto [i, index] : enumerate(*this)) {
       result(i, index) = 1;
     }
     return result;
   }
 
-  BoundMatrix fullExpander() const {
-    BoundMatrix result = BoundMatrix::Zero();
-    for (auto [i, index] : enumerate(m_indices)) {
-      result(index, i) = 1;
-    }
-    return result;
-  }
-
-  template <std::size_t M>
-  ActsMatrix<M, kFullSize> projector() const {
-    assert(size() == M && "Invalid subspace size");
-    ActsMatrix<M, kFullSize> result = ActsMatrix<M, kFullSize>::Zero();
-    for (auto [i, index] : enumerate(m_indices)) {
-      result(i, index) = 1;
-    }
-    return result;
-  }
-
-  template <std::size_t M>
-  ActsMatrix<kFullSize, M> expander() const {
-    assert(size() == M && "Invalid subspace size");
-    ActsMatrix<kFullSize, M> result = ActsMatrix<kFullSize, M>::Zero();
-    for (auto [i, index] : enumerate(m_indices)) {
+  FullSquareMatrix fullExpander() const {
+    FullSquareMatrix result = FullSquareMatrix::Zero();
+    for (auto [i, index] : enumerate(*this)) {
       result(index, i) = 1;
     }
     return result;
@@ -69,12 +57,111 @@ class SubspaceHelper {
     return matrixToBitset(fullProjector()).to_ullong();
   }
 
-  template <std::size_t N, std::size_t M, std::size_t K, typename Derived>
-  ActsMatrix<N, K> applyLeft(const Eigen::DenseBase<Derived>& matrix) const {
-    assert(size() == M && "Invalid subspace size");
-    assert(matrix.rows() == M && "Invalid matrix size");
-    ActsMatrix<N, K> result = ActsMatrix<N, K>::Zero();
-    for (auto [i, indexI] : enumerate(m_indices)) {
+ private:
+  const Derived& self() const { return static_cast<const Derived&>(*this); }
+
+  bool check() const {
+    if (size() == 0 || size() > kFullSize) {
+      return false;
+    }
+    for (std::size_t i = 0; i < size(); ++i) {
+      auto index = operator[](i);
+      if (index >= kFullSize) {
+        return false;
+      }
+      if (std::find(begin() + i + 1, end(), index) != end()) {
+        return false;
+      }
+    }
+    return true;
+  }
+};
+
+template <std::size_t FullSize, typename index_t = std::uint8_t>
+class VariableSubspaceHelper
+    : public SubspaceHelperBase<VariableSubspaceHelper<FullSize, index_t>,
+                                FullSize> {
+ public:
+  static constexpr std::size_t kFullSize = FullSize;
+
+  using IndexType = index_t;
+  using Container = boost::container::static_vector<IndexType, FullSize>;
+
+  template <typename OtherContainer>
+  explicit VariableSubspaceHelper(const OtherContainer& indices) {
+    for (std::size_t i = 0; i < indices.size(); ++i) {
+      m_indices[i] = static_cast<IndexType>(indices[i]);
+    }
+  }
+
+  std::size_t size() const { return m_indices.size(); }
+
+  IndexType operator[](std::size_t i) const { return m_indices[i]; }
+
+  auto begin() const { return m_indices.begin(); }
+  auto end() const { return m_indices.end(); }
+
+ private:
+  Container m_indices;
+};
+
+template <std::size_t FullSize, std::size_t SubspaceSize,
+          typename index_t = std::uint8_t>
+class FixedSubspaceHelper
+    : public SubspaceHelperBase<
+          FixedSubspaceHelper<FullSize, SubspaceSize, index_t>, FullSize> {
+ public:
+  static constexpr std::size_t kFullSize = FullSize;
+  static constexpr std::size_t kSubspaceSize = SubspaceSize;
+
+  using Projector = ActsMatrix<kSubspaceSize, kFullSize>;
+  using Expander = ActsMatrix<kFullSize, kSubspaceSize>;
+  using Vector = ActsVector<kSubspaceSize>;
+  using SquareMatrix = ActsSquareMatrix<kSubspaceSize>;
+  template <std::size_t K>
+  using ApplyLeftResult = ActsMatrix<kSubspaceSize, kSubspaceSize>;
+  template <std::size_t N>
+  using ApplyRightResult = ActsMatrix<kSubspaceSize, kSubspaceSize>;
+
+  using IndexType = index_t;
+  using Container = std::array<IndexType, SubspaceSize>;
+
+  template <typename OtherContainer>
+  explicit FixedSubspaceHelper(const OtherContainer& indices) {
+    for (std::size_t i = 0; i < kSubspaceSize; ++i) {
+      m_indices[i] = static_cast<IndexType>(indices[i]);
+    }
+  }
+
+  std::size_t size() const { return m_indices.size(); }
+
+  IndexType operator[](std::uint32_t i) const { return m_indices[i]; }
+
+  auto begin() const { return m_indices.begin(); }
+  auto end() const { return m_indices.end(); }
+
+  Projector projector() const {
+    Projector result = Projector::Zero();
+    for (auto [i, index] : enumerate(*this)) {
+      result(i, index) = 1;
+    }
+    return result;
+  }
+
+  Expander expander() const {
+    Expander result = Expander::Zero();
+    for (auto [i, index] : enumerate(*this)) {
+      result(index, i) = 1;
+    }
+    return result;
+  }
+
+  template <std::size_t K, typename Derived>
+  ApplyLeftResult<K> applyLeftOf(
+      const Eigen::DenseBase<Derived>& matrix) const {
+    assert(matrix.rows() == kFullSize && "Invalid matrix size");
+    ApplyLeftResult<K> result = ApplyLeftResult<K>::Zero();
+    for (auto [i, indexI] : enumerate(*this)) {
       for (std::size_t j = 0; j < K; ++j) {
         result(i, j) = matrix(indexI, j);
       }
@@ -82,40 +169,37 @@ class SubspaceHelper {
     return result;
   }
 
-  template <std::size_t N, std::size_t M, std::size_t K, typename Derived>
-  ActsMatrix<N, K> applyRight(const Eigen::DenseBase<Derived>& matrix) const {
-    assert(size() == M && "Invalid subspace size");
-    assert(matrix.rows() == M && "Invalid matrix size");
-    ActsMatrix<N, K> result = ActsMatrix<N, K>::Zero();
-    for (auto [i, indexI] : enumerate(m_indices)) {
-      for (std::size_t j = 0; j < K; ++j) {
-        result(i, j) = matrix(j, indexI);
+  template <std::size_t N, typename Derived>
+  ApplyRightResult<N> applyRightOf(
+      const Eigen::DenseBase<Derived>& matrix) const {
+    assert(matrix.cols() == kSubspaceSize && "Invalid matrix size");
+    ApplyRightResult<N> result = ApplyRightResult<N>::Zero();
+    for (std::size_t i = 0; i < N; ++i) {
+      for (auto [j, indexJ] : enumerate(*this)) {
+        result(i, j) = matrix(i, indexJ);
       }
     }
     return result;
   }
 
-  template <std::size_t N, typename Derived>
-  ActsVector<N> projectVector(
-      const Eigen::DenseBase<Derived>& fullVector) const {
-    assert(size() == N && "Invalid subspace size");
+  template <typename Derived>
+  Vector projectVector(const Eigen::DenseBase<Derived>& fullVector) const {
     assert(fullVector.size() == kFullSize && "Invalid full vector size");
-    ActsVector<N> result = ActsVector<N>::Zero();
-    for (auto [i, index] : enumerate(m_indices)) {
+    Vector result = Vector::Zero();
+    for (auto [i, index] : enumerate(*this)) {
       result(i) = fullVector(index);
     }
     return result;
   }
 
-  template <std::size_t N, typename Derived>
-  ActsSquareMatrix<N> projectMatrix(
+  template <typename Derived>
+  SquareMatrix projectMatrix(
       const Eigen::DenseBase<Derived>& fullMatrix) const {
-    assert(size() == N && "Invalid subspace size");
     assert(fullMatrix.rows() == kFullSize && fullMatrix.cols() == kFullSize &&
            "Invalid full matrix size");
-    ActsSquareMatrix<N> result = ActsSquareMatrix<N>::Zero();
-    for (auto [i, indexI] : enumerate(m_indices)) {
-      for (auto [j, indexJ] : enumerate(m_indices)) {
+    SquareMatrix result = SquareMatrix::Zero();
+    for (auto [i, indexI] : enumerate(*this)) {
+      for (auto [j, indexJ] : enumerate(*this)) {
         result(i, j) = fullMatrix(indexI, indexJ);
       }
     }
@@ -123,24 +207,7 @@ class SubspaceHelper {
   }
 
  private:
-  std::span<const std::uint8_t> m_indices;
-
-  bool check() const {
-    if (m_indices.size() == 0 || m_indices.size() > kFullSize) {
-      return false;
-    }
-    for (std::size_t i = 0; i < m_indices.size(); ++i) {
-      auto index = m_indices[i];
-      if (index >= kFullSize) {
-        return false;
-      }
-      if (std::find(m_indices.begin() + i + 1, m_indices.end(), index) !=
-          m_indices.end()) {
-        return false;
-      }
-    }
-    return true;
-  }
+  Container m_indices;
 };
 
 template <std::size_t kFullSize, typename Derived>
@@ -158,7 +225,9 @@ std::array<std::uint8_t, kFullSize> projectorToIndices(
         indices[i] = j;
       }
     }
-    assert(projector.row(i).sum() != 1 && "Invalid projector row");
+    if (projector.row(i).sum() == 0) {
+      indices[i] = kFullSize;
+    }
   }
   return indices;
 }

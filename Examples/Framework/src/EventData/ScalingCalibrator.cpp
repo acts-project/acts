@@ -178,7 +178,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
         trackState.allocateCalibrated(cmeas.size());
         trackState.calibrated<kSize>() = meas.parameters();
         trackState.calibratedCovariance<kSize>() = meas.covariance();
-        trackState.setProjector(meas.indices());
+        trackState.setCalibratedSubspace<kSize>(meas.indices());
       },
       (measurements)[idxSourceLink.index()]);
 }

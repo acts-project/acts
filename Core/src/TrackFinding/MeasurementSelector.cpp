@@ -33,7 +33,7 @@ double MeasurementSelector::calculateChi2(
                      false>::Parameters predicted,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Covariance predictedCovariance,
-    ProjectorMapping projector, unsigned int calibratedSize) const {
+    FullProjectorMapping projector, unsigned int calibratedSize) const {
   return visit_measurement(
       calibratedSize,
       [&fullCalibrated, &fullCalibratedCovariance, &predicted,
@@ -48,19 +48,18 @@ double MeasurementSelector::calculateChi2(
 
         using ParametersVector = ActsVector<kMeasurementSize>;
 
-        SubspaceHelper<eBoundSize> subspaceHelper(
-            {projector.begin(), projector.begin() + kMeasurementSize});
+        FixedSubspaceHelper<eBoundSize, kMeasurementSize> subspaceHelper(
+            std::span<std::uint8_t, kMeasurementSize>(
+                projector.begin(), projector.begin() + kMeasurementSize));
 
         // Get the residuals
         ParametersVector res =
-            calibrated -
-            subspaceHelper.projectVector<kMeasurementSize>(predicted);
+            calibrated - subspaceHelper.projectVector(predicted);
 
         // Get the chi2
         return (res.transpose() *
                 (calibratedCovariance +
-                 subspaceHelper.projectMatrix<kMeasurementSize>(
-                     predictedCovariance))
+                 subspaceHelper.projectMatrix(predictedCovariance))
                     .inverse() *
                 res)
             .eval()(0, 0);

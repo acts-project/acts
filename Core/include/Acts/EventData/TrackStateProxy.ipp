@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 namespace Acts {
-  
+
 template <typename D, std::size_t M, bool ReadOnly>
 inline TrackStateProxy<D, M, ReadOnly>::TrackStateProxy(
     detail_lt::ConstIf<MultiTrajectory<D>, ReadOnly>& trajectory,
@@ -63,12 +63,7 @@ inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const
 
 template <typename D, std::size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::projector() const -> Projector {
-  assert(has<hashString("projector")>());
-  ProjectorMapping mapping =
-      component<ProjectorMapping, hashString("projector")>();
-  SubspaceHelper<M> subspaceHelper(
-      {mapping.begin(), mapping.begin() + calibratedSize()});
-  return subspaceHelper.fullProjector();
+  return calibratedVariableSubspace().fullProjector();
 }
 
 template <typename D, std::size_t M, bool ReadOnly>

@@ -37,7 +37,7 @@ void RefittingCalibrator::calibrate(const Acts::GeometryContext& /*gctx*/,
         sl.state.template calibratedCovariance<Size>();
   });
 
-  trackState.setProjector(sl.state.projectorMapping());
+  trackState.setFullProjectorMapping(sl.state.fullProjectorMapping());
 }
 
 }  // namespace ActsExamples

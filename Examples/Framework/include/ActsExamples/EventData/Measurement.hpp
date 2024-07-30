@@ -72,14 +72,14 @@ class FixedSizeMeasurement {
   ///   of parameters and covariance.
   template <typename parameters_t, typename covariance_t>
   FixedSizeMeasurement(Acts::SourceLink source,
-                       const std::array<indices_t, kSize>& indices,
+                       const std::array<indices_t, kSize>& subsetIndices,
                        const Eigen::MatrixBase<parameters_t>& params,
                        const Eigen::MatrixBase<covariance_t>& cov)
       : m_source(std::move(source)), m_params(params), m_cov(cov) {
     for (std::size_t i = 0u; i < kSize; ++i) {
-      assert(indices[i] >= 0 && indices[i] < kFullSize &&
+      assert(subsetIndices[i] >= 0 && subsetIndices[i] < kFullSize &&
              "Index out of bounds");
-      m_indices[i] = static_cast<std::uint8_t>(indices[i]);
+      m_subsetIndices[i] = static_cast<std::uint8_t>(subsetIndices[i]);
     }
   }
   /// A measurement can only be constructed with valid parameters.
@@ -98,14 +98,15 @@ class FixedSizeMeasurement {
 
   /// Check if a specific parameter is part of this measurement.
   bool contains(indices_t i) const {
-    return std::find(m_indices.begin(), m_indices.end(), i) != m_indices.end();
+    return std::find(m_subsetIndices.begin(), m_subsetIndices.end(), i) !=
+           m_subsetIndices.end();
   }
 
   /// The measurement indices
   constexpr std::array<Acts::BoundIndices, kSize> indices() const {
     std::array<Acts::BoundIndices, kSize> result;
     for (std::size_t i = 0u; i < kSize; ++i) {
-      result[i] = static_cast<Acts::BoundIndices>(m_indices[i]);
+      result[i] = static_cast<Acts::BoundIndices>(m_subsetIndices[i]);
     }
     return result;
   }
@@ -120,7 +121,7 @@ class FixedSizeMeasurement {
   ProjectionMatrix projector() const {
     ProjectionMatrix proj = ProjectionMatrix::Zero();
     for (std::size_t i = 0u; i < kSize; ++i) {
-      proj(i, m_indices[i]) = 1;
+      proj(i, m_subsetIndices[i]) = 1;
     }
     return proj;
   }
@@ -134,7 +135,7 @@ class FixedSizeMeasurement {
   ExpansionMatrix expander() const {
     ExpansionMatrix expn = ExpansionMatrix::Zero();
     for (std::size_t i = 0u; i < kSize; ++i) {
-      expn(m_indices[i], i) = 1;
+      expn(m_subsetIndices[i], i) = 1;
     }
     return expn;
   }
@@ -148,21 +149,21 @@ class FixedSizeMeasurement {
   /// subspace are used for the computation.
   ParametersVector residuals(const FullParametersVector& reference) const {
     ParametersVector res = ParametersVector::Zero();
-    Acts::detail::calculateResiduals(static_cast<indices_t>(kSize), m_indices,
-                                     reference, m_params, res);
+    Acts::detail::calculateResiduals(static_cast<indices_t>(kSize),
+                                     m_subsetIndices, reference, m_params, res);
     return res;
   }
 
   std::ostream& operator<<(std::ostream& os) const {
     Acts::detail::printMeasurement(os, static_cast<indices_t>(kSize),
-                                   m_indices.data(), m_params.data(),
+                                   m_subsetIndices.data(), m_params.data(),
                                    m_cov.data());
     return os;
   }
 
  private:
   Acts::SourceLink m_source;
-  std::array<std::uint8_t, kSize> m_indices;
+  std::array<std::uint8_t, kSize> m_subsetIndices;
   ParametersVector m_params;
   CovarianceMatrix m_cov;
 };

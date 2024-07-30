@@ -106,7 +106,7 @@ class MeasurementSelector {
                        false>::Parameters predicted,
       TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                        false>::Covariance predictedCovariance,
-      ProjectorMapping projector, unsigned int calibratedSize) const;
+      FullProjectorMapping projector, unsigned int calibratedSize) const;
 
   Config m_config;
 };

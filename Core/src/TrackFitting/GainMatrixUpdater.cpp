@@ -43,11 +43,12 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     ACTS_VERBOSE("Calibrated measurement covariance:\n"
                  << calibratedCovariance);
 
-    SubspaceHelper<eBoundSize> subspaceHelper(
-        {trackState.projector.begin(),
-         trackState.projector.begin() + kMeasurementSize});
+    FixedSubspaceHelper<eBoundSize, kMeasurementSize> subspaceHelper(
+        std::span<std::uint8_t, kMeasurementSize>(
+            trackState.projector.begin(),
+            trackState.projector.begin() + kMeasurementSize));
 
-    const auto H = subspaceHelper.template projector<kMeasurementSize>();
+    const auto H = subspaceHelper.projector();
 
     ACTS_VERBOSE("Measurement projector H:\n" << H);
 

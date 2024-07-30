@@ -20,8 +20,11 @@ static constexpr TrackIndexType kTrackIndexInvalid =
     std::numeric_limits<TrackIndexType>::max();
 
 using ProjectorBitset = std::uint64_t;
-using ProjectorMapping = std::array<std::uint8_t, BoundIndices::eBoundSize>;
-static constexpr ProjectorMapping kProjectorMappingInvalid = {
+
+template <std::size_t measdim>
+using ProjectorMapping = std::array<std::uint8_t, measdim>;
+using FullProjectorMapping = ProjectorMapping<eBoundSize>;
+static constexpr FullProjectorMapping kFullProjectorMappingEmpty = {
     eBoundSize, eBoundSize, eBoundSize, eBoundSize, eBoundSize, eBoundSize};
 
 }  // namespace Acts
