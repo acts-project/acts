@@ -223,8 +223,8 @@ class HoughPlane {
   /// @param yBin: bin index in the second coordinate
   /// @return the (weighted) number of hits for this cell
   YieldType nHits(std::size_t xBin, std::size_t yBin) const {
-    std::cout<<"x,y="<<xBin<<","<<yBin<<std::endl;
-    std::cout<<m_cfg.nBinsX<<","<<m_cfg.nBinsY<<std::endl;
+    // std::cout<<"x,y="<<xBin<<","<<yBin<<std::endl;
+    // std::cout<<m_cfg.nBinsX<<","<<m_cfg.nBinsY<<std::endl;
     return m_houghHist.get(xBin, yBin).nHits();
   }
 

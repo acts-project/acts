@@ -261,10 +261,15 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
   }
   // sort the candidate cells descending in content
   std::sort(candidates.begin(), candidates.end(),
-            [&plane](const std::size_t  bin1,
+            [&yieldMap](const std::size_t  bin1,
                      const std::size_t bin2) {
-              return (plane.nHits(bin1) >
-                      plane.nHits(bin2));
+              YieldType h1 = yieldMap[bin1];
+              YieldType h2 = yieldMap[bin2];
+
+              if(h1 != h2){
+                return h1>h2;
+              }
+              return bin1>bin2;
             });
 
   // now we build islands from the candidate cells, starting with the most
@@ -383,7 +388,7 @@ void Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<identifier_t>::
   // add it to the cell list for the island
   inMaximum.push_back(nextCand);
   // and "veto" the hit for further use via the yield map
-  yield  = -1.0f;
+  yieldMap[candidate]  = -1.0f;
 
   // now we have to collect the non empty neighbours of this cell and check them
   // as well
