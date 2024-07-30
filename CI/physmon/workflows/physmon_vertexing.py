@@ -103,8 +103,8 @@ def run_vertexing(fitter, mu, events):
             initialSigmas=[
                 1 * u.mm,
                 1 * u.mm,
-                1 * u.degree,
-                1 * u.degree,
+                10 * u.degree,
+                10 * u.degree,
                 0.1 * u.e / u.GeV,
                 1 * u.ns,
             ],
