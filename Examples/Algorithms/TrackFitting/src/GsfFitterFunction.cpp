@@ -116,9 +116,15 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
 
     gsfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
-    gsfOptions.extensions.surfaceAccessor
-        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
-            &m_slSurfaceAccessor);
+
+    if (options.doRefit) {
+      gsfOptions.extensions.surfaceAccessor
+          .connect<&RefittingCalibrator::accessSurface>();
+    } else {
+      gsfOptions.extensions.surfaceAccessor
+          .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+              &m_slSurfaceAccessor);
+    }
     switch (reductionAlg) {
       case MixtureReductionAlgorithm::weightCut: {
         gsfOptions.extensions.mixtureReducer

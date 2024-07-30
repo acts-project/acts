@@ -478,7 +478,7 @@ def addTruthSmearedSeeding(
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
     initialSigmas: Optional[List[float]],
-    initialVarInflation: List[float],
+    initialVarInflation: Optional[List[float]],
     particleHypothesis: Optional[acts.ParticleHypothesis],
     logLevel: acts.logging.Level = None,
 ):
@@ -1186,6 +1186,7 @@ def addCKFTracks(
     ] = None,
     ckfConfig: CkfConfig = CkfConfig(),
     twoWay: bool = True,
+    reverseSearch: bool = False,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
@@ -1295,6 +1296,7 @@ def addCKFTracks(
             trackSelectorCfg=trkSelCfg,
             maxSteps=ckfConfig.maxSteps,
             twoWay=twoWay,
+            reverseSearch=reverseSearch,
             seedDeduplication=ckfConfig.seedDeduplication,
             stayOnSeed=ckfConfig.stayOnSeed,
             pixelVolumes=ckfConfig.pixelVolumes,
@@ -1627,21 +1629,23 @@ def addExaTrkX(
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("prototracks", findingAlg.config.outputProtoTracks)
 
-    matchAlg = acts.examples.ProtoTrackTruthMatcher(
+    # TODO convert prototracks to tracks
+
+    matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputProtoTracks=findingAlg.config.outputProtoTracks,
         inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
-        outputProtoTrackParticleMatching="exatrkx_prototrack_particle_matching",
-        outputParticleProtoTrackMatching="exatrkx_particle_prototrack_matching",
+        outputTrackParticleMatching="exatrkx_track_particle_matching",
+        outputParticleTrackMatching="exatrkx_particle_track_matching",
         doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
-        "prototrack_particle_matching", matchAlg.config.outputProtoTrackParticleMatching
+        "track_particle_matching", matchAlg.config.outputTrackParticleMatching
     )
     s.addWhiteboardAlias(
-        "particle_prototrack_matching", matchAlg.config.outputParticleProtoTrackMatching
+        "particle_track_matching", matchAlg.config.outputParticleTrackMatching
     )
 
     # Write truth track finding / seeding performance
@@ -1653,7 +1657,7 @@ def addExaTrkX(
                 # the original selected particles after digitization
                 inputParticles="particles_initial",
                 inputMeasurementParticlesMap="measurement_particles_map",
-                inputProtoTrackParticleMatching=matchAlg.config.outputProtoTrackParticleMatching,
+                inputTrackParticleMatching=matchAlg.config.outputTrackParticleMatching,
                 filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
             )
         )
@@ -1888,9 +1892,11 @@ def addVertexFitting(
     trackParameters: Optional[str] = None,
     outputProtoVertices: str = "protovertices",
     outputVertices: str = "fittedVertices",
-    seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
     vertexFinder: VertexFinder = VertexFinder.Truth,
+    maxIterations: Optional[int] = None,
+    initialVariances: Optional[List[float]] = None,
     useTime: Optional[bool] = False,
+    seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
     spatialBinExtent: Optional[float] = None,
     temporalBinExtent: Optional[float] = None,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
@@ -1907,11 +1913,11 @@ def addVertexFitting(
     field : magnetic field
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
+    vertexFinder : VertexFinder, Truth
+        vertexFinder algorithm: one of Truth, AMVF, Iterative
     seeder : enum member
         determines vertex seeder for AMVF, can be acts.seeder.GaussianSeeder or
         acts.seeder.AdaptiveGridSeeder
-    vertexFinder : VertexFinder, Truth
-        vertexFinder algorithm: one of Truth, AMVF, Iterative
     useTime : bool, False
         determines whether time information is used in vertex seeder, finder,
         and fitter
@@ -1955,7 +1961,7 @@ def addVertexFitting(
     tracks = tracks if tracks is not None else ""
     inputParticles = "particles_input"
     selectedParticles = "particles_selected"
-    inputVertices = "vertices_input"
+    inputTruthVertices = "vertices_input"
 
     if vertexFinder == VertexFinder.Truth:
         findVertices = TruthVertexFinder(
@@ -1969,30 +1975,34 @@ def addVertexFitting(
         s.addAlgorithm(findVertices)
         fitVertices = VertexFitterAlgorithm(
             level=customLogLevel(),
-            bField=field,
             inputTrackParameters=trackParameters,
             inputProtoVertices=findVertices.config.outputProtoVertices,
             outputVertices=outputVertices,
+            bField=field,
         )
         s.addAlgorithm(fitVertices)
     elif vertexFinder == VertexFinder.Iterative:
         findVertices = IterativeVertexFinderAlgorithm(
             level=customLogLevel(),
-            bField=field,
             inputTrackParameters=trackParameters,
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
+            bField=field,
         )
         s.addAlgorithm(findVertices)
     elif vertexFinder == VertexFinder.AMVF:
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
-            seedFinder=seeder,
-            bField=field,
             inputTrackParameters=trackParameters,
+            inputTruthParticles=selectedParticles,
+            inputTruthVertices=inputTruthVertices,
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
+            bField=field,
+            seedFinder=seeder,
             **acts.examples.defaultKWArgs(
+                maxIterations=maxIterations,
+                initialVariances=initialVariances,
                 useTime=useTime,
                 spatialBinExtent=spatialBinExtent,
                 temporalBinExtent=temporalBinExtent,
@@ -2011,7 +2021,7 @@ def addVertexFitting(
                 level=customLogLevel(),
                 inputVertices=outputVertices,
                 inputTracks=tracks,
-                inputTruthVertices=inputVertices,
+                inputTruthVertices=inputTruthVertices,
                 inputParticles=inputParticles,
                 inputSelectedParticles=selectedParticles,
                 inputTrackParticleMatching="track_particle_matching",
