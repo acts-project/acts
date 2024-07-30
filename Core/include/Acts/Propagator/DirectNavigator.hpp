@@ -134,7 +134,11 @@ class DirectNavigator {
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state,
                   const stepper_t& /*stepper*/) const {
-    ACTS_VERBOSE("initialize");
+    ACTS_VERBOSE("Initialize. Surface sequence for navigation:");
+    for (auto surface : state.navigation.options.surfaces) {
+      ACTS_VERBOSE(surface->geometryId()
+                   << " - " << surface->center(state.geoContext).transpose());
+    }
 
     // We set the current surface to the start surface
     state.navigation.currentSurface = state.navigation.options.startSurface;
@@ -254,7 +258,7 @@ class DirectNavigator {
                    << state.navigation.currentSurface->geometryId());
       // Move the sequence to the next surface
       ++state.navigation.surfaceIndex;
-      if (state.navigation.surfaceIndex >=
+      if (state.navigation.surfaceIndex <
           state.navigation.options.surfaces.size()) {
         ACTS_VERBOSE("Next surface candidate is  "
                      << state.navigation.options.surfaces
@@ -277,8 +281,8 @@ class DirectNavigator {
                                            boundaryTolerance, tolerance);
 
     for (auto& intersection : intersections.split()) {
-      if (detail::checkIntersection(intersection, nearLimit, farLimit,
-                                    logger())) {
+      if (detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                  farLimit, logger())) {
         return intersection;
       }
     }

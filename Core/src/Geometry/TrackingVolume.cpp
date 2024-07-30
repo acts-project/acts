@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -440,7 +441,7 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
       [&](SurfaceMultiIntersection& candidates,
           const BoundarySurface* boundary) -> BoundaryIntersection {
     for (const auto& intersection : candidates.split()) {
-      if (!intersection) {
+      if (!intersection.isValid()) {
         continue;
       }
 
@@ -464,8 +465,8 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
 
       ACTS_VERBOSE("Check intersection with surface "
                    << boundary->surfaceRepresentation().geometryId());
-      if (detail::checkIntersection(intersection.intersection(), nearLimit,
-                                    farLimit, logger)) {
+      if (detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                  farLimit, logger)) {
         return BoundaryIntersection(intersection, boundary);
       }
     }
@@ -495,7 +496,7 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
                                           options.boundaryTolerance);
       // Intersect and continue
       auto intersection = checkIntersection(candidates, boundary.get());
-      if (intersection.first) {
+      if (intersection.first.isValid()) {
         ACTS_VERBOSE(" - Proceed with surface");
         intersections.push_back(intersection);
       } else {
@@ -550,7 +551,7 @@ TrackingVolume::compatibleLayers(
       auto atIntersection =
           tLayer->surfaceOnApproach(gctx, position, direction, options);
       // Intersection is ok - take it (move to surface on approach)
-      if (atIntersection) {
+      if (atIntersection.isValid()) {
         // create a layer intersection
         lIntersections.push_back(LayerIntersection(atIntersection, tLayer));
       }
