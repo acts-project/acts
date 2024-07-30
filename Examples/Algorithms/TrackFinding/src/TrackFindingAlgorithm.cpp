@@ -571,7 +571,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 trackCandidate.covariance() = secondTrackCopy.covariance();
                 trackCandidate.setReferenceSurface(
                     secondTrackCopy.referenceSurface().getSharedPtr());
-              } else if (m_cfg.reverseSearch) {
+              } else {
                 // smooth the full track and extrapolate to the reference
 
                 auto secondSmoothingResult =
