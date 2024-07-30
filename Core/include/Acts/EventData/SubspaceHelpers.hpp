@@ -207,7 +207,7 @@ class FixedSubspaceHelper
   }
 
  private:
-  Container m_indices;
+  Container m_indices{};
 };
 
 template <std::size_t kFullSize, typename Derived>
