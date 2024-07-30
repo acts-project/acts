@@ -50,10 +50,20 @@ inline void updateCandidates(const GeometryContext& gctx,
     ActsScalar overstepTolerance =
         c.portal != nullptr ? s_onSurfaceTolerance : nState.overstepTolerance;
 
+    BoundaryTolerance boundaryTolerance = c.boundaryTolerance;
+
+    for (auto it = nState.externalSurfaceRange.first;
+        it != nState.externalSurfaceRange.second; it++) {
+            if (sRep.geometryId() == it->second) {
+                boundaryTolerance = BoundaryTolerance::Infinite();
+                break;
+            }
+    }
+
     // Get the intersection @todo make a templated intersector
     // TODO surface tolerance
     auto sIntersection = sRep.intersect(
-        gctx, position, direction, c.boundaryTolerance, s_onSurfaceTolerance);
+        gctx, position, direction, boundaryTolerance, s_onSurfaceTolerance);
     for (auto& si : sIntersection.split()) {
       c.objectIntersection = si;
       if (c.objectIntersection.isValid() &&

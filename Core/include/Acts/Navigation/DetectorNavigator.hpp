@@ -34,6 +34,8 @@ namespace Acts::Experimental {
 
 class DetectorNavigator {
  public:
+  using ExternalSurfaces = std::multimap<std::uint64_t, GeometryIdentifier>;
+
   struct Config {
     /// Detector for this Navigation
     const Detector* detector = nullptr;
@@ -48,6 +50,14 @@ class DetectorNavigator {
   };
 
   struct Options : public NavigatorPlainOptions {
+    /// Externally provided surfaces - these are tried to be hit
+    ExternalSurfaces externalSurfaces = {};
+
+    void insertExternalSurface(GeometryIdentifier geoid) {
+        externalSurfaces.insert(
+            std::pair<std::uint64_t, GeometryIdentifier>(geoid.volume(), geoid));
+    }
+
     void setPlainOptions(const NavigatorPlainOptions& options) {
       static_cast<NavigatorPlainOptions&>(*this) = options;
     }
@@ -209,10 +219,20 @@ class DetectorNavigator {
                    << "next surface candidate will be " << surface.geometryId()
                    << " (" << surface.center(state.geoContext).transpose()
                    << ")");
-      // Estimate the surface status
+
+        BoundaryTolerance boundaryTolerance = c.boundaryTolerance;
+
+        for (auto it = nState.externalSurfaceRange.first;
+            it != nState.externalSurfaceRange.second; it++) {
+                if (surface.geometryId() == it->second) {
+                    boundaryTolerance = BoundaryTolerance::Infinite();
+                    break;
+                }
+        }
+
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, c.objectIntersection.index(),
-          state.options.direction, c.boundaryTolerance,
+          state.options.direction, boundaryTolerance,
           state.options.surfaceTolerance, logger());
 
       ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
@@ -263,8 +283,6 @@ class DetectorNavigator {
     const Portal* nextPortal = nullptr;
     const Surface* nextSurface = nullptr;
     bool isPortal = false;
-    BoundaryTolerance boundaryTolerance =
-        nState.surfaceCandidate().boundaryTolerance;
 
     if (nState.surfaceCandidate().surface != nullptr) {
       nextSurface = nState.surfaceCandidate().surface;
@@ -277,6 +295,17 @@ class DetectorNavigator {
                         posInfo(state, stepper) +
                         "panic: not a surface not a portal - what is it?";
       throw std::runtime_error(msg);
+    }
+
+    BoundaryTolerance boundaryTolerance =
+        nState.surfaceCandidate().boundaryTolerance;
+    for (auto it = nState.externalSurfaceRange.first;
+        it != nState.externalSurfaceRange.second; it++) {
+
+        if (nextSurface->geometryId() == it->second) {
+            boundaryTolerance = BoundaryTolerance::Infinite();
+            break;
+        }
     }
 
     // TODO not sure about the boundary check
@@ -399,6 +428,11 @@ class DetectorNavigator {
                  << posInfo(state, stepper) << "initialize target");
 
     auto& nState = state.navigation;
+
+    auto volumeID = nState.currentVolume->geometryId().volume();
+
+    nState.externalSurfaceRange = 
+        nState.options.externalSurfaces.equal_range(volumeID);
 
     // Here we get the candidate surfaces
     nState.currentVolume->updateNavigationState(state.geoContext, nState);
