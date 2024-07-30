@@ -627,7 +627,8 @@ class TrackStateProxy {
   /// measurement, is located in the top left corner, everything else is zero.
   /// @return The overallocated projector
   /// @deprecated This will be swapped out in favor of `projectorMapping` in the future
-  //[[deprecated("This will be swapped out in favor of projectorMapping in the future")]]
+  //[[deprecated("This will be swapped out in favor of projectorMapping in the
+  // future")]]
   Projector projector() const;
 
   /// Returns whether a projector is set
@@ -653,8 +654,8 @@ class TrackStateProxy {
   /// @note @p projector is assumed to only have 0s or 1s as components.
   /// @deprecated Use setProjector(span) instead
   template <typename Derived>
-  [[deprecated("use setProjector(span) instead")]] void setProjector(
-      const Eigen::MatrixBase<Derived>& projector)
+  //[[deprecated("use setProjector(span) instead")]]
+  void setProjector(const Eigen::MatrixBase<Derived>& projector)
     requires(!ReadOnly)
   {
     constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
@@ -688,8 +689,8 @@ class TrackStateProxy {
   ///       you want to access the matrix.
   /// @return The projector bitset
   /// @deprecated Use projector() instead
-  [[deprecated("use projector() instead")]] ProjectorBitset projectorBitset()
-      const {
+  //[[deprecated("use projector() instead")]]
+  ProjectorBitset projectorBitset() const {
     return projectorSubspace().projectorBitset();
   }
 
@@ -731,8 +732,8 @@ class TrackStateProxy {
   ///       to another. If you have a projection matrix, set it with
   ///       `setProjector`.
   /// @deprecated Use setProjector(span) instead
-  [[deprecated("use setProjector(span) instead")]] void setProjectorBitset(
-      ProjectorBitset proj)
+  //[[deprecated("use setProjector(span) instead")]]
+  void setProjectorBitset(ProjectorBitset proj)
     requires(!ReadOnly)
   {
     assert(has<hashString("projector")>());

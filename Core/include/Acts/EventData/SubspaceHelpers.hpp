@@ -152,8 +152,8 @@ std::array<std::uint8_t, kFullSize> projectorToIndices(
   std::array<std::uint8_t, kFullSize> indices{};
   for (std::size_t i = 0; i < rows; ++i) {
     for (std::size_t j = 0; j < cols; ++j) {
-      assert(projector(i, j) == 0 ||
-             projector(i, j) == 1 && "Invalid projector value");
+      assert((projector(i, j) == 0 || projector(i, j) == 1) &&
+             "Invalid projector value");
       if (projector(i, j) == 1) {
         indices[i] = j;
       }
