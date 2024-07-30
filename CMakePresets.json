@@ -5,7 +5,6 @@
             "name": "common",
             "hidden": true,
             "generator": "Ninja",
-            "binaryDir": "build/${presetName}",
             "cacheVariables": {
                 "CMAKE_CXX_STANDARD": "20",
                 "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
@@ -78,20 +77,6 @@
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
                 "ACTS_BUILD_PLUGIN_FPEMON": "ON"
             }
-        }
-    ],
-    "buildPresets": [
-        {
-            "name": "all-dev",
-            "displayName": "All Dev Build",
-            "configurePreset": "dev",
-            "configuration": "Dev"
-        },
-        {
-            "name": "all-perf",
-            "displayName": "All Perf Build",
-            "configurePreset": "perf",
-            "configuration": "Perf"
         }
     ]
 }
