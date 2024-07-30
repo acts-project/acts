@@ -834,7 +834,7 @@ class TrackStateProxy {
     assert(has<hashString("projector")>());
     FullProjectorMapping& fullMapping =
         component<FullProjectorMapping, hashString("projector")>();
-    for (std::size_t i = 0; i < eBoundSize; ++i) {
+    for (std::size_t i = 0; i < static_cast<std::size_t>(eBoundSize); ++i) {
       fullMapping[i] = static_cast<std::uint8_t>(subspaceIndices[i]);
     }
   }
