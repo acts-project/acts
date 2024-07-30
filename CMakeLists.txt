@@ -14,7 +14,7 @@ include(ActsRetrieveVersion)
 project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 
 # build options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -Wall -Wextra")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -Wall -Wextra")
 
 # all options and compile-time parameters must be defined here for clear
 # visibility and to make them available everywhere

@@ -229,12 +229,12 @@ else:
                 args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
             ),
             outputDirRoot=pathlib.Path("/home/aicha/Atlas/NewVertices"),
-             vtxGen=acts.examples.GaussianDisplacedVertexPositionGenerator(
-                mean=acts.Vector4(2, 2, 2, 0),
-                stddev=acts.Vector4(
-                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
-                ),
-            ),
+            vtxGen = acts.examples.GaussianDisplacedVertexPositionGenerator(
+                rMean=2, rStdDev=0.0125 * u.mm, 
+                zMean=2, zStdDev=55.5 * u.mm, 
+                tMean=0, tStdDev=1.0 * u.ns
+             ),
+
 
             multiplicity=args.gun_multiplicity,
             rnd=rnd,

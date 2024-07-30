@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 
 import os
@@ -216,36 +217,31 @@ else:
     if not args.ttbar:
         addParticleGun(
             s,
-           
             MomentumConfig(
                 args.gun_pt_range[0] * u.GeV,
                 args.gun_pt_range[1] * u.GeV,
                 transverse=True,
             ),
-             
             EtaConfig(args.gun_eta_range[0], args.gun_eta_range[1]),
             PhiConfig(0.0, 360.0 * u.degree),
             ParticleConfig(
                 args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
             ),
-            outputDirRoot=pathlib.Path("/home/aicha/Atlas"),
-             vtxGen=acts.examples.GaussianVertexGenerator(
+            vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
                 ),
             ),
-
             multiplicity=args.gun_multiplicity,
             rnd=rnd,
-           
         )
     else:
         addPythia8(
             s,
             hardProcess=["Top:qqbar2ttbar=on"],
             npileup=args.ttbar_pu,
-            vtxGen=acts.examples.GaussianDisplacedVertexPositionGenerator(
+            vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns

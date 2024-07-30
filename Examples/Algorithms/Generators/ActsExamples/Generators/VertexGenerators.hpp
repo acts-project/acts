@@ -49,37 +49,34 @@ struct GaussianPrimaryVertexPositionGenerator
 //
 struct GaussianDisplacedVertexPositionGenerator
     : public EventGenerator::PrimaryVertexPositionGenerator {
-  Acts::Vector4 stddev = {0.0, 0.0, 0.0, 0.0};
-  Acts::Vector4 mean = {0.0, 0.0, 0.0, 0.0};
+  double rMean = 0;
+  double rStdDev = 1;
+  double zMean = 0;
+  double zStdDev = 1;
+  double tMean = 0;
+  double tStdDev = 1;
 
   Acts::Vector4 operator()(RandomEngine& rng) const override {
-    double min_value = -2 * M_PI;  // -π
-    double max_value = 2 * M_PI;   // π
+    double min_value = -M_PI;  // -π
+    double max_value = M_PI;   // π
 
-    // Create a uniform real distribution object with range [-π, π)
     std::uniform_real_distribution<> uniform(min_value, max_value);
 
-    // Create a normal distribution object with mean 0.0 and standard
-    // deviation 1.0
-    auto normal = std::normal_distribution<double>(0.0, 1.0);
-    Acts::Vector4 rnd = {normal(rng), uniform(rng), normal(rng), normal(rng)};
+    std::normal_distribution<double> rDist(rMean, rStdDev);
+    std::normal_distribution<double> zDist(zMean, zStdDev);
+    std::normal_distribution<double> tDist(tMean, tStdDev);
 
-    // Compute the cylindrical coordinates with deviations applied
-    Acts::Vector4 cylindrical = mean + rnd.cwiseProduct(stddev);
-
-    // Extract coordinates from the vector
-    double r = cylindrical(0);
-    double phi = cylindrical(1);
-    double z = cylindrical(2);
-    double t = cylindrical(3);
-    double phi_degrees = phi * (180.0 / M_PI);
+    // Generate random values from normal distributions
+    double r = rDist(rng);
+    double phi = uniform(rng);  // Random angle in radians
+    double z = zDist(rng);
+    double t = tDist(rng);
 
     // Convert cylindrical coordinates to Cartesian coordinates
-    double x = r * std::cos(phi_degrees);
-    double y = r * std::sin(phi_degrees);
+    double x = r * std::cos(phi);
+    double y = r * std::sin(phi);
 
     return Acts::Vector4(x, y, z, t);
   }
 };
-
-}  // namespace ActsExamples
+}
