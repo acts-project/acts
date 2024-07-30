@@ -107,12 +107,12 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       params[Acts::eBoundTheta] = newTheta;
       // compute smeared absolute momentum vector
       const double newP = std::max(0.0, p + sigmaP * stdNormal(rng));
-      params[Acts::eBoundQOverP] = particleHypothesis.qOverP(newP, q);
+      const double qOverP = particleHypothesis.qOverP(newP, q);
+      params[Acts::eBoundQOverP] = qOverP;
 
       ACTS_VERBOSE("Smearing particle (pos, time, phi, theta, q/p):");
       ACTS_VERBOSE(" from: " << particle.position().transpose() << ", " << time
-                             << ", " << phi << ", " << theta << ", "
-                             << (q != 0 ? q / p : 1 / p));
+                             << ", " << phi << ", " << theta << ", " << qOverP);
       ACTS_VERBOSE("   to: " << perigee
                                     ->localToGlobal(
                                         ctx.geoContext,
