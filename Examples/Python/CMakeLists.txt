@@ -28,6 +28,7 @@ pybind11_add_module(ActsPythonBindings
   src/Vertexing.cpp
   src/AmbiguityResolution.cpp
   src/EventData.cpp
+  src/Utilities.cpp
 )
 install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
 
