@@ -68,7 +68,6 @@ class TrackStateType {
   /// @param pos the bit position
   /// @return if the bit at @p pos is one or not
   bool test(std::size_t pos) const {
-    assert(m_raw != nullptr);
     std::bitset<kRawBits> bs{*m_raw};
     return bs.test(pos);
   }
@@ -77,7 +76,6 @@ class TrackStateType {
   /// @param pos the position of the bit to change
   /// @param value the value to change the bit to
   void set(std::size_t pos, bool value = true) {
-    assert(m_raw != nullptr);
     std::bitset<kRawBits> bs{*m_raw};
     bs.set(pos, value);
     *m_raw = bs.to_ullong();
@@ -88,7 +86,6 @@ class TrackStateType {
   void reset(std::size_t pos) { set(pos, false); }
 
   friend std::ostream& operator<<(std::ostream& os, const TrackStateType& t) {
-    assert(t.m_raw != nullptr);
     std::bitset<kRawBits> bs{*t.m_raw};
     std::bitset<TrackStateFlag::NumTrackStateFlags> trunc;
     for (std::size_t i = 0; i < TrackStateFlag::NumTrackStateFlags; i++) {
@@ -136,14 +133,12 @@ class ConstTrackStateType {
   /// @param pos the bit position
   /// @return if the bit at @p pos is one or not
   bool test(std::size_t pos) const {
-    assert(m_raw != nullptr);
     std::bitset<kRawBits> bs{*m_raw};
     return bs.test(pos);
   }
 
   friend std::ostream& operator<<(std::ostream& os,
                                   const ConstTrackStateType& t) {
-    assert(t.m_raw != nullptr);
     std::bitset<kRawBits> bs{*t.m_raw};
     std::bitset<TrackStateFlag::NumTrackStateFlags> trunc;
     for (std::size_t i = 0; i < TrackStateFlag::NumTrackStateFlags; i++) {
@@ -161,7 +156,6 @@ class ConstTrackStateType {
 
 inline TrackStateType& TrackStateType::operator=(
     const ConstTrackStateType& other) {
-  assert(other.m_raw != nullptr);
   *m_raw = *other.m_raw;
   return *this;
 }
