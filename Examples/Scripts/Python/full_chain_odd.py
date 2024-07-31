@@ -327,7 +327,7 @@ if args.reco:
             1 * u.ns,
         ],
         initialSigmaPtRel=0.1,
-        initialVarInflation=[2.0] * 6,
+        initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
