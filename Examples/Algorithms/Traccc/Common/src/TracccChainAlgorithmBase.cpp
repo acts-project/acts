@@ -55,14 +55,15 @@ inline auto readDetector(vecmem::memory_resource* mr,
 ///
 /// @param cfg is the algorithm configuration
 /// @param lvl is the logging level
+//template <typename field_t>
 ActsExamples::Traccc::Common::TracccChainAlgorithmBase::
     TracccChainAlgorithmBase(Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("TracccChainAlgorithm", lvl),
       m_cfg(std::move(cfg)),
       detector((TestValidConfig(), readDetector<DetectorHostType>(
                                        &hostMemoryResource,
-                                       "/home/frederik/Desktop/CERN-TECH/input/"
-                                       "odd-detray_geometry_detray.json"))),
+                                       "/home/frederik/Desktop/CERN-TECH/input/latest/"
+                                       "odd-detray_geometry_detray.json", "/home/frederik/Desktop/CERN-TECH/input/latest/odd-detray_material_detray.json", "/home/frederik/Desktop/CERN-TECH/input/latest/odd-detray_surface_grids_detray.json"))),
       field(Acts::CovfiePlugin::covfieField(*m_cfg.field)),
       converter{*m_cfg.trackingGeometry,
                 detector,

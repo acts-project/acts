@@ -28,38 +28,41 @@
 
 namespace ActsExamples::Traccc::Common::Conversion {
 
-template <typename map_t>
-SimSeed convertSeed(const traccc::seed& seed, const traccc::spacepoint_collection_types::const_view& spacePointsView, const map_t& spacePointMap){
-    const std::array<traccc::spacepoint, 3> spacePoints = seed.get_spacepoints(spacePointsView);
+template <typename T>
+SimSeed convertSeed(const traccc::seed& seed, T& spacePointConv){
     return SimSeed(
-        spacePointMap.at(spacePoints[0]),
-        spacePointMap.at(spacePoints[1]),
-        spacePointMap.at(spacePoints[2]),
+        spacePointConv.indexToValue(seed.spB_link),
+        spacePointConv.indexToValue(seed.spM_link),
+        spacePointConv.indexToValue(seed.spT_link),
         seed.z_vertex,
         seed.weight
     );
 }
 
-template <typename allocator_t, typename map_t>
-auto convertSeeds(std::vector<traccc::seed, allocator_t>& seeds, const traccc::spacepoint_collection_types::const_view& spacePointsView, const map_t& spacePointMap){
-    auto fn = [&spacePointsView, &spacePointMap](auto& seed){
-        return convertSeed(seed, spacePointsView, spacePointMap);
+template <typename T, typename allocator_t, typename output_container_t>
+auto convertSeeds(std::vector<traccc::seed, allocator_t>& seeds, T& spacePointConv, output_container_t& outputContainer){
+    auto fn = [&spacePointConv](auto& seed){
+        return convertSeed(seed, spacePointConv);
     };
-    return Util::convert<traccc::seed, SimSeed>(seeds, fn);
+    return Util::convert<SimSeed>(seeds, fn, outputContainer);
 }
 /*
-template <typename map_t>
-SimSeed convertSeed(SimSeed& seed, const map_t& spacePointMap){
-    const std::array<traccc::spacepoint, 3> spacePoints = seed.get_spacepoints(spacePointsView);
-    return traccc::seed{,,,seed.z(), seed.seedQuality()};
+template <typename T>
+traccc::seed convertSeed(SimSeed& seed, T& spacePointConv){
+    return traccc::seed{
+        spacePointConv.valueToIndex(*seed.sp()[0]),
+        spacePointConv.valueToIndex(*seed.sp()[1]),
+        spacePointConv.valueToIndex(*seed.sp()[2]),
+        seed.z(), 
+        seed.seedQuality()};
 }
 
-template <typename allocator_t, typename map_t>
-auto convertSeeds(SimSeedContainer& seeds, const map_t& spacePointMap){
-    auto fn = [&spacePointsView, &spacePointMap](auto& seed){
-        return convertSeed(seed, spacePointsView, spacePointMap);
+template <typename T>
+auto convertSeeds(SimSeedContainer& seeds, T& spacePointConv){
+    auto fn = [&spacePointConv](auto& seed){
+        return convertSeed(seed, spacePointConv);
     };
-    return Util::convert<traccc::seed, SimSeed>(seeds, fn);
+    return Util::convert<traccc::seed>(seeds, fn);
 }*/
 
 }  // namespace Acts::TracccPlugin

@@ -25,11 +25,9 @@ class TracccChainAlgorithm final : public Common::TracccChainAlgorithmBase {
   /// @param lvl is the logging level
   TracccChainAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
-  /// Run the algorithm.
-  ///
-  /// @param ctx is the algorithm context with event information
-  /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const override;
+  std::tuple<vecmem::vector<traccc::measurement>, vecmem::vector<traccc::spacepoint>, vecmem::vector<traccc::seed>> runDigitization(const vecmem::vector<traccc::cell>& cells, const vecmem::vector<traccc::cell_module>& modules, vecmem::host_memory_resource& mr) const override;
+
+  traccc::host_container<traccc::fitting_result<traccc::default_algebra>, traccc::track_state<traccc::default_algebra>> runReconstruction(const vecmem::vector<traccc::measurement> measurements, const vecmem::vector<traccc::spacepoint> spacepoints,  const vecmem::vector<traccc::seed> seeds, vecmem::host_memory_resource& mr) const override;
 
  private:
   using HostTypes =

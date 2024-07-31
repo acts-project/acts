@@ -36,52 +36,38 @@ ActsExamples::Traccc::Host::TracccChainAlgorithm::TracccChainAlgorithm(
       ambiguityResolutionAlgorithm(
           m_cfg.chainConfig->ambiguityResolutionConfig) {}
 
-ActsExamples::ProcessCode
-ActsExamples::Traccc::Host::TracccChainAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
-  vecmem::host_memory_resource mr;
 
+
+std::tuple<vecmem::vector<traccc::measurement>, vecmem::vector<traccc::spacepoint>, vecmem::vector<traccc::seed>> ActsExamples::Traccc::Host::TracccChainAlgorithm::runDigitization(const vecmem::vector<traccc::cell>& cells, const vecmem::vector<traccc::cell_module>& modules, vecmem::host_memory_resource& mr) const {
   typename HostTypes::ClusterizationAlgorithmType::output_type measurements{
       &mr};
   typename HostTypes::SpacepointFormationAlgorithmType::output_type spacepoints{
       &mr};
   typename HostTypes::SeedingAlgorithmType::output_type seeds{&mr};
-  typename HostTypes::TrackParametersEstimationAlgorithmType::output_type
-      params{&mr};
-  typename HostTypes::FindingAlgorithmType::output_type trackCandidates{&mr};
-  typename HostTypes::FittingAlgorithmType::output_type trackStates{&mr};
-  typename HostTypes::AmbiguityResolutionAlgorithmType::output_type
-      resolvedTrackStates{&mr};
-
-  const auto cellsMap = m_inputCells(ctx);
-
-  auto [cells, modules] = converter.convertCells(cellsMap, &mr);
 
   measurements = clusterizationAlgorithm(vecmem::get_data(cells),
                                          vecmem::get_data(modules));
-
+  
   ACTS_INFO("Ran the clusterization algorithm");
-
-  ACTS_INFO("Checking if measurements match with Acts...");
-
-  const auto actsMeasurements = m_inputMeasurements(ctx);
-  auto measurementMap = converter.createMeasurementMap(measurements, actsMeasurements);
-
-  ACTS_INFO("Measurements match (found a 1:1 mapping of indexes between traccc and Acts measurements)");
 
   spacepoints = spacepointFormationAlgorithm(vecmem::get_data(measurements),
                                              vecmem::get_data(modules));
 
-  auto [convertedSpacePoints, spacePointMap] = ActsExamples::Traccc::Common::Conversion::convertSpacePoints(spacepoints, measurementMap);
-  
   ACTS_INFO("Ran the spacepoint formation algorithm");
 
   seeds = seedingAlgorithm(spacepoints);
 
-  auto [convertedSeeds, seedMap] = ActsExamples::Traccc::Common::Conversion::convertSeeds(seeds, vecmem::get_data(spacepoints), spacePointMap);
-
   ACTS_INFO("Ran the seeding algorithm");
 
+  return std::make_tuple(std::move(measurements), std::move(spacepoints), std::move(seeds));
+}
+
+traccc::host_container<traccc::fitting_result<traccc::default_algebra>, traccc::track_state<traccc::default_algebra>> ActsExamples::Traccc::Host::TracccChainAlgorithm::runReconstruction(const vecmem::vector<traccc::measurement> measurements, const vecmem::vector<traccc::spacepoint> spacepoints,  const vecmem::vector<traccc::seed> seeds, vecmem::host_memory_resource& mr) const {
+  typename HostTypes::TrackParametersEstimationAlgorithmType::output_type
+    params{&mr};
+  typename HostTypes::FindingAlgorithmType::output_type trackCandidates{&mr};
+  typename HostTypes::FittingAlgorithmType::output_type tracks{&mr};
+  
   const typename FieldType::view_t fieldView(field);
 
   // Traccc expects a field vector of a constant field.
@@ -94,12 +80,12 @@ ActsExamples::Traccc::Host::TracccChainAlgorithm::execute(
 
   ACTS_INFO("Ran the finding algorithm");
 
-  trackStates = fittingAlgorithm(detector, field, trackCandidates);
+  tracks = fittingAlgorithm(detector, field, trackCandidates);
 
   ACTS_INFO("Ran the fitting algorithm");
 
   if (m_cfg.enableAmbiguityResolution){
-    trackStates = ambiguityResolutionAlgorithm(trackStates);
+    tracks = ambiguityResolutionAlgorithm(tracks);
 
     ACTS_INFO("Ran the ambiguity resolution algorithm");
   }
@@ -107,10 +93,6 @@ ActsExamples::Traccc::Host::TracccChainAlgorithm::execute(
     ACTS_INFO("Skipped the ambiguity resolution algorithm");
   }
 
-  auto result = converter.convertTracks(trackStates, measurementMap);
-
-  m_outputSeeds(ctx, std::move(convertedSeeds));
-  m_outputSpacePoints(ctx, std::move(convertedSpacePoints));
-  m_outputTracks(ctx, std::move(result));
-  return ActsExamples::ProcessCode::SUCCESS;
+  return tracks;
 }
+

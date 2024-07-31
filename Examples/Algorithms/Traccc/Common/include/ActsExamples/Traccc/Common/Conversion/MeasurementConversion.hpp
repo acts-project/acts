@@ -20,6 +20,7 @@
 
 // Acts Examples include(s)
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/Traccc/Common/Util/MapUtil.hpp"
 
 // Detray include(s)
 #include "detray/core/detector.hpp"
@@ -165,10 +166,10 @@ inline Acts::ActsVector<2> getVariance(
 /// @return A vector of Acts bound variant measurements.
 /// @note The type IndexSourceLink is used for the measurements' source links.
 template <typename detector_t, typename allocator_t>
-inline auto createActsMeasurements(
+inline auto convertMeasurements(
     const detector_t& detector,
-    const std::vector<traccc::measurement, allocator_t>& measurements) {
-  std::vector<ActsExamples::BoundVariantMeasurement> measurementContainer;
+    const std::vector<traccc::measurement, allocator_t>& measurements,
+    std::vector<ActsExamples::BoundVariantMeasurement>& measurementContainer) {
   for (const traccc::measurement& m : measurements) {
     Acts::GeometryIdentifier moduleGeoId(
         detector.surface(m.surface_link).source);
@@ -177,7 +178,13 @@ inline auto createActsMeasurements(
     measurementContainer.push_back(
         boundVariantMeasurement(m, Acts::SourceLink{idxSourceLink}));
   }
-  return measurementContainer;
-}
 
+  Util::ConversionData conv{
+    &measurements, 
+    Util::create1To1(measurements), 
+    &measurementContainer
+  };
+
+  return conv;
+}
 }  // namespace ActsExamples::Traccc::Common::Conversion

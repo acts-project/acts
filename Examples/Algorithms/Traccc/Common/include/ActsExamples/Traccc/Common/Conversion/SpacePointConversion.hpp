@@ -29,8 +29,8 @@
 
 namespace ActsExamples::Traccc::Common::Conversion {
 
-template <typename map_t>
-SimSpacePoint convertSpacePoint(traccc::spacepoint& spacePoint, const map_t& measurementMap){
+template <typename T>
+SimSpacePoint convertSpacePoint(traccc::spacepoint& spacePoint, T& measurementConv){
     using Scalar = Acts::ActsScalar;
     const Acts::Vector3 globalPos(
         spacePoint.x(), 
@@ -42,9 +42,10 @@ SimSpacePoint convertSpacePoint(traccc::spacepoint& spacePoint, const map_t& mea
     const Scalar varZ = 0;
     const std::optional<Scalar> varT = std::nullopt;
     const Acts::SourceLink sourceLink = std::visit(
-        [](auto m) {return m.sourceLink();},
-        measurementMap.at(spacePoint.meas)
+        [](auto& m) {return m.sourceLink();},
+        measurementConv.valueToValue(spacePoint.meas)
     );
+
     boost::container::static_vector<Acts::SourceLink, 2> sourceLinks = {std::move(sourceLink)};
 
     return SimSpacePoint(
@@ -53,16 +54,38 @@ SimSpacePoint convertSpacePoint(traccc::spacepoint& spacePoint, const map_t& mea
         varRho,
         varZ,
         varT,
-        sourceLinks
+        std::move(sourceLinks)
     );
 }
 
-template <typename allocator_t, typename map_t>
-auto convertSpacePoints(std::vector<traccc::spacepoint, allocator_t>& spacePoints, const map_t& measurementMap){
-    auto fn = [&measurementMap](traccc::spacepoint& spacePoint){
-        return convertSpacePoint(spacePoint, measurementMap);
+template <typename T, typename allocator_t, typename output_container_t>
+auto convertSpacePoints(std::vector<traccc::spacepoint, allocator_t>& spacePoints, T& measurementConv, output_container_t& outputContainer){
+    auto fn = [&measurementConv](traccc::spacepoint& spacePoint){
+        return convertSpacePoint(spacePoint, measurementConv);
     };
-    return Util::convert<traccc::spacepoint, SimSpacePoint>(spacePoints, fn);
+    return Util::convert<SimSpacePoint>(spacePoints, fn, outputContainer);
 }
+/*
+template <typename T>
+traccc::spacepoint convertSpacePoint(SimSpacePoint spacePoint,T& measurementConv){
+    using Scalar = typename traccc::point3::value_type;
+    auto idx = spacePoint.sourceLinks()[0].get<ActsExamples::IndexSourceLink>().index();
+    return traccc::spacepoint{
+        traccc::point3{
+            static_cast<Scalar>(spacePoint.x()), 
+            static_cast<Scalar>(spacePoint.y()), 
+            static_cast<Scalar>(spacePoint.z())
+            },
+        measurementConv.indexToValue(idx)
+    };
+}
+
+template <typename T>
+auto convertSpacePoints(SimSpacePointContainer& spacePoints, T& measurementConv){
+    auto fn = [&measurementConv](SimSpacePoint& spacePoint){
+        return convertSpacePoint(spacePoint, measurementConv);
+    };
+    return Util::convert<traccc::spacepoint>(spacePoints, fn);
+}*/
 
 }  // namespace Acts::TracccPlugin

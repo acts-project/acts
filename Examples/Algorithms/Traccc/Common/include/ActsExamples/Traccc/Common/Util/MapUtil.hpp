@@ -22,29 +22,65 @@
 
 namespace ActsExamples::Traccc::Common::Util {
 
-template <typename K, typename V, typename hash = std::hash<K>, typename equal_to = std::equal_to<K>>
-struct ReferenceMap{
+template <typename input_container_t, typename output_container_t, typename hash = std::hash<typename input_container_t::value_type>, typename equal_to = std::equal_to<typename input_container_t::value_type>>
+struct ConversionData{
+    using K = typename input_container_t::value_type;
+    using V = typename output_container_t::value_type;
 
-    template<typename T1, typename T2>
-    ReferenceMap(T1& keys, T2& values){
-        for (std::size_t idx = 0; idx < keys.size(); idx++){
-            map.emplace(std::piecewise_construct, std::forward_as_tuple(keys[idx]), std::forward_as_tuple(&values[idx]));
-        }
+    input_container_t* inputContainer;
+    std::unordered_map<K, std::size_t, hash, equal_to> keyToIdxMap;
+    output_container_t* outputContainer;
+
+    std::size_t valueToIndex(K& inputValue) const{
+        return keyToIdxMap.at(inputValue);
     }
-    
-    V& at(const K& k) const {
-        return *map.at(k);
+
+    std::size_t indexToIndex(std::size_t index) const{
+        return valueToIndex(inputContainer->at(index));
     }
 
-    std::unordered_map<K, V*, hash, equal_to> map;
+    auto& indexToValue(std::size_t index) const{
+        return outputContainer->at(indexToIndex(index));
+    }
 
+    auto& valueToValue(K& inputValue) const{
+        return outputContainer->at(valueToIndex(inputValue));
+    }
 };
 
-template <typename K, typename V, typename hash = std::hash<K>, typename equal_to = std::equal_to<K>, typename T, typename fn_t>
-auto convert(T& keys, fn_t fn){
-    std::vector<V> values;
-    std::transform(keys.begin(), keys.end(), std::back_inserter(values), fn);
-    return std::make_tuple(std::move(values), ReferenceMap<K, V, Hasher<K>, Equals<K>>(keys, values));
+template <typename input_container_t, typename hash = std::hash<typename input_container_t::value_type>, typename equal_to = std::equal_to<typename input_container_t::value_type>>
+auto create1To1(input_container_t& inputs){
+    using K = typename input_container_t::value_type;
+    std::unordered_map<K, std::size_t, Hasher<K>, Equals<K>> keyToIdxMap;
+    for (std::size_t idx = 0; idx < inputs.size(); idx++){
+        keyToIdxMap.emplace(std::piecewise_construct, std::forward_as_tuple(inputs[idx]), std::forward_as_tuple(idx));
+    }
+    return keyToIdxMap;
+}
+
+template <typename input_container_t, typename output_container_t, typename hash = std::hash<typename input_container_t::value_type>, typename equal_to = std::equal_to<typename input_container_t::value_type>, template <typename, typename> class index_map_t>
+auto createFromIndexMap(input_container_t& inputs, output_container_t& outputs, index_map_t<std::size_t, std::size_t>& indexMap){
+    using K = typename input_container_t::value_type;
+    std::unordered_map<K, std::size_t, Hasher<K>, Equals<K>> keyToIdxMap;
+    for (std::size_t inputIdx = 0; inputIdx < inputs.size(); inputIdx++){
+        auto outputIdx = indexMap.at(inputIdx);
+        keyToIdxMap.emplace(std::piecewise_construct, std::forward_as_tuple(inputs[inputIdx]), std::forward_as_tuple(outputIdx));
+    }
+    return ConversionData{&inputs, std::move(keyToIdxMap), &outputs};
+}
+
+template <typename V, typename input_container_t, typename output_container_t, typename hash = std::hash<typename input_container_t::value_type>, typename equal_to = std::equal_to<typename input_container_t::value_type>, typename fn_t>
+auto convert(input_container_t& inputs, fn_t fn, output_container_t& outputs){
+    using K = typename input_container_t::value_type;
+    std::transform(inputs.begin(), inputs.end(), std::back_inserter(outputs), fn);
+
+    ConversionData conv{
+        &inputs,
+        create1To1<input_container_t, hash, equal_to>(inputs),
+        &outputs
+    };
+
+    return conv;
 }
 
 }
