@@ -30,6 +30,6 @@ with tempfile.TemporaryDirectory() as temp:
     s.run()
     del s
 
-    perf_file = tp / "performance_kf.root"
+    perf_file = tp / "performance_track_fitter.root"
     assert perf_file.exists(), "Performance file not found"
-    shutil.copy(perf_file, setup.outdir / "performance_kf.root")
+    shutil.copy(perf_file, setup.outdir / "performance_track_fitter.root")

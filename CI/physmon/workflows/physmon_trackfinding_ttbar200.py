@@ -166,8 +166,6 @@ with tempfile.TemporaryDirectory() as temp:
         )
 
     for file in [
-        "pythia8_particles.root",
-        "pythia8_vertices.root",
         "performance_seeding.root",
         "performance_ckf.root",
         "tracksummary_ckf.root",

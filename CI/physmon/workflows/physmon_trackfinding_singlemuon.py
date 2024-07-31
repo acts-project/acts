@@ -88,7 +88,7 @@ def run_ckf_tracking(label, seeding):
             setup.field,
             TruthSeedRanges(pt=(500 * u.MeV, None), nHits=(9, None)),
             ParticleSmearingSigmas(
-                ptRel=0.01
+                pRel=0.01
             ),  # only used by SeedingAlgorithm.TruthSmeared
             SeedFinderConfigArg(
                 r=(33 * u.mm, 200 * u.mm),
@@ -112,7 +112,6 @@ def run_ckf_tracking(label, seeding):
                 0.1 * u.e / u.GeV,
                 1 * u.ns,
             ],
-            initialSigmaPtRel=0.01,
             initialVarInflation=[1.0] * 6,
             geoSelectionConfigFile=setup.geoSel,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
@@ -142,7 +141,7 @@ def run_ckf_tracking(label, seeding):
 
         for file in (
             (
-                ["performance_seeding"] if seeding != SeedingAlgorithm.TruthSmeared else []
+                ["performance_seeding.root"] if seeding != SeedingAlgorithm.TruthSmeared else []
             ) +
             [
                 "performance_ckf.root",
@@ -150,7 +149,7 @@ def run_ckf_tracking(label, seeding):
             ]
         ):
             perf_file = tp / file
-            assert perf_file.exists(), "Performance file not found"
+            assert perf_file.exists(), f"Performance file not found {perf_file}"
             (setup.outdir / label).mkdir(parents=True, exist_ok=True)
             shutil.copy(perf_file, setup.outdir / label / file)
 
@@ -161,4 +160,4 @@ for label, seeding in [
     ("seeded", SeedingAlgorithm.Default),
     ("orthogonal", SeedingAlgorithm.Orthogonal),
 ]:
-    run_ckf_tracking(label)
+    run_ckf_tracking(label, seeding)
