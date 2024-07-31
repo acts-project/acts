@@ -126,31 +126,27 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
                              << params[Acts::eBoundQOverP]);
 
       // build the track covariance matrix using the smearing sigmas
-      std::optional<Acts::BoundSquareMatrix> cov = std::nullopt;
+      Acts::BoundSquareMatrix cov = Acts::BoundSquareMatrix::Zero();
       if (m_cfg.initialSigmas) {
-        cov = Acts::BoundSquareMatrix::Zero();
-        Acts::BoundSquareMatrix& covRef = cov.value();
         // use the initial sigmas if set
         for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
-          covRef(i, i) = m_cfg.initialVarInflation[i] *
-                         (*m_cfg.initialSigmas)[i] * (*m_cfg.initialSigmas)[i];
+          cov(i, i) = m_cfg.initialVarInflation[i] * (*m_cfg.initialSigmas)[i] *
+                      (*m_cfg.initialSigmas)[i];
         }
-      } else if (m_cfg.addCovariances) {
-        cov = Acts::BoundSquareMatrix::Zero();
-        Acts::BoundSquareMatrix& covRef = cov.value();
+      } else {
         // otherwise use the smearing sigmas
-        covRef(Acts::eBoundLoc0, Acts::eBoundLoc0) =
+        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) =
             m_cfg.initialVarInflation[Acts::eBoundLoc0] * sigmaD0 * sigmaD0;
-        covRef(Acts::eBoundLoc1, Acts::eBoundLoc1) =
+        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) =
             m_cfg.initialVarInflation[Acts::eBoundLoc1] * sigmaZ0 * sigmaZ0;
-        covRef(Acts::eBoundTime, Acts::eBoundTime) =
+        cov(Acts::eBoundTime, Acts::eBoundTime) =
             m_cfg.initialVarInflation[Acts::eBoundTime] * sigmaT0 * sigmaT0;
-        covRef(Acts::eBoundPhi, Acts::eBoundPhi) =
+        cov(Acts::eBoundPhi, Acts::eBoundPhi) =
             m_cfg.initialVarInflation[Acts::eBoundPhi] * sigmaPhi * sigmaPhi;
-        covRef(Acts::eBoundTheta, Acts::eBoundTheta) =
+        cov(Acts::eBoundTheta, Acts::eBoundTheta) =
             m_cfg.initialVarInflation[Acts::eBoundTheta] * sigmaTheta *
             sigmaTheta;
-        covRef(Acts::eBoundQOverP, Acts::eBoundQOverP) =
+        cov(Acts::eBoundQOverP, Acts::eBoundQOverP) =
             m_cfg.initialVarInflation[Acts::eBoundQOverP] * sigmaQOverP *
             sigmaQOverP;
       }

@@ -42,7 +42,6 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         sigmaPhi=0.0,
         sigmaTheta=0.0,
         sigmaPRel=0.0,
-        addCovariances=False,
     )
     s.addAlgorithm(trackParametersGenerator)
 
@@ -57,7 +56,8 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
     propagationAlgorithm = acts.examples.PropagationAlgorithm(
         propagatorImpl=propagator,
         level=acts.logging.INFO,
-        sterileLogger=False,
+        sterileLogger=True,
+        covarianceTransport=False,
         inputTrackParameters="start_parameters",
         outputPropagationSteps="propagation_steps",
     )

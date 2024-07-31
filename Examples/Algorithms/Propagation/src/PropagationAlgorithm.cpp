@@ -35,14 +35,22 @@ ProcessCode PropagationAlgorithm::execute(
     recordedMaterialTracks.reserve(inputTrackParameters.size());
   }
 
-  for (const auto [it, trackParameters] :
-       Acts::enumerate(inputTrackParameters)) {
-    PropagationOutput pOutput = m_cfg.propagatorImpl->execute(
-        context, m_cfg, logger(), trackParameters);
+  for (const auto [it, parameters] : Acts::enumerate(inputTrackParameters)) {
+    // In case covariance transport is not desired, it has to be stripped
+    // off the input parameters
+    PropagationOutput pOutput =
+        m_cfg.covarianceTransport
+            ? m_cfg.propagatorImpl->execute(context, m_cfg, logger(),
+                                            parameters)
+            : m_cfg.propagatorImpl->execute(
+                  context, m_cfg, logger(),
+                  TrackParameters(parameters.referenceSurface().getSharedPtr(),
+                                  parameters.parameters(), std::nullopt,
+                                  parameters.particleHypothesis()));
 
     // Position / momentum for the output writing
-    Acts::Vector3 position = trackParameters.position(context.geoContext);
-    Acts::Vector3 direction = trackParameters.direction();
+    Acts::Vector3 position = parameters.position(context.geoContext);
+    Acts::Vector3 direction = parameters.direction();
 
     // Record the propagator steps
     propagationSteps.push_back(std::move(pOutput.first));
