@@ -112,8 +112,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
 
       ACTS_VERBOSE("Smearing particle (pos, time, phi, theta, q/p):");
       ACTS_VERBOSE(" from: " << particle.position().transpose() << ", " << time
-                             << ", " << phi << ", " << theta << ", "
-                             << (q != 0 ? q / p : 1 / p));
+                             << ", " << phi << ", " << theta << ", " << qOverP);
       ACTS_VERBOSE("   to: " << perigee
                                     ->localToGlobal(
                                         ctx.geoContext,
