@@ -49,7 +49,8 @@ Acts::HoughTransformUtils::HoughCell<identifier_t>::getHits() const {
 template <class identifier_t>
 std::span<const unsigned, std::dynamic_extent>
 Acts::HoughTransformUtils::HoughCell<identifier_t>::getLayers() const {
-  std::span<const unsigned, std::dynamic_extent> layers(m_layers.begin(), m_ilayer);
+  std::span<const unsigned, std::dynamic_extent> layers(m_layers.begin(),
+                                                        m_ilayer);
 
   return layers;
 }
@@ -397,7 +398,8 @@ void Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<identifier_t>::
                             nextCand[1] + step.second};
     // if we are moving out of the bounds the dynamic array will throw exception
     if (newCandxy[0] >= houghPlane.nBinsX() ||
-        newCandxy[1] >= houghPlane.nBinsY()) {
+        newCandxy[1] >= houghPlane.nBinsY() || newCandxy[0] < 0 ||
+        newCandxy[1] < 0) {
       continue;
     }
     std::size_t newCand = houghPlane.globalBin(newCandxy[0], newCandxy[1]);
