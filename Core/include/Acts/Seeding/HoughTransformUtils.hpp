@@ -21,8 +21,6 @@
 #include <span>
 #include <unordered_set>
 
-#include "HoughVectors.hpp"
-
 namespace Acts::HoughTransformUtils {
 
 /// this type is responsible for encoding the parameters of our hough space
