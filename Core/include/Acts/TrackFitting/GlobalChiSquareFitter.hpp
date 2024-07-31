@@ -805,7 +805,7 @@ class Gx2Fitter {
       GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
 
       if (!gx2fResult.result.ok()) {
-        ACTS_ERROR("GlobalChiSquareFitter failed in actor: "
+        ACTS_WARNING("GlobalChiSquareFitter failed in actor: "
                    << gx2fResult.result.error() << ", "
                    << gx2fResult.result.error().message());
         return gx2fResult.result.error();
