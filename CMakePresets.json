@@ -77,6 +77,30 @@
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
                 "ACTS_BUILD_PLUGIN_FPEMON": "ON"
             }
+        },
+        {
+            "name": "gitlab-ci-clangtidy",
+            "displayName": "GitLab-CI",
+            "inherits": "ci-common",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ACTS_RUN_CLANG_TIDY": "ON",
+                "ACTS_BUILD_ODD": "OFF"
+            }
+        },
+        {
+            "name": "gitlab-ci-exatrkx",
+            "displayName": "GitLab-CI",
+            "inherits": "ci-common",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ACTS_RUN_CLANG_TIDY": "ON",
+                "ACTS_BUILD_ODD": "OFF",
+                "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
+                "ACTS_EXATRKX_ENABLE_TORCH": "ON",
+                "ACTS_EXATRKX_ENABLE_ONNX": "ON",
+                "ACTS_EXATRKX_ENABLE_CUDA": "ON"
+            }
         }
     ]
 }
