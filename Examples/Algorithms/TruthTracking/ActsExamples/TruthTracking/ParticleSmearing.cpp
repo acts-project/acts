@@ -76,7 +76,6 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       const auto theta = Acts::VectorHelpers::theta(particle.direction());
       const auto pt = particle.transverseMomentum();
       const auto p = particle.absoluteMomentum();
-      const auto q = particle.charge();
       const auto qOverP = particle.qOverP();
       const auto particleHypothesis =
           m_cfg.particleHypothesis.value_or(particle.hypothesis());
