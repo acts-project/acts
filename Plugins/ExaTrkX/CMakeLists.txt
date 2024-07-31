@@ -28,6 +28,7 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
     src/BoostTrackBuilding.cpp
     src/TorchTruthGraphMetricsHook.cpp
     src/TorchGraphStoreHook.cpp
+    src/SeedingTrackBuilder.cpp
   )
 endif()
 

@@ -15,6 +15,7 @@
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
+#include "Acts/Plugins/ExaTrkX/SeedingTrackBuilder.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
@@ -106,9 +107,28 @@ void addExaTrkXTrackFinding(Context &ctx) {
                    mex, "BoostTrackBuilding")
                    .def(py::init([](Logging::Level lvl) {
                           return std::make_shared<Alg>(
-                              getDefaultLogger("EdgeClassifier", lvl));
+                              getDefaultLogger("TrackBuilding", lvl));
                         }),
                         py::arg("level"));
+  }
+  {
+    using Alg = Acts::SeedingTrackBuilder;
+
+    auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
+                   mex, "SeedingTrackBuilder")
+                   .def(py::init([](const Config &c, Logging::Level lvl) {
+                          return std::make_shared<Alg>(c, getDefaultLogger("TrackBuilding", lvl));
+                        }),
+                        py::arg("level"));
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(rColumn);
+    ACTS_PYTHON_MEMBER(zColumn);
+    ACTS_PYTHON_MEMBER(baseScoreCut);
+    ACTS_PYTHON_MEMBER(scoreCutRegions);
+    ACTS_PYTHON_MEMBER(minSeedSize);
+    ACTS_PYTHON_STRUCT_END();
   }
 #endif
 

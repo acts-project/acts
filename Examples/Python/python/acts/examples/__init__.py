@@ -43,6 +43,7 @@ for module in [
     "OnnxMetricLearning",
     "TorchEdgeClassifier",
     "OnnxEdgeClassifier",
+    "SeedingTrackBuilder",
 ]:
     if hasattr(ActsPythonBindings._examples, module):
         _patchKwargsConstructor(getattr(ActsPythonBindings._examples, module))
