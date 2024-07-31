@@ -388,6 +388,7 @@ class IslandsAroundMax {
   /// @brief method to incrementally grow an island by adding adjacent cells
   /// Performs a breadth-first search for neighbours above threshold and adds
   /// them to candidate. Stops when no suitable neighbours are left.
+  /// @param houghPlane: The current hough Plane we are looking for maxima
   /// @param inMaximum: List of cells found in the island. Incrementally populated by calls to the method
   /// @param toExplore: List of the global Bin indices of neighbour cell candidates left to explore. Method will not do anything once this is empty
   /// @param threshold: the threshold to apply to check if a cell should be added to an island
