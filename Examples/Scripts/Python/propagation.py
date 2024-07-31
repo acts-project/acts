@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-
 import acts
 import acts.examples
 from acts.examples import GenericDetector, AlignedDetector
@@ -65,13 +64,16 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
     )
     s.addAlgorithm(propagationAlgorithm)
 
-    # s.addWriter(
-    #    acts.examples.ObjPropagationStepsWriter(
-    #        level=acts.logging.INFO,
-    #        collection="propagation_steps",
-    #        outputDir=outputDir,
-    #    )
-    # )
+    if not os.path.exists(outputDir + "/obj"):
+        os.makedirs(outputDir + "/obj")
+
+    s.addWriter(
+        acts.examples.ObjPropagationStepsWriter(
+            level=acts.logging.INFO,
+            collection="propagation_steps",
+            outputDir=outputDir + "/obj",
+        )
+    )
 
     if not propagationAlgorithm.config.sterileLogger:
         s.addWriter(

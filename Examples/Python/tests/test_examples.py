@@ -836,7 +836,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         decorators,
         field,
         outputDir=str(tmp_path),
-        outputName="propagation-volume-material",
+        outputName="propagation_volume_material",
         s=s,
     )
 

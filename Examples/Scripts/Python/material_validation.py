@@ -16,7 +16,7 @@ def runMaterialValidation(
     decorators,
     field,
     outputDir,
-    outputName="propagation_material",
+    outputName="propagation-material",
     s=None,
 ):
     # Create a sequencer
@@ -62,7 +62,7 @@ def runMaterialValidation(
         recordMaterialInteractions=True,
         inputTrackParameters="start_parameters",
         outputPropagationSteps="propagation_steps",
-        outputMaterialTracks="material_tracks",
+        outputMaterialTracks="material-tracks",
     )
 
     s.addAlgorithm(alg)
@@ -98,7 +98,7 @@ if "__main__" == __name__:
         "-o",
         "--output",
         type=str,
-        default="propagation_material",
+        default="propagation-material",
         help="Output file name",
     )
 
