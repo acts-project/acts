@@ -1108,6 +1108,7 @@ def addKalmanTracks(
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="kf_track_particle_matching",
         outputParticleTrackMatching="kf_particle_track_matching",
+        doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
@@ -1159,6 +1160,7 @@ def addTruthTrackingGsf(
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="gsf_track_particle_matching",
         outputParticleTrackMatching="gsf_particle_track_matching",
+        doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
@@ -1306,20 +1308,21 @@ def addCKFTracks(
     s.addAlgorithm(trackFinder)
     s.addWhiteboardAlias("tracks", trackFinder.config.outputTracks)
 
-    matcher = acts.examples.TrackTruthMatcher(
+    matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=trackFinder.config.outputTracks,
         inputParticles="particles_selected",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="ckf_track_particle_matching",
         outputParticleTrackMatching="ckf_particle_track_matching",
+        doubleMatching=True,
     )
-    s.addAlgorithm(matcher)
+    s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
-        "track_particle_matching", matcher.config.outputTrackParticleMatching
+        "track_particle_matching", matchAlg.config.outputTrackParticleMatching
     )
     s.addWhiteboardAlias(
-        "particle_track_matching", matcher.config.outputParticleTrackMatching
+        "particle_track_matching", matchAlg.config.outputParticleTrackMatching
     )
 
     addTrackWriters(
@@ -1386,6 +1389,7 @@ def addGx2fTracks(
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="gx2f_track_particle_matching",
         outputParticleTrackMatching="gx2f_particle_track_matching",
+        doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
@@ -1625,20 +1629,23 @@ def addExaTrkX(
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("prototracks", findingAlg.config.outputProtoTracks)
 
-    matchAlg = acts.examples.ProtoTrackTruthMatcher(
+    # TODO convert prototracks to tracks
+
+    matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputProtoTracks=findingAlg.config.outputProtoTracks,
         inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
-        outputProtoTrackParticleMatching="exatrkx_prototrack_particle_matching",
-        outputParticleProtoTrackMatching="exatrkx_particle_prototrack_matching",
+        outputTrackParticleMatching="exatrkx_track_particle_matching",
+        outputParticleTrackMatching="exatrkx_particle_track_matching",
+        doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
-        "prototrack_particle_matching", matchAlg.config.outputProtoTrackParticleMatching
+        "track_particle_matching", matchAlg.config.outputTrackParticleMatching
     )
     s.addWhiteboardAlias(
-        "particle_prototrack_matching", matchAlg.config.outputParticleProtoTrackMatching
+        "particle_track_matching", matchAlg.config.outputParticleTrackMatching
     )
 
     # Write truth track finding / seeding performance
@@ -1650,7 +1657,7 @@ def addExaTrkX(
                 # the original selected particles after digitization
                 inputParticles="particles_initial",
                 inputMeasurementParticlesMap="measurement_particles_map",
-                inputProtoTrackParticleMatching=matchAlg.config.outputProtoTrackParticleMatching,
+                inputTrackParticleMatching=matchAlg.config.outputTrackParticleMatching,
                 filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
             )
         )
@@ -1695,6 +1702,7 @@ def addAmbiguityResolution(
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="ambi_track_particle_matching",
         outputParticleTrackMatching="ambi_particle_track_matching",
+        doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
