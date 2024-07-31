@@ -296,19 +296,19 @@ function simulation() {
     config="CI/physmon/config/simulation.yml"
 
     run Examples/Scripts/generic_plotter.py \
-        $outdir/particles_${suffix}.root \
+        $outdir/simulation/particles_${suffix}.root \
         particles \
-        $outdir/particles_${suffix}_hist.root \
+        $outdir/simulation/particles_${suffix}_hist.root \
         --silent \
         --config $config
     ec=$(($ec | $?))
 
     # remove ntuple file because it's large
-    rm $outdir/particles_${suffix}.root
+    rm $outdir/simulation/particles_${suffix}.root
 
     run_histcmp \
-        $outdir/particles_${suffix}_hist.root \
-        $refdir/particles_${suffix}_hist.root \
+        $outdir/simulation/particles_${suffix}_hist.root \
+        $refdir/simulation/particles_${suffix}_hist.root \
         "Particles ${suffix}" \
         particles_${suffix}
 }
