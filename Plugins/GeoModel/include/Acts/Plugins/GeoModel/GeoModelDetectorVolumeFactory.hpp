@@ -40,10 +40,9 @@ class GeoModelDetectorVolumeFactory {
 
   void convertSensitive(PVConstLink geoPV, const Acts::Transform3 &transform, std::vector<GeoModelSensitiveSurface> &sensitives);
 
-std::vector<GeoChildNodeWithTrf> findAllSubVolumes(PVConstLink geoPV);
-//std::vector<GeoChildNodeWithTrf> findAllSubVolumes(PVConstLink geoPV, std::function<bool(std::string, PVConstLink)> matchFunc);
 
-bool sensitiveMatch(PVConstLink vol);
+std::vector<GeoChildNodeWithTrf> findAllSubVolumes(PVConstLink geoPV, std::function<bool(std::string, PVConstLink)> matchFunc);
+
 
  private:
   std::unique_ptr<const Logger> m_logger;
