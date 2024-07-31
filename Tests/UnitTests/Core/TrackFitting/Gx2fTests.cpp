@@ -270,6 +270,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetectorYdirection(
     cfg.envelopeX = {-0.1_mm, 0.1_mm};
     cfg.envelopeY = {-0.1_mm, 0.1_mm};
     cfg.envelopeZ = {-0.1_mm, 0.1_mm};
+    cfg.binningDimension = Acts::BinningValue::binY;
     layerConfig.push_back(cfg);
   }
 
@@ -280,6 +281,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetectorYdirection(
   volumeConfig.position = {0., volumeConfig.length.y() / 2, 0.};
   volumeConfig.layerCfg = layerConfig;
   volumeConfig.name = "TestVolume";
+  volumeConfig.binningDimension = Acts::BinningValue::binY;
 
   // This basically adds an empty volume in y-direction
   // Second inner Volume - Build volume configuration
@@ -289,6 +291,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetectorYdirection(
                           2 * halfSizeSurface};;
   volumeConfig2.position = {volumeConfig2.length.x(), volumeConfig2.length.y() / 2, 0.};
   volumeConfig2.name = "AdditionalVolume";
+  volumeConfig2.binningDimension = Acts::BinningValue::binY;
 
   // Outer volume - Build TrackingGeometry configuration and fill
   CuboidVolumeBuilder::Config config;
