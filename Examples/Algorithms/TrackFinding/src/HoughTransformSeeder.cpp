@@ -185,7 +185,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
           std::vector<std::vector<std::vector<Index>>> hitIndicesAll(
               m_cfg.nLayers);  // [layer,vector<Index]
           std::vector<std::size_t> nHitsPerLayer(m_cfg.nLayers);
-          for (auto measurementIndex : m_houghHist(y, x).second) {
+          for (auto measurementIndex : m_houghHist.get(y, x).second) {
             HoughMeasurementStruct* meas =
                 houghMeasurementStructs[measurementIndex].get();
             hitIndicesAll[meas->layer].push_back(meas->indices);
@@ -244,8 +244,8 @@ ActsExamples::HoughTransformSeeder::createLayerHoughHist(unsigned layer,
       // Update the houghHist
       for (unsigned y = y_bin_min; y < y_bin_max; y++) {
         for (unsigned x = xBins.first; x < xBins.second; x++) {
-          houghHist(y, x).first++;
-          houghHist(y, x).second.insert(index);
+          houghHist.get(y, x).first++;
+          houghHist.get(y, x).second.insert(index);
         }
       }
     }
@@ -263,10 +263,10 @@ ActsExamples::HoughHist ActsExamples::HoughTransformSeeder::createHoughHist(
     HoughHist layerHoughHist = createLayerHoughHist(i, subregion);
     for (unsigned x = 0; x < m_cfg.houghHistSize_x; ++x) {
       for (unsigned y = 0; y < m_cfg.houghHistSize_y; ++y) {
-        if (layerHoughHist(y, x).first > 0) {
-          houghHist(y, x).first++;
-          houghHist(y, x).second.insert(layerHoughHist(y, x).second.begin(),
-                                        layerHoughHist(y, x).second.end());
+        if (layerHoughHist.get(y, x).first > 0) {
+          houghHist.get(y, x).first++;
+          houghHist.get(y, x).second.insert(layerHoughHist.get(y, x).second.begin(),
+                                        layerHoughHist.get(y, x).second.end());
         }
       }
     }
@@ -279,11 +279,11 @@ bool ActsExamples::HoughTransformSeeder::passThreshold(
     HoughHist const& houghHist, unsigned x, unsigned y) const {
   // Pass window threshold
   unsigned width = m_cfg.threshold.size() / 2;
-  if (x < width || (houghHist.size(1) - x) < width) {
+  if (x < width || m_cfg.houghHistSize_x - x < width) {
     return false;
   }
   for (unsigned i = 0; i < m_cfg.threshold.size(); i++) {
-    if (houghHist(y, x - width + i).first < m_cfg.threshold[i]) {
+    if (houghHist.get(y, x - width + i).first < m_cfg.threshold[i]) {
       return false;
     }
   }
@@ -297,17 +297,17 @@ bool ActsExamples::HoughTransformSeeder::passThreshold(
         if (i == 0 && j == 0) {
           continue;
         }
-        if (y + j < houghHist.size(0) && x + i < houghHist.size(1)) {
-          if (houghHist(y + j, x + i).first > houghHist(y, x).first) {
+        if (y + j <  m_cfg.houghHistSize_y && x + i <  m_cfg.houghHistSize_x) {
+          if (houghHist.get(y + j, x + i).first > houghHist.get(y, x).first) {
             return false;
           }
-          if (houghHist(y + j, x + i).first == houghHist(y, x).first) {
-            if (houghHist(y + j, x + i).second.size() >
-                houghHist(y, x).second.size()) {
+          if (houghHist.get(y + j, x + i).first == houghHist.get(y, x).first) {
+            if (houghHist.get(y + j, x + i).second.size() >
+                houghHist.get(y, x).second.size()) {
               return false;
             }
-            if (houghHist(y + j, x + i).second.size() ==
-                    houghHist(y, x).second.size() &&
+            if (houghHist.get(y + j, x + i).second.size() ==
+                    houghHist.get(y, x).second.size() &&
                 j <= 0 && i <= 0) {
               return false;  // favor bottom-left (low phi, low neg q/pt)
             }

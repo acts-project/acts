@@ -82,7 +82,8 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/TrackFinding/HoughVectors.hpp"
+#include "Acts/Utilities/DynamicArray.hpp"
+//#include "ActsExamples/TrackFinding/HoughVectors.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -129,7 +130,7 @@ namespace ActsExamples {
 /// coordinate) For now, what is stored is actually the index of the object in
 /// the vectors, so we can get the Index layer
 using HoughHist =
-    MultiIndexedVector2D<std::pair<int, std::unordered_set<unsigned>>>;
+   Acts::DynamicArray<std::pair<int, std::unordered_set<unsigned>>,2>;
 
 enum HoughHitType { SP = 0, MEASUREMENT = 1 };
 
