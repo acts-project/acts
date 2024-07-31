@@ -15,7 +15,7 @@
 
 namespace Acts {
 
-template <class T, size_t D>
+template <class T, std::size_t D>
 class DynamicArray {
  public:
   /// Abbrivation of the data-type being stored
@@ -30,7 +30,7 @@ class DynamicArray {
   DynamicArray() = default;
 
   /**
-   * @brief Construct a new Dynamical Array object with the specificaton of the array ranges in all dimensions         *
+   * @brief Construct a new Dynamical Array object with the specification of the array ranges in all dimensions         *
    * @tparam args  list of integers specyfing the length in each direction. E.g.
    *               DynamicArray<double,4> array{4,7,9};
    *               constructs an array with maximum 4, 7 and 9 elements along
@@ -62,12 +62,12 @@ class DynamicArray {
   typename vec_type::const_reverse_iterator rend() const;
 
   /// Returns the total number of elements that can be stored in the container
-  size_t size() const;
+  std::size_t size() const;
   /// Returns the array containing the defined stripes in each direction
-  const std::array<size_t, D>& getStripes() const;
-  /// Returns the array containing the offsets in memory between two neigbouring
+  const std::array<std::size_t, D>& getStripes() const;
+  /// Returns the array containing the offsets in memory between two neighboring
   /// elements in the same dimension
-  const std::array<size_t, D>& getMemoryOffsets() const;
+  const std::array<std::size_t, D>& getMemoryOffsets() const;
 
   /**
    * @brief Getter methods to access the data in (non-) const mode using the D- local dimensional indices. The number of indices given
@@ -81,19 +81,19 @@ class DynamicArray {
    * @brief Translation of the D- local dimensional indices to the global index finding the corresponding element in memory
    *
    */
-  inline size_t index(const std::array<size_t, D>& indices) const;
+  inline std::size_t index(const std::array<std::size_t, D>& indices) const;
   template <typename... args>
-  size_t index(args... jks) const;
+  std::size_t index(args... jks) const;
   /**
    *  @brief Translation of the global index into the axis-index
    */
-  std::array<size_t, D> axisIndices(size_t globIdx) const;
+  std::array<std::size_t, D> axisIndices(std::size_t globIdx) const;
   /**
    * @brief Getter methods using the global index if the data is represented as a 1D array.
    *
    */
-  value_type& get_val(size_t idx);
-  const value_type& get_val(size_t idx) const;
+  value_type& get_val(std::size_t idx);
+  const value_type& get_val(std::size_t idx) const;
 
   /// Sets all elements contained in the array to the passed value
   void assign(const T& value);
@@ -108,7 +108,7 @@ class DynamicArray {
    */
   template <typename... args>
   void changeStripes(args... jks);
-  void changeStripes(const std::array<size_t, D>& stripes);
+  void changeStripes(const std::array<std::size_t, D>& stripes);
 
   /// Standard logical operators. The operator() returns true if the array is
   /// not empty.
@@ -117,14 +117,14 @@ class DynamicArray {
   bool empty() const;
 
   /**
-   * @brief The (Const)ArrayNavigator is a leightweight helper class to navigate through the array via the multidimensional [][]
+   * @brief The (Const)ArrayNavigator is a lightweight helper class to navigate through the array via the multidimensional [][]
    * operator. For every D dimensional array, there exist D-1 ArrayNavigators
    * that create other ArrayNavigators having one dimension less until N = 1 is
    * reached. This navigator grants the direct access to the data. Each
-   * Navigator stores the index in the corresponding braket and is directly
+   * Navigator stores the index in the corresponding bracket and is directly
    * connected to its parent which is the DynamicArray for D-1.
    */
-  template <size_t N>
+  template <std::size_t N>
   class ArrayNavigator {
    public:
     using parent_type = typename std::conditional<N == D - 1, DynamicArray,
@@ -132,21 +132,21 @@ class DynamicArray {
     using value_type =
         typename std::conditional<N == 1, T&, ArrayNavigator<N - 1>>::type;
 
-    ArrayNavigator(parent_type* parent, size_t idx);
+    ArrayNavigator(parent_type* parent, std::size_t idx);
     /// Access to the data
-    value_type operator[](size_t i);
+    value_type operator[](std::size_t i);
     /// Global index calculator upstream
     template <typename... args>
-    size_t index(args... indices) const;
+    std::size_t index(args... indices) const;
     /// Getter method to stream the data
-    T& get_val(size_t idx);
+    T& get_val(std::size_t idx);
 
    private:
     parent_type* m_parent{nullptr};
-    size_t m_idx{0};
+    std::size_t m_idx{0};
   };
 
-  template <size_t N>
+  template <std::size_t N>
   class ConstArrayNavigator {
    public:
     using parent_type =
@@ -156,18 +156,18 @@ class DynamicArray {
         typename std::conditional<N == 1, const T&,
                                   ConstArrayNavigator<N - 1>>::type;
 
-    ConstArrayNavigator(const parent_type* parent, size_t idx);
+    ConstArrayNavigator(const parent_type* parent, std::size_t idx);
     /// Access to the data
-    value_type operator[](size_t i) const;
+    value_type operator[](std::size_t i) const;
     /// Global index calculator upstream
     template <typename... args>
-    size_t index(args... indices) const;
+    std::size_t index(args... indices) const;
     /// Getter method to stream the data
-    const T& get_val(size_t idx) const;
+    const T& get_val(std::size_t idx) const;
 
    private:
     const parent_type* m_parent{nullptr};
-    size_t m_idx{0};
+    std::size_t m_idx{0};
   };
 
   /**
@@ -181,7 +181,7 @@ class DynamicArray {
    */
 
   /// Depending on the dimension of the array the [] operator needs to return
-  /// either the leightweight ArrayNavigators or the value directly. The latter
+  /// either the lightweight ArrayNavigators or the value directly. The latter
   /// is only true if the dimension is one which make this class essentially to
   /// a std::vector<T>
   using array_type =
@@ -190,25 +190,25 @@ class DynamicArray {
       typename std::conditional<D != 1, ConstArrayNavigator<D - 1>,
                                 const T&>::type;
 
-  inline array_type operator[](size_t i);
-  inline const_array_type operator[](size_t i) const;
+  inline array_type operator[](std::size_t i);
+  inline const_array_type operator[](std::size_t i) const;
 
  private:
-  template <size_t pos, typename... args>
-  size_t index(size_t arg_val, args... jks) const;
-  template <size_t pos, typename... args>
-  void assign_stripes(size_t val, args... jks);
+  template <std::size_t pos, typename... args>
+  std::size_t index(std::size_t arg_val, args... jks) const;
+  template <std::size_t pos, typename... args>
+  void assign_stripes(std::size_t val, args... jks);
 
-  template <size_t pos>
-  size_t index(size_t arg_val) const;
-  template <size_t pos>
-  void assign_stripes(size_t val);
+  template <std::size_t pos>
+  std::size_t index(std::size_t arg_val) const;
+  template <std::size_t pos>
+  void assign_stripes(std::size_t val);
   void allocate();
 
   vec_type m_data_ptr{};
-  size_t m_size{0};
-  std::array<size_t, D> m_stripe_lengths{};
-  std::array<size_t, D> m_stripe_offsets{};
+  std::size_t m_size{0};
+  std::array<std::size_t, D> m_stripe_lengths{};
+  std::array<std::size_t, D> m_stripe_offsets{};
 };
 
 }  // namespace Acts
