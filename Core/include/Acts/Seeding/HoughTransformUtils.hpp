@@ -10,16 +10,16 @@
 
 #pragma once
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/DynamicArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/DynamicArray.hpp"
 
 #include <array>
 #include <map>
 #include <optional>
 #include <set>
-#include <unordered_set>
 #include <span>
+#include <unordered_set>
 
 #include "HoughVectors.hpp"
 
@@ -88,7 +88,6 @@ inline double lowerBinEdge(double min, double max, unsigned nSteps,
 /// left to the caller
 inline double binCenter(double min, double max, unsigned nSteps,
                         std::size_t binIndex) {
-                      
   return min + (max - min) * 0.5 * (2 * binIndex + 1) / nSteps;
 }
 
@@ -114,8 +113,8 @@ class HoughCell {
   YieldType nHits() const { return m_nHits; }
   /// @brief access the span of layers compatible with this cell
   std::span<const unsigned, std::dynamic_extent> getLayers() const;
-  // /// @brief access the pan of unique hits compatible with this cell  
-  std::span<const identifier_t, std::dynamic_extent> getHits() const ;
+  // /// @brief access the pan of unique hits compatible with this cell
+  std::span<const identifier_t, std::dynamic_extent> getHits() const;
 
   /// @brief reset this cell, removing any existing content.
   void reset();
@@ -123,24 +122,23 @@ class HoughCell {
  private:
   /// data members
 
-  YieldType m_nLayers{0}; // (weighted) number of layers with hits on this cell
-  YieldType m_nHits{0};  // (weighted) number of unique hits on this cell
+  YieldType m_nLayers{0};  // (weighted) number of layers with hits on this cell
+  YieldType m_nHits{0};    // (weighted) number of unique hits on this cell
   // std::unordered_set<unsigned> m_layers =
   //     {};  // set of layers with hits on this cell
   // std::unordered_set<identifier_t> m_hits =
   //     {};  // set of unique hits on this cell
-
 
   std::size_t m_ihit{0};
 
   std::size_t m_ilayer{0};
   std::size_t m_assignBatch{20};
 
-  std::vector<unsigned> m_layers{std::vector<unsigned>(m_assignBatch)}; // vector of layers with hits on this cell
+  std::vector<unsigned> m_layers{std::vector<unsigned>(
+      m_assignBatch)};  // vector of layers with hits on this cell
 
-  std::vector<identifier_t> m_hits{std::vector<identifier_t>(m_assignBatch)}; //vector of hits on this cell
-
-
+  std::vector<identifier_t> m_hits{
+      std::vector<identifier_t>(m_assignBatch)};  // vector of hits on this cell
 };
 
 /// @brief Configuration - number of bins in each axis.
@@ -160,8 +158,8 @@ template <class identifier_t>
 class HoughPlane {
  public:
   /// @brief hough histogram representation as a 2D-indexable vector of hough cells
-  //using HoughHist = MultiIndexedVector2D<HoughCell<identifier_t>>;
-  using HoughHist = DynamicArray<HoughCell<identifier_t>,2>;
+  // using HoughHist = MultiIndexedVector2D<HoughCell<identifier_t>>;
+  using HoughHist = DynamicArray<HoughCell<identifier_t>, 2>;
 
   /// @brief instantiate the (empty) hough plane
   /// @param cfg: configuration
@@ -195,8 +193,8 @@ class HoughPlane {
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the set of layer indices that have hits for this cell
-   std::unordered_set<unsigned> layers(std::size_t xBin,
-                                       std::size_t yBin) const {
+  std::unordered_set<unsigned> layers(std::size_t xBin,
+                                      std::size_t yBin) const {
     return m_houghHist.get(xBin, yBin).layers();
   }
 
@@ -212,10 +210,10 @@ class HoughPlane {
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the set of identifiers of the hits for this cell
-  std::unordered_set<identifier_t> hitIds(std::size_t xBin, std::size_t yBin) const {
-
+  std::unordered_set<identifier_t> hitIds(std::size_t xBin,
+                                          std::size_t yBin) const {
     const auto hits_span = m_houghHist.get(xBin, yBin).getHits();
-    
+
     return std::unordered_set<identifier_t>(hits_span.begin(), hits_span.end());
   }
   /// @brief get the (weighted) number of hits in one cell of the histogram
@@ -230,7 +228,6 @@ class HoughPlane {
     return m_houghHist.get_val(globalBin).nHits();
   }
 
-
   /// @brief get the number of bins on the first coordinate
   std::size_t nBinsX() const { return m_cfg.nBinsX; }
   /// @brief get the number of bins on the second coordinate
@@ -244,18 +241,17 @@ class HoughPlane {
   /// Useful for peak-finders in sparse data
   /// to avoid looping over all cells
   const std::unordered_set<std::size_t>& getNonEmptyBins() const {
-
     return m_touchedBins;
   }
-  
+
   /// @brief get the coordinates of the bin given the global bin index
-  std::array<std::size_t, 2> axisBins(std::size_t globalBin) const{
+  std::array<std::size_t, 2> axisBins(std::size_t globalBin) const {
     return m_houghHist.axisIndices(globalBin);
   }
 
   /// @brief get the globalBin index given the coordinates of the bin
-  std::size_t globalBin(std::size_t x, std::size_t y) const{
-    return m_houghHist.index({x,y});
+  std::size_t globalBin(std::size_t x, std::size_t y) const {
+    return m_houghHist.index({x, y});
   }
 
   /// @brief get the bin indices of the cell containing the largest number
@@ -293,8 +289,9 @@ class HoughPlane {
   std::pair<std::size_t, std::size_t> m_maxLocLayers = {
       0, 0};  // track the location of the maximum in layers
   std::size_t m_assignBatch{20};
-  
-  std::unordered_set<std::size_t> m_touchedBins{}; // track the bins with non-trivial content
+
+  std::unordered_set<std::size_t>
+      m_touchedBins{};  // track the bins with non-trivial content
 
   std::size_t m_ibin = 0;
 
@@ -393,17 +390,15 @@ class IslandsAroundMax {
   /// @param toExplore: List of neighbour cell candidates left to explore. Method will not do anything once this is empty
   /// @param threshold: the threshold to apply to check if a cell should be added to an island
   /// @param yieldMap: A map of the hit content of above-threshold cells. Used cells will be set to empty content to avoid re-use by subsequent calls
-  void extendMaximum(
-      const HoughPlane<identifier_t>& houghPlane, 
-      std::vector<std::array<std::size_t,2>>& inMaximum,
-      std::vector<std::size_t>& toExplore,
-      YieldType threshold,
-      std::unordered_map<std::size_t, YieldType>& yieldMap);
+  void extendMaximum(const HoughPlane<identifier_t>& houghPlane,
+                     std::vector<std::array<std::size_t, 2>>& inMaximum,
+                     std::vector<std::size_t>& toExplore, YieldType threshold,
+                     std::unordered_map<std::size_t, YieldType>& yieldMap);
 
   IslandsAroundMaxConfig m_cfg;  // configuration data object
 
   /// @brief array of steps to consider when exploring neighbouring cells.
-  const std::array<std::pair<int, int>, 8>  m_stepDirections{
+  const std::array<std::pair<int, int>, 8> m_stepDirections{
       std::make_pair(-1, -1), std::make_pair(0, -1), std::make_pair(1, -1),
       std::make_pair(-1, 0),  std::make_pair(1, 0),  std::make_pair(-1, 1),
       std::make_pair(0, 1),   std::make_pair(1, 1)};

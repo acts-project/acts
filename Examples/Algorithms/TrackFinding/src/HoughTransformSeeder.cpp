@@ -265,8 +265,9 @@ ActsExamples::HoughHist ActsExamples::HoughTransformSeeder::createHoughHist(
       for (unsigned y = 0; y < m_cfg.houghHistSize_y; ++y) {
         if (layerHoughHist.get(y, x).first > 0) {
           houghHist.get(y, x).first++;
-          houghHist.get(y, x).second.insert(layerHoughHist.get(y, x).second.begin(),
-                                        layerHoughHist.get(y, x).second.end());
+          houghHist.get(y, x).second.insert(
+              layerHoughHist.get(y, x).second.begin(),
+              layerHoughHist.get(y, x).second.end());
         }
       }
     }
@@ -297,7 +298,7 @@ bool ActsExamples::HoughTransformSeeder::passThreshold(
         if (i == 0 && j == 0) {
           continue;
         }
-        if (y + j <  m_cfg.houghHistSize_y && x + i <  m_cfg.houghHistSize_x) {
+        if (y + j < m_cfg.houghHistSize_y && x + i < m_cfg.houghHistSize_x) {
           if (houghHist.get(y + j, x + i).first > houghHist.get(y, x).first) {
             return false;
           }
