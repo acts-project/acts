@@ -49,7 +49,9 @@ Acts::HoughTransformUtils::HoughCell<identifier_t>::getHits() const {
 template <class identifier_t>
 std::span<const unsigned, std::dynamic_extent>
 Acts::HoughTransformUtils::HoughCell<identifier_t>::getLayers() const {
-  return std::span<unsigned, std::dynamic_extent>(m_layers.begin(), m_ilayer);
+  std::span<const unsigned, std::dynamic_extent> layers(m_layers.begin(), m_ilayer);
+
+  return layers;
 }
 
 template <class identifier_t>

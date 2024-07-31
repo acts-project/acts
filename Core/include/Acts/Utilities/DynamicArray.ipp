@@ -266,7 +266,7 @@ inline DynamicArray<T, D>::ArrayNavigator<N>::ArrayNavigator(
 
 template <class T, size_t D>
 template <size_t N>
-inline typename DynamicArray<T, D>::ArrayNavigator<N>::value_type
+inline typename DynamicArray<T, D>::template ArrayNavigator<N>::value_type
 DynamicArray<T, D>::ArrayNavigator<N>::operator[](size_t i) {
   if constexpr (N == 1)
     return m_parent->get_val(index(i));
@@ -298,7 +298,7 @@ inline DynamicArray<T, D>::ConstArrayNavigator<N>::ConstArrayNavigator(
 
 template <class T, size_t D>
 template <size_t N>
-inline typename DynamicArray<T, D>::ConstArrayNavigator<N>::value_type
+inline typename DynamicArray<T, D>::template ConstArrayNavigator<N>::value_type
 DynamicArray<T, D>::ConstArrayNavigator<N>::operator[](size_t i) const {
   if constexpr (N == 1)
     return m_parent->get_val(index(i));
