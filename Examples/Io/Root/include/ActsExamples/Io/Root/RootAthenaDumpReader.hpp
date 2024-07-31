@@ -109,13 +109,19 @@ class RootAthenaDumpReader : public IReader {
   SimParticleContainer readParticles() const;
 
   /// Helper method to read measurements
-  std::tuple<ClusterContainer, MeasurementContainer, IndexMultimap<ActsFatras::Barcode>> readMeasurements(SimParticleContainer &particles) const;
+  std::tuple<ClusterContainer, MeasurementContainer,
+             IndexMultimap<ActsFatras::Barcode>>
+  readMeasurements(SimParticleContainer &particles) const;
 
   /// Helper method to read spacepoints
-  std::pair<SimSpacePointContainer, SimSpacePointContainer> readSpacepoints() const;
+  std::pair<SimSpacePointContainer, SimSpacePointContainer> readSpacepoints()
+      const;
 
   /// Helper method to reprocess particle ids
-  std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>> reprocessParticles(const SimParticleContainer &particles, const IndexMultimap<ActsFatras::Barcode> &measPartMap) const;
+  std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
+  reprocessParticles(
+      const SimParticleContainer &particles,
+      const IndexMultimap<ActsFatras::Barcode> &measPartMap) const;
 
   /// Write handlers
   WriteDataHandle<SimSpacePointContainer> m_outputPixelSpacePoints{

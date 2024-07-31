@@ -12,10 +12,10 @@
 #include "Acts/Plugins/ExaTrkX/ModuleMapCpp.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
+#include "Acts/Plugins/ExaTrkX/SeedingTrackBuilder.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
-#include "Acts/Plugins/ExaTrkX/SeedingTrackBuilder.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
@@ -117,7 +117,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
     auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
                    mex, "SeedingTrackBuilder")
                    .def(py::init([](const Config &c, Logging::Level lvl) {
-                          return std::make_shared<Alg>(c, getDefaultLogger("TrackBuilding", lvl));
+                          return std::make_shared<Alg>(
+                              c, getDefaultLogger("TrackBuilding", lvl));
                         }),
                         py::arg("level"));
 

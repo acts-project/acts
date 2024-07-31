@@ -26,8 +26,11 @@ class SeedingTrackBuilder final : public Acts::TrackBuildingBase {
     std::vector<std::tuple<float, float, float>> scoreCutRegions;
     std::size_t minSeedSize = 3;
   };
-  SeedingTrackBuilder(const Config &config, std::unique_ptr<const Logger> logger)
-      : m_cfg(config), m_logger(std::move(logger)), m_device(torch::Device(torch::kCPU)) {}
+  SeedingTrackBuilder(const Config &config,
+                      std::unique_ptr<const Logger> logger)
+      : m_cfg(config),
+        m_logger(std::move(logger)),
+        m_device(torch::Device(torch::kCPU)) {}
 
   std::vector<std::vector<int>> operator()(
       std::any nodes, std::any edges, std::any edge_weights,
@@ -43,4 +46,3 @@ class SeedingTrackBuilder final : public Acts::TrackBuildingBase {
 };
 
 }  // namespace Acts
-

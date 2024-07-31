@@ -22,28 +22,25 @@
 #include <boost/container/static_vector.hpp>
 
 namespace {
-  std::uint64_t concatInts(int a, int b) {
-    auto va = static_cast<std::uint32_t>(a);
-    auto vb = static_cast<std::uint32_t>(b);
-    std::uint64_t value = (static_cast<std::uint64_t>(va) << 32) | vb;
-    return value;
-  }
-
-  std::pair<std::uint32_t, std::uint32_t> splitInt(std::uint64_t v) {
-      return {
-          static_cast<std::uint32_t>((v & 0xFFFFFFFF00000000LL) >> 32),
-          static_cast<std::uint32_t>(v & 0xFFFFFFFFLL)
-      };
-  }
+std::uint64_t concatInts(int a, int b) {
+  auto va = static_cast<std::uint32_t>(a);
+  auto vb = static_cast<std::uint32_t>(b);
+  std::uint64_t value = (static_cast<std::uint64_t>(va) << 32) | vb;
+  return value;
 }
+
+std::pair<std::uint32_t, std::uint32_t> splitInt(std::uint64_t v) {
+  return {static_cast<std::uint32_t>((v & 0xFFFFFFFF00000000LL) >> 32),
+          static_cast<std::uint32_t>(v & 0xFFFFFFFFLL)};
+}
+}  // namespace
 
 enum SpacePointType { ePixel = 1, eStrip = 2 };
 
 namespace ActsExamples {
 
 RootAthenaDumpReader::RootAthenaDumpReader(
-    const RootAthenaDumpReader::Config& config,
-    Acts::Logging::Level level)
+    const RootAthenaDumpReader::Config& config, Acts::Logging::Level level)
     : IReader(),
       m_cfg(config),
       m_logger(Acts::getDefaultLogger(name(), level)) {
@@ -248,12 +245,14 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
 
     particles.insert(particle);
   }
-  
+
   ACTS_DEBUG("Created " << particles.size() << " particles");
   return particles;
 }
 
-std::tuple<ClusterContainer, MeasurementContainer, IndexMultimap<ActsFatras::Barcode>> RootAthenaDumpReader::readMeasurements(SimParticleContainer &particles) const {
+std::tuple<ClusterContainer, MeasurementContainer,
+           IndexMultimap<ActsFatras::Barcode>>
+RootAthenaDumpReader::readMeasurements(SimParticleContainer& particles) const {
   ClusterContainer clusters(nCL);
   clusters.reserve(nCL);
 
@@ -308,7 +307,9 @@ std::tuple<ClusterContainer, MeasurementContainer, IndexMultimap<ActsFatras::Bar
     cluster.globalPosition = {CLx[im], CLy[im], CLz[im]};
     cluster.localDirection = {CLloc_direction1[im], CLloc_direction2[im],
                               CLloc_direction3[im]};
-    cluster.lengthDirection = {CLJan_loc_direction1[im], CLJan_loc_direction2[im], CLJan_loc_direction3[im]};
+    cluster.lengthDirection = {CLJan_loc_direction1[im],
+                               CLJan_loc_direction2[im],
+                               CLJan_loc_direction3[im]};
     cluster.localEta = CLloc_eta[im];
     cluster.localPhi = CLloc_phi[im];
     cluster.globalEta = CLglob_eta[im];
@@ -346,26 +347,32 @@ std::tuple<ClusterContainer, MeasurementContainer, IndexMultimap<ActsFatras::Bar
     measurements.push_back(createMeasurement(digiPars, sl));
 
     // Create measurement particles map and particles container
-    for (const auto& [subevt, barcode] : Acts::zip(CLparticleLink_eventIndex->at(im),
-                                              CLparticleLink_barcode->at(im))) {
+    for (const auto& [subevt, barcode] :
+         Acts::zip(CLparticleLink_eventIndex->at(im),
+                   CLparticleLink_barcode->at(im))) {
       auto dummyBarcode = concatInts(barcode, subevt);
       // If we don't find the particle, create one with default values
-      if( particles.find(dummyBarcode) == particles.end() ) {
-        ACTS_VERBOSE("Particle with subevt " << subevt << ", barcode " << barcode << "not found, create dummy one");
+      if (particles.find(dummyBarcode) == particles.end()) {
+        ACTS_VERBOSE("Particle with subevt " << subevt << ", barcode "
+                                             << barcode
+                                             << "not found, create dummy one");
         particles.emplace(dummyBarcode, Acts::PdgParticle::eInvalid);
       }
-      measPartMap.insert(std::pair<Index, ActsFatras::Barcode>{im, dummyBarcode});
+      measPartMap.insert(
+          std::pair<Index, ActsFatras::Barcode>{im, dummyBarcode});
     }
   }
 
-  if(particles.size() - prevParticlesSize > 0) {
-    ACTS_DEBUG("Created " << particles.size() - prevParticlesSize << " dummy particles");
+  if (particles.size() - prevParticlesSize > 0) {
+    ACTS_DEBUG("Created " << particles.size() - prevParticlesSize
+                          << " dummy particles");
   }
 
   return {clusters, measurements, measPartMap};
 }
 
-std::pair<SimSpacePointContainer, SimSpacePointContainer> RootAthenaDumpReader::readSpacepoints() const {
+std::pair<SimSpacePointContainer, SimSpacePointContainer>
+RootAthenaDumpReader::readSpacepoints() const {
   // Prepare pixel space points
   SimSpacePointContainer pixelSpacePoints;
   pixelSpacePoints.reserve(nSP);
@@ -442,9 +449,10 @@ std::pair<SimSpacePointContainer, SimSpacePointContainer> RootAthenaDumpReader::
   return {spacePoints, pixelSpacePoints};
 }
 
-std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>> RootAthenaDumpReader::reprocessParticles(
-    const SimParticleContainer &particles, const IndexMultimap<ActsFatras::Barcode> &measPartMap
-) const {
+std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
+RootAthenaDumpReader::reprocessParticles(
+    const SimParticleContainer& particles,
+    const IndexMultimap<ActsFatras::Barcode>& measPartMap) const {
   SimParticleContainer newParticles;
   IndexMultimap<ActsFatras::Barcode> newMeasPartMap;
 
@@ -453,11 +461,12 @@ std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>> RootAthenaDu
   std::uint16_t primaryCount = 0;
   std::uint16_t secondaryCount = 0;
 
-  for(const auto &particle : particles) {
+  for (const auto& particle : particles) {
     const auto [begin, end] = partMeasMap.equal_range(particle.particleId());
 
-    if( begin == end ) {
-      ACTS_VERBOSE("Particle " << particle.particleId().value() << " has no measurements");
+    if (begin == end) {
+      ACTS_VERBOSE("Particle " << particle.particleId().value()
+                               << " has no measurements");
       continue;
     }
 
@@ -483,18 +492,19 @@ std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>> RootAthenaDu
     auto newParticle = particle.withParticleId(fatrasBarcode);
     newParticles.insert(newParticle);
 
-    for(auto it=begin; it != end; ++it) {
-      newMeasPartMap.insert(std::pair<Index, ActsFatras::Barcode>{it->second, fatrasBarcode});
+    for (auto it = begin; it != end; ++it) {
+      newMeasPartMap.insert(
+          std::pair<Index, ActsFatras::Barcode>{it->second, fatrasBarcode});
     }
   }
 
-  ACTS_DEBUG("After reprocessing particles " << newParticles.size() << " of " << particles.size() << " remain");
+  ACTS_DEBUG("After reprocessing particles " << newParticles.size() << " of "
+                                             << particles.size() << " remain");
 
   return {newParticles, newMeasPartMap};
 }
 
-ProcessCode RootAthenaDumpReader::read(
-    const AlgorithmContext& ctx) {
+ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
   ACTS_DEBUG("Reading event " << ctx.eventNumber);
   auto entry = ctx.eventNumber;
   if (entry >= m_events) {
@@ -508,11 +518,13 @@ ProcessCode RootAthenaDumpReader::read(
 
   auto candidateParticles = readParticles();
 
-  auto [clusters, measurements, candidateMeasPartMap] = readMeasurements(candidateParticles);
+  auto [clusters, measurements, candidateMeasPartMap] =
+      readMeasurements(candidateParticles);
 
   auto [spacePoints, pixelSpacePoints] = readSpacepoints();
 
-  auto [particles, measPartMap] = reprocessParticles(candidateParticles, candidateMeasPartMap);
+  auto [particles, measPartMap] =
+      reprocessParticles(candidateParticles, candidateMeasPartMap);
 
   m_outputPixelSpacePoints(ctx, std::move(pixelSpacePoints));
   m_outputSpacePoints(ctx, std::move(spacePoints));
@@ -523,4 +535,4 @@ ProcessCode RootAthenaDumpReader::read(
 
   return ProcessCode::SUCCESS;
 }
-}
+}  // namespace ActsExamples
