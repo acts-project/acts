@@ -36,7 +36,7 @@
             "inherits": "common",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer",
+                "CMAKE_CXX_FLAGS": "-O3 -DNDEBUG -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer",
                 "ACTS_BUILD_BENCHMARKS": "ON"
             }
         },
@@ -46,7 +46,7 @@
             "inherits": "common",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_FLAGS_RELEASE": "-Werror",
+                "CMAKE_CXX_FLAGS": "-Werror",
                 "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_BENCHMARKS": "ON",

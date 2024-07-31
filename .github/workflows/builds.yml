@@ -59,6 +59,7 @@ jobs:
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_PLUGIN_ONNX=ON
+          -DACTS_BUILD_PLUGIN_GEOMODEL=ON
 
       - name: Build
         run: cmake --build build
@@ -351,6 +352,7 @@ jobs:
           -DCMAKE_PREFIX_PATH="${{ env.DEPENDENCY_DIR }}"
           -DPython_EXECUTABLE=${{ env.DEPENDENCY_DIR }}/bin/python3
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=OFF
       - name: Build
         run: cmake --build build
       - name: ccache stats
