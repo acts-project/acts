@@ -3,7 +3,7 @@
 ## Quick start
 
 ACTS is developed in C++ and is built using [CMake](https://cmake.org). Building
-the core library requires a C++17 compatible compiler,
+the core library requires a C++20 compatible compiler,
 [Boost](https://www.boost.org), and [Eigen](https://eigen.tuxfamily.org). The
 following commands will clone the repository, configure, and build the core
 library:
