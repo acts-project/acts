@@ -444,7 +444,7 @@ class Gx2Fitter {
 
       if (startVolume != nullptr &&
           startVolume != state.navigation.startVolume) {
-        ACTS_INFO("The update pushed aus to a new volume from '"
+        ACTS_INFO("The update pushed us to a new volume from '"
                   << startVolume->volumeName() << "' to '"
                   << state.navigation.startVolume->volumeName()
                   << "'. Starting to abort.");
@@ -805,9 +805,9 @@ class Gx2Fitter {
       GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
 
       if (!gx2fResult.result.ok()) {
-        ACTS_WARNING("GlobalChiSquareFitter failed in actor: "
-                   << gx2fResult.result.error() << ", "
-                   << gx2fResult.result.error().message());
+        ACTS_INFO("GlobalChiSquareFitter failed in actor: "
+                  << gx2fResult.result.error() << ", "
+                  << gx2fResult.result.error().message());
         return gx2fResult.result.error();
       }
 
