@@ -119,6 +119,8 @@ void addGeoModel(Context& ctx) {
             &Acts::GeoModelDetectorVolumeFactory::Config::convertSubVolumes)
         .def_readwrite("nameList",
                        &Acts::GeoModelDetectorVolumeFactory::Config::nameList)
+        .def_readwrite("convertFpv",
+                       &Acts::GeoModelDetectorVolumeFactory::Config::convertFpv)
         .def_readwrite(
             "materialList",
             &Acts::GeoModelDetectorVolumeFactory::Config::materialList);

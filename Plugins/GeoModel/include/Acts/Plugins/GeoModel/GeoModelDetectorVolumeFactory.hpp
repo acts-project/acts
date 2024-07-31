@@ -26,6 +26,9 @@ class GeoModelDetectorVolumeFactory {
 
     /// boolean flag to build subvolumes
     bool convertSubVolumes = false;
+
+    /// boolean flag to build the bounding Boxes
+    bool convertFpv = true;
   };
   struct Cache {
     /// The created detector elements and their surfaces

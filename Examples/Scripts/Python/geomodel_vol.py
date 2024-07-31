@@ -82,6 +82,13 @@ def main():
     )
 
     p.add_argument(
+        "--convert-boundingboxes",
+        help="Convert the fpvs to bounding boxes",
+        action="store_true",
+        default=False,
+    )
+
+    p.add_argument(
         "--output-svg",
         help="Write the surfaces to SVG files",
         action="store_true",
@@ -131,6 +138,7 @@ def main():
     gmVolFactoryConfig = gm.GeoModelDetectorVolumeFactory.Config()
     gmVolFactoryConfig.materialList = args.material_list
     gmVolFactoryConfig.nameList = args.name_list
+    gmVolFactoryConfig.convertFpv = args.convert_boundingboxes
     gmVolFactoryConfig.convertSubVolumes = args.convert_subvols
     gmVolFactory = gm.GeoModelDetectorVolumeFactory(gmVolFactoryConfig, logLevel)
     # The options
@@ -146,14 +154,23 @@ def main():
     if args.output_obj:
         segments = 720
         gmBoxes = gmVolFactoryCache.boundingBoxes
-        #gmBoxes = [ss[1] for ss in gmVolFactoryCache.boundingBoxes]
-        acts.examples.writeVolumesObj(
-            gmBoxes,
-            gContext,
-            [75, 220, 100],
-            segments,
-            args.output + "_vols.obj",
-        )
+        if len(gmBoxes)>0:
+            acts.examples.writeVolumesObj(
+                gmBoxes,
+                gContext,
+                [75, 220, 100],
+                segments,
+                args.output + "_vols.obj",
+            )
+        else:
+            gmSurfaces = [ss[1] for ss in gmVolFactoryCache.sensitiveSurfaces]
+            acts.examples.writeSurfacesObj(
+                gmSurfaces,
+                gContext,
+                [75, 220, 100],
+                segments,
+                args.output + "_vols.obj",
+            )
 
 if "__main__" == __name__:
     main()

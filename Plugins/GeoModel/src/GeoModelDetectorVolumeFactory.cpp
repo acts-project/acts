@@ -79,10 +79,7 @@ void Acts::GeoModelDetectorVolumeFactory::construct(Cache& cache, const Geometry
       //m=material in the querry
       auto matchMaterial = std::any_of(
           m_cfg.materialList.begin(), m_cfg.materialList.end(),
-          [&](const auto &m) {
-          if(matStr.find("RPC")!=std::string::npos){
-          }
-          return matStr.find(m) != std::string::npos; });
+          [&](const auto &m) {return matStr.find(m) != std::string::npos; });
 
       //bool match = matchMaterial;// && matchName;
       bool match = matchMaterial && matchName;
@@ -99,11 +96,6 @@ void Acts::GeoModelDetectorVolumeFactory::construct(Cache& cache, const Geometry
       if (m_cfg.materialList.empty() || !(fullVol == nullptr)) {
         return matchName;
       }
-      //else judge by material
-      else{
-        return matchMaterial;
-      }
-
       return match;
     };
 
@@ -129,13 +121,15 @@ void Acts::GeoModelDetectorVolumeFactory::construct(Cache& cache, const Geometry
         convertSensitive(surface.volume, transform, sensitives);
       }
       cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(), sensitives.begin(), sensitives.end());
+      if(m_cfg.convertFpv){
       const GeoLogVol *logVol = physVol->getLogVol();//get logVol for the shape of the volume
-      const GeoShape *shape;// = logVol->getShape();//get shape
-      const Acts::Transform3 &transform = fpv->getAbsoluteTransform(nullptr);
+      const GeoShape *shape = logVol->getShape();//get shape
+      const Acts::Transform3 &fpvtransform = fpv->getAbsoluteTransform(nullptr);
 
       //convert bounding boxes with surfaces inside
-      std::shared_ptr<Experimental::DetectorVolume> box = Acts::GeoModel::convertVolume(gctx, shape, name, transform, sensitives);
+      std::shared_ptr<Experimental::DetectorVolume> box = Acts::GeoModel::convertVolume(gctx, shape, name, fpvtransform, sensitives);
       cache.boundingBoxes.push_back(box);
+      }
     }
   }
 }
