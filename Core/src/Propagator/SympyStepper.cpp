@@ -162,6 +162,8 @@ Result<double> SympyStepper::stepImpl(
             state.pars.template segment<1>(eFreeTime).data(),
             state.derivative.data(),
             state.covTransport ? state.jacTransport.data() : nullptr);
+    // Protect against division by zero
+    errorEstimate = std::max(1e-20, errorEstimate);
 
     if (ok) {
       break;
