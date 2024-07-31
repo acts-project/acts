@@ -49,9 +49,9 @@ namespace Acts::Test {
 
 /// @brief Helper function to visualise measurements in a 3D environment.
 ///
-/// This function iterates through the provided measurements and visualises each one
-/// using the specified 3D visualisation helper. The visualisation takes into account
-/// the surface transformations and localisation errors.
+/// This function iterates through the provided measurements and visualises each
+/// one using the specified 3D visualisation helper. The visualisation takes
+/// into account the surface transformations and localisation errors.
 ///
 /// @param helper The 3D visualisation helper used to draw the measurements.
 /// @param measurements A collection of measurements to be visualised, containing source links with parameters and covariance information.
@@ -59,12 +59,11 @@ namespace Acts::Test {
 /// @param geoCtx The geometry context used for transformations and accessing geometry-related information.
 /// @param locErrorScale Scaling factor for localisation errors. Default value is 1.0.
 /// @param viewConfig Configuration settings for the visualisation view. Default value is s_viewMeasurement.
-static void drawMeasurements(IVisualization3D& helper,
-                             const Measurements& measurements,
-                             std::shared_ptr<const TrackingGeometry> geometry,
-                             const Acts::GeometryContext geoCtx,
-                             double locErrorScale = 1.,
-                             const ViewConfig& viewConfig = s_viewMeasurement) {
+static void drawMeasurements(
+    IVisualization3D& helper, const Measurements& measurements,
+    const std::shared_ptr<const TrackingGeometry>& geometry,
+    const Acts::GeometryContext& geoCtx, double locErrorScale = 1.,
+    const ViewConfig& viewConfig = s_viewMeasurement) {
   std::cout << "\n*** Draw measurements ***\n" << std::endl;
 
   for (auto& singleMeasurement : measurements.sourceLinks) {
@@ -211,7 +210,10 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
   return detector;
 }
 
-/// @brief Create a simple telescope detector in the Y direction. We cannot reuse the previous detector, since the cuboid volume builder only allows merging of YZ-faces.
+/// @brief Create a simple telescope detector in the Y direction.
+///
+/// We cannot reuse the previous detector, since the cuboid volume builder only
+/// allows merging of YZ-faces.
 ///
 /// @param geoCtx
 /// @param nSurfaces Number of surfaces
@@ -288,8 +290,10 @@ std::shared_ptr<const TrackingGeometry> makeToyDetectorYdirection(
   CuboidVolumeBuilder::VolumeConfig volumeConfig2;
   //    volumeConfig2.length = volumeConfig.length;
   volumeConfig2.length = {2 * halfSizeSurface, (nSurfaces + 1) * 1_m,
-                          2 * halfSizeSurface};;
-  volumeConfig2.position = {volumeConfig2.length.x(), volumeConfig2.length.y() / 2, 0.};
+                          2 * halfSizeSurface};
+  ;
+  volumeConfig2.position = {volumeConfig2.length.x(),
+                            volumeConfig2.length.y() / 2, 0.};
   volumeConfig2.name = "AdditionalVolume";
   volumeConfig2.binningDimension = Acts::BinningValue::binY;
 
@@ -297,7 +301,8 @@ std::shared_ptr<const TrackingGeometry> makeToyDetectorYdirection(
   CuboidVolumeBuilder::Config config;
   config.length = {4 * halfSizeSurface, (nSurfaces + 1) * 1_m,
                    2 * halfSizeSurface};
-  config.position = {volumeConfig.length.x() / 2, volumeConfig.length.y()/2, 0.};
+  config.position = {volumeConfig.length.x() / 2, volumeConfig.length.y() / 2,
+                     0.};
   config.volumeCfg = {volumeConfig, volumeConfig2};
 
   cvb.setConfig(config);
@@ -528,40 +533,11 @@ BOOST_AUTO_TEST_CASE(UpdatePushedToNewVolume) {
   Detector detector;
   detector.geometry = makeToyDetectorYdirection(geoCtx, nSurfaces);
 
-  {
-    std::cout << "\n*** Create .obj of Detector ***\n" << std::endl;
-    // Only need for obj
-    ObjVisualization3D obj;
-
-    bool triangulate = true;
-    ViewConfig viewSensitive = ViewConfig({0, 180, 240});
-    viewSensitive.triangulate = triangulate;
-    ViewConfig viewPassive = ViewConfig({240, 280, 0});
-    viewPassive.triangulate = triangulate;
-    ViewConfig viewVolume = ViewConfig({220, 220, 0});
-    viewVolume.triangulate = triangulate;
-    ViewConfig viewContainer = ViewConfig({220, 220, 0});
-    viewContainer.triangulate = triangulate;
-    ViewConfig viewGrid = ViewConfig({220, 0, 0});
-    viewGrid.nSegments = 8;
-    viewGrid.offset = 3.;
-    viewGrid.triangulate = triangulate;
-
-    std::string tag = "gx2f_toydet";
-
-    const Acts::TrackingVolume& tgVolume =
-        *(detector.geometry->highestTrackingVolume());
-
-    GeometryView3D::drawTrackingVolume(obj, tgVolume, geoCtx, viewContainer,
-                                       viewVolume, viewPassive, viewSensitive,
-                                       viewGrid, true, tag);
-  }
-
   ACTS_DEBUG("Set the start parameters for measurement creation and fit");
-  const auto parametersMeasurements = makeParameters(
-      0_mm, 0_mm, 0_mm, 42_ns, 90_degree, 90_degree, 1_GeV, 1_e
-      );
-  const auto startParametersFit = makeParameters(1600_mm, 0_mm, 0_mm, 42_ns, -45_degree, -90_degree, 1_GeV, 1_e);
+  const auto parametersMeasurements =
+      makeParameters(0_mm, 0_mm, 0_mm, 42_ns, 90_degree, 90_degree, 1_GeV, 1_e);
+  const auto startParametersFit = makeParameters(
+      1500_mm, 0_mm, 0_mm, 42_ns, -45_degree, -90_degree, 1_GeV, 1_e);
 
   ACTS_DEBUG("Create the measurements");
   using SimPropagator =
@@ -608,6 +584,36 @@ BOOST_AUTO_TEST_CASE(UpdatePushedToNewVolume) {
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                               startParametersFit, gx2fOptions, tracks);
 
+  // Helper to visualise the detector
+  {
+    std::cout << "\n*** Create .obj of Detector ***\n" << std::endl;
+    // Only need for obj
+    ObjVisualization3D obj;
+
+    bool triangulate = true;
+    ViewConfig viewSensitive = ViewConfig({0, 180, 240});
+    viewSensitive.triangulate = triangulate;
+    ViewConfig viewPassive = ViewConfig({240, 280, 0});
+    viewPassive.triangulate = triangulate;
+    ViewConfig viewVolume = ViewConfig({220, 220, 0});
+    viewVolume.triangulate = triangulate;
+    ViewConfig viewContainer = ViewConfig({220, 220, 0});
+    viewContainer.triangulate = triangulate;
+    ViewConfig viewGrid = ViewConfig({220, 0, 0});
+    viewGrid.nSegments = 8;
+    viewGrid.offset = 3.;
+    viewGrid.triangulate = triangulate;
+
+    std::string tag = "gx2f_toydet";
+
+    const Acts::TrackingVolume& tgVolume =
+        *(detector.geometry->highestTrackingVolume());
+
+    GeometryView3D::drawTrackingVolume(obj, tgVolume, geoCtx, viewContainer,
+                                       viewVolume, viewPassive, viewSensitive,
+                                       viewGrid, true, tag);
+  }
+  // Helper to visualise the measurements
   {
     std::cout << "\n*** Create .obj of measurements ***\n" << std::endl;
     ObjVisualization3D obj;
@@ -1107,7 +1113,7 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
   sourceLinks.pop_back();
   ACTS_VERBOSE("sourceLinks.size() [after pop] = " << sourceLinks.size());
 
-  // We remove the second to last measurement in the list. This effectivly
+  // We remove the second to last measurement in the list. This effectively
   // creates a hole on that surface.
   const std::size_t indexHole = sourceLinks.size() - 2;
   ACTS_VERBOSE("Remove measurement " << indexHole);
