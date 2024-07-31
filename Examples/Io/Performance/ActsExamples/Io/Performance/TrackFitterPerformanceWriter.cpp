@@ -128,9 +128,15 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
                  << track.index() << " tip index = " << track.tipIndex());
       continue;
     }
+    const auto& particleMatch = imatched->second;
+
+    if (!particleMatch.particle.has_value()) {
+      ACTS_DEBUG("No truth particle associated with this track.");
+      continue;
+    }
 
     // Get the barcode of the majority truth particle
-    SimBarcode majorityParticleId = imatched->second.particle.value();
+    SimBarcode majorityParticleId = particleMatch.particle.value();
 
     // Find the truth particle via the barcode
     auto ip = particles.find(majorityParticleId);
