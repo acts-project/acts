@@ -6,6 +6,7 @@ import argparse
 import acts
 from acts.examples import Sequencer, RootMaterialTrackWriter
 from acts.examples.odd import getOpenDataDetector
+from acts.examples.simulation import addParticleGun, EtaConfig, ParticleConfig
 
 
 def runMaterialValidation(
@@ -15,7 +16,7 @@ def runMaterialValidation(
     decorators,
     field,
     outputDir,
-    outputName="propagation-material",
+    outputName="propagation_material",
     s=None,
 ):
     # Create a sequencer
@@ -25,7 +26,6 @@ def runMaterialValidation(
         s.addContextDecorator(decorator)
 
     nav = acts.Navigator(trackingGeometry=trackingGeometry)
-
     stepper = acts.StraightLineStepper()
     # stepper = acts.EigenStepper(field)
 
@@ -33,24 +33,46 @@ def runMaterialValidation(
 
     rnd = acts.examples.RandomNumbers(seed=42)
 
+    addParticleGun(
+        s,
+        ParticleConfig(num=ntracks, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
+        EtaConfig(-4.0, 4.0),
+        rnd=rnd,
+    )
+
+    # Run particle smearing
+    trackParametersGenerator = acts.examples.ParticleSmearing(
+        level=acts.logging.INFO,
+        inputParticles="particles_input",
+        outputTrackParameters="start_parameters",
+        randomNumbers=rnd,
+        sigmaD0=0.0,
+        sigmaZ0=0.0,
+        sigmaPhi=0.0,
+        sigmaTheta=0.0,
+        sigmaPRel=0.0,
+        addCovariances=False,
+    )
+    s.addAlgorithm(trackParametersGenerator)
+
     alg = acts.examples.PropagationAlgorithm(
         propagatorImpl=prop,
         level=acts.logging.INFO,
-        randomNumberSvc=rnd,
-        ntests=ntracks,
-        sterileLogger=True,
-        propagationStepCollection="propagation-steps",
+        sterileLogger=False,
         recordMaterialInteractions=True,
-        d0Sigma=0,
-        z0Sigma=0,
+        inputTrackParameters="start_parameters",
+        outputPropagationSteps="propagation_steps",
+        outputMaterialTracks="material_tracks",
     )
 
     s.addAlgorithm(alg)
 
+    print(os.path.join(outputDir, (outputName + ".root")))
+
     s.addWriter(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
-            inputMaterialTracks=alg.config.propagationMaterialCollection,
+            inputMaterialTracks=alg.config.outputMaterialTracks,
             filePath=os.path.join(outputDir, (outputName + ".root")),
             storeSurface=True,
             storeVolume=True,
@@ -72,13 +94,23 @@ if "__main__" == __name__:
     p.add_argument(
         "-m", "--map", type=str, default="", help="Input file for the material map"
     )
-    p.add_argument("-o", "--output", type=str, default="", help="Output file name")
+    p.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default="propagation_material",
+        help="Output file name",
+    )
 
     args = p.parse_args()
 
-    matDeco = acts.IMaterialDecorator.fromFile(args.map)
+    materialDecorator = (
+        acts.IMaterialDecorator.fromFile(args.map) if len(args.map) > 0 else None
+    )
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator=matDeco)
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        mdecorator=materialDecorator
+    )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * acts.UnitConstants.T))
 
