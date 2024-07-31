@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
@@ -42,14 +42,14 @@ ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+  using Propagator = Acts::Propagator<Acts::SympyStepper>;
   using PropagatorOptions = Propagator::Options<>;
   using Linearizer = Acts::HelicalTrackLinearizer;
   using VertexFitter = Acts::FullBilloirVertexFitter;
   using VertexFitterOptions = Acts::VertexingOptions;
 
-  // Set up EigenStepper
-  Acts::EigenStepper<> stepper(m_cfg.bField);
+  // Set up SympyStepper
+  Acts::SympyStepper stepper(m_cfg.bField);
 
   // Setup the propagator with void navigator
   auto propagator = std::make_shared<Propagator>(

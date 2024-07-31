@@ -15,8 +15,8 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
@@ -51,7 +51,7 @@ struct AlgorithmContext;
 
 class IterativeVertexFinderAlgorithm final : public IAlgorithm {
  public:
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+  using Propagator = Acts::Propagator<Acts::SympyStepper>;
   using Linearizer = Acts::HelicalTrackLinearizer;
   using Fitter = Acts::FullBilloirVertexFitter;
   using Seeder = Acts::TrackDensityVertexFinder;
