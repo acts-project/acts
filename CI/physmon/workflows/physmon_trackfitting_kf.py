@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
+
 import tempfile
 from pathlib import Path
 import shutil
 
 import acts
-from truth_tracking_gx2f import runTruthTrackingGx2f
+from truth_tracking_kalman import runTruthTrackingKalman
 
 from physmon_common import makeSetup
 
@@ -18,7 +19,7 @@ with tempfile.TemporaryDirectory() as temp:
     )
 
     tp = Path(temp)
-    runTruthTrackingGx2f(
+    runTruthTrackingKalman(
         trackingGeometry=setup.trackingGeometry,
         field=setup.field,
         digiConfigFile=setup.digiConfig,
@@ -29,6 +30,6 @@ with tempfile.TemporaryDirectory() as temp:
     s.run()
     del s
 
-    perf_file = tp / "performance_gx2f.root"
+    perf_file = tp / "performance_kf.root"
     assert perf_file.exists(), "Performance file not found"
-    shutil.copy(perf_file, setup.outdir / "performance_gx2f.root")
+    shutil.copy(perf_file, setup.outdir / "performance_kf.root")

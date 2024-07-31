@@ -6,7 +6,11 @@ import shutil
 
 import acts
 from acts.examples.simulation import (
-    addPythia8,
+    addParticleGun,
+    MomentumConfig,
+    EtaConfig,
+    PhiConfig,
+    ParticleConfig,
     addFatras,
     addDigitization,
 )
@@ -46,16 +50,20 @@ with tempfile.TemporaryDirectory() as temp:
 
     rnd = acts.examples.RandomNumbers(seed=42)
 
-    addPythia8(
+    addParticleGun(
         s,
-        hardProcess=["Top:qqbar2ttbar=on"],
-        npileup=200,
+        MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
+        EtaConfig(-3.0, 3.0),
+        PhiConfig(0.0, 360.0 * u.degree),
+        ParticleConfig(10, acts.PdgParticle.eMuon, randomizeCharge=True),
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
+            stddev=acts.Vector4(
+                0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
+            ),
         ),
+        multiplicity=50,
         rnd=rnd,
-        outputDirRoot=tp,
     )
 
     addFatras(
@@ -131,50 +139,63 @@ with tempfile.TemporaryDirectory() as temp:
         )
     )
 
+    # Choosing a seeder only has an effect on VertexFinder.AMVF. For
+    # VertexFinder.IVF we always use acts.VertexSeedFinder.GaussianSeeder
+    # (Python binding is not implemented).
+    # Setting useTime also only has an effect on VertexFinder.AMVF due to
+    # the same reason.
     addVertexFitting(
         s,
         setup.field,
-        tracks="tracks",
         trackParameters="trackParameters",
-        outputProtoVertices="amvf_protovertices",
-        outputVertices="amvf_fittedVertices",
-        seeder=acts.VertexSeedFinder.GaussianSeeder,
-        vertexFinder=VertexFinder.AMVF,
-        outputDirRoot=tp / "amvf",
+        outputProtoVertices="ivf_notime_protovertices",
+        outputVertices="ivf_notime_fittedVertices",
+        vertexFinder=VertexFinder.Iterative,
+        outputDirRoot=tp / "ivf_notime",
     )
 
     addVertexFitting(
         s,
         setup.field,
-        tracks="tracks",
         trackParameters="trackParameters",
-        outputProtoVertices="amvf_gridseeder_protovertices",
-        outputVertices="amvf_gridseeder_fittedVertices",
+        outputProtoVertices="amvf_gauss_notime_protovertices",
+        outputVertices="amvf_gauss_notime_fittedVertices",
+        seeder=acts.VertexSeedFinder.GaussianSeeder,
+        useTime=False,  # Time seeding not implemented for the Gaussian seeder
+        vertexFinder=VertexFinder.AMVF,
+        outputDirRoot=tp / "amvf_gauss_notime",
+    )
+
+    addVertexFitting(
+        s,
+        setup.field,
+        trackParameters="trackParameters",
+        outputProtoVertices="amvf_grid_time_protovertices",
+        outputVertices="amvf_grid_time_fittedVertices",
         seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
         useTime=True,
         vertexFinder=VertexFinder.AMVF,
-        outputDirRoot=tp / "amvf_gridseeder",
+        outputDirRoot=tp / "amvf_grid_time",
     )
 
     s.run()
     del s
 
-    for vertexing in ["amvf", "amvf_gridseeder"]:
+    for vertexing in ["ivf_notime", "amvf_gauss_notime", "amvf_grid_time"]:
         shutil.move(
             tp / f"{vertexing}/performance_vertexing.root",
             tp / f"performance_{vertexing}.root",
         )
 
-    for stem in [
-        "performance_ckf",
-        "tracksummary_ckf",
-        "performance_amvf",
-        "performance_amvf_gridseeder",
-        "performance_seeding",
-        "performance_ambi",
-        "pythia8_particles",
-        "pythia8_vertices",
+    for file in [
+        "performance_ckf.root",
+        "tracksummary_ckf.root",
+        "performance_ambi.root",
+        "performance_ivf_notime.root",
+        "performance_amvf_gauss_notime.root",
+        "performance_amvf_grid_time.root",
+        "performance_seeding.root",
     ]:
-        perf_file = tp / f"{stem}.root"
+        perf_file = tp / file
         assert perf_file.exists(), "Performance file not found"
-        shutil.copy(perf_file, setup.outdir / f"{stem}_ttbar.root")
+        shutil.copy(perf_file, setup.outdir / file)

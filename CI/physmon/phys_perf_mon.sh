@@ -20,8 +20,8 @@ shopt -s extglob
 
 
 mode=${1:-all}
-if ! [[ $mode = @(all|kalman|gsf|gx2f|fullchains|vertexing|simulation) ]]; then
-    echo "Usage: $0 <all|kalman|gsf|gx2f|fullchains|vertexing|simulation> (outdir)"
+if ! [[ $mode = @(all|kf|gsf|gx2f|fullchains|simulation) ]]; then
+    echo "Usage: $0 <all|kf|gsf|gx2f|fullchains|simulation> (outdir)"
     exit 1
 fi
 
@@ -123,35 +123,33 @@ function run_physmon_gen() {
 
     script=CI/physmon/workflows/physmon_${slug}.py
 
-    measure "$title" "$slug" ${script} $outdir 2>&1 > $outdir/run_${slug}.log
+    mkdir -p $outdir/$slug
+    measure "$title" "$slug" ${script} $outdir/$slug 2>&1 > $outdir/$slug/run_${slug}.log
 
     this_ec=$?
     ec=$(($ec | $this_ec))
 
     if [ $this_ec -ne 0 ]; then
-      echo "::error::🟥 Dataset generation failed: ${script} -> ec=$this_ec"
+        echo "::error::🟥 Dataset generation failed: ${script} -> ec=$this_ec"
     else
-      echo "::notice::✅ Dataset generation succeeded: ${script}"
+        echo "::notice::✅ Dataset generation succeeded: ${script}"
     fi
 }
 
 echo "::group::Generate validation dataset"
-if [[ "$mode" == "all" || "$mode" == "kalman" ]]; then
-    run_physmon_gen "Truth Tracking KF" "truth_tracking_kalman"
+if [[ "$mode" == "all" || "$mode" == "kf" ]]; then
+    run_physmon_gen "Truth Tracking KF" "trackfitting_kf"
 fi
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
-    run_physmon_gen "Truth Tracking GSF" "truth_tracking_gsf"
+    run_physmon_gen "Truth Tracking GSF" "trackfitting_gsf"
 fi
 if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
-    run_physmon_gen "Truth Tracking GX2F" "truth_tracking_gx2f"
+    run_physmon_gen "Truth Tracking GX2F" "trackfitting_gx2f"
 fi
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
-    run_physmon_gen "CKF Tracking" "ckf_tracking"
-    run_physmon_gen "Track finding ttbar" "track_finding_ttbar"
-
-fi
-if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
-    run_physmon_gen "Vertexing" "vertexing"
+    run_physmon_gen "CKF single muon" "trackfinding_singlemuon"
+    run_physmon_gen "CKF muon 50" "trackfinding_muon50"
+    run_physmon_gen "CKF ttbar 200" "trackfinding_ttbar200"
 fi
 if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
     run_physmon_gen "Simulation" "simulation"
@@ -169,13 +167,13 @@ function run_histcmp() {
     echo "::group::Comparing $a vs. $b"
 
     if [ ! -f "$a" ]; then
-      echo "::error::histcmp failed: File $a does not exist"
-      ec=1
+        echo "::error::histcmp failed: File $a does not exist"
+        ec=1
     fi
 
     if [ ! -f "$b" ]; then
-      echo "::error::histcmp failed: File $b does not exist"
-      ec=1
+        echo "::error::histcmp failed: File $b does not exist"
+        ec=1
     fi
 
     run histcmp $a $b \
@@ -190,7 +188,7 @@ function run_histcmp() {
     ec=$(($ec | $this_ec))
 
     if [ $this_ec -ne 0 ]; then
-      echo "::error::histcmp failed (${slug}): ec=$this_ec"
+        echo "::error::histcmp failed (${slug}): ec=$this_ec"
     fi
 
     echo "\"${title}\",${slug},${this_ec}" >> $histcmp_results
@@ -209,12 +207,12 @@ function full_chain() {
     echo $config
 
     if [ $suffix != truth_smeared ]; then
-      run_histcmp \
-        $outdir/performance_seeding_${suffix}.root \
-        $refdir/performance_seeding_${suffix}.root \
-        "Seeding ${suffix}" \
-        seeding_${suffix} \
-        -c $config
+        run_histcmp \
+            $outdir/performance_seeding_${suffix}.root \
+            $refdir/performance_seeding_${suffix}.root \
+            "Seeding ${suffix}" \
+            seeding_${suffix} \
+            -c $config
     fi
 
     run_histcmp \
@@ -293,7 +291,6 @@ function full_chain() {
         $refdir/tracksummary_ckf_${suffix}_hist.root \
         "Track Summary CKF ${suffix}" \
         tracksummary_ckf_${suffix}
-
 }
 
 function simulation() {
@@ -434,6 +431,15 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
       vertices_ttbar
 fi
 
+if [[ "$mode" == "all" || "$mode" == "kf" ]]; then
+    run_histcmp \
+        $outdir/performance_kf.root \
+        $refdir/performance_kf.root \
+        "Truth tracking" \
+        truth_tracking \
+        -c CI/physmon/truth_tracking.yml
+fi
+
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
     run_histcmp \
         $outdir/performance_gsf.root \
@@ -443,15 +449,6 @@ if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
         -c CI/physmon/gsf.yml
 fi
 
-if [[ "$mode" == "all" || "$mode" == "kalman" ]]; then
-    run_histcmp \
-        $outdir/performance_truth_tracking.root \
-        $refdir/performance_truth_tracking.root \
-        "Truth tracking" \
-        truth_tracking \
-        -c CI/physmon/truth_tracking.yml
-fi
-
 if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
     run_histcmp \
         $outdir/performance_gx2f.root \
@@ -459,14 +456,6 @@ if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
         "Truth tracking (GX2F)" \
         gx2f \
         -c CI/physmon/gx2f.yml
-fi
-
-if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
-    run Examples/Scripts/vertex_mu_scan.py \
-        $outdir/performance_vertexing_*mu*.root \
-        $outdir/vertexing_mu_scan.pdf
-
-    rm $outdir/performance_vertexing_*mu*
 fi
 
 if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
