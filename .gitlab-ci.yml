@@ -75,7 +75,9 @@ build_exatrkx_cpu:
     - >
       cmake -B build -S src
       --preset=gitlab-ci-exatrkx
-      -DCMAKE_CXX_FLAGS=-w
+      -DCMAKE_CXX_COMPILER=clang++
+      -DCMAKE_C_COMPILER=clang
+      -DACTS_EXATRKX_ENABLE_CUDA=OFF
 
     - ccache -z
     - cmake --build build -- -j2
@@ -113,10 +115,7 @@ build_exatrkx:
     - >
       cmake -B build -S src
       --preset=gitlab-ci-exatrkx
-      -DCMAKE_CXX_FLAGS=-w
-      -DCMAKE_CUDA_FLAGS=-w
       -DCMAKE_CUDA_ARCHITECTURES="75;86"
-      -DACTS_EXATRKX_ENABLE_CUDA=ON
 
     - ccache -z
     - cmake --build build -- -j2
