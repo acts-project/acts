@@ -27,6 +27,8 @@ fi
 
 outdir=${2:-physmon}
 mkdir -p $outdir
+mkdir -p $outdir/data
+mkdir -p $outdir/html
 
 refdir=CI/physmon/reference
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
@@ -159,7 +161,8 @@ function run_histcmp() {
     a=$1
     b=$2
     title=$3
-    slug=$4
+    html_path=$4
+    plots_path=$5
     shift 4
 
     echo "::group::Comparing $a vs. $b"
@@ -178,18 +181,18 @@ function run_histcmp() {
         --label-reference=reference \
         --label-monitored=monitored \
         --title="$title" \
-        -o $outdir/html/${slug}.html \
-        -p $outdir/html/${slug}_plots \
+        -o $html_path \
+        -p $plots_path \
         "$@"
 
     this_ec=$?
     ec=$(($ec | $this_ec))
 
     if [ $this_ec -ne 0 ]; then
-        echo "::error::histcmp failed (${slug}): ec=$this_ec"
+        echo "::error::histcmp failed: ec=$this_ec"
     fi
 
-    echo "\"${title}\",${slug},${this_ec}" >> $histcmp_results
+    echo "\"${title}\",${html_path},${this_ec}" >> $histcmp_results
 
     echo "::endgroup::"
 }
@@ -204,16 +207,18 @@ function trackfinding() {
             $outdir/data/$slug/performance_seeding.root \
             $refdir/$slug/performance_seeding.root \
             "Seeding ${slug}" \
-            seeding_${slug} \
-            -c $config
+            $outdir/html/$slug/performance_seeding.html \
+            $outdir/html/$slug/performance_seeding_plots \
+            --config $config
     fi
 
     run_histcmp \
         $outdir/data/$slug/performance_ckf.root \
         $refdir/$slug/performance_ckf.root \
         "CKF ${slug}" \
-        ckf_${slug} \
-        -c $config
+        $outdir/html/$slug/performance_ckf.html \
+        $outdir/html/$slug/performance_ckf_plots \
+        --config $config
 
     run Examples/Scripts/generic_plotter.py \
         $outdir/data/$slug/tracksummary_ckf.root \
@@ -230,14 +235,18 @@ function trackfinding() {
         $outdir/data/$slug/tracksummary_ckf_hist.root \
         $refdir/$slug/tracksummary_ckf_hist.root \
         "Track Summary CKF ${slug}" \
-        tracksummary_ckf_${slug}
+        $outdir/html/$slug/tracksummary_ckf.html \
+        $outdir/html/$slug/tracksummary_ckf_plots \
+        --config $config
 
     if [ -f $refdir/$slug/performance_ambi.root ]; then
         run_histcmp \
             $outdir/data/$slug/performance_ambi.root \
             $refdir/$slug/performance_ambi.root \
             "Ambisolver ${slug}" \
-            ambi_${slug}
+            $outdir/html/$slug/performance_ambi.html \
+            $outdir/html/$slug/performance_ambi_plots \
+            --config $config
     fi
 }
 
@@ -258,7 +267,9 @@ function vertexing() {
             $outdir/data/$slug/performance_ivf_notime_hist.root \
             $refdir/$slug/performance_ivf_notime_hist.root \
             "IVF notime ${slug}" \
-            ivf_notime_${slug}
+            $outdir/html/$slug/performance_ivf_notime.html \
+            $outdir/html/$slug/performance_ivf_notime_plots \
+            --config $config
     fi
 
     run Examples/Scripts/generic_plotter.py \
@@ -273,7 +284,9 @@ function vertexing() {
         $outdir/data/$slug/performance_amvf_gauss_notime_hist.root \
         $refdir/$slug/performance_amvf_gauss_notime_hist.root \
         "AMVF gauss notime ${slug}" \
-        amvf_gauss_notime_${slug}
+        $outdir/html/$slug/performance_amvf_gauss_notime.html \
+        $outdir/html/$slug/performance_amvf_gauss_notime_plots \
+        --config $config
 
     run Examples/Scripts/generic_plotter.py \
         $outdir/data/$slug/performance_amvf_grid_time.root \
@@ -287,7 +300,9 @@ function vertexing() {
         $outdir/data/$slug/performance_amvf_grid_time_hist.root \
         $refdir/$slug/performance_amvf_grid_time_hist.root \
         "AMVF grid time ${slug}" \
-        amvf_grid_time_${slug}
+        $outdir/html/$slug/performance_amvf_grid_time.html \
+        $outdir/html/$slug/performance_amvf_grid_time_plots \
+        --config $config
 }
 
 function simulation() {
@@ -310,7 +325,9 @@ function simulation() {
         $outdir/data/simulation/particles_${suffix}_hist.root \
         $refdir/simulation/particles_${suffix}_hist.root \
         "Particles ${suffix}" \
-        particles_${suffix}
+        $outdir/html/simulation/particles_${suffix}.html \
+        $outdir/html/simulation/particles_${suffix}_plots \
+        --config $config
 }
 
 function generation() {
@@ -325,7 +342,9 @@ function generation() {
         $outdir/data/simulation/particles_ttbar_hist.root \
         $refdir/simulation/particles_ttbar_hist.root \
         "Particles ttbar" \
-        particles_ttbar
+        $outdir/html/simulation/particles_ttbar.html \
+        $outdir/html/simulation/particles_ttbar_plots \
+        --config CI/physmon/config/pythia8_ttbar.yml
 
     run Examples/Scripts/generic_plotter.py \
         $outdir/data/simulation/pythia8_vertices_ttbar.root \
@@ -338,7 +357,9 @@ function generation() {
         $outdir/data/simulation/vertices_ttbar_hist.root \
         $refdir/simulation/vertices_ttbar_hist.root \
         "Vertices ttbar" \
-        vertices_ttbar
+        $outdir/html/simulation/vertices_ttbar.html \
+        $outdir/html/simulation/vertices_ttbar_plots \
+        --config CI/physmon/config/pythia8_ttbar.yml
 }
 
 if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
@@ -353,8 +374,9 @@ if [[ "$mode" == "all" || "$mode" == "kf" ]]; then
         $outdir/data/trackfitting_kf/performance_kf.root \
         $refdir/trackfitting_kf/performance_kf.root \
         "Truth tracking (KF)" \
-        kf \
-        -c CI/physmon/config/trackfitting_kf.yml
+        $outdir/html/trackfitting_kf/performance_kf.html \
+        $outdir/html/trackfitting_kf/performance_kf_plots \
+        --config CI/physmon/config/trackfitting_kf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
@@ -362,8 +384,9 @@ if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
         $outdir/data/trackfitting_gsf/performance_gsf.root \
         $refdir/trackfitting_gsf/performance_gsf.root \
         "Truth tracking (GSF)" \
-        gsf \
-        -c CI/physmon/config/trackfitting_gsf.yml
+        $outdir/html/trackfitting_gsf/performance_gsf.html \
+        $outdir/html/trackfitting_gsf/performance_gsf_plots \
+        --config CI/physmon/config/trackfitting_gsf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
@@ -371,8 +394,9 @@ if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
         $outdir/data/trackfitting_gx2f/performance_gx2f.root \
         $refdir/trackfitting_gx2f/performance_gx2f.root \
         "Truth tracking (GX2F)" \
-        gx2f \
-        -c CI/physmon/config/trackfitting_gx2f.yml
+        $outdir/html/trackfitting_gx2f/performance_gx2f.html \
+        $outdir/html/trackfitting_gx2f/performance_gx2f_plots \
+        --config CI/physmon/config/trackfitting_gx2f.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
