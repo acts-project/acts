@@ -48,6 +48,22 @@ struct ConversionData{
     }
 };
 
+template <typename hash, typename equal_to, typename conversion_data_t>
+auto inverse(conversion_data_t& conv){
+    std::unordered_map<typename conversion_data_t::V, std::size_t, hash, equal_to> inv;
+    for (std::size_t i = 0; i < conv.inputContainer->size(); i++){
+        auto key = conv.inputContainer->at(i);
+        auto value = conv.valueToValue(key);
+        inv.push_back({value,i});
+    }
+
+    return ConversionData{
+        conv.outputCotainer,
+        inv,
+        conv.inputContainer
+    };
+}
+
 template <typename input_container_t, typename hash = std::hash<typename input_container_t::value_type>, typename equal_to = std::equal_to<typename input_container_t::value_type>>
 auto create1To1(input_container_t& inputs){
     using K = typename input_container_t::value_type;

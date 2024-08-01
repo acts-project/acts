@@ -190,7 +190,13 @@ inline auto convertMeasurements(
 
 inline auto convertMeasurement(ActsExamples::BoundVariantMeasurement& measurement){
   auto fn = [](auto& m){
-    return traccc::measurement{};
+    auto loc = getLocal(m);
+    auto var = getVariance(m);
+    return traccc::measurement{
+      getLocal(m),
+      getVariance(m),
+
+    };
   };
   return std::visit(fn, measurement);
 }
