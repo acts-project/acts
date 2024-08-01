@@ -26,14 +26,11 @@ clang_tidy:
         && ln -sf /usr/bin/clang-tidy-18 /usr/bin/clang-tidy
     - >
         cmake -B build -S .
-        -GNinja
+        --preset=gitlab-ci-clangtidy
         -DCMAKE_CXX_COMPILER=clang++
         -DCMAKE_C_COMPILER=clang
-        -DCMAKE_BUILD_TYPE=Release
-        -DCMAKE_CXX_FLAGS="-Werror"
-        -DACTS_BUILD_EVERYTHING=on
-        -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
-        -DACTS_RUN_CLANG_TIDY=on
+        -DACTS_RUN_CLANG_TIDY=ON
+        -DACTS_BUILD_ODD=OFF
 
     # Main clang-tidy run during cmake compilation
     - CI/clang_tidy/run_clang_tidy.sh clang-tidy build
@@ -79,18 +76,8 @@ build_exatrkx_cpu:
     # Here we only do a minimal build without examples to save ressources
     - >
       cmake -B build -S src
-      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      -GNinja
-      -DCMAKE_BUILD_TYPE=Release
-      -DCMAKE_CXX_FLAGS=-w
-      -DACTS_BUILD_PLUGIN_EXATRKX=ON
-      -DACTS_BUILD_EXAMPLES_EXATRKX=OFF
-      -DACTS_BUILD_UNITTESTS=OFF
-      -DACTS_EXATRKX_ENABLE_TORCH=ON
-      -DACTS_EXATRKX_ENABLE_ONNX=OFF
+      --preset=gitlab-ci-exatrkx
       -DACTS_EXATRKX_ENABLE_CUDA=OFF
-      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=OFF
-      -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
 
     - ccache -z
     - cmake --build build -- -j2
@@ -127,20 +114,8 @@ build_exatrkx:
     - mkdir build
     - >
       cmake -B build -S src
-      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      -GNinja
-      -DCMAKE_BUILD_TYPE=Release
-      -DCMAKE_CXX_FLAGS=-w
-      -DCMAKE_CUDA_FLAGS=-w
+      --preset=gitlab-ci-exatrkx
       -DCMAKE_CUDA_ARCHITECTURES="75;86"
-      -DACTS_BUILD_PLUGIN_EXATRKX=ON
-      -DACTS_BUILD_EXAMPLES_EXATRKX=ON
-      -DACTS_BUILD_UNITTESTS=ON
-      -DACTS_EXATRKX_ENABLE_TORCH=ON
-      -DACTS_EXATRKX_ENABLE_ONNX=OFF
-      -DACTS_EXATRKX_ENABLE_CUDA=ON
-      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-      -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
 
     - ccache -z
     - cmake --build build -- -j2
@@ -206,21 +181,8 @@ build_linux_ubuntu:
     - mkdir build
     - >
       cmake -B build -S src
-      -GNinja
-      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo
-      -DCMAKE_CXX_FLAGS=-Werror
-      -DCMAKE_CXX_STANDARD=20
-      -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-      -DACTS_BUILD_EVERYTHING=ON
-      -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
-      -DACTS_BUILD_ODD=ON
-      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-      -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
-      -DACTS_FORCE_ASSERTIONS=ON
-      -DACTS_BUILD_ANALYSIS_APPS=ON
+      --preset=gitlab-ci
       -DACTS_BUILD_PLUGIN_ONNX=ON
-      -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
     - ccache -z
     - cmake --build build -- -j2
@@ -304,20 +266,8 @@ linux_physmon:
     - mkdir build
     - >
       cmake -B build -S src
-      -GNinja
-      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      -DCMAKE_BUILD_TYPE=Release
-      -DCMAKE_CXX_FLAGS=-Werror
+      --preset=gitlab-ci
       -DCMAKE_CXX_STANDARD=${CXXSTD}
-      -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-      -DACTS_BUILD_EVERYTHING=ON
-      -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
-      -DACTS_BUILD_ODD=ON
-      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-      -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
-      -DACTS_FORCE_ASSERTIONS=ON
-      -DACTS_BUILD_ANALYSIS_APPS=ON
-      -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
     - ccache -z
     - cmake --build build -- -j2
@@ -411,35 +361,8 @@ linux_ubuntu_2204_clang:
   script:
     - >
       cmake -B build -S src
-      -GNinja
-      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      -DCMAKE_BUILD_TYPE=Release
-      -DCMAKE_CXX_FLAGS=-Werror
-      -DCMAKE_CXX_STANDARD=20
+      --preset=gitlab-ci
       -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-      -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-      -DACTS_FORCE_ASSERTIONS=OFF
-      -DACTS_BUILD_UNITTESTS=ON
-      -DACTS_BUILD_INTEGRATIONTESTS=ON
-      -DACTS_BUILD_BENCHMARKS=ON
-      -DACTS_BUILD_EXAMPLES=ON
-      -DACTS_BUILD_PLUGIN_DD4HEP=OFF
-      -DACTS_BUILD_PLUGIN_TGEO=ON
-      -DACTS_BUILD_PLUGIN_IDENTIFICATION=ON
-      -DACTS_BUILD_PLUGIN_JSON=ON
-      -DACTS_BUILD_FATRAS=ON
-      -DACTS_BUILD_PLUGIN_LEGACY=ON
-      -DACTS_BUILD_EXAMPLES_DD4HEP=OFF
-      -DACTS_BUILD_PLUGIN_EDM4HEP=OFF
-      -DACTS_BUILD_EXAMPLES_GEANT4=ON
-      -DACTS_BUILD_EXAMPLES_HEPMC3=ON
-      -DACTS_BUILD_EXAMPLES_PYTHIA8=ON
-      -DACTS_BUILD_FATRAS_GEANT4=ON
-      -DACTS_BUILD_FATRAS=ON
-      -DACTS_BUILD_ALIGNMENT=ON
-      -DACTS_BUILD_ANALYSIS_APPS=ON
-      -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
     - ccache -z
     - cmake --build build -- -j2
