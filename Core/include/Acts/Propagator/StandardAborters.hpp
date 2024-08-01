@@ -173,6 +173,7 @@ struct EndOfWorldReached {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] navigator The navigator object
+  /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
