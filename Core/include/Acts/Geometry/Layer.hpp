@@ -15,7 +15,7 @@
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -127,12 +127,12 @@ class Layer : public virtual GeometryObject {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be checked
-  /// @param boundaryTolerance is the boundary check directive
+  /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
-  virtual bool isOnLayer(const GeometryContext& gctx, const Vector3& position,
-                         const BoundaryTolerance& boundaryTolerance =
-                             BoundaryTolerance::None()) const;
+  virtual bool isOnLayer(
+      const GeometryContext& gctx, const Vector3& position,
+      const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// Return method for the approach descriptor, can be nullptr
   const ApproachDescriptor* approachDescriptor() const;

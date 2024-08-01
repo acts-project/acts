@@ -27,7 +27,7 @@ The implementation is then free to use and update this cache instance as
 needed. Before a client can issue field lookup calls, it needs to obtain an
 initialized instance of this cache object. This can be achieved generically for
 all implementations by using {func}`Acts::MagneticFieldProvider::makeCache`.
-This function accepts an instance of {class}`Acts::MagneticFieldContext`, see
+This function accepts an instance of {type}`Acts::MagneticFieldContext`, see
 [](#magnetic-field-context) for details.
 
 The main lookup method of {class}`Acts::MagneticFieldProvider` is
@@ -61,7 +61,7 @@ Acts::Vector3 fieldValue = *lookupResult;
 
 ## Magnetic field context
 
-:::{doxygenclass} Acts::MagneticFieldContext
+:::{doxygentypedef} Acts::MagneticFieldContext
 :outline:
 :::
 

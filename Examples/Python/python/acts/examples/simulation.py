@@ -528,22 +528,21 @@ def addFatras(
 
     # Selector
     if preSelectParticles is not None:
-        particlesSelected = "fatras_particles_preselected"
+        particles_selected = "particles_selected"
         addParticleSelection(
             s,
             preSelectParticles,
             inputParticles=inputParticles,
-            outputParticles=particlesSelected,
+            outputParticles=particles_selected,
         )
-        s.addWhiteboardAlias("particles_selected", particlesSelected)
     else:
-        particlesSelected = inputParticles
+        particles_selected = inputParticles
 
     # Simulation
     alg = acts.examples.FatrasSimulation(
         **acts.examples.defaultKWArgs(
             level=customLogLevel(),
-            inputParticles=particlesSelected,
+            inputParticles=particles_selected,
             outputParticlesInitial=outputParticlesInitial,
             outputParticlesFinal=outputParticlesFinal,
             outputSimHits=outputSimHits,
@@ -579,7 +578,6 @@ def addFatras(
             inputParticles=alg.config.outputParticlesFinal,
             outputParticles=particlesFinal,
         )
-        s.addWhiteboardAlias("particles_selected", particlesFinal)
     else:
         particlesInitial = alg.config.outputParticlesInitial
         particlesFinal = alg.config.outputParticlesFinal
@@ -751,16 +749,15 @@ def addGeant4(
 
     # Selector
     if preSelectParticles is not None:
-        particlesSelected = "geant4_particles_preselected"
+        particles_selected = "particles_selected"
         addParticleSelection(
             s,
             preSelectParticles,
             inputParticles=inputParticles,
-            outputParticles=particlesSelected,
+            outputParticles=particles_selected,
         )
-        s.addWhiteboardAlias("particles_selected", particlesSelected)
     else:
-        particlesSelected = inputParticles
+        particles_selected = inputParticles
 
     if g4DetectorConstructionFactory is None:
         if detector is None:
@@ -784,7 +781,7 @@ def addGeant4(
         geant4Handle=__geant4Handle,
         detectorConstructionFactory=g4DetectorConstructionFactory,
         randomNumbers=rnd,
-        inputParticles=particlesSelected,
+        inputParticles=particles_selected,
         outputParticlesInitial=outputParticlesInitial,
         outputParticlesFinal=outputParticlesFinal,
         outputSimHits=outputSimHits,
@@ -807,7 +804,7 @@ def addGeant4(
 
     # Selector
     if postSelectParticles is not None:
-        particlesInitial = "geant4_particles_initial_postselected"
+        particlesInitial = "geant4_particles_initial_selected"
         addParticleSelection(
             s,
             postSelectParticles,
@@ -815,14 +812,13 @@ def addGeant4(
             outputParticles=particlesInitial,
         )
 
-        particlesFinal = "geant4_particles_final_postselected"
+        particlesFinal = "geant4_particles_final_selected"
         addParticleSelection(
             s,
             postSelectParticles,
             inputParticles=alg.config.outputParticlesFinal,
             outputParticles=particlesFinal,
         )
-        s.addWhiteboardAlias("particles_selected", particlesFinal)
     else:
         particlesInitial = alg.config.outputParticlesInitial
         particlesFinal = alg.config.outputParticlesFinal

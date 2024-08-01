@@ -34,7 +34,7 @@ Acts::RecordedMaterialTrack Acts::MaterialValidater::recordMaterial(
       m_cfg.materialAssigner->assignmentCandidates(gctx, mctx, position,
                                                    direction);
 
-  for (const auto& [surface, sposition, sdirection] : surfaceAssignments) {
+  for (auto [surface, sposition, sdirection] : surfaceAssignments) {
     // The slab and the path correction
     auto materialSlab = surface->surfaceMaterial()->materialSlab(sposition);
     auto pathCorrection = surface->pathCorrection(gctx, sposition, sdirection);

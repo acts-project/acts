@@ -18,7 +18,6 @@
 #include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/TruthGraphBuilder.hpp"
 
 #include <memory>
 
@@ -169,41 +168,13 @@ void addExaTrkXTrackFinding(Context &ctx) {
 #endif
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TruthGraphBuilder, mex, "TruthGraphBuilder",
-      inputSpacePoints, inputSimHits, inputParticles,
-      inputMeasurementSimHitsMap, inputMeasurementParticlesMap, outputGraph,
-      targetMinPT, targetMinSize, uniqueModules);
-
-  py::enum_<TrackFindingAlgorithmExaTrkX::NodeFeature>(mex, "NodeFeature")
-      .value("R", TrackFindingAlgorithmExaTrkX::NodeFeature::eR)
-      .value("Phi", TrackFindingAlgorithmExaTrkX::NodeFeature::ePhi)
-      .value("Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eZ)
-      .value("X", TrackFindingAlgorithmExaTrkX::NodeFeature::eX)
-      .value("Y", TrackFindingAlgorithmExaTrkX::NodeFeature::eY)
-      .value("Eta", TrackFindingAlgorithmExaTrkX::NodeFeature::eEta)
-      .value("ClusterX", TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterX)
-      .value("ClusterY", TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterY)
-      .value("CellCount", TrackFindingAlgorithmExaTrkX::NodeFeature::eCellCount)
-      .value("CellSum", TrackFindingAlgorithmExaTrkX::NodeFeature::eCellSum)
-      .value("Cluster1R", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1R)
-      .value("Cluster2R", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2R)
-      .value("Cluster1Phi",
-             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Phi)
-      .value("Cluster2Phi",
-             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Phi)
-      .value("Cluster1Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Z)
-      .value("Cluster2Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Z)
-      .value("Cluster1Eta",
-             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Eta)
-      .value("Cluster2Eta",
-             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Eta);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
-                                "TrackFindingAlgorithmExaTrkX",
-                                inputSpacePoints, inputClusters,
-                                inputTruthGraph, outputProtoTracks, outputGraph,
-                                graphConstructor, edgeClassifiers, trackBuilder,
-                                nodeFeatures, featureScales, filterShortTracks);
+      ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
+      "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputSimHits,
+      inputParticles, inputClusters, inputMeasurementSimhitsMap,
+      outputProtoTracks, outputGraph, graphConstructor, edgeClassifiers,
+      trackBuilder, rScale, phiScale, zScale, cellCountScale, cellSumScale,
+      clusterXScale, clusterYScale, filterShortTracks, targetMinHits,
+      targetMinPT);
 
   {
     auto cls =

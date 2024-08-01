@@ -177,36 +177,36 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     BOOST_CHECK_EQUAL(tc.size(), 1);
 
     auto pTrack = tracks.at(0);
-    BOOST_CHECK_EQUAL(pTrack.getData().tipIndex, 2);
+    BOOST_CHECK_EQUAL(pTrack.data().tipIndex, 2);
 
     t.parameters() << 1, 2, 3, 4, 5, 6;
-    Eigen::Map<const BoundVector> pars{pTrack.getData().parameters.data()};
+    Eigen::Map<BoundVector> pars{pTrack.data().parameters.data()};
     BoundVector bv;
     bv << 1, 2, 3, 4, 5, 6;
     BOOST_CHECK_EQUAL(pars, bv);
 
     t.covariance() = refCov;
 
-    Eigen::Map<const BoundMatrix> cov{pTrack.getData().covariance.data()};
+    Eigen::Map<const BoundMatrix> cov{pTrack.data().covariance.data()};
     BOOST_CHECK_EQUAL(refCov, cov);
 
     t.nMeasurements() = 17;
-    BOOST_CHECK_EQUAL(pTrack.getData().nMeasurements, 17);
+    BOOST_CHECK_EQUAL(pTrack.data().nMeasurements, 17);
 
     t.nHoles() = 34;
-    BOOST_CHECK_EQUAL(pTrack.getData().nHoles, 34);
+    BOOST_CHECK_EQUAL(pTrack.data().nHoles, 34);
 
     t.chi2() = 882.3f;
-    BOOST_CHECK_EQUAL(pTrack.getData().chi2, 882.3f);
+    BOOST_CHECK_EQUAL(pTrack.data().chi2, 882.3f);
 
     t.nDoF() = 9;
-    BOOST_CHECK_EQUAL(pTrack.getData().ndf, 9);
+    BOOST_CHECK_EQUAL(pTrack.data().ndf, 9);
 
     t.nOutliers() = 77;
-    BOOST_CHECK_EQUAL(pTrack.getData().nOutliers, 77);
+    BOOST_CHECK_EQUAL(pTrack.data().nOutliers, 77);
 
     t.nSharedHits() = 99;
-    BOOST_CHECK_EQUAL(pTrack.getData().nSharedHits, 99);
+    BOOST_CHECK_EQUAL(pTrack.data().nSharedHits, 99);
 
     Acts::GeometryContext gctx;
     t.setReferenceSurface(free);

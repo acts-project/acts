@@ -405,7 +405,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
             volumes[volumes.size() - 1u]->portals()[iu + 4u]->surface();
         pReplacements.push_back(
             createSectorReplacement(gctx, vCenter, refSurface, rBoundaries,
-                                    Acts::BinningValue::binR, iu + 4ul, idir));
+                                    Acts::BinningValue::binR, iu + 4u, idir));
       }
     }
   } else {
@@ -610,7 +610,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
             volumes[0u]->portals()[iu + iSecOffset]->surface();
         pReplacements.push_back(createSectorReplacement(
             gctx, combinedCenter, refSurface, zBoundaries,
-            Acts::BinningValue::binZ, iu + 4ul, idir));
+            Acts::BinningValue::binZ, iu + 4u, idir));
       }
     }
   } else {
@@ -1036,7 +1036,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   // The outer one is a single volume represented as a container
   auto outerContainer = containers.back();
   std::shared_ptr<DetectorVolume> wrappingVolume = nullptr;
-  for (const auto& [key, value] : outerContainer) {
+  for (auto [key, value] : outerContainer) {
     auto attachedVolumes = value->attachedDetectorVolumes();
     for (const auto& ava : attachedVolumes) {
       for (const auto& av : ava) {

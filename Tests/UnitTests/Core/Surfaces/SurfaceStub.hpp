@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
@@ -85,8 +86,7 @@ class SurfaceStub : public RegularSurface {
   /// Surface intersction
   SurfaceMultiIntersection intersect(
       const GeometryContext& /*gctx*/, const Vector3& /*position*/,
-      const Vector3& /*direction*/,
-      const BoundaryTolerance& /*boundaryTolerance*/,
+      const Vector3& /*direction*/, const BoundaryCheck& /*bcheck*/,
       const ActsScalar /*tolerance*/) const final {
     Intersection3D stubIntersection(Vector3(20., 0., 0.), 20.,
                                     Intersection3D::Status::reachable);
@@ -122,7 +122,6 @@ class SurfaceStub : public RegularSurface {
   std::shared_ptr<const PlanarBounds> m_bounds;
 };
 
-static_assert(RegularSurfaceConcept<SurfaceStub>,
-              "SurfaceStub does not fulfill RegularSurfaceConcept");
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, SurfaceStub);
 
 }  // namespace Acts

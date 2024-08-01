@@ -6,11 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
-
-#include <optional>
 
 template <typename coll_t>
 void Acts::ConvexPolygonBoundsBase::convex_impl(
@@ -104,10 +100,8 @@ Acts::SurfaceBounds::BoundsType Acts::ConvexPolygonBounds<N>::type() const {
 
 template <int N>
 bool Acts::ConvexPolygonBounds<N>::inside(
-    const Acts::Vector2& lposition,
-    const Acts::BoundaryTolerance& boundaryTolerance) const {
-  return detail::insidePolygon(m_vertices, boundaryTolerance, lposition,
-                               std::nullopt);
+    const Acts::Vector2& lposition, const Acts::BoundaryCheck& bcheck) const {
+  return bcheck.isInside(lposition, m_vertices);
 }
 
 template <int N>

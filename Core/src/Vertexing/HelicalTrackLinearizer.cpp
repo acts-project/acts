@@ -8,7 +8,6 @@
 
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 
-#include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
@@ -19,7 +18,7 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
     const Acts::MagneticFieldContext& mctx,
     MagneticFieldProvider::Cache& fieldCache) const {
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorOptions<> pOptions(gctx, mctx);
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
@@ -29,11 +28,10 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection =
-      perigeeSurface
-          .intersect(gctx, params.position(gctx), params.direction(),
-                     BoundaryTolerance::Infinite())
-          .closest();
+  auto intersection = perigeeSurface
+                          .intersect(gctx, params.position(gctx),
+                                     params.direction(), BoundaryCheck(false))
+                          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above

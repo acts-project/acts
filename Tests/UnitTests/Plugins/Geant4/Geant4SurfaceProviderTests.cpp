@@ -29,26 +29,7 @@
 #include "G4ThreeVector.hh"
 #include "G4Transform3D.hh"
 
-/// @brief Convert Acts binning value to Geant4 axis
-/// as Geant4 uses a different axis convention
-/// @param bv the Acts binning value
-EAxis binToGeant4Axis(const Acts::BinningValue& bv) {
-  switch (bv) {
-    case Acts::BinningValue::binX:
-      return EAxis::kXAxis;
-    case Acts::BinningValue::binY:
-      return EAxis::kYAxis;
-    case Acts::BinningValue::binZ:
-      return EAxis::kZAxis;
-    case Acts::BinningValue::binR:
-      return EAxis::kRho;
-    case Acts::BinningValue::binPhi:
-      return EAxis::kPhi;
-    default:
-      throw std::invalid_argument(
-          "No Geant4 axis conversion for this binning value");
-  }
-}
+class G4VPhysicalVolume;
 
 const int nLayers = 5;
 const int nChips = 5;
@@ -291,7 +272,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   std::array<unsigned int, 3> g4Axes{0};
   for (auto& bv : {Acts::BinningValue::binX, Acts::BinningValue::binY,
                    Acts::BinningValue::binZ}) {
-    g4Axes[toUnderlying(bv)] = binToGeant4Axis(bv);
+    g4Axes[toUnderlying(bv)] = Acts::binToGeant4Axis(bv);
   }
 
   ranges[g4Axes[0]] = std::make_tuple(armOffset - 5, armOffset + 100);

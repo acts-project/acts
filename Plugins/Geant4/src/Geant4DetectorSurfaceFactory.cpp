@@ -17,7 +17,6 @@
 #include <utility>
 
 #include "G4LogicalVolume.hh"
-#include "G4Transform3D.hh"
 #include "G4VPhysicalVolume.hh"
 
 void Acts::Geant4DetectorSurfaceFactory::construct(

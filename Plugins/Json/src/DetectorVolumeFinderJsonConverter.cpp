@@ -46,8 +46,8 @@ struct IndexedVolumesGenerator {
             Acts::Experimental::DetectorVolumeFiller>;
 
     auto indexedDetectorVolumeImpl =
-        std::make_unique<const IndexedDetectorVolumesImpl>(
-            std::forward<grid_type>(grid), bv, transform);
+        std::make_unique<const IndexedDetectorVolumesImpl>(std::move(grid), bv,
+                                                           transform);
 
     // Create the delegate and connect it
     Acts::Experimental::ExternalNavigationDelegate vFinder;

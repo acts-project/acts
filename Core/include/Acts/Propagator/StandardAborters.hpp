@@ -12,7 +12,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -68,7 +68,7 @@ struct PathLimitReached {
 /// propagation abort
 struct SurfaceReached {
   const Surface* surface = nullptr;
-  BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
+  BoundaryCheck boundaryCheck = BoundaryCheck(true);
 
   // TODO https://github.com/acts-project/acts/issues/2738
   /// Distance limit to discard intersections "behind us"
@@ -113,7 +113,7 @@ struct SurfaceReached {
     const auto sIntersection = surface->intersect(
         state.geoContext, stepper.position(state.stepping),
         state.options.direction * stepper.direction(state.stepping),
-        boundaryTolerance, tolerance);
+        boundaryCheck, tolerance);
     const auto closest = sIntersection.closest();
 
     bool reached = false;
@@ -130,9 +130,9 @@ struct SurfaceReached {
     bool intersectionFound = false;
 
     for (const auto& intersection : sIntersection.split()) {
-      if (intersection.isValid() &&
-          detail::checkPathLength(intersection.pathLength(), nearLimit,
-                                  farLimit, logger)) {
+      if (intersection &&
+          detail::checkIntersection(intersection.intersection(), nearLimit,
+                                    farLimit, logger)) {
         stepper.updateStepSize(state.stepping, intersection.pathLength(),
                                ConstrainedStep::aborter, false);
         ACTS_VERBOSE(

@@ -10,7 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -129,10 +129,8 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
       "0.0000000, 2.5243378, 0.0000000)"));
   //
   /// Test inside
-  BOOST_CHECK(
-      DiscTrapezoidBoundsObject.inside(inSurface, BoundaryTolerance::None()));
-  BOOST_CHECK(
-      !DiscTrapezoidBoundsObject.inside(outside, BoundaryTolerance::None()));
+  BOOST_CHECK(DiscTrapezoidBoundsObject.inside(inSurface, BoundaryCheck(true)));
+  BOOST_CHECK(!DiscTrapezoidBoundsObject.inside(outside, BoundaryCheck(true)));
   //
   /// Test rMin
   CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.rMin(), rMin, 1e-6);

@@ -10,7 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
@@ -86,18 +86,21 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   const Vector2 beyondEnd{0.0, 30.0};
   const Vector2 unitZ{0.0, 1.0};
   const Vector2 unitR{1.0, 0.0};
-  const BoundaryTolerance tolerance =
-      BoundaryTolerance::AbsoluteBound(0.1, 0.1);
+  const BoundaryCheck trueBoundaryCheckWithTolerance(true, true, 0.1, 0.1);
   // This fails because the bounds are not inclusive.
-  BOOST_CHECK(!lineBoundsObject.inside(atRadius, tolerance));
-  BOOST_CHECK(!lineBoundsObject.inside(beyondEnd, tolerance));
-  BOOST_CHECK(lineBoundsObject.inside(unitZ, tolerance));
-  BOOST_CHECK(!lineBoundsObject.inside(unitR, tolerance));
+  BOOST_CHECK(
+      !lineBoundsObject.inside(atRadius, trueBoundaryCheckWithTolerance));
+  BOOST_CHECK(
+      !lineBoundsObject.inside(beyondEnd, trueBoundaryCheckWithTolerance));
+  BOOST_CHECK(lineBoundsObject.inside(unitZ, trueBoundaryCheckWithTolerance));
+  BOOST_CHECK(!lineBoundsObject.inside(unitR, trueBoundaryCheckWithTolerance));
 
   /// Test negative redius inside
 
-  BOOST_CHECK(lineBoundsObject.inside(Vector2{-0.2, 10}, tolerance));
-  BOOST_CHECK(!lineBoundsObject.inside(Vector2{-0.8, 10}, tolerance));
+  BOOST_CHECK(lineBoundsObject.inside(Vector2{-0.2, 10},
+                                      trueBoundaryCheckWithTolerance));
+  BOOST_CHECK(!lineBoundsObject.inside(Vector2{-0.8, 10},
+                                       trueBoundaryCheckWithTolerance));
 
   /// test for r()
   BOOST_CHECK_EQUAL(lineBoundsObject.get(LineBounds::eR), nominalRadius);

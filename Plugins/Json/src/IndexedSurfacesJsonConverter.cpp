@@ -40,7 +40,7 @@ struct IndexedSurfacesGenerator {
       const std::array<Acts::BinningValue, grid_type::DIM>& bv,
       const Acts::Transform3& transform) {
     Acts::Experimental::IndexedSurfacesNavigation<grid_type> indexedSurfaces(
-        std::forward<grid_type>(grid), bv, transform);
+        std::move(grid), bv, transform);
 
     // The portal delegate
     Acts::Experimental::AllPortalsNavigation allPortals;

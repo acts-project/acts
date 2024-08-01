@@ -22,16 +22,16 @@ class KalmanFitterErrorCategory : public std::error_category {
     using Acts::KalmanFitterError;
 
     switch (static_cast<KalmanFitterError>(c)) {
-      case KalmanFitterError::UpdateFailed:
-        return "Kalman update failed";
+      case KalmanFitterError::ForwardUpdateFailed:
+        return "Kalman forward update failed";
+      case KalmanFitterError::BackwardUpdateFailed:
+        return "Kalman backward update failed";
       case KalmanFitterError::SmoothFailed:
         return "Kalman smooth failed";
       case KalmanFitterError::OutputConversionFailed:
         return "Kalman output conversion failed";
       case KalmanFitterError::NoMeasurementFound:
         return "No measurement detected during the propagation";
-      case KalmanFitterError::ReversePropagationFailed:
-        return "Reverse propagation failed";
       default:
         return "unknown";
     }

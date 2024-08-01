@@ -85,19 +85,18 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
 /// @brief Smooth a track using the gain matrix smoother
 ///
 /// @tparam track_proxy_t The track proxy type
-/// @tparam smoother_t The smoother type
 ///
 /// @param geoContext The geometry context
 /// @param track The track to smooth
 /// @param logger The logger
-/// @param smoother The smoother
 ///
 /// @return The result of the smoothing
-template <typename track_proxy_t, typename smoother_t = GainMatrixSmoother>
+template <typename track_proxy_t>
 Result<void> smoothTrack(
     const GeometryContext &geoContext, track_proxy_t &track,
-    const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO),
-    smoother_t smoother = GainMatrixSmoother()) {
+    const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO)) {
+  Acts::GainMatrixSmoother smoother;
+
   auto &trackContainer = track.container();
   auto &trackStateContainer = trackContainer.trackStateContainer();
 
@@ -180,7 +179,7 @@ findTrackStateForExtrapolation(
     return referenceSurface
         .intersect(geoContext, freeVector.template segment<3>(eFreePos0),
                    freeVector.template segment<3>(eFreeDir0),
-                   BoundaryTolerance::None(), s_onSurfaceTolerance)
+                   BoundaryCheck(true), s_onSurfaceTolerance)
         .closest();
   };
 
@@ -195,7 +194,7 @@ findTrackStateForExtrapolation(
       }
 
       SurfaceIntersection intersection = intersect(*first);
-      if (!intersection.isValid()) {
+      if (!intersection) {
         ACTS_ERROR("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
             TrackExtrapolationError::ReferenceSurfaceUnreachable);
@@ -215,7 +214,7 @@ findTrackStateForExtrapolation(
       }
 
       SurfaceIntersection intersection = intersect(*last);
-      if (!intersection.isValid()) {
+      if (!intersection) {
         ACTS_ERROR("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
             TrackExtrapolationError::ReferenceSurfaceUnreachable);
@@ -246,13 +245,13 @@ findTrackStateForExtrapolation(
       double absDistanceFirst = std::abs(intersectionFirst.pathLength());
       double absDistanceLast = std::abs(intersectionLast.pathLength());
 
-      if (intersectionFirst.isValid() && absDistanceFirst <= absDistanceLast) {
+      if (intersectionFirst && absDistanceFirst <= absDistanceLast) {
         ACTS_VERBOSE("using first track state with intersection at "
                      << intersectionFirst.pathLength());
         return std::make_pair(*first, intersectionFirst.pathLength());
       }
 
-      if (intersectionLast.isValid() && absDistanceLast <= absDistanceFirst) {
+      if (intersectionLast && absDistanceLast <= absDistanceFirst) {
         ACTS_VERBOSE("using last track state with intersection at "
                      << intersectionLast.pathLength());
         return std::make_pair(*last, intersectionLast.pathLength());

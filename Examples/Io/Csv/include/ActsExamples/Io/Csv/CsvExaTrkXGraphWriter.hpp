@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Graph.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -21,7 +20,8 @@
 namespace ActsExamples {
 struct AlgorithmContext;
 
-class CsvExaTrkXGraphWriter final : public WriterT<Graph> {
+class CsvExaTrkXGraphWriter final
+    : public WriterT<std::pair<std::vector<std::int64_t>, std::vector<float>>> {
  public:
   struct Config {
     /// Which simulated (truth) hits collection to use.
@@ -46,7 +46,9 @@ class CsvExaTrkXGraphWriter final : public WriterT<Graph> {
   ///
   /// @param[in] ctx is the algorithm context
   /// @param[in] simHits are the simhits to be written
-  ProcessCode writeT(const AlgorithmContext& ctx, const Graph& graph) override;
+  ProcessCode writeT(const AlgorithmContext& ctx,
+                     const std::pair<std::vector<std::int64_t>,
+                                     std::vector<float>>& graph) override;
 
  private:
   Config m_cfg;

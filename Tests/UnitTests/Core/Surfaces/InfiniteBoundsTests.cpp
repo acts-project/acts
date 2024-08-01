@@ -10,7 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
@@ -34,8 +34,8 @@ BOOST_AUTO_TEST_CASE(InfiniteBoundsProperties) {
 
   /// test for inside()
   const Vector2 anyVector{0., 1.};
-  const BoundaryTolerance anyTolerance = BoundaryTolerance::None();
-  BOOST_CHECK(infiniteBoundsObject.inside(anyVector, anyTolerance));
+  const BoundaryCheck anyBoundaryCheck(true);
+  BOOST_CHECK(infiniteBoundsObject.inside(anyVector, anyBoundaryCheck));
 
   /// test for dump
   boost::test_tools::output_test_stream dumpOuput;

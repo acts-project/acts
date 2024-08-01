@@ -43,14 +43,14 @@ class ConstPodioTrackStateContainer;
 class PodioTrackStateContainerBase {
  public:
   using Parameters =
-      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
+      typename detail_lt::Types<eBoundSize, false>::CoefficientsMap;
   using Covariance =
-      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
+      typename detail_lt::Types<eBoundSize, false>::CovarianceMap;
 
   using ConstParameters =
-      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
+      typename detail_lt::Types<eBoundSize, true>::CoefficientsMap;
   using ConstCovariance =
-      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
+      typename detail_lt::Types<eBoundSize, true>::CovarianceMap;
 
  protected:
   template <typename T>
@@ -107,7 +107,7 @@ class PodioTrackStateContainerBase {
     if constexpr (EnsureConst) {
       dataPtr = &trackState.getData();
     } else {
-      dataPtr = &PodioUtil::getDataMutable(trackState);
+      dataPtr = &trackState.data();
     }
     auto& data = *dataPtr;
     switch (key) {
@@ -286,16 +286,16 @@ class ConstPodioTrackStateContainer final
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
+  ConstTrackStateProxy::Measurement<measdim> measurement_impl(
       IndexType index) const {
-    return ConstTrackStateProxy::Calibrated<measdim>{
+    return ConstTrackStateProxy::Measurement<measdim>{
         m_collection->at(index).getData().measurement.data()};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
-      IndexType index) const {
-    return ConstTrackStateProxy::CalibratedCovariance<measdim>{
+  ConstTrackStateProxy::MeasurementCovariance<measdim>
+  measurementCovariance_impl(IndexType index) const {
+    return ConstTrackStateProxy::MeasurementCovariance<measdim>{
         m_collection->at(index).getData().measurementCovariance.data()};
   }
 
@@ -345,9 +345,8 @@ class ConstPodioTrackStateContainer final
 static_assert(IsReadOnlyMultiTrajectory<ConstPodioTrackStateContainer>::value,
               "MutablePodioTrackStateContainer should not be read-only");
 
-static_assert(
-    ConstMultiTrajectoryBackend<ConstPodioTrackStateContainer>,
-    "ConstPodioTrackStateContainer does not fulfill TrackContainerBackend");
+ACTS_STATIC_CHECK_CONCEPT(ConstMultiTrajectoryBackend,
+                          ConstPodioTrackStateContainer);
 
 template <>
 struct IsReadOnlyMultiTrajectory<MutablePodioTrackStateContainer>
@@ -371,8 +370,7 @@ class MutablePodioTrackStateContainer final
   }
 
   Parameters parameters_impl(IndexType istate) {
-    return Parameters{
-        PodioUtil::getDataMutable(m_params->at(istate)).values.data()};
+    return Parameters{m_params->at(istate).data().values.data()};
   }
 
   ConstCovariance covariance_impl(IndexType istate) const {
@@ -380,8 +378,7 @@ class MutablePodioTrackStateContainer final
   }
 
   Covariance covariance_impl(IndexType istate) {
-    return Covariance{
-        PodioUtil::getDataMutable(m_params->at(istate)).covariance.data()};
+    return Covariance{m_params->at(istate).data().covariance.data()};
   }
 
   ConstCovariance jacobian_impl(IndexType istate) const {
@@ -391,36 +388,34 @@ class MutablePodioTrackStateContainer final
 
   Covariance jacobian_impl(IndexType istate) {
     IndexType ijacobian = m_collection->at(istate).getData().ijacobian;
-    return Covariance{
-        PodioUtil::getDataMutable(m_jacs->at(ijacobian)).values.data()};
+    return Covariance{m_jacs->at(ijacobian).data().values.data()};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
+  ConstTrackStateProxy::Measurement<measdim> measurement_impl(
       IndexType index) const {
-    return ConstTrackStateProxy::Calibrated<measdim>{
+    return ConstTrackStateProxy::Measurement<measdim>{
         m_collection->at(index).getData().measurement.data()};
   }
 
   template <std::size_t measdim>
-  TrackStateProxy::Calibrated<measdim> calibrated_impl(IndexType index) {
-    return TrackStateProxy::Calibrated<measdim>{
-        PodioUtil::getDataMutable(m_collection->at(index)).measurement.data()};
+  TrackStateProxy::Measurement<measdim> measurement_impl(IndexType index) {
+    return TrackStateProxy::Measurement<measdim>{
+        m_collection->at(index).data().measurement.data()};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
-      IndexType index) const {
-    return ConstTrackStateProxy::CalibratedCovariance<measdim>{
+  ConstTrackStateProxy::MeasurementCovariance<measdim>
+  measurementCovariance_impl(IndexType index) const {
+    return ConstTrackStateProxy::MeasurementCovariance<measdim>{
         m_collection->at(index).getData().measurementCovariance.data()};
   }
 
   template <std::size_t measdim>
-  TrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
+  TrackStateProxy::MeasurementCovariance<measdim> measurementCovariance_impl(
       IndexType index) {
-    return TrackStateProxy::CalibratedCovariance<measdim>{
-        PodioUtil::getDataMutable(m_collection->at(index))
-            .measurementCovariance.data()};
+    return TrackStateProxy::MeasurementCovariance<measdim>{
+        m_collection->at(index).data().measurementCovariance.data()};
   }
 
   IndexType size_impl() const { return m_collection->size(); }
@@ -447,15 +442,13 @@ class MutablePodioTrackStateContainer final
       TrackStatePropMask mask = TrackStatePropMask::All,
       TrackIndexType iprevious = kTrackIndexInvalid) {
     auto trackState = m_collection->create();
-    auto& data = PodioUtil::getDataMutable(trackState);
+    auto& data = trackState.data();
     data.previous = iprevious;
     data.ipredicted = kInvalid;
     data.ifiltered = kInvalid;
     data.ismoothed = kInvalid;
     data.ijacobian = kInvalid;
-
-    PodioUtil::getReferenceSurfaceMutable(trackState).surfaceType =
-        PodioUtil::kNoSurface;
+    trackState.referenceSurface().surfaceType = PodioUtil::kNoSurface;
 
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Predicted)) {
       m_params->create();
@@ -492,7 +485,7 @@ class MutablePodioTrackStateContainer final
   }
 
   void addTrackStateComponents_impl(IndexType istate, TrackStatePropMask mask) {
-    auto& data = PodioUtil::getDataMutable(m_collection->at(istate));
+    auto& data = m_collection->at(istate).data();
 
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Predicted) &&
         data.ipredicted == kInvalid) {
@@ -527,8 +520,8 @@ class MutablePodioTrackStateContainer final
   void shareFrom_impl(TrackIndexType iself, TrackIndexType iother,
                       TrackStatePropMask shareSource,
                       TrackStatePropMask shareTarget) {
-    auto& self = PodioUtil::getDataMutable(m_collection->at(iself));
-    auto& other = PodioUtil::getDataMutable(m_collection->at(iother));
+    auto& self = m_collection->at(iself).data();
+    auto& other = m_collection->at(iother).data();
 
     assert(ACTS_CHECK_BIT(getTrackState(iother).getMask(), shareSource) &&
            "Source has incompatible allocation");
@@ -578,7 +571,7 @@ class MutablePodioTrackStateContainer final
   }
 
   void unset_impl(TrackStatePropMask target, TrackIndexType istate) {
-    auto& data = PodioUtil::getDataMutable(m_collection->at(istate));
+    auto& data = m_collection->at(istate).data();
     switch (target) {
       case TrackStatePropMask::Predicted:
         data.ipredicted = kInvalid;
@@ -618,7 +611,7 @@ class MutablePodioTrackStateContainer final
 
   void allocateCalibrated_impl(IndexType istate, std::size_t measdim) {
     assert(measdim > 0 && "Zero measdim not supported");
-    auto& data = PodioUtil::getDataMutable(m_collection->at(istate));
+    auto& data = m_collection->at(istate).data();
     data.measdim = measdim;
   }
 
@@ -626,8 +619,7 @@ class MutablePodioTrackStateContainer final
                                       const SourceLink& sourceLink) {
     PodioUtil::Identifier id =
         m_helper.get().sourceLinkToIdentifier(sourceLink);
-    auto& data = PodioUtil::getDataMutable(m_collection->at(istate));
-    data.uncalibratedIdentifier = id;
+    m_collection->at(istate).data().uncalibratedIdentifier = id;
   }
 
   void setReferenceSurface_impl(IndexType istate,
@@ -704,9 +696,8 @@ static_assert(
     !IsReadOnlyMultiTrajectory<MutablePodioTrackStateContainer>::value,
     "MutablePodioTrackStateContainer should not be read-only");
 
-static_assert(MutableMultiTrajectoryBackend<MutablePodioTrackStateContainer>,
-              "MutablePodioTrackStateContainer does not fulfill "
-              "TrackStateContainerBackend");
+ACTS_STATIC_CHECK_CONCEPT(MutableMultiTrajectoryBackend,
+                          MutablePodioTrackStateContainer);
 
 ConstPodioTrackStateContainer::ConstPodioTrackStateContainer(
     const MutablePodioTrackStateContainer& other)

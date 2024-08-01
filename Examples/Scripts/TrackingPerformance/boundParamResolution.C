@@ -204,7 +204,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       float range = pullRange * h1_range->GetRMS();
       ranges[ir] = range;
     }
-    if (!saveAs.empty()) {
+    if (! saveAs.empty()) {
       rangeCanvas->SaveAs(
           (vlIdCut[0] + std::string("res_ranges.") + saveAs).c_str());
     }
@@ -315,8 +315,8 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
   // - per layer (identified by vol, lay)
   // - per volume (identified by vol, -1)
   // - overall (identified by lay)
-  for (const auto& [vol, layers] : volLayIds) {
-    for (const auto& lay : layers) {
+  for (auto [vol, layers] : volLayIds) {
+    for (auto lay : layers) {
       // Estimate the ranges from smoothed
       auto vlIdCut = volLayIdCut(vol, lay);
       auto ranges = histRanges(vlIdCut);
@@ -562,7 +562,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       profiles[ipar]->Write();
     }
     // Save the canvas: mean
-    if (!saveAs.empty()) {
+    if (! saveAs.empty()) {
       respull_mean_prf->SaveAs((std::string("all_") + res_pull +
                                 std::string("_mean_prf_") + type +
                                 std::string(".") + saveAs)
@@ -602,7 +602,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       var->Write();
     }
     // Save the canvas: pulls
-    if (!saveAs.empty()) {
+    if (! saveAs.empty()) {
       respull_var_prf->SaveAs((std::string("all_") + res_pull +
                                std::string("_var_prf_") + type +
                                std::string(".") + saveAs)
@@ -632,8 +632,8 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
   auto pulls = new TCanvas("pulls", "Pull distributions", 1200, 800);
   pulls->Divide(3, 2);
 
-  for (const auto& [vol, layers] : volLayIds) {
-    for (const auto& lay : layers) {
+  for (auto [vol, layers] : volLayIds) {
+    for (auto lay : layers) {
       auto vlID = volLayIdCut(vol, lay)[0];
 
       // Residual plotting
@@ -668,7 +668,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
         legend->SetTextFont(42);
         legend->Draw();
       }
-      if (!saveAs.empty()) {
+      if (! saveAs.empty()) {
         residuals->SaveAs((vlID + std::string("residuals.") + saveAs).c_str());
       }
 
@@ -769,7 +769,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       }
 
       // Save the Canvases as pictures
-      if (!saveAs.empty()) {
+      if (! saveAs.empty()) {
         pulls->SaveAs((vlID + std::string("pulls.") + saveAs).c_str());
       }
     }

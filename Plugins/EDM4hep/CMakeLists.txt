@@ -11,7 +11,6 @@ target_link_libraries(
 	ActsPluginEDM4hep
   PUBLIC
     ActsCore
-    ActsPluginPodio
     EDM4HEP::edm4hep)
 
 install(

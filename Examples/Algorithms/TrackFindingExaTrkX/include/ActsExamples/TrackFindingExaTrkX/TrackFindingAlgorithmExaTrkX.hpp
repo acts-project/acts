@@ -13,14 +13,12 @@
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchGraphStoreHook.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/Graph.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/TruthGraphBuilder.hpp"
 
 #include <mutex>
 #include <string>
@@ -33,35 +31,26 @@ namespace ActsExamples {
 
 class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
  public:
-  enum class NodeFeature {
-    eR,
-    ePhi,
-    eX,
-    eY,
-    eZ,
-    eEta,
-    eCellCount,
-    eCellSum,
-    eClusterX,
-    eClusterY,
-    eCluster1R,
-    eCluster2R,
-    eCluster1Phi,
-    eCluster2Phi,
-    eCluster1Z,
-    eCluster2Z,
-    eCluster1Eta,
-    eCluster2Eta,
-  };
-
   struct Config {
     /// Input spacepoints collection.
     std::string inputSpacePoints;
-    /// Input cluster information (Optional).
+
+    /// Input cluster information (Optional). If given, the following features
+    /// are added:
+    /// * cell count
+    /// * sum cell activations
+    /// * cluster size in local x
+    /// * cluster size in local y
     std::string inputClusters;
-    /// Input truth graph (Optional).
-    std::string inputTruthGraph;
-    /// Output prototracks
+
+    /// Input simhits (Optional).
+    std::string inputSimHits;
+    /// Input measurement simhit map (Optional).
+    std::string inputParticles;
+    /// Input measurement simhit map (Optional).
+    std::string inputMeasurementSimhitsMap;
+
+    /// Output protoTracks collection.
     std::string outputProtoTracks;
 
     /// Output graph (optional)
@@ -73,15 +62,21 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
 
     std::shared_ptr<Acts::TrackBuildingBase> trackBuilder;
 
-    /// Node features
-    std::vector<NodeFeature> nodeFeatures = {NodeFeature::eR, NodeFeature::ePhi,
-                                             NodeFeature::eZ};
-
-    /// Feature scales
-    std::vector<float> featureScales = {1.f, 1.f, 1.f};
+    /// Scaling of the input features
+    float rScale = 1.f;
+    float phiScale = 1.f;
+    float zScale = 1.f;
+    float cellCountScale = 1.f;
+    float cellSumScale = 1.f;
+    float clusterXScale = 1.f;
+    float clusterYScale = 1.f;
 
     /// Remove track candidates with 2 or less hits
     bool filterShortTracks = false;
+
+    /// Target graph properties
+    std::size_t targetMinHits = 3;
+    double targetMinPT = 500 * Acts::UnitConstants::MeV;
   };
 
   /// Constructor of the track finding algorithm
@@ -124,10 +119,16 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
                                                             "InputSpacePoints"};
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
-  ReadDataHandle<Graph> m_inputTruthGraph{this, "InputTruthGraph"};
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
-  WriteDataHandle<Graph> m_outputGraph{this, "OutputGraph"};
+  WriteDataHandle<Acts::TorchGraphStoreHook::Graph> m_outputGraph{
+      this, "OutputGraph"};
+
+  // for truth graph
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementMap{
+      this, "InputMeasurementMap"};
 };
 
 }  // namespace ActsExamples

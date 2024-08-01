@@ -66,7 +66,7 @@ class WriteDataHandle final : public DataHandleBase {
   }
 
   void operator()(const AlgorithmContext& ctx, T&& value) const {
-    (*this)(ctx.eventStore, std::move(value));
+    (*this)(ctx.eventStore, std::forward<T>(value));
   }
 
   void operator()(WhiteBoard& wb, T&& value) const {

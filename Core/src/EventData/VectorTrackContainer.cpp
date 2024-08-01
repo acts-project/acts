@@ -80,8 +80,6 @@ void VectorTrackContainer::removeTrack_impl(IndexType itrack) {
   erase(m_tipIndex);
   erase(m_stemIndex);
 
-  erase(m_particleHypothesis);
-
   erase(m_params);
   erase(m_cov);
   erase(m_referenceSurfaces);

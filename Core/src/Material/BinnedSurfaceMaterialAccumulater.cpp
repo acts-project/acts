@@ -126,8 +126,7 @@ void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
 
   // Empty bin correction
   if (m_cfg.emptyBinCorrection) {
-    for (const auto& [surface, position, direction] :
-         surfacesWithoutAssignment) {
+    for (auto [surface, position, direction] : surfacesWithoutAssignment) {
       // Get the accumulated material
       auto missedMaterial =
           cState->accumulatedMaterial.find(surface->geometryId());

@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
@@ -46,7 +46,7 @@ struct NavigationState {
     const Portal* portal = nullptr;
     /// The boundary check used for the candidate, boundary checks
     /// can differ for sensitive surfaces and portals
-    BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
+    BoundaryCheck boundaryCheck = BoundaryCheck(true);
   };
 
   /// Surface candidate vector alias, this allows to use e.g. boost_small vector
@@ -85,7 +85,7 @@ struct NavigationState {
   std::size_t surfaceCandidateIndex = 0;
 
   /// Boundary directives for surfaces
-  BoundaryTolerance surfaceBoundaryTolerance = BoundaryTolerance::None();
+  BoundaryCheck surfaceBoundaryCheck = BoundaryCheck(true);
 
   /// An overstep tolerance
   ActsScalar overstepTolerance = -100 * UnitConstants::um;

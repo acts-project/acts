@@ -25,7 +25,7 @@ ActsScalar calculateDeterminant(
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
     typename Acts::TrackStateTraits<
-        kMeasurementSize, true>::CalibratedCovariance calibratedCovariance{
+        kMeasurementSize, true>::MeasurementCovariance calibratedCovariance{
         fullCalibratedCovariance};
 
     const auto H =

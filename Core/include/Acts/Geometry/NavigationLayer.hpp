@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
@@ -72,12 +72,11 @@ class NavigationLayer : public Layer {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the global position for the check
-  /// @param boundaryTolerance is the boundary check directive
+  /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates if the position is on surface
   bool isOnLayer(const GeometryContext& gctx, const Vector3& gp,
-                 const BoundaryTolerance& boundaryTolerance =
-                     BoundaryTolerance::None()) const final;
+                 const BoundaryCheck& bcheck = BoundaryCheck(true)) const final;
 
   /// Accept layer according to the following collection directives
   ///
@@ -122,11 +121,11 @@ inline Vector3 NavigationLayer::binningPosition(const GeometryContext& gctx,
   return m_surfaceRepresentation->binningPosition(gctx, bValue);
 }
 
-inline bool NavigationLayer::isOnLayer(
-    const GeometryContext& gctx, const Vector3& gp,
-    const BoundaryTolerance& boundaryTolerance) const {
+inline bool NavigationLayer::isOnLayer(const GeometryContext& gctx,
+                                       const Vector3& gp,
+                                       const BoundaryCheck& bcheck) const {
   return m_surfaceRepresentation->isOnSurface(gctx, gp, Vector3::Zero(),
-                                              boundaryTolerance);
+                                              bcheck);
 }
 
 inline bool NavigationLayer::resolve(bool /*resolveSensitive*/,

@@ -46,18 +46,14 @@ inline void updateCandidates(const GeometryContext& gctx,
     const Surface& sRep =
         c.surface != nullptr ? *c.surface : c.portal->surface();
 
-    // Only allow overstepping if it's not a portal
-    ActsScalar overstepTolerance =
-        c.portal != nullptr ? s_onSurfaceTolerance : nState.overstepTolerance;
-
     // Get the intersection @todo make a templated intersector
     // TODO surface tolerance
-    auto sIntersection = sRep.intersect(
-        gctx, position, direction, c.boundaryTolerance, s_onSurfaceTolerance);
+    auto sIntersection = sRep.intersect(gctx, position, direction,
+                                        c.boundaryCheck, s_onSurfaceTolerance);
     for (auto& si : sIntersection.split()) {
       c.objectIntersection = si;
-      if (c.objectIntersection.isValid() &&
-          c.objectIntersection.pathLength() > overstepTolerance) {
+      if (c.objectIntersection &&
+          c.objectIntersection.pathLength() > nState.overstepTolerance) {
         nextSurfaceCandidates.emplace_back(c);
       }
     }

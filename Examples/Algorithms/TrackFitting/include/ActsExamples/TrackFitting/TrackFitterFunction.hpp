@@ -40,7 +40,6 @@ class TrackFitterFunction {
     std::reference_wrapper<const Acts::CalibrationContext> calibrationContext;
     const Acts::Surface* referenceSurface = nullptr;
     Acts::PropagatorPlainOptions propOptions;
-    bool doRefit = false;
   };
 
   virtual ~TrackFitterFunction() = default;

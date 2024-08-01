@@ -55,8 +55,8 @@ struct GsfExtensions {
       Delegate<void(const GeometryContext &, const CalibrationContext &,
                     const SourceLink &, TrackStateProxy)>;
 
-  using Updater = Delegate<Result<void>(const GeometryContext &,
-                                        TrackStateProxy, const Logger &)>;
+  using Updater = Delegate<Result<void>(
+      const GeometryContext &, TrackStateProxy, Direction, const Logger &)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
@@ -116,13 +116,9 @@ struct GsfOptions {
 
   ComponentMergeMethod componentMergeMethod = ComponentMergeMethod::eMaxWeight;
 
-  GsfOptions(const GeometryContext &geoCtxt,
-             const MagneticFieldContext &magFieldCtxt,
-             const CalibrationContext &calibCtxt)
-      : geoContext(geoCtxt),
-        magFieldContext(magFieldCtxt),
-        calibrationContext(calibCtxt),
-        propagatorPlainOptions(geoCtxt, magFieldCtxt) {}
+#if __cplusplus < 202002L
+  GsfOptions() = delete;
+#endif
 };
 
 }  // namespace Acts

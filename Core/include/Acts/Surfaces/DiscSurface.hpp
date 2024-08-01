@@ -13,13 +13,14 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
@@ -268,7 +269,7 @@ class DiscSurface : public RegularSurface {
   /// @param position The global position as a starting point
   /// @param direction The global direction at the starting point
   ///        @note expected to be normalized (no checking)
-  /// @param boundaryTolerance The boundary check prescription
+  /// @param bcheck The boundary check prescription
   /// @param tolerance the tolerance used for the intersection
   ///
   /// <b>Mathematical motivation:</b>
@@ -291,8 +292,7 @@ class DiscSurface : public RegularSurface {
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      const BoundaryTolerance& boundaryTolerance =
-          BoundaryTolerance::Infinite(),
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Implement the binningValue
@@ -348,7 +348,6 @@ class DiscSurface : public RegularSurface {
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
 };
 
-static_assert(RegularSurfaceConcept<DiscSurface>,
-              "DiscSurface does not fulfill RegularSurfaceConcept");
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, DiscSurface);
 
 }  // namespace Acts

@@ -13,13 +13,11 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/detail/NavigationHelpers.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -45,14 +43,7 @@ class TryAllNavigatorBase {
     bool resolvePassive = false;
 
     /// Which boundary checks to perform for surface approach
-    BoundaryTolerance boundaryToleranceSurfaceApproach =
-        BoundaryTolerance::None();
-  };
-
-  struct Options : public NavigatorPlainOptions {
-    void setPlainOptions(const NavigatorPlainOptions& options) {
-      static_cast<NavigatorPlainOptions&>(*this) = options;
-    }
+    BoundaryCheck boundaryCheckSurfaceApproach = BoundaryCheck(true);
   };
 
   /// @brief Nested State struct
@@ -60,8 +51,6 @@ class TryAllNavigatorBase {
   /// It acts as an internal state which is created for every propagation and
   /// meant to keep thread-local navigation information.
   struct State {
-    Options options;
-
     // Starting geometry information of the navigation which should only be set
     // while initialization. NOTE: This information is mostly used by actors to
     // check if we are on the starting surface (e.g. MaterialInteraction).
@@ -94,16 +83,6 @@ class TryAllNavigatorBase {
   /// @param _logger a logger instance
   TryAllNavigatorBase(Config cfg, std::unique_ptr<const Logger> _logger)
       : m_cfg(std::move(cfg)), m_logger{std::move(_logger)} {}
-
-  State makeState(const Options& options) const {
-    assert(options.startSurface != nullptr && "Start surface must be set");
-
-    State state;
-    state.options = options;
-    state.startSurface = options.startSurface;
-    state.targetSurface = options.targetSurface;
-    return state;
-  }
 
   const Surface* currentSurface(const State& state) const {
     return state.currentSurface;
@@ -212,10 +191,10 @@ class TryAllNavigatorBase {
       return;
     }
 
-    emplaceAllVolumeCandidates(
-        state.navigation.navigationCandidates, *volume, m_cfg.resolveSensitive,
-        m_cfg.resolveMaterial, m_cfg.resolvePassive,
-        m_cfg.boundaryToleranceSurfaceApproach, logger());
+    emplaceAllVolumeCandidates(state.navigation.navigationCandidates, *volume,
+                               m_cfg.resolveSensitive, m_cfg.resolveMaterial,
+                               m_cfg.resolvePassive,
+                               m_cfg.boundaryCheckSurfaceApproach, logger());
   }
 
   template <typename propagator_state_t>
@@ -244,9 +223,14 @@ class TryAllNavigatorBase {
 ///
 class TryAllNavigator : public TryAllNavigatorBase {
  public:
-  using Config = TryAllNavigatorBase::Config;
-  using Options = TryAllNavigatorBase::Options;
-  using State = TryAllNavigatorBase::State;
+  /// @brief Configuration for this Navigator
+  struct Config : public TryAllNavigatorBase::Config {};
+
+  /// @brief Nested State struct
+  ///
+  /// It acts as an internal state which is created for every propagation and
+  /// meant to keep thread-local navigation information.
+  struct State : public TryAllNavigatorBase::State {};
 
   /// Constructor with configuration object
   ///
@@ -257,7 +241,13 @@ class TryAllNavigator : public TryAllNavigatorBase {
                       getDefaultLogger("TryAllNavigator", Logging::INFO))
       : TryAllNavigatorBase(std::move(cfg), std::move(logger)) {}
 
-  using TryAllNavigatorBase::makeState;
+  State makeState(const Surface* startSurface,
+                  const Surface* targetSurface) const {
+    State result;
+    result.startSurface = startSurface;
+    result.targetSurface = targetSurface;
+    return result;
+  }
 
   using TryAllNavigatorBase::currentSurface;
   using TryAllNavigatorBase::currentVolume;
@@ -318,11 +308,10 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
       const Surface& surface = *previousIntersection.intersection.object();
       std::uint8_t index = previousIntersection.intersection.index();
-      BoundaryTolerance boundaryTolerance =
-          previousIntersection.boundaryTolerance;
+      BoundaryCheck boundaryCheck = previousIntersection.boundaryCheck;
 
       auto intersection = surface.intersect(
-          state.geoContext, position, direction, boundaryTolerance,
+          state.geoContext, position, direction, boundaryCheck,
           state.options.surfaceTolerance)[index];
 
       if (intersection.pathLength() < 0) {
@@ -343,14 +332,12 @@ class TryAllNavigator : public TryAllNavigatorBase {
                               state.options.surfaceTolerance);
       for (const auto& intersection : intersections.first.split()) {
         // exclude invalid intersections
-        if (!intersection.isValid() ||
-            !detail::checkPathLength(intersection.pathLength(), nearLimit,
-                                     farLimit)) {
+        if (!detail::checkIntersection(intersection, nearLimit, farLimit)) {
           continue;
         }
         // store candidate
         intersectionCandidates.emplace_back(intersection, intersections.second,
-                                            candidate.boundaryTolerance);
+                                            candidate.boundaryCheck);
       }
     }
 
@@ -360,16 +347,14 @@ class TryAllNavigator : public TryAllNavigatorBase {
     ACTS_VERBOSE(volInfo(state) << "found " << intersectionCandidates.size()
                                 << " intersections");
 
-    bool intersectionFound = false;
-
     for (const auto& candidate : intersectionCandidates) {
       const auto& intersection = candidate.intersection;
       const Surface& surface = *intersection.object();
-      BoundaryTolerance boundaryTolerance = candidate.boundaryTolerance;
+      BoundaryCheck boundaryCheck = candidate.boundaryCheck;
 
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
-          state.options.direction, boundaryTolerance,
+          state.options.direction, boundaryCheck,
           state.options.surfaceTolerance, logger());
 
       if (surfaceStatus == IntersectionStatus::onSurface) {
@@ -380,16 +365,13 @@ class TryAllNavigator : public TryAllNavigatorBase {
         continue;
       }
 
-      if (surfaceStatus == IntersectionStatus::reachable) {
-        ACTS_VERBOSE(volInfo(state)
-                     << "Surface reachable, step size updated to "
-                     << stepper.outputStepSize(state.stepping));
-        intersectionFound = true;
-        break;
-      }
+      ACTS_VERBOSE(volInfo(state) << "aiming at surface "
+                                  << surface.geometryId() << ". step size is "
+                                  << stepper.outputStepSize(state.stepping));
+      break;
     }
 
-    if (!intersectionFound) {
+    if (intersectionCandidates.empty()) {
       stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
 
       ACTS_VERBOSE(volInfo(state) << "no intersections found. advance without "
@@ -434,7 +416,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
       Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
-          state.options.direction, BoundaryTolerance::Infinite(),
+          state.options.direction, BoundaryCheck(false),
           state.options.surfaceTolerance, logger());
 
       if (surfaceStatus != IntersectionStatus::onSurface) {
@@ -463,7 +445,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
       Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
-          state.options.direction, BoundaryTolerance::None(),
+          state.options.direction, BoundaryCheck(true),
           state.options.surfaceTolerance, logger());
 
       if (surfaceStatus != IntersectionStatus::onSurface) {
@@ -549,9 +531,8 @@ class TryAllNavigator : public TryAllNavigatorBase {
 ///
 class TryAllOverstepNavigator : public TryAllNavigatorBase {
  public:
-  using Config = TryAllNavigatorBase::Config;
-
-  using Options = TryAllNavigatorBase::Options;
+  /// @brief Configuration for this Navigator
+  struct Config : public TryAllNavigatorBase::Config {};
 
   /// @brief Nested State struct
   ///
@@ -586,24 +567,58 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
                                                Logging::INFO))
       : TryAllNavigatorBase(std::move(cfg), std::move(logger)) {}
 
-  State makeState(const Options& options) const {
-    assert(options.startSurface != nullptr && "Start surface must be set");
-
-    State state;
-    state.options = options;
-    state.startSurface = options.startSurface;
-    state.targetSurface = options.targetSurface;
-    return state;
+  State makeState(const Surface* startSurface,
+                  const Surface* targetSurface) const {
+    State result;
+    result.startSurface = startSurface;
+    result.targetSurface = targetSurface;
+    return result;
   }
 
-  using TryAllNavigatorBase::currentSurface;
-  using TryAllNavigatorBase::currentVolume;
-  using TryAllNavigatorBase::currentVolumeMaterial;
-  using TryAllNavigatorBase::endOfWorldReached;
-  using TryAllNavigatorBase::navigationBreak;
-  using TryAllNavigatorBase::startSurface;
-  using TryAllNavigatorBase::targetReached;
-  using TryAllNavigatorBase::targetSurface;
+  const Surface* currentSurface(const State& state) const {
+    return state.currentSurface;
+  }
+
+  const TrackingVolume* currentVolume(const State& state) const {
+    return state.currentVolume;
+  }
+
+  const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
+    if (state.currentVolume == nullptr) {
+      return nullptr;
+    }
+    return state.currentVolume->volumeMaterial();
+  }
+
+  const Surface* startSurface(const State& state) const {
+    return state.startSurface;
+  }
+
+  const Surface* targetSurface(const State& state) const {
+    return state.targetSurface;
+  }
+
+  bool targetReached(const State& state) const { return state.targetReached; }
+
+  bool endOfWorldReached(State& state) const {
+    return state.currentVolume == nullptr;
+  }
+
+  bool navigationBreak(const State& state) const {
+    return state.navigationBreak;
+  }
+
+  void currentSurface(State& state, const Surface* surface) const {
+    state.currentSurface = surface;
+  }
+
+  void targetReached(State& state, bool targetReached) const {
+    state.targetReached = targetReached;
+  }
+
+  void navigationBreak(State& state, bool navigationBreak) const {
+    state.navigationBreak = navigationBreak;
+  }
 
   /// @brief Initialize call - start of navigation
   ///
@@ -655,7 +670,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       const auto& candidate = state.navigation.activeCandidate();
       const auto& intersection = candidate.intersection;
       const Surface& surface = *intersection.object();
-      BoundaryTolerance boundaryTolerance = candidate.boundaryTolerance;
+      BoundaryCheck boundaryCheck = candidate.boundaryCheck;
 
       // Screen output which surface you are on
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
@@ -664,7 +679,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       // Estimate the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
-          state.options.direction, boundaryTolerance,
+          state.options.direction, boundaryCheck,
           state.options.surfaceTolerance, logger());
 
       if (surfaceStatus == IntersectionStatus::onSurface) {
@@ -683,8 +698,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
         break;
       }
 
-      ACTS_VERBOSE(volInfo(state) << "Surface " << surface.geometryId()
-                                  << " unreachable, skip.");
+      ACTS_WARNING(volInfo(state) << "Surface unreachable, skip.");
       ++state.navigation.activeCandidateIndex;
     }
 
@@ -747,9 +761,8 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
             state.geoContext, end, direction, state.options.surfaceTolerance);
         for (const auto& intersection : intersections.first.split()) {
           // exclude invalid intersections
-          if (!intersection.isValid() ||
-              !detail::checkPathLength(intersection.pathLength(), nearLimit,
-                                       farLimit)) {
+          if (!intersection ||
+              !detail::checkIntersection(intersection, nearLimit, farLimit)) {
             continue;
           }
           // exclude last candidate
@@ -762,7 +775,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
           }
           // store candidate
           state.navigation.activeCandidates.emplace_back(
-              intersection, intersections.second, candidate.boundaryTolerance);
+              intersection, intersections.second, candidate.boundaryCheck);
         }
       }
 
@@ -791,7 +804,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
         Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
             state.stepping, surface, intersection.index(),
-            state.options.direction, BoundaryTolerance::Infinite(),
+            state.options.direction, BoundaryCheck(false),
             state.options.surfaceTolerance, logger());
 
         if (surfaceStatus != IntersectionStatus::onSurface) {
@@ -818,7 +831,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
         Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
             state.stepping, surface, intersection.index(),
-            state.options.direction, BoundaryTolerance::None(),
+            state.options.direction, BoundaryCheck(true),
             state.options.surfaceTolerance, logger());
 
         if (surfaceStatus != IntersectionStatus::onSurface) {

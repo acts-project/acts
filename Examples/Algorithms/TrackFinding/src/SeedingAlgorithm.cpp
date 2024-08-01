@@ -203,15 +203,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
         });
   }
 
-  if (m_cfg.useExtraCuts) {
-    // This function will be applied to select space points during grid filling
-    m_cfg.seedFinderConfig.spacePointSelector
-        .connect<itkFastTrackingSPselect>();
-
-    // This function will be applied to the doublet compatibility selection
-    m_cfg.seedFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
-  }
-
   m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsBottom);
   m_topBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
@@ -349,7 +340,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
     m_seedFinder.createSeedsForGroup(
         m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
-        seeds, bottom, middle, top, rMiddleSPRange, m_inputPrimaryVertex(ctx));
+        std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange, m_inputPrimaryVertex(ctx));
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "

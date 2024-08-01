@@ -77,10 +77,6 @@ std::pair<double, double> Vertex::fitQuality() const {
   return std::pair<double, double>(m_chiSquared, m_numberDoF);
 }
 
-void Vertex::setPosition(const Vector3& position) {
-  m_position.head<3>() = position;
-}
-
 void Vertex::setPosition(const Vector3& position, ActsScalar time) {
   m_position.head<3>() = position;
   m_position[eTime] = time;

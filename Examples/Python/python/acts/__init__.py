@@ -27,7 +27,7 @@ if (
         warnings.warn(error + "\nThe compile-time threshold will be used in this case!")
 
 
-def Propagator(stepper, navigator, loglevel=ActsPythonBindings.logging.INFO):
+def Propagator(stepper, navigator):
     for prefix in ("Eigen", "Atlas", "StraightLine"):
         _stepper = getattr(ActsPythonBindings, f"{prefix}Stepper")
         if isinstance(stepper, _stepper):
@@ -35,9 +35,9 @@ def Propagator(stepper, navigator, loglevel=ActsPythonBindings.logging.INFO):
             if isinstance(navigator, _detectorNavigator):
                 return getattr(
                     ActsPythonBindings._propagator, f"{prefix}DetectorPropagator"
-                )(stepper, navigator, loglevel)
+                )(stepper, navigator)
             return getattr(ActsPythonBindings._propagator, f"{prefix}Propagator")(
-                stepper, navigator, loglevel
+                stepper, navigator
             )
     raise TypeError(f"Unknown stepper {type(stepper).__name__}")
 

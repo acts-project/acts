@@ -11,7 +11,6 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackStateProxy.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/Plugins/Podio/PodioDynamicColumns.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
@@ -46,14 +45,14 @@ class PodioTrackContainerBase {
       MultiTrajectoryTraits::MeasurementSizeMax;
 
   using Parameters =
-      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
+      typename detail_lt::Types<eBoundSize, false>::CoefficientsMap;
   using Covariance =
-      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
+      typename detail_lt::Types<eBoundSize, false>::CovarianceMap;
 
   using ConstParameters =
-      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
+      typename detail_lt::Types<eBoundSize, true>::CoefficientsMap;
   using ConstCovariance =
-      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
+      typename detail_lt::Types<eBoundSize, true>::CovarianceMap;
 
  protected:
   PodioTrackContainerBase(const PodioUtil::ConversionHelper& helper)
@@ -76,7 +75,7 @@ class PodioTrackContainerBase {
     if constexpr (EnsureConst) {
       dataPtr = &track.getData();
     } else {
-      dataPtr = &PodioUtil::getDataMutable(track);
+      dataPtr = &track.data();
     }
     auto& data = *dataPtr;
     switch (key) {
@@ -213,8 +212,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
 
   IndexType addTrack_impl() {
     auto track = m_collection->create();
-    PodioUtil::getReferenceSurfaceMutable(track).surfaceType =
-        PodioUtil::kNoSurface;
+    track.referenceSurface().surfaceType = PodioUtil::kNoSurface;
     m_surfaces.emplace_back();
     for (const auto& [key, vec] : m_dynamic) {
       vec->add();
@@ -232,8 +230,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   }
 
   Parameters parameters(IndexType itrack) {
-    return Parameters{
-        PodioUtil::getDataMutable(m_collection->at(itrack)).parameters.data()};
+    return Parameters{m_collection->at(itrack).data().parameters.data()};
   }
 
   ConstParameters parameters(IndexType itrack) const {
@@ -242,8 +239,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   }
 
   Covariance covariance(IndexType itrack) {
-    return Covariance{
-        PodioUtil::getDataMutable(m_collection->at(itrack)).covariance.data()};
+    return Covariance{m_collection->at(itrack).data().covariance.data()};
   }
 
   ConstCovariance covariance(IndexType itrack) const {
@@ -307,9 +303,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
       m_dynamic;
 };
 
-static_assert(
-    TrackContainerBackend<MutablePodioTrackContainer>,
-    "MutablePodioTrackContainer does not fulfill TrackContainerBackend");
+ACTS_STATIC_CHECK_CONCEPT(TrackContainerBackend, MutablePodioTrackContainer);
 
 class ConstPodioTrackContainer : public PodioTrackContainerBase {
  public:
@@ -396,8 +390,6 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
   std::vector<HashedString> m_dynamicKeys;
 };
 
-static_assert(
-    ConstTrackContainerBackend<ConstPodioTrackContainer>,
-    "ConstPodioTrackContainer does not fulfill ConstTrackContainerBackend");
+ACTS_STATIC_CHECK_CONCEPT(ConstTrackContainerBackend, ConstPodioTrackContainer);
 
 }  //  namespace Acts

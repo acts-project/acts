@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementCylinder) {
   auto world = lcdd->world();
 
   std::shared_ptr<Acts::DD4hepDetectorElement> cylindricalElement = nullptr;
-  for (const auto& [chn, child] : world.children()) {
+  for (auto [chn, child] : world.children()) {
     cylindricalElement =
         std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10.);
   }
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementSectoralCylinder) {
   auto world = lcdd->world();
 
   std::shared_ptr<Acts::DD4hepDetectorElement> cylindricalElement = nullptr;
-  for (const auto& [chn, child] : world.children()) {
+  for (auto [chn, child] : world.children()) {
     cylindricalElement =
         std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10.);
   }
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementDisc) {
   auto world = lcdd->world();
 
   std::shared_ptr<Acts::DD4hepDetectorElement> discElement = nullptr;
-  for (const auto& [chn, child] : world.children()) {
+  for (auto [chn, child] : world.children()) {
     discElement =
         std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10., true);
   }
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementSectoralDisc) {
   auto world = lcdd->world();
 
   std::shared_ptr<Acts::DD4hepDetectorElement> discElement = nullptr;
-  for (const auto& [chn, child] : world.children()) {
+  for (auto [chn, child] : world.children()) {
     discElement =
         std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10., true);
   }
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementRectangle) {
   auto world = lcdd->world();
 
   std::shared_ptr<Acts::DD4hepDetectorElement> rectangleElement = nullptr;
-  for (const auto& [chn, child] : world.children()) {
+  for (auto [chn, child] : world.children()) {
     rectangleElement =
         std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10., true);
   }
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementTrapezoid) {
   auto world = lcdd->world();
 
   std::shared_ptr<Acts::DD4hepDetectorElement> trapezoidElement = nullptr;
-  for (const auto& [chn, child] : world.children()) {
+  for (auto [chn, child] : world.children()) {
     trapezoidElement =
         std::make_shared<Acts::DD4hepDetectorElement>(child, "xZ", 10., true);
   }

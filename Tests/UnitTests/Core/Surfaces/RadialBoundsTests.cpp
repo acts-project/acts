@@ -10,7 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
@@ -105,8 +105,8 @@ BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
                          "5.0000000, 0.3926991, 0.0000000)"));
   //
   /// Test inside
-  BOOST_CHECK(radialBoundsObject.inside(inSurface, BoundaryTolerance::None()));
-  BOOST_CHECK(!radialBoundsObject.inside(outside, BoundaryTolerance::None()));
+  BOOST_CHECK(radialBoundsObject.inside(inSurface, BoundaryCheck(true)));
+  BOOST_CHECK(!radialBoundsObject.inside(outside, BoundaryCheck(true)));
   //
   /// Test rMin
   BOOST_CHECK_EQUAL(radialBoundsObject.get(RadialBounds::eMinR), minRadius);

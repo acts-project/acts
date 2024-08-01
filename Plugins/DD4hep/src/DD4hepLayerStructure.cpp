@@ -93,14 +93,14 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   cElements.reserve(fCache.sensitiveSurfaces.size());
 
   // Fill them in to the surface provider struct and detector store
-  for (const auto& [de, ds] : fCache.sensitiveSurfaces) {
+  for (auto [de, ds] : fCache.sensitiveSurfaces) {
     lSurfaces.push_back(ds);
     cElements.push_back(de);
   }
   dd4hepStore[options.name] = cElements;
 
   // Passive surfaces to be added
-  for (const auto& [ps, toAll] : fCache.passiveSurfaces) {
+  for (auto [ps, toAll] : fCache.passiveSurfaces) {
     // Passive surface is not declared to be added to all navigation bins
     if (!toAll) {
       lSurfaces.push_back(ps);

@@ -9,8 +9,6 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -30,13 +28,11 @@ Acts::Vector2 Acts::RadialBounds::shifted(
   return tmp;
 }
 
-bool Acts::RadialBounds::inside(
-    const Acts::Vector2& lposition,
-    const Acts::BoundaryTolerance& boundaryTolerance) const {
-  return detail::insideAlignedBox(Vector2(get(eMinR), -get(eHalfPhiSector)),
-                                  Vector2(get(eMaxR), get(eHalfPhiSector)),
-                                  boundaryTolerance, shifted(lposition),
-                                  std::nullopt);
+bool Acts::RadialBounds::inside(const Acts::Vector2& lposition,
+                                const Acts::BoundaryCheck& bcheck) const {
+  return bcheck.isInside(shifted(lposition),
+                         Vector2(get(eMinR), -get(eHalfPhiSector)),
+                         Vector2(get(eMaxR), get(eHalfPhiSector)));
 }
 
 std::vector<Acts::Vector2> Acts::RadialBounds::vertices(

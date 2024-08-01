@@ -194,11 +194,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
       if (ip != particles.end()) {
         const auto& particle = *ip;
         m_t_charge = static_cast<int>(particle.charge());
-        if (p != 0.0) {
-          m_t_qop = m_t_charge / p;
-        } else {
-          m_t_qop = std::numeric_limits<double>::quiet_NaN();
-        }
+        m_t_qop = m_t_charge / p;
       } else {
         ACTS_DEBUG("Truth particle with barcode "
                    << particleId << "=" << particleId.value() << " not found!");
