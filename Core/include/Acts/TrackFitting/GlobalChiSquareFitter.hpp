@@ -671,11 +671,12 @@ class Gx2Fitter {
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
     std::map<GeometryIdentifier, SourceLink> inputMeasurements;
-
+    std::vector<const Surface*> externalSurfaces;
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      auto geoId = gx2fOptions.extensions.surfaceAccessor(sl)->geometryId();
-      inputMeasurements.emplace(geoId, std::move(sl));
+      const Surface* surface = gx2fOptions.extensions.surfaceAccessor(sl);
+      inputMeasurements.emplace(surface->geometryId(), std::move(sl));
+      externalSurfaces.push_back(surface);
     }
     ACTS_VERBOSE("inputMeasurements.size() = " << inputMeasurements.size());
 
@@ -741,8 +742,8 @@ class Gx2Fitter {
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
-      for (const auto& [surfaceId, _] : inputMeasurements) {
-        propagatorOptions.navigation.insertExternalSurface(surfaceId);
+      for (const auto* surface : externalSurfaces) {
+        propagatorOptions.navigation.insertExternalSurface(surface);
       }
 
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();

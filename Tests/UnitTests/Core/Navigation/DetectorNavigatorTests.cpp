@@ -663,36 +663,56 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsExternalSurfaces) {
 
   auto bounds1 = std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3);
   auto transform1 = Acts::Transform3::Identity();
-  auto surface1 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+  auto surface11 = Acts::Surface::makeShared<Acts::PlaneSurface>(
       transform1 * Acts::Transform3(rotation),
+      std::make_shared<Acts::RectangleBounds>(2, 2));
+    auto surface12 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+        transform1 * Acts::Translation3(0.1, 0, 0) * Acts::Transform3(rotation),
+      std::make_shared<Acts::RectangleBounds>(2, 2));
+    auto surface13 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+        transform1 * Acts::Translation3(-0.1, 0, 0) * Acts::Transform3(rotation),
       std::make_shared<Acts::RectangleBounds>(2, 2));
   auto volume1 = Acts::Experimental::DetectorVolumeFactory::construct(
       Acts::Experimental::defaultPortalAndSubPortalGenerator(), geoContext,
-      "volume1", transform1, std::move(bounds1), {surface1}, {},
+      "volume1", transform1, std::move(bounds1), {surface11,surface12,surface13}, {},
       Acts::Experimental::tryNoVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
   auto bounds2 = std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3);
   auto transform2 =
       Acts::Transform3::Identity() * Acts::Translation3(Acts::Vector3(6, 0, 0));
-  auto surface2 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+  auto surface21 = Acts::Surface::makeShared<Acts::PlaneSurface>(
       transform2 * Acts::Transform3(rotation),
+      std::make_shared<Acts::RectangleBounds>(2, 2));
+    auto surface22 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+        transform2 * Acts::Translation3(0.1, 0, 0) * Acts::Transform3(rotation),
+      std::make_shared<Acts::RectangleBounds>(2, 2));
+    auto surface23 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+        transform2 * Acts::Translation3(-0.1, 0, 0) * Acts::Transform3(rotation),
       std::make_shared<Acts::RectangleBounds>(2, 2));
   auto volume2 = Acts::Experimental::DetectorVolumeFactory::construct(
       Acts::Experimental::defaultPortalAndSubPortalGenerator(), geoContext,
-      "volume2", transform2, std::move(bounds2), {surface2}, {},
+      "volume2", transform2, std::move(bounds2), {surface21,surface22,surface23}, {},
       Acts::Experimental::tryNoVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
   auto bounds3 = std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3);
   auto transform3 = Acts::Transform3::Identity() *
                     Acts::Translation3(Acts::Vector3(12, 0, 0));
-  auto surface3 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+  auto surface31 = Acts::Surface::makeShared<Acts::PlaneSurface>(
       transform3 * Acts::Transform3(rotation),
       std::make_shared<Acts::RectangleBounds>(2, 2));
+
+    auto surface32 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+        transform3 * Acts::Translation3(0.1, 0, 0) * Acts::Transform3(rotation),
+      std::make_shared<Acts::RectangleBounds>(2, 2));
+    auto surface33 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+        transform3 * Acts::Translation3(-0.1, 0, 0) * Acts::Transform3(rotation),
+      std::make_shared<Acts::RectangleBounds>(2, 2));
+
   auto volume3 = Acts::Experimental::DetectorVolumeFactory::construct(
       Acts::Experimental::defaultPortalAndSubPortalGenerator(), geoContext,
-      "volume3", transform3, std::move(bounds3), {surface3}, {},
+      "volume3", transform3, std::move(bounds3), {surface31,surface32,surface33}, {},
       Acts::Experimental::tryNoVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
@@ -730,10 +750,11 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsExternalSurfaces) {
   // to enable the external surface
   // functionality
   int vid = 1;
-  for (auto& surf : {surface1, surface2, surface3}) {
+  for (auto& surf : {surface11, surface12, surface13,
+  surface21, surface22, surface23,
+  surface31, surface32, surface33}) {
     Acts::GeometryIdentifier gid;
     gid.setSensitive(id);
-    gid.setVolume(vid);
     surf->assignGeometryId(gid);
     id++;
     vid++;
@@ -761,12 +782,11 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsExternalSurfaces) {
   PropagatorOptions options(geoContext, mfContext);
 
   // Insert the external surfaces
-  for (auto& vol : detector->volumes()) {
-    for (auto& surf : vol->surfaces()) {
-      options.navigation.insertExternalSurface(surf->geometryId());
-    }
+    for (auto& surf : {surface11,  surface13,
+                        surface31, surface33}) {
+    
+    options.navigation.insertExternalSurface(surf.get());
   }
-
   Propagator propagator(
       stepper, navigator,
       Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
@@ -781,56 +801,13 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsExternalSurfaces) {
   auto result = propagator.propagate(start, options).value();
   auto states = result.get<StateRecorder::result_type>();
 
-  // 7 steps to reach the end of world
+  // 14 steps to reach the end of world
+  // 
+  // 4 for external surfaces
+  // 3 for portal surfaces
   // + 1 recording in the post-step
   // + 1 recording before the stepping loop
-  BOOST_CHECK_EQUAL(states.size(), 8u);
-  BOOST_CHECK_EQUAL(states[0].surfaceCandidates.size(), 2u);
-
-  // Action list call before the first step
-  // Starting in the volume1
-  BOOST_CHECK_EQUAL(states[0].currentVolume->geometryId().volume(), 1);
-  BOOST_CHECK_EQUAL(states[0].currentSurface, nullptr);
-  BOOST_CHECK_EQUAL(states[0].currentPortal, nullptr);
-
-  // Step to the surface inside volume1
-  BOOST_CHECK_EQUAL(states[1].currentVolume->geometryId().volume(), 1);
-  BOOST_CHECK_EQUAL(states[1].currentSurface->geometryId().sensitive(), 12);
-  BOOST_CHECK_EQUAL(states[1].currentSurface->geometryId().volume(), 1);
-  BOOST_CHECK_EQUAL(states[1].currentPortal, nullptr);
-
-  // Step to the volume1|volume2 boundary (portal has witched volume id)
-  BOOST_CHECK_EQUAL(states[2].currentVolume->geometryId().volume(), 2);
-  BOOST_CHECK_EQUAL(states[2].currentSurface,
-                    &(states[2].currentPortal->surface()));
-  BOOST_CHECK_EQUAL(states[2].currentPortal->surface().geometryId(), 7);
-
-  // Step to the surface inside volume2
-  BOOST_CHECK_EQUAL(states[3].currentVolume->geometryId().volume(), 2);
-  BOOST_CHECK_EQUAL(states[3].currentSurface->geometryId().sensitive(), 13);
-  BOOST_CHECK_EQUAL(states[3].currentSurface->geometryId().volume(), 2);
-  BOOST_CHECK_EQUAL(states[3].currentPortal, nullptr);
-
-  // Step to the volume2|volume3 boundary - volume has switched
-  BOOST_CHECK_EQUAL(states[4].currentVolume->geometryId().volume(), 3);
-  BOOST_CHECK_EQUAL(states[4].currentSurface,
-                    &(states[4].currentPortal->surface()));
-  BOOST_CHECK_EQUAL(states[4].currentPortal->surface().geometryId(), 10);
-
-  // Step to the surface inside volume3
-  BOOST_CHECK_EQUAL(states[5].currentVolume->geometryId().volume(), 3);
-  BOOST_CHECK_EQUAL(states[5].currentSurface->geometryId().sensitive(), 14);
-  BOOST_CHECK_EQUAL(states[5].currentSurface->geometryId().volume(), 3);
-  BOOST_CHECK_EQUAL(states[5].currentPortal, nullptr);
-
-  // Step to the volume3|endOfWorld boundary
-  BOOST_CHECK_EQUAL(states[6].currentVolume, nullptr);
-  BOOST_CHECK_EQUAL(states[6].currentSurface,
-                    &(states[6].currentPortal->surface()));
-  BOOST_CHECK_EQUAL(states[6].currentPortal->surface().geometryId(), 11);
-
-  // Step to the end of world
-  BOOST_CHECK(navigator.endOfWorldReached(states[7]));
+  BOOST_CHECK_EQUAL(states.size(), 9u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

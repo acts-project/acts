@@ -54,10 +54,10 @@ inline void updateCandidates(const GeometryContext& gctx,
 
     for (auto it = nState.externalSurfaceRange.first;
          it != nState.externalSurfaceRange.second; it++) {
-      if (sRep.geometryId() == it->second) {
-        boundaryTolerance = BoundaryTolerance::Infinite();
-        break;
-      }
+            if (sRep.geometryId() == it->second->geometryId()) {
+                boundaryTolerance = BoundaryTolerance::Infinite();
+                break;
+            }
     }
 
     // Get the intersection @todo make a templated intersector
