@@ -28,7 +28,7 @@ with open(args.results) as f:
             {
                 "title": title,
                 "total": ec == "0",
-                "path": f"{slug}.html",
+                "path": f"html/{slug}.html",
             }
         )
 

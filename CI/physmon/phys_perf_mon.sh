@@ -145,9 +145,9 @@ if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
     run_physmon_gen "Truth Tracking GX2F" "trackfitting_gx2f"
 fi
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
-    run_physmon_gen "CKF single muon" "trackfinding_singlemuon"
-    run_physmon_gen "CKF muon 50" "trackfinding_muon50"
-    run_physmon_gen "CKF ttbar 200" "trackfinding_ttbar200"
+    run_physmon_gen "CKF single muon" "trackfinding_1muon"
+    run_physmon_gen "CKF muon 50" "trackfinding_4muon_50vertices"
+    run_physmon_gen "CKF ttbar 200" "trackfinding_ttbar_pu200"
 fi
 if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
     run_physmon_gen "Simulation" "simulation"
@@ -341,17 +341,11 @@ function generation() {
         vertices_ttbar
 }
 
-if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
-    trackfinding trackfinding_singlemuon/truth_smeared
-    trackfinding trackfinding_singlemuon/truth_estimated
-    trackfinding trackfinding_singlemuon/seeded
-    trackfinding trackfinding_singlemuon/orthogonal
+if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
+    simulation fatras
+    simulation geant4
 
-    trackfinding trackfinding_muon50
-    vertexing trackfinding_muon50 CI/physmon/config/vertexing_muon50.yml
-
-    trackfinding trackfinding_ttbar200
-    vertexing trackfinding_ttbar200 CI/physmon/config/vertexing_ttbar200.yml
+    generation
 fi
 
 if [[ "$mode" == "all" || "$mode" == "kf" ]]; then
@@ -381,11 +375,17 @@ if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
         -c CI/physmon/config/trackfitting_gx2f.yml
 fi
 
-if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
-    simulation fatras
-    simulation geant4
+if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
+    trackfinding trackfinding_1muon/truth_smeared
+    trackfinding trackfinding_1muon/truth_estimated
+    trackfinding trackfinding_1muon/seeded
+    trackfinding trackfinding_1muon/orthogonal
 
-    generation
+    trackfinding trackfinding_4muon_50vertices
+    vertexing trackfinding_4muon_50vertices CI/physmon/config/vertexing_4muon_50vertices.yml
+
+    trackfinding trackfinding_ttbar_pu200
+    vertexing trackfinding_ttbar_pu200 CI/physmon/config/vertexing_ttbar_pu200.yml
 fi
 
 run CI/physmon/summary.py $histcmp_results \
