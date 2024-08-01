@@ -133,7 +133,7 @@ class VectorMultiTrajectoryBase {
         h("meas", isMeas, weight(meas_size));
         h("measCov", isMeas, weight(meas_cov_size));
         h("sourceLinks", isMeas, weight(sizeof(const SourceLink)));
-        h("projectors", isMeas, weight(sizeof(FullProjectorMapping)));
+        h("projectors", isMeas, weight(sizeof(BoundSubspaceIndices)));
       }
 
       if (ts.hasJacobian() &&
@@ -327,7 +327,7 @@ class VectorMultiTrajectoryBase {
 
   std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_jac;
   std::vector<std::optional<SourceLink>> m_sourceLinks;
-  std::vector<FullProjectorMapping> m_projectors;
+  std::vector<BoundSubspaceIndices> m_projectors;
 
   // owning vector of shared pointers to surfaces
   //

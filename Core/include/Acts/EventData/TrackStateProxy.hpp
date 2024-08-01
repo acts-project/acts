@@ -667,7 +667,7 @@ class TrackStateProxy {
   /// @deprecated Use projector() instead
   //[[deprecated("use projector() instead")]]
   ProjectorBitset projectorBitset() const {
-    return calibratedVariableSubspace().projectorBitset();
+    return variableBoundSubspaceHelper().projectorBitset();
   }
 
   /// Set the projector bitset, a compressed form of a projection matrix
@@ -680,37 +680,61 @@ class TrackStateProxy {
   //[[deprecated("use setProjector(span) instead")]]
   void setProjectorBitset(ProjectorBitset proj) requires(!ReadOnly) {
     BoundMatrix projMatrix = bitsetToMatrix<BoundMatrix>(proj);
-    FullProjectorMapping fullMapping =
-        projectorToIndices<eBoundSize>(projMatrix);
-    setFullProjectorMapping(fullMapping);
+    BoundSubspaceIndices boundSubspace =
+        projectorToSubspaceIndices<eBoundSize>(projMatrix);
+    setBoundSubspaceIndices(boundSubspace);
   }
 
-  FullProjectorMapping fullProjectorMapping() const {
+  BoundSubspaceIndices boundSubspaceIndices() const {
     assert(has<hashString("projector")>());
-    return component<FullProjectorMapping, hashString("projector")>();
+    return component<BoundSubspaceIndices, hashString("projector")>();
   }
 
   template <std::size_t measdim>
-  ProjectorMapping<measdim> projectorMapping() const {
-    FullProjectorMapping fullMapping = fullProjectorMapping();
-    ProjectorMapping<measdim> mapping;
-    std::copy(fullMapping.begin(), fullMapping.begin() + measdim,
-              mapping.begin());
-    return mapping;
+  SubspaceIndices<measdim> subspaceIndices() const {
+    BoundSubspaceIndices boundSubspace = BoundSubspaceIndices();
+    SubspaceIndices<measdim> subspace;
+    std::copy(boundSubspace.begin(), boundSubspace.begin() + measdim,
+              subspace.begin());
+    return subspace;
   }
 
-  void setFullProjectorMapping(FullProjectorMapping fullMapping) requires(
+  void setBoundSubspaceIndices(BoundSubspaceIndices boundSubspace) requires(
       !ReadOnly) {
     assert(has<hashString("projector")>());
-    component<FullProjectorMapping, hashString("projector")>() = fullMapping;
+    component<BoundSubspaceIndices, hashString("projector")>() = boundSubspace;
   }
 
   template <std::size_t measdim>
-  void setProjectorMapping(ProjectorMapping<measdim> proj) requires(!ReadOnly) {
+  void setSubspaceIndices(SubspaceIndices<measdim> proj) requires(!ReadOnly) {
     assert(has<hashString("projector")>());
-    FullProjectorMapping& fullMapping =
-        component<FullProjectorMapping, hashString("projector")>();
-    std::copy(proj.begin(), proj.end(), fullMapping.begin());
+    BoundSubspaceIndices& boundSubspace =
+        component<BoundSubspaceIndices, hashString("projector")>();
+    std::copy(proj.begin(), proj.end(), boundSubspace.begin());
+  }
+
+  template <std::size_t measdim, typename index_t>
+  void setSubspaceIndices(
+      std::array<index_t, measdim> subspaceIndices) requires(!ReadOnly) {
+    assert(has<hashString("projector")>());
+    BoundSubspaceIndices& boundSubspace =
+        component<BoundSubspaceIndices, hashString("projector")>();
+    std::transform(subspaceIndices.begin(), subspaceIndices.end(),
+                   boundSubspace.begin(),
+                   [](index_t i) { return static_cast<std::uint8_t>(i); });
+  }
+
+  VariableBoundSubspaceHelper variableBoundSubspaceHelper() const {
+    BoundSubspaceIndices boundSubspace = boundSubspaceIndices();
+    std::span<std::uint8_t> validSubspaceIndices(
+        boundSubspace.begin(), boundSubspace.begin() + calibratedSize());
+    return VariableBoundSubspaceHelper(validSubspaceIndices);
+  }
+
+  template <std::size_t measdim>
+  FixedBoundSubspaceHelper<measdim> fixedBoundSubspaceHelper() const {
+    SubspaceIndices<measdim> subspace = subspaceIndices<measdim>();
+    return FixedBoundSubspaceHelper<measdim>(subspace);
   }
 
   /// Uncalibrated measurement in the form of a source link. Const version
@@ -815,29 +839,6 @@ class TrackStateProxy {
   /// This must be called **before** setting the measurement content.
   void allocateCalibrated(std::size_t measdim) {
     m_traj->allocateCalibrated(m_istate, measdim);
-  }
-
-  VariableSubspaceHelper<eBoundSize> calibratedVariableSubspace() const {
-    FullProjectorMapping fullMapping = fullProjectorMapping();
-    return VariableSubspaceHelper<eBoundSize>(
-        std::span(fullMapping.begin(), fullMapping.begin() + calibratedSize()));
-  }
-
-  template <std::size_t measdim>
-  FixedSubspaceHelper<eBoundSize, measdim> calibratedFixedSubspace() const {
-    ProjectorMapping<measdim> mapping = projectorMapping();
-    return FixedSubspaceHelper<eBoundSize, measdim>(mapping);
-  }
-
-  template <std::size_t measdim, typename index_t>
-  void setCalibratedSubspace(
-      std::array<index_t, measdim> subspaceIndices) requires(!ReadOnly) {
-    assert(has<hashString("projector")>());
-    FullProjectorMapping& fullMapping =
-        component<FullProjectorMapping, hashString("projector")>();
-    for (std::size_t i = 0; i < measdim; ++i) {
-      fullMapping[i] = static_cast<std::uint8_t>(subspaceIndices[i]);
-    }
   }
 
   /// @}
@@ -971,7 +972,7 @@ class TrackStateProxy {
               other.template calibratedCovariance<measdim>();
         });
 
-        setFullProjectorMapping(other.fullProjectorMapping());
+        setBoundSubspaceIndices(other.boundSubspaceIndices());
       }
     } else {
       if (ACTS_CHECK_BIT(mask, PM::Predicted) &&
@@ -1018,7 +1019,7 @@ class TrackStateProxy {
               other.template calibratedCovariance<measdim>();
         });
 
-        setFullProjectorMapping(other.fullProjectorMapping());
+        setBoundSubspaceIndices(other.boundSubspaceIndices());
       }
     }
 

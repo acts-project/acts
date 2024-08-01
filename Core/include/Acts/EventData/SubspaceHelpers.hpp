@@ -23,17 +23,21 @@ namespace Acts {
 
 template <typename Container>
 inline static bool checkSubspaceIndices(const Container& container,
-                                        std::size_t fullSize) {
-  if (container.size() == 0 || container.size() > fullSize) {
+                                        std::size_t fullSize,
+                                        std::size_t subspaceSize) {
+  if (subspaceSize > fullSize) {
     return false;
   }
-  for (std::size_t i = 0; i < container.size(); ++i) {
-    auto index = container[i];
+  if (container.size() != subspaceSize) {
+    return false;
+  }
+  for (auto it = container.begin(); it != container.end();) {
+    auto index = *it;
     if (index >= fullSize) {
       return false;
     }
-    if (std::find(container.begin() + i + 1, container.end(), index) !=
-        container.end()) {
+    ++it;
+    if (std::find(it, container.end(), index) != container.end()) {
       return false;
     }
   }
@@ -47,6 +51,7 @@ class SubspaceHelperBase {
 
   using FullSquareMatrix = ActsSquareMatrix<kFullSize>;
 
+  bool empty() const { return self().empty(); }
   std::size_t size() const { return self().size(); }
 
   auto operator[](std::size_t i) const { return self()[i]; }
@@ -70,7 +75,7 @@ class SubspaceHelperBase {
     return result;
   }
 
-  ProjectorBitset projectorBitset() const {
+  ProjectorBitset projectorBitset() const requires(kFullSize <= 8) {
     return matrixToBitset(fullProjector()).to_ullong();
   }
 
@@ -90,13 +95,14 @@ class VariableSubspaceHelper
 
   template <typename OtherContainer>
   explicit VariableSubspaceHelper(const OtherContainer& indices) {
-    assert(checkSubspaceIndices(indices, kFullSize) && "Invalid indices");
+    assert(checkSubspaceIndices(indices, kFullSize, indices.size()) &&
+           "Invalid indices");
     m_indices.resize(indices.size());
-    for (std::size_t i = 0; i < indices.size(); ++i) {
-      m_indices[i] = static_cast<IndexType>(indices[i]);
-    }
+    std::transform(indices.begin(), indices.end(), m_indices.begin(),
+                   [](auto index) { return static_cast<IndexType>(index); });
   }
 
+  bool empty() const { return m_indices.empty(); }
   std::size_t size() const { return m_indices.size(); }
 
   IndexType operator[](std::size_t i) const { return m_indices[i]; }
@@ -116,6 +122,7 @@ class FixedSubspaceHelper
  public:
   static constexpr std::size_t kFullSize = FullSize;
   static constexpr std::size_t kSubspaceSize = SubspaceSize;
+  static_assert(kSubspaceSize <= kFullSize, "Invalid subspace size");
 
   using Projector = ActsMatrix<kSubspaceSize, kFullSize>;
   using Expander = ActsMatrix<kFullSize, kSubspaceSize>;
@@ -131,12 +138,13 @@ class FixedSubspaceHelper
 
   template <typename OtherContainer>
   explicit FixedSubspaceHelper(const OtherContainer& indices) {
-    assert(checkSubspaceIndices(indices, kFullSize) && "Invalid indices");
-    for (std::size_t i = 0; i < kSubspaceSize; ++i) {
-      m_indices[i] = static_cast<IndexType>(indices[i]);
-    }
+    assert(checkSubspaceIndices(indices, kFullSize, kSubspaceSize) &&
+           "Invalid indices");
+    std::transform(indices.begin(), indices.end(), m_indices.begin(),
+                   [](auto index) { return static_cast<IndexType>(index); });
   }
 
+  bool empty() const { return m_indices.empty(); }
   std::size_t size() const { return m_indices.size(); }
 
   IndexType operator[](std::uint32_t i) const { return m_indices[i]; }
@@ -214,26 +222,30 @@ class FixedSubspaceHelper
   Container m_indices{};
 };
 
+template <std::size_t SubspaceSize>
+using FixedBoundSubspaceHelper =
+    FixedSubspaceHelper<Acts::eBoundSize, SubspaceSize, std::uint8_t>;
+using VariableBoundSubspaceHelper =
+    VariableSubspaceHelper<Acts::eBoundSize, std::uint8_t>;
+
 template <std::size_t kFullSize, typename Derived>
-std::array<std::uint8_t, kFullSize> projectorToIndices(
+SubspaceIndices<kFullSize> projectorToSubspaceIndices(
     const Eigen::DenseBase<Derived>& projector) {
   auto rows = static_cast<std::size_t>(projector.rows());
   auto cols = static_cast<std::size_t>(projector.cols());
   assert(cols == kFullSize && rows <= kFullSize && "Invalid projector size");
-  std::array<std::uint8_t, kFullSize> indices{};
+  SubspaceIndices<kFullSize> result;
+  result.fill(kFullSize);
   for (std::size_t i = 0; i < rows; ++i) {
     for (std::size_t j = 0; j < cols; ++j) {
       assert((projector(i, j) == 0 || projector(i, j) == 1) &&
              "Invalid projector value");
       if (projector(i, j) == 1) {
-        indices[i] = j;
+        result[i] = j;
       }
     }
-    if (projector.row(i).sum() == 0) {
-      indices[i] = kFullSize;
-    }
   }
-  return indices;
+  return result;
 }
 
 }  // namespace Acts

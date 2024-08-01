@@ -77,7 +77,7 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
     m_sourceLinks.emplace_back(std::nullopt);
     p.icalibratedsourcelink = m_sourceLinks.size() - 1;
 
-    m_projectors.push_back(kFullProjectorMappingEmpty);
+    m_projectors.push_back(kBoundSubspaceIndicesInvalid);
     p.iprojector = m_projectors.size() - 1;
   }
 
@@ -132,7 +132,7 @@ void VectorMultiTrajectory::addTrackStateComponents_impl(
     m_sourceLinks.emplace_back(std::nullopt);
     p.icalibratedsourcelink = m_sourceLinks.size() - 1;
 
-    m_projectors.push_back(kFullProjectorMappingEmpty);
+    m_projectors.push_back(kBoundSubspaceIndicesInvalid);
     p.iprojector = m_projectors.size() - 1;
   }
 

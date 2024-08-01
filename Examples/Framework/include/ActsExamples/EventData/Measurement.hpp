@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/detail/CalculateResiduals.hpp"
 #include "Acts/EventData/detail/ParameterTraits.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
@@ -76,11 +77,10 @@ class FixedSizeMeasurement {
                        const Eigen::MatrixBase<parameters_t>& params,
                        const Eigen::MatrixBase<covariance_t>& cov)
       : m_source(std::move(source)), m_params(params), m_cov(cov) {
-    for (std::size_t i = 0u; i < kSize; ++i) {
-      assert(subsetIndices[i] >= 0 && subsetIndices[i] < kFullSize &&
-             "Index out of bounds");
-      m_subsetIndices[i] = static_cast<std::uint8_t>(subsetIndices[i]);
-    }
+    Acts::checkSubspaceIndices(subsetIndices, kFullSize, kSize);
+    std::transform(subsetIndices.begin(), subsetIndices.end(),
+                   m_subsetIndices.begin(),
+                   [](indices_t i) { return static_cast<std::uint8_t>(i); });
   }
   /// A measurement can only be constructed with valid parameters.
   FixedSizeMeasurement() = delete;
