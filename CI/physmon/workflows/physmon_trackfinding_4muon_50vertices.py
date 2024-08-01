@@ -53,7 +53,7 @@ with tempfile.TemporaryDirectory() as temp:
     addParticleGun(
         s,
         MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
-        EtaConfig(-3.0, 3.0),
+        EtaConfig(-3.0, 3.0, uniform=True),
         PhiConfig(0.0, 360.0 * u.degree),
         ParticleConfig(10, acts.PdgParticle.eMuon, randomizeCharge=True),
         vtxGen=acts.examples.GaussianVertexGenerator(
