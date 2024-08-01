@@ -130,7 +130,9 @@ def run_ckf_tracking(label, seeding):
                 maxOutliers=2,
             ),
             CkfConfig(
-                seedDeduplication=True if seeding != SeedingAlgorithm.TruthSmeared else False,
+                seedDeduplication=True
+                if seeding != SeedingAlgorithm.TruthSmeared
+                else False,
                 stayOnSeed=True if seeding != SeedingAlgorithm.TruthSmeared else False,
             ),
             outputDirRoot=tp,
@@ -140,14 +142,13 @@ def run_ckf_tracking(label, seeding):
         del s
 
         for file in (
-            (
-                ["performance_seeding.root"] if seeding != SeedingAlgorithm.TruthSmeared else []
-            ) +
-            [
-                "performance_ckf.root",
-                "tracksummary_ckf.root",
-            ]
-        ):
+            ["performance_seeding.root"]
+            if seeding != SeedingAlgorithm.TruthSmeared
+            else []
+        ) + [
+            "performance_ckf.root",
+            "tracksummary_ckf.root",
+        ]:
             perf_file = tp / file
             assert perf_file.exists(), f"Performance file not found {perf_file}"
             (setup.outdir / label).mkdir(parents=True, exist_ok=True)
@@ -155,7 +156,7 @@ def run_ckf_tracking(label, seeding):
 
 
 for label, seeding in [
-    ("truth_smeared", SeedingAlgorithm.TruthSmeared), 
+    ("truth_smeared", SeedingAlgorithm.TruthSmeared),
     ("truth_estimated", SeedingAlgorithm.TruthEstimated),
     ("seeded", SeedingAlgorithm.Default),
     ("orthogonal", SeedingAlgorithm.Orthogonal),

@@ -6,7 +6,6 @@ import shutil
 
 import acts
 from acts.examples.simulation import (
-    addPythia8,
     addFatras,
     addGeant4,
     ParticleSelectorConfig,
@@ -26,7 +25,7 @@ with tempfile.TemporaryDirectory() as temp:
 
     s = acts.examples.Sequencer(
         events=1000,
-        numThreads=-1,
+        numThreads=1,
         logLevel=acts.logging.INFO,
     )
 
@@ -106,7 +105,6 @@ with tempfile.TemporaryDirectory() as temp:
     ]:
         assert file.exists(), "file not found"
         shutil.copy(file, setup.outdir / name)
-
 
 with tempfile.TemporaryDirectory() as temp:
     s = acts.examples.Sequencer(

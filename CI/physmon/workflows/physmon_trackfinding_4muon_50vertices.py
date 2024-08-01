@@ -58,9 +58,7 @@ with tempfile.TemporaryDirectory() as temp:
         ParticleConfig(10, acts.PdgParticle.eMuon, randomizeCharge=True),
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(
-                0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
-            ),
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns),
         ),
         multiplicity=50,
         rnd=rnd,

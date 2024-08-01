@@ -137,6 +137,9 @@ function run_physmon_gen() {
 }
 
 echo "::group::Generate validation dataset"
+if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
+    run_physmon_gen "Simulation" "simulation"
+fi
 if [[ "$mode" == "all" || "$mode" == "kf" ]]; then
     run_physmon_gen "Truth Tracking KF" "trackfitting_kf"
 fi
@@ -150,9 +153,6 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     run_physmon_gen "CKF single muon" "trackfinding_1muon"
     run_physmon_gen "CKF muon 50" "trackfinding_4muon_50vertices"
     run_physmon_gen "CKF ttbar 200" "trackfinding_ttbar_pu200"
-fi
-if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
-    run_physmon_gen "Simulation" "simulation"
 fi
 echo "::endgroup::"
 
