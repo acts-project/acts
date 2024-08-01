@@ -56,23 +56,23 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
     propagationAlgorithm = acts.examples.PropagationAlgorithm(
         propagatorImpl=propagator,
         level=acts.logging.INFO,
-        sterileLogger=True,
+        sterileLogger=False,
         covarianceTransport=False,
         inputTrackParameters="start_parameters",
         outputPropagationSteps="propagation_steps",
     )
     s.addAlgorithm(propagationAlgorithm)
 
-    if not os.path.exists(outputDir + "/obj"):
-        os.makedirs(outputDir + "/obj")
+    # if not os.path.exists(outputDir + "/obj"):
+    #    os.makedirs(outputDir + "/obj")
 
-    s.addWriter(
-        acts.examples.ObjPropagationStepsWriter(
-            level=acts.logging.INFO,
-            collection="propagation_steps",
-            outputDir=outputDir + "/obj",
-        )
-    )
+    # s.addWriter(
+    #    acts.examples.ObjPropagationStepsWriter(
+    #        level=acts.logging.INFO,
+    #        collection="propagation_steps",
+    #        outputDir=outputDir + "/obj",
+    #    )
+    # )
 
     if not propagationAlgorithm.config.sterileLogger:
         s.addWriter(

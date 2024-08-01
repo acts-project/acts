@@ -417,9 +417,6 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
 def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
     from propagation import runPropagation
 
-    obj = tmp_path / "obj"
-    obj.mkdir()
-
     root_files = [
         (
             "propagation_steps.root",
@@ -432,8 +429,6 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
         fp = tmp_path / fn
         assert not fp.exists()
 
-    assert len(list(obj.iterdir())) == 0
-
     runPropagation(trk_geo, field, str(tmp_path), s=seq).run()
 
     for fn, tn, ee in root_files:
@@ -442,8 +437,6 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
         assert fp.stat().st_size > 2**10 * 50
         assert_entries(fp, tn, ee)
         assert_root_hash(fn, fp)
-
-    assert len(list(obj.iterdir())) > 0
 
 
 @pytest.mark.slow
