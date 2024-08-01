@@ -263,6 +263,9 @@ function vertexing() {
             --config $config
         ec=$(($ec | $?))
 
+        # remove ntuple file because it's large
+        rm $outdir/data/$slug/performance_ivf_notime.root
+
         run_histcmp \
             $outdir/data/$slug/performance_ivf_notime_hist.root \
             $refdir/$slug/performance_ivf_notime_hist.root \
@@ -280,6 +283,9 @@ function vertexing() {
         --config $config
     ec=$(($ec | $?))
 
+    # remove ntuple file because it's large
+    rm $outdir/data/$slug/performance_amvf_gauss_notime.root
+
     run_histcmp \
         $outdir/data/$slug/performance_amvf_gauss_notime_hist.root \
         $refdir/$slug/performance_amvf_gauss_notime_hist.root \
@@ -295,6 +301,9 @@ function vertexing() {
         --silent \
         --config $config
     ec=$(($ec | $?))
+
+    # remove ntuple file because it's large
+    rm $outdir/data/$slug/performance_amvf_grid_time.root
 
     run_histcmp \
         $outdir/data/$slug/performance_amvf_grid_time_hist.root \
@@ -337,6 +346,9 @@ function generation() {
         $outdir/data/simulation/particles_ttbar_hist.root \
         --silent \
         --config CI/physmon/config/pythia8_ttbar.yml
+    
+    # remove ntuple file because it's large
+    rm $outdir/data/simulation/pythia8_particles_ttbar.root
 
     run_histcmp \
         $outdir/data/simulation/particles_ttbar_hist.root \
@@ -352,6 +364,9 @@ function generation() {
         $outdir/data/simulation/vertices_ttbar_hist.root \
         --silent \
         --config CI/physmon/config/pythia8_ttbar.yml
+    
+    # remove ntuple file because it's large
+    rm $outdir/data/simulation/pythia8_vertices_ttbar.root
 
     run_histcmp \
         $outdir/data/simulation/vertices_ttbar_hist.root \
