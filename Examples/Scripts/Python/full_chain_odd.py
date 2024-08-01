@@ -348,6 +348,8 @@ if args.reco:
             maxOutliers=2,
         ),
         CkfConfig(
+            chi2CutOff=15,
+            numMeasurementsCutOff=10,
             seedDeduplication=True,
             stayOnSeed=True,
             pixelVolumes={16, 17, 18},
@@ -407,7 +409,7 @@ if args.reco:
     addVertexFitting(
         s,
         field,
-        vertexFinder=VertexFinder.Iterative,
+        vertexFinder=VertexFinder.AMVF,
         outputDirRoot=outputDir if args.output_root else None,
     )
 

@@ -363,7 +363,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         bottom[b]->radius() > seedFilterState.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }
-    if (m_config.seedConfirmation && seedFilterState.numQualitySeeds) {
+    if (m_config.seedConfirmation &&
+        candidates_collector.nHighQualityCandidates()) {
       minCompatibleTopSPs++;
     }
 
@@ -676,9 +677,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    */
   if ((!bottom_lh_v.empty() && !top_lh_v.empty()) ||
       (!bottom_hl_v.empty() && !top_hl_v.empty())) {
-    m_config.seedFilter->filterSeeds_1SpFixed(
-        spacePointData, candidates_collector, seedFilterState.numQualitySeeds,
-        out_cont);
+    m_config.seedFilter->filterSeeds_1SpFixed(spacePointData,
+                                              candidates_collector, out_cont);
   }
 }
 
