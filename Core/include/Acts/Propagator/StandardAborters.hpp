@@ -176,10 +176,35 @@ struct EndOfWorldReached {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
-                  const navigator_t& navigator,
-                  const Logger& /*logger*/) const {
-    bool endOfWorld = navigator.endOfWorldReached(state.navigation);
-    return endOfWorld;
+                  const navigator_t& navigator, const Logger& logger) const {
+    if (navigator.endOfWorldReached(state.navigation)) {
+      ACTS_VERBOSE(
+          "EndOfWorldReached aborter | End of world reached by navigator.");
+      return true;
+    }
+
+    if (!state.options.constrainToVolumeIds.empty() &&
+        navigator.currentSurface(state.navigation) != nullptr) {
+      const auto& constrainToVolumeIds = state.options.constrainToVolumeIds;
+      const auto* currentVolume = navigator.currentVolume(state.navigation);
+      if (currentVolume != nullptr &&
+          std::find(constrainToVolumeIds.begin(), constrainToVolumeIds.end(),
+                    static_cast<std::uint32_t>(
+                        currentVolume->geometryId().volume())) ==
+              constrainToVolumeIds.end()) {
+        std::cout << "volume id: "
+                  << static_cast<std::uint32_t>(
+                         currentVolume->geometryId().volume())
+                  << " volume name: " << currentVolume->volumeName()
+                  << std::endl;
+        ACTS_VERBOSE(
+            "EndOfWorldReached aborter | End of world reached by volume "
+            "constrain.");
+        return true;
+      }
+    }
+
+    return false;
   }
 };
 

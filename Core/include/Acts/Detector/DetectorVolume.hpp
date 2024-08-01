@@ -400,6 +400,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @return the name of the volume
   const std::string& name() const;
 
+  const std::string& volumeName() const { return name(); }
+
   /// @return the geometry identifier
   const GeometryIdentifier& geometryId() const;
 

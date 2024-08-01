@@ -128,12 +128,15 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     bool computeSharedHits = false;
 
     // Pixel and strip volume ids to be used for maxPixel/StripHoles cuts
-    std::set<Acts::GeometryIdentifier::Value> pixelVolumes;
-    std::set<Acts::GeometryIdentifier::Value> stripVolumes;
+    std::vector<std::uint32_t> pixelVolumeIds;
+    std::vector<std::uint32_t> stripVolumeIds;
 
-    /// additional track selector settings
+    // additional track selector settings
     std::size_t maxPixelHoles = std::numeric_limits<std::size_t>::max();
     std::size_t maxStripHoles = std::numeric_limits<std::size_t>::max();
+
+    /// The volume ids to constrain the track finding to
+    std::vector<std::uint32_t> constrainToVolumeIds;
   };
 
   /// Constructor of the track finding algorithm
