@@ -163,7 +163,7 @@ function run_histcmp() {
     title=$3
     html_path=$4
     plots_path=$5
-    shift 4
+    shift 5
 
     echo "::group::Comparing $a vs. $b"
 
