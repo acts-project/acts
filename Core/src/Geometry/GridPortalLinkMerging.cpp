@@ -740,37 +740,15 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
   }
 }
 
-std::unique_ptr<PortalLinkBase> GridPortalLink::mergeImpl(
-    const PortalLinkBase& other, BinningValue direction,
-    const Logger& logger) const {
-  return other.mergeImpl(*this, direction, logger);
-}
-
-std::unique_ptr<PortalLinkBase> GridPortalLink::mergeImpl(
-    const CompositePortalLink& other, BinningValue direction,
-    const Logger& logger) const {
-  ACTS_VERBOSE("Merging GridPortalLink with CompositePortalLink");
-  // Other is already a composite, nothing to to here
-  (void)other;
-  (void)direction;
-  (void)logger;
-  throw std::logic_error{"Not implemented"};
-}
-
-std::unique_ptr<PortalLinkBase> GridPortalLink::mergeImpl(
-    const TrivialPortalLink& other, BinningValue direction,
-    const Logger& logger) const {
-  ACTS_VERBOSE("Merging GridPortalLink with TrivialPortalLink");
-  ACTS_VERBOSE("Making grid from trivial portal link in " << direction);
-  auto gridFromTrivial = other.makeGrid(direction);
-  return mergeImpl(*gridFromTrivial, direction, logger);
-}
-
-std::unique_ptr<PortalLinkBase> GridPortalLink::mergeImpl(
-    const GridPortalLink& other, BinningValue direction,
-    const Logger& logger) const {
+std::unique_ptr<PortalLinkBase> GridPortalLink::merge(
+    const std::shared_ptr<const GridPortalLink>& a,
+    const std::shared_ptr<const GridPortalLink>& b, BinningValue direction,
+    const Logger& logger) {
   ACTS_VERBOSE("Merging two GridPortalLinks");
-  auto merged = mergeGridPortals(this, &other, direction, logger);
+
+  checkMergePreconditions(*a, *b, direction);
+
+  auto merged = mergeGridPortals(a.get(), b.get(), direction, logger);
   if (merged != nullptr) {
     return merged;
   } else {

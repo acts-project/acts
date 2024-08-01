@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <format>
 #include <vector>
@@ -71,6 +72,11 @@ class GridPortalLink : public PortalLinkBase {
       const std::shared_ptr<RegularSurface>& surface,
       const TrackingVolume& volume, BinningValue direction);
 
+  static std::unique_ptr<PortalLinkBase> merge(
+      const std::shared_ptr<const GridPortalLink>& a,
+      const std::shared_ptr<const GridPortalLink>& b, BinningValue direction,
+      const Logger& logger = getDummyLogger());
+
   virtual const IGrid& grid() const = 0;
   virtual void setVolume(const TrackingVolume* volume) = 0;
   virtual unsigned int dim() const = 0;
@@ -82,22 +88,6 @@ class GridPortalLink : public PortalLinkBase {
   /// This is primarily for testing / inspection
   virtual void visitBins(
       const std::function<void(const TrackingVolume*)> func) const = 0;
-
-  std::unique_ptr<PortalLinkBase> mergeImpl(
-      const PortalLinkBase& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const final;
-
-  std::unique_ptr<PortalLinkBase> mergeImpl(
-      const CompositePortalLink& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const final;
-
-  std::unique_ptr<PortalLinkBase> mergeImpl(
-      const TrivialPortalLink& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const final;
-
-  std::unique_ptr<PortalLinkBase> mergeImpl(
-      const GridPortalLink& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const final;
 
   static void fillMergedGrid(const GridPortalLink& a, const GridPortalLink& b,
                              GridPortalLink& merged, BinningValue direction,

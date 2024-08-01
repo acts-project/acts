@@ -29,22 +29,6 @@ class TrivialPortalLink final : public PortalLinkBase {
   const TrackingVolume* resolveVolume(const GeometryContext& gctx,
                                       const Vector2& position) const final;
 
-  std::unique_ptr<PortalLinkBase> mergeImpl(
-      const PortalLinkBase& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const final;
-
-  std::unique_ptr<PortalLinkBase> mergeImpl(
-      const CompositePortalLink& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const final;
-
-  std::unique_ptr<PortalLinkBase> mergeImpl(
-      const TrivialPortalLink& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const final;
-
-  std::unique_ptr<PortalLinkBase> mergeImpl(
-      const GridPortalLink& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const final;
-
  private:
   const TrackingVolume* m_volume;
 };

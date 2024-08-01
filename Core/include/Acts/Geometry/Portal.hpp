@@ -75,9 +75,10 @@ class PortalLinkBase {
 
   // virtual bool inside(const Vector2& position) const = 0;
 
-  std::unique_ptr<PortalLinkBase> merge(
-      const GeometryContext& gctx, const PortalLinkBase& other,
-      BinningValue direction, const Logger& logger = getDummyLogger()) const;
+  static std::unique_ptr<PortalLinkBase> merge(
+      const std::shared_ptr<const PortalLinkBase>& a,
+      const std::shared_ptr<const PortalLinkBase>& b, BinningValue direction,
+      const Logger& logger = getDummyLogger());
 
   virtual void toStream(std::ostream& os) const = 0;
 
@@ -86,21 +87,9 @@ class PortalLinkBase {
   const RegularSurface& surface() const { return *m_surface; }
 
  protected:
-  virtual std::unique_ptr<PortalLinkBase> mergeImpl(
-      const PortalLinkBase& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const;
-
-  virtual std::unique_ptr<PortalLinkBase> mergeImpl(
-      const CompositePortalLink& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const;
-
-  virtual std::unique_ptr<PortalLinkBase> mergeImpl(
-      const TrivialPortalLink& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const;
-
-  virtual std::unique_ptr<PortalLinkBase> mergeImpl(
-      const GridPortalLink& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const;
+  static void checkMergePreconditions(const PortalLinkBase& a,
+                                      const PortalLinkBase& b,
+                                      BinningValue direction);
 
   std::shared_ptr<RegularSurface> m_surface;
 };

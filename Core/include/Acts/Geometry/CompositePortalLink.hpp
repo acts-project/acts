@@ -19,21 +19,16 @@ class CompositePortalLink final : public PortalLinkBase {
   const TrackingVolume* resolveVolume(const GeometryContext& gctx,
                                       const Vector2& position) const final;
 
-  std::unique_ptr<PortalLinkBase> mergeImpl(
-      const PortalLinkBase& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const final;
+  CompositePortalLink(const std::shared_ptr<const PortalLinkBase>& a,
+                      const std::shared_ptr<const PortalLinkBase>& b)
+      : PortalLinkBase(nullptr) {
+    (void)a;
+    (void)b;
+    // @TODO: Implement
+    throw std::logic_error{"Not implemented"};
+  };
 
-  std::unique_ptr<PortalLinkBase> mergeImpl(
-      const CompositePortalLink& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const final;
-
-  std::unique_ptr<PortalLinkBase> mergeImpl(
-      const TrivialPortalLink& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const final;
-
-  std::unique_ptr<PortalLinkBase> mergeImpl(
-      const GridPortalLink& other, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const final;
+  // @TODO: Implement optimization in case on or both of the arguments are already composites
 };
 
 }  // namespace Acts
