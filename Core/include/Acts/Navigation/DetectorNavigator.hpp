@@ -329,7 +329,7 @@ class DetectorNavigator {
     bool isExternal = false;
     BoundaryTolerance boundaryTolerance =
         nState.surfaceCandidate().boundaryTolerance;
-    if (c.surface != nullptr) {
+    if (nextSurface != nullptr) {
       for (auto it = nState.externalSurfaceRange.first;
            it != nState.externalSurfaceRange.second; ++it) {
         if (nextSurface->geometryId() == it->second->geometryId()) {
