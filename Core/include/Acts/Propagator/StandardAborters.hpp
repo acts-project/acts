@@ -192,11 +192,6 @@ struct EndOfWorldReached {
                     static_cast<std::uint32_t>(
                         currentVolume->geometryId().volume())) ==
               constrainToVolumeIds.end()) {
-        std::cout << "volume id: "
-                  << static_cast<std::uint32_t>(
-                         currentVolume->geometryId().volume())
-                  << " volume name: " << currentVolume->volumeName()
-                  << std::endl;
         ACTS_VERBOSE(
             "EndOfWorldReached aborter | End of world reached by volume "
             "constrain.");
