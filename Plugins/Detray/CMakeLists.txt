@@ -2,11 +2,6 @@ add_library(
   ActsPluginDetray SHARED
   src/DetrayConverter.cpp)
 
-add_dependencies(ActsPluginDetray 
-    detray::core
-    covfie::core
-    vecmem::core)
-
 target_include_directories(
   ActsPluginDetray
   PUBLIC
