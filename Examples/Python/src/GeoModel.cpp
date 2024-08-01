@@ -16,7 +16,7 @@
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorSurfaceFactory.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorVolumeFactory.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
@@ -100,44 +100,44 @@ void addGeoModel(Context& ctx) {
   // Volume factory
   {
     auto a =
-        py::class_<Acts::GeoModelDetectorVolumeFactory,
-                   std::shared_ptr<Acts::GeoModelDetectorVolumeFactory>>(
-            gm, "GeoModelDetectorVolumeFactory")
+        py::class_<Acts::GeoModelDetectorObjectFactory,
+                   std::shared_ptr<Acts::GeoModelDetectorObjectFactory>>(
+            gm, "GeoModelDetectorObjectFactory")
             .def(py::init(
-                [](const Acts::GeoModelDetectorVolumeFactory::Config& cfg,
+                [](const Acts::GeoModelDetectorObjectFactory::Config& cfg,
                    Acts::Logging::Level level) {
-                  return std::make_shared<Acts::GeoModelDetectorVolumeFactory>(
+                  return std::make_shared<Acts::GeoModelDetectorObjectFactory>(
                       cfg, Acts::getDefaultLogger(
-                               "GeoModelDetectorVolumeFactory", level));
+                               "GeoModelDetectorObjectFactory", level));
                 }))
-            .def("construct", &Acts::GeoModelDetectorVolumeFactory::construct);
+            .def("construct", &Acts::GeoModelDetectorObjectFactory::construct);
 
-    py::class_<Acts::GeoModelDetectorVolumeFactory::Config>(a, "Config")
+    py::class_<Acts::GeoModelDetectorObjectFactory::Config>(a, "Config")
         .def(py::init<>())
         .def_readwrite(
             "convertSubVolumes",
-            &Acts::GeoModelDetectorVolumeFactory::Config::convertSubVolumes)
+            &Acts::GeoModelDetectorObjectFactory::Config::convertSubVolumes)
         .def_readwrite("nameList",
-                       &Acts::GeoModelDetectorVolumeFactory::Config::nameList)
+                       &Acts::GeoModelDetectorObjectFactory::Config::nameList)
         .def_readwrite("convertFpv",
-                       &Acts::GeoModelDetectorVolumeFactory::Config::convertFpv)
+                       &Acts::GeoModelDetectorObjectFactory::Config::convertFpv)
         .def_readwrite(
             "materialList",
-            &Acts::GeoModelDetectorVolumeFactory::Config::materialList);
+            &Acts::GeoModelDetectorObjectFactory::Config::materialList);
 
-    py::class_<Acts::GeoModelDetectorVolumeFactory::Cache>(a, "Cache")
+    py::class_<Acts::GeoModelDetectorObjectFactory::Cache>(a, "Cache")
         .def(py::init<>())
         .def_readwrite(
             "sensitiveSurfaces",
-            &Acts::GeoModelDetectorVolumeFactory::Cache::sensitiveSurfaces)
+            &Acts::GeoModelDetectorObjectFactory::Cache::sensitiveSurfaces)
         .def_readwrite(
             "boundingBoxes",
-            &Acts::GeoModelDetectorVolumeFactory::Cache::boundingBoxes);
+            &Acts::GeoModelDetectorObjectFactory::Cache::boundingBoxes);
 
-    py::class_<Acts::GeoModelDetectorVolumeFactory::Options>(a, "Options")
+    py::class_<Acts::GeoModelDetectorObjectFactory::Options>(a, "Options")
         .def(py::init<>())
         .def_readwrite("queries",
-                       &Acts::GeoModelDetectorVolumeFactory::Options::queries);
+                       &Acts::GeoModelDetectorObjectFactory::Options::queries);
   }
 
   // Surface factory

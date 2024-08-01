@@ -8,7 +8,7 @@ add_library(
   src/GeoModelReader.cpp
   src/GeoModelDetectorElement.cpp
   src/GeoModelDetectorSurfaceFactory.cpp
-  src/GeoModelDetectorVolumeFactory.cpp
+  src/GeoModelDetectorObjectFactory.cpp
   src/GeoModelMaterialConverter.cpp
   src/detail/GeoBoxConverter.cpp
   src/detail/GeoTrdConverter.cpp
