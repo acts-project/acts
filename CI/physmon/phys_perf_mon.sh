@@ -29,6 +29,7 @@ outdir=${2:-physmon}
 mkdir -p $outdir
 mkdir -p $outdir/data
 mkdir -p $outdir/html
+mkdir -p $outdir/logs
 
 refdir=CI/physmon/reference
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
@@ -124,7 +125,8 @@ function run_physmon_gen() {
     script=CI/physmon/workflows/physmon_${slug}.py
 
     mkdir -p $outdir/data/$slug
-    measure "$title" "$slug" ${script} $outdir/data/$slug 2>&1 > $outdir/data/$slug/run_${slug}.log
+    mkdir -p $outdir/logs/$slug
+    measure "$title" "$slug" ${script} $outdir/data/$slug 2>&1 > $outdir/logs/$slug/${slug}.log
 
     this_ec=$?
     ec=$(($ec | $this_ec))
@@ -236,8 +238,7 @@ function trackfinding() {
         $refdir/$slug/tracksummary_ckf_hist.root \
         "Track Summary CKF ${slug}" \
         $slug/tracksummary_ckf.html \
-        $slug/tracksummary_ckf_plots \
-        --config $config
+        $slug/tracksummary_ckf_plots
 
     if [ -f $refdir/$slug/performance_ambi.root ]; then
         run_histcmp \
@@ -245,8 +246,7 @@ function trackfinding() {
             $refdir/$slug/performance_ambi.root \
             "Ambisolver ${slug}" \
             $slug/performance_ambi.html \
-            $slug/performance_ambi_plots \
-            --config $config
+            $slug/performance_ambi_plots 
     fi
 }
 
@@ -271,8 +271,7 @@ function vertexing() {
             $refdir/$slug/performance_ivf_notime_hist.root \
             "IVF notime ${slug}" \
             $slug/performance_ivf_notime.html \
-            $slug/performance_ivf_notime_plots \
-            --config $config
+            $slug/performance_ivf_notime_plots
     fi
 
     run Examples/Scripts/generic_plotter.py \
@@ -291,8 +290,7 @@ function vertexing() {
         $refdir/$slug/performance_amvf_gauss_notime_hist.root \
         "AMVF gauss notime ${slug}" \
         $slug/performance_amvf_gauss_notime.html \
-        $slug/performance_amvf_gauss_notime_plots \
-        --config $config
+        $slug/performance_amvf_gauss_notime_plots
 
     run Examples/Scripts/generic_plotter.py \
         $outdir/data/$slug/performance_amvf_grid_time.root \
@@ -310,8 +308,7 @@ function vertexing() {
         $refdir/$slug/performance_amvf_grid_time_hist.root \
         "AMVF grid time ${slug}" \
         $slug/performance_amvf_grid_time.html \
-        $slug/performance_amvf_grid_time_plots \
-        --config $config
+        $slug/performance_amvf_grid_time_plots
 }
 
 function simulation() {
@@ -335,8 +332,7 @@ function simulation() {
         $refdir/simulation/particles_${suffix}_hist.root \
         "Particles ${suffix}" \
         simulation/particles_${suffix}.html \
-        simulation/particles_${suffix}_plots \
-        --config $config
+        simulation/particles_${suffix}_plots
 }
 
 function generation() {
