@@ -128,7 +128,7 @@ def runCKFTracks(
         trackingGeometry,
         field,
         TrackSelectorConfig(
-            pt=500 * u.MeV,
+            pt=(500 * u.MeV, None),
             absEta=(None, 3.0),
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
             nMeasurementsMin=7,
@@ -140,8 +140,6 @@ def runCKFTracks(
             numMeasurementsCutOff=10,
             seedDeduplication=True if not truthSmearedSeeded else False,
             stayOnSeed=True if truthSmearedSeeded else False,
-            maxPixelHoles=1,
-            maxStripHoles=2,
         ),
         outputDirRoot=outputDir,
         outputDirCsv=outputDir / "csv" if outputCsv else None,
