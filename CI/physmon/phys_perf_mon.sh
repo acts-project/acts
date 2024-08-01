@@ -121,8 +121,8 @@ function run_physmon_gen() {
 
     script=CI/physmon/workflows/physmon_${slug}.py
 
-    mkdir -p $outdir/$slug
-    measure "$title" "$slug" ${script} $outdir/$slug 2>&1 > $outdir/$slug/run_${slug}.log
+    mkdir -p $outdir/data/$slug
+    measure "$title" "$slug" ${script} $outdir/data/$slug 2>&1 > $outdir/data/$slug/run_${slug}.log
 
     this_ec=$?
     ec=$(($ec | $this_ec))
@@ -178,8 +178,8 @@ function run_histcmp() {
         --label-reference=reference \
         --label-monitored=monitored \
         --title="$title" \
-        -o $outdir/${slug}.html \
-        -p $outdir/${slug}_plots \
+        -o $outdir/html/${slug}.html \
+        -p $outdir/html/${slug}_plots \
         "$@"
 
     this_ec=$?
@@ -195,99 +195,99 @@ function run_histcmp() {
 }
 
 function trackfinding() {
-    label=$1
+    slug=$1
 
     config="CI/physmon/config/default.yml"
 
-    if [ -f $refdir/$label/performance_seeding.root ]; then
+    if [ -f $refdir/$slug/performance_seeding.root ]; then
         run_histcmp \
-            $outdir/$label/performance_seeding.root \
-            $refdir/$label/performance_seeding.root \
-            "Seeding ${label}" \
-            seeding_${label} \
+            $outdir/data/$slug/performance_seeding.root \
+            $refdir/$slug/performance_seeding.root \
+            "Seeding ${slug}" \
+            seeding_${slug} \
             -c $config
     fi
 
     run_histcmp \
-        $outdir/$label/performance_ckf.root \
-        $refdir/$label/performance_ckf.root \
-        "CKF ${label}" \
-        ckf \
+        $outdir/data/$slug/performance_ckf.root \
+        $refdir/$slug/performance_ckf.root \
+        "CKF ${slug}" \
+        ckf_${slug} \
         -c $config
 
     run Examples/Scripts/generic_plotter.py \
-        $outdir/$label/tracksummary_ckf.root \
+        $outdir/data/$slug/tracksummary_ckf.root \
         tracksummary \
-        $outdir/$label/tracksummary_ckf_hist.root \
+        $outdir/data/$slug/tracksummary_ckf_hist.root \
         --silent \
         --config CI/physmon/config/tracksummary_ckf.yml
     ec=$(($ec | $?))
 
     # remove ntuple file because it's large
-    rm $outdir/$label/tracksummary_ckf.root
+    rm $outdir/data/$slug/tracksummary_ckf.root
 
     run_histcmp \
-        $outdir/$label/tracksummary_ckf_hist.root \
-        $refdir/$label/tracksummary_ckf_hist.root \
-        "Track Summary CKF ${label}" \
-        tracksummary_ckf
+        $outdir/data/$slug/tracksummary_ckf_hist.root \
+        $refdir/$slug/tracksummary_ckf_hist.root \
+        "Track Summary CKF ${slug}" \
+        tracksummary_ckf_${slug}
 
-    if [ -f $refdir/$label/performance_ambi.root ]; then
+    if [ -f $refdir/$slug/performance_ambi.root ]; then
         run_histcmp \
-            $outdir/$label/performance_ambi.root \
-            $refdir/$label/performance_ambi.root \
-            "Ambisolver ${label}" \
-            ambi
+            $outdir/data/$slug/performance_ambi.root \
+            $refdir/$slug/performance_ambi.root \
+            "Ambisolver ${slug}" \
+            ambi_${slug}
     fi
 }
 
 function vertexing() {
-    label=$1
+    slug=$1
     config=$2
 
-    if [ -f $refdir/$label/performance_ivf_notime_hist.root ]; then
+    if [ -f $refdir/$slug/performance_ivf_notime_hist.root ]; then
         run Examples/Scripts/generic_plotter.py \
-            $outdir/$label/performance_ivf_notime.root \
+            $outdir/data/$slug/performance_ivf_notime.root \
             vertexing \
-            $outdir/$label/performance_ivf_notime_hist.root \
+            $outdir/data/$slug/performance_ivf_notime_hist.root \
             --silent \
             --config $config
         ec=$(($ec | $?))
 
         run_histcmp \
-            $outdir/$label/performance_ivf_notime_hist.root \
-            $refdir/$label/performance_ivf_notime_hist.root \
-            "IVF notime ${label}" \
-            ivf_notime
+            $outdir/data/$slug/performance_ivf_notime_hist.root \
+            $refdir/$slug/performance_ivf_notime_hist.root \
+            "IVF notime ${slug}" \
+            ivf_notime_${slug}
     fi
 
     run Examples/Scripts/generic_plotter.py \
-        $outdir/$label/performance_amvf_gauss_notime.root \
+        $outdir/data/$slug/performance_amvf_gauss_notime.root \
         vertexing \
-        $outdir/$label/performance_amvf_gauss_notime_hist.root \
+        $outdir/data/$slug/performance_amvf_gauss_notime_hist.root \
         --silent \
         --config $config
     ec=$(($ec | $?))
 
     run_histcmp \
-        $outdir/$label/performance_amvf_gauss_notime_hist.root \
-        $refdir/$label/performance_amvf_gauss_notime_hist.root \
-        "AMVF gauss notime ${label}" \
-        amvf_gauss_notime
+        $outdir/data/$slug/performance_amvf_gauss_notime_hist.root \
+        $refdir/$slug/performance_amvf_gauss_notime_hist.root \
+        "AMVF gauss notime ${slug}" \
+        amvf_gauss_notime_${slug}
 
     run Examples/Scripts/generic_plotter.py \
-        $outdir/$label/performance_amvf_grid_time.root \
+        $outdir/data/$slug/performance_amvf_grid_time.root \
         vertexing \
-        $outdir/$label/performance_amvf_grid_time_hist.root \
+        $outdir/data/$slug/performance_amvf_grid_time_hist.root \
         --silent \
         --config $config
     ec=$(($ec | $?))
 
     run_histcmp \
-        $outdir/$label/performance_amvf_grid_time_hist.root \
-        $refdir/$label/performance_amvf_grid_time_hist.root \
-        "AMVF grid time ${label}" \
-        amvf_grid_time
+        $outdir/data/$slug/performance_amvf_grid_time_hist.root \
+        $refdir/$slug/performance_amvf_grid_time_hist.root \
+        "AMVF grid time ${slug}" \
+        amvf_grid_time_${slug}
 }
 
 function simulation() {
@@ -296,18 +296,18 @@ function simulation() {
     config="CI/physmon/config/simulation.yml"
 
     run Examples/Scripts/generic_plotter.py \
-        $outdir/simulation/particles_${suffix}.root \
+        $outdir/data/simulation/particles_${suffix}.root \
         particles \
-        $outdir/simulation/particles_${suffix}_hist.root \
+        $outdir/data/simulation/particles_${suffix}_hist.root \
         --silent \
         --config $config
     ec=$(($ec | $?))
 
     # remove ntuple file because it's large
-    rm $outdir/simulation/particles_${suffix}.root
+    rm $outdir/data/simulation/particles_${suffix}.root
 
     run_histcmp \
-        $outdir/simulation/particles_${suffix}_hist.root \
+        $outdir/data/simulation/particles_${suffix}_hist.root \
         $refdir/simulation/particles_${suffix}_hist.root \
         "Particles ${suffix}" \
         particles_${suffix}
@@ -315,27 +315,27 @@ function simulation() {
 
 function generation() {
     run Examples/Scripts/generic_plotter.py \
-        $outdir/simulation/pythia8_particles_ttbar.root \
+        $outdir/data/simulation/pythia8_particles_ttbar.root \
         particles \
-        $outdir/simulation/particles_ttbar_hist.root \
+        $outdir/data/simulation/particles_ttbar_hist.root \
         --silent \
         --config CI/physmon/config/pythia8_ttbar.yml
 
     run_histcmp \
-        $outdir/simulation/particles_ttbar_hist.root \
+        $outdir/data/simulation/particles_ttbar_hist.root \
         $refdir/simulation/particles_ttbar_hist.root \
         "Particles ttbar" \
         particles_ttbar
 
     run Examples/Scripts/generic_plotter.py \
-        $outdir/simulation/pythia8_vertices_ttbar.root \
+        $outdir/data/simulation/pythia8_vertices_ttbar.root \
         vertices \
-        $outdir/simulation/vertices_ttbar_hist.root \
+        $outdir/data/simulation/vertices_ttbar_hist.root \
         --silent \
         --config CI/physmon/config/pythia8_ttbar.yml
 
     run_histcmp \
-        $outdir/simulation/vertices_ttbar_hist.root \
+        $outdir/data/simulation/vertices_ttbar_hist.root \
         $refdir/simulation/vertices_ttbar_hist.root \
         "Vertices ttbar" \
         vertices_ttbar
@@ -356,7 +356,7 @@ fi
 
 if [[ "$mode" == "all" || "$mode" == "kf" ]]; then
     run_histcmp \
-        $outdir/trackfitting_kf/performance_kf.root \
+        $outdir/data/trackfitting_kf/performance_kf.root \
         $refdir/trackfitting_kf/performance_kf.root \
         "Truth tracking (KF)" \
         kf \
@@ -365,7 +365,7 @@ fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
     run_histcmp \
-        $outdir/trackfitting_gsf/performance_gsf.root \
+        $outdir/data/trackfitting_gsf/performance_gsf.root \
         $refdir/trackfitting_gsf/performance_gsf.root \
         "Truth tracking (GSF)" \
         gsf \
@@ -374,7 +374,7 @@ fi
 
 if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
     run_histcmp \
-        $outdir/trackfitting_gx2f/performance_gx2f.root \
+        $outdir/data/trackfitting_gx2f/performance_gx2f.root \
         $refdir/trackfitting_gx2f/performance_gx2f.root \
         "Truth tracking (GX2F)" \
         gx2f \
