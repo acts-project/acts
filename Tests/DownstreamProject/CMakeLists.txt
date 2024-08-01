@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.11)
 
 project(ActsDownstreamProject)
 
-# find all optional components that are build with ACTS_BUILD_EVERYTHING=on
+# find all optional components that are build
 find_package(
   Acts CONFIG REQUIRED
   COMPONENTS
