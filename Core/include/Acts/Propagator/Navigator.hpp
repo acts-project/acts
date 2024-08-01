@@ -117,8 +117,8 @@ class Navigator {
     ExternalSurfaces externalSurfaces = {};
 
     void insertExternalSurface(const Surface* surface) {
-      externalSurfaces.insert(
-          std::pair<std::uint64_t, GeometryIdentifier>(surface->geometryId().layer(), surface->geometryId()));
+      externalSurfaces.insert(std::pair<std::uint64_t, GeometryIdentifier>(
+          surface->geometryId().layer(), surface->geometryId()));
     }
 
     void setPlainOptions(const NavigatorPlainOptions& options) {

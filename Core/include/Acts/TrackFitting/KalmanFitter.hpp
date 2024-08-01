@@ -1121,9 +1121,9 @@ class KalmanFitter {
       auto geoId = surface->geometryId();
       inputMeasurements.emplace(geoId, std::move(sl));
 
-        // Add the measurement surface as external surface to navigator.
-        // We will try to hit those surface by ignoring boundary checks.
-        propagatorOptions.navigation.insertExternalSurface(surface);
+      // Add the measurement surface as external surface to navigator.
+      // We will try to hit those surface by ignoring boundary checks.
+      propagatorOptions.navigation.insertExternalSurface(surface);
     }
 
     // Catch the actor and set the measurements

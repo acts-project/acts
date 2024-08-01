@@ -34,7 +34,7 @@ namespace Acts::Experimental {
 
 class DetectorNavigator {
  public:
-  using ExternalSurfaces = std::vector<std::pair<ActsScalar,const Surface*>>;
+  using ExternalSurfaces = std::vector<std::pair<ActsScalar, const Surface*>>;
 
   struct Config {
     /// Detector for this Navigation
@@ -55,8 +55,7 @@ class DetectorNavigator {
 
     void insertExternalSurface(const Surface* surface) {
       externalSurfaces.push_back(
-        std::make_pair(
-            std::numeric_limits<double>::max(), surface));
+          std::make_pair(std::numeric_limits<double>::max(), surface));
     }
 
     void setPlainOptions(const NavigatorPlainOptions& options) {
@@ -173,28 +172,23 @@ class DetectorNavigator {
     // Intersect with the external surfaces
     // to set up the lookup order
     for (auto it = state.options.navigation.externalSurfaces.begin();
-        it != state.options.navigation.externalSurfaces.end(); ++it) {
-            auto sIntersection = it->second->intersect(
-                state.geoContext, 
-                nState.position, 
-                nState.direction, 
-                BoundaryTolerance::Infinite(), 
-                s_onSurfaceTolerance);
+         it != state.options.navigation.externalSurfaces.end(); ++it) {
+      auto sIntersection = it->second->intersect(
+          state.geoContext, nState.position, nState.direction,
+          BoundaryTolerance::Infinite(), s_onSurfaceTolerance);
 
-            for (auto& si : sIntersection.split()) {
-                if (si.isValid()) {
-                    it->first = si.pathLength();
-                }
-            }
+      for (auto& si : sIntersection.split()) {
+        if (si.isValid()) {
+          it->first = si.pathLength();
+        }
+      }
     }
 
     // Sort the external surfaces by distance
     // for fast lookup
     std::sort(state.options.navigation.externalSurfaces.begin(),
-                state.options.navigation.externalSurfaces.end(),
-                [](const auto& a, const auto& b) {
-                return a.first < b.first;
-                });
+              state.options.navigation.externalSurfaces.end(),
+              [](const auto& a, const auto& b) { return a.first < b.first; });
 
     // Set the pointers to cover the whole range
     nState.externalSurfaceRange =
@@ -255,13 +249,13 @@ class DetectorNavigator {
 
       BoundaryTolerance boundaryTolerance = c.boundaryTolerance;
 
-        for (auto it = nState.externalSurfaceRange.first;
-            it != nState.externalSurfaceRange.second; ++it) {
-            if (surface.geometryId() == it->second->geometryId()) {
-                boundaryTolerance = BoundaryTolerance::Infinite();
-                break;
-            }
+      for (auto it = nState.externalSurfaceRange.first;
+           it != nState.externalSurfaceRange.second; ++it) {
+        if (surface.geometryId() == it->second->geometryId()) {
+          boundaryTolerance = BoundaryTolerance::Infinite();
+          break;
         }
+      }
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, c.objectIntersection.index(),
           state.options.direction, boundaryTolerance,
@@ -334,12 +328,12 @@ class DetectorNavigator {
         nState.surfaceCandidate().boundaryTolerance;
 
     for (auto it = nState.externalSurfaceRange.first;
-        it != nState.externalSurfaceRange.second; ++it) {
-        if (nextSurface->geometryId() == it->second->geometryId()) {
-            boundaryTolerance = BoundaryTolerance::Infinite();
-            isExternal = true;
-            break;
-        }
+         it != nState.externalSurfaceRange.second; ++it) {
+      if (nextSurface->geometryId() == it->second->geometryId()) {
+        boundaryTolerance = BoundaryTolerance::Infinite();
+        isExternal = true;
+        break;
+      }
     }
     // TODO not sure about the boundary check
     auto surfaceStatus = stepper.updateSurfaceStatus(
@@ -353,9 +347,9 @@ class DetectorNavigator {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper) << "landed on surface");
 
-        if (isExternal) {
-            nState.externalSurfaceRange.first++;
-        }
+      if (isExternal) {
+        nState.externalSurfaceRange.first++;
+      }
 
       if (isPortal) {
         ACTS_VERBOSE(volInfo(state)
@@ -469,13 +463,14 @@ class DetectorNavigator {
     // The number of external surfaces we can expect
     // is at most the number of surfaces in the current volume
     int nVolumeSurfaces = nState.currentVolume->surfaces().size();
-    int distance = std::distance(
-        nState.externalSurfaceRange.first, state.options.navigation.externalSurfaces.end());
+    int distance =
+        std::distance(nState.externalSurfaceRange.first,
+                      state.options.navigation.externalSurfaces.end());
     int nSurfaces = std::min(nVolumeSurfaces, distance);
 
-    nState.externalSurfaceRange = 
-        std::make_pair(nState.externalSurfaceRange.first, 
-                    nState.externalSurfaceRange.first + nSurfaces);
+    nState.externalSurfaceRange =
+        std::make_pair(nState.externalSurfaceRange.first,
+                       nState.externalSurfaceRange.first + nSurfaces);
 
     // Get the candidate surfaces
     nState.currentVolume->updateNavigationState(state.geoContext, nState);

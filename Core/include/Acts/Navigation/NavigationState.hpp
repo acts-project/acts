@@ -35,7 +35,7 @@ class DetectorVolume;
 /// It relies on Surfaces and Portals, all navigation entities have to be
 /// described in these terms.
 struct NavigationState {
-  using ExternalSurfaces = std::vector<std::pair<ActsScalar,const Surface*>>;
+  using ExternalSurfaces = std::vector<std::pair<ActsScalar, const Surface*>>;
 
   /// @brief  A surface candidate and its intersection
   ///

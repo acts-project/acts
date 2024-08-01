@@ -666,16 +666,16 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsExternalSurfaces) {
   auto surface11 = Acts::Surface::makeShared<Acts::PlaneSurface>(
       transform1 * Acts::Transform3(rotation),
       std::make_shared<Acts::RectangleBounds>(2, 2));
-    auto surface12 = Acts::Surface::makeShared<Acts::PlaneSurface>(
-        transform1 * Acts::Translation3(0.1, 0, 0) * Acts::Transform3(rotation),
+  auto surface12 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      transform1 * Acts::Translation3(0.1, 0, 0) * Acts::Transform3(rotation),
       std::make_shared<Acts::RectangleBounds>(2, 2));
-    auto surface13 = Acts::Surface::makeShared<Acts::PlaneSurface>(
-        transform1 * Acts::Translation3(-0.1, 0, 0) * Acts::Transform3(rotation),
+  auto surface13 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      transform1 * Acts::Translation3(-0.1, 0, 0) * Acts::Transform3(rotation),
       std::make_shared<Acts::RectangleBounds>(2, 2));
   auto volume1 = Acts::Experimental::DetectorVolumeFactory::construct(
       Acts::Experimental::defaultPortalAndSubPortalGenerator(), geoContext,
-      "volume1", transform1, std::move(bounds1), {surface11,surface12,surface13}, {},
-      Acts::Experimental::tryNoVolumes(),
+      "volume1", transform1, std::move(bounds1),
+      {surface11, surface12, surface13}, {}, Acts::Experimental::tryNoVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
   auto bounds2 = std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3);
@@ -684,16 +684,16 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsExternalSurfaces) {
   auto surface21 = Acts::Surface::makeShared<Acts::PlaneSurface>(
       transform2 * Acts::Transform3(rotation),
       std::make_shared<Acts::RectangleBounds>(2, 2));
-    auto surface22 = Acts::Surface::makeShared<Acts::PlaneSurface>(
-        transform2 * Acts::Translation3(0.1, 0, 0) * Acts::Transform3(rotation),
+  auto surface22 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      transform2 * Acts::Translation3(0.1, 0, 0) * Acts::Transform3(rotation),
       std::make_shared<Acts::RectangleBounds>(2, 2));
-    auto surface23 = Acts::Surface::makeShared<Acts::PlaneSurface>(
-        transform2 * Acts::Translation3(-0.1, 0, 0) * Acts::Transform3(rotation),
+  auto surface23 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      transform2 * Acts::Translation3(-0.1, 0, 0) * Acts::Transform3(rotation),
       std::make_shared<Acts::RectangleBounds>(2, 2));
   auto volume2 = Acts::Experimental::DetectorVolumeFactory::construct(
       Acts::Experimental::defaultPortalAndSubPortalGenerator(), geoContext,
-      "volume2", transform2, std::move(bounds2), {surface21,surface22,surface23}, {},
-      Acts::Experimental::tryNoVolumes(),
+      "volume2", transform2, std::move(bounds2),
+      {surface21, surface22, surface23}, {}, Acts::Experimental::tryNoVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
   auto bounds3 = std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3);
@@ -703,17 +703,17 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsExternalSurfaces) {
       transform3 * Acts::Transform3(rotation),
       std::make_shared<Acts::RectangleBounds>(2, 2));
 
-    auto surface32 = Acts::Surface::makeShared<Acts::PlaneSurface>(
-        transform3 * Acts::Translation3(0.1, 0, 0) * Acts::Transform3(rotation),
+  auto surface32 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      transform3 * Acts::Translation3(0.1, 0, 0) * Acts::Transform3(rotation),
       std::make_shared<Acts::RectangleBounds>(2, 2));
-    auto surface33 = Acts::Surface::makeShared<Acts::PlaneSurface>(
-        transform3 * Acts::Translation3(-0.1, 0, 0) * Acts::Transform3(rotation),
+  auto surface33 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      transform3 * Acts::Translation3(-0.1, 0, 0) * Acts::Transform3(rotation),
       std::make_shared<Acts::RectangleBounds>(2, 2));
 
   auto volume3 = Acts::Experimental::DetectorVolumeFactory::construct(
       Acts::Experimental::defaultPortalAndSubPortalGenerator(), geoContext,
-      "volume3", transform3, std::move(bounds3), {surface31,surface32,surface33}, {},
-      Acts::Experimental::tryNoVolumes(),
+      "volume3", transform3, std::move(bounds3),
+      {surface31, surface32, surface33}, {}, Acts::Experimental::tryNoVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
@@ -731,9 +731,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsExternalSurfaces) {
 
   // Volume ids: 1-3
   for (auto& volume : detectorVolumes) {
-    Acts::GeometryIdentifier gid;
-    gid.setVolume(id);
-    volume->assignGeometryId(gid);
+    volume->assignGeometryId(id);
     id++;
   }
   // Intervolume portal ids: 6,7,10,11
@@ -749,15 +747,10 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsExternalSurfaces) {
   // Volume id has to be set
   // to enable the external surface
   // functionality
-  int vid = 1;
-  for (auto& surf : {surface11, surface12, surface13,
-  surface21, surface22, surface23,
-  surface31, surface32, surface33}) {
-    Acts::GeometryIdentifier gid;
-    gid.setSensitive(id);
-    surf->assignGeometryId(gid);
+  for (auto& surf : {surface11, surface12, surface13, surface21, surface22,
+                     surface23, surface31, surface32, surface33}) {
+    surf->assignGeometryId(id);
     id++;
-    vid++;
   }
 
   auto detector = Acts::Experimental::Detector::makeShared(
@@ -782,9 +775,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsExternalSurfaces) {
   PropagatorOptions options(geoContext, mfContext);
 
   // Insert the external surfaces
-    for (auto& surf : {surface11,  surface13,
-                        surface31, surface33}) {
-    
+  for (auto& surf : {surface11, surface13, surface31, surface33}) {
     options.navigation.insertExternalSurface(surf.get());
   }
   Propagator propagator(
@@ -802,7 +793,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsExternalSurfaces) {
   auto states = result.get<StateRecorder::result_type>();
 
   // 14 steps to reach the end of world
-  // 
+  //
   // 4 for external surfaces
   // 3 for portal surfaces
   // + 1 recording in the post-step
