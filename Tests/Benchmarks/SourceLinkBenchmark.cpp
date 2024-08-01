@@ -23,8 +23,6 @@ class BenchmarkSourceLink final {
   constexpr BenchmarkSourceLink(Acts::GeometryIdentifier gid, Index idx)
       : m_geometryId(gid), m_index(idx) {}
 
-  // Construct an invalid source link. Must be default constructible to
-  /// satisfy SourceLinkConcept.
   BenchmarkSourceLink() = default;
   BenchmarkSourceLink(const BenchmarkSourceLink&) = default;
   BenchmarkSourceLink(BenchmarkSourceLink&&) = default;
