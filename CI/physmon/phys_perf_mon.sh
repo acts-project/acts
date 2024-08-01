@@ -348,9 +348,9 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     trackfinding trackfinding_singlemuon/orthogonal
 
     trackfinding trackfinding_muon50
-    trackfinding trackfinding_ttbar200
-
     vertexing trackfinding_muon50 CI/physmon/config/vertexing_muon50.yml
+
+    trackfinding trackfinding_ttbar200
     vertexing trackfinding_ttbar200 CI/physmon/config/vertexing_ttbar200.yml
 fi
 
