@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
         detector->findDetectorVolume(geoContext, start.position()));
     BOOST_CHECK_EQUAL(initState.currentSurface, nullptr);
     BOOST_CHECK_EQUAL(initState.currentPortal, nullptr);
-    BOOST_CHECK_EQUAL(initState.surfaceCandidates.size(), 1);
+    BOOST_CHECK_EQUAL(initState.surfaceCandidates.size(), 2u);
   }
 }
 

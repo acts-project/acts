@@ -80,7 +80,7 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
 
     cmps.emplace_back(state.components[i].weight,
                       cp.fourPosition(state.geoContext), cp.direction(),
-                      (cp.charge() / cp.absoluteMomentum()),
+                      cp.qOverP(),
                       cp.covariance().value_or(BoundSquareMatrix::Zero()));
     accumulatedPathLength += state.components[i].weight * pl;
   }
