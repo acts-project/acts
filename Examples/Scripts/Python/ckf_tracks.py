@@ -139,7 +139,7 @@ def runCKFTracks(
             chi2CutOff=15,
             numMeasurementsCutOff=10,
             seedDeduplication=True if not truthSmearedSeeded else False,
-            stayOnSeed=True if truthSmearedSeeded else False,
+            stayOnSeed=True if not truthSmearedSeeded else False,
         ),
         outputDirRoot=outputDir,
         outputDirCsv=outputDir / "csv" if outputCsv else None,
