@@ -23,6 +23,7 @@ def runCKFTracks(
 ):
     from acts.examples.simulation import (
         addParticleGun,
+        MomentumConfig,
         EtaConfig,
         PhiConfig,
         ParticleConfig,
@@ -54,9 +55,10 @@ def runCKFTracks(
     if inputParticlePath is None:
         addParticleGun(
             s,
-            EtaConfig(-2.0, 2.0),
-            ParticleConfig(4, acts.PdgParticle.eMuon, True),
+            MomentumConfig(1 * u.GeV, 10 * u.GeV, transverse=True),
+            EtaConfig(-2.0, 2.0, uniform=True),
             PhiConfig(0.0, 360.0 * u.degree),
+            ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
             multiplicity=2,
             rnd=rnd,
         )
