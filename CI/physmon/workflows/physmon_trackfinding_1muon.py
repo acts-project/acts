@@ -130,9 +130,9 @@ def run_ckf_tracking(label, seeding):
                 maxOutliers=2,
             ),
             CkfConfig(
-                seedDeduplication=True
-                if seeding != SeedingAlgorithm.TruthSmeared
-                else False,
+                seedDeduplication=(
+                    True if seeding != SeedingAlgorithm.TruthSmeared else False
+                ),
                 stayOnSeed=True if seeding != SeedingAlgorithm.TruthSmeared else False,
             ),
             outputDirRoot=tp,

@@ -241,9 +241,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             + (
                 ["performance_seeding", "performance_ambi"]
                 if label in ["seeded", "orthogonal"]
-                else ["performance_seeding"]
-                if label == "truth_estimated"
-                else []
+                else ["performance_seeding"] if label == "truth_estimated" else []
             )
         ):
             perf_file = tp / f"{stem}.root"
