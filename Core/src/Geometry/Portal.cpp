@@ -8,11 +8,15 @@
 
 #include "Acts/Geometry/Portal.hpp"
 
+#include "Acts/Geometry/CompositePortalLink.hpp"
+#include "Acts/Geometry/GridPortalLink.hpp"
+#include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <memory>
 #include <stdexcept>
 
 namespace Acts {
@@ -46,16 +50,11 @@ std::ostream& operator<<(std::ostream& os, const PortalLinkBase& link) {
   return os;
 }
 
-std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
-    const GeometryContext& /*gctx*/, const PortalLinkBase& other,
-    BinningValue direction, const Logger& logger) const {
-  ACTS_DEBUG("Merging two arbitrary portals");
-
-  ACTS_VERBOSE(" - this:  " << *this);
-  ACTS_VERBOSE(" - other: " << other);
-
-  const auto& surfaceA = this->surface();
-  const auto& surfaceB = other.surface();
+void PortalLinkBase::checkMergePreconditions(const PortalLinkBase& a,
+                                             const PortalLinkBase& b,
+                                             BinningValue direction) {
+  const auto& surfaceA = a.surface();
+  const auto& surfaceB = b.surface();
 
   throw_assert(&surfaceA != &surfaceB,
                "Cannot merge portals to the same surface");
@@ -75,9 +74,6 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
     throw_assert(
         direction == BinningValue::binZ || direction == BinningValue::binRPhi,
         "Invalid binning direction: " + binningValueName(direction));
-
-    return mergeImpl(other, direction, logger);
-
   } else if (const auto* discA = dynamic_cast<const DiscSurface*>(&surfaceA);
              discA != nullptr) {
     const auto* discB = dynamic_cast<const DiscSurface*>(&surfaceB);
@@ -87,41 +83,114 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
         direction == BinningValue::binR || direction == BinningValue::binPhi,
         "Invalid binning direction: " + binningValueName(direction));
 
-    return mergeImpl(other, direction, logger);
-
   } else {
     throw std::logic_error{"Surface type is not supported"};
   }
 }
 
-std::unique_ptr<PortalLinkBase> PortalLinkBase::mergeImpl(
-    const PortalLinkBase& other, BinningValue direction,
-    const Logger& logger) const {
-  (void)other;
-  (void)direction;
-  ACTS_VERBOSE("Composite portal merging");
-  throw std::logic_error{"Not implemented"};
-}
+std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
+    const std::shared_ptr<const PortalLinkBase>& a,
+    const std::shared_ptr<const PortalLinkBase>& b, BinningValue direction,
+    const Logger& logger) {
+  ACTS_DEBUG("Merging two arbitrary portals");
 
-std::unique_ptr<PortalLinkBase> PortalLinkBase::mergeImpl(
-    const CompositePortalLink& other, BinningValue direction,
-    const Logger& logger) const {
-  ACTS_ERROR("Fell through to the Base mergeImpl with Composite");
-  throw std::logic_error{"Not implemented"};
-}
+  ACTS_VERBOSE(" - a:  " << *a);
+  ACTS_VERBOSE(" - b: " << *b);
 
-std::unique_ptr<PortalLinkBase> PortalLinkBase::mergeImpl(
-    const TrivialPortalLink& other, BinningValue direction,
-    const Logger& logger) const {
-  ACTS_ERROR("Fell through to the Base mergeImpl with Trivial");
-  throw std::logic_error{"Not implemented"};
-}
+  checkMergePreconditions(*a, *b, direction);
 
-std::unique_ptr<PortalLinkBase> PortalLinkBase::mergeImpl(
-    const GridPortalLink& other, BinningValue direction,
-    const Logger& logger) const {
-  ACTS_ERROR("Fell through to the Base mergeImpl with Grid");
-  throw std::logic_error{"Not implemented"};
+  // Three options:
+  // 1. Grid
+  // 2. Trivial
+  // 3. Composite
+
+  // Grid Grid
+  // Grid Trivial
+  // Grid Composite
+  // Trivial Grid
+  // Trivial Trivial
+  // Trivial Composite
+  // Composite Grid
+  // Composite Trivial
+  // Composite Composite
+
+  if (auto aGrid = std::dynamic_pointer_cast<const GridPortalLink>(a); aGrid) {
+    if (auto bGrid = std::dynamic_pointer_cast<const GridPortalLink>(b);
+        bGrid) {
+      ACTS_VERBOSE("Merging two grid portals");
+      return GridPortalLink::merge(aGrid, bGrid, direction, logger);
+
+    } else if (auto bTrivial =
+                   std::dynamic_pointer_cast<const TrivialPortalLink>(b);
+               bTrivial) {
+      ACTS_WARNING("Merging a grid portal with a trivial portal");
+      return GridPortalLink::merge(aGrid, bTrivial->makeGrid(direction),
+                                   direction, logger);
+
+    } else if (auto bComposite =
+                   std::dynamic_pointer_cast<const CompositePortalLink>(b);
+               bComposite) {
+      ACTS_WARNING("Merging a grid portal with a composite portal");
+      return std::make_unique<CompositePortalLink>(aGrid, bComposite);
+
+    } else {
+      throw std::logic_error{"Portal type is not supported"};
+    }
+
+  } else if (auto aTrivial =
+                 std::dynamic_pointer_cast<const TrivialPortalLink>(a);
+             aTrivial) {
+    if (auto bGrid = std::dynamic_pointer_cast<const GridPortalLink>(b);
+        bGrid) {
+      ACTS_WARNING("Merging a trivial portal with a grid portal");
+      return GridPortalLink::merge(aTrivial->makeGrid(direction), bGrid,
+                                   direction, logger);
+
+    } else if (auto bTrivial =
+                   std::dynamic_pointer_cast<const TrivialPortalLink>(b);
+               bTrivial) {
+      ACTS_WARNING("Merging two trivial portals");
+      return GridPortalLink::merge(aTrivial->makeGrid(direction),
+                                   bTrivial->makeGrid(direction), direction,
+                                   logger);
+
+    } else if (auto bComposite =
+                   std::dynamic_pointer_cast<const CompositePortalLink>(b);
+               bComposite) {
+      ACTS_WARNING("Merging a trivial portal with a composite portal");
+      return std::make_unique<CompositePortalLink>(aTrivial, bComposite);
+
+    } else {
+      throw std::logic_error{"Portal type is not supported"};
+    }
+
+  } else if (auto aComposite =
+                 std::dynamic_pointer_cast<const CompositePortalLink>(a);
+             aComposite) {
+    if (auto bGrid = std::dynamic_pointer_cast<const GridPortalLink>(b);
+        bGrid) {
+      ACTS_WARNING("Merging a composite portal with a grid portal");
+      return std::make_unique<CompositePortalLink>(aComposite, bGrid);
+
+    } else if (auto bTrivial =
+                   std::dynamic_pointer_cast<const TrivialPortalLink>(b);
+               bTrivial) {
+      ACTS_WARNING("Merging a composite portal with a trivial portal");
+      return std::make_unique<CompositePortalLink>(aComposite, bTrivial);
+
+    } else if (auto bComposite =
+                   std::dynamic_pointer_cast<const CompositePortalLink>(b);
+               bComposite) {
+      ACTS_WARNING("Merging two composite portals");
+      return std::make_unique<CompositePortalLink>(aComposite, bComposite);
+
+    } else {
+      throw std::logic_error{"Portal type is not supported"};
+    }
+
+  } else {
+    throw std::logic_error{"Portal type is not supported"};
+  }
 }
 
 }  // namespace Acts
