@@ -643,7 +643,7 @@ class MultiTrajectory {
   }
 
   void setUncalibratedSourceLink(IndexType istate,
-                                 SourceLink sourceLink) requires(!ReadOnly) {
+                                 SourceLink&& sourceLink) requires(!ReadOnly) {
     self().setUncalibratedSourceLink_impl(istate, std::move(sourceLink));
   }
 

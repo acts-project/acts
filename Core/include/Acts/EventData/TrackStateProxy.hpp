@@ -678,7 +678,7 @@ class TrackStateProxy {
 
   /// Set an uncalibrated source link
   /// @param sourceLink The uncalibrated source link to set
-  void setUncalibratedSourceLink(SourceLink sourceLink) requires(!ReadOnly) {
+  void setUncalibratedSourceLink(SourceLink&& sourceLink) requires(!ReadOnly) {
     m_traj->setUncalibratedSourceLink(m_istate, std::move(sourceLink));
   }
 
