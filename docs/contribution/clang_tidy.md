@@ -17,7 +17,7 @@ a report on the issues it detected. The report should give you an error /
 warning code, e.g. `readability-braces-around-statements`. The LLVM
 documentation has details on all possible error codes, in this particular
 example you would find it [here][readability].  This page will tell you that
-`clang-tidy` wants you to replace 
+`clang-tidy` wants you to replace
 
 ```cpp
 if (condition)

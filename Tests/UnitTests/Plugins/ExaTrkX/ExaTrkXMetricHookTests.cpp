@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(same_graph) {
 BOOST_AUTO_TEST_CASE(same_graph_large_numbers) {
   // clang-format off
   std::int64_t k = 100'000;
-    
+
   std::vector<std::int64_t> truthGraph = {
     1,2,
     2,3,

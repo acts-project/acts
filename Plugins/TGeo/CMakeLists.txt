@@ -1,6 +1,6 @@
 
-set(library_sources 
-   src/TGeoCylinderDiscSplitter.cpp  
+set(library_sources
+   src/TGeoCylinderDiscSplitter.cpp
    src/TGeoDetectorElement.cpp
    src/TGeoLayerBuilder.cpp
    src/TGeoParser.cpp
@@ -17,7 +17,7 @@ endif()
 
 add_library(
   ActsPluginTGeo SHARED ${library_sources})
-  
+
 
 target_include_directories(
   ActsPluginTGeo

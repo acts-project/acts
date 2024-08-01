@@ -16,11 +16,11 @@ index 2f1d9fd..5090c00 100644
 +++ b/include/Pythia8/SusyLesHouches.h
 @@ -28,7 +28,7 @@ namespace Pythia8 {
    public:
- 
+
      //Constructor.
 -    LHblock<T>() : idnow(0), qDRbar(), i(), val() {} ;
 +    LHblock() : idnow(0), qDRbar(), i(), val() {} ;
- 
+
      //Does block exist?
      bool exists() { return int(entry.size()) == 0 ? false : true ; };
 @@ -129,7 +129,7 @@ namespace Pythia8 {
@@ -47,7 +47,7 @@ index ccc5c72..95a5cb1 100644
 +++ b/src/HadronWidths.cc
 @@ -867,7 +867,7 @@ double HadronWidths::psSize(double eCM, ParticleDataEntryPtr prodA,
        return 0.;
- 
+
      // Integrate mass of A.
 -    auto f = [=](double mA) {
 +    auto f = [=,this](double mA) {
@@ -56,7 +56,7 @@ index ccc5c72..95a5cb1 100644
        success = false;
 @@ -879,7 +879,7 @@ double HadronWidths::psSize(double eCM, ParticleDataEntryPtr prodA,
        return 0.;
- 
+
      // Integrate mass of B.
 -    auto f = [=](double mB) {
 +    auto f = [=,this](double mB) {
@@ -65,11 +65,11 @@ index ccc5c72..95a5cb1 100644
        success = false;
 @@ -891,10 +891,10 @@ double HadronWidths::psSize(double eCM, ParticleDataEntryPtr prodA,
        return 0.;
- 
+
      // Define integrand of outer integral.
 -    auto I = [=, &success](double mA) {
 +    auto I = [=, &success, this](double mA) {
- 
+
        // Define integrand of inner integral.
 -      auto f = [=](double mB) {
 +      auto f = [=,this](double mB) {
@@ -82,7 +82,7 @@ index b5eef8f..a82383a 100644
 +++ b/src/NucleonExcitations.cc
 @@ -502,7 +502,7 @@ double NucleonExcitations::psSize(double eCM, ParticleDataEntry& prodA,
        return 0.;
- 
+
      // Integrate mass of A.
 -    auto f = [=](double mA) {
 +    auto f = [=, this](double mA) {
@@ -91,7 +91,7 @@ index b5eef8f..a82383a 100644
        success = false;
 @@ -514,7 +514,7 @@ double NucleonExcitations::psSize(double eCM, ParticleDataEntry& prodA,
        return 0.;
- 
+
      // Integrate mass of B.
 -    auto f = [=](double mB) {
 +    auto f = [=,this](double mB) {
@@ -100,11 +100,11 @@ index b5eef8f..a82383a 100644
        success = false;
 @@ -526,10 +526,10 @@ double NucleonExcitations::psSize(double eCM, ParticleDataEntry& prodA,
        return 0.;
- 
+
      // Define integrand of outer integral.
 -    auto I = [=, &success](double mA) {
 +    auto I = [=, &success, this](double mA) {
- 
+
        // Define integrand of inner integral.
 -      auto f = [=](double mB) {
 +      auto f = [=,this](double mB) {
@@ -117,13 +117,12 @@ index 81450e2..7ec3a92 100644
 +++ b/src/PythiaParallel.cc
 @@ -106,7 +106,7 @@ bool PythiaParallel::init(function<bool(Pythia&)> customInit) {
    bool initSuccess = true;
- 
+
    for (int iPythia = 0; iPythia < numThreads; iPythia += 1) {
 -    initThreads.emplace_back([=, &seeds, &initSuccess]() {
 +    initThreads.emplace_back([=, &seeds, &initSuccess, this]() {
        Pythia* pythiaPtr = new Pythia(settings, particleData, false);
        pythiaObjects[iPythia] = unique_ptr<Pythia>(pythiaPtr);
        pythiaObjects[iPythia]->settings.flag("Print:quiet", true);
--- 
+--
 2.31.1
-
