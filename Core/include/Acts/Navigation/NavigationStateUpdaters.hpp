@@ -39,31 +39,25 @@ inline void updateCandidates(const GeometryContext& gctx,
   const auto& position = nState.position;
   const auto& direction = nState.direction;
 
-  NavigationState::SurfaceCandidates nextSurfaceCandidates;
-
-  for (NavigationState::SurfaceCandidate c : nState.surfaceCandidates) {
+  for (NavigationState::SurfaceCandidate& c : nState.surfaceCandidates) {
     // Get the surface representation: either native surface of portal
-    const Surface& sRep =
+    const Surface& surface =
         c.surface != nullptr ? *c.surface : c.portal->surface();
 
     // Only allow overstepping if it's not a portal
     ActsScalar overstepTolerance =
         c.portal != nullptr ? s_onSurfaceTolerance : nState.overstepTolerance;
 
-    // Get the intersection @todo make a templated intersector
-    // TODO surface tolerance
-    auto sIntersection = sRep.intersect(
+    // Check the surface intersection
+    auto sIntersection = surface.intersect(
         gctx, position, direction, c.boundaryTolerance, s_onSurfaceTolerance);
     for (auto& si : sIntersection.split()) {
-      c.objectIntersection = si;
-      if (c.objectIntersection.isValid() &&
-          c.objectIntersection.pathLength() > overstepTolerance) {
-        nextSurfaceCandidates.emplace_back(c);
+      if (si.isValid() && si.pathLength() > overstepTolerance) {
+        c.objectIntersection = si;
+        break;
       }
     }
   }
-
-  nState.surfaceCandidates = std::move(nextSurfaceCandidates);
 }
 
 /// @brief This sets a single object, e.g. single surface or single volume
