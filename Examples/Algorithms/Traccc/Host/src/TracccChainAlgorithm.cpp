@@ -47,16 +47,13 @@ std::tuple<vecmem::vector<traccc::measurement>, vecmem::vector<traccc::spacepoin
 
   measurements = clusterizationAlgorithm(vecmem::get_data(cells),
                                          vecmem::get_data(modules));
-  
   ACTS_INFO("Ran the clusterization algorithm");
 
   spacepoints = spacepointFormationAlgorithm(vecmem::get_data(measurements),
                                              vecmem::get_data(modules));
-
   ACTS_INFO("Ran the spacepoint formation algorithm");
 
   seeds = seedingAlgorithm(spacepoints);
-
   ACTS_INFO("Ran the seeding algorithm");
 
   return std::make_tuple(std::move(measurements), std::move(spacepoints), std::move(seeds));
@@ -73,20 +70,16 @@ traccc::host_container<traccc::fitting_result<traccc::default_algebra>, traccc::
   // Traccc expects a field vector of a constant field.
   params = trackParametersEstimationAlgorithm(spacepoints, seeds,
                                               fieldView.at(0.f, 0.f, 0.f));
-
   ACTS_INFO("Ran the parameters estimation algorithm");
 
   trackCandidates = findingAlgorithm(detector, field, measurements, params);
-
   ACTS_INFO("Ran the finding algorithm");
 
   tracks = fittingAlgorithm(detector, field, trackCandidates);
-
   ACTS_INFO("Ran the fitting algorithm");
 
   if (m_cfg.enableAmbiguityResolution){
     tracks = ambiguityResolutionAlgorithm(tracks);
-
     ACTS_INFO("Ran the ambiguity resolution algorithm");
   }
   else{

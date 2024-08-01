@@ -187,4 +187,23 @@ inline auto convertMeasurements(
 
   return conv;
 }
+
+inline auto convertMeasurement(ActsExamples::BoundVariantMeasurement& measurement){
+  auto fn = [](auto& m){
+    return traccc::measurement{};
+  };
+  return std::visit(fn, measurement);
+}
+
+template <typename output_container_t>
+inline auto convertMeasurements(const std::vector<ActsExamples::BoundVariantMeasurement>& measurements,
+    output_container_t& measurementContainer){
+    Util::ConversionData conv{
+      &measurements, 
+      Util::create1To1(measurements), 
+      &measurementContainer
+    };
+  return conv;
+}
+
 }  // namespace ActsExamples::Traccc::Common::Conversion

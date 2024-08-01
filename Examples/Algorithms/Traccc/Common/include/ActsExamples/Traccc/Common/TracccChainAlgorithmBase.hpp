@@ -82,10 +82,10 @@ class TracccChainAlgorithmBase : public IAlgorithm {
   ReadDataHandle<CellsMapType> m_inputCells{this, "InputCells"};
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
-  //ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
-  //                                                        "InputSpacePoints"};
-  //ReadDataHandle<SimSeedContainer> m_inputSeeds{this,
-  //                                                        "InputSeeds"};
+  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
+                                                          "InputSpacePoints"};
+  ReadDataHandle<SimSeedContainer> m_inputSeeds{this,
+                                                          "InputSeeds"};
   WriteDataHandle<std::vector<SimSpacePoint>> m_outputSpacePoints{this, "OutputSpacePoints"};
   WriteDataHandle<std::vector<SimSeed>> m_outputSeeds{this, "OutputSeeds"};
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
@@ -106,27 +106,46 @@ class TracccChainAlgorithmBase : public IAlgorithm {
 
     vecmem::host_memory_resource mr;
 
-    const auto cellsMap = m_inputCells(ctx);
-    auto [cells, modules] = converter.convertCells(cellsMap, &mr);
+    if (false){
+      const auto cellsMap = m_inputCells(ctx);
+      auto [cells, modules] = converter.convertCells(cellsMap, &mr);
 
-    auto [measurements, spacepoints, seeds] = runDigitization(cells, modules, mr);
+      auto [measurements, spacepoints, seeds] = runDigitization(cells, modules, mr);
 
-    auto& actsMeasurements = m_inputMeasurements(ctx);
-    auto measurementConv = converter.createMeasurementConversionData(measurements, actsMeasurements);
+      auto& actsMeasurements = m_inputMeasurements(ctx);
+      auto measurementConv = converter.createMeasurementConversionData(measurements, actsMeasurements);
 
-    SimSpacePointContainer convertedSpacePoints;
-    auto spacePointConv = ActsExamples::Traccc::Common::Conversion::convertSpacePoints(spacepoints, measurementConv, convertedSpacePoints);
+      SimSpacePointContainer convertedSpacePoints;
+      auto spacePointConv = ActsExamples::Traccc::Common::Conversion::convertSpacePoints(spacepoints, measurementConv, convertedSpacePoints);
+      m_outputSpacePoints(ctx, std::move(convertedSpacePoints));
 
-    SimSeedContainer convertedSeeds;
-    ActsExamples::Traccc::Common::Conversion::convertSeeds(seeds, spacePointConv, convertedSeeds);
+      SimSeedContainer convertedSeeds;
+      ActsExamples::Traccc::Common::Conversion::convertSeeds(seeds, spacePointConv, convertedSeeds);
+      m_outputSeeds(ctx, std::move(convertedSeeds));
 
-    auto tracks = runReconstruction(measurements, spacepoints, seeds, mr);
+      auto tracks = runReconstruction(measurements, spacepoints, seeds, mr);
+      auto convertedTracks = converter.convertTracks(tracks, measurementConv);
+      m_outputTracks(ctx, std::move(convertedTracks));
+    }
+    else
+    {
+      auto& actsMeasurements = m_inputMeasurements(ctx);
+      auto& actsSpacePoints = m_inputSpacePoints(ctx);
+      auto& actsSeeds = m_inputSeeds(ctx);
 
-    auto convertedTracks = converter.convertTracks(tracks, measurementConv);
-
-    m_outputSpacePoints(ctx, std::move(convertedSpacePoints));
-    m_outputSeeds(ctx, std::move(convertedSeeds));
-    m_outputTracks(ctx, std::move(convertedTracks));
+      vecmem::vector<traccc::measurement> measurements;
+      auto measurementConv = ActsExamples::Traccc::Common::Conversion::convertMeasurements(actsMeasurements, measurements);
+      
+      vecmem::vector<traccc::spacepoint> spacepoints;
+      auto spacepointConv = ActsExamples::Traccc::Common::Conversion::convertSpacePoints(actsSpacePoints, measurementConv, spacepoints);
+      
+      vecmem::vector<traccc::seed> seeds;
+      ActsExamples::Traccc::Common::Conversion::convertSeeds(actsSeeds, spacePointConv, seeds);
+      
+      auto tracks = runReconstruction(measurements, spacepoints, seeds, mr);
+      auto convertedTracks = converter.convertTracks(tracks, measurementConv);
+      m_outputTracks(ctx, std::move(convertedTracks));
+    }
 
     return ActsExamples::ProcessCode::SUCCESS;
   }

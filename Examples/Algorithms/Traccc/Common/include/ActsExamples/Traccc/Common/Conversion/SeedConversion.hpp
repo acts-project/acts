@@ -46,7 +46,7 @@ auto convertSeeds(std::vector<traccc::seed, allocator_t>& seeds, T& spacePointCo
     };
     return Util::convert<SimSeed>(seeds, fn, outputContainer);
 }
-/*
+
 template <typename T>
 traccc::seed convertSeed(SimSeed& seed, T& spacePointConv){
     return traccc::seed{
@@ -57,12 +57,12 @@ traccc::seed convertSeed(SimSeed& seed, T& spacePointConv){
         seed.seedQuality()};
 }
 
-template <typename T>
-auto convertSeeds(SimSeedContainer& seeds, T& spacePointConv){
+template <typename T, typename output_container_t>
+auto convertSeeds(SimSeedContainer& seeds, T& spacePointConv, output_container_t& outputContainer){
     auto fn = [&spacePointConv](auto& seed){
         return convertSeed(seed, spacePointConv);
     };
-    return Util::convert<traccc::seed>(seeds, fn);
-}*/
+    return Util::convert<traccc::seed>(seeds, fn, outputContainer);
+}
 
 }  // namespace Acts::TracccPlugin

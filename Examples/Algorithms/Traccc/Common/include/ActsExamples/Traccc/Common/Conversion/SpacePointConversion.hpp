@@ -65,7 +65,7 @@ auto convertSpacePoints(std::vector<traccc::spacepoint, allocator_t>& spacePoint
     };
     return Util::convert<SimSpacePoint>(spacePoints, fn, outputContainer);
 }
-/*
+
 template <typename T>
 traccc::spacepoint convertSpacePoint(SimSpacePoint spacePoint,T& measurementConv){
     using Scalar = typename traccc::point3::value_type;
@@ -80,12 +80,12 @@ traccc::spacepoint convertSpacePoint(SimSpacePoint spacePoint,T& measurementConv
     };
 }
 
-template <typename T>
-auto convertSpacePoints(SimSpacePointContainer& spacePoints, T& measurementConv){
+template <typename T, typename output_container_t>
+auto convertSpacePoints(SimSpacePointContainer& spacePoints, T& measurementConv, output_container_t& outputContainer){
     auto fn = [&measurementConv](SimSpacePoint& spacePoint){
         return convertSpacePoint(spacePoint, measurementConv);
     };
-    return Util::convert<traccc::spacepoint>(spacePoints, fn);
-}*/
+    return Util::convert<traccc::spacepoint>(spacePoints, fn, outputContainer);
+}
 
 }  // namespace Acts::TracccPlugin
