@@ -39,6 +39,8 @@ def runCKFTracks(
         SeedingAlgorithm,
         TruthEstimatedSeedingAlgorithmConfigArg,
         addCKFTracks,
+        TrackSelectorConfig,
+        CkfConfig,
     )
 
     s = s or acts.examples.Sequencer(
@@ -125,6 +127,22 @@ def runCKFTracks(
         s,
         trackingGeometry,
         field,
+        TrackSelectorConfig(
+            pt=500 * u.MeV,
+            absEta=(None, 3.0),
+            loc0=(-4.0 * u.mm, 4.0 * u.mm),
+            nMeasurementsMin=7,
+            maxHoles=2,
+            maxOutliers=2,
+        ),
+        CkfConfig(
+            chi2CutOff=15,
+            numMeasurementsCutOff=10,
+            seedDeduplication=True if not truthSmearedSeeded else False,
+            stayOnSeed=True if truthSmearedSeeded else False,
+            maxPixelHoles=1,
+            maxStripHoles=2,
+        ),
         outputDirRoot=outputDir,
         outputDirCsv=outputDir / "csv" if outputCsv else None,
     )
