@@ -248,13 +248,16 @@ class DetectorNavigator {
                    << ")");
 
       BoundaryTolerance boundaryTolerance = c.boundaryTolerance;
-
-      for (auto it = nState.externalSurfaceRange.first;
-           it != nState.externalSurfaceRange.second; ++it) {
-        if (surface.geometryId() == it->second->geometryId()) {
-          boundaryTolerance = BoundaryTolerance::Infinite();
-          break;
+      if (c.surface != nullptr) {
+        for (auto it = nState.externalSurfaceRange.first;
+             it != nState.externalSurfaceRange.second; ++it) {
+          if (surface.geometryId() == it->second->geometryId()) {
+            boundaryTolerance = BoundaryTolerance::Infinite();
+            break;
+          }
         }
+      } else {
+        boundaryTolerance = BoundaryTolerance::None();
       }
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, c.objectIntersection.index(),
@@ -326,14 +329,17 @@ class DetectorNavigator {
     bool isExternal = false;
     BoundaryTolerance boundaryTolerance =
         nState.surfaceCandidate().boundaryTolerance;
-
-    for (auto it = nState.externalSurfaceRange.first;
-         it != nState.externalSurfaceRange.second; ++it) {
-      if (nextSurface->geometryId() == it->second->geometryId()) {
-        boundaryTolerance = BoundaryTolerance::Infinite();
-        isExternal = true;
-        break;
+    if (c.surface != nullptr) {
+      for (auto it = nState.externalSurfaceRange.first;
+           it != nState.externalSurfaceRange.second; ++it) {
+        if (nextSurface->geometryId() == it->second->geometryId()) {
+          boundaryTolerance = BoundaryTolerance::Infinite();
+          isExternal = true;
+          break;
+        }
       }
+    } else {
+      boundaryTolerance = BoundaryTolerance::None();
     }
     // TODO not sure about the boundary check
     auto surfaceStatus = stepper.updateSurfaceStatus(

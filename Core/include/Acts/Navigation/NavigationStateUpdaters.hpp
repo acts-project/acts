@@ -50,16 +50,18 @@ inline void intitializeCandidates(const GeometryContext& gctx,
         sc.surface != nullptr ? *sc.surface : sc.portal->surface();
     // Only allow overstepping if it's not a portal
     ActsScalar overstepTolerance =
-            sc.portal != nullptr ? s_onSurfaceTolerance : nState.overstepTolerance;
+        sc.portal != nullptr ? s_onSurfaceTolerance : nState.overstepTolerance;
     // Boundary tolerance is forced to 0 for portals
     BoundaryTolerance boundaryTolerance =
         sc.portal != nullptr ? BoundaryTolerance::None() : sc.boundaryTolerance;
 
-    for (auto it = nState.externalSurfaceRange.first;
-         it != nState.externalSurfaceRange.second; it++) {
-      if (surface.geometryId() == it->second->geometryId()) {
-        boundaryTolerance = BoundaryTolerance::Infinite();
-        break;
+    if (sc.surface != nullptr) {
+      for (auto it = nState.externalSurfaceRange.first;
+           it != nState.externalSurfaceRange.second; it++) {
+        if (surface.geometryId() == it->second->geometryId()) {
+          boundaryTolerance = BoundaryTolerance::Infinite();
+          break;
+        }
       }
     }
     // Check the surface intersection
