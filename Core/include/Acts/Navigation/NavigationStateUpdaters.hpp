@@ -57,7 +57,7 @@ inline void intitializeCandidates(const GeometryContext& gctx,
 
     for (auto it = nState.externalSurfaceRange.first;
          it != nState.externalSurfaceRange.second; it++) {
-      if (sRep.geometryId() == it->second->geometryId()) {
+      if (surface.geometryId() == it->second->geometryId()) {
         boundaryTolerance = BoundaryTolerance::Infinite();
         break;
       }
