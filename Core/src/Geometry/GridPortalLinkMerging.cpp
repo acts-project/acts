@@ -232,22 +232,18 @@ std::unique_ptr<GridPortalLink> colinearMerge(
     auto mergedPortalLink =
         mergeEquidistant(mergedSurface, axisA, axisB, tolerance, direction,
                          logger, other_axis_t(otherAxis));
-    // @TODO: Sync bin contents
     return mergedPortalLink;
   } else if (aType == AxisType::Variable && bType == AxisType::Variable) {
     ACTS_VERBOSE("===> variable merge");
     auto mergedPortalLink = mergeVariableLocal();
-    // @TODO: Sync bin contents
     return mergedPortalLink;
   } else if (aType == AxisType::Equidistant && bType == AxisType::Variable) {
     ACTS_WARNING("===> mixed merged");
     auto mergedPortalLink = mergeVariableLocal();
-    // @TODO: Sync bin contents
     return mergedPortalLink;
   } else {
     ACTS_WARNING("===> mixed merged");
     auto mergedPortalLink = mergeVariableLocal();
-    // @TODO: Sync bin contents
     return mergedPortalLink;
   }
 }
@@ -339,9 +335,14 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       ACTS_VERBOSE(" - aligned: " << aligned2D->grid());
       ACTS_VERBOSE(" - other: " << other2D->grid());
 
-      // @TODO: Fix ordering (a,b) should already be in good order, to save one roundtrip
-      return mergeGridPortals(aligned2D.get(), other2D.get(), alignedSurface,
-                              otherSurface, direction, logger);
+      // @Fix ordering (a,b) should already be in good order, to save us one additional roundtrip
+      if (a->direction() == direction) {
+        return mergeGridPortals(aligned2D.get(), other2D.get(), alignedSurface,
+                                otherSurface, direction, logger);
+      } else {
+        return mergeGridPortals(other2D.get(), aligned2D.get(), otherSurface,
+                                alignedSurface, direction, logger);
+      }
     }
 
     const auto& axisA = *a->grid().axes().front();
