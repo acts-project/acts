@@ -47,7 +47,7 @@ struct AllPortalsNavigation : public IInternalNavigation {
     PortalsFiller::fill(nState, portals);
   }
 
-  /// A ordered portal provider - updat method that calls fill and initialize
+  /// A ordered portal provider - update method that calls fill and initialize
   ///
   /// @param gctx is the Geometry context of this call
   /// @param nState is the navigation state to be updated
@@ -89,7 +89,7 @@ struct AllPortalsAndSurfacesNavigation : public IInternalNavigation {
   }
 
   /// A ordered list of portals and surfaces provider
-  /// - updat method that calls fill and initialize
+  /// - update method that calls fill and initialize
   ///
   /// @param gctx is the Geometry context of this call
   /// @param nState is the navigation state to be updated
@@ -149,7 +149,7 @@ struct AdditionalSurfacesNavigation : public IInternalNavigation {
   }
 
   /// Extract the additional surfaces from the this volume
-  /// - updat method that calls fill and initialize
+  /// - update method that calls fill and initialize
   ///
   /// @param gctx is the Geometry context of this call
   /// @param nState is the navigation state to be updated

@@ -140,7 +140,7 @@ template <typename navigation_type, typename extractor_type,
           typename filler_type>
 class StaticAccessNavigation : public navigation_type {
  public:
-  /// @brief fills the navigation state with extraced objects
+  /// @brief fills the navigation state with extracted objects
   ///
   /// @param gctx is the Geometry context of this call
   /// @param nState the navigation state to which the surfaces are attached
@@ -152,7 +152,7 @@ class StaticAccessNavigation : public navigation_type {
     filler_type::fill(nState, extracted);
   }
 
-  /// @brief Update the navigation state with extraced objects
+  /// @brief Update the navigation state with extracted objects
   ///
   /// @note it calls fill and then initializes the candidates (including intersection)
   ///
@@ -229,7 +229,7 @@ class IndexedGridNavigation : public navigation_type {
   }
 
   /// @brief Update the navigation state with objects from the entries
-  /// AFTER apllying `p3loc = transform * p3` nd casting to subsbpace
+  /// AFTER applying `p3loc = transform * p3` nd casting to subsbpace
   ///
   /// @note it calls fill and then initializes the candidates (including intersection)
   ///
