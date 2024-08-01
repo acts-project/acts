@@ -229,7 +229,7 @@ class IndexedGridNavigation : public navigation_type {
   }
 
   /// @brief Update the navigation state with objects from the entries
-  /// AFTER applying `p3loc = transform * p3` nd casting to subsbpace
+  /// AFTER applying `p3loc = transform * p3` and casting to subsbpace
   ///
   /// @note it calls fill and then initializes the candidates (including intersection)
   ///
