@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,19 +22,20 @@
 namespace Acts {
 
 std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
-    InternalTrackState trackState, const Logger& logger) const {
+    InternalTrackState trackState, Direction direction,
+    const Logger& logger) const {
   // default-constructed error represents success, i.e. an invalid error code
   std::error_code error;
   double chi2 = 0;
 
-  visit_measurement(trackState.calibratedSize, [&](auto N) -> void {
+  visit_measurement(trackState.calibratedSize, [&](auto N) -> bool {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
     using ParametersVector = ActsVector<kMeasurementSize>;
     using CovarianceMatrix = ActsSquareMatrix<kMeasurementSize>;
 
-    typename TrackStateTraits<kMeasurementSize, true>::Calibrated calibrated{
+    typename TrackStateTraits<kMeasurementSize, true>::Measurement calibrated{
         trackState.calibrated};
-    typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
+    typename TrackStateTraits<kMeasurementSize, true>::MeasurementCovariance
         calibratedCovariance{trackState.calibratedCovariance};
 
     ACTS_VERBOSE("Measurement dimension: " << kMeasurementSize);
@@ -57,9 +58,10 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
     if (K.hasNaN()) {
-      // set to error abort execution
-      error = KalmanFitterError::UpdateFailed;
-      return;
+      error = (direction == Direction::Forward)
+                  ? KalmanFitterError::ForwardUpdateFailed
+                  : KalmanFitterError::BackwardUpdateFailed;  // set to error
+      return false;                                           // abort execution
     }
 
     trackState.filtered =
@@ -69,6 +71,13 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());
     ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance);
 
+    // calculate filtered residual
+    //
+    // FIXME: Without separate residual construction and assignment, we
+    //        currently take a +0.7GB build memory consumption hit in the
+    //        EventDataView unit tests. Revisit this once Measurement
+    //        overhead problems (Acts issue #350) are sorted out.
+    //
     ParametersVector residual;
     residual = calibrated - H * trackState.filtered;
     ACTS_VERBOSE("Residual: " << residual.transpose());
@@ -79,6 +88,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     chi2 = (residual.transpose() * m.inverse() * residual).value();
 
     ACTS_VERBOSE("Chi2: " << chi2);
+    return true;  // continue execution
   });
 
   return {chi2, error};

@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
@@ -363,11 +362,11 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
   auto intersection =
       planeSurface
           ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
-                      BoundaryTolerance::Infinite())
+                      BoundaryCheck(false))
           .closest();
 
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorOptions<> pOptions(gctx, mctx);
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
@@ -423,12 +422,11 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
-  auto intersection =
-      perigeeSurface
-          ->intersect(gctx, track.position(gctx), track.direction(),
-                      BoundaryTolerance::Infinite())
-          .closest();
+  PropagatorOptions<> pOptions(gctx, mctx);
+  auto intersection = perigeeSurface
+                          ->intersect(gctx, track.position(gctx),
+                                      track.direction(), BoundaryCheck(false))
+                          .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
@@ -507,7 +505,7 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorOptions<> pOptions(gctx, mctx);
   pOptions.direction = Direction::Backward;
 
   // Do the propagation to the perigeee
@@ -546,7 +544,7 @@ Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorOptions<> pOptions(gctx, mctx);
   pOptions.direction = Direction::Backward;
 
   // Do the propagation to the perigeee

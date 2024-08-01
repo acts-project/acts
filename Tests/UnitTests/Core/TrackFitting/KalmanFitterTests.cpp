@@ -102,9 +102,8 @@ auto makeDefaultKalmanFitterOptions() {
       &Acts::detail::Test::TestSourceLink::SurfaceAccessor::operator()>(
       &tester.surfaceAccessor);
 
-  return KalmanFitterOptions(
-      tester.geoCtx, tester.magCtx, tester.calCtx, extensions,
-      PropagatorPlainOptions(tester.geoCtx, tester.magCtx));
+  return KalmanFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
+                             extensions, PropagatorPlainOptions());
 }
 
 }  // namespace

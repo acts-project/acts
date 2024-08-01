@@ -66,7 +66,7 @@ ProcessCode EDM4hepTrackReader::read(const AlgorithmContext& ctx) {
   return ProcessCode::SUCCESS;
 }
 
-Acts::PodioUtil::ROOTReader& EDM4hepTrackReader::reader() {
+podio::ROOTFrameReader& EDM4hepTrackReader::reader() {
   bool exists = false;
   auto& reader = m_reader.local(exists);
   if (!exists) {

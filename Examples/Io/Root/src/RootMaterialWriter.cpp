@@ -192,10 +192,6 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
   for (auto& [key, value] : volumeMaps) {
     // Get the Volume material
     const Acts::IVolumeMaterial* vMaterial = value.get();
-    if (vMaterial == nullptr) {
-      ACTS_WARNING("No material for volume " << key << " skipping");
-      continue;
-    }
 
     // get the geometry ID
     Acts::GeometryIdentifier geoID = key;

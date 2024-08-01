@@ -149,6 +149,9 @@ def main():
     gmDetectorBuilder = DetectorBuilder(gmDetectorConfig, args.top_node, logLevel)
     detector = gmDetectorBuilder.construct(gContext)
 
+    materialSurfaces = detector.extractMaterialSurfaces()
+    print("Found ", len(materialSurfaces), " material surfaces")
+
     # Output the detector to SVG
     if args.output_svg:
         surfaceStyle = acts.svg.Style()
@@ -172,7 +175,7 @@ def main():
             [[ivol, volumeOptions] for ivol in range(detector.numberVolumes())],
             [
                 ["xy", ["sensitives", "portals"], xyRange],
-                ["zr", ["sensitives", "portals", "materials"], zrRange],
+                ["zr", ["", "", "materials"], zrRange],
             ],
             args.output + "_detector",
         )

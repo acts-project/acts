@@ -9,7 +9,6 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -22,6 +21,7 @@
 #include <edm4hep/TrackerHitCollection.h>
 #include <edm4hep/TrackerHitPlane.h>
 #include <edm4hep/TrackerHitPlaneCollection.h>
+#include <podio/Frame.h>
 
 namespace ActsExamples {
 
@@ -85,7 +85,7 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   return ProcessCode::SUCCESS;
 }
 
-Acts::PodioUtil::ROOTReader& EDM4hepMeasurementReader::reader() {
+podio::ROOTFrameReader& EDM4hepMeasurementReader::reader() {
   bool exists = false;
   auto& reader = m_reader.local(exists);
   if (!exists) {

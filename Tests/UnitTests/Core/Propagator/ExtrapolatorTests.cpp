@@ -112,8 +112,8 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
                                    ParticleHypothesis::pion());
 
-  EigenPropagatorType::Options<> options(tgContext, mfContext);
-  options.stepping.maxStepSize = 10_cm;
+  PropagatorOptions<> options(tgContext, mfContext);
+  options.maxStepSize = 10_cm;
   options.pathLimit = 25_cm;
 
   BOOST_CHECK(
@@ -157,19 +157,18 @@ BOOST_DATA_TEST_CASE(
   // A PlaneSelector for the SurfaceCollector
   using PlaneCollector = SurfaceCollector<PlaneSelector>;
 
-  EigenPropagatorType::Options<ActionList<PlaneCollector>> options(tgContext,
-                                                                   mfContext);
+  PropagatorOptions<ActionList<PlaneCollector>> options(tgContext, mfContext);
 
-  options.stepping.maxStepSize = 10_cm;
+  options.maxStepSize = 10_cm;
   options.pathLimit = 25_cm;
 
   const auto& result = epropagator.propagate(start, options).value();
   auto collector_result = result.get<PlaneCollector::result_type>();
 
   // step through the surfaces and go step by step
-  EigenPropagatorType::Options<> optionsEmpty(tgContext, mfContext);
+  PropagatorOptions<> optionsEmpty(tgContext, mfContext);
 
-  optionsEmpty.stepping.maxStepSize = 25_cm;
+  optionsEmpty.maxStepSize = 25_cm;
   // Try propagation from start to each surface
   for (const auto& colsf : collector_result.collected) {
     const auto& csurface = colsf.surface;
@@ -220,9 +219,9 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
                                    ParticleHypothesis::pion());
 
-  EigenPropagatorType::Options<ActionList<MaterialInteractor>> options(
-      tgContext, mfContext);
-  options.stepping.maxStepSize = 25_cm;
+  PropagatorOptions<ActionList<MaterialInteractor>> options(tgContext,
+                                                            mfContext);
+  options.maxStepSize = 25_cm;
   options.pathLimit = 25_cm;
 
   const auto& result = epropagator.propagate(start, options).value();
@@ -268,9 +267,9 @@ BOOST_DATA_TEST_CASE(
                                    ParticleHypothesis::pion());
 
   // Action list and abort list
-  EigenPropagatorType::Options<ActionList<MaterialInteractor>> options(
-      tgContext, mfContext);
-  options.stepping.maxStepSize = 25_cm;
+  PropagatorOptions<ActionList<MaterialInteractor>> options(tgContext,
+                                                            mfContext);
+  options.maxStepSize = 25_cm;
   options.pathLimit = 1500_mm;
 
   const auto& status = epropagator.propagate(start, options).value();

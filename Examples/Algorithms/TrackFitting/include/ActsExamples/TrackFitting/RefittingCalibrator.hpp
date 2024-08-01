@@ -29,13 +29,11 @@ struct RefittingCalibrator {
 
   struct RefittingSourceLink {
     ConstProxy state;
-  };
 
-  static const Acts::Surface* accessSurface(
-      const Acts::SourceLink& sourceLink) {
-    const auto& refittingSl = sourceLink.get<RefittingSourceLink>();
-    return &refittingSl.state.referenceSurface();
-  }
+    Acts::GeometryIdentifier geometryId() const {
+      return state.referenceSurface().geometryId();
+    }
+  };
 
   void calibrate(const Acts::GeometryContext& gctx,
                  const Acts::CalibrationContext& cctx,

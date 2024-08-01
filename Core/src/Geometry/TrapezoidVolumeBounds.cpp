@@ -9,7 +9,7 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -145,7 +145,7 @@ bool TrapezoidVolumeBounds::inside(const Vector3& pos, ActsScalar tol) const {
   }
   Vector2 locp(pos.x(), pos.y());
   bool inside(m_faceXYTrapezoidBounds->inside(
-      locp, BoundaryTolerance::AbsoluteBound{tol, tol}));
+      locp, BoundaryCheck(true, true, tol, tol)));
   return inside;
 }
 

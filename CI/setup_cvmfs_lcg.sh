@@ -1,4 +1,4 @@
-# setup latest, supported LCG release via cvmfs
+# setup lowest, supported LCG release via cvmfs
 
 if test -n "$BASH_SOURCE"; then
   this_script=$BASH_SOURCE
@@ -11,4 +11,4 @@ else
 fi
 
 dir="$( cd "$( dirname "${this_script}" )" && pwd )"
-source $dir/setup_cvmfs_lcg105.sh
+source $dir/setup_cvmfs_lcg101.sh

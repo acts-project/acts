@@ -112,7 +112,8 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
 
   std::vector<std::unique_ptr<Blueprint::Node>> gaps;
   // Only 1D binning implemented for the moment
-  if (BinningValue bVal = node.binning.front(); bVal == BinningValue::binZ) {
+  auto bVal = node.binning.front();
+  if (bVal == BinningValue::binZ) {
     // adjust inner/outer radius
     if (adjustToParent) {
       std::for_each(node.children.begin(), node.children.end(),

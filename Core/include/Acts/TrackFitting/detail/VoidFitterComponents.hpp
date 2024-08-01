@@ -30,6 +30,7 @@ void voidFitterCalibrator(const GeometryContext& /*gctx*/,
 template <typename traj_t>
 Result<void> voidFitterUpdater(const GeometryContext& /*gctx*/,
                                typename traj_t::TrackStateProxy trackState,
+                               Direction /*direction*/,
                                const Logger& /*logger*/) {
   trackState.filtered() = trackState.predicted();
   trackState.filteredCovariance() = trackState.predictedCovariance();

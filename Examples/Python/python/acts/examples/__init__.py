@@ -11,17 +11,11 @@ from acts._adapter import _patch_config, _patch_detectors, _patchKwargsConstruct
 
 _propagators = []
 _concrete_propagators = []
-for stepper in ("Eigen", "Atlas", "StraightLine"):
-    for navigator in ("", "Detector"):
-        _propagators.append(
-            getattr(ActsPythonBindings._propagator, f"{stepper}{navigator}Propagator")
-        )
-        _concrete_propagators.append(
-            getattr(
-                ActsPythonBindings._propagator,
-                f"{stepper}{navigator}ConcretePropagator",
-            )
-        )
+for prefix in ("Eigen", "Atlas", "StraightLine"):
+    _propagators.append(getattr(ActsPythonBindings._propagator, f"{prefix}Propagator"))
+    _concrete_propagators.append(
+        getattr(ActsPythonBindings._propagator, f"{prefix}ConcretePropagator")
+    )
 
 
 def ConcretePropagator(propagator):

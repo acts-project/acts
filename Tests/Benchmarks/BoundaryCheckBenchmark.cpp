@@ -8,15 +8,13 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <algorithm>
 #include <chrono>
 #include <functional>
 #include <iostream>
-#include <optional>
 #include <random>
 #include <vector>
 
@@ -62,7 +60,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   constexpr int NTESTS_NOOP = NTESTS * 10;
 
   // We use this to switch between iteration counts
-  enum class Mode { None, FastOutside, SlowOutside };
+  enum class Mode { NoCheck, FastOutside, SlowOutside };
 
   // Benchmark output display
   auto print_bench_header = [](const std::string& check_name) {
@@ -84,7 +82,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     auto bench_result = Acts::Test::microBenchmark(iterationWithArg, inputs);
     print_bench_result(bench_name, bench_result);
   };
-  auto run_all_benches = [&](const BoundaryTolerance& check,
+  auto run_all_benches = [&](const BoundaryCheck& check,
                              const std::string& check_name, const Mode mode) {
     // Announce a set of benchmarks
     print_bench_header(check_name);
@@ -93,7 +91,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     int num_inside_points = 0;
     int num_outside_points = 0;
     switch (mode) {
-      case Mode::None:
+      case Mode::NoCheck:
         num_inside_points = NTESTS_NOOP;
         num_outside_points = NTESTS_NOOP;
         break;
@@ -107,44 +105,29 @@ int main(int /*argc*/, char** /*argv[]*/) {
       default:  // do nothing
         break;
     };
-    run_bench(
-        [&] {
-          return detail::insidePolygon(poly, check, center, std::nullopt);
-        },
-        num_inside_points, "Center");
-    run_bench(
-        [&] {
-          return detail::insidePolygon(poly, check, edge_inside, std::nullopt);
-        },
-        num_inside_points, "Inside edge");
-    run_bench(
-        [&] {
-          return detail::insidePolygon(poly, check, edge_outside, std::nullopt);
-        },
-        num_outside_points, "Outside edge");
-    run_bench(
-        [&] {
-          return detail::insidePolygon(poly, check, far_away, std::nullopt);
-        },
-        num_outside_points, "Far away");
+    run_bench([&] { return check.isInside(center, poly); }, num_inside_points,
+              "Center");
+    run_bench([&] { return check.isInside(edge_inside, poly); },
+              num_inside_points, "Inside edge");
+    run_bench([&] { return check.isInside(edge_outside, poly); },
+              num_outside_points, "Outside edge");
+    run_bench([&] { return check.isInside(far_away, poly); },
+              num_outside_points, "Far away");
 
     // Pre-rolled random points
     std::vector<Vector2> points(num_outside_points);
     std::generate(points.begin(), points.end(), random_point);
     run_bench_with_inputs(
-        [&](const auto& point) {
-          return detail::insidePolygon(poly, check, point, std::nullopt);
-        },
-        points, "Random");
+        [&](const auto& point) { return check.isInside(point, poly); }, points,
+        "Random");
   };
 
   // Benchmark scenarios
-  run_all_benches(BoundaryTolerance::Infinite(), "No check", Mode::None);
-  run_all_benches(BoundaryTolerance::None(), "No tolerance", Mode::FastOutside);
-  run_all_benches(BoundaryTolerance::AbsoluteBound(0.6, 0.45), "Abs. tolerance",
+  run_all_benches(BoundaryCheck(false), "No check", Mode::NoCheck);
+  run_all_benches(BoundaryCheck(true), "No tolerance", Mode::FastOutside);
+  run_all_benches(BoundaryCheck(true, true, 0.6, 0.45), "Abs. tolerance",
                   Mode::SlowOutside);
-  run_all_benches(BoundaryTolerance::Chi2Bound(cov, 3.0), "Cov. tolerance",
-                  Mode::SlowOutside);
+  run_all_benches(BoundaryCheck(cov, 3.0), "Cov. tolerance", Mode::SlowOutside);
 
   return 0;
 }

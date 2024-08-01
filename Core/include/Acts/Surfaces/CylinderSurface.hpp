@@ -14,12 +14,13 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
@@ -186,7 +187,7 @@ class CylinderSurface : public RegularSurface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position to start from
   /// @param direction The direction at start
-  /// @param boundaryTolerance the Boundary Check Tolerance
+  /// @param bcheck the Boundary Check
   /// @param tolerance the tolerance used for the intersection
   ///
   /// If possible returns both solutions for the cylinder
@@ -195,8 +196,7 @@ class CylinderSurface : public RegularSurface {
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      const BoundaryTolerance& boundaryTolerance =
-          BoundaryTolerance::Infinite(),
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Path correction due to incident of the track
@@ -303,7 +303,6 @@ class CylinderSurface : public RegularSurface {
       const Vector3& direction) const;
 };
 
-static_assert(RegularSurfaceConcept<CylinderSurface>,
-              "CylinderSurface does not fulfill RegularSurfaceConcept");
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, CylinderSurface);
 
 }  // namespace Acts

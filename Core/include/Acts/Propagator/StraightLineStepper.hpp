@@ -22,9 +22,8 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
-#include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -52,14 +51,6 @@ class StraightLineStepper {
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
   using BField = NullBField;
-
-  struct Config {};
-
-  struct Options : public StepperPlainOptions {
-    void setPlainOptions(const StepperPlainOptions& options) {
-      static_cast<StepperPlainOptions&>(*this) = options;
-    }
-  };
 
   /// State for track parameter propagation
   ///
@@ -142,6 +133,10 @@ class StraightLineStepper {
     // Cache the geometry context of this propagation
     std::reference_wrapper<const GeometryContext> geoContext;
   };
+
+  /// Always use the same propagation state type, independently of the initial
+  /// track parameter type and of the target surface
+  using state_type = State;
 
   StraightLineStepper() = default;
 
@@ -234,17 +229,16 @@ class StraightLineStepper {
   /// @param [in] surface The surface provided
   /// @param [in] index The surface intersection index
   /// @param [in] navDir The navigation direction
-  /// @param [in] boundaryTolerance The boundary check for this status update
+  /// @param [in] bcheck The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A logger instance
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
-      Direction navDir, const BoundaryTolerance& boundaryTolerance,
+      Direction navDir, const BoundaryCheck& bcheck,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<StraightLineStepper>(
-        *this, state, surface, index, navDir, boundaryTolerance,
-        surfaceTolerance, logger);
+        *this, state, surface, index, navDir, bcheck, surfaceTolerance, logger);
   }
 
   /// Update step size

@@ -28,6 +28,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
+#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -175,26 +176,20 @@ void visitSeedIdentifiers(const TrackProxy& track, Visitor visitor) {
 
 class BranchStopper {
  public:
+  using Config =
+      std::optional<std::variant<Acts::TrackSelector::Config,
+                                 Acts::TrackSelector::EtaBinnedConfig>>;
   using BranchStopperResult =
       Acts::CombinatorialKalmanFilterBranchStopperResult;
 
-  struct BrachState {
-    std::size_t nPixelHoles = 0;
-    std::size_t nStripHoles = 0;
-  };
-
-  static constexpr Acts::ProxyAccessor<BrachState> branchStateAccessor =
-      Acts::ProxyAccessor<BrachState>(Acts::hashString("MyBranchState"));
-
   mutable std::atomic<std::size_t> m_nStoppedBranches{0};
 
-  explicit BranchStopper(const TrackFindingAlgorithm::Config& config)
-      : m_cfg(config) {}
+  explicit BranchStopper(const Config& config) : m_config(config) {}
 
   BranchStopperResult operator()(
-      const TrackContainer::TrackProxy& track,
-      const TrackContainer::TrackStateProxy& trackState) const {
-    if (!m_cfg.trackSelectorCfg.has_value()) {
+      const Acts::CombinatorialKalmanFilterTipState& tipState,
+      Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
+    if (!m_config.has_value()) {
       return BranchStopperResult::Continue;
     }
 
@@ -210,37 +205,17 @@ class BranchStopper {
             return config.hasCuts(eta) ? &config.getCuts(eta) : nullptr;
           }
         },
-        *m_cfg.trackSelectorCfg);
+        *m_config);
 
     if (singleConfig == nullptr) {
       ++m_nStoppedBranches;
       return BranchStopperResult::StopAndDrop;
     }
 
-    bool tooManyHolesPS = false;
-    if (!(m_cfg.pixelVolumes.empty() && m_cfg.stripVolumes.empty())) {
-      auto& branchState = branchStateAccessor(track);
-      // count both holes and outliers as holes for pixel/strip counts
-      if (trackState.typeFlags().test(Acts::TrackStateFlag::HoleFlag) ||
-          trackState.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
-        if (m_cfg.pixelVolumes.count(
-                trackState.referenceSurface().geometryId().volume()) >= 1) {
-          ++branchState.nPixelHoles;
-        } else if (m_cfg.stripVolumes.count(
-                       trackState.referenceSurface().geometryId().volume()) >=
-                   1) {
-          ++branchState.nStripHoles;
-        }
-      }
-      tooManyHolesPS = branchState.nPixelHoles > m_cfg.maxPixelHoles ||
-                       branchState.nStripHoles > m_cfg.maxStripHoles;
-    }
-
     bool enoughMeasurements =
-        track.nMeasurements() >= singleConfig->minMeasurements;
-    bool tooManyHoles =
-        track.nHoles() > singleConfig->maxHoles || tooManyHolesPS;
-    bool tooManyOutliers = track.nOutliers() > singleConfig->maxOutliers;
+        tipState.nMeasurements >= singleConfig->minMeasurements;
+    bool tooManyHoles = tipState.nHoles > singleConfig->maxHoles;
+    bool tooManyOutliers = tipState.nOutliers > singleConfig->maxOutliers;
 
     if (tooManyHoles || tooManyOutliers) {
       ++m_nStoppedBranches;
@@ -252,7 +227,7 @@ class BranchStopper {
   }
 
  private:
-  const TrackFindingAlgorithm::Config& m_cfg;
+  Config m_config;
 };
 
 }  // namespace
@@ -327,15 +302,17 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   MeasurementSelector measSel{
       Acts::MeasurementSelector(m_cfg.measurementSelectorCfg)};
 
-  using Extensions = Acts::CombinatorialKalmanFilterExtensions<TrackContainer>;
+  using Extensions =
+      Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>;
 
-  BranchStopper branchStopper(m_cfg);
+  BranchStopper branchStopper(m_cfg.trackSelectorCfg);
 
   Extensions extensions;
   extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
       &calibrator);
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
-      typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
+  extensions.updater.connect<
+      &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
+      &kfUpdater);
   extensions.measurementSelector.connect<&MeasurementSelector::select>(
       &measSel);
   extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
@@ -346,38 +323,33 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       slAccessorDelegate;
   slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
 
-  Acts::PropagatorPlainOptions firstPropOptions(ctx.geoContext,
-                                                ctx.magFieldContext);
+  Acts::PropagatorPlainOptions firstPropOptions;
   firstPropOptions.maxSteps = m_cfg.maxSteps;
   firstPropOptions.direction = Acts::Direction::Forward;
 
-  Acts::PropagatorPlainOptions secondPropOptions(ctx.geoContext,
-                                                 ctx.magFieldContext);
+  Acts::PropagatorPlainOptions secondPropOptions;
   secondPropOptions.maxSteps = m_cfg.maxSteps;
   secondPropOptions.direction = firstPropOptions.direction.invert();
 
   // Set the CombinatorialKalmanFilter options
-  TrackFinderOptions firstOptions(ctx.geoContext, ctx.magFieldContext,
-                                  ctx.calibContext, slAccessorDelegate,
-                                  extensions, firstPropOptions);
+  TrackFindingAlgorithm::TrackFinderOptions firstOptions(
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
+      extensions, firstPropOptions);
 
-  TrackFinderOptions secondOptions(ctx.geoContext, ctx.magFieldContext,
-                                   ctx.calibContext, slAccessorDelegate,
-                                   extensions, secondPropOptions);
+  TrackFindingAlgorithm::TrackFinderOptions secondOptions(
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
+      extensions, secondPropOptions);
   secondOptions.targetSurface = pSurface.get();
 
-  using Extrapolator = Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator>;
-  using ExtrapolatorOptions =
-      Extrapolator::template Options<Acts::ActionList<Acts::MaterialInteractor>,
-                                     Acts::AbortList<Acts::EndOfWorldReached>>;
-
-  Extrapolator extrapolator(
+  Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
       Acts::EigenStepper<>(m_cfg.magneticField),
       Acts::Navigator({m_cfg.trackingGeometry},
                       logger().cloneWithSuffix("Navigator")),
       logger().cloneWithSuffix("Propagator"));
 
-  ExtrapolatorOptions extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
+  Acts::PropagatorOptions<Acts::ActionList<Acts::MaterialInteractor>,
+                          Acts::AbortList<Acts::EndOfWorldReached>>
+      extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
@@ -392,10 +364,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   TrackContainer tracks(trackContainer, trackStateContainer);
   TrackContainer tracksTemp(trackContainerTemp, trackStateContainerTemp);
-
-  // Note that not all backends support PODs as column types
-  tracks.addColumn<BranchStopper::BrachState>("MyBranchState");
-  tracksTemp.addColumn<BranchStopper::BrachState>("MyBranchState");
 
   tracks.addColumn<unsigned int>("trackGroup");
   tracksTemp.addColumn<unsigned int>("trackGroup");
@@ -535,11 +503,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
-              if (!secondTrack.hasReferenceSurface()) {
-                ACTS_WARNING("Second track has no reference surface.");
-                continue;
-              }
-              if (secondTrack.nMeasurements() <= 1) {
+              if (secondTrack.nTrackStates() < 2) {
                 continue;
               }
 

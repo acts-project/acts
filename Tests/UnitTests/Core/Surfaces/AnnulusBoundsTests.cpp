@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -97,16 +97,11 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
     return Vector2(r, phi);
   };
 
-  BOOST_CHECK(
-      aBounds.inside(toStripFrame(inSurfaceXY), BoundaryTolerance::None()));
-  BOOST_CHECK(
-      !aBounds.inside(toStripFrame(outsideXY1), BoundaryTolerance::None()));
-  BOOST_CHECK(
-      !aBounds.inside(toStripFrame(outsideXY2), BoundaryTolerance::None()));
-  BOOST_CHECK(
-      !aBounds.inside(toStripFrame(outsideXY3), BoundaryTolerance::None()));
-  BOOST_CHECK(
-      !aBounds.inside(toStripFrame(outsideXY4), BoundaryTolerance::None()));
+  BOOST_CHECK(aBounds.inside(toStripFrame(inSurfaceXY), BoundaryCheck(true)));
+  BOOST_CHECK(!aBounds.inside(toStripFrame(outsideXY1), BoundaryCheck(true)));
+  BOOST_CHECK(!aBounds.inside(toStripFrame(outsideXY2), BoundaryCheck(true)));
+  BOOST_CHECK(!aBounds.inside(toStripFrame(outsideXY3), BoundaryCheck(true)));
+  BOOST_CHECK(!aBounds.inside(toStripFrame(outsideXY4), BoundaryCheck(true)));
 
   // Check radial inside
   BOOST_CHECK(!aBounds.insideRadialBounds(0.5));

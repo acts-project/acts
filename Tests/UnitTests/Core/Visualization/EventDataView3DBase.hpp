@@ -357,8 +357,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
           &surfaceAccessor);
 
   KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
-                                PropagatorPlainOptions(tgContext, mfContext),
-                                rSurface);
+                                PropagatorPlainOptions(), rSurface);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};

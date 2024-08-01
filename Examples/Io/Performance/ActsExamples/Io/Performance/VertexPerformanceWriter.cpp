@@ -153,7 +153,6 @@ VertexPerformanceWriter::VertexPerformanceWriter(
 
   m_outputTree->Branch("nRecoVtx", &m_nRecoVtx);
   m_outputTree->Branch("nTrueVtx", &m_nTrueVtx);
-  m_outputTree->Branch("nCleanVtx", &m_nCleanVtx);
   m_outputTree->Branch("nMergedVtx", &m_nMergedVtx);
   m_outputTree->Branch("nSplitVtx", &m_nSplitVtx);
   m_outputTree->Branch("nVtxDetectorAcceptance", &m_nVtxDetAcceptance);
@@ -404,7 +403,6 @@ ProcessCode VertexPerformanceWriter::writeT(
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   m_nRecoVtx = vertices.size();
-  m_nCleanVtx = 0;
   m_nMergedVtx = 0;
   m_nSplitVtx = 0;
 
@@ -654,9 +652,7 @@ ProcessCode VertexPerformanceWriter::writeT(
       m_recoVertexClassification.push_back(
           static_cast<int>(recoVertexClassification));
 
-      if (recoVertexClassification == RecoVertexClassification::Clean) {
-        ++m_nCleanVtx;
-      } else if (recoVertexClassification == RecoVertexClassification::Merged) {
+      if (recoVertexClassification == RecoVertexClassification::Merged) {
         ++m_nMergedVtx;
       } else if (recoVertexClassification == RecoVertexClassification::Split) {
         ++m_nSplitVtx;
@@ -771,13 +767,11 @@ ProcessCode VertexPerformanceWriter::writeT(
       auto intersection =
           perigeeSurface
               ->intersect(ctx.geoContext, params.position(ctx.geoContext),
-                          params.direction(),
-                          Acts::BoundaryTolerance::Infinite())
+                          params.direction(), Acts::BoundaryCheck(false))
               .closest();
 
       // Setting the geometry/magnetic field context for the event
-      using PropagatorOptions = Propagator::Options<>;
-      PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+      Acts::PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
       pOptions.direction =
           Acts::Direction::fromScalarZeroAsPositive(intersection.pathLength());
 

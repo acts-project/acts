@@ -198,7 +198,7 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta, q / p,
                                    std::nullopt, ParticleHypothesis::pion());
 
-  using PropagatorOptions = EigenPropagator::Options<ActionList<>, AbortList<>>;
+  using PropagatorOptions = PropagatorOptions<ActionList<>, AbortList<>>;
   PropagatorOptions options(tgContext, mfContext);
   options.maxSteps = 1e6;
   const auto& result = epropagator.propagate(start, options).value();

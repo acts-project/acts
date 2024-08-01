@@ -13,10 +13,11 @@ else
 fi
 
 lcg_release=LCG_105
-lcg_compiler=gcc13
-lcg_platform=x86_64-${lcg_os}-${lcg_compiler}-opt
+lcg_compiler=gcc11-opt
+lcg_platform=x86_64-${lcg_os}-${lcg_compiler}
 lcg_view=/cvmfs/sft.cern.ch/lcg/views/${lcg_release}/${lcg_platform}
 
 source ${lcg_view}/setup.sh
 # extra variables required to build acts
 export DD4hep_DIR=${lcg_view}
+

@@ -157,12 +157,10 @@ Measurements createMeasurements(const propagator_t& propagator,
                                 std::size_t sourceId = 0u) {
   using Actions = Acts::ActionList<MeasurementsCreator>;
   using Aborters = Acts::AbortList<Acts::EndOfWorldReached>;
-  using PropagatorOptions =
-      typename propagator_t::template Options<Actions, Aborters>;
 
   // Set options for propagator
-  PropagatorOptions options(geoCtx, magCtx);
-  auto& creator = options.actionList.template get<MeasurementsCreator>();
+  Acts::PropagatorOptions<Actions, Aborters> options(geoCtx, magCtx);
+  auto& creator = options.actionList.get<MeasurementsCreator>();
   creator.resolutions = resolutions;
   creator.rng = &rng;
   creator.sourceId = sourceId;

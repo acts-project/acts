@@ -62,10 +62,9 @@ class ParticleSelector final : public IAlgorithm {
     bool removeCharged = false;
     /// Remove neutral particles.
     bool removeNeutral = false;
+
     /// Remove secondaries.
     bool removeSecondaries = false;
-    /// Exclude particles depending on absolute pdg value
-    std::vector<int> excludeAbsPdgs;
   };
 
   ParticleSelector(const Config& config, Acts::Logging::Level level);

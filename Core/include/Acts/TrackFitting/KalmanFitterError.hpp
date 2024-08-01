@@ -15,11 +15,12 @@ namespace Acts {
 
 enum class KalmanFitterError {
   // ensure all values are non-zero
-  UpdateFailed = 1,
+  ForwardUpdateFailed = 1,
+  BackwardUpdateFailed,
   SmoothFailed,
   OutputConversionFailed,
   NoMeasurementFound,
-  ReversePropagationFailed,
+  ReverseNavigationFailed,
 };
 
 std::error_code make_error_code(Acts::KalmanFitterError e);

@@ -14,7 +14,6 @@
 #include "Acts/Propagator/MultiStepperAborters.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -104,16 +103,16 @@ struct GaussianSumFitter {
 
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActionList<GsfActor>;
+      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<NavigationBreakAborter>;
-      using PropagatorOptions =
-          typename propagator_t::template Options<Actors, Aborters>;
 
-      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
+      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
+                                                      opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.navigation.surfaces = sSequence;
+      propOptions.actionList.template get<DirectNavigator::Initializer>()
+          .navSurfaces = sSequence;
       propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
 
@@ -122,20 +121,20 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActionList<GsfActor>;
+      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
-      using PropagatorOptions =
-          typename propagator_t::template Options<Actors, Aborters>;
 
       std::vector<const Surface*> backwardSequence(
           std::next(sSequence.rbegin()), sSequence.rend());
       backwardSequence.push_back(opts.referenceSurface);
 
-      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
+      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
+                                                      opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.navigation.surfaces = backwardSequence;
+      propOptions.actionList.template get<DirectNavigator::Initializer>()
+          .navSurfaces = std::move(backwardSequence);
       propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
 
@@ -161,13 +160,10 @@ struct GaussianSumFitter {
     auto fwdPropInitializer = [this](const auto& opts) {
       using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached, NavigationBreakAborter>;
-      using PropagatorOptions =
-          typename propagator_t::template Options<Actors, Aborters>;
 
-      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
-
+      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
+                                                      opts.magFieldContext);
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
-
       propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
 
@@ -178,10 +174,9 @@ struct GaussianSumFitter {
     auto bwdPropInitializer = [this](const auto& opts) {
       using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached>;
-      using PropagatorOptions =
-          typename propagator_t::template Options<Actors, Aborters>;
 
-      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
+      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
+                                                      opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
@@ -228,7 +223,7 @@ struct GaussianSumFitter {
         sParameters.referenceSurface()
             .intersect(GeometryContext{},
                        sParameters.position(GeometryContext{}),
-                       sParameters.direction(), BoundaryTolerance::None())
+                       sParameters.direction(), BoundaryCheck(true))
             .closest()
             .status();
 

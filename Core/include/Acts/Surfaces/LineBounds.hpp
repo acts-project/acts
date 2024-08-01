@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <array>
@@ -58,11 +58,11 @@ class LineBounds : public SurfaceBounds {
   /// the bounds  Inside can be called without/with tolerances.
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param boundaryTolerance boundary check directive
+  /// @param bcheck boundary check directive
   ///
   /// @return boolean indicator for the success of this operation
   bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance) const final;
+              const BoundaryCheck& bcheck) const final;
 
   /// Output Method for std::ostream
   ///

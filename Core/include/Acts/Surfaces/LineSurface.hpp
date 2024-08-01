@@ -13,7 +13,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -240,14 +240,13 @@ class LineSurface : public Surface {
   /// @param position The global position as a starting point
   /// @param direction The global direction at the starting point
   ///        @note expected to be normalized
-  /// @param boundaryTolerance The boundary check directive for the estimate
+  /// @param bcheck The boundary check directive for the estimate
   /// @param tolerance the tolerance used for the intersection
   /// @return is the intersection object
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      const BoundaryTolerance& boundaryTolerance =
-          BoundaryTolerance::Infinite(),
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// the pathCorrection for derived classes with thickness

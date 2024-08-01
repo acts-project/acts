@@ -144,9 +144,9 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
         Acts::BinUtility(1, annulusBounds->get(Acts::AnnulusBounds::eMinPhiRel),
                          annulusBounds->get(Acts::AnnulusBounds::eMaxPhiRel),
                          Acts::open, Acts::BinningValue::binPhi);
-    bUtility += Acts::BinUtility(1, static_cast<float>(annulusBounds->rMin()),
-                                 static_cast<float>(annulusBounds->rMax()),
-                                 Acts::open, Acts::BinningValue::binR);
+    bUtility +=
+        Acts::BinUtility(1, annulusBounds->rMin(), annulusBounds->rMax(),
+                         Acts::open, Acts::BinningValue::binR);
   }
   if (rectangleBounds != nullptr) {
     bUtility +=
@@ -210,9 +210,8 @@ Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
         1, cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eMinR),
         cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eMaxR), Acts::open,
         Acts::BinningValue::binR);
-    bUtility +=
-        Acts::BinUtility(1, -static_cast<float>(M_PI), static_cast<float>(M_PI),
-                         Acts::closed, Acts::BinningValue::binPhi);
+    bUtility += Acts::BinUtility(1, -M_PI, M_PI, Acts::closed,
+                                 Acts::BinningValue::binPhi);
     bUtility += Acts::BinUtility(
         1, -cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eHalfLengthZ),
         cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eHalfLengthZ),

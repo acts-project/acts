@@ -78,7 +78,7 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
-  Acts::PropagatorPlainOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+  Acts::PropagatorPlainOptions pOptions;
   pOptions.maxSteps = 10000;
 
   PassThroughCalibrator pcalibrator;
@@ -87,13 +87,16 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
-  Acts::CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
+  Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
+      extensions;
   extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
       &calibrator);
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
-      typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
-  extensions.measurementSelector.connect<&Acts::MeasurementSelector::select<
-      typename TrackContainer::TrackStateContainerBackend>>(&measSel);
+  extensions.updater.connect<
+      &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
+      &kfUpdater);
+  extensions.measurementSelector
+      .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
+          &measSel);
 
   // The source link accessor
   ProtoTrackSourceLinkAccessor sourceLinkAccessor;

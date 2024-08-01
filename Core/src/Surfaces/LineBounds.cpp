@@ -8,9 +8,6 @@
 
 #include "Acts/Surfaces/LineBounds.hpp"
 
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
-
 #include <iomanip>
 #include <iostream>
 
@@ -18,14 +15,12 @@ Acts::SurfaceBounds::BoundsType Acts::LineBounds::type() const {
   return SurfaceBounds::eLine;
 }
 
-bool Acts::LineBounds::inside(
-    const Acts::Vector2& lposition,
-    const Acts::BoundaryTolerance& boundaryTolerance) const {
+bool Acts::LineBounds::inside(const Acts::Vector2& lposition,
+                              const Acts::BoundaryCheck& bcheck) const {
   double r = get(LineBounds::eR);
   double halfLengthZ = get(LineBounds::eHalfLengthZ);
-  return detail::insideAlignedBox(Vector2(-r, -halfLengthZ),
-                                  Vector2(r, halfLengthZ), boundaryTolerance,
-                                  lposition, std::nullopt);
+  return bcheck.isInside(lposition, Vector2(-r, -halfLengthZ),
+                         Vector2(r, halfLengthZ));
 }
 
 // ostream operator overload

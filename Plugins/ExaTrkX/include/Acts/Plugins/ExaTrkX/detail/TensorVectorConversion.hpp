@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/Concepts.hpp"
+
 #include <cstdint>
 #include <vector>
 

@@ -12,13 +12,14 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
@@ -176,7 +177,7 @@ class PlaneSurface : public RegularSurface {
   /// @param position The start position of the intersection attempt
   /// @param direction The direction of the intersection attempt,
   /// (@note expected to be normalized)
-  /// @param boundaryTolerance The boundary check directive
+  /// @param bcheck The boundary check directive
   /// @param tolerance the tolerance used for the intersection
   ///
   /// <b>mathematical motivation:</b>
@@ -200,8 +201,7 @@ class PlaneSurface : public RegularSurface {
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      const BoundaryTolerance& boundaryTolerance =
-          BoundaryTolerance::Infinite(),
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Return a Polyhedron for the surfaces
@@ -236,7 +236,6 @@ class PlaneSurface : public RegularSurface {
  private:
 };
 
-static_assert(RegularSurfaceConcept<PlaneSurface>,
-              "PlaneSurface does not fulfill RegularSurfaceConcept");
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, PlaneSurface);
 
 }  // namespace Acts

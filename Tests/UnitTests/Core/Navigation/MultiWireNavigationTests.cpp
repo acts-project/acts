@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
   nState.currentVolume->updateNavigationState(tContext, nState);
 
   // check the surface candidates after update (12 surfaces + 6 portals but only
-  // 5 are reachable, but one excluded due to new > s_onTolerance rule)
-  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 4u);
+  // 5 are reachable)
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 5u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -134,10 +134,8 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
     using ActionList =
         ActionList<MaterialSurfaceCollector, InteractionVolumeCollector>;
     using AbortList = AbortList<EndOfWorldReached>;
-    using PropagatorOptions =
-        typename propagator_t::template Options<ActionList, AbortList>;
 
-    PropagatorOptions options(gctx, mctx);
+    PropagatorOptions<ActionList, AbortList> options(gctx, mctx);
 
     const auto& result = m_propagator.propagate(start, options).value();
 
@@ -154,7 +152,7 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
     // The volume collection results
     auto vcResult =
         result.template get<InteractionVolumeCollector::result_type>();
-    for (const auto& [geoId, vIntersection] : vcResult.collected) {
+    for (auto [geoId, vIntersection] : vcResult.collected) {
       candidates.second.push_back(vIntersection);
     }
 

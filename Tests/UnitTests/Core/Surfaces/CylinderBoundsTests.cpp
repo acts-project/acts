@@ -10,7 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -113,19 +113,22 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   const Vector2 unitPhi{1.0, 0.0};
   const Vector2 withinBevelMin{0.5, -20.012};
   const Vector2 outsideBevelMin{0.5, -40.};
-  const BoundaryTolerance tolerance =
-      BoundaryTolerance::AbsoluteBound(0.1, 0.1);
-  const BoundaryTolerance lessTolerance =
-      BoundaryTolerance::AbsoluteBound(0.01, 0.01);
-  BOOST_CHECK(cylinderBoundsObject.inside(atPiBy2, tolerance));
-  BOOST_CHECK(!cylinderBoundsSegment.inside(unitPhi, tolerance));
-  BOOST_CHECK(cylinderBoundsObject.inside(origin, tolerance));
+  const BoundaryCheck trueBoundaryCheckWithTolerance(true, true, 0.1, 0.1);
+  const BoundaryCheck trueBoundaryCheckWithLessTolerance(true, true, 0.01,
+                                                         0.01);
+  BOOST_CHECK(
+      cylinderBoundsObject.inside(atPiBy2, trueBoundaryCheckWithTolerance));
+  BOOST_CHECK(
+      !cylinderBoundsSegment.inside(unitPhi, trueBoundaryCheckWithTolerance));
+  BOOST_CHECK(
+      cylinderBoundsObject.inside(origin, trueBoundaryCheckWithTolerance));
 
-  BOOST_CHECK(!cylinderBoundsObject.inside(withinBevelMin, lessTolerance));
-  BOOST_CHECK(
-      cylinderBoundsBeveledObject.inside(withinBevelMin, lessTolerance));
-  BOOST_CHECK(
-      !cylinderBoundsBeveledObject.inside(outsideBevelMin, lessTolerance));
+  BOOST_CHECK(!cylinderBoundsObject.inside(withinBevelMin,
+                                           trueBoundaryCheckWithLessTolerance));
+  BOOST_CHECK(cylinderBoundsBeveledObject.inside(
+      withinBevelMin, trueBoundaryCheckWithLessTolerance));
+  BOOST_CHECK(!cylinderBoundsBeveledObject.inside(
+      outsideBevelMin, trueBoundaryCheckWithLessTolerance));
 
   /// test for r()
   CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eR), nominalRadius,

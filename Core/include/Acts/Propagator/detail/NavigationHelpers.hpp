@@ -10,7 +10,7 @@
 
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
@@ -25,34 +25,34 @@ using AnyIntersectionObject =
 struct NavigationObjectCandidate {
   AnyIntersectionObject object;
   const Surface* representation = nullptr;
-  BoundaryTolerance boundaryTolerance;
+  BoundaryCheck boundaryCheck;
 
   NavigationObjectCandidate(AnyIntersectionObject _object,
                             const Surface* _representation,
-                            BoundaryTolerance _boundaryTolerance)
+                            BoundaryCheck _boundaryCheck)
       : object(_object),
         representation(_representation),
-        boundaryTolerance(std::move(_boundaryTolerance)) {}
+        boundaryCheck(std::move(_boundaryCheck)) {}
 
   std::pair<SurfaceMultiIntersection, AnyIntersectionObject> intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, ActsScalar tolerance) const {
     if (std::holds_alternative<const Surface*>(object)) {
       const auto& surface = std::get<const Surface*>(object);
-      auto intersection = representation->intersect(
-          gctx, position, direction, boundaryTolerance, tolerance);
+      auto intersection = representation->intersect(gctx, position, direction,
+                                                    boundaryCheck, tolerance);
       return {intersection, surface};
     }
     if (std::holds_alternative<const Layer*>(object)) {
       const auto& layer = std::get<const Layer*>(object);
-      auto intersection = representation->intersect(
-          gctx, position, direction, boundaryTolerance, tolerance);
+      auto intersection = representation->intersect(gctx, position, direction,
+                                                    boundaryCheck, tolerance);
       return {intersection, layer};
     }
     if (std::holds_alternative<const BoundarySurface*>(object)) {
       const auto& boundary = std::get<const BoundarySurface*>(object);
-      auto intersection = representation->intersect(
-          gctx, position, direction, boundaryTolerance, tolerance);
+      auto intersection = representation->intersect(gctx, position, direction,
+                                                    boundaryCheck, tolerance);
       return {intersection, boundary};
     }
     throw std::runtime_error("unknown type");
@@ -64,14 +64,14 @@ struct NavigationObjectCandidate {
 struct IntersectionCandidate {
   SurfaceIntersection intersection;
   detail::AnyIntersectionObject anyObject;
-  BoundaryTolerance boundaryTolerance;
+  BoundaryCheck boundaryCheck;
 
   IntersectionCandidate(SurfaceIntersection _intersection,
                         detail::AnyIntersectionObject _anyObject,
-                        BoundaryTolerance _boundaryTolerance)
+                        BoundaryCheck _boundaryCheck)
       : intersection(std::move(_intersection)),
         anyObject(_anyObject),
-        boundaryTolerance(std::move(_boundaryTolerance)) {}
+        boundaryCheck(std::move(_boundaryCheck)) {}
 
   template <typename object_t>
   bool checkType() const {
@@ -95,13 +95,12 @@ struct IntersectionCandidate {
 inline void emplaceAllVolumeCandidates(
     std::vector<detail::NavigationObjectCandidate>& candidates,
     const TrackingVolume& volume, bool resolveSensitive, bool resolveMaterial,
-    bool resolvePassive,
-    const BoundaryTolerance& boundaryToleranceSurfaceApproach,
+    bool resolvePassive, const BoundaryCheck& boundaryCheckSurfaceApproach,
     const Logger& logger) {
   auto addCandidate = [&](AnyIntersectionObject object,
                           const Surface* representation,
-                          const BoundaryTolerance& boundaryTolerance) {
-    candidates.emplace_back(object, representation, boundaryTolerance);
+                          const BoundaryCheck& boundaryCheck) {
+    candidates.emplace_back(object, representation, boundaryCheck);
   };
 
   // Get all boundary candidates
@@ -114,7 +113,7 @@ inline void emplaceAllVolumeCandidates(
 
     for (const auto& boundary : boundaries) {
       addCandidate(boundary.get(), &boundary->surfaceRepresentation(),
-                   BoundaryTolerance::None());
+                   BoundaryCheck(true));
     }
   }
 
@@ -134,7 +133,7 @@ inline void emplaceAllVolumeCandidates(
       if (!resolveSensitive ||
           layer->surfaceRepresentation().surfaceMaterial() != nullptr) {
         addCandidate(layer.get(), &layer->surfaceRepresentation(),
-                     BoundaryTolerance::None());
+                     BoundaryCheck(true));
       }
 
       if (layer->approachDescriptor() != nullptr) {
@@ -142,7 +141,7 @@ inline void emplaceAllVolumeCandidates(
             layer->approachDescriptor()->containedSurfaces();
 
         for (const auto& approach : approaches) {
-          addCandidate(layer.get(), approach, BoundaryTolerance::None());
+          addCandidate(layer.get(), approach, BoundaryCheck(true));
         }
       }
 
@@ -156,7 +155,7 @@ inline void emplaceAllVolumeCandidates(
           ACTS_VERBOSE("Found " << surfaces.size() << " surfaces.");
 
           for (const auto& surface : surfaces) {
-            addCandidate(surface, surface, boundaryToleranceSurfaceApproach);
+            addCandidate(surface, surface, boundaryCheckSurfaceApproach);
           }
         }
       }

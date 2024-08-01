@@ -10,7 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -166,11 +166,9 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
       "20.0000000, 0.0000000, 1.5707963, 0.0000000)"));
   //
   /// Test inside
-  BOOST_CHECK(
-      !ellipseBoundsObject.inside(inRectangle, BoundaryTolerance::None()));
+  BOOST_CHECK(!ellipseBoundsObject.inside(inRectangle, BoundaryCheck(true)));
   // dont understand why this is so:
-  BOOST_CHECK(
-      !ellipseBoundsObject.inside(outsideBy15, BoundaryTolerance::None()));
+  BOOST_CHECK(!ellipseBoundsObject.inside(outsideBy15, BoundaryCheck(true)));
 }
 /// Unit test for testing EllipseBounds assignment
 BOOST_AUTO_TEST_CASE(EllipseBoundsAssignment) {

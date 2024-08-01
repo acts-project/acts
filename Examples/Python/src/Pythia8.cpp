@@ -46,11 +46,7 @@ void addPythia8(Context& ctx) {
       .def_readwrite("printShortEventListing",
                      &Gen::Config::printShortEventListing)
       .def_readwrite("printLongEventListing",
-                     &Gen::Config::printLongEventListing)
-      .def_readwrite("labelSecondaries", &Gen::Config::labelSecondaries)
-      .def_readwrite("spatialVertexThreshold",
-                     &Gen::Config::spatialVertexThreshold)
-      .def_readwrite("initializationSeed", &Gen::Config::initializationSeed);
+                     &Gen::Config::printLongEventListing);
 
   patchClassesWithConfig(p8);
 }

@@ -18,12 +18,9 @@
 #include <tuple>
 #include <vector>
 
-namespace HepGeom {
-class Transform3D;
-}
+#include "G4Transform3D.hh"
 
 class G4VPhysicalVolume;
-using G4Transform3D = HepGeom::Transform3D;
 
 namespace Acts {
 

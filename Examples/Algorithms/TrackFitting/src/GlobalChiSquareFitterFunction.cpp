@@ -86,13 +86,9 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
         extensions;
     extensions.calibrator.connect<&calibrator_t::calibrate>(&calibrator);
 
-    if (options.doRefit) {
-      extensions.surfaceAccessor.connect<&RefittingCalibrator::accessSurface>();
-    } else {
-      extensions.surfaceAccessor
-          .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
-              &m_slSurfaceAccessor);
-    }
+    extensions.surfaceAccessor
+        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+            &m_slSurfaceAccessor);
 
     const Acts::Experimental::Gx2FitterOptions gx2fOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,

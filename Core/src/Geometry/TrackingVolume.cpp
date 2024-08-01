@@ -19,7 +19,6 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -204,8 +203,8 @@ void TrackingVolume::glueTrackingVolumes(
       neighbors->arrayObjects().at(0);
   // get the distance
   Vector3 bPosition(binningPosition(gctx, BinningValue::binR));
-  Vector3 distance(nRefVolume->binningPosition(gctx, BinningValue::binR) -
-                   bPosition);
+  Vector3 distance = Vector3(
+      nRefVolume->binningPosition(gctx, BinningValue::binR) - bPosition);
   // take the normal at the binning positio
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine =
       boundarySurfaces().at(bsfMine);
@@ -441,7 +440,7 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
       [&](SurfaceMultiIntersection& candidates,
           const BoundarySurface* boundary) -> BoundaryIntersection {
     for (const auto& intersection : candidates.split()) {
-      if (!intersection.isValid()) {
+      if (!intersection) {
         continue;
       }
 
@@ -465,8 +464,8 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
 
       ACTS_VERBOSE("Check intersection with surface "
                    << boundary->surfaceRepresentation().geometryId());
-      if (detail::checkPathLength(intersection.pathLength(), nearLimit,
-                                  farLimit, logger)) {
+      if (detail::checkIntersection(intersection.intersection(), nearLimit,
+                                    farLimit, logger)) {
         return BoundaryIntersection(intersection, boundary);
       }
     }
@@ -492,11 +491,11 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
         continue;
       }
 
-      auto candidates = surface.intersect(gctx, position, direction,
-                                          options.boundaryTolerance);
+      auto candidates =
+          surface.intersect(gctx, position, direction, options.boundaryCheck);
       // Intersect and continue
       auto intersection = checkIntersection(candidates, boundary.get());
-      if (intersection.first.isValid()) {
+      if (intersection.first) {
         ACTS_VERBOSE(" - Proceed with surface");
         intersections.push_back(intersection);
       } else {
@@ -551,7 +550,7 @@ TrackingVolume::compatibleLayers(
       auto atIntersection =
           tLayer->surfaceOnApproach(gctx, position, direction, options);
       // Intersection is ok - take it (move to surface on approach)
-      if (atIntersection.isValid()) {
+      if (atIntersection) {
         // create a layer intersection
         lIntersections.push_back(LayerIntersection(atIntersection, tLayer));
       }

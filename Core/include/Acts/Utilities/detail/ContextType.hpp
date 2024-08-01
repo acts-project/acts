@@ -46,7 +46,7 @@ class ContextType {
   /// @return ContextType&
   template <typename T>
   ContextType& operator=(T&& value) {
-    m_data = std::forward<T>(value);
+    m_data = std::move(value);
     return *this;
   }
 

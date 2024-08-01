@@ -8,7 +8,7 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 
 #include <ostream>
 
@@ -63,10 +63,10 @@ class SurfaceBounds {
   /// the bounds  Inside can be called without/with tolerances.
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param boundaryTolerance boundary check directive
+  /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
   virtual bool inside(const Vector2& lposition,
-                      const BoundaryTolerance& boundaryTolerance) const = 0;
+                      const BoundaryCheck& bcheck) const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///

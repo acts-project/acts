@@ -198,9 +198,8 @@ using propagator_t = Propagator<EigenStepper<>, VoidNavigator>;
 
 BoundVector localToLocal(const propagator_t& prop, const BoundVector& local,
                          const Surface& src, const Surface& dst) {
-  using PropagatorOptions = typename propagator_t::template Options<>;
-  PropagatorOptions options{gctx, mctx};
-  options.stepping.stepTolerance = 1e-10;
+  PropagatorOptions<> options{gctx, mctx};
+  options.stepTolerance = 1e-10;
   options.surfaceTolerance = 1e-10;
 
   BoundTrackParameters start{src.getSharedPtr(), local, std::nullopt,

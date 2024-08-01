@@ -94,8 +94,8 @@ auto kalmanHandleMeasurement(
     // Else, just tag it as an outlier
     if (!extensions.outlierFinder(trackStateProxy)) {
       // Run Kalman update
-      auto updateRes =
-          extensions.updater(state.geoContext, trackStateProxy, logger);
+      auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
+                                          state.options.direction, logger);
       if (!updateRes.ok()) {
         ACTS_ERROR("Update step failed: " << updateRes.error());
         return updateRes.error();

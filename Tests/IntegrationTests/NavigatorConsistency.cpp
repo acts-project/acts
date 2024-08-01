@@ -19,7 +19,6 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Propagator/TryAllNavigator.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -72,8 +71,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // Action list and abort list
   using ActionListType = ActionList<SurfaceCollector>;
   using AbortListType = AbortList<>;
-  using Options =
-      typename propagator_t::template Options<ActionListType, AbortListType>;
+  using Options = PropagatorOptions<ActionListType, AbortListType>;
 
   // forward surface test
   Options fwdOptions(tgContext, mfContext);
@@ -258,16 +256,13 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
   // Action list and abort list
   using ActionListType = ActionList<SurfaceCollector>;
   using AbortListType = AbortList<>;
+  using Options = PropagatorOptions<ActionListType, AbortListType>;
 
   auto run = [&](const auto& prop) {
-    using propagator_t = std::decay_t<decltype(prop)>;
-    using Options =
-        typename propagator_t::template Options<ActionListType, AbortListType>;
-
     // forward surface test
     Options fwdOptions(tgContext, mfContext);
     fwdOptions.pathLimit = 25_cm;
-    fwdOptions.stepping.maxStepSize = 1_cm;
+    fwdOptions.maxStepSize = 1_cm;
 
     // get the surface collector and configure it
     auto& fwdSurfaceCollector =
@@ -331,8 +326,7 @@ StraightLinePropagator slpropagator(slstepper,
 
 Reference1EigenPropagator refepropagator1(
     estepper,
-    TryAllNavigator({tGeometry, true, true, false,
-                     BoundaryTolerance::Infinite()},
+    TryAllNavigator({tGeometry, true, true, false, BoundaryCheck(false)},
                     getDefaultLogger("ref1_e_nav", Logging::INFO)),
     getDefaultLogger("ref1_e_prop", Logging::INFO));
 Reference1StraightLinePropagator refslpropagator1(
@@ -344,7 +338,7 @@ Reference1StraightLinePropagator refslpropagator1(
 Reference2EigenPropagator refepropagator2(
     estepper,
     TryAllOverstepNavigator({tGeometry, true, true, false,
-                             BoundaryTolerance::Infinite()},
+                             BoundaryCheck(false)},
                             getDefaultLogger("ref2_e_nav", Logging::INFO)),
     getDefaultLogger("ref2_e_prop", Logging::INFO));
 Reference2StraightLinePropagator refslpropagator2(

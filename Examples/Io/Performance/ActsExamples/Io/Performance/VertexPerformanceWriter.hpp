@@ -119,8 +119,6 @@ class VertexPerformanceWriter final
   int m_nRecoVtx = -1;
   /// Number of true vertices
   int m_nTrueVtx = -1;
-  /// Number of clean vertices
-  int m_nCleanVtx = -1;
   /// Number of merged vertices
   int m_nMergedVtx = -1;
   /// Number of split vertices

@@ -40,6 +40,9 @@ class ObjectSorterT {
     using Acts::VectorHelpers::eta;
     using Acts::VectorHelpers::perp;
     using Acts::VectorHelpers::phi;
+    // switch the binning value
+    // - BinningValue::binX, BinningValue::binY, BinningValue::binZ, binR,
+    // binPhi, binRPhi, binH, binEta
     switch (m_binningValue) {
       // compare on x
       case BinningValue::binX: {

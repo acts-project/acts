@@ -509,7 +509,7 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
     // arbitrary range. do the equivalent grouping manually
     auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
 
-    for (const auto& [moduleGeoId, moduleSourceLinks] : groupedByModule) {
+    for (auto [moduleGeoId, moduleSourceLinks] : groupedByModule) {
       // find corresponding surface
       const Acts::Surface* surface =
           m_cfg.trackingGeometry->findSurface(moduleGeoId);

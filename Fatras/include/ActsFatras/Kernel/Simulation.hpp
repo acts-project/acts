@@ -83,12 +83,11 @@ struct SingleParticleSimulation {
     using Result = typename Actor::result_type;
     using Actions = Acts::ActionList<Actor>;
     using Abort = Acts::AbortList<Aborter, Acts::EndOfWorldReached>;
-    using PropagatorOptions =
-        typename propagator_t::template Options<Actions, Abort>;
+    using PropagatorOptions = Acts::PropagatorOptions<Actions, Abort>;
 
     // Construct per-call options.
     PropagatorOptions options(geoCtx, magCtx);
-    options.stepping.maxStepSize = maxStepSize;
+    options.maxStepSize = maxStepSize;
     options.pathLimit = pathLimit;
     // setup the interactor as part of the propagator options
     auto &actor = options.actionList.template get<Actor>();

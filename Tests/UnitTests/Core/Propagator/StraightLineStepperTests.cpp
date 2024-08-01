@@ -21,7 +21,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   auto targetSurface =
       Surface::makeShared<PlaneSurface>(pos + navDir * 2. * dir, dir);
   sls.updateSurfaceStatus(slsState, *targetSurface, 0, navDir,
-                          BoundaryTolerance::Infinite());
+                          BoundaryCheck(false));
   CHECK_CLOSE_ABS(slsState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
                   1e-6);
 
@@ -340,8 +340,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
       slsState,
       targetSurface
           ->intersect(slsState.geoContext, sls.position(slsState),
-                      navDir * sls.direction(slsState),
-                      BoundaryTolerance::Infinite())
+                      navDir * sls.direction(slsState), BoundaryCheck(false))
           .closest(),
       navDir, false);
   CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);
@@ -350,8 +349,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
       slsState,
       targetSurface
           ->intersect(slsState.geoContext, sls.position(slsState),
-                      navDir * sls.direction(slsState),
-                      BoundaryTolerance::Infinite())
+                      navDir * sls.direction(slsState), BoundaryCheck(false))
           .closest(),
       navDir, true);
   CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);

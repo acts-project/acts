@@ -12,13 +12,33 @@
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <array>
-#include <map>
 #include <string>
 #include <vector>
 
-class G4VPhysicalVolume;
+#include "G4VPhysicalVolume.hh"
 
 namespace Acts {
+
+/// @brief Convert Acts binning value to Geant4 axis
+/// as Geant4 uses a different axis convention
+/// @param bv the Acts binning value
+EAxis binToGeant4Axis(const Acts::BinningValue& bv) {
+  switch (bv) {
+    case Acts::BinningValue::binX:
+      return EAxis::kXAxis;
+    case Acts::BinningValue::binY:
+      return EAxis::kYAxis;
+    case Acts::BinningValue::binZ:
+      return EAxis::kZAxis;
+    case Acts::BinningValue::binR:
+      return EAxis::kRho;
+    case Acts::BinningValue::binPhi:
+      return EAxis::kPhi;
+    default:
+      throw std::invalid_argument(
+          "No Geant4 axis conversion for this binning value");
+  }
+}
 
 /// Interface class for selectors from physical volumes
 class IGeant4PhysicalVolumeSelector {
@@ -52,7 +72,18 @@ struct NameSelector : public IGeant4PhysicalVolumeSelector {
   /// Secect function for the volume
   /// @param g4PhysVol the volume that is checked
   /// @return a boolean indicating the selection
-  bool select(const G4VPhysicalVolume& g4PhysVol) const final;
+  bool select(const G4VPhysicalVolume& g4PhysVol) const final {
+    std::string volumeName = g4PhysVol.GetName();
+    bool matched = false;
+    for (const auto& name : names) {
+      matched = exact ? (volumeName == name)
+                      : volumeName.find(name) != std::string::npos;
+      if (matched) {
+        break;
+      }
+    }
+    return matched;
+  }
 };
 
 /// @brief Struct that selects G4VPhysicalVolume objects
@@ -77,7 +108,19 @@ struct PositionSelector : public IGeant4PhysicalVolumeSelector {
   /// Secect function for the volume
   /// @param g4PhysVol the volume that is checked
   /// @return a boolean indicating the selection
-  bool select(const G4VPhysicalVolume& g4PhysVol) const final;
+  bool select(const G4VPhysicalVolume& g4PhysVol) const final {
+    bool matched = false;
+    G4ThreeVector pos = g4PhysVol.GetTranslation();
+    for (auto range : m_ranges) {
+      auto& [min, max] = range.second;
+      EAxis axis = static_cast<EAxis>(range.first);
+      matched = (pos[axis] >= min) && (pos[axis] <= max);
+      if (!matched) {
+        break;
+      }
+    }
+    return matched;
+  }
 };
 
 }  // namespace Geant4PhysicalVolumeSelectors

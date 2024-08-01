@@ -76,12 +76,6 @@ using namespace Acts::UnitLiterals;
 
 static const auto pion = Acts::ParticleHypothesis::pion();
 
-using TrackContainer = Acts::TrackContainer<Acts::VectorTrackContainer,
-                                            Acts::VectorMultiTrajectory,
-                                            Acts::detail::ValueHolder>;
-using TrackStateContainerBackend =
-    typename TrackContainer::TrackStateContainerBackend;
-
 struct Detector {
   // expected number of measurements for the given detector
   std::size_t numMeasurements = 6u;
@@ -161,16 +155,18 @@ struct Fixture {
   using ConstantFieldPropagator =
       Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
 
+  using Trajectory = Acts::VectorMultiTrajectory;
+
   using KalmanUpdater = Acts::GainMatrixUpdater;
   using KalmanSmoother = Acts::GainMatrixSmoother;
   using CombinatorialKalmanFilter =
-      Acts::CombinatorialKalmanFilter<ConstantFieldPropagator, TrackContainer>;
+      Acts::CombinatorialKalmanFilter<ConstantFieldPropagator, Trajectory>;
   using TestSourceLinkContainer =
       std::unordered_multimap<Acts::GeometryIdentifier, TestSourceLink>;
   using TestSourceLinkAccessor = TestContainerAccessor<TestSourceLinkContainer>;
   using CombinatorialKalmanFilterOptions =
       Acts::CombinatorialKalmanFilterOptions<TestSourceLinkAccessor::Iterator,
-                                             TrackContainer>;
+                                             Trajectory>;
 
   KalmanUpdater kfUpdater;
   KalmanSmoother kfSmoother;
@@ -199,16 +195,15 @@ struct Fixture {
 
   Acts::MeasurementSelector measSel{measurementSelectorCfg};
 
-  Acts::CombinatorialKalmanFilterExtensions<TrackContainer> getExtensions()
-      const {
-    Acts::CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
-    extensions.calibrator.template connect<
-        &testSourceLinkCalibrator<TrackStateContainerBackend>>();
-    extensions.updater.template connect<
-        &KalmanUpdater::operator()<TrackStateContainerBackend>>(&kfUpdater);
-    extensions.measurementSelector.template connect<
-        &Acts::MeasurementSelector::select<TrackStateContainerBackend>>(
-        &measSel);
+  Acts::CombinatorialKalmanFilterExtensions<Trajectory> getExtensions() const {
+    Acts::CombinatorialKalmanFilterExtensions<Trajectory> extensions;
+    extensions.calibrator
+        .template connect<&testSourceLinkCalibrator<Trajectory>>();
+    extensions.updater.template connect<&KalmanUpdater::operator()<Trajectory>>(
+        &kfUpdater);
+    extensions.measurementSelector
+        .template connect<&Acts::MeasurementSelector::select<Trajectory>>(
+            &measSel);
     return extensions;
   }
 
@@ -288,11 +283,13 @@ struct Fixture {
   }
 
   CombinatorialKalmanFilterOptions makeCkfOptions() const {
-    // leave the accessor empty, this will have to be set before running the CKF
     return CombinatorialKalmanFilterOptions(
         geoCtx, magCtx, calCtx,
-        Acts::SourceLinkAccessorDelegate<TestSourceLinkAccessor::Iterator>{},
-        getExtensions(), Acts::PropagatorPlainOptions(geoCtx, magCtx));
+        Acts::SourceLinkAccessorDelegate<
+            TestSourceLinkAccessor::Iterator>{},  // leave the accessor empty,
+                                                  // this will have to be set
+                                                  // before running the CKF
+        getExtensions(), Acts::PropagatorPlainOptions());
   }
 };
 
@@ -315,8 +312,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   options.sourcelinkAccessor.connect<&Fixture::TestSourceLinkAccessor::range>(
       &slAccessor);
 
-  TrackContainer tc{Acts::VectorTrackContainer{},
-                    Acts::VectorMultiTrajectory{}};
+  Acts::TrackContainer tc{Acts::VectorTrackContainer{},
+                          Acts::VectorMultiTrajectory{}};
 
   // run the CKF for all initial track states
   for (std::size_t trackId = 0u; trackId < f.startParameters.size();
@@ -372,8 +369,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   options.sourcelinkAccessor.connect<&Fixture::TestSourceLinkAccessor::range>(
       &slAccessor);
 
-  TrackContainer tc{Acts::VectorTrackContainer{},
-                    Acts::VectorMultiTrajectory{}};
+  Acts::TrackContainer tc{Acts::VectorTrackContainer{},
+                          Acts::VectorMultiTrajectory{}};
 
   // run the CKF for all initial track states
   for (std::size_t trackId = 0u; trackId < f.startParameters.size();

@@ -112,16 +112,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     nInvalidMeasurementCount +=
         static_cast<std::size_t>(!validMeasurementCount);
 
-    // Pdg selection
-    bool validPdg = true;
-    for (auto pdg : m_cfg.excludeAbsPdgs) {
-      if (p.absolutePdg() == std::abs(pdg)) {
-        validPdg = false;
-        break;
-      }
-    }
-
-    return validPdg && validCharge && validSecondary && validMeasurementCount &&
+    return validCharge && validSecondary && validMeasurementCount &&
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
            within(eta, m_cfg.etaMin, m_cfg.etaMax) &&

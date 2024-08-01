@@ -56,7 +56,7 @@ class IntersectSurfacesFinder : public IAssignmentFinder {
     for (auto& surface : surfaces) {
       // Get the intersection
       auto sMultiIntersection = surface->intersect(gctx, position, direction,
-                                                   BoundaryTolerance::None());
+                                                   Acts::BoundaryCheck(true));
       // One solution, take it
       if (sMultiIntersection.size() == 1u &&
           sMultiIntersection[0u].status() >=

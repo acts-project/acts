@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -18,6 +17,7 @@
 
 #include <edm4hep/TrackerHitCollection.h>
 #include <edm4hep/TrackerHitPlaneCollection.h>
+#include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
 
@@ -64,7 +64,7 @@ class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
  private:
   Config m_cfg;
 
-  Acts::PodioUtil::ROOTWriter m_writer;
+  podio::ROOTFrameWriter m_writer;
 
   std::mutex m_writeMutex;
 

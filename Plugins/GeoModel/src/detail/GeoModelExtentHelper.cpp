@@ -61,8 +61,8 @@ Acts::detail::GeoModelExentHelper::readBinningConstraints(
     std::vector<std::string> sbTokens;
     boost::split(sbTokens, sbe, boost::is_any_of(","));
     BinningValue bv =
-        Acts::detail::GeoModelBinningHelper::toBinningValue(sbTokens[0]);
-    if (sbTokens.size() > 1u) {
+        Acts::detail::GeoModelBinningHelper::toBinningValue(sbTokens[0], false);
+    if (bv != numBinningValues() && sbTokens.size() > 1u) {
       std::vector<std::string> valueTokens = {sbTokens.begin() + 1,
                                               sbTokens.end()};
       if (!valueTokens.empty() && valueTokens[0] == "bound") {

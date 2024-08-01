@@ -21,7 +21,6 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
-#include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 
 namespace Acts {
@@ -34,16 +33,6 @@ class SympyStepper {
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
-
-  struct Config {
-    std::shared_ptr<const MagneticFieldProvider> bField;
-  };
-
-  struct Options : public StepperPlainOptions {
-    void setPlainOptions(const StepperPlainOptions& options) {
-      static_cast<StepperPlainOptions&>(*this) = options;
-    }
-  };
 
   /// @brief State for track parameter propagation
   ///
@@ -144,12 +133,8 @@ class SympyStepper {
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
-  /// @param bField The magnetic field provider
-  explicit SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField);
-
-  /// @brief Constructor with configuration
-  /// @param config The configuration of the stepper
-  explicit SympyStepper(const Config& config);
+  SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField,
+               double overstepLimit = 100 * UnitConstants::um);
 
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
@@ -240,17 +225,16 @@ class SympyStepper {
   /// @param [in] surface The surface provided
   /// @param [in] index The surface intersection index
   /// @param [in] navDir The navigation direction
-  /// @param [in] boundaryTolerance The boundary check for this status update
+  /// @param [in] bcheck The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A @c Logger instance
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
-      Direction navDir, const BoundaryTolerance& boundaryTolerance,
+      Direction navDir, const BoundaryCheck& bcheck,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<SympyStepper>(
-        *this, state, surface, index, navDir, boundaryTolerance,
-        surfaceTolerance, logger);
+        *this, state, surface, index, navDir, bcheck, surfaceTolerance, logger);
   }
 
   /// Update step size
@@ -302,6 +286,12 @@ class SympyStepper {
   /// @param state [in,out] The stepping state (thread-local cache)
   std::string outputStepSize(const State& state) const {
     return state.stepSize.toString();
+  }
+
+  /// Overstep limit
+  double overstepLimit(const State& /*state*/) const {
+    // A dynamic overstep limit could sit here
+    return -m_overstepLimit;
   }
 
   /// Create and return the bound state at the current position
@@ -419,6 +409,9 @@ class SympyStepper {
  protected:
   /// Magnetic field inside of the detector
   std::shared_ptr<const MagneticFieldProvider> m_bField;
+
+  /// Overstep limit
+  double m_overstepLimit;
 
  private:
   Result<double> stepImpl(State& state, Direction stepDirection,
