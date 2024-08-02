@@ -353,8 +353,7 @@ function generation() {
         $refdir/simulation/particles_ttbar_hist.root \
         "Particles ttbar" \
         simulation/particles_ttbar.html \
-        simulation/particles_ttbar_plots \
-        --config CI/physmon/config/pythia8_ttbar.yml
+        simulation/particles_ttbar_plots
 
     run Examples/Scripts/generic_plotter.py \
         $outdir/data/simulation/vertices_ttbar.root \
@@ -371,8 +370,7 @@ function generation() {
         $refdir/simulation/vertices_ttbar_hist.root \
         "Vertices ttbar" \
         simulation/vertices_ttbar.html \
-        simulation/vertices_ttbar_plots \
-        --config CI/physmon/config/pythia8_ttbar.yml
+        simulation/vertices_ttbar_plots
 }
 
 if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then

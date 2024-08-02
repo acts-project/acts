@@ -159,10 +159,14 @@ with tempfile.TemporaryDirectory() as temp:
     s.run()
     del s
 
+    shutil.move(
+        tp / "performance_ambi.root",
+        tp / "performance_ckf_ambi.root",
+    )
     for vertexing in ["amvf_gauss_notime", "amvf_grid_time"]:
         shutil.move(
             tp / f"{vertexing}/performance_vertexing.root",
-            tp / f"performance_{vertexing}.root",
+            tp / f"performance_vertexing_{vertexing}.root",
         )
 
     for file in [
@@ -174,5 +178,5 @@ with tempfile.TemporaryDirectory() as temp:
         "performance_vertexing_amvf_grid_time.root",
     ]:
         perf_file = tp / file
-        assert perf_file.exists(), "Performance file not found"
+        assert perf_file.exists(), f"Performance file not found {perf_file}"
         shutil.copy(perf_file, setup.outdir / file)
