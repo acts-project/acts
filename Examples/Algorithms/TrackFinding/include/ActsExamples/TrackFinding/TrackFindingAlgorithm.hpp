@@ -126,7 +126,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     bool stayOnSeed = false;
     /// Compute shared hit information
     bool computeSharedHits = false;
-    /// Wether to trim the tracks
+    /// Whether to trim the tracks
     bool trimTracks = false;
 
     // Pixel and strip volume ids to be used for maxPixel/StripHoles cuts
