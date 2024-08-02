@@ -135,43 +135,38 @@ def main():
 
     # Read the geometry model from the database
     gmTree = acts.geomodel.readFromDb(args.input)
-    gmVolFactoryConfig = gm.GeoModelDetectorObjectFactory.Config()
-    gmVolFactoryConfig.materialList = args.material_list
-    gmVolFactoryConfig.nameList = args.name_list
-    gmVolFactoryConfig.convertFpv = args.convert_boundingboxes
-    gmVolFactoryConfig.convertSubVolumes = args.convert_subvols
-    gmVolFactory = gm.GeoModelDetectorObjectFactory(gmVolFactoryConfig, logLevel)
+    gmFactoryConfig = gm.GeoModelDetectorObjectFactory.Config()
+    gmFactoryConfig.materialList = args.material_list
+    gmFactoryConfig.nameList = args.name_list
+    gmFactoryConfig.convertFpv = args.convert_boundingboxes
+    gmFactoryConfig.convertSubVolumes = args.convert_subvols
+    gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
     # The options
-    gmVolFactoryOptions = gm.GeoModelDetectorObjectFactory.Options()
-    gmVolFactoryOptions.queries = args.queries
+    gmFactoryOptions = gm.GeoModelDetectorObjectFactory.Options()
+    gmFactoryOptions.queries = args.queries
     # The Cache & construct call
-    gmVolFactoryCache = gm.GeoModelDetectorObjectFactory.Cache()
-    gmVolFactory.construct(gmVolFactoryCache, gContext, gmTree, gmVolFactoryOptions)
+    gmFactoryCache = gm.GeoModelDetectorObjectFactory.Cache()
+    gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
 
     # All surfaces from GeoModel
-
     # Output the surface to an OBJ file
     if args.output_obj:
         segments = 720
-        gmBoxes = gmVolFactoryCache.boundingBoxes
-        if len(gmBoxes)>0:
-            acts.examples.writeVolumesObj(
-                gmBoxes,
-                gContext,
-                [75, 220, 100],
-                segments,
-                args.output + "_vols.obj",
-            )
-        else:
-            gmSurfaces = [ss[1] for ss in gmVolFactoryCache.sensitiveSurfaces]
-            acts.examples.writeSurfacesObj(
-                gmSurfaces,
-                gContext,
-                [75, 220, 100],
-                segments,
-                args.output + "_vols.obj",
-            )
+        gmBoxes = gmFactoryCache.boundingBoxes
+        gmBoxSurfaces = []
+        for gmBox in gmBoxes:
+            gmBoxSurfaces.extend(gmBox.surfaces())
+        gmSurfaces = [ss[1] for ss in gmFactoryCache.sensitiveSurfaces]
+        unboundSurfaces = [item for item in gmSurfaces if item not in gmBoxSurfaces]
 
+        acts.examples.writeVolumesSurfacesObj(
+            unboundSurfaces,
+            gmBoxes,
+            gContext,
+            [75, 220, 100],
+            segments,
+            args.output + "_vols.obj",
+        )
 if "__main__" == __name__:
     main()
 

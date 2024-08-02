@@ -45,6 +45,7 @@ class GeoModelDetectorObjectFactory {
 
 
 std::vector<GeoChildNodeWithTrf> findAllSubVolumes(PVConstLink geoPV, std::function<bool(std::string, PVConstLink)> matchFunc);
+bool convertFpv(std::string name);
 
 
  private:
