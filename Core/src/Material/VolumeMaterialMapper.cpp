@@ -402,8 +402,6 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
                                 << " at position = (" << mVolumes.position.x()
                                 << ", " << mVolumes.position.y() << ", "
                                 << mVolumes.position.z() << ")");
-
-    mappingVolumes.push_back(mVolumes);
   }
   // Run the mapping process, i.e. take the recorded material and map it
   // onto the mapping volume:
