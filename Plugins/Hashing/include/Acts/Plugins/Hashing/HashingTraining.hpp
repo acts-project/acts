@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Seeding/Hashing/HashingTrainingConfig.hpp"
+#include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
 
 #include <annoy/annoylib.h>
 #include <annoy/kissrandom.h>
@@ -45,4 +45,4 @@ class HashingTrainingAlgorithm {
 };
 
 }  // namespace Acts
-#include "Acts/Seeding/Hashing/HashingTraining.ipp"
+#include "Acts/Plugins/Hashing/HashingTraining.ipp"

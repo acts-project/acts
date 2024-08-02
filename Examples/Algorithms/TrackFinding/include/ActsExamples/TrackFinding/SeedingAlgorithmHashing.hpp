@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "Acts/Seeding/Hashing/HashingAlgorithm.hpp"
-#include "Acts/Seeding/Hashing/HashingAlgorithmConfig.hpp"
-#include "Acts/Seeding/Hashing/HashingTraining.hpp"
-#include "Acts/Seeding/Hashing/HashingTrainingConfig.hpp"
+#include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
+#include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
+#include "Acts/Plugins/Hashing/HashingTraining.hpp"
+#include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"

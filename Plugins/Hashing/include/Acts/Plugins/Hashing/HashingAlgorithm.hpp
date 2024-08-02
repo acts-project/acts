@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Seeding/Hashing/HashingAlgorithmConfig.hpp"
+#include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
 
 #include <annoy/annoylib.h>
 #include <annoy/kissrandom.h>
@@ -49,4 +49,4 @@ class HashingAlgorithm {
 };
 
 }  // namespace Acts
-#include "Acts/Seeding/Hashing/HashingAlgorithm.ipp"
+#include "Acts/Plugins/Hashing/HashingAlgorithm.ipp"

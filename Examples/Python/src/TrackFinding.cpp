@@ -8,9 +8,9 @@
 
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
+#include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Seeding/Hashing/HashingAlgorithmConfig.hpp"
-#include "Acts/Seeding/Hashing/HashingTrainingConfig.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
