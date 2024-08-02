@@ -254,15 +254,15 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         const auto& geoID = state.referenceSurface().geometryId();
         const auto& volume = geoID.volume();
         const auto& layer = geoID.layer();
-        if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-          measurementChi2.push_back(state.chi2());
-          measurementVolume.push_back(volume);
-          measurementLayer.push_back(layer);
-        }
         if (state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
           outlierChi2.push_back(state.chi2());
           outlierVolume.push_back(volume);
           outlierLayer.push_back(layer);
+        } else if (state.typeFlags().test(
+                       Acts::TrackStateFlag::MeasurementFlag)) {
+          measurementChi2.push_back(state.chi2());
+          measurementVolume.push_back(volume);
+          measurementLayer.push_back(layer);
         }
       }
       // IDs are stored as double (as the vector of vector of int is not known
@@ -342,7 +342,8 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
           auto intersection =
               pSurface
                   ->intersect(ctx.geoContext, particle.position(),
-                              particle.direction(), Acts::BoundaryCheck(false))
+                              particle.direction(),
+                              Acts::BoundaryTolerance::Infinite())
                   .closest();
           auto position = intersection.position();
 
@@ -526,7 +527,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     if (m_cfg.writeGx2fSpecific) {
       if (tracks.hasColumn(Acts::hashString("Gx2fnUpdateColumn"))) {
         int nUpdate = static_cast<int>(
-            track.template component<std::size_t,
+            track.template component<std::uint32_t,
                                      Acts::hashString("Gx2fnUpdateColumn")>());
         m_nUpdatesGx2f.push_back(nUpdate);
       } else {

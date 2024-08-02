@@ -94,8 +94,8 @@ auto kalmanHandleMeasurement(
     // Else, just tag it as an outlier
     if (!extensions.outlierFinder(trackStateProxy)) {
       // Run Kalman update
-      auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
-                                          state.options.direction, logger);
+      auto updateRes =
+          extensions.updater(state.geoContext, trackStateProxy, logger);
       if (!updateRes.ok()) {
         ACTS_ERROR("Update step failed: " << updateRes.error());
         return updateRes.error();
@@ -105,7 +105,7 @@ auto kalmanHandleMeasurement(
     } else {
       ACTS_VERBOSE(
           "Filtering step successful. But measurement is determined "
-          "to be an outlier. Stepping state is not updated.")
+          "to be an outlier. Stepping state is not updated.");
       // Set the outlier type flag
       typeFlags.set(TrackStateFlag::OutlierFlag);
       trackStateProxy.shareFrom(trackStateProxy, TrackStatePropMask::Predicted,

@@ -3,7 +3,7 @@
 ## Quick start
 
 ACTS is developed in C++ and is built using [CMake](https://cmake.org). Building
-the core library requires a C++17 compatible compiler,
+the core library requires a C++20 compatible compiler,
 [Boost](https://www.boost.org), and [Eigen](https://eigen.tuxfamily.org). The
 following commands will clone the repository, configure, and build the core
 library:
@@ -124,10 +124,13 @@ A set of container images is available through the [ACTS container
 registry][acts_containers]. The following containers are used as part of the
 continuous integration setup and come with all dependencies pre-installed.
 
--   `centos7-lcg101-gcc11`: based on CentOS 7 with HEP-specific software from
-    LCG 101 using the GCC 11 compiler
--   `ubuntu2204`: based on Ubuntu 22.04 with manual installation of HEP-specific
-    software
+- `ubuntu2204`
+- `ubuntu2404`
+
+Furthermore, we are also testing on, but do not provide the corresponding containers:
+
+- `alma9` (HEP-specific software from LCG 104 or 105 and gcc13 or clang16)
+- `macOS-10.15`
 
 :::{attention}
 We stopped producing fully-contained LCG containers in favor of running LCG
@@ -141,13 +144,13 @@ available tags, e.g. for the `ubuntu2004` image, you can use the following
 command:
 
 ```console
-$ docker search --list-tags ghcr.io/acts-project/ubuntu2004
+$ docker search --list-tags ghcr.io/acts-project/ubuntu2404
 ```
 
-The following command then downloads a stable tag of the `ubuntu2004` image:
+The following command then downloads a stable tag of the `ubuntu2404` image:
 
 ```console
-$ docker pull ghcr.io/acts-project/ubuntu2004:v9
+$ docker pull ghcr.io/acts-project/ubuntu2404:51
 ```
 
 This should print the image id as part of the output. You can also find out the
@@ -254,7 +257,6 @@ components.
 <!-- CMAKE_OPTS_BEGIN -->
 | Option                              | Description                                                                                                                                                                                                                        |
 |-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ACTS_BUILD_EVERYTHING               | Build with most options enabled (except<br>HepMC3 and documentation)<br> type: `bool`, default: `OFF`                                                                                                                              |
 | ACTS_PARAMETER_DEFINITIONS_HEADER   | Use a different (track) parameter<br>definitions header<br> type: `filepath`, default: `""`                                                                                                                                        |
 | ACTS_SOURCELINK_SBO_SIZE            | Customize the SBO size used by<br>SourceLink<br> type: `string`, default: `""`                                                                                                                                                     |
 | ACTS_FORCE_ASSERTIONS               | Force assertions regardless of build<br>type<br> type: `bool`, default: `OFF`                                                                                                                                                      |
@@ -275,6 +277,7 @@ components.
 | ACTS_BUILD_PLUGIN_EXATRKX           | Build the Exa.TrkX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
 | ACTS_EXATRKX_ENABLE_ONNX            | Build the Onnx backend for the exatrkx<br>plugin<br> type: `bool`, default: `OFF`                                                                                                                                                  |
 | ACTS_EXATRKX_ENABLE_TORCH           | Build the torchscript backend for the<br>exatrkx plugin<br> type: `bool`, default: `ON`                                                                                                                                            |
+| ACTS_EXATRKX_ENABLE_CUDA            | Enable CUDA for the exatrkx plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                |
 | ACTS_BUILD_PLUGIN_JSON              | Build json plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the<br>system instead of the bundled version<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                               |
 | ACTS_BUILD_PLUGIN_LEGACY            | Build legacy plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
@@ -295,7 +298,6 @@ components.
 | ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package<br> type: `bool`, default: `OFF`                                                                                                                                                            |
 | ACTS_BUILD_FATRAS_GEANT4            | Build Geant4 Fatras package<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
 | ACTS_BUILD_ALIGNMENT                | Build Alignment package<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
-| ACTS_BUILD_EXAMPLES                 | Build standalone examples<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
 | ACTS_BUILD_EXAMPLES_DD4HEP          | Build DD4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_EDM4HEP         | Build EDM4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_EXATRKX         | Build the Exa.TrkX example code<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
@@ -325,13 +327,17 @@ components.
 | ACTS_LOG_FAILURE_THRESHOLD          | Log level above which an exception<br>should be automatically thrown. If<br>ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set<br>and this is unset, this will enable a<br>runtime check of the log level.<br> type: `string`, default: `""` |
 <!-- CMAKE_OPTS_END -->
 
-
 All ACTS-specific options are disabled or empty by default and must be
-specifically requested. Some of the options have interdependencies that are
-automatically handled, e.g. enabling any of the specific
-`ACTS_BUILD_EXAMPLES_...` options will also enable the overall
-`ACTS_BUILD_EXAMPLES` option. You only need to tell the build system what you
-want and it will figure out the rest.
+specifically requested.
+
+ACTS comes with a couple of CMakePresets which allow to collect and
+origanize common configuration workflows. On the surface the current
+list of presets contains:
+
+- `dev` as a base for developer configurations. This enables everything
+  necessary for running the ODD full chain examples with Fatras. It
+  sets the cpp standard to 20, the generator to ninja and enables ccache.
+- `perf` is similar to `dev` but tweaked for performance measurements.
 
 In addition to the ACTS-specific options, many generic options are available
 that modify various aspects of the build. The following options are some of the

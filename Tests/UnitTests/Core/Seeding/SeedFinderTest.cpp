@@ -211,8 +211,8 @@ int main(int argc, char** argv) {
   auto start = std::chrono::system_clock::now();
   for (auto [bottom, middle, top] : spGroup) {
     auto& v = seedVector.emplace_back();
-    a.createSeedsForGroup(options, state, spGroup.grid(), std::back_inserter(v),
-                          bottom, middle, top, rMiddleSPRange);
+    a.createSeedsForGroup(options, state, spGroup.grid(), v, bottom, middle,
+                          top, rMiddleSPRange);
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;

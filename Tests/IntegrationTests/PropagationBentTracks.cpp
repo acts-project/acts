@@ -15,7 +15,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -56,8 +56,8 @@ std::vector<double> xPositionsOfPassedSurfaces(Acts::Navigator::Config navCfg,
       Acts::Vector4(0.01, 0, 0, 0), dir.normalized(), 1 / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::pion());
 
-  Acts::PropagatorOptions<Acts::ActionList<Acts::detail::SteppingLogger>,
-                          Acts::AbortList<Acts::EndOfWorldReached>>
+  Propagator::Options<Acts::ActionList<Acts::detail::SteppingLogger>,
+                      Acts::AbortList<Acts::EndOfWorldReached>>
       opts(geoCtx, magCtx);
 
   auto res = propagator.propagate(start, opts);

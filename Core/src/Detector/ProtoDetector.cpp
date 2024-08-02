@@ -82,7 +82,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
     std::vector<float> borders = {};
 
     // The volumes should be harmonized in all other constraining values
-    for (auto obValue : s_binningValues) {
+    for (auto obValue : allBinningValues()) {
       if (obValue != binValue && extent.constrains(obValue)) {
         otherConstrains.push_back(obValue);
       }
