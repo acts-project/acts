@@ -368,8 +368,9 @@ Result<void> extrapolateTracksToReferenceSurface(
 /// @tparam track_proxy_t The track proxy type
 /// @param track A mutable track proxy to operate on
 template <typename track_proxy_t>
-void calculateTrackQuantities(track_proxy_t track) requires(
-    !track_proxy_t::ReadOnly) {
+void calculateTrackQuantities(track_proxy_t track)
+  requires(!track_proxy_t::ReadOnly)
+{
   using ConstTrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
 
   track.chi2() = 0;
@@ -406,7 +407,9 @@ void calculateTrackQuantities(track_proxy_t track) requires(
 /// @param trimMaterial whether to trim pure material states
 template <typename track_proxy_t>
 void trimTrackFront(track_proxy_t track, bool trimHoles, bool trimOutliers,
-                    bool trimMaterial) requires(!track_proxy_t::ReadOnly) {
+                    bool trimMaterial)
+  requires(!track_proxy_t::ReadOnly)
+{
   using TrackStateProxy = typename track_proxy_t::TrackStateProxy;
 
   // TODO specialize if track is forward linked
@@ -415,7 +418,6 @@ void trimTrackFront(track_proxy_t track, bool trimHoles, bool trimOutliers,
 
   for (TrackStateProxy trackState : track.trackStatesReversed()) {
     TrackStateType typeFlags = trackState.typeFlags();
-
     if (trimHoles && typeFlags.test(TrackStateFlag::HoleFlag)) {
       continue;
     }
@@ -443,26 +445,29 @@ void trimTrackFront(track_proxy_t track, bool trimHoles, bool trimOutliers,
 /// @param trimMaterial whether to trim pure material states
 template <typename track_proxy_t>
 void trimTrackBack(track_proxy_t track, bool trimHoles, bool trimOutliers,
-                   bool trimMaterial) requires(!track_proxy_t::ReadOnly) {
+                   bool trimMaterial)
+  requires(!track_proxy_t::ReadOnly)
+{
   using TrackStateProxy = typename track_proxy_t::TrackStateProxy;
 
   std::optional<TrackStateProxy> back;
 
   for (TrackStateProxy trackState : track.trackStatesReversed()) {
-    TrackStateType typeFlags = trackState.typeFlags();
+    back = trackState;
 
+    TrackStateType typeFlags = trackState.typeFlags();
     if (trimHoles && typeFlags.test(TrackStateFlag::HoleFlag)) {
-      break;
+      continue;
     }
     if (trimOutliers && typeFlags.test(TrackStateFlag::OutlierFlag)) {
-      break;
+      continue;
     }
     if (trimMaterial && typeFlags.test(TrackStateFlag::MaterialFlag) &&
         !typeFlags.test(TrackStateFlag::MeasurementFlag)) {
-      break;
+      continue;
     }
 
-    back = trackState;
+    break;
   }
 
   if (back.has_value()) {
@@ -478,7 +483,9 @@ void trimTrackBack(track_proxy_t track, bool trimHoles, bool trimOutliers,
 /// @param trimMaterial whether to trim pure material states
 template <typename track_proxy_t>
 void trimTrack(track_proxy_t track, bool trimHoles, bool trimOutliers,
-               bool trimMaterial) requires(!track_proxy_t::ReadOnly) {
+               bool trimMaterial)
+  requires(!track_proxy_t::ReadOnly)
+{
   trimTrackFront(track, trimHoles, trimOutliers, trimMaterial);
   trimTrackBack(track, trimHoles, trimOutliers, trimMaterial);
 }
