@@ -10,12 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
+#include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
+#include "Acts/Plugins/Hashing/HashingAnnoy.hpp"
+#include "Acts/Plugins/Hashing/HashingTraining.hpp"
+#include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
-#include "Acts/Seeding/Hashing/HashingAlgorithm.hpp"
-#include "Acts/Seeding/Hashing/HashingAlgorithmConfig.hpp"
-#include "Acts/Seeding/Hashing/HashingAnnoy.hpp"
-#include "Acts/Seeding/Hashing/HashingTraining.hpp"
-#include "Acts/Seeding/Hashing/HashingTrainingConfig.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
 #include <cmath>
