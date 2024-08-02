@@ -18,6 +18,7 @@ from helpers import (
     pythia8Enabled,
     exatrkxEnabled,
     onnxEnabled,
+    hashingSeedingEnabled,
     AssertCollectionExistsAlg,
     failure_threshold,
 )
@@ -247,6 +248,8 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
     assert_csv_output(csv, "particles_initial")
 
 
+@pytest.mark.slow
+@pytest.mark.skipif(not hashingSeedingEnabled, reason="HashingSeeding not set up")
 def test_hashing_seeding(tmp_path, trk_geo, field, assert_root_hash):
     from hashing_seeding import runHashingSeeding, Config
 

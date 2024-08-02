@@ -297,9 +297,9 @@ def addSeeding(
     seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors, useExtraCuts)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
     hashingTrainingConfigArg : HashingTrainingConfigArg(AnnoySeed, f)
-                                Defaults specified in Core/include/Acts/Seeding/Hashing/HashingTrainingConfig.hpp
+                                Defaults specified in Plugins/Hashing/include/Acts/Plugins/Hashing/HashingTrainingConfig.hpp
     hashingAlgorithmConfigArg : HashingAlgorithmConfigArg(bucketSize, zBins, phiBins)
-                                Defaults specified in Core/include/Acts/Seeding/Hashing/HashingAlgorithmConfig.hpp
+                                Defaults specified in Plugins/Hashing/include/Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp
     truthEstimatedSeedingAlgorithmConfigArg : TruthEstimatedSeedingAlgorithmConfigArg(deltaR)
         Currently only deltaR=(min,max) range specified here.
     particleHypothesis : Optional[acts.ParticleHypothesis]
@@ -901,6 +901,12 @@ def addHashingSeeding(
     For parameters description see addSeeding docstring
     """
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+
+    hashingSeedingEnabled = hasattr(acts.examples, "SeedingAlgorithmHashing")
+    if not hashingSeedingEnabled:
+        raise ValueError(
+            "Hashing seeding is not enabled in the build. Make sure to build with ACTS_BUILD_EXAMPLES_HASHING=ON"
+        )
 
     # Same configuration than the standard seeding
     seedFinderConfig = acts.SeedFinderConfig(
