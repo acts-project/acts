@@ -46,8 +46,9 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
                   rBounds.get(RadialBounds::eHalfPhiSector);
   // Retrieve the binning data
   const std::vector<BinningData>& bData = bu.binningData();
+  std::cout << bData.size() << std::endl;
   // Loop over the binning data and adjust the dimensions
-  for (auto& bd : bData) {
+  for (const auto& bd : bData) {
     // The binning value
     BinningValue bval = bd.binvalue;
     // Throw exceptions is stuff doesn't make sense:
@@ -240,26 +241,28 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
                                           const Surface& surface,
                                           const GeometryContext& gctx) {
   // The surface type is a cylinder
-  if (surface.type() == Surface::Cylinder) {
+  if (surface.type() == Surface::Cylinder &&
+      surface.bounds().type() == SurfaceBounds::eCylinder) {
     // Cast to Cylinder bounds and return
-    auto cBounds = dynamic_cast<const CylinderBounds*>(&(surface.bounds()));
+    auto cBounds = static_cast<const CylinderBounds*>(&(surface.bounds()));
     // Return specific adjustment
     return adjustBinUtility(bu, *cBounds, surface.transform(gctx));
 
-  } else if (surface.type() == Surface::Disc) {
+  } else if (surface.type() == Surface::Disc &&
+             surface.bounds().type() == SurfaceBounds::eDisc) {
     // Cast to Cylinder bounds and return
-    auto rBounds = dynamic_cast<const RadialBounds*>(&(surface.bounds()));
+    auto rBounds = static_cast<const RadialBounds*>(&(surface.bounds()));
     // Return specific adjustment
     return adjustBinUtility(bu, *rBounds, surface.transform(gctx));
   } else if (surface.type() == Surface::Plane) {
     if (surface.bounds().type() == SurfaceBounds::eRectangle) {
       // Cast to Plane bounds and return
-      auto pBounds = dynamic_cast<const RectangleBounds*>(&(surface.bounds()));
+      auto pBounds = static_cast<const RectangleBounds*>(&(surface.bounds()));
       // Return specific adjustment
       return adjustBinUtility(bu, *pBounds, surface.transform(gctx));
     } else if (surface.bounds().type() == SurfaceBounds::eTrapezoid) {
       // Cast to Plane bounds and return
-      auto pBounds = dynamic_cast<const TrapezoidBounds*>(&(surface.bounds()));
+      auto pBounds = static_cast<const TrapezoidBounds*>(&(surface.bounds()));
       // Return specific adjustment
       return adjustBinUtility(bu, *pBounds, surface.transform(gctx));
     } else {
