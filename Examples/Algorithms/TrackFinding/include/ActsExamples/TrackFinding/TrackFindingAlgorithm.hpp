@@ -137,6 +137,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
     /// The volume ids to constrain the track finding to
     std::vector<std::uint32_t> constrainToVolumeIds;
+    /// The volume ids to stop the track finding at
+    std::vector<std::uint32_t> endOfWorldVolumeIds;
   };
 
   /// Constructor of the track finding algorithm

@@ -352,12 +352,14 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   firstPropOptions.direction = m_cfg.reverseSearch ? Acts::Direction::Backward
                                                    : Acts::Direction::Forward;
   firstPropOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
+  firstPropOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
   Acts::PropagatorPlainOptions secondPropOptions(ctx.geoContext,
                                                  ctx.magFieldContext);
   secondPropOptions.maxSteps = m_cfg.maxSteps;
   secondPropOptions.direction = firstPropOptions.direction.invert();
   secondPropOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
+  secondPropOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
   // Set the CombinatorialKalmanFilter options
   TrackFinderOptions firstOptions(ctx.geoContext, ctx.magFieldContext,
@@ -383,6 +385,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   ExtrapolatorOptions extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
   extrapolationOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
+  extrapolationOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()

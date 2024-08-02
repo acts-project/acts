@@ -44,8 +44,12 @@ struct PurePropagatorPlainOptions {
 
   /// Constrain the propagation to selected volumes
   /// @note ignored if empty
-  /// @note requires `EndOfWorldReached` aborter
+  /// @note requires `VolumeConstraintAborter` aborter
   std::vector<std::uint32_t> constrainToVolumeIds;
+  /// Additional volumes to be considered as end of world
+  /// @note ignored if empty
+  /// @note requires `VolumeConstraintAborter` aborter
+  std::vector<std::uint32_t> endOfWorldVolumeIds;
 };
 
 }  // namespace detail
