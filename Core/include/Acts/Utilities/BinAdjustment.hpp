@@ -241,38 +241,27 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
                                           const Surface& surface,
                                           const GeometryContext& gctx) {
   // The surface type is a cylinder
-  if (surface.type() == Surface::Cylinder &&
-      surface.bounds().type() == SurfaceBounds::eCylinder) {
-    // Cast to Cylinder bounds and return
-    auto cBounds = static_cast<const CylinderBounds*>(&(surface.bounds()));
-    // Return specific adjustment
-    return adjustBinUtility(bu, *cBounds, surface.transform(gctx));
-
-  } else if (surface.type() == Surface::Disc &&
-             surface.bounds().type() == SurfaceBounds::eDisc) {
-    // Cast to Cylinder bounds and return
-    auto rBounds = static_cast<const RadialBounds*>(&(surface.bounds()));
-    // Return specific adjustment
-    return adjustBinUtility(bu, *rBounds, surface.transform(gctx));
+  if (auto cb = dynamic_cast<const CylinderBounds*>(&(surface.bounds()));
+      cb != nullptr) {
+    return adjustBinUtility(bu, *cb, surface.transform(gctx));
+  } else if (auto rb = dynamic_cast<const RadialBounds*>(&(surface.bounds()));
+             rb != nullptr) {
+    return adjustBinUtility(bu, *rb, surface.transform(gctx));
   } else if (surface.type() == Surface::Plane) {
-    if (surface.bounds().type() == SurfaceBounds::eRectangle) {
-      // Cast to Plane bounds and return
-      auto pBounds = static_cast<const RectangleBounds*>(&(surface.bounds()));
-      // Return specific adjustment
-      return adjustBinUtility(bu, *pBounds, surface.transform(gctx));
-    } else if (surface.bounds().type() == SurfaceBounds::eTrapezoid) {
-      // Cast to Plane bounds and return
-      auto pBounds = static_cast<const TrapezoidBounds*>(&(surface.bounds()));
-      // Return specific adjustment
-      return adjustBinUtility(bu, *pBounds, surface.transform(gctx));
-    } else {
-      throw std::invalid_argument(
-          "Bin adjustment not implemented for this type of plane surface yet!");
+    if (auto reb = dynamic_cast<const RectangleBounds*>(&(surface.bounds()));
+        reb != nullptr) {
+      return adjustBinUtility(bu, *reb, surface.transform(gctx));
+    } else if (auto tp =
+                   dynamic_cast<const TrapezoidBounds*>(&(surface.bounds()));
+               tp != nullptr) {
+      return adjustBinUtility(bu, *tp, surface.transform(gctx));
     }
   }
 
+  std::stringstream ss;
+  ss << surface.toStream({});
   throw std::invalid_argument(
-      "Bin adjustment not implemented for this surface yet!");
+      "Bin adjustment not implemented for this surface yet:\n" + ss.str());
 }
 
 }  // namespace Acts
