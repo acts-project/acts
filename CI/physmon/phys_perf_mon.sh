@@ -125,8 +125,8 @@ function run_physmon_gen() {
     script=CI/physmon/workflows/physmon_${slug}.py
 
     mkdir -p $outdir/data/$slug
-    mkdir -p $outdir/logs/$slug
-    measure "$title" "$slug" ${script} $outdir/data/$slug 2>&1 > $outdir/logs/$slug/${slug}.log
+    mkdir -p $outdir/logs
+    measure "$title" "$slug" ${script} $outdir/data/$slug 2>&1 > $outdir/logs/${slug}.log
 
     this_ec=$?
     ec=$(($ec | $this_ec))
@@ -200,115 +200,117 @@ function run_histcmp() {
 }
 
 function trackfinding() {
-    slug=$1
+    name=$1
+    path=$2
 
     config="CI/physmon/config/default.yml"
 
-    if [ -f $refdir/$slug/performance_seeding.root ]; then
+    if [ -f $refdir/$path/performance_seeding.root ]; then
         run_histcmp \
-            $outdir/data/$slug/performance_seeding.root \
-            $refdir/$slug/performance_seeding.root \
-            "Seeding ${slug}" \
-            $slug/performance_seeding.html \
-            $slug/performance_seeding_plots \
+            $outdir/data/$path/performance_seeding.root \
+            $refdir/$path/performance_seeding.root \
+            "Seeding ${path}" \
+            $path/performance_seeding.html \
+            $path/performance_seeding_plots \
             --config $config
     fi
 
     run_histcmp \
-        $outdir/data/$slug/performance_ckf.root \
-        $refdir/$slug/performance_ckf.root \
-        "CKF ${slug}" \
-        $slug/performance_ckf.html \
-        $slug/performance_ckf_plots \
+        $outdir/data/$path/performance_ckf.root \
+        $refdir/$path/performance_ckf.root \
+        "CKF ${path}" \
+        $path/performance_ckf.html \
+        $path/performance_ckf_plots \
         --config $config
 
     run Examples/Scripts/generic_plotter.py \
-        $outdir/data/$slug/tracksummary_ckf.root \
+        $outdir/data/$path/tracksummary_ckf.root \
         tracksummary \
-        $outdir/data/$slug/tracksummary_ckf_hist.root \
+        $outdir/data/$path/tracksummary_ckf_hist.root \
         --silent \
         --config CI/physmon/config/tracksummary_ckf.yml
     ec=$(($ec | $?))
 
     # remove ntuple file because it's large
-    rm $outdir/data/$slug/tracksummary_ckf.root
+    rm $outdir/data/$path/tracksummary_ckf.root
 
     run_histcmp \
-        $outdir/data/$slug/tracksummary_ckf_hist.root \
-        $refdir/$slug/tracksummary_ckf_hist.root \
-        "Track Summary CKF ${slug}" \
-        $slug/tracksummary_ckf.html \
-        $slug/tracksummary_ckf_plots
+        $outdir/data/$path/tracksummary_ckf_hist.root \
+        $refdir/$path/tracksummary_ckf_hist.root \
+        "Track Summary CKF ${path}" \
+        $path/tracksummary_ckf.html \
+        $path/tracksummary_ckf_plots
 
-    if [ -f $refdir/$slug/performance_ambi.root ]; then
+    if [ -f $refdir/$path/performance_ckf_ambi.root ]; then
         run_histcmp \
-            $outdir/data/$slug/performance_ambi.root \
-            $refdir/$slug/performance_ambi.root \
-            "Ambisolver ${slug}" \
-            $slug/performance_ambi.html \
-            $slug/performance_ambi_plots 
+            $outdir/data/$path/performance_ckf_ambi.root \
+            $refdir/$path/performance_ckf_ambi.root \
+            "Ambisolver ${path}" \
+            $path/performance_ckf_ambi.html \
+            $path/performance_ckf_ambi 
     fi
 }
 
 function vertexing() {
-    slug=$1
-    config=$2
+    name=$1
+    path=$2
+    config=$3
 
-    if [ -f $refdir/$slug/performance_ivf_notime_hist.root ]; then
+    if [ -f $refdir/$path/performance_vertexing_ivf_notime_hist.root ]; then
         run Examples/Scripts/generic_plotter.py \
-            $outdir/data/$slug/performance_ivf_notime.root \
+            $outdir/data/$path/performance_vertexing_ivf_notime.root \
             vertexing \
-            $outdir/data/$slug/performance_ivf_notime_hist.root \
+            $outdir/data/$path/performance_vertexing_ivf_notime_hist.root \
             --silent \
             --config $config
         ec=$(($ec | $?))
 
         # remove ntuple file because it's large
-        rm $outdir/data/$slug/performance_ivf_notime.root
+        rm $outdir/data/$path/performance_vertexing_ivf_notime.root
 
         run_histcmp \
-            $outdir/data/$slug/performance_ivf_notime_hist.root \
-            $refdir/$slug/performance_ivf_notime_hist.root \
-            "IVF notime ${slug}" \
-            $slug/performance_ivf_notime.html \
-            $slug/performance_ivf_notime_plots
+            $outdir/data/$path/performance_vertexing_ivf_notime_hist.root \
+            $refdir/$path/performance_vertexing_ivf_notime_hist.root \
+            "IVF notime ${path}" \
+            $path/performance_vertexing_ivf_notime.html \
+            $path/performance_vertexing_ivf_notime_plots
     fi
 
     run Examples/Scripts/generic_plotter.py \
-        $outdir/data/$slug/performance_amvf_gauss_notime.root \
+        $outdir/data/$path/performance_vertexing_amvf_gauss_notime.root \
         vertexing \
-        $outdir/data/$slug/performance_amvf_gauss_notime_hist.root \
+        $outdir/data/$path/performance_vertexing_amvf_gauss_notime_hist.root \
         --silent \
         --config $config
     ec=$(($ec | $?))
 
     # remove ntuple file because it's large
-    rm $outdir/data/$slug/performance_amvf_gauss_notime.root
+    rm $outdir/data/$path/performance_vertexing_amvf_gauss_notime.root
 
     run_histcmp \
-        $outdir/data/$slug/performance_amvf_gauss_notime_hist.root \
-        $refdir/$slug/performance_amvf_gauss_notime_hist.root \
-        "AMVF gauss notime ${slug}" \
-        $slug/performance_amvf_gauss_notime.html \
-        $slug/performance_amvf_gauss_notime_plots
+        $outdir/data/$path/performance_vertexing_amvf_gauss_notime_hist.root \
+        $refdir/$path/performance_vertexing_amvf_gauss_notime_hist.root \
+        "AMVF gauss notime ${path}" \
+        $path/performance_vertexing_amvf_gauss_notime.html \
+        $path/performance_vertexing_amvf_gauss_notime_plots
 
     run Examples/Scripts/generic_plotter.py \
-        $outdir/data/$slug/performance_amvf_grid_time.root \
+        $outdir/data/$path/performance_vertexing_amvf_grid_time.root \
         vertexing \
-        $outdir/data/$slug/performance_amvf_grid_time_hist.root \
+        $outdir/data/$path/performance_vertexing_amvf_grid_time_hist.root \
         --silent \
         --config $config
     ec=$(($ec | $?))
 
     # remove ntuple file because it's large
-    rm $outdir/data/$slug/performance_amvf_grid_time.root
+    rm $outdir/data/$path/performance_vertexing_amvf_grid_time.root
 
     run_histcmp \
-        $outdir/data/$slug/performance_amvf_grid_time_hist.root \
-        $refdir/$slug/performance_amvf_grid_time_hist.root \
-        "AMVF grid time ${slug}" \
-        $slug/performance_amvf_grid_time.html \
-        $slug/performance_amvf_grid_time_plots
+        $outdir/data/$path/performance_vertexing_amvf_grid_time_hist.root \
+        $refdir/$path/performance_vertexing_amvf_grid_time_hist.root \
+        "AMVF grid time ${path}" \
+        $path/performance_vertexing_amvf_grid_time.html \
+        $path/performance_vertexing_amvf_grid_time_plots
 }
 
 function simulation() {
@@ -382,45 +384,45 @@ fi
 
 if [[ "$mode" == "all" || "$mode" == "kf" ]]; then
     run_histcmp \
-        $outdir/data/trackfitting_kf/performance_kf.root \
-        $refdir/trackfitting_kf/performance_kf.root \
+        $outdir/data/trackfitting_kf/performance_trackfitting.root \
+        $refdir/trackfitting_kf/performance_trackfitting.root \
         "Truth tracking (KF)" \
-        trackfitting_kf/performance_kf.html \
-        trackfitting_kf/performance_kf_plots \
+        trackfitting_kf/performance_trackfitting.html \
+        trackfitting_kf/performance_trackfitting_plots \
         --config CI/physmon/config/trackfitting_kf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
     run_histcmp \
-        $outdir/data/trackfitting_gsf/performance_gsf.root \
-        $refdir/trackfitting_gsf/performance_gsf.root \
+        $outdir/data/trackfitting_gsf/performance_trackfitting.root \
+        $refdir/trackfitting_gsf/performance_trackfitting.root \
         "Truth tracking (GSF)" \
-        trackfitting_gsf/performance_gsf.html \
-        trackfitting_gsf/performance_gsf_plots \
+        trackfitting_gsf/performance_trackfitting.html \
+        trackfitting_gsf/performance_trackfitting_plots \
         --config CI/physmon/config/trackfitting_gsf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
     run_histcmp \
-        $outdir/data/trackfitting_gx2f/performance_gx2f.root \
-        $refdir/trackfitting_gx2f/performance_gx2f.root \
+        $outdir/data/trackfitting_gx2f/performance_trackfitting.root \
+        $refdir/trackfitting_gx2f/performance_trackfitting.root \
         "Truth tracking (GX2F)" \
-        trackfitting_gx2f/performance_gx2f.html \
-        trackfitting_gx2f/performance_gx2f_plots \
+        trackfitting_gx2f/performance_trackfitting.html \
+        trackfitting_gx2f/performance_trackfitting_plots \
         --config CI/physmon/config/trackfitting_gx2f.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
-    trackfinding trackfinding_1muon/truth_smeared
-    trackfinding trackfinding_1muon/truth_estimated
-    trackfinding trackfinding_1muon/seeded
-    trackfinding trackfinding_1muon/orthogonal
+    trackfinding "trackfinding | single muon | truth smeared seeding" trackfinding_1muon/truth_smeared
+    trackfinding "trackfinding | single muon | truth estimated seeding" trackfinding_1muon/truth_estimated
+    trackfinding "trackfinding | single muon | default seeding" trackfinding_1muon/seeded
+    trackfinding "trackfinding | single muon | orthogonal seeding" trackfinding_1muon/orthogonal
 
-    trackfinding trackfinding_4muon_50vertices
-    vertexing trackfinding_4muon_50vertices CI/physmon/config/vertexing_4muon_50vertices.yml
+    trackfinding "trackfinding | 4 muon x 50 vertices | default seeding" trackfinding_4muon_50vertices
+    vertexing "trackfinding | 4 muon x 50 vertices | default seeding" trackfinding_4muon_50vertices CI/physmon/config/vertexing_4muon_50vertices.yml
 
-    trackfinding trackfinding_ttbar_pu200
-    vertexing trackfinding_ttbar_pu200 CI/physmon/config/vertexing_ttbar_pu200.yml
+    trackfinding "trackfinding | ttbar with 200 pileup | default seeding" trackfinding_ttbar_pu200
+    vertexing "trackfinding | ttbar with 200 pileup | default seeding" trackfinding_ttbar_pu200 CI/physmon/config/vertexing_ttbar_pu200.yml
 fi
 
 run CI/physmon/summary.py $histcmp_results \

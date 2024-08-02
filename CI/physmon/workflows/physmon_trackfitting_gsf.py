@@ -32,4 +32,4 @@ with tempfile.TemporaryDirectory() as temp:
 
     perf_file = tp / "performance_gsf.root"
     assert perf_file.exists(), "Performance file not found"
-    shutil.copy(perf_file, setup.outdir / "performance_gsf.root")
+    shutil.copy(perf_file, setup.outdir / "performance_trackfitting.root")

@@ -167,11 +167,11 @@ with tempfile.TemporaryDirectory() as temp:
 
     for file in [
         "performance_seeding.root",
-        "performance_ckf.root",
         "tracksummary_ckf.root",
-        "performance_ambi.root",
-        "performance_amvf_gauss_notime.root",
-        "performance_amvf_grid_time.root",
+        "performance_ckf.root",
+        "performance_ckf_ambi.root",
+        "performance_vertexing_amvf_gauss_notime.root",
+        "performance_vertexing_amvf_grid_time.root",
     ]:
         perf_file = tp / file
         assert perf_file.exists(), "Performance file not found"
