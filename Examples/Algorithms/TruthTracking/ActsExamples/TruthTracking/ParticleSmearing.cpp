@@ -92,8 +92,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       const double sigmaPhi = m_cfg.sigmaPhi;
       const double sigmaTheta = m_cfg.sigmaTheta;
       const double sigmaQOverP =
-          m_cfg.sigmaPtRel * qOverP +
-          sigmaTheta * std::abs(qOverP * std::tan(theta));
+          std::sqrt(std::pow(m_cfg.sigmaPtRel * qOverP, 2) +
+                    std::pow(sigmaTheta * (qOverP * std::tan(theta)), 2));
 
       Acts::BoundVector params = Acts::BoundVector::Zero();
       // smear the position/time
@@ -130,28 +130,28 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
         // use the initial sigmas if set
         for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
           double sigma = (*m_cfg.initialSigmas)[i];
+          double variance = sigma * sigma;
 
           if (i == Acts::eBoundQOverP) {
-            // Add momentum dependent uncertainty
-
             // note that we rely on the fact that sigma theta is already
             // computed
-            double covSigmaTheta =
-                std::sqrt(cov(Acts::eBoundTheta, Acts::eBoundTheta));
-            double additionalSimga =
-                m_cfg.initialSigmaPtRel * params[Acts::eBoundQOverP] +
-                covSigmaTheta * std::abs(params[Acts::eBoundQOverP] *
-                                         std::tan(params[Acts::eBoundTheta]));
+            double varianceTheta = cov(Acts::eBoundTheta, Acts::eBoundTheta);
 
-            sigma += additionalSimga;
+            // transverse momentum contribution
+            variance += std::pow(
+                m_cfg.initialSigmaPtRel * params[Acts::eBoundQOverP], 2);
+
+            // theta contribution
+            variance += varianceTheta *
+                        std::pow(params[Acts::eBoundQOverP] *
+                                     std::tan(params[Acts::eBoundTheta]),
+                                 2);
           }
 
-          double var = sigma * sigma;
-
           // Inflate the initial covariance
-          var *= m_cfg.initialVarInflation[i];
+          variance *= m_cfg.initialVarInflation[i];
 
-          cov(i, i) = var;
+          cov(i, i) = variance;
         }
       } else {
         // otherwise use the smearing sigmas
@@ -161,13 +161,12 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
 
         for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
           double sigma = sigmas[i];
-
-          double var = sigma * sigma;
+          double variance = sigma * sigma;
 
           // Inflate the initial covariance
-          var *= m_cfg.initialVarInflation[i];
+          variance *= m_cfg.initialVarInflation[i];
 
-          cov(i, i) = var;
+          cov(i, i) = variance;
         }
       }
 
