@@ -21,10 +21,6 @@ namespace Acts::Test {
 
 namespace {
 
-auto createTrackContainer() {
-  return TrackContainer{VectorTrackContainer{}, VectorMultiTrajectory{}};
-}
-
 template <typename TrackContainer, typename FlagsPerState>
 auto createTestTrack(TrackContainer& tc, const FlagsPerState& flagsPerState) {
   auto t = tc.makeTrack();
@@ -44,7 +40,7 @@ auto createTestTrack(TrackContainer& tc, const FlagsPerState& flagsPerState) {
 BOOST_AUTO_TEST_SUITE(Utilities)
 
 BOOST_AUTO_TEST_CASE(CalculateQuantities) {
-  auto tc = createTrackContainer();
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto t = createTestTrack(tc, std::vector<std::vector<TrackStateFlag>>{
                                    {MeasurementFlag},
                                    {OutlierFlag},
@@ -65,7 +61,7 @@ BOOST_AUTO_TEST_CASE(CalculateQuantities) {
 }
 
 BOOST_AUTO_TEST_CASE(TrimTrack) {
-  auto tc = createTrackContainer();
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto t = createTestTrack(tc, std::vector<std::vector<TrackStateFlag>>{
                                    {HoleFlag},
                                    {MeasurementFlag},
