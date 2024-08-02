@@ -12,6 +12,7 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 
 #include <algorithm>
+#include <limits>
 
 namespace Acts {
 
@@ -62,6 +63,40 @@ double MeasurementSelector::calculateChi2(
                 res)
             .eval()(0, 0);
       });
+}
+
+MeasurementSelector::Cuts MeasurementSelector::getCutsByEta(
+    const MeasurementSelectorCuts& config, double eta) {
+  const double etaAbs = std::abs(eta);
+  const auto it =
+      std::lower_bound(config.etaBins.begin(), config.etaBins.end(), etaAbs);
+  const std::size_t bin = std::distance(config.etaBins.begin(), it);
+
+  auto select = [](const auto& vec, std::size_t idx) {
+    return vec.at(std::clamp(idx, std::size_t{0}, vec.size() - 1));
+  };
+
+  const double chi2CutOffMeasurement = select(config.chi2CutOff, bin);
+  const double chi2CutOffOutlier = config.chi2CutOffOutlier.empty()
+                                       ? std::numeric_limits<double>::infinity()
+                                       : select(config.chi2CutOffOutlier, bin);
+  const std::size_t numMeasurementsCutOff =
+      select(config.numMeasurementsCutOff, bin);
+  return {chi2CutOffMeasurement, chi2CutOffOutlier, numMeasurementsCutOff};
+}
+
+Result<MeasurementSelector::Cuts> MeasurementSelector::getCuts(
+    const GeometryIdentifier& geoID, double eta) const {
+  // Find the appropriate cuts
+  auto cuts = m_config.find(geoID);
+  if (cuts == m_config.end()) {
+    // for now we consider missing cuts an unrecoverable error
+    // TODO consider other options e.g. do not add measurements at all (not
+    // even as outliers)
+    return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
+  }
+  assert(!cuts->chi2CutOff.empty());
+  return getCutsByEta(*cuts, eta);
 }
 
 }  // namespace Acts

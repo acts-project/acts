@@ -36,8 +36,10 @@ namespace Acts {
 struct MeasurementSelectorCuts {
   /// bins in |eta| to specify variable selections
   std::vector<double> etaBins{};
-  /// Maximum local chi2 contribution.
+  /// Maximum local chi2 contribution to classify as outlier.
   std::vector<double> chi2CutOff{15};
+  /// Maximum local chi2 contribution to classify as hole.
+  std::vector<double> chi2CutOffOutlier{25};
   /// Maximum number of associated measurements on a single surface.
   std::vector<std::size_t> numMeasurementsCutOff{1};
 };
@@ -93,11 +95,14 @@ class MeasurementSelector {
          bool& isOutlier, const Logger& logger) const;
 
  private:
-  template <typename traj_t, typename cut_value_t>
-  static cut_value_t getCut(
-      const typename traj_t::TrackStateProxy& trackState,
-      const Acts::MeasurementSelector::Config::Iterator selector,
-      const std::vector<cut_value_t>& cuts, const Logger& logger);
+  struct Cuts {
+    double chi2Measurement{};
+    double chi2Outlier{};
+    std::size_t numMeasurements{};
+  };
+
+  static Cuts getCutsByEta(const MeasurementSelectorCuts& config, double eta);
+  Result<Cuts> getCuts(const GeometryIdentifier& geoID, double eta) const;
 
   double calculateChi2(
       const double* fullCalibrated, const double* fullCalibratedCovariance,
