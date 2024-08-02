@@ -234,10 +234,10 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor<TrackingGeometry> surfaceAccessor{
+  TestSourceLinkSurfaceAccessor surfaceAccessor{
       detector.geometry.get()};
   extensions.surfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(
+      .connect<&TestSourceLinkSurfaceAccessor::operator()>(
           &surfaceAccessor);
 
   Experimental::Gx2FitterOptions gx2fOptions(
@@ -324,10 +324,10 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor<TrackingGeometry> surfaceAccessor{
+  TestSourceLinkSurfaceAccessor surfaceAccessor{
       detector.geometry.get()};
   extensions.surfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(
+      .connect<&TestSourceLinkSurfaceAccessor::operator()>(
           &surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
@@ -432,10 +432,10 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor<TrackingGeometry> surfaceAccessor{
+  TestSourceLinkSurfaceAccessor surfaceAccessor{
       detector.geometry.get()};
   extensions.surfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(
+      .connect<&TestSourceLinkSurfaceAccessor::operator()>(
           &surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
@@ -530,10 +530,10 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor<TrackingGeometry> surfaceAccessor{
+  TestSourceLinkSurfaceAccessor surfaceAccessor{
       detector.geometry.get()};
   extensions.surfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(
+      .connect<&TestSourceLinkSurfaceAccessor::operator()>(
           &surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
@@ -630,10 +630,10 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor<TrackingGeometry> surfaceAccessor{
+  TestSourceLinkSurfaceAccessor surfaceAccessor{
       detector.geometry.get()};
   extensions.surfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(
+      .connect<&TestSourceLinkSurfaceAccessor::operator()>(
           &surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
@@ -729,10 +729,10 @@ BOOST_AUTO_TEST_CASE(DidNotConverge) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor<TrackingGeometry> surfaceAccessor{
+  TestSourceLinkSurfaceAccessor surfaceAccessor{
       detector.geometry.get()};
   extensions.surfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(
+      .connect<&TestSourceLinkSurfaceAccessor::operator()>(
           &surfaceAccessor);
 
   // The relChi2changeCutOff = 0 prevents to stop the fitter after convergence,
@@ -804,10 +804,10 @@ BOOST_AUTO_TEST_CASE(NotEnoughMeasurements) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor<TrackingGeometry> surfaceAccessor{
+  TestSourceLinkSurfaceAccessor surfaceAccessor{
       detector.geometry.get()};
   extensions.surfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(
+      .connect<&TestSourceLinkSurfaceAccessor::operator()>(
           &surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
@@ -895,10 +895,10 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor<TrackingGeometry> surfaceAccessor{
+  TestSourceLinkSurfaceAccessor surfaceAccessor{
       detector.geometry.get()};
   extensions.surfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(
+      .connect<&TestSourceLinkSurfaceAccessor::operator()>(
           &surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
@@ -1003,10 +1003,10 @@ BOOST_AUTO_TEST_CASE(Material) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor<TrackingGeometry> surfaceAccessor{
+  TestSourceLinkSurfaceAccessor surfaceAccessor{
       detector.geometry.get()};
   extensions.surfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(
+      .connect<&TestSourceLinkSurfaceAccessor::operator()>(
           &surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(

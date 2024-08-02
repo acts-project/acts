@@ -86,10 +86,10 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   Acts::ComponentMergeMethod mergeMethod =
       Acts::ComponentMergeMethod::eMaxWeight;
 
-  IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
+  IndexSourceLinkSurfaceAccessor m_slSurfaceAccessor;
 
   GsfFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
-                        const Acts::TrackingGeometry& trkGeo)
+                        const Acts::TrackingGeometry* trkGeo)
       : fitter(std::move(f)),
         directFitter(std::move(df)),
         m_slSurfaceAccessor{trkGeo} {}
@@ -122,7 +122,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
           .connect<&RefittingCalibrator::accessSurface>();
     } else {
       gsfOptions.extensions.surfaceAccessor
-          .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+          .connect<&IndexSourceLinkSurfaceAccessor::operator()>(
               &m_slSurfaceAccessor);
     }
     switch (reductionAlg) {
@@ -196,7 +196,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     const Acts::Logger& logger) {
   // Standard fitter
   MultiStepper stepper(magneticField, logger.cloneWithSuffix("Step"));
-  const auto& geo = *trackingGeometry;
+  const auto* geo = trackingGeometry.get();
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;

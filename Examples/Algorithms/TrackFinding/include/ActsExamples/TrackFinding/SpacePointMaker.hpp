@@ -82,7 +82,7 @@ class SpacePointMaker final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  std::optional<IndexSourceLink::SurfaceAccessor> m_slSurfaceAccessor;
+  std::optional<IndexSourceLinkSurfaceAccessor> m_slSurfaceAccessor;
 
   Acts::SpacePointBuilder<SimSpacePoint> m_spacePointBuilder;
 

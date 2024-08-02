@@ -296,10 +296,10 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   // Construct the KalmanFitter options
 
   auto extensions = getExtensions();
-  TestSourceLink::SurfaceAccessor<TrackingGeometry> surfaceAccessor{
+  TestSourceLinkSurfaceAccessor surfaceAccessor{
       geometry.get()};
   extensions.surfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(
+      .connect<&TestSourceLinkSurfaceAccessor::operator()>(
           &surfaceAccessor);
   KalmanFitterOptions kfOptions(geoCtx, magCtx, calCtx, extensions,
                                 PropagatorPlainOptions(geoCtx, magCtx));

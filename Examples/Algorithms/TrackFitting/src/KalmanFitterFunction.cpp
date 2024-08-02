@@ -81,10 +81,10 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   bool energyLoss = false;
   Acts::FreeToBoundCorrection freeToBoundCorrection;
 
-  IndexSourceLink::SurfaceAccessor slSurfaceAccessor;
+  IndexSourceLinkSurfaceAccessor slSurfaceAccessor;
 
   KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
-                           const Acts::TrackingGeometry& trkGeo)
+                           const Acts::TrackingGeometry* trkGeo)
       : fitter(std::move(f)),
         directFitter(std::move(df)),
         slSurfaceAccessor{trkGeo} {}
@@ -120,7 +120,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
           .connect<&RefittingCalibrator::accessSurface>();
     } else {
       kfOptions.extensions.surfaceAccessor
-          .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+          .connect<&IndexSourceLinkSurfaceAccessor::operator()>(
               &slSurfaceAccessor);
     }
 
@@ -165,7 +165,7 @@ ActsExamples::makeKalmanFitterFunction(
   const Stepper stepper(std::move(magneticField));
 
   // Standard fitter
-  const auto& geo = *trackingGeometry;
+  const auto* geo = trackingGeometry.get();
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;

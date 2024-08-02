@@ -51,6 +51,7 @@ namespace Acts::Test {
 
 using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
 using TestSourceLink = detail::Test::TestSourceLink;
+using SurfaceAccessor = detail::Test::TestSourceLinkSurfaceAccessor;
 using ConstantFieldStepper = EigenStepper<>;
 using ConstantFieldPropagator = Propagator<ConstantFieldStepper, Navigator>;
 // Construct initial track parameters.
@@ -186,10 +187,10 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   auto spBuilderConfig = SpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = geometry;
 
-  TestSourceLink::SurfaceAccessor<TrackingGeometry> surfaceAccessor{
+  SurfaceAccessor surfaceAccessor{
       geometry.get()};
   spBuilderConfig.slSurfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(
+      .connect<&SurfaceAccessor::operator()>(
           &surfaceAccessor);
 
   auto spBuilder =
@@ -199,7 +200,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   auto spBuilderConfig_perp = SpacePointBuilderConfig();
   spBuilderConfig_perp.trackingGeometry = geometry;
   spBuilderConfig_perp.slSurfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(
+      .connect<&SurfaceAccessor::operator()>(
           &surfaceAccessor);
 
   spBuilderConfig_perp.usePerpProj = true;
@@ -283,7 +284,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
 
     spBuilderConfig_badStrips.trackingGeometry = geometry;
     spBuilderConfig_badStrips.slSurfaceAccessor.connect<
-        &TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(
+        &SurfaceAccessor::operator()>(
         &surfaceAccessor);
 
     auto spBuilder_badStrips = SpacePointBuilder<TestSpacePoint>(

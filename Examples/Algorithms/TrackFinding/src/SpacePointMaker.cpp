@@ -98,9 +98,9 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
   spBuilderConfig.trackingGeometry = m_cfg.trackingGeometry;
 
   m_slSurfaceAccessor.emplace(
-      IndexSourceLink::SurfaceAccessor{*m_cfg.trackingGeometry});
+      IndexSourceLinkSurfaceAccessor{m_cfg.trackingGeometry.get()});
   spBuilderConfig.slSurfaceAccessor
-      .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+      .connect<&IndexSourceLinkSurfaceAccessor::operator()>(
           &m_slSurfaceAccessor.value());
 
   auto spConstructor =

@@ -71,10 +71,10 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
   std::size_t nUpdateMax = 5;
   double relChi2changeCutOff = 1e-7;
 
-  IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
+  IndexSourceLinkSurfaceAccessor m_slSurfaceAccessor;
 
   GlobalChiSquareFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
-                                    const Acts::TrackingGeometry& trkGeo)
+                                    const Acts::TrackingGeometry* trkGeo)
       : fitter(std::move(f)),
         directFitter(std::move(df)),
         m_slSurfaceAccessor{trkGeo} {}
@@ -90,7 +90,7 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
       extensions.surfaceAccessor.connect<&RefittingCalibrator::accessSurface>();
     } else {
       extensions.surfaceAccessor
-          .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+          .connect<&IndexSourceLinkSurfaceAccessor::operator()>(
               &m_slSurfaceAccessor);
     }
 
@@ -140,7 +140,7 @@ ActsExamples::makeGlobalChiSquareFitterFunction(
   const Stepper stepper(std::move(magneticField));
 
   // Standard fitter
-  const auto& geo = *trackingGeometry;
+  const auto* geo = trackingGeometry.get();
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;

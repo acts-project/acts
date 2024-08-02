@@ -126,7 +126,7 @@ struct FitterTester {
   CubicTrackingGeometry geometryStore{geoCtx};
   std::shared_ptr<const Acts::TrackingGeometry> geometry = geometryStore();
 
-  Acts::detail::Test::TestSourceLink::SurfaceAccessor<Acts::TrackingGeometry>
+  Acts::detail::Test::TestSourceLinkSurfaceAccessor
       surfaceAccessor{geometry.get()};
 
   // expected number of measurements for the given detector
