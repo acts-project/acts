@@ -2,7 +2,6 @@ add_library(
     ActsExamplesTrackFinding
     SHARED
     src/SeedingAlgorithm.cpp
-    src/SeedingAlgorithmHashing.cpp
     src/SeedingOrthogonalAlgorithm.cpp
     src/SpacePointMaker.cpp
     src/TrackFindingAlgorithm.cpp
@@ -27,6 +26,16 @@ target_link_libraries(
         ActsExamplesMagneticField
     PRIVATE ROOT::Core ROOT::Geom ROOT::Graf ROOT::Hist ROOT::Gpad
 )
+
+# If Hashing examples are enabled, add them to the build
+if(ACTS_BUILD_EXAMPLES_HASHING)
+    target_sources(
+        ActsExamplesTrackFinding
+        PRIVATE src/SeedingAlgorithmHashing.cpp
+    )
+
+    target_link_libraries(ActsExamplesTrackFinding PUBLIC ActsPluginHashing)
+endif()
 
 install(
     TARGETS ActsExamplesTrackFinding
