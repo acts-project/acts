@@ -239,21 +239,22 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
 static inline BinUtility adjustBinUtility(const BinUtility& bu,
                                           const Surface& surface,
                                           const GeometryContext& gctx) {
-  // The surface type is a cylinder
-  if (auto cb = dynamic_cast<const CylinderBounds*>(&(surface.bounds()));
-      cb != nullptr) {
-    return adjustBinUtility(bu, *cb, surface.transform(gctx));
-  } else if (auto rb = dynamic_cast<const RadialBounds*>(&(surface.bounds()));
-             rb != nullptr) {
-    return adjustBinUtility(bu, *rb, surface.transform(gctx));
-  } else if (surface.type() == Surface::Plane) {
-    if (auto reb = dynamic_cast<const RectangleBounds*>(&(surface.bounds()));
-        reb != nullptr) {
-      return adjustBinUtility(bu, *reb, surface.transform(gctx));
-    } else if (auto tp =
-                   dynamic_cast<const TrapezoidBounds*>(&(surface.bounds()));
-               tp != nullptr) {
-      return adjustBinUtility(bu, *tp, surface.transform(gctx));
+  if (auto b = dynamic_cast<const CylinderBounds*>(&(surface.bounds()));
+      b != nullptr) {
+    return adjustBinUtility(bu, *b, surface.transform(gctx));
+  }
+  if (auto b = dynamic_cast<const RadialBounds*>(&(surface.bounds()));
+      b != nullptr) {
+    return adjustBinUtility(bu, *b, surface.transform(gctx));
+  }
+  if (surface.type() == Surface::Plane) {
+    if (auto b = dynamic_cast<const RectangleBounds*>(&(surface.bounds()));
+        b != nullptr) {
+      return adjustBinUtility(bu, *b, surface.transform(gctx));
+    }
+    if (auto b = dynamic_cast<const TrapezoidBounds*>(&(surface.bounds()));
+        b != nullptr) {
+      return adjustBinUtility(bu, *b, surface.transform(gctx));
     }
   }
 
