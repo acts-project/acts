@@ -214,7 +214,8 @@ struct VolumeConstraintAborter {
     const auto currentVolumeId =
         static_cast<std::uint32_t>(currentVolume->geometryId().volume());
 
-    if (std::find(constrainToVolumeIds.begin(), constrainToVolumeIds.end(),
+    if (!constrainToVolumeIds.empty() &&
+        std::find(constrainToVolumeIds.begin(), constrainToVolumeIds.end(),
                   currentVolumeId) == constrainToVolumeIds.end()) {
       ACTS_VERBOSE(
           "VolumeConstraintAborter aborter | Abort with volume constrain "
@@ -222,7 +223,8 @@ struct VolumeConstraintAborter {
       return true;
     }
 
-    if (std::find(endOfWorldVolumeIds.begin(), endOfWorldVolumeIds.end(),
+    if (!endOfWorldVolumeIds.empty() &&
+        std::find(endOfWorldVolumeIds.begin(), endOfWorldVolumeIds.end(),
                   currentVolumeId) != endOfWorldVolumeIds.end()) {
       ACTS_VERBOSE(
           "VolumeConstraintAborter aborter | Abort with additional end of "
