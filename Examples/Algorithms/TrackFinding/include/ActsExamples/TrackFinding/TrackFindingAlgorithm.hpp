@@ -36,6 +36,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <variant>
 #include <vector>
@@ -56,7 +57,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   /// and track finder options and returns some track-finder-specific result.
   using TrackFinderOptions =
       Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor::Iterator,
-                                             Acts::VectorMultiTrajectory>;
+                                             TrackContainer>;
   using TrackFinderResult =
       Acts::Result<std::vector<TrackContainer::TrackProxy>>;
 
@@ -114,6 +115,9 @@ class TrackFindingAlgorithm final : public IAlgorithm {
         Acts::TrackExtrapolationStrategy::firstOrLast;
     /// Run finding in two directions
     bool twoWay = true;
+    /// Whether to run the finding in seed parameter direction or reverse
+    /// direction
+    bool reverseSearch = false;
     /// Whether to use seed deduplication
     /// This is only available if `inputSeeds` is set.
     bool seedDeduplication = false;
@@ -122,6 +126,14 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     bool stayOnSeed = false;
     /// Compute shared hit information
     bool computeSharedHits = false;
+
+    // Pixel and strip volume ids to be used for maxPixel/StripHoles cuts
+    std::set<Acts::GeometryIdentifier::Value> pixelVolumes;
+    std::set<Acts::GeometryIdentifier::Value> stripVolumes;
+
+    /// additional track selector settings
+    std::size_t maxPixelHoles = std::numeric_limits<std::size_t>::max();
+    std::size_t maxStripHoles = std::numeric_limits<std::size_t>::max();
   };
 
   /// Constructor of the track finding algorithm

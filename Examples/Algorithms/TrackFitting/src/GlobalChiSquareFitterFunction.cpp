@@ -18,9 +18,9 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitter.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -47,7 +47,7 @@ class TrackingGeometry;
 
 namespace {
 
-using Stepper = Acts::EigenStepper<>;
+using Stepper = Acts::SympyStepper;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 using Fitter =
     Acts::Experimental::Gx2Fitter<Propagator, Acts::VectorMultiTrajectory>;
@@ -86,9 +86,13 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
         extensions;
     extensions.calibrator.connect<&calibrator_t::calibrate>(&calibrator);
 
-    extensions.surfaceAccessor
-        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
-            &m_slSurfaceAccessor);
+    if (options.doRefit) {
+      extensions.surfaceAccessor.connect<&RefittingCalibrator::accessSurface>();
+    } else {
+      extensions.surfaceAccessor
+          .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+              &m_slSurfaceAccessor);
+    }
 
     const Acts::Experimental::Gx2FitterOptions gx2fOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,

@@ -20,6 +20,13 @@ def getOpenDataDetector(
     odd_dir: Optional[Path] = None,
     logLevel=acts.logging.INFO,
 ):
+    """This function sets up the open data detector. Requires DD4hep.
+    Parameters
+    ----------
+    mdecorator: Material Decorator, take RootMaterialDecorator if non is given
+    odd_dir: if not given, try to get via ODD_PATH environment variable
+    logLevel: logging level
+    """
     import acts.examples.dd4hep
 
     customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)
@@ -86,11 +93,9 @@ def getOpenDataDetector(
     )
     detector = acts.examples.dd4hep.DD4hepDetector()
 
-    config = acts.MaterialMapJsonConverter.Config()
     if mdecorator is None:
-        mdecorator = acts.JsonMaterialDecorator(
-            rConfig=config,
-            jFileName=str(odd_dir / "config/odd-material-mapping-config.json"),
+        mdecorator = acts.examples.RootMaterialDecorator(
+            fileName=str(odd_dir / "data/odd-material-maps.root"),
             level=customLogLevel(minLevel=acts.logging.WARNING),
         )
 

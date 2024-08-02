@@ -1,3 +1,0 @@
-[
-  { include: ["@<Pythia8/.*>", "private", "<Pythia8/Pythia.h>", "public"] }
-]

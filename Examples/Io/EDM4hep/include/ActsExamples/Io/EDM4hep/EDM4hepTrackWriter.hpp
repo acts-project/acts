@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -16,8 +17,6 @@
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <string>
-
-#include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
 
@@ -58,7 +57,7 @@ class EDM4hepTrackWriter : public WriterT<ConstTrackContainer> {
 
   std::mutex m_writeMutex;
 
-  podio::ROOTFrameWriter m_writer;
+  Acts::PodioUtil::ROOTWriter m_writer;
 };
 
 }  // namespace ActsExamples

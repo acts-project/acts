@@ -254,15 +254,15 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         const auto& geoID = state.referenceSurface().geometryId();
         const auto& volume = geoID.volume();
         const auto& layer = geoID.layer();
-        if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-          measurementChi2.push_back(state.chi2());
-          measurementVolume.push_back(volume);
-          measurementLayer.push_back(layer);
-        }
         if (state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
           outlierChi2.push_back(state.chi2());
           outlierVolume.push_back(volume);
           outlierLayer.push_back(layer);
+        } else if (state.typeFlags().test(
+                       Acts::TrackStateFlag::MeasurementFlag)) {
+          measurementChi2.push_back(state.chi2());
+          measurementVolume.push_back(volume);
+          measurementLayer.push_back(layer);
         }
       }
       // IDs are stored as double (as the vector of vector of int is not known
@@ -342,7 +342,8 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
           auto intersection =
               pSurface
                   ->intersect(ctx.geoContext, particle.position(),
-                              particle.direction(), Acts::BoundaryCheck(false))
+                              particle.direction(),
+                              Acts::BoundaryTolerance::Infinite())
                   .closest();
           auto position = intersection.position();
 

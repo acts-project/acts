@@ -19,9 +19,10 @@
 
 namespace Acts {
 
-SympyStepper::SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField,
-                           double overstepLimit)
-    : m_bField(std::move(bField)), m_overstepLimit(overstepLimit) {}
+SympyStepper::SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField)
+    : m_bField(std::move(bField)) {}
+
+SympyStepper::SympyStepper(const Config& config) : m_bField(config.bField) {}
 
 SympyStepper::State SympyStepper::makeState(
     std::reference_wrapper<const GeometryContext> gctx,
@@ -161,6 +162,8 @@ Result<double> SympyStepper::stepImpl(
             state.pars.template segment<1>(eFreeTime).data(),
             state.derivative.data(),
             state.covTransport ? state.jacTransport.data() : nullptr);
+    // Protect against division by zero
+    errorEstimate = std::max(1e-20, errorEstimate);
 
     if (ok) {
       break;
