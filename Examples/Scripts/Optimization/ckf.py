@@ -184,9 +184,18 @@ def runCKFTracks(
         trackingGeometry,
         field,
         TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
-        ParticleSmearingSigmas(
-            ptRel=0.01
-        ),  # only used by SeedingAlgorithm.TruthSmeared
+        ParticleSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
+            d0=0,
+            d0PtA=0,
+            d0PtB=0,
+            z0=0,
+            z0PtA=0,
+            z0PtB=0,
+            t0=0,
+            phi=0,
+            theta=0,
+            ptRel=0,
+        ),
         SeedFinderConfigArg(
             r=(None, 200 * u.mm),  # rMin=default, 33mm
             deltaR=(DeltaRMin * u.mm, DeltaRMax * u.mm),

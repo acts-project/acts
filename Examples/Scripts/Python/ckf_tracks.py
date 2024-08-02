@@ -95,9 +95,18 @@ def runCKFTracks(
         trackingGeometry,
         field,
         TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
-        ParticleSmearingSigmas(
-            ptRel=0.01
-        ),  # only used by SeedingAlgorithm.TruthSmeared
+        ParticleSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
+            d0=0,
+            d0PtA=0,
+            d0PtB=0,
+            z0=0,
+            z0PtA=0,
+            z0PtB=0,
+            t0=0,
+            phi=0,
+            theta=0,
+            ptRel=0,
+        ),
         SeedFinderConfigArg(
             r=(None, 200 * u.mm),  # rMin=default, 33mm
             deltaR=(1 * u.mm, 60 * u.mm),
@@ -143,7 +152,6 @@ def runCKFTracks(
             seedDeduplication=True if not truthSmearedSeeded else False,
             stayOnSeed=True if not truthSmearedSeeded else False,
         ),
-        twoWay=True if not truthSmearedSeeded else False,
         outputDirRoot=outputDir,
         outputDirCsv=outputDir / "csv" if outputCsv else None,
     )
