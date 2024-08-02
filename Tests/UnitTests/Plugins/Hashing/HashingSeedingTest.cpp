@@ -10,12 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
+#include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
+#include "Acts/Plugins/Hashing/HashingAnnoy.hpp"
+#include "Acts/Plugins/Hashing/HashingTraining.hpp"
+#include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
-#include "Acts/Seeding/Hashing/HashingAlgorithm.hpp"
-#include "Acts/Seeding/Hashing/HashingAlgorithmConfig.hpp"
-#include "Acts/Seeding/Hashing/HashingAnnoy.hpp"
-#include "Acts/Seeding/Hashing/HashingTraining.hpp"
-#include "Acts/Seeding/Hashing/HashingTrainingConfig.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
 #include <cmath>
@@ -30,7 +30,7 @@
 using namespace Acts::UnitLiterals;
 
 std::optional<float> t, varianceT;
-std::vector<const SpacePoint*> test_vector = {
+std::vector<const SpacePoint*> testVector = {
     new SpacePoint{27.2535, -18.0088, -146.526, 29.0, 1, 0.00520833, 0.5, t,
                    varianceT},
     new SpacePoint{42.9126, -27.3057, -171.477, 50.0, 1, 0.0133333, 0.8, t,
@@ -48,7 +48,7 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
   using SpacePointPtrVector = std::vector<const SpacePoint*>;
 
-  SpacePointPtrVector spVec = test_vector;
+  SpacePointPtrVector spVec = testVector;
 
   using AnnoyMetric = Annoy::Euclidean;
   using AnnoyModel =
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
                         Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 
   /// Random seed for Annoy
-  unsigned int AnnoySeed = 123456789;
+  unsigned int annoySeed = 123456789;
 
   /// Number of features to use
   std::int32_t nf = 1;
@@ -84,23 +84,23 @@ BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
   hashingConfig.layerZMax = layerZMax;
 
   Acts::HashingTrainingConfig hashingTrainingConfig;
-  hashingTrainingConfig.AnnoySeed = AnnoySeed;
+  hashingTrainingConfig.annoySeed = annoySeed;
   hashingTrainingConfig.f = nf;
 
-  Acts::HashingAlgorithm<const SpacePoint*, SpacePointPtrVector> Hashing =
+  Acts::HashingAlgorithm<const SpacePoint*, SpacePointPtrVector> hashing =
       Acts::HashingAlgorithm<const SpacePoint*, SpacePointPtrVector>(
           hashingConfig);
-  Acts::HashingTrainingAlgorithm<SpacePointPtrVector> HashingTraining =
+  Acts::HashingTrainingAlgorithm<SpacePointPtrVector> hashingTraining =
       Acts::HashingTrainingAlgorithm<SpacePointPtrVector>(
           hashingTrainingConfig);
 
   // Hashing Training
-  Acts::AnnoyModel annoyModel = HashingTraining.execute(spVec);
+  Acts::AnnoyModel annoyModel = hashingTraining.execute(spVec);
 
   // Hashing
-  static thread_local std::vector<SpacePointPtrVector> bucketsPtrs;
+  std::vector<SpacePointPtrVector> bucketsPtrs;
   bucketsPtrs.clear();
-  Hashing.execute(spVec, &annoyModel, bucketsPtrs);
+  hashing.execute(spVec, &annoyModel, bucketsPtrs);
 
   // Check the number of buckets created
   BOOST_CHECK_GT(bucketsPtrs.size(), 0);
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
 BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
   using SpacePointPtrVector = std::vector<const SpacePoint*>;
 
-  SpacePointPtrVector spVec = test_vector;
+  SpacePointPtrVector spVec = testVector;
 
   using AnnoyMetric = Annoy::Euclidean;
   using AnnoyModel =
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
                         Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 
   /// Random seed for Annoy
-  unsigned int AnnoySeed = 123456789;
+  unsigned int annoySeed = 123456789;
 
   /// Number of features to use
   std::int32_t nf = 1;
@@ -145,23 +145,23 @@ BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
   hashingConfig.layerZMax = layerZMax;
 
   Acts::HashingTrainingConfig hashingTrainingConfig;
-  hashingTrainingConfig.AnnoySeed = AnnoySeed;
+  hashingTrainingConfig.annoySeed = annoySeed;
   hashingTrainingConfig.f = nf;
 
-  Acts::HashingAlgorithm<const SpacePoint*, SpacePointPtrVector> Hashing =
+  Acts::HashingAlgorithm<const SpacePoint*, SpacePointPtrVector> hashing =
       Acts::HashingAlgorithm<const SpacePoint*, SpacePointPtrVector>(
           hashingConfig);
-  Acts::HashingTrainingAlgorithm<SpacePointPtrVector> HashingTraining =
+  Acts::HashingTrainingAlgorithm<SpacePointPtrVector> hashingTraining =
       Acts::HashingTrainingAlgorithm<SpacePointPtrVector>(
           hashingTrainingConfig);
 
   // Hashing Training
-  Acts::AnnoyModel annoyModel = HashingTraining.execute(spVec);
+  Acts::AnnoyModel annoyModel = hashingTraining.execute(spVec);
 
   // Hashing
-  static thread_local std::vector<SpacePointPtrVector> bucketsPtrs;
+  std::vector<SpacePointPtrVector> bucketsPtrs;
   bucketsPtrs.clear();
-  Hashing.execute(spVec, &annoyModel, bucketsPtrs);
+  hashing.execute(spVec, &annoyModel, bucketsPtrs);
 
   // Validate bucket content
   for (const auto& bucket : bucketsPtrs) {

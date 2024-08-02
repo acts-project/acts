@@ -18,7 +18,7 @@
 namespace {
 // Test vector of 2D points generated from the make_blobs function of
 // scikit-learn to correspond to 4 clusters with a standard deviation of 0.3
-std::vector<std::array<double, 2>> test_vector{
+std::vector<std::array<double, 2>> testVector{
     {-2.83739915, 2.62792556},  {-2.02847331, -1.90722196},
     {4.42609249, -2.42439165},  {-2.54167208, -1.31586441},
     {-2.74072011, 1.88175176},  {-2.44805173, -1.72270269},
@@ -79,14 +79,14 @@ BOOST_AUTO_TEST_CASE(AnnoySetSeedTest) {
       Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
                         Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 
-  const unsigned int AnnoySeed = 123456789;
+  const unsigned int annoySeed = 123456789;
   const std::int32_t f = 2;
 
   AnnoyModel annoyModel = AnnoyModel(f);
 
-  annoyModel.set_seed(AnnoySeed);
+  annoyModel.set_seed(annoySeed);
 
-  BOOST_CHECK_EQUAL(annoyModel.get_seed(), AnnoySeed);
+  BOOST_CHECK_EQUAL(annoyModel.get_seed(), annoySeed);
 }
 
 BOOST_AUTO_TEST_CASE(AnnoyAddAndBuildTest) {
@@ -95,23 +95,23 @@ BOOST_AUTO_TEST_CASE(AnnoyAddAndBuildTest) {
       Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
                         Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 
-  const unsigned int AnnoySeed = 123456789;
+  const unsigned int annoySeed = 123456789;
   const std::int32_t f = 2;
 
   AnnoyModel annoyModel = AnnoyModel(f);
 
-  annoyModel.set_seed(AnnoySeed);
+  annoyModel.set_seed(annoySeed);
 
   unsigned int pointIndex = 0;
   // Add spacePoints parameters to Annoy
-  for (const auto& arrayvec : test_vector) {
+  for (const auto& arrayvec : testVector) {
     annoyModel.add_item(pointIndex, arrayvec.data());
     pointIndex++;
   }
 
-  unsigned int n_trees = 2 * f;
+  unsigned int nTrees = 2 * f;
 
-  annoyModel.build(n_trees);
+  annoyModel.build(nTrees);
 
   /// Get the bucketSize closest spacePoints
   unsigned int bucketSize = 5;
@@ -127,23 +127,23 @@ BOOST_AUTO_TEST_CASE(AnnoyNeighborTest) {
       Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
                         Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 
-  const unsigned int AnnoySeed = 123456789;
+  const unsigned int annoySeed = 123456789;
   const std::int32_t f = 2;
 
   AnnoyModel annoyModel = AnnoyModel(f);
 
-  annoyModel.set_seed(AnnoySeed);
+  annoyModel.set_seed(annoySeed);
 
   unsigned int pointIndex = 0;
   // Add spacePoints parameters to Annoy
-  for (const auto& arrayvec : test_vector) {
+  for (const auto& arrayvec : testVector) {
     annoyModel.add_item(pointIndex, arrayvec.data());
     pointIndex++;
   }
 
-  unsigned int n_trees = 2 * f;
+  unsigned int nTrees = 2 * f;
 
-  annoyModel.build(n_trees);
+  annoyModel.build(nTrees);
 
   /// Validate neighbors for the first point
   unsigned int bucketSize = 5;
@@ -169,29 +169,29 @@ BOOST_AUTO_TEST_CASE(AnnoyDistanceTest) {
       Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
                         Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 
-  const unsigned int AnnoySeed = 123456789;
+  const unsigned int annoySeed = 123456789;
   const std::int32_t f = 2;
 
   AnnoyModel annoyModel = AnnoyModel(f);
 
-  annoyModel.set_seed(AnnoySeed);
+  annoyModel.set_seed(annoySeed);
 
   unsigned int pointIndex = 0;
   // Add spacePoints parameters to Annoy
-  for (const auto& arrayvec : test_vector) {
+  for (const auto& arrayvec : testVector) {
     annoyModel.add_item(pointIndex, arrayvec.data());
     pointIndex++;
   }
 
-  unsigned int n_trees = 2 * f;
+  unsigned int nTrees = 2 * f;
 
-  annoyModel.build(n_trees);
+  annoyModel.build(nTrees);
 
   /// Validate the distance computation
   double distance = annoyModel.get_distance(0, 1);
   double expected_distance =
-      std::sqrt(std::pow(test_vector[0][0] - test_vector[1][0], 2) +
-                std::pow(test_vector[0][1] - test_vector[1][1], 2));
+      std::sqrt(std::pow(testVector[0][0] - testVector[1][0], 2) +
+                std::pow(testVector[0][1] - testVector[1][1], 2));
 
   BOOST_CHECK_CLOSE(distance, expected_distance, 1e-5);
 }
