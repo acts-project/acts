@@ -48,6 +48,7 @@ def runGeometry(
                 trackingGeometry=trackingGeometry,
                 outputDir=os.path.join(outputDir, "csv"),
                 writePerEvent=True,
+                writeBoundary=True,
             )
             writer.write(context)
 

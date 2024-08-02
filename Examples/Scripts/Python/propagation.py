@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+from pathlib import Path
 
 import acts
 import acts.examples
@@ -44,7 +45,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         acts.examples.ObjPropagationStepsWriter(
             level=acts.logging.INFO,
             collection="propagation-steps",
-            outputDir=outputDir + "/obj",
+            outputDir=Path(outputDir) / "obj",
         )
     )
 
@@ -52,7 +53,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         acts.examples.RootPropagationStepsWriter(
             level=acts.logging.INFO,
             collection="propagation-steps",
-            filePath=outputDir + "/propagation_steps.root",
+            filePath=Path(outputDir) / "propagation_steps.root",
         )
     )
 
