@@ -209,7 +209,7 @@ function trackfinding() {
         run_histcmp \
             $outdir/data/$path/performance_seeding.root \
             $refdir/$path/performance_seeding.root \
-            "Seeding ${path}" \
+            "Seeding ${name}" \
             $path/performance_seeding.html \
             $path/performance_seeding_plots \
             --config $config
@@ -218,7 +218,7 @@ function trackfinding() {
     run_histcmp \
         $outdir/data/$path/performance_ckf.root \
         $refdir/$path/performance_ckf.root \
-        "CKF ${path}" \
+        "CKF ${name}" \
         $path/performance_ckf.html \
         $path/performance_ckf_plots \
         --config $config
@@ -237,7 +237,7 @@ function trackfinding() {
     run_histcmp \
         $outdir/data/$path/tracksummary_ckf_hist.root \
         $refdir/$path/tracksummary_ckf_hist.root \
-        "Track Summary CKF ${path}" \
+        "Track Summary CKF ${name}" \
         $path/tracksummary_ckf.html \
         $path/tracksummary_ckf_plots
 
@@ -245,7 +245,7 @@ function trackfinding() {
         run_histcmp \
             $outdir/data/$path/performance_ckf_ambi.root \
             $refdir/$path/performance_ckf_ambi.root \
-            "Ambisolver ${path}" \
+            "Ambisolver ${name}" \
             $path/performance_ckf_ambi.html \
             $path/performance_ckf_ambi 
     fi
