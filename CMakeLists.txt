@@ -21,7 +21,6 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 # NOTE if you are adding a new option make sure that is defined in such a way
 #   that it is off/empty by default. if you think that is not possible, then
 #   it probably is not an optional component.
-option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and documentation)" OFF)
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
@@ -69,7 +68,6 @@ option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
 # alignment related options
 option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
-option(ACTS_BUILD_EXAMPLES "Build standalone examples" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EXATRKX "Build the Exa.TrkX example code" OFF)
@@ -110,20 +108,6 @@ set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an excepti
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
 include(ActsOptionHelpers)
-# options without inter-dependencies
-set_option_if(ACTS_BUILD_BENCHMARKS ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_UNITTESTS ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_NONCOMPILE_TESTS ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_INTEGRATIONTESTS ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_GEANT4 ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_HEPMC3 ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_PYTHIA8 ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_FATRAS_GEANT4 ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_FATRAS_GEANT4)
-set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_EDM4HEP ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_ANALYSIS_APPS ACTS_BUILD_EVERYTHING)
 
 # any examples component activates the general examples option
 set_option_if(
@@ -134,36 +118,43 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_HEPMC3
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
   OR ACTS_BUILD_EXAMPLES_EXATRKX
-  OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
-  OR ACTS_BUILD_EVERYTHING)
+  OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
 # core plugins might be required by examples or depend on each other
 
 set_option_if(
   ACTS_BUILD_PLUGIN_DD4HEP
-  ACTS_BUILD_EXAMPLES_DD4HEP OR ACTS_BUILD_EVERYTHING OR
+  ACTS_BUILD_EXAMPLES_DD4HEP OR
   ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(
   ACTS_BUILD_PLUGIN_EDM4HEP
-  ACTS_BUILD_EXAMPLES_EDM4HEP OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(
   ACTS_BUILD_PLUGIN_PODIO
-  ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(
     ACTS_BUILD_PLUGIN_GEANT4
-    ACTS_BUILD_EXAMPLES_GEANT4 OR ACTS_BUILD_EVERYTHING)
+    ACTS_BUILD_EXAMPLES_GEANT4)
 set_option_if(
   ACTS_BUILD_PLUGIN_TGEO
-  ACTS_BUILD_PLUGIN_DD4HEP OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_PLUGIN_DD4HEP OR
+  ACTS_BUILD_EXAMPLES)
+set_option_if(
+  ACTS_BUILD_PLUGIN_IDENTIFICATION
+  ACTS_BUILD_PLUGIN_TGEO OR
+  ACTS_BUILD_PLUGIN_PODIO OR
+  ACTS_BUILD_EXAMPLES)
 set_option_if(
   ACTS_BUILD_PLUGIN_JSON
-  ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES)
 set_option_if(
   ACTS_BUILD_FATRAS
-  ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_PLUGIN_EXATRKX ACTS_BUILD_EXAMPLES_EXATRKX)
-set_option_if(ACTS_BUILD_PLUGIN_FPEMON
-  ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES)
+set_option_if(
+  ACTS_BUILD_PLUGIN_EXATRKX
+  ACTS_BUILD_EXAMPLES_EXATRKX)
+set_option_if(
+  ACTS_BUILD_PLUGIN_FPEMON
+  ACTS_BUILD_EXAMPLES)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -213,6 +204,7 @@ set(_acts_nlohmanjson_version 3.2.0)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
+set(_acts_pythia8_version 8.309)
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
@@ -221,10 +213,17 @@ set(_acts_boost_recommended_version 1.78.0)
 # Include the sources for the external dependencies.
 include(ActsExternSources)
 
+# Controls behavior of DOWNLOAD_EXTRACT_TIMESTAMP
+if(POLICY CMP0135)
+  cmake_policy(SET CMP0135 NEW)
+endif()
+
 # required packages
 if (ACTS_SETUP_BOOST)
   if (ACTS_USE_SYSTEM_BOOST)
-    # NOTE FindBoost.cmake looks for BoostConfig.cmake first, before running it's own logic.
+    if(POLICY CMP0167)
+      cmake_policy(SET CMP0167 NEW)
+    endif()
 
     # Enable both program_options and unit_test_framework to reduce complexity
     # Also Cuda tests seem to use program_options
@@ -436,15 +435,7 @@ if(ACTS_BUILD_EXAMPLES_HEPMC3)
   find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
-  find_package(Pythia8 REQUIRED)
-
-  if(DEFINED CMAKE_CXX_STANDARD)
-    if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
-      message(WARNING "ACTS is configured to build with C++20."
-        "As of version 309, Pythia8 does not compile under C++20."
-        "You can find a patch file at: https://gist.github.com/paulgessinger/7a823b4015d4511cf829472291c8ddcf")
-    endif()
-  endif()
+  find_package(Pythia8 ${_acts_pythia8_version} REQUIRED)
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)

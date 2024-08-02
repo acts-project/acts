@@ -7,4 +7,5 @@ target_sources(
     SpacePointUtility.cpp
     TrackHelpers.cpp
     BinningType.cpp
+    Intersection.cpp
 )

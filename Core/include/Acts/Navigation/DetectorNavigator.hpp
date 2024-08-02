@@ -127,11 +127,6 @@ class DetectorNavigator {
     state.navigationBreak = navigationBreak;
   }
 
-  void insertExternalSurface(State& /*state*/,
-                             GeometryIdentifier /*geoid*/) const {
-    // TODO what about external surfaces?
-  }
-
   /// Initialize call - start of propagation
   ///
   /// @tparam propagator_state_t The state type of the propagator
@@ -301,7 +296,7 @@ class DetectorNavigator {
                      << posInfo(state, stepper)
                      << "this is a portal, updating to new volume.");
         nState.currentPortal = nextPortal;
-
+        nState.currentSurface = &nextPortal->surface();
         nState.surfaceCandidates.clear();
         nState.surfaceCandidateIndex = 0;
 

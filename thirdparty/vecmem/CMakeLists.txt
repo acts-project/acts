@@ -7,7 +7,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # CMake include(s).
-cmake_minimum_required( VERSION 3.11 )
 include( FetchContent )
 
 # Tell the user what's happening.
@@ -22,7 +21,7 @@ FetchContent_Declare( VecMem ${ACTS_VECMEM_SOURCE} )
 set( VECMEM_BUILD_TESTING FALSE CACHE BOOL
    "Turn off the build of the VecMem unit tests" )
 set( VECMEM_BUILD_BENCHMARKING FALSE CACHE BOOL
-   "Turn off the build of VecMem benchmarking" )   
+   "Turn off the build of VecMem benchmarking" )
 
 # Now set up its build.
 FetchContent_MakeAvailable( VecMem )
