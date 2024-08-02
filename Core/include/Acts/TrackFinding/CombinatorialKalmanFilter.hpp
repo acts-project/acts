@@ -754,14 +754,13 @@ class CombinatorialKalmanFilter {
 
           auto stateMask = PM::Predicted | PM::Jacobian;
 
-          currentBranch.nHoles()++;
-
           // Add a hole track state to the multitrajectory
           TrackIndexType currentTip = addNonSourcelinkState(
               stateMask, boundState, result, true, prevTip);
           auto nonSourcelinkState =
               result.trackStates->getTrackState(currentTip);
           currentBranch.tipIndex() = currentTip;
+          currentBranch.nHoles()++;
 
           BranchStopperResult branchStopperResult =
               m_extensions.branchStopper(currentBranch, nonSourcelinkState);
@@ -847,11 +846,6 @@ class CombinatorialKalmanFilter {
           // measurement and filtered parameter
           auto stateMask = PM::Predicted | PM::Jacobian;
 
-          if (isSensitive) {
-            // Increment of number of holes
-            currentBranch.nHoles()++;
-          }
-
           // Transport the covariance to a curvilinear surface
           stepper.transportCovarianceToCurvilinear(state.stepping);
 
@@ -875,6 +869,9 @@ class CombinatorialKalmanFilter {
           auto nonSourcelinkState =
               result.trackStates->getTrackState(currentTip);
           currentBranch.tipIndex() = currentTip;
+          if (isSensitive) {
+            currentBranch.nHoles()++;
+          }
 
           BranchStopperResult branchStopperResult =
               m_extensions.branchStopper(currentBranch, nonSourcelinkState);
