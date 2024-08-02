@@ -92,6 +92,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             setup.field,
             TruthSeedRanges(pt=(500 * u.MeV, None), nHits=(9, None)),
             ParticleSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
+                # zero eveything so the CKF has a chance to find the measurements
                 d0=0,
                 d0PtA=0,
                 d0PtB=0,
