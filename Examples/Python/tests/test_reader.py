@@ -155,7 +155,13 @@ def test_root_material_track_reader(material_recording):
     )
     s.addAlgorithm(alg)
 
-    s.run()
+    try:
+        s.run()
+    finally:
+        # make sure to clean up if the test fails (otherwise segfault with ODD)
+        # also
+        # files are closed in destructors, not great
+        del s
 
     assert alg.events_seen == 2
 
@@ -331,7 +337,13 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
     )
     s.addAlgorithm(alg)
 
-    s.run()
+    try:
+        s.run()
+    finally:
+        # make sure to clean up if the test fails (otherwise segfault with ODD)
+        # also
+        # files are closed in destructors, not great
+        del s
 
     assert alg.events_seen == 10
 

@@ -374,7 +374,14 @@ def _do_material_recording(d: Path):
     s = acts.examples.Sequencer(events=2, numThreads=1)
 
     runMaterialRecording(detectorConstructionFactory, str(d), tracksPerEvent=100, s=s)
-    s.run()
+
+    try:
+        s.run()
+    finally:
+        # make sure to clean up if the test fails (otherwise segfault with ODD)
+        # also
+        # files are closed in destructors, not great
+        del s
 
 
 @pytest.fixture(scope="session")

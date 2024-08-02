@@ -520,7 +520,13 @@ def test_event_recording(tmp_path):
     )
     s.addAlgorithm(alg)
 
-    s.run()
+    try:
+        s.run()
+    finally:
+        # make sure to clean up if the test fails (otherwise segfault with ODD)
+        # also
+        # files are closed in destructors, not great
+        del s
 
     assert alg.events_seen == 1
 
@@ -713,11 +719,13 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
         s=s,
     )
 
-    s.run()
-
-    # MaterialMapping alg only writes on destruct.
-    # See https://github.com/acts-project/acts/issues/881
-    del s
+    try:
+        s.run()
+    finally:
+        # make sure to clean up if the test fails (otherwise segfault with ODD)
+        # also
+        # files are closed in destructors, not great
+        del s
 
     mat_file = tmp_path / "material-map.json"
 
@@ -754,7 +762,13 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
         10, 1000, trackingGeometry, decorators, field, outputDir=str(tmp_path), s=s
     )
 
-    s.run()
+    try:
+        s.run()
+    finally:
+        # make sure to clean up if the test fails (otherwise segfault with ODD)
+        # also
+        # files are closed in destructors, not great
+        del s
 
     assert val_file.exists()
     assert_entries(val_file, "material-tracks", 10000)
@@ -792,11 +806,13 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         s=s,
     )
 
-    s.run()
-
-    # MaterialMapping alg only writes on destruct.
-    # See https://github.com/acts-project/acts/issues/881
-    del s
+    try:
+        s.run()
+    finally:
+        # make sure to clean up if the test fails (otherwise segfault with ODD)
+        # also
+        # files are closed in destructors, not great
+        del s
 
     mat_file = tmp_path / "material-map-volume.json"
 
@@ -840,7 +856,13 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         s=s,
     )
 
-    s.run()
+    try:
+        s.run()
+    finally:
+        # make sure to clean up if the test fails (otherwise segfault with ODD)
+        # also
+        # files are closed in destructors, not great
+        del s
 
     assert val_file.exists()
     assert_root_hash(val_file.name, val_file)
@@ -947,7 +969,13 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
         trk_geo, field, outputDir=tmp_path, digiConfigFile=digi_config_file, s=s
     )
 
-    s.run()
+    try:
+        s.run()
+    finally:
+        # make sure to clean up if the test fails (otherwise segfault with ODD)
+        # also
+        # files are closed in destructors, not great
+        del s
 
     assert root_file.exists()
     assert csv_dir.exists()
@@ -976,7 +1004,14 @@ def test_digitization_example_input(
     ptcl_dir.mkdir()
     pgs = Sequencer(events=20, numThreads=-1)
     runParticleGun(str(ptcl_dir), s=pgs)
-    pgs.run()
+
+    try:
+        pgs.run()
+    finally:
+        # make sure to clean up if the test fails (otherwise segfault with ODD)
+        # also
+        # files are closed in destructors, not great
+        del s
 
     s = Sequencer(numThreads=-1)
 
@@ -1002,7 +1037,13 @@ def test_digitization_example_input(
         doMerge=True,
     )
 
-    s.run()
+    try:
+        s.run()
+    finally:
+        # make sure to clean up if the test fails (otherwise segfault with ODD)
+        # also
+        # files are closed in destructors, not great
+        del s
 
     assert root_file.exists()
     assert csv_dir.exists()
@@ -1102,9 +1143,13 @@ def test_ckf_tracks_example(
         s=s,
     )
 
-    s.run()
-
-    del s  # files are closed in destructors, not great
+    try:
+        s.run()
+    finally:
+        # make sure to clean up if the test fails (otherwise segfault with ODD)
+        # also
+        # files are closed in destructors, not great
+        del s
 
     assert csv.exists()
     for rf, tn in root_files:

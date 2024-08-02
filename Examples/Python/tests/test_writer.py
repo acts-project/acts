@@ -482,7 +482,13 @@ def test_hepmc3_histogram(hepmc_data, tmp_path):
     )
     s.addAlgorithm(alg)
 
-    s.run()
+    try:
+        s.run()
+    finally:
+        # make sure to clean up if the test fails (otherwise segfault with ODD)
+        # also
+        # files are closed in destructors, not great
+        del s
 
 
 @pytest.mark.edm4hep
