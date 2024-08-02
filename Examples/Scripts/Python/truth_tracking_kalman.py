@@ -98,7 +98,6 @@ def runTruthTrackingKalman(
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.muon,
         truthSeedRanges=TruthSeedRanges(
-            pt=(1 * u.GeV, None),
             nHits=(7, None),
         ),
     )

@@ -91,6 +91,16 @@ with tempfile.TemporaryDirectory() as temp:
         ),
         SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
         seedingAlgorithm=SeedingAlgorithm.Default,
+        initialSigmas=[
+            1 * u.mm,
+            1 * u.mm,
+            1 * u.degree,
+            1 * u.degree,
+            0.1 * u.e / u.GeV,
+            1 * u.ns,
+        ],
+        initialSigmaPtRel=0.01,
+        initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=setup.geoSel,
         outputDirRoot=tp,
     )

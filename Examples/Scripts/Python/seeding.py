@@ -100,7 +100,6 @@ def runSeeding(
     from acts.examples.reconstruction import (
         addSeeding,
         TruthSeedRanges,
-        ParticleSmearingSigmas,
         SeedFinderConfigArg,
         SeedFinderOptionsArg,
     )
@@ -110,7 +109,6 @@ def runSeeding(
         trackingGeometry,
         field,
         TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-2.5, 2.5), nHits=(9, None)),
-        ParticleSmearingSigmas(pRel=0.01),  # only used by SeedingAlgorithm.TruthSmeared
         SeedFinderConfigArg(
             r=(None, 200 * u.mm),  # rMin=default, 33mm
             deltaR=(1 * u.mm, 60 * u.mm),

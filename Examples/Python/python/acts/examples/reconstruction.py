@@ -21,7 +21,7 @@ TruthSeedRanges = namedtuple(
 
 ParticleSmearingSigmas = namedtuple(
     "ParticleSmearingSigmas",
-    ["d0", "d0PtA", "d0PtB", "z0", "z0PtA", "z0PtB", "t0", "phi", "theta", "pRel"],
+    ["d0", "d0PtA", "d0PtB", "z0", "z0PtA", "z0PtB", "t0", "phi", "theta", "ptRel"],
     defaults=[None] * 10,
 )
 
@@ -220,6 +220,7 @@ def addSeeding(
     truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialSigmas: Optional[list] = None,
+    initialSigmaPtRel: Optional[float] = None,
     initialVarInflation: Optional[list] = None,
     seedFinderConfigArg: SeedFinderConfigArg = SeedFinderConfigArg(),
     seedFinderOptionsArg: SeedFinderOptionsArg = SeedFinderOptionsArg(),
@@ -252,7 +253,7 @@ def addSeeding(
         TruthSeedSelector configuration. Each range is specified as a tuple of (min,max).
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TruthSeedSelector.hpp
         If specified as None, don't run ParticleSmearing at all (and use addCKFTracks(selectedParticles="particles"))
-    particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, pRel)
+    particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, ptRel)
         ParticleSmearing configuration.
         Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
     initialSigmas : list
@@ -308,14 +309,15 @@ def addSeeding(
     if seedingAlgorithm == SeedingAlgorithm.TruthSmeared:
         logger.info("Using smeared truth particles for seeding")
         addTruthSmearedSeeding(
-            s,
-            rnd,
-            selectedParticles,
-            particleSmearingSigmas,
-            initialSigmas,
-            initialVarInflation,
-            particleHypothesis,
-            logLevel,
+            s=s,
+            rnd=rnd,
+            selectedParticles=selectedParticles,
+            particleSmearingSigmas=particleSmearingSigmas,
+            initialSigmas=initialSigmas,
+            initialSigmaPtRel=initialSigmaPtRel,
+            initialVarInflation=initialVarInflation,
+            particleHypothesis=particleHypothesis,
+            logLevel=logLevel,
         )
     else:
         spacePoints = addSpacePointsMaking(
@@ -389,6 +391,7 @@ def addSeeding(
             magneticField=field,
             **acts.examples.defaultKWArgs(
                 initialSigmas=initialSigmas,
+                initialSigmaPtRel=initialSigmaPtRel,
                 initialVarInflation=initialVarInflation,
                 particleHypothesis=particleHypothesis,
             ),
@@ -478,6 +481,7 @@ def addTruthSmearedSeeding(
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
     initialSigmas: Optional[List[float]],
+    initialSigmaPtRel: Optional[float],
     initialVarInflation: Optional[List[float]],
     particleHypothesis: Optional[acts.ParticleHypothesis],
     logLevel: acts.logging.Level = None,
@@ -504,8 +508,9 @@ def addTruthSmearedSeeding(
             sigmaT0=particleSmearingSigmas.t0,
             sigmaPhi=particleSmearingSigmas.phi,
             sigmaTheta=particleSmearingSigmas.theta,
-            sigmaPRel=particleSmearingSigmas.pRel,
+            sigmaPtRel=particleSmearingSigmas.ptRel,
             initialSigmas=initialSigmas,
+            initialSigmaPtRel=initialSigmaPtRel,
             initialVarInflation=initialVarInflation,
             particleHypothesis=particleHypothesis,
         ),

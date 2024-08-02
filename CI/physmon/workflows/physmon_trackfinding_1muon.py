@@ -87,9 +87,19 @@ def run_ckf_tracking(label, seeding):
             setup.trackingGeometry,
             setup.field,
             TruthSeedRanges(pt=(500 * u.MeV, None), nHits=(9, None)),
-            ParticleSmearingSigmas(
-                pRel=0.01
-            ),  # only used by SeedingAlgorithm.TruthSmeared
+            ParticleSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
+                # zero eveything so the CKF has a chance to find the measurements
+                d0=0,
+                d0PtA=0,
+                d0PtB=0,
+                z0=0,
+                z0PtA=0,
+                z0PtB=0,
+                t0=0,
+                phi=0,
+                theta=0,
+                ptRel=0,
+            ),
             SeedFinderConfigArg(
                 r=(33 * u.mm, 200 * u.mm),
                 deltaR=(1 * u.mm, 60 * u.mm),
@@ -112,6 +122,7 @@ def run_ckf_tracking(label, seeding):
                 0.1 * u.e / u.GeV,
                 1 * u.ns,
             ],
+            initialSigmaPtRel=0.01,
             initialVarInflation=[1.0] * 6,
             geoSelectionConfigFile=setup.geoSel,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
