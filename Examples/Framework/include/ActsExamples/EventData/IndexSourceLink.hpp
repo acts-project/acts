@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Detector/Detector.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -63,24 +63,24 @@ class IndexSourceLink final {
 };
 
 struct IndexSourceLinkSurfaceAccessor {
-    const Acts::TrackingGeometry* geometry = nullptr;
-    
-    const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
-        const auto& indexSourceLink = sourceLink.get<IndexSourceLink>();
-        return geometry->findSurface(indexSourceLink.geometryId());
-    }
+  const Acts::TrackingGeometry* geometry = nullptr;
+
+  const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
+    const auto& indexSourceLink = sourceLink.get<IndexSourceLink>();
+    return geometry->findSurface(indexSourceLink.geometryId());
+  }
 };
 
 namespace Experimental {
 
-    struct IndexSourceLinkSurfaceAccessor {
-        const Acts::Experimental::Detector* geometry = nullptr;
-        
-        const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
-            const auto& indexSourceLink = sourceLink.get<IndexSourceLink>();
-            return geometry->findSurface(indexSourceLink.geometryId());
-        }
-    };
+struct IndexSourceLinkSurfaceAccessor {
+  const Acts::Experimental::Detector* geometry = nullptr;
+
+  const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
+    const auto& indexSourceLink = sourceLink.get<IndexSourceLink>();
+    return geometry->findSurface(indexSourceLink.geometryId());
+  }
+};
 
 }  // namespace Experimental
 

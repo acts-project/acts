@@ -99,7 +99,8 @@ auto makeDefaultKalmanFitterOptions() {
   extensions.smoother
       .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
   extensions.surfaceAccessor
-      .connect<&Acts::detail::Test::TestSourceLinkSurfaceAccessor::operator()>(&tester.surfaceAccessor);
+      .connect<&Acts::detail::Test::TestSourceLinkSurfaceAccessor::operator()>(
+          &tester.surfaceAccessor);
 
   return KalmanFitterOptions(
       tester.geoCtx, tester.magCtx, tester.calCtx, extensions,

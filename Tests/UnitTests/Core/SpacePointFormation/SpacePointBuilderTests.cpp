@@ -187,11 +187,9 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   auto spBuilderConfig = SpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = geometry;
 
-  SurfaceAccessor surfaceAccessor{
-      geometry.get()};
-  spBuilderConfig.slSurfaceAccessor
-      .connect<&SurfaceAccessor::operator()>(
-          &surfaceAccessor);
+  SurfaceAccessor surfaceAccessor{geometry.get()};
+  spBuilderConfig.slSurfaceAccessor.connect<&SurfaceAccessor::operator()>(
+      &surfaceAccessor);
 
   auto spBuilder =
       SpacePointBuilder<TestSpacePoint>(spBuilderConfig, spConstructor);
@@ -199,9 +197,8 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   // for cosmic  without vertex constraint, usePerpProj = true
   auto spBuilderConfig_perp = SpacePointBuilderConfig();
   spBuilderConfig_perp.trackingGeometry = geometry;
-  spBuilderConfig_perp.slSurfaceAccessor
-      .connect<&SurfaceAccessor::operator()>(
-          &surfaceAccessor);
+  spBuilderConfig_perp.slSurfaceAccessor.connect<&SurfaceAccessor::operator()>(
+      &surfaceAccessor);
 
   spBuilderConfig_perp.usePerpProj = true;
 
@@ -283,9 +280,8 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
     auto spBuilderConfig_badStrips = SpacePointBuilderConfig();
 
     spBuilderConfig_badStrips.trackingGeometry = geometry;
-    spBuilderConfig_badStrips.slSurfaceAccessor.connect<
-        &SurfaceAccessor::operator()>(
-        &surfaceAccessor);
+    spBuilderConfig_badStrips.slSurfaceAccessor
+        .connect<&SurfaceAccessor::operator()>(&surfaceAccessor);
 
     auto spBuilder_badStrips = SpacePointBuilder<TestSpacePoint>(
         spBuilderConfig_badStrips, spConstructor);

@@ -10,12 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Detector/Detector.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/detail/Subspace.hpp"
 
@@ -88,40 +88,39 @@ struct TestSourceLink final {
     return os;
   }
   constexpr std::size_t index() const { return sourceId; }
-
 };
 
 struct TestSourceLinkSurfaceAccessor {
-    const TrackingGeometry* geometry = nullptr;
+  const TrackingGeometry* geometry = nullptr;
 
-    const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
-        const auto& testSourceLink = sourceLink.get<TestSourceLink>();
+  const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
+    const auto& testSourceLink = sourceLink.get<TestSourceLink>();
 
-        if (geometry != nullptr) {
-            return geometry->findSurface(testSourceLink.m_geometryId);
-        } else {
-            throw std::runtime_error("No tracking geometry or detector set");
-        }
+    if (geometry != nullptr) {
+      return geometry->findSurface(testSourceLink.m_geometryId);
+    } else {
+      throw std::runtime_error("No tracking geometry or detector set");
     }
+  }
 };
 
 namespace Experimental {
-    
-    struct TestSourceLinkSurfaceAccessor {
-        const Acts::Experimental::Detector* geometry = nullptr;
-    
-        const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
-            const auto& testSourceLink = sourceLink.get<TestSourceLink>();
-    
-            if (geometry != nullptr) {
-                return geometry->findSurface(testSourceLink.m_geometryId);
-            } else {
-                throw std::runtime_error("No tracking geometry or detector set");
-            }
-        }
-    };
 
-} // namespace Experimental
+struct TestSourceLinkSurfaceAccessor {
+  const Acts::Experimental::Detector* geometry = nullptr;
+
+  const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
+    const auto& testSourceLink = sourceLink.get<TestSourceLink>();
+
+    if (geometry != nullptr) {
+      return geometry->findSurface(testSourceLink.m_geometryId);
+    } else {
+      throw std::runtime_error("No tracking geometry or detector set");
+    }
+  }
+};
+
+}  // namespace Experimental
 
 inline std::ostream& operator<<(std::ostream& os,
                                 const TestSourceLink& sourceLink) {
