@@ -537,9 +537,9 @@ def test_truth_tracking_kalman(
     seq = Sequencer(events=10, numThreads=1)
 
     root_files = [
-        ("trackstates_fitter.root", "trackstates", 19),
-        ("tracksummary_fitter.root", "tracksummary", 10),
-        ("performance_track_fitter.root", None, -1),
+        ("trackstates_kf.root", "trackstates", 19),
+        ("tracksummary_kf.root", "tracksummary", 10),
+        ("performance_kf.root", None, -1),
     ]
 
     for fn, _, _ in root_files:

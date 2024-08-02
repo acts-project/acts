@@ -218,7 +218,7 @@ function trackfinding() {
     run_histcmp \
         $outdir/data/$path/performance_ckf.root \
         $refdir/$path/performance_ckf.root \
-        "CKF ${name}" \
+        "CKF | ${name}" \
         $path/performance_ckf.html \
         $path/performance_ckf_plots \
         --config $config
@@ -237,7 +237,7 @@ function trackfinding() {
     run_histcmp \
         $outdir/data/$path/tracksummary_ckf_hist.root \
         $refdir/$path/tracksummary_ckf_hist.root \
-        "Track Summary CKF ${name}" \
+        "Track Summary CKF | ${name}" \
         $path/tracksummary_ckf.html \
         $path/tracksummary_ckf_plots
 
@@ -245,7 +245,7 @@ function trackfinding() {
         run_histcmp \
             $outdir/data/$path/performance_ckf_ambi.root \
             $refdir/$path/performance_ckf_ambi.root \
-            "Ambisolver ${name}" \
+            "Ambisolver | ${name}" \
             $path/performance_ckf_ambi.html \
             $path/performance_ckf_ambi 
     fi
@@ -271,7 +271,7 @@ function vertexing() {
         run_histcmp \
             $outdir/data/$path/performance_vertexing_ivf_notime_hist.root \
             $refdir/$path/performance_vertexing_ivf_notime_hist.root \
-            "IVF notime ${path}" \
+            "IVF notime | ${name}" \
             $path/performance_vertexing_ivf_notime.html \
             $path/performance_vertexing_ivf_notime_plots
     fi
@@ -290,7 +290,7 @@ function vertexing() {
     run_histcmp \
         $outdir/data/$path/performance_vertexing_amvf_gauss_notime_hist.root \
         $refdir/$path/performance_vertexing_amvf_gauss_notime_hist.root \
-        "AMVF gauss notime ${path}" \
+        "AMVF gauss notime | ${name}" \
         $path/performance_vertexing_amvf_gauss_notime.html \
         $path/performance_vertexing_amvf_gauss_notime_plots
 
@@ -308,7 +308,7 @@ function vertexing() {
     run_histcmp \
         $outdir/data/$path/performance_vertexing_amvf_grid_time_hist.root \
         $refdir/$path/performance_vertexing_amvf_grid_time_hist.root \
-        "AMVF grid time ${path}" \
+        "AMVF grid time | ${name}" \
         $path/performance_vertexing_amvf_grid_time.html \
         $path/performance_vertexing_amvf_grid_time_plots
 }
