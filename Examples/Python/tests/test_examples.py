@@ -1011,7 +1011,7 @@ def test_digitization_example_input(
         # make sure to clean up if the test fails (otherwise segfault with ODD)
         # also
         # files are closed in destructors, not great
-        del s
+        del pgs
 
     s = Sequencer(numThreads=-1)
 
