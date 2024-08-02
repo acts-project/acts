@@ -56,22 +56,9 @@ jobs:
           git config --global user.email '<>' &&
           ccache -z &&
           cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=20
+          --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-          -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
-          -DACTS_BUILD_ODD=ON
-          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
-          -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_BUILD_ANALYSIS_APPS=ON
           -DACTS_BUILD_PLUGIN_ONNX=ON
-          -DACTS_BUILD_PLUGIN_ACTSVG=ON
           -DACTS_BUILD_PLUGIN_GEOMODEL=ON
 
       - name: Build
@@ -276,21 +263,9 @@ jobs:
         run: >
           ccache -z &&
           cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
+          --preset=github-ci
           -DCMAKE_CXX_STANDARD=${{ matrix.std }}
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-          -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
-          -DACTS_BUILD_ODD=ON
-          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
-          -DACTS_FORCE_ASSERTIONS=OFF
-          -DACTS_BUILD_ANALYSIS_APPS=ON
-          -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
       - name: Build
         run: cmake --build build
@@ -373,22 +348,11 @@ jobs:
           ccache -z
           && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
           && cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          --preset=github-ci
           -DCMAKE_PREFIX_PATH="${{ env.DEPENDENCY_DIR }}"
           -DPython_EXECUTABLE=${{ env.DEPENDENCY_DIR }}/bin/python3
-          -DDD4HEP_DEBUG_CMAKE=ON
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=20
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
-          -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
-          -DACTS_BUILD_ODD=ON
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-          -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
-          -DACTS_BUILD_PLUGIN_ACTSVG=ON
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=OFF
       - name: Build
         run: cmake --build build
       - name: ccache stats
