@@ -46,9 +46,8 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
                   rBounds.get(RadialBounds::eHalfPhiSector);
   // Retrieve the binning data
   const std::vector<BinningData>& bData = bu.binningData();
-  std::cout << bData.size() << std::endl;
   // Loop over the binning data and adjust the dimensions
-  for (const auto& bd : bData) {
+  for (auto& bd : bData) {
     // The binning value
     BinningValue bval = bd.binvalue;
     // Throw exceptions is stuff doesn't make sense:
