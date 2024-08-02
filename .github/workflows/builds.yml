@@ -154,7 +154,7 @@ jobs:
           && source build/this_acts_withdeps.sh
           && pip3 install -r Examples/Python/tests/requirements.txt
           && pip3 install pytest-md-report
-          && pytest -rFsv -k "not exatrkx" -v -s
+          && pytest -rFsv -k "not exatrkx" -v
           && cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
