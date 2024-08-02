@@ -150,8 +150,8 @@ void addGeometry(Context& ctx) {
                          std::shared_ptr<const IMaterialDecorator> m,
                          const GeometryIdentifierHook& h,
                          const PythonLogger& logger) {
-          return std::make_shared<Acts::TrackingGeometry>(v, m ? &*m : nullptr, h,
-                                                          logger.logger());
+          return std::make_shared<Acts::TrackingGeometry>(v, m ? &*m : nullptr,
+                                                          h, logger.logger());
         }))
         .def("visitSurfaces",
              [](Acts::TrackingGeometry& self, py::function& func) {

@@ -44,6 +44,7 @@ Acts::BinnedSurfaceMaterialAccumulater::createState() const {
       ACTS_DEBUG("       - (proto) binning from ProtoSurfaceMateria is "
                  << binUtility);
       // Now adjust to surface type
+      std::cout << binUtility.binningData().size() << std::endl;
       binUtility = adjustBinUtility(binUtility, *surface, m_cfg.geoContext);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << binUtility);
