@@ -572,7 +572,7 @@ def test_truth_tracking_kalman(
 
     ROOT.PyConfig.IgnoreCommandLineOptions = True
     ROOT.gROOT.SetBatch(True)
-    rf = ROOT.TFile.Open(str(tmp_path / "tracksummary_fitter.root"))
+    rf = ROOT.TFile.Open(str(tmp_path / "tracksummary_kf.root"))
     keys = [k.GetName() for k in rf.GetListOfKeys()]
     assert "tracksummary" in keys
     for entry in rf.Get("tracksummary"):
