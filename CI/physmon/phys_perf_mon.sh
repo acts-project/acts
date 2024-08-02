@@ -337,14 +337,14 @@ function simulation() {
 
 function generation() {
     run Examples/Scripts/generic_plotter.py \
-        $outdir/data/simulation/pythia8_particles_ttbar.root \
+        $outdir/data/simulation/particles_ttbar.root \
         particles \
         $outdir/data/simulation/particles_ttbar_hist.root \
         --silent \
         --config CI/physmon/config/pythia8_ttbar.yml
     
     # remove ntuple file because it's large
-    rm $outdir/data/simulation/pythia8_particles_ttbar.root
+    rm $outdir/data/simulation/particles_ttbar.root
 
     run_histcmp \
         $outdir/data/simulation/particles_ttbar_hist.root \
@@ -355,14 +355,14 @@ function generation() {
         --config CI/physmon/config/pythia8_ttbar.yml
 
     run Examples/Scripts/generic_plotter.py \
-        $outdir/data/simulation/pythia8_vertices_ttbar.root \
+        $outdir/data/simulation/vertices_ttbar.root \
         vertices \
         $outdir/data/simulation/vertices_ttbar_hist.root \
         --silent \
         --config CI/physmon/config/pythia8_ttbar.yml
-    
+
     # remove ntuple file because it's large
-    rm $outdir/data/simulation/pythia8_vertices_ttbar.root
+    rm $outdir/data/simulation/vertices_ttbar.root
 
     run_histcmp \
         $outdir/data/simulation/vertices_ttbar_hist.root \

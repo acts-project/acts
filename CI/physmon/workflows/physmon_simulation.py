@@ -9,6 +9,7 @@ from acts.examples.simulation import (
     addFatras,
     addGeant4,
     ParticleSelectorConfig,
+    addPythia8,
 )
 
 from physmon_common import makeSetup
