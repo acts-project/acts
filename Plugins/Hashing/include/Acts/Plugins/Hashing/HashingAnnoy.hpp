@@ -33,4 +33,4 @@ class HashingAnnoy {
 };
 }  // namespace Acts
 
-#include "Acts/Seeding/Hashing/HashingAnnoy.ipp"
+#include "Acts/Plugins/Hashing/HashingAnnoy.ipp"

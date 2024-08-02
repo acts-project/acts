@@ -58,9 +58,6 @@ endif()
 if(@ACTS_USE_SYSTEM_EIGEN3@)
   find_dependency(Eigen3 @Eigen3_VERSION@ CONFIG EXACT)
 endif()
-
-find_dependency(Annoy @ANNOY_VERSION@ CONFIG EXACT)
-
 if(PluginDD4hep IN_LIST Acts_COMPONENTS)
   find_dependency(DD4hep @DD4hep_VERSION@ CONFIG EXACT)
 endif()
@@ -82,6 +79,9 @@ endif()
 if(PluginGeoModel IN_LIST Acts_COMPONENTS)
   find_dependency(GeoModelCore @GeoModel_VERSION@ CONFIG EXACT)
   find_dependency(GeoModelIO @GeoModel_VERSION@ CONFIG EXACT)
+endif()
+if (PluginHashing IN_LIST Acts_COMPONENTS)
+  find_dependency(Annoy @ANNOY_VERSION@ CONFIG EXACT)
 endif()
 
 # dependencies that we have built ourselves but cannot be
