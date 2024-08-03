@@ -566,9 +566,9 @@ BOOST_AUTO_TEST_CASE(UpdatePushedToNewVolume) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  TestSourceLinkSurfaceAccessor surfaceAccessor{detector.geometry.get()};
   extensions.surfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+      .connect<&TestSourceLinkSurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
       geoCtx, magCtx, calCtx, extensions,
