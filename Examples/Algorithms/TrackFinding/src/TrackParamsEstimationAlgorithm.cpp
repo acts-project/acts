@@ -44,22 +44,32 @@ Acts::BoundSquareMatrix makeInitialCovariance(
 
   for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
     double sigma = config.initialSigmas[i];
+    double variance = sigma * sigma;
 
-    // Add momentum dependent uncertainties
-    sigma +=
-        config.initialSimgaQoverPCoefficients[i] * params[Acts::eBoundQOverP];
+    if (i == Acts::eBoundQOverP) {
+      // note that we rely on the fact that sigma theta is already computed
+      double varianceTheta = result(Acts::eBoundTheta, Acts::eBoundTheta);
 
-    double var = sigma * sigma;
+      // transverse momentum contribution
+      variance +=
+          std::pow(config.initialSigmaPtRel * params[Acts::eBoundQOverP], 2);
+
+      // theta contribution
+      variance +=
+          varianceTheta * std::pow(params[Acts::eBoundQOverP] *
+                                       std::tan(params[Acts::eBoundTheta]),
+                                   2);
+    }
 
     // Inflate the time uncertainty if no time measurement is available
     if (i == Acts::eBoundTime && !sp.t().has_value()) {
-      var *= config.noTimeVarInflation;
+      variance *= config.noTimeVarInflation;
     }
 
     // Inflate the initial covariance
-    var *= config.initialVarInflation[i];
+    variance *= config.initialVarInflation[i];
 
-    result(i, i) = var;
+    result(i, i) = variance;
   }
 
   return result;
