@@ -48,8 +48,11 @@ struct NavigationOptions {
   /// Hint for end object
   const object_t* endObject = nullptr;
 
-  /// External surface identifier for which the boundary check is ignored
-  std::vector<GeometryIdentifier> externalSurfaces = {};
+  /// Measurement surface identifier for which the boundary check is ignored
+  std::vector<GeometryIdentifier> measurementSurfaces = {};
+
+  /// External surface identifier
+  std::vector<const Surface*> externalSurfaces = {};
 
   /// The minimum distance for a surface to be considered
   double nearLimit = 0;
@@ -90,7 +93,8 @@ class Navigator {
   using NavigationBoundaries =
       boost::container::small_vector<BoundaryIntersection, 4>;
 
-  using ExternalSurfaces = std::multimap<std::uint64_t, GeometryIdentifier>;
+  using MeasurementSurfaces =
+      std::multimap<GeometryIdentifier, GeometryIdentifier>;
 
   /// The navigation stage
   enum struct Stage : int {
@@ -114,11 +118,10 @@ class Navigator {
 
   struct Options : public NavigatorPlainOptions {
     /// Externally provided surfaces - these are tried to be hit
-    ExternalSurfaces externalSurfaces = {};
+    std::vector<const Surface*> externalSurfaces = {};
 
     void insertExternalSurface(const Surface* surface) {
-      externalSurfaces.insert(std::pair<std::uint64_t, GeometryIdentifier>(
-          surface->geometryId().layer(), surface->geometryId()));
+      externalSurfaces.push_back(surface);
     }
 
     void setPlainOptions(const NavigatorPlainOptions& options) {
@@ -185,6 +188,11 @@ class Navigator {
     Stage navigationStage = Stage::undefined;
     /// Force intersection with boundaries
     bool forceIntersectBoundaries = false;
+
+    MeasurementSurfaces measurementSurfaces = {};
+    /// Range of external surfaces to be considered
+    std::pair<MeasurementSurfaces::iterator, MeasurementSurfaces::iterator>
+        currentMeasurementSurfaceRange;
   };
 
   /// Constructor with configuration object
@@ -204,6 +212,11 @@ class Navigator {
     state.startSurface = options.startSurface;
     state.targetSurface = options.targetSurface;
     return state;
+  }
+
+  void insertMeasurementSurface(State& state, GeometryIdentifier geoId) const {
+    state.measurementSurfaces.insert(
+        std::pair<std::uint64_t, GeometryIdentifier>(geoId.layer(), geoId));
   }
 
   const Surface* currentSurface(const State& state) const {
@@ -619,9 +632,9 @@ class Navigator {
     }
 
     auto layerID = state.navigation.navSurface().object()->geometryId().layer();
-    std::pair<ExternalSurfaces::iterator, ExternalSurfaces::iterator>
-        externalSurfaceRange =
-            state.navigation.options.externalSurfaces.equal_range(layerID);
+    std::pair<MeasurementSurfaces::iterator, MeasurementSurfaces::iterator>
+        measurementSurfaceRange =
+            state.navigation.measurementSurfaces.equal_range(layerID);
     // Loop over the remaining navigation surfaces
     while (state.navigation.navSurfaceIndex !=
            state.navigation.navSurfaces.size()) {
@@ -639,8 +652,8 @@ class Navigator {
                                   << surface->geometryId());
       // Estimate the surface status
       BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
-      for (auto it = externalSurfaceRange.first;
-           it != externalSurfaceRange.second; it++) {
+      for (auto it = measurementSurfaceRange.first;
+           it != measurementSurfaceRange.second; it++) {
         if (surface->geometryId() == it->second) {
           boundaryTolerance = BoundaryTolerance::Infinite();
           break;
@@ -1031,16 +1044,19 @@ class Navigator {
     navOpts.startObject = state.navigation.currentSurface;
     navOpts.endObject = state.navigation.targetSurface;
 
-    std::vector<GeometryIdentifier> externalSurfaces;
     if (!state.navigation.options.externalSurfaces.empty()) {
+      navOpts.externalSurfaces = state.navigation.options.externalSurfaces;
+    }
+
+    if (!state.navigation.measurementSurfaces.empty()) {
       auto layerID = layerSurface->geometryId().layer();
-      auto externalSurfaceRange =
-          state.navigation.options.externalSurfaces.equal_range(layerID);
-      navOpts.externalSurfaces.reserve(
-          state.navigation.options.externalSurfaces.count(layerID));
-      for (auto itSurface = externalSurfaceRange.first;
-           itSurface != externalSurfaceRange.second; itSurface++) {
-        navOpts.externalSurfaces.push_back(itSurface->second);
+      auto measurementSurfaceRange =
+          state.navigation.measurementSurfaces.equal_range(layerID);
+      navOpts.measurementSurfaces.reserve(
+          state.navigation.measurementSurfaces.count(layerID));
+      for (auto itSurface = measurementSurfaceRange.first;
+           itSurface != measurementSurfaceRange.second; itSurface++) {
+        navOpts.measurementSurfaces.push_back(itSurface->second);
       }
     }
     navOpts.nearLimit = state.options.surfaceTolerance;

@@ -20,6 +20,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <iomanip>
@@ -34,7 +35,8 @@ namespace Acts::Experimental {
 
 class DetectorNavigator {
  public:
-  using ExternalSurfaces = std::vector<std::pair<ActsScalar, const Surface*>>;
+  using VolumeIdAccessor =
+      std::unordered_map<GeometryIdentifier, GeometryIdentifier>;
 
   struct Config {
     /// Detector for this Navigation
@@ -51,12 +53,7 @@ class DetectorNavigator {
 
   struct Options : public NavigatorPlainOptions {
     /// Externally provided surfaces - these are tried to be hit
-    ExternalSurfaces externalSurfaces = {};
-
-    void insertExternalSurface(const Surface* surface) {
-      externalSurfaces.push_back(
-          std::make_pair(std::numeric_limits<double>::max(), surface));
-    }
+    std::vector<const Surface*> externalSurfaces = {};
 
     void setPlainOptions(const NavigatorPlainOptions& options) {
       static_cast<NavigatorPlainOptions&>(*this) = options;
@@ -87,12 +84,24 @@ class DetectorNavigator {
                              std::shared_ptr<const Logger> _logger =
                                  getDefaultLogger("DetectorNavigator",
                                                   Logging::Level::INFO))
-      : m_cfg{cfg}, m_logger{std::move(_logger)} {}
+      : m_cfg{cfg}, m_logger{std::move(_logger)} {
+    if (m_cfg.detector != nullptr) {
+      for (const auto& vol : m_cfg.detector->volumes()) {
+        for (const auto& surf : vol->surfaces()) {
+          volumeIdAccessor[surf->geometryId()] = vol->geometryId();
+        }
+      }
+    }
+  }
 
   State makeState(const Options& options) const {
     State state;
     state.options = options;
     return state;
+  }
+
+  void insertMeasurementSurface(State& state, GeometryIdentifier geoId) const {
+    state.measurementSurfaces.emplace(volumeIdAccessor.at(geoId), geoId);
   }
 
   const Surface* currentSurface(const State& state) const {
@@ -169,32 +178,6 @@ class DetectorNavigator {
       throw std::invalid_argument("DetectorNavigator: no current volume found");
     }
 
-    // Intersect with the external surfaces
-    // to set up the lookup order
-    for (auto it = state.options.navigation.externalSurfaces.begin();
-         it != state.options.navigation.externalSurfaces.end(); ++it) {
-      auto sIntersection = it->second->intersect(
-          state.geoContext, nState.position, nState.direction,
-          BoundaryTolerance::Infinite(), s_onSurfaceTolerance);
-
-      for (auto& si : sIntersection.split()) {
-        if (si.isValid()) {
-          it->first = si.pathLength();
-        }
-      }
-    }
-
-    // Sort the external surfaces by distance
-    // for fast lookup
-    std::sort(state.options.navigation.externalSurfaces.begin(),
-              state.options.navigation.externalSurfaces.end(),
-              [](const auto& a, const auto& b) { return a.first < b.first; });
-
-    // Set the pointers to cover the whole range
-    nState.externalSurfaceRange =
-        std::make_pair(state.options.navigation.externalSurfaces.begin(),
-                       state.options.navigation.externalSurfaces.end());
-
     updateCandidateSurfaces(state, stepper);
   }
 
@@ -249,9 +232,9 @@ class DetectorNavigator {
 
       BoundaryTolerance boundaryTolerance = c.boundaryTolerance;
       if (c.surface != nullptr) {
-        for (auto it = nState.externalSurfaceRange.first;
-             it != nState.externalSurfaceRange.second; ++it) {
-          if (surface.geometryId() == it->second->geometryId()) {
+        for (auto it = nState.currentMeasurementSurfaceRange.first;
+             it != nState.currentMeasurementSurfaceRange.second; ++it) {
+          if (surface.geometryId() == it->second) {
             boundaryTolerance = BoundaryTolerance::Infinite();
             break;
           }
@@ -326,15 +309,13 @@ class DetectorNavigator {
       throw std::runtime_error(msg);
     }
 
-    bool isExternal = false;
     BoundaryTolerance boundaryTolerance =
         nState.surfaceCandidate().boundaryTolerance;
     if (nextSurface != nullptr) {
-      for (auto it = nState.externalSurfaceRange.first;
-           it != nState.externalSurfaceRange.second; ++it) {
-        if (nextSurface->geometryId() == it->second->geometryId()) {
+      for (auto it = nState.currentMeasurementSurfaceRange.first;
+           it != nState.currentMeasurementSurfaceRange.second; ++it) {
+        if (nextSurface->geometryId() == it->second) {
           boundaryTolerance = BoundaryTolerance::Infinite();
-          isExternal = true;
           break;
         }
       }
@@ -352,10 +333,6 @@ class DetectorNavigator {
     if (surfaceStatus == Intersection3D::Status::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper) << "landed on surface");
-
-      if (isExternal) {
-        nState.externalSurfaceRange.first++;
-      }
 
       if (isPortal) {
         ACTS_VERBOSE(volInfo(state)
@@ -404,6 +381,8 @@ class DetectorNavigator {
   Config m_cfg;
 
   std::shared_ptr<const Logger> m_logger;
+
+  VolumeIdAccessor volumeIdAccessor = {};
 
   template <typename propagator_state_t>
   std::string volInfo(const propagator_state_t& state) const {
@@ -466,30 +445,21 @@ class DetectorNavigator {
 
     auto& nState = state.navigation;
 
-    // The number of external surfaces we can expect
-    // is at most the number of surfaces in the current volume
-    int nVolumeSurfaces = nState.currentVolume->surfaces().size();
-    int distance =
-        std::distance(nState.externalSurfaceRange.first,
-                      state.options.navigation.externalSurfaces.end());
-    int nSurfaces = std::min(nVolumeSurfaces, distance);
+    GeometryIdentifier volumeId = nState.currentVolume->geometryId();
 
-    nState.externalSurfaceRange =
-        std::make_pair(nState.externalSurfaceRange.first,
-                       nState.externalSurfaceRange.first + nSurfaces);
+    nState.externalSurfaces = &state.options.navigation.externalSurfaces;
+
+    // Get the external surfaces
+    nState.currentMeasurementSurfaceRange =
+        nState.measurementSurfaces.equal_range(volumeId);
+
+    for (auto it = nState.currentMeasurementSurfaceRange.first;
+         it != nState.currentMeasurementSurfaceRange.second; ++it) {
+    }
 
     // Get the candidate surfaces
     nState.currentVolume->updateNavigationState(state.geoContext, nState);
 
-    // Sort properly the surface candidates
-    auto& nCandidates = nState.surfaceCandidates;
-    std::sort(nCandidates.begin(), nCandidates.end(),
-              [&](const auto& a, const auto& b) {
-                // The two path lengths
-                ActsScalar pathToA = a.objectIntersection.pathLength();
-                ActsScalar pathToB = b.objectIntersection.pathLength();
-                return pathToA < pathToB;
-              });
     // Set the surface candidate
     nState.surfaceCandidateIndex = 0;
   }

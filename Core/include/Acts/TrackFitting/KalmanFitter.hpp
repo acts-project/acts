@@ -365,6 +365,18 @@ class KalmanFitter {
                    << " momentum: "
                    << stepper.absoluteMomentum(state.stepping));
 
+      // Add the measurement surface. We will try to hit
+      // those surfaces by ignoring boundary checks.
+      if constexpr (!isDirectNavigator) {
+        if (result.processedStates == 0) {
+          for (auto measurementIt = inputMeasurements->begin();
+               measurementIt != inputMeasurements->end(); measurementIt++) {
+            navigator.insertMeasurementSurface(state.navigation,
+                                               measurementIt->first);
+          }
+        }
+      }
+
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
@@ -1120,10 +1132,6 @@ class KalmanFitter {
       // @TODO: This can probably change over to surface pointers as keys
       auto geoId = surface->geometryId();
       inputMeasurements.emplace(geoId, std::move(sl));
-
-      // Add the measurement surface as external surface to navigator.
-      // We will try to hit those surface by ignoring boundary checks.
-      propagatorOptions.navigation.insertExternalSurface(surface);
     }
 
     // Catch the actor and set the measurements

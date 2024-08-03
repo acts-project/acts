@@ -56,9 +56,9 @@ inline void intitializeCandidates(const GeometryContext& gctx,
         sc.portal != nullptr ? BoundaryTolerance::None() : sc.boundaryTolerance;
 
     if (sc.surface != nullptr) {
-      for (auto it = nState.externalSurfaceRange.first;
-           it != nState.externalSurfaceRange.second; it++) {
-        if (surface.geometryId() == it->second->geometryId()) {
+      for (auto it = nState.currentMeasurementSurfaceRange.first;
+           it != nState.currentMeasurementSurfaceRange.second; it++) {
+        if (surface.geometryId() == it->second) {
           boundaryTolerance = BoundaryTolerance::Infinite();
           break;
         }

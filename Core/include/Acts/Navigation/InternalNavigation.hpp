@@ -86,6 +86,9 @@ struct AllPortalsAndSurfacesNavigation : public IInternalNavigation {
     const auto& surfaces = nState.currentVolume->surfaces();
     PortalsFiller::fill(nState, portals);
     SurfacesFiller::fill(nState, surfaces);
+
+    // Fill the external surfaces
+    SurfacesFiller::fill(nState, *nState.externalSurfaces);
   }
 
   /// A ordered list of portals and surfaces provider

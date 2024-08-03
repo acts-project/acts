@@ -189,9 +189,9 @@ Acts::Layer::compatibleSurfaces(
       return;
     }
     BoundaryTolerance boundaryTolerance = options.boundaryTolerance;
-    if (std::find(options.externalSurfaces.begin(),
-                  options.externalSurfaces.end(),
-                  sf.geometryId()) != options.externalSurfaces.end()) {
+    if (std::find(options.measurementSurfaces.begin(),
+                  options.measurementSurfaces.end(),
+                  sf.geometryId()) != options.measurementSurfaces.end()) {
       boundaryTolerance = BoundaryTolerance::Infinite();
     }
     // the surface intersection
@@ -243,6 +243,13 @@ Acts::Layer::compatibleSurfaces(
   // the layer surface itself is a testSurface
   const Surface* layerSurface = &surfaceRepresentation();
   processSurface(*layerSurface);
+
+  // (D) external surface section
+  //
+  // check the external surfaces if you have some
+  for (auto& eSurface : options.externalSurfaces) {
+    processSurface(*eSurface);
+  }
 
   return sIntersections;
 }
