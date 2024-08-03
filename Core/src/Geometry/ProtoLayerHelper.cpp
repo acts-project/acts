@@ -43,7 +43,10 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
 
   // Loop over surfaces and sort into clusters
   for (auto& sf : surfaces) {
-    auto sfExtent = sf->polyhedronRepresentation(gctx, 1).extent();
+    // To prevent problematic isInsidePolygon check for straw surfaces with only
+    // one lseg
+    int lseg = (sf->type() != Surface::Straw) ? 1 : 2;
+    auto sfExtent = sf->polyhedronRepresentation(gctx, lseg).extent();
     sfExtent.envelope()[sorting.first] = {sorting.second, sorting.second};
     auto& sfCluster = findCluster(sfExtent);
     sfCluster.first.extend(sfExtent);

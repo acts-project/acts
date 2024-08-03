@@ -21,7 +21,6 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 # NOTE if you are adding a new option make sure that is defined in such a way
 #   that it is off/empty by default. if you think that is not possible, then
 #   it probably is not an optional component.
-option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and documentation)" OFF)
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
@@ -69,7 +68,6 @@ option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
 # alignment related options
 option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
-option(ACTS_BUILD_EXAMPLES "Build standalone examples" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EXATRKX "Build the Exa.TrkX example code" OFF)
@@ -110,20 +108,6 @@ set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an excepti
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
 include(ActsOptionHelpers)
-# options without inter-dependencies
-set_option_if(ACTS_BUILD_BENCHMARKS ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_UNITTESTS ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_NONCOMPILE_TESTS ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_INTEGRATIONTESTS ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_GEANT4 ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_HEPMC3 ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_PYTHIA8 ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_FATRAS_GEANT4 ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_FATRAS_GEANT4)
-set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_EDM4HEP ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_ANALYSIS_APPS ACTS_BUILD_EVERYTHING)
 
 # any examples component activates the general examples option
 set_option_if(
@@ -134,36 +118,43 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_HEPMC3
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
   OR ACTS_BUILD_EXAMPLES_EXATRKX
-  OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
-  OR ACTS_BUILD_EVERYTHING)
+  OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
 # core plugins might be required by examples or depend on each other
 
 set_option_if(
   ACTS_BUILD_PLUGIN_DD4HEP
-  ACTS_BUILD_EXAMPLES_DD4HEP OR ACTS_BUILD_EVERYTHING OR
+  ACTS_BUILD_EXAMPLES_DD4HEP OR
   ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(
   ACTS_BUILD_PLUGIN_EDM4HEP
-  ACTS_BUILD_EXAMPLES_EDM4HEP OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(
   ACTS_BUILD_PLUGIN_PODIO
-  ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(
     ACTS_BUILD_PLUGIN_GEANT4
-    ACTS_BUILD_EXAMPLES_GEANT4 OR ACTS_BUILD_EVERYTHING)
+    ACTS_BUILD_EXAMPLES_GEANT4)
 set_option_if(
   ACTS_BUILD_PLUGIN_TGEO
-  ACTS_BUILD_PLUGIN_DD4HEP OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_PLUGIN_DD4HEP OR
+  ACTS_BUILD_EXAMPLES)
+set_option_if(
+  ACTS_BUILD_PLUGIN_IDENTIFICATION
+  ACTS_BUILD_PLUGIN_TGEO OR
+  ACTS_BUILD_PLUGIN_PODIO OR
+  ACTS_BUILD_EXAMPLES)
 set_option_if(
   ACTS_BUILD_PLUGIN_JSON
-  ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES)
 set_option_if(
   ACTS_BUILD_FATRAS
-  ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_PLUGIN_EXATRKX ACTS_BUILD_EXAMPLES_EXATRKX)
-set_option_if(ACTS_BUILD_PLUGIN_FPEMON
-  ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES)
+set_option_if(
+  ACTS_BUILD_PLUGIN_EXATRKX
+  ACTS_BUILD_EXAMPLES_EXATRKX)
+set_option_if(
+  ACTS_BUILD_PLUGIN_FPEMON
+  ACTS_BUILD_EXAMPLES)
 
 # feature tests
 include(CheckCXXSourceCompiles)
