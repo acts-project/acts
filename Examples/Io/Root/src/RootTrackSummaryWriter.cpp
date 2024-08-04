@@ -254,15 +254,15 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         const auto& geoID = state.referenceSurface().geometryId();
         const auto& volume = geoID.volume();
         const auto& layer = geoID.layer();
-        if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-          measurementChi2.push_back(state.chi2());
-          measurementVolume.push_back(volume);
-          measurementLayer.push_back(layer);
-        }
         if (state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
           outlierChi2.push_back(state.chi2());
           outlierVolume.push_back(volume);
           outlierLayer.push_back(layer);
+        } else if (state.typeFlags().test(
+                       Acts::TrackStateFlag::MeasurementFlag)) {
+          measurementChi2.push_back(state.chi2());
+          measurementVolume.push_back(volume);
+          measurementLayer.push_back(layer);
         }
       }
       // IDs are stored as double (as the vector of vector of int is not known
@@ -425,7 +425,11 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
              param[Acts::eBoundTime] - t_time};
 
       for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
-        pull[i] = res[i] / error[i];  // MARK: fpeMask(FLTINV, 1, #2284)
+        // MARK: fpeMaskBegin(FLTDIV, 1, #2348)
+        // MARK: fpeMaskBegin(FLTINV, 1, #2348)
+        pull[i] = res[i] / error[i];
+        // MARK: fpeMaskEnd(FLTINV)
+        // MARK: fpeMaskEnd(FLTDIV)
       }
     }
 
