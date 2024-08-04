@@ -20,16 +20,46 @@ namespace Experimental {
 /// the IP parameters and sorts the source links
 /// into possible track candidates
 ///
+/// The algorithm to convert the given source links
+/// into seeds -- pairs of IP parameters and the corresponding
+/// source links -- as follows: First the source links
+/// are sorted into a user-defined grid. Then, iteration over the source links
+/// is performed. If a source link is attached to a surface that is
+/// in the first tracking layer, as defined by the user, the IP parameters
+/// are estimated and the tracking layers are intersected to construct the
+/// core of the "Path". The source links in the subsequent layers are then
+/// added to the seed if they lie within the path width of the core.
+/// Both the list of source links and the IP parameters are stored in the seed
+/// struct.
+///
 /// @tparam axis_t Type of the axis to bin
 /// the source links
 ///
+/// @note The algorithm is designed to be used in the
+/// context of a telescope-style geometry. The surfaces
+/// are assumed to be planar.
+///
+/// @note Handling of the rotated surfaces has to happen
+/// in the user-defined delegate functions.
 template <typename axis_t>
 class PathSeeder {
  public:
+  /// @brief The seed struct
+  ///
+  /// The seed struct contains the IP parameters
+  /// and the source links that are associated with
+  /// the seed.
   struct Seed {
+    /// The IP momentum magnitude
     ActsScalar ipP;
+
+    /// The IP momentum direction
     Vector3 ipDir;
+
+    /// The IP vertex position
     Vector3 ipVertex;
+
+    /// The source links associated with the seed
     std::vector<SourceLink> sourceLinks;
 
     Seed() = delete;
@@ -41,17 +71,52 @@ class PathSeeder {
           sourceLinks(std::move(sls)){};
   };
 
+  /// @brief Delegate to transform the source link to the
+  /// appropriate global frame.
+  ///
+  /// @arg The geometry context to use
+  /// @arg The source link to calibrate
+  ///
+  /// @return The global position of the source link measurement
   using SourceLinkCalibrator =
       Delegate<Vector3(const GeometryContext&, const SourceLink&)>;
 
+  /// @brief Delegate to provide the path width around
+  /// the intersection point to pull the source links
+  /// from the grid
+  ///
+  /// @arg The geometry context to use
+  /// @arg The geometry identifier to use if the
+  /// path width is varied across different tracking layers
+  ///
+  /// @return The path width in the bin0 and bin1 direction
+  /// defined with respect to the surface normal
   using PathWidthLookup = Delegate<std::pair<ActsScalar, ActsScalar>(
       const GeometryContext&, const GeometryIdentifier&)>;
 
+  /// @brief Delegate to find the intersections for the given pivot
+  /// source link
+  ///
+  /// @arg The geometry context to use
+  /// @arg The global position of the pivot source link
+  /// @arg The momentum direction of the pivot source link
+  /// at the first tracking layer
+  /// @arg The IP momentum magnitude
+  /// @arg The particle charge
   using IntersectionLookup =
       Delegate<std::vector<std::pair<GeometryIdentifier, Vector3>>(
           const GeometryContext&, const Vector3&, const Vector3&,
           const ActsScalar&, const ActsScalar&)>;
 
+  /// @brief Delegate to estimate the IP parameters
+  /// and the momentum direction at the first tracking layer
+  ///
+  /// @arg The geometry context to use
+  /// @arg The global position of the pivot source link
+  ///
+  /// @return Particle charge, the IP momentum magnitude, the IP vertex position,
+  /// the IP momentum direction, the momentum direction at the
+  /// first tracking layer
   using TrackEstimator =
       Delegate<std::tuple<ActsScalar, ActsScalar, Vector3, Vector3, Vector3>(
           const GeometryContext&, const Vector3&)>;
@@ -62,7 +127,7 @@ class PathSeeder {
     std::shared_ptr<ISourceLinkGrid<axis_t>> sourceLinkGrid;
     /// Parameters estimator
     TrackEstimator trackEstimator;
-    /// Surface accessor
+    /// SourceLink calibrator
     SourceLinkCalibrator sourceLinkCalibrator;
     /// Intersection finder
     IntersectionLookup intersectionFinder;
