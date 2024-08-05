@@ -13,9 +13,7 @@ include(FetchContent)
 message(STATUS "Building GeoModel as part of the ACTS project")
 
 set(GEOMODEL_VERSION "${_acts_geomodel_version}")
-
 set(GEOMODEL_SETUP_JSON OFF CACHE BOOL "Skip setting up json completely")
-
 set(GEOMODEL_BUILD_GEOMODELG4 "${ACTS_BUILD_PLUGIN_GEANT4}" CACHE BOOL "Build the Geant4 plugin")
 
 # Declare where to get geomodel from.
