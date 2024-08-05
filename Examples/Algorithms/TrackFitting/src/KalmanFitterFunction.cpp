@@ -81,7 +81,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   bool energyLoss = false;
   Acts::FreeToBoundCorrection freeToBoundCorrection;
 
-  IndexSourceLinkSurfaceAccessor slSurfaceAccessor;
+  IndexSourceLink::SurfaceAccessor slSurfaceAccessor;
 
   KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
                            const Acts::TrackingGeometry* trkGeo)
@@ -120,7 +120,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
           .connect<&RefittingCalibrator::accessSurface>();
     } else {
       kfOptions.extensions.surfaceAccessor
-          .connect<&IndexSourceLinkSurfaceAccessor::operator()>(
+          .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
               &slSurfaceAccessor);
     }
 

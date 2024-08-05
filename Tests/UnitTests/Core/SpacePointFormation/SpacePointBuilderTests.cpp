@@ -51,7 +51,7 @@ namespace Acts::Test {
 
 using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
 using TestSourceLink = detail::Test::TestSourceLink;
-using SurfaceAccessor = detail::Test::TestSourceLinkSurfaceAccessor;
+using SurfaceAccessor = detail::Test::TestSourceLink::SurfaceAccessor;
 using ConstantFieldStepper = EigenStepper<>;
 using ConstantFieldPropagator = Propagator<ConstantFieldStepper, Navigator>;
 // Construct initial track parameters.

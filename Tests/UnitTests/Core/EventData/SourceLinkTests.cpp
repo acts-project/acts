@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(EventDataSourceLink)
 
 BOOST_AUTO_TEST_CASE(TestSourceLinkCoverage) {
   using Acts::detail::Test::TestSourceLink;
-  using Acts::detail::Test::TestSourceLinkSurfaceAccessor;
+  using Acts::detail::Test::TestSourceLink::SurfaceAccessor;
 
   TestSourceLink ts;
   Acts::Vector2 stddev(0.01, 0.1);
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(TestSourceLinkCoverage) {
   str << l1;
 
   auto sl = Acts::SourceLink(l1);
-  TestSourceLinkSurfaceAccessor accessor;
+  TestSourceLink::SurfaceAccessor accessor;
   BOOST_CHECK_THROW(accessor(sl), std::runtime_error);
 }
 

@@ -80,7 +80,7 @@ GsfExtensions<VectorMultiTrajectory> getExtensions() {
       .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
           &kfUpdater);
   extensions.surfaceAccessor
-      .connect<&TestSourceLinkSurfaceAccessor::operator()>(
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(
           &tester.surfaceAccessor);
   extensions.mixtureReducer.connect<&Acts::reduceMixtureWithKLDistance>();
   return extensions;

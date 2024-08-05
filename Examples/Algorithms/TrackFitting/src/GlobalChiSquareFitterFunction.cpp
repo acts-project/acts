@@ -71,7 +71,7 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
   std::size_t nUpdateMax = 5;
   double relChi2changeCutOff = 1e-7;
 
-  IndexSourceLinkSurfaceAccessor m_slSurfaceAccessor;
+  IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
 
   GlobalChiSquareFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
                                     const Acts::TrackingGeometry* trkGeo)
@@ -90,7 +90,7 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
       extensions.surfaceAccessor.connect<&RefittingCalibrator::accessSurface>();
     } else {
       extensions.surfaceAccessor
-          .connect<&IndexSourceLinkSurfaceAccessor::operator()>(
+          .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
               &m_slSurfaceAccessor);
     }
 

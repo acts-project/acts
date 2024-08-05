@@ -30,6 +30,8 @@ namespace ActsExamples {
 /// easily changed without having to also change the source link.
 class IndexSourceLink final {
  public:
+    using SurfaceAccessor = IndexSourceLinkSurfaceAccessor;
+
   /// Construct from geometry identifier and index.
   constexpr IndexSourceLink(Acts::GeometryIdentifier gid, Index idx)
       : m_geometryId(gid), m_index(idx) {}

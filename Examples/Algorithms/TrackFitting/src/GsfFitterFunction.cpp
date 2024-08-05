@@ -86,7 +86,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   Acts::ComponentMergeMethod mergeMethod =
       Acts::ComponentMergeMethod::eMaxWeight;
 
-  IndexSourceLinkSurfaceAccessor m_slSurfaceAccessor;
+  IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
 
   GsfFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
                         const Acts::TrackingGeometry* trkGeo)
@@ -122,7 +122,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
           .connect<&RefittingCalibrator::accessSurface>();
     } else {
       gsfOptions.extensions.surfaceAccessor
-          .connect<&IndexSourceLinkSurfaceAccessor::operator()>(
+          .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
               &m_slSurfaceAccessor);
     }
     switch (reductionAlg) {

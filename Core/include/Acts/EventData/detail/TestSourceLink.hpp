@@ -36,6 +36,8 @@ namespace Acts::detail::Test {
 /// identifier is stored that can be used to store additional information. How
 /// this is interpreted depends on the specific tests.
 struct TestSourceLink final {
+    using SurfaceAccessor = TestSourceLinkSurfaceAccessor;
+
   GeometryIdentifier m_geometryId{};
   std::size_t sourceId = 0u;
   // use eBoundSize to indicate unused indices
