@@ -67,7 +67,10 @@ std::ostream& ProtoLayer::toStream(std::ostream& sl) const {
 void ProtoLayer::measure(const GeometryContext& gctx,
                          const std::vector<const Surface*>& surfaces) {
   for (const auto& sf : surfaces) {
-    auto sfPolyhedron = sf->polyhedronRepresentation(gctx, 1);
+    // To prevent problematic isInsidePolygon check for straw surfaces with only
+    // one lseg
+    int lseg = (sf->type() != Surface::Straw) ? 1 : 2;
+    auto sfPolyhedron = sf->polyhedronRepresentation(gctx, lseg);
     const DetectorElementBase* element = sf->associatedDetectorElement();
     const auto* regSurface = dynamic_cast<const RegularSurface*>(sf);
     if (element != nullptr && regSurface != nullptr) {
