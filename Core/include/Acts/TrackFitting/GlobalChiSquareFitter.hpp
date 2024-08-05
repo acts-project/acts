@@ -20,6 +20,7 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/AbortList.hpp"
@@ -221,6 +222,10 @@ struct Gx2FitterResult {
 
   // Count how many surfaces have been hit
   std::size_t surfaceCount = 0;
+
+  // Monitor which volume we start in. We do not allow to switch the start of a
+  // following iteration in a different volume.
+  const TrackingVolume* startVolume = nullptr;
 };
 
 /// addToGx2fSums Function
@@ -397,6 +402,10 @@ class Gx2Fitter {
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};
 
+    /// Monitor which volume we start in. We do not allow to switch the start of
+    /// a following iteration in a different volume.
+    const TrackingVolume* startVolume = nullptr;
+
     /// @brief Gx2f actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagator state
@@ -424,7 +433,7 @@ class Gx2Fitter {
       }
 
       // End the propagation and return to the fitter
-      if (result.finished) {
+      if (result.finished || !result.result.ok()) {
         // Remove the missing surfaces that occur after the last measurement
         if (result.measurementStates > 0) {
           result.missedActiveSurfaces.resize(result.measurementHoles);
@@ -432,6 +441,19 @@ class Gx2Fitter {
 
         return;
       }
+
+      if (startVolume != nullptr &&
+          startVolume != state.navigation.startVolume) {
+        ACTS_INFO("The update pushed us to a new volume from '"
+                  << startVolume->volumeName() << "' to '"
+                  << state.navigation.startVolume->volumeName()
+                  << "'. Starting to abort.");
+        result.result = Result<void>(
+            Experimental::GlobalChiSquareFitterError::UpdatePushedToNewVolume);
+
+        return;
+      }
+      result.startVolume = state.navigation.startVolume;
 
       // Update:
       // - Waiting for a current surface
@@ -716,6 +738,10 @@ class Gx2Fitter {
     // want to fit e.g. q/p and adjusts itself later.
     std::size_t ndfSystem = std::numeric_limits<std::size_t>::max();
 
+    // Monitor which volume we start in. We do not allow to switch the start of
+    // a following iteration in a different volume.
+    const TrackingVolume* startVolume = nullptr;
+
     ACTS_VERBOSE("params:\n" << params);
 
     /// Actual Fitting /////////////////////////////////////////////////////////
@@ -750,6 +776,7 @@ class Gx2Fitter {
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
+      gx2fActor.startVolume = startVolume;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
@@ -762,6 +789,7 @@ class Gx2Fitter {
 
       auto propagationResult = m_propagator.template propagate(propagatorState);
 
+      // Run the fitter
       auto result = m_propagator.template makeResult(std::move(propagatorState),
                                                      propagationResult,
                                                      propagatorOptions, false);
@@ -775,6 +803,13 @@ class Gx2Fitter {
       // makeMeasurements
       auto& propRes = *result;
       GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
+
+      if (!gx2fResult.result.ok()) {
+        ACTS_INFO("GlobalChiSquareFitter failed in actor: "
+                  << gx2fResult.result.error() << ", "
+                  << gx2fResult.result.error().message());
+        return gx2fResult.result.error();
+      }
 
       auto track = trackContainerTemp.makeTrack();
       tipIndex = gx2fResult.lastMeasurementIndex;
@@ -903,6 +938,7 @@ class Gx2Fitter {
       }
 
       oldChi2sum = chi2sum;
+      startVolume = gx2fResult.startVolume;
     }
     ACTS_DEBUG("Finished to iterate");
     ACTS_VERBOSE("final params:\n" << params);
