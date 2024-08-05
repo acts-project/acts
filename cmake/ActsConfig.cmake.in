@@ -100,6 +100,9 @@ if(PluginDetray IN_LIST Acts_COMPONENTS)
   find_dependency(vecmem @vecmem_VERSION@ CONFIG EXACT)
   find_dependency(algebra-plugins @algebra-plugins_VERSION@ CONFIG EXACT)
   find_dependency(detray @detray_VERSION@ CONFIG EXACT)
+
+if (PluginCovfie IN_LIST Acts_COMPONENTS)
+  find_dependency(covfie @covfie_VERSION@ CONFIG EXACT)
 endif()
 
 # load **all** available components. we can not just include the requested
