@@ -41,7 +41,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         sigmaZ0=0.0,
         sigmaPhi=0.0,
         sigmaTheta=0.0,
-        sigmaPRel=0.0,
+        sigmaPtRel=0.0,
     )
     s.addAlgorithm(trackParametersGenerator)
 
