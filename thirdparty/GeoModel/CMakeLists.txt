@@ -22,9 +22,9 @@ set(GEOMODEL_BUILD_GEOMODELG4 "${ACTS_BUILD_PLUGIN_GEANT4}" CACHE BOOL "Build th
 FetchContent_Declare(geomodel ${ACTS_GEOMODEL_SOURCE}
     PATCH_COMMAND git am ${CMAKE_CURRENT_SOURCE_DIR}/0001-Add-option-to-skip-setting-up-json-completely.patch)
 
-# Disable warnings for unused parameters in GeoModelKernel
-get_target_property(_tmp_geomodel_kernel_cxx_flags GeoModelCore::GeoModelKernel CMAKE_CXX_FLAGS)
-set_target_properties(GeoModelCore::GeoModelKernel PROPERTIES CMAKE_CXX_FLAGS "${_tmp_geomodel_kernel_cxx_flags} -Wno-error=unused-parameter")
-
 # Now set up its build.
 FetchContent_MakeAvailable(geomodel)
+
+# Disable warnings for unused parameters in GeoModelKernel
+get_target_property(_tmp_geomodel_kernel_cxx_flags GeoModelKernel CMAKE_CXX_FLAGS)
+set_target_properties(GeoModelKernel PROPERTIES CMAKE_CXX_FLAGS "${_tmp_geomodel_kernel_cxx_flags} -Wno-error=unused-parameter")
