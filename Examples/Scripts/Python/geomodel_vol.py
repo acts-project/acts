@@ -84,8 +84,8 @@ def main():
     p.add_argument(
         "--convert-boundingboxes",
         help="Convert the fpvs to bounding boxes",
-        action="store_true",
-        default=False,
+        type=str,
+        default="",
     )
 
     p.add_argument(

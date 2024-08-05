@@ -27,8 +27,8 @@ class GeoModelDetectorObjectFactory {
     /// boolean flag to build subvolumes
     bool convertSubVolumes = false;
 
-    /// boolean flag to build the bounding Boxes
-    bool convertFpv = true;
+    ///flag to build the desired bounding Boxes
+    std::string convertFpv;
   };
   struct Cache {
     /// The created detector elements and their surfaces
@@ -50,7 +50,7 @@ bool convertFpv(std::string name);
 
  private:
   std::unique_ptr<const Logger> m_logger;
-  std::string name;
+  //std::string name;
   Config m_cfg;
 
    const Logger& logger() const { return *m_logger; }

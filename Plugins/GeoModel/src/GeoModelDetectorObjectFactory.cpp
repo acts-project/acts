@@ -182,6 +182,6 @@ std::vector<GeoChildNodeWithTrf> Acts::GeoModelDetectorObjectFactory::findAllSub
   return sensitives;
 }
 bool Acts::GeoModelDetectorObjectFactory::convertFpv(std::string name){
-  return (name.find("MDT") != std::string::npos);
+  return (name.find(m_cfg.convertFpv) != std::string::npos);
 }
 }
