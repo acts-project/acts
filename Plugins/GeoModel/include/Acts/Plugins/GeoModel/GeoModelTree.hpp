@@ -18,7 +18,7 @@ namespace Acts {
 
 struct GeoModelTree {
   std::shared_ptr<GeoModelIO::ReadGeoModel> geoReader = nullptr;
-  const GeoVPhysVol* worldVolume = nullptr;
+  PVConstLink worldVolume = nullptr;
   std::string worldVolumeName = "World";
 };
 
