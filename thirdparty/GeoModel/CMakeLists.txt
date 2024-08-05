@@ -23,7 +23,7 @@ FetchContent_Declare(geomodel ${ACTS_GEOMODEL_SOURCE}
     PATCH_COMMAND git am ${CMAKE_CURRENT_SOURCE_DIR}/0001-Add-option-to-skip-setting-up-json-completely.patch)
 
 # Disable warnings flagged as errors
-set_property(DIRECTORY APPEND PROPERTY COMPILE_OPTIONS -Wno-error=unused-parameter -Wno-error=shadow)
+set_property(DIRECTORY APPEND PROPERTY COMPILE_OPTIONS -Wno-error)
 
 # Now set up its build.
 FetchContent_MakeAvailable(geomodel)
