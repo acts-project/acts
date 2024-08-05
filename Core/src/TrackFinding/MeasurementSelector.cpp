@@ -68,9 +68,12 @@ double MeasurementSelector::calculateChi2(
 MeasurementSelector::Cuts MeasurementSelector::getCutsByEta(
     const MeasurementSelectorCuts& config, double eta) {
   const double etaAbs = std::abs(eta);
-  const auto it =
-      std::lower_bound(config.etaBins.begin(), config.etaBins.end(), etaAbs);
-  const std::size_t bin = std::distance(config.etaBins.begin(), it);
+  std::size_t bin = 0;
+  for (; bin < config.etaBins.size(); bin++) {
+    if (config.etaBins[bin] >= etaAbs) {
+      break;
+    }
+  }
 
   auto select = [](const auto& vec, std::size_t idx) {
     return vec.at(std::clamp(idx, std::size_t{0}, vec.size() - 1));
