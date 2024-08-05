@@ -28,6 +28,8 @@
 
 namespace Acts::detail::Test {
 
+struct TestSourceLinkSurfaceAccessor;
+
 /// A minimal source link implementation for testing.
 ///
 /// Instead of storing a reference to a measurement or raw data, the measurement
@@ -36,7 +38,7 @@ namespace Acts::detail::Test {
 /// identifier is stored that can be used to store additional information. How
 /// this is interpreted depends on the specific tests.
 struct TestSourceLink final {
-    using SurfaceAccessor = TestSourceLinkSurfaceAccessor;
+  using SurfaceAccessor = TestSourceLinkSurfaceAccessor;
 
   GeometryIdentifier m_geometryId{};
   std::size_t sourceId = 0u;

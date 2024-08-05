@@ -19,6 +19,8 @@
 
 namespace ActsExamples {
 
+struct IndexSourceLinkSurfaceAccessor;
+
 /// A source link that stores just an index.
 ///
 /// This is intentionally kept as barebones as possible. The source link
@@ -30,7 +32,7 @@ namespace ActsExamples {
 /// easily changed without having to also change the source link.
 class IndexSourceLink final {
  public:
-    using SurfaceAccessor = IndexSourceLinkSurfaceAccessor;
+  using SurfaceAccessor = IndexSourceLinkSurfaceAccessor;
 
   /// Construct from geometry identifier and index.
   constexpr IndexSourceLink(Acts::GeometryIdentifier gid, Index idx)
