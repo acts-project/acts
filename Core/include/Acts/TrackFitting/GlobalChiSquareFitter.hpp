@@ -22,6 +22,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
@@ -468,6 +469,9 @@ class Gx2Fitter {
     /// a following iteration in a different volume.
     const TrackingVolume* startVolume = nullptr;
 
+    // TODO write explantion
+    const parameters_t* parametersWithHypothesis = nullptr;
+
     /// TODO description
     std::unordered_map<GeometryIdentifier, ScatteringProperties>*
         scatteringMap = nullptr;
@@ -536,16 +540,21 @@ class Gx2Fitter {
           auto scatteringMapId = scatteringMap->find(geoId);
           if (scatteringMapId == scatteringMap->end()) {
             ACTS_DEBUG("    Create entry in scattering map.");
-            // TODO use real covariance, maybe from surface->surfaceMaterial()
+
+            // TODO use better position
+            const auto materialSlab = surface->surfaceMaterial()->materialSlab(Acts::Vector2{0, 0});
+            const auto& particle = parametersWithHypothesis->particleHypothesis();
 
             /// Calculate the highland formula first
-//            const double sigma = Acts::computeMultipleScatteringTheta0(
-//                materialSlab,
-//                particle.absolutePdg(),
-//                particle.mass(),
-//                particle.qOverP(),
-//                particle.absoluteCharge());
-            const double sigma = 0.001;
+            const double sigma = Acts::computeMultipleScatteringTheta0(
+                materialSlab,
+                particle.absolutePdg(),
+                particle.mass(),
+                parametersWithHypothesis->parameters()[eBoundQOverP],
+                particle.absoluteCharge());
+
+            ACTS_VERBOSE("The Highland formula gives sigma = " << sigma);
+
             const double sigma2 = sigma * sigma;
 
             scatteringMap->emplace(
@@ -930,6 +939,7 @@ class Gx2Fitter {
       gx2fActor.actorLogger = m_actorLogger.get();
       gx2fActor.startVolume = startVolume;
       gx2fActor.scatteringMap = &scatteringMap;
+      gx2fActor.parametersWithHypothesis = &params;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
@@ -1072,8 +1082,7 @@ class Gx2Fitter {
           // Add contribution from the angle itself similar to addToGx2fSums
           // TODO create function
           {
-            // TODO use correct formula
-            const ActsScalar sinThetaLoc = 1;
+            const ActsScalar sinThetaLoc = std::sin(trackState.predicted()[eBoundTheta]);
 
             // The position, where we need to insert the values in aMatrix and
             // bVector
@@ -1102,7 +1111,7 @@ class Gx2Fitter {
 
       // Get required number of degrees of freedom ndfSystem.
       // We have only 3 cases, because we always have l0, l1, phi, theta
-      // 4: no magentic field -> q/p is empty
+      // 4: no magnetic field -> q/p is empty
       // 5: no time measurement -> time not fittable
       // 6: full fit
       if (aMatrixExtended(4, 4) == 0) {
