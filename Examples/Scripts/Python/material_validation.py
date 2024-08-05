@@ -50,8 +50,7 @@ def runMaterialValidation(
         sigmaZ0=0.0,
         sigmaPhi=0.0,
         sigmaTheta=0.0,
-        sigmaPRel=0.0,
-        addCovariances=False,
+        sigmaPtRel=0.0,
     )
     s.addAlgorithm(trackParametersGenerator)
 
