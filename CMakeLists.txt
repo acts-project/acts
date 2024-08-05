@@ -49,17 +49,11 @@ option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
-option(ACTS_SETUP_COVFIE "Explicitly set up covfie for the project" OFF)
 option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_DETRAY "Explicitly set up detray for the project" OFF)
 option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_TRACCC "Explicitly set up traccc for the project" OFF)
 option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_DFELIBS "Explicitly set up dfelibs for the project" ON)
 option(ACTS_USE_SYSTEM_DFELIBS "Use a system-provided dfelibs installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_VECMEM "Explicitly set up vecmem for the project" OFF)
 option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_ALGEBRAPLUGINS "Explicitly set up algebra-plugins for the project" OFF)
 option(ACTS_USE_SYSTEM_ALGEBRAPLUGINS "Use a system-provided algebra-plugins installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
 # fatras related options
@@ -155,6 +149,12 @@ set_option_if(
 set_option_if(
   ACTS_BUILD_PLUGIN_FPEMON
   ACTS_BUILD_EXAMPLES)
+set_option_if(
+  ACTS_BUILD_PLUGIN_DETRAY
+  ACTS_BUILD_PLUGIN_TRACCC)
+set_option_if(
+  ACTS_BUILD_PLUGIN_COVFIE
+  ACTS_BUILD_PLUGIN_DETRAY)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -205,6 +205,11 @@ set(_acts_onnxruntime_version 1.12.0)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.309)
+set(_acts_detray_version 0.72.0)
+set(_acts_traccc_version 0.13.0)
+set(_acts_covfie_version 0.10.0)
+set(_acts_vecmem_version 1.4.0)
+set(_acts_algebraplugins_version 0.22.0)
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
@@ -249,30 +254,10 @@ if (ACTS_SETUP_EIGEN3)
   endif()
 endif()
 
-if (ACTS_SETUP_DFELIBS)
-  if (ACTS_USE_SYSTEM_DFELIBS)
-    find_package(dfelibs ${_acts_dfelibs_version} REQUIRED)
-  else()
-    add_subdirectory(thirdparty/dfelibs)
-  endif()
-endif()
-
-if (ACTS_SETUP_VECMEM)
-  if (ACTS_USE_SYSTEM_VECMEM)
-    find_package(vecmem ${_acts_vecmem_version} REQUIRED)
-  else()
-    add_subdirectory(thirdparty/vecmem)
-    # Make the "VecMem language code" available for the whole project.
-    include( "${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake" )
-  endif()
-endif()
-
-if (ACTS_SETUP_ALGEBRAPLUGINS)
-  if (ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
-    find_package(algebra-plugins ${_acts_algebraplugins_version} REQUIRED)
-  else()
-    add_subdirectory(thirdparty/algebra-plugins)
-  endif()
+if (ACTS_USE_SYSTEM_DFELIBS)
+  find_package(dfelibs ${_acts_dfelibs_version} REQUIRED)
+else()
+  add_subdirectory(thirdparty/dfelibs)
 endif()
 
 find_package(Filesystem REQUIRED)
@@ -307,30 +292,6 @@ endmacro()
 # find packages explicitly for each component even if this means searching for
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
-
-# plugin dependencies
-if(ACTS_SETUP_COVFIE)
-  if(ACTS_USE_SYSTEM_COVFIE)
-    find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
-  else()
-    add_subdirectory(thirdparty/covfie)
-  endif()
-endif()
-if(ACTS_SETUP_DETRAY)
-  if(ACTS_USE_SYSTEM_DETRAY)
-    find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
-  else()
-    add_subdirectory(thirdparty/detray)
-  endif()
-endif()
-if(ACTS_SETUP_TRACCC)
-  if(ACTS_USE_SYSTEM_TRACCC)
-    find_package(traccc ${_acts_traccc_version} REQUIRED CONFIG)
-  else()
-    add_subdirectory(thirdparty/traccc)
-  endif()
-endif()
-
 if(ACTS_BUILD_PLUGIN_ACTSVG)
   if(ACTS_USE_SYSTEM_ACTSVG)
     find_package(actsvg ${_acts_actsvg_version} REQUIRED CONFIG)
@@ -408,6 +369,43 @@ if(ACTS_BUILD_PLUGIN_EDM4HEP)
 endif()
 if(ACTS_BUILD_PLUGIN_GEANT4)
   find_package(Geant4 REQUIRED CONFIG COMPONENTS gdml)
+endif()
+if(ACTS_BUILD_PLUGIN_DETRAY)
+  if(ACTS_USE_SYSTEM_DETRAY)
+    find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
+  else()
+    add_subdirectory(thirdparty/detray)
+  endif()
+
+  if (ACTS_USE_SYSTEM_VECMEM)
+    find_package(vecmem ${_acts_vecmem_version} REQUIRED)
+  else()
+    add_subdirectory(thirdparty/vecmem)
+    # Make the "VecMem language code" available for the whole project.
+    include( "${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake" )
+  endif()
+
+  if (ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
+    find_package(algebra-plugins ${_acts_algebraplugins_version} REQUIRED)
+  else()
+    add_subdirectory(thirdparty/algebra-plugins)
+  endif()
+endif()
+if(ACTS_BUILD_PLUGIN_COVFIE)
+  if(ACTS_USE_SYSTEM_COVFIE)
+    find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
+  else()
+    add_subdirectory(thirdparty/covfie)
+  endif()
+endif()
+if(ACTS_BUILD_PLUGIN_TRACCC)
+  # traccc also depends on vecmem and covfie, but those plugins should always
+  # be enabled if traccc is.
+  if(ACTS_USE_SYSTEM_TRACCC)
+    find_package(traccc ${_acts_traccc_version} REQUIRED CONFIG)
+  else()
+    add_subdirectory(thirdparty/traccc)
+  endif()
 endif()
 
 # examples dependencies
