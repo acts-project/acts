@@ -46,9 +46,6 @@ struct ParticleMatchEntry {
   std::uint32_t fakes{};
 };
 
-using ProtoTrackParticleMatching = std::map<TrackIndexType, TrackMatchEntry>;
-using ParticleProtoTrackMatching = std::map<SimBarcode, ParticleMatchEntry>;
-
 using TrackParticleMatching = std::map<TrackIndexType, TrackMatchEntry>;
 using ParticleTrackMatching = std::map<SimBarcode, ParticleMatchEntry>;
 
