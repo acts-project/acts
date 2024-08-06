@@ -58,10 +58,6 @@ class IGrid {
                       [](const IAxis* a, const IAxis* b) { return *a == *b; });
   }
 
-  friend bool operator!=(const IGrid& lhs, const IGrid& rhs) {
-    return !(lhs == rhs);
-  }
-
  protected:
   virtual void toStream(std::ostream& os) const = 0;
 };
@@ -629,8 +625,8 @@ class Grid final : public IGrid {
 
   template <std::size_t... Is>
   void printAxes(std::ostream& os, std::index_sequence<Is...> /*s*/) const {
-    auto printOne = [&os, this](auto I) {
-      constexpr std::size_t index = decltype(I)::value;
+    auto printOne = [&os, this]<std::size_t index>(
+                        std::integral_constant<std::size_t, index>) {
       if constexpr (index > 0) {
         os << ", ";
       }

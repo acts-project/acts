@@ -16,6 +16,7 @@
 #include <vector>
 
 namespace Acts::Test {
+BOOST_AUTO_TEST_SUITE(Axes)
 
 BOOST_AUTO_TEST_CASE(equidistant_axis) {
   Axis a(0.0, 10.0, 10u);
@@ -441,5 +442,50 @@ BOOST_AUTO_TEST_CASE(AxisVisit) {
                         Axis<AxisType::Variable, AxisBoundaryType::Closed>>));
   });
 }
+
+BOOST_AUTO_TEST_CASE(Output) {
+  std::stringstream ss;
+
+  Axis a{AxisBound, 0.0, 10., 10};
+  Axis b{AxisBound, {0.0, 10., 11}};
+
+  ss << a;
+
+  BOOST_CHECK_EQUAL(ss.str(), "Axis<Equidistant, Bound>(0, 10, 10)");
+
+  ss.str("");
+
+  const IAxis& ia = a;
+
+  ss << ia;
+
+  BOOST_CHECK_EQUAL(ss.str(), "Axis<Equidistant, Bound>(0, 10, 10)");
+
+  ss.str("");
+
+  ss << b;
+
+  BOOST_CHECK_EQUAL(ss.str(), "Axis<Variable, Bound>(0, 10, 11)");
+}
+
+BOOST_AUTO_TEST_CASE(Equality) {
+  Axis a{AxisBound, 0.0, 10., 10};
+  Axis b{AxisClosed, 0.0, 10., 10};
+
+  BOOST_CHECK_EQUAL(a, a);
+  BOOST_CHECK_NE(a, b);
+
+  const IAxis& ia = a;
+  const IAxis& ib = b;
+
+  BOOST_CHECK_EQUAL(ia, ia);
+  BOOST_CHECK_NE(ia, ib);
+  BOOST_CHECK_NE(ia, b);
+  BOOST_CHECK_NE(a, ib);
+  BOOST_CHECK_EQUAL(a, ia);
+  BOOST_CHECK_EQUAL(b, ib);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test

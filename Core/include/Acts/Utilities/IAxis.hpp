@@ -65,29 +65,27 @@ class IAxis {
   /// @param callable the callable object
   template <typename callable_t>
   decltype(auto) visit(const callable_t& callable) const {
-    auto switchOnType = [this, &callable](auto bdtTag) {
-      constexpr auto bdt = decltype(bdtTag)::value;
-      switch (getType()) {
-        case AxisType::Equidistant:
-          return callable(
-              dynamic_cast<const Axis<AxisType::Equidistant, bdt>&>(*this));
-        case AxisType::Variable:
-          return callable(
-              dynamic_cast<const Axis<AxisType::Variable, bdt>&>(*this));
-        default:
-          throw std::logic_error{"Unknown type case"};
-      }
-    };
+    auto switchOnType =
+        [this, &callable]<AxisBoundaryType bdt>(AxisBoundaryTypeTag<bdt>) {
+          switch (getType()) {
+            using enum AxisType;
+            case Equidistant:
+              return callable(
+                  dynamic_cast<const Axis<AxisType::Equidistant, bdt>&>(*this));
+            case Variable:
+              return callable(
+                  dynamic_cast<const Axis<AxisType::Variable, bdt>&>(*this));
+          }
+        };
 
     switch (getBoundaryType()) {
-      case AxisBoundaryType::Open:
+      using enum AxisBoundaryType;
+      case Open:
         return switchOnType(AxisOpen);
-      case AxisBoundaryType::Bound:
+      case Bound:
         return switchOnType(AxisBound);
-      case AxisBoundaryType::Closed:
+      case Closed:
         return switchOnType(AxisClosed);
-      default:
-        throw std::logic_error{"Unknown boundary type case"};
     }
   }
 
@@ -95,21 +93,22 @@ class IAxis {
   /// @param lhs first axis
   /// @param rhs second axis
   /// @return true if the axes are equal
-  friend bool operator==(const IAxis& lhs, const IAxis& rhs);
-
-  /// Check if two axes are not equal
-  /// @param lhs first axis
-  /// @param rhs second axis
-  /// @return true if the axes are not equal
-  friend bool operator!=(const IAxis& lhs, const IAxis& rhs) {
-    return !(lhs == rhs);
+  friend bool operator==(const IAxis& lhs, const IAxis& rhs) {
+    return lhs.getType() == rhs.getType() &&
+           lhs.getBoundaryType() == rhs.getBoundaryType() &&
+           lhs.getMin() == rhs.getMin() && lhs.getMax() == rhs.getMax() &&
+           lhs.getNBins() == rhs.getNBins() &&
+           lhs.getBinEdges() == rhs.getBinEdges();
   }
 
   /// Output stream operator
   /// @param os output stream
   /// @param axis the axis to be printed
   /// @return the output stream
-  friend std::ostream& operator<<(std::ostream& os, const IAxis& axis);
+  friend std::ostream& operator<<(std::ostream& os, const IAxis& axis) {
+    axis.toStream(os);
+    return os;
+  }
 
  protected:
   /// Dispatch to the correct stream operator

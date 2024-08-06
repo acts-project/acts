@@ -8,5 +8,4 @@ target_sources(
     TrackHelpers.cpp
     BinningType.cpp
     Intersection.cpp
-    IAxis.cpp
 )

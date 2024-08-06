@@ -393,7 +393,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   }
 
   friend std::ostream& operator<<(std::ostream& os, const Axis& axis) {
-    os << "Axis<" << bdt << ", Equidistant>(";
+    os << "Axis<Equidistant, " << bdt << ">(";
     os << axis.m_min << ", ";
     os << axis.m_max << ", ";
     os << axis.m_bins << ")";
@@ -707,7 +707,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   std::vector<ActsScalar> getBinEdges() const override { return m_binEdges; }
 
   friend std::ostream& operator<<(std::ostream& os, const Axis& axis) {
-    os << "Axis<" << bdt << ", Variable>(";
+    os << "Axis<Variable, " << bdt << ">(";
     os << axis.m_binEdges.front();
     for (std::size_t i = 1; i < axis.m_binEdges.size(); i++) {
       os << ", " << axis.m_binEdges[i];
