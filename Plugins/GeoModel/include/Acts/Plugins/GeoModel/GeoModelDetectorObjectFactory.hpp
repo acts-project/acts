@@ -28,7 +28,7 @@ class GeoModelDetectorObjectFactory {
     bool convertSubVolumes = false;
 
     ///flag to build the desired bounding Boxes
-    std::string convertFpv;
+    std::string convertBox;
   };
   struct Cache {
     /// The created detector elements and their surfaces
@@ -49,7 +49,7 @@ std::vector<GeoChildNodeWithTrf> findAllSubVolumes(PVConstLink geoPV);
 bool convertBox(std::string name);
 bool matches(const std::string &name, PVConstLink physvol);
 
-void convertFpv(std::string name, PVConstLink fpv, Cache& cache, const GeometryContext& gctx);
+void convertFpv(std::string name, auto fpv, Cache& cache, const GeometryContext& gctx);
 
 
  private:

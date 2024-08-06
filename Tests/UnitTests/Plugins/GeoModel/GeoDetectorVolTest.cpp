@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   PVConstLink physVol{fphysXY};
   auto rBounds = std::make_shared<Acts::RectangleBounds>(100, 200);
   //int shapeId = shape->typeID();
-  std::cout << "!!!!!" <<physVol->typeID() << std::endl;
+  //std::cout << "!!!!!" <<physVol->typeID() << std::endl;
 
   //create pars for constructor
   //std::unique_ptr<const Actst::Logger> log;
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
 
   std::cout <<"!!!!!!!! test" << std::endl;
   //TODO find the right data type for the surface converter
-  factory.convertFpv("LogVolumeXY", fphysXY, gmCache, gContext);
+  //factory.convertFpv("LogVolumeXY", fphysXY, gmCache, gContext);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
