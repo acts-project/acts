@@ -147,7 +147,6 @@ jobs:
   linux_physmon:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404:53
-    needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
 
@@ -184,7 +183,7 @@ jobs:
           && /usr/local/bin/geant4-config --install-datasets
           && source build/this_acts_withdeps.sh
           && echo "::endgroup::"
-          && CI/physmon/phys_perf_mon.sh all physmon
+          && CI/physmon/phys_perf_mon.sh gx2f physmon
 
       - name: Post step summary
         if: always()

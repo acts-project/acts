@@ -1188,7 +1188,8 @@ class Gx2Fitter {
 
       // TODO investigate further
       if (chi2sum > oldChi2sum + 1e-5) {
-        ACTS_DEBUG("chi2 not converging monotonically");
+        ACTS_INFO("chi2 not converging monotonically");
+        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
       oldChi2sum = chi2sum;
