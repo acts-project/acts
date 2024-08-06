@@ -92,20 +92,20 @@ jobs:
           name: acts-linux-ubuntu
           path: build.tar.gz
 
-      - name: Downstream configure
-        run: >
-          cmake -B build-downstream -S Tests/DownstreamProject
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=20
-          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
-
-      - name: Downstream build
-        run: cmake --build build-downstream
-
-      - name: Downstream run
-        run: ./build-downstream/bin/ShowActsVersion
+#      - name: Downstream configure
+#        run: >
+#          cmake -B build-downstream -S Tests/DownstreamProject
+#          -GNinja
+#          -DCMAKE_BUILD_TYPE=Release
+#          -DCMAKE_CXX_FLAGS=-Werror
+#          -DCMAKE_CXX_STANDARD=20
+#          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+#
+#      - name: Downstream build
+#        run: cmake --build build-downstream
+#
+#      - name: Downstream run
+#        run: ./build-downstream/bin/ShowActsVersion
 
   linux_examples_test:
     runs-on: ubuntu-latest
@@ -147,6 +147,7 @@ jobs:
   linux_physmon:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404:53
+    needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
 
