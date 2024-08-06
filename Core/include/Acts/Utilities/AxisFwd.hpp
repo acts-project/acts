@@ -30,9 +30,7 @@ enum class AxisBoundaryType {
 /// Tag helper type for Axis constructors with class template deduction
 /// @tparam bdt the boundary type
 template <AxisBoundaryType bdt>
-struct AxisBoundaryTypeTag {
-  static constexpr AxisBoundaryType value = bdt;
-};
+struct AxisBoundaryTypeTag {};
 
 /// Convenience typedefs for AxisBoundaryTypeTag
 constexpr auto AxisOpen = AxisBoundaryTypeTag<AxisBoundaryType::Open>{};
