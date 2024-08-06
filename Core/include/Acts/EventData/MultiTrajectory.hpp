@@ -642,9 +642,11 @@ class MultiTrajectory {
     self().allocateCalibrated_impl(istate, measdim);
   }
 
+  // This function will move to an rvalue reference in the next major version
+  template<typename source_link_t>
   void setUncalibratedSourceLink(IndexType istate,
-                                 SourceLink&& sourceLink) requires(!ReadOnly) {
-    self().setUncalibratedSourceLink_impl(istate, std::move(sourceLink));
+                                 source_link_t&& sourceLink) requires(!ReadOnly) {
+    self().setUncalibratedSourceLink_impl(istate, std::forward<source_link_t>(sourceLink));
   }
 
   SourceLink getUncalibratedSourceLink(IndexType istate) const {
