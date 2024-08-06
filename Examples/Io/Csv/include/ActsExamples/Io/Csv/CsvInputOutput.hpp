@@ -49,7 +49,7 @@
 ///
 /// This allows access to the selected members via `.get<I>()` or `get<I>(...)`,
 /// conversion to equivalent `std::tuple<...>` via implicit conversion or
-/// explicitely via `.tuple()`,  and assignment from equivalent tuples.
+/// explicitly via `.tuple()`,  and assignment from equivalent tuples.
 /// The names can be accessed via `::names()`.
 #define DFE_NAMEDTUPLE(name, ...)                                       \
   using Tuple = decltype(::std::make_tuple(__VA_ARGS__));               \
@@ -160,7 +160,7 @@ inline std::ostream& print_tuple(std::ostream& os, const Names& n,
   // be done with the comma operator (yep, `,` is a weird but helpful operator)
   // for arbitrary expressions. `(<expr1>, <expr2>)` executes both expressions
   // but evaluates only to the return value of the second expression. thus,
-  // `(<expr>, 0)` executes `<expr>` but always evalutes to an integer of value
+  // `(<expr>, 0)` executes `<expr>` but always evaluates to an integer of value
   // zero. if <expr> uses the index pack variable `I` in the following setup
   //
   //     (void)Vacuum{(<expr>, 0)...};
@@ -295,7 +295,7 @@ class NamedTupleDsvWriter {
 
 template <typename T>
 static void parse(const std::string& str, T& value) {
-  // TODO use somthing w/ lower overhead then stringstream e.g. std::from_chars
+  // TODO use somtehing w/ lower overhead then stringstream e.g. std::from_chars
   std::istringstream is(str);
   is >> value;
 }
@@ -419,7 +419,7 @@ inline void DsvWriter<Delimiter>::append(Arg0&& arg0, Args&&... args) {
       // for all other items, write the delimiter followed by the item itself
       // (<expr1>, <expr2>) use the comma operator (yep, ',' in c++ is a weird
       // but helpful operator) to execute both expression and return the return
-      // value of the last one, i.e. here thats the number of columns written.
+      // value of the last one, i.e. here that's the number of columns written.
       // the ... pack expansion creates this expression for all arguments
       (line << Delimiter, write(std::forward<Args>(args), line))...,
   };
