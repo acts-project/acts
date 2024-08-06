@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
 
 // OPEN - equidistant binning tests
 BOOST_AUTO_TEST_CASE(BinUtility_arbitrary_binning) {
-  std::vector<float> bvalues = {-5., 0., 1., 1.1, 8.};
+  std::vector<ActsScalar> bvalues = {-5., 0., 1., 1.1, 8.};
   BinUtility xUtil(bvalues, Acts::open, Acts::BinningValue::binX);
 
   // Underflow

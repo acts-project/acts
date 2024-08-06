@@ -243,7 +243,7 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
   }
 
   // Set bin boundaries along binning
-  std::vector<float> binBoundaries;
+  std::vector<ActsScalar> binBoundaries;
   binBoundaries.push_back(volumes[0]->center().x() -
                           m_cfg.volumeCfg[0].length.x() * 0.5);
   for (std::size_t i = 0; i < volumes.size(); i++) {

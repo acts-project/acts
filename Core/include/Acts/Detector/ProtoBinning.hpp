@@ -168,7 +168,7 @@ struct BinningDescription {
         binUtility += BinUtility(b.bins(), b.edges.front(), b.edges.back(),
                                  bOption, b.binValue);
       } else {
-        std::vector<float> edges;
+        std::vector<ActsScalar> edges;
         std::for_each(b.edges.begin(), b.edges.end(),
                       [&](ActsScalar edge) { edges.push_back(edge); });
         binUtility += BinUtility(edges, bOption, b.binValue);
