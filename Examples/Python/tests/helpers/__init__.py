@@ -69,7 +69,7 @@ except ImportError:
 try:
     import acts.examples
 
-    hashingSeedingEnabled = hasattr(acts.examples, "SeedingAlgorithmHashing")
+    hashingSeedingEnabled = hasattr(acts.examples, "hashing")
 except ImportError:
     hashingSeedingEnabled = False
 
