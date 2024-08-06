@@ -829,13 +829,14 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         decorators,
         field,
         outputDir=str(tmp_path),
-        outputName="propagation_volume_material",
+        outputName="propagation-volume-material",
         s=s,
     )
 
     s.run()
 
     assert val_file.exists()
+
     assert_root_hash(val_file.name, val_file)
 
 
