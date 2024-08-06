@@ -207,3 +207,8 @@ const Acts::GeometryHierarchyMap<const Acts::Surface*>&
 Acts::Experimental::Detector::sensitiveHierarchyMap() const {
   return m_sensitiveHierarchyMap;
 }
+
+const Acts::Surface* Acts::Experimental::Detector::findSurface(
+    GeometryIdentifier geoID) const {
+  return *m_sensitiveHierarchyMap.find(geoID);
+}
