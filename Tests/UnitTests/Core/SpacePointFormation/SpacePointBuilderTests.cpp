@@ -51,7 +51,6 @@ namespace Acts::Test {
 
 using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
 using TestSourceLink = detail::Test::TestSourceLink;
-using SurfaceAccessor = detail::Test::TestSourceLink::SurfaceAccessor;
 using ConstantFieldStepper = EigenStepper<>;
 using ConstantFieldPropagator = Propagator<ConstantFieldStepper, Navigator>;
 // Construct initial track parameters.
@@ -187,9 +186,9 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   auto spBuilderConfig = SpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = geometry;
 
-  SurfaceAccessor surfaceAccessor{*geometry};
-  spBuilderConfig.slSurfaceAccessor.connect<&SurfaceAccessor::operator()>(
-      &surfaceAccessor);
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*geometry};
+  spBuilderConfig.slSurfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   auto spBuilder =
       SpacePointBuilder<TestSpacePoint>(spBuilderConfig, spConstructor);
@@ -197,8 +196,8 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   // for cosmic  without vertex constraint, usePerpProj = true
   auto spBuilderConfig_perp = SpacePointBuilderConfig();
   spBuilderConfig_perp.trackingGeometry = geometry;
-  spBuilderConfig_perp.slSurfaceAccessor.connect<&SurfaceAccessor::operator()>(
-      &surfaceAccessor);
+  spBuilderConfig_perp.slSurfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   spBuilderConfig_perp.usePerpProj = true;
 
@@ -281,7 +280,8 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
 
     spBuilderConfig_badStrips.trackingGeometry = geometry;
     spBuilderConfig_badStrips.slSurfaceAccessor
-        .connect<&SurfaceAccessor::operator()>(&surfaceAccessor);
+        .connect<&TestSourceLink::SurfaceAccessor::operator()>(
+            &surfaceAccessor);
 
     auto spBuilder_badStrips = SpacePointBuilder<TestSpacePoint>(
         spBuilderConfig_badStrips, spConstructor);
