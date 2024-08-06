@@ -334,6 +334,8 @@ std::vector<SourceLink> createSourceLinks(
 }
 
 BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
+    using SurfaceAccessor = detail::Test::Experimental::TestSourceLinkSurfaceAccessor;
+
   // Create detector
   auto detector = constructTelescopeDetector();
 
@@ -344,11 +346,10 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   auto pathSeederCfg = Acts::Experimental::PathSeeder<Axis>::Config();
 
   // Grid to bin the source links
-  detail::Test::TestSourceLink::SurfaceAccessor surfaceAccessor;
-  surfaceAccessor.detector = detector.get();
+  SurfaceAccessor surfaceAccessor{*detector};
   auto sourceLinkGrid = std::make_shared<SourceLinkGrid>();
   sourceLinkGrid->m_surfaceAccessor
-      .connect<&detail::Test::TestSourceLink::SurfaceAccessor::operator()>(
+      .connect<&SurfaceAccessor::operator()>(
           &surfaceAccessor);
   pathSeederCfg.sourceLinkGrid = sourceLinkGrid;
 
@@ -362,7 +363,7 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   // Transforms the source links to global coordinates
   SourceLinkCalibrator sourceLinkCalibrator;
   sourceLinkCalibrator.m_surfaceAccessor.connect<
-      &Acts::detail::Test::TestSourceLink::SurfaceAccessor::operator()>(
+      &SurfaceAccessor::operator()>(
       &surfaceAccessor);
   pathSeederCfg.sourceLinkCalibrator.connect<&SourceLinkCalibrator::operator()>(
       &sourceLinkCalibrator);
