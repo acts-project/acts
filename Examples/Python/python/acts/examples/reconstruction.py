@@ -901,12 +901,7 @@ def addHashingSeeding(
     For parameters description see addSeeding docstring
     """
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
-
-    hashingSeedingEnabled = hasattr(acts.examples, "SeedingAlgorithmHashing")
-    if not hashingSeedingEnabled:
-        raise ValueError(
-            "Hashing seeding is not enabled in the build. Make sure to build with ACTS_BUILD_EXAMPLES_HASHING=ON"
-        )
+    from acts.examples.hashing import SeedingAlgorithmHashing
 
     # Same configuration than the standard seeding
     seedFinderConfig = acts.SeedFinderConfig(
@@ -1027,14 +1022,14 @@ def addHashingSeeding(
     )
 
     # Hashing configuration
-    hashingTrainingConfig = acts.HashingTrainingConfig(
+    hashingTrainingConfig = acts.hashing.HashingTrainingConfig(
         **acts.examples.defaultKWArgs(
             AnnoySeed=HashingTrainingConfigArg.AnnoySeed,
             f=HashingTrainingConfigArg.f,
         ),
     )
 
-    hashingConfig = acts.HashingAlgorithmConfig(
+    hashingConfig = acts.hashing.HashingAlgorithmConfig(
         **acts.examples.defaultKWArgs(
             bucketSize=HashingAlgorithmConfigArg.bucketSize,
             zBins=HashingAlgorithmConfigArg.zBins,
@@ -1043,7 +1038,7 @@ def addHashingSeeding(
     )
 
     # Seeding algorithm
-    seedingAlg = acts.examples.SeedingAlgorithmHashing(
+    seedingAlg = SeedingAlgorithmHashing(
         level=logLevel,
         inputSpacePoints=[spacePoints],
         outputSeeds="seeds",

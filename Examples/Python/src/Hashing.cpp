@@ -26,9 +26,13 @@ namespace Acts::Python {
 void addHashing(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
+  auto hashingModule = m.def_submodule("hashing");
+  auto hashingExampleModule = mex.def_submodule("_hashing");
+
   {
     using Config = Acts::HashingAlgorithmConfig;
-    auto c = py::class_<Config>(m, "HashingAlgorithmConfig").def(py::init<>());
+    auto c = py::class_<Config>(hashingModule, "HashingAlgorithmConfig")
+                 .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(bucketSize);
     ACTS_PYTHON_MEMBER(zBins);
@@ -39,20 +43,21 @@ void addHashing(Context& ctx) {
 
   {
     using Config = Acts::HashingTrainingConfig;
-    auto c = py::class_<Config>(m, "HashingTrainingConfig").def(py::init<>());
+    auto c = py::class_<Config>(hashingModule, "HashingTrainingConfig")
+                 .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(AnnoySeed);
+    ACTS_PYTHON_MEMBER(annoySeed);
     ACTS_PYTHON_MEMBER(f);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::SeedingAlgorithmHashing, mex, "SeedingAlgorithmHashing",
-      inputSpacePoints, outputSeeds, outputBuckets, seedFilterConfig,
-      seedFinderConfig, seedFinderOptions, gridConfig, gridOptions,
-      allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors,
-      hashingConfig, hashingTrainingConfig, useExtraCuts);
+      ActsExamples::SeedingAlgorithmHashing, hashingExampleModule,
+      "SeedingAlgorithmHashing", inputSpacePoints, outputSeeds, outputBuckets,
+      seedFilterConfig, seedFinderConfig, seedFinderOptions, gridConfig,
+      gridOptions, allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom,
+      numPhiNeighbors, hashingConfig, hashingTrainingConfig, useExtraCuts);
 }
 
 }  // namespace Acts::Python
