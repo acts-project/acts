@@ -132,7 +132,7 @@ struct TrackStateTraits {
   using EffectiveCalibratedCovariance =
       typename detail_lt::DynamicSizeTypes<ReadOnly>::CovarianceMap;
 
-  constexpr static auto ProjectorFlags = Eigen::ColMajor | Eigen::AutoAlign;
+  constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
   using Projector = Eigen::Matrix<Scalar, M, eBoundSize, ProjectorFlags>;
   using EffectiveProjector = Eigen::Matrix<Scalar, Eigen::Dynamic, eBoundSize,
                                            ProjectorFlags, M, eBoundSize>;
