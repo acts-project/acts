@@ -45,8 +45,6 @@
 #include <utility>
 #include <vector>
 
-// Set up a helper macro for not using a GCC extension on Windows.
-
 /// Enable tuple-like access and conversion for selected class/struct members.
 ///
 /// This allows access to the selected members via `.get<I>()` or `get<I>(...)`,
@@ -57,7 +55,7 @@
   using Tuple = decltype(::std::make_tuple(__VA_ARGS__));               \
   static ::std::array<::std::string, ::std::tuple_size<Tuple>::value>   \
   names() {                                                             \
-    return ::dfe::namedtuple_impl::unstringify<                         \
+    return ::ActsExamples::detail_dfe::unstringify<                     \
         ::std::tuple_size<Tuple>::value>((#__VA_ARGS__));               \
   }                                                                     \
   template <typename... U>                                              \
@@ -95,11 +93,12 @@
   }                                                                     \
   friend inline ::std::ostream& operator<<(::std::ostream& os,          \
                                            const name& nt) {            \
-    return ::dfe::namedtuple_impl::print_tuple(                         \
+    return ::ActsExamples::detail_dfe::print_tuple(                     \
         os, nt.names(), nt.tuple(),                                     \
         ::std::make_index_sequence<::std::tuple_size<Tuple>::value>{}); \
   }
 
+namespace ActsExamples {
 // implementation helpers
 namespace detail_dfe {
 
@@ -619,6 +618,8 @@ inline void NamedTupleDsvReader<Delimiter, NamedTuple>::parse_header(
   }
 }
 
+#undef _UNUSED
+
 }  // namespace detail_dfe
 
 /// Write arbitrary data as comma-separated values into as text file.
@@ -642,3 +643,5 @@ using NamedTupleTsvWriter = detail_dfe::NamedTupleDsvWriter<'\t', T>;
 /// Read tuple-like records from a tab-separated file.
 template <typename T>
 using NamedTupleTsvReader = detail_dfe::NamedTupleDsvReader<'\t', T>;
+
+}  // namespace ActsExamples
