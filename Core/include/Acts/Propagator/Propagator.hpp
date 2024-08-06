@@ -106,16 +106,15 @@ class Propagator final
   /// Re-define bound track parameters dependent on the stepper
   using StepperBoundTrackParameters =
       detail::stepper_bound_parameters_type_t<stepper_t>;
-  static_assert(
-      Concepts::BoundTrackParametersConcept<StepperBoundTrackParameters>,
-      "Stepper bound track parameters do not fulfill bound "
-      "parameters concept.");
+  static_assert(Concepts::BoundTrackParameters<StepperBoundTrackParameters>,
+                "Stepper bound track parameters do not fulfill bound "
+                "parameters concept.");
 
   /// Re-define curvilinear track parameters dependent on the stepper
   using StepperCurvilinearTrackParameters =
       detail::stepper_curvilinear_parameters_type_t<stepper_t>;
   static_assert(
-      Concepts::BoundTrackParametersConcept<StepperCurvilinearTrackParameters>,
+      Concepts::BoundTrackParameters<StepperCurvilinearTrackParameters>,
       "Stepper bound track parameters do not fulfill bound "
       "parameters concept.");
 

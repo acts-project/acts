@@ -125,7 +125,7 @@ auto Acts::Propagator<S, N>::propagate(
     -> Result<action_list_t_result_t<
         StepperBoundTrackParameters,
         typename propagator_options_t::action_list_type>> {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+  static_assert(Concepts::BoundTrackParameters<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
   auto state = makeState<parameters_t, propagator_options_t, target_aborter_t,
@@ -142,7 +142,7 @@ template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
 auto Acts::Propagator<S, N>::makeState(
     const parameters_t& start, const propagator_options_t& options) const {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+  static_assert(Concepts::BoundTrackParameters<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
   // Type of track parameters produced by the propagation
@@ -189,7 +189,7 @@ template <typename parameters_t, typename propagator_options_t,
 auto Acts::Propagator<S, N>::makeState(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options) const {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+  static_assert(Concepts::BoundTrackParameters<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
   // Type of provided options
