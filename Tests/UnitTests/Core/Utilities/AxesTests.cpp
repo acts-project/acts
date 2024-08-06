@@ -400,46 +400,43 @@ BOOST_AUTO_TEST_CASE(AxisTypeDeduction) {
 }
 
 BOOST_AUTO_TEST_CASE(AxisVisit) {
+  using enum AxisBoundaryType;
+  using enum AxisType;
+
   auto eqOpen = Axis{0.0, 10., 10};
   eqOpen.visit([](const auto& axis) {
-    BOOST_CHECK(
-        (std::is_same_v<std::decay_t<decltype(axis)>,
-                        Axis<AxisType::Equidistant, AxisBoundaryType::Open>>));
+    BOOST_CHECK((
+        std::is_same_v<std::decay_t<decltype(axis)>, Axis<Equidistant, Open>>));
   });
 
   auto eqBound = Axis{AxisBound, 0.0, 10., 10};
   eqBound.visit([](const auto& axis) {
-    BOOST_CHECK(
-        (std::is_same_v<std::decay_t<decltype(axis)>,
-                        Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>));
+    BOOST_CHECK((std::is_same_v<std::decay_t<decltype(axis)>,
+                                Axis<Equidistant, Bound>>));
   });
 
   auto eqClosed = Axis{AxisClosed, 0.0, 10., 10};
   eqClosed.visit([](const auto& axis) {
-    BOOST_CHECK((
-        std::is_same_v<std::decay_t<decltype(axis)>,
-                       Axis<AxisType::Equidistant, AxisBoundaryType::Closed>>));
+    BOOST_CHECK((std::is_same_v<std::decay_t<decltype(axis)>,
+                                Axis<Equidistant, Closed>>));
   });
 
   auto varOpen = Axis{{0, 1, 2., 3, 4}};
   varOpen.visit([](const auto& axis) {
     BOOST_CHECK(
-        (std::is_same_v<std::decay_t<decltype(axis)>,
-                        Axis<AxisType::Variable, AxisBoundaryType::Open>>));
+        (std::is_same_v<std::decay_t<decltype(axis)>, Axis<Variable, Open>>));
   });
 
   auto varBound = Axis{AxisBound, {0, 1, 2., 3, 4}};
   varBound.visit([](const auto& axis) {
     BOOST_CHECK(
-        (std::is_same_v<std::decay_t<decltype(axis)>,
-                        Axis<AxisType::Variable, AxisBoundaryType::Bound>>));
+        (std::is_same_v<std::decay_t<decltype(axis)>, Axis<Variable, Bound>>));
   });
 
   auto varClosed = Axis{AxisClosed, {0, 1, 2., 3, 4}};
   varClosed.visit([](const auto& axis) {
     BOOST_CHECK(
-        (std::is_same_v<std::decay_t<decltype(axis)>,
-                        Axis<AxisType::Variable, AxisBoundaryType::Closed>>));
+        (std::is_same_v<std::decay_t<decltype(axis)>, Axis<Variable, Closed>>));
   });
 }
 
