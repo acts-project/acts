@@ -469,7 +469,7 @@ class Gx2Fitter {
     /// a following iteration in a different volume.
     const TrackingVolume* startVolume = nullptr;
 
-    // TODO write explantion
+    // TODO write explanation
     const parameters_t* parametersWithHypothesis = nullptr;
 
     /// TODO description
@@ -533,7 +533,7 @@ class Gx2Fitter {
         const GeometryIdentifier geoId = surface->geometryId();
         ACTS_DEBUG("Surface " << geoId << " detected.");
 
-        // Found material - add an scatteringAngles entry
+        // Found material - add an scatteringAngles entry if not done yet. Handling will happen later
         if (surface->surfaceMaterial() != nullptr) {
           ACTS_DEBUG("    The surface contains material.");
 
@@ -681,9 +681,9 @@ class Gx2Fitter {
             auto& [boundParams, jacobian, pathLength] = *res;
 
             // Fill the track state
-            // TODO Do we need to get a prediction?
-            // trackStateProxy.predicted() = boundParams.parameters();
-            // trackStateProxy.predictedCovariance() = state.stepping.cov;
+            // TODO Do we need to get a prediction? -> yes for scattering
+             trackStateProxy.predicted() = boundParams.parameters();
+             trackStateProxy.predictedCovariance() = state.stepping.cov;
 
             trackStateProxy.jacobian() = jacobian;
             trackStateProxy.pathLength() = pathLength;
@@ -1024,6 +1024,7 @@ class Gx2Fitter {
       std::vector<GeometryIdentifier> geoIdVector;
 
       for (const auto& trackState : track.trackStates()) {
+        ACTS_VERBOSE("Start to investigate trackState ...");
         auto typeFlags = trackState.typeFlags();
 
         // update all Jacobians from start
@@ -1036,6 +1037,7 @@ class Gx2Fitter {
 
         if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
           // Handle measurement
+          ACTS_VERBOSE("    Handle measurement");
 
           auto measDim = trackState.calibratedSize();
           countNdf += measDim;
@@ -1071,7 +1073,7 @@ class Gx2Fitter {
           // Get and store geoId for the current material surface
           const GeometryIdentifier geoId =
               trackState.referenceSurface().geometryId();
-          ACTS_VERBOSE("Add material effects for " << geoId);
+          ACTS_VERBOSE("    Add material effects for " << geoId);
           assert(scatteringMap.find(geoId) != scatteringMap.end() &&
                  "No scattering angles found for material surface");
           geoIdVector.emplace_back(geoId);
