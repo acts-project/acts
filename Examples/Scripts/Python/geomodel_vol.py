@@ -138,7 +138,7 @@ def main():
     gmFactoryConfig = gm.GeoModelDetectorObjectFactory.Config()
     gmFactoryConfig.materialList = args.material_list
     gmFactoryConfig.nameList = args.name_list
-    gmFactoryConfig.convertFpv = args.convert_boundingboxes
+    gmFactoryConfig.convertBox = args.convert_boundingboxes
     gmFactoryConfig.convertSubVolumes = args.convert_subvols
     gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
     # The options

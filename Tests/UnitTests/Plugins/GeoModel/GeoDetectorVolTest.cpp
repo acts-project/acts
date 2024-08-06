@@ -29,17 +29,16 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   //create pars for constructor
   //std::unique_ptr<const Actst::Logger> log;
   Acts::GeoModelDetectorObjectFactory::Config gmConfig;
-  gmConfig.materialList = {"Aluminium"};
-  //gmConfig.nameList = {};
-  //gmConfig.convertFpv = {};
-  //gmConfig.convertSubVolumnes = {};
+  //gmConfig.materialList = {"Aluminium"};
+  Acts::GeometryContext gContext;
+  Acts::GeoModelDetectorObjectFactory::Cache gmCache;
 
   //create factory instance
   Acts::GeoModelDetectorObjectFactory factory = Acts::GeoModelDetectorObjectFactory(gmConfig);
 
-  std::cout <<"!!!!!!!! test" << std::endl;
   //TODO find the right data type for the surface converter
-  //factory.convertFpv("LogVolumeXY", fphysXY, gmCache, gContext);
+  factory.convertFpv("LogVolumeXY", fphysXY, gmCache, gContext);
+  BOOST_CHECK(gmCache.sensitiveSurfaces.size()==1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
