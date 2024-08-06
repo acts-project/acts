@@ -21,7 +21,7 @@
 #include <string>
 
 #include <boost/container/static_vector.hpp>
-#include <dfe/dfe_io_dsv.hpp>
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 
 #include "CsvOutputData.hpp"
 
@@ -61,7 +61,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
   const auto& path =
       perEventFilepath(m_cfg.inputDir, filename + ".csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvReader<SpacePointData> reader(path);
+  Acts::NamedTupleCsvReader<SpacePointData> reader(path);
   SpacePointData data;
 
   while (reader.read(data)) {

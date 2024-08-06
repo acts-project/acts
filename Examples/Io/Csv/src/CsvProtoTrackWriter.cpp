@@ -22,7 +22,7 @@
 #include <optional>
 #include <stdexcept>
 
-#include <dfe/dfe_io_dsv.hpp>
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 
 #include "CsvOutputData.hpp"
 
@@ -49,7 +49,7 @@ ActsExamples::ProcessCode ActsExamples::CsvProtoTrackWriter::writeT(
   std::string path =
       perEventFilepath(m_cfg.outputDir, "prototracks.csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<ProtoTrackData> writer(path, m_cfg.outputPrecision);
+  Acts::NamedTupleCsvWriter<ProtoTrackData> writer(path, m_cfg.outputPrecision);
 
   for (auto trackId = 0ul; trackId < tracks.size(); ++trackId) {
     for (Index measurmentId : tracks[trackId]) {

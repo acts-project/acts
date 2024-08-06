@@ -19,7 +19,7 @@
 #include <array>
 #include <stdexcept>
 
-#include <dfe/dfe_io_dsv.hpp>
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 
 #include "CsvOutputData.hpp"
 
@@ -55,7 +55,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
 
-  dfe::NamedTupleCsvReader<SimHitData> reader(path);
+  Acts::NamedTupleCsvReader<SimHitData> reader(path);
 
   SimHitContainer::sequence_type unordered;
   SimHitData data;

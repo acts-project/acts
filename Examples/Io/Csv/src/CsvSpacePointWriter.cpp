@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include <dfe/dfe_io_dsv.hpp>
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 
 #include "CsvOutputData.hpp"
 
@@ -44,7 +44,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacepointWriter::writeT(
   std::string pathSP =
       perEventFilepath(m_cfg.outputDir, "spacepoint.csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<SpacepointData> writerSP(pathSP,
+  Acts::NamedTupleCsvWriter<SpacepointData> writerSP(pathSP,
                                                     m_cfg.outputPrecision);
 
   SpacepointData spData{};

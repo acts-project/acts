@@ -23,7 +23,7 @@
 #include <stdexcept>
 #include <string>
 
-#include <dfe/dfe_io_dsv.hpp>
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 
 #include "CsvOutputData.hpp"
 
@@ -60,7 +60,7 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
   // vt and m are an optional columns
-  dfe::NamedTupleCsvReader<ParticleData> reader(path, {"vt", "m"});
+  Acts::NamedTupleCsvReader<ParticleData> reader(path, {"vt", "m"});
   ParticleData data;
 
   while (reader.read(data)) {

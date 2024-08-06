@@ -24,7 +24,7 @@
 #include <stdexcept>
 #include <string>
 
-#include <dfe/dfe_io_dsv.hpp>
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 
 #include "CsvOutputData.hpp"
 
@@ -54,7 +54,7 @@ ProcessCode CsvExaTrkXGraphReader::read(const AlgorithmContext& ctx) {
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
   // vt and m are an optional columns
-  dfe::NamedTupleCsvReader<GraphData> reader(path, {"vt", "m"});
+  Acts::NamedTupleCsvReader<GraphData> reader(path, {"vt", "m"});
   GraphData data;
 
   Graph g;

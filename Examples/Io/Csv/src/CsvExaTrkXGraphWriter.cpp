@@ -18,8 +18,8 @@
 #include <stdexcept>
 #include <vector>
 
-#include <dfe/dfe_io_dsv.hpp>
-#include <dfe/dfe_namedtuple.hpp>
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
+
 
 #include "CsvOutputData.hpp"
 
@@ -42,7 +42,7 @@ ActsExamples::ProcessCode ActsExamples::CsvExaTrkXGraphWriter::writeT(
   std::string path = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<GraphData> writer(path);
+  Acts::NamedTupleCsvWriter<GraphData> writer(path);
 
   const auto nEdges = graph.edges.size() / 2;
   for (auto i = 0ul; i < nEdges; ++i) {

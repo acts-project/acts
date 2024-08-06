@@ -21,7 +21,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include <dfe/dfe_io_dsv.hpp>
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 
 #include "CsvOutputData.hpp"
 
@@ -41,7 +41,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitWriter::writeT(
   std::string pathSimHit = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<SimHitData> writerSimHit(pathSimHit,
+  Acts::NamedTupleCsvWriter<SimHitData> writerSimHit(pathSimHit,
                                                     m_cfg.outputPrecision);
 
   // CsvOutputData struct

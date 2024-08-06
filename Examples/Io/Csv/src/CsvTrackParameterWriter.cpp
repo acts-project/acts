@@ -17,7 +17,7 @@
 #include <optional>
 #include <stdexcept>
 
-#include <dfe/dfe_io_dsv.hpp>
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 
 #include "CsvOutputData.hpp"
 
@@ -68,7 +68,7 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::write(
   std::string path =
       perEventFilepath(m_cfg.outputDir, m_cfg.outputStem, ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<TrackParameterData> writer(path,
+  Acts::NamedTupleCsvWriter<TrackParameterData> writer(path,
                                                       m_cfg.outputPrecision);
 
   TrackParameterData data{};

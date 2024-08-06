@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <string>
 
-#include <dfe/dfe_io_dsv.hpp>
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 
 #include "CsvOutputData.hpp"
 
@@ -60,7 +60,7 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterReader::read(
 
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
-  dfe::NamedTupleCsvReader<TrackParameterData> reader(path);
+  Acts::NamedTupleCsvReader<TrackParameterData> reader(path);
   TrackParameterData d{};
 
   while (reader.read(d)) {
