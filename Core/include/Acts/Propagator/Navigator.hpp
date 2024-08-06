@@ -319,6 +319,11 @@ class Navigator {
               : nullptr;
       if (state.navigation.startVolume != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
+      } else {
+        ACTS_VERBOSE(volInfo(state)
+                     << "No start volume resolved. Nothing left to do.");
+        // set the navigation break
+        state.navigation.navigationBreak = true;
       }
     }
 
