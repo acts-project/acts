@@ -12,12 +12,11 @@
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <optional>
 #include <stdexcept>
-
-#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 
 #include "CsvOutputData.hpp"
 
@@ -68,8 +67,8 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::write(
   std::string path =
       perEventFilepath(m_cfg.outputDir, m_cfg.outputStem, ctx.eventNumber);
 
-  Acts::NamedTupleCsvWriter<TrackParameterData> writer(path,
-                                                      m_cfg.outputPrecision);
+  ActsExamples::NamedTupleCsvWriter<TrackParameterData> writer(
+      path, m_cfg.outputPrecision);
 
   TrackParameterData data{};
   for (const auto& tp : inputTrackParameters) {

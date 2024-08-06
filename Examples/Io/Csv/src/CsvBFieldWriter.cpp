@@ -48,7 +48,7 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
 
   // Initialize a CSV writer to the specified filename using the specified
   // column names.
-  Acts::CsvWriter writer(fields, config.fileName);
+  CsvWriter writer(fields, config.fileName);
 
   // We proceed by finding the number of bins, as well as the minimum and
   // maximum coordinates. This process depends quite heavily on the structure
