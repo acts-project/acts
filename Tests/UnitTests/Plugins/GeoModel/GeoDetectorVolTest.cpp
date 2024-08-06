@@ -9,36 +9,52 @@
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoMaterial.h>
+#include <typeinfo>
 
 #include "Acts/Utilities/Logger.hpp"
 
 BOOST_AUTO_TEST_SUITE(GeoModelDetObj)
 
 BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
-  auto material = new GeoMaterial("Material", 1.0);
-  // Let's create a GeoFullPhysVol object
 
-  // (BOX object)
-  auto boxXY = new GeoBox(100, 200, 2);
+  // Let's create a GeoFullPhysVol object
+  auto material = new GeoMaterial("Material", 1.0);
+  double gmhlx = 100;
+  double gmhly = 200;
+  double gmhlz = 2;
+  auto boxXY = new GeoBox(gmhlx, gmhly, gmhlz);
   auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
   auto fphysXY = new GeoFullPhysVol(logXY);
   PVConstLink physVol{fphysXY};
   auto rBounds = std::make_shared<Acts::RectangleBounds>(100, 200);
-  //int shapeId = shape->typeID();
 
-  //create pars for constructor
-  //std::unique_ptr<const Actst::Logger> log;
+  //create pars for conversion
   Acts::GeoModelDetectorObjectFactory::Config gmConfig;
-  //gmConfig.materialList = {"Aluminium"};
   Acts::GeometryContext gContext;
   Acts::GeoModelDetectorObjectFactory::Cache gmCache;
 
   //create factory instance
   Acts::GeoModelDetectorObjectFactory factory = Acts::GeoModelDetectorObjectFactory(gmConfig);
 
-  //TODO find the right data type for the surface converter
+  //convert GeoFullPhysVol
   factory.convertFpv("LogVolumeXY", fphysXY, gmCache, gContext);
-  BOOST_CHECK(gmCache.sensitiveSurfaces.size()==1);
+
+
+  //perform checks
+  //TODO check achlz
+  for (auto surface : gmCache.sensitiveSurfaces){
+    auto ss = std::get<1>(surface);
+    BOOST_CHECK(ss->type() == Acts::Surface::SurfaceType::Plane);
+    const Acts::SurfaceBounds& bounds = ss->bounds();
+    const Acts::RectangleBounds* rectBounds = dynamic_cast<const Acts::RectangleBounds*>(&bounds);
+
+    double achlx = rectBounds->halfLengthX();
+    double achly = rectBounds->halfLengthY();
+    //double achlz = rectBounds->halfLengthZ();
+    BOOST_CHECK(gmhlx == achlx);
+    BOOST_CHECK(gmhly == achly);
+    //BOOST_CHECK(gmhlz == achlz);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
