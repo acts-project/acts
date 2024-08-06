@@ -22,6 +22,7 @@ BOOST_AUTO_TEST_SUITE(EventDataSourceLink)
 
 BOOST_AUTO_TEST_CASE(TestSourceLinkCoverage) {
   using Acts::detail::Test::TestSourceLink;
+
   TestSourceLink ts;
   Acts::Vector2 stddev(0.01, 0.1);
   Acts::SquareMatrix2 cov = stddev.cwiseProduct(stddev).asDiagonal();
