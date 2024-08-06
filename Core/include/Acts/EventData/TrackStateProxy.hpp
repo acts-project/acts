@@ -679,15 +679,19 @@ class TrackStateProxy {
   // This function will move to an rvalue reference in the next major version
   /// Set an uncalibrated source link
   /// @param sourceLink The uncalibrated source link to set
-  template<typename source_link_t>
-  void setUncalibratedSourceLink(source_link_t&& sourceLink) requires(!ReadOnly) {
-    m_traj->setUncalibratedSourceLink(m_istate, std::forward<source_link_t>(sourceLink));
+  template <typename source_link_t>
+  void setUncalibratedSourceLink(source_link_t&& sourceLink) requires(
+      !ReadOnly) {
+    m_traj->setUncalibratedSourceLink(m_istate,
+                                      std::forward<source_link_t>(sourceLink));
   }
 
   /// Set an uncalibrated source link
   /// @param sourceLink The uncalibrated source link to set
-  /// @deprecated Use the overload with an rvalue reference
-  void setUncalibratedSourceLink(const SourceLink& sourceLink) requires(!ReadOnly) {
+  /// @note Use the overload with an rvalue reference, this
+  ///       overload will be removed ith the next major version
+  void setUncalibratedSourceLink(const SourceLink& sourceLink) requires(
+      !ReadOnly) {
     m_traj->setUncalibratedSourceLink(m_istate, SourceLink{sourceLink});
   }
 
