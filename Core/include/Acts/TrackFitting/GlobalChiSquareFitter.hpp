@@ -680,13 +680,13 @@ class Gx2Fitter {
             typename parameters_t = BoundTrackParameters,
             typename track_container_t, template <typename> class holder_t,
             bool _isdn = isDirectNavigator>
-  auto fit(source_link_iterator_t it, source_link_iterator_t end,
-           const start_parameters_t& sParameters,
-           const Gx2FitterOptions<traj_t>& gx2fOptions,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const -> std::enable_if_t<
-          !_isdn, Result<typename TrackContainer<track_container_t, traj_t,
-                                                 holder_t>::TrackProxy>> {
+  requires(!_isdn) auto fit(
+      source_link_iterator_t it, source_link_iterator_t end,
+      const start_parameters_t& sParameters,
+      const Gx2FitterOptions<traj_t>& gx2fOptions,
+      TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
+      -> Result<typename TrackContainer<track_container_t, traj_t,
+                                        holder_t>::TrackProxy> {
     // Preprocess Measurements (SourceLinks -> map)
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <concepts>
 #include <optional>
 #include <sstream>
 #include <system_error>
@@ -61,14 +62,13 @@ class Result {
   /// @tparam T2 Type of the potential assignment
   /// @param value The potential value, could be an actual valid value or an
   /// error.
-  template <
-      typename T2, typename _E = E, typename _T = T,
-      typename = std::enable_if_t<
-          (!std::is_same_v<_T, _E> && !std::is_constructible_v<_T, _E> &&
-           !std::is_convertible_v<_T, _E> && !std::is_constructible_v<_E, _T> &&
-           !std::is_convertible_v<_E, _T> &&
-           !(std::is_convertible_v<T2, _T> && std::is_convertible_v<T2, _E>))>>
-  Result(T2 value) noexcept
+  template <typename T2, typename _E = E, typename _T = T>
+  requires(!std::same_as<_T, _E> && !std::constructible_from<_T, _E> &&
+           !std::convertible_to<_T, _E> && !std::constructible_from<_E, _T> &&
+           !std::convertible_to<_E, _T> &&
+           !(std::convertible_to<T2, _T> && std::convertible_to<T2, _E>))
+      Result(T2 value)
+  noexcept
       : m_var(std::conditional_t<std::is_convertible_v<T2, _T>, T, E>{
             std::move(value)}) {}
 
@@ -79,14 +79,13 @@ class Result {
   /// @param value The potential value, could be an actual valid value or an
   /// error.
   /// @return The assigned instance
-  template <
-      typename T2, typename _E = E, typename _T = T,
-      typename = std::enable_if_t<
-          (!std::is_same_v<_T, _E> && !std::is_constructible_v<_T, _E> &&
-           !std::is_convertible_v<_T, _E> && !std::is_constructible_v<_E, _T> &&
-           !std::is_convertible_v<_E, _T> &&
-           !(std::is_convertible_v<T2, _T> && std::is_convertible_v<T2, _E>))>>
-  Result<T, E>& operator=(T2 value) noexcept {
+  template <typename T2, typename _E = E, typename _T = T>
+  requires(!std::same_as<_T, _E> && !std::constructible_from<_T, _E> &&
+           !std::convertible_to<_T, _E> && !std::constructible_from<_E, _T> &&
+           !std::convertible_to<_E, _T> &&
+           !(std::convertible_to<T2, _T> &&
+             std::convertible_to<T2, _E>)) Result<T, E>
+  &operator=(T2 value) noexcept {
     m_var = std::move(std::conditional_t<std::is_convertible_v<T2, _T>, T, E>{
         std::move(value)});
     return *this;

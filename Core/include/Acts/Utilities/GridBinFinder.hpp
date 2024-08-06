@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
@@ -37,15 +38,11 @@ class GridBinFinder {
   /// @pre The provided paramers must be of type 'int', 'std::pair<int, int>' or 'std::vector<std::pair<int, int>>'
   /// no other type is allowed. The order of these parameters must correspond to
   /// the same ordering of the axes in the grid
-  template <typename... args,
-            typename = std::enable_if_t<
-                sizeof...(args) == DIM &&
-                std::conjunction_v<std::disjunction<
-                    std::is_same<int, std::decay_t<args>>,
-                    std::is_same<std::pair<int, int>, std::decay_t<args>>,
-                    std::is_same<std::vector<std::pair<int, int>>,
-                                 std::decay_t<args>>>...>>>
-  explicit GridBinFinder(args&&... vals) {
+  template <typename... args>
+  requires(sizeof...(args) == DIM &&
+           (same_as_any_of<std::decay_t<args>, int, std::pair<int, int>,
+                           std::vector<std::pair<int, int>>> &&
+            ...)) explicit GridBinFinder(args&&... vals) {
     storeValue(std::forward<args>(vals)...);
   }
 
