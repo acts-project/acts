@@ -41,7 +41,7 @@ void ActsExamples::PassThroughCalibrator::calibrate(
         measurement.parameters<kMeasurementSize>();
     trackState.calibratedCovariance<kMeasurementSize>() =
         measurement.covariance<kMeasurementSize>();
-    trackState.setProjectorBitset(measurement.subspace().fullProjectorBits());
+    trackState.setProjector(measurement.subspace().fullProjector<double>());
   });
 }
 

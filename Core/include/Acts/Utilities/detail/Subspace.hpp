@@ -320,40 +320,6 @@ class VariableSizeSubspace {
     }
     return expn;
   }
-
-  std::uint64_t projectorBits() const {
-    std::uint64_t result = 0;
-
-    for (std::size_t i = 0; i < m_size; ++i) {
-      for (std::size_t j = 0; j < kFullSize; ++j) {
-        // the bit order is defined in `Acts/Utilities/AlgebraHelpers.hpp`
-        // in `matrixToBitset`
-        std::size_t index = m_size * kFullSize - 1 - (i + j * m_size);
-        if (m_axes[i] == j) {
-          result |= (1ull << index);
-        }
-      }
-    }
-
-    return result;
-  }
-
-  std::uint64_t fullProjectorBits() const {
-    std::uint64_t result = 0;
-
-    for (std::size_t i = 0; i < kFullSize; ++i) {
-      for (std::size_t j = 0; j < kFullSize; ++j) {
-        // the bit order is defined in `Acts/Utilities/AlgebraHelpers.hpp`
-        // in `matrixToBitset`
-        std::size_t index = kFullSize * kFullSize - 1 - (i + j * kFullSize);
-        if (i < m_size && m_axes[i] == j) {
-          result |= (1ull << index);
-        }
-      }
-    }
-
-    return result;
-  }
 };
 
 /// @}

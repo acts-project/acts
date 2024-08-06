@@ -175,6 +175,6 @@ void ActsExamples::ScalingCalibrator::calibrate(
         measurement.parameters<kMeasurementSize>();
     trackState.calibratedCovariance<kMeasurementSize>() =
         measurementCopy.covariance<kMeasurementSize>();
-    trackState.setProjectorBitset(measurement.subspace().fullProjectorBits());
+    trackState.setProjector(measurement.subspace().fullProjector<double>());
   });
 }
