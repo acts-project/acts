@@ -187,7 +187,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   auto spBuilderConfig = SpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = geometry;
 
-  SurfaceAccessor surfaceAccessor{geometry.get()};
+  SurfaceAccessor surfaceAccessor{*geometry};
   spBuilderConfig.slSurfaceAccessor.connect<&SurfaceAccessor::operator()>(
       &surfaceAccessor);
 

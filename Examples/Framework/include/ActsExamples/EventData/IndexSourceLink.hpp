@@ -67,22 +67,22 @@ class IndexSourceLink final {
 };
 
 struct IndexSourceLinkSurfaceAccessor {
-  const Acts::TrackingGeometry* geometry = nullptr;
+  const Acts::TrackingGeometry& geometry;
 
   const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
     const auto& indexSourceLink = sourceLink.get<IndexSourceLink>();
-    return geometry->findSurface(indexSourceLink.geometryId());
+    return geometry.findSurface(indexSourceLink.geometryId());
   }
 };
 
 namespace Experimental {
 
 struct IndexSourceLinkSurfaceAccessor {
-  const Acts::Experimental::Detector* geometry = nullptr;
+  const Acts::Experimental::Detector& geometry;
 
   const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
     const auto& indexSourceLink = sourceLink.get<IndexSourceLink>();
-    return geometry->findSurface(indexSourceLink.geometryId());
+    return geometry.findSurface(indexSourceLink.geometryId());
   }
 };
 

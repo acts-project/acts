@@ -351,7 +351,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       .connect<&Acts::GainMatrixSmoother::operator()<VectorMultiTrajectory>>(
           &kfSmoother);
 
-  detail::Test::TestSourceLink::SurfaceAccessor surfaceAccessor{detector.get()};
+  detail::Test::TestSourceLink::SurfaceAccessor surfaceAccessor{*detector};
   extensions.surfaceAccessor
       .connect<&detail::Test::TestSourceLink::SurfaceAccessor::operator()>(
           &surfaceAccessor);

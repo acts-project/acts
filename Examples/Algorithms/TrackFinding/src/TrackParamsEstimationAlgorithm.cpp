@@ -131,7 +131,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
 
   IndexSourceLink::SurfaceAccessor surfaceAccessor{
-      m_cfg.trackingGeometry.get()};
+      *m_cfg.trackingGeometry};
 
   // Loop over all found seeds to estimate track parameters
   for (std::size_t iseed = 0; iseed < seeds.size(); ++iseed) {

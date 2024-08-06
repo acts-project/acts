@@ -89,7 +89,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
 
   GsfFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
-                        const Acts::TrackingGeometry* trkGeo)
+                        const Acts::TrackingGeometry& trkGeo)
       : fitter(std::move(f)),
         directFitter(std::move(df)),
         m_slSurfaceAccessor{trkGeo} {}
@@ -196,7 +196,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     const Acts::Logger& logger) {
   // Standard fitter
   MultiStepper stepper(magneticField, logger.cloneWithSuffix("Step"));
-  const auto* geo = trackingGeometry.get();
+  const auto& geo = *trackingGeometry;
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;

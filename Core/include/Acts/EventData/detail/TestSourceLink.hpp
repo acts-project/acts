@@ -95,32 +95,22 @@ struct TestSourceLink final {
 };
 
 struct TestSourceLinkSurfaceAccessor {
-  const TrackingGeometry* geometry = nullptr;
+  const TrackingGeometry& geometry;
 
   const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
     const auto& testSourceLink = sourceLink.get<TestSourceLink>();
-
-    if (geometry != nullptr) {
-      return geometry->findSurface(testSourceLink.m_geometryId);
-    } else {
-      throw std::runtime_error("No tracking geometry or detector set");
-    }
+    return geometry.findSurface(testSourceLink.m_geometryId);
   }
 };
 
 namespace Experimental {
 
 struct TestSourceLinkSurfaceAccessor {
-  const Acts::Experimental::Detector* geometry = nullptr;
+  const Acts::Experimental::Detector& geometry;
 
   const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
     const auto& testSourceLink = sourceLink.get<TestSourceLink>();
-
-    if (geometry != nullptr) {
-      return geometry->findSurface(testSourceLink.m_geometryId);
-    } else {
-      throw std::runtime_error("No tracking geometry or detector set");
-    }
+    return geometry.findSurface(testSourceLink.m_geometryId);
   }
 };
 

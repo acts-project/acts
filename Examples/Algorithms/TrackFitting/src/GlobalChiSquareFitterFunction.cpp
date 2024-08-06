@@ -74,7 +74,7 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
   IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
 
   GlobalChiSquareFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
-                                    const Acts::TrackingGeometry* trkGeo)
+                                    const Acts::TrackingGeometry& trkGeo)
       : fitter(std::move(f)),
         directFitter(std::move(df)),
         m_slSurfaceAccessor{trkGeo} {}
@@ -140,7 +140,7 @@ ActsExamples::makeGlobalChiSquareFitterFunction(
   const Stepper stepper(std::move(magneticField));
 
   // Standard fitter
-  const auto* geo = trackingGeometry.get();
+  const auto& geo = *trackingGeometry;
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;

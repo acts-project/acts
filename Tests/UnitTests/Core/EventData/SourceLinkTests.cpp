@@ -34,10 +34,6 @@ BOOST_AUTO_TEST_CASE(TestSourceLinkCoverage) {
   BOOST_CHECK(!(l1 != l2));  // testing the !=
   std::ostringstream str;
   str << l1;
-
-  auto sl = Acts::SourceLink(l1);
-  TestSourceLink::SurfaceAccessor accessor;
-  BOOST_CHECK_THROW(accessor(sl), std::runtime_error);
 }
 
 struct MySourceLink {
