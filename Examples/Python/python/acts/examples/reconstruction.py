@@ -479,7 +479,7 @@ def addSeeding(
 
             if seedingAlgorithm == SeedingAlgorithm.Hashing:
                 s.addWriter(
-                    acts.examples.CsvBucketWriter(
+                    acts.examples.CsvSpacePointsBucketWriter(
                         level=logLevel,
                         inputBuckets=buckets,
                         outputDir=str(outputDirCsv),

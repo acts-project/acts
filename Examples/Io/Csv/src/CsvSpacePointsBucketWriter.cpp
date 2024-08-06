@@ -6,11 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Csv/CsvBucketWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvSpacePointsBucketWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <cstddef>
@@ -18,33 +19,33 @@
 #include <optional>
 #include <stdexcept>
 
-#include <dfe/dfe_io_dsv.hpp>
-
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvBucketWriter::CsvBucketWriter(
-    const ActsExamples::CsvBucketWriter::Config& config,
+ActsExamples::CsvSpacePointsBucketWriter::CsvSpacePointsBucketWriter(
+    const ActsExamples::CsvSpacePointsBucketWriter::Config& config,
     Acts::Logging::Level level)
-    : WriterT(config.inputBuckets, "CsvBucketWriter", level), m_cfg(config) {}
+    : WriterT(config.inputBuckets, "CsvSpacePointsBucketWriter", level),
+      m_cfg(config) {}
 
-ActsExamples::CsvBucketWriter::~CsvBucketWriter() = default;
+ActsExamples::CsvSpacePointsBucketWriter::~CsvSpacePointsBucketWriter() =
+    default;
 
-ActsExamples::ProcessCode ActsExamples::CsvBucketWriter::finalize() {
+ActsExamples::ProcessCode ActsExamples::CsvSpacePointsBucketWriter::finalize() {
   // Write the tree
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvBucketWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::CsvSpacePointsBucketWriter::writeT(
     const AlgorithmContext& ctx,
     const std::vector<SimSpacePointContainer>& buckets) {
   // Open per-event file for all components
   std::string pathBucket =
       perEventFilepath(m_cfg.outputDir, "buckets.csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<BucketData> writerBucket(pathBucket,
-                                                    m_cfg.outputPrecision);
+  ActsExamples::NamedTupleCsvWriter<SpacePointBucketData> writerBucket(
+      pathBucket, m_cfg.outputPrecision);
 
-  BucketData bucketData{};
+  SpacePointBucketData bucketData{};
 
   int bucketIdx = 0;
   for (const auto& bucket : buckets) {
