@@ -26,7 +26,7 @@
 
 namespace ActsExamples {
 
-/// @class CsvBucketWriter
+/// @class CsvSpacePointsBucketWriter
 ///
 /// This writes one file per event containing information about the
 /// buckets
@@ -36,7 +36,7 @@ namespace ActsExamples {
 ///     ...
 ///
 /// Intrinsically thread-safe as one file per event.
-class CsvBucketWriter final
+class CsvSpacePointsBucketWriter final
     : public WriterT<std::vector<SimSpacePointContainer>> {
  public:
   struct Config {
@@ -51,10 +51,10 @@ class CsvBucketWriter final
   /// Constructor with
   /// @param config configuration struct
   /// @param level logging level
-  CsvBucketWriter(const Config& config, Acts::Logging::Level level);
+  CsvSpacePointsBucketWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
-  ~CsvBucketWriter() override;
+  ~CsvSpacePointsBucketWriter() override;
 
   /// End-of-run hook
   ProcessCode finalize() override;
