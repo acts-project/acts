@@ -187,6 +187,6 @@ void ActsExamples::NeuralCalibrator::calibrate(
         measurementCopy.parameters<kMeasurementSize>();
     trackState.calibratedCovariance<kMeasurementSize>() =
         measurementCopy.covariance<kMeasurementSize>();
-    trackState.setProjectorBitset(measurement.subspace().fullProjectorBits());
+    trackState.setProjector(measurementCopy.subspace().fullProjector<double>());
   });
 }
