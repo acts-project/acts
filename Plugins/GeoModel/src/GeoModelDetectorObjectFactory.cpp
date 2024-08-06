@@ -62,38 +62,6 @@ void Acts::GeoModelDetectorObjectFactory::construct(Cache& cache, const Geometry
     //load data from database according to querie (Muon)
     auto qFPV = geoModelTree.geoReader->getPublishedNodes<std::string, GeoFullPhysVol *>(q);
 
-    //lambda to determine if object fits querry
-    auto matches = [&](const std::string &name, PVConstLink physvol) {
-
-      if (m_cfg.nameList.empty() && m_cfg.materialList.empty()) {
-        return true;
-      }
-
-      auto matchName = std::any_of(
-          m_cfg.nameList.begin(), m_cfg.nameList.end(),
-          [&](const auto &n) {return name.find(n) != std::string::npos; });
-
-      std::string matStr = physvol->getLogVol()->getMaterial()->getName();
-
-      auto matchMaterial = std::any_of(
-          m_cfg.materialList.begin(), m_cfg.materialList.end(),
-          [&](const auto &m) {return matStr.find(m) != std::string::npos; });
-
-      bool match = matchMaterial && matchName;
-      GeoIntrusivePtr<const GeoVFullPhysVol> fullVol =
-          dynamic_pointer_cast<const GeoVFullPhysVol>(physvol);
-
-      // for the fullphysvol we only check the name
-      if (m_cfg.nameList.empty()) {
-        return matchMaterial;
-      }
-
-      //if no material specified or we're looking at fpv judge by name only
-      if (m_cfg.materialList.empty() || !(fullVol == nullptr)) {
-        return matchName;
-      }
-      return match;
-    };
 
     //go through each fpv
     for (auto &[name, fpv] : qFPV) {
@@ -220,4 +188,33 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(std::string name, auto fpv,
         std::cout << "converts work" << std::endl;
       }
 }
+    //lambda to determine if object fits querry
+bool Acts::GeoModelDetectorObjectFactory::matches(const std::string &name, PVConstLink physvol){
+  if (m_cfg.nameList.empty() && m_cfg.materialList.empty()) {
+    return true;
+  }
+
+  auto matchName = std::any_of(m_cfg.nameList.begin(), m_cfg.nameList.end(), [&](const auto &n) {return name.find(n) != std::string::npos; });
+
+      std::string matStr = physvol->getLogVol()->getMaterial()->getName();
+
+      auto matchMaterial = std::any_of(
+          m_cfg.materialList.begin(), m_cfg.materialList.end(),
+          [&](const auto &m) {return matStr.find(m) != std::string::npos; });
+
+      bool match = matchMaterial && matchName;
+      GeoIntrusivePtr<const GeoVFullPhysVol> fullVol =
+          dynamic_pointer_cast<const GeoVFullPhysVol>(physvol);
+
+      // for the fullphysvol we only check the name
+      if (m_cfg.nameList.empty()) {
+        return matchMaterial;
+      }
+
+      //if no material specified or we're looking at fpv judge by name only
+      if (m_cfg.materialList.empty() || !(fullVol == nullptr)) {
+        return matchName;
+      }
+      return match;
+    }
 }
