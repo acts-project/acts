@@ -142,6 +142,7 @@ struct PointwiseMaterialInteraction {
   template <typename propagator_state_t, typename stepper_t>
   void updateState(propagator_state_t& state, const stepper_t& stepper,
                    NoiseUpdateMode updateMode = addNoise) {
+    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
     // in forward(backward) propagation, energy decreases(increases) and
     // variances increase(decrease)
     const auto nextE = std::hypot(mass, momentum) - Eloss * navDir;
@@ -152,9 +153,10 @@ struct PointwiseMaterialInteraction {
     // TODO 10 MeV might be quite low and we should make this configurable
     static constexpr double minP = 10 * Acts::UnitConstants::MeV;
     nextP = std::max(minP, nextP);
+    const double nextQOverP =
+        std::copysign(particleHypothesis.qOverP(nextP, absQ), qOverP);
     // update track parameters and covariance
-    stepper.update(state.stepping, pos, dir,
-                   std::copysign(absQ / nextP, qOverP), time);
+    stepper.update(state.stepping, pos, dir, nextQOverP, time);
     state.stepping.cov(eBoundPhi, eBoundPhi) = updateVariance(
         state.stepping.cov(eBoundPhi, eBoundPhi), variancePhi, updateMode);
     state.stepping.cov(eBoundTheta, eBoundTheta) =
