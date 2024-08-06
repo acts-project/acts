@@ -12,8 +12,6 @@
 
 #include <cstdint>
 
-
-
 namespace ActsExamples {
 
 struct ParticleData {
