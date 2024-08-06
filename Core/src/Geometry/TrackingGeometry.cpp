@@ -44,7 +44,8 @@ const Acts::TrackingVolume* Acts::TrackingGeometry::lowestTrackingVolume(
     const GeometryContext& gctx, const Acts::Vector3& gp) const {
   const TrackingVolume* searchVolume = m_world.get();
   const TrackingVolume* currentVolume = nullptr;
-  while (currentVolume != searchVolume && (searchVolume != nullptr)) {
+  while (currentVolume != searchVolume && (searchVolume != nullptr) &&
+         searchVolume->inside(gp)) {
     currentVolume = searchVolume;
     searchVolume = searchVolume->lowestTrackingVolume(gctx, gp);
   }
