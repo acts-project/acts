@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/AmbiguityResolution/GreedyAmbiguityResolution.hpp"
+#include "Acts/EventData/TrackStateType.hpp"
 
 #include <unordered_map>
 
@@ -36,7 +37,9 @@ void GreedyAmbiguityResolution::computeInitialState(
     }
     std::vector<std::size_t> measurements;
     for (auto ts : track.trackStatesReversed()) {
-      if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      bool isMeasurement = ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
+      bool isOutlier = ts.typeFlags().test(TrackStateFlag::OutlierFlag);
+      if (isMeasurement && !isOutlier) {
         SourceLink sourceLink = ts.getUncalibratedSourceLink();
         // assign a new measurement index if the source link was not seen yet
         auto emplace = measurementIndexMap.try_emplace(
