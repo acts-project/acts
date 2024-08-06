@@ -44,8 +44,12 @@ class GeoModelDetectorObjectFactory {
   void convertSensitive(PVConstLink geoPV, const Acts::Transform3 &transform, std::vector<GeoModelSensitiveSurface> &sensitives);
 
 
-std::vector<GeoChildNodeWithTrf> findAllSubVolumes(PVConstLink geoPV, std::function<bool(std::string, PVConstLink)> matchFunc);
-bool convertFpv(std::string name);
+std::vector<GeoChildNodeWithTrf> findAllSubVolumes(PVConstLink geoPV);
+
+bool convertBox(std::string name);
+bool matches(const std::string &name, PVConstLink physvol);
+
+void convertFpv(std::string name, PVConstLink fpv, Cache& cache, const GeometryContext& gctx);
 
 
  private:

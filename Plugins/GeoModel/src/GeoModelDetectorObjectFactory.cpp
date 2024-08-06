@@ -181,7 +181,43 @@ std::vector<GeoChildNodeWithTrf> Acts::GeoModelDetectorObjectFactory::findAllSub
   }
   return sensitives;
 }
-bool Acts::GeoModelDetectorObjectFactory::convertFpv(std::string name){
-  return (name.find(m_cfg.convertFpv) != std::string::npos);
+bool Acts::GeoModelDetectorObjectFactory::convertBox(std::string name){
+  return (name.find(m_cfg.convertBox) != std::string::npos);
+}
+void Acts::GeoModelDetectorObjectFactory::convertFpv(std::string name, PVConstLink fpv, Cache& cache, const GeometryContext& gctx){
+  std::cout << "pars work" << std::endl;
+
+      //get children
+      std::vector<GeoChildNodeWithTrf> subvolumes = getChildrenWithRef(fpv, false);
+      if(subvolumes.size()>0){
+        std::cout << "subvols" << std::endl;
+
+        //vector containing all subvolumes to be converted to surfaces
+        std::vector<GeoChildNodeWithTrf> surfaces = findAllSubVolumes(fpv);
+        std::vector<GeoModelSensitiveSurface> sensitives;
+  
+        for (auto surface : surfaces){
+          const Transform3 &transform = fpv->getAbsoluteTransform() * surface.transform;
+          convertSensitive(surface.volume, transform, sensitives);
+        }
+        cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(), sensitives.begin(), sensitives.end());
+        if(convertBox(name)){
+          const GeoLogVol *logVol = fpv->getLogVol();//get logVol for the shape of the volume
+          const GeoShape *shape = logVol->getShape();//get shape
+          const Acts::Transform3 &fpvtransform = fpv->getAbsoluteTransform(nullptr);
+
+          //convert bounding boxes with surfaces inside
+          std::shared_ptr<Experimental::DetectorVolume> box = Acts::GeoModel::convertVolume(gctx, shape, name, fpvtransform, sensitives);
+          cache.boundingBoxes.push_back(box);
+        }
+      }
+      else{
+        std::cout << "no subvols" << std::endl;
+        //convert fpvs to surfaces
+        const Transform3 &transform = fpv->getAbsoluteTransform();
+        std::cout << "transforms work" << std::endl;
+        convertSensitive(fpv, transform, cache.sensitiveSurfaces);
+        std::cout << "converts work" << std::endl;
+      }
 }
 }
