@@ -12,9 +12,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief Seeding algorigthm that extracts
 /// the IP parameters and sorts the source links
@@ -249,6 +247,5 @@ class PathSeeder {
   Config m_cfg;
 };
 
-}  // namespace Experimental
+}  // namespace Acts::Experimental
 
-}  // namespace Acts
