@@ -298,7 +298,8 @@ std::shared_ptr<const TrackingGeometry> makeToyDetectorYdirection(
 
   // Outer volume - Build TrackingGeometry configuration and fill
   CuboidVolumeBuilder::Config config;
-  config.length = {10_m, 10_m, 10_m};
+  config.length = {4 * halfSizeSurface, (nSurfaces + 1) * 1_m,
+                   2 * halfSizeSurface};
   config.position = {volumeConfig.length.x() / 2, volumeConfig.length.y() / 2,
                      0.};
   config.volumeCfg = {volumeConfig, volumeConfig2};
