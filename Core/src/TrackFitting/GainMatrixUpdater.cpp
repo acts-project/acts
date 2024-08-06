@@ -28,12 +28,10 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
 
   return visit_measurement(
       trackState.calibratedSize,
-      [this]<std::size_t N>(
-          std::integral_constant<std::size_t, N>, InternalTrackState trackState,
-          const Logger& logger) -> std::tuple<double, std::error_code> {
+      [&, this]<std::size_t N>(std::integral_constant<std::size_t, N>)
+          -> std::tuple<double, std::error_code> {
         return visitMeasurementImpl<N>(trackState, logger);
-      },
-      std::move(trackState), logger);
+      });
 }
 
 }  // namespace Acts
