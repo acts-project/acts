@@ -203,7 +203,7 @@ function trackfinding() {
     name=$1
     path=$2
 
-    config="CI/physmon/config/default.yml"
+    default_config="CI/physmon/config/default.yml"
 
     if [ -f $refdir/$path/performance_seeding.root ]; then
         run_histcmp \
@@ -212,7 +212,7 @@ function trackfinding() {
             "Seeding ${name}" \
             $path/performance_seeding.html \
             $path/performance_seeding_plots \
-            --config $config
+            --config $default_config
     fi
 
     run_histcmp \
@@ -221,7 +221,7 @@ function trackfinding() {
         "CKF | ${name}" \
         $path/performance_ckf.html \
         $path/performance_ckf_plots \
-        --config $config
+        --config $default_config
 
     run Examples/Scripts/generic_plotter.py \
         $outdir/data/$path/tracksummary_ckf.root \
