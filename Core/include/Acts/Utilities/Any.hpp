@@ -143,9 +143,9 @@ class AnyBase : public AnyBaseAll {
   AnyBase() = default;
 #endif
 
-  template <typename T, typename = std::enable_if_t<
-                            !std::is_same_v<std::decay_t<T>, AnyBase<SIZE>>>>
-  explicit AnyBase(T&& value)
+  template <typename T>
+  requires(!std::same_as<std::decay_t<T>, AnyBase<SIZE>>) explicit AnyBase(
+      T&& value)
       : AnyBase{std::in_place_type<T>, std::forward<T>(value)} {}
 
   template <typename T>

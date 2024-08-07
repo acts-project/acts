@@ -420,11 +420,11 @@ class Grid final : public IGrid {
   /// indices must start at 0.
   /// @note Bin values are interpreted as being the field values at the
   /// lower-left corner of the corresponding hyper-box.
-  template <class Point, typename U = T,
-            typename = std::enable_if_t<
-                detail::can_interpolate<Point, std::array<ActsScalar, DIM>,
-                                        std::array<ActsScalar, DIM>, U>::value>>
-  T interpolate(const Point& point) const {
+  template <class Point, class U = T>
+  requires(detail::interpolatable<U, Point, std::array<ActsScalar, DIM>,
+                                  std::array<ActsScalar, DIM>>) T
+      interpolate(const Point& point)
+  const {
     // there are 2^DIM corner points used during the interpolation
     constexpr std::size_t nCorners = 1 << DIM;
 

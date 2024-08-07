@@ -51,9 +51,9 @@ class Frustum {
   /// @param opening_angle The opening angle
   /// @note The @p opening_angle is defined as the angle between opposing side
   /// planes. The opening angle needs to be < pi.
-  template <std::size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
-  Frustum(const VertexType& origin, const VertexType& dir,
-          value_type opening_angle);
+  template <std::size_t D = DIM>
+  requires(D == 2) Frustum(const VertexType& origin, const VertexType& dir,
+                           value_type opening_angle);
 
   /// Constructor for the 3D case.
   /// @param origin The origin of the frustum
@@ -61,17 +61,18 @@ class Frustum {
   /// @param opening_angle The opening angle
   /// @note The @p opening_angle is defined as the angle between opposing side
   /// planes. The opening angle needs to be < pi.
-  template <std::size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
-  Frustum(const VertexType& origin, const VertexType& dir,
-          value_type opening_angle);
+  template <std::size_t D = DIM>
+  requires(D == 3) Frustum(const VertexType& origin, const VertexType& dir,
+                           value_type opening_angle);
 
   /// Draw a representation of this frustum using a visualization helper
   /// @note This is only available for the 3D case.
   /// @param helper The visualization helper
   /// @param far_distance The distance to the virtual "far plane" at which point
   /// the side planes terminate visually.
-  template <std::size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
-  void draw(IVisualization3D& helper, value_type far_distance = 10) const;
+  template <std::size_t D = DIM>
+  requires(D == 3) void draw(IVisualization3D& helper,
+                             value_type far_distance = 10) const;
 
   /// Draw a representation of this frustum as an SVG string to an outstream
   /// @note This is only available for the 2D case.
@@ -81,9 +82,10 @@ class Frustum {
   /// @param far_distance The distance to the virtual "far line" at which point
   /// the side lines terminate visually.
   /// @param unit Multiplicative factor to apply to internal distances
-  template <std::size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
-  std::ostream& svg(std::ostream& os, value_type w, value_type h,
-                    value_type far_distance = 1, value_type unit = 20.) const;
+  template <std::size_t D = DIM>
+  requires(D == 2) std::ostream& svg(std::ostream& os, value_type w,
+                                     value_type h, value_type far_distance = 1,
+                                     value_type unit = 20.) const;
 
   /// Getter for the oriogin of the frustum
   /// @return The origin of the frustum
