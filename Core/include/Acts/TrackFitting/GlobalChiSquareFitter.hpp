@@ -685,9 +685,7 @@ class Gx2Fitter {
       source_link_iterator_t it, source_link_iterator_t end,
       const start_parameters_t& sParameters,
       const Gx2FitterOptions<traj_t>& gx2fOptions,
-      track_container_t& trackContainer) const
-    requires(!_isdn)
-  {
+      track_container_t& trackContainer) const requires(!_isdn) {
     // Preprocess Measurements (SourceLinks -> map)
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
