@@ -94,4 +94,8 @@ std::size_t CompositePortalLink::depth() const {
   return result;
 }
 
+std::size_t CompositePortalLink::size() const {
+  return m_children.size();
+}
+
 }  // namespace Acts
