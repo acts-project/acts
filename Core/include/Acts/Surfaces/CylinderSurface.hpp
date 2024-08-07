@@ -256,7 +256,9 @@ class CylinderSurface : public RegularSurface {
   /// @param direction The binning direction: either @c binZ or @c binRPhi
   /// @param externalRotation If true, any phi rotation is done in the transform
   /// @param logger The logger to use
-  /// @return The merged cylinder surface and the ordering of input surfaces
+  /// @return The merged cylinder surface and a boolean indicating if surfaces are reversed
+  /// @note The returned boolean is `false` if `this` is *left* or
+  ///       *counter-clockwise* of @p other, and `true` if not.
   std::pair<std::shared_ptr<CylinderSurface>, bool> mergedWith(
       const CylinderSurface& other, BinningValue direction,
       bool externalRotation, const Logger& logger = getDummyLogger()) const;
