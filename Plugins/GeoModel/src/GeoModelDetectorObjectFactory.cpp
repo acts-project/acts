@@ -91,6 +91,7 @@ void Acts::GeoModelDetectorObjectFactory::convertSensitive(PVConstLink geoPV, co
   if (converted.ok()) {
     sensitives.push_back(converted.value());
     const auto &[el, sf] = converted.value();
+    auto ss = std::get<1>(converted.value());
 
     ACTS_VERBOSE("(successfully converted: " << name << " / " << recType(*shape) << " / " << logVol->getMaterial()->getName() << ")");
 
