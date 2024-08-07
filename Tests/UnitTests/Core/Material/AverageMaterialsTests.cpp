@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsPercent) {
   auto slab = combineSlabs(percent, percent);
   // combining two identical slabs must give the same average material
   BOOST_CHECK(slab.material().valid());
-//  BOOST_CHECK_EQUAL(slab.material(), percent);// FIX
+  BOOST_CHECK_EQUAL(slab.material(), percent.material());
   // thickness-like properties must double
   BOOST_CHECK_EQUAL(slab.thickness(), 2 * percent.thickness());
   BOOST_CHECK_EQUAL(slab.thicknessInX0(), 2 * percent.thicknessInX0());
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsUnit) {
   auto slab = combineSlabs(unit, unit);
   // combining two identical slabs must give the same average material
   BOOST_CHECK(slab.material().valid());
-//  BOOST_CHECK_EQUAL(slab.material(), unit);// FIX
+  BOOST_CHECK_EQUAL(slab.material(), unit.material());
   // thickness-like properties must double
   BOOST_CHECK_EQUAL(slab.thickness(), 2 * unit.thickness());
   BOOST_CHECK_EQUAL(slab.thicknessInX0(), 2 * unit.thicknessInX0());
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsPercentZeroVacuum) {
   {
     auto slab = combineSlabs(percent, zeroVacuum);
     BOOST_CHECK(slab.material().valid());
-//    BOOST_CHECK_EQUAL(slab.material(), percent);// FIX
+    BOOST_CHECK_EQUAL(slab.material(), percent.material());
     BOOST_CHECK_EQUAL(slab.thickness(), percent.thickness());
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), percent.thicknessInX0());
     BOOST_CHECK_EQUAL(slab.thicknessInL0(), percent.thicknessInL0());
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsPercentZeroVacuum) {
   {
     auto slab = combineSlabs(zeroVacuum, percent);
     BOOST_CHECK(slab.material().valid());
-//    BOOST_CHECK_EQUAL(slab.material(), percent);// FIX
+    BOOST_CHECK_EQUAL(slab.material(), percent.material());
     BOOST_CHECK_EQUAL(slab.thickness(), percent.thickness());
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), percent.thicknessInX0());
     BOOST_CHECK_EQUAL(slab.thicknessInL0(), percent.thicknessInL0());
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsUnitZeroVacuum) {
   {
     auto slab = combineSlabs(unit, zeroVacuum);
     BOOST_CHECK(slab.material().valid());
-//    BOOST_CHECK_EQUAL(slab.material(), unit);// FIX
+    BOOST_CHECK_EQUAL(slab.material(), unit.material());
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), unit.thicknessInX0());
     BOOST_CHECK_EQUAL(slab.thicknessInL0(), unit.thicknessInL0());
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsUnitZeroVacuum) {
   {
     auto slab = combineSlabs(zeroVacuum, unit);
     BOOST_CHECK(slab.material().valid());
-//    BOOST_CHECK_EQUAL(slab.material(), unit);// FIX
+    BOOST_CHECK_EQUAL(slab.material(), unit.material());
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), unit.thicknessInX0());
     BOOST_CHECK_EQUAL(slab.thicknessInL0(), unit.thicknessInL0());
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsPercentUnit) {
   {
     auto slab = combineSlabs(percent, unit);
     BOOST_CHECK(slab.material().valid());
-//    BOOST_CHECK_EQUAL(slab.material(), percent);// FIX
+    BOOST_CHECK_EQUAL(slab.material(), percent.material());
     BOOST_CHECK_EQUAL(slab.thickness(), percent.thickness() + unit.thickness());
     BOOST_CHECK_EQUAL(slab.thicknessInX0(),
                       percent.thicknessInX0() + unit.thicknessInX0());
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsPercentUnit) {
   {
     auto slab = combineSlabs(unit, percent);
     BOOST_CHECK(slab.material().valid());
-//    BOOST_CHECK_EQUAL(slab.material(), unit);// FIX
+    BOOST_CHECK_EQUAL(slab.material(), unit.material());
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness() + percent.thickness());
     BOOST_CHECK_EQUAL(slab.thicknessInX0(),
                       percent.thicknessInX0() + unit.thicknessInX0());
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsUnitZero) {
   {
     auto slab = combineSlabs(unit, zero);
     BOOST_CHECK(slab.material().valid());
-//    BOOST_CHECK_EQUAL(slab.material(), unit);// FIX
+    BOOST_CHECK_EQUAL(slab.material(), unit.material());
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), unit.thicknessInX0());
     BOOST_CHECK_EQUAL(slab.thicknessInL0(), unit.thicknessInL0());
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsUnitZero) {
   {
     auto slab = combineSlabs(zero, unit);
     BOOST_CHECK(slab.material().valid());
-//    BOOST_CHECK_EQUAL(slab.material(), unit);// FIX
+    BOOST_CHECK_EQUAL(slab.material(), unit.material());
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), unit.thicknessInX0());
     BOOST_CHECK_EQUAL(slab.thicknessInL0(), unit.thicknessInL0());
