@@ -16,7 +16,7 @@ namespace Acts {
 
 Result<std::optional<std::pair<double, double>>>
 Acts::GaussianTrackDensity::globalMaximumWithWidth(
-    State& state, const std::vector<InputTrack>& trackList) const {
+    State& state, const std::vector<InputTrack>& trackList,double time) const {
   auto result = addTracks(state, trackList);
   if (!result.ok()) {
     return result.error();
@@ -30,7 +30,7 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
     double trialZ = track.z;
 
     auto [density, firstDerivative, secondDerivative] =
-        trackDensityAndDerivatives(state, trialZ);
+        trackDensityAndDerivatives(state, trialZ,time);
     if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
@@ -40,7 +40,7 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
 
     trialZ += stepSize(density, firstDerivative, secondDerivative);
     std::tie(density, firstDerivative, secondDerivative) =
-        trackDensityAndDerivatives(state, trialZ);
+        trackDensityAndDerivatives(state, trialZ,time);
 
     if (secondDerivative >= 0. || density <= 0.) {
       continue;
@@ -50,7 +50,7 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
                       maxDensity, maxSecondDerivative);
     trialZ += stepSize(density, firstDerivative, secondDerivative);
     std::tie(density, firstDerivative, secondDerivative) =
-        trackDensityAndDerivatives(state, trialZ);
+        trackDensityAndDerivatives(state, trialZ,time);
     if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
@@ -67,8 +67,8 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
 }
 
 Result<std::optional<double>> Acts::GaussianTrackDensity::globalMaximum(
-    State& state, const std::vector<InputTrack>& trackList) const {
-  auto maxRes = globalMaximumWithWidth(state, trackList);
+    State& state, const std::vector<InputTrack>& trackList,double time) const {
+  auto maxRes = globalMaximumWithWidth(state, trackList, time);
   if (!maxRes.ok()) {
     return maxRes.error();
   }
@@ -86,6 +86,9 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
     // Get required track parameters
     const double d0 = boundParams.parameters()[BoundIndices::eBoundLoc0];
     const double z0 = boundParams.parameters()[BoundIndices::eBoundLoc1];
+    const double time = boundParams.parameters()[BoundIndices::eBoundTime];
+    //const double time = InputTrack::extractParameters(trackList[0]).time();
+
     // Get track covariance
     if (!boundParams.covariance().has_value()) {
       return VertexingError::NoCovariance;
@@ -97,7 +100,22 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
         perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1);
     const double covDZ =
         perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1);
-    const double covDeterminant = (perigeeCov.block<2, 2>(0, 0)).determinant();
+
+    //Add time into Cov 
+    const double covDT = perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundTime);
+    const double covZT = perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundTime);
+    const double covTT = perigeeCov(BoundIndices::eBoundTime, BoundIndices::eBoundTime);
+
+
+    //const double covDeterminant = (perigeeCov.block<3, 3>(0, 0)).determinant();
+
+    // Update determinant for 3x3 matrix because I'm not sure how perigee works
+    Eigen::Matrix3d covMatrix;
+    covMatrix << covDD, covDZ, covDT,
+                 covDZ, covZZ, covZT,
+                 covDT, covZT, covTT;
+    const double covDeterminant = covMatrix.determinant();
+
 
     // Do track selection based on track cov matrix and m_cfg.d0SignificanceCut
     if ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut) ||
@@ -106,16 +124,20 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
     }
 
     // Calculate track density quantities
+    //Change time to covTT
     double constantTerm =
-        -(d0 * d0 * covZZ + z0 * z0 * covDD + 2. * d0 * z0 * covDZ) /
+        -(d0 * d0 * covZZ + z0 * z0 * covDD + 2. * d0 * z0 * covDZ +
+          2. * d0 * time * covDT + 2. * z0 * time * covZT + time * time * covTT) /
         (2. * covDeterminant);
     const double linearTerm =
-        (d0 * covDZ + z0 * covDD) /
-        covDeterminant;  // minus signs and factors of 2 cancel...
+        (d0 * covDZ + z0 * covDD + time * covZT) / covDeterminant;
     const double quadraticTerm = -covDD / (2. * covDeterminant);
     double discriminant =
         linearTerm * linearTerm -
         4. * quadraticTerm * (constantTerm + 2. * m_cfg.z0SignificanceCut);
+
+    std::cout << discriminant;
+    
     if (discriminant < 0) {
       continue;
     }
@@ -127,15 +149,15 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
     constantTerm -= std::log(2. * M_PI * std::sqrt(covDeterminant));
 
     state.trackEntries.emplace_back(z0, constantTerm, linearTerm, quadraticTerm,
-                                    zMin, zMax);
+                                    zMin, zMax,time); // Included time
   }
   return Result<void>::success();
 }
 
 std::tuple<double, double, double>
 Acts::GaussianTrackDensity::trackDensityAndDerivatives(State& state,
-                                                       double z) const {
-  GaussianTrackDensityStore densityResult(z);
+                                                       double z, double time) const {
+  GaussianTrackDensityStore densityResult(z,time,m_cfg.timeScale);
   for (const auto& trackEntry : state.trackEntries) {
     densityResult.addTrackToDensity(trackEntry);
   }
@@ -168,7 +190,17 @@ void Acts::GaussianTrackDensity::GaussianTrackDensityStore::addTrackToDensity(
     m_density += delta;
     m_firstDerivative += deltaPrime;
     m_secondDerivative += 2. * entry.c2 * delta + qPrime * deltaPrime;
+
+    double timeFactor = computeTimeFactor(entry.time, m_time);
+    m_density *= timeFactor;
+    m_firstDerivative *= timeFactor;
+    m_secondDerivative *= timeFactor;
   }
 }
 
-}  // namespace Acts
+// double Acts::GaussianTrackDensity::GaussianTrackDensityStore::computeTimeFactor(
+//     double entryTime, double currentTime) const {
+//   return std::exp(-std::abs(entryTime - currentTime) / m_cfg.timeScale);
+
+// } 
+} // namespace Acts

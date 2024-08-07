@@ -35,6 +35,8 @@ class TrackDensityVertexFinder final : public IVertexFinder {
   struct Config {
     // The track density estimator
     GaussianTrackDensity trackDensityEstimator;
+    // Time scale for time-based weighting (if needed)
+    double timeScale = 1.0;  // Add time scale
   };
 
   /// State struct for fulfilling interface
