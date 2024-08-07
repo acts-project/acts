@@ -12,7 +12,6 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
-#include <memory>
 #include <utility>
 
 // #define _ACTS_ANY_ENABLE_VERBOSE
@@ -130,6 +129,7 @@ class AnyBase : public AnyBaseAll {
     } else {
       // too large, heap allocate
       U* heap = new U(std::forward<Args>(args)...);
+      _ACTS_ANY_DEBUG("Allocate type: " << typeid(U).name() << " at " << heap);
       _ACTS_ANY_TRACK_ALLOCATION(T, heap);
       setDataPtr(heap);
     }
@@ -335,6 +335,7 @@ class AnyBase : public AnyBaseAll {
   void destroy() {
     _ACTS_ANY_VERBOSE("Destructor this=" << this << " handler: " << m_handler);
     if (m_handler != nullptr && m_handler->destroy != nullptr) {
+      _ACTS_ANY_VERBOSE("Non-trivial destruction");
       m_handler->destroy(dataPtr());
     }
     m_handler = nullptr;
@@ -356,6 +357,7 @@ class AnyBase : public AnyBaseAll {
     }
 
     if (m_handler->moveConstruct == nullptr) {
+      _ACTS_ANY_VERBOSE("Trivially move construct");
       // trivially move constructible
       m_data = std::move(fromAny.m_data);
     } else {
@@ -381,6 +383,7 @@ class AnyBase : public AnyBaseAll {
     }
 
     if (m_handler->move == nullptr) {
+      _ACTS_ANY_VERBOSE("Trivially move");
       // trivially movable
       m_data = std::move(fromAny.m_data);
     } else {
@@ -397,6 +400,7 @@ class AnyBase : public AnyBaseAll {
     const void* from = fromAny.dataPtr();
 
     if (m_handler->copyConstruct == nullptr) {
+      _ACTS_ANY_VERBOSE("Trivially copy construct");
       // trivially copy constructible
       m_data = fromAny.m_data;
     } else {
@@ -418,6 +422,7 @@ class AnyBase : public AnyBaseAll {
     const void* from = fromAny.dataPtr();
 
     if (m_handler->copy == nullptr) {
+      _ACTS_ANY_VERBOSE("Trivially copy");
       // trivially copyable
       m_data = fromAny.m_data;
     } else {
