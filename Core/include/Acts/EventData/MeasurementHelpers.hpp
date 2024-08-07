@@ -63,10 +63,12 @@ auto visit_measurement(A&& param, B&& cov, std::size_t dim, L&& lambda) {
 /// @tparam L The generic lambda type to call
 /// @param dim The runtime dimension of the measurement
 /// @param lambda The generic lambda instance to call
+/// @param args Additional arguments passed to @p lambda
 /// @return Returns the lambda return value
-template <typename L>
-auto visit_measurement(std::size_t dim, L&& lambda) {
-  return template_switch_lambda<1, eBoundSize>(dim, lambda);
+template <typename L, typename... Args>
+auto visit_measurement(std::size_t dim, L&& lambda, Args&&... args) {
+  return template_switch_lambda<1, eBoundSize>(dim, lambda,
+                                               std::forward<Args>(args)...);
 }
 
 }  // namespace Acts
