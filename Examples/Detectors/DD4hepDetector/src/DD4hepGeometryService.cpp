@@ -146,6 +146,9 @@ DD4hepGeometryService::contextDecorators() const {
 }
 
 void DD4hepGeometryService::drop() {
+  if (m_detector != nullptr) {
+    m_detector->destroyInstance();
+  }
   m_detector = nullptr;
   m_geometry = dd4hep::DetElement();
   m_trackingGeometry.reset();

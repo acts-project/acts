@@ -27,7 +27,7 @@
 namespace ActsExamples {
 
 namespace DD4hep {
-struct DD4hepGeometryService;
+class DD4hepGeometryService;
 }
 
 /// Read particles from EDM4hep.

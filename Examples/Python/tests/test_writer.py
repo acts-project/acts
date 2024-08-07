@@ -440,6 +440,10 @@ def hepmc_data(hepmc_data_impl: Path, tmp_path):
 
 
 @pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 plugin not available")
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.odd
+@pytest.mark.slow
 def test_hepmc3_histogram(hepmc_data, tmp_path):
     from acts.examples.hepmc3 import (
         HepMC3AsciiReader,

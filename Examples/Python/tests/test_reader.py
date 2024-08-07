@@ -130,7 +130,10 @@ def test_root_reader_interface(reader, conf_const, tmp_path):
     assert conf_const(reader, **kw)
 
 
+@pytest.mark.slow
 @pytest.mark.root
+@pytest.mark.odd
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 def test_root_material_track_reader(material_recording):
     input_tracks = material_recording / "geant4_material_tracks.root"
     assert input_tracks.exists()
