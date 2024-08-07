@@ -26,10 +26,11 @@ namespace Acts {
 class TrackingGeometry;
 class IMaterialDecorator;
 class DD4hepFieldAdapter;
-namespace Experimental {
-class Detector;
-}  // namespace Experimental
 }  // namespace Acts
+
+namespace Acts::Examples {
+class Detector;
+}  // namespace Acts::Examples
 
 namespace ActsExamples {
 class IContextDecorator;
@@ -43,7 +44,7 @@ class DD4hepDetector {
   using ContextDecorators =
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
 
-  /// @brief  The tracking geometry
+  /// @brief The tracking geometry
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   /// @brief The detector geometry
@@ -51,11 +52,11 @@ class DD4hepDetector {
 
   /// @brief Default constructor
   DD4hepDetector() = default;
+
   /// @brief Constructor from geometry service
-  /// @param _geometryService the geometry service
-  DD4hepDetector(std::unique_ptr<DD4hepGeometryService> geometryService);
-  /// @brief  Default destructor
-  ~DD4hepDetector() = default;
+  /// @param geometryService the geometry service
+  explicit DD4hepDetector(
+      std::unique_ptr<DD4hepGeometryService> geometryService);
 
   /// @brief Build the tracking geometry from the DD4hep geometry
   ///
@@ -86,9 +87,7 @@ class DD4hepDetector {
   /// @return a shared pointer to the DD4hep field
   std::shared_ptr<Acts::DD4hepFieldAdapter> field() const;
 
-  dd4hep::Detector& dd4hepDetector() const {
-    return m_geometryService->detector();
-  }
+  dd4hep::Detector& dd4hepDetector() const;
 
   void free();
 

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,8 +25,10 @@
 
 class TGeoNode;
 
-ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
-    const ActsExamples::DD4hep::DD4hepGeometryService::Config& cfg)
+namespace ActsExamples::DD4hep {
+
+DD4hepGeometryService::DD4hepGeometryService(
+    const DD4hepGeometryService::Config& cfg)
     : m_cfg(cfg),
       m_logger{Acts::getDefaultLogger("DD4hepGeometryService", cfg.logLevel)} {
   if (m_cfg.xmlFileNames.empty()) {
@@ -34,14 +36,13 @@ ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
   }
 }
 
-ActsExamples::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
+DD4hepGeometryService::~DD4hepGeometryService() {
   if (m_detector != nullptr) {
     m_detector->destroyInstance();
   }
 }
 
-ActsExamples::ProcessCode
-ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
+ActsExamples::ProcessCode DD4hepGeometryService::buildDD4hepGeometry() {
   const int old_gErrorIgnoreLevel = gErrorIgnoreLevel;
   switch (m_cfg.dd4hepLogLevel) {
     case Acts::Logging::Level::VERBOSE:
@@ -89,30 +90,28 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-dd4hep::Detector&
-ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService::detector() {
+dd4hep::Detector& DD4hepGeometryService::DD4hepGeometryService::detector() {
   if (m_detector == nullptr) {
     buildDD4hepGeometry();
   }
   return *m_detector;
 }
 
-dd4hep::DetElement& ActsExamples::DD4hep::DD4hepGeometryService::geometry() {
+dd4hep::DetElement& DD4hepGeometryService::geometry() {
   if (!m_geometry) {
     buildDD4hepGeometry();
   }
   return m_geometry;
 }
 
-TGeoNode& ActsExamples::DD4hep::DD4hepGeometryService::tgeoGeometry() {
+TGeoNode& DD4hepGeometryService::tgeoGeometry() {
   if (!m_geometry) {
     buildDD4hepGeometry();
   }
   return *m_geometry.placement().ptr();
 }
 
-ActsExamples::ProcessCode
-ActsExamples::DD4hep::DD4hepGeometryService::buildTrackingGeometry(
+ActsExamples::ProcessCode DD4hepGeometryService::buildTrackingGeometry(
     const Acts::GeometryContext& gctx) {
   // Set the tracking geometry
   auto logger = Acts::getDefaultLogger("DD4hepConversion", m_cfg.logLevel);
@@ -125,13 +124,14 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildTrackingGeometry(
 }
 
 std::shared_ptr<const Acts::TrackingGeometry>
-ActsExamples::DD4hep::DD4hepGeometryService::trackingGeometry(
-    const Acts::GeometryContext& gctx) {
+DD4hepGeometryService::trackingGeometry(const Acts::GeometryContext& gctx) {
   if (!m_trackingGeometry) {
     buildTrackingGeometry(gctx);
   }
   return m_trackingGeometry;
 }
+
+}  // namespace ActsExamples::DD4hep
 
 void ActsExamples::DD4hep::sortFCChhDetElements(
     std::vector<dd4hep::DetElement>& det) {

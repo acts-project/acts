@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,13 +27,15 @@
 #include <TGeoNode.h>
 
 class TGeoNode;
+
+namespace dd4hep {
+class Detector;
+}  // namespace dd4hep
+
 namespace Acts {
 class IMaterialDecorator;
 class TrackingGeometry;
 }  // namespace Acts
-namespace dd4hep {
-class Detector;
-}  // namespace dd4hep
 
 namespace ActsExamples::DD4hep {
 
@@ -44,8 +46,8 @@ void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det);
 /// @brief service creating geometries from dd4hep input
 ///
 /// The DD4hepGeometryService creates the DD4hep, the TGeo and the ACTS
-/// TrackingGeometry
-/// from DD4hep xml input. The geometries are created only on demand.
+/// TrackingGeometry from DD4hep xml input. The geometries are created only on
+/// demand.
 class DD4hepGeometryService {
  public:
   struct Config {

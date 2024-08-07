@@ -81,6 +81,12 @@ std::shared_ptr<Acts::DD4hepFieldAdapter> DD4hepDetector::field() const {
   return std::make_shared<Acts::DD4hepFieldAdapter>(detector.field());
 }
 
-void DD4hepDetector::free() { m_geometryService.reset(); }
+dd4hep::Detector& DD4hepDetector::dd4hepDetector() const {
+  return m_geometryService->detector();
+}
+
+void DD4hepDetector::free() {
+  m_geometryService.reset();
+}
 
 }  // namespace ActsExamples::DD4hep
