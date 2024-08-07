@@ -27,6 +27,8 @@ class CompositePortalLink final : public PortalLinkBase {
 
   std::size_t depth() const;
 
+  std::size_t size() const;
+
  private:
   static std::shared_ptr<RegularSurface> mergedSurface(const PortalLinkBase& a,
                                                        const PortalLinkBase& b,
