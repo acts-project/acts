@@ -10,6 +10,8 @@
 
 #include "Acts/Geometry/Portal.hpp"
 
+#include <boost/container/small_vector.hpp>
+
 namespace Acts {
 
 class CompositePortalLink final : public PortalLinkBase {
@@ -20,15 +22,18 @@ class CompositePortalLink final : public PortalLinkBase {
                                       const Vector2& position) const final;
 
   CompositePortalLink(const std::shared_ptr<const PortalLinkBase>& a,
-                      const std::shared_ptr<const PortalLinkBase>& b)
-      : PortalLinkBase(nullptr) {
-    (void)a;
-    (void)b;
-    // @TODO: Implement
-    throw std::logic_error{"Not implemented"};
-  };
+                      const std::shared_ptr<const PortalLinkBase>& b,
+                      BinningValue direction, bool flatten = true);
 
-  // @TODO: Implement optimization in case on or both of the arguments are already composites
+  std::size_t depth() const;
+
+ private:
+  static std::shared_ptr<RegularSurface> mergedSurface(const PortalLinkBase& a,
+                                                       const PortalLinkBase& b,
+                                                       BinningValue direction);
+
+  boost::container::small_vector<std::shared_ptr<const PortalLinkBase>, 4>
+      m_children{};
 };
 
 }  // namespace Acts

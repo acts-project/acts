@@ -13,6 +13,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/Portal.hpp"
@@ -412,7 +413,7 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     auto trivial = std::make_unique<TrivialPortalLink>(cyl, vol.get());
     BOOST_REQUIRE(trivial);
 
-    BOOST_CHECK_EQUAL(trivial->resolveVolume({}, Vector2{1, 2}), vol.get());
+    BOOST_CHECK_EQUAL(trivial->resolveVolume(gctx, Vector2{1, 2}), vol.get());
 
     auto gridZ = trivial->makeGrid(BinningValue::binZ);
     BOOST_REQUIRE(gridZ);
@@ -423,11 +424,12 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     BOOST_CHECK_EQUAL(*gridZ->grid().axes().front(), axisZExpected);
 
     BOOST_CHECK_EQUAL(
-        gridZ->resolveVolume({}, Vector2{20_degree * 30_mm, 90_mm}), vol.get());
+        gridZ->resolveVolume(gctx, Vector2{20_degree * 30_mm, 90_mm}),
+        vol.get());
 
     // Exception when queried for out of bounds
     BOOST_CHECK_THROW(
-        gridZ->resolveVolume({}, Vector2{20_degree * 30_mm, 110_mm}),
+        gridZ->resolveVolume(gctx, Vector2{20_degree * 30_mm, 110_mm}),
         std::invalid_argument);
 
     auto gridRPhi = trivial->makeGrid(BinningValue::binRPhi);
@@ -444,18 +446,19 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     auto trivialPhi = std::make_unique<TrivialPortalLink>(cylPhi, vol.get());
     BOOST_REQUIRE(trivialPhi);
 
-    BOOST_CHECK_EQUAL(trivialPhi->resolveVolume({}, Vector2{1, 2}), vol.get());
+    BOOST_CHECK_EQUAL(trivialPhi->resolveVolume(gctx, Vector2{1, 2}),
+                      vol.get());
 
     auto gridRPhiSector = trivialPhi->makeGrid(BinningValue::binRPhi);
     BOOST_REQUIRE(gridRPhiSector);
 
     BOOST_CHECK_EQUAL(
-        gridRPhiSector->resolveVolume({}, Vector2{20_degree * 30_mm, 90_mm}),
+        gridRPhiSector->resolveVolume(gctx, Vector2{20_degree * 30_mm, 90_mm}),
         vol.get());
 
     // Exception when queried for out of bounds
     BOOST_CHECK_THROW(
-        gridRPhiSector->resolveVolume({}, Vector2{40_degree * 30_mm, 90_mm}),
+        gridRPhiSector->resolveVolume(gctx, Vector2{40_degree * 30_mm, 90_mm}),
         std::invalid_argument);
 
     BOOST_CHECK_EQUAL(gridRPhiSector->grid().axes().size(), 1);
@@ -477,7 +480,7 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     BOOST_REQUIRE(trivial);
 
     // Doesn't matter which position
-    BOOST_CHECK_EQUAL(trivial->resolveVolume({}, Vector2{1, 2}), vol.get());
+    BOOST_CHECK_EQUAL(trivial->resolveVolume(gctx, Vector2{1, 2}), vol.get());
 
     auto gridR = trivial->makeGrid(BinningValue::binR);
     BOOST_REQUIRE(gridR);
@@ -487,9 +490,9 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     Axis axisRExpected{AxisBound, 30_mm, 100_mm, 1};
     BOOST_CHECK_EQUAL(*gridR->grid().axes().front(), axisRExpected);
 
-    BOOST_CHECK_EQUAL(gridR->resolveVolume({}, Vector2{90_mm, 10_degree}),
+    BOOST_CHECK_EQUAL(gridR->resolveVolume(gctx, Vector2{90_mm, 10_degree}),
                       vol.get());
-    BOOST_CHECK_THROW(gridR->resolveVolume({}, Vector2{110_mm, 0_degree}),
+    BOOST_CHECK_THROW(gridR->resolveVolume(gctx, Vector2{110_mm, 0_degree}),
                       std::invalid_argument);
 
     auto gridPhi = trivial->makeGrid(BinningValue::binPhi);
@@ -500,9 +503,9 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     Axis axisPhiExpected{AxisClosed, -M_PI, M_PI, 1};
     BOOST_CHECK_EQUAL(*gridPhi->grid().axes().front(), axisPhiExpected);
 
-    BOOST_CHECK_EQUAL(gridPhi->resolveVolume({}, Vector2{90_mm, 10_degree}),
+    BOOST_CHECK_EQUAL(gridPhi->resolveVolume(gctx, Vector2{90_mm, 10_degree}),
                       vol.get());
-    BOOST_CHECK_THROW(gridPhi->resolveVolume({}, Vector2{110_mm, 0_degree}),
+    BOOST_CHECK_THROW(gridPhi->resolveVolume(gctx, Vector2{110_mm, 0_degree}),
                       std::invalid_argument);
   }
 }
@@ -1990,7 +1993,84 @@ BOOST_AUTO_TEST_SUITE_END()  // MergeCrossDisc
 
 BOOST_AUTO_TEST_SUITE_END()  // GridMerging
 
-BOOST_AUTO_TEST_CASE(CompositeConstruction) {}
+BOOST_AUTO_TEST_CASE(CompositeConstruction) {
+  // Arbitrary volumes for testing only
+  auto vol1 = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+  auto vol2 = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+  auto vol3 = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+  auto disc1 =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 60_mm);
+
+  auto trivial1 = std::make_shared<TrivialPortalLink>(disc1, vol1.get());
+
+  auto disc2 =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 60_mm, 90_mm);
+  auto trivial2 = std::make_shared<TrivialPortalLink>(disc2, vol2.get());
+
+  auto composite = std::make_shared<CompositePortalLink>(trivial1, trivial2,
+                                                         BinningValue::binR);
+
+  BOOST_CHECK_EQUAL(composite->resolveVolume(gctx, Vector2{40_mm, 0_degree}),
+                    vol1.get());
+  BOOST_CHECK_EQUAL(composite->resolveVolume(gctx, Vector2{70_mm, 0_degree}),
+                    vol2.get());
+
+  BOOST_CHECK_EQUAL(composite->depth(), 1);
+
+  // Test exception on different surface types
+  auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30_mm,
+                                                  40_mm);
+  auto trivialCyl = std::make_shared<TrivialPortalLink>(cyl, vol3.get());
+  BOOST_CHECK_THROW(
+      CompositePortalLink(trivial1, trivialCyl, BinningValue::binR),
+      std::invalid_argument);
+
+  auto disc3 =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 90_mm, 120_mm);
+  auto trivial3 = std::make_shared<TrivialPortalLink>(disc3, vol3.get());
+
+  // Test exception on un-mergable surfaces
+  BOOST_CHECK_THROW(CompositePortalLink(trivial1, trivial3, BinningValue::binR),
+                    SurfaceMergingException);
+
+  // Composite with a composite (this should work regardless of flattening)
+
+  CompositePortalLink composite2(composite, trivial3, BinningValue::binR,
+                                 false);
+
+  BOOST_CHECK_EQUAL(composite2.resolveVolume(gctx, Vector2{40_mm, 0_degree}),
+                    vol1.get());
+  BOOST_CHECK_EQUAL(composite2.resolveVolume(gctx, Vector2{70_mm, 0_degree}),
+                    vol2.get());
+  BOOST_CHECK_EQUAL(composite2.resolveVolume(gctx, Vector2{100_mm, 0_degree}),
+                    vol3.get());
+
+  // Two without flattening
+  BOOST_CHECK_EQUAL(composite2.depth(), 2);
+
+  CompositePortalLink composite2Flat(composite, trivial3, BinningValue::binR,
+                                     true);
+
+  // One because of flattening
+  BOOST_CHECK_EQUAL(composite2Flat.depth(), 1);
+
+  BOOST_CHECK_EQUAL(
+      composite2Flat.resolveVolume(gctx, Vector2{40_mm, 0_degree}), vol1.get());
+  BOOST_CHECK_EQUAL(
+      composite2Flat.resolveVolume(gctx, Vector2{70_mm, 0_degree}), vol2.get());
+  BOOST_CHECK_EQUAL(
+      composite2Flat.resolveVolume(gctx, Vector2{100_mm, 0_degree}),
+      vol3.get());
+}
 
 BOOST_AUTO_TEST_SUITE(PortalMerging)
 
@@ -2121,7 +2201,19 @@ BOOST_AUTO_TEST_CASE(TrivialGridPhi) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(CompositeOther) {}
+BOOST_AUTO_TEST_CASE(CompositeOther) {
+  auto vol1 = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+  auto vol2 = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+}
+
+BOOST_AUTO_TEST_CASE(CompositeFlattening) {
+  // @TODO: Add test for composite flattening
+}
 
 BOOST_AUTO_TEST_SUITE_END()  // PortalMerging
 
