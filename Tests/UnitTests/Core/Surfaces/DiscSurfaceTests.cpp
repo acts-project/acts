@@ -431,6 +431,20 @@ BOOST_AUTO_TEST_CASE(IncompatibleBounds) {
       SurfaceMergingException);
 }
 
+BOOST_AUTO_TEST_CASE(InvalidDetectorElement) {
+  DetectorElementStub detElem;
+
+  auto bounds1 = std::make_shared<RadialBounds>(30_mm, 100_mm);
+  auto disc1 = Surface::makeShared<DiscSurface>(bounds1, detElem);
+
+  auto bounds2 = std::make_shared<RadialBounds>(100_mm, 150_mm);
+  auto disc2 = Surface::makeShared<DiscSurface>(bounds2, detElem);
+
+  BOOST_CHECK_THROW(
+      disc1->mergedWith(*disc2, BinningValue::binR, false, *logger),
+      SurfaceMergingException);
+}
+
 BOOST_DATA_TEST_CASE(IncompatibleRDirection,
                      (boost::unit_test::data::xrange(-135, 180, 45) *
                       boost::unit_test::data::make(Vector3{0_mm, 0_mm, 0_mm},
@@ -598,8 +612,6 @@ BOOST_DATA_TEST_CASE(IncompatiblePhiDirection,
   BOOST_CHECK_THROW(discPhi->mergedWith(*discPhi5, Acts::BinningValue::binPhi,
                                         false, *logger),
                     SurfaceMergingException);
-
-  // @TODO: Test phi sector with different radii
 }
 
 BOOST_DATA_TEST_CASE(PhiDirection,
@@ -668,6 +680,38 @@ BOOST_DATA_TEST_CASE(PhiDirection,
         1e-6);
     BOOST_CHECK_CLOSE(bounds45->get(RadialBounds::eHalfPhiSector), 30_degree,
                       1e-6);
+
+    auto disc6 = makeDisc(base, 30_mm, 100_mm, 90_degree, a(0_degree));
+    auto disc7 = makeDisc(base, 30_mm, 100_mm, 90_degree, a(180_degree));
+
+    auto [disc67, reversed67] =
+        disc6->mergedWith(*disc7, Acts::BinningValue::binPhi, false, *logger);
+    BOOST_REQUIRE_NE(disc67, nullptr);
+    CHECK_CLOSE_OR_SMALL(disc67->transform(tgContext).matrix(), base.matrix(),
+                         1e-6, 1e-10);
+    BOOST_CHECK(!reversed67);
+
+    auto [disc76, reversed76] =
+        disc7->mergedWith(*disc6, Acts::BinningValue::binPhi, false, *logger);
+    BOOST_REQUIRE_NE(disc76, nullptr);
+    // surfaces are not equal because bounds are not equal
+    BOOST_CHECK(*disc76 != *disc67);
+    // bounds are different because of avg phi
+    BOOST_CHECK_NE(disc76->bounds(), disc67->bounds());
+    // transforms should be the same
+    BOOST_CHECK_EQUAL(disc76->transform(tgContext).matrix(),
+                      disc67->transform(tgContext).matrix());
+    // not reversed either because you get the ordering you put in
+    BOOST_CHECK(!reversed76);
+
+    const auto* bounds67 = dynamic_cast<const RadialBounds*>(&disc67->bounds());
+    BOOST_REQUIRE_NE(bounds67, nullptr);
+    BOOST_CHECK_SMALL(
+        detail::difference_periodic(bounds67->get(RadialBounds::eAveragePhi),
+                                    a(90_degree), 2 * M_PI),
+        1e-6);
+    BOOST_CHECK_CLOSE(bounds67->get(RadialBounds::eHalfPhiSector), 180_degree,
+                      1e-6);
   }
 
   BOOST_TEST_CONTEXT("External rotation") {
@@ -724,10 +768,39 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     BOOST_CHECK_EQUAL(bounds45->get(RadialBounds::eAveragePhi), 0);
     BOOST_CHECK_CLOSE(bounds45->get(RadialBounds::eHalfPhiSector), 30_degree,
                       1e-6);
-  }
 
-  // @TODO: Add half-circle sector test
-  // @TODO: Add detector element test
+    Transform3 trf6 = base * AngleAxis3(a(0_degree), Vector3::UnitZ());
+    auto disc6 = makeDisc(trf6, 30_mm, 100_mm, 90_degree, 0_degree);
+    Transform3 trf7 = base * AngleAxis3(a(180_degree), Vector3::UnitZ());
+    auto disc7 = makeDisc(trf7, 30_mm, 100_mm, 90_degree, 0_degree);
+    auto [disc67, reversed67] =
+        disc6->mergedWith(*disc7, Acts::BinningValue::binPhi, true, *logger);
+    BOOST_REQUIRE_NE(disc67, nullptr);
+    Transform3 trfExpected67 =
+        base * AngleAxis3(a(90_degree), Vector3::UnitZ());
+    CHECK_CLOSE_OR_SMALL(disc67->transform(tgContext).matrix(),
+                         trfExpected67.matrix(), 1e-6, 1e-10);
+    BOOST_CHECK(!reversed67);
+
+    auto [disc76, reversed76] =
+        disc7->mergedWith(*disc6, Acts::BinningValue::binPhi, true, *logger);
+    BOOST_REQUIRE_NE(disc76, nullptr);
+    // surfaces are not equal due to different transforms
+    BOOST_CHECK(*disc76 != *disc67);
+    BOOST_CHECK_NE(disc76->transform(tgContext).matrix(),
+                   disc67->transform(tgContext).matrix());
+    // bounds should be equal however
+    BOOST_CHECK_EQUAL(disc76->bounds(), disc67->bounds());
+
+    BOOST_CHECK(!reversed76);  // not reversed either because you get the
+                               // ordering you put in
+
+    const auto* bounds67 = dynamic_cast<const RadialBounds*>(&disc67->bounds());
+    BOOST_REQUIRE_NE(bounds67, nullptr);
+    BOOST_CHECK_EQUAL(bounds67->get(RadialBounds::eAveragePhi), 0);
+    BOOST_CHECK_CLOSE(bounds67->get(RadialBounds::eHalfPhiSector), 180_degree,
+                      1e-6);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

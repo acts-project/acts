@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -347,6 +348,18 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceBinningPosition) {
 }
 
 BOOST_AUTO_TEST_SUITE(CylinderSurfaceMerging)
+
+BOOST_AUTO_TEST_CASE(InvalidDetectorElement) {
+  DetectorElementStub detElem;
+
+  auto bounds = std::make_shared<CylinderBounds>(100_mm, 100_mm);
+  auto cyl1 = Surface::makeShared<CylinderSurface>(bounds, detElem);
+  auto cyl2 = Surface::makeShared<CylinderSurface>(bounds, detElem);
+
+  BOOST_CHECK_THROW(
+      cyl1->mergedWith(*cyl2, Acts::BinningValue::binR, false, *logger),
+      SurfaceMergingException);
+}
 
 BOOST_DATA_TEST_CASE(IncompatibleZDirection,
                      (boost::unit_test::data::xrange(-135, 180, 45) *
