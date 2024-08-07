@@ -82,4 +82,30 @@ BOOST_AUTO_TEST_CASE(VariableBoundAll) {
   BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
 }
 
+BOOST_AUTO_TEST_CASE(VariableBoundReassign) {
+  // generate w/ a single parameter
+  auto [par1, cov1] = generateParametersCovariance<ActsScalar, 1u>(rng);
+  auto meas = makeVariableSizeMeasurement(source, par1, cov1, eBoundTheta);
+  BOOST_CHECK_EQUAL(meas.size(), 1);
+  BOOST_CHECK(!meas.contains(eBoundLoc0));
+  BOOST_CHECK(!meas.contains(eBoundLoc1));
+  BOOST_CHECK(!meas.contains(eBoundTime));
+  BOOST_CHECK(!meas.contains(eBoundPhi));
+  BOOST_CHECK(meas.contains(eBoundTheta));
+  BOOST_CHECK(!meas.contains(eBoundQOverP));
+
+  // reassign w/ all parameters
+  auto [parN, covN] = generateBoundParametersCovariance(rng);
+  meas = makeVariableSizeMeasurement(source, parN, covN, eBoundLoc0, eBoundLoc1,
+                                     eBoundPhi, eBoundTheta, eBoundQOverP,
+                                     eBoundTime);
+  BOOST_CHECK_EQUAL(meas.size(), eBoundSize);
+  BOOST_CHECK(meas.contains(eBoundLoc0));
+  BOOST_CHECK(meas.contains(eBoundLoc1));
+  BOOST_CHECK(meas.contains(eBoundTime));
+  BOOST_CHECK(meas.contains(eBoundPhi));
+  BOOST_CHECK(meas.contains(eBoundTheta));
+  BOOST_CHECK(meas.contains(eBoundQOverP));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
