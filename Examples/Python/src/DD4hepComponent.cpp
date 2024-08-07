@@ -49,10 +49,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
                           &DD4hep::DD4hepGeometryService::trackingGeometry))
                  .def("contextDecorators",
                       &DD4hep::DD4hepGeometryService::contextDecorators)
-                 .def("drop", &DD4hep::DD4hepGeometryService::drop)
-                 .def("__enter__", [](py::object self) { return self; })
-                 .def("__exit__",
-                      [](DD4hep::DD4hepGeometryService& self) { self.drop(); });
+                 .def("drop", &DD4hep::DD4hepGeometryService::drop);
 
     auto c = py::class_<Config>(s, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
