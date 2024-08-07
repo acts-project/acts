@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
@@ -42,7 +43,11 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
                  .def(py::init<const Config&>())
                  .def("drop", &DD4hep::DD4hepGeometryService::drop)
                  .def("trackingGeometry",
-                      &DD4hep::DD4hepGeometryService::trackingGeometry)
+                      py::overload_cast<>(
+                          &DD4hep::DD4hepGeometryService::trackingGeometry))
+                 .def("trackingGeometry",
+                      py::overload_cast<const Acts::GeometryContext&>(
+                          &DD4hep::DD4hepGeometryService::trackingGeometry))
                  .def("contextDecorators",
                       &DD4hep::DD4hepGeometryService::contextDecorators);
 

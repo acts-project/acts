@@ -109,14 +109,12 @@ def _detector_create(cls, config_class=None):
             cfg = cls.Config()
         else:
             cfg = config_class()
-        _kwargs = {}
+        setattr(cfg, "matDecorator", mdecorator)
         for k, v in kwargs.items():
-            try:
-                setattr(cfg, k, v)
-            except AttributeError:
-                _kwargs[k] = v
-        det = cls()
-        tg, deco = det.finalize(cfg, mdecorator, *args, **_kwargs)
+            setattr(cfg, k, v)
+        det = cls(cfg)
+        tg = det.trackingGeometry()
+        deco = det.contextDecorators()
         return det, tg, deco
 
     return create

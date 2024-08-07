@@ -111,6 +111,8 @@ class DD4hepGeometryService {
   /// @return The world TGeoNode (physical volume)
   TGeoNode& tgeoGeometry();
 
+  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry();
+
   /// Interface method to access the ACTS TrackingGeometry
   ///
   /// @param gctx is the geometry context object

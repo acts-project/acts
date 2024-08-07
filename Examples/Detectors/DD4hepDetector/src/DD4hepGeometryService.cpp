@@ -124,6 +124,15 @@ ActsExamples::ProcessCode DD4hepGeometryService::buildTrackingGeometry(
 }
 
 std::shared_ptr<const Acts::TrackingGeometry>
+DD4hepGeometryService::trackingGeometry() {
+  Acts::GeometryContext gctx;
+  if (!m_trackingGeometry) {
+    buildTrackingGeometry(gctx);
+  }
+  return m_trackingGeometry;
+}
+
+std::shared_ptr<const Acts::TrackingGeometry>
 DD4hepGeometryService::trackingGeometry(const Acts::GeometryContext& gctx) {
   if (!m_trackingGeometry) {
     buildTrackingGeometry(gctx);
