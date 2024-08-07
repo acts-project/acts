@@ -119,7 +119,7 @@ struct VolumeMaterialInteraction {
     } else {
       slab = MaterialSlab();
     }
-    return slab;
+    return slab.valid();
   }
 };
 

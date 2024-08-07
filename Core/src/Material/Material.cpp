@@ -96,7 +96,7 @@ Acts::Material::ParametersVector Acts::Material::parameters() const {
 }
 
 std::ostream& Acts::operator<<(std::ostream& os, const Material& material) {
-  if (!material) {
+  if (!material.valid()) {
     os << "vacuum";
   } else {
     os << "x0=" << material.X0();

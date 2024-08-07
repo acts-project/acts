@@ -100,15 +100,22 @@ struct PointwiseMaterialInteraction {
   /// @return Boolean statement whether the material is valid
   template <typename propagator_state_t, typename navigator_t>
   bool evaluateMaterialSlab(
+      // make getMaterialSlab
       const propagator_state_t& state, const navigator_t& navigator,
       MaterialUpdateStage updateStage = MaterialUpdateStage::FullUpdate) {
     // We are at the start surface
     if (surface == navigator.startSurface(state.navigation)) {
       updateStage = MaterialUpdateStage::PostUpdate;
+      std::cout << "changed to PostUpdate" << std::endl;
       // Or is it the target surface ?
     } else if (surface == navigator.targetSurface(state.navigation)) {
       updateStage = MaterialUpdateStage::PreUpdate;
+      std::cout << "changed to PreUpdate" << std::endl;
+    } else {
+      std::cout << "changed to originalValue" << std::endl;
     }
+
+    std::cout << "pos: (" << pos[0] << ", " << pos[1] << ", " << pos[2] << ")" << std::endl;
 
     // Retrieve the material properties
     slab = navigator.currentSurface(state.navigation)
@@ -117,10 +124,14 @@ struct PointwiseMaterialInteraction {
 
     // Correct the material properties for non-zero incidence
     pathCorrection = surface->pathCorrection(state.geoContext, pos, dir);
+    std::cout << "pathCorrection: " << pathCorrection << std::endl;
+    std::cout << "thickness before correction: " << slab.thickness() << std::endl;
     slab.scaleThickness(pathCorrection);
+    std::cout << "thickness after correction: " << slab.thickness() << std::endl;
+    std::cout << "material: " << slab.material() << std::endl;
 
     // Get the surface material & properties from them
-    return slab;
+    return slab.valid();
   }
 
   /// @brief This function evaluate the material effects

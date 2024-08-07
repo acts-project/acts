@@ -283,7 +283,7 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
 }  // namespace
 
 void Acts::to_json(nlohmann::json& j, const Material& t) {
-  if (!t) {
+  if (!t.valid()) {
     return;
   }
   for (unsigned i = 0; i < t.parameters().size(); ++i) {

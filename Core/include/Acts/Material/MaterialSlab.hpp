@@ -45,7 +45,7 @@ class MaterialSlab {
   /// Construct vacuum without thickness.
   MaterialSlab() = default;
   /// Construct vacuum with thickness.
-  MaterialSlab(float thickness);
+  explicit MaterialSlab(float thickness);
   /// Construct from material description.
   ///
   /// @param material  is the material description
@@ -62,7 +62,7 @@ class MaterialSlab {
   void scaleThickness(float scale);
 
   /// Check if the material is valid, i.e. it is finite and not vacuum.
-  constexpr operator bool() const { return m_material && (0.0f < m_thickness); }
+  bool valid() const { return m_material.valid() && (0.0f < m_thickness); }
 
   /// Access the (average) material parameters.
   constexpr const Material& material() const { return m_material; }

@@ -34,7 +34,7 @@ def runTruthTrackingGx2f(
     )
 
     s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
+        events=10, numThreads=1, logLevel=acts.logging.VERBOSE
     )
 
     rnd = acts.examples.RandomNumbers(seed=42)
@@ -156,20 +156,20 @@ def runTruthTrackingGx2f(
 if "__main__" == __name__:
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    # ODD
-    from acts.examples.odd import getOpenDataDetector
-
-    detector, trackingGeometry, _ = getOpenDataDetector()
-    digiConfigFile = (
-        srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
-    )
-
-    ## GenericDetector
-    # detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
+    # # ODD
+    # from acts.examples.odd import getOpenDataDetector
+    #
+    # detector, trackingGeometry, _ = getOpenDataDetector()
     # digiConfigFile = (
-    #     srcdir
-    #     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    #     srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
     # )
+
+    # GenericDetector
+    detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
+    digiConfigFile = (
+        srcdir
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

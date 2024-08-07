@@ -83,9 +83,9 @@ class Material {
   Material& operator=(const Material& mat) = default;
 
   /// Check if the material is valid, i.e. it is not vacuum.
-  constexpr operator bool() const { return 0.0f < m_ar; }
+  bool valid() const { return 0.0f < m_ar; }
 
-  /// Return the radition length. Infinity in case of vacuum.
+  /// Return the radiation length. Infinity in case of vacuum.
   constexpr float X0() const { return m_x0; }
   /// Return the nuclear interaction length. Infinity in case of vacuum.
   constexpr float L0() const { return m_l0; }

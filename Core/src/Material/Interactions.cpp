@@ -13,6 +13,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <iostream>
 
 using namespace Acts::UnitLiterals;
 
@@ -154,7 +155,7 @@ namespace detail {
 inline float computeEnergyLossLandauFwhm(const Acts::MaterialSlab& slab,
                                          const RelativisticQuantities& rq) {
   // return early in case of vacuum or zero thickness
-  if (!slab) {
+  if (!slab.valid()) {
     return 0.0f;
   }
 
@@ -171,7 +172,7 @@ inline float computeEnergyLossLandauFwhm(const Acts::MaterialSlab& slab,
 float Acts::computeEnergyLossBethe(const MaterialSlab& slab, float m,
                                    float qOverP, float absQ) {
   // return early in case of vacuum or zero thickness
-  if (!slab) {
+  if (!slab.valid()) {
     return 0.0f;
   }
 
@@ -196,7 +197,7 @@ float Acts::computeEnergyLossBethe(const MaterialSlab& slab, float m,
 float Acts::deriveEnergyLossBetheQOverP(const MaterialSlab& slab, float m,
                                         float qOverP, float absQ) {
   // return early in case of vacuum or zero thickness
-  if (!slab) {
+  if (!slab.valid()) {
     return 0.0f;
   }
 
@@ -233,7 +234,7 @@ float Acts::deriveEnergyLossBetheQOverP(const MaterialSlab& slab, float m,
 float Acts::computeEnergyLossLandau(const MaterialSlab& slab, float m,
                                     float qOverP, float absQ) {
   // return early in case of vacuum or zero thickness
-  if (!slab) {
+  if (!slab.valid()) {
     return 0.0f;
   }
 
@@ -253,7 +254,7 @@ float Acts::computeEnergyLossLandau(const MaterialSlab& slab, float m,
 float Acts::deriveEnergyLossLandauQOverP(const MaterialSlab& slab, float m,
                                          float qOverP, float absQ) {
   // return early in case of vacuum or zero thickness
-  if (!slab) {
+  if (!slab.valid()) {
     return 0.0f;
   }
 
@@ -288,7 +289,7 @@ float Acts::deriveEnergyLossLandauQOverP(const MaterialSlab& slab, float m,
 float Acts::computeEnergyLossLandauSigma(const MaterialSlab& slab, float m,
                                          float qOverP, float absQ) {
   // return early in case of vacuum or zero thickness
-  if (!slab) {
+  if (!slab.valid()) {
     return 0.0f;
   }
 
@@ -386,7 +387,7 @@ float Acts::computeEnergyLossRadiative(const MaterialSlab& slab,
          "pdg is not absolute");
 
   // return early in case of vacuum or zero thickness
-  if (!slab) {
+  if (!slab.valid()) {
     return 0.0f;
   }
 
@@ -415,7 +416,7 @@ float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab,
          "pdg is not absolute");
 
   // return early in case of vacuum or zero thickness
-  if (!slab) {
+  if (!slab.valid()) {
     return 0.0f;
   }
 
@@ -483,6 +484,15 @@ inline float theta0Highland(float xOverX0, float momentumInv,
   const float t = std::sqrt(xOverX0 * q2OverBeta2);
   // log((x/X0) * (q²/beta²)) = log((sqrt(x/X0) * (q/beta))²)
   //                          = 2 * log(sqrt(x/X0) * (q/beta))
+
+  std::cout << "HIGHLAND t: " << t << std::endl;
+  std::cout << "HIGHLAND std::log(t): " << std::log(t) << std::endl;
+  std::cout << "HIGHLAND 0.038f * 2 * std::log(t): " << 0.038f * 2 * std::log(t) << std::endl;
+  std::cout << "HIGHLAND t * (1.0f + 0.038f * 2 * std::log(t)): " << t * (1.0f + 0.038f * 2 * std::log(t)) << std::endl;
+  std::cout << "HIGHLAND momentumInv * t * (1.0f + 0.038f * 2 * std::log(t)): " << momentumInv * t * (1.0f + 0.038f * 2 * std::log(t)) << std::endl;
+  std::cout << "HIGHLAND 13.6_MeV: " << 13.6_MeV << std::endl;
+  std::cout << "HIGHLAND 13.6_MeV * momentumInv * t * (1.0f + 0.038f * 2 * std::log(t)): " << 13.6_MeV * momentumInv * t * (1.0f + 0.038f * 2 * std::log(t)) << std::endl;
+
   return 13.6_MeV * momentumInv * t * (1.0f + 0.038f * 2 * std::log(t));
 }
 
@@ -504,21 +514,27 @@ float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab,
          "pdg is not absolute");
 
   // return early in case of vacuum or zero thickness
-  if (!slab) {
+  if (!slab.valid()) {
+    std::cout << "return early because of vacuum" << std::endl;
     return 0.0f;
   }
 
   // relative radiation length
   const float xOverX0 = slab.thicknessInX0();
+  std::cout << "THETA0 xOverX0: " << xOverX0 << std::endl;
   // 1/p = q/(pq) = (q/p)/q
   const float momentumInv = std::abs(qOverP / absQ);
+  std::cout << "THETA0 momentumInv: " << momentumInv << std::endl;
   // q²/beta²; a smart compiler should be able to remove the unused computations
   const float q2OverBeta2 = RelativisticQuantities(m, qOverP, absQ).q2OverBeta2;
+  std::cout << "THETA0 q2OverBeta2: " << q2OverBeta2 << std::endl;
 
   // electron or positron
   if (absPdg == PdgParticle::eElectron) {
+    std::cout << "THETA0 electron: " << std::endl;
     return theta0RossiGreisen(xOverX0, momentumInv, q2OverBeta2);
   } else {
+    std::cout << "THETA0 highland: " << std::endl;
     return theta0Highland(xOverX0, momentumInv, q2OverBeta2);
   }
 }
