@@ -17,7 +17,7 @@ namespace Acts {
 
 template <typename T>
 concept TrackContainerFrontend = requires() {
-  typename T::ReadOnly;
+  { T::ReadOnly } -> std::same_as<const bool &>;
 
   requires std::same_as<typename T::IndexType, TrackIndexType>;
 

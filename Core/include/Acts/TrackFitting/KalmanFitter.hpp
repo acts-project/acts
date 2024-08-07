@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,7 +15,6 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
-#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -33,6 +32,7 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 
 #include <functional>
 #include <limits>
@@ -1088,7 +1088,9 @@ class KalmanFitter {
       source_link_iterator_t it, source_link_iterator_t end,
       const start_parameters_t& sParameters,
       const KalmanFitterOptions<traj_t>& kfOptions,
-      track_container_t& trackContainer) const requires(!_isdn) {
+      track_container_t& trackContainer) const
+    requires(!_isdn)
+  {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
@@ -1176,7 +1178,9 @@ class KalmanFitter {
       const start_parameters_t& sParameters,
       const KalmanFitterOptions<traj_t>& kfOptions,
       const std::vector<const Surface*>& sSequence,
-      track_container_t& trackContainer) const requires(_isdn) {
+      track_container_t& trackContainer) const
+    requires(_isdn)
+  {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
@@ -1301,6 +1305,6 @@ class KalmanFitter {
     // Return the converted Track
     return track;
   }
-};  // namespace Acts
+};
 
 }  // namespace Acts

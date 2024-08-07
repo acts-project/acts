@@ -18,7 +18,7 @@ namespace Acts {
 
 template <typename T>
 concept TrackProxyConcept = requires() {
-  typename T::ReadOnly;
+  { T::ReadOnly } -> std::same_as<const bool &>;
 
   requires TrackContainerBackend<typename T::Container>;
 
