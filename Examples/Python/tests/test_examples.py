@@ -141,7 +141,11 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_geant4(tmp_path, assert_root_hash):
     # This test literally only ensures that the geant 4 example can run without erroring out
-    getOpenDataDetector()  # just to make sure it can build
+
+    # just to make sure it can build the odd
+    detector, trackingGeometry, decorators, contextManager = getOpenDataDetector()
+    with contextManager:
+        pass
 
     csv = tmp_path / "csv"
     csv.mkdir()
@@ -690,7 +694,9 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    with getOpenDataDetector(mdecorator) as (detector, trackingGeometry, decorators):
+    detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator)
+
+    with detector:
         runMaterialMapping(
             trackingGeometry,
             decorators,
@@ -723,11 +729,9 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(events=10, numThreads=1)
 
-    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file)) as (
-        detector,
-        trackingGeometry,
-        decorators,
-    ):
+    detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file))
+
+    with detector:
         runMaterialValidation(
             10, 1000, trackingGeometry, decorators, field, outputDir=str(tmp_path), s=s
         )
@@ -757,11 +761,9 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     s = Sequencer(numThreads=1)
 
-    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(geo_map)) as (
-        detector,
-        trackingGeometry,
-        decorators,
-    ):
+    detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(geo_map))
+
+    with detector:
         runMaterialMapping(
             trackingGeometry,
             decorators,
@@ -795,11 +797,9 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     s = Sequencer(events=10, numThreads=1)
 
-    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file)) as (
-        detector,
-        trackingGeometry,
-        decorators,
-    ):
+    detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file))
+
+    with detector:
         runMaterialValidation(
             10,
             1000,
@@ -950,9 +950,6 @@ def test_digitization_example_input(
 
     pgs.run()
 
-    # files are closed in destructors, not great
-    del pgs
-
     s = Sequencer(numThreads=-1)
 
     csv_dir = tmp_path / "csv"
@@ -1097,7 +1094,11 @@ def test_ckf_tracks_example(
 @pytest.mark.slow
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-    getOpenDataDetector()  # just to make sure it can build
+
+    # just to make sure it can build the odd
+    detector, trackingGeometry, decorators, contextManager = getOpenDataDetector()
+    with contextManager:
+        pass
 
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -1127,7 +1128,11 @@ def test_full_chain_odd_example(tmp_path):
 @pytest.mark.slow
 def test_full_chain_odd_example_pythia_geant4(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-    getOpenDataDetector()  # just to make sure it can build
+
+    # just to make sure it can build the odd
+    detector, trackingGeometry, decorators, contextManager = getOpenDataDetector()
+    with contextManager:
+        pass
 
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -1173,11 +1178,16 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
 @pytest.mark.skipif(not onnxEnabled, reason="ONNX plugin not enabled")
 @pytest.mark.slow
 def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
+    # This test literally only ensures that the full chain example can run without erroring out
+
     root_file = "performance_ambiML.root"
     output_dir = "odd_output"
     assert not (tmp_path / root_file).exists()
-    # This test literally only ensures that the full chain example can run without erroring out
-    getOpenDataDetector()  # just to make sure it can build
+
+    # just to make sure it can build the odd
+    detector, trackingGeometry, decorators, contextManager = getOpenDataDetector()
+    with contextManager:
+        pass
 
     script = (
         Path(__file__).parent.parent.parent.parent

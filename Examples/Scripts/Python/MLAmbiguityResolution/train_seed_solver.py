@@ -329,11 +329,6 @@ torch.onnx.export(
     dynamic_axes={"x": {0: "batch_size"}, "y": {0: "batch_size"}},
 )
 
-del CKF_files
-del data
-del x_train, y_train
-del input, input_test
-del duplicateClassifier
 # ==================================================================
 
 # ttbar events for the test, here we assume 40 events are availables

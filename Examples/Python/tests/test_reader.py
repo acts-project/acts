@@ -293,40 +293,41 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
 
     assert os.path.exists(tmp_file)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
-
     s = Sequencer(numThreads=1)
 
-    s.addReader(
-        EDM4hepReader(
-            level=acts.logging.INFO,
-            inputPath=tmp_file,
-            inputSimHits=[
-                "PixelBarrelReadout",
-                "PixelEndcapReadout",
-                "ShortStripBarrelReadout",
-                "ShortStripEndcapReadout",
-                "LongStripBarrelReadout",
-                "LongStripEndcapReadout",
-            ],
-            outputParticlesGenerator="particles_input",
-            outputParticlesInitial="particles_initial",
-            outputParticlesFinal="particles_final",
-            outputSimHits="simhits",
-            dd4hepDetector=detector,
-            trackingGeometry=trackingGeometry,
+    detector, trackingGeometry, decorators, contextManager = getOpenDataDetector()
+
+    with contextManager:
+        s.addReader(
+            EDM4hepReader(
+                level=acts.logging.INFO,
+                inputPath=tmp_file,
+                inputSimHits=[
+                    "PixelBarrelReadout",
+                    "PixelEndcapReadout",
+                    "ShortStripBarrelReadout",
+                    "ShortStripEndcapReadout",
+                    "LongStripBarrelReadout",
+                    "LongStripEndcapReadout",
+                ],
+                outputParticlesGenerator="particles_input",
+                outputParticlesInitial="particles_initial",
+                outputParticlesFinal="particles_final",
+                outputSimHits="simhits",
+                dd4hepDetector=detector,
+                trackingGeometry=trackingGeometry,
+            )
         )
-    )
 
-    alg = AssertCollectionExistsAlg("simhits", "check_alg", acts.logging.WARNING)
-    s.addAlgorithm(alg)
+        alg = AssertCollectionExistsAlg("simhits", "check_alg", acts.logging.WARNING)
+        s.addAlgorithm(alg)
 
-    alg = AssertCollectionExistsAlg(
-        "particles_input", "check_alg", acts.logging.WARNING
-    )
-    s.addAlgorithm(alg)
+        alg = AssertCollectionExistsAlg(
+            "particles_input", "check_alg", acts.logging.WARNING
+        )
+        s.addAlgorithm(alg)
 
-    s.run()
+        s.run()
 
     assert alg.events_seen == 10
 

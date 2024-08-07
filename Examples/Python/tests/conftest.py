@@ -280,7 +280,6 @@ def detector_config(request):
             ),
             name=request.param,
         )
-
     else:
         raise ValueError(f"Invalid detector {detector}")
 
@@ -367,7 +366,9 @@ def _do_material_recording(d: Path):
 
     s = acts.examples.Sequencer(events=2, numThreads=1)
 
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
+    detector, trackingGeometry, decorators, contextManager = getOpenDataDetector()
+
+    with contextManager:
         detectorConstructionFactory = (
             acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
         )

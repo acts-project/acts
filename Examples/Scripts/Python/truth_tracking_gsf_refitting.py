@@ -97,8 +97,8 @@ def runRefittingGsf(
 if __name__ == "__main__":
     outputDir = Path.cwd()
 
-    # detector, trackingGeometry, _ = getOpenDataDetector()
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    # detector, trackingGeometry, decorators, contextManager = getOpenDataDetector()
+    detector, trackingGeometry, decorators, contextManager = acts.examples.GenericDetector.create()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     runRefittingGsf(trackingGeometry, field, outputDir).run()

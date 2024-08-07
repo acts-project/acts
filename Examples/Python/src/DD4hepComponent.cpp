@@ -36,12 +36,11 @@ using namespace Acts::Python;
 
 PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   {
-    using Config = ActsExamples::DD4hep::DD4hepGeometryService::Config;
+    using Config = DD4hep::DD4hepGeometryService::Config;
     auto s = py::class_<DD4hep::DD4hepGeometryService,
                         std::unique_ptr<DD4hep::DD4hepGeometryService>>(
                  m, "DD4hepGeometryService")
                  .def(py::init<const Config&>())
-                 .def("drop", &DD4hep::DD4hepGeometryService::drop)
                  .def("trackingGeometry",
                       py::overload_cast<>(
                           &DD4hep::DD4hepGeometryService::trackingGeometry))
@@ -49,7 +48,11 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
                       py::overload_cast<const Acts::GeometryContext&>(
                           &DD4hep::DD4hepGeometryService::trackingGeometry))
                  .def("contextDecorators",
-                      &DD4hep::DD4hepGeometryService::contextDecorators);
+                      &DD4hep::DD4hepGeometryService::contextDecorators)
+                 .def("drop", &DD4hep::DD4hepGeometryService::drop)
+                 .def("__enter__", [](py::object self) { return self; })
+                 .def("__exit__",
+                      [](DD4hep::DD4hepGeometryService& self) { self.drop(); });
 
     auto c = py::class_<Config>(s, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
@@ -63,6 +66,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     ACTS_PYTHON_MEMBER(envelopeR);
     ACTS_PYTHON_MEMBER(envelopeZ);
     ACTS_PYTHON_MEMBER(defaultLayerThickness);
+    ACTS_PYTHON_MEMBER(matDecorator);
     ACTS_PYTHON_MEMBER(geometryIdentifierHook);
     ACTS_PYTHON_STRUCT_END();
 

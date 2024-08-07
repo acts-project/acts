@@ -53,11 +53,12 @@ def test_telescope_geometry():
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
 def test_odd():
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators, contextManager = getOpenDataDetector()
 
-    trackingGeometry.visitSurfaces(check_extra_odd)
+    with contextManager:
+        trackingGeometry.visitSurfaces(check_extra_odd)
 
-    assert count_surfaces(trackingGeometry) == 18824
+        assert count_surfaces(trackingGeometry) == 18824
 
 
 def test_aligned_detector():

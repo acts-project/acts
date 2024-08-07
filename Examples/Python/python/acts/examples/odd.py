@@ -3,7 +3,6 @@ import sys
 import math
 from pathlib import Path
 from typing import Optional
-from collections import namedtuple
 import acts
 import acts.examples
 
@@ -86,37 +85,32 @@ def getOpenDataDetector(
 
         return geoid
 
-    dd4hepConfig = acts.examples.dd4hep.DD4hepGeometryService.Config(
-        xmlFileNames=[str(odd_xml)],
-        logLevel=customLogLevel(),
-        dd4hepLogLevel=customLogLevel(),
-        geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
-    )
-    detector = acts.examples.dd4hep.DD4hepGeometryService(dd4hepConfig)
-
     if mdecorator is None:
         mdecorator = acts.examples.RootMaterialDecorator(
             fileName=str(odd_dir / "data/odd-material-maps.root"),
             level=customLogLevel(minLevel=acts.logging.WARNING),
         )
 
-    trackingGeometry = detector.trackingGeometry()
-    deco = detector.contextDecorators()
-
-    OpenDataDetector = namedtuple(
-        "OpenDataDetector", ["detector", "trackingGeometry", "decorator"]
+    dd4hepConfig = acts.examples.dd4hep.DD4hepGeometryService.Config(
+        xmlFileNames=[str(odd_xml)],
+        logLevel=customLogLevel(),
+        dd4hepLogLevel=customLogLevel(),
+        geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
+        matDecorator=mdecorator,
     )
+    detector = acts.examples.dd4hep.DD4hepGeometryService(dd4hepConfig)
 
-    class OpenDataDetectorWithContextManager(OpenDataDetector):
-        def __new__(cls, detector, trackingGeometry, decorator):
-            return super(OpenDataDetectorWithContextManager, cls).__new__(
-                cls, detector, trackingGeometry, decorator
-            )
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
+    class ContextManager:
+        def __init__(self, detector):
+            self.detector = detector
         def __enter__(self):
             return self
-
         def __exit__(self):
             self.detector.drop()
 
-    return OpenDataDetectorWithContextManager(detector, trackingGeometry, deco)
+    contextManager = ContextManager(detector)
+
+    return detector, trackingGeometry, decorators, contextManager

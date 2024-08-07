@@ -112,10 +112,11 @@ def _detector_create(cls, config_class=None):
         setattr(cfg, "matDecorator", mdecorator)
         for k, v in kwargs.items():
             setattr(cfg, k, v)
-        det = cls(cfg)
-        tg = det.trackingGeometry()
-        deco = det.contextDecorators()
-        return det, tg, deco
+        detector = cls(cfg)
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
+        contextManager = None
+        return detector, trackingGeometry, decorators, contextManager
 
     return create
 
