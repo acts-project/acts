@@ -153,6 +153,22 @@ void addJson(Context& ctx) {
   }
 
   {
+    mex.def(
+        "writeSensitivesMapToJson",
+        [](const Acts::Experimental::Detector& detector,
+           const std::string& fileName, std::size_t outputPrecision) -> void {
+          using SurfaceConverter =
+              Acts::GeometryHierarchyMapJsonConverter<const Acts::Surface*>;
+          std::ofstream out;
+          out.open(fileName);
+          auto j = SurfaceConverter("surfaces")
+                       .toJson(detector.sensitiveHierarchyMap(), nullptr);
+          out << std::setprecision(outputPrecision) << j.dump(2);
+          out.close();
+        });
+  }
+
+  {
     auto sjOptions = py::class_<ActsExamples::JsonSurfacesReader::Options>(
                          mex, "SurfaceJsonOptions")
                          .def(py::init<>());

@@ -79,7 +79,21 @@ def main():
 
     p.add_argument(
         "--output-json",
-        help="Write the surfaces to OBJ files",
+        help="Write the geometry to JSON files",
+        action="store_true",
+        default=False,
+    )
+
+    p.add_argument(
+        "--output-json-detray",
+        help="Write the geometry in detray JSON format",
+        action="store_true",
+        default=False,
+    )
+
+    p.add_argument(
+        "--output-json-sensitives-map",
+        help="Write the surfaces to a dedicated JSON file",
         action="store_true",
         default=False,
     )
@@ -177,6 +191,17 @@ def main():
             args.output + "_detector",
         )
 
+        acts.svg.viewDetector(
+            gContext,
+            detector,
+            args.top_node,
+            [[ivol, volumeOptions] for ivol in range(detector.numberVolumes())],
+            [
+                ["zr", ["materials"], zrRange],
+            ],
+            args.output + "_material_surfaces",
+        )
+
         # Output the internal navigation to SVG
         if args.output_internals_svg:
             for vol in detector.volumes():
@@ -197,7 +222,17 @@ def main():
         )
     # Output to a JSON file
     if args.output_json:
-        acts.examples.writeDetectorToJsonDetray(gContext, detector, args.output)
+        # Gen2 detector json format
+        if args.output_json_detray:
+            acts.examples.writeDetectorToJsonDetray(gContext, detector, args.output)
+        else:
+            acts.examples.writeDetectorToJson(gContext, detector, args.output)
+
+        # Create a surface hierarchy map (Gen1 / Gen2)
+        if args.output_json_sensitives_map:
+            acts.examples.writeSensitivesMapToJson(
+                detector, args.output + "_sensitives.json", 4
+            )
 
     return
 

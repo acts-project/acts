@@ -42,6 +42,11 @@ void Acts::to_json(nlohmann::json& j, const Acts::Surface& surface) {
   j = SurfaceJsonConverter::toJson(gctx, surface);
 }
 
+void Acts::to_json(nlohmann::json& j, const Acts::Surface* surface) {
+  Acts::GeometryContext gctx;
+  j = SurfaceJsonConverter::toJson(gctx, *surface);
+}
+
 void Acts::to_json(nlohmann::json& j,
                    const std::shared_ptr<const Acts::Surface>& surface) {
   Acts::GeometryContext gctx;
