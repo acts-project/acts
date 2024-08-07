@@ -121,6 +121,7 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   /// The number of ndf of the measurements+outliers
   std::vector<unsigned int> m_NDF;
   /// The chi2 on all measurement states
+
   std::vector<std::vector<double>> m_measurementChi2;
   /// The chi2 on all outlier states
   std::vector<std::vector<double>> m_outlierChi2;
@@ -148,6 +149,8 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   std::vector<float> m_t_vx;
   /// Vertex y positions of majority particle
   std::vector<float> m_t_vy;
+  /// Vertex R positions of majority particle
+  std::vector<float> m_prodR;
   /// Vertex z positions of majority particle
   std::vector<float> m_t_vz;
   /// Initial momenta px of majority particle

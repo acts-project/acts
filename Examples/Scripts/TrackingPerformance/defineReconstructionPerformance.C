@@ -25,7 +25,7 @@
 /// defines the efficiency, fake rate and duplicaiton rate. It aims to make
 /// custom definition and tuning of the reconstruction performance easier.
 /// Multiple files for the reconstructed tracks are allowed.
-/// 
+///
 /// NB: It's very likely that fiducal cuts are already imposed on the truth
 /// particles. Please check the selection criteria in the truth fitting example
 /// which writes out the 'track_finder_particles.root'. For instance, if the
@@ -71,13 +71,15 @@ void defineReconstructionPerformance(
     trackFiles.push_back(TFile::Open(fileName.c_str(), "read"));
   }
 
-  // Define variables for tree reading (turn on the events sorting since we have more than one root files to read)
-  ParticleReader pReader(
-      (TTree*)particleFile->Get(simParticleTreeName.c_str()), true);
+  // Define variables for tree reading (turn on the events sorting since we have
+  // more than one root files to read)
+  ParticleReader pReader((TTree*)particleFile->Get(simParticleTreeName.c_str()),
+                         true);
   std::vector<TrackSummaryReader> tReaders;
   tReaders.reserve(nTrackFiles);
   for (const auto& trackFile : trackFiles) {
-    tReaders.emplace_back((TTree*)trackFile->Get(trackSummaryTreeName.c_str()), true);
+    tReaders.emplace_back((TTree*)trackFile->Get(trackSummaryTreeName.c_str()),
+                          true);
   }
 
   std::vector<std::size_t> nEvents;
@@ -94,20 +96,31 @@ void defineReconstructionPerformance(
   std::vector<TEfficiency*> trackEff_vs_pt;
   std::vector<TEfficiency*> fakeRate_vs_pt;
   std::vector<TEfficiency*> duplicateRate_vs_pt;
+  std::vector<TEfficiency*> trackEff_vs_prodR;
 
   for (int i = 0; i < nTrackFiles; ++i) {
-    trackEff_vs_eta.push_back(new TEfficiency(
-        Form("trackeff_vs_eta_%i", i), ";Truth #eta [GeV/c];Efficiency", 40, -4, 4));
+    trackEff_vs_prodR.push_back(
+        new TEfficiency(Form("trackeff_vs_prodR_%i", i),
+                        ";Truth t_{prodR} [units];Efficiency", 40, 0, 4));
+  }
+
+  for (int i = 0; i < nTrackFiles; ++i) {
+    trackEff_vs_eta.push_back(new TEfficiency(Form("trackeff_vs_eta_%i", i),
+                                              ";Truth #eta [GeV/c];Efficiency",
+                                              40, -4, 4));
     fakeRate_vs_eta.push_back(new TEfficiency(
         Form("fakerate_vs_eta_%i", i), ";#eta [GeV/c];fake rate", 40, -4, 4));
-    duplicateRate_vs_eta.push_back(new TEfficiency(
-        Form("duplicaterate_vs_eta_%i", i), ";#eta [GeV/c];Duplicate rate", 40, -4, 4));
-    trackEff_vs_pt.push_back(new TEfficiency(
-        Form("trackeff_vs_pt_%i", i), ";Truth pt [GeV/c];Efficiency", 40, 0, 100));
+    duplicateRate_vs_eta.push_back(
+        new TEfficiency(Form("duplicaterate_vs_eta_%i", i),
+                        ";#eta [GeV/c];Duplicate rate", 40, -4, 4));
+    trackEff_vs_pt.push_back(new TEfficiency(Form("trackeff_vs_pt_%i", i),
+                                             ";Truth pt [GeV/c];Efficiency", 40,
+                                             0, 100));
     fakeRate_vs_pt.push_back(new TEfficiency(
         Form("fakerate_vs_pt_%i", i), ";pt [GeV/c];fake rate", 40, 0, 100));
-    duplicateRate_vs_pt.push_back(new TEfficiency(
-        Form("duplicaterate_vs_pt_%i", i), ";pt [GeV/c];Duplicate rate", 40, 0, 100));
+    duplicateRate_vs_pt.push_back(
+        new TEfficiency(Form("duplicaterate_vs_pt_%i", i),
+                        ";pt [GeV/c];Duplicate rate", 40, 0, 100));
   }
 
   // Set styles
@@ -119,6 +132,7 @@ void defineReconstructionPerformance(
     setEffStyle(trackEff_vs_pt[i], color);
     setEffStyle(fakeRate_vs_pt[i], color);
     setEffStyle(duplicateRate_vs_pt[i], color);
+    setEffStyle(trackEff_vs_prodR[i], color);
   }
 
   // The particles in each event
@@ -128,7 +142,6 @@ void defineReconstructionPerformance(
   for (unsigned int ifile = 0; ifile < nTrackFiles; ++ifile) {
     std::cout << "Processing track file: " << inputTrackSummaryFileNames[ifile]
               << std::endl;
-
     // The container from track-particle matching info (Flushed per event)
     std::map<std::uint64_t, std::vector<RecoTrackInfo>> matchedParticles;
 
@@ -215,6 +228,13 @@ void defineReconstructionPerformance(
           }
         }
       }  // end of all selected truth-matched tracks
+      std::unordered_map<std::uint64_t, std::size_t> particleIdToEntryMap;
+
+      // Initialize the map
+      for (std::size_t i = 0; i < pReader.tree->GetEntries(); ++i) {
+        pReader.getEntry(i);
+        particleIdToEntryMap[pReader.particleId] = i;
+      }
 
       // Loop over all truth particles in this event
       // The efficiency is defined as the ratio of selected particles that have
@@ -223,25 +243,35 @@ void defineReconstructionPerformance(
         auto nHits = particle.nHits;
         auto eta = particle.eta;
         auto pt = particle.pt;
+        auto position = Particle.position();
+        auto v_x = position[0];
+        auto v_y = position[1];
+
         if (nHits < nHitsMin or pt < ptMin) {
           continue;
         }
         std::uint64_t id = particle.particleId;
+        double prodR = std::sqrt(v_x * v_x + v_y * v_y);
+
+        std::cout << "prodR value: " << prodR << std::endl;
 
         // Fill the efficiency plots
         auto ip = matchedParticles.find(id);
         if (ip != matchedParticles.end()) {
           trackEff_vs_eta[ifile]->Fill(true, eta);
           trackEff_vs_pt[ifile]->Fill(true, pt);
+          trackEff_vs_prodR[ifile]->Fill(true, prodR);
+
         } else {
           trackEff_vs_eta[ifile]->Fill(false, eta);
           trackEff_vs_pt[ifile]->Fill(false, pt);
+          trackEff_vs_prodR[ifile]->Fill(false, prodR);
         }
       }  // end of all particles
 
       matchedParticles.clear();
     }  // end of all events
-  }    // end of all track files
+  }  // end of all track files
 
   std::cout << "All good. Now plotting..." << std::endl;
 
@@ -271,8 +301,8 @@ void defineReconstructionPerformance(
   }
 
   // Now draw the plots
-  TCanvas* c1 = new TCanvas("recoPerf", " ", 1500, 800);
-  c1->Divide(3, 2);
+  TCanvas* c1 = new TCanvas("recoPerf", "c1", 1500, 800);
+  c1->Divide(3, 3);
 
   float scaleRangeMax = 1.15;
   for (int i = 0; i < nTrackFiles; ++i) {
@@ -318,7 +348,13 @@ void defineReconstructionPerformance(
       legs[5]->Draw();
     }
     adaptEffRange(duplicateRate_vs_pt[i], 1, scaleRangeMax);
-  }
 
-  c1->Update();
-}
+    c1->cd(7);
+     trackEff_vs_prodR[i]->Draw(mode.c_str());
+     if (i == nTrackFiles - 1) {
+       legs[6]->Draw();
+     }
+     adaptEffRange(trackEff_vs_prodR[i], 1, scaleRangeMax); 
+
+    c1->Update();
+  }
