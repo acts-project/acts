@@ -63,7 +63,8 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
       auto trackStateProxy =
           track.appendTrackState(Acts::TrackStatePropMask::None);
       trackStateProxy.typeFlags().set(Acts::TrackStateFlag::MeasurementFlag);
-      trackStateProxy.setUncalibratedSourceLink(slMap.at(idx));
+      trackStateProxy.setUncalibratedSourceLink(
+          Acts::SourceLink{slMap.at(idx)});
     }
 
     track.nMeasurements() = static_cast<std::uint32_t>(protoTrack.size());
