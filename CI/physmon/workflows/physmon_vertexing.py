@@ -148,8 +148,6 @@ def run_vertexing(fitter, mu, events):
 
         s.run()
 
-        del s
-
         perf_file = tp / f"performance_vertexing.root"
         assert perf_file.exists(), "Performance file not found"
         shutil.copy(

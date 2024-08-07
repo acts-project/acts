@@ -226,7 +226,6 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             )
 
         s.run()
-        del s
 
         for vertexing in ["ivf", "amvf"]:
             shutil.move(

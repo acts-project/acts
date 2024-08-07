@@ -97,7 +97,6 @@ with tempfile.TemporaryDirectory() as temp:
     )
 
     s.run()
-    del s
 
     for file, name in [
         (tp / "fatras" / "particles_simulation.root", "particles_fatras.root"),

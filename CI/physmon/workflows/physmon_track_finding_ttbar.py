@@ -157,7 +157,6 @@ with tempfile.TemporaryDirectory() as temp:
     )
 
     s.run()
-    del s
 
     for vertexing in ["amvf", "amvf_gridseeder"]:
         shutil.move(

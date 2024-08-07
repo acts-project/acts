@@ -59,7 +59,6 @@ def runGeant4EventRange(beginEvent, endEvent, outputDir):
     )
 
     s.run()
-    del s
 
 
 if "__main__" == __name__:

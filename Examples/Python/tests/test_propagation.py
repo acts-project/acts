@@ -65,12 +65,6 @@ def test_steppers(conf_const, trk_geo):
         )
         seq.addAlgorithm(chkAlg)
 
-        try:
-            seq.run()
-        finally:
-            # make sure to clean up if the test fails (otherwise segfault with ODD)
-            # also
-            # files are closed in destructors, not great
-            del s
+        seq.run()
 
     assert acts.StraightLineStepper()

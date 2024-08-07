@@ -45,8 +45,6 @@ def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
 
     s.run()
 
-    del s  # to properly close the root file
-
     # reset sequencer for reading
 
     s2 = Sequencer(numThreads=1, logLevel=acts.logging.WARNING)
@@ -417,8 +415,6 @@ def test_edm4hep_tracks_reader(tmp_path):
     )
 
     s.run()
-
-    del s
 
     s = Sequencer(numThreads=1)
     s.addReader(

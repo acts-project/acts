@@ -87,8 +87,6 @@ def test_pythia8(tmp_path, seq, assert_root_hash):
 
     runPythia8(str(tmp_path), outputRoot=True, outputCsv=True, s=seq).run()
 
-    del seq
-
     fp = tmp_path / "pythia8_particles.root"
     assert fp.exists()
     assert fp.stat().st_size > 2**10 * 50
@@ -124,8 +122,6 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 
     seq = Sequencer(events=nevents)
     runFatras(trk_geo, field, str(tmp_path), s=seq).run()
-
-    del seq
 
     assert_csv_output(csv, "particles_final")
     assert_csv_output(csv, "particles_initial")
@@ -228,8 +224,6 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
 
     runSeeding(trk_geo, field, outputDir=str(tmp_path), s=seq).run()
 
-    del seq
-
     for fn, tn in root_files:
         fp = tmp_path / fn
         assert fp.exists()
@@ -286,8 +280,6 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
         s=seq,
         seedingAlgorithm=SeedingAlgorithm.Orthogonal,
     ).run()
-
-    del seq
 
     for fn, tn in root_files:
         fp = tmp_path / fn
@@ -396,8 +388,6 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
     )
 
     seq.run()
-
-    del seq
 
     for fn, tn in root_files:
         fp = tmp_path / fn
@@ -558,8 +548,6 @@ def test_truth_tracking_kalman(
 
     seq.run()
 
-    del seq
-
     for fn, tn, ee in root_files:
         fp = tmp_path / fn
         assert fp.exists()
@@ -617,8 +605,6 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
     # See https://github.com/acts-project/acts/issues/1300
     with failure_threshold(acts.logging.FATAL):
         seq.run()
-
-    del seq
 
     for fn, tn in root_files:
         fp = tmp_path / fn
@@ -716,9 +702,6 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
         s.run()
 
-        # files are closed in destructors, not great
-        del s
-
     mat_file = tmp_path / "material-map.json"
 
     assert mat_file.exists()
@@ -750,9 +733,6 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
         )
 
         s.run()
-
-        # files are closed in destructors, not great
-        del s
 
     assert val_file.exists()
     assert_entries(val_file, "material-tracks", 10000)
@@ -794,9 +774,6 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
         s.run()
 
-    # files are closed in destructors, not great
-    del s
-
     mat_file = tmp_path / "material-map-volume.json"
 
     assert mat_file.exists()
@@ -835,9 +812,6 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         )
 
         s.run()
-
-    # files are closed in destructors, not great
-    del s
 
     assert val_file.exists()
     assert_root_hash(val_file.name, val_file)
@@ -946,9 +920,6 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
 
     s.run()
 
-    # files are closed in destructors, not great
-    del s
-
     assert root_file.exists()
     assert csv_dir.exists()
 
@@ -1007,9 +978,6 @@ def test_digitization_example_input(
     )
 
     s.run()
-
-    # files are closed in destructors, not great
-    del s
 
     assert root_file.exists()
     assert csv_dir.exists()
@@ -1110,9 +1078,6 @@ def test_ckf_tracks_example(
     )
 
     s.run()
-
-    # files are closed in destructors, not great
-    del s
 
     assert csv.exists()
     for rf, tn in root_files:

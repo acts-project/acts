@@ -199,10 +199,6 @@ def runMaterialMappingVariance(
         s=sMap,
     )
     sMap.run()
-    del sMap  # Need to be deleted to write the material map to cbor
-    del detector
-    del trackingGeometry
-    del decorators
 
     # Compute the variance by rerunning the mapping
     print(
@@ -300,11 +296,6 @@ def runMaterialMappingVariance(
     )
     pipeResult.send(score)
 
-    del mapping
-    del s
-    del detectorVar
-    del trackingGeometryVar
-    del decoratorsVar
     os.remove(cborMap)
 
 
