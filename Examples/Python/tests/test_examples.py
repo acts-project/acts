@@ -540,17 +540,18 @@ def test_truth_tracking_kalman(
         fp = tmp_path / fn
         assert not fp.exists()
 
-    runTruthTrackingKalman(
-        trackingGeometry=detector_config.trackingGeometry,
-        field=field,
-        digiConfigFile=detector_config.digiConfigFile,
-        outputDir=tmp_path,
-        reverseFilteringMomThreshold=revFiltMomThresh,
-        directNavigation=directNavigation,
-        s=seq,
-    )
+    with detector_config.contextManager:
+        runTruthTrackingKalman(
+            trackingGeometry=detector_config.trackingGeometry,
+            field=field,
+            digiConfigFile=detector_config.digiConfigFile,
+            outputDir=tmp_path,
+            reverseFilteringMomThreshold=revFiltMomThresh,
+            directNavigation=directNavigation,
+            s=seq,
+        )
 
-    seq.run()
+        seq.run()
 
     for fn, tn, ee in root_files:
         fp = tmp_path / fn
@@ -597,18 +598,19 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
         fp = tmp_path / fn
         assert not fp.exists()
 
-    runTruthTrackingGsf(
-        trackingGeometry=detector_config.trackingGeometry,
-        decorators=detector_config.decorators,
-        field=field,
-        digiConfigFile=detector_config.digiConfigFile,
-        outputDir=tmp_path,
-        s=seq,
-    )
+    with detector_config.contextManager:
+        runTruthTrackingGsf(
+            trackingGeometry=detector_config.trackingGeometry,
+            decorators=detector_config.decorators,
+            field=field,
+            digiConfigFile=detector_config.digiConfigFile,
+            outputDir=tmp_path,
+            s=seq,
+        )
 
-    # See https://github.com/acts-project/acts/issues/1300
-    with failure_threshold(acts.logging.FATAL):
-        seq.run()
+        # See https://github.com/acts-project/acts/issues/1300
+        with failure_threshold(acts.logging.FATAL):
+            seq.run()
 
     for fn, tn in root_files:
         fp = tmp_path / fn
@@ -628,14 +630,15 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
         numThreads=1,
     )
 
-    # Only check if it runs without errors right known
-    # Changes in fitter behaviour should be caught by other tests
-    runRefittingGsf(
-        trackingGeometry=detector_config.trackingGeometry,
-        field=field,
-        outputDir=tmp_path,
-        s=seq,
-    ).run()
+    with detector_config.contextManager:
+        # Only check if it runs without errors right known
+        # Changes in fitter behaviour should be caught by other tests
+        runRefittingGsf(
+            trackingGeometry=detector_config.trackingGeometry,
+            field=field,
+            outputDir=tmp_path,
+            s=seq,
+        ).run()
 
     root_files = [
         ("trackstates_gsf_refit.root", "trackstates"),
@@ -729,7 +732,9 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(events=10, numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file))
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+    )
 
     with detector:
         runMaterialValidation(
@@ -761,7 +766,9 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     s = Sequencer(numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(geo_map))
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
+    )
 
     with detector:
         runMaterialMapping(
@@ -797,7 +804,9 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     s = Sequencer(events=10, numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file))
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+    )
 
     with detector:
         runMaterialValidation(
@@ -1061,20 +1070,21 @@ def test_ckf_tracks_example(
 
     from ckf_tracks import runCKFTracks
 
-    runCKFTracks(
-        detector_config.trackingGeometry,
-        detector_config.decorators,
-        field=field,
-        outputCsv=True,
-        outputDir=tmp_path,
-        geometrySelection=detector_config.geometrySelection,
-        digiConfigFile=detector_config.digiConfigFile,
-        truthSmearedSeeded=truthSmeared,
-        truthEstimatedSeeded=truthEstimated,
-        s=s,
-    )
+    with detector_config.contextManager:
+        runCKFTracks(
+            detector_config.trackingGeometry,
+            detector_config.decorators,
+            field=field,
+            outputCsv=True,
+            outputDir=tmp_path,
+            geometrySelection=detector_config.geometrySelection,
+            digiConfigFile=detector_config.digiConfigFile,
+            truthSmearedSeeded=truthSmeared,
+            truthEstimatedSeeded=truthEstimated,
+            s=s,
+        )
 
-    s.run()
+        s.run()
 
     assert csv.exists()
     for rf, tn in root_files:

@@ -231,6 +231,7 @@ DetectorConfig = namedtuple(
         "detector",
         "trackingGeometry",
         "decorators",
+        "contextManager",
         "geometrySelection",
         "digiConfigFile",
         "name",
@@ -243,11 +244,14 @@ def detector_config(request):
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     if request.param == "generic":
-        detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+        detector, trackingGeometry, decorators, contextManager = (
+            acts.examples.GenericDetector.create()
+        )
         return DetectorConfig(
             detector,
             trackingGeometry,
             decorators,
+            contextManager,
             geometrySelection=(
                 srcdir
                 / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
@@ -266,11 +270,14 @@ def detector_config(request):
             srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
             level=acts.logging.INFO,
         )
-        detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+        detector, trackingGeometry, decorators, contextManager = getOpenDataDetector(
+            matDeco
+        )
         return DetectorConfig(
             detector,
             trackingGeometry,
             decorators,
+            contextManager,
             digiConfigFile=(
                 srcdir
                 / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"

@@ -148,7 +148,9 @@ if "__main__" == __name__:
 
     args = p.parse_args()
     # detector, trackingGeometry, decorators, contextManager = getOpenDataDetector()
-    detector, trackingGeometry, decorators, contextManager = acts.examples.GenericDetector.create()
+    detector, trackingGeometry, decorators, contextManager = (
+        acts.examples.GenericDetector.create()
+    )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
