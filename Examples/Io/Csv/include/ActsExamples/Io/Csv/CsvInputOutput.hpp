@@ -137,7 +137,8 @@ constexpr std::array<std::string, N> unstringify(const char* str) {
 // modified from http://stackoverflow.com/a/6245777
 template <typename Names, typename Values, std::size_t... I>
 inline std::ostream& print_tuple(std::ostream& os, const Names& n,
-                                 const Values& v, std::index_sequence<I...>) {
+                                 const Values& v,
+                                 std::index_sequence<I...> /*seq*/) {
   // we want to execute some expression for every entry in the index pack. this
   // requires a construction that can take a variable number of arguments into
   // which we can unpack the indices. inside a function, constructing an
