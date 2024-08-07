@@ -131,7 +131,8 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
                    std::dynamic_pointer_cast<const CompositePortalLink>(b);
                bComposite) {
       ACTS_WARNING("Merging a grid portal with a composite portal");
-      return std::make_unique<CompositePortalLink>(aGrid, bComposite);
+      return std::make_unique<CompositePortalLink>(aGrid, bComposite,
+                                                   direction);
 
     } else {
       throw std::logic_error{"Portal type is not supported"};
@@ -158,7 +159,8 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
                    std::dynamic_pointer_cast<const CompositePortalLink>(b);
                bComposite) {
       ACTS_WARNING("Merging a trivial portal with a composite portal");
-      return std::make_unique<CompositePortalLink>(aTrivial, bComposite);
+      return std::make_unique<CompositePortalLink>(aTrivial, bComposite,
+                                                   direction);
 
     } else {
       throw std::logic_error{"Portal type is not supported"};
@@ -170,19 +172,22 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
     if (auto bGrid = std::dynamic_pointer_cast<const GridPortalLink>(b);
         bGrid) {
       ACTS_WARNING("Merging a composite portal with a grid portal");
-      return std::make_unique<CompositePortalLink>(aComposite, bGrid);
+      return std::make_unique<CompositePortalLink>(aComposite, bGrid,
+                                                   direction);
 
     } else if (auto bTrivial =
                    std::dynamic_pointer_cast<const TrivialPortalLink>(b);
                bTrivial) {
       ACTS_WARNING("Merging a composite portal with a trivial portal");
-      return std::make_unique<CompositePortalLink>(aComposite, bTrivial);
+      return std::make_unique<CompositePortalLink>(aComposite, bTrivial,
+                                                   direction);
 
     } else if (auto bComposite =
                    std::dynamic_pointer_cast<const CompositePortalLink>(b);
                bComposite) {
       ACTS_WARNING("Merging two composite portals");
-      return std::make_unique<CompositePortalLink>(aComposite, bComposite);
+      return std::make_unique<CompositePortalLink>(aComposite, bComposite,
+                                                   direction);
 
     } else {
       throw std::logic_error{"Portal type is not supported"};
