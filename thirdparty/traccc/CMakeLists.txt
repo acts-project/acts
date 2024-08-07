@@ -33,7 +33,7 @@ set( TRACCC_SETUP_DFELIBS OFF CACHE BOOL
 set( TRACCC_SETUP_DETRAY OFF CACHE BOOL
     "Do not set up Detray as part of Traccc" )
 set( TRACCC_SETUP_ACTS OFF CACHE BOOL
-    "Do not set up ACTS as part of Traccc" ) 
+    "Do not set up ACTS as part of Traccc" )
 set( TRACCC_SETUP_TBB OFF CACHE BOOL
     "Do not set up TBB as part of Traccc" )
 
