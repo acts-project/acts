@@ -91,7 +91,7 @@ if "__main__" == __name__:
         "-t", "--tracks", type=int, default=1000, help="Number of tracks per event"
     )
     p.add_argument(
-        "-m", "--map", type=str, default="", help="Input file for the material map"
+        "-m", "--map", type=str, help="Input file (optional) for the material map"
     )
     p.add_argument(
         "-o",
@@ -104,7 +104,7 @@ if "__main__" == __name__:
     args = p.parse_args()
 
     materialDecorator = (
-        acts.IMaterialDecorator.fromFile(args.map) if len(args.map) > 0 else None
+        acts.IMaterialDecorator.fromFile(args.map) if args.map != None else None
     )
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
