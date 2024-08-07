@@ -92,7 +92,7 @@ def getOpenDataDetector(
         dd4hepLogLevel=customLogLevel(),
         geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
     )
-    detector = acts.examples.dd4hep.DD4hepDetector()
+    detector = acts.examples.dd4hep.DD4hepGeometryService(dd4hepConfig)
 
     if mdecorator is None:
         mdecorator = acts.examples.RootMaterialDecorator(
@@ -100,7 +100,8 @@ def getOpenDataDetector(
             level=customLogLevel(minLevel=acts.logging.WARNING),
         )
 
-    trackingGeometry, deco = detector.finalize(dd4hepConfig, mdecorator)
+    trackingGeometry = detector.trackingGeometry()
+    deco = detector.contextDecorators()
 
     OpenDataDetector = namedtuple(
         "OpenDataDetector", ["detector", "trackingGeometry", "decorator"]
@@ -116,6 +117,6 @@ def getOpenDataDetector(
             return self
 
         def __exit__(self):
-            self.detector.free()
+            self.detector.drop()
 
     return OpenDataDetectorWithContextManager(detector, trackingGeometry, deco)

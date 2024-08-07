@@ -131,6 +131,17 @@ DD4hepGeometryService::trackingGeometry(const Acts::GeometryContext& gctx) {
   return m_trackingGeometry;
 }
 
+DD4hepGeometryService::ContextDecorators
+DD4hepGeometryService::contextDecorators() const {
+  return ContextDecorators{};
+}
+
+void DD4hepGeometryService::drop() {
+  m_detector = nullptr;
+  m_geometry = dd4hep::DetElement();
+  m_trackingGeometry.reset();
+}
+
 }  // namespace ActsExamples::DD4hep
 
 void ActsExamples::DD4hep::sortFCChhDetElements(

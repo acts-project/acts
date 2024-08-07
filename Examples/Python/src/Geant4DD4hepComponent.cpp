@@ -6,8 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/TypeTraits.hpp"
-#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
@@ -29,9 +28,9 @@ PYBIND11_MODULE(ActsPythonBindingsDDG4, m) {
   py::class_<DDG4DetectorConstructionFactory, DetectorConstructionFactory,
              std::shared_ptr<DDG4DetectorConstructionFactory>>(
       m, "DDG4DetectorConstructionFactory")
-      .def(py::init<std::shared_ptr<DD4hep::DD4hepDetector>,
+      .def(py::init<std::shared_ptr<DD4hep::DD4hepGeometryService>,
                     std::vector<std::shared_ptr<RegionCreator>>>(),
-           py::arg("detector"),
+           py::arg("geometryService"),
            py::arg("regionCreators") =
                std::vector<std::shared_ptr<RegionCreator>>());
 }

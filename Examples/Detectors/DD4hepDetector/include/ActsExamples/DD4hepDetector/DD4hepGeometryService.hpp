@@ -8,14 +8,14 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include <Acts/Definitions/Units.hpp>
-#include <Acts/Geometry/TrackingGeometry.hpp>
-#include <Acts/Material/IMaterialDecorator.hpp>
-#include <Acts/Utilities/BinningType.hpp>
-#include <Acts/Utilities/Logger.hpp>
 
 #include <functional>
 #include <memory>
@@ -37,6 +37,10 @@ class IMaterialDecorator;
 class TrackingGeometry;
 }  // namespace Acts
 
+namespace ActsExamples {
+class IContextDecorator;
+}  // namespace ActsExamples
+
 namespace ActsExamples::DD4hep {
 
 void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det);
@@ -50,6 +54,10 @@ void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det);
 /// demand.
 class DD4hepGeometryService {
  public:
+  /// @brief The context decorators
+  using ContextDecorators =
+      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+
   struct Config {
     /// Log level for the geometry service.
     Acts::Logging::Level logLevel = Acts::Logging::Level::INFO;
@@ -78,7 +86,7 @@ class DD4hepGeometryService {
     /// the layers (e.g. barrel, endcap volumes) have no specific shape
     /// (assemblies)
     double envelopeZ = 1 * Acts::UnitConstants::mm;
-    double defaultLayerThickness = 10e-10;
+    double defaultLayerThickness = 1e-10;
     std::function<void(std::vector<dd4hep::DetElement>& detectors)>
         sortDetectors = sortFCChhDetElements;
     /// Material decorator
@@ -108,6 +116,10 @@ class DD4hepGeometryService {
   /// @param gctx is the geometry context object
   std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry(
       const Acts::GeometryContext& gctx);
+
+  ContextDecorators contextDecorators() const;
+
+  void drop();
 
  private:
   /// Private method to initiate building of the DD4hep geometry
