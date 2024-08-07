@@ -264,7 +264,12 @@ BOOST_AUTO_TEST_CASE(DetectorConstructionWithHierarchyMap) {
       "DetWithSurfaces", {cylVolume}, Acts::Experimental::tryRootVolumes());
 
   const auto& sensitiveHierarchyMap = det->sensitiveHierarchyMap();
+
+  const Acts::Surface* surface0 =
+      det->findSurface(Acts::GeometryIdentifier{}.setSensitive(1));
+
   BOOST_CHECK_EQUAL(sensitiveHierarchyMap.size(), 6u);
+  BOOST_CHECK_NE(surface0, nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
