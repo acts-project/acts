@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -37,7 +37,8 @@ class IContextDecorator;
 
 namespace ActsExamples::DD4hep {
 
-struct DD4hepDetector {
+class DD4hepDetector {
+ public:
   /// @brief The context decorators
   using ContextDecorators =
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
@@ -52,15 +53,9 @@ struct DD4hepDetector {
   DD4hepDetector() = default;
   /// @brief Constructor from geometry service
   /// @param _geometryService the geometry service
-  DD4hepDetector(std::shared_ptr<DD4hepGeometryService> _geometryService);
+  DD4hepDetector(std::unique_ptr<DD4hepGeometryService> geometryService);
   /// @brief  Default destructor
   ~DD4hepDetector() = default;
-
-  /// @brief The DD4hep geometry service
-  std::shared_ptr<DD4hepGeometryService> geometryService = nullptr;
-
-  // @brief the compact file names
-  std::vector<std::string> compactFiles = {};
 
   /// @brief Build the tracking geometry from the DD4hep geometry
   ///
@@ -90,6 +85,15 @@ struct DD4hepDetector {
   /// @brief Access to the DD4hep field
   /// @return a shared pointer to the DD4hep field
   std::shared_ptr<Acts::DD4hepFieldAdapter> field() const;
+
+  dd4hep::Detector& dd4hepDetector() const {
+    return m_geometryService->detector();
+  }
+
+  void free();
+
+ private:
+  std::unique_ptr<DD4hepGeometryService> m_geometryService = nullptr;
 };
 
 }  // namespace ActsExamples::DD4hep

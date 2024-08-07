@@ -365,23 +365,18 @@ def fatras(ptcl_gun, trk_geo, rng):
 def _do_material_recording(d: Path):
     from material_recording import runMaterialRecording
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
-
-    detectorConstructionFactory = (
-        acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
-    )
-
     s = acts.examples.Sequencer(events=2, numThreads=1)
 
-    runMaterialRecording(detectorConstructionFactory, str(d), tracksPerEvent=100, s=s)
+    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
+        detectorConstructionFactory = (
+            acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
+        )
 
-    try:
+        runMaterialRecording(
+            detectorConstructionFactory, str(d), tracksPerEvent=100, s=s
+        )
+
         s.run()
-    finally:
-        # make sure to clean up if the test fails (otherwise segfault with ODD)
-        # also
-        # files are closed in destructors, not great
-        del s
 
 
 @pytest.fixture(scope="session")

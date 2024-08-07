@@ -132,10 +132,7 @@ def test_root_reader_interface(reader, conf_const, tmp_path):
     assert conf_const(reader, **kw)
 
 
-@pytest.mark.slow
 @pytest.mark.root
-@pytest.mark.odd
-@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 def test_root_material_track_reader(material_recording):
     input_tracks = material_recording / "geant4_material_tracks.root"
     assert input_tracks.exists()
@@ -155,13 +152,7 @@ def test_root_material_track_reader(material_recording):
     )
     s.addAlgorithm(alg)
 
-    try:
-        s.run()
-    finally:
-        # make sure to clean up if the test fails (otherwise segfault with ODD)
-        # also
-        # files are closed in destructors, not great
-        del s
+    s.run()
 
     assert alg.events_seen == 2
 
@@ -337,13 +328,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
     )
     s.addAlgorithm(alg)
 
-    try:
-        s.run()
-    finally:
-        # make sure to clean up if the test fails (otherwise segfault with ODD)
-        # also
-        # files are closed in destructors, not great
-        del s
+    s.run()
 
     assert alg.events_seen == 10
 

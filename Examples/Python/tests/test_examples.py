@@ -520,13 +520,7 @@ def test_event_recording(tmp_path):
     )
     s.addAlgorithm(alg)
 
-    try:
-        s.run()
-    finally:
-        # make sure to clean up if the test fails (otherwise segfault with ODD)
-        # also
-        # files are closed in destructors, not great
-        del s
+    s.run()
 
     assert alg.events_seen == 1
 
@@ -694,10 +688,11 @@ def test_particle_gun(tmp_path, assert_root_hash):
 @pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_material_mapping(material_recording, tmp_path, assert_root_hash):
+    from material_mapping import runMaterialMapping
+    from material_validation import runMaterialValidation
+
     map_file = tmp_path / "material-map_tracks.root"
     assert not map_file.exists()
-
-    s = Sequencer(numThreads=1)
 
     odd_dir = getOpenDataDetectorDirectory()
     config = acts.MaterialMapJsonConverter.Config()
@@ -706,24 +701,21 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
         rConfig=config,
         jFileName=str(odd_dir / "config/odd-material-mapping-config.json"),
     )
-    detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator)
 
-    from material_mapping import runMaterialMapping
+    s = Sequencer(numThreads=1)
 
-    runMaterialMapping(
-        trackingGeometry,
-        decorators,
-        outputDir=str(tmp_path),
-        inputDir=material_recording,
-        mappingStep=1,
-        s=s,
-    )
+    with getOpenDataDetector(mdecorator) as (detector, trackingGeometry, decorators):
+        runMaterialMapping(
+            trackingGeometry,
+            decorators,
+            outputDir=str(tmp_path),
+            inputDir=material_recording,
+            mappingStep=1,
+            s=s,
+        )
 
-    try:
         s.run()
-    finally:
-        # make sure to clean up if the test fails (otherwise segfault with ODD)
-        # also
+
         # files are closed in destructors, not great
         del s
 
@@ -744,29 +736,21 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     # test the validation as well
 
-    # we need to destroy the ODD to reload with material
-    del trackingGeometry
-    del detector
-
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file),
-    )
-
-    from material_validation import runMaterialValidation
+    field = acts.NullBField()
 
     s = Sequencer(events=10, numThreads=1)
 
-    field = acts.NullBField()
+    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file)) as (
+        detector,
+        trackingGeometry,
+        decorators,
+    ):
+        runMaterialValidation(
+            10, 1000, trackingGeometry, decorators, field, outputDir=str(tmp_path), s=s
+        )
 
-    runMaterialValidation(
-        10, 1000, trackingGeometry, decorators, field, outputDir=str(tmp_path), s=s
-    )
-
-    try:
         s.run()
-    finally:
-        # make sure to clean up if the test fails (otherwise segfault with ODD)
-        # also
+
         # files are closed in destructors, not great
         del s
 
@@ -779,10 +763,11 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 @pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash):
+    from material_mapping import runMaterialMapping
+    from material_validation import runMaterialValidation
+
     map_file = tmp_path / "material-map-volume_tracks.root"
     assert not map_file.exists()
-
-    s = Sequencer(numThreads=1)
 
     geo_map = Path(__file__).parent / "geometry-volume-map.json"
     assert geo_map.exists()
@@ -790,29 +775,27 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     with geo_map.open() as fh:
         assert json.load(fh)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(geo_map),
-    )
+    s = Sequencer(numThreads=1)
 
-    from material_mapping import runMaterialMapping
-
-    runMaterialMapping(
+    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(geo_map)) as (
+        detector,
         trackingGeometry,
         decorators,
-        mapName="material-map-volume",
-        outputDir=str(tmp_path),
-        inputDir=material_recording,
-        mappingStep=1,
-        s=s,
-    )
+    ):
+        runMaterialMapping(
+            trackingGeometry,
+            decorators,
+            mapName="material-map-volume",
+            outputDir=str(tmp_path),
+            inputDir=material_recording,
+            mappingStep=1,
+            s=s,
+        )
 
-    try:
         s.run()
-    finally:
-        # make sure to clean up if the test fails (otherwise segfault with ODD)
-        # also
-        # files are closed in destructors, not great
-        del s
+
+    # files are closed in destructors, not great
+    del s
 
     mat_file = tmp_path / "material-map-volume.json"
 
@@ -831,38 +814,30 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     # test the validation as well
 
-    # we need to destroy the ODD to reload with material
-    del trackingGeometry
-    del detector
-
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file),
-    )
-
-    from material_validation import runMaterialValidation
+    field = acts.NullBField()
 
     s = Sequencer(events=10, numThreads=1)
 
-    field = acts.NullBField()
-
-    runMaterialValidation(
-        10,
-        1000,
+    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file)) as (
+        detector,
         trackingGeometry,
         decorators,
-        field,
-        outputDir=str(tmp_path),
-        outputName="propagation-volume-material",
-        s=s,
-    )
+    ):
+        runMaterialValidation(
+            10,
+            1000,
+            trackingGeometry,
+            decorators,
+            field,
+            outputDir=str(tmp_path),
+            outputName="propagation-volume-material",
+            s=s,
+        )
 
-    try:
         s.run()
-    finally:
-        # make sure to clean up if the test fails (otherwise segfault with ODD)
-        # also
-        # files are closed in destructors, not great
-        del s
+
+    # files are closed in destructors, not great
+    del s
 
     assert val_file.exists()
     assert_root_hash(val_file.name, val_file)
@@ -969,13 +944,10 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
         trk_geo, field, outputDir=tmp_path, digiConfigFile=digi_config_file, s=s
     )
 
-    try:
-        s.run()
-    finally:
-        # make sure to clean up if the test fails (otherwise segfault with ODD)
-        # also
-        # files are closed in destructors, not great
-        del s
+    s.run()
+
+    # files are closed in destructors, not great
+    del s
 
     assert root_file.exists()
     assert csv_dir.exists()
@@ -1005,13 +977,10 @@ def test_digitization_example_input(
     pgs = Sequencer(events=20, numThreads=-1)
     runParticleGun(str(ptcl_dir), s=pgs)
 
-    try:
-        pgs.run()
-    finally:
-        # make sure to clean up if the test fails (otherwise segfault with ODD)
-        # also
-        # files are closed in destructors, not great
-        del pgs
+    pgs.run()
+
+    # files are closed in destructors, not great
+    del pgs
 
     s = Sequencer(numThreads=-1)
 
@@ -1037,13 +1006,10 @@ def test_digitization_example_input(
         doMerge=True,
     )
 
-    try:
-        s.run()
-    finally:
-        # make sure to clean up if the test fails (otherwise segfault with ODD)
-        # also
-        # files are closed in destructors, not great
-        del s
+    s.run()
+
+    # files are closed in destructors, not great
+    del s
 
     assert root_file.exists()
     assert csv_dir.exists()
@@ -1143,13 +1109,10 @@ def test_ckf_tracks_example(
         s=s,
     )
 
-    try:
-        s.run()
-    finally:
-        # make sure to clean up if the test fails (otherwise segfault with ODD)
-        # also
-        # files are closed in destructors, not great
-        del s
+    s.run()
+
+    # files are closed in destructors, not great
+    del s
 
     assert csv.exists()
     for rf, tn in root_files:

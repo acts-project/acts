@@ -23,7 +23,7 @@ class Detector;
 namespace ActsExamples {
 
 namespace DD4hep {
-struct DD4hepDetector;
+class DD4hepDetector;
 }
 
 /// Construct the Geant4 detector from a DD4hep description.
@@ -32,7 +32,6 @@ class DDG4DetectorConstruction final : public G4VUserDetectorConstruction {
   DDG4DetectorConstruction(
       std::shared_ptr<DD4hep::DD4hepDetector> detector,
       std::vector<std::shared_ptr<RegionCreator>> regionCreators = {});
-  ~DDG4DetectorConstruction() final;
 
   /// Convert the stored DD4hep detector to a Geant4 description.
   ///
@@ -50,9 +49,6 @@ class DDG4DetectorConstruction final : public G4VUserDetectorConstruction {
   std::vector<std::shared_ptr<RegionCreator>> m_regionCreators;
   /// The world volume
   G4VPhysicalVolume* m_world = nullptr;
-
-  /// The DD4hep detector instance
-  dd4hep::Detector& dd4hepDetector() const;
 };
 
 class DDG4DetectorConstructionFactory final

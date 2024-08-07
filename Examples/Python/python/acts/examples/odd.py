@@ -3,6 +3,7 @@ import sys
 import math
 from pathlib import Path
 from typing import Optional
+from collections import namedtuple
 import acts
 import acts.examples
 
@@ -101,4 +102,20 @@ def getOpenDataDetector(
 
     trackingGeometry, deco = detector.finalize(dd4hepConfig, mdecorator)
 
-    return detector, trackingGeometry, deco
+    OpenDataDetector = namedtuple(
+        "OpenDataDetector", ["detector", "trackingGeometry", "decorator"]
+    )
+
+    class OpenDataDetectorWithContextManager(OpenDataDetector):
+        def __new__(cls, detector, trackingGeometry, decorator):
+            return super(OpenDataDetectorWithContextManager, cls).__new__(
+                cls, detector, trackingGeometry, decorator
+            )
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self):
+            self.detector.free()
+
+    return OpenDataDetectorWithContextManager(detector, trackingGeometry, deco)

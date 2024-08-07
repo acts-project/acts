@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,8 +26,8 @@
 namespace ActsExamples::DD4hep {
 
 DD4hepDetector::DD4hepDetector(
-    std::shared_ptr<DD4hepGeometryService> _geometryService)
-    : geometryService(std::move(_geometryService)) {}
+    std::unique_ptr<DD4hepGeometryService> geometryService)
+    : m_geometryService(std::move(geometryService)) {}
 
 auto DD4hepDetector::finalize(
     ActsExamples::DD4hep::DD4hepGeometryService::Config config,
@@ -35,10 +35,10 @@ auto DD4hepDetector::finalize(
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   Acts::GeometryContext dd4HepContext;
   config.matDecorator = std::move(mdecorator);
-  geometryService =
-      std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(config);
+  m_geometryService =
+      std::make_unique<ActsExamples::DD4hep::DD4hepGeometryService>(config);
   TrackingGeometryPtr dd4tGeometry =
-      geometryService->trackingGeometry(dd4HepContext);
+      m_geometryService->trackingGeometry(dd4HepContext);
   if (!dd4tGeometry) {
     throw std::runtime_error{
         "Did not receive tracking geometry from DD4hep geometry service"};
@@ -54,13 +54,13 @@ auto DD4hepDetector::finalize(
     const Acts::Experimental::DD4hepDetectorStructure::Options& options)
     -> std::tuple<DetectorPtr, ContextDecorators,
                   Acts::DD4hepDetectorElement::Store> {
-  if (geometryService == nullptr) {
+  if (m_geometryService == nullptr) {
     throw std::runtime_error{
         "No DD4hep geometry service configured, can not build "
         "TrackingGeometry."};
   }
 
-  auto world = geometryService->geometry();
+  auto world = m_geometryService->geometry();
   // Build the detector structure
   Acts::Experimental::DD4hepDetectorStructure dd4hepStructure(
       Acts::getDefaultLogger("DD4hepDetectorStructure", options.logLevel));
@@ -76,9 +76,11 @@ auto DD4hepDetector::finalize(
 }
 
 std::shared_ptr<Acts::DD4hepFieldAdapter> DD4hepDetector::field() const {
-  const auto& detector = geometryService->detector();
+  const auto& detector = m_geometryService->detector();
 
   return std::make_shared<Acts::DD4hepFieldAdapter>(detector.field());
 }
+
+void DD4hepDetector::free() { m_geometryService.reset(); }
 
 }  // namespace ActsExamples::DD4hep

@@ -38,7 +38,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   {
     using Config = ActsExamples::DD4hep::DD4hepGeometryService::Config;
     auto s = py::class_<DD4hep::DD4hepGeometryService,
-                        std::shared_ptr<DD4hep::DD4hepGeometryService>>(
+                        std::unique_ptr<DD4hep::DD4hepGeometryService>>(
                  m, "DD4hepGeometryService")
                  .def(py::init<const Config&>());
 
@@ -157,7 +157,6 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     py::class_<DD4hep::DD4hepDetector, std::shared_ptr<DD4hep::DD4hepDetector>>(
         m, "DD4hepDetector")
         .def(py::init<>())
-        .def(py::init<std::shared_ptr<DD4hep::DD4hepGeometryService>>())
         .def("finalize",
              py::overload_cast<DD4hep::DD4hepGeometryService::Config,
                                std::shared_ptr<const Acts::IMaterialDecorator>>(
@@ -167,6 +166,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
                  const Acts::GeometryContext&,
                  const Acts::Experimental::DD4hepDetectorStructure::Options&>(
                  &DD4hep::DD4hepDetector::finalize))
+        .def("free", &DD4hep::DD4hepDetector::free)
         .def_property_readonly("field", &DD4hep::DD4hepDetector::field);
   }
 }
