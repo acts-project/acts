@@ -73,49 +73,24 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
     std::vector<const Acts::Surface*> surfaces = box->surfaces();
 
     for (auto surface : surfaces){
-      const Acts::SurfaceBounds& bounds = surface->bounds();
+      const Acts::SurfaceBounds& sbounds = surface->bounds();
       //Straw check outer radius and length without trf
       if(surface->type() == Acts::Surface::SurfaceType::Straw){
-        BOOST_CHECK(bounds.values()[0]==gmrmax);
-        BOOST_CHECK(bounds.values()[1]==gmhlzt);
+        BOOST_CHECK(sbounds.values()[0]==gmrmax);
+        BOOST_CHECK(sbounds.values()[1]==gmhlzt);
       }
   
       //plane Surface check corner position without trf
       if(surface->type() == Acts::Surface::SurfaceType::Plane){
-        double csxmin = bounds.values()[0];
-        double csymin = bounds.values()[1];
-        double csxmax = bounds.values()[2];
-        double csymax = bounds.values()[3];
+        double csxmin = sbounds.values()[0];
+        double csymin = sbounds.values()[1];
+        double csxmax = sbounds.values()[2];
+        double csymax = sbounds.values()[3];
         BOOST_CHECK(gmhlxs == -csxmin);
         BOOST_CHECK(gmhlys == -csymin);
         BOOST_CHECK(gmhlxs == csxmax);
         BOOST_CHECK(gmhlys == csymax);
       }
-    }
-  }
-
-
-  //perform checks
-  for (auto surface : gmCache.sensitiveSurfaces){
-    auto ss = std::get<1>(surface);
-    const Acts::SurfaceBounds& bounds = ss->bounds();
-
-    //Straw check outer radius and length without trf
-    if(ss->type() == Acts::Surface::SurfaceType::Straw){
-      BOOST_CHECK(bounds.values()[0]==gmrmax);
-      BOOST_CHECK(bounds.values()[1]==gmhlzt);
-    }
-
-    //plane Surface check corner position without trf
-    if(ss->type() == Acts::Surface::SurfaceType::Plane){
-      double csxmin = bounds.values()[0];
-      double csymin = bounds.values()[1];
-      double csxmax = bounds.values()[2];
-      double csymax = bounds.values()[3];
-      BOOST_CHECK(gmhlxs == -csxmin);
-      BOOST_CHECK(gmhlys == -csymin);
-      BOOST_CHECK(gmhlxs == csxmax);
-      BOOST_CHECK(gmhlys == csymax);
     }
   }
 }
