@@ -28,6 +28,7 @@
 
 #include <cstdio>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 
 using namespace Acts::UnitLiterals;
@@ -2209,10 +2210,46 @@ BOOST_AUTO_TEST_CASE(CompositeOther) {
   auto vol2 = std::make_shared<TrackingVolume>(
       Transform3::Identity(),
       std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
-}
 
-BOOST_AUTO_TEST_CASE(CompositeFlattening) {
-  // @TODO: Add test for composite flattening
+  auto vol3 = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+  auto disc1 =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 60_mm);
+  auto disc2 =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 60_mm, 90_mm);
+  auto disc3 =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 90_mm, 120_mm);
+
+  std::shared_ptr grid1 =
+      GridPortalLink::make(disc1, *vol1, BinningValue::binR);
+  auto trivial2 = std::make_shared<TrivialPortalLink>(disc2, *vol2);
+
+  auto composite12 = std::make_shared<CompositePortalLink>(grid1, trivial2,
+                                                           BinningValue::binR);
+  BOOST_CHECK_EQUAL(composite12->depth(), 1);
+  BOOST_CHECK_EQUAL(composite12->size(), 2);
+
+  auto trivial3 = std::make_shared<TrivialPortalLink>(disc3, *vol3);
+
+  auto composite123Ptr =
+      PortalLinkBase::merge(composite12, trivial3, BinningValue::binR, *logger);
+
+  const auto* composite123 =
+      dynamic_cast<const CompositePortalLink*>(composite123Ptr.get());
+  BOOST_REQUIRE(composite12);
+
+  BOOST_CHECK_EQUAL(composite123->depth(), 1);
+
+  BOOST_CHECK_EQUAL(composite123->resolveVolume(gctx, Vector2{40_mm, 0_degree}),
+                    vol1.get());
+  BOOST_CHECK_EQUAL(composite123->resolveVolume(gctx, Vector2{70_mm, 0_degree}),
+                    vol2.get());
+  BOOST_CHECK_EQUAL(
+      composite123->resolveVolume(gctx, Vector2{100_mm, 0_degree}), vol3.get());
+
+  BOOST_CHECK_EQUAL(composite123->size(), 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()  // PortalMerging

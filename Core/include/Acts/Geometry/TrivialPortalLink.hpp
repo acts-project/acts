@@ -18,7 +18,13 @@ class TrivialPortalLink final : public PortalLinkBase {
  public:
   TrivialPortalLink(std::shared_ptr<RegularSurface> surface,
                     const TrackingVolume* volume)
-      : PortalLinkBase(std::move(surface)), m_volume(volume) {}
+      : PortalLinkBase(std::move(surface)), m_volume(volume) {
+    assert(m_volume != nullptr);
+  }
+
+  TrivialPortalLink(std::shared_ptr<RegularSurface> surface,
+                    const TrackingVolume& volume)
+      : TrivialPortalLink(std::move(surface), &volume) {}
 
   std::unique_ptr<GridPortalLink> makeGrid(BinningValue direction) const;
 
