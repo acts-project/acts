@@ -29,8 +29,8 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   // to properly account for the energy loss in multiple material.
 
   // use double for (intermediate) computations to avoid precision loss
-  const double thickness1 = static_cast<double>(slab1.thickness());
-  const double thickness2 = static_cast<double>(slab2.thickness());
+  const auto thickness1 = static_cast<double>(slab1.thickness());
+  const auto thickness2 = static_cast<double>(slab2.thickness());
 
   // the thickness properties are purely additive
   const double thickness = thickness1 + thickness2;
@@ -42,8 +42,8 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   }
 
   // molar amount-of-substance assuming a unit area, i.e. volume = thickness*1*1
-  const double molarDensity1 = static_cast<double>(mat1.molarDensity());
-  const double molarDensity2 = static_cast<double>(mat2.molarDensity());
+  const auto molarDensity1 = static_cast<double>(mat1.molarDensity());
+  const auto molarDensity2 = static_cast<double>(mat2.molarDensity());
 
   const double molarAmount1 = molarDensity1 * thickness1;
   const double molarAmount2 = molarDensity2 * thickness2;
@@ -55,10 +55,10 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   }
 
   // radiation/interaction length follows from consistency argument
-  const double thicknessX01 = static_cast<double>(slab1.thicknessInX0());
-  const double thicknessX02 = static_cast<double>(slab2.thicknessInX0());
-  const double thicknessL01 = static_cast<double>(slab1.thicknessInL0());
-  const double thicknessL02 = static_cast<double>(slab2.thicknessInL0());
+  const auto thicknessX01 = static_cast<double>(slab1.thicknessInX0());
+  const auto thicknessX02 = static_cast<double>(slab2.thicknessInX0());
+  const auto thicknessL01 = static_cast<double>(slab1.thicknessInL0());
+  const auto thicknessL02 = static_cast<double>(slab2.thicknessInL0());
 
   const double thicknessInX0 = thicknessX01 + thicknessX02;
   const double thicknessInL0 = thicknessL01 + thicknessL02;
@@ -83,8 +83,8 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   //        = (Vi*rhoi) / (V1*rho1 + V2*rho2)
   //
   // which can be computed from the molar amount-of-substance above.
-  const double ar1 = static_cast<double>(mat1.Ar());
-  const double ar2 = static_cast<double>(mat2.Ar());
+  const auto ar1 = static_cast<double>(mat1.Ar());
+  const auto ar2 = static_cast<double>(mat2.Ar());
 
   const double molarWeight1 = molarAmount1 / molarAmount;
   const double molarWeight2 = molarAmount2 / molarAmount;
@@ -103,8 +103,8 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   // To respect this the average atomic number thus need to be defined as :
   //     ln(Z)*t = ln(Z1)*t1 + ln(Z2)*t2
   //           Z = Exp( ln(Z1)*t1/t + ln(Z2)*t2/t )
-  const double z1 = static_cast<double>(mat1.Z());
-  const double z2 = static_cast<double>(mat2.Z());
+  const auto z1 = static_cast<double>(mat1.Z());
+  const auto z2 = static_cast<double>(mat2.Z());
 
   const double thicknessWeight1 = thickness1 / thickness;
   const double thicknessWeight2 = thickness2 / thickness;
