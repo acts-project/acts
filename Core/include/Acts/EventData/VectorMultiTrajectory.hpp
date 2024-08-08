@@ -484,7 +484,8 @@ class VectorMultiTrajectory final
     m_measCov.resize(m_measCov.size() + measdim * measdim);
   }
 
-  void setUncalibratedSourceLink_impl(IndexType istate, SourceLink sourceLink) {
+  void setUncalibratedSourceLink_impl(IndexType istate,
+                                      SourceLink&& sourceLink) {
     m_sourceLinks[m_index[istate].iuncalibrated] = std::move(sourceLink);
   }
 
