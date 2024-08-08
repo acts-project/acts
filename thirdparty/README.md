@@ -10,10 +10,6 @@ issues with missing files after installation.
 
 `nlohmann_json` is exempted from this rule as it is handled specially.
 
-## dfelibs
-
-CMake instructions to build [dfelibs](https://github.com/msmk0/dfelibs).
-
 ## nlohmann_json
 
 CMake instructions to build [nlohmann::json](https://github.com/nlohmann/json).

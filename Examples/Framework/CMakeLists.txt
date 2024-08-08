@@ -31,9 +31,6 @@ target_link_libraries(
   ActsExamplesFramework
   PUBLIC ActsCore ActsFatras ActsPluginFpeMonitoring Boost::boost ROOT::Core ROOT::Hist
   PRIVATE std::filesystem)
-acts_target_link_libraries_system(
-  ActsExamplesFramework
-  PRIVATE dfelibs)
 target_compile_definitions(
   ActsExamplesFramework
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)

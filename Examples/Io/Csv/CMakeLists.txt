@@ -30,9 +30,6 @@ target_link_libraries(
     ActsCore
     ActsExamplesFramework ActsExamplesDigitization
     Threads::Threads)
-acts_target_link_libraries_system(
-  ActsExamplesIoCsv
-  PRIVATE dfelibs)
 
 install(
   TARGETS ActsExamplesIoCsv
