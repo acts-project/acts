@@ -2,7 +2,7 @@
 # Legacy geometry module
 
 
-:::{todo} 
+:::{todo}
 Describe how the legacy geometry used to work and how it differs from the
 [layerless geometry](#layerless_geometry)
 :::

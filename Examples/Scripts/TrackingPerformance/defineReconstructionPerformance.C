@@ -25,7 +25,7 @@
 /// defines the efficiency, fake rate and duplicaiton rate. It aims to make
 /// custom definition and tuning of the reconstruction performance easier.
 /// Multiple files for the reconstructed tracks are allowed.
-/// 
+///
 /// NB: It's very likely that fiducal cuts are already imposed on the truth
 /// particles. Please check the selection criteria in the truth fitting example
 /// which writes out the 'track_finder_particles.root'. For instance, if the

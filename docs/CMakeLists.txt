@@ -3,7 +3,7 @@
 # the code. when running running on readthedocs.org, the build is fully driven
 # by Sphinx, including running Doxygen.
 #
-# this CMake-based build is only intended for local development. 
+# this CMake-based build is only intended for local development.
 
 set(sphinx_build ${CMAKE_CURRENT_SOURCE_DIR}/_build)
 set(sphinx_doctrees ${CMAKE_CURRENT_SOURCE_DIR}/_build/doctrees)
