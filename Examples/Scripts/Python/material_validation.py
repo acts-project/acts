@@ -39,7 +39,7 @@ def runMaterialValidation(
         randomNumberSvc=rnd,
         ntests=ntracks,
         sterileLogger=True,
-        propagationStepCollection="propagation-steps",
+        outputSummaryCollection="propagation_summary",
         recordMaterialInteractions=True,
         d0Sigma=0,
         z0Sigma=0,
@@ -50,7 +50,7 @@ def runMaterialValidation(
     s.addWriter(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
-            inputMaterialTracks=alg.config.propagationMaterialCollection,
+            inputMaterialTracks=alg.config.outputMaterialCollection,
             filePath=os.path.join(outputDir, (outputName + ".root")),
             storeSurface=True,
             storeVolume=True,
