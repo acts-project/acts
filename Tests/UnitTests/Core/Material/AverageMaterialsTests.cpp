@@ -41,6 +41,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsVacuum) {
   // vacuum with zero thickness
   {
     auto slab = combineSlabs(zeroVacuum, zeroVacuum);
+    BOOST_CHECK(!slab.isValid());
     BOOST_CHECK(!slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.thickness(), 0.0f);
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), 0.0f);
@@ -49,6 +50,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsVacuum) {
   // vacuum with unit thickness
   {
     auto slab = combineSlabs(unitVacuum, unitVacuum);
+    BOOST_CHECK(!slab.isValid());
     BOOST_CHECK(!slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.thickness(), 2.0f);
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), 0.0f);
@@ -59,6 +61,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsVacuum) {
 BOOST_AUTO_TEST_CASE(CombineSlabsPercent) {
   auto slab = combineSlabs(percent, percent);
   // combining two identical slabs must give the same average material
+  BOOST_CHECK(slab.isValid());
   BOOST_CHECK(slab.material().isValid());
   BOOST_CHECK_EQUAL(slab.material(), percent.material());
   // thickness-like properties must double
@@ -70,6 +73,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsPercent) {
 BOOST_AUTO_TEST_CASE(CombineSlabsUnit) {
   auto slab = combineSlabs(unit, unit);
   // combining two identical slabs must give the same average material
+  BOOST_CHECK(slab.isValid());
   BOOST_CHECK(slab.material().isValid());
   BOOST_CHECK_EQUAL(slab.material(), unit.material());
   // thickness-like properties must double
@@ -83,6 +87,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsUnit) {
 BOOST_AUTO_TEST_CASE(CombineSlabsPercentZeroVacuum) {
   {
     auto slab = combineSlabs(percent, zeroVacuum);
+    BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.material(), percent.material());
     BOOST_CHECK_EQUAL(slab.thickness(), percent.thickness());
@@ -92,6 +97,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsPercentZeroVacuum) {
   // reverse input order
   {
     auto slab = combineSlabs(zeroVacuum, percent);
+    BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.material(), percent.material());
     BOOST_CHECK_EQUAL(slab.thickness(), percent.thickness());
@@ -103,6 +109,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsPercentZeroVacuum) {
 BOOST_AUTO_TEST_CASE(CombineSlabsUnitZeroVacuum) {
   {
     auto slab = combineSlabs(unit, zeroVacuum);
+    BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.material(), unit.material());
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
@@ -112,6 +119,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsUnitZeroVacuum) {
   // reverse input order
   {
     auto slab = combineSlabs(zeroVacuum, unit);
+    BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.material(), unit.material());
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
@@ -126,6 +134,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsPercentUnit) {
   // the two slabs have the same material -> average should be identical
   {
     auto slab = combineSlabs(percent, unit);
+    BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.material(), percent.material());
     BOOST_CHECK_EQUAL(slab.thickness(), percent.thickness() + unit.thickness());
@@ -137,6 +146,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsPercentUnit) {
   // reverse input order
   {
     auto slab = combineSlabs(unit, percent);
+    BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.material(), unit.material());
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness() + percent.thickness());
@@ -153,7 +163,14 @@ BOOST_AUTO_TEST_CASE(CombineSlabsUnitZero) {
   // the two slabs have the same material -> average should be identical
   {
     auto slab = combineSlabs(unit, zero);
+    BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
+    std::cout << "comparing material: " << std::endl;
+    std::cout << "(lhs.m_x0 == rhs.m_x0): " << std::boolalpha << (slab.material().X0() == unit.material().X0()) << std::endl;
+    std::cout << "(lhs.m_l0 == rhs.m_l0): " << std::boolalpha << (slab.material().L0() == unit.material().L0()) << std::endl;
+    std::cout << "(lhs.m_ar == rhs.m_ar): " << std::boolalpha << (slab.material().Ar() == unit.material().Ar()) << std::endl;
+    std::cout << "(lhs.m_z == rhs.m_z): " << std::boolalpha << (slab.material().Z() == unit.material().Z()) << std::endl;
+    std::cout << "(lhs.m_molarRho == rhs.m_molarRho): " << std::boolalpha << (slab.material().molarDensity() == unit.material().molarDensity()) << std::endl;
     BOOST_CHECK_EQUAL(slab.material(), unit.material());
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), unit.thicknessInX0());
@@ -162,7 +179,14 @@ BOOST_AUTO_TEST_CASE(CombineSlabsUnitZero) {
   // reverse input order
   {
     auto slab = combineSlabs(zero, unit);
+    BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
+    std::cout << "comparing material: " << std::endl;
+    std::cout << "(lhs.m_x0 == rhs.m_x0): " << std::boolalpha << (slab.material().X0() == unit.material().X0()) << std::endl;
+    std::cout << "(lhs.m_l0 == rhs.m_l0): " << std::boolalpha << (slab.material().L0() == unit.material().L0()) << std::endl;
+    std::cout << "(lhs.m_ar == rhs.m_ar): " << std::boolalpha << (slab.material().Ar() == unit.material().Ar()) << std::endl;
+    std::cout << "(lhs.m_z == rhs.m_z): " << std::boolalpha << (slab.material().Z() == unit.material().Z()) << std::endl;
+    std::cout << "(lhs.m_molarRho == rhs.m_molarRho): " << std::boolalpha << (slab.material().molarDensity() == unit.material().molarDensity()) << std::endl;
     BOOST_CHECK_EQUAL(slab.material(), unit.material());
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), unit.thicknessInX0());
@@ -178,10 +202,11 @@ BOOST_AUTO_TEST_CASE(CombineSlabsEqualThicknessVacuum) {
   const auto slabVac = Acts::MaterialSlab(Acts::Material(), 1.0f);
   {
     auto slab = combineSlabs(slabMat, slabVac);
+    BOOST_CHECK(slab.isValid());
+    BOOST_CHECK(slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.thickness(), 2.0f);
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), slabMat.thicknessInX0());
     BOOST_CHECK_EQUAL(slab.thicknessInL0(), slabMat.thicknessInL0());
-    BOOST_CHECK(slab.material().isValid());
     // atomic mass and nuclear charge are per atom, adding any amount vacuum
     // does not change the average atom properties only their density
     BOOST_CHECK_EQUAL(slab.material().Ar(), mat.Ar());
@@ -196,6 +221,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsEqualThicknessVacuum) {
   // reverse input order
   {
     auto slab = combineSlabs(slabVac, slabMat);
+    BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.thickness(), 2.0f);
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), slabMat.thicknessInX0());
@@ -222,15 +248,20 @@ BOOST_AUTO_TEST_CASE(CombineSlabs) {
   const auto slabMat1 = Acts::MaterialSlab(mat1, 1.0f);
   // verify derived quantities for the input slabs. these tests are not really
   // needed, but to show the input values for the tests below.
+  BOOST_CHECK(slabMat0.isValid());
+  BOOST_CHECK(slabMat0.material().isValid());
   BOOST_CHECK_EQUAL(slabMat0.thickness(), 0.5f);
   BOOST_CHECK_EQUAL(slabMat0.thicknessInX0(), 0.5f);
   BOOST_CHECK_EQUAL(slabMat0.thicknessInL0(), 0.5f);
+  BOOST_CHECK(slabMat1.isValid());
+  BOOST_CHECK(slabMat1.material().isValid());
   BOOST_CHECK_EQUAL(slabMat1.thickness(), 1.0f);
   BOOST_CHECK_EQUAL(slabMat1.thicknessInX0(), 0.5f);
   BOOST_CHECK_EQUAL(slabMat1.thicknessInL0(), 0.5f);
   // check combined slabs
   {
     auto slab = combineSlabs(slabMat0, slabMat1);
+    BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.thickness(), 1.5f);
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), 1.0f);
@@ -246,6 +277,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabs) {
   // reverse input order
   {
     auto slab = combineSlabs(slabMat0, slabMat1);
+    BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.thickness(), 1.5f);
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), 1.0f);
