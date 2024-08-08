@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,7 +13,6 @@
 
 #include <cassert>
 #include <cmath>
-#include <iostream>
 
 using namespace Acts::UnitLiterals;
 
@@ -484,15 +483,6 @@ inline float theta0Highland(float xOverX0, float momentumInv,
   const float t = std::sqrt(xOverX0 * q2OverBeta2);
   // log((x/X0) * (q²/beta²)) = log((sqrt(x/X0) * (q/beta))²)
   //                          = 2 * log(sqrt(x/X0) * (q/beta))
-
-  std::cout << "HIGHLAND t: " << t << std::endl;
-  std::cout << "HIGHLAND std::log(t): " << std::log(t) << std::endl;
-  std::cout << "HIGHLAND 0.038f * 2 * std::log(t): " << 0.038f * 2 * std::log(t) << std::endl;
-  std::cout << "HIGHLAND t * (1.0f + 0.038f * 2 * std::log(t)): " << t * (1.0f + 0.038f * 2 * std::log(t)) << std::endl;
-  std::cout << "HIGHLAND momentumInv * t * (1.0f + 0.038f * 2 * std::log(t)): " << momentumInv * t * (1.0f + 0.038f * 2 * std::log(t)) << std::endl;
-  std::cout << "HIGHLAND 13.6_MeV: " << 13.6_MeV << std::endl;
-  std::cout << "HIGHLAND 13.6_MeV * momentumInv * t * (1.0f + 0.038f * 2 * std::log(t)): " << 13.6_MeV * momentumInv * t * (1.0f + 0.038f * 2 * std::log(t)) << std::endl;
-
   return 13.6_MeV * momentumInv * t * (1.0f + 0.038f * 2 * std::log(t));
 }
 
