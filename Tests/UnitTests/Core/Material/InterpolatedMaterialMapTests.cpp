@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
   cache.matCell = materialCell;
   cache.initialized = true;
   BOOST_CHECK_EQUAL(ipolMatMap.getMaterial(Vector3(0.5, 0.5, 0.5), cache),
-                  Material(mat));
+                    Material(mat));
 
   // Test the inside check
   BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3(1., 1., 1.)), true);
