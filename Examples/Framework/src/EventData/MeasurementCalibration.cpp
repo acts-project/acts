@@ -24,7 +24,7 @@ void ActsExamples::PassThroughCalibrator::calibrate(
     const Acts::CalibrationContext& /*cctx*/,
     const Acts::SourceLink& sourceLink,
     Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
-  trackState.setUncalibratedSourceLink(sourceLink);
+  trackState.setUncalibratedSourceLink(Acts::SourceLink{sourceLink});
   const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
 
   assert((idxSourceLink.index() < measurements.size()) &&

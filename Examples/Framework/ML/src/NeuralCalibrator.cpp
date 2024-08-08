@@ -77,7 +77,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
     const Acts::SourceLink& sourceLink,
     Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
         trackState) const {
-  trackState.setUncalibratedSourceLink(sourceLink);
+  trackState.setUncalibratedSourceLink(Acts::SourceLink{sourceLink});
   const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
   assert((idxSourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
