@@ -6,7 +6,7 @@ elif test -n "$ZSH_VERSION"; then
   setopt function_argzero
   this_script=$0
 else
-  echo "Unsupported shell. Please use bash or zsh." 1>&2 
+  echo "Unsupported shell. Please use bash or zsh." 1>&2
   return
 fi
 
