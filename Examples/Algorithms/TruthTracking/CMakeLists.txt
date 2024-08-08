@@ -5,7 +5,6 @@ add_library(
   ActsExamples/TruthTracking/TrackParameterSelector.cpp
   ActsExamples/TruthTracking/TrackModifier.cpp
   ActsExamples/TruthTracking/TrackTruthMatcher.cpp
-  ActsExamples/TruthTracking/ProtoTrackTruthMatcher.cpp
   ActsExamples/TruthTracking/TruthSeedSelector.cpp
   ActsExamples/TruthTracking/TruthTrackFinder.cpp
   ActsExamples/TruthTracking/TruthVertexFinder.cpp

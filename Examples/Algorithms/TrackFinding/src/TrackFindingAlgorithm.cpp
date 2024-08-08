@@ -28,7 +28,6 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -346,11 +345,14 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       slAccessorDelegate;
   slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
 
-  Acts::PropagatorPlainOptions firstPropOptions;
+  Acts::PropagatorPlainOptions firstPropOptions(ctx.geoContext,
+                                                ctx.magFieldContext);
   firstPropOptions.maxSteps = m_cfg.maxSteps;
-  firstPropOptions.direction = Acts::Direction::Forward;
+  firstPropOptions.direction = m_cfg.reverseSearch ? Acts::Direction::Backward
+                                                   : Acts::Direction::Forward;
 
-  Acts::PropagatorPlainOptions secondPropOptions;
+  Acts::PropagatorPlainOptions secondPropOptions(ctx.geoContext,
+                                                 ctx.magFieldContext);
   secondPropOptions.maxSteps = m_cfg.maxSteps;
   secondPropOptions.direction = firstPropOptions.direction.invert();
 
@@ -358,21 +360,25 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   TrackFinderOptions firstOptions(ctx.geoContext, ctx.magFieldContext,
                                   ctx.calibContext, slAccessorDelegate,
                                   extensions, firstPropOptions);
+  firstOptions.targetSurface = m_cfg.reverseSearch ? pSurface.get() : nullptr;
 
   TrackFinderOptions secondOptions(ctx.geoContext, ctx.magFieldContext,
                                    ctx.calibContext, slAccessorDelegate,
                                    extensions, secondPropOptions);
-  secondOptions.targetSurface = pSurface.get();
+  secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
 
-  Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
+  using Extrapolator = Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator>;
+  using ExtrapolatorOptions =
+      Extrapolator::template Options<Acts::ActionList<Acts::MaterialInteractor>,
+                                     Acts::AbortList<Acts::EndOfWorldReached>>;
+
+  Extrapolator extrapolator(
       Acts::EigenStepper<>(m_cfg.magneticField),
       Acts::Navigator({m_cfg.trackingGeometry},
                       logger().cloneWithSuffix("Navigator")),
       logger().cloneWithSuffix("Propagator"));
 
-  Acts::PropagatorOptions<Acts::ActionList<Acts::MaterialInteractor>,
-                          Acts::AbortList<Acts::EndOfWorldReached>>
-      extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
+  ExtrapolatorOptions extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
@@ -555,6 +561,21 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                       .index();
 
               Acts::calculateTrackQuantities(trackCandidate);
+
+              if (m_cfg.reverseSearch) {
+                auto secondSmoothingResult =
+                    Acts::smoothTrack(ctx.geoContext, trackCandidate, logger());
+                if (!secondSmoothingResult.ok()) {
+                  m_nFailedSmoothing++;
+                  ACTS_ERROR("Second smoothing for seed "
+                             << iSeed << " and track " << secondTrack.index()
+                             << " failed with error "
+                             << secondSmoothingResult.error());
+                  continue;
+                }
+
+                trackCandidate.reverseTrackStates(true);
+              }
 
               // TODO This extrapolation should not be necessary
               // TODO The CKF is targeting this surface and should communicate

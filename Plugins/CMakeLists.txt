@@ -15,7 +15,7 @@ add_component_if(Detray PluginDetray ACTS_BUILD_PLUGIN_DETRAY)
 # dependent plugins. depend either on a independent plugins or on one another
 add_component_if(TGeo PluginTGeo ACTS_BUILD_PLUGIN_TGEO)
 add_component_if(DD4hep PluginDD4hep ACTS_BUILD_PLUGIN_DD4HEP)
+add_component_if(Podio PluginPodio ACTS_BUILD_PLUGIN_PODIO OR ACTS_PLUGIN_EDM4HEP)
 add_component_if(EDM4hep PluginEDM4hep ACTS_BUILD_PLUGIN_EDM4HEP)
-add_component_if(Podio PluginPodio ACTS_BUILD_PLUGIN_PODIO)
 
 propagate_components_to_parent()

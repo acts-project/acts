@@ -4,7 +4,7 @@ add_library(
   ActsPluginGeoModel SHARED
   src/GeoModelBlueprintCreater.cpp
   src/GeoModelConversionError.cpp
-  src/GeoModelToDetVol.cpp
+  src/GeoModelToDetectorVolume.cpp
   src/GeoModelReader.cpp
   src/GeoModelDetectorElement.cpp
   src/GeoModelDetectorSurfaceFactory.cpp

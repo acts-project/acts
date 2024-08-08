@@ -232,29 +232,32 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
 
       MSG_DEBUG("curvilinear covariance alt.:" << std::endl << curvi_cov_alt);
 
+      auto stepper = stepper_creator(bField);
+      MSG_DEBUG("Stepper type " << typeid(stepper).name());
+
+      using Stepper = decltype(stepper);
+      using Propagator = Acts::Propagator<Stepper>;
+      using PropagatorOptions = typename Propagator::template Options<>;
+
       // configure propagator for tiny step size
-      Acts::PropagatorOptions<> null_propagation_options(geoCtx,
-                                                         magFieldContext);
+      PropagatorOptions null_propagation_options(geoCtx, magFieldContext);
 
       null_propagation_options.pathLimit =
           i == 0 ? 0 : 1e-12 * 1_m * std::pow(10, i - 1);
       if (null_propagation_options.pathLimit > 0 && i > 1) {
-        null_propagation_options.stepTolerance =
+        null_propagation_options.stepping.stepTolerance =
             null_propagation_options.pathLimit * .99;
         null_propagation_options.surfaceTolerance =
             null_propagation_options.pathLimit * .99;
       }
-      auto stepper = stepper_creator(bField);
-      MSG_DEBUG("Stepper type " << typeid(stepper).name());
 
       auto log_level = (isDebugOutputEnabled() ? Acts::Logging::VERBOSE
                                                : Acts::Logging::INFO);
 
       // Use propagator with small step size to compute parameters in
       // curvilinear parameterisation
-      Propagator<decltype(stepper)> propagator(
-          std::move(stepper), Acts::VoidNavigator(),
-          Acts::getDefaultLogger("Propagator", log_level));
+      Propagator propagator(std::move(stepper), Acts::VoidNavigator(),
+                            Acts::getDefaultLogger("Propagator", log_level));
       auto result =
           propagator.propagate(params, null_propagation_options, true);
       {
@@ -264,7 +267,8 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
           MSG_DEBUG(i << " | "
                       << "limit: " << null_propagation_options.pathLimit
                       << " tolerance: "
-                      << null_propagation_options.stepTolerance << std::endl);
+                      << null_propagation_options.stepping.stepTolerance
+                      << std::endl);
 
           Acts::BoundSquareMatrix curvi_cov =
               curvilinear_parameters.value().covariance().value();

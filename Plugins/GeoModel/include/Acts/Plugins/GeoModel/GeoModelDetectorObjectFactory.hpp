@@ -1,6 +1,6 @@
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include <GeoModelHelpers/getChildNodesWithTrf.h>
-#include "Acts/Plugins/GeoModel/GeoModelToDetVol.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelToDetectorVolume.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"

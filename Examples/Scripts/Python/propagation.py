@@ -23,6 +23,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
     stepper = acts.EigenStepper(field)
     # stepper = acts.AtlasStepper(field)
     # stepper = acts.StraightLineStepper()
+    # stepper = acts.SympyStepper(field)
 
     print("We're running with:", type(stepper).__name__)
     prop = acts.examples.ConcretePropagator(acts.Propagator(stepper, nav))

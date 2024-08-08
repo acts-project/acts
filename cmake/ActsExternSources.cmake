@@ -31,7 +31,7 @@ set( ACTS_FRNN_SOURCE
 mark_as_advanced( ACTS_FRNN_SOURCE )
 
 set( ACTS_GEOMODEL_SOURCE
-   "GIT_REPOSITORY;https://gitlab.cern.ch/GeoModelDev/GeoModel;GIT_TAG;6.2.0;" CACHE STRING "Source to take GeoModel from")
+   "GIT_REPOSITORY;https://gitlab.cern.ch/GeoModelDev/GeoModel;GIT_TAG;6.3.0;" CACHE STRING "Source to take GeoModel from")
 mark_as_advanced( ACTS_GEOMODEL_SOURCE )
 
 set( ACTS_NLOHMANNJSON_SOURCE
@@ -48,5 +48,5 @@ set( ACTS_EIGEN3_SOURCE
 mark_as_advanced( ACTS_EIGEN3_SOURCE )
 
 set( ACTS_PYBIND11_SOURCE
-   "GIT_REPOSITORY;https://github.com/pybind/pybind11.git;GIT_TAG;v2.10.1" CACHE STRING "Source to take pybind11 from")
+   "GIT_REPOSITORY;https://github.com/pybind/pybind11.git;GIT_TAG;v2.13.1" CACHE STRING "Source to take pybind11 from")
 mark_as_advanced( ACTS_PYBIND11_SOURCE )
