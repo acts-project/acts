@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
@@ -27,6 +26,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <algorithm>
 #include <array>
@@ -43,7 +43,8 @@
 
 #include "TGeoManager.h"
 
-namespace ActsExamples::TGeo {
+namespace ActsExamples {
+using namespace Options;
 
 namespace {
 
@@ -134,12 +135,12 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
               cdsConfig,
               logger.clone("TGeoCylinderDiscSplitter", config.layerLogLevel));
     } else if (volume.itkModuleSplit) {
-      TGeoITkModuleSplitter::Config itkConfig;
+      ActsExamples::TGeoITkModuleSplitter::Config itkConfig;
       itkConfig.barrelMap = volume.barrelMap;
       itkConfig.discMap = volume.discMap;
       itkConfig.splitPatterns = volume.splitPatterns;
       layerBuilderConfig.detectorElementSplitter =
-          std::make_shared<TGeoITkModuleSplitter>(
+          std::make_shared<ActsExamples::TGeoITkModuleSplitter>(
               itkConfig,
               logger.clone("TGeoITkModuleSplitter", config.layerLogLevel));
     }
@@ -161,7 +162,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
 /// @param vm is the variable map from the options
 std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     const TGeoDetector::Config& config, const Acts::GeometryContext& context,
-    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
+    std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>&
         detElementStore,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator,
     const Acts::Logger& logger) {
@@ -366,20 +367,23 @@ void TGeoDetector::readTGeoLayerBuilderConfigsFile(const std::string& path,
   }
 }
 
-TGeoDetector::TGeoDetector(const Config& cfg)
-    : DetectorCommons::Detector(
-          Acts::getDefaultLogger("TGeoDetector", m_cfg.logLevel)),
-      m_cfg(cfg) {}
+auto TGeoDetector::finalize(
+    const Config& cfg,
+    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
+    -> std::pair<TrackingGeometryPtr, ContextDecorators> {
+  Acts::GeometryContext tGeoContext;
+  auto logger = Acts::getDefaultLogger("TGeoDetector", Acts::Logging::INFO);
+  TrackingGeometryPtr tgeoTrackingGeometry = buildTGeoDetector(
+      cfg, tGeoContext, detectorStore, std::move(mdecorator), *logger);
+
+  ContextDecorators tgeoContextDecorators = {};
+  // Return the pair of geometry and empty decorators
+  return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
+      std::move(tgeoTrackingGeometry), std::move(tgeoContextDecorators));
+}
 
 void TGeoDetector::Config::readJson(const std::string& jsonFile) {
   readTGeoLayerBuilderConfigsFile(jsonFile, *this);
 }
 
-void TGeoDetector::buildTrackingGeometry() {
-  Acts::GeometryContext tGeoContext;
-
-  m_trackingGeometry = buildTGeoDetector(m_cfg, tGeoContext, m_detectorStore,
-                                         m_cfg.materialDecorator, logger());
-}
-
-}  // namespace ActsExamples::TGeo
+}  // namespace ActsExamples

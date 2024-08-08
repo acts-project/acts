@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
 #include <cstddef>
@@ -18,20 +17,29 @@
 #include <utility>
 #include <vector>
 
+namespace Acts {
+class TrackingGeometry;
+class IMaterialDecorator;
+}  // namespace Acts
+
+namespace ActsExamples {
+class IContextDecorator;
+namespace Generic {
+class GenericDetectorElement;
+}  // namespace Generic
+}  // namespace ActsExamples
+
 namespace ActsExamples::Contextual {
 class InternallyAlignedDetectorElement;
 class InternalAlignmentDecorator;
 
-class AlignedDetector : public DetectorCommons::Detector {
+class AlignedDetector {
  public:
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
   using ContextDecorators =
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
-  using DetectorStore = std::vector<
-      std::vector<std::shared_ptr<Generic::GenericDetectorElement>>>;
-
-  struct Config : public Generic::GenericDetector::Config {
+  struct Config : public GenericDetector::Config {
     /// Seed for the decorator random numbers.
     std::size_t seed = 1324354657;
     /// Size of a valid IOV.
@@ -55,21 +63,21 @@ class AlignedDetector : public DetectorCommons::Detector {
 
     enum class Mode { Internal, External };
     Mode mode = Mode::Internal;
-
-    std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
   };
 
-  explicit AlignedDetector(const Config& cfg);
+  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
+      const Config& cfg,
+      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 
-  const DetectorStore& detectorStore() const { return m_detectorStore; }
+  std::vector<std::vector<std::shared_ptr<Generic::GenericDetectorElement>>>&
+  detectorStore() {
+    return m_detectorStore;
+  }
 
  private:
-  Config m_cfg;
-
   /// The Store of the detector elements (lifetime: job)
-  DetectorStore m_detectorStore;
-
-  void buildTrackingGeometry() final;
+  std::vector<std::vector<std::shared_ptr<Generic::GenericDetectorElement>>>
+      m_detectorStore;
 };
 
 }  // namespace ActsExamples::Contextual

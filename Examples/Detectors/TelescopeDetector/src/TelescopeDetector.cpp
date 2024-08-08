@@ -8,56 +8,55 @@
 
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <algorithm>
-#include <memory>
 #include <stdexcept>
 
-namespace ActsExamples::Telescope {
+auto ActsExamples::Telescope::TelescopeDetector::finalize(
+    const Config& cfg, const std::shared_ptr<const Acts::IMaterialDecorator>&
+    /*mdecorator*/) -> std::pair<TrackingGeometryPtr, ContextDecorators> {
+  DetectorElement::ContextType nominalContext;
 
-TelescopeDetector::TelescopeDetector(const Config& cfg)
-    : DetectorCommons::Detector(
-          Acts::getDefaultLogger("TelescopeDetector", cfg.logLevel)),
-      m_cfg(cfg) {}
-
-void TelescopeDetector::buildTrackingGeometry() {
-  Acts::GeometryContext gctx;
-
-  if (m_cfg.surfaceType > 1) {
+  if (cfg.surfaceType > 1) {
     throw std::invalid_argument(
         "The surface type could either be 0 for plane surface or 1 for disc "
         "surface.");
   }
-  if (m_cfg.binValue > 2) {
+  if (cfg.binValue > 2) {
     throw std::invalid_argument("The axis value could only be 0, 1, or 2.");
   }
   // Check if the bounds values are valid
-  if (m_cfg.surfaceType == 1 && m_cfg.bounds[0] >= m_cfg.bounds[1]) {
+  if (cfg.surfaceType == 1 && cfg.bounds[0] >= cfg.bounds[1]) {
     throw std::invalid_argument(
         "The minR should be smaller than the maxR for disc surface bounds.");
   }
 
-  if (m_cfg.positions.size() != m_cfg.stereos.size()) {
+  if (cfg.positions.size() != cfg.stereos.size()) {
     throw std::invalid_argument(
         "The number of provided positions must match the number of "
         "provided stereo angles.");
   }
 
+  config = cfg;
+
   // Sort the provided distances
-  std::vector<double> positions = m_cfg.positions;
-  std::vector<double> stereos = m_cfg.stereos;
+  std::vector<double> positions = cfg.positions;
+  std::vector<double> stereos = cfg.stereos;
   std::sort(positions.begin(), positions.end());
 
   /// Return the telescope detector
-  m_trackingGeometry = ActsExamples::Telescope::buildDetector(
-      gctx, m_detectorStore, positions, stereos, m_cfg.offsets, m_cfg.bounds,
-      m_cfg.thickness, static_cast<TelescopeSurfaceType>(m_cfg.surfaceType),
-      static_cast<Acts::BinningValue>(m_cfg.binValue));
+  TrackingGeometryPtr gGeometry = ActsExamples::Telescope::buildDetector(
+      nominalContext, detectorStore, positions, stereos, cfg.offsets,
+      cfg.bounds, cfg.thickness,
+      static_cast<ActsExamples::Telescope::TelescopeSurfaceType>(
+          cfg.surfaceType),
+      static_cast<Acts::BinningValue>(cfg.binValue));
+  ContextDecorators gContextDecorators = {};
+  // return the pair of geometry and empty decorators
+  return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
+      std::move(gGeometry), std::move(gContextDecorators));
 }
-
-}  // namespace ActsExamples::Telescope

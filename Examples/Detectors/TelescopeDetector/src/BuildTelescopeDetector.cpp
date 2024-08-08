@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerArrayCreator.hpp"
@@ -36,8 +35,10 @@
 
 std::unique_ptr<const Acts::TrackingGeometry>
 ActsExamples::Telescope::buildDetector(
-    const Acts::GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
+    const typename ActsExamples::Telescope::TelescopeDetectorElement::
+        ContextType& gctx,
+    std::vector<
+        std::shared_ptr<ActsExamples::Telescope::TelescopeDetectorElement>>&
         detectorStore,
     const std::vector<double>& positions,
     const std::vector<double>& stereoAngles,

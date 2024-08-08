@@ -1,14 +1,11 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/DetectorCommons/Detector.hpp"
-
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
@@ -39,7 +36,6 @@ using namespace ActsExamples;
 namespace Acts::Python {
 void addDetector(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
-
   {
     py::class_<IContextDecorator, std::shared_ptr<IContextDecorator>>(
         mex, "IContextDecorator")
@@ -48,25 +44,16 @@ void addDetector(Context& ctx) {
   }
 
   {
-    py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
-        mex, "DetectorElementBase");
-  }
+    using Config = GenericDetector::Config;
 
-  {
-    using Detector = DetectorCommons::Detector;
-
-    py::class_<Detector, std::shared_ptr<Detector>>(mex, "Detector")
-        .def("trackingGeometry", &Detector::trackingGeometry)
-        .def("drop", &Detector::drop);
-  }
-
-  {
-    using Detector = Generic::GenericDetector;
-    using Config = Detector::Config;
-
-    auto gd = py::class_<Detector, DetectorCommons::Detector,
-                         std::shared_ptr<Detector>>(mex, "GenericDetector")
-                  .def(py::init<const Config&>());
+    auto gd = py::class_<GenericDetector, std::shared_ptr<GenericDetector>>(
+                  mex, "GenericDetector")
+                  .def(py::init<>())
+                  .def("finalize",
+                       py::overload_cast<
+                           const Config&,
+                           std::shared_ptr<const Acts::IMaterialDecorator>>(
+                           &GenericDetector::finalize));
 
     py::class_<Config>(gd, "Config")
         .def(py::init<>())
@@ -74,17 +61,22 @@ void addDetector(Context& ctx) {
         .def_readwrite("surfaceLogLevel", &Config::surfaceLogLevel)
         .def_readwrite("layerLogLevel", &Config::layerLogLevel)
         .def_readwrite("volumeLogLevel", &Config::volumeLogLevel)
-        .def_readwrite("buildProto", &Config::buildProto)
-        .def_readwrite("materialDecorator", &Config::materialDecorator);
+        .def_readwrite("buildProto", &Config::buildProto);
   }
 
   {
-    using Detector = Telescope::TelescopeDetector;
-    using Config = Detector::Config;
+    using TelescopeDetector = Telescope::TelescopeDetector;
+    using Config = TelescopeDetector::Config;
 
-    auto td = py::class_<Detector, DetectorCommons::Detector,
-                         std::shared_ptr<Detector>>(mex, "TelescopeDetector")
-                  .def(py::init<const Config&>());
+    auto td =
+        py::class_<TelescopeDetector, std::shared_ptr<TelescopeDetector>>(
+            mex, "TelescopeDetector")
+            .def(py::init<>())
+            .def("finalize",
+                 py::overload_cast<
+                     const Config&,
+                     const std::shared_ptr<const Acts::IMaterialDecorator>&>(
+                     &TelescopeDetector::finalize));
 
     py::class_<Config>(td, "Config")
         .def(py::init<>())
@@ -98,14 +90,19 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using Detector = Contextual::AlignedDetector;
-    using Config = Detector::Config;
+    using AlignedDetector = Contextual::AlignedDetector;
+    using Config = AlignedDetector::Config;
 
-    auto d = py::class_<Detector, DetectorCommons::Detector,
-                        std::shared_ptr<Detector>>(mex, "AlignedDetector")
-                 .def(py::init<const Config&>());
+    auto d = py::class_<AlignedDetector, std::shared_ptr<AlignedDetector>>(
+                 mex, "AlignedDetector")
+                 .def(py::init<>())
+                 .def("finalize",
+                      py::overload_cast<
+                          const Config&,
+                          std::shared_ptr<const Acts::IMaterialDecorator>>(
+                          &AlignedDetector::finalize));
 
-    auto c = py::class_<Config, Generic::GenericDetector::Config>(d, "Config")
+    auto c = py::class_<Config, GenericDetector::Config>(d, "Config")
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(seed);
@@ -127,12 +124,16 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using Detector = TGeo::TGeoDetector;
-    using Config = Detector::Config;
+    using Config = TGeoDetector::Config;
 
-    auto d = py::class_<Detector, DetectorCommons::Detector,
-                        std::shared_ptr<Detector>>(mex, "TGeoDetector")
-                 .def(py::init<const Config&>());
+    auto d = py::class_<TGeoDetector, std::shared_ptr<TGeoDetector>>(
+                 mex, "TGeoDetector")
+                 .def(py::init<>())
+                 .def("finalize",
+                      py::overload_cast<
+                          const Config&,
+                          std::shared_ptr<const Acts::IMaterialDecorator>>(
+                          &TGeoDetector::finalize));
 
     py::class_<Options::Interval>(mex, "Interval")
         .def(py::init<>())

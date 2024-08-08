@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,34 +8,25 @@
 
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 #include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
-namespace ActsExamples::Generic {
-
-GenericDetector::GenericDetector(const Config& cfg)
-    : DetectorCommons::Detector(
-          Acts::getDefaultLogger("GenericDetector", m_cfg.logLevel)),
-      m_cfg(cfg) {}
-
-void GenericDetector::buildTrackingGeometry() {
-  Acts::GeometryContext gctx;
-  std::vector<std::vector<std::shared_ptr<DetectorElement>>> detectorStore;
-  m_trackingGeometry = ActsExamples::Generic::buildDetector<DetectorElement>(
-      gctx, detectorStore, m_cfg.buildLevel, m_cfg.materialDecorator,
-      m_cfg.buildProto, m_cfg.surfaceLogLevel, m_cfg.layerLogLevel,
-      m_cfg.volumeLogLevel);
-  for (auto& something : detectorStore) {
-    for (auto& element : something) {
-      m_detectorStore.push_back(std::move(element));
-    }
-  }
+auto GenericDetector::finalize(
+    const Config& cfg,
+    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
+    -> std::pair<TrackingGeometryPtr, ContextDecorators> {
+  DetectorElement::ContextType nominalContext;
+  /// Return the generic detector
+  TrackingGeometryPtr gGeometry =
+      ActsExamples::Generic::buildDetector<DetectorElement>(
+          nominalContext, detectorStore, cfg.buildLevel, std::move(mdecorator),
+          cfg.buildProto, cfg.surfaceLogLevel, cfg.layerLogLevel,
+          cfg.volumeLogLevel);
+  ContextDecorators gContextDecorators = {};
+  // return the pair of geometry and empty decorators
+  return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
+      std::move(gGeometry), std::move(gContextDecorators));
 }
-
-}  // namespace ActsExamples::Generic

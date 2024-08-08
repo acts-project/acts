@@ -77,9 +77,10 @@ ActsExamples::MockupSectorBuilder::buildChamber(
   g4SurfaceOptions.passiveSurfaceSelector = g4Passive;
   g4WorldConfig.g4SurfaceOptions = g4SurfaceOptions;
 
-  auto g4detector = ActsExamples::Geant4::Geant4Detector(g4WorldConfig);
-  // Trigger the build of the detector
-  g4detector.detector();
+  auto g4detector = ActsExamples::Geant4::Geant4Detector();
+
+  auto [detector, surfaces, detectorElements] =
+      g4detector.constructDetector(g4WorldConfig, Acts::getDummyLogger());
 
   // The vector that holds the converted sensitive surfaces of the chamber
   std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces = {};
@@ -90,7 +91,7 @@ ActsExamples::MockupSectorBuilder::buildChamber(
                                          -std::numeric_limits<float>::max()));
 
   // Convert the physical volumes of the detector elements to straw surfaces
-  for (auto& detectorElement : g4detector.detectorElements()) {
+  for (auto& detectorElement : detectorElements) {
     auto context = Acts::GeometryContext();
     auto g4conv = Acts::Geant4PhysicalVolumeConverter();
 

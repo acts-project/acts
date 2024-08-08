@@ -1,13 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
@@ -15,7 +14,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
-#include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
@@ -37,17 +36,10 @@ using namespace Acts::Python;
 
 PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   {
-    py::class_<Acts::DD4hepDetectorElement, Acts::DetectorElementBase,
-               std::shared_ptr<Acts::DD4hepDetectorElement>>(
-        m, "DD4hepDetectorElement");
-  }
-
-  {
-    using Detector = DD4hep::DD4hepDetector;
-    using Config = Detector::Config;
-
-    auto s = py::class_<Detector, DetectorCommons::Detector,
-                        std::shared_ptr<Detector>>(m, "DD4hepDetector")
+    using Config = ActsExamples::DD4hep::DD4hepGeometryService::Config;
+    auto s = py::class_<DD4hep::DD4hepGeometryService,
+                        std::shared_ptr<DD4hep::DD4hepGeometryService>>(
+                 m, "DD4hepGeometryService")
                  .def(py::init<const Config&>());
 
     auto c = py::class_<Config>(s, "Config").def(py::init<>());
@@ -62,7 +54,6 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     ACTS_PYTHON_MEMBER(envelopeR);
     ACTS_PYTHON_MEMBER(envelopeZ);
     ACTS_PYTHON_MEMBER(defaultLayerThickness);
-    ACTS_PYTHON_MEMBER(materialDecorator);
     ACTS_PYTHON_MEMBER(geometryIdentifierHook);
     ACTS_PYTHON_STRUCT_END();
 
@@ -73,6 +64,12 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     py::class_<Acts::DD4hepFieldAdapter, Acts::MagneticFieldProvider,
                std::shared_ptr<Acts::DD4hepFieldAdapter>>(m,
                                                           "DD4hepFieldAdapter");
+  }
+
+  {
+    py::class_<Acts::DD4hepDetectorElement,
+               std::shared_ptr<Acts::DD4hepDetectorElement>>(
+        m, "DD4hepDetectorElement");
   }
 
   {
@@ -91,7 +88,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
                 const auto* dd4hepDetElement =
                     dynamic_cast<const Acts::DD4hepDetectorElement*>(dde);
                 // Check if it is valid
-                if (dd4hepDetElement != nullptr) {
+                if (dd4hepDetElement) {
                   dd4hep::DDSegmentation::VolumeID dd4hepID =
                       dd4hepDetElement->sourceElement().volumeID();
                   auto geoID = surface->geometryId();
@@ -154,5 +151,22 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
 
           options.geoIdGenerator = chainedGeoIdGenerator;
         });
+  }
+
+  {
+    py::class_<DD4hep::DD4hepDetector, std::shared_ptr<DD4hep::DD4hepDetector>>(
+        m, "DD4hepDetector")
+        .def(py::init<>())
+        .def(py::init<std::shared_ptr<DD4hep::DD4hepGeometryService>>())
+        .def("finalize",
+             py::overload_cast<DD4hep::DD4hepGeometryService::Config,
+                               std::shared_ptr<const Acts::IMaterialDecorator>>(
+                 &DD4hep::DD4hepDetector::finalize))
+        .def("finalize",
+             py::overload_cast<
+                 const Acts::GeometryContext&,
+                 const Acts::Experimental::DD4hepDetectorStructure::Options&>(
+                 &DD4hep::DD4hepDetector::finalize))
+        .def_property_readonly("field", &DD4hep::DD4hepDetector::field);
   }
 }

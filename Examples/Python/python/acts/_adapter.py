@@ -2,7 +2,6 @@ import inspect
 import functools
 from typing import Optional, Callable, Dict, Any
 from pathlib import Path
-from contextlib import nullcontext
 
 import acts
 
@@ -110,14 +109,15 @@ def _detector_create(cls, config_class=None):
             cfg = cls.Config()
         else:
             cfg = config_class()
-        setattr(cfg, "matDecorator", mdecorator)
+        _kwargs = {}
         for k, v in kwargs.items():
-            setattr(cfg, k, v)
-        detector = cls(cfg)
-        trackingGeometry = detector.trackingGeometry()
-        decorators = detector.contextDecorators()
-        contextManager = nullcontext()
-        return detector, trackingGeometry, decorators, contextManager
+            try:
+                setattr(cfg, k, v)
+            except AttributeError:
+                _kwargs[k] = v
+        det = cls()
+        tg, deco = det.finalize(cfg, mdecorator, *args, **_kwargs)
+        return det, tg, deco
 
     return create
 
