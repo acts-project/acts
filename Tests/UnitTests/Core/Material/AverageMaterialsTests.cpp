@@ -165,12 +165,6 @@ BOOST_AUTO_TEST_CASE(CombineSlabsUnitZero) {
     auto slab = combineSlabs(unit, zero);
     BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
-    std::cout << "comparing material: " << std::endl;
-    std::cout << "(lhs.m_x0 == rhs.m_x0): " << std::boolalpha << (slab.material().X0() == unit.material().X0()) << std::endl;
-    std::cout << "(lhs.m_l0 == rhs.m_l0): " << std::boolalpha << (slab.material().L0() == unit.material().L0()) << std::endl;
-    std::cout << "(lhs.m_ar == rhs.m_ar): " << std::boolalpha << (slab.material().Ar() == unit.material().Ar()) << std::endl;
-    std::cout << "(lhs.m_z == rhs.m_z): " << std::boolalpha << (slab.material().Z() == unit.material().Z()) << std::endl;
-    std::cout << "(lhs.m_molarRho == rhs.m_molarRho): " << std::boolalpha << (slab.material().molarDensity() == unit.material().molarDensity()) << std::endl;
     BOOST_CHECK_EQUAL(slab.material(), unit.material());
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), unit.thicknessInX0());
@@ -181,12 +175,6 @@ BOOST_AUTO_TEST_CASE(CombineSlabsUnitZero) {
     auto slab = combineSlabs(zero, unit);
     BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
-    std::cout << "comparing material: " << std::endl;
-    std::cout << "(lhs.m_x0 == rhs.m_x0): " << std::boolalpha << (slab.material().X0() == unit.material().X0()) << std::endl;
-    std::cout << "(lhs.m_l0 == rhs.m_l0): " << std::boolalpha << (slab.material().L0() == unit.material().L0()) << std::endl;
-    std::cout << "(lhs.m_ar == rhs.m_ar): " << std::boolalpha << (slab.material().Ar() == unit.material().Ar()) << std::endl;
-    std::cout << "(lhs.m_z == rhs.m_z): " << std::boolalpha << (slab.material().Z() == unit.material().Z()) << std::endl;
-    std::cout << "(lhs.m_molarRho == rhs.m_molarRho): " << std::boolalpha << (slab.material().molarDensity() == unit.material().molarDensity()) << std::endl;
     BOOST_CHECK_EQUAL(slab.material(), unit.material());
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), unit.thicknessInX0());
