@@ -32,14 +32,9 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
   TrackContainer tracks(trackContainer, mtj);
 
   boost::container::flat_map<Index, Acts::SourceLink> slMap;
-  for (const auto& varm : m_inputMeasurements(ctx)) {
-    std::visit(
-        [&](const auto& m) {
-          const auto idx =
-              m.sourceLink().template get<IndexSourceLink>().index();
-          slMap.insert(std::pair<Index, Acts::SourceLink>{idx, m.sourceLink()});
-        },
-        varm);
+  for (const auto& m : m_inputMeasurements(ctx)) {
+    const auto idx = m.sourceLink().template get<IndexSourceLink>().index();
+    slMap.insert(std::pair<Index, Acts::SourceLink>{idx, m.sourceLink()});
   }
 
   const auto& prototracks = m_inputProtoTracks(ctx);

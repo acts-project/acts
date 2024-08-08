@@ -151,34 +151,30 @@ void ActsExamples::ScalingCalibrator::calibrate(
   const Cluster& cl = clusters->at(idxSourceLink.index());
   ConstantTuple ct = m_calib_maps.at(mgid).at(cl.sizeLoc0, cl.sizeLoc1);
 
-  std::visit(
-      [&](const auto& meas) {
-        auto E = meas.expander();
-        auto P = meas.projector();
+  const auto& measurement = measurements[idxSourceLink.index()];
 
-        Acts::ActsVector<Acts::eBoundSize> fpar = E * meas.parameters();
+  assert(measurement.contains(Acts::eBoundLoc0) &&
+         "Measurement does not contain the required bound loc0");
+  assert(measurement.contains(Acts::eBoundLoc1) &&
+         "Measurement does not contain the required bound loc1");
 
-        Acts::ActsSquareMatrix<Acts::eBoundSize> fcov =
-            E * meas.covariance() * E.transpose();
+  auto boundLoc0 = measurement.subspace().indexOf(Acts::eBoundLoc0);
+  auto boundLoc1 = measurement.subspace().indexOf(Acts::eBoundLoc1);
 
-        fpar[Acts::eBoundLoc0] += ct.x_offset;
-        fpar[Acts::eBoundLoc1] += ct.y_offset;
-        fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) *= ct.x_scale;
-        fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) *= ct.y_scale;
+  Measurement measurementCopy = measurement;
+  measurementCopy.effectiveParameters()[boundLoc0] += ct.x_offset;
+  measurementCopy.effectiveParameters()[boundLoc1] += ct.y_offset;
+  measurementCopy.effectiveCovariance()(boundLoc0, boundLoc0) *= ct.x_scale;
+  measurementCopy.effectiveCovariance()(boundLoc1, boundLoc1) *= ct.y_scale;
 
-        constexpr std::size_t kSize =
-            std::remove_reference_t<decltype(meas)>::size();
-        std::array<Acts::BoundIndices, kSize> indices = meas.indices();
-        Acts::ActsVector<kSize> cpar = P * fpar;
-        Acts::ActsSquareMatrix<kSize> ccov = P * fcov * P.transpose();
+  Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
+    constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
-        FixedSizeMeasurement<Acts::BoundIndices, kSize> cmeas(
-            Acts::SourceLink{idxSourceLink}, indices, cpar, ccov);
-
-        trackState.allocateCalibrated(cmeas.size());
-        trackState.calibrated<kSize>() = meas.parameters();
-        trackState.calibratedCovariance<kSize>() = meas.covariance();
-        trackState.setProjector(meas.projector());
-      },
-      (measurements)[idxSourceLink.index()]);
+    trackState.allocateCalibrated(kMeasurementSize);
+    trackState.calibrated<kMeasurementSize>() =
+        measurement.parameters<kMeasurementSize>();
+    trackState.calibratedCovariance<kMeasurementSize>() =
+        measurementCopy.covariance<kMeasurementSize>();
+    trackState.setProjector(measurement.subspace().fullProjector<double>());
+  });
 }
