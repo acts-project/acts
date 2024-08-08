@@ -535,7 +535,7 @@ def test_truth_tracking_kalman(
         assert not fp.exists()
 
     print("with")
-    with detector_config.contextManager:
+    with detector_config.detector:
         from truth_tracking_kalman import runTruthTrackingKalman
 
         field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
@@ -600,7 +600,7 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
         fp = tmp_path / fn
         assert not fp.exists()
 
-    with detector_config.contextManager:
+    with detector_config.detector:
         runTruthTrackingGsf(
             trackingGeometry=detector_config.trackingGeometry,
             decorators=detector_config.decorators,
@@ -632,7 +632,7 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
         numThreads=1,
     )
 
-    with detector_config.contextManager:
+    with detector_config.detector:
         # Only check if it runs without errors right known
         # Changes in fitter behaviour should be caught by other tests
         runRefittingGsf(
@@ -1072,7 +1072,7 @@ def test_ckf_tracks_example(
 
     from ckf_tracks import runCKFTracks
 
-    with detector_config.contextManager:
+    with detector_config.detector:
         runCKFTracks(
             detector_config.trackingGeometry,
             detector_config.decorators,
