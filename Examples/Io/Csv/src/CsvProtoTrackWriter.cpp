@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -21,8 +22,6 @@
 #include <ios>
 #include <optional>
 #include <stdexcept>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
 
@@ -49,7 +48,8 @@ ActsExamples::ProcessCode ActsExamples::CsvProtoTrackWriter::writeT(
   std::string path =
       perEventFilepath(m_cfg.outputDir, "prototracks.csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<ProtoTrackData> writer(path, m_cfg.outputPrecision);
+  ActsExamples::NamedTupleCsvWriter<ProtoTrackData> writer(
+      path, m_cfg.outputPrecision);
 
   for (auto trackId = 0ul; trackId < tracks.size(); ++trackId) {
     for (Index measurmentId : tracks[trackId]) {

@@ -12,10 +12,10 @@ add_library(
   src/CsvTrackingGeometryWriter.cpp
   src/CsvTrackParameterReader.cpp
   src/CsvTrackParameterWriter.cpp
-  src/CsvSeedWriter.cpp 
-  src/CsvTrackWriter.cpp 
-  src/CsvDriftCircleReader.cpp 
-  src/CsvMuonSimHitReader.cpp 
+  src/CsvSeedWriter.cpp
+  src/CsvTrackWriter.cpp
+  src/CsvDriftCircleReader.cpp
+  src/CsvMuonSimHitReader.cpp
   src/CsvProtoTrackWriter.cpp
   src/CsvSpacePointWriter.cpp
   src/CsvExaTrkXGraphWriter.cpp
@@ -30,9 +30,6 @@ target_link_libraries(
     ActsCore
     ActsExamplesFramework ActsExamplesDigitization
     Threads::Threads)
-acts_target_link_libraries_system(
-  ActsExamplesIoCsv
-  PRIVATE dfelibs)
 
 install(
   TARGETS ActsExamplesIoCsv

@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -16,8 +17,6 @@
 
 #include <stdexcept>
 #include <vector>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
 
@@ -36,8 +35,8 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleWriter::writeT(
     const SimParticleContainer& particles) {
   auto pathParticles = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
-  dfe::NamedTupleCsvWriter<ParticleData> writer(pathParticles,
-                                                m_cfg.outputPrecision);
+  ActsExamples::NamedTupleCsvWriter<ParticleData> writer(pathParticles,
+                                                         m_cfg.outputPrecision);
 
   ParticleData data;
   for (const auto& particle : particles) {

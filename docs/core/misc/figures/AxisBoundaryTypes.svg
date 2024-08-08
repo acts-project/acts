@@ -4,7 +4,7 @@
       <line x1="-20" x2="20" y1="0" y2="0" stroke="black" stroke-witdh="1"/>
       <line x1="-20" x2="-20" y1="-5" y2="5" stroke="black" stroke-width="1"/>
       <line x1="20" x2="20" y1="-5" y2="5" stroke="black" stroke-width="1"/>
-      
+
       <text x="0" y="40" text-anchor="middle">bound</text>
       <text x="-20" y="-12" text-anchor="middle" font-size="10">
         <tspan>x</tspan>
@@ -15,7 +15,7 @@
         <tspan dy="2" dx="-2" font-size="6">max</tspan>
       </text>
     </g>
-    
+
     <g stroke-width="1" transform="translate(105,25)">
       <line x1="-20" x2="20" y1="0" y2="0" stroke="black"/>
       <line x1="-20" x2="-20" y1="-5" y2="5" stroke="black"/>
@@ -65,4 +65,3 @@
   </g>
 
 </svg>
-

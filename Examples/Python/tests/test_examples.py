@@ -525,9 +525,9 @@ def test_truth_tracking_kalman(
     tmp_path, assert_root_hash, revFiltMomThresh, directNavigation, detector_config
 ):
     root_files = [
-        ("trackstates_fitter.root", "trackstates", 19),
-        ("tracksummary_fitter.root", "tracksummary", 10),
-        ("performance_track_fitter.root", None, -1),
+        ("trackstates_kf.root", "trackstates", 19),
+        ("tracksummary_kf.root", "tracksummary", 10),
+        ("performance_kf.root", None, -1),
     ]
 
     for fn, _, _ in root_files:
@@ -567,7 +567,7 @@ def test_truth_tracking_kalman(
 
     ROOT.PyConfig.IgnoreCommandLineOptions = True
     ROOT.gROOT.SetBatch(True)
-    rf = ROOT.TFile.Open(str(tmp_path / "tracksummary_fitter.root"))
+    rf = ROOT.TFile.Open(str(tmp_path / "tracksummary_kf.root"))
     keys = [k.GetName() for k in rf.GetListOfKeys()]
     assert "tracksummary" in keys
     for entry in rf.Get("tracksummary"):
