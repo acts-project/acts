@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMultiTrajectoryWriter.hpp"
@@ -29,12 +29,11 @@ using namespace Acts;
 using namespace Acts::Python;
 
 PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepReader, m, "EDM4hepReader",
-                             inputPath, inputParticles, inputSimHits,
-                             outputParticlesInitial, outputParticlesFinal,
-                             outputParticlesGenerator, outputSimHits,
-                             graphvizOutput, dd4hepGeometryService,
-                             trackingGeometry, sortSimHitsInTime);
+  ACTS_PYTHON_DECLARE_READER(
+      ActsExamples::EDM4hepReader, m, "EDM4hepReader", inputPath,
+      inputParticles, inputSimHits, outputParticlesInitial,
+      outputParticlesFinal, outputParticlesGenerator, outputSimHits,
+      graphvizOutput, dd4hepDetector, trackingGeometry, sortSimHitsInTime);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::EDM4hepSimHitWriter, m, "EDM4hepSimHitWriter", inputSimHits,
