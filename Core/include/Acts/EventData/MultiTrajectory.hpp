@@ -499,6 +499,10 @@ class MultiTrajectory {
     return self().template calibratedCovariance_impl<measdim>(istate);
   }
 
+  /// Retrieve a calibrated measurement covariance proxy instance for a
+  /// measurement at a given index
+  /// @param istate The track state
+  /// @return Mutable proxy
   typename TrackStateProxy::EffectiveCalibrated effectiveCalibrated(
       IndexType istate) requires(!ReadOnly) {
     // This abuses an incorrectly sized vector / matrix to access the
@@ -508,6 +512,10 @@ class MultiTrajectory {
         calibrated<eBoundSize>(istate).data(), calibratedSize(istate)};
   }
 
+  /// Retrieve a calibrated measurement covariance proxy instance for a
+  /// measurement at a given index
+  /// @param istate The track state
+  /// @return Const proxy
   typename ConstTrackStateProxy::EffectiveCalibrated effectiveCalibrated(
       IndexType istate) const {
     // This abuses an incorrectly sized vector / matrix to access the
@@ -517,6 +525,10 @@ class MultiTrajectory {
         calibrated<eBoundSize>(istate).data(), calibratedSize(istate)};
   }
 
+  /// Retrieve a calibrated measurement covariance proxy instance for a
+  /// measurement at a given index
+  /// @param istate The track state
+  /// @return Mutable proxy
   typename TrackStateProxy::EffectiveCalibratedCovariance
   effectiveCalibratedCovariance(IndexType istate) requires(!ReadOnly) {
     // This abuses an incorrectly sized vector / matrix to access the
@@ -527,6 +539,10 @@ class MultiTrajectory {
         calibratedSize(istate)};
   }
 
+  /// Retrieve a calibrated measurement covariance proxy instance for a
+  /// measurement at a given index
+  /// @param istate The track state
+  /// @return Const proxy
   typename ConstTrackStateProxy::EffectiveCalibratedCovariance
   effectiveCalibratedCovariance(IndexType istate) const {
     // This abuses an incorrectly sized vector / matrix to access the
