@@ -188,7 +188,6 @@ struct GsfActor {
     // All components must have status "on surface". It is however possible,
     // that currentSurface is nullptr and all components are "on surface" (e.g.,
     // for surfaces excluded from the navigation)
-    using Status = Acts::Intersection3D::Status;
     assert(std::all_of(
         stepperComponents.begin(), stepperComponents.end(),
         [](const auto& cmp) { return cmp.status() == Status::onSurface; }));
