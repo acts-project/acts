@@ -63,7 +63,7 @@ Extended by providing total Start date, total time, total test stats
 				<property name="ProcessorClockFrequency" value="{$ProcessorClockFrequency}" />
 			</properties>
 			<xsl:apply-templates select="Testing/Test"/>
-			
+
 			<system-out>
 				BuildName: <xsl:value-of select="$BuildName" />
 				BuildStamp: <xsl:value-of select="$BuildStamp" />
@@ -101,7 +101,7 @@ Extended by providing total Start date, total time, total test stats
 				</xsl:if>
 			</xsl:for-each>
 		</xsl:variable>
-		
+
 			<testcase name="{$testcasename}" classname="{$testclassname}" time="{$exectime}">
             <xsl:if test="@Status = 'passed'">
             <system-out><xsl:value-of select="Results/Measurement/Value/text()"/></system-out>
@@ -130,4 +130,3 @@ Extended by providing total Start date, total time, total test stats
     </xsl:template>
 
 </xsl:stylesheet>
-

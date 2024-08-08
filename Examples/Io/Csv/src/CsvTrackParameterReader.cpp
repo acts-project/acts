@@ -14,13 +14,12 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <algorithm>
 #include <stdexcept>
 #include <string>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
 
@@ -60,7 +59,7 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterReader::read(
 
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
-  dfe::NamedTupleCsvReader<TrackParameterData> reader(path);
+  ActsExamples::NamedTupleCsvReader<TrackParameterData> reader(path);
   TrackParameterData d{};
 
   while (reader.read(d)) {

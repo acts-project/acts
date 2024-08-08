@@ -18,8 +18,8 @@ target_link_libraries(
 # message(STATUS "IO HANDLERS: ${PODIO_IO_HANDLERS}")
 
 PODIO_GENERATE_DATAMODEL(
-  ActsPodioEdm 
-  ${CMAKE_CURRENT_LIST_DIR}/edm.yml 
+  ActsPodioEdm
+  ${CMAKE_CURRENT_LIST_DIR}/edm.yml
   headers
   sources
   IO_BACKEND_HANDLERS ${PODIO_IO_HANDLERS}
@@ -27,9 +27,9 @@ PODIO_GENERATE_DATAMODEL(
 
 PODIO_ADD_DATAMODEL_CORE_LIB(ActsPodioEdm "${headers}" "${sources}")
 
-target_link_libraries(ActsPluginPodio PUBLIC 
-  ActsPodioEdm 
-  ROOT::Core 
+target_link_libraries(ActsPluginPodio PUBLIC
+  ActsPodioEdm
+  ROOT::Core
   podio::podio
   podio::podioRootIO
 )
@@ -76,4 +76,3 @@ if (${ROOT_VERSION} GREATER 6)
       "${CMAKE_CURRENT_BINARY_DIR}/libActsPodioEdmDict_rdict.pcm"
       DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT dev)
 endif()
-

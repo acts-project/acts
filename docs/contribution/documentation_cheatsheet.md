@@ -46,7 +46,7 @@ A link to {class}`Acts::Volume`.
 
 ## Pull in API documentation
 
-* Code: 
+* Code:
 
 ```text
 :::{doxygenclass} Acts::Volume
