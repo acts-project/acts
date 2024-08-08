@@ -15,6 +15,7 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
@@ -25,8 +26,6 @@
 #include <stdexcept>
 #include <variant>
 #include <vector>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
 
@@ -64,22 +63,24 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
   std::string pathMeasurementSimHitMap = perEventFilepath(
       m_cfg.outputDir, "measurement-simhit-map.csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<MeasurementData> writerMeasurements(
+  ActsExamples::NamedTupleCsvWriter<MeasurementData> writerMeasurements(
       pathMeasurements, m_cfg.outputPrecision);
 
-  std::optional<dfe::NamedTupleCsvWriter<CellData>> writerCells{std::nullopt};
+  std::optional<ActsExamples::NamedTupleCsvWriter<CellData>> writerCells{
+      std::nullopt};
   if (!m_cfg.inputClusters.empty()) {
     ACTS_VERBOSE(
         "Set up writing of clusters from collection: " << m_cfg.inputClusters);
     clusters = m_inputClusters(ctx);
     std::string pathCells =
         perEventFilepath(m_cfg.outputDir, "cells.csv", ctx.eventNumber);
-    writerCells =
-        dfe::NamedTupleCsvWriter<CellData>{pathCells, m_cfg.outputPrecision};
+    writerCells = ActsExamples::NamedTupleCsvWriter<CellData>{
+        pathCells, m_cfg.outputPrecision};
   }
 
-  dfe::NamedTupleCsvWriter<MeasurementSimHitLink> writerMeasurementSimHitMap(
-      pathMeasurementSimHitMap, m_cfg.outputPrecision);
+  ActsExamples::NamedTupleCsvWriter<MeasurementSimHitLink>
+      writerMeasurementSimHitMap(pathMeasurementSimHitMap,
+                                 m_cfg.outputPrecision);
 
   MeasurementData meas;
   CellData cell;
