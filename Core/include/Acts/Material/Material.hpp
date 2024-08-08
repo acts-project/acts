@@ -74,7 +74,7 @@ class Material {
   /// Construct a vacuum representation.
   Material() = default;
   /// Construct from an encoded parameters vector.
-  Material(const ParametersVector& parameters);
+  explicit Material(const ParametersVector& parameters);
 
   Material(Material&& mat) = default;
   Material(const Material& mat) = default;
