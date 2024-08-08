@@ -108,7 +108,7 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
 /// return a unique vector to the tracking geometry
 template <typename detector_element_t>
 std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
-    const typename detector_element_t::ContextType& gctxIn,
+    const Acts::GeometryContext& gctxIn,
     std::vector<std::vector<std::shared_ptr<detector_element_t>>>&
         detectorStore,
     std::size_t level,

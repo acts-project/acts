@@ -3,12 +3,17 @@ add_library(
   src/TelescopeDetector.cpp
   src/TelescopeDetectorElement.cpp
   src/BuildTelescopeDetector.cpp)
+
 target_include_directories(
   ActsExamplesDetectorTelescope
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
 target_link_libraries(
   ActsExamplesDetectorTelescope
-  PUBLIC ActsCore ActsExamplesFramework)
+  PUBLIC
+    ActsCore
+    ActsExamplesFramework
+    ActsExamplesDetectorCommons)
 
 install(
   TARGETS ActsExamplesDetectorTelescope
