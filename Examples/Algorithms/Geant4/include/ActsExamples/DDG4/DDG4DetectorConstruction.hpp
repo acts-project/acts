@@ -24,7 +24,7 @@ class Detector;
 namespace ActsExamples {
 
 namespace DD4hep {
-class DD4hepDetector;
+struct DD4hepDetector;
 }
 
 /// Construct the Geant4 detector from a DD4hep description.
