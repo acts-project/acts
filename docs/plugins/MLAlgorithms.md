@@ -16,12 +16,12 @@ The `OnnxRuntimeBase` class implements the inference of a standard MLP via ONNX.
 The goal of the ambiguity solver is to remove duplicated and fake tracks that remain after the CKF. To perform this cleaning, this algorithm works in three steps:
 
 - Clustering: tracks are clustered together, one cluster ~ one truth particle
-- Ranking: tracks in each cluster are scored, the best one is kept 
+- Ranking: tracks in each cluster are scored, the best one is kept
 - Cleaning: last pass over all the remaining tracks to remove duplicate and fake (not implemented yet)
 
 ### Clustering
 
-The clustering is implemented with the `clusterTracks` function. Its input is a multimap of a pair of track IDs and a vector of measurement IDs. The multimap uses the number of measurements associated with the tracks as a key, which is only a trick to sort the tracks efficiently by the number of measurements. Then, for each track, starting with the one with the most measurements, we check if a cluster shares a hit with the track. If not, we create a new cluster and associate all the hits of the current track with the cluster. If yes, the track is added to that cluster (note that the hits associated with the cluster don’t change here). After looping over all the tracks, each should have been associated with a cluster.   
+The clustering is implemented with the `clusterTracks` function. Its input is a multimap of a pair of track IDs and a vector of measurement IDs. The multimap uses the number of measurements associated with the tracks as a key, which is only a trick to sort the tracks efficiently by the number of measurements. Then, for each track, starting with the one with the most measurements, we check if a cluster shares a hit with the track. If not, we create a new cluster and associate all the hits of the current track with the cluster. If yes, the track is added to that cluster (note that the hits associated with the cluster don’t change here). After looping over all the tracks, each should have been associated with a cluster.
 
 ### Ranking
 
@@ -48,7 +48,7 @@ While the ambiguity solver can significantly improve the cleanliness of the outp
 It uses the same three steps as the ML ambiguity solver but with seed instead of tracks:
 
 - Clustering: seeds are clustered together, one cluster ~ one truth particle
-- Ranking: seeds in each cluster are scored, and the best one is kept 
+- Ranking: seeds in each cluster are scored, and the best one is kept
 - Cleaning: last pass over all the remaining scores to remove fake
 
 ### Clustering

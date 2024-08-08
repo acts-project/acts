@@ -16,4 +16,3 @@ While it is used in ACTS-internal applications such as material mapping, it is n
 members: kVolumeMask,kBoundaryMask,kLayerMask,kApproachMask,kSensitiveMask,kExtraMask
 ---
 :::
-

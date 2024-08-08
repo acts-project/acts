@@ -130,7 +130,7 @@ def runTruthTrackingKalman(
             inputTrackParticleMatching="track_particle_matching",
             inputSimHits="simhits",
             inputMeasurementSimHitsMap="measurement_simhits_map",
-            filePath=str(outputDir / "trackstates_fitter.root"),
+            filePath=str(outputDir / "trackstates_kf.root"),
         )
     )
 
@@ -140,7 +140,7 @@ def runTruthTrackingKalman(
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
             inputTrackParticleMatching="track_particle_matching",
-            filePath=str(outputDir / "tracksummary_fitter.root"),
+            filePath=str(outputDir / "tracksummary_kf.root"),
         )
     )
 
@@ -150,7 +150,7 @@ def runTruthTrackingKalman(
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
             inputTrackParticleMatching="track_particle_matching",
-            filePath=str(outputDir / "performance_track_fitter.root"),
+            filePath=str(outputDir / "performance_kf.root"),
         )
     )
 
