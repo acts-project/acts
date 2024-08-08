@@ -150,7 +150,6 @@ ProcessCode CKFPerformanceWriter::finalize() {
 ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
                                          const ConstTrackContainer& tracks) {
   // The number of majority particle hits and fitted track parameters
-  using RecoTrackInfo = std::pair<std::size_t, Acts::BoundTrackParameters>;
   using Acts::VectorHelpers::perp;
 
   // Read truth input collections

@@ -751,9 +751,11 @@ void propagator_instatiation_test_function() {
       decltype(propagator.template propagate<decltype(pars), decltype(options),
                                              MultiStepperSurfaceReached>(
           pars, *surface, options));
+  static_assert(!std::is_same_v<type_a, void>);
 
   // Instantiate without target
-  using tybe_b = decltype(propagator.propagate(pars, options));
+  using type_b = decltype(propagator.propagate(pars, options));
+  static_assert(!std::is_same_v<type_b, void>);
 }
 
 BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {

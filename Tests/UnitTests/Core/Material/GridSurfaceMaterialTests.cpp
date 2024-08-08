@@ -62,7 +62,6 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial_invalid_bound2Grid_Unconnected) {
 
   using EqBound = Acts::GridAxisGenerators::EqBound;
   using EqGrid = EqBound::grid_type<std::size_t>;
-  using Point = EqGrid::point_t;
 
   EqBound eqBound{{0., 5.}, 5};
   EqGrid eqGrid{eqBound()};
@@ -86,7 +85,6 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial_invalid_global2Grid_Unconnected) {
 
   using EqBound = Acts::GridAxisGenerators::EqBound;
   using EqGrid = EqBound::grid_type<std::size_t>;
-  using Point = EqGrid::point_t;
 
   EqBound eqBound{{0., 5.}, 5};
   EqGrid eqGrid{eqBound()};
