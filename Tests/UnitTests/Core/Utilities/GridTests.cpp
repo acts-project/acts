@@ -20,6 +20,7 @@
 #include <array>
 #include <cstddef>
 #include <set>
+#include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -28,6 +29,8 @@
 using namespace Acts::detail;
 
 namespace Acts::Test {
+
+BOOST_AUTO_TEST_SUITE(GridTests)
 
 BOOST_AUTO_TEST_CASE(grid_test_1d_equidistant) {
   using Point = std::array<double, 1>;
@@ -1335,4 +1338,49 @@ BOOST_AUTO_TEST_CASE(grid_full_conversion) {
   BOOST_CHECK_EQUAL(g1ConvertedInt.atPosition(Point({{0.3}})), 1);
   BOOST_CHECK_EQUAL(g1ConvertedInt.atPosition(Point({{0.6}})), 2);
 }
+
+BOOST_AUTO_TEST_CASE(Output) {
+  Axis a{AxisOpen, 0.0, 1.0, 10u};
+  Axis b{AxisBound, {1, 2, 3}};
+
+  Grid g(Type<double>, std::move(a), std::move(b));
+
+  std::stringstream ss;
+  ss << g;
+  BOOST_CHECK_EQUAL(
+      ss.str(),
+      "Axis<Equidistant, Open>(0, 1, 10), Axis<Variable, Bound>(1, 2, 3)");
+
+  const IGrid& ig = g;
+
+  ss.str("");
+
+  ss << ig;
+
+  BOOST_CHECK_EQUAL(
+      ss.str(),
+      "Axis<Equidistant, Open>(0, 1, 10), Axis<Variable, Bound>(1, 2, 3)");
+}
+
+BOOST_AUTO_TEST_CASE(Equality) {
+  Axis a{AxisOpen, 0.0, 1.0, 10u};
+  Axis b{AxisBound, {1, 2, 3}};
+  Axis c{AxisClosed, {1, 2, 5}};
+
+  Grid ab{Type<double>, a, b};
+  Grid ac{Type<double>, a, c};
+
+  BOOST_CHECK_EQUAL(ab, ab);
+  BOOST_CHECK_EQUAL(ac, ac);
+  BOOST_CHECK_NE(ab, ac);
+
+  const IGrid& iab = ab;
+  const IGrid& iac = ac;
+
+  BOOST_CHECK_EQUAL(iab, iab);
+  BOOST_CHECK_EQUAL(iac, iac);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace Acts::Test

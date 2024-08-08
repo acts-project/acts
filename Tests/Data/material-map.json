@@ -129,7 +129,7 @@
                         ],
                         "mapMaterial": true,
                         "type": "interpolated3D"
-                    }  
+                    }
                 }
             }
         ]
@@ -191,7 +191,7 @@
                                     "thickness": 5.19966459274292
                                 }
                             ]
-                        ],                        
+                        ],
                         "mapMaterial": true,
                         "mappingType": "Default",
                         "type": "binned"
@@ -249,7 +249,7 @@
                                     "thickness": 5.167008399963379
                                 }
                             ]
-                        ],                          
+                        ],
                         "mapMaterial": true,
                         "mappingType": "Default",
                         "type": "binned"

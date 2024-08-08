@@ -128,6 +128,8 @@ class TestAxis : public IAxis {
   ActsScalar getMax() const final { return 1.; }
 
   std::size_t getNBins() const final { return 1; };
+
+  void toStream(std::ostream& os) const final { os << "TextAxis"; }
 };
 
 class MultiGrid1D {

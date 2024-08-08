@@ -318,6 +318,16 @@ if args.reco:
             if args.ttbar
             else TruthSeedRanges()
         ),
+        initialSigmas=[
+            1 * u.mm,
+            1 * u.mm,
+            1 * u.degree,
+            1 * u.degree,
+            0.1 * u.e / u.GeV,
+            1 * u.ns,
+        ],
+        initialSigmaPtRel=0.1,
+        initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
