@@ -269,17 +269,6 @@ class Navigator {
           m_cfg.trackingGeometry->highestTrackingVolume();
     }
 
-    // We set the current surface to the start surface
-    // for eventual post-update action, e.g. material integration
-    // or collection when leaving a surface at the start of
-    // an extrapolation process
-    state.navigation.currentSurface = state.navigation.startSurface;
-    if (state.navigation.currentSurface != nullptr) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Current surface set to start surface "
-                   << state.navigation.currentSurface->geometryId());
-    }
-
     // Fast Navigation initialization for start condition:
     // - short-cut through object association, saves navigation in the
     // - geometry and volume tree search for the lowest volume
@@ -288,18 +277,26 @@ class Navigator {
       ACTS_VERBOSE(
           volInfo(state)
           << "Fast start initialization through association from Surface.");
+
       // assign the current layer and volume by association
       state.navigation.startLayer =
           state.navigation.startSurface->associatedLayer();
+      state.navigation.currentLayer = state.navigation.startLayer;
+
       state.navigation.startVolume =
           state.navigation.startLayer->trackingVolume();
+      state.navigation.currentVolume = state.navigation.startVolume;
     } else if (state.navigation.startVolume != nullptr) {
       ACTS_VERBOSE(
           volInfo(state)
           << "Fast start initialization through association from Volume.");
+
+      state.navigation.currentVolume = state.navigation.startVolume;
+
       state.navigation.startLayer =
           state.navigation.startVolume->associatedLayer(
               state.geoContext, stepper.position(state.stepping));
+      state.navigation.currentLayer = state.navigation.startLayer;
     } else {
       ACTS_VERBOSE(volInfo(state)
                    << "Slow start initialization through search.");
@@ -309,26 +306,31 @@ class Navigator {
                    << toString(stepper.position(state.stepping))
                    << " and direction "
                    << toString(stepper.direction(state.stepping)));
+
       state.navigation.startVolume =
           m_cfg.trackingGeometry->lowestTrackingVolume(
               state.geoContext, stepper.position(state.stepping));
-      state.navigation.startLayer =
-          state.navigation.startVolume != nullptr
-              ? state.navigation.startVolume->associatedLayer(
-                    state.geoContext, stepper.position(state.stepping))
-              : nullptr;
+      state.navigation.currentVolume = state.navigation.startVolume;
+
       if (state.navigation.startVolume != nullptr) {
-        ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
+        state.navigation.startLayer =
+            state.navigation.startVolume->associatedLayer(
+                state.geoContext, stepper.position(state.stepping));
+        state.navigation.currentLayer = state.navigation.startLayer;
       }
     }
 
-    // Set the start volume as current volume
-    state.navigation.currentVolume = state.navigation.startVolume;
-    // Set the start layer as current layer
-    state.navigation.currentLayer = state.navigation.startLayer;
+    if (state.navigation.startVolume != nullptr) {
+      ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
+      assert(state.navigation.startVolume->inside(
+                 stepper.position(state.stepping),
+                 state.options.surfaceTolerance) &&
+             "We did not end up inside the volume.");
+    }
 
     if (state.navigation.startLayer != nullptr) {
-      ACTS_VERBOSE(volInfo(state) << "Start layer to be resolved.");
+      ACTS_VERBOSE(volInfo(state) << "Start layer resolved "
+                                  << state.navigation.startLayer->geometryId());
       // We provide the layer to the resolve surface method in this case
       bool startResolved = resolveSurfaces(state, stepper);
       if (!startResolved &&
@@ -340,6 +342,21 @@ class Navigator {
         state.navigation.navigationBreak = true;
         stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       }
+    }
+
+    // Set the start volume as current volume
+    state.navigation.currentVolume = state.navigation.startVolume;
+    // Set the start layer as current layer
+    state.navigation.currentLayer = state.navigation.startLayer;
+
+    // We set the current surface to the start surface for eventual post-update
+    // action, e.g. material integration or collection when leaving a surface at
+    // the start of an extrapolation process
+    state.navigation.currentSurface = state.navigation.startSurface;
+    if (state.navigation.currentSurface != nullptr) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Current surface set to start surface "
+                   << state.navigation.currentSurface->geometryId());
     }
   }
 
@@ -499,6 +516,10 @@ class Navigator {
           return;
         } else {
           ACTS_VERBOSE(volInfo(state) << "Volume updated.");
+          assert(state.navigation.currentVolume->inside(
+                     stepper.position(state.stepping),
+                     state.options.surfaceTolerance) &&
+                 "We did not end up inside the volume.");
           // Forget the boundary information
           state.navigation.navBoundaries.clear();
           state.navigation.navBoundaryIndex =
