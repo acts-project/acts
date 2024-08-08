@@ -75,7 +75,9 @@ auto DD4hepDetector::finalize(
   return {detector, contextDecorators, detectorElements};
 }
 
-void DD4hepDetector::drop() { geometryService->drop(); }
+void DD4hepDetector::drop() {
+  geometryService->drop();
+}
 
 std::shared_ptr<Acts::DD4hepFieldAdapter> DD4hepDetector::field() const {
   const auto& detector = geometryService->detector();
