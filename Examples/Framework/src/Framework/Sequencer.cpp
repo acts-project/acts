@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <exception>
+#include <fstream>
 #include <functional>
 #include <iterator>
 #include <limits>
@@ -50,8 +51,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/core/demangle.hpp>
-#include <dfe/dfe_io_dsv.hpp>
-#include <dfe/dfe_namedtuple.hpp>
 
 namespace ActsExamples {
 
@@ -390,27 +389,20 @@ inline std::string perEvent(D duration, std::size_t numEvents) {
   return asString(duration / numEvents) + "/event";
 }
 
-// Store timing data
-struct TimingInfo {
-  std::string identifier;
-  double time_total_s = 0;
-  double time_perevent_s = 0;
-
-  DFE_NAMEDTUPLE(TimingInfo, identifier, time_total_s, time_perevent_s);
-};
-
 void storeTiming(const std::vector<std::string>& identifiers,
                  const std::vector<Duration>& durations, std::size_t numEvents,
                  const std::string& path) {
-  dfe::NamedTupleTsvWriter<TimingInfo> writer(path, 4);
+  std::ofstream file(path);
+
+  file << "identifier,time_total_s,time_perevent_s\n";
+
   for (std::size_t i = 0; i < identifiers.size(); ++i) {
-    TimingInfo info;
-    info.identifier = identifiers[i];
-    info.time_total_s =
+    const auto time_total_s =
         std::chrono::duration_cast<Seconds>(durations[i]).count();
-    info.time_perevent_s = info.time_total_s / numEvents;
-    writer.append(info);
+    file << identifiers[i] << "," << time_total_s << ","
+         << time_total_s / numEvents;
   }
+  file << std::endl;
 }
 }  // namespace
 
