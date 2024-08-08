@@ -63,8 +63,8 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   const double thicknessInX0 = thicknessX01 + thicknessX02;
   const double thicknessInL0 = thicknessL01 + thicknessL02;
 
-  const float x0 = static_cast<float>(thickness / thicknessInX0);
-  const float l0 = static_cast<float>(thickness / thicknessInL0);
+  const auto x0 = static_cast<float>(thickness / thicknessInX0);
+  const auto l0 = static_cast<float>(thickness / thicknessInL0);
 
   // assume two slabs of materials with N1,N2 atoms/molecules each with atomic
   // masses A1,A2 and nuclear charges. We have a total of N = N1 + N2
@@ -88,7 +88,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
 
   const double molarWeight1 = molarAmount1 / molarAmount;
   const double molarWeight2 = molarAmount2 / molarAmount;
-  const float ar = static_cast<float>(molarWeight1 * ar1 + molarWeight2 * ar2);
+  const auto ar = static_cast<float>(molarWeight1 * ar1 + molarWeight2 * ar2);
 
   // In the case of the atomic number, its main use is the computation
   // of the mean excitation energy approximated in ATL-SOFT-PUB-2008-003 as :
@@ -118,7 +118,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
 
   // compute average molar density by dividing the total amount-of-substance by
   // the total volume for the same unit area, i.e. volume = totalThickness*1*1
-  const float molarDensity = static_cast<float>(molarAmount / thickness);
+  const auto molarDensity = static_cast<float>(molarAmount / thickness);
 
   return {Material::fromMolarDensity(x0, l0, ar, z, molarDensity),
           static_cast<float>(thickness)};
