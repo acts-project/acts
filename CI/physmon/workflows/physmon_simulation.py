@@ -9,6 +9,7 @@ from acts.examples.simulation import (
     addFatras,
     addGeant4,
     ParticleSelectorConfig,
+    addPythia8,
 )
 
 from physmon_common import makeSetup
@@ -102,6 +103,42 @@ with tempfile.TemporaryDirectory() as temp:
     for file, name in [
         (tp / "fatras" / "particles_simulation.root", "particles_fatras.root"),
         (tp / "geant4" / "particles_simulation.root", "particles_geant4.root"),
+    ]:
+        assert file.exists(), "file not found"
+        shutil.copy(file, setup.outdir / name)
+
+with tempfile.TemporaryDirectory() as temp:
+    s = acts.examples.Sequencer(
+        events=3,
+        numThreads=-1,
+        logLevel=acts.logging.INFO,
+    )
+
+    tp = Path(temp)
+
+    for d in setup.decorators:
+        s.addContextDecorator(d)
+
+    rnd = acts.examples.RandomNumbers(seed=42)
+
+    addPythia8(
+        s,
+        hardProcess=["Top:qqbar2ttbar=on"],
+        npileup=200,
+        vtxGen=acts.examples.GaussianVertexGenerator(
+            mean=acts.Vector4(0, 0, 0, 0),
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
+        ),
+        rnd=rnd,
+        outputDirRoot=tp,
+    )
+
+    s.run()
+    del s
+
+    for file, name in [
+        (tp / "pythia8_particles.root", "particles_ttbar.root"),
+        (tp / "pythia8_vertices.root", "vertices_ttbar.root"),
     ]:
         assert file.exists(), "file not found"
         shutil.copy(file, setup.outdir / name)

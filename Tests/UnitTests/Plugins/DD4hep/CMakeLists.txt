@@ -18,7 +18,7 @@ dd4hep_generate_rootmap(ActsTestsDD4hepFactories)
 
 find_library(dd4hep_core_library DDCore)
 
-if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0") 
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0")
   set(factory_path "$<PATH:GET_PARENT_PATH,$<TARGET_FILE:ActsTestsDD4hepFactories>>")
 else()
   set(factory_path "${CMAKE_CURRENT_BINARY_DIR}")
@@ -34,10 +34,10 @@ if (NOT "${dd4hep_core_library}" STREQUAL "dd4hep_core_library-NOTFOUND")
     add_unittest(${_test} ${_test}Tests.cpp)
     add_dependencies(ActsUnitTest${_test} Components_ActsTestsDD4hepFactories)
     if(APPLE)
-      set_property(TEST ${_test} PROPERTY ENVIRONMENT 
-        "DYLD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:${factory_path}:$ENV{DYLD_LIBRARY_PATH}") 
+      set_property(TEST ${_test} PROPERTY ENVIRONMENT
+        "DYLD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:${factory_path}:$ENV{DYLD_LIBRARY_PATH}")
     else()
-      set_property(TEST ${_test} PROPERTY ENVIRONMENT 
+      set_property(TEST ${_test} PROPERTY ENVIRONMENT
         "LD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:${factory_path}:$ENV{LD_LIBRARY_PATH}")
     endif()
   endforeach()
