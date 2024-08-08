@@ -30,8 +30,8 @@ set( TRACCC_SETUP_COVFIE OFF CACHE BOOL
     "Do not set up Covfie as part of Traccc" ) 
 set( TRACCC_SETUP_DFELIBS OFF CACHE BOOL
     "Do not set up dfelibs as part of Traccc" ) 
-set( TRACCC_SETUP_DETRAY OFF CACHE BOOL
-    "Do not set up Detray as part of Traccc" ) 
+set( TRACCC_SETUP_DETRAY ON CACHE BOOL
+    "Set up Detray as part of Traccc" )
 set( TRACCC_SETUP_ACTS OFF CACHE BOOL
     "Do not set up ACTS as part of Traccc" ) 
 set( TRACCC_SETUP_TBB OFF CACHE BOOL
