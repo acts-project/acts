@@ -203,6 +203,35 @@ BOOST_AUTO_TEST_CASE(PerigeeRoundTripTests) {
   BOOST_CHECK_EQUAL(perigeeTest->geometryId(), perigeeRef->geometryId());
 }
 
+BOOST_AUTO_TEST_CASE(CylinderToJsonPlainPointerReference) {
+  Transform3 trf(Transform3::Identity() * Translation3(0., 0., -7.));
+  auto tube = std::make_shared<CylinderBounds>(5., 20.);
+  auto cylinderRef = Surface::makeShared<CylinderSurface>(trf, tube);
+  cylinderRef->assignGeometryId(GeometryIdentifier(11u));
+
+  const Surface* surf = cylinderRef.get();
+
+  // Test a cylinder
+  nlohmann::json cylinderOut = surf;
+  out.open("CylinderSurfacePlainPointer.json");
+  out << cylinderOut.dump(2);
+  out.close();
+
+  auto in = std::ifstream("CylinderSurfacePlainPointer.json",
+                          std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(in.good());
+  nlohmann::json cylinderIn;
+  in >> cylinderIn;
+  in.close();
+
+  auto cylinderTest = SurfaceJsonConverter::fromJson(cylinderIn);
+
+  BOOST_CHECK(
+      cylinderTest->transform(gctx).isApprox(cylinderRef->transform(gctx)));
+  BOOST_CHECK_EQUAL(cylinderTest->geometryId(), cylinderRef->geometryId());
+  BOOST_CHECK_EQUAL(cylinderTest->bounds(), cylinderRef->bounds());
+}
+
 BOOST_AUTO_TEST_CASE(SurfacesDetrayTests) {
   Transform3 trf(Transform3::Identity() * Translation3(0., 0., -7.));
   auto trapezoid = std::make_shared<TrapezoidBounds>(2., 3., 4.);
