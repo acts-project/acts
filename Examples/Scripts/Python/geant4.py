@@ -76,5 +76,5 @@ if "__main__" == __name__:
         [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
         runGeant4(detector, detector, field, Path.cwd()).run()
     else:
-        detector, trackingGeometry, decorators, contextManager = getOpenDataDetector()
+        detector, trackingGeometry, decorators = getOpenDataDetector()
         runGeant4(detector, trackingGeometry, field, Path.cwd()).run()

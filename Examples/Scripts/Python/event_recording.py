@@ -76,7 +76,7 @@ def runEventRecording(detectorConstructionFactory, outputDir, s=None):
 
 
 if "__main__" == __name__:
-    detector, trackingGeometry, decorators, contextManager = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector()
 
     detectorConstructionFactory = (
         acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)

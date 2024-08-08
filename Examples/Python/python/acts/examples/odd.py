@@ -85,31 +85,28 @@ def getOpenDataDetector(
 
         return geoid
 
+    dd4hepConfig = acts.examples.dd4hep.DD4hepGeometryService.Config(
+        xmlFileNames=[str(odd_xml)],
+        logLevel=customLogLevel(),
+        dd4hepLogLevel=customLogLevel(),
+        geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
+    )
+    detector = acts.examples.dd4hep.DD4hepDetector()
+
     if mdecorator is None:
         mdecorator = acts.examples.RootMaterialDecorator(
             fileName=str(odd_dir / "data/odd-material-maps.root"),
             level=customLogLevel(minLevel=acts.logging.WARNING),
         )
 
-    dd4hepConfig = acts.examples.dd4hep.DD4hepDetector.Config(
-        xmlFileNames=[str(odd_xml)],
-        logLevel=customLogLevel(),
-        dd4hepLogLevel=customLogLevel(),
-        geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
-        materialDecorator=mdecorator,
-    )
-    detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
+    trackingGeometry, deco = detector.finalize(dd4hepConfig, mdecorator)
 
-    trackingGeometry, decorators, _ = detector.trackingGeometry()
-
-    class ContextManager:
+    class DetectorAdapter:
         def __init__(self, detector):
-            self.detector = detector
+            self.__detector = detector
         def __enter__(self):
             return self
         def __exit__(self, exc_type, exc_val, exc_tb):
-            self.detector.drop()
+            return self.__detector.drop()
 
-    contextManager = ContextManager(detector)
-
-    return detector, trackingGeometry, decorators, contextManager
+    return DetectorAdapter(detector), trackingGeometry, deco

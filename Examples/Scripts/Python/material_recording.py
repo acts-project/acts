@@ -104,7 +104,7 @@ def main():
 
     detectorConstructionFactory = None
     if args.input == "":
-        detector, trackingGeometry, decorators, contextManager = getOpenDataDetector()
+        detector, trackingGeometry, decorators = getOpenDataDetector()
 
         detectorConstructionFactory = (
             acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)

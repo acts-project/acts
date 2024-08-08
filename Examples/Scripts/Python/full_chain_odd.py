@@ -161,7 +161,7 @@ oddDigiConfig = (
 oddSeedingSel = geoDir / "config/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector, trackingGeometry, decorators, contextManager = getOpenDataDetector(
+detector, trackingGeometry, decorators = getOpenDataDetector(
     odd_dir=geoDir, mdecorator=oddMaterialDeco
 )
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))

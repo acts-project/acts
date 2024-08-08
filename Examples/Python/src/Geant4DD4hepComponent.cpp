@@ -30,7 +30,7 @@ PYBIND11_MODULE(ActsPythonBindingsDDG4, m) {
       m, "DDG4DetectorConstructionFactory")
       .def(py::init<std::shared_ptr<DD4hep::DD4hepDetector>,
                     std::vector<std::shared_ptr<RegionCreator>>>(),
-           py::arg("geometryService"),
+           py::arg("detector"),
            py::arg("regionCreators") =
                std::vector<std::shared_ptr<RegionCreator>>());
 }
