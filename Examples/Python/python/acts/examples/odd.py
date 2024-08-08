@@ -91,26 +91,27 @@ def getOpenDataDetector(
             level=customLogLevel(minLevel=acts.logging.WARNING),
         )
 
-    dd4hepConfig = acts.examples.dd4hep.DD4hepGeometryService.Config(
+    dd4hepConfig = acts.examples.dd4hep.DD4hepDetector.Config(
         xmlFileNames=[str(odd_xml)],
         logLevel=customLogLevel(),
         dd4hepLogLevel=customLogLevel(),
         geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
-        matDecorator=mdecorator,
+        materialDecorator=mdecorator,
     )
-    detector = acts.examples.dd4hep.DD4hepGeometryService(dd4hepConfig)
+    detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
 
-    trackingGeometry = detector.trackingGeometry()
-    decorators = detector.contextDecorators()
+    trackingGeometry, decorators, _ = detector.trackingGeometry()
 
     class ContextManager:
         def __init__(self, detector):
             self.detector = detector
 
         def __enter__(self):
+            print("!!!!!!!!!!!!!!!! Entering context !!!!!!!!!!!!!!!!")
             return self
 
-        def __exit__(self):
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            print("!!!!!!!!!!!!!!!! Exiting context !!!!!!!!!!!!!!!!!")
             self.detector.drop()
 
     contextManager = ContextManager(detector)

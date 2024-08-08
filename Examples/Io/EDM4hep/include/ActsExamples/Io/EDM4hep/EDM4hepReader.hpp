@@ -27,7 +27,7 @@
 namespace ActsExamples {
 
 namespace DD4hep {
-class DD4hepGeometryService;
+class DD4hepDetector;
 }
 
 /// Read particles from EDM4hep.
@@ -59,7 +59,7 @@ class EDM4hepReader final : public IReader {
     std::string graphvizOutput = "";
 
     /// DD4hep detector for cellID resolution.
-    std::shared_ptr<DD4hep::DD4hepGeometryService> dd4hepGeometryService;
+    std::shared_ptr<DD4hep::DD4hepDetector> dd4hepDetector;
 
     /// Tracking geometry for cellID resolution.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;

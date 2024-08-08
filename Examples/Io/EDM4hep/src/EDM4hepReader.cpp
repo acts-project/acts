@@ -12,7 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -325,8 +325,7 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
           [&](std::uint64_t cellId) {
             ACTS_VERBOSE("CellID: " << cellId);
 
-            const auto& vm =
-                m_cfg.dd4hepGeometryService->detector().volumeManager();
+            const auto& vm = m_cfg.dd4hepDetector->detector().volumeManager();
 
             const auto detElement = vm.lookupDetElement(cellId);
 

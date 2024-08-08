@@ -2,6 +2,7 @@ import inspect
 import functools
 from typing import Optional, Callable, Dict, Any
 from pathlib import Path
+from contextlib import nullcontext
 
 import acts
 
@@ -115,7 +116,7 @@ def _detector_create(cls, config_class=None):
         detector = cls(cfg)
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
-        contextManager = None
+        contextManager = nullcontext()
         return detector, trackingGeometry, decorators, contextManager
 
     return create

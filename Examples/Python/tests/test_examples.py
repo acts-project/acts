@@ -524,12 +524,6 @@ def test_event_recording(tmp_path):
 def test_truth_tracking_kalman(
     tmp_path, assert_root_hash, revFiltMomThresh, directNavigation, detector_config
 ):
-    from truth_tracking_kalman import runTruthTrackingKalman
-
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
-    seq = Sequencer(events=10, numThreads=1)
-
     root_files = [
         ("trackstates_fitter.root", "trackstates", 19),
         ("tracksummary_fitter.root", "tracksummary", 10),
@@ -540,7 +534,14 @@ def test_truth_tracking_kalman(
         fp = tmp_path / fn
         assert not fp.exists()
 
+    print("with")
     with detector_config.contextManager:
+        from truth_tracking_kalman import runTruthTrackingKalman
+
+        field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+        seq = Sequencer(events=10, numThreads=1)
+
         runTruthTrackingKalman(
             trackingGeometry=detector_config.trackingGeometry,
             field=field,
@@ -552,6 +553,7 @@ def test_truth_tracking_kalman(
         )
 
         seq.run()
+    print("done")
 
     for fn, tn, ee in root_files:
         fp = tmp_path / fn

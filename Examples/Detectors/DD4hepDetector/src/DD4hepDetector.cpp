@@ -6,11 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -27,22 +29,37 @@ class TGeoNode;
 
 namespace ActsExamples::DD4hep {
 
-DD4hepGeometryService::DD4hepGeometryService(
-    const DD4hepGeometryService::Config& cfg)
-    : m_cfg(cfg),
-      m_logger{Acts::getDefaultLogger("DD4hepGeometryService", cfg.logLevel)} {
+DD4hepDetector::DD4hepDetector(const DD4hepDetector::Config& cfg)
+    : DetectorCommons::Detector(
+          Acts::getDefaultLogger("DD4hepDetector", cfg.logLevel)),
+      m_cfg(cfg) {
   if (m_cfg.xmlFileNames.empty()) {
     throw std::invalid_argument("Missing DD4hep XML filenames");
   }
 }
 
-DD4hepGeometryService::~DD4hepGeometryService() {
-  if (m_detector != nullptr) {
-    m_detector->destroyInstance();
+dd4hep::Detector& DD4hepDetector::DD4hepDetector::dd4hepDetector() {
+  if (m_detector == nullptr) {
+    buildDD4hepGeometry();
   }
+  return *m_detector;
 }
 
-ActsExamples::ProcessCode DD4hepGeometryService::buildDD4hepGeometry() {
+dd4hep::DetElement& DD4hepDetector::dd4hepGeometry() {
+  if (!m_geometry) {
+    buildDD4hepGeometry();
+  }
+  return m_geometry;
+}
+
+TGeoNode& DD4hepDetector::tgeoGeometry() {
+  if (!m_geometry) {
+    buildDD4hepGeometry();
+  }
+  return *m_geometry.placement().ptr();
+}
+
+void DD4hepDetector::buildDD4hepGeometry() {
   const int old_gErrorIgnoreLevel = gErrorIgnoreLevel;
   switch (m_cfg.dd4hepLogLevel) {
     case Acts::Logging::Level::VERBOSE:
@@ -75,7 +92,7 @@ ActsExamples::ProcessCode DD4hepGeometryService::buildDD4hepGeometry() {
     std::cout.setstate(std::ios_base::failbit);
   }
 
-  m_detector = &dd4hep::Detector::getInstance();
+  m_detector = dd4hep::Detector::make_unique(m_cfg.name);
   for (auto& file : m_cfg.xmlFileNames) {
     m_detector->fromCompact(file.c_str());
   }
@@ -86,69 +103,19 @@ ActsExamples::ProcessCode DD4hepGeometryService::buildDD4hepGeometry() {
   // restore the logging
   gErrorIgnoreLevel = old_gErrorIgnoreLevel;
   std::cout.clear();
-
-  return ActsExamples::ProcessCode::SUCCESS;
 }
 
-dd4hep::Detector& DD4hepGeometryService::DD4hepGeometryService::detector() {
-  if (m_detector == nullptr) {
-    buildDD4hepGeometry();
-  }
-  return *m_detector;
-}
-
-dd4hep::DetElement& DD4hepGeometryService::geometry() {
-  if (!m_geometry) {
-    buildDD4hepGeometry();
-  }
-  return m_geometry;
-}
-
-TGeoNode& DD4hepGeometryService::tgeoGeometry() {
-  if (!m_geometry) {
-    buildDD4hepGeometry();
-  }
-  return *m_geometry.placement().ptr();
-}
-
-ActsExamples::ProcessCode DD4hepGeometryService::buildTrackingGeometry(
-    const Acts::GeometryContext& gctx) {
-  // Set the tracking geometry
+void DD4hepDetector::buildTrackingGeometry() {
+  Acts::GeometryContext gctx;
   auto logger = Acts::getDefaultLogger("DD4hepConversion", m_cfg.logLevel);
   m_trackingGeometry = Acts::convertDD4hepDetector(
-      geometry(), *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
+      m_geometry, *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
       m_cfg.envelopeR, m_cfg.envelopeZ, m_cfg.defaultLayerThickness,
-      m_cfg.sortDetectors, gctx, m_cfg.matDecorator,
+      m_cfg.sortDetectors, gctx, m_cfg.materialDecorator,
       m_cfg.geometryIdentifierHook);
-  return ActsExamples::ProcessCode::SUCCESS;
 }
 
-std::shared_ptr<const Acts::TrackingGeometry>
-DD4hepGeometryService::trackingGeometry() {
-  Acts::GeometryContext gctx;
-  if (!m_trackingGeometry) {
-    buildTrackingGeometry(gctx);
-  }
-  return m_trackingGeometry;
-}
-
-std::shared_ptr<const Acts::TrackingGeometry>
-DD4hepGeometryService::trackingGeometry(const Acts::GeometryContext& gctx) {
-  if (!m_trackingGeometry) {
-    buildTrackingGeometry(gctx);
-  }
-  return m_trackingGeometry;
-}
-
-DD4hepGeometryService::ContextDecorators
-DD4hepGeometryService::contextDecorators() const {
-  return ContextDecorators{};
-}
-
-void DD4hepGeometryService::drop() {
-  if (m_detector != nullptr) {
-    m_detector->destroyInstance();
-  }
+void DD4hepDetector::drop() {
   m_detector = nullptr;
   m_geometry = dd4hep::DetElement();
   m_trackingGeometry.reset();

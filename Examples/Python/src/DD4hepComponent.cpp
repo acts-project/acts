@@ -14,7 +14,8 @@
 #include "Acts/Plugins/DD4hep/DD4hepIdentifierMapper.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
@@ -36,20 +37,18 @@ using namespace Acts::Python;
 
 PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   {
-    using Config = DD4hep::DD4hepGeometryService::Config;
-    auto s = py::class_<DD4hep::DD4hepGeometryService,
-                        std::unique_ptr<DD4hep::DD4hepGeometryService>>(
-                 m, "DD4hepGeometryService")
-                 .def(py::init<const Config&>())
-                 .def("trackingGeometry",
-                      py::overload_cast<>(
-                          &DD4hep::DD4hepGeometryService::trackingGeometry))
-                 .def("trackingGeometry",
-                      py::overload_cast<const Acts::GeometryContext&>(
-                          &DD4hep::DD4hepGeometryService::trackingGeometry))
-                 .def("contextDecorators",
-                      &DD4hep::DD4hepGeometryService::contextDecorators)
-                 .def("drop", &DD4hep::DD4hepGeometryService::drop);
+    py::class_<Acts::DD4hepDetectorElement, Acts::DetectorElementBase,
+               std::shared_ptr<Acts::DD4hepDetectorElement>>(
+        m, "DD4hepDetectorElement");
+  }
+
+  {
+    using Detector = DD4hep::DD4hepDetector;
+    using Config = Detector::Config;
+
+    auto s = py::class_<Detector, DetectorCommons::Detector,
+                        std::shared_ptr<Detector>>(m, "DD4hepDetector")
+                 .def(py::init<const Config&>());
 
     auto c = py::class_<Config>(s, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
@@ -63,7 +62,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     ACTS_PYTHON_MEMBER(envelopeR);
     ACTS_PYTHON_MEMBER(envelopeZ);
     ACTS_PYTHON_MEMBER(defaultLayerThickness);
-    ACTS_PYTHON_MEMBER(matDecorator);
+    ACTS_PYTHON_MEMBER(materialDecorator);
     ACTS_PYTHON_MEMBER(geometryIdentifierHook);
     ACTS_PYTHON_STRUCT_END();
 
@@ -74,12 +73,6 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     py::class_<Acts::DD4hepFieldAdapter, Acts::MagneticFieldProvider,
                std::shared_ptr<Acts::DD4hepFieldAdapter>>(m,
                                                           "DD4hepFieldAdapter");
-  }
-
-  {
-    py::class_<Acts::DD4hepDetectorElement,
-               std::shared_ptr<Acts::DD4hepDetectorElement>>(
-        m, "DD4hepDetectorElement");
   }
 
   {

@@ -15,6 +15,7 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <functional>
@@ -24,35 +25,21 @@
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
-#include <TGeoNode.h>
 
 class TGeoNode;
-
-namespace dd4hep {
-class Detector;
-}  // namespace dd4hep
-
-namespace Acts {
-class IMaterialDecorator;
-class TrackingGeometry;
-}  // namespace Acts
-
-namespace ActsExamples {
-class IContextDecorator;
-}  // namespace ActsExamples
 
 namespace ActsExamples::DD4hep {
 
 void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det);
 
-/// @class DD4hepGeometryService
+/// @class DD4hepDetector
 ///
-/// @brief service creating geometries from dd4hep input
+/// @brief geometries from dd4hep input
 ///
-/// The DD4hepGeometryService creates the DD4hep, the TGeo and the ACTS
+/// The DD4hepDetector creates the DD4hep, the TGeo and the ACTS
 /// TrackingGeometry from DD4hep xml input. The geometries are created only on
 /// demand.
-class DD4hepGeometryService {
+class DD4hepDetector : public DetectorCommons::Detector {
  public:
   /// @brief The context decorators
   using ContextDecorators =
@@ -90,59 +77,42 @@ class DD4hepGeometryService {
     std::function<void(std::vector<dd4hep::DetElement>& detectors)>
         sortDetectors = sortFCChhDetElements;
     /// Material decorator
-    std::shared_ptr<const Acts::IMaterialDecorator> matDecorator;
+    std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
 
     /// Optional geometry identifier hook to be used during closure
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<const Acts::GeometryIdentifierHook>();
   };
 
-  DD4hepGeometryService(const Config& cfg);
-  ~DD4hepGeometryService();
+  explicit DD4hepDetector(const Config& cfg);
 
   /// Interface method to access to the DD4hep geometry
-  dd4hep::Detector& detector();
+  dd4hep::Detector& dd4hepDetector();
 
   /// Interface method to access the DD4hep geometry
   /// @return The world DD4hep DetElement
-  dd4hep::DetElement& geometry();
+  dd4hep::DetElement& dd4hepGeometry();
 
   /// Interface method to Access the TGeo geometry
   /// @return The world TGeoNode (physical volume)
   TGeoNode& tgeoGeometry();
 
-  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry();
-
-  /// Interface method to access the ACTS TrackingGeometry
-  ///
-  /// @param gctx is the geometry context object
-  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry(
-      const Acts::GeometryContext& gctx);
-
-  ContextDecorators contextDecorators() const;
-
-  void drop();
+  void drop() final;
 
  private:
   /// Private method to initiate building of the DD4hep geometry
-  ActsExamples::ProcessCode buildDD4hepGeometry();
+  void buildDD4hepGeometry();
 
-  /// Private method to initiate building of the ACTS tracking geometry
-  ActsExamples::ProcessCode buildTrackingGeometry(
-      const Acts::GeometryContext& gctx);
+  void buildTrackingGeometry() final;
 
   /// The config class
   Config m_cfg;
   /// Pointer to the interface to the DD4hep geometry
-  dd4hep::Detector* m_detector = nullptr;
+  std::unique_ptr<dd4hep::Detector> m_detector;
   /// The world DD4hep DetElement
   dd4hep::DetElement m_geometry;
   /// The ACTS TrackingGeometry
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
-
-  const Acts::Logger& logger() const { return *m_logger; }
-
-  std::unique_ptr<const Acts::Logger> m_logger;
 };
 
 }  // namespace ActsExamples::DD4hep

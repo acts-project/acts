@@ -16,9 +16,9 @@ from acts._adapter import _patch_config, _detector_create
 from acts import ActsPythonBindingsDD4hep
 
 _patch_config(ActsPythonBindingsDD4hep)
-ActsPythonBindingsDD4hep.DD4hepGeometryService.create = _detector_create(
-    ActsPythonBindingsDD4hep.DD4hepGeometryService,
-    ActsPythonBindingsDD4hep.DD4hepGeometryService.Config,
+ActsPythonBindingsDD4hep.DD4hepDetector.create = _detector_create(
+    ActsPythonBindingsDD4hep.DD4hepDetector,
+    ActsPythonBindingsDD4hep.DD4hepDetector.Config,
 )
 
 from acts.ActsPythonBindingsDD4hep import *
