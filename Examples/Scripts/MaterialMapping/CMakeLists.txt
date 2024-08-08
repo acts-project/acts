@@ -5,4 +5,3 @@ install(
   TARGETS
   ActsAnalysisMaterialComposition
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
