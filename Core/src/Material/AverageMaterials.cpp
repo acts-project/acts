@@ -104,10 +104,12 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   const double thicknessWeight1 = static_cast<double>(slab1.thickness()) / thickness;
   const double thicknessWeight2 = static_cast<double>(slab2.thickness()) / thickness;
   float z = 0.f;
-  if (mat1.Z() != 0.f && mat2.Z() != 0) {
-    z = exp(thicknessWeight1 * log(mat1.Z()) +
-            thicknessWeight2 * log(mat2.Z()));
+  if (mat1.Z() != 0.f && mat2.Z() != 0.f) {
+    std::cout << "DEBUG exp-thickness" << std::endl;
+    z = std::exp(thicknessWeight1 * std::log(static_cast<double>(mat1.Z())) +
+            thicknessWeight2 * std::log(static_cast<double>(mat2.Z())));
   } else {
+    std::cout << "DEBUG lin-thickness" << std::endl;
     z = static_cast<float>(thicknessWeight1 * static_cast<double>(mat1.Z()) + thicknessWeight2 * static_cast<double>(mat2.Z()));
   }
 
