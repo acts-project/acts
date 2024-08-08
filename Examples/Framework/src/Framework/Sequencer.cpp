@@ -399,6 +399,14 @@ struct TimingInfo {
   DFE_NAMEDTUPLE(TimingInfo, identifier, time_total_s, time_perevent_s);
 };
 
+// struct to store timing data
+struct EventTimingInfo {
+  std::string identifier;
+  double time_s = 0;
+  int eventId = 0;
+  DFE_NAMEDTUPLE(EventTimingInfo, identifier, time_s, eventId);
+};
+
 void storeTiming(const std::vector<std::string>& identifiers,
                  const std::vector<Duration>& durations, std::size_t numEvents,
                  const std::string& path) {
@@ -466,9 +474,18 @@ int Sequencer::run() {
     }
   }
 
-  // execute the parallel event loop
+  // loop preparation
   std::atomic<std::size_t> nProcessedEvents = 0;
   std::size_t nTotalEvents = eventsRange.second - eventsRange.first;
+
+  // prepare event timing data
+  const bool enableEventTiming = !m_cfg.outputEventTimingFile.empty();
+  std::vector<EventTimingInfo> eventTimingData;
+  if (enableEventTiming) {
+    eventTimingData.resize(nTotalEvents * names.size());
+  }
+
+  // execute the parallel event loop
   m_taskArena.execute([&] {
     tbbWrap::parallel_for(
         tbb::blocked_range<std::size_t>(eventsRange.first, eventsRange.second),
@@ -548,6 +565,22 @@ int Sequencer::run() {
               context.fpeMonitor = nullptr;
             }
 
+            if (enableEventTiming) {
+              // Collect the event timing data
+              for (std::size_t i = 0; i < names.size(); i++) {
+                std::size_t eventTimingIndex =
+                    nProcessedEvents * names.size() + i;
+
+                EventTimingInfo eventInfo;
+                eventInfo.identifier = names[i];
+                eventInfo.time_s = std::chrono::duration_cast<Seconds>(
+                                       localClocksAlgorithms[i])
+                                       .count();
+                eventInfo.eventId = event;
+                eventTimingData[eventTimingIndex] = eventInfo;
+              }
+            }
+
             nProcessedEvents++;
             if (logger().level() <= Acts::Logging::DEBUG) {
               ACTS_DEBUG("finished event " << event);
@@ -602,6 +635,17 @@ int Sequencer::run() {
 
   if (m_nUnmaskedFpe > 0) {
     return EXIT_FAILURE;
+  }
+
+  if (enableEventTiming) {
+    // Write the data to a file
+    std::string eventTimingPath =
+        joinPaths(m_cfg.outputDir, m_cfg.outputEventTimingFile);
+    dfe::NamedTupleTsvWriter<EventTimingInfo> eventTimingWriter(eventTimingPath,
+                                                                4);
+    for (const EventTimingInfo& info : eventTimingData) {
+      eventTimingWriter.append(info);
+    }
   }
 
   return EXIT_SUCCESS;
