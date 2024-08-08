@@ -111,8 +111,6 @@ class DD4hepDetector : public DetectorCommons::Detector {
   std::unique_ptr<dd4hep::Detector> m_detector;
   /// The world DD4hep DetElement
   dd4hep::DetElement m_geometry;
-  /// The ACTS TrackingGeometry
-  std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
 };
 
 }  // namespace ActsExamples::DD4hep

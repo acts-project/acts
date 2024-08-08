@@ -64,9 +64,9 @@ void addDetector(Context& ctx) {
     using Detector = Generic::GenericDetector;
     using Config = Detector::Config;
 
-    auto gd =
-        py::class_<Detector, std::shared_ptr<Detector>>(mex, "GenericDetector")
-            .def(py::init<const Config&>());
+    auto gd = py::class_<Detector, DetectorCommons::Detector,
+                         std::shared_ptr<Detector>>(mex, "GenericDetector")
+                  .def(py::init<const Config&>());
 
     py::class_<Config>(gd, "Config")
         .def(py::init<>())
@@ -82,8 +82,8 @@ void addDetector(Context& ctx) {
     using Detector = Telescope::TelescopeDetector;
     using Config = Detector::Config;
 
-    auto td = py::class_<Detector, std::shared_ptr<Detector>>(
-                  mex, "TelescopeDetector")
+    auto td = py::class_<Detector, DetectorCommons::Detector,
+                         std::shared_ptr<Detector>>(mex, "TelescopeDetector")
                   .def(py::init<const Config&>());
 
     py::class_<Config>(td, "Config")
@@ -101,9 +101,9 @@ void addDetector(Context& ctx) {
     using Detector = Contextual::AlignedDetector;
     using Config = Detector::Config;
 
-    auto d =
-        py::class_<Detector, std::shared_ptr<Detector>>(mex, "AlignedDetector")
-            .def(py::init<const Config&>());
+    auto d = py::class_<Detector, DetectorCommons::Detector,
+                        std::shared_ptr<Detector>>(mex, "AlignedDetector")
+                 .def(py::init<const Config&>());
 
     auto c = py::class_<Config, Generic::GenericDetector::Config>(d, "Config")
                  .def(py::init<>());
@@ -130,9 +130,9 @@ void addDetector(Context& ctx) {
     using Detector = TGeo::TGeoDetector;
     using Config = Detector::Config;
 
-    auto d =
-        py::class_<Detector, std::shared_ptr<Detector>>(mex, "TGeoDetector")
-            .def(py::init<const Config&>());
+    auto d = py::class_<Detector, DetectorCommons::Detector,
+                        std::shared_ptr<Detector>>(mex, "TGeoDetector")
+                 .def(py::init<const Config&>());
 
     py::class_<Options::Interval>(mex, "Interval")
         .def(py::init<>())

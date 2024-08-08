@@ -105,13 +105,9 @@ def getOpenDataDetector(
     class ContextManager:
         def __init__(self, detector):
             self.detector = detector
-
         def __enter__(self):
-            print("!!!!!!!!!!!!!!!! Entering context !!!!!!!!!!!!!!!!")
             return self
-
         def __exit__(self, exc_type, exc_val, exc_tb):
-            print("!!!!!!!!!!!!!!!! Exiting context !!!!!!!!!!!!!!!!!")
             self.detector.drop()
 
     contextManager = ContextManager(detector)

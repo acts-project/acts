@@ -106,6 +106,10 @@ void DD4hepDetector::buildDD4hepGeometry() {
 }
 
 void DD4hepDetector::buildTrackingGeometry() {
+  if (m_detector == nullptr) {
+    buildDD4hepGeometry();
+  }
+
   Acts::GeometryContext gctx;
   auto logger = Acts::getDefaultLogger("DD4hepConversion", m_cfg.logLevel);
   m_trackingGeometry = Acts::convertDD4hepDetector(
