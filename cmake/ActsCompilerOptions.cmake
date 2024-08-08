@@ -9,7 +9,7 @@ if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Setting default build type: ${CMAKE_BUILD_TYPE}")
 endif()
 
-set(cxx_flags "-Wall -Wextra -Wpedantic -Wshadow -Wno-unused-local-typedefs")
+set(cxx_flags "-Wall -Wextra -Wpedantic -Wshadow -Wzero-as-null-pointer-constant -Wold-style-cast -Wnull-dereference")
 
 # This adds some useful conversion checks like float-to-bool, float-to-int, etc.
 # However, at the moment this is only added to clang builds, since GCC's -Wfloat-conversion
