@@ -139,7 +139,7 @@ inline MaterialSlab ISurfaceMaterial::materialSlab(
   // The plain material properties associated to this bin
   MaterialSlab plainMatProp = materialSlab(lp);
   // Scale if you have material to scale
-  if (plainMatProp.valid()) {
+  if (plainMatProp.isValid()) {
     double scaleFactor = factor(pDir, mStage);
     if (scaleFactor == 0.) {
       return MaterialSlab();
@@ -154,7 +154,7 @@ inline MaterialSlab ISurfaceMaterial::materialSlab(
   // The plain material properties associated to this bin
   MaterialSlab plainMatProp = materialSlab(gp);
   // Scale if you have material to scale
-  if (plainMatProp.valid()) {
+  if (plainMatProp.isValid()) {
     double scaleFactor = factor(pDir, mStage);
     if (scaleFactor == 0.) {
       return MaterialSlab();

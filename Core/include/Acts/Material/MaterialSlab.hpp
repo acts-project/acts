@@ -62,7 +62,7 @@ class MaterialSlab {
   void scaleThickness(float scale);
 
   /// Check if the material is valid, i.e. it is finite and not vacuum.
-  bool valid() const { return m_material.valid() && (0.0f < m_thickness); }
+  bool isValid() const { return m_material.isValid() && (0.0f < m_thickness); }
 
   /// Access the (average) material parameters.
   constexpr const Material& material() const { return m_material; }

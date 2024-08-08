@@ -131,7 +131,7 @@ struct PointwiseMaterialInteraction {
     std::cout << "material: " << slab.material() << std::endl;
 
     // Get the surface material & properties from them
-    return slab.valid();
+    return slab.isValid();
   }
 
   /// @brief This function evaluate the material effects

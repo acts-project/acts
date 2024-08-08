@@ -30,13 +30,13 @@ BOOST_AUTO_TEST_SUITE(Material)
 BOOST_AUTO_TEST_CASE(ConstructVacuum) {
   // default constructor builds invalid material a.k.a. vacuum
   Acts::Material vacuum;
-  BOOST_CHECK(!vacuum.valid());
+  BOOST_CHECK(!vacuum.isValid());
 }
 
 BOOST_AUTO_TEST_CASE(ConstructSomething) {
   // anything with non-zero Ar is a valid material
   auto notVacuum = Acts::Material::fromMolarDensity(1, 2, 3, 4, 5);
-  BOOST_CHECK(notVacuum.valid());
+  BOOST_CHECK(notVacuum.isValid());
 }
 
 BOOST_AUTO_TEST_CASE(Units) {

@@ -183,7 +183,7 @@ struct SimulationActor {
         Acts::MaterialSlab slab =
             surface.surfaceMaterial()->materialSlab(local);
         // again: interact only if there is valid material to interact with
-        if (slab.valid()) {
+        if (slab.isValid()) {
           // adapt material for non-zero incidence
           auto normal = surface.normal(state.geoContext, before.position(),
                                        before.direction());
