@@ -505,26 +505,20 @@ float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab,
 
   // return early in case of vacuum or zero thickness
   if (!slab.isValid()) {
-    std::cout << "return early because of vacuum" << std::endl;
     return 0.0f;
   }
 
   // relative radiation length
   const float xOverX0 = slab.thicknessInX0();
-  std::cout << "THETA0 xOverX0: " << xOverX0 << std::endl;
   // 1/p = q/(pq) = (q/p)/q
   const float momentumInv = std::abs(qOverP / absQ);
-  std::cout << "THETA0 momentumInv: " << momentumInv << std::endl;
   // q²/beta²; a smart compiler should be able to remove the unused computations
   const float q2OverBeta2 = RelativisticQuantities(m, qOverP, absQ).q2OverBeta2;
-  std::cout << "THETA0 q2OverBeta2: " << q2OverBeta2 << std::endl;
 
   // electron or positron
   if (absPdg == PdgParticle::eElectron) {
-    std::cout << "THETA0 electron: " << std::endl;
     return theta0RossiGreisen(xOverX0, momentumInv, q2OverBeta2);
   } else {
-    std::cout << "THETA0 highland: " << std::endl;
     return theta0Highland(xOverX0, momentumInv, q2OverBeta2);
   }
 }
