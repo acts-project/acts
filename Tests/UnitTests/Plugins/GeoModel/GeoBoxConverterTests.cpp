@@ -23,6 +23,8 @@
 #include <GeoModelKernel/GeoTrap.h>
 #include <GeoModelKernel/GeoTrd.h>
 
+#include "GeoModelKernel/GeoVPhysVol.h"
+
 Acts::GeometryContext tContext;
 Acts::RotationMatrix3 idRotation = Acts::RotationMatrix3::Identity();
 Acts::Transform3 idTransform = Acts::Transform3::Identity();
@@ -37,7 +39,7 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   // (BOX object) - XY
   auto boxXY = new GeoBox(100, 200, 2);
   auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
-  auto fphysXY = new GeoFullPhysVol(logXY);
+  auto fphysXY = make_intrusive<GeoFullPhysVol>(logXY);
 
   auto converted = Acts::GeoBoxConverter{}.toSensitiveSurface(*fphysXY);
 
@@ -61,7 +63,7 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   // (BOX object) - YZ
   auto boxYZ = new GeoBox(2, 200, 300);
   auto logYZ = new GeoLogVol("LogVolumeYZ", boxYZ, material);
-  auto fphysYZ = new GeoFullPhysVol(logYZ);
+  auto fphysYZ = make_intrusive<GeoFullPhysVol>(logYZ);
 
   converted = Acts::GeoBoxConverter{}.toSensitiveSurface(*fphysYZ);
 
@@ -87,7 +89,7 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   // (BOX object) - XZ
   auto boxXZ = new GeoBox(400, 2, 300);
   auto logXZ = new GeoLogVol("LogVolumeXZ", boxXZ, material);
-  auto fphysXZ = new GeoFullPhysVol(logXZ);
+  auto fphysXZ = make_intrusive<GeoFullPhysVol>(logXZ);
 
   converted = Acts::GeoBoxConverter{}.toSensitiveSurface(*fphysXZ);
 
