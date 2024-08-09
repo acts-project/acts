@@ -144,8 +144,9 @@ CkfConfig = namedtuple(
         "stripVolumes",
         "maxPixelHoles",
         "maxStripHoles",
+        "trimTracks",
     ],
-    defaults=[15.0, 10, None, None, None, None, None, None, None],
+    defaults=[15.0, 10, None, None, None, None, None, None, None, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -1308,6 +1309,7 @@ def addCKFTracks(
             stripVolumes=ckfConfig.stripVolumes,
             maxPixelHoles=ckfConfig.maxPixelHoles,
             maxStripHoles=ckfConfig.maxStripHoles,
+            trimTracks=ckfConfig.trimTracks,
         ),
     )
     s.addAlgorithm(trackFinder)

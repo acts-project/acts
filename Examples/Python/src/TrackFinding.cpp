@@ -304,7 +304,8 @@ void addTrackFinding(Context& ctx) {
                                magneticField,
                            Logging::Level level) {
                           return Alg::makeTrackFinderFunction(
-                              trackingGeometry, magneticField,
+                              std::move(trackingGeometry),
+                              std::move(magneticField),
                               *Acts::getDefaultLogger("TrackFinding", level));
                         });
 
@@ -333,6 +334,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(stripVolumes);
     ACTS_PYTHON_MEMBER(maxPixelHoles);
     ACTS_PYTHON_MEMBER(maxStripHoles);
+    ACTS_PYTHON_MEMBER(trimTracks);
     ACTS_PYTHON_STRUCT_END();
   }
 
