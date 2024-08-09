@@ -23,10 +23,7 @@ class CylinderSurface;
 class PlaneSurface;
 class DiscSurface;
 
-class GridPortalLink;
 class PortalLinkBase;
-class CompositePortalLink;
-class TrivialPortalLink;
 
 class Portal {
  public:
@@ -45,7 +42,8 @@ class Portal {
 
  private:
   // @TODO: Potentially short circuit the virtual call
-  // using VolumeResolver = Delegate<TrackingVolume*(const Vector3& position)>;
+  // using VolumeResolver = Delegate<const TrackingVolume*(const Vector3&
+  // position)>;
 
   std::shared_ptr<RegularSurface> m_surface;
 
@@ -68,8 +66,6 @@ class PortalLinkBase {
   // @TODO: Does this need boundary tolerance?
   virtual const TrackingVolume* resolveVolume(
       const GeometryContext& gctx, const Vector2& position) const = 0;
-
-  // virtual bool inside(const Vector2& position) const = 0;
 
   static std::unique_ptr<PortalLinkBase> merge(
       const std::shared_ptr<PortalLinkBase>& a,

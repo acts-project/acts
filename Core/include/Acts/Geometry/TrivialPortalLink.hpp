@@ -13,6 +13,7 @@
 namespace Acts {
 
 class TrackingVolume;
+class GridPortalLink;
 
 class TrivialPortalLink final : public PortalLinkBase {
  public:
