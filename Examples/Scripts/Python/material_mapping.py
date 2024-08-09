@@ -155,8 +155,7 @@ if "__main__" == __name__:
 
     mapName = args.outFile.split(".")[0]
 
-    matDeco = acts.IMaterialDecorator.fromFile("geometry-map.json")
-    detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+    detector, trackingGeometry, decorators = getOpenDataDetector(None)
 
     runMaterialMapping(
         trackingGeometry,

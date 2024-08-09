@@ -24,6 +24,7 @@ import pytest
 import acts
 import acts.examples
 from acts.examples.odd import getOpenDataDetector
+from acts.examples.simulation import addParticleGun, EtaConfig, ParticleConfig
 
 try:
     import ROOT
@@ -201,18 +202,42 @@ def basic_prop_seq(rng):
         if s is None:
             s = acts.examples.Sequencer(events=10, numThreads=1)
 
+        addParticleGun(
+            s,
+            ParticleConfig(num=10, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
+            EtaConfig(-4.0, 4.0),
+            rnd=rng,
+        )
+
+        # Run particle smearing
+        trackParametersGenerator = acts.examples.ParticleSmearing(
+            level=acts.logging.INFO,
+            inputParticles="particles_input",
+            outputTrackParameters="start_parameters",
+            randomNumbers=rng,
+            sigmaD0=0.0,
+            sigmaZ0=0.0,
+            sigmaPhi=0.0,
+            sigmaTheta=0.0,
+            sigmaPtRel=0.0,
+        )
+        s.addAlgorithm(trackParametersGenerator)
+
         nav = acts.Navigator(trackingGeometry=geo)
         stepper = acts.StraightLineStepper()
 
         prop = acts.examples.ConcretePropagator(acts.Propagator(stepper, nav))
+
         alg = acts.examples.PropagationAlgorithm(
+            level=acts.logging.WARNING,
             propagatorImpl=prop,
-            level=acts.logging.INFO,
-            randomNumberSvc=rng,
-            ntests=10,
             sterileLogger=False,
-            propagationStepCollection="propagation-steps",
+            recordMaterialInteractions=True,
+            inputTrackParameters="start_parameters",
+            outputPropagationSteps="propagation-steps",
+            outputMaterialTracks="material-tracks",
         )
+
         s.addAlgorithm(alg)
         return s, alg
 
