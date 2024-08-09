@@ -12,52 +12,61 @@ set(ACTS_EXAMPLES_G4SOURCES
     src/SimParticleTranslation.cpp
     src/ParticleKillAction.cpp
     src/PhysicsListFactory.cpp
-    src/Geant4Manager.cpp)
+    src/Geant4Manager.cpp
+)
 
-if (ACTS_BUILD_EXAMPLES_DD4HEP)
+if(ACTS_BUILD_EXAMPLES_DD4HEP)
     list(APPEND ACTS_EXAMPLES_G4SOURCES src/DDG4DetectorConstruction.cpp)
 endif()
 
-if (ACTS_BUILD_PLUGIN_GEOMODEL)
-  list(APPEND ACTS_EXAMPLES_G4SOURCES src/GeoModelDetectorConstruction.cpp)
+if(ACTS_BUILD_PLUGIN_GEOMODEL)
+    list(APPEND ACTS_EXAMPLES_G4SOURCES src/GeoModelDetectorConstruction.cpp)
 endif()
 
-add_library(
-  ActsExamplesGeant4 SHARED ${ACTS_EXAMPLES_G4SOURCES})
-target_compile_definitions(
-  ActsExamplesGeant4
-  PUBLIC ${Geant4_DEFINITIONS})
+add_library(ActsExamplesGeant4 SHARED ${ACTS_EXAMPLES_G4SOURCES})
+target_compile_definitions(ActsExamplesGeant4 PUBLIC ${Geant4_DEFINITIONS})
 target_include_directories(
-  ActsExamplesGeant4
-  SYSTEM PUBLIC ${Geant4_INCLUDE_DIRS})
+    ActsExamplesGeant4
+    SYSTEM
+    PUBLIC ${Geant4_INCLUDE_DIRS}
+)
 target_include_directories(
-  ActsExamplesGeant4
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+    ActsExamplesGeant4
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
 target_link_libraries(
-  ActsExamplesGeant4
-  PUBLIC ActsCore ActsExamplesFramework ActsExamplesDetectorTelescope Boost::headers ${Geant4_LIBRARIES})
+    ActsExamplesGeant4
+    PUBLIC
+        ActsCore
+        ActsExamplesFramework
+        ActsExamplesDetectorTelescope
+        Boost::headers
+        ${Geant4_LIBRARIES}
+)
 
-if (ACTS_BUILD_EXAMPLES_DD4HEP)
-  if(${DD4hep_VERSION} VERSION_LESS 1.11)
-  target_include_directories(
-    ActsExamplesGeant4
-    PRIVATE ${DD4hep_INCLUDE_DIRS})
-  target_link_libraries(
-    ActsExamplesGeant4
-    PRIVATE ${DD4hep_DDCORE_LIBRARY} ${DD4hep_DDG4_LIBRARY})
-  else()
-  target_link_libraries(
-    ActsExamplesGeant4
-    PUBLIC ActsExamplesDetectorDD4hep DD4hep::DDCore DD4hep::DDG4)
-  endif()
+if(ACTS_BUILD_EXAMPLES_DD4HEP)
+    if(${DD4hep_VERSION} VERSION_LESS 1.11)
+        target_include_directories(
+            ActsExamplesGeant4
+            PRIVATE ${DD4hep_INCLUDE_DIRS}
+        )
+        target_link_libraries(
+            ActsExamplesGeant4
+            PRIVATE ${DD4hep_DDCORE_LIBRARY} ${DD4hep_DDG4_LIBRARY}
+        )
+    else()
+        target_link_libraries(
+            ActsExamplesGeant4
+            PUBLIC ActsExamplesDetectorDD4hep DD4hep::DDCore DD4hep::DDG4
+        )
+    endif()
 endif()
 
-if (ACTS_BUILD_PLUGIN_GEOMODEL)
-  target_link_libraries(
-    ActsExamplesGeant4
-    PUBLIC ActsPluginGeoModel GeoModel2G4)
+if(ACTS_BUILD_PLUGIN_GEOMODEL)
+    target_link_libraries(
+        ActsExamplesGeant4
+        PUBLIC ActsPluginGeoModel GeoModel2G4
+    )
 endif()
 
-install(
-  TARGETS ActsExamplesGeant4
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS ActsExamplesGeant4 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
