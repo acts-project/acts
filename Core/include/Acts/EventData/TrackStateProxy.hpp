@@ -676,6 +676,7 @@ class TrackStateProxy {
   /// @return The uncalibrated measurement source link
   SourceLink getUncalibratedSourceLink() const;
 
+  // This function will move to an rvalue reference in the next major version
   /// Set an uncalibrated source link
   /// @param sourceLink The uncalibrated source link to set
   void setUncalibratedSourceLink(SourceLink&& sourceLink) requires(!ReadOnly) {

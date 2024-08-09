@@ -22,10 +22,6 @@ set( ACTS_TRACCC_SOURCE
    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v0.13.0.tar.gz;URL_MD5;1ddf757ddcbaa08fd7db3a7752ef7f98" CACHE STRING "Source to take TRACCC from")
 mark_as_advanced( ACTS_TRACCC_SOURCE )
 
-set( ACTS_DFELIBS_SOURCE
-   "URL;https://github.com/acts-project/dfelibs/archive/refs/tags/v20211029.tar.gz;URL_MD5;87fb09c5a11b98250f5e266e9cd501ea" CACHE STRING "Source to take dfelibs from")
-mark_as_advanced( ACTS_DFELIBS_SOURCE )
-
 set( ACTS_FRNN_SOURCE
    "GIT_REPOSITORY;https://github.com/hrzhao76/FRNN/;GIT_TAG;5f8a48b0022300cd2863119f5646a5f31373e0c8" CACHE STRING "Source to take FRNN from")
 mark_as_advanced( ACTS_FRNN_SOURCE )

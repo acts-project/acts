@@ -10,15 +10,11 @@ issues with missing files after installation.
 
 `nlohmann_json` is exempted from this rule as it is handled specially.
 
-## dfelibs
-
-CMake instructions to build [dfelibs](https://github.com/msmk0/dfelibs).
-
 ## nlohmann_json
 
 CMake instructions to build [nlohmann::json](https://github.com/nlohmann/json).
 
-## boost 
+## boost
 
 For convenience, it's possible to use the ACTS build system to build the minimum
 required version of [boost](https://www.boost.org/) (currently 1.71.0).  No source is
