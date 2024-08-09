@@ -60,10 +60,6 @@ concept PortalSurfaceConcept =
 
 class PortalLinkBase {
  public:
-  friend class GridPortalLink;
-  friend class TrivialPortalLink;
-  friend class CompositePortalLink;
-
   PortalLinkBase(std::shared_ptr<RegularSurface> surface)
       : m_surface(std::move(surface)) {}
 
