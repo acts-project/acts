@@ -247,7 +247,7 @@ function trackfinding() {
             $refdir/$path/performance_ckf_ambi.root \
             "Ambisolver | ${name}" \
             $path/performance_ckf_ambi.html \
-            $path/performance_ckf_ambi 
+            $path/performance_ckf_ambi
     fi
 }
 
@@ -344,7 +344,7 @@ function generation() {
         $outdir/data/simulation/particles_ttbar_hist.root \
         --silent \
         --config CI/physmon/config/pythia8_ttbar.yml
-    
+
     # remove ntuple file because it's large
     rm $outdir/data/simulation/particles_ttbar.root
 

@@ -40,4 +40,3 @@ mapping process, that is in further described below.
  * {class}`Acts::ProtoSurfaceMaterialT`, only binning description (without material) to be
    used in the material mapping process, which can be specified with a templated binning
    description.
-
