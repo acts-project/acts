@@ -21,7 +21,6 @@ target_link_libraries(
     detray::core_array
     detray::io
     detray::utils
-    detray::svgtools
     vecmem::core)
 
 install(
