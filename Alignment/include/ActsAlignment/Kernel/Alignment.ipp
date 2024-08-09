@@ -163,7 +163,7 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
   for (const auto& [surface, index] : alignResult.idxedAlignSurfaces) {
     // 1. The original transform
     const Acts::Vector3& oldCenter = surface->center(gctx);
-    const Acts::Transform3& oldTransform = surface->transform(gctx);
+    Acts::Transform3 oldTransform = surface->transform(gctx);
     const Acts::RotationMatrix3& oldRotation = oldTransform.rotation();
     // The elements stored below is (rotZ, rotY, rotX)
     const Acts::Vector3& oldEulerAngles = oldRotation.eulerAngles(2, 1, 0);
@@ -308,8 +308,7 @@ ActsAlignment::Alignment<fitter_t>::align(
   if (alignmentParametersUpdated) {
     for (const auto& det : alignOptions.alignedDetElements) {
       const auto& surface = &det->surface();
-      const auto& transform =
-          det->transform(alignOptions.fitOptions.geoContext);
+      auto transform = det->transform(alignOptions.fitOptions.geoContext);
       // write it to the result
       alignResult.alignedParameters.emplace(det, transform);
       const auto& translation = transform.translation();
