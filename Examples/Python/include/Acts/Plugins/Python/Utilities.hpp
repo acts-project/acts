@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <string>
@@ -51,6 +52,26 @@ void patchKwargsConstructor(T& c) {
 }
 
 METHOD_TRAIT(write_method_trait_t, write);
+
+class PythonLogger {
+ public:
+  PythonLogger(const std::string& name, Acts::Logging::Level level)
+      : m_name{name}, m_logger{Acts::getDefaultLogger(m_name, level)} {}
+
+  void log(Acts::Logging::Level level, const std::string& message) const {
+    m_logger->log(level, message);
+  }
+
+  void setLevel(Acts::Logging::Level level) {
+    m_logger = Acts::getDefaultLogger(m_name, level);
+  }
+
+  const Logger& logger() const { return *m_logger; }
+
+ private:
+  std::string m_name;
+  std::unique_ptr<const Logger> m_logger;
+};
 
 }  // namespace Acts::Python
 

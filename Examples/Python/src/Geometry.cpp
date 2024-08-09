@@ -146,6 +146,13 @@ void addGeometry(Context& ctx) {
   {
     py::class_<Acts::TrackingGeometry, std::shared_ptr<Acts::TrackingGeometry>>(
         m, "TrackingGeometry")
+        .def(py::init([](const MutableTrackingVolumePtr& v,
+                         // std::shared_ptr<const IMaterialDecorator> m,
+                         const GeometryIdentifierHook& h,
+                         const PythonLogger& logger) {
+          return std::make_shared<Acts::TrackingGeometry>(v, nullptr, h,
+                                                          logger.logger());
+        }))
         .def("visitSurfaces",
              [](Acts::TrackingGeometry& self, py::function& func) {
                self.visitSurfaces(func);
@@ -177,7 +184,12 @@ void addGeometry(Context& ctx) {
 
   {
     py::class_<Acts::TrackingVolume, Acts::Volume,
-               std::shared_ptr<Acts::TrackingVolume>>(m, "TrackingVolume");
+               std::shared_ptr<Acts::TrackingVolume>>(m, "TrackingVolume")
+        .def(py::init([](std::shared_ptr<const Acts::VolumeBounds> bounds,
+                         std::string name) {
+          return std::make_shared<Acts::TrackingVolume>(Transform3::Identity(),
+                                                        bounds, name);
+        }));
   }
 
   {

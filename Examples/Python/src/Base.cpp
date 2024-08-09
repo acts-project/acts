@@ -15,7 +15,6 @@
 #include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 #include <array>
 #include <exception>
@@ -90,24 +89,6 @@ void addUnits(Context& ctx) {
 
 #undef UNIT
 }
-
-class PythonLogger {
- public:
-  PythonLogger(const std::string& name, Acts::Logging::Level level)
-      : m_name{name}, m_logger{Acts::getDefaultLogger(m_name, level)} {}
-
-  void log(Acts::Logging::Level level, const std::string& message) const {
-    m_logger->log(level, message);
-  }
-
-  void setLevel(Acts::Logging::Level level) {
-    m_logger = Acts::getDefaultLogger(m_name, level);
-  }
-
- private:
-  std::string m_name;
-  std::unique_ptr<const Logger> m_logger;
-};
 
 void addLogging(Acts::Python::Context& ctx) {
   auto& m = ctx.get("main");
