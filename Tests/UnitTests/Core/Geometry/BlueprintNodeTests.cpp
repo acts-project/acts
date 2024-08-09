@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTest) {
       CylinderVolumeStack::ResizeStrategy::Gap);
 
   root->addMaterial([&](auto& mat) {
-    mat.addCylinderContainer("Pixel", binZ, [&](auto& cyl) {
+    mat.addCylinderContainer("Pixel", BinningValue::binZ, [&](auto& cyl) {
       cyl.setAttachmentStrategy(CylinderVolumeStack::AttachmentStrategy::Gap)
           .setResizeStrategy(CylinderVolumeStack::ResizeStrategy::Gap);
 
@@ -137,44 +137,51 @@ BOOST_AUTO_TEST_CASE(NodeApiTest) {
       // std::make_shared<CylinderVolumeBounds>(100_mm, 600_mm, 200_mm),
       // "PixelBarrel"));
 
-      cyl.addCylinderContainer("PixelNegativeEndcap", binZ, [&](auto& ec) {
-        ec.setAttachmentStrategy(CylinderVolumeStack::AttachmentStrategy::Gap);
+      cyl.addCylinderContainer(
+          "PixelNegativeEndcap", BinningValue::binZ, [&](auto& ec) {
+            ec.setAttachmentStrategy(
+                CylinderVolumeStack::AttachmentStrategy::Gap);
 
-        ec.addStaticVolume(std::make_unique<TrackingVolume>(
-            base * Translation3{Vector3{0, 0, -600_mm}},
-            std::make_shared<CylinderVolumeBounds>(200_mm, 450_mm, 20_mm),
-            "PixelNeg1"));
+            ec.addStaticVolume(std::make_unique<TrackingVolume>(
+                base * Translation3{Vector3{0, 0, -600_mm}},
+                std::make_shared<CylinderVolumeBounds>(200_mm, 450_mm, 20_mm),
+                "PixelNeg1"));
 
-        ec.addStaticVolume(std::make_unique<TrackingVolume>(
-            base * Translation3{Vector3{0, 0, -400_mm}},
-            std::make_shared<CylinderVolumeBounds>(200_mm, 800_mm, 20_mm),
-            "PixelNeg2"));
-      });
+            ec.addStaticVolume(std::make_unique<TrackingVolume>(
+                base * Translation3{Vector3{0, 0, -400_mm}},
+                std::make_shared<CylinderVolumeBounds>(200_mm, 800_mm, 20_mm),
+                "PixelNeg2"));
+          });
 
-      cyl.addCylinderContainer("PixelBarrel", binR, [&](auto& brl) {
-        brl.setAttachmentStrategy(CylinderVolumeStack::AttachmentStrategy::Gap)
-            .setResizeStrategy(CylinderVolumeStack::ResizeStrategy::Expand);
+      cyl.addCylinderContainer(
+          "PixelBarrel", BinningValue::binR, [&](auto& brl) {
+            brl.setAttachmentStrategy(
+                   CylinderVolumeStack::AttachmentStrategy::Gap)
+                .setResizeStrategy(CylinderVolumeStack::ResizeStrategy::Expand);
 
-        brl.addStaticVolume(std::make_unique<TrackingVolume>(
-            base, std::make_shared<CylinderVolumeBounds>(23_mm, 48_mm, 200_mm),
-            "PixelLayer0"));
+            brl.addStaticVolume(std::make_unique<TrackingVolume>(
+                base,
+                std::make_shared<CylinderVolumeBounds>(23_mm, 48_mm, 200_mm),
+                "PixelLayer0"));
 
-        brl.addStaticVolume(std::make_unique<TrackingVolume>(
-            base, std::make_shared<CylinderVolumeBounds>(87_mm, 103_mm, 250_mm),
-            "PixelLayer1"));
+            brl.addStaticVolume(std::make_unique<TrackingVolume>(
+                base,
+                std::make_shared<CylinderVolumeBounds>(87_mm, 103_mm, 250_mm),
+                "PixelLayer1"));
 
-        brl.addStaticVolume(std::make_unique<TrackingVolume>(
-            base,
-            std::make_shared<CylinderVolumeBounds>(150_mm, 180_mm, 310_mm),
-            "PixelLayer2"));
+            brl.addStaticVolume(std::make_unique<TrackingVolume>(
+                base,
+                std::make_shared<CylinderVolumeBounds>(150_mm, 180_mm, 310_mm),
+                "PixelLayer2"));
 
-        brl.addStaticVolume(std::make_unique<TrackingVolume>(
-            base,
-            std::make_shared<CylinderVolumeBounds>(250_mm, 400_mm, 310_mm),
-            "PixelLayer3"));
-      });
+            brl.addStaticVolume(std::make_unique<TrackingVolume>(
+                base,
+                std::make_shared<CylinderVolumeBounds>(250_mm, 400_mm, 310_mm),
+                "PixelLayer3"));
+          });
 
-      auto& ec = cyl.addCylinderContainer("PixelPosWrapper", binR);
+      auto& ec =
+          cyl.addCylinderContainer("PixelPosWrapper", BinningValue::binR);
       ec.setResizeStrategy(CylinderVolumeStack::ResizeStrategy::Gap);
       ec.addStaticVolume(std::make_unique<TrackingVolume>(
           base * Translation3{Vector3{0, 0, 600_mm}},
