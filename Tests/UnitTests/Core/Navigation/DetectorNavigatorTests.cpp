@@ -647,4 +647,222 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   BOOST_CHECK_EQUAL(statesBwd[0].currentPortal, nullptr);
 }
 
+// Check that the external surfaces are
+// valid for the navigation
+BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsExternalSurfaces) {
+  // Construct a cubic detector with 3 volumes
+  Acts::RotationMatrix3 rotation;
+  double angle = 90_degree;
+  Acts::Vector3 xPos(cos(angle), 0., sin(angle));
+  Acts::Vector3 yPos(0., 1., 0.);
+  Acts::Vector3 zPos(-sin(angle), 0., cos(angle));
+  rotation.col(0) = xPos;
+  rotation.col(1) = yPos;
+  rotation.col(2) = zPos;
+
+  auto bounds1 = std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3);
+  auto transform1 = Acts::Transform3::Identity();
+  auto surface1 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      transform1 * Acts::Transform3(rotation),
+      std::make_shared<Acts::RectangleBounds>(2, 2));
+  auto surface2 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      transform1 * Acts::Translation3(0.1, 0, 0) * Acts::Transform3(rotation),
+      std::make_shared<Acts::RectangleBounds>(2, 2));
+  auto surface3 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      transform1 * Acts::Translation3(-0.1, 0, 0) * Acts::Transform3(rotation),
+      std::make_shared<Acts::RectangleBounds>(2, 2));
+  auto volume1 = Acts::Experimental::DetectorVolumeFactory::construct(
+      Acts::Experimental::defaultPortalAndSubPortalGenerator(), geoContext,
+      "volume1", transform1, std::move(bounds1), {}, {},
+      Acts::Experimental::tryNoVolumes(),
+      Acts::Experimental::tryAllPortalsAndSurfaces());
+
+  std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
+      detectorVolumes = {volume1};
+
+  auto portalContainer =
+      Acts::Experimental::detail::CuboidalDetectorHelper::connect(
+          geoContext, detectorVolumes, Acts::BinningValue::binX, {},
+          Acts::Logging::VERBOSE);
+
+  // Make sure that the geometry ids are
+  // independent of the potential Id generation
+  // changes
+  int id = 1;
+
+  for (auto& volume : detectorVolumes) {
+    volume->assignGeometryId(id);
+    id++;
+  }
+  for (auto& volume : detectorVolumes) {
+    for (auto& port : volume->portalPtrs()) {
+      if (port->surface().geometryId() == 0) {
+        port->surface().assignGeometryId(id);
+        id++;
+      }
+    }
+  }
+
+  auto detector = Acts::Experimental::Detector::makeShared(
+      "cubicDetector", detectorVolumes, Acts::Experimental::tryRootVolumes());
+
+  using Stepper = Acts::StraightLineStepper;
+  using Navigator = Acts::Experimental::DetectorNavigator;
+  using Propagator = Acts::Propagator<Stepper, Navigator>;
+  using ActionList = Acts::ActionList<StateRecorder>;
+  using AbortList = Acts::AbortList<Acts::EndOfWorldReached>;
+  using PropagatorOptions = Propagator::Options<ActionList, AbortList>;
+
+  Navigator::Config navCfg;
+  navCfg.detector = detector.get();
+
+  Stepper stepper;
+
+  Navigator navigator(navCfg,
+                      Acts::getDefaultLogger("DetectorNavigator",
+                                             Acts::Logging::Level::VERBOSE));
+
+  PropagatorOptions options(geoContext, mfContext);
+
+  // Insert the external surfaces
+  for (auto& surf : {surface1, surface2, surface3}) {
+    options.navigation.externalSurfaces.push_back(surf.get());
+  }
+  Propagator propagator(
+      stepper, navigator,
+      Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
+
+  Acts::Vector4 pos(-2, 0, 0, 0);
+  Acts::CurvilinearTrackParameters start(pos, 0_degree, 90_degree, 1_e / 1_GeV,
+                                         std::nullopt,
+                                         Acts::ParticleHypothesis::electron());
+
+  auto result = propagator.propagate(start, options).value();
+  auto states = result.get<StateRecorder::result_type>();
+
+  // 6 steps to reach the end of world
+  //
+  // 3 for external surfaces
+  // 1 for portal surfaces
+  // + 1 recording in the post-step
+  // + 1 recording before the stepping loop
+  BOOST_CHECK_EQUAL(states.size(), 6u);
+}
+
+// Check that the measurement surfaces are
+// handled properly by the navigator
+BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMeasurementSurfaces) {
+  // Construct a cubic detector with 3 volumes
+  Acts::RotationMatrix3 rotation;
+  double angle = 90_degree;
+  Acts::Vector3 xPos(cos(angle), 0., sin(angle));
+  Acts::Vector3 yPos(0., 1., 0.);
+  Acts::Vector3 zPos(-sin(angle), 0., cos(angle));
+  rotation.col(0) = xPos;
+  rotation.col(1) = yPos;
+  rotation.col(2) = zPos;
+
+  auto bounds1 = std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3);
+  auto transform1 = Acts::Transform3::Identity();
+  auto surface1 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      transform1 * Acts::Transform3(rotation),
+      std::make_shared<Acts::RectangleBounds>(2, 2));
+  auto surface2 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      transform1 * Acts::Translation3(0.1, 0, 0) * Acts::Transform3(rotation),
+      std::make_shared<Acts::RectangleBounds>(2, 2));
+  auto surface3 = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      transform1 * Acts::Translation3(-0.1, 0, 0) * Acts::Transform3(rotation),
+      std::make_shared<Acts::RectangleBounds>(2, 2));
+  auto volume1 = Acts::Experimental::DetectorVolumeFactory::construct(
+      Acts::Experimental::defaultPortalAndSubPortalGenerator(), geoContext,
+      "volume1", transform1, std::move(bounds1), {surface1, surface2, surface3},
+      {}, Acts::Experimental::tryNoVolumes(),
+      Acts::Experimental::tryAllPortalsAndSurfaces());
+
+  std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
+      detectorVolumes = {volume1};
+
+  auto portalContainer =
+      Acts::Experimental::detail::CuboidalDetectorHelper::connect(
+          geoContext, detectorVolumes, Acts::BinningValue::binX, {},
+          Acts::Logging::VERBOSE);
+
+  // Make sure that the geometry ids are
+  // independent of the potential Id generation
+  // changes
+  int id = 1;
+
+  for (auto& volume : detectorVolumes) {
+    volume->assignGeometryId(id);
+    id++;
+  }
+  for (auto& volume : detectorVolumes) {
+    for (auto& port : volume->portalPtrs()) {
+      if (port->surface().geometryId() == 0) {
+        port->surface().assignGeometryId(id);
+        id++;
+      }
+    }
+  }
+  // Surface ids: 12-14;
+  for (auto& surf : {surface1, surface2, surface3}) {
+    surf->assignGeometryId(id);
+    id++;
+  }
+
+  auto detector = Acts::Experimental::Detector::makeShared(
+      "cubicDetector", detectorVolumes, Acts::Experimental::tryRootVolumes());
+
+  using Stepper = Acts::StraightLineStepper;
+  using Navigator = Acts::Experimental::DetectorNavigator;
+  using Propagator = Acts::Propagator<Stepper, Navigator>;
+  using ActionList = Acts::ActionList<StateRecorder>;
+  using AbortList = Acts::AbortList<Acts::EndOfWorldReached>;
+  using PropagatorOptions = Propagator::Options<ActionList, AbortList>;
+
+  Navigator::Config navCfg;
+  navCfg.detector = detector.get();
+
+  Stepper stepper;
+
+  Navigator navigator(navCfg,
+                      Acts::getDefaultLogger("DetectorNavigator",
+                                             Acts::Logging::Level::VERBOSE));
+
+  PropagatorOptions options(geoContext, mfContext);
+
+  Propagator propagator(
+      stepper, navigator,
+      Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
+
+  // Set the parameters to intentionally
+  // miss the sensitive surfaces
+  Acts::Vector4 pos(-2, 2.5, 0, 0);
+  Acts::CurvilinearTrackParameters start(pos, 0_degree, 90_degree, 1_e / 1_GeV,
+                                         std::nullopt,
+                                         Acts::ParticleHypothesis::electron());
+
+  auto pState = propagator.makeState(start, options);
+
+  // Insert the measurement surfaces
+  for (auto& surf : {surface1, surface2, surface3}) {
+    navigator.insertMeasurementSurface(pState.navigation, surf->geometryId());
+  }
+  navigator.initialize(pState, stepper);
+
+  auto pResult = propagator.propagate(pState);
+  auto result =
+      propagator.makeResult(std::move(pState), pResult, options, false).value();
+
+  auto states = result.get<StateRecorder::result_type>();
+
+  // 6 steps to reach the end of world
+  //
+  // 3 for measurement surfaces
+  // 1 for portal surfaces
+  // + 1 recording in the post-step
+  // + 1 recording before the stepping loop
+  BOOST_CHECK_EQUAL(states.size(), 6u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

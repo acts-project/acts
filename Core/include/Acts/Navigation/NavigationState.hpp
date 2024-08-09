@@ -11,12 +11,14 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <any>
 #include <cstddef>
+#include <map>
 #include <vector>
 
 namespace Acts {
@@ -34,6 +36,9 @@ class DetectorVolume;
 /// It relies on Surfaces and Portals, all navigation entities have to be
 /// described in these terms.
 struct NavigationState {
+  using MeasurementSurfaces =
+      std::multimap<GeometryIdentifier, GeometryIdentifier>;
+
   /// @brief  A surface candidate and its intersection
   ///
   /// A candidates can either be a surface or a portal (which contain a surface)
@@ -83,6 +88,13 @@ struct NavigationState {
   /// That are the candidate surfaces to process
   SurfaceCandidates surfaceCandidates = {};
   std::size_t surfaceCandidateIndex = 0;
+
+  MeasurementSurfaces measurementSurfaces = {};
+  /// Range of external surfaces to be considered
+  std::pair<MeasurementSurfaces::iterator, MeasurementSurfaces::iterator>
+      currentMeasurementSurfaceRange;
+
+  std::vector<const Surface*>* externalSurfaces = nullptr;
 
   /// Boundary directives for surfaces
   BoundaryTolerance surfaceBoundaryTolerance = BoundaryTolerance::None();

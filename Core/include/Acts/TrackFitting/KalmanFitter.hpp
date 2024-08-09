@@ -365,6 +365,18 @@ class KalmanFitter {
                    << " momentum: "
                    << stepper.absoluteMomentum(state.stepping));
 
+      // Add the measurement surface. We will try to hit
+      // those surfaces by ignoring boundary checks.
+      if constexpr (!isDirectNavigator) {
+        if (result.processedStates == 0) {
+          for (auto measurementIt = inputMeasurements->begin();
+               measurementIt != inputMeasurements->end(); measurementIt++) {
+            navigator.insertMeasurementSurface(state.navigation,
+                                               measurementIt->first);
+          }
+        }
+      }
+
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
@@ -1091,20 +1103,6 @@ class KalmanFitter {
       const -> std::enable_if_t<
           !_isdn, Result<typename TrackContainer<track_container_t, traj_t,
                                                  holder_t>::TrackProxy>> {
-    // To be able to find measurements later, we put them into a map
-    // We need to copy input SourceLinks anyway, so the map can own them.
-    ACTS_VERBOSE("Preparing " << std::distance(it, end)
-                              << " input measurements");
-    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
-    // for (const auto& sl : sourcelinks) {
-    for (; it != end; ++it) {
-      SourceLink sl = *it;
-      const Surface* surface = kfOptions.extensions.surfaceAccessor(sl);
-      // @TODO: This can probably change over to surface pointers as keys
-      auto geoId = surface->geometryId();
-      inputMeasurements.emplace(geoId, std::move(sl));
-    }
-
     // Create the ActionList and AbortList
     using KalmanAborter = Aborter<parameters_t>;
     using KalmanActor = Actor<parameters_t>;
@@ -1122,10 +1120,18 @@ class KalmanFitter {
     // Set the trivial propagator options
     propagatorOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
 
-    // Add the measurement surface as external surface to navigator.
-    // We will try to hit those surface by ignoring boundary checks.
-    for (const auto& [surfaceId, _] : inputMeasurements) {
-      propagatorOptions.navigation.insertExternalSurface(surfaceId);
+    // To be able to find measurements later, we put them into a map
+    // We need to copy input SourceLinks anyway, so the map can own them.
+    ACTS_VERBOSE("Preparing " << std::distance(it, end)
+                              << " input measurements");
+    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
+    // for (const auto& sl : sourcelinks) {
+    for (; it != end; ++it) {
+      SourceLink sl = *it;
+      const Surface* surface = kfOptions.extensions.surfaceAccessor(sl);
+      // @TODO: This can probably change over to surface pointers as keys
+      auto geoId = surface->geometryId();
+      inputMeasurements.emplace(geoId, std::move(sl));
     }
 
     // Catch the actor and set the measurements
