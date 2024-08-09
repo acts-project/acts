@@ -35,7 +35,7 @@ class IGeoShapeConverter {
   ///
   /// @return The detector element and surface
   virtual Result<GeoModelSensitiveSurface> toSensitiveSurface(
-      const GeoFullPhysVol& geoFPV) const = 0;
+      PVConstLink geoPV, const Transform3& transform) const = 0;
 
   /// @brief Convert a GeoShape to a detector element and passive surface
   ///
@@ -43,7 +43,7 @@ class IGeoShapeConverter {
   ///
   /// @return The representing surface
   virtual Result<std::shared_ptr<Surface>> toPassiveSurface(
-      const GeoFullPhysVol& geoFPV) const = 0;
+      PVConstLink geoPV, const Transform3& transform) const = 0;
 };
 
 }  // namespace Acts
