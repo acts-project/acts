@@ -217,6 +217,7 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_MEMBER(beamPipeEnvelopeR);
     ACTS_PYTHON_MEMBER(layerEnvelopeR);
     ACTS_PYTHON_MEMBER(unitScalor);
+    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
     ACTS_PYTHON_MEMBER(volumes);
     ACTS_PYTHON_STRUCT_END();
 

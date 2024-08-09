@@ -33,6 +33,7 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
@@ -116,7 +117,9 @@ void addGeometry(Context& ctx) {
              [](Acts::Surface& self) {
                return self.center(Acts::GeometryContext{});
              })
-        .def("type", [](Acts::Surface& self) { return self.type(); });
+        .def("type", [](Acts::Surface& self) { return self.type(); })
+        .def("bounds", &Acts::Surface::bounds,
+             py::return_value_policy::reference);
   }
 
   {
@@ -129,6 +132,42 @@ void addGeometry(Context& ctx) {
         .value("Straw", Acts::Surface::SurfaceType::Straw)
         .value("Curvilinear", Acts::Surface::SurfaceType::Curvilinear)
         .value("Other", Acts::Surface::SurfaceType::Other);
+  }
+
+  {
+    py::class_<Acts::SurfaceBounds>(m, "SurfaceBounds")
+        .def("type", &Acts::SurfaceBounds::type)
+        .def("values", &Acts::SurfaceBounds::values);
+  }
+
+  {
+    py::enum_<Acts::SurfaceBounds::BoundsType>(m, "SurfaceBoundsType")
+        .value("Cone", Acts::SurfaceBounds::BoundsType::eCone)
+        .value("Cylinder", Acts::SurfaceBounds::BoundsType::eCylinder)
+        .value("Diamond", Acts::SurfaceBounds::BoundsType::eDiamond)
+        .value("Disc", Acts::SurfaceBounds::BoundsType::eDisc)
+        .value("Ellipse", Acts::SurfaceBounds::BoundsType::eEllipse)
+        .value("Line", Acts::SurfaceBounds::BoundsType::eLine)
+        .value("Rectangle", Acts::SurfaceBounds::BoundsType::eRectangle)
+        .value("Trapezoid", Acts::SurfaceBounds::BoundsType::eTrapezoid)
+        .value("Triangle", Acts::SurfaceBounds::BoundsType::eTriangle)
+        .value("DiscTrapezoid", Acts::SurfaceBounds::BoundsType::eDiscTrapezoid)
+        .value("ConvexPolygon", Acts::SurfaceBounds::BoundsType::eConvexPolygon)
+        .value("Annulus", Acts::SurfaceBounds::BoundsType::eAnnulus)
+        .value("Boundless", Acts::SurfaceBounds::BoundsType::eBoundless)
+        .value("Other", Acts::SurfaceBounds::BoundsType::eOther);
+  }
+
+  {
+    py::enum_<Acts::AnnulusBounds::BoundValues>(m, "AnnulusBoundValues")
+        .value("MinR", Acts::AnnulusBounds::BoundValues::eMinR)
+        .value("MaxR", Acts::AnnulusBounds::BoundValues::eMaxR)
+        .value("MinPhiRel", Acts::AnnulusBounds::BoundValues::eMinPhiRel)
+        .value("MaxPhiRel", Acts::AnnulusBounds::BoundValues::eMaxPhiRel)
+        .value("AveragePhi", Acts::AnnulusBounds::BoundValues::eAveragePhi)
+        .value("OriginX", Acts::AnnulusBounds::BoundValues::eOriginX)
+        .value("OriginY", Acts::AnnulusBounds::BoundValues::eOriginY)
+        .value("Size", Acts::AnnulusBounds::BoundValues::eSize);
   }
 
   {
