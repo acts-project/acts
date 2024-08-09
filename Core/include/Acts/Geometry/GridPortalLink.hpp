@@ -105,13 +105,20 @@ class GridPortalLink : public PortalLinkBase {
   std::unique_ptr<GridPortalLink> extendTo2D(
       const std::shared_ptr<DiscSurface>& surface, const IAxis* other) const;
 
-  // These should only be used to synchronize the bins between grids
-  virtual std::vector<std::size_t> numLocalBins() const = 0;
-  virtual const TrackingVolume*& atLocalBins(
-      const std::vector<std::size_t>) = 0;
+  enum class FillDirection {
+    loc0,
+    loc1,
+  };
+  static void fillGrid1dTo2d(FillDirection dir, const GridPortalLink& grid1d,
+                             GridPortalLink& grid2d);
 
-  virtual const TrackingVolume* atLocalBins(
-      const std::vector<std::size_t>) const = 0;
+  using IndexType = boost::container::static_vector<std::size_t, 2>;
+
+  // These should only be used to synchronize the bins between grids
+  virtual IndexType numLocalBins() const = 0;
+  virtual const TrackingVolume*& atLocalBins(IndexType indices) = 0;
+
+  virtual const TrackingVolume* atLocalBins(IndexType indices) const = 0;
 
  private:
   BinningValue m_direction;
@@ -208,17 +215,16 @@ class GridPortalLinkT final : public GridPortalLink {
   }
 
  protected:
-  std::vector<std::size_t> numLocalBins() const final {
+  IndexType numLocalBins() const final {
     typename GridType::index_t idx = m_grid.numLocalBins();
-    std::vector<std::size_t> result;
+    IndexType result;
     for (std::size_t i = 0; i < DIM; i++) {
       result.push_back(idx[i]);
     }
     return result;
   }
 
-  const TrackingVolume*& atLocalBins(
-      const std::vector<std::size_t> indices) final {
+  const TrackingVolume*& atLocalBins(IndexType indices) final {
     throw_assert(indices.size() == DIM, "Invalid number of indices");
     typename GridType::index_t idx;
     for (std::size_t i = 0; i < DIM; i++) {
@@ -227,8 +233,7 @@ class GridPortalLinkT final : public GridPortalLink {
     return m_grid.atLocalBins(idx);
   }
 
-  const TrackingVolume* atLocalBins(
-      const std::vector<std::size_t> indices) const final {
+  const TrackingVolume* atLocalBins(IndexType indices) const final {
     throw_assert(indices.size() == DIM, "Invalid number of indices");
     typename GridType::index_t idx;
     for (std::size_t i = 0; i < DIM; i++) {
