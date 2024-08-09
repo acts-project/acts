@@ -47,6 +47,12 @@ struct Fixture {
   ~Fixture() { Acts::Logging::setFailureThreshold(m_level); }
 };
 
+std::shared_ptr<TrackingVolume> makeDummyVolume() {
+  return std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+}
+
 GeometryContext gctx;
 
 BOOST_FIXTURE_TEST_SUITE(Geometry, Fixture)
@@ -520,16 +526,15 @@ BOOST_AUTO_TEST_SUITE(Merging1dCylinder)
 BOOST_AUTO_TEST_SUITE(ZDirection)
 
 BOOST_AUTO_TEST_CASE(ColinearMerge) {
-  // WARNING: These are invalid pointers!
-  const auto* vol1 = reinterpret_cast<const TrackingVolume*>(0x000001);
-  const auto* vol2 = reinterpret_cast<const TrackingVolume*>(0x000002);
+  auto vol1 = makeDummyVolume();
+  auto vol2 = makeDummyVolume();
 
   auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30_mm,
                                                   100_mm);
 
   std::shared_ptr grid1dCyl = GridPortalLink::make(
       cyl, BinningValue::binZ, Axis{AxisBound, -100_mm, 100_mm, 10});
-  grid1dCyl->setVolume(vol1);
+  grid1dCyl->setVolume(vol1.get());
 
   // Another cylinder, shifted in z
   auto cyl2 = Surface::makeShared<CylinderSurface>(
@@ -538,7 +543,7 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
   std::shared_ptr grid1dCyl2 = GridPortalLink::make(
       cyl2, BinningValue::binZ, Axis{AxisBound, -50_mm, 50_mm, 5});
 
-  grid1dCyl2->setVolume(vol2);
+  grid1dCyl2->setVolume(vol2.get());
 
   // Completely invalid
   BOOST_CHECK_THROW(GridPortalLink::merge(grid1dCyl, grid1dCyl2,
@@ -1381,9 +1386,9 @@ BOOST_AUTO_TEST_SUITE_END()  // PhiDirection
 
 BOOST_AUTO_TEST_CASE(BinFilling) {
   // Volumes for bin content checking
-  // WARNING: These are invalid pointers!
-  const auto* vol1 = reinterpret_cast<const TrackingVolume*>(0x000001);
-  const auto* vol2 = reinterpret_cast<const TrackingVolume*>(0x000002);
+
+  auto vol1 = makeDummyVolume();
+  auto vol2 = makeDummyVolume();
 
   BOOST_TEST_CONTEXT("RDirection") {
     auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
@@ -1392,7 +1397,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     std::shared_ptr grid1 = GridPortalLink::make(
         disc1, BinningValue::binR, Axis{AxisBound, 30_mm, 60_mm, 2});
 
-    grid1->setVolume(vol1);
+    grid1->setVolume(vol1.get());
 
     auto disc2 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 60_mm,
                                                   90_mm, 30_degree);
@@ -1400,7 +1405,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     std::shared_ptr grid2 = GridPortalLink::make(
         disc2, BinningValue::binR, Axis{AxisBound, 60_mm, 90_mm, 2});
 
-    grid2->setVolume(vol2);
+    grid2->setVolume(vol2.get());
 
     auto mergedPtr =
         GridPortalLink::merge(grid1, grid2, BinningValue::binR, *logger);
@@ -1415,10 +1420,10 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     grid2->printContents(std::cout);
     merged->printContents(std::cout);
 
-    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({1}), vol1);
-    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({2}), vol1);
-    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({3}), vol2);
-    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({4}), vol2);
+    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({1}), vol1.get());
+    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({2}), vol1.get());
+    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({3}), vol2.get());
+    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({4}), vol2.get());
   }
 
   BOOST_TEST_CONTEXT("PhiDirection") {
@@ -1428,7 +1433,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     std::shared_ptr grid1 = GridPortalLink::make(
         disc1, BinningValue::binPhi, Axis{AxisBound, -30_degree, 30_degree, 2});
 
-    grid1->setVolume(vol1);
+    grid1->setVolume(vol1.get());
 
     auto disc2 = Surface::makeShared<DiscSurface>(
         Transform3{AngleAxis3{60_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
@@ -1437,7 +1442,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     std::shared_ptr grid2 = GridPortalLink::make(
         disc2, BinningValue::binPhi, Axis{AxisBound, -30_degree, 30_degree, 2});
 
-    grid2->setVolume(vol2);
+    grid2->setVolume(vol2.get());
 
     auto mergedPtr =
         GridPortalLink::merge(grid1, grid2, BinningValue::binPhi, *logger);
@@ -1453,10 +1458,10 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     grid2->printContents(std::cout);
     merged->printContents(std::cout);
 
-    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({1}), vol2);
-    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({2}), vol2);
-    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({3}), vol1);
-    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({4}), vol1);
+    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({1}), vol2.get());
+    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({2}), vol2.get());
+    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({3}), vol1.get());
+    BOOST_CHECK_EQUAL(merged->grid().atLocalBins({4}), vol1.get());
   }
 }
 
@@ -1871,19 +1876,18 @@ BOOST_AUTO_TEST_SUITE(MergingCrossDisc)
 
 BOOST_AUTO_TEST_CASE(RDirection) {
   // Volumes for bin content checking
-  // WARNING: These are invalid pointers!
-  const auto* vol1 = reinterpret_cast<const TrackingVolume*>(0x000001);
-  const auto* vol2 = reinterpret_cast<const TrackingVolume*>(0x000002);
-  const auto* vol3 = reinterpret_cast<const TrackingVolume*>(0x000003);
-  const auto* vol4 = reinterpret_cast<const TrackingVolume*>(0x000004);
+  auto vol1 = makeDummyVolume();
+  auto vol2 = makeDummyVolume();
+  auto vol3 = makeDummyVolume();
+  auto vol4 = makeDummyVolume();
 
   auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
                                                 100_mm, 30_degree);
 
   std::shared_ptr grid1 = GridPortalLink::make(
       disc1, BinningValue::binR, Axis{AxisBound, 30_mm, 100_mm, 2});
-  grid1->grid().atLocalBins({1}) = vol1;
-  grid1->grid().atLocalBins({2}) = vol2;
+  grid1->grid().atLocalBins({1}) = vol1.get();
+  grid1->grid().atLocalBins({2}) = vol2.get();
 
   auto disc2 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 100_mm,
                                                 150_mm, 30_degree);
@@ -1891,8 +1895,8 @@ BOOST_AUTO_TEST_CASE(RDirection) {
   std::shared_ptr grid2 = GridPortalLink::make(
       disc2, BinningValue::binPhi, Axis{AxisBound, -30_degree, 30_degree, 2});
 
-  grid2->grid().atLocalBins({1}) = vol3;
-  grid2->grid().atLocalBins({2}) = vol4;
+  grid2->grid().atLocalBins({1}) = vol3.get();
+  grid2->grid().atLocalBins({2}) = vol4.get();
 
   auto mergedPtr =
       GridPortalLink::merge(grid1, grid2, BinningValue::binR, *logger);
@@ -1908,12 +1912,12 @@ BOOST_AUTO_TEST_CASE(RDirection) {
   BOOST_CHECK_EQUAL(axis1, axisExpectedR);
   BOOST_CHECK_EQUAL(axis2, axisExpectedPhi);
 
-  std::vector<std::pair<Vector2, const TrackingVolume*>> locations = {
-      {{40_mm, -15_degree}, vol1},  {{40_mm, 15_degree}, vol1},
-      {{90_mm, -15_degree}, vol2},  {{90_mm, 15_degree}, vol2},
+  std::vector<std::pair<Vector2, TrackingVolume*>> locations = {
+      {{40_mm, -15_degree}, vol1.get()},  {{40_mm, 15_degree}, vol1.get()},
+      {{90_mm, -15_degree}, vol2.get()},  {{90_mm, 15_degree}, vol2.get()},
 
-      {{110_mm, -15_degree}, vol3}, {{110_mm, 15_degree}, vol4},
-      {{140_mm, -15_degree}, vol3}, {{140_mm, 15_degree}, vol4},
+      {{110_mm, -15_degree}, vol3.get()}, {{110_mm, 15_degree}, vol4.get()},
+      {{140_mm, -15_degree}, vol3.get()}, {{140_mm, 15_degree}, vol4.get()},
   };
 
   for (const auto& [loc, vol] : locations) {
@@ -1928,11 +1932,11 @@ BOOST_AUTO_TEST_CASE(RDirection) {
 
 BOOST_AUTO_TEST_CASE(PhiDirection) {
   // Volumes for bin content checking
-  // WARNING: These are invalid pointers!
-  const auto* vol1 = reinterpret_cast<const TrackingVolume*>(0x000001);
-  const auto* vol2 = reinterpret_cast<const TrackingVolume*>(0x000002);
-  const auto* vol3 = reinterpret_cast<const TrackingVolume*>(0x000003);
-  const auto* vol4 = reinterpret_cast<const TrackingVolume*>(0x000004);
+
+  auto vol1 = makeDummyVolume();
+  auto vol2 = makeDummyVolume();
+  auto vol3 = makeDummyVolume();
+  auto vol4 = makeDummyVolume();
 
   auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
                                                 100_mm, 30_degree);
@@ -1940,8 +1944,8 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
   std::shared_ptr grid1 = GridPortalLink::make(
       disc1, BinningValue::binR, Axis{AxisBound, 30_mm, 100_mm, 2});
 
-  grid1->grid().atLocalBins({1}) = vol1;
-  grid1->grid().atLocalBins({2}) = vol2;
+  grid1->grid().atLocalBins({1}) = vol1.get();
+  grid1->grid().atLocalBins({2}) = vol2.get();
 
   auto disc2 = Surface::makeShared<DiscSurface>(
       Transform3{AngleAxis3{90_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
@@ -1950,8 +1954,8 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
   std::shared_ptr grid2 = GridPortalLink::make(
       disc2, BinningValue::binPhi, Axis{AxisBound, -60_degree, 60_degree, 2});
 
-  grid2->grid().atLocalBins({1}) = vol3;
-  grid2->grid().atLocalBins({2}) = vol4;
+  grid2->grid().atLocalBins({1}) = vol3.get();
+  grid2->grid().atLocalBins({2}) = vol4.get();
 
   auto mergedPtr =
       GridPortalLink::merge(grid1, grid2, BinningValue::binPhi, *logger);
@@ -1975,10 +1979,10 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
   BOOST_CHECK_EQUAL(axis2.getType(), AxisType::Equidistant);
   BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
 
-  std::vector<std::pair<Vector2, const TrackingVolume*>> locations = {
-      {{40_mm, 45_degree}, vol1},  {{40_mm, 0_degree}, vol4},
-      {{40_mm, -80_degree}, vol3}, {{90_mm, 45_degree}, vol2},
-      {{90_mm, 0_degree}, vol4},   {{90_mm, -80_degree}, vol3},
+  std::vector<std::pair<Vector2, TrackingVolume*>> locations = {
+      {{40_mm, 45_degree}, vol1.get()},  {{40_mm, 0_degree}, vol4.get()},
+      {{40_mm, -80_degree}, vol3.get()}, {{90_mm, 45_degree}, vol2.get()},
+      {{90_mm, 0_degree}, vol4.get()},   {{90_mm, -80_degree}, vol3.get()},
   };
 
   grid1->printContents(std::cout);

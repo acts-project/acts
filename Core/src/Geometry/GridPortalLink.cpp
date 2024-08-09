@@ -11,11 +11,13 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 
+#include <format>
+
 namespace Acts {
 
 std::unique_ptr<GridPortalLink> GridPortalLink::make(
-    const std::shared_ptr<RegularSurface>& surface,
-    const TrackingVolume& volume, BinningValue direction) {
+    const std::shared_ptr<RegularSurface>& surface, TrackingVolume& volume,
+    BinningValue direction) {
   std::unique_ptr<GridPortalLink> grid;
 
   if (const auto* cylinder =
@@ -276,7 +278,7 @@ void GridPortalLink::fillGrid1dTo2d(FillDirection dir,
   assert(locDest.size() == 2);
 
   for (std::size_t i = 0; i <= locSource[0] + 1; ++i) {
-    const auto* source = grid1d.atLocalBins({i});
+    TrackingVolume* source = grid1d.atLocalBins({i});
 
     if (dir == FillDirection::loc1) {
       for (std::size_t j = 0; j <= locDest[1] + 1; ++j) {

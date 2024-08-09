@@ -16,9 +16,6 @@
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <format>
-#include <vector>
-
 namespace Acts {
 
 class IGrid;
@@ -69,8 +66,8 @@ class GridPortalLink : public PortalLinkBase {
   }
 
   static std::unique_ptr<GridPortalLink> make(
-      const std::shared_ptr<RegularSurface>& surface,
-      const TrackingVolume& volume, BinningValue direction);
+      const std::shared_ptr<RegularSurface>& surface, TrackingVolume& volume,
+      BinningValue direction);
 
   static std::unique_ptr<PortalLinkBase> merge(
       const std::shared_ptr<GridPortalLink>& a,
@@ -78,7 +75,7 @@ class GridPortalLink : public PortalLinkBase {
       const Logger& logger = getDummyLogger());
 
   virtual const IGrid& grid() const = 0;
-  virtual void setVolume(const TrackingVolume* volume) = 0;
+  virtual void setVolume(TrackingVolume* volume) = 0;
   virtual unsigned int dim() const = 0;
   virtual std::unique_ptr<GridPortalLink> make2DGrid(
       const IAxis* other) const = 0;
@@ -116,9 +113,9 @@ class GridPortalLink : public PortalLinkBase {
 
   // These should only be used to synchronize the bins between grids
   virtual IndexType numLocalBins() const = 0;
-  virtual const TrackingVolume*& atLocalBins(IndexType indices) = 0;
+  virtual TrackingVolume*& atLocalBins(IndexType indices) = 0;
 
-  virtual const TrackingVolume* atLocalBins(IndexType indices) const = 0;
+  virtual TrackingVolume* atLocalBins(IndexType indices) const = 0;
 
  private:
   BinningValue m_direction;
@@ -131,7 +128,7 @@ template <typename... Axes>
   requires(sizeof...(Axes) <= 2)
 class GridPortalLinkT final : public GridPortalLink {
  public:
-  using GridType = Grid<const TrackingVolume*, Axes...>;
+  using GridType = Grid<TrackingVolume*, Axes...>;
   static constexpr std::size_t DIM = sizeof...(Axes);
 
   GridPortalLinkT(std::shared_ptr<RegularSurface> surface,
@@ -174,7 +171,7 @@ class GridPortalLinkT final : public GridPortalLink {
     }
   }
 
-  void setVolume(const TrackingVolume* volume) final {
+  void setVolume(TrackingVolume* volume) final {
     auto loc = m_grid.numLocalBins();
     if constexpr (GridType::DIM == 1) {
       for (std::size_t i = 1; i <= loc[0]; i++) {
@@ -224,7 +221,7 @@ class GridPortalLinkT final : public GridPortalLink {
     return result;
   }
 
-  const TrackingVolume*& atLocalBins(IndexType indices) final {
+  TrackingVolume*& atLocalBins(IndexType indices) final {
     throw_assert(indices.size() == DIM, "Invalid number of indices");
     typename GridType::index_t idx;
     for (std::size_t i = 0; i < DIM; i++) {
@@ -233,7 +230,7 @@ class GridPortalLinkT final : public GridPortalLink {
     return m_grid.atLocalBins(idx);
   }
 
-  const TrackingVolume* atLocalBins(IndexType indices) const final {
+  TrackingVolume* atLocalBins(IndexType indices) const final {
     throw_assert(indices.size() == DIM, "Invalid number of indices");
     typename GridType::index_t idx;
     for (std::size_t i = 0; i < DIM; i++) {
