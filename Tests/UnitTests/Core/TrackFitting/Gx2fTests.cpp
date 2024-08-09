@@ -291,7 +291,6 @@ std::shared_ptr<const TrackingGeometry> makeToyDetectorYdirection(
   //    volumeConfig2.length = volumeConfig.length;
   volumeConfig2.length = {2 * halfSizeSurface, (nSurfaces + 1) * 1_m,
                           2 * halfSizeSurface};
-  ;
   volumeConfig2.position = {volumeConfig2.length.x(),
                             volumeConfig2.length.y() / 2, 0.};
   volumeConfig2.name = "AdditionalVolume";

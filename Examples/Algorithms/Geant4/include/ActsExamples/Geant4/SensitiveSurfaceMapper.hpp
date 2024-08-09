@@ -41,17 +41,19 @@ struct SensitiveCandidates {
   /// @return a vector of sensitive surfaces
   std::vector<const Acts::Surface*> operator()(
       const Acts::GeometryContext& gctx, const Acts::Vector3& position) const {
+    if (trackingGeometry == nullptr) {
+      return {};
+    }
+
+    auto layer = trackingGeometry->associatedLayer(gctx, position);
+    if (layer == nullptr || layer->surfaceArray() == nullptr) {
+      return {};
+    }
+
     std::vector<const Acts::Surface*> surfaces;
-
-    if (trackingGeometry != nullptr) {
-      auto layer = trackingGeometry->associatedLayer(gctx, position);
-
-      if (layer->surfaceArray() != nullptr) {
-        for (const auto& surface : layer->surfaceArray()->surfaces()) {
-          if (surface->associatedDetectorElement() != nullptr) {
-            surfaces.push_back(surface);
-          }
-        }
+    for (const auto& surface : layer->surfaceArray()->surfaces()) {
+      if (surface->associatedDetectorElement() != nullptr) {
+        surfaces.push_back(surface);
       }
     }
     return surfaces;

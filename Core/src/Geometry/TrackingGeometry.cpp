@@ -42,13 +42,7 @@ Acts::TrackingGeometry::~TrackingGeometry() = default;
 
 const Acts::TrackingVolume* Acts::TrackingGeometry::lowestTrackingVolume(
     const GeometryContext& gctx, const Acts::Vector3& gp) const {
-  const TrackingVolume* searchVolume = m_world.get();
-  const TrackingVolume* currentVolume = nullptr;
-  while (currentVolume != searchVolume && (searchVolume != nullptr)) {
-    currentVolume = searchVolume;
-    searchVolume = searchVolume->lowestTrackingVolume(gctx, gp);
-  }
-  return currentVolume;
+  return m_world->lowestTrackingVolume(gctx, gp);
 }
 
 const Acts::TrackingVolume* Acts::TrackingGeometry::highestTrackingVolume()
@@ -63,7 +57,10 @@ Acts::TrackingGeometry::highestTrackingVolumeShared() const {
 
 const Acts::Layer* Acts::TrackingGeometry::associatedLayer(
     const GeometryContext& gctx, const Acts::Vector3& gp) const {
-  const TrackingVolume* lowestVol = (lowestTrackingVolume(gctx, gp));
+  const TrackingVolume* lowestVol = lowestTrackingVolume(gctx, gp);
+  if (lowestVol == nullptr) {
+    return nullptr;
+  }
   return lowestVol->associatedLayer(gctx, gp);
 }
 
