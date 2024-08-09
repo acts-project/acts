@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,7 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -147,6 +148,11 @@ struct MockNavigator {
     return state.currentSurface;
   }
 
+  const Acts::TrackingVolume *currentVolume(
+      const MockNavigatorState & /*state*/) const {
+    return nullptr;
+  }
+
   bool endOfWorldReached(const MockNavigatorState & /*state*/) const {
     return false;
   }
@@ -157,6 +163,10 @@ struct MockPropagatorState {
   MockStepperState stepping;
   Acts::GeometryContext geoContext;
   Acts::PropagatorStage stage = Acts::PropagatorStage::invalid;
+
+  struct {
+    std::vector<std::uint32_t> constrainToVolumeIds;
+  } options;
 };
 
 template <typename SurfaceSelector>
