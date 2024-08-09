@@ -9,7 +9,6 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
-#include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -20,40 +19,10 @@
 #include <limits>
 #include <memory>
 #include <stdexcept>
-#include <type_traits>
 
 namespace Acts {
 
 namespace {
-
-struct NoOtherAxis : public std::false_type {};
-
-template <typename axis_t>
-struct OtherAxis : public std::true_type {
-  using AxisType = std::decay_t<axis_t>;
-  const AxisType& m_axis;
-
-  OtherAxis(const AxisType& axis) : m_axis(axis) {}
-};
-
-template <typename axis_t>
-OtherAxis(axis_t&&) -> OtherAxis<std::decay_t<axis_t>>;
-
-template <typename axis_t>
-struct PrependAxis : public OtherAxis<std::decay_t<axis_t>> {
-  static constexpr bool prepend = true;
-};
-
-template <typename axis_t>
-PrependAxis(axis_t&&) -> PrependAxis<std::decay_t<axis_t>>;
-
-template <typename axis_t>
-struct AppendAxis : public OtherAxis<std::decay_t<axis_t>> {
-  static constexpr bool prepend = false;
-};
-
-template <typename axis_t>
-AppendAxis(axis_t&&) -> AppendAxis<std::decay_t<axis_t>>;
 
 template <typename... Args>
 std::unique_ptr<GridPortalLink> makeGrid(
