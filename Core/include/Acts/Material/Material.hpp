@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -74,7 +74,7 @@ class Material {
   /// Construct a vacuum representation.
   Material() = default;
   /// Construct from an encoded parameters vector.
-  Material(const ParametersVector& parameters);
+  explicit Material(const ParametersVector& parameters);
 
   Material(Material&& mat) = default;
   Material(const Material& mat) = default;
@@ -83,9 +83,9 @@ class Material {
   Material& operator=(const Material& mat) = default;
 
   /// Check if the material is valid, i.e. it is not vacuum.
-  constexpr operator bool() const { return 0.0f < m_ar; }
+  bool isValid() const { return 0.0f < m_ar; }
 
-  /// Return the radition length. Infinity in case of vacuum.
+  /// Return the radiation length. Infinity in case of vacuum.
   constexpr float X0() const { return m_x0; }
   /// Return the nuclear interaction length. Infinity in case of vacuum.
   constexpr float L0() const { return m_l0; }

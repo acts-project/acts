@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -139,7 +139,7 @@ inline MaterialSlab ISurfaceMaterial::materialSlab(
   // The plain material properties associated to this bin
   MaterialSlab plainMatProp = materialSlab(lp);
   // Scale if you have material to scale
-  if (plainMatProp) {
+  if (plainMatProp.isValid()) {
     double scaleFactor = factor(pDir, mStage);
     if (scaleFactor == 0.) {
       return MaterialSlab();
@@ -154,7 +154,7 @@ inline MaterialSlab ISurfaceMaterial::materialSlab(
   // The plain material properties associated to this bin
   MaterialSlab plainMatProp = materialSlab(gp);
   // Scale if you have material to scale
-  if (plainMatProp) {
+  if (plainMatProp.isValid()) {
     double scaleFactor = factor(pDir, mStage);
     if (scaleFactor == 0.) {
       return MaterialSlab();

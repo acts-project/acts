@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -30,13 +30,13 @@ BOOST_AUTO_TEST_SUITE(Material)
 BOOST_AUTO_TEST_CASE(ConstructVacuum) {
   // default constructor builds invalid material a.k.a. vacuum
   Acts::Material vacuum;
-  BOOST_CHECK(!vacuum);
+  BOOST_CHECK(!vacuum.isValid());
 }
 
 BOOST_AUTO_TEST_CASE(ConstructSomething) {
   // anything with non-zero Ar is a valid material
   auto notVacuum = Acts::Material::fromMolarDensity(1, 2, 3, 4, 5);
-  BOOST_CHECK(!!notVacuum);
+  BOOST_CHECK(notVacuum.isValid());
 }
 
 BOOST_AUTO_TEST_CASE(Units) {

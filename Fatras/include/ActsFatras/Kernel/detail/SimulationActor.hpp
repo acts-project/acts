@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -183,7 +183,7 @@ struct SimulationActor {
         Acts::MaterialSlab slab =
             surface.surfaceMaterial()->materialSlab(local);
         // again: interact only if there is valid material to interact with
-        if (slab) {
+        if (slab.isValid()) {
           // adapt material for non-zero incidence
           auto normal = surface.normal(state.geoContext, before.position(),
                                        before.direction());
