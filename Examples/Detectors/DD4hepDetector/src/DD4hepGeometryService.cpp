@@ -91,7 +91,7 @@ ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService::detector() {
   return *m_detector;
 }
 
-dd4hep::DetElement ActsExamples::DD4hep::DD4hepGeometryService::geometry() {
+dd4hep::DetElement& ActsExamples::DD4hep::DD4hepGeometryService::geometry() {
   if (!m_geometry) {
     buildDD4hepGeometry();
   }
