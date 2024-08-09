@@ -18,7 +18,7 @@ set( DETRAY_VERSION "v${_acts_detray_version}")
 FetchContent_Declare( Detray ${ACTS_DETRAY_SOURCE} )
 
 # Options used in the build of Detray.
-set( DETRAY_CUSTOM_SCALARTYPE "float" CACHE STRING
+set( DETRAY_CUSTOM_SCALARTYPE "double" CACHE STRING
    "Scalar type to use in the Detray code" )
 
 set( DETRAY_BUILD_TESTING OFF CACHE BOOL

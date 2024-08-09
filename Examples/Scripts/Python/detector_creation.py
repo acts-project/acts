@@ -53,9 +53,9 @@ if "__main__" == __name__:
         for surf in vol.surfacePtrs():
             if surf.geometryId().sensitive() > 0:
                 surfaces.append(surf)
-    acts.examples.writeSurfacesObj(
-        surfaces, geoContext, [0, 120, 120], "odd-surfaces.obj"
-    )
+    #acts.examples.writeSurfacesObj(
+        #surfaces, geoContext, [0, 120, 120], "odd-surfaces.obj"
+    #)
 
     # SVG style output
     surfaceStyle = acts.svg.Style()
@@ -93,4 +93,4 @@ if "__main__" == __name__:
 
     acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")
 
-    # det_detector = acts.examples.DetrayConverter(geoContext, detector,"odd-detray")
+    det_detector = acts.examples.convertDetectorToDetray(geoContext, detector,"odd-detray")
