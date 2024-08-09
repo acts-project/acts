@@ -30,7 +30,7 @@ inline ActsMatrix<3, 2> sphericalToFreeDirectionJacobian(
 
   // clang-format off
   ActsMatrix<3, 2> jacobian;
-  jacobian << 
+  jacobian <<
     -direction.y(),  cosTheta * cosPhi,
      direction.x(),  cosTheta * sinPhi,
      0,             -sinTheta;

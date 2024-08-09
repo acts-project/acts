@@ -8,7 +8,7 @@ The basic scalar type can be defined via this file and is set per default to `do
 
    #ifdef ACTS_CUSTOM_SCALAR
    using ActsScalar = ACTS_CUSTOM_SCALAR;
-   #else 
+   #else
    using ActsScalar = double;
    #endif
 
