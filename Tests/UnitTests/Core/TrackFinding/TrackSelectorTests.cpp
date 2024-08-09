@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,6 +25,11 @@ using namespace Acts;
 namespace bdata = boost::unit_test::data;
 
 struct MockTrack {
+  static constexpr bool ReadOnly = true;
+  using Container = VectorTrackContainer;
+  using Trajectory = VectorMultiTrajectory;
+  using IndexType = TrackIndexType;
+
   double m_theta;
   double m_phi;
   double m_pt;
