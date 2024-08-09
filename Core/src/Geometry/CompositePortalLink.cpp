@@ -18,16 +18,16 @@
 namespace Acts {
 
 CompositePortalLink::CompositePortalLink(
-    const std::shared_ptr<const PortalLinkBase>& a,
-    const std::shared_ptr<const PortalLinkBase>& b, BinningValue direction,
+    const std::shared_ptr<PortalLinkBase>& a,
+    const std::shared_ptr<PortalLinkBase>& b, BinningValue direction,
     bool flatten)
     : PortalLinkBase(mergedSurface(*a, *b, direction)) {
   if (!flatten) {
     m_children = {a, b};
   } else {
-    auto handle = [&](const std::shared_ptr<const PortalLinkBase>& link) {
+    auto handle = [&](const std::shared_ptr<PortalLinkBase>& link) {
       if (const auto* composite =
-              dynamic_cast<const CompositePortalLink*>(link.get());
+              dynamic_cast<CompositePortalLink*>(link.get());
           composite != nullptr) {
         m_children.insert(m_children.end(), composite->m_children.begin(),
                           composite->m_children.end());
@@ -51,6 +51,9 @@ const TrackingVolume* CompositePortalLink::resolveVolume(
     }
   }
 
+  // @TODO: Should this be an error or just return nullptr?
+  // I guess technically it's an error, since if we got here, we should be
+  // on one of the merged surfaces.
   throw std::runtime_error{"CompositePortalLink: Neither portal is on surface"};
 }
 
