@@ -124,9 +124,15 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   BOOST_CHECK(!discSurfaceObject->isOnSurface(
       tgContext, point3DNotInSector, ignoredMomentum,
       BoundaryTolerance::None()));  // passes
+  BOOST_CHECK(
+      !discSurfaceObject->isOnSurface(tgContext, point3DNotInSector,
+                                      BoundaryTolerance::None()));  // passes
   BOOST_CHECK(discSurfaceObject->isOnSurface(
       tgContext, point3DOnSurface, ignoredMomentum,
       BoundaryTolerance::None()));  // passes
+  BOOST_CHECK(
+      discSurfaceObject->isOnSurface(tgContext, point3DOnSurface,
+                                     BoundaryTolerance::None()));  // passes
   //
   /// Test localToGlobal
   Vector3 returnedPosition{10.9, 8.7, 6.5};

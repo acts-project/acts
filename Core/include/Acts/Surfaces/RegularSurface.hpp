@@ -97,5 +97,20 @@ class RegularSurface : public Surface {
   /// @return The global position by value
   virtual Vector3 localToGlobal(const GeometryContext& gctx,
                                 const Vector2& lposition) const = 0;
+
+  /// The geometric onSurface method
+  ///
+  /// Geometrical check whether position is on Surface
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position global position to be evaludated
+  /// @param boundaryTolerance BoundaryTolerance directive for this onSurface check
+  ///
+  /// @return boolean indication if operation was successful
+  bool isOnSurface(const GeometryContext& gctx, const Vector3& position,
+                   const BoundaryTolerance& boundaryTolerance =
+                       BoundaryTolerance::None()) const;
+
+  using Surface::isOnSurface;
 };
 }  // namespace Acts

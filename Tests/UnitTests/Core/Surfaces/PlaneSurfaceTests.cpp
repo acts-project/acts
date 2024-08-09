@@ -152,7 +152,11 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   Vector3 offSurface{0, 1, -2.};
   BOOST_CHECK(planeSurfaceObject->isOnSurface(
       tgContext, globalPosition, momentum, BoundaryTolerance::None()));
+  BOOST_CHECK(planeSurfaceObject->isOnSurface(tgContext, globalPosition,
+                                              BoundaryTolerance::None()));
   BOOST_CHECK(!planeSurfaceObject->isOnSurface(tgContext, offSurface, momentum,
+                                               BoundaryTolerance::None()));
+  BOOST_CHECK(!planeSurfaceObject->isOnSurface(tgContext, offSurface,
                                                BoundaryTolerance::None()));
   //
   // Test intersection
