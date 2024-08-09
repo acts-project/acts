@@ -482,6 +482,14 @@ class Surface : public virtual GeometryObject,
   virtual ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const = 0;
 
+  /// Outstream operator for surfaces without an associated detector element
+  /// @note This operator checks if an associated detector element is set
+  ///       and will throws an exception if that's the case.
+  /// @param os The output stream
+  /// @param srf The surface to print
+  /// @return The output stream
+  friend std::ostream& operator<<(std::ostream& os, const Surface& srf);
+
  protected:
   /// Output Method for std::ostream, to be overloaded by child classes
   ///

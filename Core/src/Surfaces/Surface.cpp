@@ -357,3 +357,16 @@ void Acts::Surface::assignSurfaceMaterial(
 void Acts::Surface::associateLayer(const Acts::Layer& lay) {
   m_associatedLayer = (&lay);
 }
+
+std::ostream& Acts::operator<<(std::ostream& os, const Acts::Surface& srf) {
+  if (srf.associatedDetectorElement() != nullptr) {
+    throw std::runtime_error(
+        "Cannot print Surface with associated DetectorElement without geometry "
+        "context");
+  }
+  // Using a default context is ONLY safe, if the surface does not have an
+  // associated detector element, which we ensure right above.
+  Acts::GeometryContext defaultContext;
+  os << srf.toStream(defaultContext);
+  return os;
+}
