@@ -22,6 +22,8 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 #   that it is off/empty by default. if you think that is not possible, then
 #   it probably is not an optional component.
 # core related options
+# Formatting needs to be preserved here for parsing
+# gersemi: off
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
@@ -95,6 +97,7 @@ set(ACTS_GPERF_INSTALL_DIR "" CACHE STRING "Hint to help find gperf if profiling
 
 option(ACTS_ENABLE_LOG_FAILURE_THRESHOLD "Enable failing on log messages with level above certain threshold" OFF)
 set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an exception should be automatically thrown. If ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set and this is unset, this will enable a runtime check of the log level.")
+# gersemi: on
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
