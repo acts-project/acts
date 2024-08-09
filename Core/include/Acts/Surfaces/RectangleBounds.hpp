@@ -86,13 +86,12 @@ class RectangleBounds : public PlanarBounds {
 
   /// Return the vertices
   ///
-  /// @param lseg the number of segments used to approximate
-  /// and eventually curved line
-  ///
+  /// @param quarterSegments is the number of segments used to describe curved
+  /// segments in a quarter of the phi range.
   /// @note the number of segments is ignored in this representation
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2> vertices(unsigned int quarterSegments = 0u) const final;
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;

@@ -256,7 +256,8 @@ Acts::Experimental::LayerStructureBuilder::construct(
       if (!support.internalConstraints.empty()) {
         // Estimate the extent from the surfaces
         for (const auto& s : internalSurfaces) {
-          auto sPolyhedron = s->polyhedronRepresentation(gctx, m_cfg.nSegments);
+          auto sPolyhedron =
+              s->polyhedronRepresentation(gctx, m_cfg.quarterSegments);
           supportExtent.extend(sPolyhedron.extent(),
                                support.internalConstraints);
         }

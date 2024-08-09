@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   planarStyle.highlightColor = {255, 153, 51};
   planarStyle.highlights = {"mouseover", "mouseout"};
   planarStyle.strokeWidth = 0.5;
-  planarStyle.nSegments = 0u;
+  planarStyle.quarterSegments = 0u;
 
   // Rectangle case
   auto rectangleBounds = std::make_shared<Acts::RectangleBounds>(36., 64.);
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaces) {
   discStyle.highlightColor = {153, 204, 0};
   discStyle.highlights = {"mouseover", "mouseout"};
   discStyle.strokeWidth = 0.5;
-  discStyle.nSegments = 72u;
+  discStyle.quarterSegments = 72u;
 
   auto transform = Acts::Transform3::Identity();
   transform.pretranslate(Acts::Vector3{20., 20., 100.});

@@ -188,19 +188,15 @@ const Acts::CylinderBounds& Acts::CylinderSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, std::size_t lseg) const {
+    const GeometryContext& gctx, unsigned int quarterSegments) const {
   auto ctrans = transform(gctx);
 
   // Prepare vertices and faces
-  std::vector<Vector3> vertices = bounds().createCircles(ctrans, lseg);
-  std::vector<Polyhedron::FaceType> faces;
-  std::vector<Polyhedron::FaceType> triangularMesh;
-
-  bool fullCylinder = bounds().coversFullAzimuth();
-
-  auto facesMesh =
-      detail::FacesHelper::cylindricalFaceMesh(vertices, fullCylinder);
-  return Polyhedron(vertices, facesMesh.first, facesMesh.second, false);
+  std::vector<Vector3> vertices =
+      bounds().circleVertices(ctrans, quarterSegments);
+  auto [faces, triangularMesh] =
+      detail::FacesHelper::cylindricalFaceMesh(vertices);
+  return Polyhedron(vertices, faces, triangularMesh, false);
 }
 
 Acts::Vector3 Acts::CylinderSurface::rotSymmetryAxis(

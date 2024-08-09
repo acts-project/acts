@@ -96,7 +96,7 @@ bool Acts::TrapezoidBounds::inside(
 }
 
 std::vector<Acts::Vector2> Acts::TrapezoidBounds::vertices(
-    unsigned int /*lseg*/) const {
+    unsigned int /*ignoredSegments*/) const {
   const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
   const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
   const double hlY = get(TrapezoidBounds::eHalfLengthY);

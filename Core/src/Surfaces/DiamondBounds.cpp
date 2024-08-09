@@ -27,7 +27,7 @@ bool Acts::DiamondBounds::inside(
 }
 
 std::vector<Acts::Vector2> Acts::DiamondBounds::vertices(
-    unsigned int /*lseg*/) const {
+    unsigned int /*ignoredSegments*/) const {
   // Vertices starting at lower left (min rel. phi)
   // counter-clockwise
   double x1 = get(DiamondBounds::eHalfLengthXnegY);

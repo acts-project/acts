@@ -214,14 +214,20 @@ class CylinderSurface : public RegularSurface {
 
   /// Return a Polyhedron for a cylinder
   ///
+  /// This method represents the cylinder as a polyhedron with a given number
+  /// of segments to represent a quarter of a full circle. The polyedron will
+  /// consist of the vertices of the cylinder on both sides, and faces between
+  /// them, both as rectangular faces and as triangular faces.
+  ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lseg Number of segments along curved lines, it represents
-  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
-  /// are given
+  /// @param quarterSegments The number of segments to approximate a quarter of the
+  /// full circle; it's chosen to be 1, only the extrema points (-pi, -0.5pi,
+  /// 0., 0.5pi) are inserted to capture the correct extent in the x-y plane
   ///
   /// @return A list of vertices and a face/facett description of it
-  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      std::size_t lseg) const override;
+  Polyhedron polyhedronRepresentation(
+      const GeometryContext& gctx,
+      unsigned int quarterSegments = 2u) const override;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.

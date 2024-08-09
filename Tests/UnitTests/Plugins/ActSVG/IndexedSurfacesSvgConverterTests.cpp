@@ -42,7 +42,7 @@ IndexedSurfacesConverter::Options generateDrawOptions() {
   sensitiveStyle.highlights = {"onmouseover", "onmouseout"};
   sensitiveStyle.strokeWidth = 0.5;
   sensitiveStyle.strokeColor = {0, 0, 0};
-  sensitiveStyle.nSegments = 72u;
+  sensitiveStyle.quarterSegments = 72u;
   std::pair<GeometryIdentifier, Style> allSensitives = {GeometryIdentifier(0u),
                                                         sensitiveStyle};
 

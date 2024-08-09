@@ -200,15 +200,16 @@ class ConeSurface : public RegularSurface {
   /// Return a Polyhedron for the surfaces
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lseg Number of segments along curved lines, it represents
-  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
-  /// are given
-  /// @note that a surface transform can invalidate the extrema
-  /// in the transformed space
+  /// @param quarterSegments Number of segments used to approximate a quarter
+  ///
+  /// @note The phi extrema points at (-pi, -1/2 pi, 0, 1/2 pi) that fall within
+  /// the surface will be inserted to guarantee an appropriate extent
+  /// measurement in x and y
   ///
   /// @return A list of vertices and a face/facett description of it
-  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      std::size_t lseg) const override;
+  Polyhedron polyhedronRepresentation(
+      const GeometryContext& gctx,
+      unsigned int quarterSegments = 2u) const override;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;

@@ -99,7 +99,6 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
         objVis, center, center + 1.2 * bR * rotation.col(1), 4., 2.5, green);
     GeometryView3D::drawArrowForward(
         objVis, center, center + 1.2 * bhZ * rotation.col(2), 4., 2.5, blue);
-
     objVis.write("TGeoConversion_TGeoTube_CylinderSurface_" +
                  std::to_string(icyl));
     objVis.clear();

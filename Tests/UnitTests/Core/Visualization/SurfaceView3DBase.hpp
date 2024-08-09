@@ -68,7 +68,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   coneSurfaces.push_back(cone);
   GeometryView3D::drawSurface(helper, *cone, gctx, Transform3::Identity(),
                               sConfig);
-  ;
+
   helper.write(std::string("Surfaces_ConeSurface") + tag);
   helper.write(cStream);
   helper.clear();
@@ -80,7 +80,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   coneSurfaces.push_back(cone);
   GeometryView3D::drawSurface(helper, *cone, gctx, Transform3::Identity(),
                               sConfig);
-  ;
+
   helper.write(std::string("Surfaces_ConeSurfaceSector") + tag);
   helper.write(cStream);
   helper.clear();
@@ -92,7 +92,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   coneSurfaces.push_back(cone);
   GeometryView3D::drawSurface(helper, *cone, gctx, Transform3::Identity(),
                               sConfig);
-  ;
+
   helper.write(std::string("Surfaces_ConeSurfaceSectorShifted") + tag);
   helper.write(cStream);
   helper.clear();
@@ -126,7 +126,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   cylinderSurfaces.push_back(cylinder);
   GeometryView3D::drawSurface(helper, *cylinder, gctx, Transform3::Identity(),
                               sConfig);
-  ;
+
   helper.write(std::string("Surfaces_CylinderSurface") + tag);
   helper.write(cStream);
   helper.clear();
@@ -138,7 +138,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   cylinderSurfaces.push_back(cylinder);
   GeometryView3D::drawSurface(helper, *cylinder, gctx, Transform3::Identity(),
                               sConfig);
-  ;
+
   helper.write(std::string("Surfaces_CylinderSurfaceSector") + tag);
   helper.write(cStream);
   helper.clear();
@@ -150,7 +150,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   cylinderSurfaces.push_back(cylinder);
   GeometryView3D::drawSurface(helper, *cylinder, gctx, Transform3::Identity(),
                               sConfig);
-  ;
+
   helper.write(std::string("Surfaces_CylinderSurfaceSectorShifted") + tag);
   helper.write(cStream);
   helper.clear();
@@ -179,7 +179,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
     auto bbSurface = Surface::makeShared<PlaneSurface>(identity, bbBounds);
     GeometryView3D::drawSurface(helper, *bbSurface, gctx,
                                 Transform3::Identity(), sConfig);
-    ;
+
     helper.write(bbPath);
     helper.write(cStream);
     helper.clear();
@@ -199,7 +199,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   radialSurfaces.push_back(disc);
   GeometryView3D::drawSurface(helper, *disc, gctx, Transform3::Identity(),
                               sConfig);
-  ;
+
   helper.write(std::string("Surfaces_DiscSurfaceFull") + tag);
   helper.write(cStream);
   helper.clear();
@@ -335,7 +335,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   planarSurfaces.push_back(plane);
   GeometryView3D::drawSurface(helper, *plane, gctx, Transform3::Identity(),
                               sConfig);
-  ;
+
   helper.write(name + tag);
   helper.write(cStream);
   helper.clear();
@@ -349,7 +349,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   planarSurfaces.push_back(plane);
   GeometryView3D::drawSurface(helper, *plane, gctx, Transform3::Identity(),
                               sConfig);
-  ;
+
   helper.write(name + tag);
   helper.write(cStream);
   helper.clear();
@@ -363,7 +363,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   planarSurfaces.push_back(plane);
   GeometryView3D::drawSurface(helper, *plane, gctx, Transform3::Identity(),
                               sConfig);
-  ;
+
   helper.write(name + tag);
   helper.write(cStream);
   helper.clear();
@@ -377,7 +377,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   planarSurfaces.push_back(plane);
   GeometryView3D::drawSurface(helper, *plane, gctx, Transform3::Identity(),
                               sConfig);
-  ;
+
   helper.write(name + tag);
   helper.write(cStream);
   helper.clear();

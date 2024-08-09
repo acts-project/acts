@@ -58,7 +58,7 @@ std::ostream& Acts::PerigeeSurface::toStreamImpl(const GeometryContext& gctx,
 }
 
 Acts::Polyhedron Acts::PerigeeSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, std::size_t /*lseg*/) const {
+    const GeometryContext& gctx, unsigned int /*quarterSegments*/) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;

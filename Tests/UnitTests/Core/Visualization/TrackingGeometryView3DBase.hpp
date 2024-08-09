@@ -39,14 +39,18 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
 
   ViewConfig viewSensitive = ViewConfig({0, 180, 240});
   viewSensitive.triangulate = triangulate;
+  viewSensitive.quarterSegments = 72;
   ViewConfig viewPassive = ViewConfig({240, 280, 0});
   viewPassive.triangulate = triangulate;
+  viewPassive.quarterSegments = 72;
   ViewConfig viewVolume = ViewConfig({220, 220, 0});
   viewVolume.triangulate = triangulate;
+  viewVolume.quarterSegments = 72;
   ViewConfig viewContainer = ViewConfig({220, 220, 0});
   viewContainer.triangulate = triangulate;
+  viewContainer.quarterSegments = 72;
   ViewConfig viewGrid = ViewConfig({220, 0, 0});
-  viewGrid.nSegments = 8;
+  viewGrid.quarterSegments = 8;
   viewGrid.offset = 3.;
   viewGrid.triangulate = triangulate;
 

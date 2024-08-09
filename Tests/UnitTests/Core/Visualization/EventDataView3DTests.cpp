@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(BoundTrackParametersVisualizationObj) {
   for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
-  BOOST_CHECK_EQUAL(std::count(objTest.begin(), objTest.end(), '\n'), 1458);
+  BOOST_CHECK_EQUAL(std::count(objTest.begin(), objTest.end(), '\n'), 4924);
 }
 
 BOOST_AUTO_TEST_CASE(BoundTrackParametersVisualizationPly) {
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(BoundTrackParametersVisualizationPly) {
   for (const auto& plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
-  BOOST_CHECK_EQUAL(std::count(plyTest.begin(), plyTest.end(), '\n'), 973);
+  BOOST_CHECK_EQUAL(std::count(plyTest.begin(), plyTest.end(), '\n'), 3143);
 }
 
 BOOST_AUTO_TEST_CASE(MeasurementVisualizationObj) {
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationObj) {
   for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
-  BOOST_CHECK_EQUAL(std::count(objTest.begin(), objTest.end(), '\n'), 31010);
+  BOOST_CHECK_EQUAL(std::count(objTest.begin(), objTest.end(), '\n'), 103796);
 }
 
 BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationPly) {
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationPly) {
   for (const auto& plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
-  BOOST_CHECK_EQUAL(std::count(plyTest.begin(), plyTest.end(), '\n'), 20521);
+  BOOST_CHECK_EQUAL(std::count(plyTest.begin(), plyTest.end(), '\n'), 66091);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

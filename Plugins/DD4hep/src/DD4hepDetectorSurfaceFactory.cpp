@@ -108,7 +108,7 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
   // Measure if configured to do so
   if (cache.sExtent.has_value()) {
     auto sExtent =
-        sSurface->polyhedronRepresentation(gctx, cache.nExtentSegments)
+        sSurface->polyhedronRepresentation(gctx, cache.nExtentQSegments)
             .extent();
     cache.sExtent.value().extend(sExtent, cache.extentConstraints);
   }
@@ -137,7 +137,7 @@ Acts::DD4hepDetectorSurfaceFactory::constructPassiveComponents(
   // Measure if configured to do so
   if (cache.pExtent.has_value()) {
     auto sExtent =
-        pSurface->polyhedronRepresentation(gctx, cache.nExtentSegments)
+        pSurface->polyhedronRepresentation(gctx, cache.nExtentQSegments)
             .extent();
     cache.pExtent.value().extend(sExtent, cache.extentConstraints);
   }

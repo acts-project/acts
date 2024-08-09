@@ -42,7 +42,7 @@ namespace Acts::Test {
 const GeometryContext tgContext = GeometryContext();
 
 const std::vector<std::tuple<std::string, unsigned int>> testModes = {
-    {"Triangulate", 72}, {"Extrema", 1}};
+    {"Triangulate", 18}, {"Extrema", 1}};
 
 const Transform3 transform = Transform3::Identity();
 const double epsAbs = 1e-12;
@@ -61,9 +61,8 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
 
   const double rMax = hzPos * std::tan(alpha);
 
-  for (const auto& mode : testModes) {
-    ACTS_INFO("\tMode: " << std::get<std::string>(mode));
-    const unsigned int segments = std::get<unsigned int>(mode);
+  for (const auto& [mode, segments] : testModes) {
+    ACTS_INFO("\tMode: " << mode);
 
     /// The full cone on one side
     {
@@ -81,9 +80,10 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
       CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0_mm, epsAbs);
       CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), hzPos, epsAbs);
 
-      const unsigned int expectedFaces = segments < 4 ? 4 : segments;
+      const unsigned int expectedFaces = 4 * segments;
       BOOST_CHECK_EQUAL(oneConePh.faces.size(), expectedFaces);
-      BOOST_CHECK_EQUAL(oneConePh.vertices.size(), expectedFaces + 1);
+      // full segments + overlap at (pi/pi) + tip
+      BOOST_CHECK_EQUAL(oneConePh.vertices.size(), expectedFaces + 2);
     }
 
     /// The full cone on one side
@@ -106,6 +106,11 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
       CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), rMax, epsAbs);
       CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), hzpMin, epsAbs);
       CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), hzPos, epsAbs);
+
+      const unsigned int expectedFaces = 4 * segments;
+      BOOST_CHECK_EQUAL(oneConePiecePh.faces.size(), expectedFaces);
+      BOOST_CHECK_EQUAL(oneConePiecePh.vertices.size(),
+                        (expectedFaces + 1) * 2);
     }
 
     /// The full cone on both sides
@@ -124,9 +129,11 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
       CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), hzNeg, epsAbs);
       CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), hzPos, epsAbs);
 
-      const unsigned int expectedFaces = segments < 4 ? 8 : 2 * segments;
+      const unsigned int expectedFaces = 2 * segments * 4;
+      const unsigned int expectedVertices = 2 * (4 * segments + 1) + 1;
+
       BOOST_CHECK_EQUAL(twoConesPh.faces.size(), expectedFaces);
-      BOOST_CHECK_EQUAL(twoConesPh.vertices.size(), expectedFaces + 1);
+      BOOST_CHECK_EQUAL(twoConesPh.vertices.size(), expectedVertices);
     }
 
     /// A centered sectoral cone on both sides
@@ -143,13 +150,16 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
       const auto extent = sectoralConesPh.extent();
       CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), 0, epsAbs);
       CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), rMax, epsAbs);
-      //      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), ???,
-      //      epsAbs); CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(),
-      //      ???, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(),
+                      -rMax * std::sin(phiSector), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(),
+                      rMax * std::sin(phiSector), epsAbs);
       CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), 0_mm, epsAbs);
       CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), rMax, epsAbs);
       CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), hzNeg, epsAbs);
       CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), hzPos, epsAbs);
+
+      // Segment numbers are further checked with the VertexHelper checks
     }
   }
 }
@@ -185,8 +195,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
       CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), -hZ, epsAbs);
       CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), hZ, epsAbs);
 
-      const unsigned int expectedFaces = segments < 4 ? 4 : segments;
-      const unsigned int expectedVertices = segments < 4 ? 8 : 2 * segments;
+      const unsigned int expectedFaces = 4 * segments;
+      const unsigned int expectedVertices = (4 * segments + 1) * 2;
       BOOST_CHECK_EQUAL(fullCylinderPh.faces.size(), expectedFaces);
       BOOST_CHECK_EQUAL(fullCylinderPh.vertices.size(), expectedVertices);
     }
@@ -248,7 +258,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
       CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), 0., epsAbs);
 
       const unsigned int expectedFaces = 1;
-      const unsigned int expectedVertices = segments > 4 ? segments + 1 : 4 + 1;
+      // Segments + overlap + center
+      const unsigned int expectedVertices = 4 * segments + 1 + 1;
       BOOST_CHECK_EQUAL(fullDiscPh.faces.size(), expectedFaces);
       BOOST_CHECK_EQUAL(fullDiscPh.vertices.size(), expectedVertices);
     }
@@ -353,14 +364,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
       auto annulusDisc = Surface::makeShared<DiscSurface>(transform, annulus);
       auto annulusDiscPh =
           annulusDisc->polyhedronRepresentation(tgContext, segments);
-
       const auto extent = annulusDiscPh.extent();
-      //      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), ???,
-      //      epsAbs); CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(),
-      //      ???, epsAbs);
-      //      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), ???,
-      //      epsAbs); CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(),
-      //      ???, epsAbs);
       CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), minRadius,
                       epsAbs);
       CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), maxRadius,

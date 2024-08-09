@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(CylindricalTrackingGeometrySvg) {
   cylinderLayerStyle.highlights = {"mouseover", "mouseout"};
   cylinderLayerStyle.strokeColor = {25, 25, 25};
   cylinderLayerStyle.strokeWidth = 0.5;
-  cylinderLayerStyle.nSegments = 72u;
+  cylinderLayerStyle.quarterSegments = 72u;
 
   Acts::GeometryIdentifier geoID{0};
 

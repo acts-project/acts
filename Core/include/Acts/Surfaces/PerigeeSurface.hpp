@@ -76,11 +76,11 @@ class PerigeeSurface : public LineSurface {
   /// Return a Polyhedron for the surfaces
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lseg is ignored for a perigee @note ignored
+  /// @param ingoreSegments is an ignored parameter
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      std::size_t lseg) const final;
+                                      unsigned int ingoreSegments) const final;
 
  protected:
   /// Output Method for std::ostream

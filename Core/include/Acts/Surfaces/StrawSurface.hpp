@@ -92,13 +92,13 @@ class StrawSurface : public LineSurface {
   /// Return a Polyhedron for the surfaces
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lseg Number of segments along curved lines, it represents
-  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
-  /// are given @note if lseg is set to 1 then only the straw is created
+  /// @param quarterSegments is the number of segments used to describe curved
+  /// segments in a quarter of the phi range. If it is 1, then only the extrema
+  /// points in phi are inserted next to the segment corners.
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      std::size_t lseg) const final;
+                                      unsigned int quarterSegments) const final;
 };
 
 inline Surface::SurfaceType StrawSurface::type() const {

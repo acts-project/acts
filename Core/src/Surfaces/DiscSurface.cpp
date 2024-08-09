@@ -154,12 +154,9 @@ const Acts::SurfaceBounds& Acts::DiscSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, std::size_t lseg) const {
+    const GeometryContext& gctx, unsigned int quarterSegments) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
-  std::vector<Polyhedron::FaceType> faces;
-  std::vector<Polyhedron::FaceType> triangularMesh;
-
   // Understand the disc
   bool fullDisc = m_bounds->coversFullAzimuth();
   bool toCenter = m_bounds->rMin() < s_onSurfaceTolerance;
@@ -167,7 +164,7 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
   bool exactPolyhedron = (m_bounds->type() == SurfaceBounds::eDiscTrapezoid);
   bool addCentreFromConvexFace = (m_bounds->type() != SurfaceBounds::eAnnulus);
   if (m_bounds) {
-    auto vertices2D = m_bounds->vertices(lseg);
+    auto vertices2D = m_bounds->vertices(quarterSegments);
     vertices.reserve(vertices2D.size() + 1);
     Vector3 wCenter(0., 0., 0);
     for (const auto& v2D : vertices2D) {
@@ -182,22 +179,19 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
       if (addCentreFromConvexFace) {
         vertices.push_back(wCenter);
       }
-      auto facesMesh = detail::FacesHelper::convexFaceMesh(vertices, true);
-      faces = facesMesh.first;
-      triangularMesh = facesMesh.second;
+      auto [faces, triangularMesh] =
+          detail::FacesHelper::convexFaceMesh(vertices, true);
+      return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
     } else {
       // Two concentric rings, we use the pure concentric method momentarily,
       // but that creates too  many unneccesarry faces, when only two
       // are needed to describe the mesh, @todo investigate merging flag
-      auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices, true);
-      faces = facesMesh.first;
-      triangularMesh = facesMesh.second;
+      auto [faces, triangularMesh] =
+          detail::FacesHelper::cylindricalFaceMesh(vertices);
+      return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
     }
-  } else {
-    throw std::domain_error(
-        "Polyhedron repr of boundless surface not possible.");
   }
-  return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
+  throw std::domain_error("Polyhedron repr of boundless surface not possible.");
 }
 
 Acts::Vector2 Acts::DiscSurface::localPolarToCartesian(

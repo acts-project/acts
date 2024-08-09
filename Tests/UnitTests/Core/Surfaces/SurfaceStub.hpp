@@ -102,7 +102,7 @@ class SurfaceStub : public RegularSurface {
 
   /// Return a Polyhedron for the surfaces
   Polyhedron polyhedronRepresentation(const GeometryContext& /*gctx*/,
-                                      std::size_t /*lseg */) const final {
+                                      unsigned int /* ignored */) const final {
     std::vector<Vector3> vertices;
     std::vector<std::vector<std::size_t>> faces;
     std::vector<std::vector<std::size_t>> triangularMesh;

@@ -92,14 +92,13 @@ class EllipseBounds : public PlanarBounds {
 
   /// Return the vertices
   ///
-  /// @param lseg the number of segments used to approximate
-  /// and eventually curved line, here it refers to the full 2PI Ellipse
-  ///
-  /// @note the number of segments to may be altered by also providing
-  /// the extremas in all direction
+  /// @param quarterSegments is the number of segments to approximate a quarter
+  /// of a circle. In order to symmetrize fully closed and sectoral cylinders,
+  /// also in the first case the two end points are given (albeit they overlap)
+  /// in -pi / pi
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg) const final;
+  std::vector<Vector2> vertices(unsigned int quarterSegments) const final;
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;
