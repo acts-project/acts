@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
         Transform3::Identity(),
         std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
 
-    auto trivial = std::make_unique<TrivialPortalLink>(cyl, vol.get());
+    auto trivial = std::make_unique<TrivialPortalLink>(cyl, *vol);
     BOOST_REQUIRE(trivial);
 
     BOOST_CHECK_EQUAL(trivial->resolveVolume(gctx, Vector2{1, 2}), vol.get());
@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     auto cylPhi = Surface::makeShared<CylinderSurface>(
         Transform3::Identity(), 30_mm, 100_mm, 30_degree);
 
-    auto trivialPhi = std::make_unique<TrivialPortalLink>(cylPhi, vol.get());
+    auto trivialPhi = std::make_unique<TrivialPortalLink>(cylPhi, *vol);
     BOOST_REQUIRE(trivialPhi);
 
     BOOST_CHECK_EQUAL(trivialPhi->resolveVolume(gctx, Vector2{1, 2}),
@@ -483,7 +483,7 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
         Transform3::Identity(),
         std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
 
-    auto trivial = std::make_unique<TrivialPortalLink>(disc, vol.get());
+    auto trivial = std::make_unique<TrivialPortalLink>(disc, *vol);
     BOOST_REQUIRE(trivial);
 
     // Doesn't matter which position
@@ -2016,11 +2016,11 @@ BOOST_AUTO_TEST_CASE(CompositeConstruction) {
   auto disc1 =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 60_mm);
 
-  auto trivial1 = std::make_shared<TrivialPortalLink>(disc1, vol1.get());
+  auto trivial1 = std::make_shared<TrivialPortalLink>(disc1, *vol1);
 
   auto disc2 =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 60_mm, 90_mm);
-  auto trivial2 = std::make_shared<TrivialPortalLink>(disc2, vol2.get());
+  auto trivial2 = std::make_shared<TrivialPortalLink>(disc2, *vol2);
 
   auto composite = std::make_shared<CompositePortalLink>(trivial1, trivial2,
                                                          BinningValue::binR);
@@ -2035,14 +2035,14 @@ BOOST_AUTO_TEST_CASE(CompositeConstruction) {
   // Test exception on different surface types
   auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30_mm,
                                                   40_mm);
-  auto trivialCyl = std::make_shared<TrivialPortalLink>(cyl, vol3.get());
+  auto trivialCyl = std::make_shared<TrivialPortalLink>(cyl, *vol3);
   BOOST_CHECK_THROW(
       CompositePortalLink(trivial1, trivialCyl, BinningValue::binR),
       std::invalid_argument);
 
   auto disc3 =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 90_mm, 120_mm);
-  auto trivial3 = std::make_shared<TrivialPortalLink>(disc3, vol3.get());
+  auto trivial3 = std::make_shared<TrivialPortalLink>(disc3, *vol3);
 
   // Test exception on un-mergable surfaces
   BOOST_CHECK_THROW(CompositePortalLink(trivial1, trivial3, BinningValue::binR),
@@ -2097,7 +2097,7 @@ BOOST_AUTO_TEST_CASE(TrivialGridR) {
   auto disc2 =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 60_mm, 90_mm);
 
-  auto trivial = std::make_shared<TrivialPortalLink>(disc2, vol2.get());
+  auto trivial = std::make_shared<TrivialPortalLink>(disc2, *vol2);
   BOOST_REQUIRE(trivial);
 
   std::shared_ptr gridPhi = GridPortalLink::make(
@@ -2157,7 +2157,7 @@ BOOST_AUTO_TEST_CASE(TrivialGridPhi) {
       Transform3{AngleAxis3{90_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
       60_degree);
 
-  auto trivial = std::make_shared<TrivialPortalLink>(disc2, vol2.get());
+  auto trivial = std::make_shared<TrivialPortalLink>(disc2, *vol2);
   BOOST_REQUIRE(trivial);
 
   std::shared_ptr gridPhi = GridPortalLink::make(

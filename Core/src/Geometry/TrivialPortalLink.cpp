@@ -25,4 +25,9 @@ const TrackingVolume* TrivialPortalLink::resolveVolume(
   return m_volume;
 }
 
+const TrackingVolume* TrivialPortalLink::resolveVolume(
+    const GeometryContext& /*gctx*/, const Vector3& /*position*/) const {
+  return m_volume;
+}
+
 }  // namespace Acts

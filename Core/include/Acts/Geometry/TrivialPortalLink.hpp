@@ -18,14 +18,8 @@ class GridPortalLink;
 class TrivialPortalLink final : public PortalLinkBase {
  public:
   TrivialPortalLink(std::shared_ptr<RegularSurface> surface,
-                    TrackingVolume* volume)
-      : PortalLinkBase(std::move(surface)), m_volume(volume) {
-    assert(m_volume != nullptr);
-  }
-
-  TrivialPortalLink(std::shared_ptr<RegularSurface> surface,
                     TrackingVolume& volume)
-      : TrivialPortalLink(std::move(surface), &volume) {}
+      : PortalLinkBase(std::move(surface)), m_volume{&volume} {}
 
   std::unique_ptr<GridPortalLink> makeGrid(BinningValue direction) const;
 
@@ -35,6 +29,9 @@ class TrivialPortalLink final : public PortalLinkBase {
 
   const TrackingVolume* resolveVolume(const GeometryContext& gctx,
                                       const Vector2& position) const final;
+
+  const TrackingVolume* resolveVolume(const GeometryContext& gctx,
+                                      const Vector3& position) const final;
 
  private:
   TrackingVolume* m_volume;
