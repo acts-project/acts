@@ -15,6 +15,15 @@
 
 #include <type_traits>
 
+namespace Acts::detail {
+template <typename Stepper, typename StateType, typename N>
+concept propagator_stepper_compatible_with = requires(const Stepper& s,
+                                                      StateType& st,
+                                                      const N& n) {
+  { s.step(st, n) } -> std::same_as<Acts::Result<double>>;
+};
+}  // namespace Acts::detail
+
 template <typename S, typename N>
 template <typename propagator_state_t>
 auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
@@ -173,8 +182,7 @@ auto Acts::Propagator<S, N>::makeState(
       m_navigator.makeState(eOptions.navigation)};
 
   static_assert(
-      Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,
-                           StateType&, const N&>,
+      detail::propagator_stepper_compatible_with<S, StateType, N>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
@@ -216,8 +224,7 @@ auto Acts::Propagator<S, N>::makeState(
       m_navigator.makeState(eOptions.navigation)};
 
   static_assert(
-      Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,
-                           StateType&, const N&>,
+      detail::propagator_stepper_compatible_with<S, StateType, N>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
