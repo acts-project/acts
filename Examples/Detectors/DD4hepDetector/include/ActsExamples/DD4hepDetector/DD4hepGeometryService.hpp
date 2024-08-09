@@ -56,7 +56,7 @@ class DD4hepGeometryService {
     /// XML-file with the detector description
     std::vector<std::string> xmlFileNames;
     /// The name of the service
-    std::string name;
+    std::string name = "default";
     /// Binningtype in phi
     Acts::BinningType bTypePhi = Acts::equidistant;
     /// Binningtype in r
@@ -88,6 +88,7 @@ class DD4hepGeometryService {
   };
 
   DD4hepGeometryService(const Config& cfg);
+  ~DD4hepGeometryService();
 
   /// Interface method to access to the DD4hep geometry
   dd4hep::Detector& detector();
@@ -119,7 +120,7 @@ class DD4hepGeometryService {
   /// The config class
   Config m_cfg;
   /// Pointer to the interface to the DD4hep geometry
-  std::unique_ptr<dd4hep::Detector> m_detector;
+  dd4hep::Detector* m_detector = nullptr;
   /// The world DD4hep DetElement
   dd4hep::DetElement m_geometry;
   /// The ACTS TrackingGeometry

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -89,7 +89,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
                 const auto* dd4hepDetElement =
                     dynamic_cast<const Acts::DD4hepDetectorElement*>(dde);
                 // Check if it is valid
-                if (dd4hepDetElement) {
+                if (dd4hepDetElement != nullptr) {
                   dd4hep::DDSegmentation::VolumeID dd4hepID =
                       dd4hepDetElement->sourceElement().volumeID();
                   auto geoID = surface->geometryId();

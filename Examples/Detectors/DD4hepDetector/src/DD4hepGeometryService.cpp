@@ -34,6 +34,12 @@ ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
   }
 }
 
+ActsExamples::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
+  if (m_detector != nullptr) {
+    dd4hep::Detector::destroyInstance(m_cfg.name);
+  }
+}
+
 ActsExamples::ProcessCode
 ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
   const int old_gErrorIgnoreLevel = gErrorIgnoreLevel;
@@ -68,7 +74,7 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
     std::cout.setstate(std::ios_base::failbit);
   }
 
-  m_detector = dd4hep::Detector::make_unique(m_cfg.name);
+  m_detector = &dd4hep::Detector::getInstance();
   for (auto& file : m_cfg.xmlFileNames) {
     m_detector->fromCompact(file.c_str());
   }
@@ -128,6 +134,10 @@ ActsExamples::DD4hep::DD4hepGeometryService::trackingGeometry(
 }
 
 void ActsExamples::DD4hep::DD4hepGeometryService::drop() {
+  if (m_detector == nullptr) {
+    return;
+  }
+  dd4hep::Detector::destroyInstance(m_cfg.name);
   m_detector = nullptr;
   m_geometry = dd4hep::DetElement();
   m_trackingGeometry = nullptr;
