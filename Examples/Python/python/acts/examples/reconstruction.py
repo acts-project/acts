@@ -135,7 +135,8 @@ TrackSelectorConfig = namedtuple(
 CkfConfig = namedtuple(
     "CkfConfig",
     [
-        "chi2CutOff",
+        "chi2CutOffMeasurement",
+        "chi2CutOffOutlier",
         "numMeasurementsCutOff",
         "maxSteps",
         "seedDeduplication",
@@ -145,7 +146,7 @@ CkfConfig = namedtuple(
         "maxPixelHoles",
         "maxStripHoles",
     ],
-    defaults=[15.0, 10, None, None, None, None, None, None, None],
+    defaults=[15.0, 25.0, 10, None, None, None, None, None, None, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -1277,7 +1278,8 @@ def addCKFTracks(
                     acts.GeometryIdentifier(),
                     (
                         [],
-                        [ckfConfig.chi2CutOff],
+                        [ckfConfig.chi2CutOffMeasurement],
+                        [ckfConfig.chi2CutOffOutlier],
                         [ckfConfig.numMeasurementsCutOff],
                     ),
                 )
