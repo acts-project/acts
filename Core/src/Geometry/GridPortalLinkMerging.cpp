@@ -263,8 +263,8 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
   assert(a->dim() == 2 || a->dim() == 1);
   assert(a->dim() == b->dim());
 
-  ACTS_VERBOSE(" - a: " << a->surface());
-  ACTS_VERBOSE(" - b: " << b->surface());
+  ACTS_VERBOSE(" - a: " << a->surface().bounds());
+  ACTS_VERBOSE(" - b: " << b->surface().bounds());
 
   constexpr auto tolerance = s_onSurfaceTolerance;
 
@@ -287,7 +287,7 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
     throw std::invalid_argument{"Unsupported surface type"};
   }
 
-  ACTS_VERBOSE("Merged surface: " << *mergedSurface);
+  ACTS_VERBOSE("Merged surface: " << mergedSurface->bounds());
   ACTS_VERBOSE("~> reversed? " << std::boolalpha << reversed);
 
   // Normalize ordering of grid portals and surfaces: a is always at lower
