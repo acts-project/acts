@@ -132,7 +132,7 @@ void testSourceLinkCalibratorReturn(
     typename trajectory_t::TrackStateProxy trackState) {
   TestSourceLink sl = sourceLink.template get<TestSourceLink>();
 
-  trackState.setUncalibratedSourceLink(sourceLink);
+  trackState.setUncalibratedSourceLink(SourceLink{sourceLink});
 
   if ((sl.indices[0] != Acts::eBoundSize) &&
       (sl.indices[1] != Acts::eBoundSize)) {
