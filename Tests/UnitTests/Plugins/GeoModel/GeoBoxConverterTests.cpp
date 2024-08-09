@@ -31,15 +31,17 @@ BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
 // GeoBox conversion test case
 BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
-  auto material = new GeoMaterial("Material", 1.0);
+  auto material = make_intrusive<GeoMaterial>("Material", 1.0);
   // Let's create a GeoFullPhysVol object
 
   // (BOX object) - XY
-  auto boxXY = new GeoBox(100, 200, 2);
-  auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
-  auto fphysXY = new GeoFullPhysVol(logXY);
+  auto boxXY = make_intrusive<GeoBox>(100, 200, 2);
+  auto logXY = make_intrusive<GeoLogVol>("LogVolumeXY", boxXY, material);
 
-  auto converted = Acts::GeoBoxConverter{}.toSensitiveSurface(*fphysXY);
+  PVConstLink physXY{make_intrusive<GeoFullPhysVol>(logXY)};
+
+  auto converted = Acts::GeoBoxConverter{}.toSensitiveSurface(
+      physXY, Acts::Transform3::Identity());
 
   BOOST_CHECK(converted.ok());
 
@@ -59,11 +61,13 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   BOOST_CHECK(transformXY.isApprox(idTransform));
 
   // (BOX object) - YZ
-  auto boxYZ = new GeoBox(2, 200, 300);
-  auto logYZ = new GeoLogVol("LogVolumeYZ", boxYZ, material);
-  auto fphysYZ = new GeoFullPhysVol(logYZ);
+  auto boxYZ = make_intrusive<GeoBox>(2, 200, 300);
+  auto logYZ = make_intrusive<GeoLogVol>("LogVolumeYZ", boxYZ, material);
 
-  converted = Acts::GeoBoxConverter{}.toSensitiveSurface(*fphysYZ);
+  PVConstLink physYZ{make_intrusive<GeoFullPhysVol>(logYZ)};
+
+  converted = Acts::GeoBoxConverter{}.toSensitiveSurface(
+      physYZ, Acts::Transform3::Identity());
 
   BOOST_CHECK(converted.ok());
 
@@ -85,11 +89,13 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   BOOST_CHECK(rotationYZ.col(2).isApprox(idRotation.col(0)));
 
   // (BOX object) - XZ
-  auto boxXZ = new GeoBox(400, 2, 300);
-  auto logXZ = new GeoLogVol("LogVolumeXZ", boxXZ, material);
-  auto fphysXZ = new GeoFullPhysVol(logXZ);
+  auto boxXZ = make_intrusive<GeoBox>(400, 2, 300);
+  auto logXZ = make_intrusive<GeoLogVol>("LogVolumeXZ", boxXZ, material);
 
-  converted = Acts::GeoBoxConverter{}.toSensitiveSurface(*fphysXZ);
+  PVConstLink physXZ{make_intrusive<GeoFullPhysVol>(logXZ)};
+
+  converted = Acts::GeoBoxConverter{}.toSensitiveSurface(
+      physXZ, Acts::Transform3::Identity());
 
   BOOST_CHECK(converted.ok());
 

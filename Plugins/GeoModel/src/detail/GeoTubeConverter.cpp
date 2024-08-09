@@ -26,7 +26,7 @@
 #include <GeoModelKernel/Units.h>
 
 Acts::Result<Acts::GeoModelSensitiveSurface>
-Acts::detail::GeoTubeConverter::operator()(const GeoFullPhysVol& geoFPV,
+Acts::detail::GeoTubeConverter::operator()(PVConstLink geoPV,
                                            const GeoTube& geoTube,
                                            const Transform3& absTransform,
                                            bool sensitive) const {
@@ -54,7 +54,7 @@ Acts::detail::GeoTubeConverter::operator()(const GeoFullPhysVol& geoFPV,
 
     auto detectorElement =
         GeoModelDetectorElement::createDetectorElement<StrawSurface>(
-            geoFPV, lineBounds, transform, 2 * outerRadius);
+            geoPV, lineBounds, transform, 2 * outerRadius);
     auto surface = detectorElement->surface().getSharedPtr();
     return std::make_tuple(detectorElement, surface);
     // Next option is translation to disc
@@ -69,7 +69,7 @@ Acts::detail::GeoTubeConverter::operator()(const GeoFullPhysVol& geoFPV,
     // Create the element and the surface
     auto detectorElement =
         GeoModelDetectorElement::createDetectorElement<DiscSurface>(
-            geoFPV, radialBounds, transform, 2 * halfZ);
+            geoPV, radialBounds, transform, 2 * halfZ);
     auto surface = detectorElement->surface().getSharedPtr();
     return std::make_tuple(detectorElement, surface);
   }
@@ -81,9 +81,10 @@ Acts::detail::GeoTubeConverter::operator()(const GeoFullPhysVol& geoFPV,
     return std::make_tuple(nullptr, surface);
   }
   // Create the element and the surface
+
   auto detectorElement =
       GeoModelDetectorElement::createDetectorElement<CylinderSurface>(
-          geoFPV, cylinderBounds, transform, outerRadius - innerRadius);
+          geoPV, cylinderBounds, transform, outerRadius - innerRadius);
   auto surface = detectorElement->surface().getSharedPtr();
   return std::make_tuple(detectorElement, surface);
 }
