@@ -63,6 +63,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
 
   auto portal1 = std::make_shared<Portal>(
       Direction::AlongNormal, std::make_unique<TrivialPortalLink>(cyl1, *vol1));
+  BOOST_REQUIRE(portal1);
 
   BOOST_CHECK_EQUAL(portal1->resolveVolume(gctx, Vector3{50_mm, 0_mm, -50_mm},
                                            Vector3::UnitX()),
@@ -73,12 +74,27 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
                     nullptr);
 
   auto portal2 = std::make_shared<Portal>(Direction::AlongNormal, cyl2, *vol2);
+  BOOST_REQUIRE(portal2);
+
+  BOOST_CHECK_EQUAL(portal2->resolveVolume(gctx, Vector3{50_mm, 0_mm, 50_mm},
+                                           Vector3::UnitX()),
+                    vol2.get());
+
+  BOOST_CHECK_EQUAL(portal2->resolveVolume(gctx, Vector3{50_mm, 0_mm, 50_mm},
+                                           -Vector3::UnitX()),
+                    nullptr);
+
+  // @TODO: Test merging portals along z
+  // @TODO: Test portals in opposite directions fail to merge along z
 }
 BOOST_AUTO_TEST_CASE(Disc) {}
 
 BOOST_AUTO_TEST_SUITE_END()  // Merging
 
 BOOST_AUTO_TEST_SUITE(Fusing)
+
+// @TODO: Test fusing portals with different surfaces fails
+
 BOOST_AUTO_TEST_SUITE_END()  // Fusing
 
 BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {

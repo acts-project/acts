@@ -24,6 +24,7 @@ namespace Acts {
 
 Portal::Portal(Direction direction, std::unique_ptr<PortalLinkBase> link) {
   setLink(direction, std::move(link));
+  assert(m_surface != nullptr);
 }
 
 Portal::Portal(Direction direction, std::shared_ptr<RegularSurface> surface,
@@ -33,10 +34,23 @@ Portal::Portal(Direction direction, std::shared_ptr<RegularSurface> surface,
 
 void Portal::setLink(Direction direction,
                      std::unique_ptr<PortalLinkBase> link) {
-  if (direction == Direction::AlongNormal) {
-    m_alongNormal = std::move(link);
-  } else {
-    m_oppositeNormal = std::move(link);
+  assert(link != nullptr);
+
+  auto& active =
+      direction == Direction::AlongNormal ? m_alongNormal : m_oppositeNormal;
+  auto& other =
+      direction == Direction::AlongNormal ? m_oppositeNormal : m_alongNormal;
+
+  // check if surfaces are identical
+  if (other != nullptr && link->surface() != other->surface()) {
+    throw std::runtime_error("Cannot set two different surfaces");
+  }
+  active = std::move(link);
+
+  // @TODO: To avoid numerical issues with not-exactly-identical surfaces,
+  // reset the other side to the exact same surface instance
+  if (m_surface == nullptr) {
+    m_surface = active->surfacePtr();
   }
 }
 
@@ -51,6 +65,7 @@ const PortalLinkBase* Portal::getLink(Direction direction) const {
 const TrackingVolume* Portal::resolveVolume(const GeometryContext& gctx,
                                             const Vector3& position,
                                             const Vector3& direction) const {
+  assert(m_surface != nullptr);
   const Vector3 normal = m_surface->normal(gctx, position);
   Direction side = Direction::fromScalar(normal.dot(direction));
 
@@ -58,7 +73,6 @@ const TrackingVolume* Portal::resolveVolume(const GeometryContext& gctx,
                                    ? m_alongNormal.get()
                                    : m_oppositeNormal.get();
 
-  return nullptr;
   if (link == nullptr) {
     // no link is attached in this direction => this is the end of the world as
     // we know it. (i feel fine)
