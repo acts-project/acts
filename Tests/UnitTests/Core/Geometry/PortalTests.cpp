@@ -661,13 +661,14 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
         GridPortalLink::make(cyl2, BinningValue::binZ,
                              Axis{AxisOpen, {-50_mm, -10_mm, 10_mm, 50_mm}});
 
-    // @TODO: Implement fallback to binary for this
-    BOOST_CHECK_THROW(GridPortalLink::merge(gridLeft, gridRightClosed,
-                                            BinningValue::binZ, *logger),
-                      std::logic_error);
-    BOOST_CHECK_THROW(GridPortalLink::merge(gridLeft, gridRightOpen,
-                                            BinningValue::binZ, *logger),
-                      std::logic_error);
+    auto compositeLR = GridPortalLink::merge(gridLeft, gridRightClosed,
+                                             BinningValue::binZ, *logger);
+    BOOST_CHECK_NE(dynamic_cast<const CompositePortalLink*>(compositeLR.get()),
+                   nullptr);
+    auto compositeRL = GridPortalLink::merge(gridLeft, gridRightOpen,
+                                             BinningValue::binZ, *logger);
+    BOOST_CHECK_NE(dynamic_cast<const CompositePortalLink*>(compositeRL.get()),
+                   nullptr);
   }
 }
 
@@ -1119,10 +1120,10 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
         cyl2, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 3},
         Axis{AxisBound, -50_mm, 50_mm, 5});
 
-    // @TODO: Change after binary merging is in
-    BOOST_CHECK_THROW(
-        GridPortalLink::merge(grid1, grid3, BinningValue::binZ, *logger),
-        std::logic_error);
+    auto composite =
+        GridPortalLink::merge(grid1, grid3, BinningValue::binZ, *logger);
+    BOOST_CHECK_NE(dynamic_cast<const CompositePortalLink*>(composite.get()),
+                   nullptr);
   }
 
   BOOST_TEST_CONTEXT("Check wraparound for full circle in phi") {
