@@ -57,7 +57,6 @@ class DDG4DetectorConstructionFactory final
   DDG4DetectorConstructionFactory(
       std::shared_ptr<DD4hep::DD4hepDetector> detector,
       std::vector<std::shared_ptr<RegionCreator>> regionCreators = {});
-  ~DDG4DetectorConstructionFactory() final;
 
   std::unique_ptr<G4VUserDetectorConstruction> factorize() const override;
 

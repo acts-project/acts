@@ -59,14 +59,6 @@ struct DD4hepDetector {
   /// @brief The DD4hep geometry service
   std::shared_ptr<DD4hepGeometryService> geometryService = nullptr;
 
-  dd4hep::Detector& dd4hepDetector() const {
-    return geometryService->detector();
-  }
-
-  dd4hep::DetElement& dd4hepGeometry() const {
-    return geometryService->geometry();
-  }
-
   /// @brief Build the tracking geometry from the DD4hep geometry
   ///
   /// @param config is the configuration of the geometry service
