@@ -39,6 +39,7 @@ ROOT_GENERATE_DICTIONARY(
   ActsExamplesIoRootDict MODULE ActsExamplesIoRoot LINKDEF LinkDef.hpp)
 set_target_properties(
   ActsExamplesIoRootDict PROPERTIES CXX_CLANG_TIDY "")
+target_compile_options(ActsExamplesIoRootDict PRIVATE "-Wno-old-style-cast")
 
 install(
   TARGETS ActsExamplesIoRoot

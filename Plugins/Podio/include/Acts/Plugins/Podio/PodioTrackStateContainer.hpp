@@ -19,10 +19,14 @@
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 #include "ActsPodioEdm/BoundParametersCollection.h"
 #include "ActsPodioEdm/JacobianCollection.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
 #include "ActsPodioEdm/TrackStateInfo.h"
+#pragma GCC diagnostic pop
 
 #include <any>
 #include <memory>
@@ -32,8 +36,6 @@
 
 #include <podio/CollectionBase.h>
 #include <podio/Frame.h>
-
-#include "podio/UserDataCollection.h"
 
 namespace Acts {
 

@@ -124,8 +124,9 @@ class AnyBase : public AnyBaseAll {
     if constexpr (!heapAllocated<U>()) {
       // construct into local buffer
       /*U* ptr =*/new (m_data.data()) U(std::forward<Args>(args)...);
-      _ACTS_ANY_VERBOSE(
-          "Construct local (this=" << this << ") at: " << (void*)m_data.data());
+      _ACTS_ANY_VERBOSE("Construct local (this="
+                        << this
+                        << ") at: " << static_cast<void*>(m_data.data()));
     } else {
       // too large, heap allocate
       U* heap = new U(std::forward<Args>(args)...);
@@ -181,16 +182,16 @@ class AnyBase : public AnyBaseAll {
       return;
     }
 
-    _ACTS_ANY_VERBOSE(
-        "Copy construct (this=" << this << ") at: " << (void*)m_data.data());
+    _ACTS_ANY_VERBOSE("Copy construct (this="
+                      << this << ") at: " << static_cast<void*>(m_data.data()));
 
     m_handler = other.m_handler;
     copyConstruct(other);
   }
 
   AnyBase& operator=(const AnyBase& other) {
-    _ACTS_ANY_VERBOSE("Copy assign (this=" << this
-                                           << ") at: " << (void*)m_data.data());
+    _ACTS_ANY_VERBOSE("Copy assign (this="
+                      << this << ") at: " << static_cast<void*>(m_data.data()));
 
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
@@ -213,8 +214,8 @@ class AnyBase : public AnyBaseAll {
   }
 
   AnyBase(AnyBase&& other) {
-    _ACTS_ANY_VERBOSE(
-        "Move construct (this=" << this << ") at: " << (void*)m_data.data());
+    _ACTS_ANY_VERBOSE("Move construct (this="
+                      << this << ") at: " << static_cast<void*>(m_data.data()));
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return;
@@ -225,8 +226,8 @@ class AnyBase : public AnyBaseAll {
   }
 
   AnyBase& operator=(AnyBase&& other) {
-    _ACTS_ANY_VERBOSE("Move assign (this=" << this
-                                           << ") at: " << (void*)m_data.data());
+    _ACTS_ANY_VERBOSE("Move assign (this="
+                      << this << ") at: " << static_cast<void*>(m_data.data()));
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return *this;

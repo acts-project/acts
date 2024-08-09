@@ -277,8 +277,6 @@ BOOST_AUTO_TEST_CASE(AssignWithPathLength) {
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20.0, 100.0);
   surface->assignGeometryId(GeometryIdentifier().setSensitive(1));
 
-  using SurfaceHit = std::tuple<const Surface*, Vector3, Vector3>;
-
   Vector3 position = {20., 10., 0.};
   Vector3 direction = position.normalized();
 

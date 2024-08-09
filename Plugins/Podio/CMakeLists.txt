@@ -34,8 +34,12 @@ target_link_libraries(ActsPluginPodio PUBLIC
   podio::podioRootIO
 )
 
+target_compile_options(ActsPodioEdm PRIVATE "-Wno-old-style-cast")
+
 PODIO_ADD_ROOT_IO_DICT(ActsPodioEdmDict ActsPodioEdm "${headers}" src/selection.xml)
 add_library(Acts::ActsPodioEdmDict ALIAS ActsPodioEdmDict)
+
+target_compile_options(ActsPodioEdmDict PRIVATE "-Wno-old-style-cast")
 
 install(
   TARGETS ActsPodioEdm
