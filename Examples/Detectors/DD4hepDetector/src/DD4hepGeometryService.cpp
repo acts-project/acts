@@ -34,12 +34,6 @@ ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
   }
 }
 
-ActsExamples::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
-  if (m_detector != nullptr) {
-    m_detector->destroyInstance();
-  }
-}
-
 ActsExamples::ProcessCode
 ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
   const int old_gErrorIgnoreLevel = gErrorIgnoreLevel;
@@ -134,7 +128,6 @@ ActsExamples::DD4hep::DD4hepGeometryService::trackingGeometry(
 }
 
 void ActsExamples::DD4hep::DD4hepGeometryService::drop() {
-  m_detector->destroyInstance();
   m_detector = nullptr;
   m_geometry = dd4hep::DetElement();
   m_trackingGeometry = nullptr;

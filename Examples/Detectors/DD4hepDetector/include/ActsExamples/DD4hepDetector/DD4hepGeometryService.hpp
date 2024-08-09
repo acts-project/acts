@@ -88,7 +88,6 @@ class DD4hepGeometryService {
   };
 
   DD4hepGeometryService(const Config& cfg);
-  ~DD4hepGeometryService();
 
   /// Interface method to access to the DD4hep geometry
   dd4hep::Detector& detector();
