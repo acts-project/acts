@@ -34,32 +34,38 @@
 
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <memory>
 #include <ostream>
 #include <utility>
 #include <vector>
 
-#include <limits.h>
-#include <unistd.h>
-
 namespace {
 
-std::string joinPaths(const std::string& a, const std::string& b) {
-  if (b.substr(0, 1) == "/" || a.empty()) {
-    return b;
+/// @brief Combines a base directory path with a relative file path to create an
+/// absolute path.
+/// - If the relative file path is already absolute, baseDir will be ignored.
+/// - If the baseDir is empty (which should not happen), we set it as the
+///   current working directory.
+///
+/// @param baseDir The base directory path.
+/// @param relativeFilePath The relative file path to be combined with the base directory.
+///
+/// @return A string containing the absolute path created by combining baseDir and relativeFilePath.
+std::string makeAbsPath(const std::string& baseDir,
+                        const std::string& relativeFilePath) {
+  std::filesystem::path pathBaseDir(baseDir);
+  const std::filesystem::path pathRelativeFilePath(relativeFilePath);
+
+  if (pathRelativeFilePath.is_absolute()) {
+    return pathRelativeFilePath.string();
   }
 
-  if (a.substr(a.size() - 1) == "/") {
-    return a.substr(a.size() - 1) + "/" + b;
+  if (pathBaseDir.empty()) {
+    pathBaseDir = std::filesystem::current_path();
   }
 
-  return a + "/" + b;
-}
-
-std::string getWorkingDirectory() {
-  char buffer[PATH_MAX];
-  return (getcwd(buffer, sizeof(buffer)) != nullptr ? std::string(buffer)
-                                                    : std::string(""));
+  return (pathBaseDir / pathRelativeFilePath).string();
 }
 
 }  // namespace
@@ -103,8 +109,8 @@ void Acts::GeometryView3D::drawSurfaceArray(
     const GeometryContext& gctx, const Transform3& transform,
     const ViewConfig& sensitiveConfig, const ViewConfig& passiveConfig,
     const ViewConfig& gridConfig, const std::string& _outputDir) {
-  std::string outputDir =
-      _outputDir == "." ? getWorkingDirectory() : _outputDir;
+  const std::string outputDir =
+      _outputDir == "." ? std::filesystem::current_path().string() : _outputDir;
   // Draw all the surfaces
   Extent arrayExtent;
   for (const auto& sf : surfaceArray.surfaces()) {
@@ -117,7 +123,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
   }
 
   if (!sensitiveConfig.outputName.empty()) {
-    helper.write(joinPaths(outputDir, sensitiveConfig.outputName));
+    helper.write(makeAbsPath(outputDir, sensitiveConfig.outputName));
     helper.clear();
   }
 
@@ -181,7 +187,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
   }
 
   if (!gridConfig.outputName.empty()) {
-    helper.write(joinPaths(outputDir, gridConfig.outputName));
+    helper.write(makeAbsPath(outputDir, gridConfig.outputName));
     helper.clear();
   }
 }
@@ -240,8 +246,8 @@ void Acts::GeometryView3D::drawLayer(
     IVisualization3D& helper, const Layer& layer, const GeometryContext& gctx,
     const ViewConfig& layerConfig, const ViewConfig& sensitiveConfig,
     const ViewConfig& gridConfig, const std::string& _outputDir) {
-  std::string outputDir =
-      _outputDir == "." ? getWorkingDirectory() : _outputDir;
+  const std::string outputDir =
+      _outputDir == "." ? std::filesystem::current_path().string() : _outputDir;
 
   if (layerConfig.visible) {
     auto layerVolume = layer.representingVolume();
@@ -254,7 +260,7 @@ void Acts::GeometryView3D::drawLayer(
                   layerConfig);
     }
     if (!layerConfig.outputName.empty()) {
-      helper.write(joinPaths(outputDir, layerConfig.outputName));
+      helper.write(makeAbsPath(outputDir, layerConfig.outputName));
       helper.clear();
     }
   }
@@ -274,8 +280,8 @@ void Acts::GeometryView3D::drawTrackingVolume(
     const ViewConfig& volumeView, const ViewConfig& layerView,
     const ViewConfig& sensitiveView, const ViewConfig& gridView, bool writeIt,
     const std::string& tag, const std::string& _outputDir) {
-  std::string outputDir =
-      _outputDir == "." ? getWorkingDirectory() : _outputDir;
+  const std::string outputDir =
+      _outputDir == "." ? std::filesystem::current_path().string() : _outputDir;
   if (tVolume.confinedVolumes() != nullptr) {
     const auto& subVolumes = tVolume.confinedVolumes()->arrayObjects();
     for (const auto& tv : subVolumes) {
@@ -329,7 +335,7 @@ void Acts::GeometryView3D::drawTrackingVolume(
                 Transform3::Identity(), vcConfig);
   }
   if (writeIt) {
-    std::string outputName = joinPaths(outputDir, vcConfig.outputName);
+    std::string outputName = makeAbsPath(outputDir, vcConfig.outputName);
     helper.write(outputName);
     helper.clear();
   }
