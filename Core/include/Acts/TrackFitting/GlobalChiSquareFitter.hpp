@@ -533,7 +533,8 @@ class Gx2Fitter {
         const GeometryIdentifier geoId = surface->geometryId();
         ACTS_DEBUG("Surface " << geoId << " detected.");
 
-        // Found material - add an scatteringAngles entry if not done yet. Handling will happen later
+        // Found material - add an scatteringAngles entry if not done yet.
+        // Handling will happen later
         if (multipleScattering && surface->surfaceMaterial() != nullptr) {
           ACTS_DEBUG("    The surface contains material.");
 
@@ -541,24 +542,27 @@ class Gx2Fitter {
           if (scatteringMapId == scatteringMap->end()) {
             ACTS_DEBUG("    Create entry in scattering map.");
 
-            detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
+            detail::PointwiseMaterialInteraction interaction(surface, state,
+                                                             stepper);
             // We need to evaluate the material to create the correct slab
-            const bool slabIsValid = interaction.evaluateMaterialSlab(state, navigator, MaterialUpdateStage::FullUpdate);
+            const bool slabIsValid = interaction.evaluateMaterialSlab(
+                state, navigator, MaterialUpdateStage::FullUpdate);
             if (!slabIsValid) {
               std::cout << "ERROR in material slab evaluation" << std::endl;
             }
 
-            ACTS_VERBOSE("    Material of the slab: " << interaction.slab.material());
+            ACTS_VERBOSE(
+                "    Material of the slab: " << interaction.slab.material());
 
-            const auto& particle = parametersWithHypothesis->particleHypothesis();
+            const auto& particle =
+                parametersWithHypothesis->particleHypothesis();
 
             /// Calculate the highland formula first
-            const double sigma = static_cast<double>(Acts::computeMultipleScatteringTheta0(
-                interaction.slab,
-                particle.absolutePdg(),
-                particle.mass(),
-                parametersWithHypothesis->parameters()[eBoundQOverP],
-                particle.absoluteCharge()));
+            const double sigma =
+                static_cast<double>(Acts::computeMultipleScatteringTheta0(
+                    interaction.slab, particle.absolutePdg(), particle.mass(),
+                    parametersWithHypothesis->parameters()[eBoundQOverP],
+                    particle.absoluteCharge()));
 
             ACTS_VERBOSE("    The Highland formula gives sigma = " << sigma);
 
@@ -658,7 +662,8 @@ class Gx2Fitter {
           // Update the number of holes count only when encountering a
           // measurement
           result.measurementHoles = result.missedActiveSurfaces.size();
-        } else if (multipleScattering && surface->surfaceMaterial() != nullptr) {
+        } else if (multipleScattering &&
+                   surface->surfaceMaterial() != nullptr) {
           // Here we handle material and holes. Material-less holes come later
           ACTS_DEBUG("    The surface contains no measurement, but material.");
 
@@ -1043,7 +1048,8 @@ class Gx2Fitter {
 
         // update all Jacobians from start
         if ((typeFlags.test(TrackStateFlag::MeasurementFlag)) ||
-            (gx2fOptions.multipleScattering && typeFlags.test(TrackStateFlag::MaterialFlag))) {
+            (gx2fOptions.multipleScattering &&
+             typeFlags.test(TrackStateFlag::MaterialFlag))) {
           for (auto& jac : jacobianFromStart) {
             jac = trackState.jacobian() * jac;
           }
@@ -1083,7 +1089,8 @@ class Gx2Fitter {
           }
         }
 
-        if (gx2fOptions.multipleScattering && typeFlags.test(TrackStateFlag::MaterialFlag)) {
+        if (gx2fOptions.multipleScattering &&
+            typeFlags.test(TrackStateFlag::MaterialFlag)) {
           // Get and store geoId for the current material surface
           const GeometryIdentifier geoId =
               trackState.referenceSurface().geometryId();
@@ -1110,18 +1117,18 @@ class Gx2Fitter {
           // Add contribution from the angle itself similar to addToGx2fSums
           // TODO create function
           {
-            std::cout << "theta_loc " << trackState.predicted()[eBoundTheta] << std::endl;
-            const ActsScalar sinThetaLoc = std::sin(trackState.predicted()[eBoundTheta]);
+            std::cout << "theta_loc " << trackState.predicted()[eBoundTheta]
+                      << std::endl;
+            const ActsScalar sinThetaLoc =
+                std::sin(trackState.predicted()[eBoundTheta]);
 
             // The position, where we need to insert the values in aMatrix and
             // bVector
             const std::size_t deltaPosition =
                 eBoundSize + 2 * (geoIdVector.size() - 1);
 
-
             const BoundVector& scatteringAngles =
                 scatteringMapId->second.scatteringAngles;
-
 
             // Phi contribution
             aMatrixExtended(deltaPosition, deltaPosition) +=
