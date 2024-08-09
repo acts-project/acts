@@ -29,7 +29,7 @@ Volume& StaticBlueprintNode::build(const Logger& logger) {
 
 void StaticBlueprintNode::connect(TrackingVolume& parent,
                                   const Logger& logger) {
-  ACTS_DEBUG(prefix() << "static connect")
+  ACTS_DEBUG(prefix() << "static connect");
   if (!m_volume) {
     throw std::runtime_error("Volume is not built");
   }
@@ -41,7 +41,7 @@ void StaticBlueprintNode::connect(TrackingVolume& parent,
 }
 
 void StaticBlueprintNode::connect(const Logger& logger) {
-  ACTS_DEBUG(prefix() << "static connect")
+  ACTS_DEBUG(prefix() << "static connect");
   if (!m_volume) {
     throw std::runtime_error("Volume is not built");
   }
