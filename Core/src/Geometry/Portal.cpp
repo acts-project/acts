@@ -89,8 +89,8 @@ void PortalLinkBase::checkMergePreconditions(const PortalLinkBase& a,
 }
 
 std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
-    const std::shared_ptr<const PortalLinkBase>& a,
-    const std::shared_ptr<const PortalLinkBase>& b, BinningValue direction,
+    const std::shared_ptr<PortalLinkBase>& a,
+    const std::shared_ptr<PortalLinkBase>& b, BinningValue direction,
     const Logger& logger) {
   ACTS_DEBUG("Merging two arbitrary portals");
 
@@ -114,21 +114,19 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
   // Composite Trivial
   // Composite Composite
 
-  if (auto aGrid = std::dynamic_pointer_cast<const GridPortalLink>(a); aGrid) {
-    if (auto bGrid = std::dynamic_pointer_cast<const GridPortalLink>(b);
-        bGrid) {
+  if (auto aGrid = std::dynamic_pointer_cast<GridPortalLink>(a); aGrid) {
+    if (auto bGrid = std::dynamic_pointer_cast<GridPortalLink>(b); bGrid) {
       ACTS_VERBOSE("Merging two grid portals");
       return GridPortalLink::merge(aGrid, bGrid, direction, logger);
 
-    } else if (auto bTrivial =
-                   std::dynamic_pointer_cast<const TrivialPortalLink>(b);
+    } else if (auto bTrivial = std::dynamic_pointer_cast<TrivialPortalLink>(b);
                bTrivial) {
       ACTS_WARNING("Merging a grid portal with a trivial portal");
       return GridPortalLink::merge(aGrid, bTrivial->makeGrid(direction),
                                    direction, logger);
 
     } else if (auto bComposite =
-                   std::dynamic_pointer_cast<const CompositePortalLink>(b);
+                   std::dynamic_pointer_cast<CompositePortalLink>(b);
                bComposite) {
       ACTS_WARNING("Merging a grid portal with a composite portal");
       return std::make_unique<CompositePortalLink>(aGrid, bComposite,
@@ -138,11 +136,9 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
       throw std::logic_error{"Portal type is not supported"};
     }
 
-  } else if (auto aTrivial =
-                 std::dynamic_pointer_cast<const TrivialPortalLink>(a);
+  } else if (auto aTrivial = std::dynamic_pointer_cast<TrivialPortalLink>(a);
              aTrivial) {
-    if (auto bGrid = std::dynamic_pointer_cast<const GridPortalLink>(b);
-        bGrid) {
+    if (auto bGrid = std::dynamic_pointer_cast<GridPortalLink>(b); bGrid) {
       ACTS_WARNING("Merging a trivial portal with a grid portal");
       return GridPortalLink::merge(aTrivial->makeGrid(direction), bGrid,
                                    direction, logger);
@@ -156,7 +152,7 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
                                    logger);
 
     } else if (auto bComposite =
-                   std::dynamic_pointer_cast<const CompositePortalLink>(b);
+                   std::dynamic_pointer_cast<CompositePortalLink>(b);
                bComposite) {
       ACTS_WARNING("Merging a trivial portal with a composite portal");
       return std::make_unique<CompositePortalLink>(aTrivial, bComposite,
@@ -167,23 +163,21 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
     }
 
   } else if (auto aComposite =
-                 std::dynamic_pointer_cast<const CompositePortalLink>(a);
+                 std::dynamic_pointer_cast<CompositePortalLink>(a);
              aComposite) {
-    if (auto bGrid = std::dynamic_pointer_cast<const GridPortalLink>(b);
-        bGrid) {
+    if (auto bGrid = std::dynamic_pointer_cast<GridPortalLink>(b); bGrid) {
       ACTS_WARNING("Merging a composite portal with a grid portal");
       return std::make_unique<CompositePortalLink>(aComposite, bGrid,
                                                    direction);
 
-    } else if (auto bTrivial =
-                   std::dynamic_pointer_cast<const TrivialPortalLink>(b);
+    } else if (auto bTrivial = std::dynamic_pointer_cast<TrivialPortalLink>(b);
                bTrivial) {
       ACTS_WARNING("Merging a composite portal with a trivial portal");
       return std::make_unique<CompositePortalLink>(aComposite, bTrivial,
                                                    direction);
 
     } else if (auto bComposite =
-                   std::dynamic_pointer_cast<const CompositePortalLink>(b);
+                   std::dynamic_pointer_cast<CompositePortalLink>(b);
                bComposite) {
       ACTS_WARNING("Merging two composite portals");
       return std::make_unique<CompositePortalLink>(aComposite, bComposite,

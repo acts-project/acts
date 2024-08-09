@@ -76,8 +76,8 @@ class PortalLinkBase {
   // virtual bool inside(const Vector2& position) const = 0;
 
   static std::unique_ptr<PortalLinkBase> merge(
-      const std::shared_ptr<const PortalLinkBase>& a,
-      const std::shared_ptr<const PortalLinkBase>& b, BinningValue direction,
+      const std::shared_ptr<PortalLinkBase>& a,
+      const std::shared_ptr<PortalLinkBase>& b, BinningValue direction,
       const Logger& logger = getDummyLogger());
 
   virtual void toStream(std::ostream& os) const = 0;

@@ -584,8 +584,8 @@ void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
 }
 
 std::unique_ptr<PortalLinkBase> GridPortalLink::merge(
-    const std::shared_ptr<const GridPortalLink>& a,
-    const std::shared_ptr<const GridPortalLink>& b, BinningValue direction,
+    const std::shared_ptr<GridPortalLink>& a,
+    const std::shared_ptr<GridPortalLink>& b, BinningValue direction,
     const Logger& logger) {
   ACTS_VERBOSE("Merging two GridPortalLinks");
 
