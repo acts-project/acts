@@ -36,11 +36,12 @@ using namespace Acts::Python;
 
 PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   {
-    using Config = ActsExamples::DD4hep::DD4hepGeometryService::Config;
+    using Config = DD4hep::DD4hepGeometryService::Config;
     auto s = py::class_<DD4hep::DD4hepGeometryService,
                         std::shared_ptr<DD4hep::DD4hepGeometryService>>(
                  m, "DD4hepGeometryService")
-                 .def(py::init<const Config&>());
+                 .def(py::init<const Config&>())
+                 .def("drop", &DD4hep::DD4hepGeometryService::drop);
 
     auto c = py::class_<Config>(s, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
@@ -167,6 +168,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
                  const Acts::GeometryContext&,
                  const Acts::Experimental::DD4hepDetectorStructure::Options&>(
                  &DD4hep::DD4hepDetector::finalize))
+        .def("drop", &DD4hep::DD4hepDetector::drop)
         .def_property_readonly("field", &DD4hep::DD4hepDetector::field);
   }
 }
