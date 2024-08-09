@@ -79,7 +79,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
     auto& fVolume = cts.constituentVolumes.front();
     auto& lVolume = cts.constituentVolumes.back();
 
-    std::vector<float> borders = {};
+    std::vector<ActsScalar> borders = {};
 
     // The volumes should be harmonized in all other constraining values
     for (auto obValue : allBinningValues()) {
@@ -115,7 +115,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
     } else if (layersPresent && !legacy) {
       // Count the gaps
       std::size_t gaps = 0;
-      std::vector<float> boundaries = {};
+      std::vector<ActsScalar> boundaries = {};
       // New container vector
       std::vector<ProtoVolume> updatedConstituents;
       ActsScalar containerMin = extent.min(binValue);
@@ -124,14 +124,14 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
         gap.name = name + "-gap-" + std::to_string(gaps++);
         gap.extent.set(binValue, containerMin, fVolume.extent.min(binValue));
         updatedConstituents.push_back(gap);
-        borders.push_back(static_cast<float>(containerMin));
+        borders.push_back(containerMin);
       }
       // Fill the gaps
       for (unsigned int iv = 1; iv < cts.constituentVolumes.size(); ++iv) {
         auto& lv = cts.constituentVolumes[iv - 1u];
         // This volume is one to save
         updatedConstituents.push_back(lv);
-        borders.push_back(static_cast<float>(lv.extent.min(binValue)));
+        borders.push_back(static_cast<ActsScalar>(lv.extent.min(binValue)));
         // check if a gap to the next is needed
         ActsScalar low = lv.extent.max(binValue);
         auto& hv = cts.constituentVolumes[iv];
@@ -141,12 +141,12 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
           gap.name = name + "-gap-" + std::to_string(gaps++);
           gap.extent.set(binValue, low, high);
           updatedConstituents.push_back(gap);
-          borders.push_back(static_cast<float>(low));
+          borders.push_back(low);
         }
       }
       ActsScalar constituentsMax = lVolume.extent.max(binValue);
       updatedConstituents.push_back(lVolume);
-      borders.push_back(static_cast<float>(constituentsMax));
+      borders.push_back(constituentsMax);
       // Check the container min/max setting
       ActsScalar containerMax = extent.max(binValue);
       if (constituentsMax < containerMax) {
@@ -154,7 +154,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
         gap.name = name + "-gap-" + std::to_string(gaps++);
         gap.extent.set(binValue, constituentsMax, containerMax);
         updatedConstituents.push_back(gap);
-        borders.push_back(static_cast<float>(containerMax));
+        borders.push_back(containerMax);
       }
       cts.constituentVolumes = updatedConstituents;
     } else if (legacy && layersPresent) {

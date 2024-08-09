@@ -73,7 +73,7 @@ void Acts::from_json(const nlohmann::json& j, BinningData& bd) {
     bd = BinningData(bOption, bValue, bins, min, max, std::move(subBinning),
                      subBinningAdditive);
   } else {
-    std::vector<float> boundaries = j["boundaries"];
+    std::vector<ActsScalar> boundaries = j["boundaries"];
     bd = BinningData(bOption, bValue, boundaries, std::move(subBinning));
   }
 }
