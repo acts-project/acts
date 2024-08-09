@@ -98,7 +98,6 @@ with tempfile.TemporaryDirectory() as temp:
     )
 
     s.run()
-    del s
 
     for file, name in [
         (tp / "fatras" / "particles_simulation.root", "particles_fatras.root"),
@@ -134,7 +133,6 @@ with tempfile.TemporaryDirectory() as temp:
     )
 
     s.run()
-    del s
 
     for file, name in [
         (tp / "pythia8_particles.root", "particles_ttbar.root"),

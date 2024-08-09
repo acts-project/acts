@@ -305,7 +305,6 @@ def detector_config(request):
             ),
             name=request.param,
         )
-
     else:
         raise ValueError(f"Invalid detector {detector}")
 
@@ -390,16 +389,20 @@ def fatras(ptcl_gun, trk_geo, rng):
 def _do_material_recording(d: Path):
     from material_recording import runMaterialRecording
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
-
-    detectorConstructionFactory = (
-        acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
-    )
-
     s = acts.examples.Sequencer(events=2, numThreads=1)
 
-    runMaterialRecording(detectorConstructionFactory, str(d), tracksPerEvent=100, s=s)
-    s.run()
+    detector, trackingGeometry, decorators = getOpenDataDetector()
+
+    with detector:
+        detectorConstructionFactory = (
+            acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
+        )
+
+        runMaterialRecording(
+            detectorConstructionFactory, str(d), tracksPerEvent=100, s=s
+        )
+
+        s.run()
 
 
 @pytest.fixture(scope="session")

@@ -150,7 +150,6 @@ def run_ckf_tracking(label, seeding):
         )
 
         s.run()
-        del s
 
         for file in (
             ["performance_seeding.root"]

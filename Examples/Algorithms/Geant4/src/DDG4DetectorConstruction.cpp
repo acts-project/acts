@@ -42,11 +42,11 @@ G4VPhysicalVolume* ActsExamples::DDG4DetectorConstruction::Construct() {
     dd4hep::sim::Geant4Mapping& g4map = dd4hep::sim::Geant4Mapping::instance();
     auto conv = dd4hep::sim::Geant4Converter(dd4hepDetector(),
                                              dd4hep::PrintLevel::VERBOSE);
-    dd4hep::sim::Geant4GeometryInfo* geo_info =
+    dd4hep::sim::Geant4GeometryInfo* geoInfo =
         conv.create(dd4hepDetector().world()).detach();
-    g4map.attach(geo_info);
+    g4map.attach(geoInfo);
     // All volumes are deleted in ~G4PhysicalVolumeStore()
-    m_world = geo_info->world();
+    m_world = geoInfo->world();
     // Create Geant4 volume manager
     g4map.volumeManager();
 

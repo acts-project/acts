@@ -99,6 +99,6 @@ def getOpenDataDetector(
             level=customLogLevel(minLevel=acts.logging.WARNING),
         )
 
-    trackingGeometry, deco = detector.finalize(dd4hepConfig, mdecorator)
+    trackingGeometry, decorators = detector.finalize(dd4hepConfig, mdecorator)
 
-    return detector, trackingGeometry, deco
+    return detector, trackingGeometry, decorators

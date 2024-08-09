@@ -55,9 +55,10 @@ def test_telescope_geometry():
 def test_odd():
     detector, trackingGeometry, decorators = getOpenDataDetector()
 
-    trackingGeometry.visitSurfaces(check_extra_odd)
+    with detector:
+        trackingGeometry.visitSurfaces(check_extra_odd)
 
-    assert count_surfaces(trackingGeometry) == 18824
+        assert count_surfaces(trackingGeometry) == 18824
 
 
 def test_aligned_detector():

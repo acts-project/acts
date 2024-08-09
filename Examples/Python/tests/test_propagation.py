@@ -90,6 +90,7 @@ def test_steppers(conf_const, trk_geo):
             "propagation_steps", "chk_alg", level=acts.logging.WARNING
         )
         seq.addAlgorithm(chkAlg)
+
         seq.run()
 
     assert acts.StraightLineStepper()

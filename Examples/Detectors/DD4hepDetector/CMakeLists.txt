@@ -3,16 +3,15 @@ add_library(
   src/DD4hepDetector.cpp
   src/DD4hepGeometryService.cpp)
 
-
 target_include_directories(
   ActsExamplesDetectorDD4hep
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesDetectorDD4hep
   PUBLIC
-    ActsCore ActsPluginDD4hep
-    ActsExamplesFramework
-    ROOT::Geom ROOT::GenVector)
+    ActsCore
+    ActsPluginDD4hep
+    ActsExamplesFramework)
 
 if(${DD4hep_VERSION} VERSION_LESS 1.11)
   target_include_directories(ActsExamplesDetectorDD4hep PUBLIC ${DD4hep_INCLUDE_DIRS})
