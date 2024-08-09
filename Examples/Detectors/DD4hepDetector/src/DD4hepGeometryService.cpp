@@ -35,9 +35,7 @@ ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
 }
 
 ActsExamples::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
-  if (m_detector != nullptr) {
-    dd4hep::Detector::destroyInstance(m_cfg.name);
-  }
+  drop();
 }
 
 ActsExamples::ProcessCode
