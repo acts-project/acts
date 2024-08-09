@@ -349,9 +349,15 @@ struct GaussianSumFitter {
                                   ? *options.referenceSurface
                                   : sParameters.referenceSurface();
 
-      using PM = TrackStatePropMask;
+      assert(!fwdGsfResult.lastMeasurementComponents.empty());
+      assert(fwdGsfResult.lastMeasurementSurface != nullptr);
+      Acts::detail::normalizeWeights(fwdGsfResult.lastMeasurementComponents,
+                       [](auto& c) -> double& { return std::get<double>(c); });
+      MultiComponentBoundTrackParameters params(
+          fwdGsfResult.lastMeasurementSurface->getSharedPtr(),
+          fwdGsfResult.lastMeasurementComponents,
+          sParameters.particleHypothesis());
 
-      const auto& params = *fwdGsfResult.lastMeasurementState;
       auto state =
           m_propagator.template makeState<MultiComponentBoundTrackParameters,
                                           decltype(bwdPropOptions),
