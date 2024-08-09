@@ -126,3 +126,9 @@ def _patch_detectors(m):
     for name, cls in inspect.getmembers(m, inspect.isclass):
         if name.endswith("Detector"):
             cls.create = _detector_create(cls)
+
+            cls.__enter__ = lambda self: self
+            if hasattr(cls, "drop"):
+                cls.__exit__ = lambda self, *args: self.drop()
+            else:
+                cls.__exit__ = lambda self, *args: None
