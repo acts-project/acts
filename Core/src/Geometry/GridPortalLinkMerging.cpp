@@ -596,7 +596,6 @@ std::unique_ptr<PortalLinkBase> GridPortalLink::merge(
     return merged;
   } else {
     ACTS_VERBOSE("Grid merging failed, falling back to composite merging");
-    throw std::logic_error{"Not implemented"};
     return std::make_unique<CompositePortalLink>(a, b, direction, true);
   }
 }
