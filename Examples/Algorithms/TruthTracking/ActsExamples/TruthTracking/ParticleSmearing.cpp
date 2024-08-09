@@ -169,7 +169,6 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
           cov(i, i) = variance;
         }
       }
-
       parameters.emplace_back(perigee, params, cov, particleHypothesis);
     }
   }
