@@ -298,9 +298,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
 
     s = Sequencer(numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
-
-    with detector:
+    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
         s.addReader(
             EDM4hepReader(
                 level=acts.logging.INFO,

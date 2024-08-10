@@ -143,8 +143,7 @@ def test_geant4(tmp_path, assert_root_hash):
     # This test literally only ensures that the geant 4 example can run without erroring out
 
     # just to make sure it can build the odd
-    detector, trackingGeometry, decorators = getOpenDataDetector()
-    with detector:
+    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
         pass
 
     csv = tmp_path / "csv"
@@ -528,7 +527,7 @@ def test_truth_tracking_kalman(
         assert not fp.exists()
 
     print("with")
-    with detector_config.detector:
+    with detector_config.detectorTuple as (detector, trackingGeometry, decorators):
         from truth_tracking_kalman import runTruthTrackingKalman
 
         field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
@@ -536,7 +535,7 @@ def test_truth_tracking_kalman(
         seq = Sequencer(events=10, numThreads=1)
 
         runTruthTrackingKalman(
-            trackingGeometry=detector_config.trackingGeometry,
+            trackingGeometry=trackingGeometry,
             field=field,
             digiConfigFile=detector_config.digiConfigFile,
             outputDir=tmp_path,
@@ -593,10 +592,10 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
         fp = tmp_path / fn
         assert not fp.exists()
 
-    with detector_config.detector:
+    with detector_config.detectorTuple as (detector, trackingGeometry, decorators):
         runTruthTrackingGsf(
-            trackingGeometry=detector_config.trackingGeometry,
-            decorators=detector_config.decorators,
+            trackingGeometry=trackingGeometry,
+            decorators=decorators,
             field=field,
             digiConfigFile=detector_config.digiConfigFile,
             outputDir=tmp_path,
@@ -625,11 +624,11 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
         numThreads=1,
     )
 
-    with detector_config.detector:
+    with detector_config.detectorTuple as (detector, trackingGeometry, decorators):
         # Only check if it runs without errors right known
         # Changes in fitter behaviour should be caught by other tests
         runRefittingGsf(
-            trackingGeometry=detector_config.trackingGeometry,
+            trackingGeometry=trackingGeometry,
             field=field,
             outputDir=tmp_path,
             s=seq,
@@ -692,9 +691,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator)
-
-    with detector:
+    with getOpenDataDetector(mdecorator) as (detector, trackingGeometry, decorators):
         runMaterialMapping(
             trackingGeometry,
             decorators,
@@ -727,11 +724,9 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(events=10, numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(
+    with getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
-    )
-
-    with detector:
+    ) as (detector, trackingGeometry, decorators):
         runMaterialValidation(
             10, 1000, trackingGeometry, decorators, field, outputDir=str(tmp_path), s=s
         )
@@ -761,11 +756,9 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     s = Sequencer(numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
-    )
-
-    with detector:
+    with getOpenDataDetector(
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+    ) as (detector, trackingGeometry, decorators):
         runMaterialMapping(
             trackingGeometry,
             decorators,
@@ -799,11 +792,9 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     s = Sequencer(events=10, numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(
+    with getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
-    )
-
-    with detector:
+    ) as (detector, trackingGeometry, decorators):
         runMaterialValidation(
             10,
             1000,
@@ -1066,10 +1057,10 @@ def test_ckf_tracks_example(
 
     from ckf_tracks import runCKFTracks
 
-    with detector_config.detector:
+    with detector_config.detectorTuple as (detector, trackingGeometry, decorators):
         runCKFTracks(
-            detector_config.trackingGeometry,
-            detector_config.decorators,
+            trackingGeometry,
+            decorators,
             field=field,
             outputCsv=True,
             outputDir=tmp_path,
@@ -1102,8 +1093,7 @@ def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
 
     # just to make sure it can build the odd
-    detector, trackingGeometry, decorators = getOpenDataDetector()
-    with detector:
+    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
         pass
 
     script = (
