@@ -724,9 +724,11 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(events=10, numThreads=1)
 
-    with getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
-    ) as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file)) as (
+        detector,
+        trackingGeometry,
+        decorators,
+    ):
         runMaterialValidation(
             10, 1000, trackingGeometry, decorators, field, outputDir=str(tmp_path), s=s
         )
@@ -756,9 +758,11 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     s = Sequencer(numThreads=1)
 
-    with getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
-    ) as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file)) as (
+        detector,
+        trackingGeometry,
+        decorators,
+    ):
         runMaterialMapping(
             trackingGeometry,
             decorators,
@@ -792,9 +796,11 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     s = Sequencer(events=10, numThreads=1)
 
-    with getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
-    ) as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file)) as (
+        detector,
+        trackingGeometry,
+        decorators,
+    ):
         runMaterialValidation(
             10,
             1000,
