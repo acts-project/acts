@@ -758,7 +758,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     s = Sequencer(numThreads=1)
 
-    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file)) as (
+    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(geo_map)) as (
         detector,
         trackingGeometry,
         decorators,
