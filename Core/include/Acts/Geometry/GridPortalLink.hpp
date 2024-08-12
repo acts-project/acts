@@ -22,7 +22,8 @@ namespace Acts {
 class IGrid;
 
 template <typename... Axes>
-requires(sizeof...(Axes) <= 2) class GridPortalLinkT;
+  requires(sizeof...(Axes) <= 2)
+class GridPortalLinkT;
 
 class GridPortalLink : public PortalLinkBase {
  protected:
@@ -115,8 +116,8 @@ class GridPortalLink1 : public GridPortalLink {};
 class GridPortalLink2 : public GridPortalLink {};
 
 template <typename... Axes>
-requires(sizeof...(Axes) <= 2) class GridPortalLinkT final
-    : public GridPortalLink {
+  requires(sizeof...(Axes) <= 2)
+class GridPortalLinkT final : public GridPortalLink {
  public:
   using GridType = Grid<const TrackingVolume*, Axes...>;
   static constexpr std::size_t DIM = sizeof...(Axes);
