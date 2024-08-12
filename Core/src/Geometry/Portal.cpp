@@ -146,8 +146,9 @@ template <typename axis_t>
 AppendAxis(axis_t&&) -> AppendAxis<std::decay_t<axis_t>>;
 
 template <typename S>
-concept RegularSurfaceConcept = std::is_same_v<S, CylinderSurface> ||
-    std::is_same_v<S, DiscSurface> || std::is_same_v<S, PlaneSurface>;
+concept RegularSurfaceConcept =
+    std::is_same_v<S, CylinderSurface> || std::is_same_v<S, DiscSurface> ||
+    std::is_same_v<S, PlaneSurface>;
 
 template <RegularSurfaceConcept surface_t, typename... Args,
           typename other_axis_t>
