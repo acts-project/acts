@@ -133,7 +133,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     if (angle > pi) {
       return angle - 2.f * pi;
     }
-    if (angle < pi) {
+    if (angle < -pi) {
       return angle + 2.f * pi;
     }
     return angle;
@@ -171,7 +171,8 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     float rPhiSlope = 0.f;
 
     if (deltaR != 0) {
-      phiSlope = deltaPhi / deltaR;
+      phiSlope = std::clamp(deltaPhi / deltaR, -100.f, 100.f);
+
       const float avgR = 0.5f * (dstFeatures[0] + srcFeatures[0]);
       rPhiSlope = avgR * phiSlope;
     }
