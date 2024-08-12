@@ -35,6 +35,13 @@ struct TracccSpacePointHash{
     }
 };
 
+struct ActsSpacePointHash{
+    std::size_t operator()(const SimSpacePoint& s) const noexcept {
+        assert(s.sourceLinks().size() >= 1);
+        return s.sourceLinks()[0].get<ActsExamples::IndexSourceLink>().index();
+    }
+};
+
 /// @brief Converts a traccc space point to an acts space point.
 /// @param spacePoint the traccc seed.
 /// @param measurementConv the measurement ConversionData (traccc measurement -> acts bound variant measurement).
@@ -82,25 +89,27 @@ auto convertSpacePoints(std::vector<traccc::spacepoint, allocator_t>& spacePoint
 }
 
 template <typename T>
-traccc::spacepoint convertSpacePoint(SimSpacePoint spacePoint,T& measurementConv){
+traccc::spacepoint convertSpacePoint(const SimSpacePoint spacePoint, T& measurementConv){
     using Scalar = typename traccc::point3::value_type;
     auto idx = spacePoint.sourceLinks()[0].get<ActsExamples::IndexSourceLink>().index();
+
+    traccc::point3 global{
+        static_cast<Scalar>(spacePoint.x()), 
+        static_cast<Scalar>(spacePoint.y()), 
+        static_cast<Scalar>(spacePoint.z())
+        };
     return traccc::spacepoint{
-        traccc::point3{
-            static_cast<Scalar>(spacePoint.x()), 
-            static_cast<Scalar>(spacePoint.y()), 
-            static_cast<Scalar>(spacePoint.z())
-            },
+        global,
         measurementConv.indexToValue(idx)
     };
 }
 
 template <typename T, typename output_container_t>
-auto convertSpacePoints(SimSpacePointContainer& spacePoints, T& measurementConv, output_container_t& outputContainer){
-    auto fn = [&measurementConv](SimSpacePoint& spacePoint){
+auto convertSpacePoints(const SimSpacePointContainer& spacePoints, T& measurementConv, output_container_t& outputContainer){
+    auto fn = [&measurementConv](const SimSpacePoint& spacePoint){
         return convertSpacePoint(spacePoint, measurementConv);
     };
-    return Util::convert<traccc::spacepoint>(spacePoints, fn, outputContainer);
+    return Util::convert<ActsSpacePointHash, std::equal_to<SimSpacePoint>>(spacePoints, fn, outputContainer);
 }
 
 }  // namespace Acts::TracccPlugin

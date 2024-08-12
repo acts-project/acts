@@ -47,6 +47,24 @@ struct TracccMeasurementHash{
     }
 };
 
+struct ActsMeasurementHash{
+    std::size_t operator()(const ActsExamples::BoundVariantMeasurement& s) const noexcept {
+      const Acts::SourceLink sourceLink = std::visit(
+        [](auto& m) {return m.sourceLink();},
+        s
+      );
+      return sourceLink.get<ActsExamples::IndexSourceLink>().index();
+    }
+};
+
+struct ActsMeasurementEquals {
+    bool operator()(const ActsExamples::BoundVariantMeasurement& lhs, const ActsExamples::BoundVariantMeasurement& rhs) const {
+      auto lhsIdx = std::visit([](auto& m) {return m.sourceLink();}, lhs).get<ActsExamples::IndexSourceLink>().index();
+      auto rhsIdx = std::visit([](auto& m) {return m.sourceLink();}, rhs).get<ActsExamples::IndexSourceLink>().index();
+      return lhsIdx == rhsIdx;
+    }
+};
+
 /// @brief Converts a traccc bound index to an Acts bound index.
 /// @param tracccBoundIndex the traccc bound index.
 /// @returns an Acts bound index.
@@ -204,30 +222,6 @@ inline auto convertMeasurements(
     &measurementContainer
   };
 
-  return conv;
-}
-
-inline auto convertMeasurement(ActsExamples::BoundVariantMeasurement& measurement){
-  auto fn = [](auto& m){
-    auto loc = getLocal(m);
-    auto var = getVariance(m);
-    return traccc::measurement{
-      getLocal(m),
-      getVariance(m),
-
-    };
-  };
-  return std::visit(fn, measurement);
-}
-
-template <typename output_container_t>
-inline auto convertMeasurements(const std::vector<ActsExamples::BoundVariantMeasurement>& measurements,
-    output_container_t& measurementContainer){
-    Util::ConversionData conv{
-      &measurements, 
-      Util::create1To1(measurements), 
-      &measurementContainer
-    };
   return conv;
 }
 

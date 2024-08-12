@@ -73,6 +73,8 @@ ActsExamples::Traccc::Common::TracccChainAlgorithmBase::
       barcodeMap{Acts::TracccPlugin::createBarcodeMap(detector)} {
   m_inputCells.initialize(m_cfg.inputCells);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+  m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
+  m_inputSeeds.initialize(m_cfg.inputSeeds);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
   m_outputTracks.initialize(m_cfg.outputTracks);

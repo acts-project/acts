@@ -27,6 +27,8 @@ from acts.examples.dd4hep import (
 )
 
 from acts.examples.reconstruction import (
+    addSeeding,
+    TruthSeedRanges,
     addTracccChain,
 )
 
@@ -120,6 +122,13 @@ parser.add_argument(
 parser.add_argument(
     '--no-ambi-res',
     help='Disable ambiguity resolution for the traccc chain',
+    action='store_true',
+    default=False
+)
+
+parser.add_argument(
+    '--acts-digi',
+    help='Disable traccc digitization and use acts digitization and seeds instead',
     action='store_true',
     default=False
 )
@@ -268,6 +277,20 @@ addDigitization(
     mergeCommonCorner=True,
 )
 
+if args.acts_digi:
+    oddSeedingSel = getOpenDataDetectorDirectory() / "config/odd-seeding-config.json"
+    addSeeding(
+        s,
+        recoGeometry,
+        field,
+        (
+            TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
+            if args.ttbar
+            else TruthSeedRanges()
+        ),
+        geoSelectionConfigFile=oddSeedingSel
+    )
+
 chainConfig = acts.examples.TracccChainConfig()
 
 addTracccChain(
@@ -281,6 +304,7 @@ addTracccChain(
     logLevel=acts.logging.INFO,
     platform=args.platform,
     enableAmbiguityResolution=not args.no_ambi_res,
+    externalDigitization=args.acts_digi,
 )
 
 s.run()

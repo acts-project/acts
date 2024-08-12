@@ -2072,8 +2072,11 @@ def addTracccChain(
     chainConfig : acts.examples.TracccChainConfig,
     outputDirRoot: Union[Path, str],
     enableAmbiguityResolution: Optional[bool] = True,
+    externalDigitization: Optional[bool] = False,
     inputCells: Optional[str] = "cells",  # "InputCells",
     inputMeasurements: Optional[str] = "measurements",
+    inputSpacePoints: Optional[str] = "spacepoints",  # "InputCells",
+    inputSeeds: Optional[str] = "seeds",  # "InputCells",
     outputSeeds : Optional[str] = "traccc_seeds",
     outputSpacePoints : Optional[str] = "traccc_spacepoints",
     outputTracks: Optional[str] = "traccc_tracks",
@@ -2095,9 +2098,12 @@ def addTracccChain(
             level=customLogLevel(),
             inputCells=inputCells,
             inputMeasurements=inputMeasurements,
+            inputSpacePoints=inputSpacePoints,
+            inputSeeds=inputSeeds,
             outputSpacePoints=outputSpacePoints,
             outputSeeds=outputSeeds,
             outputTracks=outputTracks,
+            externalDigitization=externalDigitization,
             enableAmbiguityResolution=enableAmbiguityResolution,
             trackingGeometry=trackingGeometry,
             field=field,
@@ -2156,35 +2162,36 @@ def addTracccChain(
         writeCovMat=writeCovMat,
     )
 
-    parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
-            level=logLevel,
-            inputSeeds=outputSeeds,
-            outputTrackParameters="estimatedparameters",
-            outputSeeds="estimatedseeds",
-            trackingGeometry=trackingGeometry,
-            magneticField=field,
-        )
-    s.addAlgorithm(parEstimateAlg)
+    if not externalDigitization:
+        parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
+                level=logLevel,
+                inputSeeds=outputSeeds,
+                outputTrackParameters="estimatedparameters",
+                outputSeeds="estimatedseeds",
+                trackingGeometry=trackingGeometry,
+                magneticField=field,
+            )
+        s.addAlgorithm(parEstimateAlg)
 
-    prototracks = "seed-prototracks"
-    s.addAlgorithm(
-        acts.examples.SeedsToPrototracks(
-            level=logLevel,
-            inputSeeds=outputSeeds,
-            outputProtoTracks=prototracks,
+        prototracks = "seed-prototracks"
+        s.addAlgorithm(
+            acts.examples.SeedsToPrototracks(
+                level=logLevel,
+                inputSeeds=outputSeeds,
+                outputProtoTracks=prototracks,
+            )
         )
-    )
 
-    addSeedPerformanceWriters(
-        s,
-        outputDirRoot,
-        outputSeeds,
-        prototracks,
-        "particles",
-        "particles",
-        parEstimateAlg.config.outputTrackParameters,
-        logLevel,
-        seedingPerformanceName=f"performance_seeding_traccc_{platform}",
-    )
+        addSeedPerformanceWriters(
+            s,
+            outputDirRoot,
+            outputSeeds,
+            prototracks,
+            "particles",
+            "particles",
+            parEstimateAlg.config.outputTrackParameters,
+            logLevel,
+            seedingPerformanceName=f"performance_seeding_traccc_{platform}",
+        )
     
     return s

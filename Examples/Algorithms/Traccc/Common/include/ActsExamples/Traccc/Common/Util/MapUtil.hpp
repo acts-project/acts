@@ -34,7 +34,7 @@ struct ConversionData{
     std::unordered_map<K, std::size_t, hash_t, equals_t> keyToIdxMap;
     output_container_t* outputContainer;
 
-    std::size_t valueToIndex(K& inputValue) const{
+    std::size_t valueToIndex(const K& inputValue) const{
         return keyToIdxMap.at(inputValue);
     }
 
@@ -46,32 +46,36 @@ struct ConversionData{
         return outputContainer->at(indexToIndex(index));
     }
 
-    auto& valueToValue(K& inputValue) const{
+    auto& valueToValue(const K& inputValue) const{
         return outputContainer->at(valueToIndex(inputValue));
     }
 
     auto size(){
-        return keyToIdxMap->size();
+        return keyToIdxMap.size();
     }
 };
 
-/*template <typename hash, typename equal_to, typename conversion_data_t>
+/// @returns the inverse of a ConversionData instance.
+template <typename hash_t, typename equals_t, typename conversion_data_t>
 auto inverse(conversion_data_t& conv){
-    std::unordered_map<typename conversion_data_t::V, std::size_t, hash, equal_to> inv;
-    for (std::size_t i = 0; i < conv.inputContainer->size(); i++){
-        auto key = conv.inputContainer->at(i);
+    std::unordered_map<typename conversion_data_t::V, std::size_t, hash_t, equals_t> keyToIdxMap;
+
+    for (std::size_t idx = 0; idx < conv.size(); idx++){
+        auto key = conv.inputContainer->at(idx);
         auto value = conv.valueToValue(key);
-        inv.push_back({value,i});
+        keyToIdxMap.emplace(std::piecewise_construct, std::forward_as_tuple(value), std::forward_as_tuple(idx));
     }
 
     return ConversionData{
-        conv.outputCotainer,
-        inv,
+        conv.outputContainer,
+        keyToIdxMap,
         conv.inputContainer
     };
-}*/
+}
 
-template <typename input_container_t, typename hash = std::hash<typename input_container_t::value_type>, typename equal_to = std::equal_to<typename input_container_t::value_type>>
+/// @brief Creates a keyToIdxMap map each value in the input container to their index.
+/// This represents a mapping from a value at index n in the input container to index n in the output container.
+template <typename hash_t, typename equals_t, typename input_container_t>
 auto create1To1(input_container_t& inputs){
     using K = typename input_container_t::value_type;
     std::unordered_map<K, std::size_t, hash_t, equals_t> keyToIdxMap;

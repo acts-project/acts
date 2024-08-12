@@ -34,13 +34,41 @@ struct TracccSeedHash{
     }
 };
 
-struct TracccSeedEqual {
+struct TracccSeedEquals {
     bool operator()(const traccc::seed& lhs, const traccc::seed& rhs) const {
         return lhs.spB_link == rhs.spB_link &&
         lhs.spM_link == rhs.spM_link &&
         lhs.spT_link == rhs.spT_link &&
         lhs.weight == rhs.weight &&
         lhs.z_vertex == rhs.z_vertex;
+    }
+};
+
+struct ActsSeedHash{
+    std::size_t operator()(const SimSeed& s) const noexcept {
+        auto getIdx = [](auto sp){
+            assert(sp->sourceLinks().size() >= 1);
+            auto sl = sp->sourceLinks()[0];
+            return sl.template get<ActsExamples::IndexSourceLink>().index();
+        };
+        std::vector<std::size_t> indices;
+        std::transform(s.sp().begin(), s.sp().end(), std::back_inserter(indices), getIdx);
+        return indices[0] ^ indices[1] ^ indices[2];
+    }
+};
+
+struct ActsSeedEquals {
+    bool operator()(const SimSeed& lhs, const SimSeed& rhs) const {
+        auto getIdx = [](auto sp){
+            assert(sp->sourceLinks().size() >= 1);
+            auto sl = sp->sourceLinks()[0];
+            return sl.template get<ActsExamples::IndexSourceLink>().index();
+        };
+        std::vector<std::size_t> lhsIndices;
+        std::transform(lhs.sp().begin(), lhs.sp().end(), std::back_inserter(lhsIndices), getIdx);
+        std::vector<std::size_t> rhsIndices;
+        std::transform(rhs.sp().begin(), rhs.sp().end(), std::back_inserter(rhsIndices), getIdx);
+        return lhsIndices[0] == rhsIndices[0] && lhsIndices[1] == rhsIndices[1] && lhsIndices[2] == rhsIndices[2];
     }
 };
 
@@ -69,25 +97,26 @@ auto convertSeeds(std::vector<traccc::seed, allocator_t>& seeds, T& spacePointCo
     auto fn = [&spacePointConv](auto& seed){
         return convertSeed(seed, spacePointConv);
     };
-    return Util::convert<TracccSeedHash, TracccSeedEqual>(seeds, fn, outputContainer);
+    return Util::convert<TracccSeedHash, TracccSeedEquals>(seeds, fn, outputContainer);
 }
 
 template <typename T>
-traccc::seed convertSeed(SimSeed& seed, T& spacePointConv){
+traccc::seed convertSeed(const SimSeed& seed, T& spacePointConv){
+    using Scalar = typename traccc::point3::value_type;
     return traccc::seed{
         spacePointConv.valueToIndex(*seed.sp()[0]),
         spacePointConv.valueToIndex(*seed.sp()[1]),
         spacePointConv.valueToIndex(*seed.sp()[2]),
-        seed.z(), 
+        static_cast<Scalar>(seed.z()), 
         seed.seedQuality()};
 }
 
 template <typename T, typename output_container_t>
-auto convertSeeds(SimSeedContainer& seeds, T& spacePointConv, output_container_t& outputContainer){
-    auto fn = [&spacePointConv](auto& seed){
+auto convertSeeds(const SimSeedContainer& seeds, T& spacePointConv, output_container_t& outputContainer){
+    auto fn = [&spacePointConv](const SimSeed& seed){
         return convertSeed(seed, spacePointConv);
     };
-    return Util::convert<traccc::seed>(seeds, fn, outputContainer);
+    return Util::convert<ActsSeedHash, ActsSeedEquals>(seeds, fn, outputContainer);
 }
 
 }  // namespace Acts::TracccPlugin
