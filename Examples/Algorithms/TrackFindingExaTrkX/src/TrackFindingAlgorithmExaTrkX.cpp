@@ -236,6 +236,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
       }
       // clang-format on
 
+      assert(std::isfinite(f[ift]));
       f[ift] /= m_cfg.featureScales[ift];
     }
 #undef MAKE_CLUSTER_FEATURES

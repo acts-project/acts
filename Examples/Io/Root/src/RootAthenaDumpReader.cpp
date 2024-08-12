@@ -259,6 +259,8 @@ RootAthenaDumpReader::readMeasurements(SimParticleContainer& particles) const {
   MeasurementContainer measurements;
   measurements.reserve(nCL);
 
+  std::size_t nTotalTotZero = 0;
+
   const auto prevParticlesSize = particles.size();
   IndexMultimap<ActsFatras::Barcode> measPartMap;
 
@@ -287,12 +289,17 @@ RootAthenaDumpReader::readMeasurements(SimParticleContainer& particles) const {
     cluster.sizeLoc0 = *maxEta - *minEta;
     cluster.sizeLoc1 = *maxPhi - *minPhi;
 
+    if( totalTot == 0.0 ) {
+      ACTS_VERBOSE("total time over threshold is 0, set all activations to 0");
+      nTotalTotZero++;
+    }
+
     for (const auto& [eta, phi, tot] : Acts::zip(etas, phis, tots)) {
       // Make best out of what we have:
       // Weight the overall collected charge corresponding to the
       // time-over-threshold of each cell Use this as activation (does this make
       // sense?)
-      auto activation = CLcharge_count[im] * tot / totalTot;
+      auto activation = (totalTot != 0.0) ? CLcharge_count[im] * tot / totalTot : 0.0;
 
       // This bases every cluster at zero, but shouldn't matter right now
       ActsFatras::Segmentizer::Bin2D bin;
@@ -366,6 +373,10 @@ RootAthenaDumpReader::readMeasurements(SimParticleContainer& particles) const {
   if (particles.size() - prevParticlesSize > 0) {
     ACTS_DEBUG("Created " << particles.size() - prevParticlesSize
                           << " dummy particles");
+  }
+
+  if( nTotalTotZero > 0) {
+    ACTS_WARNING(nTotalTotZero << " / " << nCL << " clusters have zero time-over-threshold");
   }
 
   return {clusters, measurements, measPartMap};
