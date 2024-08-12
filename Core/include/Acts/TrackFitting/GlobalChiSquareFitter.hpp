@@ -641,7 +641,7 @@ class Gx2Fitter {
           // Update the number of holes count only when encountering a
           // measurement
           result.measurementHoles = result.missedActiveSurfaces.size();
-        } else if (multipleScattering && surface->surfaceMaterial() != nullptr) {
+        } else if (multipleScattering && (surface->surfaceMaterial() != nullptr)) {
           // Here we handle material and holes
           // TODO add material handling
           ACTS_DEBUG("    The surface contains no measurement, but material. It may contain a hole.");
@@ -836,9 +836,9 @@ class Gx2Fitter {
             auto typeFlags = trackStateProxy.typeFlags();
             // TODO no parameters for hole?
             typeFlags.set(TrackStateFlag::ParameterFlag);
-//              if (surface->surfaceMaterial() != nullptr) {
-//                typeFlags.set(TrackStateFlag::MaterialFlag);
-//              }
+            if (!multipleScattering && (surface->surfaceMaterial() != nullptr)) {
+              typeFlags.set(TrackStateFlag::MaterialFlag);
+            }
 
 //              // Set hole only, if we are on a sensitive surface
 //              if (surface->associatedDetectorElement() != nullptr) {
