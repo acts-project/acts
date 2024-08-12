@@ -59,8 +59,9 @@ class Portal {
 class GridPortalLink;
 
 template <typename S>
-concept PortalSurfaceConcept = std::is_same_v<S, CylinderSurface> ||
-    std::is_same_v<S, DiscSurface> || std::is_same_v<S, PlaneSurface>;
+concept PortalSurfaceConcept =
+    std::is_same_v<S, CylinderSurface> || std::is_same_v<S, DiscSurface> ||
+    std::is_same_v<S, PlaneSurface>;
 
 class PortalLinkBase {
  public:
