@@ -529,8 +529,8 @@ class Gx2Fitter {
         const GeometryIdentifier geoId = surface->geometryId();
         ACTS_DEBUG("Surface " << geoId << " detected.");
 
-        // Found material - add an scatteringAngles entry
-        if (surface->surfaceMaterial() != nullptr) {
+        // Found material - add an scatteringAngles entry if not done yet. Handling will happen later
+        if (multipleScattering && surface->surfaceMaterial() != nullptr) {
           ACTS_DEBUG("    The surface contains material.");
 
           auto scatteringMapId = scatteringMap->find(geoId);
@@ -597,7 +597,7 @@ class Gx2Fitter {
 
             // For material surfaces, we also update the angles with the
             // available scattering information
-            if (surface->surfaceMaterial() != nullptr) {
+            if (multipleScattering && surface->surfaceMaterial() != nullptr) {
               ACTS_DEBUG("    Update parameters with scattering angles.");
               auto scatteringMapId = scatteringMap->find(geoId);
               ACTS_VERBOSE("    scatteringAngles:\n"
@@ -641,7 +641,7 @@ class Gx2Fitter {
           // Update the number of holes count only when encountering a
           // measurement
           result.measurementHoles = result.missedActiveSurfaces.size();
-        } else if (surface->surfaceMaterial() != nullptr) {
+        } else if (multipleScattering && surface->surfaceMaterial() != nullptr) {
           // Here we handle material and holes. Material-less holes come later
           ACTS_DEBUG("    The surface contains no measurement, but material.");
 
@@ -683,7 +683,7 @@ class Gx2Fitter {
 
             // For material surfaces, we also update the angles with the
             // available scattering information
-            if (surface->surfaceMaterial() != nullptr) {
+            if (multipleScattering && surface->surfaceMaterial() != nullptr) {
               ACTS_DEBUG("    Update parameters with scattering angles.");
               auto scatteringMapId = scatteringMap->find(geoId);
               ACTS_VERBOSE("scatteringAngles:\n"
@@ -934,6 +934,7 @@ class Gx2Fitter {
       gx2fActor.actorLogger = m_actorLogger.get();
       gx2fActor.startVolume = startVolume;
       gx2fActor.scatteringMap = &scatteringMap;
+      gx2fActor.multipleScattering = gx2fOptions.multipleScattering;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
@@ -990,15 +991,16 @@ class Gx2Fitter {
       // Count the material surfaces, to set up the system
       std::size_t nMaterialSurfaces = 0;
 
-      // TODO description
-      // pre-evaluate the track and count material states
-      // TODO we could also do the ndf here
-      for (const auto& trackState : track.trackStates()) {
-        auto typeFlags = trackState.typeFlags();
+      if (gx2fOptions.multipleScattering) {
+        // TODO description
+        // pre-evaluate the track and count material states
+        // TODO we could also do the ndf here
+        for (const auto& trackState : track.trackStates()) {
+          auto typeFlags = trackState.typeFlags();
 
-        // update all jacobian from start
-        if (typeFlags.test(TrackStateFlag::MaterialFlag)) {
-          nMaterialSurfaces++;
+          if (typeFlags.test(TrackStateFlag::MaterialFlag)) {
+            nMaterialSurfaces++;
+          }
         }
       }
 
@@ -1023,7 +1025,7 @@ class Gx2Fitter {
 
         // update all Jacobians from start
         if ((typeFlags.test(TrackStateFlag::MeasurementFlag)) ||
-            (typeFlags.test(TrackStateFlag::MaterialFlag))) {
+            (gx2fOptions.multipleScattering && typeFlags.test(TrackStateFlag::MaterialFlag))) {
           for (auto& jac : jacobianFromStart) {
             jac = trackState.jacobian() * jac;
           }
@@ -1063,7 +1065,7 @@ class Gx2Fitter {
           }
         }
 
-        if (typeFlags.test(TrackStateFlag::MaterialFlag)) {
+        if (gx2fOptions.multipleScattering && typeFlags.test(TrackStateFlag::MaterialFlag)) {
           // Get and store geoId for the current material surface
           const GeometryIdentifier geoId =
               trackState.referenceSurface().geometryId();
@@ -1146,19 +1148,20 @@ class Gx2Fitter {
 
       deltaParams = deltaParamsExtended.topLeftCorner<eBoundSize, 1>().eval();
 
-      // update the scattering angles
-      for (std::size_t matSurface = 0; matSurface < geoIdVector.size();
-           matSurface++) {
-        const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
+      if (gx2fOptions.multipleScattering) {  // update the scattering angles
+        for (std::size_t matSurface = 0; matSurface < geoIdVector.size();
+             matSurface++) {
+          const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
 
-        auto scatteringMapId = scatteringMap.find(geoIdVector[matSurface]);
-        if (scatteringMapId == scatteringMap.end()) {
-          // TODO make proper error and return
-          ACTS_ERROR("No scattering angles found for material surface "
-                     << geoIdVector[matSurface]);
+          auto scatteringMapId = scatteringMap.find(geoIdVector[matSurface]);
+          if (scatteringMapId == scatteringMap.end()) {
+            // TODO make proper error and return
+            ACTS_ERROR("No scattering angles found for material surface "
+                       << geoIdVector[matSurface]);
+          }
+          scatteringMapId->second.scatteringAngles.block<2, 1>(2, 0) +=
+              deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
         }
-        scatteringMapId->second.scatteringAngles.block<2, 1>(2, 0) +=
-            deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
       }
 
       ACTS_VERBOSE("aMatrix:\n"
