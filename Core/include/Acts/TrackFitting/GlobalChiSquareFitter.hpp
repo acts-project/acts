@@ -496,6 +496,10 @@ class Gx2Fitter {
       } else if (state.navigation.navigationBreak) {
         ACTS_INFO("Actor: finish: navigationBreak.");
         result.finished = true;
+      } else if (result.surfaceCount > 900) {
+        // TODO Keep it in for now, but check in the future, if we can remove it
+        ACTS_INFO("Actor: finish due to limit. Result might be garbage.");
+        result.finished = true;
       }
 
       // End the propagation and return to the fitter
@@ -644,8 +648,7 @@ class Gx2Fitter {
         } else if (multipleScattering && (surface->surfaceMaterial() != nullptr)) {
           // Here we handle material for multipleScattering. If holes exist, we also handle them already
           // TODO add material handling
-          ACTS_VERBOSE("Non-Measurement surface " << surface->geometryId()
-                                                  << " detected.");
+          ACTS_DEBUG("    The surface contains no measurement, but material and maybe a hole.");
           //        } else if (multipleScattering && surface->surfaceMaterial() != nullptr) {
           //          // Here we handle material and holes. Material-less holes come later
           //          ACTS_DEBUG("    The surface contains no measurement, but material.");
@@ -790,96 +793,76 @@ class Gx2Fitter {
           } else {
             ACTS_DEBUG("    Ignoring hole, because no preceding measurements.");
           }
-        } else if (surface->associatedDetectorElement() != nullptr ||
-                 surface->surfaceMaterial() != nullptr) {
+        } else if ((surface->associatedDetectorElement() != nullptr) ||
+                 (surface->surfaceMaterial() != nullptr)) {
           // Here we handle holes. If material hasn't been handled before (because multipleScattering is turned off), we will also handle it here
-          // TODO add material handling
-          ACTS_VERBOSE("Non-Measurement surface " << surface->geometryId()
-                                                  << " detected.");
+          if (multipleScattering) {
+            ACTS_DEBUG("    The surface contains no measurement, but maybe a hole.");
+          } else {
+            ACTS_DEBUG("    The surface contains no measurement, but maybe a hole and/or material.");
+          }
 
           // We only create track states here if there is already a measurement
           // detected (no holes before the first measurement)
-          if (result.measurementStates > 0) {
-            ACTS_DEBUG("    Handle hole.");
-
-            auto& fittedStates = *result.fittedStates;
-
-            // Add a <trackStateMask> TrackState entry multi trajectory. This
-            // allocates storage for all components, which we will set later.
-            typename traj_t::TrackStateProxy trackStateProxy =
-                fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
-                                            result.lastTrackIndex);
-            const std::size_t currentTrackIndex = trackStateProxy.index();
-
-            {
-              // Set the trackStateProxy components with the state from the
-              // ongoing propagation
-              {
-                trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-                // Bind the transported state to the current surface
-                auto res = stepper.boundState(state.stepping, *surface, false,
-                                              freeToBoundCorrection);
-                if (!res.ok()) {
-                  result.result = res.error();
-                  return;
-                }
-                const auto& [boundParams, jacobian, pathLength] = *res;
-
-                // Fill the track state
-                trackStateProxy.predicted() = boundParams.parameters();
-                trackStateProxy.predictedCovariance() = state.stepping.cov;
-
-                trackStateProxy.jacobian() = jacobian;
-                trackStateProxy.pathLength() = pathLength;
-              }
-
-              // Get and set the type flags
-              auto typeFlags = trackStateProxy.typeFlags();
-              // TODO no parameters for hole?
-              typeFlags.set(TrackStateFlag::ParameterFlag);
-              if (surface->surfaceMaterial() != nullptr) {
-                typeFlags.set(TrackStateFlag::MaterialFlag);
-              }
-
-              // Set hole only, if we are on a sensitive surface
-              if (surface->associatedDetectorElement() != nullptr) {
-                ACTS_VERBOSE("Detected hole on " << surface->geometryId());
-                // If the surface is sensitive, set the hole type flag
-                typeFlags.set(TrackStateFlag::HoleFlag);
-              } else {
-                ACTS_VERBOSE("Detected in-sensitive surface "
-                             << surface->geometryId());
-              }
-              //              typeFlags.set(TrackStateFlag::HoleFlag);
-            }
-
-            result.lastTrackIndex = currentTrackIndex;
-
-            // Count the missed surface
-            result.missedActiveSurfaces.push_back(surface);
-
-            ++result.processedStates;
-          } else {
-            ACTS_DEBUG("    Ignoring hole, because no preceding measurements.");
+          if (result.measurementStates <= 0) {
+            ACTS_DEBUG("    Ignoring hole, because there are no preceding measurements.");
+            return;
           }
-        } else {
-          ACTS_INFO("Surface " << geoId
-                               << " has no measurement/material/hole.");
-        }
-      }
-      ACTS_VERBOSE("result.processedMeasurements: "
-                   << result.processedMeasurements << "\n"
-                   << "inputMeasurements.size(): "
-                   << inputMeasurements->size());
-      // TODO this can be safely removed since we have it already in the beginning of the actor
-//      if (result.processedMeasurements >= inputMeasurements->size()) {
-//        ACTS_INFO("Actor: finish: all measurements found.");
-//        result.finished = true;
-//      }
 
-      if (result.surfaceCount > 900) {
-        ACTS_INFO("Actor: finish due to limit. Result might be garbage.");
-        result.finished = true;
+          ACTS_DEBUG("    Handle hole."); // (We are not sure yet, if it maybe is just material
+
+          auto& fittedStates = *result.fittedStates;
+
+          // Add a <trackStateMask> TrackState entry multi trajectory. This
+          // allocates storage for all components, which we will set later.
+          typename traj_t::TrackStateProxy trackStateProxy =
+              fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
+                                          result.lastTrackIndex);
+          const std::size_t currentTrackIndex = trackStateProxy.index();
+
+          // Set the trackStateProxy components with the state from the
+          // ongoing propagation
+          {
+            trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+            // Bind the transported state to the current surface
+            auto res = stepper.boundState(state.stepping, *surface, false,
+                                          freeToBoundCorrection);
+            if (!res.ok()) {
+              result.result = res.error();
+              return;
+            }
+            const auto& [boundParams, jacobian, pathLength] = *res;
+
+            // Fill the track state
+            trackStateProxy.predicted() = boundParams.parameters();
+            trackStateProxy.predictedCovariance() = state.stepping.cov;
+
+            trackStateProxy.jacobian() = jacobian;
+            trackStateProxy.pathLength() = pathLength;
+          }
+
+          // Get and set the type flags
+          auto typeFlags = trackStateProxy.typeFlags();
+          // TODO no parameters for hole?
+          typeFlags.set(TrackStateFlag::ParameterFlag);
+          if (surface->surfaceMaterial() != nullptr) {
+            typeFlags.set(TrackStateFlag::MaterialFlag);
+          }
+
+          // Set hole only, if we are on a sensitive surface
+          if (surface->associatedDetectorElement() != nullptr) {
+            typeFlags.set(TrackStateFlag::HoleFlag);
+          }
+
+          result.lastTrackIndex = currentTrackIndex;
+
+          // Count the missed surface
+          result.missedActiveSurfaces.push_back(surface);
+
+          ++result.processedStates;
+        } else {
+          ACTS_DEBUG("    The surface contains no measurement/material/hole.");
+        }
       }
     }
   };
