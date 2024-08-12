@@ -41,6 +41,12 @@
 
 namespace ActsExamples::Traccc::Common::Conversion {
 
+struct TracccMeasurementHash{
+    std::size_t operator()(const traccc::measurement& s) const noexcept {
+        return s.measurement_id;
+    }
+};
+
 /// @brief Converts a traccc bound index to an Acts bound index.
 /// @param tracccBoundIndex the traccc bound index.
 /// @returns an Acts bound index.
@@ -160,6 +166,19 @@ inline Acts::ActsVector<2> getVariance(
   return std::visit([](auto& m) { return getVariance(m); }, measurement);
 }
 
+/// @brief Get the geometry ID from the measurement through its source link.
+/// @note The sourcelink is assumed to be of type IndexSourceLink.
+inline Acts::GeometryIdentifier getGeometryID(
+    const ActsExamples::BoundVariantMeasurement& measurement) {
+  return std::visit(
+      [](auto& m) {
+        return m.sourceLink()
+            .template get<ActsExamples::IndexSourceLink>()
+            .geometryId();
+      },
+      measurement);
+}
+
 /// @brief Converts traccc measurements to acts measurements.
 /// @param detector The detray detector,
 /// @param measurements The traccc measurements,
@@ -181,7 +200,7 @@ inline auto convertMeasurements(
 
   Util::ConversionData conv{
     &measurements, 
-    Util::create1To1(measurements), 
+    Util::create1To1<TracccMeasurementHash, std::equal_to<traccc::measurement>>(measurements), 
     &measurementContainer
   };
 

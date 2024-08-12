@@ -11,6 +11,10 @@
 // Acts include(s)
 #include "ActsExamples/EventData/Measurement.hpp"
 
+// Acts Examples include(s)
+#include "ActsExamples/Traccc/Common/Conversion/MeasurementMatch.hpp"
+#include "ActsExamples/Traccc/Common/Util/IndexMap.hpp"
+
 // System include(s).
 #include <cstdint>
 #include <cstdlib>
@@ -34,5 +38,21 @@ std::string pairingStatistics(
     const std::vector<ActsExamples::BoundVariantMeasurement>& measurements1,
     const std::vector<ActsExamples::BoundVariantMeasurement>& measurements2,
     const std::map<std::size_t, std::size_t>& indexMap);
+
+template <typename allocator_t, typename detector_t>
+std::string pairingStatistics(
+    const std::vector<traccc::measurement, allocator_t>& tracccMeasurements,
+    const std::vector<ActsExamples::BoundVariantMeasurement>& measurements,
+    const detector_t& detector)
+    {
+
+    std::vector<ActsExamples::BoundVariantMeasurement> convertedMeasurements;
+    Conversion::convertMeasurements(detector, tracccMeasurements, convertedMeasurements);
+    
+    auto indexMap = Util::matchMap(convertedMeasurements, measurements, Conversion::MeasurementGeoIDHash{}, Conversion::MeasurementAproxEquals<>{});
+
+    return pairingStatistics(convertedMeasurements,
+                             measurements, indexMap);
+  }
 
 }  // namespace ActsExamples::Traccc::Common::Measurement

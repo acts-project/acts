@@ -19,21 +19,14 @@
 
 namespace ActsExamples::Traccc::Common::Util {
 
-/// @brief
-/// @tparam T
-/// @tparam A
-/// @param out the index into the candidate indices vector.
-/// Taking this index into the candidate indices vector will get the index in .
-/// @param element
-/// @param candidateIdxs
-/// @param candidateVec
-/// @param eqFn
-/// @return
-template <typename T, typename A>
+/// @brief Helper function for matchMap to find the index of a match.
+/// The index is return true the out parameter.
+/// The function returns false if no match was found.
+template <typename T, typename A, typename equal_fn_t>
 auto findMatchIdx(std::size_t* out, const T& element,
                   const std::vector<std::size_t>& candidateIdxs,
                   const std::vector<T, A>& candidateVec,
-                  const std::function<bool(const T&, const T&)>& eqFn) {
+                  const equal_fn_t& eqFn) {
   for (std::size_t i = 0; i < candidateIdxs.size(); i++) {
     auto idx = candidateIdxs[i];
     if (eqFn(element, candidateVec[idx])) {
@@ -57,11 +50,11 @@ auto findMatchIdx(std::size_t* out, const T& element,
 /// @param eqFn the function for determining if two items are equal.
 /// @param bijection flag indicatiing whether the map should be a bijection.
 /// @return a map: index ('from' vector) -> index ('to' vector).
-template <typename T1, typename T2, typename A1, typename A2>
-inline auto matchMap(const std::vector<T1, A1>& from,
-                     const std::vector<T1, A2>& to,
-                     const std::function<T2(const T1&)>& lshFn,
-                     const std::function<bool(const T1&, const T1&)>& eqFn,
+template <typename T, typename A1, typename A2, typename hash_fn_t, typename equal_fn_t>
+inline auto matchMap(const std::vector<T, A1>& from,
+                     const std::vector<T, A2>& to,
+                     const hash_fn_t& lshFn,
+                     const equal_fn_t& eqFn,
                      const bool bijection = true) {
   // By composition of functions, we can combine the maps "index ('from' vector)
   // -> hash value" and "hash value -> index ('to' vector)" to obtain "index
@@ -78,7 +71,7 @@ inline auto matchMap(const std::vector<T1, A1>& from,
   // Since there can be collisions with the hash values
   // each hash value maps to a bucket of indices rather than a single index.
 
-  std::unordered_map<T2, std::vector<std::size_t>> map1;
+  std::unordered_map<std::size_t, std::vector<std::size_t>> map1;
   for (std::size_t toIdx = 0; toIdx < to.size(); toIdx++) {
     auto& toElement = to[toIdx];
     auto toElementHash = lshFn(toElement);
@@ -101,25 +94,6 @@ inline auto matchMap(const std::vector<T1, A1>& from,
     if (bijection) {
       candidateIdxs.erase(candidateIdxs.begin() + idx);
     }
-  }
-  return res;
-}
-
-/// @brief Creates a map from elements in one vector to another.
-/// The resulting map holds the elements by reference.
-/// @param from the first collection.
-/// @param to the second collection.
-/// @param indexMap a map of indices in the first collection to indices in the second collection.
-/// @returns the map: element in first collection -> element in second collection.
-template <typename T1, typename T2, typename A1, typename A2>
-std::map<T1, T2> referenceMap(
-    const std::vector<T1, A1>& from, const std::vector<T2, A2>& to,
-    const std::map<std::size_t, std::size_t>& indexMap) {
-  assert(from.size() == to.size());
-  std::map<T1, T2> res;
-  for (const auto [i, j] : indexMap) {
-    res.emplace(std::piecewise_construct, std::forward_as_tuple(from[i]),
-                std::forward_as_tuple(to[j]));
   }
   return res;
 }

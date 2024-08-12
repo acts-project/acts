@@ -28,6 +28,26 @@
 
 namespace ActsExamples::Traccc::Common::Conversion {
 
+struct TracccSeedHash{
+    std::size_t operator()(const traccc::seed& s) const noexcept {
+        return s.spB_link ^ s.spM_link ^ s.spT_link;
+    }
+};
+
+struct TracccSeedEqual {
+    bool operator()(const traccc::seed& lhs, const traccc::seed& rhs) const {
+        return lhs.spB_link == rhs.spB_link &&
+        lhs.spM_link == rhs.spM_link &&
+        lhs.spT_link == rhs.spT_link &&
+        lhs.weight == rhs.weight &&
+        lhs.z_vertex == rhs.z_vertex;
+    }
+};
+
+/// @brief Converts a traccc seed to an acts seed.
+/// @param seed the traccc seed.
+/// @param spacePointConv the space point ConversionData (traccc space point -> acts space point).
+/// @returns An acts seed.
 template <typename T>
 SimSeed convertSeed(const traccc::seed& seed, T& spacePointConv){
     return SimSeed(
@@ -39,12 +59,17 @@ SimSeed convertSeed(const traccc::seed& seed, T& spacePointConv){
     );
 }
 
+/// @brief Converts a collection of traccc seeds and appends the result to the given outputContainer.
+/// @param seeds the traccc seeds
+/// @param SpacePointConv the spacepoint ConversionData (traccc space point -> acts space point).
+/// @param outputContainer the container to put the converted space points into (an empty container is expected).
+/// @returns The seed ConversionData (traccc seed -> acts seed).
 template <typename T, typename allocator_t, typename output_container_t>
 auto convertSeeds(std::vector<traccc::seed, allocator_t>& seeds, T& spacePointConv, output_container_t& outputContainer){
     auto fn = [&spacePointConv](auto& seed){
         return convertSeed(seed, spacePointConv);
     };
-    return Util::convert<SimSeed>(seeds, fn, outputContainer);
+    return Util::convert<TracccSeedHash, TracccSeedEqual>(seeds, fn, outputContainer);
 }
 
 template <typename T>

@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "ActsExamples/Traccc/Common/Util/Functional.hpp"
-
 // System include(s).
 #include <cstdint>
 #include <cstdlib>
@@ -22,13 +20,18 @@
 
 namespace ActsExamples::Traccc::Common::Util {
 
-template <typename input_container_t, typename output_container_t, typename hash = std::hash<typename input_container_t::value_type>, typename equal_to = std::equal_to<typename input_container_t::value_type>>
+
+/// @brief Class representing a mapping between two collections.
+/// Functions for mapping from/to value and indexes are provided.
+/// The class is useful as it allows you to obtain a reference to
+/// the item mapped in the output collection.
+template <typename hash_t, typename equals_t, typename input_container_t, typename output_container_t>
 struct ConversionData{
     using K = typename input_container_t::value_type;
     using V = typename output_container_t::value_type;
 
     input_container_t* inputContainer;
-    std::unordered_map<K, std::size_t, hash, equal_to> keyToIdxMap;
+    std::unordered_map<K, std::size_t, hash_t, equals_t> keyToIdxMap;
     output_container_t* outputContainer;
 
     std::size_t valueToIndex(K& inputValue) const{
@@ -46,9 +49,13 @@ struct ConversionData{
     auto& valueToValue(K& inputValue) const{
         return outputContainer->at(valueToIndex(inputValue));
     }
+
+    auto size(){
+        return keyToIdxMap->size();
+    }
 };
 
-template <typename hash, typename equal_to, typename conversion_data_t>
+/*template <typename hash, typename equal_to, typename conversion_data_t>
 auto inverse(conversion_data_t& conv){
     std::unordered_map<typename conversion_data_t::V, std::size_t, hash, equal_to> inv;
     for (std::size_t i = 0; i < conv.inputContainer->size(); i++){
@@ -62,22 +69,24 @@ auto inverse(conversion_data_t& conv){
         inv,
         conv.inputContainer
     };
-}
+}*/
 
 template <typename input_container_t, typename hash = std::hash<typename input_container_t::value_type>, typename equal_to = std::equal_to<typename input_container_t::value_type>>
 auto create1To1(input_container_t& inputs){
     using K = typename input_container_t::value_type;
-    std::unordered_map<K, std::size_t, Hasher<K>, Equals<K>> keyToIdxMap;
+    std::unordered_map<K, std::size_t, hash_t, equals_t> keyToIdxMap;
     for (std::size_t idx = 0; idx < inputs.size(); idx++){
         keyToIdxMap.emplace(std::piecewise_construct, std::forward_as_tuple(inputs[idx]), std::forward_as_tuple(idx));
     }
     return keyToIdxMap;
 }
 
-template <typename input_container_t, typename output_container_t, typename hash = std::hash<typename input_container_t::value_type>, typename equal_to = std::equal_to<typename input_container_t::value_type>, template <typename, typename> class index_map_t>
+/// @brief Creates an instance of the ConversionData class where the given indexMap parameter determines how the elements
+/// depending on their index in the input container map to the elements of the output container depending on their index.
+template <typename hash_t, typename equals_t, typename input_container_t, typename output_container_t, template <typename, typename> class index_map_t>
 auto createFromIndexMap(input_container_t& inputs, output_container_t& outputs, index_map_t<std::size_t, std::size_t>& indexMap){
     using K = typename input_container_t::value_type;
-    std::unordered_map<K, std::size_t, Hasher<K>, Equals<K>> keyToIdxMap;
+    std::unordered_map<K, std::size_t, hash_t, equals_t> keyToIdxMap;
     for (std::size_t inputIdx = 0; inputIdx < inputs.size(); inputIdx++){
         auto outputIdx = indexMap.at(inputIdx);
         keyToIdxMap.emplace(std::piecewise_construct, std::forward_as_tuple(inputs[inputIdx]), std::forward_as_tuple(outputIdx));
@@ -85,14 +94,16 @@ auto createFromIndexMap(input_container_t& inputs, output_container_t& outputs, 
     return ConversionData{&inputs, std::move(keyToIdxMap), &outputs};
 }
 
-template <typename V, typename input_container_t, typename output_container_t, typename hash = std::hash<typename input_container_t::value_type>, typename equal_to = std::equal_to<typename input_container_t::value_type>, typename fn_t>
+/// @brief Creates an instance of the ConversionData class where the mapping and output container is generated
+/// by the provided function.
+template <typename hash_t, typename equals_t, typename input_container_t, typename output_container_t, typename fn_t>
 auto convert(input_container_t& inputs, fn_t fn, output_container_t& outputs){
     using K = typename input_container_t::value_type;
     std::transform(inputs.begin(), inputs.end(), std::back_inserter(outputs), fn);
 
     ConversionData conv{
         &inputs,
-        create1To1<input_container_t, hash, equal_to>(inputs),
+        create1To1<hash_t, equals_t>(inputs),
         &outputs
     };
 

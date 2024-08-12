@@ -23,11 +23,19 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Traccc/Common/Converter.hpp"
+#include "ActsExamples/Traccc/Common/Conversion/TrackConversion.hpp"
 #include "ActsExamples/Traccc/Common/TracccChainConfig.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Traccc/Common/Conversion/SeedConversion.hpp"
 #include "ActsExamples/Traccc/Common/Conversion/SpacePointConversion.hpp"
+#include "ActsExamples/Traccc/Common/Conversion/CellMapConversion.hpp"
+#include "ActsExamples/Traccc/Common/Conversion/MeasurementConversion.hpp"
+#include "ActsExamples/Traccc/Common/Measurement/Debug.hpp"
+#include "ActsExamples/Traccc/Common/Util/IndexMap.hpp"
+#include "ActsExamples/Traccc/Common/Util/MapUtil.hpp"
+
+// Traccc Plugin include(s)
+#include "Acts/Plugins/Traccc/CellConversion.hpp"
 
 // Covfie Plugin include(s)
 #include "Acts/Plugins/Covfie/FieldConversion.hpp"
@@ -95,7 +103,6 @@ class TracccChainAlgorithmBase : public IAlgorithm {
   vecmem::host_memory_resource hostMemoryResource;
   const DetectorHostType detector;
   const FieldType field;
-  const Converter converter;
 
   virtual std::tuple<vecmem::vector<traccc::measurement>, vecmem::vector<traccc::spacepoint>, vecmem::vector<traccc::seed>> runDigitization(const vecmem::vector<traccc::cell>& cells, const vecmem::vector<traccc::cell_module>& modules, vecmem::host_memory_resource& mr) const = 0;
 
@@ -106,51 +113,67 @@ class TracccChainAlgorithmBase : public IAlgorithm {
 
     vecmem::host_memory_resource mr;
 
-    if (false){
-      const auto cellsMap = m_inputCells(ctx);
-      auto [cells, modules] = converter.convertCells(cellsMap, &mr);
+    // Read the cells
+    const auto cellsMap = m_inputCells(ctx);
 
-      auto [measurements, spacepoints, seeds] = runDigitization(cells, modules, mr);
+    // Convert the cells
+    auto tcm = Conversion::tracccCellsMap(cellsMap);
+    auto [cells, modules] = Acts::TracccPlugin::createCellsAndModules(
+        &mr, tcm, &surfaceTransforms, &convertedDigitizationConfig, &barcodeMap);
 
-      auto& actsMeasurements = m_inputMeasurements(ctx);
-      auto measurementConv = converter.createMeasurementConversionData(measurements, actsMeasurements);
+    // Run the traccc digitization
+    auto [measurements, spacepoints, seeds] = runDigitization(cells, modules, mr);
 
-      SimSpacePointContainer convertedSpacePoints;
-      auto spacePointConv = ActsExamples::Traccc::Common::Conversion::convertSpacePoints(spacepoints, measurementConv, convertedSpacePoints);
-      m_outputSpacePoints(ctx, std::move(convertedSpacePoints));
+    // Now we have both traccc measurements and acts measurements
+    // We have run the traccc digitization and we expect that Acts digitization has also
+    // been run, since otherwise we cannot do compare and do truth matching.
 
-      SimSeedContainer convertedSeeds;
-      ActsExamples::Traccc::Common::Conversion::convertSeeds(seeds, spacePointConv, convertedSeeds);
-      m_outputSeeds(ctx, std::move(convertedSeeds));
+    // Read the acts measurements
+    auto& actsMeasurements = m_inputMeasurements(ctx);
+    // Determine which traccc measurements are equivalent to which Acts measurements.
+    // This is needed since we cannot guarentee that the measurements have the same ordering.
+    // We run the following to obtain a mapping between the two measurement collections.
+    // Note: if the number of measurements don't match during the perhaps mergeCommonCorner or doMerge is false in the digitization algorithm configuration.
+    auto measurementConv = Conversion::matchMeasurements(measurements, actsMeasurements, detector);
+    ACTS_DEBUG(std::string("Traccc (1) and Acts (2) measurement index pairing "
+                        "information:\n") +
+            Measurement::pairingStatistics(measurements, actsMeasurements, detector));
 
-      auto tracks = runReconstruction(measurements, spacepoints, seeds, mr);
-      auto convertedTracks = converter.convertTracks(tracks, measurementConv);
-      m_outputTracks(ctx, std::move(convertedTracks));
-    }
-    else
-    {
-      auto& actsMeasurements = m_inputMeasurements(ctx);
-      auto& actsSpacePoints = m_inputSpacePoints(ctx);
-      auto& actsSeeds = m_inputSeeds(ctx);
+    // Convert the traccc spacepoints to traccc space points.
+    // Create an empty container to hold the converted space points.
+    SimSpacePointContainer convertedSpacePoints;
+    auto spacePointConv = ActsExamples::Traccc::Common::Conversion::convertSpacePoints(spacepoints, measurementConv, convertedSpacePoints);
 
-      vecmem::vector<traccc::measurement> measurements;
-      auto measurementConv = ActsExamples::Traccc::Common::Conversion::convertMeasurements(actsMeasurements, measurements);
-      
-      vecmem::vector<traccc::spacepoint> spacepoints;
-      auto spacepointConv = ActsExamples::Traccc::Common::Conversion::convertSpacePoints(actsSpacePoints, measurementConv, spacepoints);
-      
-      vecmem::vector<traccc::seed> seeds;
-      ActsExamples::Traccc::Common::Conversion::convertSeeds(actsSeeds, spacePointConv, seeds);
-      
-      auto tracks = runReconstruction(measurements, spacepoints, seeds, mr);
-      auto convertedTracks = converter.convertTracks(tracks, measurementConv);
-      m_outputTracks(ctx, std::move(convertedTracks));
-    }
+    // Repeat the process for the traccc seeds to obtain the seeds converted to the Acts edm.
+    SimSeedContainer convertedSeeds;
+    ActsExamples::Traccc::Common::Conversion::convertSeeds(seeds, spacePointConv, convertedSeeds);
+
+    // We have now obtained the traccc seeds as Acts seeds which is useful for comparison.
+    // The converted seeds will be outputed along with the converted tracks.
+
+    // We now want to obtain the converted tracks.
+    // We run the reconstruction with traccc.
+    auto tracks = runReconstruction(measurements, spacepoints, seeds, mr);
+
+    // Now we convert the traccc tracks to acts tracks.
+    auto convertedTracks = Conversion::convertTracks(tracks, measurementConv, *m_cfg.trackingGeometry, detector);
+
+    // Write results.
+    m_outputSpacePoints(ctx, std::move(convertedSpacePoints));
+    m_outputSeeds(ctx, std::move(convertedSeeds));
+    m_outputTracks(ctx, std::move(convertedTracks));
 
     return ActsExamples::ProcessCode::SUCCESS;
   }
 
  private:
+
+ // We cache the surface transforms, barcode map, and converted digitization configuration.
+ // These are use for converting between the traccc edm and acts edm.
+ const traccc::digitization_config convertedDigitizationConfig;
+  const traccc::geometry surfaceTransforms;
+  const std::map<std::uint64_t, detray::geometry::barcode> barcodeMap;
+
   /// @brief Test if the configuration is valid.
   void TestValidConfig() {
     if (m_cfg.inputCells.empty()) {
@@ -169,6 +192,7 @@ class TracccChainAlgorithmBase : public IAlgorithm {
       throw std::invalid_argument("Missing digitization configuration");
     }
   }
+
 };
 
 }  // namespace ActsExamples::Traccc::Common

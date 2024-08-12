@@ -11,6 +11,9 @@
 
 // Acts include(s)
 #include "Acts/Utilities/Logger.hpp"
+
+// Acts Examples include(s)
+#include "ActsExamples/Traccc/Common/Conversion/DigitizationConversion.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 // Detray include(s).
@@ -65,12 +68,9 @@ ActsExamples::Traccc::Common::TracccChainAlgorithmBase::
                                        "/home/frederik/Desktop/CERN-TECH/input/latest/"
                                        "odd-detray_geometry_detray.json", "/home/frederik/Desktop/CERN-TECH/input/latest/odd-detray_material_detray.json", "/home/frederik/Desktop/CERN-TECH/input/latest/odd-detray_surface_grids_detray.json"))),
       field(Acts::CovfiePlugin::covfieField(*m_cfg.field)),
-      converter{*m_cfg.trackingGeometry,
-                detector,
-                Conversion::tracccConfig(m_cfg.digitizationConfigs),
-                traccc::io::alt_read_geometry(detector),
-                Acts::TracccPlugin::createBarcodeMap(detector),
-                logger()} {
+      convertedDigitizationConfig{Conversion::tracccConfig(m_cfg.digitizationConfigs)},
+      surfaceTransforms{traccc::io::alt_read_geometry(detector)},
+      barcodeMap{Acts::TracccPlugin::createBarcodeMap(detector)} {
   m_inputCells.initialize(m_cfg.inputCells);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_outputSeeds.initialize(m_cfg.outputSeeds);

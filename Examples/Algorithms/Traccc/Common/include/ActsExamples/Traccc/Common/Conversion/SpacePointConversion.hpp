@@ -29,6 +29,16 @@
 
 namespace ActsExamples::Traccc::Common::Conversion {
 
+struct TracccSpacePointHash{
+    std::size_t operator()(const traccc::spacepoint& s) const noexcept {
+        return s.meas.measurement_id;
+    }
+};
+
+/// @brief Converts a traccc space point to an acts space point.
+/// @param spacePoint the traccc seed.
+/// @param measurementConv the measurement ConversionData (traccc measurement -> acts bound variant measurement).
+/// @returns An acts seed.
 template <typename T>
 SimSpacePoint convertSpacePoint(traccc::spacepoint& spacePoint, T& measurementConv){
     using Scalar = Acts::ActsScalar;
@@ -58,12 +68,17 @@ SimSpacePoint convertSpacePoint(traccc::spacepoint& spacePoint, T& measurementCo
     );
 }
 
+/// @brief Converts a collection of traccc space points and appends the result to the given outputContainer.
+/// @param spacepoints the traccc spacepoints.
+/// @param meausrementConv the measurement ConversionData (traccc measurement  -> acts bound varaint measurement).
+/// @param outputContainer the container to put the converted space points into (an empty container is expected).
+/// @returns The spacepoint ConversionData (traccc space point -> acts space point)
 template <typename T, typename allocator_t, typename output_container_t>
 auto convertSpacePoints(std::vector<traccc::spacepoint, allocator_t>& spacePoints, T& measurementConv, output_container_t& outputContainer){
     auto fn = [&measurementConv](traccc::spacepoint& spacePoint){
         return convertSpacePoint(spacePoint, measurementConv);
     };
-    return Util::convert<SimSpacePoint>(spacePoints, fn, outputContainer);
+    return Util::convert<TracccSpacePointHash, std::equal_to<traccc::spacepoint>>(spacePoints, fn, outputContainer);
 }
 
 template <typename T>
