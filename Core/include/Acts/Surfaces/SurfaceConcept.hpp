@@ -104,10 +104,10 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
 };
 
 template <typename S>
-concept RegularSurfaceConcept = SurfaceConcept<S> &&
-    requires(S s, const S cs, GeometryContext gctx,
-             BoundaryTolerance tolerance) {
-  { cs.normal(gctx, Vector2{}) } -> std::same_as<Vector3>;
+concept RegularSurfaceConcept =
+    SurfaceConcept<S> && requires(S s, const S cs, GeometryContext gctx,
+                                  BoundaryTolerance tolerance) {
+      { cs.normal(gctx, Vector2{}) } -> std::same_as<Vector3>;
 
       { cs.normal(gctx, Vector3{}) } -> std::same_as<Vector3>;
 
@@ -115,8 +115,8 @@ concept RegularSurfaceConcept = SurfaceConcept<S> &&
         cs.globalToLocal(gctx, Vector3{}, Vector3{}, std::declval<double>())
       } -> std::same_as<Result<Vector2>>;
 
-  { cs.localToGlobal(gctx, Vector2{}) } -> std::same_as<Vector3>;
+      { cs.localToGlobal(gctx, Vector2{}) } -> std::same_as<Vector3>;
 
-  { cs.isOnSurface(gctx, Vector3{}, tolerance) } -> std::same_as<bool>;
-};
+      { cs.isOnSurface(gctx, Vector3{}, tolerance) } -> std::same_as<bool>;
+    };
 }  // namespace Acts
