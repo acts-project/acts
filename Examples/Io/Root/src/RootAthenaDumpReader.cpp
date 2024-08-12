@@ -223,7 +223,8 @@ RootAthenaDumpReader::RootAthenaDumpReader(
 }  // constructor
 
 SimParticleContainer RootAthenaDumpReader::readParticles() const {
-  SimParticleContainer particles;
+  std::vector<ActsFatras::Particle> particles;
+  particles.reserve(nPartEVT);
 
   for (auto ip = 0; ip < nPartEVT; ++ip) {
     if (m_cfg.onlyPassedParticles && !static_cast<bool>(Part_passed[ip])) {
@@ -243,11 +244,26 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
     auto x = Acts::Vector4{Part_vx[ip], Part_vy[ip], Part_vz[ip], 0.0};
     particle.setPosition4(x);
 
-    particles.insert(particle);
+    particles.push_back(particle);
   }
 
   ACTS_DEBUG("Created " << particles.size() << " particles");
-  return particles;
+
+  // Speed up the creation of the datastructure by providing an ordered and unique range
+  auto cmp = [](const auto &a, const auto &b) {
+    return a.particleId().value() == b.particleId().value();
+  };
+
+  auto before = particles.size();
+
+  std::sort(particles.begin(), particles.end(), detail::CompareParticleId{});
+
+  particles.erase(std::unique(particles.begin(), particles.end(), cmp), particles.end());
+  if(particles.size() < before) {
+    ACTS_WARNING("Particle IDs not unique for " << before - particles.size() << " particles!");
+  }
+
+  return SimParticleContainer(boost::container::ordered_unique_range_t{}, particles.begin(), particles.end());
 }
 
 std::tuple<ClusterContainer, MeasurementContainer,
