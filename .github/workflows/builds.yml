@@ -149,6 +149,7 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2404:53
     needs: [linux_ubuntu]
     env:
+      ACTIONS_RUNNER_DEBUG: true
       ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
