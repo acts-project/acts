@@ -18,8 +18,14 @@ set( DETRAY_VERSION "v${_acts_detray_version}")
 FetchContent_Declare( Detray ${ACTS_DETRAY_SOURCE} )
 
 # Options used in the build of Detray.
-set( DETRAY_CUSTOM_SCALARTYPE "float" CACHE STRING
-   "Scalar type to use in the Detray code" )
+if(ACTS_CUSTOM_SCALARTYPE)
+   set(ACTS_DETRAY_SCALARTYPE ${ACTS_CUSTOM_SCALARTYPE})
+else()
+   set(ACTS_DETRAY_SCALARTYPE "double")
+endif()
+
+set( DETRAY_CUSTOM_SCALARTYPE "${ACTS_DETRAY_SCALARTYPE}" CACHE STRING
+      "Scalar type to use in the Detray code" )
 
 set( DETRAY_BUILD_TESTING OFF CACHE BOOL
    "Turn off the build of the Detray unit tests" )
@@ -48,8 +54,8 @@ set( DETRAY_SETUP_ACTSVG OFF CACHE BOOL
    "Do not set up Actsvg as part of Detray" )
 set( DETRAY_SETUP_DFELIBS OFF CACHE BOOL
    "Do not set up Dfelibs as part of Detray" )
-set( DETRAY_SVG_DISPLAY ${ACTS_BUILD_PLUGIN_ACTSVG} CACHE BOOL
-    "Build the ActSVG display module depending on the ACTS_BUILD_PLUGIN_ACTSVG" )
+set( DETRAY_SVG_DISPLAY OFF CACHE BOOL
+   "No not build the ActSVG display module" )
 
 
 #Now set up its build.
