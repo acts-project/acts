@@ -16,8 +16,6 @@
 
 namespace Acts::KalmanVertexUpdater::detail {
 
-namespace {
-
 /// Cache object, the comments indicate the names of the variables in Ref. (1)
 /// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
 /// fit its spatial coordinates) or 4 (if we also fit time).
@@ -238,8 +236,6 @@ Acts::BoundMatrix calculateTrackCovariance(
 
   return boundTrackCov;
 }
-
-}  // namespace
 
 template <unsigned int nDimVertex>
 void updateVertexWithTrackImpl(Vertex& vtx, TrackAtVertex& trk, int sign) {

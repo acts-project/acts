@@ -9,12 +9,8 @@
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/detail/KalmanVertexUpdaterImpl.hpp"
 
-namespace Acts::KalmanVertexUpdater::detail {
+template void Acts::KalmanVertexUpdater::detail::updateVertexWithTrackImpl<4>(
+    Vertex& vtx, TrackAtVertex& trk, int sign);
 
-template void updateVertexWithTrackImpl<4>(Vertex& vtx, TrackAtVertex& trk,
-                                           int sign);
-
-template void updateTrackWithVertexImpl<4>(TrackAtVertex& track,
-                                           const Vertex& vtx);
-
-}  // namespace Acts::KalmanVertexUpdater::detail
+template void Acts::KalmanVertexUpdater::detail::updateTrackWithVertexImpl<4>(
+    TrackAtVertex& track, const Vertex& vtx);
