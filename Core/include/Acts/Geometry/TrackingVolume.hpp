@@ -256,6 +256,10 @@ class TrackingVolume : public Volume {
   /// Returns the VolumeName - for debug reason, might be depreciated later
   const std::string& volumeName() const;
 
+  /// Set the volume name to @p volumeName
+  /// @param volumeName is the new name of
+  void setVolumeName(const std::string& volumeName);
+
   /// Return the material of the volume
   const IVolumeMaterial* volumeMaterial() const;
 
