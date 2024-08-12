@@ -10,14 +10,24 @@
 
 #include "Acts/Vertexing/Vertex.hpp"
 
-namespace Acts {
+#include <stdexcept>
+
+namespace Acts::KalmanVertexUpdater {
+
+namespace detail {
+template <unsigned int nDimVertex>
+void updateVertexWithTrackImpl(Vertex& vtx, TrackAtVertex& trk, int sign);
+
+template <unsigned int nDimVertex>
+void updateTrackWithVertexImpl(TrackAtVertex& track, const Vertex& vtx);
+}  // namespace detail
 
 // The two functions don't contain any of the actual update code, they
 // only dispatch into templated functions, effectively doing a
 // runtime-to-compile time conversion.
 
-void KalmanVertexUpdater::updateVertexWithTrack(Vertex& vtx, TrackAtVertex& trk,
-                                                unsigned int nDimVertex) {
+void updateVertexWithTrack(Vertex& vtx, TrackAtVertex& trk,
+                           unsigned int nDimVertex) {
   if (nDimVertex == 3) {
     detail::updateVertexWithTrackImpl<3>(vtx, trk, 1);
   } else if (nDimVertex == 4) {
@@ -29,9 +39,8 @@ void KalmanVertexUpdater::updateVertexWithTrack(Vertex& vtx, TrackAtVertex& trk,
   }
 }
 
-void Acts::KalmanVertexUpdater::updateTrackWithVertex(TrackAtVertex& track,
-                                                      const Vertex& vtx,
-                                                      unsigned int nDimVertex) {
+void updateTrackWithVertex(TrackAtVertex& track, const Vertex& vtx,
+                           unsigned int nDimVertex) {
   if (nDimVertex == 3) {
     detail::updateTrackWithVertexImpl<3>(track, vtx);
   } else if (nDimVertex == 4) {
@@ -43,4 +52,4 @@ void Acts::KalmanVertexUpdater::updateTrackWithVertex(TrackAtVertex& track,
   }
 }
 
-}  // namespace Acts
+}  // namespace Acts::KalmanVertexUpdater

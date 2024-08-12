@@ -15,14 +15,6 @@ struct TrackAtVertex;
 
 namespace KalmanVertexUpdater {
 
-namespace detail {
-template <unsigned int nDimVertex>
-void updateVertexWithTrackImpl(Vertex& vtx, TrackAtVertex& trk, int sign);
-
-template <unsigned int nDimVertex>
-void updateTrackWithVertexImpl(TrackAtVertex& track, const Vertex& vtx);
-}  // namespace detail
-
 /// KalmanVertexUpdater
 ///
 /// @brief adds or removes track from or updates current vertex
