@@ -26,6 +26,12 @@ class DiscSurface;
 
 class PortalLinkBase;
 
+class PortalMergingException : public std::exception {
+  const char* what() const noexcept override {
+    return "Failure to merge portals";
+  }
+};
+
 class Portal {
  public:
   Portal(Direction direction, std::unique_ptr<PortalLinkBase> link);
@@ -33,12 +39,33 @@ class Portal {
   Portal(Direction direction, std::shared_ptr<RegularSurface> surface,
          TrackingVolume& volume);
 
-  static std::shared_ptr<Portal> fuse(const std::shared_ptr<Portal>& aPortal,
+  Portal(std::unique_ptr<PortalLinkBase> alongNormal,
+         std::unique_ptr<PortalLinkBase> oppositeNormal);
+
+  //    portal1   portal2
+  //      +---+   +---+
+  //      |   |   |   |
+  //      |   |   |   |
+  // <----+   | + |   +---->
+  //      |   |   |   |
+  //      |   |   |   |
+  //      +---+   +---+
+  static std::unique_ptr<Portal> fuse(const std::shared_ptr<Portal>& aPortal,
                                       const std::shared_ptr<Portal>& bPortal);
 
-  static std::shared_ptr<Portal> mergeAdjacent(
-      const std::shared_ptr<Portal>& aPortal,
-      const std::shared_ptr<Portal>& bPortal);
+  //         ^                     ^
+  //         |                     |
+  //  portal1|              portal2|
+  // +-------+-------+     +-------+-------+
+  // |               |  +  |               |
+  // +-------+-------+     +-------+-------+
+  //         |                     |
+  //         |                     |
+  //         v                     v
+  static std::unique_ptr<Portal> merge(const std::shared_ptr<Portal>& aPortal,
+                                       const std::shared_ptr<Portal>& bPortal,
+                                       BinningValue direction,
+                                       const Logger& logger = getDummyLogger());
 
   const TrackingVolume* resolveVolume(const GeometryContext& gctx,
                                       const Vector3& position,
@@ -54,8 +81,8 @@ class Portal {
 
   std::shared_ptr<RegularSurface> m_surface;
 
-  std::unique_ptr<PortalLinkBase> m_alongNormal;
-  std::unique_ptr<PortalLinkBase> m_oppositeNormal;
+  std::shared_ptr<PortalLinkBase> m_alongNormal;
+  std::shared_ptr<PortalLinkBase> m_oppositeNormal;
 };
 
 template <typename S>
