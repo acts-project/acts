@@ -32,7 +32,7 @@ class SurfaceBuilder : public Acts::Experimental::IInternalStructureBuilder {
  public:
   SurfaceBuilder(const Acts::Transform3& transform,
                  const Acts::RectangleBounds& sBounds)
-      : m_transform(transform), m_surfaceBounds(sBounds){};
+      : m_transform(transform), m_surfaceBounds(sBounds) {};
 
   /// Conrstruct and return the internal structure creation
   ///
