@@ -704,6 +704,7 @@ class Gx2Fitter {
           // Set hole only, if we are on a sensitive surface
           if (surface->associatedDetectorElement() != nullptr) {
             ACTS_DEBUG("    Surface is also sensitive. Marked as hole.");
+            typeFlags.set(TrackStateFlag::ParameterFlag);
             typeFlags.set(TrackStateFlag::HoleFlag);
 
             // Count the missed surface
@@ -758,7 +759,7 @@ class Gx2Fitter {
               // Get and set the type flags
               auto typeFlags = trackStateProxy.typeFlags();
               // TODO no parameters for hole?
-              // typeFlags.set(TrackStateFlag::ParameterFlag);
+              typeFlags.set(TrackStateFlag::ParameterFlag);
               typeFlags.set(TrackStateFlag::HoleFlag);
             }
 
@@ -780,10 +781,11 @@ class Gx2Fitter {
                    << result.processedMeasurements << "\n"
                    << "inputMeasurements.size(): "
                    << inputMeasurements->size());
-      if (result.processedMeasurements >= inputMeasurements->size()) {
-        ACTS_INFO("Actor: finish: all measurements found.");
-        result.finished = true;
-      }
+      // TODO this can be safely removed since we have it already in the beginning of the actor
+//      if (result.processedMeasurements >= inputMeasurements->size()) {
+//        ACTS_INFO("Actor: finish: all measurements found.");
+//        result.finished = true;
+//      }
 
       if (result.surfaceCount > 900) {
         ACTS_INFO("Actor: finish due to limit. Result might be garbage.");
