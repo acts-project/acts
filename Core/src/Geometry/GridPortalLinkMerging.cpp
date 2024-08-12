@@ -502,8 +502,6 @@ void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
     std::size_t nBinsA = locBinsA.at(0);
     std::size_t nBinsB = locBinsB.at(0);
 
-    ACTS_VERBOSE("1d merge:");
-
     for (std::size_t i = 1; i <= nBinsA; ++i) {
       merged.atLocalBins({i}) = a.atLocalBins({i});
     }
@@ -511,9 +509,7 @@ void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
       merged.atLocalBins({nBinsA + i}) = b.atLocalBins({i});
     }
   } else {
-    ACTS_VERBOSE("2d merge:");
     if (a.direction() == direction) {
-      ACTS_VERBOSE("~> direction is loc0");
       std::size_t nBinsA = locBinsA.at(0);
       std::size_t nBinsB = locBinsB.at(0);
       std::size_t nBinsCommon = locBinsB.at(1);
@@ -531,7 +527,6 @@ void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
         }
       }
     } else {
-      ACTS_VERBOSE("~> direction is loc1");
       std::size_t nBinsA = locBinsA.at(1);
       std::size_t nBinsB = locBinsB.at(1);
       std::size_t nBinsCommon = locBinsB.at(0);

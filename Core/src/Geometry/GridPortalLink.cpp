@@ -234,10 +234,14 @@ void GridPortalLink::printContents(std::ostream& os) const {
       }
       os << std::endl;
 
-      os << "    ";
+      os << "  ";
       for (std::size_t i = 0; i <= loc.at(0) + 1; i++) {
-        const void* v = atLocalBins({i});
-        os << std::format("{:11}", v) << " ";
+        std::string name = "0x0";
+        if (const auto* v = atLocalBins({i}); v != nullptr) {
+          name = v->volumeName();
+        }
+        name = name.substr(0, std::min(name.size(), std::size_t{11}));
+        os << std::format("{:>11}", name) << " ";
       }
       os << std::endl;
 
@@ -245,8 +249,12 @@ void GridPortalLink::printContents(std::ostream& os) const {
       os << std::format("v {}", loc0) << std::endl;
       for (std::size_t i = 0; i <= loc.at(0) + 1; i++) {
         os << "i=" << i << " ";
-        const void* v = atLocalBins({i});
-        os << std::format("{:11}", v) << " ";
+        std::string name = "0x0";
+        if (const auto* v = atLocalBins({i}); v != nullptr) {
+          name = v->volumeName();
+        }
+        name = name.substr(0, std::min(name.size(), std::size_t{11}));
+        os << std::format("{:>11}", name) << " ";
         os << std::endl;
       }
     }

@@ -138,9 +138,27 @@ class GridPortalLinkT final : public GridPortalLink {
     if (const auto* cylinder =
             dynamic_cast<const CylinderSurface*>(m_surface.get())) {
       checkConsistency(*cylinder);
+
+      if (direction == BinningValue::binRPhi) {
+        m_projection = &projection<CylinderSurface, BinningValue::binRPhi>;
+      } else if (direction == BinningValue::binZ) {
+        m_projection = &projection<CylinderSurface, BinningValue::binZ>;
+      } else {
+        throw std::invalid_argument{"Invalid binning direction"};
+      }
+
     } else if (const auto* disc =
                    dynamic_cast<const DiscSurface*>(m_surface.get())) {
       checkConsistency(*disc);
+
+      if (direction == BinningValue::binR) {
+        m_projection = &projection<DiscSurface, BinningValue::binR>;
+      } else if (direction == BinningValue::binPhi) {
+        m_projection = &projection<DiscSurface, BinningValue::binPhi>;
+      } else {
+        throw std::invalid_argument{"Invalid binning direction"};
+      }
+
     } else {
       throw std::logic_error{"Surface type is not supported"};
     }
@@ -203,7 +221,7 @@ class GridPortalLinkT final : public GridPortalLink {
     if (!surface().insideBounds(position, BoundaryTolerance::None())) {
       throw std::invalid_argument{"Position is outside surface bounds"};
     }
-    return m_grid.atPosition(position);
+    return m_grid.atPosition(m_projection(position));
   }
 
   void visitBins(
@@ -251,7 +269,48 @@ class GridPortalLinkT final : public GridPortalLink {
   }
 
  private:
+  template <class surface_t, BinningValue direction>
+  static ActsVector<DIM> projection(const Vector2& position) {
+    if constexpr (DIM == 2) {
+      return position;
+    } else {
+      if constexpr (std::is_same_v<surface_t, CylinderSurface>) {
+        if constexpr (direction == BinningValue::binRPhi) {
+          return ActsVector<1>{position[0]};
+        } else if constexpr (direction == BinningValue::binZ) {
+          return ActsVector<1>{position[1]};
+        } else {
+          []<bool flag = false>() {
+            static_assert(flag, "invalid direction");
+          }();
+        }
+      } else if constexpr (std::is_same_v<surface_t, DiscSurface>) {
+        if constexpr (direction == BinningValue::binR) {
+          return ActsVector<1>{position[0]};
+        } else if constexpr (direction == BinningValue::binPhi) {
+          return ActsVector<1>{position[1]};
+        } else {
+          []<bool flag = false>() {
+            static_assert(flag, "invalid direction");
+          }();
+        }
+      } else if constexpr (std::is_same_v<surface_t, PlaneSurface>) {
+        if constexpr (direction == BinningValue::binX) {
+          return ActsVector<1>{position[0]};
+        } else if constexpr (direction == BinningValue::binY) {
+          return ActsVector<1>{position[1]};
+        } else {
+          []<bool flag = false>() {
+            static_assert(flag, "invalid direction");
+          }();
+        }
+      }
+    }
+  }
+
   GridType m_grid;
+
+  ActsVector<DIM> (*m_projection)(const Vector2& position);
 };
 
 }  // namespace Acts
