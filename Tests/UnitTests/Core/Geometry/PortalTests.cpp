@@ -244,6 +244,44 @@ BOOST_AUTO_TEST_SUITE_END()  // Merging
 BOOST_AUTO_TEST_SUITE(Fusing)
 
 // @TODO: Test fusing portals with different surfaces fails
+BOOST_AUTO_TEST_CASE(Separated) {
+  auto vol1 = makeDummyVolume();
+  vol1->setVolumeName("vol1");
+  auto vol2 = makeDummyVolume();
+  vol2->setVolumeName("vol2");
+
+  auto cyl1 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
+                                                   50_mm, 100_mm);
+
+  auto cyl2 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
+                                                   60_mm, 100_mm);
+
+  auto portal1 = std::make_shared<Portal>(
+      Direction::OppositeNormal,
+      std::make_unique<TrivialPortalLink>(cyl1, *vol1));
+  auto portal2 = std::make_shared<Portal>(
+      Direction::AlongNormal, std::make_unique<TrivialPortalLink>(cyl2, *vol2));
+
+  BOOST_CHECK_THROW(Portal::fuse(portal1, portal2, *logger),
+                    PortalFusingException);
+
+  auto disc1 = Surface::makeShared<DiscSurface>(
+      Transform3::Identity(), std::make_shared<RadialBounds>(50_mm, 100_mm));
+
+  auto disc2 = Surface::makeShared<DiscSurface>(
+      Transform3{Translation3{Vector3{0, 0, 5_mm}}},
+      std::make_shared<RadialBounds>(50_mm, 100_mm));
+
+  portal1 = std::make_shared<Portal>(
+      Direction::OppositeNormal,
+      std::make_unique<TrivialPortalLink>(disc1, *vol1));
+  portal2 = std::make_shared<Portal>(
+      Direction::AlongNormal,
+      std::make_unique<TrivialPortalLink>(disc2, *vol2));
+
+  BOOST_CHECK_THROW(Portal::fuse(portal1, portal2, *logger),
+                    PortalFusingException);
+}
 
 BOOST_AUTO_TEST_SUITE_END()  // Fusing
 

@@ -142,6 +142,12 @@ std::unique_ptr<Portal> Portal::merge(const std::shared_ptr<Portal>& aPortal,
                                   std::move(mergedOppositeNormal));
 }
 
+std::unique_ptr<Portal> Portal::fuse(const std::shared_ptr<Portal>& aPortal,
+                                     const std::shared_ptr<Portal>& bPortal,
+                                     const Logger& logger) {
+  return nullptr;
+}
+
 void PortalLinkBase::checkMergePreconditions(const PortalLinkBase& a,
                                              const PortalLinkBase& b,
                                              BinningValue direction) {

@@ -32,6 +32,12 @@ class PortalMergingException : public std::exception {
   }
 };
 
+class PortalFusingException : public std::exception {
+  const char* what() const noexcept override {
+    return "Failure to fuse portals";
+  }
+};
+
 class Portal {
  public:
   Portal(Direction direction, std::unique_ptr<PortalLinkBase> link);
@@ -51,7 +57,8 @@ class Portal {
   //      |   |   |   |
   //      +---+   +---+
   static std::unique_ptr<Portal> fuse(const std::shared_ptr<Portal>& aPortal,
-                                      const std::shared_ptr<Portal>& bPortal);
+                                      const std::shared_ptr<Portal>& bPortal,
+                                      const Logger& logger = getDummyLogger());
 
   //         ^                     ^
   //         |                     |
