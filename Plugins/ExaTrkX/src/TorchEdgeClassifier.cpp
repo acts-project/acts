@@ -110,7 +110,7 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
             ? nodeFeatures.index({Slice{}, Slice{None, m_cfg.numFeatures}})
             : nodeFeatures;
 
-    if (edgeFeatures) {
+    if (edgeFeatures && m_cfg.useEdgeFeatures) {
       inputTensors.push_back(*edgeFeatures);
     }
 

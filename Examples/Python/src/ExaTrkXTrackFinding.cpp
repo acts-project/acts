@@ -98,6 +98,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(nChunks);
     ACTS_PYTHON_MEMBER(undirected);
     ACTS_PYTHON_MEMBER(deviceID);
+    ACTS_PYTHON_MEMBER(useEdgeFeatures);
     ACTS_PYTHON_STRUCT_END();
   }
   {

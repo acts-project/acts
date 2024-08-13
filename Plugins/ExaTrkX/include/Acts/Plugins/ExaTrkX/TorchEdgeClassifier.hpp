@@ -34,6 +34,7 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
     int nChunks = 1;  // NOTE for GNN use 1
     bool undirected = false;
     int deviceID = 0;
+    bool useEdgeFeatures = false;
   };
 
   TorchEdgeClassifier(const Config &cfg, std::unique_ptr<const Logger> logger);
