@@ -22,7 +22,7 @@
 #include <GeoModelKernel/Units.h>
 
 Acts::Result<Acts::GeoModelSensitiveSurface>
-Acts::detail::GeoBoxConverter::operator()(const GeoFullPhysVol& geoFPV,
+Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
                                           const GeoBox& geoBox,
                                           const Transform3& absTransform,
                                           bool sensitive) const {
@@ -64,7 +64,7 @@ Acts::detail::GeoBoxConverter::operator()(const GeoFullPhysVol& geoFPV,
   // Create the element and the surface
   auto detectorElement =
       GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
-          geoFPV, rectangleBounds, transform,
+          geoPV, rectangleBounds, transform,
           2 * unitLength * halfLengths[zIndex]);
   auto surface = detectorElement->surface().getSharedPtr();
   // Return the detector element and surface

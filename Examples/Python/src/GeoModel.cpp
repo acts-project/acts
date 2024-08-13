@@ -114,8 +114,8 @@ void addGeoModel(Context& ctx) {
     py::class_<Acts::GeoModelDetectorSurfaceFactory::Config>(f, "Config")
         .def(py::init<>())
         .def_readwrite(
-            "shapeConverters",
-            &Acts::GeoModelDetectorSurfaceFactory::Config::shapeConverters)
+            "convertSubVolumes",
+            &Acts::GeoModelDetectorSurfaceFactory::Config::convertSubVolumes)
         .def_readwrite("nameList",
                        &Acts::GeoModelDetectorSurfaceFactory::Config::nameList)
         .def_readwrite(
