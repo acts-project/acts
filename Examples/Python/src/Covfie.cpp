@@ -6,11 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// Acts include(s)
 #include "Acts/Plugins/Covfie/FieldConversion.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 
+// Pybind include(s)
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+// Covfie include(s)
+#include <covfie/core/backend/primitive/array.hpp>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -40,23 +45,34 @@ void addCovfie(Context& ctx) {
   auto main = ctx.get("main");
   auto m = main.def_submodule("covfie", "Submodule for covfie conversion");
 
-  declareCovfieField<Acts::CovfiePlugin::ConstantField>(m,
+  using ConverterHost = Acts::CovfiePlugin::Converter<float, covfie::backend::array>;
+
+  declareCovfieField<ConverterHost::ConstantField>(m,
                                                         "CovfieConstantField");
-  declareCovfieField<Acts::CovfiePlugin::InterpolatedField>(
+  declareCovfieField<ConverterHost::InterpolatedField>(
       m, "CovfieAffineLinearStridedField");
 
-  m.def("covfieField",
-        py::overload_cast<const Acts::InterpolatedMagneticField&>(
-            &Acts::CovfiePlugin::covfieField));
-  m.def("covfieField", py::overload_cast<const Acts::ConstantBField&>(
-                           &Acts::CovfiePlugin::covfieField));
-  m.def(
-      "covfieField",
-      py::overload_cast<const Acts::MagneticFieldProvider&,
-                        Acts::MagneticFieldProvider::Cache&,
-                        const std::vector<std::size_t>&,
-                        const std::vector<double>&, const std::vector<double>&>(
-          &Acts::CovfiePlugin::covfieField));
+
+  // Only Python bindings for host.
+  auto c = py::class_<ConverterHost, std::shared_ptr<ConverterHost>>(m, "CovfieConverterHost");
+
+  c.def(py::init<>());
+
+  c.def("covfieField",
+        static_cast<ConverterHost::InterpolatedField (ConverterHost::*)(const Acts::InterpolatedMagneticField&) const>(
+            &ConverterHost::covfieField));
+
+  c.def("covfieField",
+        static_cast<ConverterHost::ConstantField (ConverterHost::*)(const Acts::ConstantBField&) const>(
+            &ConverterHost::covfieField));
+
+  c.def("covfieField",
+        static_cast<ConverterHost::InterpolatedField (ConverterHost::*)(const Acts::MagneticFieldProvider&,
+                                                                        Acts::MagneticFieldProvider::Cache&,
+                                                                        const std::vector<std::size_t>&,
+                                                                        const std::vector<double>&,
+                                                                        const std::vector<double>&) const>(
+            &ConverterHost::covfieField));
 }
 
 }  // namespace Acts::Python

@@ -5,7 +5,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+/*
 // Traccc plugin include(s)
 #include "ActsExamples/Traccc/Common/TracccChainAlgorithmBase.hpp"
 
@@ -58,7 +58,6 @@ inline auto readDetector(vecmem::memory_resource* mr,
 ///
 /// @param cfg is the algorithm configuration
 /// @param lvl is the logging level
-//template <typename field_t>
 ActsExamples::Traccc::Common::TracccChainAlgorithmBase::
     TracccChainAlgorithmBase(Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("TracccChainAlgorithm", lvl),
@@ -67,7 +66,8 @@ ActsExamples::Traccc::Common::TracccChainAlgorithmBase::
                                        &hostMemoryResource,
                                        "/home/frederik/Desktop/CERN-TECH/input/latest/"
                                        "odd-detray_geometry_detray.json", "/home/frederik/Desktop/CERN-TECH/input/latest/odd-detray_material_detray.json", "/home/frederik/Desktop/CERN-TECH/input/latest/odd-detray_surface_grids_detray.json"))),
-      field(Acts::CovfiePlugin::covfieField(*m_cfg.field)),
+      fieldConverter(),
+      field(fieldConverter.covfieField(*m_cfg.field)),
       convertedDigitizationConfig{Conversion::tracccConfig(m_cfg.digitizationConfigs)},
       surfaceTransforms{traccc::io::alt_read_geometry(detector)},
       barcodeMap{Acts::TracccPlugin::createBarcodeMap(detector)} {
@@ -81,3 +81,4 @@ ActsExamples::Traccc::Common::TracccChainAlgorithmBase::
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
+*/

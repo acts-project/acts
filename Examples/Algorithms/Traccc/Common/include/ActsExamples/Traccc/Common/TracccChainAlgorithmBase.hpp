@@ -33,15 +33,14 @@
 #include "ActsExamples/Traccc/Common/Measurement/Debug.hpp"
 #include "ActsExamples/Traccc/Common/Util/IndexMap.hpp"
 #include "ActsExamples/Traccc/Common/Util/MapUtil.hpp"
+#include "ActsExamples/Traccc/Common/Conversion/DigitizationConversion.hpp"
 
 // Traccc Plugin include(s)
 #include "Acts/Plugins/Traccc/CellConversion.hpp"
 
-// Covfie Plugin include(s)
-#include "Acts/Plugins/Covfie/FieldConversion.hpp"
-
 // Detray include(s).
 #include "detray/core/detector.hpp"
+#include "detray/io/frontend/detector_reader.hpp"
 
 // VecMem include(s).
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -53,12 +52,13 @@
 
 namespace ActsExamples::Traccc::Common {
 
-//template <typename field_type>
+template <typename field_converter_t>
 class TracccChainAlgorithmBase : public IAlgorithm {
  public:
   using DetectorHostType =
       detray::detector<detray::default_metadata, detray::host_container_types>;
-  using FieldType = Acts::CovfiePlugin::ConstantField; //field_type;
+  using FieldConverterType = field_converter_t;
+  using FieldType = FieldConverterType::ConstantField; //field_type;
   using CellsMapType =
       std::map<Acts::GeometryIdentifier, std::vector<Cluster::Cell>>;
 
@@ -77,12 +77,6 @@ class TracccChainAlgorithmBase : public IAlgorithm {
     Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
     std::shared_ptr<const TracccChainConfig> chainConfig;
   };
-
-  /// Construct the traccc algorithm.
-  ///
-  /// @param cfg is the algorithm configuration
-  /// @param lvl is the logging level
-  TracccChainAlgorithmBase(Config cfg, Acts::Logging::Level lvl);
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }
@@ -105,13 +99,65 @@ class TracccChainAlgorithmBase : public IAlgorithm {
   // to ensure order of destructor call.
   vecmem::host_memory_resource hostMemoryResource;
   const DetectorHostType detector;
+
+  const FieldConverterType fieldConverter;
   const FieldType field;
 
   virtual std::tuple<vecmem::vector<traccc::measurement>, vecmem::vector<traccc::spacepoint>, vecmem::vector<traccc::seed>> runDigitization(const vecmem::vector<traccc::cell>& cells, const vecmem::vector<traccc::cell_module>& modules, vecmem::host_memory_resource& mr) const = 0;
 
   virtual traccc::host_container<traccc::fitting_result<traccc::default_algebra>, traccc::track_state<traccc::default_algebra>> runReconstruction(const vecmem::vector<traccc::measurement> measurements, const vecmem::vector<traccc::spacepoint> spacepoints,  const vecmem::vector<traccc::seed> seeds, vecmem::host_memory_resource& mr) const = 0;
 
+  // Temporarily used to get the corresponding detray detector for the Acts
+  // geometry. Will be replaced when the detray plugin containing geometry
+  // conversion is complete.
+  template <typename detector_t>
+  inline auto readDetector(vecmem::memory_resource* mr,
+                          const std::string& detectorFilePath,
+                          const std::string& materialFilePath = "",
+                          const std::string& gridFilePath = "") {
+    // Set up the detector reader configuration.
+    detray::io::detector_reader_config cfg;
+    cfg.add_file(detectorFilePath);
+    if (!materialFilePath.empty()) {
+      cfg.add_file(materialFilePath);
+    }
+    if (!gridFilePath.empty()) {
+      cfg.add_file(gridFilePath);
+    }
+
+    // Read the detector.
+    auto [det, names] = detray::io::read_detector<detector_t>(*mr, cfg);
+    return std::move(det);
+  }
+
   public:
+
+  /// Construct the traccc algorithm.
+  ///
+  /// @param cfg is the algorithm configuration
+  /// @param lvl is the logging level
+  TracccChainAlgorithmBase(Config cfg, Acts::Logging::Level lvl)
+      : ActsExamples::IAlgorithm("TracccChainAlgorithm", lvl),
+        m_cfg(std::move(cfg)),
+        detector((TestValidConfig(), readDetector<DetectorHostType>(
+                                        &hostMemoryResource,
+                                        "/home/frederik/Desktop/CERN-TECH/input/latest/"
+                                        "odd-detray_geometry_detray.json", "/home/frederik/Desktop/CERN-TECH/input/latest/odd-detray_material_detray.json", "/home/frederik/Desktop/CERN-TECH/input/latest/odd-detray_surface_grids_detray.json"))),
+        fieldConverter(),
+        field(fieldConverter.covfieField(*m_cfg.field)),
+        convertedDigitizationConfig{Conversion::tracccConfig(m_cfg.digitizationConfigs)},
+        surfaceTransforms{traccc::io::alt_read_geometry(detector)},
+        barcodeMap{Acts::TracccPlugin::createBarcodeMap(detector)} {
+    m_inputCells.initialize(m_cfg.inputCells);
+    m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+    if (m_cfg.reconstructionOnly){
+      m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
+      m_inputSeeds.initialize(m_cfg.inputSeeds);
+    }
+    m_outputSeeds.initialize(m_cfg.outputSeeds);
+    m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
+    m_outputTracks.initialize(m_cfg.outputTracks);
+  }
   ActsExamples::ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override{
 
     vecmem::host_memory_resource mr;

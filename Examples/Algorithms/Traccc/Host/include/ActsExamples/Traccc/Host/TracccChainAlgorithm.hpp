@@ -12,12 +12,18 @@
 #include "ActsExamples/Traccc/Common/TracccChainAlgorithmBase.hpp"
 #include "ActsExamples/Traccc/Host/Types.hpp"
 
+// Covfie Plugin include(s)
+#include "Acts/Plugins/Covfie/FieldConversion.hpp"
+
+// Covfie include(s)
+#include <covfie/core/backend/primitive/array.hpp>
+
 // VecMem include(s).
 #include <vecmem/memory/host_memory_resource.hpp>
 
 namespace ActsExamples::Traccc::Host {
 
-class TracccChainAlgorithm final : public Common::TracccChainAlgorithmBase {
+class TracccChainAlgorithm final : public Common::TracccChainAlgorithmBase<Acts::CovfiePlugin::Converter<traccc::scalar, covfie::backend::array>> {
  public:
   /// Construct the traccc algorithm.
   ///

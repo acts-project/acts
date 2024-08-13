@@ -23,7 +23,7 @@
 
 ActsExamples::Traccc::Host::TracccChainAlgorithm::TracccChainAlgorithm(
     Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::Traccc::Common::TracccChainAlgorithmBase(std::move(cfg),
+    : ActsExamples::Traccc::Common::TracccChainAlgorithmBase<Acts::CovfiePlugin::Converter<traccc::scalar, covfie::backend::array>>(std::move(cfg),
                                                              std::move(lvl)),
       clusterizationAlgorithm(hostMemoryResource),
       spacepointFormationAlgorithm(hostMemoryResource),

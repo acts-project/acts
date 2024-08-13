@@ -10,7 +10,8 @@ def test_constant_field_conversion():
 
     v = acts.Vector3(1, 2, 3)
     af = acts.ConstantBField(v)
-    cf = covfie.covfieField(af)
+    converter = covfie.CovfieConverterHost()
+    cf = converter.covfieField(af)
     view = covfie.newView(cf)
     points = [(0, 0, 1), (1, 1, 1), (1, 0, 2)]
     for x, y, z in points:
@@ -31,7 +32,8 @@ def test_root_field_conversion():
     )
 
     af = acts.examples.MagneticFieldMapXyz(str(p))
-    cf = covfie.covfieField(af)
+    converter = covfie.CovfieConverterHost()
+    cf = converter.covfieField(af)
     view = covfie.newView(cf)
     points = [
         (9300.0, 4700.0, 11200.0),
