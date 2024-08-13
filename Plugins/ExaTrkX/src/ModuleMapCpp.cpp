@@ -125,7 +125,9 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   std::vector<int64_t> edgeIndexVector;
   edgeIndexVector.reserve(2 * numEdges);
 
+  constexpr std::size_t numEdgeFeatures = 6;
   std::vector<float> edgeFeatureVector;
+  edgeFeatureVector.reserve(numEdgeFeatures * numEdges);
 
   // TODO I think this is already somewhere in the codebase
   const float pi = static_cast<float>(M_PI);
@@ -193,7 +195,6 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
                        .clone()
                        .to(torch::kInt64);
 
-  constexpr std::size_t numEdgeFeatures = 6;
   assert(edgeFeatureVector.size() % numEdgeFeatures == 0);
   auto edgeFeatures =
       detail::vectorToTensor2D(edgeFeatureVector, numEdgeFeatures).clone();

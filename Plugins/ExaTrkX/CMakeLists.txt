@@ -2,7 +2,6 @@
 set(SOURCES 
   src/buildEdges.cpp
   src/ExaTrkXPipeline.cpp
-  src/ModuleMapCpp.cpp
 )
 
 if(ACTS_EXATRKX_ENABLE_MODULEMAP)

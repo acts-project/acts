@@ -33,6 +33,9 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
     int knnVal = 500;
     bool shuffleDirections = false;
     int deviceID = 0;  // default is the first GPU if available
+    
+    // For edge features
+    float phiScale = 3.141592654;
   };
 
   TorchMetricLearning(const Config &cfg, std::unique_ptr<const Logger> logger);
