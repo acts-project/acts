@@ -103,6 +103,7 @@ def runTruthTrackingGx2f(
         field,
         nUpdateMax=200,
         relChi2changeCutOff=1e-2,
+        multipleScattering=True,
     )
 
     s.addAlgorithm(

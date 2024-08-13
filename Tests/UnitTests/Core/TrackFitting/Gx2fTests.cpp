@@ -1253,7 +1253,7 @@ BOOST_AUTO_TEST_CASE(Material) {
 
   const Experimental::Gx2FitterOptions gx2fOptions(
       geoCtx, magCtx, calCtx, extensions,
-      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, true, false,
       FreeToBoundCorrection(false), 5, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
