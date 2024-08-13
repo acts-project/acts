@@ -114,6 +114,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
   }
   {
     using Alg = Acts::SeedingTrackBuilder;
+    using Config = typename Alg::Config;
 
     auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
                    mex, "SeedingTrackBuilder")
@@ -121,7 +122,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                           return std::make_shared<Alg>(
                               c, getDefaultLogger("TrackBuilding", lvl));
                         }),
-                        py::arg("level"));
+                        py::arg("config"), py::arg("level"));
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
