@@ -1,4 +1,5 @@
-set(ACTS_EXAMPLES_G4SOURCES
+add_library(
+  ActsExamplesGeant4 SHARED
     src/GdmlDetectorConstruction.cpp
     src/TelescopeG4DetectorConstruction.cpp
     src/Geant4Simulation.cpp
@@ -15,15 +16,13 @@ set(ACTS_EXAMPLES_G4SOURCES
     src/Geant4Manager.cpp)
 
 if (ACTS_BUILD_EXAMPLES_DD4HEP)
-    list(APPEND ACTS_EXAMPLES_G4SOURCES src/DDG4DetectorConstruction.cpp)
+  target_sources(ActsExamplesGeant4 PUBLIC src/DDG4DetectorConstruction.cpp)
 endif()
 
 if (ACTS_BUILD_PLUGIN_GEOMODEL)
-  list(APPEND ACTS_EXAMPLES_G4SOURCES src/GeoModelDetectorConstruction.cpp)
+  target_sources(ActsExamplesGeant4 PUBLIC src/GeoModelDetectorConstruction.cpp)
 endif()
 
-add_library(
-  ActsExamplesGeant4 SHARED ${ACTS_EXAMPLES_G4SOURCES})
 target_compile_definitions(
   ActsExamplesGeant4
   PUBLIC ${Geant4_DEFINITIONS})
@@ -53,9 +52,12 @@ if (ACTS_BUILD_EXAMPLES_DD4HEP)
 endif()
 
 if (ACTS_BUILD_PLUGIN_GEOMODEL)
+
+  find_library(GeoModel2G4_LIBRARY GeoModel2G4 REQUIRED)
+
   target_link_libraries(
     ActsExamplesGeant4
-    PUBLIC ActsPluginGeoModel GeoModel2G4)
+    PRIVATE ActsPluginGeoModel ${GeoModel2G4_LIBRARY})
 endif()
 
 install(
