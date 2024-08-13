@@ -341,9 +341,6 @@ jobs:
             ${{ runner.os  }}-ccache_${{ env.CCACHE_KEY_SUFFIX }}_
 
       - name: Configure
-        # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
-        # dd4hep CMake configuration that gets triggered on recent CMake
-        # versions such as the one installed via homebrew
         run: >
           ccache -z
           && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
@@ -352,7 +349,8 @@ jobs:
           -DCMAKE_PREFIX_PATH="${{ env.DEPENDENCY_DIR }}"
           -DPython_EXECUTABLE=${{ env.DEPENDENCY_DIR }}/bin/python3
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
-          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=OFF
+          -DACTS_BUILD_PLUGIN_GEOMODEL=ON
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       - name: Build
         run: cmake --build build
       - name: ccache stats
