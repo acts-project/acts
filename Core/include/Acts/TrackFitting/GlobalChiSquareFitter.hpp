@@ -793,9 +793,8 @@ class Gx2Fitter {
           } else {
             ACTS_DEBUG("    Ignoring hole, because no preceding measurements.");
           }
-        } else if ((surface->associatedDetectorElement() != nullptr)
-//                   || (surface->surfaceMaterial() != nullptr)
-                   ) {
+        } else if ((surface->associatedDetectorElement() != nullptr) ||
+                 (surface->surfaceMaterial() != nullptr)) {
           // Here we handle holes. If material hasn't been handled before (because multipleScattering is turned off), we will also handle it here
           if (multipleScattering) {
             ACTS_DEBUG("    The surface contains no measurement, but maybe a hole.");
@@ -851,9 +850,9 @@ class Gx2Fitter {
           }
 
           // Set hole only, if we are on a sensitive surface
-//          if (surface->associatedDetectorElement() != nullptr) {
+          if (surface->associatedDetectorElement() != nullptr) {
             typeFlags.set(TrackStateFlag::HoleFlag);
-//          }
+          }
 
           result.lastTrackIndex = currentTrackIndex;
 
@@ -861,10 +860,7 @@ class Gx2Fitter {
           result.missedActiveSurfaces.push_back(surface);
 
           ++result.processedStates;
-        } else if (!multipleScattering && (surface->surfaceMaterial() != nullptr)) {
-          ACTS_DEBUG("    The surface contains material. Skip, because it is not sensitive and multipleScattering is ignored.");
-        }
-        else {
+        } else {
           ACTS_DEBUG("    The surface contains no measurement/material/hole.");
         }
       }
