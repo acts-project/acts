@@ -33,6 +33,20 @@ std::pair<std::uint32_t, std::uint32_t> splitInt(std::uint64_t v) {
   return {static_cast<std::uint32_t>((v & 0xFFFFFFFF00000000LL) >> 32),
           static_cast<std::uint32_t>(v & 0xFFFFFFFFLL)};
 }
+
+/// In cases when there is built up a particle collection in an iterative way it can be way faster to build up a vector and afterwards use a special constructor to speed up the set creation.
+inline auto particleVectorToSet(std::vector<ActsFatras::Particle> &particles) {
+  using namespace ActsExamples;
+  auto cmp = [](const auto &a, const auto &b) {
+    return a.particleId().value() == b.particleId().value();
+  };
+
+  std::sort(particles.begin(), particles.end(), detail::CompareParticleId{});
+  particles.erase(std::unique(particles.begin(), particles.end(), cmp), particles.end());
+
+  return SimParticleContainer(boost::container::ordered_unique_range_t{}, particles.begin(), particles.end());
+}
+
 }  // namespace
 
 enum SpacePointType { ePixel = 1, eStrip = 2 };
@@ -248,22 +262,15 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
   }
 
   ACTS_DEBUG("Created " << particles.size() << " particles");
-
-  // Speed up the creation of the datastructure by providing an ordered and unique range
-  auto cmp = [](const auto &a, const auto &b) {
-    return a.particleId().value() == b.particleId().value();
-  };
-
   auto before = particles.size();
 
-  std::sort(particles.begin(), particles.end(), detail::CompareParticleId{});
+  auto particlesSet = particleVectorToSet(particles);
 
-  particles.erase(std::unique(particles.begin(), particles.end(), cmp), particles.end());
-  if(particles.size() < before) {
+  if(particlesSet.size() < before) {
     ACTS_WARNING("Particle IDs not unique for " << before - particles.size() << " particles!");
   }
 
-  return SimParticleContainer(boost::container::ordered_unique_range_t{}, particles.begin(), particles.end());
+  return particlesSet;
 }
 
 std::tuple<ClusterContainer, MeasurementContainer,
@@ -480,7 +487,8 @@ std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
 RootAthenaDumpReader::reprocessParticles(
     const SimParticleContainer& particles,
     const IndexMultimap<ActsFatras::Barcode>& measPartMap) const {
-  SimParticleContainer newParticles;
+  std::vector<ActsFatras::Particle> newParticles;
+  newParticles.reserve(particles.size());
   IndexMultimap<ActsFatras::Barcode> newMeasPartMap;
 
   const auto partMeasMap = invertIndexMultimap(measPartMap);
@@ -517,7 +525,7 @@ RootAthenaDumpReader::reprocessParticles(
     }
 
     auto newParticle = particle.withParticleId(fatrasBarcode);
-    newParticles.insert(newParticle);
+    newParticles.push_back(newParticle);
 
     for (auto it = begin; it != end; ++it) {
       newMeasPartMap.insert(
@@ -527,8 +535,7 @@ RootAthenaDumpReader::reprocessParticles(
 
   ACTS_DEBUG("After reprocessing particles " << newParticles.size() << " of "
                                              << particles.size() << " remain");
-
-  return {newParticles, newMeasPartMap};
+  return {particleVectorToSet(newParticles), newMeasPartMap};
 }
 
 ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
