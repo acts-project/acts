@@ -29,6 +29,9 @@
 
 namespace ActsExamples::Traccc::Common::Conversion {
 
+// Custom hash functions
+// as some are not defined by std::hash and std::equal_to
+
 struct TracccSpacePointHash{
     std::size_t operator()(const traccc::spacepoint& s) const noexcept {
         return s.meas.measurement_id;
@@ -43,9 +46,9 @@ struct ActsSpacePointHash{
 };
 
 /// @brief Converts a traccc space point to an acts space point.
-/// @param spacePoint the traccc seed.
+/// @param spacePoint the traccc space point.
 /// @param measurementConv the measurement ConversionData (traccc measurement -> acts bound variant measurement).
-/// @returns An acts seed.
+/// @returns An acts space point.
 template <typename T>
 SimSpacePoint convertSpacePoint(traccc::spacepoint& spacePoint, T& measurementConv){
     using Scalar = Acts::ActsScalar;
@@ -88,6 +91,10 @@ auto convertSpacePoints(std::vector<traccc::spacepoint, allocator_t>& spacePoint
     return Util::convert<TracccSpacePointHash, std::equal_to<traccc::spacepoint>>(spacePoints, fn, outputContainer);
 }
 
+/// @brief Converts a space point to a traccc space point.
+/// @param spacePoint the space point.
+/// @param measurementConv the measurement ConversionData ( bound variant measurement -> traccc measurement).
+/// @returns A traccc space point.
 template <typename T>
 traccc::spacepoint convertSpacePoint(const SimSpacePoint spacePoint, T& measurementConv){
     using Scalar = typename traccc::point3::value_type;
@@ -104,6 +111,12 @@ traccc::spacepoint convertSpacePoint(const SimSpacePoint spacePoint, T& measurem
     };
 }
 
+
+/// @brief Converts a collection of space points to traccc space points and appends the result to the given outputContainer.
+/// @param spacepoints the traccc space points.
+/// @param meausrementConv the measurement ConversionData (acts bound varaint measurement -> traccc measurement).
+/// @param outputContainer the container to put the converted space points into (an empty container is expected).
+/// @returns The spacepoint ConversionData (acts space point -> traccc space point)
 template <typename T, typename output_container_t>
 auto convertSpacePoints(const SimSpacePointContainer& spacePoints, T& measurementConv, output_container_t& outputContainer){
     auto fn = [&measurementConv](const SimSpacePoint& spacePoint){

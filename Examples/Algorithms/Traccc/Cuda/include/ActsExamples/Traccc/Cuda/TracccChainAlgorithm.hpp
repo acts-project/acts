@@ -14,6 +14,12 @@
 #include "traccc/cuda/utils/stream.hpp"
 #include "traccc/utils/algorithm.hpp"
 
+// Covfie Plugin include(s)
+#include "Acts/Plugins/Covfie/FieldConversion.hpp"
+
+// Covfie include(s)
+#include <covfie/cuda/backend/primitive/cuda_device_array.hpp>
+
 // VecMem include(s).
 #include <vecmem/containers/vector.hpp>
 #include <vecmem/memory/binary_page_memory_resource.hpp>
@@ -24,7 +30,7 @@
 namespace ActsExamples::Traccc::Cuda {
 
 
-class TracccChainAlgorithm final : public Common::TracccChainAlgorithmBase {
+class TracccChainAlgorithm final : public Common::TracccChainAlgorithmBase<Acts::CovfiePlugin::Converter<traccc::scalar, covfie::backend::cuda_device_array>> {
 public:
 
 /// Construct the traccc algorithm.
@@ -38,6 +44,12 @@ TracccChainAlgorithm(Config cfg, Acts::Logging::Level lvl);
 /// @param ctx is the algorithm context with event information
 /// @return a process code indication success or failure
 ProcessCode execute(const AlgorithmContext& ctx) const override;
+
+protected:
+
+std::tuple<vecmem::vector<traccc::measurement>, vecmem::vector<traccc::spacepoint>, vecmem::vector<traccc::seed>> runDigitization(const vecmem::vector<traccc::cell>& cells, const vecmem::vector<traccc::cell_module>& modules, vecmem::host_memory_resource& mr) const override;
+
+traccc::host_container<traccc::fitting_result<traccc::default_algebra>, traccc::track_state<traccc::default_algebra>> runReconstruction(const vecmem::vector<traccc::measurement> measurements, const vecmem::vector<traccc::spacepoint> spacepoints,  const vecmem::vector<traccc::seed> seeds, vecmem::host_memory_resource& mr) const override;
 
 private:
     using HostTypes = typename ActsExamples::Chain::Cuda::Types<typename FieldType::view_t>;

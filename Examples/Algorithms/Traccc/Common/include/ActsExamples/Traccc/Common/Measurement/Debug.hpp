@@ -39,6 +39,7 @@ std::string pairingStatistics(
     const std::vector<ActsExamples::BoundVariantMeasurement>& measurements2,
     const std::map<std::size_t, std::size_t>& indexMap);
 
+/// @brief Pairs the measurements by equivalency and creates a string containing debug information.
 template <typename allocator_t, typename detector_t>
 std::string pairingStatistics(
     const std::vector<traccc::measurement, allocator_t>& tracccMeasurements,

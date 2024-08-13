@@ -31,6 +31,8 @@ class TracccChainAlgorithm final : public Common::TracccChainAlgorithmBase<Acts:
   /// @param lvl is the logging level
   TracccChainAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
+  protected:
+  
   std::tuple<vecmem::vector<traccc::measurement>, vecmem::vector<traccc::spacepoint>, vecmem::vector<traccc::seed>> runDigitization(const vecmem::vector<traccc::cell>& cells, const vecmem::vector<traccc::cell_module>& modules, vecmem::host_memory_resource& mr) const override;
 
   traccc::host_container<traccc::fitting_result<traccc::default_algebra>, traccc::track_state<traccc::default_algebra>> runReconstruction(const vecmem::vector<traccc::measurement> measurements, const vecmem::vector<traccc::spacepoint> spacepoints,  const vecmem::vector<traccc::seed> seeds, vecmem::host_memory_resource& mr) const override;

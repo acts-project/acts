@@ -41,6 +41,9 @@
 
 namespace ActsExamples::Traccc::Common::Conversion {
 
+// Custom hash and equals functions
+// as some are not defined by std::hash and std::equal_to
+
 struct TracccMeasurementHash{
     std::size_t operator()(const traccc::measurement& s) const noexcept {
         return s.measurement_id;

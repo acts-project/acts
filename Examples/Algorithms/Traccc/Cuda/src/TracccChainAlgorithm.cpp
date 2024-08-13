@@ -20,7 +20,7 @@
 
 #include <stdexcept>
 
-ActsExamples::Traccc::Host::TracccChainAlgorithm::TracccChainAlgorithm(
+ActsExamples::Traccc::Cuda::TracccChainAlgorithm::TracccChainAlgorithm(
     Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::Traccc::Common::TracccChainAlgorithmBase(std::move(cfg), std::move(lvl)),
     clusterizationAlgorithm(vecmem::memory_resource{cachedDeviceMemoryResource, &hostMemoryResource}, asyncCopy, stream, targetCellsPerPartition),
@@ -32,10 +32,7 @@ ActsExamples::Traccc::Host::TracccChainAlgorithm::TracccChainAlgorithm(
     ambiguityResolutionAlgorithm(m_cfg.chainConfig->ambiguityResolutionConfig)
 {}
 
-ActsExamples::ProcessCode ActsExamples::Traccc::Cuda::TracccChainAlgorithm::execute(
-const ActsExamples::AlgorithmContext& ctx) const {
-
-  vecmem::host_memory_resource mr;
+std::tuple<vecmem::vector<traccc::measurement>, vecmem::vector<traccc::spacepoint>, vecmem::vector<traccc::seed>> ActsExamples::Traccc::Cuda::TracccChainAlgorithm::runDigitization(const vecmem::vector<traccc::cell>& cells, const vecmem::vector<traccc::cell_module>& modules, vecmem::host_memory_resource& mr) const {
 
   typename HostTypes::ClusterizationAlgorithmType::output_type measurements{&mr};
   typename HostTypes::SpacepointFormationAlgorithmType::output_type spacepoints{&mr};
@@ -65,6 +62,12 @@ const ActsExamples::AlgorithmContext& ctx) const {
 
   seeds = seedingAlgorithm(spacepoints);
 
+  // Todo: copy measurements, spacepoints and seeds to host and return.
+}
+
+traccc::host_container<traccc::fitting_result<traccc::default_algebra>, traccc::track_state<traccc::default_algebra>> ActsExamples::Traccc::Cuda::TracccChainAlgorithm::runReconstruction(const vecmem::vector<traccc::measurement> measurements, const vecmem::vector<traccc::spacepoint> spacepoints,  const vecmem::vector<traccc::seed> seeds, vecmem::host_memory_resource& mr) const {
+
+    // Todo: copy measurements, spacepoints and seeds to cuda.
   const typename FieldType::view_t fieldView(field);
   static_assert(std::is_same<FieldType, typename detray::bfield::const_field_t>::value, "Currently, traccc expects a constant field.");
   params = trackParameterEstimationAlgorithm(spacepoints, seeds, fieldView.at(0.f,0.f,0.f));
@@ -91,4 +94,6 @@ const ActsExamples::AlgorithmContext& ctx) const {
 
   m_outputTracks(ctx, std::move(result));
   return ActsExamples::ProcessCode::SUCCESS;
+
+
 }
