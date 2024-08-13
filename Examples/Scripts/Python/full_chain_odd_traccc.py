@@ -304,7 +304,7 @@ addTracccChain(
     logLevel=acts.logging.INFO,
     platform=args.platform,
     enableAmbiguityResolution=not args.no_ambi_res,
-    externalDigitization=args.acts_digi,
+    reconstructionOnly=args.acts_digi,
 )
 
 s.run()

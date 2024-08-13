@@ -2072,7 +2072,7 @@ def addTracccChain(
     chainConfig : acts.examples.TracccChainConfig,
     outputDirRoot: Union[Path, str],
     enableAmbiguityResolution: Optional[bool] = True,
-    externalDigitization: Optional[bool] = False,
+    reconstructionOnly: Optional[bool] = False,
     inputCells: Optional[str] = "cells",  # "InputCells",
     inputMeasurements: Optional[str] = "measurements",
     inputSpacePoints: Optional[str] = "spacepoints",  # "InputCells",
@@ -2103,7 +2103,7 @@ def addTracccChain(
             outputSpacePoints=outputSpacePoints,
             outputSeeds=outputSeeds,
             outputTracks=outputTracks,
-            externalDigitization=externalDigitization,
+            reconstructionOnly=reconstructionOnly,
             enableAmbiguityResolution=enableAmbiguityResolution,
             trackingGeometry=trackingGeometry,
             field=field,
@@ -2150,9 +2150,10 @@ def addTracccChain(
         "particle_track_matching", matchAlg.config.outputParticleTrackMatching
     )
 
+    recStr = "_reconstruction_only" if reconstructionOnly else ""
     addTrackWriters(
         s,
-        name=f"traccc_{platform}",
+        name=f"traccc_{platform + recStr}",
         tracks=alg.config.outputTracks,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
@@ -2162,7 +2163,7 @@ def addTracccChain(
         writeCovMat=writeCovMat,
     )
 
-    if not externalDigitization:
+    if not reconstructionOnly:
         parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
                 level=logLevel,
                 inputSeeds=outputSeeds,

@@ -25,7 +25,7 @@ void addTracccChainHost(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::Traccc::Host::TracccChainAlgorithm, m,
-      "TracccChainAlgorithmHost", inputCells, inputMeasurements, inputSpacePoints, inputSeeds, outputSpacePoints, outputSeeds, outputTracks, externalDigitization, enableAmbiguityResolution,
+      "TracccChainAlgorithmHost", inputCells, inputMeasurements, inputSpacePoints, inputSeeds, outputSpacePoints, outputSeeds, outputTracks, reconstructionOnly, enableAmbiguityResolution,
       trackingGeometry, field, digitizationConfigs, chainConfig);
 }
 

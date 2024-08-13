@@ -2,5 +2,8 @@
 
 from physmon_traccc_common import runTracccChain
 
+# With Traccc seeding.
+runTracccChain("host", False)
 
-runTracccChain("host")
+# With Acts seeding.
+runTracccChain("host", True)

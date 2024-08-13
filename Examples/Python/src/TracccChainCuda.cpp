@@ -25,7 +25,7 @@ void addTracccChainCuda(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::Traccc::Cuda::TracccChainAlgorithm, m,
-      "TracccChainAlgorithmCuda", inputCells, inputMeasurements, inputSpacePoints, inputSeeds, outputSpacePoints, outputSeeds, outputTracks, externalDigitization, enableAmbiguityResolution,
+      "TracccChainAlgorithmCuda", inputCells, inputMeasurements, inputSpacePoints, inputSeeds, outputSpacePoints, outputSeeds, outputTracks, reconstructionOnly, enableAmbiguityResolution,
       trackingGeometry, field, digitizationConfigs, chainConfig);
 }
 

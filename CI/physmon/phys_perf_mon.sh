@@ -327,21 +327,18 @@ function simulation() {
 
 function full_chain_traccc() {
     suffix=$1
-    seeding=$2
 
-    if [[ "$seeding" == "y" ]]; then
-        run_histcmp \
-            $outdir/performance_seeding_traccc_${suffix}.root \
-            $refdir/performance_seeding_seeded.root \
-            "Seeding Performance Comparision (traccc (${suffix}) and acts)" \
-            performance_seeding_comparison_acts_traccc_${suffix}
+    run_histcmp \
+        $outdir/performance_seeding_traccc_${suffix}.root \
+        $refdir/performance_seeding_seeded.root \
+        "Seeding Performance Comparision (traccc (${suffix}) and acts)" \
+        performance_seeding_comparison_acts_traccc_${suffix}
 
-        run_histcmp \
-            $outdir/performance_seeding_traccc_${suffix}.root \
-            $refdir/performance_seeding_traccc_${suffix}.root \
-            "Seeding Performance Traccc (${suffix})" \
-            performance_seeding_comparison_acts_traccc_${suffix}
-    fi
+    run_histcmp \
+        $outdir/performance_seeding_traccc_${suffix}.root \
+        $refdir/performance_seeding_traccc_${suffix}.root \
+        "Seeding Performance Traccc (${suffix})" \
+        performance_seeding_comparison_acts_traccc_${suffix}
 
     run Examples/Scripts/generic_plotter.py \
         $outdir/tracksummary_traccc_${suffix}.root \
@@ -351,7 +348,16 @@ function full_chain_traccc() {
         --config CI/physmon/tracksummary_ckf_config.yml
     ec=$(($ec | $?))
 
-    rm $outdir/tracksummary_traccc_${suffix}.root
+    run Examples/Scripts/generic_plotter.py \
+        $outdir/tracksummary_traccc_${suffix}_reconstruction_only.root \
+        tracksummary \
+        $outdir/tracksummary_traccc_${suffix}_reconstruction_only_hist.root \
+        --silent \
+        --config CI/physmon/tracksummary_ckf_config.yml
+    ec=$(($ec | $?))
+
+    #rm $outdir/tracksummary_traccc_${suffix}.root
+    #rm $outdir/tracksummary_traccc_${suffix}_reconstruction_only.root
 
     run_histcmp \
         $outdir/tracksummary_traccc_${suffix}_hist.root \
@@ -364,6 +370,12 @@ function full_chain_traccc() {
         $refdir/tracksummary_traccc_${suffix}_hist.root \
         "Track Summary Traccc Chain (${suffix})" \
         tracksummary_traccc_${suffix}
+
+    run_histcmp \
+        $outdir/tracksummary_traccc_${suffix}_reconstruction_only_hist.root \
+        $refdir/tracksummary_ckf_seeded_hist.root \
+        "Track Summary Comparision - Reconstruction only (traccc ${suffix} and acts)" \
+        tracksummary_comparison_acts_traccc_${suffix}_reconstruction_only
 }
 
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then

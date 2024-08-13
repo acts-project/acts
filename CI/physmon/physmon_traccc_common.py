@@ -14,9 +14,15 @@ from acts.examples.simulation import (
     addFatras,
     addDigitization,
 )
-
 from acts.examples.reconstruction import (
-    addTracccChain
+    addSeeding,
+    TruthSeedRanges,
+    ParticleSmearingSigmas,
+    SeedFinderConfigArg,
+    SeedFinderOptionsArg,
+    SeedingAlgorithm,
+    TruthEstimatedSeedingAlgorithmConfigArg,
+    addTracccChain,
 )
 
 from physmon_common import makeSetup
@@ -24,7 +30,13 @@ from physmon_common import makeSetup
 setup = makeSetup(useGeometricConfig=True)
 
 
-def runTracccChain(platform):
+def runTracccChain(
+    platform,
+    actsDigi=False,
+    truthSmearedSeeded=False,
+    truthEstimatedSeeded=False,
+    label="seeded"):
+
     u = acts.UnitConstants
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
@@ -80,6 +92,54 @@ def runTracccChain(platform):
             mergeCommonCorner=True,
         )
 
+        if actsDigi:
+            addSeeding(
+                s,
+                setup.trackingGeometry,
+                setup.field,
+                TruthSeedRanges(pt=(500 * u.MeV, None), nHits=(9, None)),
+                ParticleSmearingSigmas(
+                    pRel=0.01
+                ),  # only used by SeedingAlgorithm.TruthSmeared
+                SeedFinderConfigArg(
+                    r=(33 * u.mm, 200 * u.mm),
+                    deltaR=(1 * u.mm, 60 * u.mm),
+                    collisionRegion=(-250 * u.mm, 250 * u.mm),
+                    z=(-2000 * u.mm, 2000 * u.mm),
+                    maxSeedsPerSpM=1,
+                    sigmaScattering=5,
+                    radLengthPerSeed=0.1,
+                    minPt=500 * u.MeV,
+                    impactMax=3 * u.mm,
+                ),
+                SeedFinderOptionsArg(bFieldInZ=2 * u.T),
+                TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
+                seedingAlgorithm=(
+                    SeedingAlgorithm.TruthSmeared
+                    if truthSmearedSeeded
+                    else (
+                        SeedingAlgorithm.TruthEstimated
+                        if truthEstimatedSeeded
+                        else (
+                            SeedingAlgorithm.Default
+                            if label == "seeded"
+                            else SeedingAlgorithm.Orthogonal
+                        )
+                    )
+                ),
+                initialSigmas=[
+                    1 * u.mm,
+                    1 * u.mm,
+                    1 * u.degree,
+                    1 * u.degree,
+                    0.1 / u.GeV,
+                    1 * u.ns,
+                ],
+                initialVarInflation=[1.0] * 6,
+                geoSelectionConfigFile=setup.geoSel,
+                rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
+            )
+
         chainConfig = acts.examples.TracccChainConfig()
 
         addTracccChain(
@@ -92,17 +152,21 @@ def runTracccChain(platform):
             chainConfig=chainConfig,
             logLevel=acts.logging.INFO,
             platform=platform,
+            enableAmbiguityResolution=True,
+            reconstructionOnly=actsDigi,
         )
 
         s.run()
         del s
 
-        name = f"tracksummary_traccc_{platform}";
+        recStr = "_reconstruction_only" if actsDigi else ""
+        name = f"tracksummary_traccc_{platform + recStr}"
         perf_file = tp / f"{name}.root"
         assert perf_file.exists(), "Tracksummary file not found"
         shutil.copy(perf_file, setup.outdir / f"{name}.root")
 
-        name = f"performance_seeding_traccc_{platform}";
-        perf_file = tp / f"{name}.root"
-        assert perf_file.exists(), "Performance seeding file not found"
-        shutil.copy(perf_file, setup.outdir / f"{name}.root")
+        if not actsDigi:
+            name = f"performance_seeding_traccc_{platform}";
+            perf_file = tp / f"{name}.root"
+            assert perf_file.exists(), "Performance seeding file not found"
+            shutil.copy(perf_file, setup.outdir / f"{name}.root")
