@@ -338,7 +338,7 @@ function full_chain_traccc() {
         $outdir/performance_seeding_traccc_${suffix}.root \
         $refdir/performance_seeding_traccc_${suffix}.root \
         "Seeding Performance Traccc (${suffix})" \
-        performance_seeding_comparison_acts_traccc_${suffix}
+        performance_seeding_traccc_${suffix}
 
     run Examples/Scripts/generic_plotter.py \
         $outdir/tracksummary_traccc_${suffix}.root \
@@ -356,8 +356,8 @@ function full_chain_traccc() {
         --config CI/physmon/tracksummary_ckf_config.yml
     ec=$(($ec | $?))
 
-    #rm $outdir/tracksummary_traccc_${suffix}.root
-    #rm $outdir/tracksummary_traccc_${suffix}_reconstruction_only.root
+    rm $outdir/tracksummary_traccc_${suffix}.root
+    rm $outdir/tracksummary_traccc_${suffix}_reconstruction_only.root
 
     run_histcmp \
         $outdir/tracksummary_traccc_${suffix}_hist.root \
