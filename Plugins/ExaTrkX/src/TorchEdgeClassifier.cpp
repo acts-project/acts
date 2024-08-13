@@ -92,10 +92,6 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
   auto model = m_model->clone();
   model.to(device);
 
-  if (m_cfg.numFeatures > nodeFeatures.size(1)) {
-    throw std::runtime_error("requested more features then available");
-  }
-
   torch::Tensor output;
 
   // Scope this to keep inference objects separate
@@ -105,9 +101,10 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
                             : edgeIndex;
 
     std::vector<torch::jit::IValue> inputTensors(2);
+    auto selectedFeaturesTensor = at::tensor(at::ArrayRef<int>(m_cfg.selectedFeatures));
     inputTensors[0] =
-        m_cfg.numFeatures < nodeFeatures.size(1)
-            ? nodeFeatures.index({Slice{}, Slice{None, m_cfg.numFeatures}})
+        !m_cfg.selectedFeatures.empty()
+            ? nodeFeatures.index({Slice{}, selectedFeaturesTensor})
             : nodeFeatures;
 
     if (edgeFeatures && m_cfg.useEdgeFeatures) {

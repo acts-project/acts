@@ -29,7 +29,7 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
  public:
   struct Config {
     std::string modelPath;
-    int numFeatures = 3;
+    std::vector<int> selectedFeatures = {};
     float cut = 0.21;
     int nChunks = 1;  // NOTE for GNN use 1
     bool undirected = false;

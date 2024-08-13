@@ -27,7 +27,7 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
  public:
   struct Config {
     std::string modelPath;
-    int numFeatures = 3;
+    std::vector<int> selectedFeatures = {};
     int embeddingDim = 8;
     float rVal = 1.6;
     int knnVal = 500;
