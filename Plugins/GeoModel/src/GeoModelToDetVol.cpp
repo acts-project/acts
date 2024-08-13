@@ -65,37 +65,31 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         portalGenerator, context, name, newTransform, bounds,
         Experimental::tryAllPortalsAndSurfaces());
   } else if (shape->typeID() == GeoBox::getClassTypeID()) {
-    //TODO do the surfaces
     const GeoBox* box = static_cast<const GeoBox*>(shape);
     std::shared_ptr<CuboidVolumeBounds> bounds =
         std::make_shared<CuboidVolumeBounds>(box->getXHalfLength(),
                                              box->getYHalfLength(),
                                              box->getZHalfLength());
-    constexpr double rotationAngle = M_PI / 2;
-    GeoTrf::Transform3D newTransform =
-        transform * GeoTrf::RotateX3D(rotationAngle);
     return Experimental::DetectorVolumeFactory::construct(
-        portalGenerator, context, name, newTransform, bounds,
+        portalGenerator, context, name, transform, bounds,
         sensSurfaces, a, 
         Experimental::tryNoVolumes(),
         Experimental::tryAllPortalsAndSurfaces());
-    /*
-    return Experimental::DetectorVolumeFactory::construct(
-        portalGenerator, context, name, transform, bounds,
-        Experimental::tryAllPortalsAndSurfaces());
-    */
-  } else if (shape->typeID() == GeoSimplePolygonBrep::getClassTypeID()) {
+  }
+  //TODO fix that
+  /*
+  else if (shape->typeID() == GeoSimplePolygonBrep::getClassTypeID()) {
     const GeoSimplePolygonBrep* brep =
         static_cast<const GeoSimplePolygonBrep*>(shape);
     double xmin{0}, xmax{0}, ymin{0}, ymax{0}, zmin{0}, zmax{0};
     brep->extent(xmin, ymin, zmin, xmax, ymax, zmax);
-    std::shared_ptr<CuboidVolumeBounds> bounds =
+    std::shared_ptr<DiamondBounds> bounds =
         std::make_shared<CuboidVolumeBounds>(
             (xmax - xmin) / 2, (ymax - ymin) / 2, (zmax - zmin) / 2);
     return Experimental::DetectorVolumeFactory::construct(
         portalGenerator, context, name, transform, bounds,
         Experimental::tryAllPortalsAndSurfaces());
-  } else if (shape->typeID() == GeoTrd::getClassTypeID()) {
+  }*/ else if (shape->typeID() == GeoTrd::getClassTypeID()) {
     const GeoTrd* trd = static_cast<const GeoTrd*>(shape);
     double x1 = trd->getXHalfLength1();
     double x2 = trd->getXHalfLength2();

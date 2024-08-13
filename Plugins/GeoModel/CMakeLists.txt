@@ -11,6 +11,7 @@ add_library(
   src/GeoModelDetectorObjectFactory.cpp
   src/GeoModelMaterialConverter.cpp
   src/detail/GeoBoxConverter.cpp
+  src/detail/GeoPolygonConverter.cpp
   src/detail/GeoTrdConverter.cpp
   src/detail/GeoTubeConverter.cpp
   src/detail/GeoShiftConverter.cpp

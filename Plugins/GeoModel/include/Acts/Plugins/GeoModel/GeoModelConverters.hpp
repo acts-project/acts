@@ -14,6 +14,7 @@
 #include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GenericGeoShapeConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoBoxConverter.hpp"
+#include "Acts/Plugins/GeoModel/detail/GeoPolygonConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoIntersectionAnnulusConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoShiftConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoTrdConverter.hpp"
@@ -37,6 +38,8 @@ namespace Acts {
 using GeoBoxConverter =
     detail::GenericGeoShapeConverter<GeoBox, detail::GeoBoxConverter>;
 
+using GeoPolygonConverter =
+    detail::GenericGeoShapeConverter<GeoSimplePolygonBrep, detail::GeoPolygonConverter>;
 /// @brief A dedicated converter for GeoInterseciton that describe annulus bounds
 ///
 /// This is very much tailored to the AnnulusBounds class
@@ -76,12 +79,11 @@ inline std::shared_ptr<const IGeoShapeConverter> GeoShapesConverters(int geoShap
                                   std::shared_ptr<const IGeoShapeConverter>>
       converters{
           {GeoBox::getClassTypeID(), std::make_shared<GeoBoxConverter>()},
-          {GeoShapeIntersection::getClassTypeID(),
-           std::make_shared<GeoIntersectionAnnulusConverter>()},
-          {GeoShapeShift::getClassTypeID(),
-           std::make_shared<GeoShiftConverter>()},
+          {GeoShapeIntersection::getClassTypeID(), std::make_shared<GeoIntersectionAnnulusConverter>()},
+          {GeoShapeShift::getClassTypeID(), std::make_shared<GeoShiftConverter>()},
           {GeoTrd::getClassTypeID(), std::make_shared<GeoTrdConverter>()},
           {GeoTube::getClassTypeID(), std::make_shared<GeoTubeConverter>()},
+          {GeoSimplePolygonBrep::getClassTypeID(), std::make_shared<GeoPolygonConverter>()},
           {GeoShapeUnion::getClassTypeID(),
            std::make_shared<GeoUnionDoubleTrdConverter>()}};
   auto itr = converters.find(geoShapeId);

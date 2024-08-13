@@ -82,13 +82,14 @@ void Acts::GeoModelDetectorObjectFactory::convertSensitive(PVConstLink geoPV, co
   std::string name = logVol->getName();
   std::shared_ptr<const Acts::IGeoShapeConverter> converter = Acts::GeoShapesConverters(shapeId);
   if (converter == nullptr) {
-    throw std::runtime_error("The converter for " + recType(*shape) +
-                             " is nullptr");
-
+    throw std::runtime_error("The converter for " + recType(*shape) + " is nullptr");
     return;
   }
+  //std::cout << "conversion test passed" << std::endl;
   auto converted = converter->toSensitiveSurface(geoPV, transform);
+  //std::cout << "converted" << std::endl;
   if (converted.ok()) {
+    //std::cout << "convert ok" << std::endl;
     sensitives.push_back(converted.value());
     const auto &[el, sf] = converted.value();
     auto ss = std::get<1>(converted.value());
@@ -122,6 +123,9 @@ std::vector<GeoChildNodeWithTrf> Acts::GeoModelDetectorObjectFactory::findAllSub
   return sensitives;
 }
 bool Acts::GeoModelDetectorObjectFactory::convertBox(std::string name){
+  if(m_cfg.convertBox==""){
+    return false;
+  }
   return (name.find(m_cfg.convertBox) != std::string::npos);
 }
 void Acts::GeoModelDetectorObjectFactory::convertFpv(std::string name, auto fpv, Cache& cache, const GeometryContext& gctx){
@@ -141,6 +145,7 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(std::string name, auto fpv,
         }
         cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(), sensitives.begin(), sensitives.end());
         if(convertBox(name)){
+          std::cout << "wtf" << std::endl;
           const GeoLogVol *logVol = physVol->getLogVol();//get logVol for the shape of the volume
           const GeoShape *shape = logVol->getShape();//get shape
           const Acts::Transform3 &fpvtransform = fpv->getAbsoluteTransform(nullptr);
@@ -158,31 +163,31 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(std::string name, auto fpv,
 }
     //lambda to determine if object fits querry
 bool Acts::GeoModelDetectorObjectFactory::matches(const std::string &name, PVConstLink physvol){
+  std::string matStr = physvol->getLogVol()->getMaterial()->getName();
   if (m_cfg.nameList.empty() && m_cfg.materialList.empty()) {
     return true;
   }
 
   auto matchName = std::any_of(m_cfg.nameList.begin(), m_cfg.nameList.end(), [&](const auto &n) {return name.find(n) != std::string::npos; });
 
-      std::string matStr = physvol->getLogVol()->getMaterial()->getName();
 
-      auto matchMaterial = std::any_of(
-          m_cfg.materialList.begin(), m_cfg.materialList.end(),
-          [&](const auto &m) {return matStr.find(m) != std::string::npos; });
+  auto matchMaterial = std::any_of(
+    m_cfg.materialList.begin(), m_cfg.materialList.end(),
+    [&](const auto &m) {return matStr.find(m) != std::string::npos; });
 
-      bool match = matchMaterial && matchName;
+    bool match = matchMaterial && matchName;
       GeoIntrusivePtr<const GeoVFullPhysVol> fullVol =
-          dynamic_pointer_cast<const GeoVFullPhysVol>(physvol);
+      dynamic_pointer_cast<const GeoVFullPhysVol>(physvol);
 
-      // for the fullphysvol we only check the name
-      if (m_cfg.nameList.empty()) {
-        return matchMaterial;
-      }
-
-      //if no material specified or we're looking at fpv judge by name only
-      if (m_cfg.materialList.empty() || !(fullVol == nullptr)) {
-        return matchName;
-      }
-      return match;
+    // for the fullphysvol we only check the name
+    if (m_cfg.nameList.empty()) {
+      return matchMaterial;
     }
+
+    //if no material specified or we're looking at fpv judge by name only
+    if (m_cfg.materialList.empty() || !(fullVol == nullptr)) {
+      return matchName;
+    }
+    return match;
+  }
 }
