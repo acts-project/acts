@@ -210,7 +210,7 @@ struct FitterTester {
 
     if (doDiag) {
       doTest(true);
-    }               // with reversed & smoothed columns
+    }  // with reversed & smoothed columns
     doTest(false);  // without the extra columns
   }
 

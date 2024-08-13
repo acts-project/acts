@@ -417,9 +417,6 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
 def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
     from propagation import runPropagation
 
-    obj = tmp_path / "obj"
-    obj.mkdir()
-
     root_files = [
         (
             "propagation_steps.root",
@@ -432,8 +429,6 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
         fp = tmp_path / fn
         assert not fp.exists()
 
-    assert len(list(obj.iterdir())) == 0
-
     runPropagation(trk_geo, field, str(tmp_path), s=seq).run()
 
     for fn, tn, ee in root_files:
@@ -442,8 +437,6 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
         assert fp.stat().st_size > 2**10 * 50
         assert_entries(fp, tn, ee)
         assert_root_hash(fn, fp)
-
-    assert len(list(obj.iterdir())) > 0
 
 
 @pytest.mark.slow
@@ -537,9 +530,9 @@ def test_truth_tracking_kalman(
     seq = Sequencer(events=10, numThreads=1)
 
     root_files = [
-        ("trackstates_fitter.root", "trackstates", 19),
-        ("tracksummary_fitter.root", "tracksummary", 10),
-        ("performance_track_fitter.root", None, -1),
+        ("trackstates_kf.root", "trackstates", 19),
+        ("tracksummary_kf.root", "tracksummary", 10),
+        ("performance_kf.root", None, -1),
     ]
 
     for fn, _, _ in root_files:
@@ -572,7 +565,7 @@ def test_truth_tracking_kalman(
 
     ROOT.PyConfig.IgnoreCommandLineOptions = True
     ROOT.gROOT.SetBatch(True)
-    rf = ROOT.TFile.Open(str(tmp_path / "tracksummary_fitter.root"))
+    rf = ROOT.TFile.Open(str(tmp_path / "tracksummary_kf.root"))
     keys = [k.GetName() for k in rf.GetListOfKeys()]
     assert "tracksummary" in keys
     for entry in rf.Get("tracksummary"):
@@ -843,6 +836,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     s.run()
 
     assert val_file.exists()
+
     assert_root_hash(val_file.name, val_file)
 
 

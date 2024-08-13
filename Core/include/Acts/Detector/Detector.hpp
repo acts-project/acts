@@ -102,6 +102,13 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @return the map which can be queried with GeometryID for ranges
   const GeometryHierarchyMap<const Surface*>& sensitiveHierarchyMap() const;
 
+  /// Search for a surface with the given identifier.
+  ///
+  /// @param id is the geometry identifier of the surface
+  /// @retval nullptr if no such surface exists
+  /// @retval pointer to the found surface otherwise.
+  const Surface* findSurface(GeometryIdentifier id) const;
+
   /// @brief Visit all reachable surfaces of the detector
   ///
   /// @tparam visitor_t Type of the callable visitor

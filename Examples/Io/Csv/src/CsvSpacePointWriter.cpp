@@ -16,12 +16,11 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <string>
 #include <vector>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
 
@@ -44,8 +43,8 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacepointWriter::writeT(
   std::string pathSP =
       perEventFilepath(m_cfg.outputDir, "spacepoint.csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<SpacepointData> writerSP(pathSP,
-                                                    m_cfg.outputPrecision);
+  ActsExamples::NamedTupleCsvWriter<SpacepointData> writerSP(
+      pathSP, m_cfg.outputPrecision);
 
   SpacepointData spData{};
   for (const auto& sp : spacepoints) {
