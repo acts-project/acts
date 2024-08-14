@@ -100,9 +100,8 @@ bool Acts::EigenStepper<E, A>::prepareCurvilinearState(
 }
 
 template <typename E, typename A>
-auto Acts::EigenStepper<E, A>::curvilinearState(State& state,
-                                                bool transportCov) const
-    -> CurvilinearState {
+auto Acts::EigenStepper<E, A>::curvilinearState(
+    State& state, bool transportCov) const -> CurvilinearState {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
       state.jacToGlobal, state.pars, state.particleHypothesis,

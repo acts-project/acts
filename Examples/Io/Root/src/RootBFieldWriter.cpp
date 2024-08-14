@@ -189,8 +189,8 @@ void RootBFieldWriter::run(const Config& config,
           Bz = bField.z() / Acts::UnitConstants::T;
           outputTree->Fill();
         }  // for z
-      }    // for y
-    }      // for x
+      }  // for y
+    }  // for x
 
   } else {
     ACTS_INFO("Map will be written out in cylinder coordinates (r,z).");
@@ -271,7 +271,7 @@ void RootBFieldWriter::run(const Config& config,
         Br = VectorHelpers::perp(bField) / Acts::UnitConstants::T;
         outputTree->Fill();
       }  // for R
-    }    // for z
+    }  // for z
   }
 
   // Tear down ROOT I/O
