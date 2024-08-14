@@ -400,9 +400,9 @@ void storeTiming(const std::vector<std::string>& identifiers,
     const auto time_total_s =
         std::chrono::duration_cast<Seconds>(durations[i]).count();
     file << identifiers[i] << "," << time_total_s << ","
-         << time_total_s / numEvents << "\n";
+         << time_total_s / numEvents;
   }
-  file << "\n";
+  file << std::endl;
 }
 }  // namespace
 
