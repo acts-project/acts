@@ -70,8 +70,7 @@ class GridPortalLink : public PortalLinkBase {
       BinningValue direction);
 
   static std::unique_ptr<PortalLinkBase> merge(
-      const std::shared_ptr<GridPortalLink>& a,
-      const std::shared_ptr<GridPortalLink>& b, BinningValue direction,
+      const GridPortalLink& a, const GridPortalLink& b, BinningValue direction,
       const Logger& logger = getDummyLogger());
 
   virtual const IGrid& grid() const = 0;

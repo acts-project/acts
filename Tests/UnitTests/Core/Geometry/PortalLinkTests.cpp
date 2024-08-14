@@ -55,6 +55,11 @@ std::shared_ptr<TrackingVolume> makeDummyVolume() {
 
 GeometryContext gctx;
 
+template <typename T>
+std::unique_ptr<T> copy(const std::unique_ptr<T>& p) {
+  return std::make_unique<T>(*p);
+}
+
 BOOST_FIXTURE_TEST_SUITE(Geometry, Fixture)
 
 BOOST_AUTO_TEST_SUITE(GridConstruction)
@@ -532,31 +537,31 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
   auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30_mm,
                                                   100_mm);
 
-  std::shared_ptr grid1dCyl = GridPortalLink::make(
-      cyl, BinningValue::binZ, Axis{AxisBound, -100_mm, 100_mm, 10});
+  auto grid1dCyl = GridPortalLink::make(cyl, BinningValue::binZ,
+                                        Axis{AxisBound, -100_mm, 100_mm, 10});
   grid1dCyl->setVolume(vol1.get());
 
   // Another cylinder, shifted in z
   auto cyl2 = Surface::makeShared<CylinderSurface>(
       Transform3{Translation3{Vector3::UnitZ() * 150_mm}}, 30_mm, 50_mm);
 
-  std::shared_ptr grid1dCyl2 = GridPortalLink::make(
-      cyl2, BinningValue::binZ, Axis{AxisBound, -50_mm, 50_mm, 5});
+  auto grid1dCyl2 = GridPortalLink::make(cyl2, BinningValue::binZ,
+                                         Axis{AxisBound, -50_mm, 50_mm, 5});
 
   grid1dCyl2->setVolume(vol2.get());
 
   // Completely invalid
-  BOOST_CHECK_THROW(GridPortalLink::merge(grid1dCyl, grid1dCyl2,
+  BOOST_CHECK_THROW(GridPortalLink::merge(*grid1dCyl, *grid1dCyl2,
                                           BinningValue::binPhi, *logger),
                     AssertionFailureException);
   // Invalid direction, as the cylinders are shifted in z, and can't be merged
   // in r x phi
-  BOOST_CHECK_THROW(GridPortalLink::merge(grid1dCyl, grid1dCyl2,
+  BOOST_CHECK_THROW(GridPortalLink::merge(*grid1dCyl, *grid1dCyl2,
                                           BinningValue::binRPhi, *logger),
                     SurfaceMergingException);
 
   BOOST_TEST_CONTEXT("Consistent equidistant") {
-    auto mergedPtr = GridPortalLink::merge(grid1dCyl, grid1dCyl2,
+    auto mergedPtr = GridPortalLink::merge(*grid1dCyl, *grid1dCyl2,
                                            BinningValue::binZ, *logger);
     BOOST_REQUIRE_NE(mergedPtr, nullptr);
     const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
@@ -571,11 +576,11 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
   }
 
   BOOST_TEST_CONTEXT("Inconsistent equidistant") {
-    std::shared_ptr grid1dCyl2BinWidthChanged = GridPortalLink::make(
+    auto grid1dCyl2BinWidthChanged = GridPortalLink::make(
         cyl2, BinningValue::binZ, Axis{AxisBound, -50_mm, 50_mm, 6});
 
-    auto mergedPtr = GridPortalLink::merge(grid1dCyl, grid1dCyl2BinWidthChanged,
-                                           BinningValue::binZ, *logger);
+    auto mergedPtr = GridPortalLink::merge(
+        *grid1dCyl, *grid1dCyl2BinWidthChanged, BinningValue::binZ, *logger);
     BOOST_REQUIRE_NE(mergedPtr, nullptr);
     const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
     BOOST_REQUIRE_NE(merged, nullptr);
@@ -589,15 +594,15 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
   }
 
   BOOST_TEST_CONTEXT("Right Variable") {
-    std::shared_ptr gridLeft = GridPortalLink::make(
-        cyl, BinningValue::binZ, Axis{AxisBound, -100_mm, 100_mm, 10});
+    auto gridLeft = GridPortalLink::make(cyl, BinningValue::binZ,
+                                         Axis{AxisBound, -100_mm, 100_mm, 10});
 
-    std::shared_ptr gridRight =
+    auto gridRight =
         GridPortalLink::make(cyl2, BinningValue::binZ,
                              Axis{AxisBound, {-50_mm, -10_mm, 10_mm, 50_mm}});
 
-    auto mergedPtr =
-        GridPortalLink::merge(gridLeft, gridRight, BinningValue::binZ, *logger);
+    auto mergedPtr = GridPortalLink::merge(*gridLeft, *gridRight,
+                                           BinningValue::binZ, *logger);
     BOOST_REQUIRE_NE(mergedPtr, nullptr);
     const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
     BOOST_REQUIRE_NE(merged, nullptr);
@@ -611,15 +616,15 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
   }
 
   BOOST_TEST_CONTEXT("Left Variable") {
-    std::shared_ptr gridLeft =
+    auto gridLeft =
         GridPortalLink::make(cyl, BinningValue::binZ,
                              Axis{AxisBound, {-100_mm, -80_mm, 10_mm, 100_mm}});
 
-    std::shared_ptr gridRight = GridPortalLink::make(
-        cyl2, BinningValue::binZ, Axis{AxisBound, -50_mm, 50_mm, 8});
+    auto gridRight = GridPortalLink::make(cyl2, BinningValue::binZ,
+                                          Axis{AxisBound, -50_mm, 50_mm, 8});
 
-    auto mergedPtr =
-        GridPortalLink::merge(gridLeft, gridRight, BinningValue::binZ, *logger);
+    auto mergedPtr = GridPortalLink::merge(*gridLeft, *gridRight,
+                                           BinningValue::binZ, *logger);
     BOOST_REQUIRE_NE(mergedPtr, nullptr);
     const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
     BOOST_REQUIRE_NE(merged, nullptr);
@@ -633,16 +638,16 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
   }
 
   BOOST_TEST_CONTEXT("Both Variable") {
-    std::shared_ptr gridLeft =
+    auto gridLeft =
         GridPortalLink::make(cyl, BinningValue::binZ,
                              Axis{AxisBound, {-100_mm, -80_mm, 10_mm, 100_mm}});
 
-    std::shared_ptr gridRight =
+    auto gridRight =
         GridPortalLink::make(cyl2, BinningValue::binZ,
                              Axis{AxisBound, {-50_mm, -10_mm, 10_mm, 50_mm}});
 
-    auto mergedPtr =
-        GridPortalLink::merge(gridLeft, gridRight, BinningValue::binZ, *logger);
+    auto mergedPtr = GridPortalLink::merge(*gridLeft, *gridRight,
+                                           BinningValue::binZ, *logger);
     BOOST_REQUIRE_NE(mergedPtr, nullptr);
     const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
     BOOST_REQUIRE_NE(merged, nullptr);
@@ -656,22 +661,22 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
   }
 
   BOOST_TEST_CONTEXT("Non bound axis") {
-    std::shared_ptr gridLeft =
+    std::unique_ptr gridLeft =
         GridPortalLink::make(cyl, BinningValue::binZ,
                              Axis{AxisBound, {-100_mm, -80_mm, 10_mm, 100_mm}});
-    std::shared_ptr gridRightClosed =
+    std::unique_ptr gridRightClosed =
         GridPortalLink::make(cyl2, BinningValue::binZ,
                              Axis{AxisClosed, {-50_mm, -10_mm, 10_mm, 50_mm}});
-    std::shared_ptr gridRightOpen =
+    std::unique_ptr gridRightOpen =
         GridPortalLink::make(cyl2, BinningValue::binZ,
                              Axis{AxisOpen, {-50_mm, -10_mm, 10_mm, 50_mm}});
 
-    auto compositeLR = GridPortalLink::merge(gridLeft, gridRightClosed,
-                                             BinningValue::binZ, *logger);
+    auto compositeLR = PortalLinkBase::merge(
+        copy(gridLeft), copy(gridRightClosed), BinningValue::binZ, *logger);
     BOOST_CHECK_NE(dynamic_cast<const CompositePortalLink*>(compositeLR.get()),
                    nullptr);
-    auto compositeRL = GridPortalLink::merge(gridLeft, gridRightOpen,
-                                             BinningValue::binZ, *logger);
+    auto compositeRL = PortalLinkBase::merge(
+        copy(gridLeft), copy(gridRightOpen), BinningValue::binZ, *logger);
     BOOST_CHECK_NE(dynamic_cast<const CompositePortalLink*>(compositeRL.get()),
                    nullptr);
   }
@@ -682,7 +687,7 @@ BOOST_AUTO_TEST_CASE(ParallelMerge) {
   auto cyl1 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
                                                    30_mm, 100_mm, 35_degree);
 
-  std::shared_ptr grid1 = GridPortalLink::make(
+  auto grid1 = GridPortalLink::make(
       cyl1, BinningValue::binRPhi,
 
       Axis{AxisBound, -35_degree * 30_mm, 35_degree * 30_mm, 3});
@@ -690,12 +695,12 @@ BOOST_AUTO_TEST_CASE(ParallelMerge) {
       Transform3{Translation3{Vector3::UnitZ() * 150_mm}}, 30_mm, 50_mm,
       35_degree);
 
-  std::shared_ptr grid2 = GridPortalLink::make(
+  auto grid2 = GridPortalLink::make(
       cyl2, BinningValue::binRPhi,
       Axis{AxisBound, -35_degree * 30_mm, 35_degree * 30_mm, 3});
 
   auto merged12Ptr =
-      GridPortalLink::merge(grid1, grid2, BinningValue::binZ, *logger);
+      GridPortalLink::merge(*grid1, *grid2, BinningValue::binZ, *logger);
   BOOST_REQUIRE_NE(merged12Ptr, nullptr);
   auto merged12 = dynamic_cast<const GridPortalLink*>(merged12Ptr.get());
   BOOST_REQUIRE_NE(merged12, nullptr);
@@ -739,33 +744,33 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
         Transform3::Identity() * AngleAxis3(105_degree, Vector3::UnitZ()),
         30_mm, 100_mm, 40_degree, 0_degree);
 
-    std::shared_ptr portalPhi1 = GridPortalLink::make(
+    auto portalPhi1 = GridPortalLink::make(
         cylPhi1, BinningValue::binRPhi,
         Axis{AxisBound, -20_degree * 30_mm, 20_degree * 30_mm, 5});
 
-    std::shared_ptr portalPhi2 = GridPortalLink::make(
+    auto portalPhi2 = GridPortalLink::make(
         cylPhi2, BinningValue::binRPhi,
         Axis{AxisBound, -40_degree * 30_mm, 40_degree * 30_mm, 10});
 
-    std::shared_ptr cylPhi3 = Surface::makeShared<CylinderSurface>(
+    auto cylPhi3 = Surface::makeShared<CylinderSurface>(
         Transform3::Identity() * AngleAxis3(45_degree, Vector3::UnitZ()), 30_mm,
         100_mm, 90_degree, 0_degree);
 
-    std::shared_ptr cylPhi4 = Surface::makeShared<CylinderSurface>(
+    auto cylPhi4 = Surface::makeShared<CylinderSurface>(
         Transform3::Identity() * AngleAxis3(-135_degree, Vector3::UnitZ()),
         30_mm, 100_mm, 90_degree, 0_degree);
 
-    std::shared_ptr portalPhi3 = GridPortalLink::make(
+    auto portalPhi3 = GridPortalLink::make(
         cylPhi3, BinningValue::binRPhi,
         Axis{AxisBound, -90_degree * 30_mm, 90_degree * 30_mm, 2});
 
-    std::shared_ptr portalPhi4 = GridPortalLink::make(
+    auto portalPhi4 = GridPortalLink::make(
         cylPhi4, BinningValue::binRPhi,
         Axis{AxisBound, -90_degree * 30_mm, 90_degree * 30_mm, 2});
 
     BOOST_TEST_CONTEXT("Consistent equidistant") {
-      std::shared_ptr portalMerged = GridPortalLink::merge(
-          portalPhi1, portalPhi2, BinningValue::binRPhi, *logger);
+      auto portalMerged = GridPortalLink::merge(*portalPhi1, *portalPhi2,
+                                                BinningValue::binRPhi, *logger);
       BOOST_REQUIRE_NE(portalMerged, nullptr);
 
       const auto* merged =
@@ -781,7 +786,7 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
 
       // Test that if you merge half-circles, we get a closed axis
       auto portalMerged34 = GridPortalLink::merge(
-          portalPhi3, portalPhi4, BinningValue::binRPhi, *logger);
+          *portalPhi3, *portalPhi4, BinningValue::binRPhi, *logger);
       BOOST_REQUIRE_NE(portalMerged34, nullptr);
 
       const auto* merged34 =
@@ -797,12 +802,12 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
     }
 
     BOOST_TEST_CONTEXT("Inconsistent equidistant") {
-      std::shared_ptr portalPhi2Mod = GridPortalLink::make(
+      auto portalPhi2Mod = GridPortalLink::make(
           cylPhi2, BinningValue::binRPhi,
           Axis{AxisBound, -40_degree * 30_mm, 40_degree * 30_mm, 3});
 
       auto portalMergedMod = GridPortalLink::merge(
-          portalPhi1, portalPhi2Mod, BinningValue::binRPhi, *logger);
+          *portalPhi1, *portalPhi2Mod, BinningValue::binRPhi, *logger);
       BOOST_REQUIRE_NE(portalMergedMod, nullptr);
 
       const auto* merged12 =
@@ -821,12 +826,12 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
                                             23.0383,  27.2271,  31.4159};
       CHECK_CLOSE_OR_SMALL(axis12.getBinEdges(), expected12, 1e-4, 10e-10);
 
-      std::shared_ptr portalPhi4Mod = GridPortalLink::make(
+      auto portalPhi4Mod = GridPortalLink::make(
           cylPhi4, BinningValue::binRPhi,
           Axis{AxisBound, -90_degree * 30_mm, 90_degree * 30_mm, 1});
 
       auto portalMerged34 = GridPortalLink::merge(
-          portalPhi3, portalPhi4Mod, BinningValue::binRPhi, *logger);
+          *portalPhi3, *portalPhi4Mod, BinningValue::binRPhi, *logger);
       BOOST_REQUIRE_NE(portalMerged34, nullptr);
 
       const auto* merged34 =
@@ -848,16 +853,16 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
 
     BOOST_TEST_CONTEXT("Left variable") {
       BOOST_TEST_CONTEXT("Non-closed") {
-        std::shared_ptr gridLeft =
+        auto gridLeft =
             GridPortalLink::make(cylPhi1, BinningValue::binRPhi,
                                  Axis{AxisBound,
                                       {-20_degree * 30_mm, -10_degree * 30_mm,
                                        10_degree * 30_mm, 20_degree * 30_mm}});
-        std::shared_ptr gridRight = GridPortalLink::make(
+        auto gridRight = GridPortalLink::make(
             cylPhi2, BinningValue::binRPhi,
             Axis{AxisBound, -40_degree * 30_mm, 40_degree * 30_mm, 3});
 
-        auto mergedPtr = GridPortalLink::merge(gridLeft, gridRight,
+        auto mergedPtr = GridPortalLink::merge(*gridLeft, *gridRight,
                                                BinningValue::binRPhi, *logger);
         BOOST_REQUIRE_NE(mergedPtr, nullptr);
 
@@ -878,16 +883,16 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
       }
 
       BOOST_TEST_CONTEXT("Closed") {
-        std::shared_ptr gridLeft = GridPortalLink::make(
+        auto gridLeft = GridPortalLink::make(
             cylPhi4, BinningValue::binRPhi,
             Axis{AxisBound,
                  {-90_degree * 30_mm, 25_degree * 30_mm, 90_degree * 30_mm}});
 
-        std::shared_ptr gridRight = GridPortalLink::make(
+        auto gridRight = GridPortalLink::make(
             cylPhi3, BinningValue::binRPhi,
             Axis{AxisBound, -90_degree * 30_mm, 90_degree * 30_mm, 3});
 
-        auto mergedPtr = GridPortalLink::merge(gridLeft, gridRight,
+        auto mergedPtr = GridPortalLink::merge(*gridLeft, *gridRight,
                                                BinningValue::binRPhi, *logger);
         BOOST_REQUIRE_NE(mergedPtr, nullptr);
 
@@ -912,16 +917,16 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
 
     BOOST_TEST_CONTEXT("Right variable") {
       BOOST_TEST_CONTEXT("Non-closed") {
-        std::shared_ptr gridLeft = GridPortalLink::make(
+        auto gridLeft = GridPortalLink::make(
             cylPhi1, BinningValue::binRPhi,
             Axis{AxisBound, -20_degree * 30_mm, 20_degree * 30_mm, 3});
-        std::shared_ptr gridRight =
+        auto gridRight =
             GridPortalLink::make(cylPhi2, BinningValue::binRPhi,
                                  Axis{AxisBound,
                                       {-40_degree * 30_mm, -10_degree * 30_mm,
                                        10_degree * 30_mm, 40_degree * 30_mm}});
 
-        auto mergedPtr = GridPortalLink::merge(gridLeft, gridRight,
+        auto mergedPtr = GridPortalLink::merge(*gridLeft, *gridRight,
                                                BinningValue::binRPhi, *logger);
         BOOST_REQUIRE_NE(mergedPtr, nullptr);
 
@@ -942,16 +947,16 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
       }
 
       BOOST_TEST_CONTEXT("Closed") {
-        std::shared_ptr gridLeft = GridPortalLink::make(
+        auto gridLeft = GridPortalLink::make(
             cylPhi4, BinningValue::binRPhi,
             Axis{AxisBound, -90_degree * 30_mm, 90_degree * 30_mm, 3});
 
-        std::shared_ptr gridRight = GridPortalLink::make(
+        auto gridRight = GridPortalLink::make(
             cylPhi3, BinningValue::binRPhi,
             Axis{AxisBound,
                  {-90_degree * 30_mm, 25_degree * 30_mm, 90_degree * 30_mm}});
 
-        auto mergedPtr = GridPortalLink::merge(gridLeft, gridRight,
+        auto mergedPtr = GridPortalLink::merge(*gridLeft, *gridRight,
                                                BinningValue::binRPhi, *logger);
         BOOST_REQUIRE_NE(mergedPtr, nullptr);
 
@@ -976,17 +981,17 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
 
     BOOST_TEST_CONTEXT("Both variable") {
       BOOST_TEST_CONTEXT("Non-closed") {
-        std::shared_ptr gridLeft =
+        auto gridLeft =
             GridPortalLink::make(cylPhi1, BinningValue::binRPhi,
                                  Axis{AxisBound,
                                       {-20_degree * 30_mm, -10_degree * 30_mm,
                                        10_degree * 30_mm, 20_degree * 30_mm}});
-        std::shared_ptr gridRight = GridPortalLink::make(
+        auto gridRight = GridPortalLink::make(
             cylPhi2, BinningValue::binRPhi,
             Axis{AxisBound,
                  {-40_degree * 30_mm, -5_degree * 30_mm, 40_degree * 30_mm}});
 
-        auto mergedPtr = GridPortalLink::merge(gridLeft, gridRight,
+        auto mergedPtr = GridPortalLink::merge(*gridLeft, *gridRight,
                                                BinningValue::binRPhi, *logger);
         BOOST_REQUIRE_NE(mergedPtr, nullptr);
 
@@ -1007,18 +1012,18 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
       }
 
       BOOST_TEST_CONTEXT("Closed") {
-        std::shared_ptr gridLeft = GridPortalLink::make(
+        auto gridLeft = GridPortalLink::make(
             cylPhi4, BinningValue::binRPhi,
             Axis{AxisBound,
                  {-90_degree * 30_mm, 25_degree * 30_mm, 90_degree * 30_mm}});
 
-        std::shared_ptr gridRight =
+        auto gridRight =
             GridPortalLink::make(cylPhi3, BinningValue::binRPhi,
                                  Axis{AxisBound,
                                       {-90_degree * 30_mm, -10_degree * 30_mm,
                                        10_degree * 30_mm, 90_degree * 30_mm}});
 
-        auto mergedPtr = GridPortalLink::merge(gridLeft, gridRight,
+        auto mergedPtr = GridPortalLink::merge(*gridLeft, *gridRight,
                                                BinningValue::binRPhi, *logger);
         BOOST_REQUIRE_NE(mergedPtr, nullptr);
 
@@ -1053,13 +1058,13 @@ BOOST_AUTO_TEST_CASE(ParallelMerge) {
       Transform3::Identity() * AngleAxis3(85_degree, Vector3::UnitZ()), 30_mm,
       100_mm, 20_degree, 0_degree);
 
-  std::shared_ptr portalPhi1 = GridPortalLink::make(
-      cylPhi1, BinningValue::binZ, Axis{AxisBound, -100_mm, 100_mm, 5});
+  auto portalPhi1 = GridPortalLink::make(cylPhi1, BinningValue::binZ,
+                                         Axis{AxisBound, -100_mm, 100_mm, 5});
 
-  std::shared_ptr portalPhi2 = GridPortalLink::make(
-      cylPhi2, BinningValue::binZ, Axis{AxisBound, -100_mm, 100_mm, 5});
+  auto portalPhi2 = GridPortalLink::make(cylPhi2, BinningValue::binZ,
+                                         Axis{AxisBound, -100_mm, 100_mm, 5});
 
-  auto merged12Ptr = GridPortalLink::merge(portalPhi1, portalPhi2,
+  auto merged12Ptr = GridPortalLink::merge(*portalPhi1, *portalPhi2,
                                            BinningValue::binRPhi, *logger);
   BOOST_REQUIRE_NE(merged12Ptr, nullptr);
   auto merged12 = dynamic_cast<const GridPortalLink*>(merged12Ptr.get());
@@ -1086,7 +1091,7 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
                                                      30_mm, 100_mm, 45_degree);
 
     // z good, rphi good
-    std::shared_ptr grid1 = GridPortalLink::make(
+    auto grid1 = GridPortalLink::make(
         cyl1, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
         Axis{AxisBound, -100_mm, 100_mm, 5});
 
@@ -1095,14 +1100,14 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
         Surface::makeShared<CylinderSurface>(trf2, 30_mm, 50_mm, 45_degree);
 
     // Second grid portal with compatible phi binning
-    std::shared_ptr grid2 = GridPortalLink::make(
+    auto grid2 = GridPortalLink::make(
         cyl2, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
         Axis{AxisBound, -50_mm, 50_mm, 5});
 
     // We're merging in z direction, so the phi binnings need to be the same
 
     auto mergedPtr =
-        GridPortalLink::merge(grid1, grid2, BinningValue::binZ, *logger);
+        GridPortalLink::merge(*grid1, *grid2, BinningValue::binZ, *logger);
     const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
     BOOST_REQUIRE_NE(mergedPtr, nullptr);
 
@@ -1121,12 +1126,12 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
     BOOST_CHECK_EQUAL(axis2.getType(), AxisType::Variable);
     BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
 
-    std::shared_ptr grid3 = GridPortalLink::make(
+    auto grid3 = GridPortalLink::make(
         cyl2, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 3},
         Axis{AxisBound, -50_mm, 50_mm, 5});
 
-    auto composite =
-        GridPortalLink::merge(grid1, grid3, BinningValue::binZ, *logger);
+    auto composite = PortalLinkBase::merge(copy(grid1), copy(grid3),
+                                           BinningValue::binZ, *logger);
     BOOST_CHECK_NE(dynamic_cast<const CompositePortalLink*>(composite.get()),
                    nullptr);
   }
@@ -1136,7 +1141,7 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
                                                      30_mm, 100_mm, 180_degree);
 
     // z good, rphi good
-    std::shared_ptr grid1 = GridPortalLink::make(
+    auto grid1 = GridPortalLink::make(
         cyl1, Axis{AxisClosed, -180_degree * 30_mm, 180_degree * 30_mm, 5},
         Axis{AxisBound, -100_mm, 100_mm, 5});
 
@@ -1145,12 +1150,12 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
         Surface::makeShared<CylinderSurface>(trf2, 30_mm, 50_mm, 180_degree);
 
     // Second grid portal with compatible phi binning
-    std::shared_ptr grid2 = GridPortalLink::make(
+    auto grid2 = GridPortalLink::make(
         cyl2, Axis{AxisClosed, -180_degree * 30_mm, 180_degree * 30_mm, 5},
         Axis{AxisBound, -50_mm, 50_mm, 5});
 
     auto mergedPtr =
-        GridPortalLink::merge(grid1, grid2, BinningValue::binZ, *logger);
+        GridPortalLink::merge(*grid1, *grid2, BinningValue::binZ, *logger);
     const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
     BOOST_REQUIRE_NE(mergedPtr, nullptr);
 
@@ -1170,7 +1175,7 @@ BOOST_AUTO_TEST_CASE(RPhiDirection) {
                                                    30_mm, 100_mm, 45_degree);
 
   // z good, rphi good
-  std::shared_ptr grid1 = GridPortalLink::make(
+  auto grid1 = GridPortalLink::make(
       cyl1, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
       Axis{AxisBound, -100_mm, 100_mm, 5});
   BOOST_REQUIRE_NE(grid1, nullptr);
@@ -1180,7 +1185,7 @@ BOOST_AUTO_TEST_CASE(RPhiDirection) {
       Surface::makeShared<CylinderSurface>(trf2, 30_mm, 100_mm, 45_degree);
 
   // Second grid portal with compatible phi binning
-  std::shared_ptr grid2 = GridPortalLink::make(
+  auto grid2 = GridPortalLink::make(
       cyl2, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
       Axis{AxisBound, -100_mm, 100_mm, 5});
   BOOST_REQUIRE_NE(grid2, nullptr);
@@ -1188,7 +1193,7 @@ BOOST_AUTO_TEST_CASE(RPhiDirection) {
   // We're merging in z direction, so the phi binnings need to be the same
 
   auto mergedPtr =
-      GridPortalLink::merge(grid1, grid2, BinningValue::binRPhi, *logger);
+      GridPortalLink::merge(*grid1, *grid2, BinningValue::binRPhi, *logger);
   const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
   BOOST_REQUIRE_NE(mergedPtr, nullptr);
 
@@ -1214,17 +1219,17 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
   auto disc1 =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 100_mm);
 
-  std::shared_ptr grid1 = GridPortalLink::make(
-      disc1, BinningValue::binR, Axis{AxisBound, 30_mm, 100_mm, 7});
+  auto grid1 = GridPortalLink::make(disc1, BinningValue::binR,
+                                    Axis{AxisBound, 30_mm, 100_mm, 7});
 
   auto disc2 =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 100_mm, 150_mm);
 
-  std::shared_ptr grid2 = GridPortalLink::make(
-      disc2, BinningValue::binR, Axis{AxisBound, 100_mm, 150_mm, 5});
+  auto grid2 = GridPortalLink::make(disc2, BinningValue::binR,
+                                    Axis{AxisBound, 100_mm, 150_mm, 5});
 
   auto mergedPtr =
-      GridPortalLink::merge(grid1, grid2, BinningValue::binR, *logger);
+      GridPortalLink::merge(*grid1, *grid2, BinningValue::binR, *logger);
   BOOST_REQUIRE(mergedPtr);
   const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
   BOOST_REQUIRE_NE(merged, nullptr);
@@ -1237,16 +1242,16 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
   auto discPhi1 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
                                                    30_mm, 100_mm, 30_degree);
 
-  std::shared_ptr discPhiGrid1 = GridPortalLink::make(
-      discPhi1, BinningValue::binR, Axis{AxisBound, 30_mm, 100_mm, 7});
+  auto discPhiGrid1 = GridPortalLink::make(discPhi1, BinningValue::binR,
+                                           Axis{AxisBound, 30_mm, 100_mm, 7});
 
   auto discPhi2 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
                                                    100_mm, 150_mm, 30_degree);
 
-  std::shared_ptr discPhiGrid2 = GridPortalLink::make(
-      discPhi2, BinningValue::binR, Axis{AxisBound, 100_mm, 150_mm, 5});
+  auto discPhiGrid2 = GridPortalLink::make(discPhi2, BinningValue::binR,
+                                           Axis{AxisBound, 100_mm, 150_mm, 5});
 
-  auto mergedPhiPtr = GridPortalLink::merge(discPhiGrid1, discPhiGrid2,
+  auto mergedPhiPtr = GridPortalLink::merge(*discPhiGrid1, *discPhiGrid2,
                                             BinningValue::binR, *logger);
   BOOST_REQUIRE(mergedPhiPtr);
   const auto* mergedPhi =
@@ -1261,19 +1266,19 @@ BOOST_AUTO_TEST_CASE(ParallelMerge) {
   auto disc1 =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 100_mm);
 
-  std::shared_ptr grid1 =
+  auto grid1 =
       GridPortalLink::make(disc1, BinningValue::binPhi,
                            Axis{AxisClosed, -180_degree, 180_degree, 5});
 
   auto disc2 =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 100_mm, 150_mm);
 
-  std::shared_ptr grid2 =
+  auto grid2 =
       GridPortalLink::make(disc2, BinningValue::binPhi,
                            Axis{AxisClosed, -180_degree, 180_degree, 5});
 
   auto mergedPtr =
-      GridPortalLink::merge(grid1, grid2, BinningValue::binR, *logger);
+      GridPortalLink::merge(*grid1, *grid2, BinningValue::binR, *logger);
   BOOST_REQUIRE(mergedPtr);
   const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
   BOOST_REQUIRE_NE(merged, nullptr);
@@ -1295,18 +1300,18 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
   auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
                                                 100_mm, 30_degree);
 
-  std::shared_ptr grid1 = GridPortalLink::make(
-      disc1, BinningValue::binPhi, Axis{AxisBound, -30_degree, 30_degree, 3});
+  auto grid1 = GridPortalLink::make(disc1, BinningValue::binPhi,
+                                    Axis{AxisBound, -30_degree, 30_degree, 3});
 
   auto disc2 = Surface::makeShared<DiscSurface>(
       Transform3{AngleAxis3{90_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
       60_degree);
 
-  std::shared_ptr grid2 = GridPortalLink::make(
-      disc2, BinningValue::binPhi, Axis{AxisBound, -60_degree, 60_degree, 6});
+  auto grid2 = GridPortalLink::make(disc2, BinningValue::binPhi,
+                                    Axis{AxisBound, -60_degree, 60_degree, 6});
 
   auto mergedPtr =
-      GridPortalLink::merge(grid1, grid2, BinningValue::binPhi, *logger);
+      GridPortalLink::merge(*grid1, *grid2, BinningValue::binPhi, *logger);
   BOOST_REQUIRE(mergedPtr);
   const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
   BOOST_REQUIRE_NE(merged, nullptr);
@@ -1323,7 +1328,7 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
       Transform3{AngleAxis3{15_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
       90_degree);
 
-  std::shared_ptr grid1Half =
+  auto grid1Half =
       GridPortalLink::make(disc1Half, BinningValue::binPhi,
                            Axis{AxisBound, -90_degree, 90_degree, 3});
 
@@ -1331,11 +1336,11 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
       Transform3{AngleAxis3{-165_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
       90_degree);
 
-  std::shared_ptr grid2Half =
+  auto grid2Half =
       GridPortalLink::make(disc2Half, BinningValue::binPhi,
                            Axis{AxisBound, -90_degree, 90_degree, 3});
 
-  auto mergedHalfPtr = GridPortalLink::merge(grid1Half, grid2Half,
+  auto mergedHalfPtr = GridPortalLink::merge(*grid1Half, *grid2Half,
                                              BinningValue::binPhi, *logger);
   BOOST_REQUIRE(mergedHalfPtr);
   const auto* mergedHalf =
@@ -1351,18 +1356,18 @@ BOOST_AUTO_TEST_CASE(ParallelMerge) {
   auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
                                                 100_mm, 30_degree);
 
-  std::shared_ptr grid1 = GridPortalLink::make(
-      disc1, BinningValue::binR, Axis{AxisBound, 30_mm, 100_mm, 3});
+  auto grid1 = GridPortalLink::make(disc1, BinningValue::binR,
+                                    Axis{AxisBound, 30_mm, 100_mm, 3});
 
   auto disc2 = Surface::makeShared<DiscSurface>(
       Transform3{AngleAxis3{90_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
       60_degree);
 
-  std::shared_ptr grid2 = GridPortalLink::make(
-      disc2, BinningValue::binR, Axis{AxisBound, 30_mm, 100_mm, 3});
+  auto grid2 = GridPortalLink::make(disc2, BinningValue::binR,
+                                    Axis{AxisBound, 30_mm, 100_mm, 3});
 
   auto mergedPtr =
-      GridPortalLink::merge(grid1, grid2, BinningValue::binPhi, *logger);
+      GridPortalLink::merge(*grid1, *grid2, BinningValue::binPhi, *logger);
   BOOST_REQUIRE(mergedPtr);
   const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
   BOOST_REQUIRE_NE(merged, nullptr);
@@ -1394,21 +1399,21 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
                                                   60_mm, 30_degree);
 
-    std::shared_ptr grid1 = GridPortalLink::make(
-        disc1, BinningValue::binR, Axis{AxisBound, 30_mm, 60_mm, 2});
+    auto grid1 = GridPortalLink::make(disc1, BinningValue::binR,
+                                      Axis{AxisBound, 30_mm, 60_mm, 2});
 
     grid1->setVolume(vol1.get());
 
     auto disc2 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 60_mm,
                                                   90_mm, 30_degree);
 
-    std::shared_ptr grid2 = GridPortalLink::make(
-        disc2, BinningValue::binR, Axis{AxisBound, 60_mm, 90_mm, 2});
+    auto grid2 = GridPortalLink::make(disc2, BinningValue::binR,
+                                      Axis{AxisBound, 60_mm, 90_mm, 2});
 
     grid2->setVolume(vol2.get());
 
     auto mergedPtr =
-        GridPortalLink::merge(grid1, grid2, BinningValue::binR, *logger);
+        GridPortalLink::merge(*grid1, *grid2, BinningValue::binR, *logger);
 
     using merged_type =
         GridPortalLinkT<Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
@@ -1430,7 +1435,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
                                                   100_mm, 30_degree);
 
-    std::shared_ptr grid1 = GridPortalLink::make(
+    auto grid1 = GridPortalLink::make(
         disc1, BinningValue::binPhi, Axis{AxisBound, -30_degree, 30_degree, 2});
 
     grid1->setVolume(vol1.get());
@@ -1439,13 +1444,13 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
         Transform3{AngleAxis3{60_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
         30_degree);
 
-    std::shared_ptr grid2 = GridPortalLink::make(
+    auto grid2 = GridPortalLink::make(
         disc2, BinningValue::binPhi, Axis{AxisBound, -30_degree, 30_degree, 2});
 
     grid2->setVolume(vol2.get());
 
     auto mergedPtr =
-        GridPortalLink::merge(grid1, grid2, BinningValue::binPhi, *logger);
+        GridPortalLink::merge(*grid1, *grid2, BinningValue::binPhi, *logger);
     BOOST_REQUIRE(mergedPtr);
 
     using merged_type =
@@ -1474,18 +1479,18 @@ BOOST_AUTO_TEST_CASE(RDirection) {
   auto discPhi1 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
                                                    30_mm, 100_mm, 30_degree);
 
-  std::shared_ptr discPhiGrid1 =
+  auto discPhiGrid1 =
       GridPortalLink::make(discPhi1, Axis{AxisBound, 30_mm, 100_mm, 7},
                            Axis{AxisBound, -30_degree, 30_degree, 3});
 
   auto discPhi2 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
                                                    100_mm, 150_mm, 30_degree);
 
-  std::shared_ptr discPhiGrid2 =
+  auto discPhiGrid2 =
       GridPortalLink::make(discPhi2, Axis{AxisBound, 100_mm, 150_mm, 5},
                            Axis{AxisBound, -30_degree, 30_degree, 3});
 
-  auto mergedPtr = GridPortalLink::merge(discPhiGrid1, discPhiGrid2,
+  auto mergedPtr = GridPortalLink::merge(*discPhiGrid1, *discPhiGrid2,
                                          BinningValue::binR, *logger);
   BOOST_REQUIRE(mergedPtr);
   const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
@@ -1510,20 +1515,18 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
   auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
                                                 100_mm, 30_degree);
 
-  std::shared_ptr grid1 =
-      GridPortalLink::make(disc1, Axis{AxisBound, 30_mm, 100_mm, 3},
-                           Axis{AxisBound, -30_degree, 30_degree, 3});
+  auto grid1 = GridPortalLink::make(disc1, Axis{AxisBound, 30_mm, 100_mm, 3},
+                                    Axis{AxisBound, -30_degree, 30_degree, 3});
 
   auto disc2 = Surface::makeShared<DiscSurface>(
       Transform3{AngleAxis3{90_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
       60_degree);
 
-  std::shared_ptr grid2 =
-      GridPortalLink::make(disc2, Axis{AxisBound, 30_mm, 100_mm, 3},
-                           Axis{AxisBound, -60_degree, 60_degree, 6});
+  auto grid2 = GridPortalLink::make(disc2, Axis{AxisBound, 30_mm, 100_mm, 3},
+                                    Axis{AxisBound, -60_degree, 60_degree, 6});
 
   auto mergedPtr =
-      GridPortalLink::merge(grid1, grid2, BinningValue::binPhi, *logger);
+      GridPortalLink::merge(*grid1, *grid2, BinningValue::binPhi, *logger);
   BOOST_REQUIRE(mergedPtr);
   const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
   BOOST_REQUIRE_NE(merged, nullptr);
@@ -1581,7 +1584,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     auto discPhi1 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
                                                      30_mm, 60_mm, 30_degree);
 
-    std::shared_ptr discPhiGrid1 =
+    auto discPhiGrid1 =
         GridPortalLink::make(discPhi1, Axis{AxisBound, 30_mm, 60_mm, 2},
                              Axis{AxisBound, -30_degree, 30_degree, 2});
 
@@ -1591,14 +1594,14 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     auto discPhi2 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
                                                      60_mm, 90_mm, 30_degree);
 
-    std::shared_ptr discPhiGrid2 =
+    auto discPhiGrid2 =
         GridPortalLink::make(discPhi2, Axis{AxisBound, 60_mm, 90_mm, 2},
                              Axis{AxisBound, -30_degree, 30_degree, 2});
 
     fillCheckerBoard(discPhiGrid2->grid());
     checkCheckerBoard(discPhiGrid2->grid());
 
-    auto mergedPtr = GridPortalLink::merge(discPhiGrid1, discPhiGrid2,
+    auto mergedPtr = GridPortalLink::merge(*discPhiGrid1, *discPhiGrid2,
                                            BinningValue::binR, *logger);
 
     using merged_type =
@@ -1613,7 +1616,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     discPhiGrid1->setVolume(vol1.get());
     discPhiGrid2->setVolume(vol2.get());
 
-    mergedPtr = GridPortalLink::merge(discPhiGrid1, discPhiGrid2,
+    mergedPtr = GridPortalLink::merge(*discPhiGrid1, *discPhiGrid2,
                                       BinningValue::binR, *logger);
 
     merged = dynamic_cast<const merged_type*>(mergedPtr.get());
@@ -1653,7 +1656,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
                                                   100_mm, 30_degree);
 
-    std::shared_ptr grid1 =
+    auto grid1 =
         GridPortalLink::make(disc1, Axis{AxisBound, 30_mm, 100_mm, 2},
                              Axis{AxisBound, -30_degree, 30_degree, 2});
     fillCheckerBoard(grid1->grid());
@@ -1663,14 +1666,14 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
         Transform3{AngleAxis3{60_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
         30_degree);
 
-    std::shared_ptr grid2 =
+    auto grid2 =
         GridPortalLink::make(disc2, Axis{AxisBound, 30_mm, 100_mm, 2},
                              Axis{AxisBound, -30_degree, 30_degree, 2});
     fillCheckerBoard(grid2->grid());
     checkCheckerBoard(grid2->grid());
 
     auto mergedPtr =
-        GridPortalLink::merge(grid1, grid2, BinningValue::binPhi, *logger);
+        GridPortalLink::merge(*grid1, *grid2, BinningValue::binPhi, *logger);
 
     BOOST_REQUIRE(mergedPtr);
 
@@ -1688,7 +1691,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     grid2->setVolume(vol2.get());
 
     mergedPtr =
-        GridPortalLink::merge(grid1, grid2, BinningValue::binPhi, *logger);
+        GridPortalLink::merge(*grid1, *grid2, BinningValue::binPhi, *logger);
     merged = dynamic_cast<const merged_type*>(mergedPtr.get());
     BOOST_REQUIRE(merged);
 
@@ -1729,25 +1732,25 @@ BOOST_AUTO_TEST_CASE(RDirection) {
   auto discPhi1 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
                                                    30_mm, 100_mm, 30_degree);
 
-  std::shared_ptr discPhiGrid1 =
+  auto discPhiGrid1 =
       GridPortalLink::make(discPhi1, Axis{AxisBound, 30_mm, 100_mm, 7},
                            Axis{AxisBound, -30_degree, 30_degree, 3});
 
   auto discPhi2 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
                                                    100_mm, 150_mm, 30_degree);
 
-  std::shared_ptr discPhiGrid21dPhi =
+  auto discPhiGrid21dPhi =
       GridPortalLink::make(discPhi2, BinningValue::binPhi,
                            Axis{AxisBound, -30_degree, 30_degree, 3});
 
-  auto merged12PhiPtr = GridPortalLink::merge(discPhiGrid1, discPhiGrid21dPhi,
+  auto merged12PhiPtr = GridPortalLink::merge(*discPhiGrid1, *discPhiGrid21dPhi,
                                               BinningValue::binR, *logger);
   BOOST_REQUIRE(merged12PhiPtr);
   const auto* merged12Phi =
       dynamic_cast<const GridPortalLink*>(merged12PhiPtr.get());
   BOOST_REQUIRE_NE(merged12Phi, nullptr);
 
-  auto merged21PhiPtr = GridPortalLink::merge(discPhiGrid21dPhi, discPhiGrid1,
+  auto merged21PhiPtr = GridPortalLink::merge(*discPhiGrid21dPhi, *discPhiGrid1,
                                               BinningValue::binR, *logger);
   BOOST_REQUIRE(merged21PhiPtr);
   const auto* merged21Phi =
@@ -1771,17 +1774,17 @@ BOOST_AUTO_TEST_CASE(RDirection) {
   BOOST_CHECK_EQUAL(axis2.getType(), AxisType::Equidistant);
   BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
 
-  std::shared_ptr discPhiGrid21dR = GridPortalLink::make(
+  auto discPhiGrid21dR = GridPortalLink::make(
       discPhi2, BinningValue::binR, Axis{AxisBound, 100_mm, 150_mm, 5});
 
-  auto merged12RPtr = GridPortalLink::merge(discPhiGrid1, discPhiGrid21dR,
+  auto merged12RPtr = GridPortalLink::merge(*discPhiGrid1, *discPhiGrid21dR,
                                             BinningValue::binR, *logger);
   BOOST_REQUIRE(merged12RPtr);
   const auto* merged12R =
       dynamic_cast<const GridPortalLink*>(merged12RPtr.get());
   BOOST_REQUIRE_NE(merged12R, nullptr);
 
-  auto merged21RPtr = GridPortalLink::merge(discPhiGrid21dR, discPhiGrid1,
+  auto merged21RPtr = GridPortalLink::merge(*discPhiGrid21dR, *discPhiGrid1,
                                             BinningValue::binR, *logger);
   BOOST_REQUIRE(merged21RPtr);
   const auto* merged21R =
@@ -1809,21 +1812,20 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
   auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
                                                 100_mm, 30_degree);
 
-  std::shared_ptr grid1 =
-      GridPortalLink::make(disc1, Axis{AxisBound, 30_mm, 100_mm, 3},
-                           Axis{AxisBound, -30_degree, 30_degree, 3});
+  auto grid1 = GridPortalLink::make(disc1, Axis{AxisBound, 30_mm, 100_mm, 3},
+                                    Axis{AxisBound, -30_degree, 30_degree, 3});
 
   auto disc2 = Surface::makeShared<DiscSurface>(
       Transform3{AngleAxis3{90_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
       60_degree);
 
-  std::shared_ptr grid21dPhi =
+  auto grid21dPhi =
       GridPortalLink::make(disc2, BinningValue::binPhi,
 
                            Axis{AxisBound, -60_degree, 60_degree, 6});
 
   auto merged12PhiPtr =
-      GridPortalLink::merge(grid1, grid21dPhi, BinningValue::binPhi, *logger);
+      GridPortalLink::merge(*grid1, *grid21dPhi, BinningValue::binPhi, *logger);
   BOOST_REQUIRE(merged12PhiPtr);
   const auto* merged12Phi =
       dynamic_cast<const GridPortalLink*>(merged12PhiPtr.get());
@@ -1844,11 +1846,11 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
   BOOST_CHECK_EQUAL(axis2.getType(), AxisType::Equidistant);
   BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
 
-  std::shared_ptr grid21dR = GridPortalLink::make(
-      disc2, BinningValue::binR, Axis{AxisBound, 30_mm, 100_mm, 3});
+  auto grid21dR = GridPortalLink::make(disc2, BinningValue::binR,
+                                       Axis{AxisBound, 30_mm, 100_mm, 3});
 
   auto merged12RPtr =
-      GridPortalLink::merge(grid1, grid21dR, BinningValue::binPhi, *logger);
+      GridPortalLink::merge(*grid1, *grid21dR, BinningValue::binPhi, *logger);
   BOOST_REQUIRE(merged12RPtr);
   const auto* merged12R =
       dynamic_cast<const GridPortalLink*>(merged12RPtr.get());
@@ -1884,22 +1886,22 @@ BOOST_AUTO_TEST_CASE(RDirection) {
   auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
                                                 100_mm, 30_degree);
 
-  std::shared_ptr grid1 = GridPortalLink::make(
-      disc1, BinningValue::binR, Axis{AxisBound, 30_mm, 100_mm, 2});
+  auto grid1 = GridPortalLink::make(disc1, BinningValue::binR,
+                                    Axis{AxisBound, 30_mm, 100_mm, 2});
   grid1->grid().atLocalBins({1}) = vol1.get();
   grid1->grid().atLocalBins({2}) = vol2.get();
 
   auto disc2 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 100_mm,
                                                 150_mm, 30_degree);
 
-  std::shared_ptr grid2 = GridPortalLink::make(
-      disc2, BinningValue::binPhi, Axis{AxisBound, -30_degree, 30_degree, 2});
+  auto grid2 = GridPortalLink::make(disc2, BinningValue::binPhi,
+                                    Axis{AxisBound, -30_degree, 30_degree, 2});
 
   grid2->grid().atLocalBins({1}) = vol3.get();
   grid2->grid().atLocalBins({2}) = vol4.get();
 
   auto mergedPtr =
-      GridPortalLink::merge(grid1, grid2, BinningValue::binR, *logger);
+      GridPortalLink::merge(*grid1, *grid2, BinningValue::binR, *logger);
 
   const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
   BOOST_REQUIRE_NE(merged, nullptr);
@@ -1941,8 +1943,8 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
   auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
                                                 100_mm, 30_degree);
 
-  std::shared_ptr grid1 = GridPortalLink::make(
-      disc1, BinningValue::binR, Axis{AxisBound, 30_mm, 100_mm, 2});
+  auto grid1 = GridPortalLink::make(disc1, BinningValue::binR,
+                                    Axis{AxisBound, 30_mm, 100_mm, 2});
 
   grid1->grid().atLocalBins({1}) = vol1.get();
   grid1->grid().atLocalBins({2}) = vol2.get();
@@ -1951,14 +1953,14 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
       Transform3{AngleAxis3{90_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
       60_degree);
 
-  std::shared_ptr grid2 = GridPortalLink::make(
-      disc2, BinningValue::binPhi, Axis{AxisBound, -60_degree, 60_degree, 2});
+  auto grid2 = GridPortalLink::make(disc2, BinningValue::binPhi,
+                                    Axis{AxisBound, -60_degree, 60_degree, 2});
 
   grid2->grid().atLocalBins({1}) = vol3.get();
   grid2->grid().atLocalBins({2}) = vol4.get();
 
   auto mergedPtr =
-      GridPortalLink::merge(grid1, grid2, BinningValue::binPhi, *logger);
+      GridPortalLink::merge(*grid1, *grid2, BinningValue::binPhi, *logger);
 
   using merged_type =
       GridPortalLinkT<Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
@@ -2016,14 +2018,17 @@ BOOST_AUTO_TEST_CASE(CompositeConstruction) {
   auto disc1 =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 60_mm);
 
-  auto trivial1 = std::make_shared<TrivialPortalLink>(disc1, *vol1);
+  auto trivial1 = std::make_unique<TrivialPortalLink>(disc1, *vol1);
 
   auto disc2 =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 60_mm, 90_mm);
-  auto trivial2 = std::make_shared<TrivialPortalLink>(disc2, *vol2);
+  auto trivial2 = std::make_unique<TrivialPortalLink>(disc2, *vol2);
 
-  auto composite = std::make_shared<CompositePortalLink>(trivial1, trivial2,
-                                                         BinningValue::binR);
+  auto composite = std::make_unique<CompositePortalLink>(
+      copy(trivial1), copy(trivial2), BinningValue::binR);
+
+  auto compositeCopy = std::make_unique<CompositePortalLink>(
+      copy(trivial1), copy(trivial2), BinningValue::binR);
 
   BOOST_CHECK_EQUAL(composite->resolveVolume(gctx, Vector2{40_mm, 0_degree}),
                     vol1.get());
@@ -2035,23 +2040,24 @@ BOOST_AUTO_TEST_CASE(CompositeConstruction) {
   // Test exception on different surface types
   auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30_mm,
                                                   40_mm);
-  auto trivialCyl = std::make_shared<TrivialPortalLink>(cyl, *vol3);
+  auto trivialCyl = std::make_unique<TrivialPortalLink>(cyl, *vol3);
   BOOST_CHECK_THROW(
-      CompositePortalLink(trivial1, trivialCyl, BinningValue::binR),
+      CompositePortalLink(copy(trivial1), copy(trivialCyl), BinningValue::binR),
       std::invalid_argument);
 
   auto disc3 =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 90_mm, 120_mm);
-  auto trivial3 = std::make_shared<TrivialPortalLink>(disc3, *vol3);
+  auto trivial3 = std::make_unique<TrivialPortalLink>(disc3, *vol3);
 
   // Test exception on un-mergable surfaces
-  BOOST_CHECK_THROW(CompositePortalLink(trivial1, trivial3, BinningValue::binR),
-                    SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      CompositePortalLink(copy(trivial1), copy(trivial3), BinningValue::binR),
+      SurfaceMergingException);
 
   // Composite with a composite (this should work regardless of flattening)
 
-  CompositePortalLink composite2(composite, trivial3, BinningValue::binR,
-                                 false);
+  CompositePortalLink composite2(std::move(composite), copy(trivial3),
+                                 BinningValue::binR, false);
 
   BOOST_CHECK_EQUAL(composite2.resolveVolume(gctx, Vector2{40_mm, 0_degree}),
                     vol1.get());
@@ -2063,8 +2069,8 @@ BOOST_AUTO_TEST_CASE(CompositeConstruction) {
   // Two without flattening
   BOOST_CHECK_EQUAL(composite2.depth(), 2);
 
-  CompositePortalLink composite2Flat(composite, trivial3, BinningValue::binR,
-                                     true);
+  CompositePortalLink composite2Flat(std::move(compositeCopy), copy(trivial3),
+                                     BinningValue::binR, true);
 
   // One because of flattening
   BOOST_CHECK_EQUAL(composite2Flat.depth(), 1);
@@ -2097,20 +2103,20 @@ BOOST_AUTO_TEST_CASE(TrivialGridR) {
   auto disc2 =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 60_mm, 90_mm);
 
-  auto trivial = std::make_shared<TrivialPortalLink>(disc2, *vol2);
+  auto trivial = std::make_unique<TrivialPortalLink>(disc2, *vol2);
   BOOST_REQUIRE(trivial);
 
-  std::shared_ptr gridPhi = GridPortalLink::make(
-      disc1, BinningValue::binPhi, Axis{AxisClosed, -M_PI, M_PI, 2});
+  auto gridPhi = GridPortalLink::make(disc1, BinningValue::binPhi,
+                                      Axis{AxisClosed, -M_PI, M_PI, 2});
   gridPhi->setVolume(vol1.get());
 
-  std::shared_ptr gridR = GridPortalLink::make(
-      disc1, BinningValue::binR, Axis{AxisBound, 30_mm, 60_mm, 2});
+  auto gridR = GridPortalLink::make(disc1, BinningValue::binR,
+                                    Axis{AxisBound, 30_mm, 60_mm, 2});
   gridR->setVolume(vol1.get());
 
   BOOST_TEST_CONTEXT("Colinear") {
-    auto merged =
-        PortalLinkBase::merge(trivial, gridR, BinningValue::binR, *logger);
+    auto merged = PortalLinkBase::merge(copy(trivial), copy(gridR),
+                                        BinningValue::binR, *logger);
     BOOST_REQUIRE(merged);
 
     auto* mergedGrid = dynamic_cast<const GridPortalLink*>(merged.get());
@@ -2124,8 +2130,8 @@ BOOST_AUTO_TEST_CASE(TrivialGridR) {
   }
 
   BOOST_TEST_CONTEXT("Orthogonal") {
-    auto merged =
-        PortalLinkBase::merge(gridPhi, trivial, BinningValue::binR, *logger);
+    auto merged = PortalLinkBase::merge(copy(gridPhi), copy(trivial),
+                                        BinningValue::binR, *logger);
     BOOST_REQUIRE(merged);
 
     auto* mergedGrid = dynamic_cast<const GridPortalLink*>(merged.get());
@@ -2157,20 +2163,20 @@ BOOST_AUTO_TEST_CASE(TrivialGridPhi) {
       Transform3{AngleAxis3{90_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
       60_degree);
 
-  auto trivial = std::make_shared<TrivialPortalLink>(disc2, *vol2);
+  auto trivial = std::make_unique<TrivialPortalLink>(disc2, *vol2);
   BOOST_REQUIRE(trivial);
 
-  std::shared_ptr gridPhi = GridPortalLink::make(
+  auto gridPhi = GridPortalLink::make(
       disc1, BinningValue::binPhi, Axis{AxisBound, -30_degree, 30_degree, 2});
   gridPhi->setVolume(vol1.get());
 
-  std::shared_ptr gridR = GridPortalLink::make(
-      disc1, BinningValue::binR, Axis{AxisBound, 30_mm, 100_mm, 2});
+  auto gridR = GridPortalLink::make(disc1, BinningValue::binR,
+                                    Axis{AxisBound, 30_mm, 100_mm, 2});
   gridR->setVolume(vol1.get());
 
   BOOST_TEST_CONTEXT("Colinear") {
-    auto merged =
-        PortalLinkBase::merge(trivial, gridPhi, BinningValue::binPhi, *logger);
+    auto merged = PortalLinkBase::merge(copy(trivial), copy(gridPhi),
+                                        BinningValue::binPhi, *logger);
     BOOST_REQUIRE(merged);
 
     auto* mergedGrid = dynamic_cast<const GridPortalLink*>(merged.get());
@@ -2188,8 +2194,8 @@ BOOST_AUTO_TEST_CASE(TrivialGridPhi) {
   }
 
   BOOST_TEST_CONTEXT("Orthogonal") {
-    auto merged =
-        PortalLinkBase::merge(gridR, trivial, BinningValue::binPhi, *logger);
+    auto merged = PortalLinkBase::merge(copy(gridR), copy(trivial),
+                                        BinningValue::binPhi, *logger);
     BOOST_REQUIRE(merged);
 
     auto* mergedGrid = dynamic_cast<const GridPortalLink*>(merged.get());
@@ -2227,23 +2233,23 @@ BOOST_AUTO_TEST_CASE(CompositeOther) {
   auto disc3 =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 90_mm, 120_mm);
 
-  std::shared_ptr grid1 =
-      GridPortalLink::make(disc1, *vol1, BinningValue::binR);
-  auto trivial2 = std::make_shared<TrivialPortalLink>(disc2, *vol2);
+  auto grid1 = GridPortalLink::make(disc1, *vol1, BinningValue::binR);
+  auto trivial2 = std::make_unique<TrivialPortalLink>(disc2, *vol2);
 
-  auto composite12 = std::make_shared<CompositePortalLink>(grid1, trivial2,
-                                                           BinningValue::binR);
+  auto composite12 = std::make_unique<CompositePortalLink>(
+      std::move(grid1), std::move(trivial2), BinningValue::binR);
+
   BOOST_CHECK_EQUAL(composite12->depth(), 1);
   BOOST_CHECK_EQUAL(composite12->size(), 2);
 
-  auto trivial3 = std::make_shared<TrivialPortalLink>(disc3, *vol3);
+  auto trivial3 = std::make_unique<TrivialPortalLink>(disc3, *vol3);
 
-  auto composite123Ptr =
-      PortalLinkBase::merge(composite12, trivial3, BinningValue::binR, *logger);
+  auto composite123Ptr = PortalLinkBase::merge(
+      std::move(composite12), std::move(trivial3), BinningValue::binR, *logger);
 
   const auto* composite123 =
       dynamic_cast<const CompositePortalLink*>(composite123Ptr.get());
-  BOOST_REQUIRE(composite12);
+  BOOST_REQUIRE(composite123);
 
   BOOST_CHECK_EQUAL(composite123->depth(), 1);
 

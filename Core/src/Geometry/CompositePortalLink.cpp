@@ -17,27 +17,29 @@
 
 namespace Acts {
 
-CompositePortalLink::CompositePortalLink(
-    const std::shared_ptr<PortalLinkBase>& a,
-    const std::shared_ptr<PortalLinkBase>& b, BinningValue direction,
-    bool flatten)
-    : PortalLinkBase(mergedSurface(*a, *b, direction)) {
+CompositePortalLink::CompositePortalLink(std::unique_ptr<PortalLinkBase> a,
+                                         std::unique_ptr<PortalLinkBase> b,
+                                         BinningValue direction, bool flatten)
+    : PortalLinkBase(mergedSurface(a.get(), b.get(), direction)) {
   if (!flatten) {
-    m_children = {a, b};
+    m_children.push_back(std::move(a));
+    m_children.push_back(std::move(b));
+
   } else {
-    auto handle = [&](const std::shared_ptr<PortalLinkBase>& link) {
-      if (const auto* composite =
-              dynamic_cast<CompositePortalLink*>(link.get());
+    auto handle = [&](std::unique_ptr<PortalLinkBase> link) {
+      if (auto* composite = dynamic_cast<CompositePortalLink*>(link.get());
           composite != nullptr) {
-        m_children.insert(m_children.end(), composite->m_children.begin(),
-                          composite->m_children.end());
+        m_children.insert(
+            m_children.end(),
+            std::make_move_iterator(composite->m_children.begin()),
+            std::make_move_iterator(composite->m_children.end()));
       } else {
-        m_children.push_back(link);
+        m_children.push_back(std::move(link));
       }
     };
 
-    handle(a);
-    handle(b);
+    handle(std::move(a));
+    handle(std::move(b));
   }
 }
 
@@ -66,25 +68,28 @@ const TrackingVolume* CompositePortalLink::resolveVolume(
 }
 
 std::shared_ptr<RegularSurface> CompositePortalLink::mergedSurface(
-    const PortalLinkBase& a, const PortalLinkBase& b, BinningValue direction) {
-  if (a.surface().type() != b.surface().type()) {
+    const PortalLinkBase* a, const PortalLinkBase* b, BinningValue direction) {
+  assert(a != nullptr);
+  assert(b != nullptr);
+  if (a->surface().type() != b->surface().type()) {
     throw std::invalid_argument{"Cannot merge surfaces of different types"};
   }
 
   if (const auto* cylinderA =
-          dynamic_cast<const CylinderSurface*>(&a.surface());
+          dynamic_cast<const CylinderSurface*>(&a->surface());
       cylinderA != nullptr) {
-    const auto& cylinderB = dynamic_cast<const CylinderSurface&>(b.surface());
+    const auto& cylinderB = dynamic_cast<const CylinderSurface&>(b->surface());
 
     auto [merged, reversed] = cylinderA->mergedWith(cylinderB, direction, true);
     return merged;
-  } else if (const auto* discA = dynamic_cast<const DiscSurface*>(&a.surface());
+  } else if (const auto* discA =
+                 dynamic_cast<const DiscSurface*>(&a->surface());
              discA != nullptr) {
-    const auto& discB = dynamic_cast<const DiscSurface&>(b.surface());
+    const auto& discB = dynamic_cast<const DiscSurface&>(b->surface());
     auto [merged, reversed] = discA->mergedWith(discB, direction, true);
     return merged;
   } else if (const auto* planeA =
-                 dynamic_cast<const PlaneSurface*>(&a.surface());
+                 dynamic_cast<const PlaneSurface*>(&a->surface());
              planeA != nullptr) {
     throw std::logic_error{"Plane surfaces not implemented yet"};
   } else {

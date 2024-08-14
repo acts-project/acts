@@ -547,21 +547,21 @@ void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
   }
 }
 
-std::unique_ptr<PortalLinkBase> GridPortalLink::merge(
-    const std::shared_ptr<GridPortalLink>& a,
-    const std::shared_ptr<GridPortalLink>& b, BinningValue direction,
-    const Logger& logger) {
+std::unique_ptr<PortalLinkBase> GridPortalLink::merge(const GridPortalLink& a,
+                                                      const GridPortalLink& b,
+                                                      BinningValue direction,
+                                                      const Logger& logger) {
   ACTS_VERBOSE("Merging two GridPortalLinks");
 
-  checkMergePreconditions(*a, *b, direction);
+  checkMergePreconditions(a, b, direction);
 
-  auto merged = mergeGridPortals(a.get(), b.get(), direction, logger);
-  if (merged != nullptr) {
-    return merged;
-  } else {
-    ACTS_VERBOSE("Grid merging failed, falling back to composite merging");
-    return std::make_unique<CompositePortalLink>(a, b, direction, true);
+  auto merged = mergeGridPortals(&a, &b, direction, logger);
+  if (merged == nullptr) {
+    ACTS_WARNING("Grid merging failed returning nullptr");
+    return nullptr;
   }
+
+  return merged;
 }
 
 // @TODO: Optimize build-time memory consumption of this file

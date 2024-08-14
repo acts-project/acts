@@ -24,20 +24,20 @@ class CompositePortalLink final : public PortalLinkBase {
   const TrackingVolume* resolveVolume(const GeometryContext& gctx,
                                       const Vector3& position) const final;
 
-  CompositePortalLink(const std::shared_ptr<PortalLinkBase>& a,
-                      const std::shared_ptr<PortalLinkBase>& b,
-                      BinningValue direction, bool flatten = true);
+  CompositePortalLink(std::unique_ptr<PortalLinkBase> a,
+                      std::unique_ptr<PortalLinkBase> b, BinningValue direction,
+                      bool flatten = true);
 
   std::size_t depth() const;
 
   std::size_t size() const;
 
  private:
-  static std::shared_ptr<RegularSurface> mergedSurface(const PortalLinkBase& a,
-                                                       const PortalLinkBase& b,
+  static std::shared_ptr<RegularSurface> mergedSurface(const PortalLinkBase* a,
+                                                       const PortalLinkBase* b,
                                                        BinningValue direction);
 
-  boost::container::small_vector<std::shared_ptr<PortalLinkBase>, 4>
+  boost::container::small_vector<std::unique_ptr<PortalLinkBase>, 4>
       m_children{};
 };
 
