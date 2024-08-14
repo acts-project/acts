@@ -36,9 +36,9 @@ namespace Acts {
 struct MeasurementSelectorCuts {
   /// bins in |eta| to specify variable selections
   std::vector<double> etaBins{};
-  /// Maximum local chi2 contribution to classify as outlier.
+  /// Maximum local chi2 contribution to classify as measurement.
   std::vector<double> chi2CutOff{15};
-  /// Maximum local chi2 contribution to classify as hole.
+  /// Maximum local chi2 contribution to classify as outlier.
   std::vector<double> chi2CutOffOutlier{25};
   /// Maximum number of associated measurements on a single surface.
   std::vector<std::size_t> numMeasurementsCutOff{1};
@@ -113,6 +113,8 @@ class MeasurementSelector {
       TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                        false>::Projector projector,
       unsigned int calibratedSize) const;
+
+  static void validateCuts(const MeasurementSelectorCuts& cuts);
 
   Config m_config;
 };

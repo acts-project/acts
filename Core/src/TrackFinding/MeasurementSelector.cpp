@@ -17,13 +17,36 @@
 namespace Acts {
 
 MeasurementSelector::MeasurementSelector()
-    : m_config{{GeometryIdentifier(), MeasurementSelectorCuts{}}} {}
+    : MeasurementSelector({{GeometryIdentifier(), MeasurementSelectorCuts{}}}) {
+}
 
 MeasurementSelector::MeasurementSelector(const MeasurementSelectorCuts& cuts)
-    : m_config{{GeometryIdentifier(), cuts}} {}
+    : MeasurementSelector({{GeometryIdentifier(), cuts}}) {}
 
 MeasurementSelector::MeasurementSelector(Config config)
-    : m_config(std::move(config)) {}
+    : m_config(std::move(config)) {
+  for (const auto& cuts : m_config) {
+    validateCuts(cuts);
+  }
+}
+
+void MeasurementSelector::validateCuts(const MeasurementSelectorCuts& cuts) {
+  if (!cuts.chi2CutOffOutlier.empty() &&
+      cuts.chi2CutOff.size() != cuts.chi2CutOffOutlier.size()) {
+    throw std::invalid_argument(
+        "chi2CutOff and chi2CutOffOutlier must have the same size");
+  }
+
+  if (cuts.chi2CutOff.size() != cuts.numMeasurementsCutOff.size()) {
+    throw std::invalid_argument(
+        "chi2CutOff and numMeasurementsCutOff must have the same size");
+  }
+
+  if (cuts.chi2CutOff.size() != cuts.etaBins.size() + 1) {
+    throw std::invalid_argument(
+        "chi2CutOff must have one more element than etaBins");
+  }
+}
 
 double MeasurementSelector::calculateChi2(
     const double* fullCalibrated, const double* fullCalibratedCovariance,
@@ -75,16 +98,12 @@ MeasurementSelector::Cuts MeasurementSelector::getCutsByEta(
     }
   }
 
-  auto select = [](const auto& vec, std::size_t idx) {
-    return vec.at(std::clamp(idx, std::size_t{0}, vec.size() - 1));
-  };
-
-  const double chi2CutOffMeasurement = select(config.chi2CutOff, bin);
+  const double chi2CutOffMeasurement = config.chi2CutOff.at(bin);
   const double chi2CutOffOutlier = config.chi2CutOffOutlier.empty()
                                        ? std::numeric_limits<double>::infinity()
-                                       : select(config.chi2CutOffOutlier, bin);
+                                       : config.chi2CutOffOutlier.at(bin);
   const std::size_t numMeasurementsCutOff =
-      select(config.numMeasurementsCutOff, bin);
+      config.numMeasurementsCutOff.at(bin);
   return {chi2CutOffMeasurement, chi2CutOffOutlier, numMeasurementsCutOff};
 }
 
