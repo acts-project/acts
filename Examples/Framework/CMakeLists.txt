@@ -42,7 +42,7 @@ if(ACTS_USE_EXAMPLES_TBB)
   find_package(TBB ${_acts_tbb_version} CONFIG)
   if(NOT TBB_FOUND)
     # no version check possible when using the find module
-    find_package(TBB ${_acts_tbb_version} MODULE)
+    find_package(TBB ${_acts_tbb_version} MODULE REQUIRED)
   endif()
 else()
   set(TBB_FOUND FALSE)
