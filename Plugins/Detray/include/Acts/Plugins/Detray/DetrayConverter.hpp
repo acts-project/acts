@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 
+#include <span>
 #include <vector>
 
 #include "detray/builders/detector_builder.hpp"
