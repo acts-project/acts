@@ -34,8 +34,9 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   // (Trapezoid object) - YZ
   //  GeoTrd (double XHalfLength1, double XHalfLength2, double YHalfLength1,
   //  double YHalfLength2, double ZHalfLength);
-  auto trapYZ = make_intrusive<GeoTrd>(2, 2, 50, 80, 60);
-  auto logYZ = make_intrusive<GeoLogVol>("LogVolumeYZ", trapYZ, material);
+  auto trapYZ = new GeoTrd(2, 2, 50, 80, 60);
+  auto logYZ = new GeoLogVol("LogVolumeYZ", trapYZ, material);
+  auto fphysYZ = make_intrusive<GeoFullPhysVol>(logYZ);
 
   PVConstLink physYZ{make_intrusive<GeoFullPhysVol>(logYZ)};
 
@@ -72,12 +73,11 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   // (Trapezoid object) - YZ swapped
   //  GeoTrd (double XHalfLength1, double XHalfLength2, double YHalfLength1,
   //  double YHalfLength2, double ZHalfLength);
-  auto trapYZs = make_intrusive<GeoTrd>(2, 2, 80, 50, 60);
-  auto logYZs = make_intrusive<GeoLogVol>("LogVolumeYZs", trapYZs, material);
+  auto trapYZs = new GeoTrd(2, 2, 80, 50, 60);
+  auto logYZs = new GeoLogVol("LogVolumeYZs", trapYZs, material);
+  auto fphysYZs = make_intrusive<GeoFullPhysVol>(logYZs);
 
-  PVConstLink physYZs{make_intrusive<GeoFullPhysVol>(logYZs)};
-
-  converted = Acts::GeoTrdConverter{}.toSensitiveSurface(physYZs, idTransform);
+  converted = Acts::GeoTrdConverter{}.toSensitiveSurface(fphysYZs, idTransform);
 
   BOOST_CHECK(converted.ok());
 
@@ -107,12 +107,11 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   BOOST_CHECK(rotationYZs.col(2).isApprox(-idRotation.col(0)));
 
   // (Trapezoid object) - XZ
-  auto trapXZ = make_intrusive<GeoTrd>(50, 80, 2, 2, 60);
-  auto logXZ = make_intrusive<GeoLogVol>("LogVolumeXZ", trapXZ, material);
+  auto trapXZ = new GeoTrd(50, 80, 2, 2, 60);
+  auto logXZ = new GeoLogVol("LogVolumeXZ", trapXZ, material);
+  auto fphysXZ = make_intrusive<GeoFullPhysVol>(logXZ);
 
-  PVConstLink physXZ{make_intrusive<GeoFullPhysVol>(logXZ)};
-
-  converted = Acts::GeoTrdConverter{}.toSensitiveSurface(physXZ, idTransform);
+  converted = Acts::GeoTrdConverter{}.toSensitiveSurface(fphysXZ, idTransform);
 
   BOOST_CHECK(converted.ok());
 
@@ -142,8 +141,9 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   BOOST_CHECK(rotationXZ.col(2).isApprox(-1 * idRotation.col(1)));
 
   // (Trapezoid object) - XZs (swapped)
-  auto trapXZs = make_intrusive<GeoTrd>(80, 50, 2, 2, 60);
-  auto logXZs = make_intrusive<GeoLogVol>("LogVolumeXZs", trapXZs, material);
+  auto trapXZs = new GeoTrd(80, 50, 2, 2, 60);
+  auto logXZs = new GeoLogVol("LogVolumeXZs", trapXZs, material);
+  auto fphysXZs = make_intrusive<GeoFullPhysVol>(logXZs);
 
   PVConstLink physXZs{make_intrusive<GeoFullPhysVol>(logXZs)};
 
@@ -177,14 +177,12 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   BOOST_CHECK(rotationXZs.col(2).isApprox(idRotation.col(1)));
 
   // Double - trazoid -> throw exception
-  auto trapDouble = make_intrusive<GeoTrd>(50, 80, 50, 80, 60);
-  auto logDouble =
-      make_intrusive<GeoLogVol>("LogVolumeDouble", trapDouble, material);
-
-  PVConstLink physDouble{make_intrusive<GeoFullPhysVol>(logDouble)};
+  auto trapDouble = new GeoTrd(50, 80, 50, 80, 60);
+  auto logDouble = new GeoLogVol("LogVolumeDouble", trapDouble, material);
+  auto fphysDouble = make_intrusive<GeoFullPhysVol>(logDouble);
 
   BOOST_CHECK_THROW(
-      Acts::GeoTrdConverter{}.toSensitiveSurface(physDouble, idTransform),
+      Acts::GeoTrdConverter{}.toSensitiveSurface(fphysDouble, idTransform),
       std::invalid_argument);
 }
 

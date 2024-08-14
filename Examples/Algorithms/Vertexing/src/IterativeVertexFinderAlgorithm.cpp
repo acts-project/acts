@@ -9,7 +9,7 @@
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -68,8 +68,8 @@ ProcessCode IterativeVertexFinderAlgorithm::execute(
     }
   }
 
-  // Set up EigenStepper
-  Acts::EigenStepper<> stepper(m_cfg.bField);
+  // Set up SympyStepper
+  Acts::SympyStepper stepper(m_cfg.bField);
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(

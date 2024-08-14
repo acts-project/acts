@@ -48,13 +48,13 @@ Formatting of the Python source code uses the library
 
 ```console
 $ pip install black
-$ black <source> 
+$ black <source>
 ```
 
 :::{tip}
 It is **strongly recommended** to use a [virtual
 environment](https://realpython.com/python-virtual-environments-a-primer/) for
-this purpose! For example, run 
+this purpose! For example, run
 
 ```console
 $ python -m venv venv

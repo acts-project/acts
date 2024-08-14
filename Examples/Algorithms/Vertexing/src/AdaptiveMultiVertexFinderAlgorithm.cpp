@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -49,8 +49,8 @@ AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
     : IAlgorithm("AdaptiveMultiVertexFinder", level),
       m_cfg(config),
       m_propagator{[&]() {
-        // Set up EigenStepper
-        Acts::EigenStepper<> stepper(m_cfg.bField);
+        // Set up SympyStepper
+        Acts::SympyStepper stepper(m_cfg.bField);
 
         // Set up the propagator
         return std::make_shared<Propagator>(stepper);

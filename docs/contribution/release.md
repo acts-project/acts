@@ -45,7 +45,7 @@ a7ee09d 2022-05-25 11:17 +0200 Luis Falda Coelho          │ o fix: Bug in xyz 
 4ceddf3 2022-05-25 10:26 +0200 Luis Falda Coelho          │ o─┘ feat: ITk seedFilter integration and seed quality confirmation  (#1201)
 ```
 
-You can now push the updated `releases` branch to the remote `releases` branch using `git push -u upstream releases`. 
+You can now push the updated `releases` branch to the remote `releases` branch using `git push -u upstream releases`.
 
 On push, a CI job should run and create an additional commit on the `releases` branch, which bumps a number of version numbers. That commit is going to be the one tagged with the correct version. It doesn't hurt to make sure that commit looks right, as in it bumps to a sensible next version number.
 

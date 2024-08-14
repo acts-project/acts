@@ -7,7 +7,6 @@ add_library(
   src/GeoModelToDetectorVolume.cpp
   src/GeoModelReader.cpp
   src/GeoModelDetectorElement.cpp
-  src/GeoModelDetectorSurfaceFactory.cpp
   src/GeoModelDetectorObjectFactory.cpp
   src/GeoModelMaterialConverter.cpp
   src/detail/GeoBoxConverter.cpp
@@ -25,7 +24,8 @@ target_include_directories(
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
     ActsPluginGeoModel
-  PUBLIC ActsCore GeoModelKernel GeoModelCore::GeoModelHelpers GeoModelIO::GeoModelDBManager GeoModelIO::GeoModelRead)
+  #PUBLIC ActsCore GeoModelKernel GeoModelCore::GeoModelHelpers GeoModelIO::GeoModelDBManager GeoModelIO::GeoModelRead)
+  PUBLIC ActsCore GeoModelCore::GeoModelKernel GeoModelIO::GeoModelDBManager GeoModelIO::GeoModelRead)
 
 install(
   TARGETS ActsPluginGeoModel
