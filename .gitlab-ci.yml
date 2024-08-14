@@ -364,7 +364,7 @@ linux_ubuntu_2204_clang:
       cmake -B build -S src
       --preset=gitlab-ci
       -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-      -DACTS_BUILD_PLUGIN_GEOMODEL=ON # GeoModel is not in LCG at this point
+      -DACTS_BUILD_PLUGIN_GEOMODEL=OFF # GeoModel is not in LCG at this point
 
     - ccache -z
     - cmake --build build -- -j2
