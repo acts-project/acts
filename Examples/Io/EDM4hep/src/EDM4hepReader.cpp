@@ -348,8 +348,14 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
             if (it == m_surfaceMap.end()) {
               ACTS_ERROR("Unable to find surface for detElement "
                          << detElement.name() << " with cellId " << cellId);
+              throw std::runtime_error("Unable to find surface for detElement");
             }
             const auto* surface = it->second;
+            if (surface == nullptr) {
+              ACTS_ERROR("Unable to find surface for detElement "
+                         << detElement.name() << " with cellId " << cellId);
+              throw std::runtime_error("Unable to find surface for detElement");
+            }
             ACTS_VERBOSE("   -> surface: " << surface->geometryId());
             return surface->geometryId();
           });
