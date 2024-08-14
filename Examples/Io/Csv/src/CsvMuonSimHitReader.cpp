@@ -12,14 +12,13 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/MuonSimHit.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
 #include <array>
 #include <stdexcept>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
 
@@ -56,7 +55,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMuonSimHitReader::read(
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
 
-  dfe::NamedTupleCsvReader<MuonSimHitData> reader(path);
+  ActsExamples::NamedTupleCsvReader<MuonSimHitData> reader(path);
 
   MuonSimHitData data;
 

@@ -97,7 +97,7 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
   pl.envelope[BinningValue::binY] = cfg.envelopeY;
   pl.envelope[BinningValue::binZ] = cfg.envelopeZ;
   return layerCreator.planeLayer(gctx, cfg.surfaces, cfg.binsY, cfg.binsZ,
-                                 BinningValue::binX, pl, trafo);
+                                 cfg.binningDimension, pl, trafo);
 }
 
 std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
@@ -121,10 +121,10 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
   for (const auto& layercfg : cfg.layerCfg) {
     // recreating the protolayer for each layer => slow, but only few sensors
     ProtoLayer pl{gctx, layercfg.surfaces};
-    pl.envelope[BinningValue::binX] = layercfg.envelopeX;
+    pl.envelope[cfg.binningDimension] = layercfg.envelopeX;
 
-    double surfacePosMin = pl.min(BinningValue::binX);
-    double surfacePosMax = pl.max(BinningValue::binX);
+    double surfacePosMin = pl.min(cfg.binningDimension);
+    double surfacePosMax = pl.max(cfg.binningDimension);
 
     // Test if new extreme is found and set it
     if (surfacePosMin < minMax.first) {
@@ -137,9 +137,9 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
 
   // Use the volume boundaries as limits for the binning
   minMax.first = std::min(
-      minMax.first, minVolumeBoundaries(toUnderlying(BinningValue::binX)));
+      minMax.first, minVolumeBoundaries(toUnderlying(cfg.binningDimension)));
   minMax.second = std::max(
-      minMax.second, maxVolumeBoundaries(toUnderlying(BinningValue::binX)));
+      minMax.second, maxVolumeBoundaries(toUnderlying(cfg.binningDimension)));
 
   return minMax;
 }
@@ -176,7 +176,7 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
       lacCnf, getDefaultLogger("LayerArrayCreator", Logging::INFO));
   std::unique_ptr<const LayerArray> layArr(
       layArrCreator.layerArray(gctx, layVec, minMax.first, minMax.second,
-                               BinningType::arbitrary, BinningValue::binX));
+                               BinningType::arbitrary, cfg.binningDimension));
 
   // Build confined volumes
   if (cfg.trackingVolumes.empty()) {
