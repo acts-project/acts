@@ -24,7 +24,7 @@ env:
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:53
+    container: ghcr.io/acts-project/ubuntu2404:57
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -109,7 +109,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:53
+    container: ghcr.io/acts-project/ubuntu2404:57
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -146,7 +146,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:53
+    container: ghcr.io/acts-project/ubuntu2404:57
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -233,7 +233,7 @@ jobs:
             std: 20
           - image: ubuntu2204_clang
             std: 20
-    container: ghcr.io/acts-project/${{ matrix.image }}:53
+    container: ghcr.io/acts-project/${{ matrix.image }}:57
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -310,7 +310,7 @@ jobs:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       DEPENDENCY_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/macOS/cmake/deps.8a95213.tar.zst
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/macos-14/deps.v2.tar.zst
       # Works around an issue where root's RPATH is wrong for tbb, thus won't find it
       DYLD_LIBRARY_PATH: "${{ github.workspace }}/install/tbb/2021.11.0/lib"
     steps:
@@ -341,9 +341,6 @@ jobs:
             ${{ runner.os  }}-ccache_${{ env.CCACHE_KEY_SUFFIX }}_
 
       - name: Configure
-        # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
-        # dd4hep CMake configuration that gets triggered on recent CMake
-        # versions such as the one installed via homebrew
         run: >
           ccache -z
           && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
@@ -352,7 +349,8 @@ jobs:
           -DCMAKE_PREFIX_PATH="${{ env.DEPENDENCY_DIR }}"
           -DPython_EXECUTABLE=${{ env.DEPENDENCY_DIR }}/bin/python3
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
-          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=OFF
+          -DACTS_BUILD_PLUGIN_GEOMODEL=ON
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       - name: Build
         run: cmake --build build
       - name: ccache stats
