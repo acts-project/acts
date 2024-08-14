@@ -13,17 +13,20 @@
 #include <set>
 #include <vector>
 
+#include <annoy/annoylib.h>
+#include <annoy/kissrandom.h>
+
 namespace Acts {
+
 template <typename external_spacepoint_t, typename SpacePointContainer>
 void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
-    computeSpacePointsBuckets(
-        const Annoy::AnnoyIndex<
-            unsigned int, double, Annoy::AngularEuclidean, Annoy::Kiss32Random,
-            Annoy::AnnoyIndexSingleThreadedBuildPolicy>* annoyModel,
-        const SpacePointContainer& spacePoints, const unsigned int bucketSize,
-        const unsigned int zBins, const unsigned int phiBins,
-        const double layerRMin, const double layerRMax, const double layerZMin,
-        const double layerZMax) {
+    computeSpacePointsBuckets(const AnnoyModel* annoyModel,
+                              const SpacePointContainer& spacePoints,
+                              const unsigned int bucketSize,
+                              const unsigned int zBins,
+                              const unsigned int phiBins,
+                              const double layerRMin, const double layerRMax,
+                              const double layerZMin, const double layerZMax) {
   using Scalar = Acts::ActsScalar;
 
   static thread_local std::vector<std::set<external_spacepoint_t>>

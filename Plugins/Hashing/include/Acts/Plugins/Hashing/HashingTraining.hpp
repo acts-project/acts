@@ -8,17 +8,11 @@
 
 #pragma once
 
+#include "Acts/Plugins/Hashing/AnnoyForwardDeclarations.hpp"
 #include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
-
-#include <annoy/annoylib.h>
-#include <annoy/kissrandom.h>
 
 namespace Acts {
 
-using AnnoyMetric = Annoy::AngularEuclidean;
-using AnnoyModel =
-    Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
-                      Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 template <typename SpacePointContainer>
 class HashingTrainingAlgorithm {
  public:

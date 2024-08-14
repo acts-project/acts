@@ -11,7 +11,11 @@
 
 #include <cstdint>
 
+#include <annoy/annoylib.h>
+#include <annoy/kissrandom.h>
+
 namespace Acts {
+
 // constructor
 template <typename SpacePointContainer>
 HashingTrainingAlgorithm<SpacePointContainer>::HashingTrainingAlgorithm(

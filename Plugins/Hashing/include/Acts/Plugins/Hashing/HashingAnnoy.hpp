@@ -9,12 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Plugins/Hashing/AnnoyForwardDeclarations.hpp"
 
 #include <map>
 #include <set>
-
-#include <annoy/annoylib.h>
-#include <annoy/kissrandom.h>
 
 namespace Acts {
 
@@ -22,13 +20,10 @@ template <typename external_spacepoint_t, typename SpacePointContainer>
 class HashingAnnoy {
  public:
   void computeSpacePointsBuckets(
-      const Annoy::AnnoyIndex<
-          unsigned int, double, Annoy::AngularEuclidean, Annoy::Kiss32Random,
-          Annoy::AnnoyIndexSingleThreadedBuildPolicy>* annoyModel,
-      const SpacePointContainer& spacePoints, const unsigned int bucketSize,
-      const unsigned int zBins, const unsigned int phiBins,
-      const double layerRMin, const double layerRMax, const double layerZMin,
-      const double layerZMax);
+      const AnnoyModel* annoyModel, const SpacePointContainer& spacePoints,
+      const unsigned int bucketSize, const unsigned int zBins,
+      const unsigned int phiBins, const double layerRMin,
+      const double layerRMax, const double layerZMin, const double layerZMax);
   std::map<unsigned int, std::set<external_spacepoint_t>> m_bucketsSPMap;
 };
 }  // namespace Acts
