@@ -46,8 +46,6 @@ option(ACTS_BUILD_PLUGIN_PODIO "Build Podio plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
-option(ACTS_BUILD_PLUGIN_COVFIE "Build Covfie plugin" OFF)
-option(ACTS_BUILD_PLUGIN_DETRAY "Build Detray plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
@@ -149,14 +147,8 @@ set_option_if(
   ACTS_BUILD_PLUGIN_FPEMON
   ACTS_BUILD_EXAMPLES)
 set_option_if(
-  ACTS_BUILD_PLUGIN_DETRAY
-  ACTS_BUILD_PLUGIN_TRACCC)
-set_option_if(
   ACTS_BUILD_PLUGIN_JSON
-  ACTS_BUILD_PLUGIN_DETRAY)
-set_option_if(
-  ACTS_BUILD_PLUGIN_COVFIE
-  ACTS_BUILD_PLUGIN_DETRAY)
+  ACTS_BUILD_PLUGIN_TRACCC)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -359,7 +351,8 @@ endif()
 if(ACTS_BUILD_PLUGIN_GEANT4)
   find_package(Geant4 REQUIRED CONFIG COMPONENTS gdml)
 endif()
-if(ACTS_BUILD_PLUGIN_DETRAY)
+
+if(ACTS_BUILD_PLUGIN_TRACCC)
   if (ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
     find_package(algebra-plugins ${_acts_algebraplugins_version} REQUIRED)
   else()
@@ -380,15 +373,12 @@ if(ACTS_BUILD_PLUGIN_DETRAY)
     include( "${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake" )
   endif()
 
-endif()
-if(ACTS_BUILD_PLUGIN_COVFIE)
   if(ACTS_USE_SYSTEM_COVFIE)
     find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
   else()
     add_subdirectory(thirdparty/covfie)
   endif()
-endif()
-if(ACTS_BUILD_PLUGIN_TRACCC)
+
   # traccc also depends on vecmem and covfie, but those plugins should always
   # be enabled if traccc is.
   if(ACTS_USE_SYSTEM_TRACCC)
@@ -397,6 +387,7 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
     add_subdirectory(thirdparty/traccc)
   endif()
 endif()
+
 
 # examples dependencies
 if(ACTS_BUILD_EXAMPLES)
