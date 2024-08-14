@@ -7,8 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
-
 #include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
+
+#include <chrono>
 
 #ifndef ACTS_EXATRKX_CPUONLY
 #include <c10/cuda/CUDAGuard.h>
@@ -66,6 +67,8 @@ TorchEdgeClassifier::~TorchEdgeClassifier() {}
 std::tuple<std::any, std::any, std::any, std::any>
 TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
                                 std::any inEdgeFeatures, torch::Device device) {
+  decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4, t5;
+  t0 = std::chrono::high_resolution_clock::now();
   ACTS_DEBUG("Start edge classification, use " << device);
   c10::InferenceMode guard(true);
 
@@ -80,7 +83,6 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
   auto nodeFeatures = std::any_cast<torch::Tensor>(inNodeFeatures).to(device);
   auto edgeIndex = std::any_cast<torch::Tensor>(inEdgeIndex).to(device);
 
-  ACTS_DEBUG("nodeFeatures: " << detail::TensorDetails{nodeFeatures});
   ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
 
   std::optional<torch::Tensor> edgeFeatures;
@@ -88,9 +90,10 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
     edgeFeatures = std::any_cast<torch::Tensor>(inEdgeFeatures).to(device);
     ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
   }
-
+  t1 = std::chrono::high_resolution_clock::now();
   auto model = m_model->clone();
   model.to(device);
+  t2 = std::chrono::high_resolution_clock::now();
 
   torch::Tensor output;
 
@@ -102,10 +105,13 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
 
     std::vector<torch::jit::IValue> inputTensors(2);
     auto selectedFeaturesTensor = at::tensor(at::ArrayRef<int>(m_cfg.selectedFeatures));
-    inputTensors[0] =
+    at::Tensor selectedNodeFeatures =
         !m_cfg.selectedFeatures.empty()
-            ? nodeFeatures.index({Slice{}, selectedFeaturesTensor})
+            ? nodeFeatures.index({Slice{}, selectedFeaturesTensor}).clone()
             : nodeFeatures;
+
+    ACTS_DEBUG("selected nodeFeatures: " << detail::TensorDetails{selectedNodeFeatures});
+    inputTensors[0] = selectedNodeFeatures;
 
     if (edgeFeatures && m_cfg.useEdgeFeatures) {
       inputTensors.push_back(*edgeFeatures);
@@ -127,7 +133,9 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
       output = torch::cat(results);
     } else {
       inputTensors[1] = edgeIndexTmp;
+      t3 = std::chrono::high_resolution_clock::now();
       output = model.forward(inputTensors).toTensor();
+      t4 = std::chrono::high_resolution_clock::now();
       output.squeeze_();
     }
   }
@@ -150,9 +158,20 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
 
   ACTS_VERBOSE("Size after score cut: " << edgesAfterCut.size(1));
   printCudaMemInfo(logger());
+  t5 = std::chrono::high_resolution_clock::now();
+
+  auto milliseconds = [](const auto &a, const auto &b) {
+    return std::chrono::duration<double, std::milli>(b - a).count();
+  };
+  ACTS_DEBUG("Time anycast, device guard:  " << milliseconds(t0, t1));
+  ACTS_DEBUG("Time model clone, to device: " << milliseconds(t1, t2));
+  ACTS_DEBUG("Time jit::IValue creation:   " << milliseconds(t2, t3));
+  ACTS_DEBUG("Time model forward:          " << milliseconds(t3, t4));
+  ACTS_DEBUG("Time sigmoid and cut:        " << milliseconds(t4, t5));
 
   return {std::move(nodeFeatures), std::move(edgesAfterCut),
           std::move(inEdgeFeatures), output.masked_select(mask)};
 }
 
 }  // namespace Acts
+
