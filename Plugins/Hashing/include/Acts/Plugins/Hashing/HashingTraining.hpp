@@ -24,11 +24,6 @@ class HashingTrainingAlgorithm {
  public:
   explicit HashingTrainingAlgorithm(const HashingTrainingConfig &cfg);
 
-  /**
-   * @brief Destroy the object.
-   */
-  ~HashingTrainingAlgorithm() = default;
-
   HashingTrainingAlgorithm() = default;
   HashingTrainingAlgorithm(
       const HashingTrainingAlgorithm<SpacePointContainer> &) = delete;
