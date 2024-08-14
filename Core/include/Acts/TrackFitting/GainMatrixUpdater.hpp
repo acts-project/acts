@@ -96,6 +96,10 @@ class GainMatrixUpdater {
  private:
   std::tuple<double, std::error_code> visitMeasurement(
       InternalTrackState trackState, const Logger& logger) const;
+
+  template <std::size_t N>
+  std::tuple<double, std::error_code> visitMeasurementImpl(
+      InternalTrackState trackState, const Logger& logger) const;
 };
 
 }  // namespace Acts

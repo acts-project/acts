@@ -22,7 +22,7 @@ components:
         "
 
     ActsPodioEdm::Surface:
-      Members: 
+      Members:
         - int surfaceType
         - int boundsType
         - uint64_t geometryId
@@ -96,7 +96,7 @@ datatypes:
   ActsPodioEdm::TrackState:
     Description: "Local state on a track"
     Author : "Paul Gessinger, CERN"
-    Members: 
+    Members:
       - ActsPodioEdm::TrackStateInfo data // local information
       - ActsPodioEdm::Surface referenceSurface // reference surface
 
@@ -128,4 +128,3 @@ datatypes:
     # ExtraCode:
       # declaration: >
         # auto data() { return &m_obj->data; }
-

@@ -196,7 +196,7 @@ bool Acts::Extent::operator==(const Extent& e) const {
 
 std::string Acts::Extent::toString(const std::string& indent) const {
   std::stringstream sl;
-  sl << indent << "Extent in space : " << std::endl;
+  sl << indent << "Extent in space :" << std::endl;
   for (const auto& bv : allBinningValues()) {
     if (constrains(bv)) {
       sl << indent << "  - value :" << std::setw(10) << binningValueName(bv)

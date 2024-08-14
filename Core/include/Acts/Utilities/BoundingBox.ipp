@@ -445,7 +445,7 @@ box_t* octree_inner(std::vector<std::unique_ptr<box_t>>& store,
                     const std::vector<box_t*>& lprims, std::size_t depth) {
   using VertexType = typename box_t::VertexType;
 
-  assert(lprims.size() > 0);
+  assert(!lprims.empty());
   if (lprims.size() == 1) {
     // just return
     return lprims.front();

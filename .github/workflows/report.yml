@@ -67,7 +67,7 @@ jobs:
               return false;
             }
 
-            
+
             let number = Number(fs.readFileSync(file, {encoding: 'utf8'}).trim());
             console.log('PR number is '+number);
             core.exportVariable('PR_NUMBER', number)

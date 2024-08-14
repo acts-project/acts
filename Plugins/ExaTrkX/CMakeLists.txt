@@ -1,10 +1,10 @@
-set(SOURCES 
+set(SOURCES
   src/buildEdges.cpp
   src/ExaTrkXPipeline.cpp
 )
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
-  list(APPEND SOURCES 
+  list(APPEND SOURCES
     src/OnnxEdgeClassifier.cpp
     src/OnnxMetricLearning.cpp
     src/CugraphTrackBuilding.cpp
@@ -12,7 +12,7 @@ if(ACTS_EXATRKX_ENABLE_ONNX)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)
-  list(APPEND SOURCES 
+  list(APPEND SOURCES
     src/TorchEdgeClassifier.cpp
     src/TorchMetricLearning.cpp
     src/BoostTrackBuilding.cpp
@@ -28,7 +28,7 @@ add_library(
 
 target_include_directories(
   ActsPluginExaTrkX
-  PUBLIC 
+  PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
@@ -80,7 +80,7 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
       TorchScatter::TorchScatter
   )
 
-  # Should not discard TorchScatter even if its not needed at this point 
+  # Should not discard TorchScatter even if its not needed at this point
   # since we need the scatter_max operation in the torch script later
   target_link_options(
     ActsPluginExaTrkX

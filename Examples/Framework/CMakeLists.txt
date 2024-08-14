@@ -31,9 +31,6 @@ target_link_libraries(
   ActsExamplesFramework
   PUBLIC ActsCore ActsFatras ActsPluginFpeMonitoring Boost::boost ROOT::Core ROOT::Hist
   PRIVATE std::filesystem)
-acts_target_link_libraries_system(
-  ActsExamplesFramework
-  PRIVATE dfelibs)
 target_compile_definitions(
   ActsExamplesFramework
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
@@ -67,7 +64,7 @@ install(
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
-  DIRECTORY include/ActsExamples 
+  DIRECTORY include/ActsExamples
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_subdirectory_if(ML ACTS_BUILD_PLUGIN_ONNX)

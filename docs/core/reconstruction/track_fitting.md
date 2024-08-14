@@ -335,7 +335,7 @@ Gx2FitterOptions( ... ) : ... {}
 
 Gx2FitterOptions() = delete;
 
-... 
+...
 //common options:
 // geoContext, magFieldContext, calibrationContext, extensions,
 // propagatorPlainOptions, referenceSurface, multipleScattering,

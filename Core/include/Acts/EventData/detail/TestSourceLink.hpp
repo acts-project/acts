@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -26,6 +27,8 @@
 
 namespace Acts::detail::Test {
 
+struct TestSourceLinkSurfaceAccessor;
+
 /// A minimal source link implementation for testing.
 ///
 /// Instead of storing a reference to a measurement or raw data, the measurement
@@ -34,6 +37,8 @@ namespace Acts::detail::Test {
 /// identifier is stored that can be used to store additional information. How
 /// this is interpreted depends on the specific tests.
 struct TestSourceLink final {
+  using SurfaceAccessor = TestSourceLinkSurfaceAccessor;
+
   GeometryIdentifier m_geometryId{};
   std::size_t sourceId = 0u;
   // use eBoundSize to indicate unused indices
@@ -86,16 +91,29 @@ struct TestSourceLink final {
     return os;
   }
   constexpr std::size_t index() const { return sourceId; }
-
-  struct SurfaceAccessor {
-    const Acts::TrackingGeometry& trackingGeometry;
-
-    const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
-      const auto& testSourceLink = sourceLink.get<TestSourceLink>();
-      return trackingGeometry.findSurface(testSourceLink.m_geometryId);
-    }
-  };
 };
+
+struct TestSourceLinkSurfaceAccessor {
+  const TrackingGeometry& geometry;
+
+  const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
+    const auto& testSourceLink = sourceLink.get<TestSourceLink>();
+    return geometry.findSurface(testSourceLink.m_geometryId);
+  }
+};
+
+namespace Experimental {
+
+struct TestSourceLinkSurfaceAccessor {
+  const Acts::Experimental::Detector& geometry;
+
+  const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
+    const auto& testSourceLink = sourceLink.get<TestSourceLink>();
+    return geometry.findSurface(testSourceLink.m_geometryId);
+  }
+};
+
+}  // namespace Experimental
 
 inline std::ostream& operator<<(std::ostream& os,
                                 const TestSourceLink& sourceLink) {
@@ -113,7 +131,7 @@ void testSourceLinkCalibratorReturn(
     typename trajectory_t::TrackStateProxy trackState) {
   TestSourceLink sl = sourceLink.template get<TestSourceLink>();
 
-  trackState.setUncalibratedSourceLink(sourceLink);
+  trackState.setUncalibratedSourceLink(SourceLink{sourceLink});
 
   if ((sl.indices[0] != Acts::eBoundSize) &&
       (sl.indices[1] != Acts::eBoundSize)) {

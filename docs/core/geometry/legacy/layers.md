@@ -30,5 +30,3 @@ objects are confined together in a special {type}`Acts::LayerArray` class and ca
 contained by a {class}`Acts::TrackingVolume`.
 
 ![LayerArray](../figures/LayerArray.png)
-
-
