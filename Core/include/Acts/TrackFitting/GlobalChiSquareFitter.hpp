@@ -22,6 +22,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
@@ -468,6 +469,9 @@ class Gx2Fitter {
     /// a following iteration in a different volume.
     const TrackingVolume* startVolume = nullptr;
 
+    // TODO description
+    const parameters_t* parametersWithHypothesis = nullptr;
+
     /// TODO description
     std::unordered_map<GeometryIdentifier, ScatteringProperties>*
         scatteringMap = nullptr;
@@ -533,29 +537,43 @@ class Gx2Fitter {
         const GeometryIdentifier geoId = surface->geometryId();
         ACTS_DEBUG("Surface " << geoId << " detected.");
 
-        // Found material - add an scatteringAngles entry if not done yet. Handling will happen later
+        // Found material - add an scatteringAngles entry if not done yet.
+        // Handling will happen later
         if (multipleScattering && surface->surfaceMaterial() != nullptr) {
-          ACTS_DEBUG("    The surface contains material.");
+          ACTS_DEBUG("    The surface contains material, ...");
 
           auto scatteringMapId = scatteringMap->find(geoId);
           if (scatteringMapId == scatteringMap->end()) {
-            ACTS_DEBUG("    Create entry in scattering map.");
+            ACTS_DEBUG("    ... create entry in scattering map.");
             // TODO use real covariance, maybe from surface->surfaceMaterial()
 
-            /// Calculate the highland formula first
-            //            const double sigma = Acts::computeMultipleScatteringTheta0(
-            //                materialSlab,
-            //                particle.absolutePdg(),
-            //                particle.mass(),
-            //                particle.qOverP(),
-            //                particle.absoluteCharge());
-            const double sigma = 0.001;
+            detail::PointwiseMaterialInteraction interaction(surface, state,
+                                                             stepper);
+            // We need to evaluate the material to create the correct slab
+            const bool slabIsValid = interaction.evaluateMaterialSlab(
+                state, navigator, MaterialUpdateStage::FullUpdate);
+            if (!slabIsValid) {
+              std::cout << "ERROR in material slab evaluation" << std::endl;
+            }
+
+            const auto& particle =
+                parametersWithHypothesis->particleHypothesis();
+
+            const double sigma =
+                static_cast<double>(Acts::computeMultipleScatteringTheta0(
+                    interaction.slab, particle.absolutePdg(), particle.mass(),
+                    parametersWithHypothesis->parameters()[eBoundQOverP],
+                    particle.absoluteCharge()));
+            ACTS_VERBOSE(
+                "        The Highland formula gives sigma = " << sigma);
+
+            //            const double sigma = 0.001;
             const double sigma2 = sigma * sigma;
 
             scatteringMap->emplace(
                 geoId, ScatteringProperties{BoundVector::Zero(), 1. / sigma2});
           } else {
-            ACTS_DEBUG("    Found entry in scattering map.");
+            ACTS_DEBUG("    ... found entry in scattering map.");
           }
         }
 
@@ -645,11 +663,15 @@ class Gx2Fitter {
           // Update the number of holes count only when encountering a
           // measurement
           result.measurementHoles = result.missedActiveSurfaces.size();
-        } else if (multipleScattering && (surface->surfaceMaterial() != nullptr)) {
-          // Here we handle material for multipleScattering. If holes exist, we also handle them already.
-          // We create a full trackstate (unlike for simple holes), since we need to evaluate the material later
+        } else if (multipleScattering &&
+                   (surface->surfaceMaterial() != nullptr)) {
+          // Here we handle material for multipleScattering. If holes exist, we
+          // also handle them already. We create a full trackstate (unlike for
+          // simple holes), since we need to evaluate the material later
           // TODO add material handling
-          ACTS_DEBUG("    The surface contains no measurement, but material and maybe a hole.");
+          ACTS_DEBUG(
+              "    The surface contains no measurement, but material and maybe "
+              "a hole.");
 
           // Transport the covariance to the surface
           stepper.transportCovarianceToBound(state.stepping, *surface,
@@ -680,16 +702,18 @@ class Gx2Fitter {
             auto& [boundParams, jacobian, pathLength] = *res;
 
             // Fill the track state
-            // TODO Do we need to get a prediction?
-            // trackStateProxy.predicted() = boundParams.parameters();
-            // trackStateProxy.predictedCovariance() = state.stepping.cov;
+            // TODO Do we need to get a prediction? -> yes, otherwise the
+            // trackstates are broken
+            trackStateProxy.predicted() = boundParams.parameters();
+            trackStateProxy.predictedCovariance() = state.stepping.cov;
 
             trackStateProxy.jacobian() = jacobian;
             trackStateProxy.pathLength() = pathLength;
 
             // For material surfaces, we also update the angles with the
             // available scattering information
-            // We can skip the if here, since we already kno, that we do multipleScattering and have material
+            // We can skip the if here, since we already kno, that we do
+            // multipleScattering and have material
             {
               ACTS_DEBUG("    Update parameters with scattering angles.");
               auto scatteringMapId = scatteringMap->find(geoId);
@@ -710,8 +734,10 @@ class Gx2Fitter {
           // typeFlags.set(TrackStateFlag::ParameterFlag);
           typeFlags.set(TrackStateFlag::MaterialFlag);
 
-          // Set hole only, if we are on a sensitive surface
-          if (surface->associatedDetectorElement() != nullptr) {
+          // Set hole only, if we are on a sensitive surface and had
+          // measurements before
+          if ((surface->associatedDetectorElement() != nullptr) &&
+              (result.measurementStates > 0)) {
             ACTS_DEBUG("    Surface is also sensitive. Marked as hole.");
             typeFlags.set(TrackStateFlag::ParameterFlag);
             typeFlags.set(TrackStateFlag::HoleFlag);
@@ -792,22 +818,30 @@ class Gx2Fitter {
 //            ACTS_DEBUG("    Ignoring hole, because no preceding measurements.");
 //          }
         } else if ((surface->associatedDetectorElement() != nullptr) ||
-                 (surface->surfaceMaterial() != nullptr)) {
-          // Here we handle holes. If material hasn't been handled before (because multipleScattering is turned off), we will also handle it here
+                   (surface->surfaceMaterial() != nullptr)) {
+          // Here we handle holes. If material hasn't been handled before
+          // (because multipleScattering is turned off), we will also handle it
+          // here
           if (multipleScattering) {
-            ACTS_DEBUG("    The surface contains no measurement, but maybe a hole.");
+            ACTS_DEBUG(
+                "    The surface contains no measurement, but maybe a hole.");
           } else {
-            ACTS_DEBUG("    The surface contains no measurement, but maybe a hole and/or material.");
+            ACTS_DEBUG(
+                "    The surface contains no measurement, but maybe a hole "
+                "and/or material.");
           }
 
           // We only create track states here if there is already a measurement
           // detected (no holes before the first measurement)
           if (result.measurementStates <= 0) {
-            ACTS_DEBUG("    Ignoring hole, because there are no preceding measurements.");
+            ACTS_DEBUG(
+                "    Ignoring hole, because there are no preceding "
+                "measurements.");
             return;
           }
 
-          ACTS_DEBUG("    Handle hole."); // (We are not sure yet, if it maybe is just material
+          ACTS_DEBUG("    Handle hole.");  // (We are not sure yet, if it maybe
+                                           // is just material
 
           auto& fittedStates = *result.fittedStates;
 
@@ -844,16 +878,17 @@ class Gx2Fitter {
           // TODO no parameters for hole?
           typeFlags.set(TrackStateFlag::ParameterFlag);
           if (surface->surfaceMaterial() != nullptr) {
+            ACTS_VERBOSE("    It is material.");
             typeFlags.set(TrackStateFlag::MaterialFlag);
           }
 
           // Set hole only, if we are on a sensitive surface
           if (surface->associatedDetectorElement() != nullptr) {
+            ACTS_VERBOSE("    It is a hole.");
             typeFlags.set(TrackStateFlag::HoleFlag);
+            // Count the missed surface
+            result.missedActiveSurfaces.push_back(surface);
           }
-
-          // Count the missed surface
-          result.missedActiveSurfaces.push_back(surface);
 
           result.lastTrackIndex = currentTrackIndex;
 
@@ -1007,6 +1042,7 @@ class Gx2Fitter {
       gx2fActor.actorLogger = m_actorLogger.get();
       gx2fActor.startVolume = startVolume;
       gx2fActor.scatteringMap = &scatteringMap;
+      gx2fActor.parametersWithHypothesis = &params;
       gx2fActor.multipleScattering = gx2fOptions.multipleScattering;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
@@ -1098,7 +1134,8 @@ class Gx2Fitter {
 
         // update all Jacobians from start
         if ((typeFlags.test(TrackStateFlag::MeasurementFlag)) ||
-            (gx2fOptions.multipleScattering && typeFlags.test(TrackStateFlag::MaterialFlag))) {
+            (gx2fOptions.multipleScattering &&
+             typeFlags.test(TrackStateFlag::MaterialFlag))) {
           for (auto& jac : jacobianFromStart) {
             jac = trackState.jacobian() * jac;
           }
@@ -1138,7 +1175,8 @@ class Gx2Fitter {
           }
         }
 
-        if (gx2fOptions.multipleScattering && typeFlags.test(TrackStateFlag::MaterialFlag)) {
+        if (gx2fOptions.multipleScattering &&
+            typeFlags.test(TrackStateFlag::MaterialFlag)) {
           // Get and store geoId for the current material surface
           const GeometryIdentifier geoId =
               trackState.referenceSurface().geometryId();
@@ -1153,8 +1191,8 @@ class Gx2Fitter {
           // Add contribution from the angle itself similar to addToGx2fSums
           // TODO create function
           {
-            // TODO use correct formula
-            const ActsScalar sinThetaLoc = 1;
+            const ActsScalar sinThetaLoc =
+                std::sin(trackState.predicted()[eBoundTheta]);
 
             // The position, where we need to insert the values in aMatrix and
             // bVector
@@ -1166,6 +1204,8 @@ class Gx2Fitter {
                 scatteringMapId->second.scatteringAngles;
             const ActsScalar invCov =
                 scatteringMapId->second.invCovarianceMaterial;
+
+            ACTS_VERBOSE("    invCov: " << invCov);
 
             // Phi contribution
             aMatrixExtended(deltaPosition, deltaPosition) +=
@@ -1221,22 +1261,6 @@ class Gx2Fitter {
 
       deltaParams = deltaParamsExtended.topLeftCorner<eBoundSize, 1>().eval();
 
-      if (gx2fOptions.multipleScattering) {  // update the scattering angles
-        for (std::size_t matSurface = 0; matSurface < geoIdVector.size();
-             matSurface++) {
-          const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
-
-          auto scatteringMapId = scatteringMap.find(geoIdVector[matSurface]);
-          if (scatteringMapId == scatteringMap.end()) {
-            // TODO make proper error and return
-            ACTS_ERROR("No scattering angles found for material surface "
-                       << geoIdVector[matSurface]);
-          }
-          scatteringMapId->second.scatteringAngles.block<2, 1>(2, 0) +=
-              deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
-        }
-      }
-
       ACTS_VERBOSE("aMatrix:\n"
                    << aMatrix << "\n"
                    << "bVector:\n"
@@ -1261,6 +1285,23 @@ class Gx2Fitter {
       if (chi2sum > oldChi2sum + 1e-5) {
         ACTS_DEBUG("chi2 not converging monotonically");
       }
+
+//      if (gx2fOptions.multipleScattering) {
+//        // update the scattering angles
+//        for (std::size_t matSurface = 0; matSurface < nMaterialSurfaces;
+//             matSurface++) {
+//          const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
+//
+//          auto scatteringMapId = scatteringMap.find(geoIdVector[matSurface]);
+//          if (scatteringMapId == scatteringMap.end()) {
+//            // TODO make proper error and return
+//            ACTS_ERROR("No scattering angles found for material surface"
+//                       << geoIdVector[matSurface]);
+//          }
+//          scatteringMapId->second.scatteringAngles.block<2, 1>(2, 0) +=
+//              deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
+//        }
+//      }
 
       oldChi2sum = chi2sum;
       startVolume = gx2fResult.startVolume;
@@ -1343,7 +1384,10 @@ class Gx2Fitter {
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
+      gx2fActor.startVolume = startVolume;
       gx2fActor.scatteringMap = &scatteringMap;
+      gx2fActor.parametersWithHypothesis = &params;
+      gx2fActor.multipleScattering = gx2fOptions.multipleScattering;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
