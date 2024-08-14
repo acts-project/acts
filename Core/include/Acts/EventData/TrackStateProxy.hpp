@@ -626,7 +626,6 @@ class TrackStateProxy {
   /// dimensions. The NxM submatrix, where N is the actual dimension of the
   /// measurement, is located in the top left corner, everything else is zero.
   /// @return The overallocated projector
-  /// @deprecated This will be swapped out in favor of `projectorMapping` in the future
   //[[deprecated("This will be swapped out in favor of projectorMapping in the
   // future")]]
   Projector projector() const;
@@ -641,7 +640,6 @@ class TrackStateProxy {
   /// is of dimension \f$N\times M\f$, where \f$N\f$ is the actual dimension of the
   /// measurement.
   /// @return The effective projector
-  /// @deprecated This will be dropped in the future
   //[[deprecated("This will be dropped in the future")]]
   EffectiveProjector effectiveProjector() const {
     return projector().topLeftCorner(calibratedSize(), M);
@@ -652,7 +650,6 @@ class TrackStateProxy {
   /// and store it.
   /// @param projector The projector in the form of a dense matrix
   /// @note @p projector is assumed to only have 0s or 1s as components.
-  /// @deprecated Use setProjector(span) instead
   template <typename Derived>
   //[[deprecated("use setProjector(span) instead")]]
   void setProjector(const Eigen::MatrixBase<Derived>& projector)
@@ -688,7 +685,6 @@ class TrackStateProxy {
   ///       to another. Use the `projector` or `effectiveProjector` method if
   ///       you want to access the matrix.
   /// @return The projector bitset
-  /// @deprecated Use projector() instead
   //[[deprecated("use projector() instead")]]
   ProjectorBitset projectorBitset() const {
     return variableBoundSubspaceHelper().projectorBitset();
@@ -700,7 +696,6 @@ class TrackStateProxy {
   /// @note This is mainly to copy explicitly a projector from one state
   ///       to another. If you have a projection matrix, set it with
   ///       `setProjector`.
-  /// @deprecated Use setProjector(span) instead
   //[[deprecated("use setProjector(span) instead")]]
   void setProjectorBitset(ProjectorBitset proj)
     requires(!ReadOnly)

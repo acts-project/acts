@@ -75,7 +75,9 @@ class SubspaceHelperBase {
     return result;
   }
 
-  ProjectorBitset projectorBitset() const requires(kFullSize <= 8) {
+  ProjectorBitset projectorBitset() const
+    requires(kFullSize <= 8)
+  {
     return matrixToBitset(fullProjector()).to_ullong();
   }
 
