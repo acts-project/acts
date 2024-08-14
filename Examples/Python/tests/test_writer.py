@@ -398,7 +398,6 @@ def test_csv_multitrajectory_writer(tmp_path):
         )
     )
     s.run()
-    del s
     assert len([f for f in csv_dir.iterdir() if f.is_file()]) == 10
     assert all(f.stat().st_size > 20 for f in csv_dir.iterdir())
 

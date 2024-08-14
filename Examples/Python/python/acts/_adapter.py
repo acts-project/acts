@@ -2,6 +2,7 @@ import inspect
 import functools
 from typing import Optional, Callable, Dict, Any
 from pathlib import Path
+from collections import namedtuple
 
 import acts
 
@@ -117,7 +118,23 @@ def _detector_create(cls, config_class=None):
                 _kwargs[k] = v
         det = cls()
         tg, deco = det.finalize(cfg, mdecorator, *args, **_kwargs)
-        return det, tg, deco
+        Detector = namedtuple(
+            "Detector", ["detector", "trackingGeometry", "decorators"]
+        )
+
+        class DetectorContextManager(Detector):
+            def __new__(cls, detector, trackingGeometry, decorators):
+                return super(DetectorContextManager, cls).__new__(
+                    cls, detector, trackingGeometry, decorators
+                )
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                pass
+
+        return DetectorContextManager(det, tg, deco)
 
     return create
 
