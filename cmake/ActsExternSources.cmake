@@ -26,10 +26,6 @@ set( ACTS_FRNN_SOURCE
    "GIT_REPOSITORY;https://github.com/hrzhao76/FRNN/;GIT_TAG;5f8a48b0022300cd2863119f5646a5f31373e0c8" CACHE STRING "Source to take FRNN from")
 mark_as_advanced( ACTS_FRNN_SOURCE )
 
-set( ACTS_GEOMODEL_SOURCE
-   "GIT_REPOSITORY;https://gitlab.cern.ch/GeoModelDev/GeoModel;GIT_TAG;4.6.0;" CACHE STRING "Source to take GeoModel from")
-mark_as_advanced( ACTS_GEOMODEL_SOURCE )
-
 set( ACTS_NLOHMANNJSON_SOURCE
    "URL;https://github.com/nlohmann/json/archive/refs/tags/v3.10.5.tar.gz;URL_HASH;SHA1=8969f5ad1a422e01f040ff48dcae9c0e6ad0811d" CACHE STRING "Source to take nlohmann_json from")
 mark_as_advanced( ACTS_NLOHMANN_JSON_SOURCE )
