@@ -348,7 +348,7 @@ jobs:
           -DCMAKE_PREFIX_PATH="${{ env.DEPENDENCY_DIR }}"
           -DPython_EXECUTABLE=${{ env.DEPENDENCY_DIR }}/bin/python3
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
-          -DCACTS_BUILD_PLUGIN_TRACCC=OFF # traccc does not support macOS due to CCCL / libcudacxx
+          -DACTS_BUILD_PLUGIN_TRACCC=OFF # traccc does not support macOS due to CCCL / libcudacxx
       - name: Build
         run: cmake --build build
       - name: ccache stats
