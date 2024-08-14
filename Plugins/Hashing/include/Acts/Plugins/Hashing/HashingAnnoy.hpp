@@ -21,7 +21,7 @@ namespace Acts {
 template <typename external_spacepoint_t, typename SpacePointContainer>
 class HashingAnnoy {
  public:
-  void ComputeSpacePointsBuckets(
+  void computeSpacePointsBuckets(
       const Annoy::AnnoyIndex<
           unsigned int, double, Annoy::AngularEuclidean, Annoy::Kiss32Random,
           Annoy::AnnoyIndexSingleThreadedBuildPolicy>* annoyModel,

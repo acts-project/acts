@@ -16,7 +16,7 @@
 namespace Acts {
 template <typename external_spacepoint_t, typename SpacePointContainer>
 void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
-    ComputeSpacePointsBuckets(
+    computeSpacePointsBuckets(
         const Annoy::AnnoyIndex<
             unsigned int, double, Annoy::AngularEuclidean, Annoy::Kiss32Random,
             Annoy::AnnoyIndexSingleThreadedBuildPolicy>* annoyModel,
@@ -48,7 +48,7 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
   }
 
   // Function to check if a spacePoint is inside the layer
-  auto LayerSelection = [&layerRMin, &layerRMax, &layerZMin, &layerZMax](
+  auto layerSelection = [&layerRMin, &layerRMax, &layerZMin, &layerZMax](
                             double r2, double z) {
     bool isInside =
         (r2 >= layerRMin * layerRMin && r2 <= layerRMax * layerRMax) &&
@@ -57,25 +57,25 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
   };
 
   // Functions to get the bin index
-  auto GetBinIndexZ = [&zBins, &layerZMin, &layerZMax](Scalar z) {
+  auto getBinIndexZ = [&zBins, &layerZMin, &layerZMax](Scalar z) {
     Scalar binSize = (layerZMax - layerZMin) / zBins;
     auto binIndex = static_cast<int>((z - layerZMin + 0.5 * binSize) / binSize);
     return binIndex;
   };
 
-  auto GetBinIndexPhi = [&phiBins](Scalar phi) {
+  auto getBinIndexPhi = [&phiBins](Scalar phi) {
     Scalar binSize = 2 * M_PI / phiBins;
     auto binIndex = static_cast<int>((phi + M_PI) / binSize);
     return binIndex;
   };
 
   // Function pointers to a unified bin index function for z and phi
-  auto GetBinIndex = [&zBins, &phiBins, &GetBinIndexZ, &GetBinIndexPhi](
+  auto getBinIndex = [&zBins, &phiBins, &getBinIndexZ, &getBinIndexPhi](
                          Scalar z, Scalar phi) -> int {
     if (zBins > 0) {
-      return GetBinIndexZ(z);
+      return getBinIndexZ(z);
     } else if (phiBins > 0) {
-      return GetBinIndexPhi(phi);
+      return getBinIndexPhi(phi);
     } else {
       throw std::runtime_error("No bins defined");
     }
@@ -90,13 +90,13 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
     Scalar z = spacePoint->z() / Acts::UnitConstants::mm;
 
     // Helix transform
-    if (Scalar r2 = x * x + y * y; !LayerSelection(r2, z)) {
+    if (Scalar r2 = x * x + y * y; !layerSelection(r2, z)) {
       continue;
     }
 
     Scalar phi = atan2(y, x);
 
-    int binIndex = GetBinIndex(z, phi);
+    int binIndex = getBinIndex(z, phi);
     if (binIndex < 0 || static_cast<unsigned int>(binIndex) >= nBins) {
       throw std::runtime_error("binIndex outside of bins covering");
     }

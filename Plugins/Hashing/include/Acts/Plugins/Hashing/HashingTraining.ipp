@@ -20,7 +20,7 @@ HashingTrainingAlgorithm<SpacePointContainer>::HashingTrainingAlgorithm(
   if (m_cfg.f <= 0) {
     throw std::invalid_argument("Invalid f, f must be positive");
   }
-  if (m_cfg.AnnoySeed <= 0) {
+  if (m_cfg.annoySeed <= 0) {
     throw std::invalid_argument(
         "Invalid Annoy random seed, Annoy random seed must be positive");
   }
@@ -29,14 +29,14 @@ HashingTrainingAlgorithm<SpacePointContainer>::HashingTrainingAlgorithm(
 template <typename SpacePointContainer>
 AnnoyModel HashingTrainingAlgorithm<SpacePointContainer>::execute(
     SpacePointContainer spacePoints) const {
-  const unsigned int AnnoySeed = m_cfg.AnnoySeed;
+  const unsigned int annoySeed = m_cfg.annoySeed;
   const std::int32_t f = m_cfg.f;
 
   auto annoyModel = AnnoyModel(f);
 
   using Scalar = Acts::ActsScalar;
 
-  annoyModel.set_seed(AnnoySeed);
+  annoyModel.set_seed(annoySeed);
 
   unsigned int spacePointIndex = 0;
   // Add spacePoints parameters to Annoy
@@ -62,9 +62,9 @@ AnnoyModel HashingTrainingAlgorithm<SpacePointContainer>::execute(
     spacePointIndex++;
   }
 
-  unsigned int n_trees = 2 * f;
+  unsigned int nTrees = 2 * f;
 
-  annoyModel.build(n_trees);
+  annoyModel.build(nTrees);
 
   return annoyModel;
 }

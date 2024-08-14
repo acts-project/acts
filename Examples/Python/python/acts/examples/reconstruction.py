@@ -194,7 +194,7 @@ SeedFilterMLDBScanConfig = namedtuple(
 
 HashingTrainingConfigArg = namedtuple(
     "HashingTrainingConfig",
-    ["AnnoySeed", "f"],
+    ["annoySeed", "f"],
     defaults=[None] * 2,
 )
 
@@ -296,7 +296,7 @@ def addSeeding(
         Defaults specified in Core/include/Acts/Seeding/SpacePointGrid.hpp
     seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors, useExtraCuts)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
-    hashingTrainingConfigArg : HashingTrainingConfigArg(AnnoySeed, f)
+    hashingTrainingConfigArg : HashingTrainingConfigArg(annoySeed, f)
                                 Defaults specified in Plugins/Hashing/include/Acts/Plugins/Hashing/HashingTrainingConfig.hpp
     hashingAlgorithmConfigArg : HashingAlgorithmConfigArg(bucketSize, zBins, phiBins)
                                 Defaults specified in Plugins/Hashing/include/Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp
@@ -893,8 +893,8 @@ def addHashingSeeding(
     seedFinderOptionsArg: SeedFinderOptionsArg,
     seedFilterConfigArg: SeedFilterConfigArg,
     spacePointGridConfigArg: SpacePointGridConfigArg,
-    HashingTrainingConfigArg: HashingTrainingConfigArg,
-    HashingAlgorithmConfigArg: HashingAlgorithmConfigArg,
+    hashingTrainingConfigArg: HashingTrainingConfigArg,
+    hashingAlgorithmConfigArg: HashingAlgorithmConfigArg,
     logLevel: acts.logging.Level = None,
 ):
     """adds Hashing seeding
@@ -1024,16 +1024,16 @@ def addHashingSeeding(
     # Hashing configuration
     hashingTrainingConfig = acts.hashing.HashingTrainingConfig(
         **acts.examples.defaultKWArgs(
-            AnnoySeed=HashingTrainingConfigArg.AnnoySeed,
-            f=HashingTrainingConfigArg.f,
+            annoySeed=hashingTrainingConfigArg.annoySeed,
+            f=hashingTrainingConfigArg.f,
         ),
     )
 
     hashingConfig = acts.hashing.HashingAlgorithmConfig(
         **acts.examples.defaultKWArgs(
-            bucketSize=HashingAlgorithmConfigArg.bucketSize,
-            zBins=HashingAlgorithmConfigArg.zBins,
-            phiBins=HashingAlgorithmConfigArg.phiBins,
+            bucketSize=hashingAlgorithmConfigArg.bucketSize,
+            zBins=hashingAlgorithmConfigArg.zBins,
+            phiBins=hashingAlgorithmConfigArg.phiBins,
         ),
     )
 

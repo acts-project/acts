@@ -48,16 +48,16 @@ void HashingAlgorithm<external_spacepoint_t, SpacePointContainer>::execute(
   const double layerZMax = m_cfg.layerZMax;
 
   // Create an instance of the HashingAnnoy class
-  auto AnnoyHashingInstance = std::make_unique<
+  auto annoyHashingInstance = std::make_unique<
       HashingAnnoy<external_spacepoint_t, SpacePointContainer>>();
 
   // Compute the buckets of spacepoints using the Annoy model
-  AnnoyHashingInstance->ComputeSpacePointsBuckets(
+  annoyHashingInstance->computeSpacePointsBuckets(
       annoyModel, spacePoints, bucketSize, zBins, phiBins, layerRMin, layerRMax,
       layerZMin, layerZMax);
 
   // Get the map of buckets and the number of buckets
-  map_t bucketsSPMap = AnnoyHashingInstance->m_bucketsSPMap;
+  map_t bucketsSPMap = annoyHashingInstance->m_bucketsSPMap;
   auto nBuckets = static_cast<unsigned int>(bucketsSPMap.size());
 
   // Check if the number of buckets is greater than the number of space points

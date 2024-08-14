@@ -214,10 +214,10 @@ ActsExamples::SeedingAlgorithmHashing::SeedingAlgorithmHashing(
       Acts::SeedFinder<SimSpacePoint,
                        Acts::CylindricalSpacePointGrid<SimSpacePoint>>(
           m_cfg.seedFinderConfig);
-  m_Hashing = Acts::HashingAlgorithm<const SimSpacePoint*,
+  m_hashing = Acts::HashingAlgorithm<const SimSpacePoint*,
                                      std::vector<const SimSpacePoint*>>(
       m_cfg.hashingConfig);
-  m_HashingTraining =
+  m_hashingTraining =
       Acts::HashingTrainingAlgorithm<std::vector<const SimSpacePoint*>>(
           m_cfg.hashingTrainingConfig);
 }
@@ -256,11 +256,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
   };
 
   // Hashing Training
-  Acts::AnnoyModel annoyModel = m_HashingTraining.execute(spacePointPtrs);
+  Acts::AnnoyModel annoyModel = m_hashingTraining.execute(spacePointPtrs);
   // Hashing
   static thread_local std::vector<SpacePointPtrVector> bucketsPtrs;
   bucketsPtrs.clear();
-  m_Hashing.execute(spacePointPtrs, &annoyModel, bucketsPtrs);
+  m_hashing.execute(spacePointPtrs, &annoyModel, bucketsPtrs);
 
   // pre-compute the maximum size required so we only need to allocate once
   // doesn't combine the input containers of space point pointers
@@ -347,7 +347,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
     }
   }
 
-  static thread_local SimSeedContainer seeds;
+  SimSeedContainer seeds;
   seeds.clear();
   seeds.reserve(seedsSet.size());
   for (const ActsExamples::SimSeed& seed : seedsSet) {

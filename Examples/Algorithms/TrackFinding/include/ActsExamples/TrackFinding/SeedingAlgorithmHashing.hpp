@@ -137,9 +137,9 @@ class SeedingAlgorithmHashing final : public IAlgorithm {
       this, "OutputBuckets"};
   Acts::HashingAlgorithm<const SimSpacePoint*,
                          std::vector<const SimSpacePoint*>>
-      m_Hashing;
+      m_hashing;
   Acts::HashingTrainingAlgorithm<std::vector<const SimSpacePoint*>>
-      m_HashingTraining;
+      m_hashingTraining;
 
   static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
     float RMin = 50.;
