@@ -4,8 +4,6 @@ set(SOURCES
 )
 
 if(ACTS_EXATRKX_ENABLE_MODULEMAP)
-  find_package(ModuleMapGraph REQUIRED COMPONENTS CPU)
-
   list(APPEND SOURCES
     src/ModuleMapCpp.cpp
   )
@@ -101,7 +99,13 @@ endif()
 
 
 if(ACTS_EXATRKX_ENABLE_MODULEMAP)
-  target_link_libraries(ActsPluginExaTrkX PRIVATE ModuleMapGraph::CPU)
+  if(ACTS_EXATRKX_ENABLE_CUDA)
+    find_package(ModuleMapGraph REQUIRED COMPONENTS CPU GPU)
+    target_link_libraries(ActsPluginExaTrkX PRIVATE ModuleMapGraph::CPU ModuleMapGraph::GPU)
+  else()
+    find_package(ModuleMapGraph REQUIRED COMPONENTS CPU)
+    target_link_libraries(ActsPluginExaTrkX PRIVATE ModuleMapGraph::CPU)
+  endif()
 endif()
 
 install(

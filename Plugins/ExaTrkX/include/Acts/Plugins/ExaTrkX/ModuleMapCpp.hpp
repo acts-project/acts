@@ -17,6 +17,9 @@
 template <typename T>
 class graph_creator;
 
+template <typename T>
+class CUDA_graph_creator;
+
 namespace Acts {
 
 class ModuleMapCpp : public GraphConstructionBase {
@@ -28,12 +31,16 @@ class ModuleMapCpp : public GraphConstructionBase {
     float zScale = 1.0;
     float etaScale = 1.0;
     bool checkModuleConsistencyPerEvent = false;
+
+    torch::Device device;
   };
 
  private:
   Config m_cfg;
-  std::unique_ptr<graph_creator<float>> m_graphCreator;
   std::unique_ptr<const Acts::Logger> m_logger;
+
+  std::unique_ptr<graph_creator<float>> m_graphCreator;
+  std::unique_ptr<CUDA_graph_creator<float>> m_cudaGraphCreator;
 
   std::vector<uint64_t> m_uniqueDoupletModuleIds;
 
@@ -50,7 +57,7 @@ class ModuleMapCpp : public GraphConstructionBase {
       const std::vector<uint64_t> &moduleIds,
       torch::Device device = torch::Device(torch::kCPU)) override;
 
-  torch::Device device() const override { return torch::Device(torch::kCPU); }
+  torch::Device device() const override { return m_cfg.device; }
 };
 
 }  // namespace Acts

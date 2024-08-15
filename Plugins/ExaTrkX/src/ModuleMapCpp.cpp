@@ -15,6 +15,10 @@
 #include <map>
 #include <module_map_triplet>
 
+#ifndef ACTS_EXATRKX_CPUONLY
+#include <CUDA_graph_creator>
+#endif
+
 using namespace torch::indexing;
 
 namespace Acts {
@@ -22,9 +26,19 @@ namespace Acts {
 ModuleMapCpp::ModuleMapCpp(const Config &cfg,
                            std::unique_ptr<const Acts::Logger> logger_)
     : m_cfg(cfg), m_logger(std::move(logger_)) {
-  m_graphCreator = std::make_unique<graph_creator<float>>(
-      m_cfg.moduleMapPath, 10,
-      std::pair<float, float>{0.f, std::numeric_limits<float>::max()});
+  if( m_cfg.device == torch::kCPU ) {
+    m_graphCreator = std::make_unique<graph_creator<float>>(
+        m_cfg.moduleMapPath, 10,
+        std::pair<float, float>{0.f, std::numeric_limits<float>::max()});
+  } else {
+#ifndef ACTS_EXATRKX_CPUONLY
+    m_cudaGraphCreator = std::make_unique<CUDA_graph_creator<float>>(
+      device.id(), m_cfg.moduleMapPath, 10, std::pair<float, float>{0.f, std::numeric_limits<float>::max()}
+    );
+#else
+    throw std::runtime_error("Cannot use cuda version of GraphModuleMap (CUDA is not enabled in CMake)");
+#endif
+  }
 
   if (m_cfg.checkModuleConsistencyPerEvent) {
     for (const auto &[doublet, _] :
@@ -113,8 +127,20 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   ACTS_DEBUG("Hits tree has " << hitsTree.size()
                               << " hits, now build graph...");
   bool print = logger().level() == Acts::Logging::VERBOSE;
-  auto [graph, _] =
+  graph<float> graph;
+  graph_true<float> graph_true;
+  if( m_cfg.device == torch::kCPU ) {
+    ACTS_DEBUG("Call CPU graph buildinig");
+  std::tie(graph, graph_true) =
       m_graphCreator->build_impl(hitsTree, particlesTree, eventId, print);
+  } else {
+#ifndef ACTS_EXATRKX_CPUONLY
+    CUDA_graph_creator<float>::graph_building_stats stats;
+    graph = m_cudaGraphCreator->build_impl(hitsTree, stats);
+#else
+    throw std::runtime_error("Tried to call CUDA graph buidling which is not enabled");
+#endif
+  }
   const auto numEdges = boost::num_edges(graph.graph_impl());
 
   if (numEdges == 0) {
