@@ -230,7 +230,7 @@ else:
             ),
             outputDirRoot=pathlib.Path("/home/aicha/Atlas/NewVertices"),
             vtxGen = acts.examples.GaussianDisplacedVertexPositionGenerator(
-                rMean=2, rStdDev=0.0125 * u.mm, 
+                rMean=50, rStdDev= 50* u.mm, 
                 zMean=2, zStdDev=55.5 * u.mm, 
                 tMean=0, tStdDev=1.0 * u.ns
              ),
@@ -317,6 +317,7 @@ if args.reco:
     addSeeding(
         s,
         trackingGeometry,
+        
         field,
         (
             TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
@@ -324,8 +325,8 @@ if args.reco:
             else TruthSeedRanges()
         ),
         geoSelectionConfigFile=oddSeedingSel,
-        outputDirRoot=outputDir if args.output_root else None,
-        outputDirCsv=outputDir if args.output_csv else None,
+        outputDirRoot="/home/aicha/Atlas/seeding_root_output",
+        outputDirCsv="/home/aicha/Atlas/seeding_csv_output",
     )
 
     if seedFilter_ML:

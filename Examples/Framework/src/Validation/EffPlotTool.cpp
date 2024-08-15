@@ -28,7 +28,7 @@ void ActsExamples::EffPlotTool::book(
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bDeltaR = m_cfg.varBinning.at("DeltaR");
   PlotHelpers::Binning bProdR = m_cfg.varBinning.at("prodR");
-  ACTS_DEBUG("Initialize the histograms for efficiency plots");
+  
   // efficiency vs pT
   effPlotCache.trackEff_vs_pT = PlotHelpers::bookEff(
       "trackeff_vs_pT", "Tracking efficiency;Truth pT [GeV/c];Efficiency", bPt);
@@ -42,9 +42,11 @@ void ActsExamples::EffPlotTool::book(
   effPlotCache.trackEff_vs_DeltaR = PlotHelpers::bookEff(
       "trackeff_vs_DeltaR",
       "Tracking efficiency;Closest track #Delta R;Efficiency", bDeltaR);
+  std::cout << "Initialize the histograms for efficiency versus prodR"
+            << std::endl;
   effPlotCache.trackEff_vs_prodR = PlotHelpers::bookEff(
       "trackeff_vs_prodR",
-      "Tracking efficiency;Radial distance (prodR);Efficiency", bProdR);
+      "Tracking efficiency;production radius (prodR);Efficiency", bProdR);
 }
 
 void ActsExamples::EffPlotTool::clear(EffPlotCache& effPlotCache) const {
@@ -80,5 +82,6 @@ void ActsExamples::EffPlotTool::fill(EffPlotTool::EffPlotCache& effPlotCache,
   PlotHelpers::fillEff(effPlotCache.trackEff_vs_eta, t_eta, status);
   PlotHelpers::fillEff(effPlotCache.trackEff_vs_phi, t_phi, status);
   PlotHelpers::fillEff(effPlotCache.trackEff_vs_DeltaR, t_deltaR, status);
+
   PlotHelpers::fillEff(effPlotCache.trackEff_vs_prodR, t_prodR, status);
 }
