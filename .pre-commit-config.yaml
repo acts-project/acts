@@ -25,3 +25,4 @@ repos:
     rev: 0.15.0
     hooks:
     - id: gersemi
+      args: [--no-warn-about-unknown-commands]
