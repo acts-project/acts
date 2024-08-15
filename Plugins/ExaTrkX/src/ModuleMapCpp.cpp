@@ -14,6 +14,8 @@
 
 #include <map>
 
+#include <graph_creator>
+#include <module_map_triplet>
 #include <TTree_hits>
 
 
@@ -25,15 +27,14 @@ ModuleMapCpp::ModuleMapCpp(const Config &cfg,
                            std::unique_ptr<const Acts::Logger> logger_)
     : m_cfg(cfg), m_logger(std::move(logger_)) {
   if(!m_cfg.useGpu) {
-    m_graphCreator = std::make_unique<GraphCreatorWrapperCpu>(m_cfg.moduleMapPath);
+    m_graphCreator = std::make_unique<detail::GraphCreatorWrapperCpu>(m_cfg.moduleMapPath);
   } else {
 #ifndef ACTS_EXATRKX_CPUONLY
-    m_graphCreator = std::make_unique<GraphCreatorWrapperCuda>(m_cfg.moduleMapPath, m_cfg.gpuDevice);
+    m_graphCreator = std::make_unique<detail::GraphCreatorWrapperCuda>(m_cfg.moduleMapPath, m_cfg.gpuDevice);
 #else
     throw std::runtime_error("Cannot use cuda version of GraphModuleMap (CUDA is not enabled in CMake)");
 #endif
   }
-
 }
 
 ModuleMapCpp::~ModuleMapCpp() {}
@@ -45,7 +46,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     throw std::invalid_argument(
         "Module Ids do not match number of graph nodes");
   }
-
+/*
   if (m_cfg.checkModuleConsistencyPerEvent) {
     ACTS_DEBUG("Perform consistency check...");
     auto uniqueModuleIds = moduleIds;
@@ -66,7 +67,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     ACTS_DEBUG(
         "Intersection with doublet modules: " << moduleIdIntersection.size());
   }
-
+*/
   const auto numFeatures = inputValues.size() / numNodes;
 
   hits<float> hitsCollection(false, false);
@@ -104,7 +105,6 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
 
   ACTS_DEBUG("Hits tree has " << hitsTree.size()
                               << " hits, now build graph...");
-  bool print = logger().level() == Acts::Logging::VERBOSE;
   auto graph = m_graphCreator->build(hitsTree);
   const auto numEdges = boost::num_edges(graph.graph_impl());
 

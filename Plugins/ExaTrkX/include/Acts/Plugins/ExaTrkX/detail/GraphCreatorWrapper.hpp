@@ -24,12 +24,14 @@ namespace Acts::detail {
 
 class GraphCreatorWrapperBase {
 public:
+  virtual ~GraphCreatorWrapperBase() {}
   virtual graph<float> build(TTree_hits<float> &hits) = 0;
 };
 
-class GraphCreaterWrapperCpu : public GraphCreatorWrapperBase {
+class GraphCreatorWrapperCpu : public GraphCreatorWrapperBase {
 public:
-  GraphCreaterWrapperCpu(const std::string &path);
+  GraphCreatorWrapperCpu(const std::string &path);
+  ~GraphCreatorWrapperCpu();
 
   virtual graph<float> build(TTree_hits<float> &hits);
 
@@ -38,9 +40,10 @@ private:
 };
 
 #ifndef ACTS_EXATRKX_CPUONLY
-class GraphCreaterWrapperCuda : public GraphCreatorWrapperBase {
+class GraphCreatorWrapperCuda : public GraphCreatorWrapperBase {
 public:
-  GraphCreaterWrapperCuda(const std::string &path, int device);
+  GraphCreatorWrapperCuda(const std::string &path, int device);
+  ~GraphCreatorWrapperCuda();
 
   virtual graph<float> build(TTree_hits<float> &hits);
 

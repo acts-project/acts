@@ -19,7 +19,7 @@
 namespace Acts {
 
 namespace detail {
-class GraphConstructorWrapper;
+class GraphCreatorWrapperBase;
 }
 
 class ModuleMapCpp : public GraphConstructionBase {
@@ -39,7 +39,7 @@ class ModuleMapCpp : public GraphConstructionBase {
  private:
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
-  std::unique_ptr<detail::GraphConstructorWrapper> m_graphCreator;
+  std::unique_ptr<detail::GraphCreatorWrapperBase> m_graphCreator;
   std::vector<uint64_t> m_uniqueDoupletModuleIds;
 
   const auto &logger() const { return *m_logger; }
@@ -55,7 +55,8 @@ class ModuleMapCpp : public GraphConstructionBase {
       const std::vector<uint64_t> &moduleIds,
       torch::Device device = torch::Device(torch::kCPU)) override;
 
-  torch::Device device() const override { return m_cfg.device; }
+  // TODO this returns nothing useful
+  torch::Device device() const override { return torch::Device(torch::kCPU); }
 };
 
 }  // namespace Acts

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/detail/GraphCreaterWrapper.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/GraphCreatorWrapper.hpp"
 
 #include <TTree_hits>
 #include <graph>
@@ -14,15 +14,18 @@
 
 namespace Acts::detail {
 
-GraphCreaterWrapperCuda::GraphCreaterWrapperCuda(const std::string &path, int device) {
+GraphCreatorWrapperCuda::GraphCreatorWrapperCuda(const std::string &path, int device) {
+  int cudaBlocks = 512;
   m_graphCreator = std::make_unique<CUDA_graph_creator<float>>(
-      device, path, 10,
+      cudaBlocks, device, path, 10,
       std::pair<float, float>{0.f, std::numeric_limits<float>::max()});
 }
 
-graph<float> GraphCreaterWrapperCuda::build(TTree_hits<float> &hits) {
-  CUDA_graph_creator<float>::graph_building_stats stats;ś
-  return m_graphCreator->build_impl(hits, stats);
+GraphCreatorWrapperCuda::~GraphCreatorWrapperCuda() {}
+
+graph<float> GraphCreatorWrapperCuda::build(TTree_hits<float> &hits) {
+  CUDA_graph_creator<float>::graph_building_stats stats;
+  return m_graphCreator->build_impl(hits, stats, false);
 }
 
 }  // namespace Acts::detail
