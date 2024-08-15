@@ -30,13 +30,13 @@ struct GeoUnionDoubleTrdConverter {
   /// @brief Convert a GeoTube to a detector element and surface
   ///
   /// @param geoFPV The full physical volume to convert (contains shape)
-  /// @param geoTube The GeoTube shape to convert
+  /// @param geoUnion The GeoUnion shape to convert
   /// @param absTransform from the GeoPhysVol
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
   Result<GeoModelSensitiveSurface> operator()(const GeoFullPhysVol& geoFPV,
-                                              const GeoShapeUnion& geoTube,
+                                              const GeoShapeUnion& geoUnion,
                                               const Transform3& absTransform,
                                               bool sensitive) const;
 };

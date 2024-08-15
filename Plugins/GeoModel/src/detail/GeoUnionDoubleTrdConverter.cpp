@@ -47,10 +47,10 @@ bool trapezoidsAreMergeable(const std::vector<Acts::Vector3> &vtxsa,
 namespace Acts::detail {
 
 Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
-    const GeoFullPhysVol &geoFPV, const GeoShapeUnion &geoTube,
+    const GeoFullPhysVol &geoFPV, const GeoShapeUnion &geoUnion,
     const Transform3 &absTransform, bool sensitive) const {
-  const auto shiftA = dynamic_cast<const GeoShapeShift *>(geoTube.getOpA());
-  const auto shiftB = dynamic_cast<const GeoShapeShift *>(geoTube.getOpB());
+  const auto shiftA = dynamic_cast<const GeoShapeShift *>(geoUnion.getOpA());
+  const auto shiftB = dynamic_cast<const GeoShapeShift *>(geoUnion.getOpB());
 
   if (shiftA == nullptr || shiftB == nullptr) {
     return GeoModelConversionError::WrongShapeForConverter;
