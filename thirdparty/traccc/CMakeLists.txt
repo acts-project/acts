@@ -7,16 +7,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # CMake include(s).
-cmake_minimum_required(VERSION 3.14)
 include(FetchContent)
 
 # Tell the user what's happening.
-message( STATUS "Building tracc as part of the Acts project" )
+message( STATUS "Building traccc as part of the Acts project" )
 
 set( TRACCC_VERSION "${_acts_traccc_version}")
 
 # Declare where to get traccc from.
-FetchContent_Declare( traccc ${ACTS_TRACCC_SOURCE} )
+FetchContent_Declare(
+    traccc
+    ${ACTS_TRACCC_SOURCE}
+)
 
 if(ACTS_CUSTOM_SCALARTYPE)
    set(ACTS_TRACCC_SCALARTYPE ${ACTS_CUSTOM_SCALARTYPE})
@@ -50,6 +52,8 @@ set( TRACCC_BUILD_TESTING OFF CACHE BOOL
     "Turn off the build of the Traccc unit tests" )
 set( TRACCC_BUILD_EXAMPLES OFF CACHE BOOL
     "Turn off the build of the Traccc examples" )
+set (TRACCC_BUILD_BENCHMARKS OFF CACHE BOOL
+    "Turn off the build of the Traccc benchmarks")
 
 # Now set up its build.
 FetchContent_MakeAvailable( traccc )
