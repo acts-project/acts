@@ -20,7 +20,7 @@
 
 #include <set>
 
-//#include <typeinfo> TODO delete
+// #include <typeinfo> TODO delete
 
 namespace {
 std::string recType(const GeoShapeShift &gshift);
@@ -122,7 +122,8 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
 
       } else {
         // convert the full phys vol
-        convertSensitive(physVol, fpv->getAbsoluteTransform(nullptr),cache.sensitiveSurfaces);
+        convertSensitive(physVol, fpv->getAbsoluteTransform(nullptr),
+                         cache.sensitiveSurfaces);
       }
     }
 

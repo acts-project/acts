@@ -15,6 +15,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 
 #include <GeoModelKernel/GeoBox.h>
@@ -27,23 +28,22 @@
 #include <GeoModelKernel/GeoTube.h>
 #include <GeoModelKernel/GeoTubs.h>
 
-#include "Acts/Navigation/DetectorVolumeFinders.hpp"
-
-
 namespace Acts {
 namespace GeoModel {
 std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeometryContext& context, const GeoShape* shape,
-    const std::string& name, const GeoTrf::Transform3D transform, std::vector<GeoModelSensitiveSurface> sensitives) {
-    //dummy volume for conversion with surfaces
-    std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> a;
+    const std::string& name, const GeoTrf::Transform3D transform,
+    std::vector<GeoModelSensitiveSurface> sensitives) {
+  // dummy volume for conversion with surfaces
+  std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> a;
 
-    //type conversion from GeoModelSensitiveSurface to Surface
-    std::vector<std::shared_ptr<Surface>> sensSurfaces(sensitives.size());
-    std::transform(sensitives.begin(), sensitives.end(), sensSurfaces.begin(),
-    [](const std::tuple<std::shared_ptr<GeoModelDetectorElement>, std::shared_ptr<Surface>>& t) {
-         return std::get<1>(t);
-    });
+  // type conversion from GeoModelSensitiveSurface to Surface
+  std::vector<std::shared_ptr<Surface>> sensSurfaces(sensitives.size());
+  std::transform(sensitives.begin(), sensitives.end(), sensSurfaces.begin(),
+                 [](const std::tuple<std::shared_ptr<GeoModelDetectorElement>,
+                                     std::shared_ptr<Surface>>& t) {
+                   return std::get<1>(t);
+                 });
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
   if (shape->typeID() == GeoTube::getClassTypeID()) {
     const GeoTube* tube = static_cast<const GeoTube*>(shape);
@@ -65,17 +65,15 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         portalGenerator, context, name, newTransform, bounds,
         Experimental::tryAllPortalsAndSurfaces());
   } else if (shape->typeID() == GeoBox::getClassTypeID()) {
-    //TODO do the surfaces
+    // TODO do the surfaces
     const GeoBox* box = static_cast<const GeoBox*>(shape);
     std::shared_ptr<CuboidVolumeBounds> bounds =
         std::make_shared<CuboidVolumeBounds>(box->getXHalfLength(),
                                              box->getYHalfLength(),
                                              box->getZHalfLength());
     return Experimental::DetectorVolumeFactory::construct(
-        portalGenerator, context, name, transform, bounds,
-        sensSurfaces, a, 
-        Experimental::tryNoVolumes(),
-        Experimental::tryAllPortalsAndSurfaces());
+        portalGenerator, context, name, transform, bounds, sensSurfaces, a,
+        Experimental::tryNoVolumes(), Experimental::tryAllPortalsAndSurfaces());
   } else if (shape->typeID() == GeoSimplePolygonBrep::getClassTypeID()) {
     const GeoSimplePolygonBrep* brep =
         static_cast<const GeoSimplePolygonBrep*>(shape);
@@ -104,9 +102,8 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         GeoTrf::Transform3D newTransform =
             transform * GeoTrf::RotateX3D(rotationAngle);
         return Experimental::DetectorVolumeFactory::construct(
-            portalGenerator, context, name, newTransform, bounds,
-            sensSurfaces, a, 
-            Experimental::tryNoVolumes(),
+            portalGenerator, context, name, newTransform, bounds, sensSurfaces,
+            a, Experimental::tryNoVolumes(),
             Experimental::tryAllPortalsAndSurfaces());
       } else {
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
@@ -116,9 +113,8 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
                                            GeoTrf::RotateY3D(rotationAngle) *
                                            GeoTrf::RotateZ3D(rotationAngle);
         return Experimental::DetectorVolumeFactory::construct(
-            portalGenerator, context, name, newTransform, bounds,
-            sensSurfaces, a, 
-            Experimental::tryNoVolumes(),
+            portalGenerator, context, name, newTransform, bounds, sensSurfaces,
+            a, Experimental::tryNoVolumes(),
             Experimental::tryAllPortalsAndSurfaces());
       }
     } else if (x1 == x2) {
@@ -130,9 +126,8 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
                                            GeoTrf::RotateZ3D(rotationAngle) *
                                            GeoTrf::RotateX3D(rotationAngle);
         return Experimental::DetectorVolumeFactory::construct(
-            portalGenerator, context, name, newTransform, bounds,
-            sensSurfaces, a, 
-            Experimental::tryNoVolumes(),
+            portalGenerator, context, name, newTransform, bounds, sensSurfaces,
+            a, Experimental::tryNoVolumes(),
             Experimental::tryAllPortalsAndSurfaces());
       } else {
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
@@ -143,9 +138,8 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
             GeoTrf::RotateZ3D(rotationAngle / 2) *
             GeoTrf::RotateX3D(rotationAngle / 2);
         return Experimental::DetectorVolumeFactory::construct(
-            portalGenerator, context, name, newTransform, bounds,
-            sensSurfaces, a, 
-            Experimental::tryNoVolumes(),
+            portalGenerator, context, name, newTransform, bounds, sensSurfaces,
+            a, Experimental::tryNoVolumes(),
             Experimental::tryAllPortalsAndSurfaces());
       }
     } else {
