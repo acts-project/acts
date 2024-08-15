@@ -610,6 +610,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         m_eT[ipar].push_back(parameters[Acts::eBoundTime]);
 
         // track parameters error
+        // MARK: fpeMaskBegin(FLTINV, 1, #2348)
         m_err_eLOC0[ipar].push_back(
             std::sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
         m_err_eLOC1[ipar].push_back(
@@ -622,6 +623,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
             std::sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
         m_err_eT[ipar].push_back(
             std::sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+        // MARK: fpeMaskEnd(FLTINV)
 
         // further track parameter info
         Acts::FreeVector freeParams =
