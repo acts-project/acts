@@ -143,7 +143,7 @@ bool Acts::GeoModelDetectorObjectFactory::convertBox(std::string name) {
   return (name.find(m_cfg.convertBox) != std::string::npos);
 }
 void Acts::GeoModelDetectorObjectFactory::convertFpv(
-    std::string name, auto fpv, Cache &cache, const GeometryContext &gctx) {
+    std::string name, GeoFullPhysVol* fpv, Cache &cache, const GeometryContext &gctx) {
   PVConstLink physVol{fpv};
 
   // get children

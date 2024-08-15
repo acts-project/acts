@@ -65,7 +65,7 @@ class GeoModelDetectorObjectFactory {
   bool convertBox(std::string name);
   bool matches(const std::string& name, PVConstLink physvol);
 
-  void convertFpv(std::string name, auto fpv, Cache& cache,
+  void convertFpv(std::string name, GeoFullPhysVol* fpv, Cache& cache,
                   const GeometryContext& gctx);
 
  private:
