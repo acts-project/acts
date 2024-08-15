@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   //  double YHalfLength2, double ZHalfLength);
   auto trapYZ = new GeoTrd(2, 2, 50, 80, 60);
   auto logYZ = new GeoLogVol("LogVolumeYZ", trapYZ, material);
-  auto fphysYZ = new GeoFullPhysVol(logYZ);
+  auto fphysYZ = make_intrusive<GeoFullPhysVol>(logYZ);
 
   auto converted = Acts::GeoTrdConverter{}.toSensitiveSurface(*fphysYZ);
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   //  double YHalfLength2, double ZHalfLength);
   auto trapYZs = new GeoTrd(2, 2, 80, 50, 60);
   auto logYZs = new GeoLogVol("LogVolumeYZs", trapYZs, material);
-  auto fphysYZs = new GeoFullPhysVol(logYZs);
+  auto fphysYZs = make_intrusive<GeoFullPhysVol>(logYZs);
 
   converted = Acts::GeoTrdConverter{}.toSensitiveSurface(*fphysYZs);
 
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   // (Trapezoid object) - XZ
   auto trapXZ = new GeoTrd(50, 80, 2, 2, 60);
   auto logXZ = new GeoLogVol("LogVolumeXZ", trapXZ, material);
-  auto fphysXZ = new GeoFullPhysVol(logXZ);
+  auto fphysXZ = make_intrusive<GeoFullPhysVol>(logXZ);
 
   converted = Acts::GeoTrdConverter{}.toSensitiveSurface(*fphysXZ);
 
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   // (Trapezoid object) - XZs (swapped)
   auto trapXZs = new GeoTrd(80, 50, 2, 2, 60);
   auto logXZs = new GeoLogVol("LogVolumeXZs", trapXZs, material);
-  auto fphysXZs = new GeoFullPhysVol(logXZs);
+  auto fphysXZs = make_intrusive<GeoFullPhysVol>(logXZs);
 
   converted = Acts::GeoTrdConverter{}.toSensitiveSurface(*fphysXZs);
 
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   // Double - trazoid -> throw exception
   auto trapDouble = new GeoTrd(50, 80, 50, 80, 60);
   auto logDouble = new GeoLogVol("LogVolumeDouble", trapDouble, material);
-  auto fphysDouble = new GeoFullPhysVol(logDouble);
+  auto fphysDouble = make_intrusive<GeoFullPhysVol>(logDouble);
 
   BOOST_CHECK_THROW(Acts::GeoTrdConverter{}.toSensitiveSurface(*fphysDouble),
                     std::invalid_argument);

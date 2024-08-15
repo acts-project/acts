@@ -17,7 +17,7 @@ More information can be found in the [Acts documentation](https://acts.readthedo
 ## Quick start
 
 Acts is developed in C++ and is build using [CMake](https://cmake.org). Building
-the core library requires a C++17 compatible compiler,
+the core library requires a C++20 compatible compiler,
 [Boost](https://www.boost.org), and [Eigen](https://eigen.tuxfamily.org). The
 following commands will clone the repository, configure, and build the core
 library

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -114,12 +114,10 @@ void addPropagation(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::PropagationAlgorithm, mex, "PropagationAlgorithm",
-      propagatorImpl, randomNumberSvc, mode, sterileLogger, debugOutput,
-      energyLoss, multipleScattering, recordMaterialInteractions, ntests,
-      d0Sigma, z0Sigma, phiSigma, thetaSigma, qpSigma, tSigma, phiRange,
-      etaRange, ptRange, particleHypothesis, ptLoopers, maxStepSize,
-      propagationStepCollection, propagationMaterialCollection,
-      covarianceTransport, covariances, correlations);
+      propagatorImpl, sterileLogger, debugOutput, energyLoss,
+      multipleScattering, recordMaterialInteractions, ptLoopers, maxStepSize,
+      covarianceTransport, inputTrackParameters, outputPropagationSteps,
+      outputMaterialTracks);
 
   py::class_<ActsExamples::PropagatorInterface,
              std::shared_ptr<ActsExamples::PropagatorInterface>>(

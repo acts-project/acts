@@ -70,7 +70,7 @@ def runMaterialRecording(
         detectorConstructionFactory=detectorConstructionFactory,
         randomNumbers=rnd,
         inputParticles=evGen.config.outputParticles,
-        outputMaterialTracks="material_tracks",
+        outputMaterialTracks="material-tracks",
     )
 
     s.addAlgorithm(g4Alg)
@@ -79,7 +79,7 @@ def runMaterialRecording(
         acts.examples.RootMaterialTrackWriter(
             prePostStep=True,
             recalculateTotals=True,
-            inputMaterialTracks="material_tracks",
+            inputMaterialTracks="material-tracks",
             filePath=os.path.join(outputDir, "geant4_material_tracks.root"),
             level=acts.logging.INFO,
         )
