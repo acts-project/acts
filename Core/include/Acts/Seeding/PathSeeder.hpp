@@ -66,7 +66,7 @@ class PathSeeder {
         : ipP(ipPmag),
           ipDir(std::move(ipPdir)),
           ipVertex(std::move(ipPos)),
-          sourceLinks(std::move(sls)){};
+          sourceLinks(std::move(sls)) {};
   };
 
   /// @brief Delegate to transform the source link to the
@@ -138,7 +138,7 @@ class PathSeeder {
   };
 
   /// @brief Constructor
-  PathSeeder(const Config& config) : m_cfg(std::move(config)){};
+  PathSeeder(const Config& config) : m_cfg(std::move(config)) {};
 
   /// @brief Destructor
   ~PathSeeder() = default;
