@@ -10,25 +10,14 @@
 include(FetchContent)
 
 # Tell the user what's happening.
-message( STATUS "Building tracc as part of the Acts project" )
+message( STATUS "Building traccc as part of the Acts project" )
 
 set( TRACCC_VERSION "${_acts_traccc_version}")
-
-# Needed to disable -Wfloat-conversion until
-# https://github.com/acts-project/traccc/pull/676 is deployed
-file(
-    DOWNLOAD
-        https://github.com/acts-project/traccc/commit/d2a8754242ddfa84f03fcab837205f548279e4ad.diff
-        ${CMAKE_CURRENT_BINARY_DIR}/traccc-patch.diff
-    EXPECTED_HASH
-        SHA256=ae9140fbfc51b28bbd5857b59bec8af36d09d50d4fd3756627b5ab76c2014068
-)
 
 # Declare where to get traccc from.
 FetchContent_Declare(
     traccc
     ${ACTS_TRACCC_SOURCE}
-    PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_BINARY_DIR}/traccc-patch.diff
 )
 
 if(ACTS_CUSTOM_SCALARTYPE)
@@ -63,6 +52,8 @@ set( TRACCC_BUILD_TESTING OFF CACHE BOOL
     "Turn off the build of the Traccc unit tests" )
 set( TRACCC_BUILD_EXAMPLES OFF CACHE BOOL
     "Turn off the build of the Traccc examples" )
+set (TRACCC_BUILD_BENCHMARKS OFF CACHE BOOL
+    "Turn off the build of the Traccc benchmarks")
 
 # Now set up its build.
 FetchContent_MakeAvailable( traccc )
