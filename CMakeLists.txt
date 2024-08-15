@@ -52,7 +52,6 @@ option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
 option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_USE_SYSTEM_DFELIBS "Use a system-provided dfelibs installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_ALGEBRAPLUGINS "Use a system-provided algebra-plugins installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
@@ -153,6 +152,9 @@ set_option_if(
   ACTS_BUILD_PLUGIN_DETRAY
   ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(
+  ACTS_BUILD_PLUGIN_JSON
+  ACTS_BUILD_PLUGIN_DETRAY)
+set_option_if(
   ACTS_BUILD_PLUGIN_COVFIE
   ACTS_BUILD_PLUGIN_DETRAY)
 
@@ -194,7 +196,7 @@ set(_acts_autodiff_version 0.6)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.21)
 set(_acts_edm4hep_version 0.7)
-set(_acts_geomodel_version 4.6.0)
+set(_acts_geomodel_version 6.3.0)
 set(_acts_eigen3_version 3.3.7)
 set(_acts_podio_version 1.0.1) # will try this first
 set(_acts_podio_fallback_version 0.16) # if not found, will try this one
@@ -254,11 +256,6 @@ if (ACTS_SETUP_EIGEN3)
   endif()
 endif()
 
-if (ACTS_USE_SYSTEM_DFELIBS)
-  find_package(dfelibs ${_acts_dfelibs_version} REQUIRED)
-else()
-  add_subdirectory(thirdparty/dfelibs)
-endif()
 
 find_package(Filesystem REQUIRED)
 
@@ -315,12 +312,8 @@ if(ACTS_BUILD_PLUGIN_JSON)
   endif()
 endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
-  if(ACTS_USE_SYSTEM_GEOMODEL)
-    find_package(GeoModelCore ${_acts_geomodel_version} REQUIRED CONFIG)
-    find_package(GeoModelIO ${_acts_geomodel_version} REQUIRED CONFIG)
-  else()
-    add_subdirectory(thirdparty/GeoModel)
-  endif()
+  find_package(GeoModelCore ${_acts_geomodel_version} REQUIRED CONFIG)
+  find_package(GeoModelIO ${_acts_geomodel_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_PLUGIN_TGEO)
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Geom Graf)
