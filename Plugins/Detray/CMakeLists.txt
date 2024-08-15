@@ -17,6 +17,7 @@ target_link_libraries(
   ActsPluginDetray
   PUBLIC
     ActsCore
+    ActsPluginJson
     detray::core
     detray::core_array
     detray::io
