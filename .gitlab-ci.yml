@@ -55,7 +55,7 @@ clang_tidy:
 
 build_exatrkx_cpu:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:52
+  image: ghcr.io/acts-project/ubuntu2204_exatrkx:58
   tags:
     - large
 
@@ -86,7 +86,7 @@ build_exatrkx_cpu:
 
 build_exatrkx:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:52
+  image: ghcr.io/acts-project/ubuntu2204_exatrkx:58
   tags:
     - large
 
@@ -126,7 +126,7 @@ build_exatrkx:
 #   stage: test
 #   needs:
 #     - build_exatrkx
-#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:52
+#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:58
 #   tags:
 #     - docker-gpu-nvidia
 #   script:
@@ -136,7 +136,7 @@ build_exatrkx:
 #   stage: test
 #   needs:
 #     - build_exatrkx
-#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:52
+#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:58
 #   tags:
 #     - docker-gpu-nvidia
 #   script:
@@ -305,7 +305,7 @@ linux_ubuntu_2204_clang:
   <<: *linux_ubuntu_extra
   variables:
     CXXSTD: 20
-  image: ghcr.io/acts-project/ubuntu2204_clang:52
+  image: ghcr.io/acts-project/ubuntu2204_clang:58
 
 
 ######################
