@@ -51,8 +51,8 @@ struct PathLimitReached {
     double tolerance = state.options.surfaceTolerance;
     bool limitReached = (std::abs(distance) < std::abs(tolerance));
     if (limitReached) {
-      ACTS_VERBOSE("PathLimit aborter | "
-                   << "Path limit reached at distance " << distance);
+      ACTS_VERBOSE("PathLimit aborter | " << "Path limit reached at distance "
+                                          << distance);
       return true;
     }
     stepper.updateStepSize(state.stepping, distance, ConstrainedStep::aborter,
@@ -130,9 +130,9 @@ struct SurfaceReached {
     bool intersectionFound = false;
 
     for (const auto& intersection : sIntersection.split()) {
-      if (intersection &&
-          detail::checkIntersection(intersection.intersection(), nearLimit,
-                                    farLimit, logger)) {
+      if (intersection.isValid() &&
+          detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                  farLimit, logger)) {
         stepper.updateStepSize(state.stepping, intersection.pathLength(),
                                ConstrainedStep::aborter, false);
         ACTS_VERBOSE(

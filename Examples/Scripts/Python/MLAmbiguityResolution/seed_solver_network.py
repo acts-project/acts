@@ -11,7 +11,7 @@ def prepareDataSet(data: pd.DataFrame) -> pd.DataFrame:
     """Format the dataset that have been written from the Csv file"""
     """
     @param[in] data: input DataFrame containing 1 event
-    @return: Formatted DataFrame 
+    @return: Formatted DataFrame
     """
     # Sort by particle ID
     data = data.sort_values("particleId")

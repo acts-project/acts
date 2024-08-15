@@ -15,24 +15,16 @@ set( ACTS_COVFIE_SOURCE
 mark_as_advanced( ACTS_COVFIE_SOURCE )
 
 set( ACTS_DETRAY_SOURCE
-   "URL;https://github.com/acts-project/detray/archive/refs/tags/v0.65.1.tar.gz;URL_MD5;fbf57a881565fa6019d79d13409b588f" CACHE STRING "Source to take DETRAY from")
+   "URL;https://github.com/acts-project/detray/archive/refs/tags/v0.72.1.tar.gz;URL_MD5;342ab0bfba45c5764c8eef3842897c16" CACHE STRING "Source to take DETRAY from")
 mark_as_advanced( ACTS_DETRAY_SOURCE )
 
 set( ACTS_TRACCC_SOURCE
-   "URL;https://github.com/acts-project/traccc/archive/refs/tags/v0.10.0.tar.gz;URL_MD5;131399d26e3280c4d7f7ca2995efd256" CACHE STRING "Source to take TRACCC from")
+   "URL;https://github.com/acts-project/traccc/archive/refs/tags/v0.13.0.tar.gz;URL_MD5;1ddf757ddcbaa08fd7db3a7752ef7f98" CACHE STRING "Source to take TRACCC from")
 mark_as_advanced( ACTS_TRACCC_SOURCE )
-
-set( ACTS_DFELIBS_SOURCE
-   "URL;https://github.com/acts-project/dfelibs/archive/refs/tags/v20211029.tar.gz;URL_MD5;87fb09c5a11b98250f5e266e9cd501ea" CACHE STRING "Source to take dfelibs from")
-mark_as_advanced( ACTS_DFELIBS_SOURCE )
 
 set( ACTS_FRNN_SOURCE
    "GIT_REPOSITORY;https://github.com/hrzhao76/FRNN/;GIT_TAG;5f8a48b0022300cd2863119f5646a5f31373e0c8" CACHE STRING "Source to take FRNN from")
 mark_as_advanced( ACTS_FRNN_SOURCE )
-
-set( ACTS_GEOMODEL_SOURCE
-   "GIT_REPOSITORY;https://gitlab.cern.ch/GeoModelDev/GeoModel;GIT_TAG;6.2.0;" CACHE STRING "Source to take GeoModel from")
-mark_as_advanced( ACTS_GEOMODEL_SOURCE )
 
 set( ACTS_NLOHMANNJSON_SOURCE
    "URL;https://github.com/nlohmann/json/archive/refs/tags/v3.10.5.tar.gz;URL_HASH;SHA1=8969f5ad1a422e01f040ff48dcae9c0e6ad0811d" CACHE STRING "Source to take nlohmann_json from")
@@ -48,5 +40,5 @@ set( ACTS_EIGEN3_SOURCE
 mark_as_advanced( ACTS_EIGEN3_SOURCE )
 
 set( ACTS_PYBIND11_SOURCE
-   "GIT_REPOSITORY;https://github.com/pybind/pybind11.git;GIT_TAG;v2.10.1" CACHE STRING "Source to take pybind11 from")
+   "GIT_REPOSITORY;https://github.com/pybind/pybind11.git;GIT_TAG;v2.13.1" CACHE STRING "Source to take pybind11 from")
 mark_as_advanced( ACTS_PYBIND11_SOURCE )

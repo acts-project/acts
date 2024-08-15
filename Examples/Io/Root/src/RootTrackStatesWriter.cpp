@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,6 +17,7 @@
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
@@ -42,17 +43,16 @@
 #include <TTree.h>
 
 namespace ActsExamples {
+
 class IndexSourceLink;
-}  // namespace ActsExamples
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
-ActsExamples::RootTrackStatesWriter::RootTrackStatesWriter(
-    const ActsExamples::RootTrackStatesWriter::Config& config,
-    Acts::Logging::Level level)
+RootTrackStatesWriter::RootTrackStatesWriter(
+    const RootTrackStatesWriter::Config& config, Acts::Logging::Level level)
     : WriterT(config.inputTracks, "RootTrackStatesWriter", level),
       m_cfg(config) {
   // trajectories collection name is already checked by base ctor
@@ -91,194 +91,199 @@ ActsExamples::RootTrackStatesWriter::RootTrackStatesWriter(
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
   if (m_outputTree == nullptr) {
     throw std::bad_alloc();
-  } else {
-    // I/O parameters
-    m_outputTree->Branch("event_nr", &m_eventNr);
-    m_outputTree->Branch("track_nr", &m_trackNr);
-
-    m_outputTree->Branch("t_x", &m_t_x);
-    m_outputTree->Branch("t_y", &m_t_y);
-    m_outputTree->Branch("t_z", &m_t_z);
-    m_outputTree->Branch("t_r", &m_t_r);
-    m_outputTree->Branch("t_dx", &m_t_dx);
-    m_outputTree->Branch("t_dy", &m_t_dy);
-    m_outputTree->Branch("t_dz", &m_t_dz);
-    m_outputTree->Branch("t_eLOC0", &m_t_eLOC0);
-    m_outputTree->Branch("t_eLOC1", &m_t_eLOC1);
-    m_outputTree->Branch("t_ePHI", &m_t_ePHI);
-    m_outputTree->Branch("t_eTHETA", &m_t_eTHETA);
-    m_outputTree->Branch("t_eQOP", &m_t_eQOP);
-    m_outputTree->Branch("t_eT", &m_t_eT);
-    m_outputTree->Branch("particle_ids", &m_particleId);
-
-    m_outputTree->Branch("nStates", &m_nStates);
-    m_outputTree->Branch("nMeasurements", &m_nMeasurements);
-    m_outputTree->Branch("volume_id", &m_volumeID);
-    m_outputTree->Branch("layer_id", &m_layerID);
-    m_outputTree->Branch("module_id", &m_moduleID);
-    m_outputTree->Branch("pathLength", &m_pathLength);
-    m_outputTree->Branch("l_x_hit", &m_lx_hit);
-    m_outputTree->Branch("l_y_hit", &m_ly_hit);
-    m_outputTree->Branch("g_x_hit", &m_x_hit);
-    m_outputTree->Branch("g_y_hit", &m_y_hit);
-    m_outputTree->Branch("g_z_hit", &m_z_hit);
-    m_outputTree->Branch("res_x_hit", &m_res_x_hit);
-    m_outputTree->Branch("res_y_hit", &m_res_y_hit);
-    m_outputTree->Branch("err_x_hit", &m_err_x_hit);
-    m_outputTree->Branch("err_y_hit", &m_err_y_hit);
-    m_outputTree->Branch("pull_x_hit", &m_pull_x_hit);
-    m_outputTree->Branch("pull_y_hit", &m_pull_y_hit);
-    m_outputTree->Branch("dim_hit", &m_dim_hit);
-
-    m_outputTree->Branch("nPredicted", &m_nParams[ePredicted]);
-    m_outputTree->Branch("predicted", &m_hasParams[ePredicted]);
-    m_outputTree->Branch("eLOC0_prt", &m_eLOC0[ePredicted]);
-    m_outputTree->Branch("eLOC1_prt", &m_eLOC1[ePredicted]);
-    m_outputTree->Branch("ePHI_prt", &m_ePHI[ePredicted]);
-    m_outputTree->Branch("eTHETA_prt", &m_eTHETA[ePredicted]);
-    m_outputTree->Branch("eQOP_prt", &m_eQOP[ePredicted]);
-    m_outputTree->Branch("eT_prt", &m_eT[ePredicted]);
-    m_outputTree->Branch("res_eLOC0_prt", &m_res_eLOC0[ePredicted]);
-    m_outputTree->Branch("res_eLOC1_prt", &m_res_eLOC1[ePredicted]);
-    m_outputTree->Branch("res_ePHI_prt", &m_res_ePHI[ePredicted]);
-    m_outputTree->Branch("res_eTHETA_prt", &m_res_eTHETA[ePredicted]);
-    m_outputTree->Branch("res_eQOP_prt", &m_res_eQOP[ePredicted]);
-    m_outputTree->Branch("res_eT_prt", &m_res_eT[ePredicted]);
-    m_outputTree->Branch("err_eLOC0_prt", &m_err_eLOC0[ePredicted]);
-    m_outputTree->Branch("err_eLOC1_prt", &m_err_eLOC1[ePredicted]);
-    m_outputTree->Branch("err_ePHI_prt", &m_err_ePHI[ePredicted]);
-    m_outputTree->Branch("err_eTHETA_prt", &m_err_eTHETA[ePredicted]);
-    m_outputTree->Branch("err_eQOP_prt", &m_err_eQOP[ePredicted]);
-    m_outputTree->Branch("err_eT_prt", &m_err_eT[ePredicted]);
-    m_outputTree->Branch("pull_eLOC0_prt", &m_pull_eLOC0[ePredicted]);
-    m_outputTree->Branch("pull_eLOC1_prt", &m_pull_eLOC1[ePredicted]);
-    m_outputTree->Branch("pull_ePHI_prt", &m_pull_ePHI[ePredicted]);
-    m_outputTree->Branch("pull_eTHETA_prt", &m_pull_eTHETA[ePredicted]);
-    m_outputTree->Branch("pull_eQOP_prt", &m_pull_eQOP[ePredicted]);
-    m_outputTree->Branch("pull_eT_prt", &m_pull_eT[ePredicted]);
-    m_outputTree->Branch("g_x_prt", &m_x[ePredicted]);
-    m_outputTree->Branch("g_y_prt", &m_y[ePredicted]);
-    m_outputTree->Branch("g_z_prt", &m_z[ePredicted]);
-    m_outputTree->Branch("px_prt", &m_px[ePredicted]);
-    m_outputTree->Branch("py_prt", &m_py[ePredicted]);
-    m_outputTree->Branch("pz_prt", &m_pz[ePredicted]);
-    m_outputTree->Branch("eta_prt", &m_eta[ePredicted]);
-    m_outputTree->Branch("pT_prt", &m_pT[ePredicted]);
-
-    m_outputTree->Branch("nFiltered", &m_nParams[eFiltered]);
-    m_outputTree->Branch("filtered", &m_hasParams[eFiltered]);
-    m_outputTree->Branch("eLOC0_flt", &m_eLOC0[eFiltered]);
-    m_outputTree->Branch("eLOC1_flt", &m_eLOC1[eFiltered]);
-    m_outputTree->Branch("ePHI_flt", &m_ePHI[eFiltered]);
-    m_outputTree->Branch("eTHETA_flt", &m_eTHETA[eFiltered]);
-    m_outputTree->Branch("eQOP_flt", &m_eQOP[eFiltered]);
-    m_outputTree->Branch("eT_flt", &m_eT[eFiltered]);
-    m_outputTree->Branch("res_eLOC0_flt", &m_res_eLOC0[eFiltered]);
-    m_outputTree->Branch("res_eLOC1_flt", &m_res_eLOC1[eFiltered]);
-    m_outputTree->Branch("res_ePHI_flt", &m_res_ePHI[eFiltered]);
-    m_outputTree->Branch("res_eTHETA_flt", &m_res_eTHETA[eFiltered]);
-    m_outputTree->Branch("res_eQOP_flt", &m_res_eQOP[eFiltered]);
-    m_outputTree->Branch("res_eT_flt", &m_res_eT[eFiltered]);
-    m_outputTree->Branch("err_eLOC0_flt", &m_err_eLOC0[eFiltered]);
-    m_outputTree->Branch("err_eLOC1_flt", &m_err_eLOC1[eFiltered]);
-    m_outputTree->Branch("err_ePHI_flt", &m_err_ePHI[eFiltered]);
-    m_outputTree->Branch("err_eTHETA_flt", &m_err_eTHETA[eFiltered]);
-    m_outputTree->Branch("err_eQOP_flt", &m_err_eQOP[eFiltered]);
-    m_outputTree->Branch("err_eT_flt", &m_err_eT[eFiltered]);
-    m_outputTree->Branch("pull_eLOC0_flt", &m_pull_eLOC0[eFiltered]);
-    m_outputTree->Branch("pull_eLOC1_flt", &m_pull_eLOC1[eFiltered]);
-    m_outputTree->Branch("pull_ePHI_flt", &m_pull_ePHI[eFiltered]);
-    m_outputTree->Branch("pull_eTHETA_flt", &m_pull_eTHETA[eFiltered]);
-    m_outputTree->Branch("pull_eQOP_flt", &m_pull_eQOP[eFiltered]);
-    m_outputTree->Branch("pull_eT_flt", &m_pull_eT[eFiltered]);
-    m_outputTree->Branch("g_x_flt", &m_x[eFiltered]);
-    m_outputTree->Branch("g_y_flt", &m_y[eFiltered]);
-    m_outputTree->Branch("g_z_flt", &m_z[eFiltered]);
-    m_outputTree->Branch("px_flt", &m_px[eFiltered]);
-    m_outputTree->Branch("py_flt", &m_py[eFiltered]);
-    m_outputTree->Branch("pz_flt", &m_pz[eFiltered]);
-    m_outputTree->Branch("eta_flt", &m_eta[eFiltered]);
-    m_outputTree->Branch("pT_flt", &m_pT[eFiltered]);
-
-    m_outputTree->Branch("nSmoothed", &m_nParams[eSmoothed]);
-    m_outputTree->Branch("smoothed", &m_hasParams[eSmoothed]);
-    m_outputTree->Branch("eLOC0_smt", &m_eLOC0[eSmoothed]);
-    m_outputTree->Branch("eLOC1_smt", &m_eLOC1[eSmoothed]);
-    m_outputTree->Branch("ePHI_smt", &m_ePHI[eSmoothed]);
-    m_outputTree->Branch("eTHETA_smt", &m_eTHETA[eSmoothed]);
-    m_outputTree->Branch("eQOP_smt", &m_eQOP[eSmoothed]);
-    m_outputTree->Branch("eT_smt", &m_eT[eSmoothed]);
-    m_outputTree->Branch("res_eLOC0_smt", &m_res_eLOC0[eSmoothed]);
-    m_outputTree->Branch("res_eLOC1_smt", &m_res_eLOC1[eSmoothed]);
-    m_outputTree->Branch("res_ePHI_smt", &m_res_ePHI[eSmoothed]);
-    m_outputTree->Branch("res_eTHETA_smt", &m_res_eTHETA[eSmoothed]);
-    m_outputTree->Branch("res_eQOP_smt", &m_res_eQOP[eSmoothed]);
-    m_outputTree->Branch("res_eT_smt", &m_res_eT[eSmoothed]);
-    m_outputTree->Branch("err_eLOC0_smt", &m_err_eLOC0[eSmoothed]);
-    m_outputTree->Branch("err_eLOC1_smt", &m_err_eLOC1[eSmoothed]);
-    m_outputTree->Branch("err_ePHI_smt", &m_err_ePHI[eSmoothed]);
-    m_outputTree->Branch("err_eTHETA_smt", &m_err_eTHETA[eSmoothed]);
-    m_outputTree->Branch("err_eQOP_smt", &m_err_eQOP[eSmoothed]);
-    m_outputTree->Branch("err_eT_smt", &m_err_eT[eSmoothed]);
-    m_outputTree->Branch("pull_eLOC0_smt", &m_pull_eLOC0[eSmoothed]);
-    m_outputTree->Branch("pull_eLOC1_smt", &m_pull_eLOC1[eSmoothed]);
-    m_outputTree->Branch("pull_ePHI_smt", &m_pull_ePHI[eSmoothed]);
-    m_outputTree->Branch("pull_eTHETA_smt", &m_pull_eTHETA[eSmoothed]);
-    m_outputTree->Branch("pull_eQOP_smt", &m_pull_eQOP[eSmoothed]);
-    m_outputTree->Branch("pull_eT_smt", &m_pull_eT[eSmoothed]);
-    m_outputTree->Branch("g_x_smt", &m_x[eSmoothed]);
-    m_outputTree->Branch("g_y_smt", &m_y[eSmoothed]);
-    m_outputTree->Branch("g_z_smt", &m_z[eSmoothed]);
-    m_outputTree->Branch("px_smt", &m_px[eSmoothed]);
-    m_outputTree->Branch("py_smt", &m_py[eSmoothed]);
-    m_outputTree->Branch("pz_smt", &m_pz[eSmoothed]);
-    m_outputTree->Branch("eta_smt", &m_eta[eSmoothed]);
-    m_outputTree->Branch("pT_smt", &m_pT[eSmoothed]);
-
-    m_outputTree->Branch("nUnbiased", &m_nParams[eUnbiased]);
-    m_outputTree->Branch("unbiased", &m_hasParams[eUnbiased]);
-    m_outputTree->Branch("eLOC0_ubs", &m_eLOC0[eUnbiased]);
-    m_outputTree->Branch("eLOC1_ubs", &m_eLOC1[eUnbiased]);
-    m_outputTree->Branch("ePHI_ubs", &m_ePHI[eUnbiased]);
-    m_outputTree->Branch("eTHETA_ubs", &m_eTHETA[eUnbiased]);
-    m_outputTree->Branch("eQOP_ubs", &m_eQOP[eUnbiased]);
-    m_outputTree->Branch("eT_ubs", &m_eT[eUnbiased]);
-    m_outputTree->Branch("res_eLOC0_ubs", &m_res_eLOC0[eUnbiased]);
-    m_outputTree->Branch("res_eLOC1_ubs", &m_res_eLOC1[eUnbiased]);
-    m_outputTree->Branch("res_ePHI_ubs", &m_res_ePHI[eUnbiased]);
-    m_outputTree->Branch("res_eTHETA_ubs", &m_res_eTHETA[eUnbiased]);
-    m_outputTree->Branch("res_eQOP_ubs", &m_res_eQOP[eUnbiased]);
-    m_outputTree->Branch("res_eT_ubs", &m_res_eT[eUnbiased]);
-    m_outputTree->Branch("err_eLOC0_ubs", &m_err_eLOC0[eUnbiased]);
-    m_outputTree->Branch("err_eLOC1_ubs", &m_err_eLOC1[eUnbiased]);
-    m_outputTree->Branch("err_ePHI_ubs", &m_err_ePHI[eUnbiased]);
-    m_outputTree->Branch("err_eTHETA_ubs", &m_err_eTHETA[eUnbiased]);
-    m_outputTree->Branch("err_eQOP_ubs", &m_err_eQOP[eUnbiased]);
-    m_outputTree->Branch("err_eT_ubs", &m_err_eT[eUnbiased]);
-    m_outputTree->Branch("pull_eLOC0_ubs", &m_pull_eLOC0[eUnbiased]);
-    m_outputTree->Branch("pull_eLOC1_ubs", &m_pull_eLOC1[eUnbiased]);
-    m_outputTree->Branch("pull_ePHI_ubs", &m_pull_ePHI[eUnbiased]);
-    m_outputTree->Branch("pull_eTHETA_ubs", &m_pull_eTHETA[eUnbiased]);
-    m_outputTree->Branch("pull_eQOP_ubs", &m_pull_eQOP[eUnbiased]);
-    m_outputTree->Branch("pull_eT_ubs", &m_pull_eT[eUnbiased]);
-    m_outputTree->Branch("g_x_ubs", &m_x[eUnbiased]);
-    m_outputTree->Branch("g_y_ubs", &m_y[eUnbiased]);
-    m_outputTree->Branch("g_z_ubs", &m_z[eUnbiased]);
-    m_outputTree->Branch("px_ubs", &m_px[eUnbiased]);
-    m_outputTree->Branch("py_ubs", &m_py[eUnbiased]);
-    m_outputTree->Branch("pz_ubs", &m_pz[eUnbiased]);
-    m_outputTree->Branch("eta_ubs", &m_eta[eUnbiased]);
-    m_outputTree->Branch("pT_ubs", &m_pT[eUnbiased]);
-
-    m_outputTree->Branch("chi2", &m_chi2);
   }
+
+  // I/O parameters
+  m_outputTree->Branch("event_nr", &m_eventNr);
+  m_outputTree->Branch("track_nr", &m_trackNr);
+
+  m_outputTree->Branch("nStates", &m_nStates);
+  m_outputTree->Branch("nMeasurements", &m_nMeasurements);
+
+  m_outputTree->Branch("volume_id", &m_volumeID);
+  m_outputTree->Branch("layer_id", &m_layerID);
+  m_outputTree->Branch("module_id", &m_moduleID);
+
+  m_outputTree->Branch("stateType", &m_stateType);
+
+  m_outputTree->Branch("chi2", &m_chi2);
+
+  m_outputTree->Branch("pathLength", &m_pathLength);
+
+  m_outputTree->Branch("t_x", &m_t_x);
+  m_outputTree->Branch("t_y", &m_t_y);
+  m_outputTree->Branch("t_z", &m_t_z);
+  m_outputTree->Branch("t_r", &m_t_r);
+  m_outputTree->Branch("t_dx", &m_t_dx);
+  m_outputTree->Branch("t_dy", &m_t_dy);
+  m_outputTree->Branch("t_dz", &m_t_dz);
+  m_outputTree->Branch("t_eLOC0", &m_t_eLOC0);
+  m_outputTree->Branch("t_eLOC1", &m_t_eLOC1);
+  m_outputTree->Branch("t_ePHI", &m_t_ePHI);
+  m_outputTree->Branch("t_eTHETA", &m_t_eTHETA);
+  m_outputTree->Branch("t_eQOP", &m_t_eQOP);
+  m_outputTree->Branch("t_eT", &m_t_eT);
+  m_outputTree->Branch("particle_ids", &m_particleId);
+
+  m_outputTree->Branch("dim_hit", &m_dim_hit);
+  m_outputTree->Branch("l_x_hit", &m_lx_hit);
+  m_outputTree->Branch("l_y_hit", &m_ly_hit);
+  m_outputTree->Branch("g_x_hit", &m_x_hit);
+  m_outputTree->Branch("g_y_hit", &m_y_hit);
+  m_outputTree->Branch("g_z_hit", &m_z_hit);
+  m_outputTree->Branch("res_x_hit", &m_res_x_hit);
+  m_outputTree->Branch("res_y_hit", &m_res_y_hit);
+  m_outputTree->Branch("err_x_hit", &m_err_x_hit);
+  m_outputTree->Branch("err_y_hit", &m_err_y_hit);
+  m_outputTree->Branch("pull_x_hit", &m_pull_x_hit);
+  m_outputTree->Branch("pull_y_hit", &m_pull_y_hit);
+
+  m_outputTree->Branch("nPredicted", &m_nParams[ePredicted]);
+  m_outputTree->Branch("predicted", &m_hasParams[ePredicted]);
+  m_outputTree->Branch("eLOC0_prt", &m_eLOC0[ePredicted]);
+  m_outputTree->Branch("eLOC1_prt", &m_eLOC1[ePredicted]);
+  m_outputTree->Branch("ePHI_prt", &m_ePHI[ePredicted]);
+  m_outputTree->Branch("eTHETA_prt", &m_eTHETA[ePredicted]);
+  m_outputTree->Branch("eQOP_prt", &m_eQOP[ePredicted]);
+  m_outputTree->Branch("eT_prt", &m_eT[ePredicted]);
+  m_outputTree->Branch("res_eLOC0_prt", &m_res_eLOC0[ePredicted]);
+  m_outputTree->Branch("res_eLOC1_prt", &m_res_eLOC1[ePredicted]);
+  m_outputTree->Branch("res_ePHI_prt", &m_res_ePHI[ePredicted]);
+  m_outputTree->Branch("res_eTHETA_prt", &m_res_eTHETA[ePredicted]);
+  m_outputTree->Branch("res_eQOP_prt", &m_res_eQOP[ePredicted]);
+  m_outputTree->Branch("res_eT_prt", &m_res_eT[ePredicted]);
+  m_outputTree->Branch("err_eLOC0_prt", &m_err_eLOC0[ePredicted]);
+  m_outputTree->Branch("err_eLOC1_prt", &m_err_eLOC1[ePredicted]);
+  m_outputTree->Branch("err_ePHI_prt", &m_err_ePHI[ePredicted]);
+  m_outputTree->Branch("err_eTHETA_prt", &m_err_eTHETA[ePredicted]);
+  m_outputTree->Branch("err_eQOP_prt", &m_err_eQOP[ePredicted]);
+  m_outputTree->Branch("err_eT_prt", &m_err_eT[ePredicted]);
+  m_outputTree->Branch("pull_eLOC0_prt", &m_pull_eLOC0[ePredicted]);
+  m_outputTree->Branch("pull_eLOC1_prt", &m_pull_eLOC1[ePredicted]);
+  m_outputTree->Branch("pull_ePHI_prt", &m_pull_ePHI[ePredicted]);
+  m_outputTree->Branch("pull_eTHETA_prt", &m_pull_eTHETA[ePredicted]);
+  m_outputTree->Branch("pull_eQOP_prt", &m_pull_eQOP[ePredicted]);
+  m_outputTree->Branch("pull_eT_prt", &m_pull_eT[ePredicted]);
+  m_outputTree->Branch("g_x_prt", &m_x[ePredicted]);
+  m_outputTree->Branch("g_y_prt", &m_y[ePredicted]);
+  m_outputTree->Branch("g_z_prt", &m_z[ePredicted]);
+  m_outputTree->Branch("px_prt", &m_px[ePredicted]);
+  m_outputTree->Branch("py_prt", &m_py[ePredicted]);
+  m_outputTree->Branch("pz_prt", &m_pz[ePredicted]);
+  m_outputTree->Branch("eta_prt", &m_eta[ePredicted]);
+  m_outputTree->Branch("pT_prt", &m_pT[ePredicted]);
+
+  m_outputTree->Branch("nFiltered", &m_nParams[eFiltered]);
+  m_outputTree->Branch("filtered", &m_hasParams[eFiltered]);
+  m_outputTree->Branch("eLOC0_flt", &m_eLOC0[eFiltered]);
+  m_outputTree->Branch("eLOC1_flt", &m_eLOC1[eFiltered]);
+  m_outputTree->Branch("ePHI_flt", &m_ePHI[eFiltered]);
+  m_outputTree->Branch("eTHETA_flt", &m_eTHETA[eFiltered]);
+  m_outputTree->Branch("eQOP_flt", &m_eQOP[eFiltered]);
+  m_outputTree->Branch("eT_flt", &m_eT[eFiltered]);
+  m_outputTree->Branch("res_eLOC0_flt", &m_res_eLOC0[eFiltered]);
+  m_outputTree->Branch("res_eLOC1_flt", &m_res_eLOC1[eFiltered]);
+  m_outputTree->Branch("res_ePHI_flt", &m_res_ePHI[eFiltered]);
+  m_outputTree->Branch("res_eTHETA_flt", &m_res_eTHETA[eFiltered]);
+  m_outputTree->Branch("res_eQOP_flt", &m_res_eQOP[eFiltered]);
+  m_outputTree->Branch("res_eT_flt", &m_res_eT[eFiltered]);
+  m_outputTree->Branch("err_eLOC0_flt", &m_err_eLOC0[eFiltered]);
+  m_outputTree->Branch("err_eLOC1_flt", &m_err_eLOC1[eFiltered]);
+  m_outputTree->Branch("err_ePHI_flt", &m_err_ePHI[eFiltered]);
+  m_outputTree->Branch("err_eTHETA_flt", &m_err_eTHETA[eFiltered]);
+  m_outputTree->Branch("err_eQOP_flt", &m_err_eQOP[eFiltered]);
+  m_outputTree->Branch("err_eT_flt", &m_err_eT[eFiltered]);
+  m_outputTree->Branch("pull_eLOC0_flt", &m_pull_eLOC0[eFiltered]);
+  m_outputTree->Branch("pull_eLOC1_flt", &m_pull_eLOC1[eFiltered]);
+  m_outputTree->Branch("pull_ePHI_flt", &m_pull_ePHI[eFiltered]);
+  m_outputTree->Branch("pull_eTHETA_flt", &m_pull_eTHETA[eFiltered]);
+  m_outputTree->Branch("pull_eQOP_flt", &m_pull_eQOP[eFiltered]);
+  m_outputTree->Branch("pull_eT_flt", &m_pull_eT[eFiltered]);
+  m_outputTree->Branch("g_x_flt", &m_x[eFiltered]);
+  m_outputTree->Branch("g_y_flt", &m_y[eFiltered]);
+  m_outputTree->Branch("g_z_flt", &m_z[eFiltered]);
+  m_outputTree->Branch("px_flt", &m_px[eFiltered]);
+  m_outputTree->Branch("py_flt", &m_py[eFiltered]);
+  m_outputTree->Branch("pz_flt", &m_pz[eFiltered]);
+  m_outputTree->Branch("eta_flt", &m_eta[eFiltered]);
+  m_outputTree->Branch("pT_flt", &m_pT[eFiltered]);
+
+  m_outputTree->Branch("nSmoothed", &m_nParams[eSmoothed]);
+  m_outputTree->Branch("smoothed", &m_hasParams[eSmoothed]);
+  m_outputTree->Branch("eLOC0_smt", &m_eLOC0[eSmoothed]);
+  m_outputTree->Branch("eLOC1_smt", &m_eLOC1[eSmoothed]);
+  m_outputTree->Branch("ePHI_smt", &m_ePHI[eSmoothed]);
+  m_outputTree->Branch("eTHETA_smt", &m_eTHETA[eSmoothed]);
+  m_outputTree->Branch("eQOP_smt", &m_eQOP[eSmoothed]);
+  m_outputTree->Branch("eT_smt", &m_eT[eSmoothed]);
+  m_outputTree->Branch("res_eLOC0_smt", &m_res_eLOC0[eSmoothed]);
+  m_outputTree->Branch("res_eLOC1_smt", &m_res_eLOC1[eSmoothed]);
+  m_outputTree->Branch("res_ePHI_smt", &m_res_ePHI[eSmoothed]);
+  m_outputTree->Branch("res_eTHETA_smt", &m_res_eTHETA[eSmoothed]);
+  m_outputTree->Branch("res_eQOP_smt", &m_res_eQOP[eSmoothed]);
+  m_outputTree->Branch("res_eT_smt", &m_res_eT[eSmoothed]);
+  m_outputTree->Branch("err_eLOC0_smt", &m_err_eLOC0[eSmoothed]);
+  m_outputTree->Branch("err_eLOC1_smt", &m_err_eLOC1[eSmoothed]);
+  m_outputTree->Branch("err_ePHI_smt", &m_err_ePHI[eSmoothed]);
+  m_outputTree->Branch("err_eTHETA_smt", &m_err_eTHETA[eSmoothed]);
+  m_outputTree->Branch("err_eQOP_smt", &m_err_eQOP[eSmoothed]);
+  m_outputTree->Branch("err_eT_smt", &m_err_eT[eSmoothed]);
+  m_outputTree->Branch("pull_eLOC0_smt", &m_pull_eLOC0[eSmoothed]);
+  m_outputTree->Branch("pull_eLOC1_smt", &m_pull_eLOC1[eSmoothed]);
+  m_outputTree->Branch("pull_ePHI_smt", &m_pull_ePHI[eSmoothed]);
+  m_outputTree->Branch("pull_eTHETA_smt", &m_pull_eTHETA[eSmoothed]);
+  m_outputTree->Branch("pull_eQOP_smt", &m_pull_eQOP[eSmoothed]);
+  m_outputTree->Branch("pull_eT_smt", &m_pull_eT[eSmoothed]);
+  m_outputTree->Branch("g_x_smt", &m_x[eSmoothed]);
+  m_outputTree->Branch("g_y_smt", &m_y[eSmoothed]);
+  m_outputTree->Branch("g_z_smt", &m_z[eSmoothed]);
+  m_outputTree->Branch("px_smt", &m_px[eSmoothed]);
+  m_outputTree->Branch("py_smt", &m_py[eSmoothed]);
+  m_outputTree->Branch("pz_smt", &m_pz[eSmoothed]);
+  m_outputTree->Branch("eta_smt", &m_eta[eSmoothed]);
+  m_outputTree->Branch("pT_smt", &m_pT[eSmoothed]);
+
+  m_outputTree->Branch("nUnbiased", &m_nParams[eUnbiased]);
+  m_outputTree->Branch("unbiased", &m_hasParams[eUnbiased]);
+  m_outputTree->Branch("eLOC0_ubs", &m_eLOC0[eUnbiased]);
+  m_outputTree->Branch("eLOC1_ubs", &m_eLOC1[eUnbiased]);
+  m_outputTree->Branch("ePHI_ubs", &m_ePHI[eUnbiased]);
+  m_outputTree->Branch("eTHETA_ubs", &m_eTHETA[eUnbiased]);
+  m_outputTree->Branch("eQOP_ubs", &m_eQOP[eUnbiased]);
+  m_outputTree->Branch("eT_ubs", &m_eT[eUnbiased]);
+  m_outputTree->Branch("res_eLOC0_ubs", &m_res_eLOC0[eUnbiased]);
+  m_outputTree->Branch("res_eLOC1_ubs", &m_res_eLOC1[eUnbiased]);
+  m_outputTree->Branch("res_ePHI_ubs", &m_res_ePHI[eUnbiased]);
+  m_outputTree->Branch("res_eTHETA_ubs", &m_res_eTHETA[eUnbiased]);
+  m_outputTree->Branch("res_eQOP_ubs", &m_res_eQOP[eUnbiased]);
+  m_outputTree->Branch("res_eT_ubs", &m_res_eT[eUnbiased]);
+  m_outputTree->Branch("err_eLOC0_ubs", &m_err_eLOC0[eUnbiased]);
+  m_outputTree->Branch("err_eLOC1_ubs", &m_err_eLOC1[eUnbiased]);
+  m_outputTree->Branch("err_ePHI_ubs", &m_err_ePHI[eUnbiased]);
+  m_outputTree->Branch("err_eTHETA_ubs", &m_err_eTHETA[eUnbiased]);
+  m_outputTree->Branch("err_eQOP_ubs", &m_err_eQOP[eUnbiased]);
+  m_outputTree->Branch("err_eT_ubs", &m_err_eT[eUnbiased]);
+  m_outputTree->Branch("pull_eLOC0_ubs", &m_pull_eLOC0[eUnbiased]);
+  m_outputTree->Branch("pull_eLOC1_ubs", &m_pull_eLOC1[eUnbiased]);
+  m_outputTree->Branch("pull_ePHI_ubs", &m_pull_ePHI[eUnbiased]);
+  m_outputTree->Branch("pull_eTHETA_ubs", &m_pull_eTHETA[eUnbiased]);
+  m_outputTree->Branch("pull_eQOP_ubs", &m_pull_eQOP[eUnbiased]);
+  m_outputTree->Branch("pull_eT_ubs", &m_pull_eT[eUnbiased]);
+  m_outputTree->Branch("g_x_ubs", &m_x[eUnbiased]);
+  m_outputTree->Branch("g_y_ubs", &m_y[eUnbiased]);
+  m_outputTree->Branch("g_z_ubs", &m_z[eUnbiased]);
+  m_outputTree->Branch("px_ubs", &m_px[eUnbiased]);
+  m_outputTree->Branch("py_ubs", &m_py[eUnbiased]);
+  m_outputTree->Branch("pz_ubs", &m_pz[eUnbiased]);
+  m_outputTree->Branch("eta_ubs", &m_eta[eUnbiased]);
+  m_outputTree->Branch("pT_ubs", &m_pT[eUnbiased]);
 }
 
-ActsExamples::RootTrackStatesWriter::~RootTrackStatesWriter() {
+RootTrackStatesWriter::~RootTrackStatesWriter() {
   m_outputFile->Close();
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::finalize() {
+ProcessCode RootTrackStatesWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -289,8 +294,25 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
-    const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
+RootTrackStatesWriter::StateType RootTrackStatesWriter::getStateType(
+    ConstTrackStateProxy state) {
+  if (state.typeFlags().test(Acts::OutlierFlag)) {
+    return StateType::eOutlier;
+  }
+  if (state.typeFlags().test(Acts::MeasurementFlag)) {
+    return StateType::eMeasurement;
+  }
+  if (state.typeFlags().test(Acts::HoleFlag)) {
+    return StateType::eHole;
+  }
+  if (state.typeFlags().test(Acts::MaterialFlag)) {
+    return StateType::eMaterial;
+  }
+  return StateType::eUnknown;
+}
+
+ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
+                                          const ConstTrackContainer& tracks) {
   float nan = std::numeric_limits<float>::quiet_NaN();
 
   auto& gctx = ctx.geoContext;
@@ -349,6 +371,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
       m_volumeID.push_back(geoID.volume());
       m_layerID.push_back(geoID.layer());
       m_moduleID.push_back(geoID.sensitive());
+
+      m_stateType.push_back(Acts::toUnderlying(getStateType(state)));
 
       // get the path length
       m_pathLength.push_back(state.pathLength());
@@ -694,6 +718,16 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
     m_outputTree->Fill();
 
     // now reset
+    m_volumeID.clear();
+    m_layerID.clear();
+    m_moduleID.clear();
+
+    m_stateType.clear();
+
+    m_chi2.clear();
+
+    m_pathLength.clear();
+
     m_t_x.clear();
     m_t_y.clear();
     m_t_z.clear();
@@ -707,12 +741,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
     m_t_eTHETA.clear();
     m_t_eQOP.clear();
     m_t_eT.clear();
+
     m_particleId.clear();
 
-    m_volumeID.clear();
-    m_layerID.clear();
-    m_moduleID.clear();
-    m_pathLength.clear();
+    m_dim_hit.clear();
     m_lx_hit.clear();
     m_ly_hit.clear();
     m_x_hit.clear();
@@ -724,7 +756,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
     m_err_y_hit.clear();
     m_pull_x_hit.clear();
     m_pull_y_hit.clear();
-    m_dim_hit.clear();
 
     for (unsigned int ipar = 0; ipar < eSize; ++ipar) {
       m_hasParams[ipar].clear();
@@ -767,3 +798,5 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

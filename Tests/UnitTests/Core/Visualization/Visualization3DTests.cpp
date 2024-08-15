@@ -83,7 +83,7 @@ l 4 1
 BOOST_AUTO_TEST_CASE(Visualization3DTesterPly) {
   // Test the tester
   std::string validPly = R"(ply
-format ascii 1.0		
+format ascii 1.0
 comment made by Greg Turk
 comment this file is a cube
 element vertex 8
@@ -122,7 +122,7 @@ end_header
 
   // Test the tester - contains 3 errors
   std::string invalidPly = R"(ply
-format ascii 1.0		
+format ascii 1.0
 comment made by Greg Turk
 comment this file is a cube
 element vertex 8

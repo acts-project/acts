@@ -9,15 +9,15 @@ help()
 {
    echo ""
    echo "Usage: $0 -d <detector> -b <bFieldMap> -t <numTracksPerEvent> -n <numEvents>"
-   echo -e "\t-d The detector type, either 'Generic' or 'DD4hep'. Optional. In default 'Generic'" 
-   echo -e "\t-x The '.xml' for DD4hep detector input. Required if the detector is 'DD4hep'. In default empty" 
+   echo -e "\t-d The detector type, either 'Generic' or 'DD4hep'. Optional. In default 'Generic'"
+   echo -e "\t-x The '.xml' for DD4hep detector input. Required if the detector is 'DD4hep'. In default empty"
    echo -e "\t-b The '.txt' or '.root' file for B Field map. Optional. In default using constant BField: (0, 0, 2)"
    echo -e "\t-n The number of events. Optional. In default: 1"
    exit 1 # Exit script after printing help
 }
 
-if [ ! -f "ActsExampleFatrasGeneric" ]; then	
-  echo Please run this script under the directory where the executables are located 
+if [ ! -f "ActsExampleFatrasGeneric" ]; then
+  echo Please run this script under the directory where the executables are located
   exit 1
 fi
 
@@ -79,7 +79,7 @@ echo "* job | mode | mu " >> ${output_file}
 
 jobID=0
 
-# Loop over the pileup bins 
+# Loop over the pileup bins
 for mu in 0 50 100 150 200 250 300 ; do
     #Run ttbar events generation
     gen="${exe_dir}/ActsExamplePythia8  --events=${numEvents}  --output-dir=data/gen/ttbar_e${numEvents}_mu${mu} --output-csv=1 --rnd-seed=42 --gen-cms-energy-gev=14000 --gen-hard-process=Top:qqbar2ttbar=on --gen-npileup=${mu}"
@@ -91,9 +91,9 @@ for mu in 0 50 100 150 200 250 300 ; do
     echo ${sim}
     eval ${sim}
 
-    # Loop over the combinatorial/sequential mode (different source link selection criteria) 
+    # Loop over the combinatorial/sequential mode (different source link selection criteria)
     for mode in {0..1} ; do
-      # Run reco 
+      # Run reco
       if [[ $mode -eq 0 ]]; then
         reco="${exe_dir}/ActsExampleCKFTracks${detector} ${dd4hep_input} ${bField} -j 1 --input-dir=data/sim_${detector}/ttbar_e${numEvents}_mu${mu}  --output-dir=data/reco_${detector}/ttbar_e${numEvents}_mu${mu}_m${mode}"
       else

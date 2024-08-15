@@ -23,6 +23,8 @@
 #include <GeoModelKernel/GeoTrap.h>
 #include <GeoModelKernel/GeoTrd.h>
 
+#include "GeoModelKernel/GeoVPhysVol.h"
+
 Acts::GeometryContext tContext;
 Acts::RotationMatrix3 idRotation = Acts::RotationMatrix3::Identity();
 Acts::Transform3 idTransform = Acts::Transform3::Identity();
@@ -35,8 +37,9 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   // Let's create a GeoFullPhysVol object
 
   // (BOX object) - XY
-  auto boxXY = make_intrusive<GeoBox>(100, 200, 2);
-  auto logXY = make_intrusive<GeoLogVol>("LogVolumeXY", boxXY, material);
+  auto boxXY = new GeoBox(100, 200, 2);
+  auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
+  auto fphysXY = make_intrusive<GeoFullPhysVol>(logXY);
 
   PVConstLink physXY{make_intrusive<GeoFullPhysVol>(logXY)};
 
@@ -61,13 +64,12 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   BOOST_CHECK(transformXY.isApprox(idTransform));
 
   // (BOX object) - YZ
-  auto boxYZ = make_intrusive<GeoBox>(2, 200, 300);
-  auto logYZ = make_intrusive<GeoLogVol>("LogVolumeYZ", boxYZ, material);
-
-  PVConstLink physYZ{make_intrusive<GeoFullPhysVol>(logYZ)};
+  auto boxYZ = new GeoBox(2, 200, 300);
+  auto logYZ = new GeoLogVol("LogVolumeYZ", boxYZ, material);
+  auto fphysYZ = make_intrusive<GeoFullPhysVol>(logYZ);
 
   converted = Acts::GeoBoxConverter{}.toSensitiveSurface(
-      physYZ, Acts::Transform3::Identity());
+      fphysYZ, Acts::Transform3::Identity());
 
   BOOST_CHECK(converted.ok());
 
@@ -89,13 +91,12 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   BOOST_CHECK(rotationYZ.col(2).isApprox(idRotation.col(0)));
 
   // (BOX object) - XZ
-  auto boxXZ = make_intrusive<GeoBox>(400, 2, 300);
-  auto logXZ = make_intrusive<GeoLogVol>("LogVolumeXZ", boxXZ, material);
-
-  PVConstLink physXZ{make_intrusive<GeoFullPhysVol>(logXZ)};
+  auto boxXZ = new GeoBox(400, 2, 300);
+  auto logXZ = new GeoLogVol("LogVolumeXZ", boxXZ, material);
+  auto fphysXZ = make_intrusive<GeoFullPhysVol>(logXZ);
 
   converted = Acts::GeoBoxConverter{}.toSensitiveSurface(
-      physXZ, Acts::Transform3::Identity());
+      fphysXZ, Acts::Transform3::Identity());
 
   BOOST_CHECK(converted.ok());
 

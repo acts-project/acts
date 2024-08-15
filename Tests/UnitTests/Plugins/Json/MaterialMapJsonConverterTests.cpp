@@ -26,10 +26,10 @@ class IVolumeMaterial;
 class DummyDecorator : public Acts::IVolumeMaterialJsonDecorator {
  public:
   void decorate([[maybe_unused]] const Acts::ISurfaceMaterial &material,
-                [[maybe_unused]] nlohmann::json &json) const override{};
+                [[maybe_unused]] nlohmann::json &json) const override {};
 
   void decorate([[maybe_unused]] const Acts::IVolumeMaterial &material,
-                [[maybe_unused]] nlohmann::json &json) const override{};
+                [[maybe_unused]] nlohmann::json &json) const override {};
 };
 
 BOOST_AUTO_TEST_SUITE(MaterialMapJsonConverter)
