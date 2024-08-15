@@ -14,7 +14,6 @@ message( STATUS "Building tracc as part of the Acts project" )
 
 set( TRACCC_VERSION "${_acts_traccc_version}")
 
-# https://github.com/acts-project/traccc/pull/6
 # Needed to disable -Wfloat-conversion until
 # https://github.com/acts-project/traccc/pull/676 is deployed
 file(
