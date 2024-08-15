@@ -21,9 +21,8 @@
 class GeoFullPhysVol;
 class GeoTube;
 
-namespace Acts {
+namespace Acts::detail {
 
-namespace detail {
 struct GeoUnionDoubleTrdConverter {
   /// Merge trapezoids up to this gap
   double gapTolerance = 0.2;
@@ -41,6 +40,5 @@ struct GeoUnionDoubleTrdConverter {
                                               const Transform3& absTransform,
                                               bool sensitive) const;
 };
-}  // namespace detail
 
-}  // namespace Acts
+}  // namespace Acts::detail
