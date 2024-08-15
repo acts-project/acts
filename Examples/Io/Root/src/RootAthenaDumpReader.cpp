@@ -368,7 +368,7 @@ RootAthenaDumpReader::readMeasurements(SimParticleContainer& particles) const {
     } else {
       digiPars.values = {CLloc_direction1[im]};
       digiPars.indices = {Acts::eBoundLoc0};
-      assert(locCov.size() >= 1);
+      assert(!locCov.empty());
       digiPars.variances = {locCov[0]};
     }
 

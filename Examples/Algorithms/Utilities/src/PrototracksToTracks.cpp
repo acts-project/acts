@@ -10,7 +10,6 @@
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -23,8 +22,8 @@ namespace ActsExamples {
 PrototracksToTracks::PrototracksToTracks(Config cfg, Acts::Logging::Level lvl)
     : IAlgorithm("PrototracksToTracks", lvl), m_cfg(std::move(cfg)) {
   m_outputTracks.initialize(m_cfg.outputTracks);
-  m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+  m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
 }
 
 ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
@@ -33,14 +32,9 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
   TrackContainer tracks(trackContainer, mtj);
 
   boost::container::flat_map<Index, Acts::SourceLink> slMap;
-  for (const auto& varm : m_inputMeasurements(ctx)) {
-    std::visit(
-        [&](const auto& m) {
-          const auto idx =
-              m.sourceLink().template get<IndexSourceLink>().index();
-          slMap.insert(std::pair<Index, Acts::SourceLink>{idx, m.sourceLink()});
-        },
-        varm);
+  for (const auto& m : m_inputMeasurements(ctx)) {
+    const auto idx = m.sourceLink().template get<IndexSourceLink>().index();
+    slMap.insert(std::pair<Index, Acts::SourceLink>{idx, m.sourceLink()});
   }
 
   const auto& prototracks = m_inputProtoTracks(ctx);
@@ -55,7 +49,7 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
       continue;
     }
 
-    avgSize += protoTrack.size();
+    avgSize += static_cast<float>(protoTrack.size());
     minSize = std::min(minSize, protoTrack.size());
     maxSize = std::max(maxSize, protoTrack.size());
 
@@ -64,10 +58,11 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
       auto trackStateProxy =
           track.appendTrackState(Acts::TrackStatePropMask::None);
       trackStateProxy.typeFlags().set(Acts::TrackStateFlag::MeasurementFlag);
-      trackStateProxy.setUncalibratedSourceLink(slMap.at(idx));
+      trackStateProxy.setUncalibratedSourceLink(
+          Acts::SourceLink{slMap.at(idx)});
     }
 
-    track.nMeasurements() = protoTrack.size();
+    track.nMeasurements() = static_cast<std::uint32_t>(protoTrack.size());
     track.nHoles() = 0;
     track.nOutliers() = 0;
   }

@@ -14,16 +14,14 @@
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <any>
-#include <type_traits>
-
-#if defined(__cpp_concepts)
 #include <concepts>
+#include <type_traits>
 
 namespace Acts {
 
 template <typename C>
 concept ChargeConcept = requires(C c, C c2, float f, double d) {
-  {C{f}};
+  { C{f} };
 
   { c == c2 } -> std::same_as<bool>;
   { c != c2 } -> std::same_as<bool>;
@@ -35,5 +33,3 @@ concept ChargeConcept = requires(C c, C c2, float f, double d) {
 };
 
 }  // namespace Acts
-
-#endif
