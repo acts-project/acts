@@ -248,15 +248,18 @@ struct ScatteringProperties {
   /// @param scatteringAngles_
   /// @param invCovarianceMaterial_
   ScatteringProperties(const BoundVector scatteringAngles_,
-                       const ActsScalar invCovarianceMaterial_)
+                       const ActsScalar invCovarianceMaterial_,
+                       const bool materialIsValid_)
       : scatteringAngles(scatteringAngles_),
-        invCovarianceMaterial(invCovarianceMaterial_) {}
+        invCovarianceMaterial(invCovarianceMaterial_),
+        materialIsValid(materialIsValid_) {}
 
   /// No default construction
   ScatteringProperties() = delete;
 
   BoundVector scatteringAngles;
   const ActsScalar invCovarianceMaterial;
+  const bool materialIsValid;
 };
 
 /// addToGx2fSums Function
@@ -552,26 +555,26 @@ class Gx2Fitter {
             // We need to evaluate the material to create the correct slab
             const bool slabIsValid = interaction.evaluateMaterialSlab(
                 state, navigator, MaterialUpdateStage::FullUpdate);
-            if (!slabIsValid) {
-              std::cout << "ERROR in material slab evaluation" << std::endl;
+            double invSigma2 = 0.;
+            if (slabIsValid) {
+              const auto& particle =
+                  parametersWithHypothesis->particleHypothesis();
+
+              const double sigma =
+                  static_cast<double>(Acts::computeMultipleScatteringTheta0(
+                      interaction.slab, particle.absolutePdg(), particle.mass(),
+                      parametersWithHypothesis->parameters()[eBoundQOverP],
+                      particle.absoluteCharge()));
+              ACTS_VERBOSE(
+                  "        The Highland formula gives sigma = " << sigma);
+              invSigma2 = 1. / sigma / sigma;
+            } else {
+              ACTS_VERBOSE("        Material slab is not valid.");
             }
 
-            const auto& particle =
-                parametersWithHypothesis->particleHypothesis();
-
-            const double sigma =
-                static_cast<double>(Acts::computeMultipleScatteringTheta0(
-                    interaction.slab, particle.absolutePdg(), particle.mass(),
-                    parametersWithHypothesis->parameters()[eBoundQOverP],
-                    particle.absoluteCharge()));
-            ACTS_VERBOSE(
-                "        The Highland formula gives sigma = " << sigma);
-
-            //            const double sigma = 0.001;
-            const double sigma2 = sigma * sigma;
-
             scatteringMap->emplace(
-                geoId, ScatteringProperties{BoundVector::Zero(), 1. / sigma2});
+                geoId, ScatteringProperties{BoundVector::Zero(), invSigma2,
+                                            slabIsValid});
           } else {
             ACTS_DEBUG("    ... found entry in scattering map.");
           }
@@ -1107,9 +1110,22 @@ class Gx2Fitter {
         for (const auto& trackState : track.trackStates()) {
           auto typeFlags = trackState.typeFlags();
 
-          if (typeFlags.test(TrackStateFlag::MaterialFlag)) {
-            nMaterialSurfaces++;
+          if (!typeFlags.test(TrackStateFlag::MaterialFlag)) {
+            continue;
           }
+
+          // Get and store geoId for the current material surface
+          const GeometryIdentifier geoId =
+              trackState.referenceSurface().geometryId();
+          assert(scatteringMap.find(geoId) != scatteringMap.end() &&
+                 "No scattering angles found for material surface");
+
+          auto scatteringMapId = scatteringMap.find(geoId);
+          if (!scatteringMapId->second.materialIsValid) {
+            continue;
+          }
+
+          nMaterialSurfaces++;
         }
       }
 
@@ -1181,8 +1197,12 @@ class Gx2Fitter {
           const GeometryIdentifier geoId =
               trackState.referenceSurface().geometryId();
           ACTS_VERBOSE("    Add material effects for " << geoId);
-          assert(scatteringMap.find(geoId) != scatteringMap.end() &&
-                 "No scattering angles found for material surface");
+          auto scatteringMapId = scatteringMap.find(geoId);
+          if (!scatteringMapId->second.materialIsValid) {
+            ACTS_VERBOSE("    ... Skip material, since it is not valid.");
+            continue;
+          }
+
           geoIdVector.emplace_back(geoId);
 
           // Add for this material a new jacobian
@@ -1199,7 +1219,6 @@ class Gx2Fitter {
             const std::size_t deltaPosition =
                 eBoundSize + 2 * (geoIdVector.size() - 1);
 
-            auto scatteringMapId = scatteringMap.find(geoId);
             const BoundVector& scatteringAngles =
                 scatteringMapId->second.scatteringAngles;
             const ActsScalar invCov =
