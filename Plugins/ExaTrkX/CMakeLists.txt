@@ -6,7 +6,12 @@ set(SOURCES
 if(ACTS_EXATRKX_ENABLE_MODULEMAP)
   list(APPEND SOURCES
     src/ModuleMapCpp.cpp
+    src/GraphCreatorWrapperCpu.cpp
   )
+
+  if(ACTS_EXATRKX_ENABLE_CUDA)
+    list(APPEND SOURCES src/GraphCreatorWrapperCuda.cu)
+  endif()
 endif()
 
 if(ACTS_EXATRKX_ENABLE_ONNX)

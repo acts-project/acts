@@ -14,13 +14,13 @@
 #include <memory>
 #include <string>
 
-template <typename T>
-class graph_creator;
 
-template <typename T>
-class CUDA_graph_creator;
 
 namespace Acts {
+
+namespace detail {
+class GraphConstructorWrapper;
+}
 
 class ModuleMapCpp : public GraphConstructionBase {
  public:
@@ -32,16 +32,14 @@ class ModuleMapCpp : public GraphConstructionBase {
     float etaScale = 1.0;
     bool checkModuleConsistencyPerEvent = false;
 
-    torch::Device device;
+    bool useGpu = false;
+    int gpuDevice = 0;
   };
 
  private:
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
-
-  std::unique_ptr<graph_creator<float>> m_graphCreator;
-  std::unique_ptr<CUDA_graph_creator<float>> m_cudaGraphCreator;
-
+  std::unique_ptr<detail::GraphConstructorWrapper> m_graphCreator;
   std::vector<uint64_t> m_uniqueDoupletModuleIds;
 
   const auto &logger() const { return *m_logger; }

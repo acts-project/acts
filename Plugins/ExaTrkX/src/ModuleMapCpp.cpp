@@ -10,14 +10,12 @@
 
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/GraphCreatorWrapper.hpp"
 
-#include <graph_creator>
 #include <map>
-#include <module_map_triplet>
 
-#ifndef ACTS_EXATRKX_CPUONLY
-#include <CUDA_graph_creator>
-#endif
+#include <TTree_hits>
+
 
 using namespace torch::indexing;
 
@@ -26,34 +24,16 @@ namespace Acts {
 ModuleMapCpp::ModuleMapCpp(const Config &cfg,
                            std::unique_ptr<const Acts::Logger> logger_)
     : m_cfg(cfg), m_logger(std::move(logger_)) {
-  if( m_cfg.device == torch::kCPU ) {
-    m_graphCreator = std::make_unique<graph_creator<float>>(
-        m_cfg.moduleMapPath, 10,
-        std::pair<float, float>{0.f, std::numeric_limits<float>::max()});
+  if(!m_cfg.useGpu) {
+    m_graphCreator = std::make_unique<GraphCreatorWrapperCpu>(m_cfg.moduleMapPath);
   } else {
 #ifndef ACTS_EXATRKX_CPUONLY
-    m_cudaGraphCreator = std::make_unique<CUDA_graph_creator<float>>(
-      device.id(), m_cfg.moduleMapPath, 10, std::pair<float, float>{0.f, std::numeric_limits<float>::max()}
-    );
+    m_graphCreator = std::make_unique<GraphCreatorWrapperCuda>(m_cfg.moduleMapPath, m_cfg.gpuDevice);
 #else
     throw std::runtime_error("Cannot use cuda version of GraphModuleMap (CUDA is not enabled in CMake)");
 #endif
   }
 
-  if (m_cfg.checkModuleConsistencyPerEvent) {
-    for (const auto &[doublet, _] :
-         m_graphCreator->get_module_map_triplet().map_doublet()) {
-      m_uniqueDoupletModuleIds.push_back(doublet[0]);
-      m_uniqueDoupletModuleIds.push_back(doublet[1]);
-    }
-    std::sort(m_uniqueDoupletModuleIds.begin(), m_uniqueDoupletModuleIds.end());
-    auto end = std::unique(m_uniqueDoupletModuleIds.begin(),
-                           m_uniqueDoupletModuleIds.end());
-    m_uniqueDoupletModuleIds.erase(end, m_uniqueDoupletModuleIds.end());
-
-    ACTS_DEBUG(
-        "Unique module IDs in doublets: " << m_uniqueDoupletModuleIds.size());
-  }
 }
 
 ModuleMapCpp::~ModuleMapCpp() {}
@@ -121,26 +101,11 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   }
 
   TTree_hits<float> hitsTree = hitsCollection;
-  TTree_particles<float> particlesTree;  // dummy, not needed currently
-  std::string eventId = "no-id";
 
   ACTS_DEBUG("Hits tree has " << hitsTree.size()
                               << " hits, now build graph...");
   bool print = logger().level() == Acts::Logging::VERBOSE;
-  graph<float> graph;
-  graph_true<float> graph_true;
-  if( m_cfg.device == torch::kCPU ) {
-    ACTS_DEBUG("Call CPU graph buildinig");
-  std::tie(graph, graph_true) =
-      m_graphCreator->build_impl(hitsTree, particlesTree, eventId, print);
-  } else {
-#ifndef ACTS_EXATRKX_CPUONLY
-    CUDA_graph_creator<float>::graph_building_stats stats;
-    graph = m_cudaGraphCreator->build_impl(hitsTree, stats);
-#else
-    throw std::runtime_error("Tried to call CUDA graph buidling which is not enabled");
-#endif
-  }
+  auto graph = m_graphCreator->build(hitsTree);
   const auto numEdges = boost::num_edges(graph.graph_impl());
 
   if (numEdges == 0) {
