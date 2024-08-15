@@ -26,6 +26,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <array>
@@ -112,6 +113,23 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
     data.module_t = surface.associatedDetectorElement()->thickness() /
                     Acts::UnitConstants::mm;
   }
+
+#define COPY_VTX(a,b) data.v ## a ## _ ## b = vtxs[a][b]
+
+  if(auto anBnds = dynamic_cast<const Acts::AnnulusBounds *>(&bounds); anBnds != nullptr) {
+    auto vtxs = anBnds->vertices(0);
+    assert(vtxs.size() == 4);
+    COPY_VTX(0,0);
+    COPY_VTX(0,1);
+    COPY_VTX(1,0);
+    COPY_VTX(1,1);
+    COPY_VTX(2,0);
+    COPY_VTX(2,1);
+    COPY_VTX(3,0);
+    COPY_VTX(3,1);
+  }
+
+#undef COPY_VTX
 }
 
 /// Write a single surface.
