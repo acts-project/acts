@@ -140,7 +140,11 @@ Acts::GeoModelDetectorObjectFactory::findAllSubVolumes(PVConstLink vol) {
   return sensitives;
 }
 bool Acts::GeoModelDetectorObjectFactory::convertBox(std::string name) {
-  return (name.find(m_cfg.convertBox) != std::string::npos);
+  auto convB = std::any_of(
+      m_cfg.convertBox.begin(), m_cfg.convertBox.end(),
+      [&](const auto &n) { return name.find(n) != std::string::npos; });
+  //return (name.find(m_cfg.convertBox) != std::string::npos);
+  return convB;
 }
 void Acts::GeoModelDetectorObjectFactory::convertFpv(
     std::string name, GeoFullPhysVol *fpv, Cache &cache,

@@ -40,7 +40,7 @@ class GeoModelDetectorObjectFactory {
     bool convertSubVolumes = false;
 
     /// flag to build the desired bounding Boxes
-    std::string convertBox;
+    std::vector<std::string> convertBox;
   };
   struct Cache {
     /// The created detector elements and their surfaces

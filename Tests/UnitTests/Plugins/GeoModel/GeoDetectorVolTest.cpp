@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
 
   // create pars for conversion
   Acts::GeoModelDetectorObjectFactory::Config gmConfig;
-  gmConfig.convertBox = "LogVolumeXY";
+  gmConfig.convertBox = {"LogVolumeXY"};
   Acts::GeometryContext gContext;
   Acts::GeoModelDetectorObjectFactory::Cache gmCache;
 
