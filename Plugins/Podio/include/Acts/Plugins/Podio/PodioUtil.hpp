@@ -20,7 +20,7 @@
 #include <podio/podioVersion.h>
 
 #if podio_VERSION_MAJOR >= 1 || \
-    (podio_VERSION_MAJOR == 1 && podio_VERSION_MINOR == 99)
+    (podio_VERSION_MAJOR == 0 && podio_VERSION_MINOR == 99)
 #include <podio/ROOTReader.h>
 #include <podio/ROOTWriter.h>
 #else
@@ -43,7 +43,7 @@ namespace PodioUtil {
 
 // See https://github.com/AIDASoft/podio/pull/549
 #if podio_VERSION_MAJOR >= 1 || \
-    (podio_VERSION_MAJOR == 1 && podio_VERSION_MINOR == 99)
+    (podio_VERSION_MAJOR == 0 && podio_VERSION_MINOR == 99)
 using ROOTWriter = podio::ROOTWriter;
 using ROOTReader = podio::ROOTReader;
 #else
