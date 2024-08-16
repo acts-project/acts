@@ -50,12 +50,7 @@ class SingleCylinderPortalShell : public CylinderPortalShell {
  public:
   SingleCylinderPortalShell(TrackingVolume& volume);
 
-  std::size_t size() const {
-    std::size_t count = 0;
-    std::ranges::for_each(
-        m_portals, [&count](const auto& portal) { count += portal ? 1 : 0; });
-    return count;
-  }
+  std::size_t size() const;
 
   Portal* portal(Face face) final;
 

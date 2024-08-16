@@ -65,4 +65,11 @@ Portal* SingleCylinderPortalShell::portal(Face face) {
   return m_portals.at(toUnderlying(face)).get();
 }
 
+std::size_t SingleCylinderPortalShell::size() const {
+  std::size_t count = 0;
+  std::ranges::for_each(
+      m_portals, [&count](const auto& portal) { count += portal ? 1 : 0; });
+  return count;
+}
+
 }  // namespace Acts
