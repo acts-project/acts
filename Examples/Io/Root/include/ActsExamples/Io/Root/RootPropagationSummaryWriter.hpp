@@ -99,6 +99,7 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   float m_theta = 0;
   float m_qOverP = 0;
   float m_t = 0;
+
   // derived initial trajectory parameters
   float m_eta = 0;
   float m_pt = 0;

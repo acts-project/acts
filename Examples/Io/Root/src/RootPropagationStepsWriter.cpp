@@ -72,6 +72,7 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("layer_id", &m_layerID);
   m_outputTree->Branch("approach_id", &m_approachID);
   m_outputTree->Branch("sensitive_id", &m_sensitiveID);
+  m_outputTree->Branch("sensitive_id", &m_extraID);
   m_outputTree->Branch("material", &m_material);
   m_outputTree->Branch("g_x", &m_x);
   m_outputTree->Branch("g_y", &m_y);
@@ -129,6 +130,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     m_layerID.clear();
     m_approachID.clear();
     m_sensitiveID.clear();
+    m_extraID.clear();
     m_material.clear();
     m_x.clear();
     m_y.clear();
@@ -171,6 +173,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_layerID.push_back(geoID.layer());
       m_boundaryID.push_back(geoID.boundary());
       m_volumeID.push_back(geoID.volume());
+      m_extraID.push_back(geoID.extra());
 
       int material = 0;
       if (step.surface != nullptr &&

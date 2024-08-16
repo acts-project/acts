@@ -78,13 +78,14 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPESmallMatrix) {
   BOOST_CHECK(mInv);
   BOOST_CHECK(!mInvInv);
 
-  ACTS_VERBOSE("Test: SafeInverseFPESmallMatrix" << "\n"
-                                                 << "m:\n"
-                                                 << m << "\n"
-                                                 << "mInv:\n"
-                                                 << *mInv << "\n"
-                                                 << "mInvInv [garbage]:\n"
-                                                 << *mInvInv);
+  ACTS_VERBOSE("Test: SafeInverseFPESmallMatrix"
+               << "\n"
+               << "m:\n"
+               << m << "\n"
+               << "mInv:\n"
+               << *mInv << "\n"
+               << "mInvInv [garbage]:\n"
+               << *mInvInv);
 }
 
 BOOST_AUTO_TEST_CASE(SafeInverseFPELargeMatrix) {
@@ -96,11 +97,12 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPELargeMatrix) {
 
   BOOST_CHECK(!mInv);
 
-  ACTS_VERBOSE("Test: SafeInverseFPELargeMatrix" << "\n"
-                                                 << "m:\n"
-                                                 << m << "\n"
-                                                 << "mInv [garbage]:\n"
-                                                 << *mInv);
+  ACTS_VERBOSE("Test: SafeInverseFPELargeMatrix"
+               << "\n"
+               << "m:\n"
+               << m << "\n"
+               << "mInv [garbage]:\n"
+               << *mInv);
 }
 
 /// This test should not compile

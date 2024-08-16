@@ -56,29 +56,17 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
     propagationAlgorithm = acts.examples.PropagationAlgorithm(
         propagatorImpl=propagator,
         level=acts.logging.INFO,
-        ntests=1000,
         sterileLogger=True,
+        inputTrackParameters="start_parameters",
         outputSummaryCollection="propagation_summary",
     )
     s.addAlgorithm(propagationAlgorithm)
 
-    # if not os.path.exists(outputDir + "/obj"):
-    #    os.makedirs(outputDir + "/obj")
-
-    # Output
-    s.addWriter(
-        acts.examples.ObjPropagationStepsWriter(
-            level=acts.logging.INFO,
-            collection="propagation_summary",
-            outputDir=outputDir + "/obj",
-        )
-    )
-
     s.addWriter(
         acts.examples.RootPropagationSummaryWriter(
             level=acts.logging.INFO,
-            collection="propagation_summary",
-            filePath=outputDir + "/propagation_steps.root",
+            inputSummaryCollection="propagation_summary",
+            filePath=outputDir + "/propagation_summary.root",
         )
     )
 
@@ -135,6 +123,8 @@ if "__main__" == __name__:
     #     nbins=(50, 50),
     #     field=solenoid
     # )
+
+    os.makedirs(os.getcwd() + "/propagation", exist_ok=True)
 
     runPropagation(
         trackingGeometry,

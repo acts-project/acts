@@ -14,6 +14,7 @@
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/PropagationSummary.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -39,10 +40,12 @@ struct AlgorithmContext;
 class PropagationAlgorithm : public IAlgorithm {
  public:
   struct Config {
-    /// The output step collection
-    std::string outputSummaryCollection = "propagation_summary";
-    /// The output material collection
-    std::string outputMaterialCollection = "recorded_material";
+    /// Input track parameters
+    std::string inputTrackParameters = "InputTrackParameters";
+    /// The step collection to be stored
+    std::string outputSummaryCollection = "PropagationSummary";
+    /// The material collection to be stored
+    std::string outputMaterialCollection = "RecordedMaterialTracks";
 
     /// Instance of a propagator wrapper that performs the actual propagation
     std::shared_ptr<PropagatorInterface> propagatorImpl = nullptr;
@@ -62,12 +65,6 @@ class PropagationAlgorithm : public IAlgorithm {
     double maxStepSize = 5 * Acts::UnitConstants::m;
     /// Switch covariance transport on
     bool covarianceTransport = false;
-    /// Input track parameters
-    std::string inputTrackParameters = "InputTrackParameters";
-    /// The step collection to be stored
-    std::string outputSummarySollection = "PropagationSummary";
-    /// The material collection to be stored
-    std::string outputSummaryCollection = "RecordedMaterialTracks";
   };
 
   /// Constructor
@@ -91,7 +88,6 @@ class PropagationAlgorithm : public IAlgorithm {
       this, "InputTrackParameters"};
 
   WriteDataHandle<PropagationSummaries> m_outputSummary{this, "OutputSummary"};
-
 
   WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_outputMaterialTracks{this, "RecordedMaterial"};

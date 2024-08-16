@@ -23,12 +23,9 @@ PropagationAlgorithm::PropagationAlgorithm(
   if (!m_cfg.propagatorImpl) {
     throw std::invalid_argument("Config needs to contain a propagator");
   }
-  if (!m_cfg.randomNumberSvc) {
-    throw std::invalid_argument("No random number generator given");
-  }
-
+  m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
   m_outputSummary.initialize(m_cfg.outputSummaryCollection);
-  m_recordedMaterial.initialize(m_cfg.outputMaterialCollection);
+  m_outputMaterialTracks.initialize(m_cfg.outputMaterialCollection);
 }
 
 ProcessCode PropagationAlgorithm::execute(
@@ -39,13 +36,9 @@ ProcessCode PropagationAlgorithm::execute(
   ACTS_DEBUG("Propagating " << inputTrackParameters.size()
                             << " input trackparameters");
 
-  std::shared_ptr<const Acts::PerigeeSurface> surface =
-      Acts::Surface::makeShared<Acts::PerigeeSurface>(
-          Acts::Vector3(0., 0., 0.));
-
   // Output : the propagation steps
   PropagationSummaries propagationSummaries;
-  propagationSummaries.reserve(m_cfg.ntests);
+  propagationSummaries.reserve(inputTrackParameters.size());
 
   // Output (optional): the recorded material
   std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
@@ -84,7 +77,7 @@ ProcessCode PropagationAlgorithm::execute(
       // Record the material information
       recordedMaterialTracks.emplace(
           it, std::make_pair(std::make_pair(position, direction),
-                             std::move(pOutput.second)));
+                             std::move(propagationOutput.second)));
     }
   }
   // Write the propagation step data to the event store
@@ -95,17 +88,6 @@ ProcessCode PropagationAlgorithm::execute(
     m_outputMaterialTracks(context, std::move(recordedMaterialTracks));
   }
   return ProcessCode::SUCCESS;
-}
-
-PropagationAlgorithm::PropagationAlgorithm(
-    const PropagationAlgorithm::Config& config, Acts::Logging::Level level)
-    : IAlgorithm("PropagationAlgorithm", level), m_cfg(config) {
-  if (!m_cfg.propagatorImpl) {
-    throw std::invalid_argument("Config needs to contain a propagator");
-  }
-  m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
-  m_outputSummary.initialize(m_cfg.outputSummaryCollection);
-  m_outputMaterialTracks.initialize(m_cfg.outputMaterialCollection);
 }
 
 }  // namespace ActsExamples

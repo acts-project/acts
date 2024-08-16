@@ -223,7 +223,7 @@ class Delegate<R(Args...), H, O> {
   template <auto Callable, typename Type, DelegateType T = kOwnership,
             typename = std::enable_if_t<T == DelegateType::Owning>>
   void connect(std::unique_ptr<const Type> instance) {
-    using member_ptr_type = return_type (Type::*)(Args &&...) const;
+    using member_ptr_type = return_type (Type::*)(Args && ...) const;
     static_assert(Concepts::is_detected<isSignatureCompatible, member_ptr_type,
                                         decltype(Callable)>::value,
                   "Callable given does not correspond exactly to required call "

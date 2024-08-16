@@ -98,6 +98,7 @@ class RootPropagationStepsWriter : public WriterT<PropagationSummaries> {
   float m_theta = 0;
   float m_qOverP = 0;
   float m_t = 0;
+
   // derived initial trajectory parameters
   float m_eta = 0;
   float m_pt = 0;
@@ -113,6 +114,8 @@ class RootPropagationStepsWriter : public WriterT<PropagationSummaries> {
   std::vector<int> m_approachID;
   /// surface identifier
   std::vector<int> m_sensitiveID;
+  /// surface identifeir
+  std::vector<int> m_extraID;
   /// flag material if present
   std::vector<int> m_material;
   /// global x

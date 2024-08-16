@@ -58,16 +58,13 @@ def runMaterialValidation(
         propagatorImpl=prop,
         level=acts.logging.INFO,
         sterileLogger=True,
-        outputSummaryCollection="propagation_summary",
         recordMaterialInteractions=True,
         inputTrackParameters="start_parameters",
-        outputPropagationSteps="propagation_steps",
-        outputMaterialTracks="material-tracks",
+        outputSummaryCollection="propagation_summary",
+        outputMaterialCollection="material_tracks",
     )
 
     s.addAlgorithm(alg)
-
-    print(os.path.join(outputDir, (outputName + ".root")))
 
     s.addWriter(
         RootMaterialTrackWriter(
