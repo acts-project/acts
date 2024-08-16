@@ -250,8 +250,13 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
   SimParticleContainer particlesFinal;
   SimParticleContainer particlesGenerator;
   for (const auto& inParticle : mcParticleCollection) {
-    const std::size_t index =
-        edm4hepParticleMap.find(inParticle.getObjectID().index)->second;
+    auto particleIt = edm4hepParticleMap.find(inParticle.getObjectID().index);
+    if (particleIt == edm4hepParticleMap.end()) {
+      ACTS_ERROR("Particle " << inParticle.getObjectID().index
+                             << " not found in particle map");
+      continue;
+    }
+    const std::size_t index = particleIt->second;
     const auto& particleInitial = unordered.at(index);
     if (!inParticle.isCreatedInSimulation()) {
       particlesGenerator.insert(particleInitial);
