@@ -93,9 +93,10 @@ void Acts::HoughTransformUtils::HoughCell<identifier_t>::reset() {
 template <class identifier_t>
 Acts::HoughTransformUtils::HoughPlane<identifier_t>::HoughPlane(
     const HoughPlaneConfig& cfg)
-    : m_cfg(cfg) {
+    : m_cfg(cfg),
+      m_houghHist(Axis(0, m_cfg.nBinsX, m_cfg.nBinsX), Axis(0, m_cfg.nBinsY, m_cfg.nBinsY)) {
   // instantiate our histogram.
-  m_houghHist = HoughHist(m_cfg.nBinsX, m_cfg.nBinsY);
+ // m_houghHist = HoughHist(Axis(0, m_cfg.nBinsX, m_cfg.nBinsX), Axis(0, m_cfg.nBinsY, m_cfg.nBinsY));
 }
 template <class identifier_t>
 void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fillBin(
@@ -105,20 +106,20 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fillBin(
   // if(m_touchedBins.size() == m_ibin){
   //   m_touchedBins.resize(m_touchedBins.size() + m_assignBatch);
   // }
-  m_touchedBins.insert(m_houghHist.index(binX, binY));
-  // m_ibin+=1;
+  m_touchedBins.insert(globalBin({binX, binY}));
+  //m_ibin+=1;
 
   // add content to the cell
-  m_houghHist.get(binX, binY).fill(identifier, layer, w);
+  m_houghHist.atLocalBins({binX, binY}).fill(identifier, layer, w);
   // and update our cached maxima
-  YieldType nLayers = m_houghHist.get(binX, binY).nLayers();
-  YieldType nHits = m_houghHist.get(binX, binY).nHits();
-  if (nLayers > m_maxLayers) {
-    m_maxLayers = nLayers;
+  YieldType layers = nLayers(binX, binY);
+  YieldType hits = nHits(binX, binY);
+  if (layers > m_maxLayers) {
+    m_maxLayers = layers;
     m_maxLocLayers = {binX, binY};
   }
-  if (nHits > m_maxHits) {
-    m_maxHits = nHits;
+  if (hits > m_maxHits) {
+    m_maxHits = hits;
     m_maxLocHits = {binX, binY};
   }
 }
@@ -128,7 +129,7 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::reset() {
   // reset all bins that were previously filled
   // avoid calling this on empty cells to save time
   for (auto bin : getNonEmptyBins()) {
-    m_houghHist.get_val(bin).reset();
+    m_houghHist.at(bin).reset();
   }
   // don't forget to reset our cached maxima
   m_maxHits = 0.;
@@ -394,15 +395,14 @@ void Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<identifier_t>::
   // now we have to collect the non empty neighbours of this cell and check them
   // as well
   for (auto step : m_stepDirections) {
+    
     std::array newCandxy = {nextCand[0] + step.first,
-                            nextCand[1] + step.second};
-    // if we are moving out of the bounds the dynamic array will throw exception
-    if (newCandxy[0] >= houghPlane.nBinsX() ||
-        newCandxy[1] >= houghPlane.nBinsY() || newCandxy[0] < 0 ||
-        newCandxy[1] < 0) {
+                                  nextCand[1] + step.second};
+    //if we are moving out of the bounds the dynamic array will throw exception
+    if(newCandxy[0] >= houghPlane.nBinsX() || newCandxy[1] >= houghPlane.nBinsY()){
       continue;
     }
-    std::size_t newCand = houghPlane.globalBin(newCandxy[0], newCandxy[1]);
+    std::size_t newCand = houghPlane.globalBin({newCandxy[0], newCandxy[1]});
 
     // if the cell is above threshold, add it to our list of neighbours to
     // explore
