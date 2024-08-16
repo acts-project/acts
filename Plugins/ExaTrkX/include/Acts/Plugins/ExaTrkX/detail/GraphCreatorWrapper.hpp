@@ -33,7 +33,7 @@ public:
   GraphCreatorWrapperCpu(const std::string &path);
   ~GraphCreatorWrapperCpu();
 
-  virtual graph<float> build(TTree_hits<float> &hits);
+  virtual graph<float> build(TTree_hits<float> &hits) override;
 
 private:
   std::unique_ptr<graph_creator<float>> m_graphCreator;
@@ -45,7 +45,7 @@ public:
   GraphCreatorWrapperCuda(const std::string &path, int device);
   ~GraphCreatorWrapperCuda();
 
-  virtual graph<float> build(TTree_hits<float> &hits);
+  virtual graph<float> build(TTree_hits<float> &hits) override;
 
 private:
   std::unique_ptr<CUDA_graph_creator<float>> m_graphCreator;
