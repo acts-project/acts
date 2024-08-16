@@ -79,7 +79,7 @@ def test_steppers(conf_const, trk_geo):
             level=acts.logging.WARNING,
             propagatorImpl=prop,
             inputTrackParameters="start_parameters",
-            outputSummaryCollection="propagation_summary"
+            outputSummaryCollection="propagation_summary",
             sterileLogger=False,
         )
 
