@@ -38,7 +38,7 @@ struct ViewConfig {
   /// The visual surface thickness for this object
   double surfaceThickness = 0.15;
   /// The number of segments to approximate full 2pi
-  unsigned int nSegments = 72;
+  unsigned int nSegments = 360;
   /// Whether to triangulate or not
   bool triangulate = false;
   /// Write name - non-empty string indicates writing

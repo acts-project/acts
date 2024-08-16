@@ -28,7 +28,9 @@
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "/home/benjamin/CERN/acts/Plugins/GeoModel/include/Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 
+#include <regex>
 #include <array>
 #include <cstddef>
 #include <stdexcept>
@@ -112,6 +114,20 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
   if (surface.associatedDetectorElement() != nullptr) {
     data.module_t = surface.associatedDetectorElement()->thickness() /
                     Acts::UnitConstants::mm;
+  }
+
+  if(auto gmEl = dynamic_cast<const Acts::GeoModelDetectorElement *>(surface.associatedDetectorElement()); gmEl != nullptr) {
+    const static std::regex pattern(R"~(^barrel_endcap_(-?\d+)_eta_module_(-?\d+)_layer_wheel_(-?\d+)_phi_module_(-?\d+)_side_(0|1).*$)~");
+    gmEl->databaseEntryName();
+    std::smatch result;
+
+    if( std::regex_match(gmEl->databaseEntryName(), result, pattern)) {
+      data.bec = std::stoi(result[1]);
+      data.etam = std::stoi(result[2]);
+      data.layw = std::stoi(result[3]);
+      data.phim = std::stoi(result[4]);
+      data.side = std::stoi(result[5]);
+    }
   }
 
 #define COPY_VTX(a,b) data.v ## a ## _ ## b = vtxs[a][b]
