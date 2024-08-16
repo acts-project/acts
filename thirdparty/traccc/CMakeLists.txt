@@ -51,6 +51,11 @@ set(TRACCC_SETUP_DFELIBS
 set(TRACCC_SETUP_DETRAY ON CACHE BOOL "Set up Detray as part of Traccc")
 set(TRACCC_SETUP_ACTS OFF CACHE BOOL "Do not set up ACTS as part of Traccc")
 set(TRACCC_SETUP_TBB OFF CACHE BOOL "Do not set up TBB as part of Traccc")
+set(TRACCC_SETUP_BENCHMARKS
+    OFF
+    CACHE BOOL
+    "Do not set up google benchmarks as part of Traccc"
+)
 
 set(TRACCC_BUILD_TESTING
     OFF
