@@ -52,7 +52,7 @@ set( DETRAY_SETUP_NLOHMANN OFF CACHE BOOL
    "Do not set up Nlohmann as part of Detray" )
 set( DETRAY_SETUP_ACTSVG OFF CACHE BOOL
    "Do not set up Actsvg as part of Detray" )
-set( DETRAY_SETUP_DFELIBS OFF CACHE BOOL
+set( DETRAY_SETUP_DFELIBS ON CACHE BOOL
    "Do not set up Dfelibs as part of Detray" )
 set( DETRAY_SVG_DISPLAY OFF CACHE BOOL
    "No not build the ActSVG display module" )
