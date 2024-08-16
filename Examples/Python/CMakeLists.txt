@@ -85,7 +85,7 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/GeoModelStub.cpp)
 endif()
 
-if(ACTS_BUILD_PLUGIN_DETRAY)
+if(ACTS_BUILD_PLUGIN_TRACCC)
   target_link_libraries(ActsPythonBindings PUBLIC ActsPluginDetray)
   target_sources(ActsPythonBindings PRIVATE src/Detray.cpp)
 else()

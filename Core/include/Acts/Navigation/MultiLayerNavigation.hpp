@@ -48,10 +48,13 @@ class MultiLayerNavigation : public IInternalNavigation {
 
   MultiLayerNavigation() = delete;
 
-  /// Update the navigation state
+  /// Fill the navigation state
+  ///
+  /// @note no initialization is done here (sorting and update)
+  ///
   /// @param gctx is the geometry context
   /// @param nState is the navigation state
-  void update(const GeometryContext& gctx, NavigationState& nState) const {
+  void fill(const GeometryContext& gctx, NavigationState& nState) const {
     // get the local position and direction
     auto lposition = transform * nState.position;
     auto ldirection = transform.linear() * nState.direction;
@@ -72,8 +75,16 @@ class MultiLayerNavigation : public IInternalNavigation {
 
     resolveDuplicates(gctx, surfCandidates);
     SurfacesFiller::fill(nState, surfCandidates);
-
-    updateCandidates(gctx, nState);
+  }
+  /// Fill the update the navigation state with candidates
+  ///
+  /// @note initialization is done here (sorting and update)
+  ///
+  /// @param gctx is the geometry context
+  /// @param nState is the navigation state
+  void update(const GeometryContext& gctx, NavigationState& nState) const {
+    fill(gctx, nState);
+    intitializeCandidates(gctx, nState);
   }
 
   /// Cast into a lookup position

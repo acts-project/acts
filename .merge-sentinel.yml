@@ -9,7 +9,7 @@ rules:
      - "main"
      - "develop/*"
     paths_ignore:
-     - "docs/*" 
+     - "docs/*"
 
     required_checks:
      - Docs / docs
@@ -24,6 +24,6 @@ rules:
      - "main"
      - "develop/*"
     paths:
-     - "docs/*" 
+     - "docs/*"
     required_checks:
      - Docs / docs

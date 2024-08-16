@@ -21,7 +21,6 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 # NOTE if you are adding a new option make sure that is defined in such a way
 #   that it is off/empty by default. if you think that is not possible, then
 #   it probably is not an optional component.
-option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and documentation)" OFF)
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
@@ -30,6 +29,16 @@ option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
 option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_USE_SYSTEM_GEOMODEL "Use a system-provided GeoModel installation" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_USE_SYSTEM_ALGEBRAPLUGINS "Use a system-provided algebra-plugins installation" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
+option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
+
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
@@ -37,31 +46,15 @@ option(ACTS_BUILD_PLUGIN_PODIO "Build Podio plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
-option(ACTS_BUILD_PLUGIN_COVFIE "Build Covfie plugin" OFF)
-option(ACTS_BUILD_PLUGIN_DETRAY "Build Detray plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
-option(ACTS_USE_SYSTEM_GEOMODEL "Use a system-provided GeoModel installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_ONNX "Build the Onnx backend for the exatrkx plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_TORCH "Build the torchscript backend for the exatrkx plugin" ON)
 option(ACTS_EXATRKX_ENABLE_CUDA "Enable CUDA for the exatrkx plugin" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
-option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
-option(ACTS_SETUP_COVFIE "Explicitly set up covfie for the project" OFF)
-option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_DETRAY "Explicitly set up detray for the project" OFF)
-option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_TRACCC "Explicitly set up traccc for the project" OFF)
-option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_DFELIBS "Explicitly set up dfelibs for the project" ON)
-option(ACTS_USE_SYSTEM_DFELIBS "Use a system-provided dfelibs installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_VECMEM "Explicitly set up vecmem for the project" OFF)
-option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_ALGEBRAPLUGINS "Explicitly set up algebra-plugins for the project" OFF)
-option(ACTS_USE_SYSTEM_ALGEBRAPLUGINS "Use a system-provided algebra-plugins installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
@@ -69,7 +62,6 @@ option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
 # alignment related options
 option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
-option(ACTS_BUILD_EXAMPLES "Build standalone examples" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EXATRKX "Build the Exa.TrkX example code" OFF)
@@ -77,7 +69,6 @@ option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
-option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
 option(ACTS_USE_EXAMPLES_TBB "Use Threading Building Blocks library in the examples" ON)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
@@ -95,9 +86,7 @@ option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
 option(ACTS_SETUP_BOOST "Explicitly set up Boost for the project" ON)
-option(ACTS_USE_SYSTEM_BOOST "Use a system-provided boost" ON)
 option(ACTS_SETUP_EIGEN3 "Explicitly set up Eigen3 for the project" ON)
-option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
 option(ACTS_BUILD_ODD "Build the OpenDataDetector" OFF)
 # profiling related optios
 option(ACTS_ENABLE_CPU_PROFILING "Enable CPU profiling using gperftools" OFF)
@@ -110,20 +99,6 @@ set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an excepti
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
 include(ActsOptionHelpers)
-# options without inter-dependencies
-set_option_if(ACTS_BUILD_BENCHMARKS ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_UNITTESTS ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_NONCOMPILE_TESTS ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_INTEGRATIONTESTS ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_GEANT4 ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_HEPMC3 ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_PYTHIA8 ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_FATRAS_GEANT4 ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_FATRAS_GEANT4)
-set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_EXAMPLES_EDM4HEP ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_ANALYSIS_APPS ACTS_BUILD_EVERYTHING)
 
 # any examples component activates the general examples option
 set_option_if(
@@ -134,36 +109,46 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_HEPMC3
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
   OR ACTS_BUILD_EXAMPLES_EXATRKX
-  OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
-  OR ACTS_BUILD_EVERYTHING)
+  OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
 # core plugins might be required by examples or depend on each other
 
 set_option_if(
   ACTS_BUILD_PLUGIN_DD4HEP
-  ACTS_BUILD_EXAMPLES_DD4HEP OR ACTS_BUILD_EVERYTHING OR
+  ACTS_BUILD_EXAMPLES_DD4HEP OR
   ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(
   ACTS_BUILD_PLUGIN_EDM4HEP
-  ACTS_BUILD_EXAMPLES_EDM4HEP OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(
   ACTS_BUILD_PLUGIN_PODIO
-  ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(
     ACTS_BUILD_PLUGIN_GEANT4
-    ACTS_BUILD_EXAMPLES_GEANT4 OR ACTS_BUILD_EVERYTHING)
+    ACTS_BUILD_EXAMPLES_GEANT4)
 set_option_if(
   ACTS_BUILD_PLUGIN_TGEO
-  ACTS_BUILD_PLUGIN_DD4HEP OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_PLUGIN_DD4HEP OR
+  ACTS_BUILD_EXAMPLES)
+set_option_if(
+  ACTS_BUILD_PLUGIN_IDENTIFICATION
+  ACTS_BUILD_PLUGIN_TGEO OR
+  ACTS_BUILD_PLUGIN_PODIO OR
+  ACTS_BUILD_EXAMPLES)
 set_option_if(
   ACTS_BUILD_PLUGIN_JSON
-  ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES)
 set_option_if(
   ACTS_BUILD_FATRAS
-  ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_PLUGIN_EXATRKX ACTS_BUILD_EXAMPLES_EXATRKX)
-set_option_if(ACTS_BUILD_PLUGIN_FPEMON
-  ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES)
+set_option_if(
+  ACTS_BUILD_PLUGIN_EXATRKX
+  ACTS_BUILD_EXAMPLES_EXATRKX)
+set_option_if(
+  ACTS_BUILD_PLUGIN_FPEMON
+  ACTS_BUILD_EXAMPLES)
+set_option_if(
+  ACTS_BUILD_PLUGIN_JSON
+  ACTS_BUILD_PLUGIN_TRACCC)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -203,8 +188,8 @@ set(_acts_autodiff_version 0.6)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.21)
 set(_acts_edm4hep_version 0.7)
-set(_acts_geomodel_version 4.6.0)
-set(_acts_eigen3_version 3.3.7)
+set(_acts_geomodel_version 6.3.0)
+set(_acts_eigen3_version 3.4.0)
 set(_acts_podio_version 1.0.1) # will try this first
 set(_acts_podio_fallback_version 0.16) # if not found, will try this one
 set(_acts_doxygen_version 1.9.4)
@@ -214,6 +199,11 @@ set(_acts_onnxruntime_version 1.12.0)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.309)
+set(_acts_detray_version 0.72.0)
+set(_acts_traccc_version 0.13.0)
+set(_acts_covfie_version 0.10.0)
+set(_acts_vecmem_version 1.4.0)
+set(_acts_algebraplugins_version 0.22.0)
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
@@ -229,24 +219,20 @@ endif()
 
 # required packages
 if (ACTS_SETUP_BOOST)
-  if (ACTS_USE_SYSTEM_BOOST)
-    if(POLICY CMP0167)
-      cmake_policy(SET CMP0167 NEW)
-    endif()
+  if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+  endif()
 
-    # Enable both program_options and unit_test_framework to reduce complexity
-    # Also Cuda tests seem to use program_options
-    if( ACTS_BUILD_ANALYSIS_APPS OR ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_BENCHMARKS )
-      find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options unit_test_framework)
-    else()
-      find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
-    endif()
-
-    if(Boost_VERSION VERSION_LESS _acts_boost_recommended_version)
-      message(WARNING "Found Boost ${Boost_VERSION} - recommended is at least ${_acts_boost_recommended_version}")
-    endif()
+  # Enable both program_options and unit_test_framework to reduce complexity
+  # Also Cuda tests seem to use program_options
+  if( ACTS_BUILD_ANALYSIS_APPS OR ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_BENCHMARKS )
+    find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options unit_test_framework)
   else()
-    add_subdirectory(thirdparty/boost)
+    find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
+  endif()
+
+  if(Boost_VERSION VERSION_LESS _acts_boost_recommended_version)
+    message(WARNING "Found Boost ${Boost_VERSION} - recommended is at least ${_acts_boost_recommended_version}")
   endif()
 endif()
 
@@ -258,31 +244,6 @@ if (ACTS_SETUP_EIGEN3)
   endif()
 endif()
 
-if (ACTS_SETUP_DFELIBS)
-  if (ACTS_USE_SYSTEM_DFELIBS)
-    find_package(dfelibs ${_acts_dfelibs_version} REQUIRED)
-  else()
-    add_subdirectory(thirdparty/dfelibs)
-  endif()
-endif()
-
-if (ACTS_SETUP_VECMEM)
-  if (ACTS_USE_SYSTEM_VECMEM)
-    find_package(vecmem ${_acts_vecmem_version} REQUIRED)
-  else()
-    add_subdirectory(thirdparty/vecmem)
-    # Make the "VecMem language code" available for the whole project.
-    include( "${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake" )
-  endif()
-endif()
-
-if (ACTS_SETUP_ALGEBRAPLUGINS)
-  if (ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
-    find_package(algebra-plugins ${_acts_algebraplugins_version} REQUIRED)
-  else()
-    add_subdirectory(thirdparty/algebra-plugins)
-  endif()
-endif()
 
 find_package(Filesystem REQUIRED)
 
@@ -316,30 +277,6 @@ endmacro()
 # find packages explicitly for each component even if this means searching for
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
-
-# plugin dependencies
-if(ACTS_SETUP_COVFIE)
-  if(ACTS_USE_SYSTEM_COVFIE)
-    find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
-  else()
-    add_subdirectory(thirdparty/covfie)
-  endif()
-endif()
-if(ACTS_SETUP_DETRAY)
-  if(ACTS_USE_SYSTEM_DETRAY)
-    find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
-  else()
-    add_subdirectory(thirdparty/detray)
-  endif()
-endif()
-if(ACTS_SETUP_TRACCC)
-  if(ACTS_USE_SYSTEM_TRACCC)
-    find_package(traccc ${_acts_traccc_version} REQUIRED CONFIG)
-  else()
-    add_subdirectory(thirdparty/traccc)
-  endif()
-endif()
-
 if(ACTS_BUILD_PLUGIN_ACTSVG)
   if(ACTS_USE_SYSTEM_ACTSVG)
     find_package(actsvg ${_acts_actsvg_version} REQUIRED CONFIG)
@@ -363,12 +300,8 @@ if(ACTS_BUILD_PLUGIN_JSON)
   endif()
 endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
-  if(ACTS_USE_SYSTEM_GEOMODEL)
-    find_package(GeoModelCore ${_acts_geomodel_version} REQUIRED CONFIG)
-    find_package(GeoModelIO ${_acts_geomodel_version} REQUIRED CONFIG)
-  else()
-    add_subdirectory(thirdparty/GeoModel)
-  endif()
+  find_package(GeoModelCore ${_acts_geomodel_version} REQUIRED CONFIG)
+  find_package(GeoModelIO ${_acts_geomodel_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_PLUGIN_TGEO)
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Geom Graf)
@@ -418,6 +351,43 @@ endif()
 if(ACTS_BUILD_PLUGIN_GEANT4)
   find_package(Geant4 REQUIRED CONFIG COMPONENTS gdml)
 endif()
+
+if(ACTS_BUILD_PLUGIN_TRACCC)
+  if (ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
+    find_package(algebra-plugins ${_acts_algebraplugins_version} REQUIRED)
+  else()
+    add_subdirectory(thirdparty/algebra-plugins)
+  endif()
+
+  if(ACTS_USE_SYSTEM_DETRAY)
+    find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
+  else()
+    add_subdirectory(thirdparty/detray)
+  endif()
+
+  if (ACTS_USE_SYSTEM_VECMEM)
+    find_package(vecmem ${_acts_vecmem_version} REQUIRED)
+  else()
+    add_subdirectory(thirdparty/vecmem)
+    # Make the "VecMem language code" available for the whole project.
+    include( "${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake" )
+  endif()
+
+  if(ACTS_USE_SYSTEM_COVFIE)
+    find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
+  else()
+    add_subdirectory(thirdparty/covfie)
+  endif()
+
+  # traccc also depends on vecmem and covfie, but those plugins should always
+  # be enabled if traccc is.
+  if(ACTS_USE_SYSTEM_TRACCC)
+    find_package(traccc ${_acts_traccc_version} REQUIRED CONFIG)
+  else()
+    add_subdirectory(thirdparty/traccc)
+  endif()
+endif()
+
 
 # examples dependencies
 if(ACTS_BUILD_EXAMPLES)

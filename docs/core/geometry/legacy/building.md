@@ -38,7 +38,7 @@ While `DD4hep` offers a descriptive language with a dedicated extension mechanis
 that can be used by ACTS to interpret the underlying geometry hierarchy and and structure,
 there is no such guarantee when having the already as built `TGeo` geometry in hand.
 Therefore a dedicated ACTS configuration file based on `json` can be provided that allows
-to specify parsing restrictions for sub detectors. 
+to specify parsing restrictions for sub detectors.
 ```
 
 
@@ -52,9 +52,9 @@ layer are determined by parsing the provided surfaces. Additionally, an envelope
 covering the surfaces can be chosen.
 
 ```{note}
-There exist standard layer builders that are designed to build cylindrical, disk like 
+There exist standard layer builders that are designed to build cylindrical, disk like
 and planar layers and perform the ordering of the surfaces onto those layers. These
-builders are called from the top level translation entry points from either `TGeo` 
+builders are called from the top level translation entry points from either `TGeo`
 or `DD4hep`.
 ```
 
@@ -80,7 +80,6 @@ For cylindrical detector setups, a dedicated {class}`Acts::CylinderVolumeBuilder
 provided, which performs a variety of volume building, packing and gluing.
 
 ```{note}
-For most cylindrical detectors, there exist automated glueing and geometry building 
+For most cylindrical detectors, there exist automated glueing and geometry building
 modules that take care of the glueing process.
 ```
-

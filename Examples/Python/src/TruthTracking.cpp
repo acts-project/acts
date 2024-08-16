@@ -91,8 +91,9 @@ void addTruthTracking(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::ParticleSmearing, mex, "ParticleSmearing", inputParticles,
       outputTrackParameters, sigmaD0, sigmaD0PtA, sigmaD0PtB, sigmaZ0,
-      sigmaZ0PtA, sigmaZ0PtB, sigmaT0, sigmaPhi, sigmaTheta, sigmaPRel,
-      initialSigmas, initialVarInflation, particleHypothesis, randomNumbers);
+      sigmaZ0PtA, sigmaZ0PtB, sigmaT0, sigmaPhi, sigmaTheta, sigmaPtRel,
+      initialSigmas, initialSigmaPtRel, initialVarInflation, particleHypothesis,
+      randomNumbers);
 
   {
     using Alg = ActsExamples::ParticleSelector;

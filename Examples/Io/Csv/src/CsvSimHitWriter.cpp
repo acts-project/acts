@@ -14,14 +14,13 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
 #include <stdexcept>
 #include <vector>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
 
@@ -41,8 +40,8 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitWriter::writeT(
   std::string pathSimHit = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<SimHitData> writerSimHit(pathSimHit,
-                                                    m_cfg.outputPrecision);
+  ActsExamples::NamedTupleCsvWriter<SimHitData> writerSimHit(
+      pathSimHit, m_cfg.outputPrecision);
 
   // CsvOutputData struct
   SimHitData simhit;
