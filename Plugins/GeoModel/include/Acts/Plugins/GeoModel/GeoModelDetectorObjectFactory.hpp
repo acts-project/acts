@@ -1,11 +1,23 @@
-#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
-#include <GeoModelHelpers/getChildNodesWithTrf.h>
-#include "Acts/Plugins/GeoModel/GeoModelToDetVol.hpp"
+// This file is part of the Acts project.
+//
+// Copyright (C) 2024 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#pragma once
+
 #include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "GeoModelKernel/GeoDefinitions.h"
+#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelToDetectorVolume.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <GeoModelHelpers/getChildNodesWithTrf.h>
+
+#include "GeoModelKernel/GeoDefinitions.h"
 
 class GeoShape;
 struct GeoModelTree;
@@ -27,8 +39,8 @@ class GeoModelDetectorObjectFactory {
     /// boolean flag to build subvolumes
     bool convertSubVolumes = false;
 
-    ///flag to build the desired bounding Boxes
-    std::string convertBox;
+    /// flag to build the desired bounding Boxes
+    std::vector<std::string> convertBox;
   };
   struct Cache {
     /// The created detector elements and their surfaces
@@ -37,26 +49,30 @@ class GeoModelDetectorObjectFactory {
     std::vector<GeoModelBoundingBox> boundingBoxes;
   };
 
-  GeoModelDetectorObjectFactory(const Config& cfg, std::unique_ptr<const Logger> mlogger = getDefaultLogger( "GeoModelDetectorObjectFactory", Acts::Logging::WARNING));
+  GeoModelDetectorObjectFactory(
+      const Config& cfg,
+      std::unique_ptr<const Logger> mlogger = getDefaultLogger(
+          "GeoModelDetectorObjectFactory", Acts::Logging::WARNING));
 
-  void construct(Cache& cache, const GeometryContext& gctx, const GeoModelTree& geoModelTree, const Options& options);
+  void construct(Cache& cache, const GeometryContext& gctx,
+                 const GeoModelTree& geoModelTree, const Options& options);
 
-  void convertSensitive(PVConstLink geoPV, const Acts::Transform3 &transform, std::vector<GeoModelSensitiveSurface> &sensitives);
+  void convertSensitive(PVConstLink geoPV, const Acts::Transform3& transform,
+                        std::vector<GeoModelSensitiveSurface>& sensitives);
 
+  std::vector<GeoChildNodeWithTrf> findAllSubVolumes(PVConstLink geoPV);
 
-std::vector<GeoChildNodeWithTrf> findAllSubVolumes(PVConstLink geoPV);
+  bool convertBox(std::string name);
+  bool matches(const std::string& name, PVConstLink physvol);
 
-bool convertBox(std::string name);
-bool matches(const std::string &name, PVConstLink physvol);
-
-void convertFpv(std::string name, auto fpv, Cache& cache, const GeometryContext& gctx);
-
+  void convertFpv(std::string name, GeoFullPhysVol* fpv, Cache& cache,
+                  const GeometryContext& gctx);
 
  private:
   std::unique_ptr<const Logger> m_logger;
-  //std::string name;
+  // std::string name;
   Config m_cfg;
 
-   const Logger& logger() const { return *m_logger; }
+  const Logger& logger() const { return *m_logger; }
 };
-}
+}  // namespace Acts

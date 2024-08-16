@@ -85,7 +85,8 @@ def main():
         "--convert-boundingboxes",
         help="Convert the fpvs to bounding boxes",
         type=str,
-        default="",
+        nargs="+",
+        default=[],
     )
 
     p.add_argument(
@@ -167,6 +168,7 @@ def main():
             segments,
             args.output + "_vols.obj",
         )
+
+
 if "__main__" == __name__:
     main()
-

@@ -7,15 +7,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // Must be on top to avoid some conflict between forward declare and typedef
+// Needed until https://gitlab.cern.ch/GeoModelDev/GeoModel/-/merge_requests/351
+// is deployed
 // clang-format off
-#include "GeoModelRead/ReadGeoModel.h"
+#include <GeoModelRead/ReadGeoModel.h>
 // clang-format on
 
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
@@ -138,44 +139,6 @@ void addGeoModel(Context& ctx) {
         .def(py::init<>())
         .def_readwrite("queries",
                        &Acts::GeoModelDetectorObjectFactory::Options::queries);
-  }
-
-  // Surface factory
-  {
-    auto f =
-        py::class_<Acts::GeoModelDetectorSurfaceFactory,
-                   std::shared_ptr<Acts::GeoModelDetectorSurfaceFactory>>(
-            gm, "GeoModelDetectorSurfaceFactory")
-            .def(py::init(
-                [](const Acts::GeoModelDetectorSurfaceFactory::Config& cfg,
-                   Acts::Logging::Level level) {
-                  return std::make_shared<Acts::GeoModelDetectorSurfaceFactory>(
-                      cfg, Acts::getDefaultLogger(
-                               "GeoModelDetectorSurfaceFactory", level));
-                }))
-            .def("construct", &Acts::GeoModelDetectorSurfaceFactory::construct);
-
-    py::class_<Acts::GeoModelDetectorSurfaceFactory::Config>(f, "Config")
-        .def(py::init<>())
-        .def_readwrite(
-            "convertSubVolumes",
-            &Acts::GeoModelDetectorSurfaceFactory::Config::convertSubVolumes)
-        .def_readwrite("nameList",
-                       &Acts::GeoModelDetectorSurfaceFactory::Config::nameList)
-        .def_readwrite(
-            "materialList",
-            &Acts::GeoModelDetectorSurfaceFactory::Config::materialList);
-
-    py::class_<Acts::GeoModelDetectorSurfaceFactory::Cache>(f, "Cache")
-        .def(py::init<>())
-        .def_readwrite(
-            "sensitiveSurfaces",
-            &Acts::GeoModelDetectorSurfaceFactory::Cache::sensitiveSurfaces);
-
-    py::class_<Acts::GeoModelDetectorSurfaceFactory::Options>(f, "Options")
-        .def(py::init<>())
-        .def_readwrite("queries",
-                       &Acts::GeoModelDetectorSurfaceFactory::Options::queries);
   }
 
   {

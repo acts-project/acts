@@ -74,7 +74,8 @@ using GeoUnionDoubleTrdConverter =
 
 /// @brief The map that maps the converters with the shapes
 
-inline std::shared_ptr<const IGeoShapeConverter> GeoShapesConverters(int geoShapeId) {
+inline std::shared_ptr<const IGeoShapeConverter> GeoShapesConverters(
+    int geoShapeId) {
   static const std::unordered_map<int,
                                   std::shared_ptr<const IGeoShapeConverter>>
       converters{
