@@ -94,9 +94,11 @@ template <class identifier_t>
 Acts::HoughTransformUtils::HoughPlane<identifier_t>::HoughPlane(
     const HoughPlaneConfig& cfg)
     : m_cfg(cfg),
-      m_houghHist(Axis(0, m_cfg.nBinsX, m_cfg.nBinsX), Axis(0, m_cfg.nBinsY, m_cfg.nBinsY)) {
+      m_houghHist(Axis(0, m_cfg.nBinsX, m_cfg.nBinsX),
+                  Axis(0, m_cfg.nBinsY, m_cfg.nBinsY)) {
   // instantiate our histogram.
- // m_houghHist = HoughHist(Axis(0, m_cfg.nBinsX, m_cfg.nBinsX), Axis(0, m_cfg.nBinsY, m_cfg.nBinsY));
+  // m_houghHist = HoughHist(Axis(0, m_cfg.nBinsX, m_cfg.nBinsX), Axis(0,
+  // m_cfg.nBinsY, m_cfg.nBinsY));
 }
 template <class identifier_t>
 void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fillBin(
@@ -107,7 +109,7 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fillBin(
   //   m_touchedBins.resize(m_touchedBins.size() + m_assignBatch);
   // }
   m_touchedBins.insert(globalBin({binX, binY}));
-  //m_ibin+=1;
+  // m_ibin+=1;
 
   // add content to the cell
   m_houghHist.atLocalBins({binX, binY}).fill(identifier, layer, w);
@@ -395,11 +397,11 @@ void Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<identifier_t>::
   // now we have to collect the non empty neighbours of this cell and check them
   // as well
   for (auto step : m_stepDirections) {
-    
     std::array newCandxy = {nextCand[0] + step.first,
-                                  nextCand[1] + step.second};
-    //if we are moving out of the bounds the dynamic array will throw exception
-    if(newCandxy[0] >= houghPlane.nBinsX() || newCandxy[1] >= houghPlane.nBinsY()){
+                            nextCand[1] + step.second};
+    // if we are moving out of the bounds the dynamic array will throw exception
+    if (newCandxy[0] >= houghPlane.nBinsX() ||
+        newCandxy[1] >= houghPlane.nBinsY()) {
       continue;
     }
     std::size_t newCand = houghPlane.globalBin({newCandxy[0], newCandxy[1]});
