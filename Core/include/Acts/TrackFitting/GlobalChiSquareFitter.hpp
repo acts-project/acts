@@ -475,6 +475,9 @@ class Gx2Fitter {
     // TODO description
     const parameters_t* parametersWithHypothesis = nullptr;
 
+    /// TODO desription
+    bool isFinalPropagation = false;
+
     /// TODO description
     std::unordered_map<GeometryIdentifier, ScatteringProperties>*
         scatteringMap = nullptr;
@@ -666,7 +669,7 @@ class Gx2Fitter {
           // Update the number of holes count only when encountering a
           // measurement
           result.measurementHoles = result.missedActiveSurfaces.size();
-        } else if (multipleScattering &&
+        } else if (false && !isFinalPropagation && multipleScattering &&
                    (surface->surfaceMaterial() != nullptr)) {
           // Here we handle material for multipleScattering. If holes exist, we
           // also handle them already. We create a full trackstate (unlike for
@@ -752,74 +755,6 @@ class Gx2Fitter {
           result.lastTrackIndex = currentTrackIndex;
 
           ++result.processedStates;
-
-
-//
-//          // We only create track states here if there is already a measurement
-//          // detected (no holes before the first measurement)
-//          if (result.measurementStates > 0) {
-//            ACTS_DEBUG("    Handle hole.");
-//
-//            auto& fittedStates = *result.fittedStates;
-//
-//            // Add a <trackStateMask> TrackState entry multi trajectory. This
-//            // allocates storage for all components, which we will set later.
-//            typename traj_t::TrackStateProxy trackStateProxy =
-//                fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
-//                                            result.lastTrackIndex);
-//            const std::size_t currentTrackIndex = trackStateProxy.index();
-//
-//            {
-//              // Set the trackStateProxy components with the state from the
-//              // ongoing propagation
-//              {
-//                trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-//                // Bind the transported state to the current surface
-//                auto res = stepper.boundState(state.stepping, *surface, false,
-//                                              freeToBoundCorrection);
-//                if (!res.ok()) {
-//                  result.result = res.error();
-//                  return;
-//                }
-//                const auto& [boundParams, jacobian, pathLength] = *res;
-//
-//                // Fill the track state
-//                trackStateProxy.predicted() = boundParams.parameters();
-//                trackStateProxy.predictedCovariance() = state.stepping.cov;
-//
-//                trackStateProxy.jacobian() = jacobian;
-//                trackStateProxy.pathLength() = pathLength;
-//              }
-//
-//              // Get and set the type flags
-//              auto typeFlags = trackStateProxy.typeFlags();
-//              // TODO no parameters for hole?
-//              typeFlags.set(TrackStateFlag::ParameterFlag);
-//              if (surface->surfaceMaterial() != nullptr) {
-//                typeFlags.set(TrackStateFlag::MaterialFlag);
-//              }
-//
-//              // Set hole only, if we are on a sensitive surface
-//              if (surface->associatedDetectorElement() != nullptr) {
-//                ACTS_VERBOSE("Detected hole on " << surface->geometryId());
-//                // If the surface is sensitive, set the hole type flag
-//                typeFlags.set(TrackStateFlag::HoleFlag);
-//              } else {
-//                ACTS_VERBOSE("Detected in-sensitive surface "
-//                             << surface->geometryId());
-//              }
-//              //              typeFlags.set(TrackStateFlag::HoleFlag);
-//            }
-//
-//            result.lastTrackIndex = currentTrackIndex;
-//
-//            // Count the missed surface
-//            result.missedActiveSurfaces.push_back(surface);
-//
-//            ++result.processedStates;
-//          } else {
-//            ACTS_DEBUG("    Ignoring hole, because no preceding measurements.");
-//          }
         } else if ((surface->associatedDetectorElement() != nullptr) ||
                    (surface->surfaceMaterial() != nullptr)) {
           // Here we handle holes. If material hasn't been handled before
@@ -1007,6 +942,9 @@ class Gx2Fitter {
     // a following iteration in a different volume.
     const TrackingVolume* startVolume = nullptr;
 
+    // Store, if we want to do multiple scattering. We still need to pass this option to the Actor.
+    const bool multipleScattering = gx2fOptions.multipleScattering;
+
     // TODO description
     std::unordered_map<GeometryIdentifier, ScatteringProperties> scatteringMap;
 
@@ -1046,7 +984,8 @@ class Gx2Fitter {
       gx2fActor.startVolume = startVolume;
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
-      gx2fActor.multipleScattering = gx2fOptions.multipleScattering;
+      gx2fActor.multipleScattering = multipleScattering;
+      gx2fActor.isFinalPropagation = false;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
@@ -1103,14 +1042,19 @@ class Gx2Fitter {
       // Count the material surfaces, to set up the system
       std::size_t nMaterialSurfaces = 0;
 
-      if (gx2fOptions.multipleScattering) {
+      if (multipleScattering) {
         // TODO description
         // pre-evaluate the track and count material states
         // TODO we could also do the ndf here
         for (const auto& trackState : track.trackStates()) {
-          auto typeFlags = trackState.typeFlags();
+          const auto typeFlags = trackState.typeFlags();
 
           if (!typeFlags.test(TrackStateFlag::MaterialFlag)) {
+            continue;
+          }
+
+          // For now we only allow material on measurement surfaces
+          if (!typeFlags.test(TrackStateFlag::MeasurementFlag)) {
             continue;
           }
 
@@ -1146,18 +1090,26 @@ class Gx2Fitter {
 
       for (const auto& trackState : track.trackStates()) {
         ACTS_VERBOSE("Start to investigate trackState ...");
-        auto typeFlags = trackState.typeFlags();
+        const auto typeFlags = trackState.typeFlags();
+        const bool stateHasMeasurement =
+            typeFlags.test(TrackStateFlag::MeasurementFlag);
+        const bool stateHasMaterial =
+            typeFlags.test(TrackStateFlag::MaterialFlag);
 
-        // update all Jacobians from start
-        if ((typeFlags.test(TrackStateFlag::MeasurementFlag)) ||
-            (gx2fOptions.multipleScattering &&
-             typeFlags.test(TrackStateFlag::MaterialFlag))) {
-          for (auto& jac : jacobianFromStart) {
-            jac = trackState.jacobian() * jac;
-          }
+        // We only consider states with a measurement
+        // TODO also material only states
+        // if (!(stateHasMeasurement || (stateHasMaterial && multipleScattering))) {
+        if (!stateHasMeasurement) {
+          ACTS_INFO("    Skip state.");
+          continue;
         }
 
-        if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
+        // update all Jacobians from start
+        for (auto& jac : jacobianFromStart) {
+          jac = trackState.jacobian() * jac;
+        }
+
+        if (stateHasMeasurement) {
           // Handle measurement
           ACTS_VERBOSE("    Handle measurement");
 
@@ -1191,8 +1143,10 @@ class Gx2Fitter {
           }
         }
 
-        if (gx2fOptions.multipleScattering &&
-            typeFlags.test(TrackStateFlag::MaterialFlag)) {
+        // TODO for now I bundle with the measurement. Let's develop
+        // material-only states later.
+        if (stateHasMeasurement && multipleScattering &&
+            stateHasMaterial) {
           // Get and store geoId for the current material surface
           const GeometryIdentifier geoId =
               trackState.referenceSurface().geometryId();
@@ -1303,24 +1257,25 @@ class Gx2Fitter {
       // TODO investigate further
       if (chi2sum > oldChi2sum + 1e-5) {
         ACTS_DEBUG("chi2 not converging monotonically");
+        //        break;
       }
 
-//      if (gx2fOptions.multipleScattering) {
-//        // update the scattering angles
-//        for (std::size_t matSurface = 0; matSurface < nMaterialSurfaces;
-//             matSurface++) {
-//          const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
-//
-//          auto scatteringMapId = scatteringMap.find(geoIdVector[matSurface]);
-//          if (scatteringMapId == scatteringMap.end()) {
-//            // TODO make proper error and return
-//            ACTS_ERROR("No scattering angles found for material surface"
-//                       << geoIdVector[matSurface]);
-//          }
-//          scatteringMapId->second.scatteringAngles.block<2, 1>(2, 0) +=
-//              deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
-//        }
-//      }
+      if (multipleScattering) {
+        // update the scattering angles
+        for (std::size_t matSurface = 0; matSurface < nMaterialSurfaces;
+             matSurface++) {
+          const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
+
+          auto scatteringMapId = scatteringMap.find(geoIdVector[matSurface]);
+          if (scatteringMapId == scatteringMap.end()) {
+            // TODO make proper error and return
+            ACTS_ERROR("No scattering angles found for material surface"
+                       << geoIdVector[matSurface]);
+          }
+          scatteringMapId->second.scatteringAngles.block<2, 1>(2, 0) +=
+              deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
+        }
+      }
 
       oldChi2sum = chi2sum;
       startVolume = gx2fResult.startVolume;
@@ -1406,7 +1361,8 @@ class Gx2Fitter {
       gx2fActor.startVolume = startVolume;
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
-      gx2fActor.multipleScattering = gx2fOptions.multipleScattering;
+      gx2fActor.multipleScattering = multipleScattering;
+      gx2fActor.isFinalPropagation = false;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
