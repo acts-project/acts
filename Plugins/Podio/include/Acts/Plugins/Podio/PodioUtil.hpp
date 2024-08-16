@@ -19,7 +19,7 @@
 
 #include <podio/podioVersion.h>
 
-#if podio_VERSION_MAJOR >= 1
+#if podio_VERSION_MAJOR >= 1 || podio_VERSION_MINOR == 99
 #include <podio/ROOTReader.h>
 #include <podio/ROOTWriter.h>
 #else
