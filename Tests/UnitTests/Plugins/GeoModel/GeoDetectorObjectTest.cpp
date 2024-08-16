@@ -8,6 +8,7 @@
 
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoTube.h>
+#include <GeoModelKernel/GeoSimplePolygonBrep.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoMaterial.h>
@@ -32,6 +33,8 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   auto boxXY = new GeoBox(gm_box_hlx, gm_box_hly, gm_box_hlz);
   auto tube = new GeoTube(gm_tube_rmin, gm_tube_rmax, gm_tube_hlz);
   auto ssurface = new GeoBox(gm_rsurf_hlx, gm_rsurf_hly, gm_rsurf_hlz);
+  //TODO create dimentsions for the polygon
+  auto poly = new GeoSimplePolygonBrep(gm_poly_z);
 
   //create logvols
   auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
