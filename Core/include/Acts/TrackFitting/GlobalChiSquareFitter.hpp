@@ -626,6 +626,7 @@ class Gx2Fitter {
             // For material surfaces, we also update the angles with the
             // available scattering information
             if (multipleScattering && surface->surfaceMaterial() != nullptr) {
+              std::cout << "Material on measurement surface." << std::endl;
               ACTS_DEBUG("    Update parameters with scattering angles.");
               auto scatteringMapId = scatteringMap->find(geoId);
               ACTS_VERBOSE("    scatteringAngles:\n"
