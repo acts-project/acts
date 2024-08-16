@@ -114,7 +114,7 @@ class RootPropagationStepsWriter : public WriterT<PropagationSummaries> {
   std::vector<int> m_approachID;
   /// surface identifier
   std::vector<int> m_sensitiveID;
-  /// surface identifeir
+  /// surface identifier
   std::vector<int> m_extraID;
   /// flag material if present
   std::vector<int> m_material;
