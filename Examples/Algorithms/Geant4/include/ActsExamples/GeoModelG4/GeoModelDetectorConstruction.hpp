@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
-#include <Acts/Plugins/GeoModel/GeoModelTree.hpp>
 
 #include <string>
 

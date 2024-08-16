@@ -26,7 +26,7 @@ def readDataSet(Seed_files: list[str]) -> pd.DataFrame:
     """Read the dataset from the different files, remove the particle with only fakes and combine the datasets"""
     """
     @param[in] Seed_files: DataFrame contain the data from each seed files (1 file per events usually)
-    @return: combined DataFrame containing all the seed, ordered by events and then by truth particle ID in each events 
+    @return: combined DataFrame containing all the seed, ordered by events and then by truth particle ID in each events
     """
     data = pd.DataFrame()
     for f in Seed_files:
@@ -40,7 +40,7 @@ def prepareTrainingData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     """Prepare the data"""
     """
     @param[in] data: input DataFrame to be prepared
-    @return: array of the network input and the corresponding truth  
+    @return: array of the network input and the corresponding truth
     """
     # Remove truth and useless variable
     target_column = "good/duplicate/fake"
@@ -74,7 +74,7 @@ def batchSplit(data: pd.DataFrame, batch_size: int) -> list[pd.DataFrame]:
     """
     @param[in] data: input DataFrame to be cut into batch
     @param[in] batch_size: Number of truth particles per batch
-    @return: list of DataFrame, each element correspond to a batch 
+    @return: list of DataFrame, each element correspond to a batch
     """
     batch = []
     pid = data[0][0]
@@ -104,7 +104,7 @@ def computeLoss(
 ) -> torch.Tensor:
     """Compute one loss for each duplicate seed associated with the particle"""
     """
-    @param[in] score_good: score return by the model for the good seed associated with this particle 
+    @param[in] score_good: score return by the model for the good seed associated with this particle
     @param[in] score_duplicate: list of the scores of all duplicate seed associated with this particle
     @param[in] margin_duplicate: Margin used in the computation of the MarginRankingLoss for duplicate seeds
     @param[in] margin_fake: Margin used in the computation of the MarginRankingLoss for fake seeds
@@ -130,8 +130,8 @@ def computeLoss(
 def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, float]:
     """Run the MLP on a batch and compute the corresponding efficiency and loss. If an optimiser is specify train the MLP."""
     """
-    @param[in] batch:  list of DataFrame, each element correspond to a batch 
-    @param[in] Optimiser: Optimiser for the MLP, if one is specify the network will be train on batch. 
+    @param[in] batch:  list of DataFrame, each element correspond to a batch
+    @param[in] Optimiser: Optimiser for the MLP, if one is specify the network will be train on batch.
     @return: array containing the number of particles, the number of particle where the good seed was found and the loss
     """
     # number of particles
@@ -329,11 +329,6 @@ torch.onnx.export(
     dynamic_axes={"x": {0: "batch_size"}, "y": {0: "batch_size"}},
 )
 
-del CKF_files
-del data
-del x_train, y_train
-del input, input_test
-del duplicateClassifier
 # ==================================================================
 
 # ttbar events for the test, here we assume 40 events are availables
