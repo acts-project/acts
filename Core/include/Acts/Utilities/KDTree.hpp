@@ -180,9 +180,8 @@ class KDTree {
   /// @param i The iterator to write the output to.
   template <typename OutputIt>
   void rangeSearchInserterWithKey(const range_t &r, OutputIt i) const {
-    rangeSearchMapDiscard(r, [i](const coordinate_t &c, const Type &v) mutable {
-      i = {c, v};
-    });
+    rangeSearchMapDiscard(
+        r, [i](const coordinate_t &c, const Type &v) mutable { i = {c, v}; });
   }
 
   /// @brief Perform an orthogonal range search within the k-d tree, applying
