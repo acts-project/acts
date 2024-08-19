@@ -12,14 +12,13 @@
 
 #include "GeoModelKernel/GeoMaterial.h"
 #include "GeoModelKernel/Units.h"
-namespace {
-constexpr double s_densityCnvFactor = 1. / GeoModelKernelUnits::gram;
-}
+
 Acts::Material Acts::GeoModel::geoMaterialConverter(const GeoMaterial* gm,
                                                     bool useMolarDensity) {
+  constexpr double densityCnvFactor = 1. / GeoModelKernelUnits::gram;
   double x0 = gm->getRadLength();
   double l0 = gm->getIntLength();
-  double density = gm->getDensity() * s_densityCnvFactor;
+  double density = gm->getDensity() * densityCnvFactor;
   double A = 0.;
   double Z = 0.;
   // Get number elements
