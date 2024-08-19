@@ -253,9 +253,7 @@ def trk_geo():
 DetectorConfig = namedtuple(
     "DetectorConfig",
     [
-        "detector",
-        "trackingGeometry",
-        "decorators",
+        "detectorTuple",
         "geometrySelection",
         "digiConfigFile",
         "name",
@@ -268,11 +266,9 @@ def detector_config(request):
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     if request.param == "generic":
-        detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+        detectorTuple = acts.examples.GenericDetector.create()
         return DetectorConfig(
-            detector,
-            trackingGeometry,
-            decorators,
+            detectorTuple,
             geometrySelection=(
                 srcdir
                 / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
@@ -291,11 +287,9 @@ def detector_config(request):
             srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
             level=acts.logging.INFO,
         )
-        detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+        detectorTuple = getOpenDataDetector(matDeco)
         return DetectorConfig(
-            detector,
-            trackingGeometry,
-            decorators,
+            detectorTuple,
             digiConfigFile=(
                 srcdir
                 / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
@@ -305,7 +299,6 @@ def detector_config(request):
             ),
             name=request.param,
         )
-
     else:
         raise ValueError(f"Invalid detector {detector}")
 
@@ -390,16 +383,18 @@ def fatras(ptcl_gun, trk_geo, rng):
 def _do_material_recording(d: Path):
     from material_recording import runMaterialRecording
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
-
-    detectorConstructionFactory = (
-        acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
-    )
-
     s = acts.examples.Sequencer(events=2, numThreads=1)
 
-    runMaterialRecording(detectorConstructionFactory, str(d), tracksPerEvent=100, s=s)
-    s.run()
+    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
+        detectorConstructionFactory = (
+            acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
+        )
+
+        runMaterialRecording(
+            detectorConstructionFactory, str(d), tracksPerEvent=100, s=s
+        )
+
+        s.run()
 
 
 @pytest.fixture(scope="session")

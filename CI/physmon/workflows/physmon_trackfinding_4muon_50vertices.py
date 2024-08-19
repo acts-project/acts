@@ -190,7 +190,6 @@ with tempfile.TemporaryDirectory() as temp:
     )
 
     s.run()
-    del s
 
     shutil.move(
         tp / "performance_ambi.root",

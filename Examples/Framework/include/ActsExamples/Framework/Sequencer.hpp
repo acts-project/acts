@@ -78,7 +78,7 @@ class Sequencer {
     /// output directory for timing information, empty for working directory
     std::string outputDir;
     /// output name of the timing file
-    std::string outputTimingFile = "timing.tsv";
+    std::string outputTimingFile = "timing.csv";
     /// Callback that is invoked in the event loop.
     /// @warning This function can be called from multiple threads and should therefore be thread-safe
     IterationCallback iterationCallback = []() {};
