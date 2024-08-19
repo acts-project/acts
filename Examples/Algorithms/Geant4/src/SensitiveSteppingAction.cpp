@@ -31,6 +31,8 @@
 #include <G4VPhysicalVolume.hh>
 #include <G4VTouchable.hh>
 
+#include <boost/version.hpp>
+
 class G4PrimaryParticle;
 
 #if BOOST_VERSION >= 107800
