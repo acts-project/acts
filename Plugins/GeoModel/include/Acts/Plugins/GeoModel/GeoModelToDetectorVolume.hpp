@@ -5,6 +5,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "Acts/Detector/DetectorVolume.hpp"
@@ -13,9 +14,8 @@
 
 class GeoShape;
 
-namespace Acts {
+namespace Acts::GeoModel {
 
-namespace GeoModel {
 /// @brief Convert a GeoModel shape to a DetectorVolume
 ///
 /// @param shape the GeoModel shape
@@ -24,5 +24,5 @@ namespace GeoModel {
 std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeometryContext& context, const GeoShape* shape,
     const std::string& name, const GeoTrf::Transform3D transform);
-}  // namespace GeoModel
-}  // namespace Acts
+
+}  // namespace Acts::GeoModel

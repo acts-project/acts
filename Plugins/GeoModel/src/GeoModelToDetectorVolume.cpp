@@ -27,8 +27,8 @@
 #include <GeoModelKernel/GeoTube.h>
 #include <GeoModelKernel/GeoTubs.h>
 
-namespace Acts {
-namespace GeoModel {
+namespace Acts::GeoModel {
+
 std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeometryContext& context, const GeoShape* shape,
     const std::string& name, const GeoTrf::Transform3D transform) {
@@ -164,5 +164,5 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
   }
   throw std::runtime_error("FATAL: Unsupported GeoModel shape");
 }
-}  // namespace GeoModel
-}  // namespace Acts
+
+}  // namespace Acts::GeoModel
