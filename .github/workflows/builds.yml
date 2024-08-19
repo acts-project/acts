@@ -24,7 +24,7 @@ env:
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:53
+    container: ghcr.io/acts-project/ubuntu2404:58
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -56,23 +56,9 @@ jobs:
           git config --global user.email '<>' &&
           ccache -z &&
           cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=20
+          --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-          -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
-          -DACTS_BUILD_ODD=ON
-          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
-          -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_BUILD_ANALYSIS_APPS=ON
           -DACTS_BUILD_PLUGIN_ONNX=ON
-          -DACTS_BUILD_PLUGIN_ACTSVG=ON
-          -DACTS_BUILD_PLUGIN_GEOMODEL=ON
 
       - name: Build
         run: cmake --build build
@@ -122,7 +108,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:53
+    container: ghcr.io/acts-project/ubuntu2404:58
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -159,7 +145,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:53
+    container: ghcr.io/acts-project/ubuntu2404:58
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -192,7 +178,7 @@ jobs:
         run: >
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
-          && pip3 install histcmp==0.6.6 matplotlib
+          && pip3 install histcmp==0.6.7 matplotlib
           && pip3 install -r Examples/Scripts/requirements.txt
           && /usr/local/bin/geant4-config --install-datasets
           && source build/this_acts_withdeps.sh
@@ -246,7 +232,7 @@ jobs:
             std: 20
           - image: ubuntu2204_clang
             std: 20
-    container: ghcr.io/acts-project/${{ matrix.image }}:53
+    container: ghcr.io/acts-project/${{ matrix.image }}:58
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -276,21 +262,9 @@ jobs:
         run: >
           ccache -z &&
           cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
+          --preset=github-ci
           -DCMAKE_CXX_STANDARD=${{ matrix.std }}
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-          -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
-          -DACTS_BUILD_ODD=ON
-          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
-          -DACTS_FORCE_ASSERTIONS=OFF
-          -DACTS_BUILD_ANALYSIS_APPS=ON
-          -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
       - name: Build
         run: cmake --build build
@@ -335,7 +309,7 @@ jobs:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       DEPENDENCY_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/macOS/cmake/deps.8e12bbf.tar.zst
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/macos-14/deps.v2.tar.zst
       # Works around an issue where root's RPATH is wrong for tbb, thus won't find it
       DYLD_LIBRARY_PATH: "${{ github.workspace }}/install/tbb/2021.11.0/lib"
     steps:
@@ -352,11 +326,9 @@ jobs:
           brew install cmake ninja ccache xerces-c
           && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.zst ${{ env.DEPENDENCY_URL }}
           && mkdir ${{ env.DEPENDENCY_DIR }}
-          && ls ${{ env.DEPENDENCY_DIR }}
           && tar -xf deps.tar.zst -C ${{ env.DEPENDENCY_DIR }}
-          && ls ${{ env.DEPENDENCY_DIR }}
-          && ls ${{ env.DEPENDENCY_DIR }}/python
-          && ${{ env.DEPENDENCY_DIR }}/python/3.12.2/bin/python3 -m pip install pyyaml jinja2
+          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
+          && python3 -m pip install pyyaml jinja2
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
@@ -368,29 +340,14 @@ jobs:
             ${{ runner.os  }}-ccache_${{ env.CCACHE_KEY_SUFFIX }}_
 
       - name: Configure
-        # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
-        # dd4hep CMake configuration that gets triggered on recent CMake
-        # versions such as the one installed via homebrew
         run: >
           ccache -z
-          && source ${{ env.DEPENDENCY_DIR }}/setup.sh
+          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
           && cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DPython_EXECUTABLE=${{ env.DEPENDENCY_DIR }}/python/3.12.2/bin/python3
-          -DDD4HEP_DEBUG_CMAKE=ON
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=20
+          --preset=github-ci
+          -DCMAKE_PREFIX_PATH="${{ env.DEPENDENCY_DIR }}"
+          -DPython_EXECUTABLE=${{ env.DEPENDENCY_DIR }}/bin/python3
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
-          -DCMAKE_PREFIX_PATH=/usr/local/acts
-          -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
-          -DACTS_BUILD_ODD=ON
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-          -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
-          -DACTS_BUILD_PLUGIN_ACTSVG=ON
       - name: Build
         run: cmake --build build
       - name: ccache stats
@@ -413,7 +370,7 @@ jobs:
           path: ${{ env.INSTALL_DIR }}
       - name: Downstream configure
         run: >
-          source ${{ env.DEPENDENCY_DIR }}/setup.sh
+          PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
           && cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
@@ -423,7 +380,6 @@ jobs:
       - name: Downstream build
         run: cmake --build build-downstream
       - name: Downstream run
-        run: |
-          source ${{ env.DEPENDENCY_DIR }}/setup.sh
-          source ${{ env.DEPENDENCY_DIR}}/dd4hep/*/bin/thisdd4hep.sh
-          ./build-downstream/bin/ShowActsVersion
+        run: >
+          PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
+          && ./build-downstream/bin/ShowActsVersion

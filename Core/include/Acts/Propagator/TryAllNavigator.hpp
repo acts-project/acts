@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -342,7 +343,9 @@ class TryAllNavigator : public TryAllNavigatorBase {
                               state.options.surfaceTolerance);
       for (const auto& intersection : intersections.first.split()) {
         // exclude invalid intersections
-        if (!detail::checkIntersection(intersection, nearLimit, farLimit)) {
+        if (!intersection.isValid() ||
+            !detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                     farLimit)) {
           continue;
         }
         // store candidate
@@ -356,6 +359,8 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
     ACTS_VERBOSE(volInfo(state) << "found " << intersectionCandidates.size()
                                 << " intersections");
+
+    bool intersectionFound = false;
 
     for (const auto& candidate : intersectionCandidates) {
       const auto& intersection = candidate.intersection;
@@ -375,13 +380,16 @@ class TryAllNavigator : public TryAllNavigatorBase {
         continue;
       }
 
-      ACTS_VERBOSE(volInfo(state) << "aiming at surface "
-                                  << surface.geometryId() << ". step size is "
-                                  << stepper.outputStepSize(state.stepping));
-      break;
+      if (surfaceStatus == IntersectionStatus::reachable) {
+        ACTS_VERBOSE(volInfo(state)
+                     << "Surface reachable, step size updated to "
+                     << stepper.outputStepSize(state.stepping));
+        intersectionFound = true;
+        break;
+      }
     }
 
-    if (intersectionCandidates.empty()) {
+    if (!intersectionFound) {
       stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
 
       ACTS_VERBOSE(volInfo(state) << "no intersections found. advance without "
@@ -675,7 +683,8 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
         break;
       }
 
-      ACTS_WARNING(volInfo(state) << "Surface unreachable, skip.");
+      ACTS_VERBOSE(volInfo(state) << "Surface " << surface.geometryId()
+                                  << " unreachable, skip.");
       ++state.navigation.activeCandidateIndex;
     }
 
@@ -738,8 +747,9 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
             state.geoContext, end, direction, state.options.surfaceTolerance);
         for (const auto& intersection : intersections.first.split()) {
           // exclude invalid intersections
-          if (!intersection ||
-              !detail::checkIntersection(intersection, nearLimit, farLimit)) {
+          if (!intersection.isValid() ||
+              !detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                       farLimit)) {
             continue;
           }
           // exclude last candidate

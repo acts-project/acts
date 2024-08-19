@@ -70,9 +70,8 @@ constexpr auto type_collector = [](auto t_, auto predicate, auto extractor) {
  * @tparam items The items to filter / collect from.
  */
 template <typename helper, typename... items>
-constexpr auto type_collector_t = type_collector(hana::tuple_t<items...>,
-                                                 helper::predicate,
-                                                 helper::extractor);
+constexpr auto type_collector_t = type_collector(
+    hana::tuple_t<items...>, helper::predicate, helper::extractor);
 
 /**
  * Meta function which returns a compile time bool
