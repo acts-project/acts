@@ -1,14 +1,18 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <numeric>
@@ -16,8 +20,242 @@
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;
 using MultiTrajectoryTraits::IndexType;
+using namespace Acts::UnitLiterals;
+
+template <typename track_container_t, typename traj_t,
+          template <typename> class holder_t>
+struct Factory {};
+
+template <typename track_container_t, typename traj_t>
+struct Factory<track_container_t, traj_t, detail::RefHolder> {
+  using track_container_type =
+      TrackContainer<track_container_t, traj_t, detail::RefHolder>;
+
+  track_container_t vtc;
+  traj_t mtj;
+  track_container_type tc{vtc, mtj};
+
+  auto& trackContainer() { return tc; }
+  auto& trackStateContainer() { return mtj; }
+  auto& backend() { return vtc; }
+};
+
+template <typename track_container_t, typename traj_t>
+struct Factory<track_container_t, traj_t, detail::ValueHolder> {
+  using track_container_type =
+      TrackContainer<track_container_t, traj_t, detail::ValueHolder>;
+
+  track_container_type tc{track_container_t{}, traj_t{}};
+
+  auto& trackContainer() { return tc; }
+  auto& trackStateContainer() { return tc.trackStateContainer(); }
+  auto& backend() { return tc.container(); }
+};
+
+template <typename track_container_t, typename traj_t>
+struct Factory<track_container_t, traj_t, std::shared_ptr> {
+  using track_container_type =
+      TrackContainer<track_container_t, traj_t, std::shared_ptr>;
+
+  std::shared_ptr<track_container_t> vtc{std::make_shared<track_container_t>()};
+  std::shared_ptr<traj_t> mtj{std::make_shared<traj_t>()};
+  track_container_type tc{vtc, mtj};
+
+  auto& trackContainer() { return tc; }
+  auto& trackStateContainer() { return *mtj; }
+  auto& backend() { return *vtc; }
+};
+
+template <typename track_container_t, typename traj_t,
+          template <typename> class... holders>
+using holder_types_t =
+    std::tuple<Factory<track_container_t, traj_t, holders>...>;
+
+using holder_types = holder_types_t<VectorTrackContainer, VectorMultiTrajectory,
+                                    // detail_tc::ValueHolder,
+                                    // detail_tc::RefHolder,
+                                    std::shared_ptr>;
+
+using const_holder_types =
+    holder_types_t<ConstVectorTrackContainer, ConstVectorMultiTrajectory,
+                   detail::ValueHolder, detail::RefHolder, std::shared_ptr>;
 
 BOOST_AUTO_TEST_SUITE(EventDataTrack)
+
+BOOST_AUTO_TEST_CASE(BuildDefaultHolder) {
+  VectorMultiTrajectory mtj{};
+  VectorTrackContainer vtc{};
+  TrackContainer tc{vtc, mtj};
+
+  static_assert(
+      std::is_same_v<decltype(tc),
+                     TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
+                                    detail::RefHolder>>,
+      "Incorrect deduced type");
+  BOOST_CHECK_EQUAL(&mtj, &tc.trackStateContainer());
+  BOOST_CHECK_EQUAL(&vtc, &tc.container());
+  tc.addTrack();
+
+  std::decay_t<decltype(tc)> copy = tc;
+  BOOST_CHECK_EQUAL(&mtj, &copy.trackStateContainer());
+  BOOST_CHECK_EQUAL(&vtc, &copy.container());
+}
+
+BOOST_AUTO_TEST_CASE(BuildValueHolder) {
+  {
+    VectorMultiTrajectory mtj{};
+    VectorTrackContainer vtc{};
+    TrackContainer tc{std::move(vtc), std::move(mtj)};
+    static_assert(
+        std::is_same_v<decltype(tc), TrackContainer<VectorTrackContainer,
+                                                    VectorMultiTrajectory,
+                                                    detail::ValueHolder>>,
+        "Incorrect deduced type");
+    std::decay_t<decltype(tc)> copy = tc;
+    BOOST_CHECK_NE(&tc.trackStateContainer(), &copy.trackStateContainer());
+    BOOST_CHECK_NE(&tc.container(), &copy.container());
+  }
+  {
+    TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+
+    static_assert(
+        std::is_same_v<decltype(tc), TrackContainer<VectorTrackContainer,
+                                                    VectorMultiTrajectory,
+                                                    detail::ValueHolder>>,
+        "Incorrect deduced type");
+    tc.addTrack();
+    std::decay_t<decltype(tc)> copy = tc;
+    BOOST_CHECK_NE(&tc.trackStateContainer(), &copy.trackStateContainer());
+    BOOST_CHECK_NE(&tc.container(), &copy.container());
+  }
+}
+
+BOOST_AUTO_TEST_CASE(BuildRefHolder) {
+  VectorMultiTrajectory mtj{};
+  VectorTrackContainer vtc{};
+  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
+      tc{vtc, mtj};
+
+  static_assert(
+      std::is_same_v<decltype(tc),
+                     TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
+                                    detail::RefHolder>>,
+      "Incorrect deduced type");
+  BOOST_CHECK_EQUAL(&mtj, &tc.trackStateContainer());
+  BOOST_CHECK_EQUAL(&vtc, &tc.container());
+  tc.addTrack();
+  std::decay_t<decltype(tc)> copy = tc;
+  BOOST_CHECK_EQUAL(&mtj, &copy.trackStateContainer());
+  BOOST_CHECK_EQUAL(&vtc, &copy.container());
+}
+
+BOOST_AUTO_TEST_CASE(BuildSharedPtr) {
+  auto mtj = std::make_shared<VectorMultiTrajectory>();
+  auto vtc = std::make_shared<VectorTrackContainer>();
+  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, std::shared_ptr>
+      tc{vtc, mtj};
+
+  static_assert(
+      std::is_same_v<decltype(tc),
+                     TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
+                                    std::shared_ptr>>,
+      "Incorrect deduced type");
+  BOOST_CHECK_EQUAL(mtj.get(), &tc.trackStateContainer());
+  BOOST_CHECK_EQUAL(vtc.get(), &tc.container());
+  tc.addTrack();
+  std::decay_t<decltype(tc)> copy = tc;
+  BOOST_CHECK_EQUAL(mtj.get(), &copy.trackStateContainer());
+  BOOST_CHECK_EQUAL(vtc.get(), &copy.container());
+}
+
+BOOST_AUTO_TEST_CASE(BuildConvenience) {
+  VectorMultiTrajectory mtj{};
+  VectorTrackContainer vtc{};
+  TrackContainer tc{vtc, mtj};
+
+  BOOST_CHECK_EQUAL(tc.size(), 0);
+  auto track1 = tc.makeTrack();
+  BOOST_CHECK_EQUAL(tc.size(), 1);
+  auto track2 = tc.makeTrack();
+  BOOST_CHECK_EQUAL(tc.size(), 2);
+
+  BOOST_CHECK_EQUAL(track1.index(), 0);
+  BOOST_CHECK_EQUAL(track2.index(), 1);
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
+  factory_t factory;
+
+  auto& tc = factory.trackContainer();
+
+  static_assert(std::is_same_v<std::decay_t<decltype(tc)>,
+                               typename factory_t::track_container_type>,
+                "Incorrect deduction");
+
+  static_assert(!std::decay_t<decltype(tc)>::ReadOnly,
+                "Should not be read only");
+  BOOST_CHECK(!tc.ReadOnly);
+
+  auto idx = tc.addTrack();
+  auto t = tc.getTrack(idx);
+  auto t2 = tc.getTrack(idx);
+  t.template component<IndexType, "tipIndex"_hash>() = 5;
+
+  BOOST_CHECK_EQUAL((t.template component<IndexType, "tipIndex"_hash>()), 5);
+  BOOST_CHECK_EQUAL(t.tipIndex(), 5);
+  t.tipIndex() = 6;
+  BOOST_CHECK_EQUAL(t.tipIndex(), 6);
+
+  BoundVector pars;
+  pars.setRandom();
+  t.parameters() = pars;
+  BOOST_CHECK_EQUAL(t.parameters(), pars);
+
+  BoundMatrix cov;
+  cov.setRandom();
+  t.covariance() = cov;
+  BOOST_CHECK_EQUAL(t.covariance(), cov);
+
+  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
+
+  t.setReferenceSurface(surface);
+  BOOST_CHECK_EQUAL(surface.get(), &t.referenceSurface());
+
+  ProxyAccessor<unsigned int> accNMeasuements("nMeasurements");
+  ConstProxyAccessor<unsigned int> caccNMeasuements("nMeasurements");
+
+  t.nMeasurements() = 42;
+  BOOST_CHECK_EQUAL(t2.nMeasurements(), 42);
+  BOOST_CHECK_EQUAL(accNMeasuements(t), 42);
+  accNMeasuements(t) = 89;
+  BOOST_CHECK_EQUAL(t2.nMeasurements(), 89);
+  BOOST_CHECK_EQUAL(caccNMeasuements(t), 89);
+
+  // does not compile
+  // caccNMeasuements(t) = 66;
+
+  t2.nHoles() = 67;
+  BOOST_CHECK_EQUAL(t.nHoles(), 67);
+
+  t2.nOutliers() = 68;
+  BOOST_CHECK_EQUAL(t.nOutliers(), 68);
+
+  t2.nSharedHits() = 69;
+  BOOST_CHECK_EQUAL(t.nSharedHits(), 69);
+
+  t2.chi2() = 555.0;
+  BOOST_CHECK_EQUAL(t2.chi2(), 555.0);
+
+  t2.nDoF() = 123;
+  BOOST_CHECK_EQUAL(t2.nDoF(), 123);
+
+  // const checks: should not compile
+  // const auto& ctc = tc;
+  // ctc.getTrack(idx).covariance().setRandom();
+  // const auto& ctp = t;
+  // ctp.covariance().setRandom();
+}
 
 BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
   // mutable source

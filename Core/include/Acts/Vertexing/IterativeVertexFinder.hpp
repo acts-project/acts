@@ -112,7 +112,7 @@ class IterativeVertexFinder final : public IVertexFinder {
     InputTrack::Extractor extractParameters;
 
     /// Magnetic field provider
-    std::shared_ptr<MagneticFieldProvider> field;
+    std::shared_ptr<const MagneticFieldProvider> field;
   };
 
   /// State struct

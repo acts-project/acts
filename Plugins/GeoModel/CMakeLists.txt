@@ -10,8 +10,8 @@ add_library(
   src/detail/GeoBoxConverter.cpp
   src/detail/GeoTrdConverter.cpp
   src/detail/GeoTubeConverter.cpp
-  src/detail//GeoShiftConverter.cpp
-  src/detail//GeoIntersectionAnnulusConverter.cpp
+  src/detail/GeoShiftConverter.cpp
+  src/detail/GeoIntersectionAnnulusConverter.cpp
   src/detail/GeoModelBinningHelper.cpp
   src/detail/GeoModelExtentHelper.cpp
   src/detail/GeoUnionDoubleTrdConverter.cpp)
@@ -22,7 +22,7 @@ target_include_directories(
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
     ActsPluginGeoModel
-  PUBLIC ActsCore GeoModelKernel GeoModelIO::GeoModelDBManager GeoModelIO::GeoModelRead)
+  PUBLIC ActsCore GeoModelCore::GeoModelKernel GeoModelIO::GeoModelDBManager GeoModelIO::GeoModelRead)
 
 install(
   TARGETS ActsPluginGeoModel

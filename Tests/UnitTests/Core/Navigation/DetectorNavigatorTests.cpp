@@ -69,34 +69,35 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
   auto detector = Acts::Experimental::Detector::makeShared(
       "detector", {volume}, Acts::Experimental::tryRootVolumes());
 
+  using Stepper = Acts::StraightLineStepper;
+  using Navigator = Acts::Experimental::DetectorNavigator;
+  using Propagator = Acts::Propagator<Stepper, Navigator>;
   using ActionList = Acts::ActionList<>;
   using AbortList = Acts::AbortList<>;
+  using PropagatorOptions = Propagator::Options<ActionList, AbortList>;
 
-  auto options =
-      Acts::PropagatorOptions<ActionList, AbortList>(geoContext, mfContext);
+  PropagatorOptions options(geoContext, mfContext);
 
-  auto stepper = Acts::StraightLineStepper();
+  Stepper stepper;
 
   Acts::Vector4 pos(-2, 0, 0, 0);
-  auto start = Acts::CurvilinearTrackParameters(
-      pos, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
-      Acts::ParticleHypothesis::electron());
+  Acts::CurvilinearTrackParameters start(pos, 0_degree, 90_degree, 1_e / 1_GeV,
+                                         std::nullopt,
+                                         Acts::ParticleHypothesis::electron());
 
   //
   // (1) Test for inactivity
   //
   // Run without anything present
   {
-    Acts::Experimental::DetectorNavigator::Config navCfg;
+    Navigator::Config navCfg;
     navCfg.resolveSensitive = false;
     navCfg.resolveMaterial = false;
     navCfg.resolvePassive = false;
 
-    auto navigator = Acts::Experimental::DetectorNavigator(navCfg);
+    Navigator navigator(navCfg);
 
-    auto propagator = Acts::Propagator<Acts::StraightLineStepper,
-                                       Acts::Experimental::DetectorNavigator>(
-        stepper, navigator);
+    Propagator propagator(stepper, navigator);
 
     BOOST_CHECK_THROW(propagator.makeState(start, options),
                       std::invalid_argument);
@@ -110,11 +111,11 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
     navCfg.resolvePassive = false;
     navCfg.detector = detector.get();
 
-    auto navigator = Acts::Experimental::DetectorNavigator(navCfg);
+    Acts::Experimental::DetectorNavigator navigator(navCfg);
 
-    auto propagator = Acts::Propagator<Acts::StraightLineStepper,
-                                       Acts::Experimental::DetectorNavigator>(
-        stepper, navigator);
+    Acts::Propagator<Acts::StraightLineStepper,
+                     Acts::Experimental::DetectorNavigator>
+        propagator(stepper, navigator);
 
     auto state = propagator.makeState(start, options);
 
@@ -137,18 +138,18 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
   // Run from endOfWorld
   {
     Acts::Vector4 posEoW(-20, 0, 0, 0);
-    auto startEoW = Acts::CurvilinearTrackParameters(
+    Acts::CurvilinearTrackParameters startEoW(
         posEoW, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
         Acts::ParticleHypothesis::electron());
 
     Acts::Experimental::DetectorNavigator::Config navCfg;
     navCfg.detector = detector.get();
 
-    auto navigator = Acts::Experimental::DetectorNavigator(navCfg);
+    Acts::Experimental::DetectorNavigator navigator(navCfg);
 
-    auto propagator = Acts::Propagator<Acts::StraightLineStepper,
-                                       Acts::Experimental::DetectorNavigator>(
-        stepper, navigator);
+    Acts::Propagator<Acts::StraightLineStepper,
+                     Acts::Experimental::DetectorNavigator>
+        propagator(stepper, navigator);
 
     BOOST_CHECK_THROW(propagator.makeState(startEoW, options),
                       std::invalid_argument);
@@ -159,11 +160,11 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
     Acts::Experimental::DetectorNavigator::Config navCfg;
     navCfg.detector = detector.get();
 
-    auto navigator = Acts::Experimental::DetectorNavigator(navCfg);
+    Acts::Experimental::DetectorNavigator navigator(navCfg);
 
-    auto propagator = Acts::Propagator<Acts::StraightLineStepper,
-                                       Acts::Experimental::DetectorNavigator>(
-        stepper, navigator);
+    Acts::Propagator<Acts::StraightLineStepper,
+                     Acts::Experimental::DetectorNavigator>
+        propagator(stepper, navigator);
 
     auto state = propagator.makeState(start, options);
 
@@ -175,7 +176,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
         detector->findDetectorVolume(geoContext, start.position()));
     BOOST_CHECK_EQUAL(initState.currentSurface, nullptr);
     BOOST_CHECK_EQUAL(initState.currentPortal, nullptr);
-    BOOST_CHECK_EQUAL(initState.surfaceCandidates.size(), 1);
+    BOOST_CHECK_EQUAL(initState.surfaceCandidates.size(), 2u);
   }
 }
 
@@ -264,31 +265,33 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   auto detector = Acts::Experimental::Detector::makeShared(
       "cubicDetector", detectorVolumes, Acts::Experimental::tryRootVolumes());
 
+  using Stepper = Acts::StraightLineStepper;
+  using Navigator = Acts::Experimental::DetectorNavigator;
+  using Propagator = Acts::Propagator<Stepper, Navigator>;
   using ActionList = Acts::ActionList<StateRecorder>;
   using AbortList = Acts::AbortList<Acts::EndOfWorldReached>;
+  using PropagatorOptions = Propagator::Options<ActionList, AbortList>;
 
-  Acts::Experimental::DetectorNavigator::Config navCfg;
+  Navigator::Config navCfg;
   navCfg.detector = detector.get();
 
-  auto stepper = Acts::StraightLineStepper();
+  Stepper stepper;
 
-  auto navigator = Acts::Experimental::DetectorNavigator(
-      navCfg, Acts::getDefaultLogger("DetectorNavigator",
-                                     Acts::Logging::Level::VERBOSE));
+  Navigator navigator(navCfg,
+                      Acts::getDefaultLogger("DetectorNavigator",
+                                             Acts::Logging::Level::VERBOSE));
 
-  auto options =
-      Acts::PropagatorOptions<ActionList, AbortList>(geoContext, mfContext);
+  PropagatorOptions options(geoContext, mfContext);
   options.direction = Acts::Direction::Forward;
 
-  auto propagator = Acts::Propagator<Acts::StraightLineStepper,
-                                     Acts::Experimental::DetectorNavigator>(
+  Propagator propagator(
       stepper, navigator,
       Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
 
   // Forward and backward propagation
   // should be consistent between each other
   Acts::Vector4 posFwd(-2, 0, 0, 0);
-  auto startFwd = Acts::CurvilinearTrackParameters(
+  Acts::CurvilinearTrackParameters startFwd(
       posFwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::electron());
 
@@ -298,7 +301,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   options.direction = Acts::Direction::Backward;
 
   Acts::Vector4 posBwd(14, 0, 0, 0);
-  auto startBwd = Acts::CurvilinearTrackParameters(
+  Acts::CurvilinearTrackParameters startBwd(
       posBwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::electron());
 
@@ -308,7 +311,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   // 7 steps to reach the end of world
   // + 1 recording in the post-step
   // + 1 recording before the stepping loop
-  BOOST_CHECK_EQUAL(statesFwd.size(), 9u);
+  BOOST_CHECK_EQUAL(statesFwd.size(), 8u);
   BOOST_CHECK_EQUAL(statesFwd.size(), statesBwd.size());
   BOOST_CHECK_EQUAL(statesFwd[0].surfaceCandidates.size(), 2u);
   BOOST_CHECK_EQUAL(statesBwd[0].surfaceCandidates.size(), 2u);
@@ -324,9 +327,10 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   BOOST_CHECK_EQUAL(statesFwd[1].currentSurface->geometryId(), 12);
   BOOST_CHECK_EQUAL(statesFwd[1].currentPortal, nullptr);
 
-  // Step to the volume1|volume2 boundary
-  BOOST_CHECK_EQUAL(statesFwd[2].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesFwd[2].currentSurface, nullptr);
+  // Step to the volume1|volume2 boundary (portal has witched volume id)
+  BOOST_CHECK_EQUAL(statesFwd[2].currentVolume->geometryId(), 2);
+  BOOST_CHECK_EQUAL(statesFwd[2].currentSurface,
+                    &(statesFwd[2].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[2].currentPortal->surface().geometryId(), 7);
 
   // Step to the surface inside volume2
@@ -334,9 +338,10 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   BOOST_CHECK_EQUAL(statesFwd[3].currentSurface->geometryId(), 13);
   BOOST_CHECK_EQUAL(statesFwd[3].currentPortal, nullptr);
 
-  // Step to the volume2|volume3 boundary
-  BOOST_CHECK_EQUAL(statesFwd[4].currentVolume->geometryId(), 2);
-  BOOST_CHECK_EQUAL(statesFwd[4].currentSurface, nullptr);
+  // Step to the volume2|volume3 boundary - volume has switched
+  BOOST_CHECK_EQUAL(statesFwd[4].currentVolume->geometryId(), 3);
+  BOOST_CHECK_EQUAL(statesFwd[4].currentSurface,
+                    &(statesFwd[4].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[4].currentPortal->surface().geometryId(), 10);
 
   // Step to the surface inside volume3
@@ -345,8 +350,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   BOOST_CHECK_EQUAL(statesFwd[5].currentPortal, nullptr);
 
   // Step to the volume3|endOfWorld boundary
-  BOOST_CHECK_EQUAL(statesFwd[6].currentVolume->geometryId(), 3);
-  BOOST_CHECK_EQUAL(statesFwd[6].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesFwd[6].currentVolume, nullptr);
+  BOOST_CHECK_EQUAL(statesFwd[6].currentSurface,
+                    &(statesFwd[6].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[6].currentPortal->surface().geometryId(), 11);
 
   // Step to the end of world
@@ -355,8 +361,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
 
   // Action list call before the first step
   // Starting in the volume3
-  BOOST_CHECK_EQUAL(statesBwd[6].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesBwd[6].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesBwd[6].currentVolume, nullptr);
+  BOOST_CHECK_EQUAL(statesBwd[6].currentSurface,
+                    &(statesBwd[6].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[6].currentPortal->surface().geometryId(), 6);
 
   // Step to the surface inside volume1
@@ -364,9 +371,10 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   BOOST_CHECK_EQUAL(statesBwd[5].currentSurface->geometryId(), 12);
   BOOST_CHECK_EQUAL(statesBwd[5].currentPortal, nullptr);
 
-  // Step to the volume1|volume2 boundary
-  BOOST_CHECK_EQUAL(statesBwd[4].currentVolume->geometryId(), 2);
-  BOOST_CHECK_EQUAL(statesBwd[4].currentSurface, nullptr);
+  // Step to the volume1|volume2 boundary / preStep not yet set
+  BOOST_CHECK_EQUAL(statesBwd[4].currentVolume->geometryId(), 1);
+  BOOST_CHECK_EQUAL(statesBwd[4].currentSurface,
+                    &(statesBwd[4].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[4].currentPortal->surface().geometryId(), 7);
 
   // Step to the surface inside volume2
@@ -374,9 +382,10 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   BOOST_CHECK_EQUAL(statesBwd[3].currentSurface->geometryId(), 13);
   BOOST_CHECK_EQUAL(statesBwd[3].currentPortal, nullptr);
 
-  // Step to the volume2|volume3 boundary
-  BOOST_CHECK_EQUAL(statesBwd[2].currentVolume->geometryId(), 3);
-  BOOST_CHECK_EQUAL(statesBwd[2].currentSurface, nullptr);
+  // Step to the volume2|volume3 boundary / pre-step not yet set
+  BOOST_CHECK_EQUAL(statesBwd[2].currentVolume->geometryId(), 2);
+  BOOST_CHECK_EQUAL(statesBwd[2].currentSurface,
+                    &(statesBwd[2].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[2].currentPortal->surface().geometryId(), 10);
   BOOST_CHECK_EQUAL(statesBwd[2].surfaceCandidates.size(), 2u);
 
@@ -417,33 +426,35 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   auto detector = Acts::Experimental::Detector::makeShared(
       "detector", {volume}, Acts::Experimental::tryRootVolumes());
 
+  using Stepper = Acts::StraightLineStepper;
+  using Navigator = Acts::Experimental::DetectorNavigator;
+  using Propagator = Acts::Propagator<Stepper, Navigator>;
   using ActionList = Acts::ActionList<StateRecorder>;
   using AbortList = Acts::AbortList<Acts::EndOfWorldReached>;
+  using PropagatorOptions = Propagator::Options<ActionList, AbortList>;
 
-  Acts::Experimental::DetectorNavigator::Config navCfg;
+  Navigator::Config navCfg;
   navCfg.detector = detector.get();
 
-  auto stepper = Acts::StraightLineStepper();
+  Stepper stepper;
 
-  auto navigator = Acts::Experimental::DetectorNavigator(
-      navCfg, Acts::getDefaultLogger("DetectorNavigator",
-                                     Acts::Logging::Level::VERBOSE));
+  Navigator navigator(navCfg,
+                      Acts::getDefaultLogger("DetectorNavigator",
+                                             Acts::Logging::Level::VERBOSE));
 
-  auto options =
-      Acts::PropagatorOptions<ActionList, AbortList>(geoContext, mfContext);
+  PropagatorOptions options(geoContext, mfContext);
   options.direction = Acts::Direction::Forward;
 
-  auto propagator = Acts::Propagator<Acts::StraightLineStepper,
-                                     Acts::Experimental::DetectorNavigator>(
+  Propagator propagator(
       stepper, navigator,
       Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
 
   // Depending on the direction, the same surface
   // may be reached in different points
   Acts::Vector4 pos(0, 0, 0, 0);
-  auto start = Acts::CurvilinearTrackParameters(
-      pos, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
-      Acts::ParticleHypothesis::electron());
+  Acts::CurvilinearTrackParameters start(pos, 0_degree, 90_degree, 1_e / 1_GeV,
+                                         std::nullopt,
+                                         Acts::ParticleHypothesis::electron());
 
   // Has to properly handle propagation in the
   // forward and backward direction
@@ -458,7 +469,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   // 3 steps to reach the end of world
   // + 1 recording in the post-step
   // + 1 recording before the stepping loop
-  BOOST_CHECK_EQUAL(statesFwd.size(), 5u);
+  BOOST_CHECK_EQUAL(statesFwd.size(), 4u);
   BOOST_CHECK_EQUAL(statesFwd.size(), statesBwd.size());
   BOOST_CHECK_EQUAL(statesFwd[0].surfaceCandidates.size(), 2u);
   BOOST_CHECK_EQUAL(statesBwd[0].surfaceCandidates.size(), 2u);
@@ -477,8 +488,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   CHECK_CLOSE_REL(statesFwd[1].position.x(), 4, 1e-6);
 
   // Step to the volume|endOfWorld boundary
-  BOOST_CHECK_EQUAL(statesFwd[2].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesFwd[2].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesFwd[2].currentVolume, nullptr);
+  BOOST_CHECK_EQUAL(statesFwd[2].currentSurface,
+                    &(statesFwd[2].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[2].currentPortal->surface().geometryId(), 6);
 
   // Step to the end of world
@@ -486,8 +498,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   BOOST_CHECK(navigator.endOfWorldReached(statesBwd[3]));
 
   // Step to the endOfWorld|volume boundary
-  BOOST_CHECK_EQUAL(statesBwd[2].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesBwd[2].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesBwd[2].currentVolume, nullptr);
+  BOOST_CHECK_EQUAL(statesBwd[2].currentSurface,
+                    &(statesBwd[2].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[2].currentPortal->surface().geometryId(), 5);
 
   // Step to the cylindrical surface
@@ -529,24 +542,26 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   auto detector = Acts::Experimental::Detector::makeShared(
       "detector", {volume}, Acts::Experimental::tryRootVolumes());
 
+  using Stepper = Acts::StraightLineStepper;
+  using Navigator = Acts::Experimental::DetectorNavigator;
+  using Propagator = Acts::Propagator<Stepper, Navigator>;
   using ActionList = Acts::ActionList<StateRecorder>;
   using AbortList = Acts::AbortList<Acts::EndOfWorldReached>;
+  using PropagatorOptions = Propagator::Options<ActionList, AbortList>;
 
-  Acts::Experimental::DetectorNavigator::Config navCfg;
+  Navigator::Config navCfg;
   navCfg.detector = detector.get();
 
-  auto stepper = Acts::StraightLineStepper();
+  Stepper stepper;
 
-  auto navigator = Acts::Experimental::DetectorNavigator(
-      navCfg, Acts::getDefaultLogger("DetectorNavigator",
-                                     Acts::Logging::Level::VERBOSE));
+  Navigator navigator(navCfg,
+                      Acts::getDefaultLogger("DetectorNavigator",
+                                             Acts::Logging::Level::VERBOSE));
 
-  auto options =
-      Acts::PropagatorOptions<ActionList, AbortList>(geoContext, mfContext);
+  PropagatorOptions options(geoContext, mfContext);
   options.direction = Acts::Direction::Forward;
 
-  auto propagator = Acts::Propagator<Acts::StraightLineStepper,
-                                     Acts::Experimental::DetectorNavigator>(
+  Propagator propagator(
       stepper, navigator,
       Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
 
@@ -555,7 +570,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   // and the cylindrical surface should be
   // reached in two points during navigation
   Acts::Vector4 posFwd(-5, 0, 0, 0);
-  auto startFwd = Acts::CurvilinearTrackParameters(
+  Acts::CurvilinearTrackParameters startFwd(
       posFwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::electron());
 
@@ -564,7 +579,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
 
   options.direction = Acts::Direction::Backward;
   Acts::Vector4 posBwd(5, 0, 0, 0);
-  auto startBwd = Acts::CurvilinearTrackParameters(
+  Acts::CurvilinearTrackParameters startBwd(
       posBwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::electron());
 
@@ -574,7 +589,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   // 4 steps to reach the end of world
   // + 1 recording in the post-step
   // + 1 recording before the stepping loop
-  BOOST_CHECK_EQUAL(statesFwd.size(), 6u);
+  BOOST_CHECK_EQUAL(statesFwd.size(), 5u);
   BOOST_CHECK_EQUAL(statesFwd.size(), statesBwd.size());
   BOOST_CHECK_EQUAL(statesFwd[0].surfaceCandidates.size(), 3u);
   BOOST_CHECK_EQUAL(statesBwd[0].surfaceCandidates.size(), 3u);
@@ -598,8 +613,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   CHECK_CLOSE_REL(statesFwd[2].position.x(), 4, 1e-6);
 
   // Step to the volume|endOfWorld boundary
-  BOOST_CHECK_EQUAL(statesFwd[3].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesFwd[3].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesFwd[3].currentVolume, nullptr);
+  BOOST_CHECK_EQUAL(statesFwd[3].currentSurface,
+                    &(statesFwd[3].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[3].currentPortal->surface().geometryId(), 6);
 
   // Step to the end of world
@@ -607,8 +623,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   BOOST_CHECK(navigator.endOfWorldReached(statesBwd[4]));
 
   // Step to the endOfWorld|volume boundary
-  BOOST_CHECK_EQUAL(statesBwd[3].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesBwd[3].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesBwd[3].currentVolume, nullptr);
+  BOOST_CHECK_EQUAL(statesBwd[3].currentSurface,
+                    &(statesBwd[3].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[3].currentPortal->surface().geometryId(), 5);
 
   // Second intersection of the cylindrical surface

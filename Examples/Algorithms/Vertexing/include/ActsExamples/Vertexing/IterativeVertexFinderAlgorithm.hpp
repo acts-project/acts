@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,8 +15,8 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
@@ -51,7 +51,7 @@ struct AlgorithmContext;
 
 class IterativeVertexFinderAlgorithm final : public IAlgorithm {
  public:
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+  using Propagator = Acts::Propagator<Acts::SympyStepper>;
   using Linearizer = Acts::HelicalTrackLinearizer;
   using Fitter = Acts::FullBilloirVertexFitter;
   using Seeder = Acts::TrackDensityVertexFinder;
@@ -67,8 +67,12 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
     std::string outputProtoVertices;
     /// Output vertex collection
     std::string outputVertices = "vertices";
+
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
+
+    /// Maximum number of iterations for the vertex finding
+    int maxIterations = 1000;
   };
 
   IterativeVertexFinderAlgorithm(const Config& config,

@@ -8,7 +8,7 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v41
+    container: ghcr.io/acts-project/ubuntu2204:53
     if: github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Dump job context
@@ -105,7 +105,7 @@ jobs:
           git status
 
       - name: Install sonar-scanner and build-wrapper
-        uses: SonarSource/sonarcloud-github-c-cpp@v2
+        uses: SonarSource/sonarcloud-github-c-cpp@v3
 
       - name: Debug
         run: |

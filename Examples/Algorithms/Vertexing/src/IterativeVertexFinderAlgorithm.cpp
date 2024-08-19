@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,7 @@
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -26,9 +26,11 @@
 
 #include "VertexingHelpers.hpp"
 
-ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
+namespace ActsExamples {
+
+IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
     const Config& config, Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("IterativeVertexFinder", level), m_cfg(config) {
+    : IAlgorithm("IterativeVertexFinder", level), m_cfg(config) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing input track parameter collection");
   }
@@ -44,8 +46,8 @@ ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
   m_outputVertices.initialize(m_cfg.outputVertices);
 }
 
-ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode IterativeVertexFinderAlgorithm::execute(
+    const AlgorithmContext& ctx) const {
   // retrieve input tracks and convert into the expected format
 
   const auto& inputTrackParameters = m_inputTrackParameters(ctx);
@@ -66,8 +68,8 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
     }
   }
 
-  // Set up EigenStepper
-  Acts::EigenStepper<> stepper(m_cfg.bField);
+  // Set up SympyStepper
+  Acts::SympyStepper stepper(m_cfg.bField);
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(
@@ -100,7 +102,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   Finder::Config finderCfg(std::move(vertexFitter), seeder, ipEst);
   finderCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
-  finderCfg.maxVertices = 200;
+  finderCfg.maxVertices = m_cfg.maxIterations;
   finderCfg.reassignTracksAfterFirstFit = false;
   finderCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
   finderCfg.field = m_cfg.bField;
@@ -122,8 +124,8 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   // show some debug output
   ACTS_INFO("Found " << vertices.size() << " vertices in event");
   for (const auto& vtx : vertices) {
-    ACTS_INFO("Found vertex at " << vtx.fullPosition().transpose() << " with "
-                                 << vtx.tracks().size() << " tracks.");
+    ACTS_DEBUG("Found vertex at " << vtx.fullPosition().transpose() << " with "
+                                  << vtx.tracks().size() << " tracks.");
   }
 
   // store proto vertices extracted from the found vertices
@@ -132,5 +134,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   // store found vertices
   m_outputVertices(ctx, std::move(vertices));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

@@ -19,6 +19,7 @@
 #include <set>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -39,6 +40,26 @@ class IGrid {
   /// Get a dynamically sized vector of axis objects for inspection
   /// @return a vector of axis pointers
   virtual boost::container::small_vector<const IAxis*, 3> axes() const = 0;
+
+  /// Helper to print out the grid
+  /// @param os the output stream
+  /// @param grid the grid to print
+  /// @return the output stream
+  friend std::ostream& operator<<(std::ostream& os, const IGrid& grid) {
+    grid.toStream(os);
+    return os;
+  }
+
+  friend bool operator==(const IGrid& lhs, const IGrid& rhs) {
+    auto lhsAxes = lhs.axes();
+    auto rhsAxes = rhs.axes();
+    return lhsAxes.size() == rhsAxes.size() &&
+           std::equal(lhsAxes.begin(), lhsAxes.end(), rhsAxes.begin(),
+                      [](const IAxis* a, const IAxis* b) { return *a == *b; });
+  }
+
+ protected:
+  virtual void toStream(std::ostream& os) const = 0;
 };
 
 /// @brief class for describing a regular multi-dimensional grid
@@ -583,6 +604,11 @@ class Grid final : public IGrid {
     return local_iterator_t(*this, std::move(endline), navigator);
   }
 
+ protected:
+  void toStream(std::ostream& os) const override {
+    printAxes(os, std::make_index_sequence<sizeof...(Axes)>());
+  }
+
  private:
   /// set of axis defining the multi-dimensional grid
   std::tuple<Axes...> m_axes;
@@ -595,6 +621,18 @@ class Grid final : public IGrid {
   detail::GlobalNeighborHoodIndices<DIM> rawClosestPointsIndices(
       const index_t& localBins) const {
     return detail::grid_helper::closestPointsIndices(localBins, m_axes);
+  }
+
+  template <std::size_t... Is>
+  void printAxes(std::ostream& os, std::index_sequence<Is...> /*s*/) const {
+    auto printOne = [&os, this]<std::size_t index>(
+                        std::integral_constant<std::size_t, index>) {
+      if constexpr (index > 0) {
+        os << ", ";
+      }
+      os << std::get<index>(m_axes);
+    };
+    (printOne(std::integral_constant<std::size_t, Is>()), ...);
   }
 };
 

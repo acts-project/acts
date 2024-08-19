@@ -56,14 +56,14 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
   std::shared_ptr<DetectorVolume> dVolume = nullptr;
   // If there are no internals, the volume is fully defined
   if (m_cfg.internalsBuilder == nullptr) {
-    ACTS_VERBOSE("No internal structure present.")
+    ACTS_VERBOSE("No internal structure present.");
     // Construct the DetectorVolume
     dVolume = DetectorVolumeFactory::construct(
         portalGenerator, gctx, m_cfg.name, transform, std::move(bounds),
         tryAllPortals());
   } else {
     // Internal structure is present
-    ACTS_VERBOSE("Internal structure is being built.")
+    ACTS_VERBOSE("Internal structure is being built.");
     auto [surfaces, volumes, surfacesUpdater, volumeUpdater] =
         m_cfg.internalsBuilder->construct(gctx);
 
@@ -80,7 +80,7 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
         std::move(surfacesUpdater));
   }
   // All portals are defined and build the current shell
-  for (auto [ip, p] : enumerate(dVolume->portalPtrs())) {
+  for (const auto& [ip, p] : enumerate(dVolume->portalPtrs())) {
     portalContainer[ip] = p;
   }
 
@@ -92,7 +92,7 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
   }
 
   // Assign the proto material if configured to do so
-  for (auto [ip, bDescription] : m_cfg.portalMaterialBinning) {
+  for (const auto& [ip, bDescription] : m_cfg.portalMaterialBinning) {
     if (portalContainer.find(ip) != portalContainer.end()) {
       auto bd = detail::ProtoMaterialHelper::attachProtoMaterial(
           gctx, portalContainer[ip]->surface(), bDescription);

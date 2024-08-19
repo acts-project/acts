@@ -23,7 +23,7 @@ target_link_libraries(
     ActsExamplesFramework
     ActsExamplesIoJson
     ActsExamplesMagneticField
-    
+
   PRIVATE  ROOT::Core ROOT::Geom ROOT::Graf ROOT::Hist ROOT::Gpad
 )
 
