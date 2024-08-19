@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,10 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+
 namespace Acts {
 
 class Surface;
@@ -22,6 +25,9 @@ struct VoidNavigator {
   struct Config {};
 
   struct Options : public NavigatorPlainOptions {
+    explicit Options(const GeometryContext& gctx)
+        : NavigatorPlainOptions(gctx) {}
+
     void setPlainOptions(const NavigatorPlainOptions& options) {
       static_cast<NavigatorPlainOptions&>(*this) = options;
     }
@@ -29,12 +35,13 @@ struct VoidNavigator {
 
   /// @brief Nested State struct, minimal requirement
   struct State {
+    explicit State(const Options& options_) : options(options_) {}
+
     Options options;
   };
 
   State makeState(const Options& options) const {
-    State state;
-    state.options = options;
+    State state(options);
     return state;
   }
 
@@ -56,35 +63,19 @@ struct VoidNavigator {
 
   void navigationBreak(State& /*state*/, bool /*navigationBreak*/) const {}
 
-  /// Navigation call - void
-  ///
-  /// @tparam propagator_state_t is the type of Propagatgor state
-  /// @tparam stepper_t Type of the Stepper
-  ///
-  /// Empty call, compiler should optimise that
-  template <typename propagator_state_t, typename stepper_t>
-  void initialize(propagator_state_t& /*state*/,
-                  const stepper_t& /*stepper*/) const {}
+  void initialize(State& /*state*/, const Vector3& /*position*/,
+                  const Vector3& /*direction*/) const {}
 
-  /// Navigation call - void
-  ///
-  /// @tparam propagator_state_t is the type of Propagatgor state
-  /// @tparam stepper_t Type of the Stepper
-  ///
-  /// Empty call, compiler should optimise that
-  template <typename propagator_state_t, typename stepper_t>
-  void preStep(propagator_state_t& /*state*/,
-               const stepper_t& /*stepper*/) const {}
+  SurfaceIntersection estimateNextTarget(State& /*state*/,
+                                         const Vector3& /*position*/,
+                                         const Vector3& /*direction*/) const {
+    return SurfaceIntersection::invalid();
+  }
 
-  /// Navigation call - void
-  ///
-  /// @tparam propagator_state_t is the type of Propagatgor state
-  /// @tparam stepper_t Type of the Stepper
-  ///
-  /// Empty call, compiler should optimise that
-  template <typename propagator_state_t, typename stepper_t>
-  void postStep(propagator_state_t& /*state*/,
-                const stepper_t& /*stepper*/) const {}
+  void registerSurfaceStatus(State& /*state*/, const Vector3& /*position*/,
+                             const Vector3& /*direction*/,
+                             const Surface& /*surface*/,
+                             IntersectionStatus /*surfaceStatus*/) const {}
 };
 
 }  // namespace Acts

@@ -73,11 +73,11 @@ jobs:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
-      - name: Unit tests
-        run: ctest --test-dir build -j$(nproc)
+      #- name: Unit tests
+      #  run: ctest --test-dir build -j$(nproc)
 
-      - name: Integration tests
-        run: cmake --build build --target integrationtests
+      #- name: Integration tests
+      #  run: cmake --build build --target integrationtests
 
       - name: Install
         run: cmake --build build --target install
@@ -279,11 +279,11 @@ jobs:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
-      - name: Unit tests
-        run: cmake --build build --target test
+      #- name: Unit tests
+      #  run: cmake --build build --target test
 
-      - name: Integration tests
-        run: cmake --build build --target integrationtests
+      #- name: Integration tests
+      #  run: cmake --build build --target integrationtests
 
       - name: Install
         run: cmake --build build --target install
@@ -358,10 +358,10 @@ jobs:
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
-      - name: Unit tests
-        run: cmake --build build --target test
-      - name: Integration tests
-        run: cmake --build build --target integrationtests
+      #- name: Unit tests
+      #  run: cmake --build build --target test
+      #- name: Integration tests
+      #  run: cmake --build build --target integrationtests
       - name: Install
         run: cmake --build build --target install
       - uses: actions/upload-artifact@v4

@@ -12,6 +12,8 @@
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <type_traits>
 
@@ -33,45 +35,94 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
   bool terminatedNormally = true;
 
   // Pre-Stepping: abort condition check
-  if (!state.options.abortList(state, m_stepper, m_navigator, logger())) {
+  if (state.options.abortList(state, m_stepper, m_navigator, logger())) {
+    ACTS_VERBOSE("Propagation terminated without going into stepping loop.");
+  } else {
     // Stepping loop
     ACTS_VERBOSE("Starting stepping loop.");
 
-    terminatedNormally = false;  // priming error condition
+    // priming error condition
+    terminatedNormally = false;
+
+    SurfaceIntersection nextTargetIntersection = SurfaceIntersection::invalid();
 
     // Propagation loop : stepping
     for (; state.steps < state.options.maxSteps; ++state.steps) {
       // Pre-Stepping: target setting
       state.stage = PropagatorStage::preStep;
-      m_navigator.preStep(state, m_stepper);
+
+      if (!nextTargetIntersection.isValid()) {
+        for (int i = 0; i < 3; ++i) {
+          nextTargetIntersection = m_navigator.estimateNextTarget(
+              state.navigation, state.position,
+              state.options.direction * state.direction);
+          if (!nextTargetIntersection.isValid()) {
+            break;
+          }
+          IntersectionStatus preStepSurfaceStatus =
+              m_stepper.updateSurfaceStatus(
+                  state.stepping, *nextTargetIntersection.object(),
+                  nextTargetIntersection.index(), state.options.direction,
+                  BoundaryTolerance::None(), s_onSurfaceTolerance, logger());
+          if (preStepSurfaceStatus >= Acts::IntersectionStatus::reachable) {
+            break;
+          }
+          m_navigator.registerSurfaceStatus(
+              state.navigation, state.position,
+              state.options.direction * state.direction,
+              *nextTargetIntersection.object(), preStepSurfaceStatus);
+        }
+      }
+
       // Perform a propagation step - it takes the propagation state
       Result<double> res = m_stepper.step(state, m_navigator);
-      if (res.ok()) {
-        // Accumulate the path length
-        double s = *res;
-        state.pathLength += s;
-        ACTS_VERBOSE("Step with size = " << s << " performed");
-      } else {
+      if (!res.ok()) {
         ACTS_ERROR("Step failed with " << res.error() << ": "
                                        << res.error().message());
         // pass error to caller
         return res.error();
       }
+      // Accumulate the path length
+      state.pathLength += *res;
+      // Update the position and direction
+      state.position = m_stepper.position(state.stepping);
+      state.direction = m_stepper.direction(state.stepping);
+
+      ACTS_VERBOSE("Step with size = " << *res << " performed. We are now at: "
+                                       << state.position.transpose()
+                                       << " with direction: "
+                                       << state.direction.transpose());
+
       // release actor and aborter constrains after step was performed
       m_stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       m_stepper.releaseStepSize(state.stepping, ConstrainedStep::aborter);
+
       // Post-stepping:
-      // navigator post step call - action list - aborter list
+      // navigator - action list - aborter list
       state.stage = PropagatorStage::postStep;
-      m_navigator.postStep(state, m_stepper);
+
+      if (nextTargetIntersection.isValid()) {
+        IntersectionStatus postStepSurfaceStatus =
+            m_stepper.updateSurfaceStatus(
+                state.stepping, *nextTargetIntersection.object(),
+                nextTargetIntersection.index(), state.options.direction,
+                BoundaryTolerance::None(), s_onSurfaceTolerance, logger());
+        m_navigator.registerSurfaceStatus(
+            state.navigation, state.position,
+            state.options.direction * state.direction,
+            *nextTargetIntersection.object(), postStepSurfaceStatus);
+        if (postStepSurfaceStatus == IntersectionStatus::onSurface) {
+          nextTargetIntersection = SurfaceIntersection::invalid();
+        }
+      }
+
       state.options.actionList(state, m_stepper, m_navigator, logger());
+
       if (state.options.abortList(state, m_stepper, m_navigator, logger())) {
         terminatedNormally = true;
         break;
       }
     }
-  } else {
-    ACTS_VERBOSE("Propagation terminated without going into stepping loop.");
   }
 
   state.stage = PropagatorStage::postPropagation;
@@ -318,8 +369,12 @@ auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
 template <typename S, typename N>
 template <typename propagator_state_t, typename path_aborter_t>
 void Acts::Propagator<S, N>::initialize(propagator_state_t& state) const {
+  state.position = m_stepper.position(state.stepping);
+  state.direction = m_stepper.direction(state.stepping);
+
   // Navigator initialize state call
-  m_navigator.initialize(state, m_stepper);
+  m_navigator.initialize(state.navigation, state.position,
+                         state.options.direction * state.direction);
 
   // Apply the loop protection - it resets the internal path limit
   detail::setupLoopProtection(

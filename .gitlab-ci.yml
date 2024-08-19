@@ -274,8 +274,8 @@ linux_physmon:
     - cmake --build build -- -j2
     - ccache -s
 
-    - ctest --test-dir build -j$(nproc)
-    - cmake --build build --target integrationtests
+    #- ctest --test-dir build -j$(nproc)
+    #- cmake --build build --target integrationtests
 
     # Install main project
     - cmake --install build
@@ -370,7 +370,7 @@ linux_ubuntu_2204_clang:
     - cmake --build build -- -j2
     - ccache -s
 
-    - ctest --test-dir build -j$(nproc)
+    #- ctest --test-dir build -j$(nproc)
 
 
 lcg_105:

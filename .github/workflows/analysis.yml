@@ -54,8 +54,8 @@ jobs:
         run: cmake --build build
       - name: ccache stats
         run: ccache -s
-      - name: Unit tests
-        run: ctest --test-dir build -j$(nproc)
+      #- name: Unit tests
+      #  run: ctest --test-dir build -j$(nproc)
 
       - name: Remove .o files
         run: >

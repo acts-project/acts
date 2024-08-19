@@ -12,7 +12,7 @@ from acts._adapter import _patch_config, _patch_detectors, _patchKwargsConstruct
 _propagators = []
 _concrete_propagators = []
 for stepper in ("Eigen", "Atlas", "StraightLine"):
-    for navigator in ("", "Detector"):
+    for navigator in "":
         _propagators.append(
             getattr(ActsPythonBindings._propagator, f"{stepper}{navigator}Propagator")
         )
