@@ -142,11 +142,11 @@ class SeedingAlgorithmHashing final : public IAlgorithm {
       m_hashingTraining;
 
   static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
-    float RMin = 50.;
-    float CotThetaMax = 1.5;
+    float rMin = 50.;
+    float cotThetaMax = 1.5;
 
-    if (bottomRadius < RMin &&
-        (cotTheta > CotThetaMax || cotTheta < -CotThetaMax)) {
+    if (bottomRadius < rMin &&
+        (cotTheta > cotThetaMax || cotTheta < -cotThetaMax)) {
       return false;
     }
     return true;
