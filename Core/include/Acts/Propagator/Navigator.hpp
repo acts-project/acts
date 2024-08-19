@@ -55,9 +55,6 @@ struct NavigationOptions {
   double nearLimit = 0;
   /// The maximum distance for a surface to be considered
   double farLimit = std::numeric_limits<double>::max();
-
-  /// Force intersection with boundaries
-  bool forceIntersectBoundaries = false;
 };
 
 /// @brief Steers the propagation through the geometry by adjusting the step
@@ -183,8 +180,6 @@ class Navigator {
     bool navigationBreak = false;
     // The navigation stage (@todo: integrate break, target)
     Stage navigationStage = Stage::undefined;
-    /// Force intersection with boundaries
-    bool forceIntersectBoundaries = false;
 
     void reset() {
       navSurfaces.clear();
@@ -910,8 +905,6 @@ class Navigator {
       navOpts.nearLimit = state.options.surfaceTolerance;
       navOpts.farLimit =
           stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
-      navOpts.forceIntersectBoundaries =
-          state.navigation.forceIntersectBoundaries;
 
       ACTS_VERBOSE(volInfo(state)
                    << "Try to find boundaries, we are at: "
@@ -988,17 +981,10 @@ class Navigator {
       // Increase the index to the next one
       ++state.navigation.navBoundaryIndex;
     }
-    // We have to leave the volume somehow, so try again
-    state.navigation.navBoundaries.clear();
-    ACTS_VERBOSE(volInfo(state) << "Boundary navigation lost, re-targeting.");
-    state.navigation.forceIntersectBoundaries = true;
-    if (findBoundaries()) {
-      // Resetting intersection check for boundary surfaces
-      state.navigation.forceIntersectBoundaries = false;
-      return true;
-    }
 
     // Tried our best, but couldn't do anything
+    state.navigation.navBoundaries.clear();
+    state.navigation.navBoundaryIndex = state.navigation.navBoundaries.size();
     return false;
   }
 
