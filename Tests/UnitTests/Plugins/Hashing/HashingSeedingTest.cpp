@@ -20,6 +20,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <memory>
 #include <vector>
 
 #include <annoy/annoylib.h>
@@ -29,26 +30,39 @@
 
 using namespace Acts::UnitLiterals;
 
-std::optional<float> t, varianceT;
-std::vector<const SpacePoint*> testVector = {
-    new SpacePoint{27.2535, -18.0088, -146.526, 29.0, 1, 0.00520833, 0.5, t,
-                   varianceT},
-    new SpacePoint{42.9126, -27.3057, -171.477, 50.0, 1, 0.0133333, 0.8, t,
-                   varianceT},
-    new SpacePoint{42.7087, -27.4589, -171.557, 50.0, 1, 0.0133333, 0.4, t,
-                   varianceT},
-    new SpacePoint{74.3652, -45.8552, -221.277, 80.0, 1, 0.0133333, 0.4, t,
-                   varianceT},
-    new SpacePoint{104.12, -63.4203, -268.468, 110.0, 1, 0.0133333, 0.4, t,
-                   varianceT},
-    new SpacePoint{104.412, -63.1851, -268.468, 110.0, 1, 0.0133333, 0.4, t,
-                   varianceT}};
+// Function to create and initialize the test vector
+std::vector<std::unique_ptr<const SpacePoint>> createTestVector() {
+  std::optional<float> t, varianceT;
+  std::vector<std::unique_ptr<const SpacePoint>> testVector;
+  testVector.reserve(6);  // Reserve space for efficiency
 
+  testVector.push_back(std::make_unique<SpacePoint>(
+      27.2535, -18.0088, -146.526, 29.0, 1, 0.00520833, 0.5, t, varianceT));
+  testVector.push_back(std::make_unique<SpacePoint>(
+      42.9126, -27.3057, -171.477, 50.0, 1, 0.0133333, 0.8, t, varianceT));
+  testVector.push_back(std::make_unique<SpacePoint>(
+      42.7087, -27.4589, -171.557, 50.0, 1, 0.0133333, 0.4, t, varianceT));
+  testVector.push_back(std::make_unique<SpacePoint>(
+      74.3652, -45.8552, -221.277, 80.0, 1, 0.0133333, 0.4, t, varianceT));
+  testVector.push_back(std::make_unique<SpacePoint>(
+      104.12, -63.4203, -268.468, 110.0, 1, 0.0133333, 0.4, t, varianceT));
+  testVector.push_back(std::make_unique<SpacePoint>(
+      104.412, -63.1851, -268.468, 110.0, 1, 0.0133333, 0.4, t, varianceT));
+  return testVector;
+}
 namespace Acts::Test {
 BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
   using SpacePointPtrVector = std::vector<const SpacePoint*>;
 
-  SpacePointPtrVector spVec = testVector;
+  // Initialize testVector using the createTestVector function
+  auto testVector = createTestVector();
+
+  // Extract raw pointers from unique_ptrs for the test
+  SpacePointPtrVector spVec;
+  spVec.reserve(testVector.size());
+  for (const auto& sp : testVector) {
+    spVec.push_back(sp.get());
+  }
 
   using AnnoyMetric = Annoy::Euclidean;
   using AnnoyModel =
@@ -109,7 +123,15 @@ BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
 BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
   using SpacePointPtrVector = std::vector<const SpacePoint*>;
 
-  SpacePointPtrVector spVec = testVector;
+  // Initialize testVector using the createTestVector function
+  auto testVector = createTestVector();
+
+  // Extract raw pointers from unique_ptrs for the test
+  SpacePointPtrVector spVec;
+  spVec.reserve(testVector.size());
+  for (const auto& sp : testVector) {
+    spVec.push_back(sp.get());
+  }
 
   using AnnoyMetric = Annoy::Euclidean;
   using AnnoyModel =
