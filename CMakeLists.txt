@@ -277,6 +277,17 @@ if(ACTS_SETUP_BOOST)
             "Found Boost ${Boost_VERSION} - recommended is at least ${_acts_boost_recommended_version}"
         )
     endif()
+
+    if(Boost_VERSION VERSION_EQUAL "1.85.0")
+        set(message
+            "Boost 1.85.0 is known to be broken (https://github.com/boostorg/container/issues/273). Please use a different version."
+        )
+        if(ACTS_IGNORE_BOOST_1850_ERROR)
+            message(WARNING ${message})
+        else()
+            message(SEND_ERROR ${message})
+        endif()
+    endif()
 endif()
 
 if(ACTS_SETUP_EIGEN3)
