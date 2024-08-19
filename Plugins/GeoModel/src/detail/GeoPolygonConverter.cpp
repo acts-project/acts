@@ -44,42 +44,66 @@ Acts::detail::GeoPolygonConverter::operator()(PVConstLink geoPV,
     std::vector<double> tmp={polygon.getXVertex(i), polygon.getYVertex(i)};
     vertices.push_back(tmp);
   }
-  std::vector<ActsScalar> halfLengths = {fabs(vertices[2][0]-vertices[3][0])/2,fabs(vertices[0][0]-vertices[1][0])/2, fabs(vertices[0][1]-vertices[3][1])/2};
-
-  // Create the surface
-  auto minElement = std::min_element(halfLengths.begin(), halfLengths.end());
-  auto zIndex = std::distance(halfLengths.begin(), minElement);
-
-  Vector3 colX = rotation.col(0);
-  Vector3 colY = rotation.col(1);
-  Vector3 colZ = rotation.col(2);
-  rotation.col(0) = colX;
-  rotation.col(1) = colY;
-  rotation.col(2) = colZ;
-  transform.linear() = rotation;
+  // sort based on the y-coordinate
+  std::sort(vertices.begin(), vertices.end(),
+              [](const std::vector<double>& a, const std::vector<double>& b) {
+                  return a[1] < b[1]; 
+              });
   if(nVertices==4){
+    double hlxnegy = fabs(vertices[0][0]-vertices[1][0])/2;
+    double hlxposy = fabs(vertices[2][0]-vertices[3][0])/2;
+    double hly = fabs(vertices[0][1]-vertices[3][1])/2;
+    std::vector<ActsScalar> halfLengths = {hlxnegy, hlxposy,hly};
 
-  // Create the surface bounds
-  ActsScalar halfXnegY = unitLength * halfLengths[0];
-  ActsScalar halfXposY = unitLength * halfLengths[1];
-  ActsScalar halfY = unitLength * halfLengths[2];
-  auto trapBounds = std::make_shared<Acts::TrapezoidBounds>(halfXnegY, halfXposY, halfY);
-  if (!sensitive) {
-    auto surface =
-        Surface::makeShared<PlaneSurface>(transform, trapBounds);
-    return std::make_tuple(nullptr, surface);
-  }
-  // Create the element and the surface
-  auto detectorElement =
-      GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
-          geoPV, trapBounds, transform,
-          2 * unitLength * halfLengths[zIndex]);
-  auto surface = detectorElement->surface().getSharedPtr();
-  // Return the detector element and surface
-  return std::make_tuple(detectorElement, surface);
+    // Create the surface
+    auto minElement = std::min_element(halfLengths.begin(), halfLengths.end());
+    auto zIndex = std::distance(halfLengths.begin(), minElement);
+  
+    Vector3 colX = rotation.col(0);
+    Vector3 colY = rotation.col(1);
+    Vector3 colZ = rotation.col(2);
+    rotation.col(0) = colX;
+    rotation.col(1) = colY;
+    rotation.col(2) = colZ;
+    transform.linear() = rotation;
+    // Create the surface bounds
+    ActsScalar halfXnegY = unitLength * halfLengths[0];
+    ActsScalar halfXposY = unitLength * halfLengths[1];
+    ActsScalar halfY = unitLength * halfLengths[2];
+    auto trapBounds = std::make_shared<Acts::TrapezoidBounds>(halfXnegY, halfXposY, halfY);
+    if (!sensitive) {
+      auto surface =
+          Surface::makeShared<PlaneSurface>(transform, trapBounds);
+      return std::make_tuple(nullptr, surface);
+    }
+    // Create the element and the surface
+    auto detectorElement =
+        GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
+            geoPV, trapBounds, transform,
+             unitLength * polygon.getDZ());
+        //std::cout << halfLengths[zIndex] << std::endl;
+    auto surface = detectorElement->surface().getSharedPtr();
+    // Return the detector element and surface
+    return std::make_tuple(detectorElement, surface);
   }
   if(nVertices==6){
-    halfLengths = {fabs(vertices[3][0]-vertices[4][0])/2,fabs(vertices[2][0]-vertices[5][0])/2, fabs(vertices[0][0]-vertices[1][0])/2, fabs(vertices[1][1]-vertices[3][1])/2, fabs(vertices[0][1]-vertices[4][1])/2};
+    double hlxnegy = fabs(vertices[0][0]-vertices[1][0])/2;
+    double hlxposy = fabs(vertices[4][0]-vertices[5][0])/2;
+    double hlxzeroy = fabs(vertices[2][0]-vertices[3][0])/2;
+    double hly = fabs(vertices[0][1]-vertices[3][1])/2;
+    std::vector<ActsScalar> halfLengths = {hlxnegy, hlxzeroy, hlxposy,hly, hly};
+
+    // Create the surface
+    auto minElement = std::min_element(halfLengths.begin(), halfLengths.end());
+    auto zIndex = std::distance(halfLengths.begin(), minElement);
+  
+    Vector3 colX = rotation.col(0);
+    Vector3 colY = rotation.col(1);
+    Vector3 colZ = rotation.col(2);
+    rotation.col(0) = colX;
+    rotation.col(1) = colY;
+    rotation.col(2) = colZ;
+    transform.linear() = rotation;
 
     // Create the surface bounds
     ActsScalar halfXnegY = unitLength * halfLengths[0];
@@ -98,7 +122,7 @@ Acts::detail::GeoPolygonConverter::operator()(PVConstLink geoPV,
     auto detectorElement =
         GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
             geoPV, diamondBounds, transform,
-            2 * unitLength * halfLengths[zIndex]);
+            unitLength * polygon.getDZ());
     auto surface = detectorElement->surface().getSharedPtr();
     // Return the detector element and surface
     return std::make_tuple(detectorElement, surface);

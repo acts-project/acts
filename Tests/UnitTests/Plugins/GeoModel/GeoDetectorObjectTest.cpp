@@ -114,7 +114,6 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
       }
       // trap Surface without trf
       if (sbounds.type() == Acts::SurfaceBounds::eTrapezoid) {
-        //Acts::TrapezoidBounds trapBounds=dynamic_cast<Acts::TrapezoidBounds>(sbounds);
         const auto* trapBounds = dynamic_cast<const Acts::TrapezoidBounds*>(&sbounds);
         std::vector<Acts::Vector2>verts = trapBounds->vertices();
         BOOST_CHECK(verts[3][0]==x_verts[0]);
