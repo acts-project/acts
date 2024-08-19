@@ -137,7 +137,7 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
     } else {
       inputTensors[1] = edgeIndexTmp;
       t3 = std::chrono::high_resolution_clock::now();
-      output = model.forward(inputTensors).toTensor();
+      output = model.forward(inputTensors).toTensor().to(torch::kFloat32);
       t4 = std::chrono::high_resolution_clock::now();
       output.squeeze_();
     }
