@@ -56,9 +56,6 @@ Acts::detail::GeoPolygonConverter::operator()(PVConstLink geoPV,
     std::vector<ActsScalar> halfLengths = {hlxnegy, hlxposy,hly};
 
     // Create the surface
-    auto minElement = std::min_element(halfLengths.begin(), halfLengths.end());
-    auto zIndex = std::distance(halfLengths.begin(), minElement);
-  
     Vector3 colX = rotation.col(0);
     Vector3 colY = rotation.col(1);
     Vector3 colZ = rotation.col(2);
@@ -81,21 +78,18 @@ Acts::detail::GeoPolygonConverter::operator()(PVConstLink geoPV,
         GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
             geoPV, trapBounds, transform,
              unitLength * polygon.getDZ());
-        //std::cout << halfLengths[zIndex] << std::endl;
     auto surface = detectorElement->surface().getSharedPtr();
     // Return the detector element and surface
     return std::make_tuple(detectorElement, surface);
   }
   if(nVertices==6){
     double hlxnegy = fabs(vertices[0][0]-vertices[1][0])/2;
-    double hlxposy = fabs(vertices[4][0]-vertices[5][0])/2;
     double hlxzeroy = fabs(vertices[2][0]-vertices[3][0])/2;
-    double hly = fabs(vertices[0][1]-vertices[3][1])/2;
+    double hlxposy = fabs(vertices[4][0]-vertices[5][0])/2;
+    double hly = fabs(vertices[0][1]-vertices[4][1])/2;
     std::vector<ActsScalar> halfLengths = {hlxnegy, hlxzeroy, hlxposy,hly, hly};
 
     // Create the surface
-    auto minElement = std::min_element(halfLengths.begin(), halfLengths.end());
-    auto zIndex = std::distance(halfLengths.begin(), minElement);
   
     Vector3 colX = rotation.col(0);
     Vector3 colY = rotation.col(1);
