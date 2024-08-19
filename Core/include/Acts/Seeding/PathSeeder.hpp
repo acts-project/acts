@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Seeding/ISourceLinkGrid.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
@@ -39,9 +38,12 @@ namespace Acts::Experimental {
 ///
 /// @note Handling of the rotated surfaces has to happen
 /// in the user-defined delegate functions.
-template <typename axis_t>
+
+template <typename grid_t>
 class PathSeeder {
  public:
+  using GridType = grid_t;
+
   /// @brief The seed struct
   ///
   /// The seed struct contains the IP parameters
@@ -66,8 +68,31 @@ class PathSeeder {
         : ipP(ipPmag),
           ipDir(std::move(ipPdir)),
           ipVertex(std::move(ipPos)),
-          sourceLinks(std::move(sls)) {};
+          sourceLinks(std::move(sls)){};
   };
+
+  /// @brief Delegate to provide the relevant grid
+  /// filled with source links for the given geometry
+  /// member
+  ///
+  /// @arg The geometry identifier to use
+  ///
+  /// @return The grid filled with source links
+  using SourceLinkGridLookup =
+      Delegate<const GridType(const GeometryIdentifier&)>;
+
+  /// @brief Delegate to estimate the IP parameters
+  /// and the momentum direction at the first tracking layer
+  ///
+  /// @arg The geometry context to use
+  /// @arg The global position of the pivot source link
+  ///
+  /// @return Particle charge, the IP momentum magnitude, the IP vertex position,
+  /// the IP momentum direction, the momentum direction at the
+  /// first tracking layer
+  using TrackEstimator = Delegate<
+      const std::tuple<ActsScalar, ActsScalar, Vector3, Vector3, Vector3>(
+          const GeometryContext&, const Vector3&)>;
 
   /// @brief Delegate to transform the source link to the
   /// appropriate global frame.
@@ -77,20 +102,7 @@ class PathSeeder {
   ///
   /// @return The global position of the source link measurement
   using SourceLinkCalibrator =
-      Delegate<Vector3(const GeometryContext&, const SourceLink&)>;
-
-  /// @brief Delegate to provide the path width around
-  /// the intersection point to pull the source links
-  /// from the grid
-  ///
-  /// @arg The geometry context to use
-  /// @arg The geometry identifier to use if the
-  /// path width is varied across different tracking layers
-  ///
-  /// @return The path width in the bin0 and bin1 direction
-  /// defined with respect to the surface normal
-  using PathWidthLookup = Delegate<std::pair<ActsScalar, ActsScalar>(
-      const GeometryContext&, const GeometryIdentifier&)>;
+      Delegate<const Vector3(const GeometryContext&, const SourceLink&)>;
 
   /// @brief Delegate to find the intersections for the given pivot
   /// source link
@@ -102,27 +114,27 @@ class PathSeeder {
   /// @arg The IP momentum magnitude
   /// @arg The particle charge
   using IntersectionLookup =
-      Delegate<std::vector<std::pair<GeometryIdentifier, Vector3>>(
+      Delegate<const std::vector<std::pair<GeometryIdentifier, Vector3>>(
           const GeometryContext&, const Vector3&, const Vector3&,
           const ActsScalar&, const ActsScalar&)>;
 
-  /// @brief Delegate to estimate the IP parameters
-  /// and the momentum direction at the first tracking layer
+  /// @brief Delegate to provide the path width around
+  /// the intersection point to pull the source links
+  /// from the grid
   ///
   /// @arg The geometry context to use
-  /// @arg The global position of the pivot source link
+  /// @arg The geometry identifier to use if the
+  /// path width is varied across different tracking layers
   ///
-  /// @return Particle charge, the IP momentum magnitude, the IP vertex position,
-  /// the IP momentum direction, the momentum direction at the
-  /// first tracking layer
-  using TrackEstimator =
-      Delegate<std::tuple<ActsScalar, ActsScalar, Vector3, Vector3, Vector3>(
-          const GeometryContext&, const Vector3&)>;
+  /// @return The path width in the bin0 and bin1 direction
+  /// defined with respect to the surface normal
+  using PathWidthLookup = Delegate<const std::pair<ActsScalar, ActsScalar>(
+      const GeometryContext&, const GeometryIdentifier&)>;
 
   /// @brief The nested configuration struct
   struct Config {
     /// Binned SourceLink provider
-    std::shared_ptr<ISourceLinkGrid<axis_t>> sourceLinkGrid;
+    SourceLinkGridLookup sourceLinkGridLookup;
     /// Parameters estimator
     TrackEstimator trackEstimator;
     /// SourceLink calibrator
@@ -138,7 +150,7 @@ class PathSeeder {
   };
 
   /// @brief Constructor
-  PathSeeder(const Config& config) : m_cfg(std::move(config)) {};
+  PathSeeder(const Config& config) : m_cfg(std::move(config)){};
 
   /// @brief Destructor
   ~PathSeeder() = default;
@@ -152,9 +164,6 @@ class PathSeeder {
   /// @return The vector of seeds
   std::vector<Seed> getSeeds(const GeometryContext& gctx,
                              const std::vector<SourceLink>& sourceLinks) const {
-    // Sort the source links into the grid
-    m_cfg.sourceLinkGrid->initialize(gctx, sourceLinks);
-
     // Get plane of the telescope
     // sensitive surfaces
     int bin0 = static_cast<int>(BinningValue::binX);
@@ -210,7 +219,7 @@ class PathSeeder {
         ActsScalar bot1 = refPoint[bin1] - pathWidth1;
 
         // Get the lookup table for the source links
-        auto grid = m_cfg.sourceLinkGrid->getSourceLinkTable(geoId);
+        auto grid = m_cfg.sourceLinkGridLookup(geoId);
 
         // Get the range of bins to search for source links
         auto botLeftBin = grid.localBinsFromPosition(Vector2(bot0, bot1));

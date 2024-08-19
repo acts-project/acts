@@ -36,6 +36,7 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 using Axis = Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
+using Grid = Acts::Grid<std::vector<SourceLink>, Axis, Axis>;
 
 GeometryContext gctx;
 
@@ -49,14 +50,14 @@ const ActsScalar deltaYZ = 1.;
 // region of interest for seeding
 class NoFieldIntersectionFinder {
  public:
-  ActsScalar tol = 1e-4;
+  ActsScalar m_tol = 1e-4;
 
   std::vector<const Surface*> m_surfaces;
 
   // Find the intersections along the path
   // and return them in the order of the path
   // length
-  std::vector<std::pair<GeometryIdentifier, Vector3>> operator()(
+  const std::vector<std::pair<GeometryIdentifier, Vector3>> operator()(
       const GeometryContext& geoCtx, const Vector3& position,
       const Vector3& direction, [[maybe_unused]] const ActsScalar& Pmag = 0,
       [[maybe_unused]] const ActsScalar& Charge = 0) const {
@@ -64,9 +65,9 @@ class NoFieldIntersectionFinder {
     // Intersect the surfaces
     for (auto& surface : m_surfaces) {
       // Get the intersection
-      auto sMultiIntersection =
-          surface->intersect(geoCtx, position, direction,
-                             BoundaryTolerance::AbsoluteCartesian(tol, tol));
+      auto sMultiIntersection = surface->intersect(
+          geoCtx, position, direction,
+          BoundaryTolerance::AbsoluteCartesian(m_tol, m_tol));
 
       // Take the closest
       auto closestForward = sMultiIntersection.closestForward();
@@ -85,27 +86,27 @@ class NoFieldIntersectionFinder {
 
 // Grid to store the source links for
 // the seeding fast lookup
-class SourceLinkGrid : public ISourceLinkGrid<Axis> {
+class SourceLinkGrid {
  public:
-  using eGrid = Grid<std::vector<SourceLink>, Axis, Axis>;
+  using GridType = Grid;
 
   /// Lookup table collection
-  std::unordered_map<int, eGrid> m_lookupTables;
+  std::unordered_map<int, GridType> m_lookupTables;
 
   /// Surface accessor
   SourceLinkSurfaceAccessor m_surfaceAccessor;
 
   void initialize(const GeometryContext& geoCtx,
-                  std::vector<SourceLink> sourceLinks) override {
+                  std::vector<SourceLink> sourceLinks) {
     // Lookup table for each layer
-    std::unordered_map<int, eGrid> lookupTable;
+    std::unordered_map<int, GridType> lookupTable;
 
     // Construct a binned grid for each layer
     for (int i : {14, 15, 16, 17}) {
       Axis xAxis(-halfY, halfY, 50);
       Axis yAxis(-halfZ, halfZ, 50);
 
-      eGrid grid(std::make_tuple(xAxis, yAxis));
+      GridType grid(std::make_tuple(xAxis, yAxis));
       lookupTable.insert({i, grid});
     }
     // Fill the grid with source links
@@ -127,7 +128,7 @@ class SourceLinkGrid : public ISourceLinkGrid<Axis> {
   };
 
   // Get the source link grid for a given geometry id
-  eGrid getSourceLinkTable(const GeometryIdentifier& geoId) const override {
+  const GridType operator()(const GeometryIdentifier& geoId) const {
     return m_lookupTables.at(geoId.sensitive());
   }
 };
@@ -135,16 +136,10 @@ class SourceLinkGrid : public ISourceLinkGrid<Axis> {
 // A simple path width provider to set
 // the grid lookup boundaries around the
 // intersection point
-class PathWidthProvider {
- public:
-  ActsScalar m_pathWidth = 0.1;
-
-  std::pair<ActsScalar, ActsScalar> operator()(
-      const GeometryContext& /*geoCtx*/,
-      const GeometryIdentifier& /*geoId*/) const {
-    return {m_pathWidth, m_pathWidth};
-  }
-};
+const std::pair<ActsScalar, ActsScalar> getPathWidth(
+    const GeometryContext& /*gctx*/, const GeometryIdentifier& /*geoId*/) {
+  return {0.1, 0.1};
+}
 
 // Calibrator to transform the source links
 // to global coordinates
@@ -152,8 +147,8 @@ class SourceLinkCalibrator {
  public:
   SourceLinkSurfaceAccessor m_surfaceAccessor;
 
-  Vector3 operator()(const GeometryContext& geoCtx,
-                     const SourceLink& sourceLink) const {
+  const Vector3 operator()(const GeometryContext& geoCtx,
+                           const SourceLink& sourceLink) const {
     auto ssl = sourceLink.get<detail::Test::TestSourceLink>();
     auto res = m_surfaceAccessor(sourceLink)
                    ->localToGlobal(geoCtx, ssl.parameters, Vector3{0, 1, 0});
@@ -168,8 +163,8 @@ class TrackEstimator {
  public:
   Vector3 ip;
 
-  std::tuple<ActsScalar, ActsScalar, Vector3, Vector3, Vector3> operator()(
-      const GeometryContext& /*geoCtx*/, const Vector3& pivot) const {
+  const std::tuple<ActsScalar, ActsScalar, Vector3, Vector3, Vector3>
+  operator()(const GeometryContext& /*geoCtx*/, const Vector3& pivot) const {
     Vector3 direction = (pivot - ip).normalized();
     return {1_e, 1._GeV, ip, direction, direction};
   };
@@ -344,14 +339,15 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   auto sourceLinks = createSourceLinks(gctx, *detector);
 
   // Prepare the PathSeeder
-  auto pathSeederCfg = Acts::Experimental::PathSeeder<Axis>::Config();
+  auto pathSeederCfg = Acts::Experimental::PathSeeder<Grid>::Config();
 
   // Grid to bin the source links
   SurfaceAccessor surfaceAccessor{*detector};
-  auto sourceLinkGrid = std::make_shared<SourceLinkGrid>();
-  sourceLinkGrid->m_surfaceAccessor.connect<&SurfaceAccessor::operator()>(
+  SourceLinkGrid sourceLinkGrid;
+  sourceLinkGrid.m_surfaceAccessor.connect<&SurfaceAccessor::operator()>(
       &surfaceAccessor);
-  pathSeederCfg.sourceLinkGrid = sourceLinkGrid;
+  pathSeederCfg.sourceLinkGridLookup.connect<&SourceLinkGrid::operator()>(
+      &sourceLinkGrid);
 
   // Estimator of the IP and first hit
   // parameters of the track
@@ -368,7 +364,7 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
       &sourceLinkCalibrator);
 
   // Intersection finder
-  auto intersectionFinder = NoFieldIntersectionFinder();
+  NoFieldIntersectionFinder intersectionFinder;
   for (auto volume : detector->volumes()) {
     for (auto surface : volume->surfaces()) {
       intersectionFinder.m_surfaces.push_back(surface);
@@ -378,9 +374,7 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
       .connect<&NoFieldIntersectionFinder::operator()>(&intersectionFinder);
 
   // Path width provider
-  auto pathWidthProvider = PathWidthProvider();
-  pathSeederCfg.pathWidthProvider.connect<&PathWidthProvider::operator()>(
-      &pathWidthProvider);
+  pathSeederCfg.pathWidthProvider.connect<&getPathWidth>();
 
   // First tracking layer
   Extent firstLayerExtent;
@@ -391,9 +385,10 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   pathSeederCfg.firstLayerExtent = firstLayerExtent;
 
   // Create the PathSeeder
-  Acts::Experimental::PathSeeder<Axis> pathSeeder(pathSeederCfg);
+  Acts::Experimental::PathSeeder<Grid> pathSeeder(pathSeederCfg);
 
   // Get the seeds
+  sourceLinkGrid.initialize(gctx, sourceLinks);
   auto seeds = pathSeeder.getSeeds(gctx, sourceLinks);
 
   // Check the seeds
