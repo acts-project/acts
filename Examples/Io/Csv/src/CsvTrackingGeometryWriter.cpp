@@ -18,6 +18,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -26,13 +27,15 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
-#include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "/home/benjamin/CERN/acts/Plugins/GeoModel/include/Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 
-#include <regex>
+#ifdef HAVE_GEOMODEL
+#include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
+#endif
+
 #include <array>
 #include <cstddef>
+#include <regex>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -116,33 +119,32 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
                     Acts::UnitConstants::mm;
   }
 
-  if(auto gmEl = dynamic_cast<const Acts::GeoModelDetectorElement *>(surface.associatedDetectorElement()); gmEl != nullptr) {
-    const static std::regex pattern(R"~(^barrel_endcap_(-?\d+)_eta_module_(-?\d+)_layer_wheel_(-?\d+)_phi_module_(-?\d+)_side_(0|1).*$)~");
-    gmEl->databaseEntryName();
-    std::smatch result;
-
-    if( std::regex_match(gmEl->databaseEntryName(), result, pattern)) {
-      data.bec = std::stoi(result[1]);
-      data.etam = std::stoi(result[2]);
-      data.layw = std::stoi(result[3]);
-      data.phim = std::stoi(result[4]);
-      data.side = std::stoi(result[5]);
-    }
+#ifdef HAVE_GEOMODEL
+  if (auto gmEl = dynamic_cast<const Acts::GeoModelDetectorElementITk*>(
+          surface.associatedDetectorElement());
+      gmEl != nullptr) {
+    data.bec = gmEl->barrelEndcap();
+    data.etam = gmEl->etaModule();
+    data.layw = gmEl->layerWheel();
+    data.phim = gmEl->phiModule();
+    data.side = gmEl->side();
   }
+#endif
 
-#define COPY_VTX(a,b) data.v ## a ## _ ## b = vtxs[a][b]
+#define COPY_VTX(a, b) data.v##a##_##b = vtxs[a][b]
 
-  if(auto anBnds = dynamic_cast<const Acts::AnnulusBounds *>(&bounds); anBnds != nullptr) {
+  if (auto anBnds = dynamic_cast<const Acts::AnnulusBounds*>(&bounds);
+      anBnds != nullptr) {
     auto vtxs = anBnds->vertices(0);
     assert(vtxs.size() == 4);
-    COPY_VTX(0,0);
-    COPY_VTX(0,1);
-    COPY_VTX(1,0);
-    COPY_VTX(1,1);
-    COPY_VTX(2,0);
-    COPY_VTX(2,1);
-    COPY_VTX(3,0);
-    COPY_VTX(3,1);
+    COPY_VTX(0, 0);
+    COPY_VTX(0, 1);
+    COPY_VTX(1, 0);
+    COPY_VTX(1, 1);
+    COPY_VTX(2, 0);
+    COPY_VTX(2, 1);
+    COPY_VTX(3, 0);
+    COPY_VTX(3, 1);
   }
 
 #undef COPY_VTX

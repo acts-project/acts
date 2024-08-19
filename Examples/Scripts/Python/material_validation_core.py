@@ -23,7 +23,6 @@ from acts.examples import (
 )
 
 
-
 def runMaterialValidation(s, ntracks, surfaces, outputFile, seed, loglevel):
     # IO for material tracks reading
     wb = WhiteBoard(acts.logging.INFO)
@@ -194,7 +193,10 @@ if "__main__" == __name__:
                 DD4hepGeometryService,
             )
 
-            from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+            from acts.examples.odd import (
+                getOpenDataDetector,
+                getOpenDataDetectorDirectory,
+            )
 
             odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
 

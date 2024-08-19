@@ -93,15 +93,16 @@ class GeoModelDetectorElement : public DetectorElementBase {
   const std::string& databaseEntryName() const { return m_entryName; };
   void setDatabaseEntryName(const std::string& n) { m_entryName = n; };
 
- private:
-  std::string m_entryName;
-
+ protected:
   /// Attach a surface
   ///
   /// @param surface The surface to attach
   void attachSurface(std::shared_ptr<Surface> surface) {
     m_surface = std::move(surface);
   }
+
+ private:
+  std::string m_entryName;
 
   /// The GeoModel full physical volume
   const GeoFullPhysVol* m_geoPhysVol{nullptr};

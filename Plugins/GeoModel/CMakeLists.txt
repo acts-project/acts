@@ -14,7 +14,9 @@ add_library(
   src/detail/GeoIntersectionAnnulusConverter.cpp
   src/detail/GeoModelBinningHelper.cpp
   src/detail/GeoModelExtentHelper.cpp
-  src/detail/GeoUnionDoubleTrdConverter.cpp)
+  src/detail/GeoUnionDoubleTrdConverter.cpp
+  src/SplitModulesByRadius.cpp
+  src/GeoModelDetectorElementITk.cpp)
 target_include_directories(
     ActsPluginGeoModel
   PUBLIC
