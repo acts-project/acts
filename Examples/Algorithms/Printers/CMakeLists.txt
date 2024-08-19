@@ -1,6 +1,5 @@
 add_library(
   ActsExamplesPrinters SHARED
-  ActsExamples/Printers/HitsPrinter.cpp
   ActsExamples/Printers/ParticlesPrinter.cpp
   ActsExamples/Printers/TrackParametersPrinter.cpp)
 target_include_directories(

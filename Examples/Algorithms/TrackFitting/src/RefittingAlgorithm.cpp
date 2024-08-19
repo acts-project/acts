@@ -63,14 +63,20 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
   auto itrack = 0ul;
   for (const auto& track : inputTracks) {
     // Check if you are not in picking mode
-    if (m_cfg.pickTrack > -1 and
-        m_cfg.pickTrack != static_cast<int>(itrack++)) {
+    if (m_cfg.pickTrack > -1 && m_cfg.pickTrack != static_cast<int>(itrack++)) {
+      continue;
+    }
+
+    if (!track.hasReferenceSurface()) {
+      ACTS_VERBOSE("Skip track " << itrack << ": missing ref surface");
       continue;
     }
 
     TrackFitterFunction::GeneralFitterOptions options{
         ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-        &track.referenceSurface(), Acts::PropagatorPlainOptions()};
+        &track.referenceSurface(),
+        Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext)};
+    options.doRefit = true;
 
     const Acts::BoundTrackParameters initialParams(
         track.referenceSurface().getSharedPtr(), track.parameters(),
@@ -82,13 +88,15 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
     for (auto state : track.trackStatesReversed()) {
       surfSequence.push_back(&state.referenceSurface());
 
-      if (not state.hasCalibrated()) {
+      if (!state.hasCalibrated()) {
         continue;
       }
 
       auto sl = RefittingCalibrator::RefittingSourceLink{state};
       trackSourceLinks.push_back(Acts::SourceLink{sl});
     }
+
+    std::reverse(surfSequence.begin(), surfSequence.end());
 
     if (surfSequence.empty()) {
       ACTS_WARNING("Empty track " << itrack << " found.");

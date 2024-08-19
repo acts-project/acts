@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,10 +13,12 @@
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
+#include "ActsExamples/TruthTracking/TrackTruthMatcher.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
+#include "ActsExamples/Utilities/HitSelector.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <array>
@@ -89,8 +91,9 @@ void addTruthTracking(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::ParticleSmearing, mex, "ParticleSmearing", inputParticles,
       outputTrackParameters, sigmaD0, sigmaD0PtA, sigmaD0PtB, sigmaZ0,
-      sigmaZ0PtA, sigmaZ0PtB, sigmaT0, sigmaPhi, sigmaTheta, sigmaPRel,
-      initialSigmas, initialVarInflation, particleHypothesis, randomNumbers);
+      sigmaZ0PtA, sigmaZ0PtB, sigmaT0, sigmaPhi, sigmaTheta, sigmaPtRel,
+      initialSigmas, initialSigmaPtRel, initialVarInflation, particleHypothesis,
+      randomNumbers);
 
   {
     using Alg = ActsExamples::ParticleSelector;
@@ -106,6 +109,7 @@ void addTruthTracking(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputParticles);
+    ACTS_PYTHON_MEMBER(inputMeasurementParticlesMap);
     ACTS_PYTHON_MEMBER(outputParticles);
     ACTS_PYTHON_MEMBER(rhoMin);
     ACTS_PYTHON_MEMBER(rhoMax);
@@ -123,9 +127,12 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(mMax);
     ACTS_PYTHON_MEMBER(ptMin);
     ACTS_PYTHON_MEMBER(ptMax);
+    ACTS_PYTHON_MEMBER(measurementsMin);
+    ACTS_PYTHON_MEMBER(measurementsMax);
     ACTS_PYTHON_MEMBER(removeCharged);
     ACTS_PYTHON_MEMBER(removeNeutral);
     ACTS_PYTHON_MEMBER(removeSecondaries);
+    ACTS_PYTHON_MEMBER(excludeAbsPdgs);
     ACTS_PYTHON_STRUCT_END();
 
     pythonRangeProperty(c, "rho", &Config::rhoMin, &Config::rhoMax);
@@ -136,6 +143,8 @@ void addTruthTracking(Context& ctx) {
     pythonRangeProperty(c, "absEta", &Config::absEtaMin, &Config::absEtaMax);
     pythonRangeProperty(c, "m", &Config::mMin, &Config::mMax);
     pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
+    pythonRangeProperty(c, "measurements", &Config::measurementsMin,
+                        &Config::measurementsMax);
   }
 
   {
@@ -179,18 +188,26 @@ void addTruthTracking(Context& ctx) {
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TruthVertexFinder, mex, "TruthVertexFinder", inputParticles,
-      outputProtoVertices, excludeSecondaries, separateSecondaries);
+      ActsExamples::TruthVertexFinder, mex, "TruthVertexFinder", inputTracks,
+      inputParticles, inputMeasurementParticlesMap, outputProtoVertices,
+      excludeSecondaries, separateSecondaries, trackMatchingRatio);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackModifier, mex, "TrackModifier", inputTrajectories,
-      inputTrackParameters, outputTrajectories, outputTrackParameters,
-      dropCovariance, covScale, killTime);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackModifier, mex,
+                                "TrackModifier", inputTracks, outputTracks,
+                                dropCovariance, covScale, killTime);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm",
       inputParticles, inputMeasurementParticlesMap, inputSpacePoints,
       outputParticles, outputSeeds, outputProtoTracks, deltaRMin, deltaRMax);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HitSelector, mex, "HitSelector",
+                                inputHits, outputHits, maxTime);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackTruthMatcher, mex, "TrackTruthMatcher", inputTracks,
+      inputParticles, inputMeasurementParticlesMap, outputTrackParticleMatching,
+      outputParticleTrackMatching, matchingRatio, doubleMatching);
 }
 
 }  // namespace Acts::Python

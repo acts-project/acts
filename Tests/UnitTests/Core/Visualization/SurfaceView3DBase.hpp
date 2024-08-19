@@ -32,9 +32,7 @@
 #include <sstream>
 #include <string>
 
-namespace Acts {
-
-namespace SurfaceView3DTest {
+namespace Acts::SurfaceView3DTest {
 
 /// Helper method to visualize all types of surfaces
 ///
@@ -105,7 +103,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
       Transform3(Translation3{0., 0., 0.}),
       Transform3(Translation3{0.75 * coneMaxZ, 0., 0.})};
 
-  for (size_t ic = 0; ic < coneSurfaces.size(); ++ic) {
+  for (std::size_t ic = 0; ic < coneSurfaces.size(); ++ic) {
     GeometryView3D::drawSurface(helper, *coneSurfaces[ic], gctx, threeCones[ic],
                                 sConfig);
   }
@@ -163,7 +161,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
       Transform3(Translation3{0., 0., 0.}),
       Transform3(Translation3{2.5 * cylinderRadius, 0., 0.})};
 
-  for (size_t ic = 0; ic < cylinderSurfaces.size(); ++ic) {
+  for (std::size_t ic = 0; ic < cylinderSurfaces.size(); ++ic) {
     GeometryView3D::drawSurface(helper, *cylinderSurfaces[ic], gctx,
                                 threeCylinders[ic], sConfig);
   }
@@ -272,7 +270,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
       Transform3(Translation3{-2.0 * discRmax, -1.5 * discRmax, 0.}),
       Transform3(Translation3{0., -1.5 * discRmax, 0.}),
       Transform3(Translation3{2.5 * discRmax, -1.5 * discRmax, 0.})};
-  for (size_t ir = 0; ir < radialSurfaces.size(); ++ir) {
+  for (std::size_t ir = 0; ir < radialSurfaces.size(); ++ir) {
     GeometryView3D::drawSurface(helper, *radialSurfaces[ir], gctx, sixDiscs[ir],
                                 sConfig);
   }
@@ -313,7 +311,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   std::vector<Transform3> twoAnomalDiscs = {
       Transform3(Translation3{-5., 0., 0.}),
       Transform3(Translation3{5., 0., 0.})};
-  for (size_t id = 0; id < anomalDiscSurfaces.size(); ++id) {
+  for (std::size_t id = 0; id < anomalDiscSurfaces.size(); ++id) {
     GeometryView3D::drawSurface(helper, *anomalDiscSurfaces[id], gctx,
                                 sixDiscs[id], sConfig);
   }
@@ -477,7 +475,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
       Transform3(Translation3{-10, 10., 0.}),
       Transform3(Translation3{0., 10., 0.}),
       Transform3(Translation3{10., 10., 0.})};
-  for (size_t ip = 0; ip < planarSurfaces.size(); ++ip) {
+  for (std::size_t ip = 0; ip < planarSurfaces.size(); ++ip) {
     GeometryView3D::drawSurface(helper, *planarSurfaces[ip], gctx,
                                 ninePlanes[ip], sConfig);
   }
@@ -500,5 +498,4 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   return cStream.str();
 }
 
-}  // namespace SurfaceView3DTest
-}  // namespace Acts
+}  // namespace Acts::SurfaceView3DTest

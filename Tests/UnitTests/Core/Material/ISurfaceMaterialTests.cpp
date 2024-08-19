@@ -17,9 +17,7 @@
 #include <cstddef>
 #include <ostream>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 class SurfaceMaterialStub : public ISurfaceMaterial {
   using ISurfaceMaterial::ISurfaceMaterial;
@@ -31,11 +29,6 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
   }
 
   const MaterialSlab& materialSlab(const Vector3& /*gp*/) const override {
-    return m_fullMaterial;
-  }
-
-  const MaterialSlab& materialSlab(size_t /*bin0*/,
-                                   size_t /*bin1*/) const override {
     return m_fullMaterial;
   }
 
@@ -75,5 +68,4 @@ BOOST_AUTO_TEST_CASE(ISurfaceMaterial_factor_test) {
       1 - splitFactor);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

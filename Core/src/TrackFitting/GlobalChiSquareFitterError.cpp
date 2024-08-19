@@ -24,8 +24,14 @@ class GlobalChiSquareFitterErrorCategory : public std::error_category {
     using Acts::Experimental::GlobalChiSquareFitterError;
 
     switch (static_cast<GlobalChiSquareFitterError>(c)) {
-      case GlobalChiSquareFitterError::DetAIsZero:
-        return "Gx2f has det(a) == 0 during update.";
+      case GlobalChiSquareFitterError::AIsNotInvertible:
+        return "Gx2f: aMatrix is not invertible.";
+      case GlobalChiSquareFitterError::DidNotConverge:
+        return "Gx2f: Did not converge in 'nUpdateMax' updates.";
+      case GlobalChiSquareFitterError::NotEnoughMeasurements:
+        return "Gx2f: Not enough measurements.";
+      case GlobalChiSquareFitterError::UpdatePushedToNewVolume:
+        return "Gx2f: Update pushed the parameters to a new volume.";
       default:
         return "unknown";
     }

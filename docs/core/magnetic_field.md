@@ -1,3 +1,4 @@
+(magnetic-field-core)=
 # Magnetic field
 
 The magnetic field component of ACTS provides functionality to describe
@@ -7,7 +8,7 @@ source of field data.
 
 Algorithms which need magnetic field information (e.g.
 {class}`Acts::AtlasStepper`, {class}`Acts::EigenStepper`) accept the magnetic
-field as an explicit argument. 
+field as an explicit argument.
 
 ## Provider interface
 
@@ -26,7 +27,7 @@ The implementation is then free to use and update this cache instance as
 needed. Before a client can issue field lookup calls, it needs to obtain an
 initialized instance of this cache object. This can be achieved generically for
 all implementations by using {func}`Acts::MagneticFieldProvider::makeCache`.
-This function accepts an instance of {type}`Acts::MagneticFieldContext`, see
+This function accepts an instance of {class}`Acts::MagneticFieldContext`, see
 [](#magnetic-field-context) for details.
 
 The main lookup method of {class}`Acts::MagneticFieldProvider` is
@@ -60,7 +61,7 @@ Acts::Vector3 fieldValue = *lookupResult;
 
 ## Magnetic field context
 
-:::{doxygentypedef} Acts::MagneticFieldContext
+:::{doxygenclass} Acts::MagneticFieldContext
 :outline:
 :::
 
@@ -71,7 +72,7 @@ values. The library itself does not make any assumptions on the content of this
 context type (it is implemented using `std::any`), but passes a reference
 through the call-chain to the field implementation. An experiment specific
 field implementation is then expected to performa cast to the concrete type,
-and use the contents. 
+and use the contents.
 
 An example use case of the context could be to look up conditions data /
 records for the value of the magnetic field at the time of the event.
@@ -99,12 +100,12 @@ which is returned unmodified to every call to
 For more complex magnetic field implementations
 {class}`Acts::InterpolatedMagneticField` can be used. The idea here is to calculate
 an interpolated value of the magnetic field from a grid of known field values.
-In 3D, this means the interpolation is done from the 8 cornerpoints of a *field
+In 3D, this means the interpolation is done from the 8 corner points of a *field
 cell*. The field cell can be retrieved for any given position. Since during
 typical access patterns, e.g. the propagation, subsequent steps are relatively
 likely to not cross the field cell boundary, the field cell can be cached.
 
-:::{figure} ../figures/bfield/field_cell.svg
+:::{figure} figures/bfield/field_cell.svg
 :width: 300
 :align: center
 Illustration of the field cell concept. Subsequent steps are clustered in the
@@ -121,7 +122,7 @@ methods:
 
 This intermediate interface is again implemented by
 {class}`Acts::InterpolatedBFieldMap`, which is a template class that depends on
-an instance of {class}`Acts::detail::Grid`. Varying configurations are possible,
+an instance of {class}`Acts::Grid`. Varying configurations are possible,
 like a 2D field map that exploits $rz$ symmetry, or a plain 3D grid.
 
 :::{doxygenclass} Acts::InterpolatedBFieldMap
@@ -161,9 +162,9 @@ to speed it up.
 :::
 
 ACTS also provides a field provider that calculates the field vectors
-analytically for a [solenoid](https://en.wikipedia.org/wiki/Solenoid) field. 
+analytically for a [solenoid](https://en.wikipedia.org/wiki/Solenoid) field.
 
-:::{figure} ../figures/bfield/quiver.png
+:::{figure} figures/bfield/quiver.png
 :width: 600
 :align: center
 Picture of a solenoid field in rz, with arrows indicating the direction of the
@@ -177,7 +178,7 @@ The implementation has configurable solenoid parameters:
 :::
 
 :::{note}
-A configuration of 
+A configuration of
 ```cpp
 SolenoidBField::Config cfg;
 cfg.length = 5.8_m;
@@ -224,7 +225,7 @@ $$
 
 In the implementation the factor of $(\mu_0\cdot I)$ is defined to be a scaling
 factor. It is evaluated and defined as the magnetic field in the center of the
-coil, i.e. the scale set in {any}`Acts::SolenoidBField::Config::bMagCenter`.
+coil, i.e. the scale set in {member}`Acts::SolenoidBField::Config::bMagCenter`.
 
 As the evaluation of $E_1(k^2)$ and $E_2(k^2)$ is **slow**. The
 {class}`Acts::InterpolatedBFieldMap` easily outperforms
@@ -238,4 +239,3 @@ analytical implementation and is much faster to lookup:
 
 :::{doxygenclass} Acts::MagneticFieldProvider
 :::
-

@@ -44,7 +44,7 @@ double getRndDouble(std::mt19937& gen, double from, double to) {
 /// @param to upper threshold
 /// @return random number in [from,to)
 int getRndInt(std::mt19937& gen, int from, int to) {
-  return (int)(gen() / 4294967296. * (to - from) + from);
+  return static_cast<int>(gen() / 4294967296. * (to - from) + from);
 }
 
 /// @brief Calculates equation of the plane (alpha*x + beta*y + gamma*z + delta = 0), given the three points
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(single_seed_vertex_finder_full_planes_test) {
             << std::endl;
 
   // check if all vertices have compatible positions
-  BOOST_CHECK(vtxFound == nEvents);
+  BOOST_CHECK_EQUAL(vtxFound, nEvents);
 }
 
 /// @brief Unit test for SingleSeedVertexFinder. Generates real-looking sets of the spacepoints, then fits them with rays, finds a vertex, and then verifies the reconstructed vertex is actually near the original one
@@ -453,5 +453,5 @@ BOOST_AUTO_TEST_CASE(single_seed_vertex_finder_full_rays_test) {
             << std::endl;
 
   // check if all vertices have compatible positions
-  BOOST_CHECK(vtxFound == nEvents);
+  BOOST_CHECK_EQUAL(vtxFound, nEvents);
 }

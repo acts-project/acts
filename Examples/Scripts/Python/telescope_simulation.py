@@ -19,6 +19,7 @@ if "__main__" == __name__:
     detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
         bounds=[200, 200],
         positions=[30, 60, 90, 120, 150, 180, 210, 240, 270],
+        stereos=[0, 0, 0, 0, 0, 0, 0, 0, 0],
         binValue=2,
     )
 

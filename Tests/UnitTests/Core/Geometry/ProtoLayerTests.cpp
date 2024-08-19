@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -28,10 +27,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-
-namespace Test {
-namespace Layers {
+namespace Acts::Test::Layers {
 
 BOOST_AUTO_TEST_SUITE(Geometry)
 
@@ -74,7 +70,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
         atNegX, atNegY, atPosX, atPosY};
     surfaceStore.insert(surfaceStore.begin(), sharedSurfaces.begin(),
                         sharedSurfaces.end());
-    if (not shared) {
+    if (!shared) {
       std::vector<const Surface*> surfaces = {atNegX.get(), atNegY.get(),
                                               atPosX.get(), atPosY.get()};
 
@@ -91,7 +87,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   BOOST_CHECK(pLayerSf.envelope == pLayerSfShared.envelope);
 
   // CHECK That you have 4 surfaces
-  BOOST_CHECK(pLayerSf.surfaces().size() == 4);
+  BOOST_CHECK_EQUAL(pLayerSf.surfaces().size(), 4);
   // Add one surface from a detector element (to test thickness)
   auto rB = std::make_shared<RectangleBounds>(30., 60.);
 
@@ -101,7 +97,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
 
   pLayerSf.add(tgContext, *addSurface.get());
   // CHECK That if you now have 5 surfaces
-  BOOST_CHECK(pLayerSf.surfaces().size() == 5);
+  BOOST_CHECK_EQUAL(pLayerSf.surfaces().size(), 5);
 
   // That should invalidate the ranges
   BOOST_CHECK(!(pLayerSf.extent.range() == pLayerSfShared.extent.range()));
@@ -109,20 +105,20 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   // Test 1 - identity transform
   auto protoLayer = createProtoLayer(Transform3::Identity());
 
-  CHECK_CLOSE_ABS(protoLayer.range(binX), 12., 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.medium(binX), 0., 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.min(binX), -6., 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.max(binX), 6., 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.range(binY), 6., 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.medium(binY), 0., 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.min(binY), -3., 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.max(binY), 3., 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.range(binZ), 12., 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.medium(binZ), 0., 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.min(binZ), -6., 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.max(binZ), 6., 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.max(binR), std::hypot(3, 6), 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.min(binR), 3., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.range(BinningValue::binX), 12., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.medium(BinningValue::binX), 0., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.min(BinningValue::binX), -6., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.max(BinningValue::binX), 6., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.range(BinningValue::binY), 6., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.medium(BinningValue::binY), 0., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.min(BinningValue::binY), -3., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.max(BinningValue::binY), 3., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.range(BinningValue::binZ), 12., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.medium(BinningValue::binZ), 0., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.min(BinningValue::binZ), -6., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.max(BinningValue::binZ), 6., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.max(BinningValue::binR), std::hypot(3, 6), 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.min(BinningValue::binR), 3., 1e-8);
 
   // Test 1a
 
@@ -131,20 +127,21 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   auto protoLayerRot = createProtoLayer(AngleAxis3(-0.345, Vector3::UnitZ()) *
                                         Transform3::Identity());
 
-  BOOST_CHECK_NE(protoLayer.min(binX), -6.);
-  CHECK_CLOSE_ABS(protoLayerRot.medium(binX), 0., 1e-8);
-  CHECK_CLOSE_ABS(protoLayerRot.medium(binY), 0., 1e-8);
-  CHECK_CLOSE_ABS(protoLayerRot.range(binZ), 12., 1e-8);
-  CHECK_CLOSE_ABS(protoLayerRot.medium(binZ), 0., 1e-8);
-  CHECK_CLOSE_ABS(protoLayerRot.min(binZ), -6., 1e-8);
-  CHECK_CLOSE_ABS(protoLayerRot.max(binZ), 6., 1e-8);
-  CHECK_CLOSE_ABS(protoLayerRot.min(binR), 3., 1e-8);
-  CHECK_CLOSE_ABS(protoLayerRot.max(binR), std::hypot(3, 6), 1e-8);
+  BOOST_CHECK_NE(protoLayer.min(BinningValue::binX), -6.);
+  CHECK_CLOSE_ABS(protoLayerRot.medium(BinningValue::binX), 0., 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.medium(BinningValue::binY), 0., 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.range(BinningValue::binZ), 12., 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.medium(BinningValue::binZ), 0., 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.min(BinningValue::binZ), -6., 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.max(BinningValue::binZ), 6., 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.min(BinningValue::binR), 3., 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.max(BinningValue::binR), std::hypot(3, 6),
+                  1e-8);
 
   std::stringstream sstream;
   protoLayerRot.toStream(sstream);
   std::string oString = R"(ProtoLayer with dimensions (min/max)
-Extent in space : 
+Extent in space :
   - value :      binX | range = [-6.66104, 6.66104]
   - value :      binY | range = [-4.85241, 4.85241]
   - value :      binZ | range = [-6, 6]
@@ -159,7 +156,5 @@ Extent in space :
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Layers
-}  // namespace Test
 
-}  // namespace Acts
+}  // namespace Acts::Test::Layers

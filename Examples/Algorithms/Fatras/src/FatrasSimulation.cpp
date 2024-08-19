@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,10 +12,10 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -60,9 +60,9 @@ struct HitSurfaceSelector {
     bool isSensitive = surface.associatedDetectorElement() != nullptr;
     bool isMaterial = surface.surfaceMaterial() != nullptr;
     // passive should be an orthogonal category
-    bool isPassive = not(isSensitive or isMaterial);
-    return (isSensitive and sensitive) or (isMaterial and material) or
-           (isPassive and passive);
+    bool isPassive = !(isSensitive || isMaterial);
+    return (isSensitive && sensitive) || (isMaterial && material) ||
+           (isPassive && passive);
   }
 };
 
@@ -83,16 +83,14 @@ namespace {
 
 // Magnetic-field specific PIMPL implementation.
 //
-// This always uses the EigenStepper with default extensions for charged
-// particle propagation and is thus limited to propagation in vacuum at the
-// moment.
-// @TODO: Remove this, unneeded after #675
+// This always uses the SympyStepper for charged particle propagation and is
+// thus limited to propagation in vacuum at the moment.
 struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
   using CutPMin = ActsFatras::Min<ActsFatras::Casts::P>;
 
   // typedefs for charge particle simulation
   // propagate charged particles numerically in the given magnetic field
-  using ChargedStepper = Acts::EigenStepper<>;
+  using ChargedStepper = Acts::SympyStepper;
   using ChargedPropagator = Acts::Propagator<ChargedStepper, Acts::Navigator>;
   // charged particles w/ standard em physics list and selectable hits
   using ChargedSelector = CutPMin;
@@ -122,12 +120,18 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
                     Acts::Logging::Level lvl)
       : simulation(
             ChargedSimulation(
-                ChargedPropagator(ChargedStepper(cfg.magneticField),
-                                  Acts::Navigator{{cfg.trackingGeometry}}),
+                ChargedPropagator(
+                    ChargedStepper(cfg.magneticField),
+                    Acts::Navigator({cfg.trackingGeometry},
+                                    Acts::getDefaultLogger("SimNav", lvl)),
+                    Acts::getDefaultLogger("SimProp", lvl)),
                 Acts::getDefaultLogger("Simulation", lvl)),
             NeutralSimulation(
-                NeutralPropagator(NeutralStepper(),
-                                  Acts::Navigator{{cfg.trackingGeometry}}),
+                NeutralPropagator(
+                    NeutralStepper(),
+                    Acts::Navigator({cfg.trackingGeometry},
+                                    Acts::getDefaultLogger("SimNav", lvl)),
+                    Acts::getDefaultLogger("SimProp", lvl)),
                 Acts::getDefaultLogger("Simulation", lvl))) {
     using namespace ActsFatras;
     using namespace ActsFatras::detail;
@@ -140,16 +144,16 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
         makeStandardChargedElectroMagneticInteractions(cfg.pMin);
 
     // processes are enabled by default
-    if (not cfg.emScattering) {
+    if (!cfg.emScattering) {
       simulation.charged.interactions.template disable<StandardScattering>();
     }
-    if (not cfg.emEnergyLossIonisation) {
+    if (!cfg.emEnergyLossIonisation) {
       simulation.charged.interactions.template disable<StandardBetheBloch>();
     }
-    if (not cfg.emEnergyLossRadiation) {
+    if (!cfg.emEnergyLossRadiation) {
       simulation.charged.interactions.template disable<StandardBetheHeitler>();
     }
-    if (not cfg.emPhotonConversion) {
+    if (!cfg.emPhotonConversion) {
       simulation.neutral.interactions.template disable<PhotonConversion>();
     }
 
@@ -157,6 +161,11 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
     simulation.charged.selectHitSurface.sensitive = cfg.generateHitsOnSensitive;
     simulation.charged.selectHitSurface.material = cfg.generateHitsOnMaterial;
     simulation.charged.selectHitSurface.passive = cfg.generateHitsOnPassive;
+
+    simulation.charged.maxStepSize = cfg.maxStepSize;
+    simulation.charged.pathLimit = cfg.pathLimit;
+    simulation.neutral.maxStepSize = cfg.maxStepSize;
+    simulation.neutral.pathLimit = cfg.pathLimit;
   }
   ~FatrasSimulationT() final = default;
 
@@ -234,7 +243,7 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
                              inputParticles, particlesInitialUnordered,
                              particlesFinalUnordered, simHitsUnordered);
   // fatal error leads to panic
-  if (not ret.ok()) {
+  if (!ret.ok()) {
     ACTS_FATAL("event " << ctx.eventNumber << " simulation failed with error "
                         << ret.error());
     return ProcessCode::ABORT;

@@ -20,10 +20,7 @@
 
 #include "Visualization3DTester.hpp"
 
-using boost::test_tools::output_test_stream;
-
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
 
@@ -52,7 +49,7 @@ l 4 1
 
   // Valid obj, but triangular mesh is requested
   objErrors = testObjString(validObj, true);
-  BOOST_CHECK(objErrors.size() == 1);
+  BOOST_CHECK_EQUAL(objErrors.size(), 1);
   for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
@@ -77,7 +74,7 @@ l 4 1
 )";
 
   objErrors = testObjString(invalidObj);
-  BOOST_CHECK(objErrors.size() == 4);
+  BOOST_CHECK_EQUAL(objErrors.size(), 4);
   for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
@@ -86,7 +83,7 @@ l 4 1
 BOOST_AUTO_TEST_CASE(Visualization3DTesterPly) {
   // Test the tester
   std::string validPly = R"(ply
-format ascii 1.0		
+format ascii 1.0
 comment made by Greg Turk
 comment this file is a cube
 element vertex 8
@@ -125,7 +122,7 @@ end_header
 
   // Test the tester - contains 3 errors
   std::string invalidPly = R"(ply
-format ascii 1.0		
+format ascii 1.0
 comment made by Greg Turk
 comment this file is a cube
 element vertex 8
@@ -154,7 +151,7 @@ end_header
 
   // Valid ply, but triangular mesh is requested
   plyErrors = testPlyString(invalidPly);
-  BOOST_CHECK(plyErrors.size() == 3);
+  BOOST_CHECK_EQUAL(plyErrors.size(), 3);
   for (const auto& plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
@@ -175,7 +172,7 @@ BOOST_AUTO_TEST_CASE(Visualization3DConstruction) {
 
 BOOST_AUTO_TEST_CASE(PlyOutputTest) {
   PlyVisualization3D ply;
-  output_test_stream output;
+  boost::test_tools::output_test_stream output;
 
   ply.vertex({0, 0, 0});
 
@@ -295,7 +292,7 @@ end_header
 BOOST_AUTO_TEST_CASE(ObjOutputTest) {
   ObjVisualization3D obj;
 
-  output_test_stream output;
+  boost::test_tools::output_test_stream output;
 
   obj.vertex({1, 0, 0});
 
@@ -320,5 +317,5 @@ f 1 2 3
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

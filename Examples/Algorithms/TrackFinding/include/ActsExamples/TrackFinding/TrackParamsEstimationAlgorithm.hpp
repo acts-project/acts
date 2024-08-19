@@ -63,19 +63,30 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// Output prototrack collection - only tracks with successful parameter
     /// estimation are propagated (optional)
     std::string outputProtoTracks;
+
     /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Magnetic field variant.
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+
     /// The minimum magnetic field to trigger the track parameters estimation
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
-    /// Initial covariance matrix diagonal.
+
+    /// Initial sigmas for the track parameters.
     std::array<double, 6> initialSigmas = {
-        25 * Acts::UnitConstants::um,       100 * Acts::UnitConstants::um,
-        0.02 * Acts::UnitConstants::degree, 0.02 * Acts::UnitConstants::degree,
-        0.1 / Acts::UnitConstants::GeV,     10 * Acts::UnitConstants::ns};
+        1 * Acts::UnitConstants::mm,
+        1 * Acts::UnitConstants::mm,
+        1 * Acts::UnitConstants::degree,
+        1 * Acts::UnitConstants::degree,
+        0 * Acts::UnitConstants::e / Acts::UnitConstants::GeV,
+        1 * Acts::UnitConstants::ns};
+    /// Relative pt resolution used for the initial sigma of q/p.
+    double initialSigmaPtRel = 0.1;
     /// Inflate initial covariance.
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
+    /// Inflate time covariance if no time measurement is available.
+    double noTimeVarInflation = 100.;
+
     /// Particle hypothesis.
     Acts::ParticleHypothesis particleHypothesis =
         Acts::ParticleHypothesis::pion();
@@ -98,10 +109,6 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-
-  /// The track parameters covariance (assumed to be the same for all estimated
-  /// track parameters for the moment)
-  Acts::BoundSquareMatrix m_covariance = Acts::BoundSquareMatrix::Zero();
 
   ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
   ReadDataHandle<ProtoTrackContainer> m_inputTracks{this, "InputTracks"};

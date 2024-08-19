@@ -18,7 +18,7 @@ namespace ActsExamples {
 ///
 /// We do not expect to have more than 2^32 elements in any given container so a
 /// fixed sized integer type is sufficient.
-using Index = uint32_t;
+using Index = std::uint32_t;
 
 /// Store elements that are identified by an index, e.g. in another container.
 ///

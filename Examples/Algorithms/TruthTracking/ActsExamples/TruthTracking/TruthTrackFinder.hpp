@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -34,8 +34,6 @@ struct AlgorithmContext;
 /// the chain.
 class TruthTrackFinder final : public IAlgorithm {
  public:
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   struct Config {
     /// The input truth particles that should be used to create proto tracks.
     std::string inputParticles;

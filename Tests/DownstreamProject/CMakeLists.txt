@@ -2,13 +2,12 @@ cmake_minimum_required(VERSION 3.11)
 
 project(ActsDownstreamProject)
 
-# find all optional components that are build with ACTS_BUILD_EVERYTHING=on
+# find all optional components that are build
 find_package(
   Acts CONFIG REQUIRED
   COMPONENTS
     Core
     Fatras
-    PluginIdentification
     PluginJson
     PluginLegacy
     PluginTGeo)
@@ -26,7 +25,6 @@ target_link_libraries(
   PRIVATE
     ActsCore
     ActsFatras
-    ActsPluginIdentification
     ActsPluginJson
     ActsPluginLegacy
     ActsPluginTGeo)
@@ -36,4 +34,18 @@ if(DD4HEP)
   message(STATUS "Adding DD4hep plugin")
   find_package(Acts CONFIG REQUIRED COMPONENTS PluginDD4hep)
   target_link_libraries( ShowActsVersion PRIVATE ActsPluginDD4hep)
+endif()
+
+option(PODIO "Build with podio" ON)
+if(PODIO)
+  message(STATUS "Adding podio plugin")
+  find_package(Acts CONFIG REQUIRED COMPONENTS PluginPodio)
+  target_link_libraries( ShowActsVersion PRIVATE ActsPluginPodio)
+endif()
+
+option(EDM4HEP "Build with EDM4hep" ON)
+if(EDM4HEP)
+  message(STATUS "Adding EDM4hep plugin")
+  find_package(Acts CONFIG REQUIRED COMPONENTS PluginEDM4hep)
+  target_link_libraries( ShowActsVersion PRIVATE ActsPluginEDM4hep)
 endif()

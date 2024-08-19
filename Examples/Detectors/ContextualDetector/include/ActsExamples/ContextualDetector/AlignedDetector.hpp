@@ -41,11 +41,11 @@ class AlignedDetector {
 
   struct Config : public GenericDetector::Config {
     /// Seed for the decorator random numbers.
-    size_t seed = 1324354657;
+    std::size_t seed = 1324354657;
     /// Size of a valid IOV.
-    size_t iovSize = 100;
+    std::size_t iovSize = 100;
     /// Span until garbage collection is active.
-    size_t flushSize = 200;
+    std::size_t flushSize = 200;
     /// Run the garbage collection?
     bool doGarbageCollection = true;
     /// Sigma of the in-plane misalignment

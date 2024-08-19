@@ -8,12 +8,15 @@
 
 #pragma once
 
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
+#include <array>
+#include <map>
 #include <string>
 #include <vector>
 
-#include "G4VPhysicalVolume.hh"
+class G4VPhysicalVolume;
 
 namespace Acts {
 
@@ -49,18 +52,32 @@ struct NameSelector : public IGeant4PhysicalVolumeSelector {
   /// Secect function for the volume
   /// @param g4PhysVol the volume that is checked
   /// @return a boolean indicating the selection
-  bool select(const G4VPhysicalVolume& g4PhysVol) const final {
-    std::string volumeName = g4PhysVol.GetName();
-    bool matched = false;
-    for (const auto& name : names) {
-      matched = exact ? (volumeName == name)
-                      : volumeName.find(name) != std::string::npos;
-      if (matched) {
-        break;
-      }
-    }
-    return matched;
-  }
+  bool select(const G4VPhysicalVolume& g4PhysVol) const final;
+};
+
+/// @brief Struct that selects G4VPhysicalVolume objects
+/// based on the allowed range of their position
+///
+/// @note Can be used for preselection of volumes
+/// before a KDTree search. This way the memory
+/// consumption can be reduced, compromising the
+/// execution speed
+///
+/// @note Careful with axis conventions as
+/// Geant4 uses a different one than Acts
+struct PositionSelector : public IGeant4PhysicalVolumeSelector {
+  std::map<unsigned int, std::tuple<double, double>> m_ranges;
+
+  /// Constructor with arguments
+  /// @param ranges the provided map of axes of ranges
+  PositionSelector(
+      const std::map<unsigned int, std::tuple<double, double>>& ranges)
+      : m_ranges(ranges) {}
+
+  /// Secect function for the volume
+  /// @param g4PhysVol the volume that is checked
+  /// @return a boolean indicating the selection
+  bool select(const G4VPhysicalVolume& g4PhysVol) const final;
 };
 
 }  // namespace Geant4PhysicalVolumeSelectors

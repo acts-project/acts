@@ -1,4 +1,4 @@
-add_library(ActsExamplesGeometry SHARED 
+add_library(ActsExamplesGeometry SHARED
   src/VolumeAssociationTest.cpp)
 
 target_include_directories(

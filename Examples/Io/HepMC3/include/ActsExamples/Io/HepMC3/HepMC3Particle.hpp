@@ -15,8 +15,12 @@
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
 
-namespace ActsExamples {
-namespace HepMC3Particle {
+namespace ActsExamples::HepMC3Particle {
+
+/// @brief Returns the barcode translated into Acts
+/// @param particle HepMC3::GenParticle particle
+/// @return corresponding Acts barcode
+SimBarcode barcode(const HepMC3::ConstGenParticlePtr& particle);
 
 /// @brief Returns the particle translated into Acts
 /// @param particle HepMC3::GenParticle particle
@@ -88,5 +92,4 @@ void energy(const std::shared_ptr<HepMC3::GenParticle>& particle,
 void mass(const std::shared_ptr<HepMC3::GenParticle>& particle,
           const double mass);
 
-}  // namespace HepMC3Particle
-}  // namespace ActsExamples
+}  // namespace ActsExamples::HepMC3Particle

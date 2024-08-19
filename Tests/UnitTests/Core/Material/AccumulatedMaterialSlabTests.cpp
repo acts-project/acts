@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(Nothing) {
   AccumulatedMaterialSlab a;
   auto [average, trackCount] = a.totalAverage();
   // material is vacuum
-  BOOST_CHECK(not(average));
+  BOOST_CHECK(!(average));
   BOOST_CHECK_EQUAL(trackCount, 0u);
 }
 
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(EmptyTracksIgnored) {
   a.trackAverage();
   a.trackAverage();
   auto [average, trackCount] = a.totalAverage();
-  BOOST_CHECK(not(average));
+  BOOST_CHECK(!(average));
   BOOST_CHECK_EQUAL(trackCount, 0u);
 }
 
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(EmptyTracks) {
   a.trackAverage(true);
   a.trackAverage(true);
   auto [average, trackCount] = a.totalAverage();
-  BOOST_CHECK(not(average));
+  BOOST_CHECK(!(average));
   BOOST_CHECK_EQUAL(trackCount, 3u);
 }
 

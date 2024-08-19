@@ -20,26 +20,26 @@ BOOST_AUTO_TEST_SUITE(FatrasParticleSelectors)
 
 BOOST_AUTO_TEST_CASE(NegativeParticle) {
   const auto& particle = Dataset::centralElectron;
-  BOOST_CHECK(not NeutralSelector()(particle));
+  BOOST_CHECK(!NeutralSelector()(particle));
   BOOST_CHECK(ChargedSelector()(particle));
-  BOOST_CHECK(not PositiveSelector()(particle));
+  BOOST_CHECK(!PositiveSelector()(particle));
   BOOST_CHECK(NegativeSelector()(particle));
 }
 
 BOOST_AUTO_TEST_CASE(NeutralParticle) {
   const auto& particle = Dataset::centralNeutron;
   BOOST_CHECK(NeutralSelector()(particle));
-  BOOST_CHECK(not ChargedSelector()(particle));
-  BOOST_CHECK(not PositiveSelector()(particle));
-  BOOST_CHECK(not NegativeSelector()(particle));
+  BOOST_CHECK(!ChargedSelector()(particle));
+  BOOST_CHECK(!PositiveSelector()(particle));
+  BOOST_CHECK(!NegativeSelector()(particle));
 }
 
 BOOST_AUTO_TEST_CASE(PositiveParticle) {
   const auto& particle = Dataset::centralPositron;
-  BOOST_CHECK(not NeutralSelector()(particle));
+  BOOST_CHECK(!NeutralSelector()(particle));
   BOOST_CHECK(ChargedSelector()(particle));
   BOOST_CHECK(PositiveSelector()(particle));
-  BOOST_CHECK(not NegativeSelector()(particle));
+  BOOST_CHECK(!NegativeSelector()(particle));
 }
 
 namespace {
@@ -53,26 +53,26 @@ const auto& pion = Dataset::centralPion;
 BOOST_AUTO_TEST_CASE(PdgSelector) {
   ActsFatras::PdgSelector<Acts::PdgParticle::eElectron> selectElectron;
   BOOST_CHECK(selectElectron(electron));
-  BOOST_CHECK(not selectElectron(positron));
-  BOOST_CHECK(not selectElectron(muon));
-  BOOST_CHECK(not selectElectron(antimuon));
-  BOOST_CHECK(not selectElectron(pion));
+  BOOST_CHECK(!selectElectron(positron));
+  BOOST_CHECK(!selectElectron(muon));
+  BOOST_CHECK(!selectElectron(antimuon));
+  BOOST_CHECK(!selectElectron(pion));
 }
 
 BOOST_AUTO_TEST_CASE(AbsPdgSelector) {
   ActsFatras::AbsPdgSelector<Acts::PdgParticle::eElectron> selectElectronLike;
   BOOST_CHECK(selectElectronLike(electron));
   BOOST_CHECK(selectElectronLike(positron));
-  BOOST_CHECK(not selectElectronLike(muon));
-  BOOST_CHECK(not selectElectronLike(antimuon));
-  BOOST_CHECK(not selectElectronLike(pion));
+  BOOST_CHECK(!selectElectronLike(muon));
+  BOOST_CHECK(!selectElectronLike(antimuon));
+  BOOST_CHECK(!selectElectronLike(pion));
 }
 
 BOOST_AUTO_TEST_CASE(PdgExcluder) {
   ActsFatras::PdgExcluder<Acts::PdgParticle::eMuon> excludeMuon;
   BOOST_CHECK(excludeMuon(electron));
   BOOST_CHECK(excludeMuon(positron));
-  BOOST_CHECK(not excludeMuon(muon));
+  BOOST_CHECK(!excludeMuon(muon));
   BOOST_CHECK(excludeMuon(antimuon));
   BOOST_CHECK(excludeMuon(pion));
 }
@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(AbsPdgExcluder) {
   ActsFatras::AbsPdgExcluder<Acts::PdgParticle::eMuon> excludeMuonLike;
   BOOST_CHECK(excludeMuonLike(electron));
   BOOST_CHECK(excludeMuonLike(positron));
-  BOOST_CHECK(not excludeMuonLike(muon));
-  BOOST_CHECK(not excludeMuonLike(antimuon));
+  BOOST_CHECK(!excludeMuonLike(muon));
+  BOOST_CHECK(!excludeMuonLike(antimuon));
   BOOST_CHECK(excludeMuonLike(pion));
 }
 

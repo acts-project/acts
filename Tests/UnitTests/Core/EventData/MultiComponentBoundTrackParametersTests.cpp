@@ -16,7 +16,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include <Acts/EventData/Charge.hpp>
-#include <Acts/EventData/MultiComponentBoundTrackParameters.hpp>
+#include <Acts/EventData/MultiComponentTrackParameters.hpp>
 #include <Acts/Surfaces/PlaneSurface.hpp>
 
 #include <algorithm>
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
     if (cov && *cov != BoundSquareMatrix::Zero()) {
       BOOST_CHECK_EQUAL(*multi_pars.covariance(), *single_pars.covariance());
     } else {
-      BOOST_CHECK(not multi_pars.covariance());
+      BOOST_CHECK(!multi_pars.covariance());
     }
   }
 }

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,7 +18,6 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
-#include "Acts/Seeding/SpacePointGrid.hpp"
 
 #include <array>
 #include <limits>
@@ -36,7 +35,8 @@ enum class SpacePointCandidateType : short { eBottom, eTop };
 
 enum class DetectorMeasurementInfo : short { eDefault, eDetailed };
 
-template <typename external_spacepoint_t, typename platform_t = void*>
+template <typename external_spacepoint_t, typename grid_t,
+          typename platform_t = void*>
 class SeedFinder {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
@@ -63,9 +63,11 @@ class SeedFinder {
         candidates_collector;
 
     // managing doublet candidates
-    boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
+    boost::container::small_vector<Acts::Neighbour<grid_t>,
+                                   Acts::detail::ipow(3, grid_t::DIM)>
         bottomNeighbours;
-    boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
+    boost::container::small_vector<Acts::Neighbour<grid_t>,
+                                   Acts::detail::ipow(3, grid_t::DIM)>
         topNeighbours;
 
     // Adding space point info
@@ -79,9 +81,10 @@ class SeedFinder {
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
   SeedFinder() = default;
-  SeedFinder(const SeedFinder<external_spacepoint_t, platform_t>&) = delete;
-  SeedFinder<external_spacepoint_t, platform_t>& operator=(
-      const SeedFinder<external_spacepoint_t, platform_t>&) = default;
+  SeedFinder(const SeedFinder<external_spacepoint_t, grid_t, platform_t>&) =
+      delete;
+  SeedFinder<external_spacepoint_t, grid_t, platform_t>& operator=(
+      const SeedFinder<external_spacepoint_t, grid_t, platform_t>&) = default;
   //@}
 
   /// Create all seeds from the space points in the three iterators.
@@ -89,47 +92,21 @@ class SeedFinder {
   /// @param options frequently changing configuration (like beam position)
   /// @param state State object that holds memory used
   /// @param grid The grid with space points
-  /// @param outIt Output iterator for the seeds in the group
+  /// @param outputCollection Output container for the seeds in the group
   /// @param bottomSPs group of space points to be used as innermost SP in a seed.
   /// @param middleSPs group of space points to be used as middle SP in a seed.
   /// @param topSPs group of space points to be used as outermost SP in a seed.
   /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin.
   /// @note Ranges must return pointers.
   /// @note Ranges must be separate objects for each parallel call.
-  template <template <typename...> typename container_t, typename sp_range_t>
-  void createSeedsForGroup(
-      const Acts::SeedFinderOptions& options, SeedingState& state,
-      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
-      std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
-      const sp_range_t& bottomSPs, const std::size_t middleSPs,
-      const sp_range_t& topSPs,
-      const Acts::Range1D<float>& rMiddleSPRange) const;
-
-  /// @brief Compatibility method for the new-style seed finding API.
-  ///
-  /// This method models the old-style seeding API where we only need a
-  /// container for the bottom, middle, and top space points. Also, the results
-  /// are returned by value instead of inserted into an inserter.
-  ///
-  /// @note This method is a very simply wrapper around the more modern API.
-  /// @warning The performance of the seeding code is far greater if the new
-  /// API is used, and this is recommended for all new uses which do not
-  /// require backwards-compatibility.
-  ///
-  /// @tparam sp_range_t container type for the seed point collections.
-  /// @param options frequently changing configuration (like beam position)
-  /// @param grid The grid with space points
-  /// @param bottomSPs group of space points to be used as innermost SP in a
-  /// seed.
-  /// @param middleSPs group of space points to be used as middle SP in a seed.
-  /// @param topSPs group of space points to be used as outermost SP in a seed.
-  /// @returns a vector of seeds.
-  template <typename sp_range_t>
-  std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
-      const Acts::SeedFinderOptions& options,
-      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
-      const sp_range_t& bottomSPs, const std::size_t middleSPs,
-      const sp_range_t& topSPs) const;
+  template <typename container_t, typename sp_range_t>
+  void createSeedsForGroup(const Acts::SeedFinderOptions& options,
+                           SeedingState& state, const grid_t& grid,
+                           container_t& outputCollection,
+                           const sp_range_t& bottomSPs,
+                           const std::size_t middleSPs,
+                           const sp_range_t& topSPs,
+                           const Acts::Range1D<float>& rMiddleSPRange) const;
 
  private:
   /// Iterates over dublets and tests the compatibility between them by applying
@@ -150,9 +127,9 @@ class SeedFinder {
   template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
   void getCompatibleDoublets(
       Acts::SpacePointData& spacePointData,
-      const Acts::SeedFinderOptions& options,
-      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
-      boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>&
+      const Acts::SeedFinderOptions& options, const grid_t& grid,
+      boost::container::small_vector<Acts::Neighbour<grid_t>,
+                                     Acts::detail::ipow(3, grid_t::DIM)>&
           otherSPsNeighbours,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,

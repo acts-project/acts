@@ -103,7 +103,7 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
 #endif
 
   // Check
-  BOOST_CHECK(edges_ref_cantor.size() == edges_test_cantor.size());
+  BOOST_CHECK_EQUAL(edges_ref_cantor.size(), edges_test_cantor.size());
   BOOST_CHECK(std::equal(edges_test_cantor.begin(), edges_test_cantor.end(),
                          edges_ref_cantor.begin()));
 }
@@ -113,8 +113,8 @@ BOOST_AUTO_TEST_CASE(test_cantor_pair_functions) {
   int b = 23;
   // Use non-sorted cantor pair to make this work
   const auto [aa, bb] = CantorPair(a, b, false).inverse();
-  BOOST_CHECK(a == aa);
-  BOOST_CHECK(b == bb);
+  BOOST_CHECK_EQUAL(a, aa);
+  BOOST_CHECK_EQUAL(b, bb);
 }
 
 BOOST_AUTO_TEST_CASE(test_cantor_pair_sorted) {
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(test_cantor_pair_sorted) {
   int b = 23;
   CantorPair c1(a, b);
   CantorPair c2(b, a);
-  BOOST_CHECK(c1.value() == c2.value());
+  BOOST_CHECK_EQUAL(c1.value(), c2.value());
 }
 
 const int emb_dim = 3;
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(test_random_graph_edge_building_kdtree) {
 
 BOOST_AUTO_TEST_CASE(test_self_loop_removal) {
   // clang-format off
-  std::vector<int64_t> edges = {
+  std::vector<std::int64_t> edges = {
     1,1,
     2,3,
     2,2,
@@ -177,23 +177,23 @@ BOOST_AUTO_TEST_CASE(test_self_loop_removal) {
           .transpose(1, 0)
           .flatten();
 
-  const std::vector<int64_t> postEdges(
-      withoutSelfLoops.data_ptr<int64_t>(),
-      withoutSelfLoops.data_ptr<int64_t>() + withoutSelfLoops.numel());
+  const std::vector<std::int64_t> postEdges(
+      withoutSelfLoops.data_ptr<std::int64_t>(),
+      withoutSelfLoops.data_ptr<std::int64_t>() + withoutSelfLoops.numel());
 
   // clang-format off
-  const std::vector<int64_t> ref = {
+  const std::vector<std::int64_t> ref = {
     2,3,
     5,4,
   };
   // clang-format on
 
-  BOOST_CHECK(ref == postEdges);
+  BOOST_CHECK_EQUAL(ref, postEdges);
 }
 
 BOOST_AUTO_TEST_CASE(test_duplicate_removal) {
   // clang-format off
-  std::vector<int64_t> edges = {
+  std::vector<std::int64_t> edges = {
     1,2,
     2,1,   // duplicate, flipped
     3,2,
@@ -213,26 +213,26 @@ BOOST_AUTO_TEST_CASE(test_duplicate_removal) {
           .transpose(1, 0)
           .flatten();
 
-  const std::vector<int64_t> postEdges(
-      withoutDups.data_ptr<int64_t>(),
-      withoutDups.data_ptr<int64_t>() + withoutDups.numel());
+  const std::vector<std::int64_t> postEdges(
+      withoutDups.data_ptr<std::int64_t>(),
+      withoutDups.data_ptr<std::int64_t>() + withoutDups.numel());
 
   // clang-format off
-  const std::vector<int64_t> ref = {
+  const std::vector<std::int64_t> ref = {
     1,2,
     2,3,
     6,7,
   };
   // clang-format on
 
-  BOOST_CHECK(ref == postEdges);
+  BOOST_CHECK_EQUAL(ref, postEdges);
 }
 
 BOOST_AUTO_TEST_CASE(test_random_flip) {
   torch::manual_seed(seed);
 
   // clang-format off
-  std::vector<int64_t> edges = {
+  std::vector<std::int64_t> edges = {
     1,2,
     2,3,
     3,4,
@@ -251,11 +251,11 @@ BOOST_AUTO_TEST_CASE(test_random_flip) {
           .transpose(0, 1)
           .flatten();
 
-  const std::vector<int64_t> postEdges(
-      flipped.data_ptr<int64_t>(),
-      flipped.data_ptr<int64_t>() + flipped.numel());
+  const std::vector<std::int64_t> postEdges(
+      flipped.data_ptr<std::int64_t>(),
+      flipped.data_ptr<std::int64_t>() + flipped.numel());
 
-  BOOST_CHECK(postEdges.size() == edges.size());
+  BOOST_CHECK_EQUAL(postEdges.size(), edges.size());
   for (auto preIt = edges.begin(); preIt != edges.end(); preIt += 2) {
     int found = 0;
 
@@ -267,6 +267,6 @@ BOOST_AUTO_TEST_CASE(test_random_flip) {
       found += (flp or noflp);
     }
 
-    BOOST_CHECK(found == 1);
+    BOOST_CHECK_EQUAL(found, 1);
   }
 }

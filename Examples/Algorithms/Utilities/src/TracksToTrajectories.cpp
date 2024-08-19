@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -37,7 +38,7 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
   TrajectoriesContainer trajectories;
   trajectories.reserve(tracks.size());
 
-  static const Acts::ConstTrackAccessor<unsigned int> seedNumber("trackGroup");
+  static const Acts::ConstProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   if (tracks.hasColumn(Acts::hashString("trackGroup"))) {
     // track group by seed is available, produce grouped trajectories
@@ -81,7 +82,7 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
     // no grouping by seed, make one trajectory per track
 
     for (const auto& track : tracks) {
-      if (not track.hasReferenceSurface()) {
+      if (!track.hasReferenceSurface()) {
         ACTS_WARNING("Unable to convert track with tip "
                      << track.tipIndex()
                      << " because no reference surface is set");

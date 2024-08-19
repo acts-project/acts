@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -29,12 +30,10 @@ class LineBounds;
 ///  Class for a StrawSurface in the TrackingGeometry
 ///  to describe dirft tube and straw like detectors.
 ///
-/// @image html figures/LineSurface.png
+/// @image html LineSurface.png
 ///
 class StrawSurface : public LineSurface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+  friend class Surface;
 
  protected:
   /// Constructor from Transform3 and bounds
@@ -99,7 +98,7 @@ class StrawSurface : public LineSurface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const final;
+                                      std::size_t lseg) const final;
 };
 
 inline Surface::SurfaceType StrawSurface::type() const {
@@ -109,5 +108,8 @@ inline Surface::SurfaceType StrawSurface::type() const {
 inline std::string Acts::StrawSurface::name() const {
   return "Acts::StrawSurface";
 }
+
+static_assert(SurfaceConcept<StrawSurface>,
+              "StrawSurface does not fulfill SurfaceConcept");
 
 }  // namespace Acts

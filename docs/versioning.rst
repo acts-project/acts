@@ -1,14 +1,14 @@
 Versioning and public API
 =========================
 
-Acts uses `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_ to
+ACTS uses `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_ to
 indicate breaking changes in its public API. A breaking change will result in a
 new major version. The `Conventional Commits
 <https://www.conventionalcommits.org/en/v1.0.0/>`_ convention is used for pull
 requests to track the type of changes that have been merged and ensure that the
 version number is increased correctly.
 
-Since Acts is still under active development not all visible symbols are
+Since ACTS is still under active development not all visible symbols are
 automatically considered part of the public API and as such fall under the
 Semantic Versioning rules. The subset of symbols that are currently part of the
 public API is outlined below.

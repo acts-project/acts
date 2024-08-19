@@ -1,0 +1,67 @@
+<svg version="1.1" baseProfile="full" width="630" height="210" xmlns="http://www.w3.org/2000/svg">
+  <g transform="scale(3)">
+    <g stroke-width="1" transform="translate(35, 25)">
+      <line x1="-20" x2="20" y1="0" y2="0" stroke="black" stroke-witdh="1"/>
+      <line x1="-20" x2="-20" y1="-5" y2="5" stroke="black" stroke-width="1"/>
+      <line x1="20" x2="20" y1="-5" y2="5" stroke="black" stroke-width="1"/>
+
+      <text x="0" y="40" text-anchor="middle">bound</text>
+      <text x="-20" y="-12" text-anchor="middle" font-size="10">
+        <tspan>x</tspan>
+        <tspan dy="2" dx="-2" font-size="6">min</tspan>
+      </text>
+      <text x="20" y="-12" text-anchor="middle" font-size="10">
+        <tspan>x</tspan>
+        <tspan dy="2" dx="-2" font-size="6">max</tspan>
+      </text>
+    </g>
+
+    <g stroke-width="1" transform="translate(105,25)">
+      <line x1="-20" x2="20" y1="0" y2="0" stroke="black"/>
+      <line x1="-20" x2="-20" y1="-5" y2="5" stroke="black"/>
+      <line x1="20" x2="20" y1="-5" y2="5" stroke="black"/>
+      <line x1="-20" x2="-25" y1="0" y2="0" stroke="black" stroke-dasharray="1"/>
+      <line x1="-25" x2="-25" y1="-5" y2="5" stroke="black" stroke-dasharray="2"/>
+      <line x1="20" x2="25" y1="0" y2="0" stroke="black" stroke-dasharray="1"/>
+      <line x1="25" x2="25" y1="-5" y2="5" stroke="black" stroke-dasharray="2"/>
+
+      <text x="0" y="40" text-anchor="middle">open</text>
+      <text x="-20" y="-12" text-anchor="middle" font-size="10">
+        <tspan>x</tspan>
+        <tspan dy="2" dx="-2" font-size="6">min</tspan>
+      </text>
+      <text x="20" y="-12" text-anchor="middle" font-size="10">
+        <tspan>x</tspan>
+        <tspan dy="2" dx="-2" font-size="6">max</tspan>
+      </text>
+    </g>
+
+    <g transform="translate(175, 25)">
+      <g transform="matrix(17 0 0 -17 0 0)">
+        <path d="M 0 -1
+                 A 1 1 0 0 0 -0.0523 0.9986
+                 l 0 0.2
+                 m 0 -0.2
+                 l 0 -0.2
+                 " stroke="black" stroke-width="0.056" fill="transparent"/>
+        <path d="M 0.0523 0.9986
+                 l 0 0.2
+                 m 0 -0.2
+                 l 0 -0.2
+                 m 0 0.2
+                 A 1 1 0 0 0 0 -1
+                 " stroke="black" stroke-width="0.056" fill="transparent"/>
+      </g>
+      <text x="0" y="40" text-anchor="middle">closed</text>
+      <text x="-15" y="-18" text-anchor="middle" font-size="10">
+        <tspan>x</tspan>
+        <tspan dy="2" dx="-2" font-size="6">min</tspan>
+      </text>
+      <text x="15" y="-18" text-anchor="middle" font-size="10">
+        <tspan>x</tspan>
+        <tspan dy="2" dx="-2" font-size="6">max</tspan>
+      </text>
+    </g>
+  </g>
+
+</svg>

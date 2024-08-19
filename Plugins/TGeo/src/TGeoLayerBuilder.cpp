@@ -107,9 +107,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                        const LayerConfig& lCfg,
                        unsigned int pl_id = 0) -> void {
     int nb0 = 0, nt0 = 0;
-    bool is_autobinning = ((lCfg.binning0.size() == 1) and
+    bool is_autobinning = ((lCfg.binning0.size() == 1) &&
                            (std::get<int>(lCfg.binning0.at(0)) <= 0));
-    if (!is_autobinning and std::get<int>(lCfg.binning0.at(pl_id)) <= 0) {
+    if (!is_autobinning && std::get<int>(lCfg.binning0.at(pl_id)) <= 0) {
       throw std::invalid_argument(
           "Incorrect binning configuration found for loc0 protolayer #" +
           std::to_string(pl_id) +
@@ -127,9 +127,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     }
 
     int nb1 = 0, nt1 = 0;
-    is_autobinning = (lCfg.binning1.size() == 1) and
+    is_autobinning = (lCfg.binning1.size() == 1) &&
                      (std::get<int>(lCfg.binning1.at(0)) <= 0);
-    if (!is_autobinning and std::get<int>(lCfg.binning1.at(pl_id)) <= 0) {
+    if (!is_autobinning && std::get<int>(lCfg.binning1.at(pl_id)) <= 0) {
       throw std::invalid_argument(
           "Incorrect binning configuration found for loc1 protolayer #" +
           std::to_string(pl_id) +
@@ -149,11 +149,14 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     if (type == 0) {
       ProtoLayer pl(gctx, lSurfaces);
       ACTS_DEBUG("- creating CylinderLayer with "
-                 << lSurfaces.size() << " surfaces at r = " << pl.medium(binR));
+                 << lSurfaces.size()
+                 << " surfaces at r = " << pl.medium(BinningValue::binR));
 
-      pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
-      pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
-      if (nb0 >= 0 and nb1 >= 0) {
+      pl.envelope[Acts::BinningValue::binR] = {lCfg.envelope.first,
+                                               lCfg.envelope.second};
+      pl.envelope[Acts::BinningValue::binZ] = {lCfg.envelope.second,
+                                               lCfg.envelope.second};
+      if (nb0 >= 0 && nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->cylinderLayer(gctx, lSurfaces, nb0, nb1, pl));
       } else {
@@ -163,11 +166,14 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     } else {
       ProtoLayer pl(gctx, lSurfaces);
       ACTS_DEBUG("- creating DiscLayer with "
-                 << lSurfaces.size() << " surfaces at z = " << pl.medium(binZ));
+                 << lSurfaces.size()
+                 << " surfaces at z = " << pl.medium(BinningValue::binZ));
 
-      pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
-      pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
-      if (nb0 >= 0 and nb1 >= 0) {
+      pl.envelope[Acts::BinningValue::binR] = {lCfg.envelope.first,
+                                               lCfg.envelope.second};
+      pl.envelope[Acts::BinningValue::binZ] = {lCfg.envelope.second,
+                                               lCfg.envelope.second};
+      if (nb0 >= 0 && nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->discLayer(gctx, lSurfaces, nb0, nb1, pl));
       } else {
@@ -183,30 +189,43 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     for (auto& sensor : layerCfg.sensorNames) {
       ACTS_DEBUG("  - sensor: " << sensor);
     }
-    if (not layerCfg.parseRanges.empty()) {
+    if (!layerCfg.parseRanges.empty()) {
       for (const auto& pRange : layerCfg.parseRanges) {
         ACTS_DEBUG("- layer parsing restricted in "
-                   << binningValueNames()[pRange.first] << " to ["
+                   << binningValueName(pRange.first) << " to ["
                    << pRange.second.first << "/" << pRange.second.second
                    << "].");
       }
     }
-    if (not layerCfg.splitConfigs.empty()) {
+    if (!layerCfg.splitConfigs.empty()) {
       for (const auto& sConfig : layerCfg.splitConfigs) {
         ACTS_DEBUG("- layer splitting attempt in "
-                   << binningValueNames()[sConfig.first] << " with tolerance "
+                   << binningValueName(sConfig.first) << " with tolerance "
                    << sConfig.second << ".");
       }
     }
 
     // Either pick the configured volume or take the top level volume
+    // and retrieve its global transformation.
     TGeoVolume* tVolume =
         gGeoManager->FindVolumeFast(layerCfg.volumeName.c_str());
+    TGeoHMatrix gmatrix = TGeoIdentity((layerCfg.volumeName + "ID").c_str());
+
     if (tVolume == nullptr) {
       tVolume = gGeoManager->GetTopVolume();
       ACTS_DEBUG("- search volume is TGeo top volume");
     } else {
       ACTS_DEBUG("- setting search volume to " << tVolume->GetName());
+
+      auto node = TGeoParser::findNodeRecursive(gGeoManager->GetTopNode(),
+                                                tVolume->GetName());
+
+      if (node == nullptr) {
+        std::string volname(tVolume->GetName());
+        throw std::invalid_argument("Could not locate node for " + volname);
+      }
+
+      gmatrix = *(node->GetMatrix());
     }
 
     if (tVolume != nullptr) {
@@ -221,12 +240,12 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       ACTS_DEBUG("- applying  " << layerCfg.parseRanges.size()
                                 << " search restrictions.");
       for (const auto& prange : layerCfg.parseRanges) {
-        ACTS_VERBOSE(" - range " << binningValueNames()[prange.first]
+        ACTS_VERBOSE(" - range " << binningValueName(prange.first)
                                  << " within [ " << prange.second.first << ", "
                                  << prange.second.second << "]");
       }
 
-      TGeoParser::select(tgpState, tgpOptions);
+      TGeoParser::select(tgpState, tgpOptions, gmatrix);
 
       ACTS_DEBUG("- number of selected nodes found : "
                  << tgpState.selectedNodes.size());
@@ -235,7 +254,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         auto identifier =
             m_cfg.identifierProvider != nullptr
                 ? m_cfg.identifierProvider->identify(gctx, *snode.node)
-                : Identifier();
+                : TGeoDetectorElement::Identifier();
 
         auto tgElement =
             m_cfg.elementFactory(identifier, *snode.node, *snode.transform,
@@ -256,8 +275,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
       ACTS_DEBUG("- created TGeoDetectorElements : " << layerSurfaces.size());
 
-      if (m_cfg.protoLayerHelper != nullptr and
-          not layerCfg.splitConfigs.empty()) {
+      if (m_cfg.protoLayerHelper != nullptr && !layerCfg.splitConfigs.empty()) {
         auto protoLayers = m_cfg.protoLayerHelper->protoLayers(
             gctx, unpack_shared_vector(layerSurfaces), layerCfg.splitConfigs);
         ACTS_DEBUG("- splitting into " << protoLayers.size() << " layers.");
@@ -267,15 +285,15 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         const bool is_loc0_n_config =
             layerCfg.binning0.size() == protoLayers.size();
         const bool is_loc0_autobinning =
-            (layerCfg.binning0.size() == 1) and
+            (layerCfg.binning0.size() == 1) &&
             (std::get<int>(layerCfg.binning0.at(0)) <= 0);
         const bool is_loc1_n_config =
             layerCfg.binning1.size() == protoLayers.size();
         const bool is_loc1_autobinning =
-            (layerCfg.binning1.size() == 1) and
+            (layerCfg.binning1.size() == 1) &&
             (std::get<int>(layerCfg.binning1.at(0)) <= 0);
-        if ((!is_loc0_n_config and !is_loc0_autobinning) or
-            (!is_loc1_n_config and !is_loc1_autobinning)) {
+        if ((!is_loc0_n_config && !is_loc0_autobinning) ||
+            (!is_loc1_n_config && !is_loc1_autobinning)) {
           throw std::invalid_argument(
               "Incorrect binning configuration found: Number of configurations "
               "does not match number of protolayers in subvolume " +
@@ -301,7 +319,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
 std::shared_ptr<Acts::TGeoDetectorElement>
 Acts::TGeoLayerBuilder::defaultElementFactory(
-    const Identifier& identifier, const TGeoNode& tGeoNode,
+    const TGeoDetectorElement::Identifier& identifier, const TGeoNode& tGeoNode,
     const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
     std::shared_ptr<const Acts::ISurfaceMaterial> material) {
   return std::make_shared<TGeoDetectorElement>(

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,88 +8,62 @@
 
 #pragma once
 
-#include "Acts/Utilities/Result.hpp"
-#include "Acts/Vertexing/TrackAtVertex.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
-
 namespace Acts {
+
+class Vertex;
+struct TrackAtVertex;
+
 namespace KalmanVertexUpdater {
 
 /// KalmanVertexUpdater
 ///
 /// @brief adds or removes track from or updates current vertex
-/// Based on R. Frühwirth et al.
-/// Vertex reconstruction and track bundling at the lep collider using
-/// robust Algorithms Computer Physics Comm.: 96 (1996) 189, chapter 2.1
-
-/// Cache object to store matrix information
-struct MatrixCache {
-  Vector3 newVertexPos = Vector3::Zero();
-  SquareMatrix3 newVertexCov = SquareMatrix3::Zero();
-  SquareMatrix3 newVertexWeight = SquareMatrix3::Zero();
-  SquareMatrix3 oldVertexWeight = SquareMatrix3::Zero();
-  SquareMatrix3 momWeightInv = SquareMatrix3::Zero();
-};
+/// Based on
+/// Ref. (1):
+/// R. Frühwirth et al.
+/// Vertex reconstruction and track bundling at the lep collider using robust
+/// algorithms
+/// Computer Physics Comm.: 96 (1996) 189
+/// Chapter 2.1
+///
+/// For remarks on the weighted formalism, which we use here, see
+/// Ref. (2):
+/// Giacinto Piacquadio
+/// Identification of b-jets and investigation of the discovery potential of a
+/// Higgs boson in the WH−−>lvbb¯ channel with the ATLAS experiment
+/// CERN-THESIS-2010-027
+/// Section 5.3.5
 
 /// @brief Updates vertex with knowledge of new track
-/// @note KalmanVertexUpdater updates the vertex w.r.t. the
-/// newly given track, but does NOT add the track to the
-/// TrackAtVertex list. Has to be done manually after calling
-/// this method
+/// @note KalmanVertexUpdater updates the vertex when trk is added to the fit.
+/// However, it does not add the track to the TrackAtVertex list. This to be
+/// done manually after calling the method.
+///
 ///
 /// @param vtx Vertex to be updated
 /// @param trk Track to be used for updating the vertex
-template <typename input_track_t>
-void updateVertexWithTrack(Vertex<input_track_t>& vtx,
-                           TrackAtVertex<input_track_t>& trk);
+/// @param nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
+void updateVertexWithTrack(Vertex& vtx, TrackAtVertex& trk,
+                           unsigned int nDimVertex);
 
-/// @brief Updates vertex position
+/// Based on
+/// Ref. (1):
+/// R. Frühwirth et al.
+/// Vertex reconstruction and track bundling at the lep collider using robust
+/// algorithms
+/// Computer Physics Comm.: 96 (1996) 189
+/// Chapter 2.1
+
+/// @brief Refits a single track with the knowledge of
+/// the vertex it has originated from
 ///
-/// @param vtx Old vertex
-/// @param linTrack Linearized version of track to be added or removed
-/// @param trackWeight Track weight
-/// @param sign +1 (add track) or -1 (remove track)
-/// @param[out] matrixCache A cache to store matrix information
-template <typename input_track_t>
-void updatePosition(const Acts::Vertex<input_track_t>& vtx,
-                    const Acts::LinearizedTrack& linTrack, double trackWeight,
-                    int sign, MatrixCache& matrixCache);
+/// @param track Track to update
+/// @param vtx Vertex to use for updating the track
+/// @param nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
+void updateTrackWithVertex(TrackAtVertex& track, const Vertex& vtx,
+                           unsigned int nDimVertex);
 
-namespace detail {
-
-/// @brief Takes old and new vtx and calculates position chi2
-///
-/// @param oldVtx Old vertex
-/// @param matrixCache A cache to store matrix information
-///
-/// @return Chi2
-template <typename input_track_t>
-double vertexPositionChi2(const Vertex<input_track_t>& oldVtx,
-                          const MatrixCache& matrixCache);
-
-/// @brief Calculates chi2 of refitted track parameters
-/// w.r.t. updated vertex
-///
-/// @param linTrack Linearized version of track
-/// @param matrixCache A cache to store matrix information
-///
-/// @return Chi2
-template <typename input_track_t>
-double trackParametersChi2(const LinearizedTrack& linTrack,
-                           const MatrixCache& matrixCache);
-
-/// @brief Adds or removes (depending on `sign`) tracks from vertex
-/// and updates the vertex
-///
-/// @param vtx Vertex to be updated
-/// @param trk Track to be added to/removed from vtx
-/// @param sign +1 (add track) or -1 (remove track)
-template <typename input_track_t>
-void update(Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk,
-            int sign);
-}  // Namespace detail
-
-}  // Namespace KalmanVertexUpdater
-}  // Namespace Acts
-
-#include "KalmanVertexUpdater.ipp"
+}  // namespace KalmanVertexUpdater
+}  // namespace Acts

@@ -6,18 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/EventData/NeuralCalibrator.hpp"
+
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
-#include <ActsExamples/EventData/NeuralCalibrator.hpp>
+#include "ActsExamples/EventData/Measurement.hpp"
 
 #include <TFile.h>
 
 namespace detail {
 
 template <typename Array>
-size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
-                        size_t size0 = 7u, size_t size1 = 7u) {
+std::size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
+                             std::size_t size0 = 7u, std::size_t size1 = 7u) {
   // First, rescale the activations to sum to unity. This promotes
   // numerical stability in the index computation
   double totalAct = 0;
@@ -31,7 +35,7 @@ size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
 
   double acc0 = 0;
   double acc1 = 0;
-  for (size_t i = 0; i < cluster.channels.size(); i++) {
+  for (std::size_t i = 0; i < cluster.channels.size(); i++) {
     acc0 += cluster.channels.at(i).bin[0] * weights.at(i);
     acc1 += cluster.channels.at(i).bin[1] * weights.at(i);
   }
@@ -48,7 +52,8 @@ size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
     // Translate each pixel
     int iMat = cell.bin[0] - offset0;
     int jMat = cell.bin[1] - offset1;
-    if (iMat >= 0 && iMat < (int)size0 && jMat >= 0 && jMat < (int)size1) {
+    if (iMat >= 0 && iMat < static_cast<int>(size0) && jMat >= 0 &&
+        jMat < static_cast<int>(size1)) {
       typename Array::Index index = iMat * size0 + jMat;
       if (index < arr.size()) {
         arr(index) = cell.activation;
@@ -61,8 +66,8 @@ size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
 }  // namespace detail
 
 ActsExamples::NeuralCalibrator::NeuralCalibrator(
-    const std::filesystem::path& modelPath, size_t nComponents,
-    std::vector<size_t> volumeIds)
+    const std::filesystem::path& modelPath, std::size_t nComponents,
+    std::vector<std::size_t> volumeIds)
     : m_env(ORT_LOGGING_LEVEL_WARNING, "NeuralCalibrator"),
       m_model(m_env, modelPath.c_str()),
       m_nComponents{nComponents},
@@ -74,7 +79,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
     const Acts::SourceLink& sourceLink,
     Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
         trackState) const {
-  trackState.setUncalibratedSourceLink(sourceLink);
+  trackState.setUncalibratedSourceLink(Acts::SourceLink{sourceLink});
   const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
   assert((idxSourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
@@ -90,94 +95,98 @@ void ActsExamples::NeuralCalibrator::calibrate(
   auto input = inputBatch(0, Eigen::all);
 
   // TODO: Matrix size should be configurable perhaps?
-  size_t matSize0 = 7u;
-  size_t matSize1 = 7u;
-  size_t iInput = ::detail::fillChargeMatrix(
+  std::size_t matSize0 = 7u;
+  std::size_t matSize1 = 7u;
+  std::size_t iInput = ::detail::fillChargeMatrix(
       input, (*clusters)[idxSourceLink.index()], matSize0, matSize1);
 
   input[iInput++] = idxSourceLink.geometryId().volume();
   input[iInput++] = idxSourceLink.geometryId().layer();
 
   const Acts::Surface& referenceSurface = trackState.referenceSurface();
+  auto trackParameters = trackState.parameters();
 
-  std::visit(
-      [&](const auto& measurement) {
-        auto E = measurement.expander();
-        auto P = measurement.projector();
-        Acts::ActsVector<Acts::eBoundSize> fpar = E * measurement.parameters();
-        Acts::ActsSquareMatrix<Acts::eBoundSize> fcov =
-            E * measurement.covariance() * E.transpose();
+  const auto& measurement = measurements[idxSourceLink.index()];
 
-        Acts::Vector3 dir = Acts::makeDirectionFromPhiTheta(
-            fpar[Acts::eBoundPhi], fpar[Acts::eBoundTheta]);
-        Acts::Vector3 globalPosition = referenceSurface.localToGlobal(
-            gctx, fpar.segment<2>(Acts::eBoundLoc0), dir);
+  assert(measurement.contains(Acts::eBoundLoc0) &&
+         "Measurement does not contain the required bound loc0");
+  assert(measurement.contains(Acts::eBoundLoc1) &&
+         "Measurement does not contain the required bound loc1");
 
-        // Rotation matrix. When applied to global coordinates, they
-        // are rotated into the local reference frame of the
-        // surface. Note that this such a rotation can be found by
-        // inverting a matrix whose columns correspond to the
-        // coordinate axes of the local coordinate system.
-        Acts::RotationMatrix3 rot =
-            referenceSurface.referenceFrame(gctx, globalPosition, dir)
-                .inverse();
-        std::pair<double, double> angles =
-            Acts::VectorHelpers::incidentAngles(dir, rot);
+  auto boundLoc0 = measurement.subspace().indexOf(Acts::eBoundLoc0);
+  auto boundLoc1 = measurement.subspace().indexOf(Acts::eBoundLoc1);
 
-        input[iInput++] = angles.first;
-        input[iInput++] = angles.second;
-        input[iInput++] = fpar[Acts::eBoundLoc0];
-        input[iInput++] = fpar[Acts::eBoundLoc1];
-        input[iInput++] = fcov(Acts::eBoundLoc0, Acts::eBoundLoc0);
-        input[iInput++] = fcov(Acts::eBoundLoc1, Acts::eBoundLoc1);
-        if (iInput != m_nInputs) {
-          throw std::runtime_error("Expected input size of " +
-                                   std::to_string(m_nInputs) +
-                                   ", got: " + std::to_string(iInput));
-        }
+  Acts::Vector2 localPosition{measurement.effectiveParameters()[boundLoc0],
+                              measurement.effectiveParameters()[boundLoc1]};
+  Acts::Vector2 localCovariance{
+      measurement.effectiveCovariance()(boundLoc0, boundLoc0),
+      measurement.effectiveCovariance()(boundLoc1, boundLoc1)};
 
-        // Input is a single row, hence .front()
-        std::vector<float> output =
-            m_model.runONNXInference(inputBatch).front();
-        // Assuming 2-D measurements, the expected params structure is:
-        // [           0,    nComponent[ --> priors
-        // [  nComponent,  3*nComponent[ --> means
-        // [3*nComponent,  5*nComponent[ --> variances
-        size_t nParams = 5 * m_nComponents;
-        if (output.size() != nParams) {
-          throw std::runtime_error(
-              "Got output vector of size " + std::to_string(output.size()) +
-              ", expected size " + std::to_string(nParams));
-        }
+  Acts::Vector3 dir = Acts::makeDirectionFromPhiTheta(
+      trackParameters[Acts::eBoundPhi], trackParameters[Acts::eBoundTheta]);
+  Acts::Vector3 globalPosition =
+      referenceSurface.localToGlobal(gctx, localPosition, dir);
 
-        // Most probable value computation of mixture density
-        size_t iMax = 0;
-        if (m_nComponents > 1) {
-          iMax = std::distance(
-              output.begin(),
-              std::max_element(output.begin(), output.begin() + m_nComponents));
-        }
-        size_t iLoc0 = m_nComponents + iMax * 2;
-        size_t iVar0 = 3 * m_nComponents + iMax * 2;
+  // Rotation matrix. When applied to global coordinates, they
+  // are rotated into the local reference frame of the
+  // surface. Note that this such a rotation can be found by
+  // inverting a matrix whose columns correspond to the
+  // coordinate axes of the local coordinate system.
+  Acts::RotationMatrix3 rot =
+      referenceSurface.referenceFrame(gctx, globalPosition, dir).inverse();
+  std::pair<double, double> angles =
+      Acts::VectorHelpers::incidentAngles(dir, rot);
 
-        fpar[Acts::eBoundLoc0] = output[iLoc0];
-        fpar[Acts::eBoundLoc1] = output[iLoc0 + 1];
-        fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) = output[iVar0];
-        fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) = output[iVar0 + 1];
+  input[iInput++] = angles.first;
+  input[iInput++] = angles.second;
+  input[iInput++] = localPosition[0];
+  input[iInput++] = localPosition[1];
+  input[iInput++] = localCovariance[0];
+  input[iInput++] = localCovariance[1];
+  if (iInput != m_nInputs) {
+    throw std::runtime_error("Expected input size of " +
+                             std::to_string(m_nInputs) +
+                             ", got: " + std::to_string(iInput));
+  }
 
-        constexpr size_t kSize =
-            std::remove_reference_t<decltype(measurement)>::size();
-        std::array<Acts::BoundIndices, kSize> indices = measurement.indices();
-        Acts::ActsVector<kSize> cpar = P * fpar;
-        Acts::ActsSquareMatrix<kSize> ccov = P * fcov * P.transpose();
+  // Input is a single row, hence .front()
+  std::vector<float> output = m_model.runONNXInference(inputBatch).front();
+  // Assuming 2-D measurements, the expected params structure is:
+  // [           0,    nComponent[ --> priors
+  // [  nComponent,  3*nComponent[ --> means
+  // [3*nComponent,  5*nComponent[ --> variances
+  std::size_t nParams = 5 * m_nComponents;
+  if (output.size() != nParams) {
+    throw std::runtime_error("Got output vector of size " +
+                             std::to_string(output.size()) +
+                             ", expected size " + std::to_string(nParams));
+  }
 
-        Acts::SourceLink sl{idxSourceLink};
+  // Most probable value computation of mixture density
+  std::size_t iMax = 0;
+  if (m_nComponents > 1) {
+    iMax = std::distance(
+        output.begin(),
+        std::max_element(output.begin(), output.begin() + m_nComponents));
+  }
+  std::size_t iLoc0 = m_nComponents + iMax * 2;
+  std::size_t iVar0 = 3 * m_nComponents + iMax * 2;
 
-        Acts::Measurement<Acts::BoundIndices, kSize> calibrated(
-            std::move(sl), indices, cpar, ccov);
+  Measurement measurementCopy = measurement;
+  measurementCopy.effectiveParameters()[boundLoc0] = output[iLoc0];
+  measurementCopy.effectiveParameters()[boundLoc1] = output[iLoc0 + 1];
+  measurementCopy.effectiveCovariance()(boundLoc0, boundLoc0) = output[iVar0];
+  measurementCopy.effectiveCovariance()(boundLoc1, boundLoc1) =
+      output[iVar0 + 1];
 
-        trackState.allocateCalibrated(calibrated.size());
-        trackState.setCalibrated(calibrated);
-      },
-      measurements[idxSourceLink.index()]);
+  Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
+    constexpr std::size_t kMeasurementSize = decltype(N)::value;
+
+    trackState.allocateCalibrated(kMeasurementSize);
+    trackState.calibrated<kMeasurementSize>() =
+        measurementCopy.parameters<kMeasurementSize>();
+    trackState.calibratedCovariance<kMeasurementSize>() =
+        measurementCopy.covariance<kMeasurementSize>();
+    trackState.setProjector(measurementCopy.subspace().fullProjector<double>());
+  });
 }

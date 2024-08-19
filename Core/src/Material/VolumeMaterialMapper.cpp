@@ -31,8 +31,8 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinAdjustmentVolume.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -71,7 +71,7 @@ Acts::VolumeMaterialMapper::State Acts::VolumeMaterialMapper::createState(
 void Acts::VolumeMaterialMapper::resolveMaterialVolume(
     State& mState, const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
-                                   << "' for material surfaces.")
+                                   << "' for material surfaces.");
 
   ACTS_VERBOSE("- Insert Volume ...");
   checkAndInsert(mState, tVolume);
@@ -98,7 +98,7 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
   // Check if the volume has a proxy
   if (volumeMaterial != nullptr) {
     auto geoID = volume.geometryId();
-    size_t volumeID = geoID.volume();
+    std::size_t volumeID = geoID.volume();
     ACTS_DEBUG("Material volume found with volumeID " << volumeID);
     ACTS_DEBUG("       - ID is " << geoID);
 
@@ -181,7 +181,7 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
 void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
     State& mState, const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
-                                   << "' for material surfaces.")
+                                   << "' for material surfaces.");
 
   ACTS_VERBOSE("- boundary surfaces ...");
   // Check the boundary surfaces
@@ -377,8 +377,8 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   using ActionList = ActionList<BoundSurfaceCollector, MaterialVolumeCollector>;
   using AbortList = AbortList<EndOfWorldReached>;
 
-  PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
-                                                   mState.magFieldContext);
+  StraightLinePropagator::Options<ActionList, AbortList> options(
+      mState.geoContext, mState.magFieldContext);
 
   // Now collect the material volume by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();
@@ -391,19 +391,17 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
-                            << " recorded material steps to map.")
+                            << " recorded material steps to map.");
 
   // These should be mapped onto the mapping surfaces found
   ACTS_VERBOSE("Found     " << mappingVolumes.size()
                             << " mapping volumes for this track.");
-  ACTS_VERBOSE("Mapping volumes are :")
+  ACTS_VERBOSE("Mapping volumes are :");
   for (auto& mVolumes : mappingVolumes) {
     ACTS_VERBOSE(" - Volume : " << mVolumes.volume->geometryId()
                                 << " at position = (" << mVolumes.position.x()
                                 << ", " << mVolumes.position.y() << ", "
                                 << mVolumes.position.z() << ")");
-
-    mappingVolumes.push_back(mVolumes);
   }
   // Run the mapping process, i.e. take the recorded material and map it
   // onto the mapping volume:
@@ -444,7 +442,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         volIter->volume->inside(rmIter->position, s_epsilon)) {
       currentID = volIter->volume->geometryId();
       direction = rmIter->direction;
-      if (not(currentID == lastID)) {
+      if (!(currentID == lastID)) {
         // Let's (re-)assess the information
         lastID = currentID;
         lastPositionEnd = volIter->position;

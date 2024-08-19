@@ -81,7 +81,7 @@ class DuplicationPlotTool {
   /// @param nDuplicatedTracks the number of duplicated tracks
   void fill(DuplicationPlotCache& duplicationPlotCache,
             const ActsFatras::Particle& truthParticle,
-            size_t nDuplicatedTracks) const;
+            std::size_t nDuplicatedTracks) const;
 
   /// @brief write the duplication plots to file
   ///

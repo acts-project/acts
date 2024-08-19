@@ -8,42 +8,43 @@ on:
       - 'release/**'
       - 'develop/**'
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
-  format:
+  lint:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/format14:v41
+    env:
+      PRE_COMMIT_HOME: '/tmp/pre-commit'
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Check
-        run: >
-          git config --global safe.directory "$GITHUB_WORKSPACE"
-          && CI/check_format .
-      - uses: actions/upload-artifact@v3
-        if: failure()
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
         with:
-          name: changed
-          path: changed
-  format-py:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+          python-version: '3.12'
+
+      - uses: actions/cache@v4
         with:
-          python-version: '3.10'
-      - name: Install black
-        run: pip install black==22.3.0
-      - name: Run black format check
-        run: black --check . --extend-exclude ".*thirdparty.*"
+          path: |
+            ${{ env.PRE_COMMIT_HOME }}
+          key: ${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files --show-diff-on-failure
 
   license:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Check
         run: >
           sudo apt-get install -y git
@@ -51,54 +52,64 @@ jobs:
   include_guards:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Check
         run: >
           CI/check_include_guards.py . --fail-global --exclude "*thirdparty/*"
   pragma_once:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Check
         run: >
           CI/check_pragma_once.sh
-  end_of_line:
+  type_t:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Check
         run: >
-          CI/check_end_of_file.py . --exclude "thirdparty/*" --reject-multiple-newlines --github
+          CI/check_type_t.py . --exclude "thirdparty/*"
   boost_test_macro:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Check
         run: >
           CI/check_boost_test_macro.sh
   smearing_config:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Check
         run: >
           CI/check_smearing_config.py .
   cmake_options:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Check
         run: >
           docs/parse_cmake_options.py CMakeLists.txt --write docs/getting_started.md --verify
   spelling:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Install codespell
         run: >
           pip install codespell==2.2.5
@@ -108,7 +119,7 @@ jobs:
   missing_includes:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install clang
         run: >
           sudo apt-get install -y clang libeigen3-dev libboost-dev
@@ -118,11 +129,42 @@ jobs:
   fpe_masks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Install dependencies
         run: >
           pip install -r CI/requirements_fpe_masks.txt
       - name: Check
         run: >
           CI/check_fpe_masks.py --token ${{ secrets.GITHUB_TOKEN }}
+  unused_files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check
+        run: >
+          CI/check_unused_files.py
+
+  codegen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: >
+          pip install -r codegen/requirements.txt
+      - name: Check
+        run: >
+          CI/check_codegen
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: changed
+          path: changed

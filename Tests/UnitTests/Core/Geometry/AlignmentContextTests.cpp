@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -27,8 +26,7 @@ class PlanarBounds;
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 /// @class AlignmentContext
 struct AlignmentContext {
@@ -102,7 +100,7 @@ class AlignableDetectorElement : public DetectorElementBase {
 inline const Transform3& AlignableDetectorElement::transform(
     const GeometryContext& gctx) const {
   auto alignContext = gctx.get<AlignmentContext>();
-  if (alignContext.alignmentStore != nullptr and
+  if (alignContext.alignmentStore != nullptr &&
       alignContext.alignmentIndex < 2) {
     return (*(alignContext.alignmentStore))[alignContext.alignmentIndex];
   }
@@ -211,5 +209,4 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   BOOST_CHECK_EQUAL(localPosition, Vector2(3., 3.));
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

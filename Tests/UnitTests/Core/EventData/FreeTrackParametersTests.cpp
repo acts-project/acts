@@ -16,7 +16,6 @@
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericFreeTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -33,7 +32,6 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
-const GeometryContext geoCtx;
 const FreeSquareMatrix cov = FreeSquareMatrix::Identity();
 
 void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,
@@ -85,7 +83,7 @@ BOOST_DATA_TEST_CASE(
   FreeTrackParameters params(pos4, phi, theta, 1 / p, std::nullopt,
                              ParticleHypothesis::pion0());
   checkParameters(params, pos4, dir, p, 0_e);
-  BOOST_CHECK(not params.covariance());
+  BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
   params = FreeTrackParameters(pos4, phi, theta, 1 / p, cov,
@@ -104,7 +102,7 @@ BOOST_DATA_TEST_CASE(
   FreeTrackParameters params(pos4, phi, theta, q / p, std::nullopt,
                              ParticleHypothesis::pionLike(std::abs(q)));
   checkParameters(params, pos4, dir, p, q);
-  BOOST_CHECK(not params.covariance());
+  BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
   params = FreeTrackParameters(pos4, phi, theta, q / p, cov,
@@ -123,7 +121,7 @@ BOOST_DATA_TEST_CASE(
   FreeTrackParameters params(pos4, phi, theta, q / p, std::nullopt,
                              ParticleHypothesis::pionLike(std::abs(q)));
   checkParameters(params, pos4, dir, p, q);
-  BOOST_CHECK(not params.covariance());
+  BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
   params = FreeTrackParameters(pos4, phi, theta, q / p, cov,

@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
@@ -19,8 +18,7 @@
 #include <sstream>
 #include <tuple>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Basic non-timing tests do not validate the core performance aspects of the
 // benchmark tools, but have the advantage of being runnable on any system.
@@ -165,7 +163,7 @@ BOOST_AUTO_TEST_SUITE_END()
 // ./BenchmarkTools --run_test=benchmark_timings
 BOOST_AUTO_TEST_SUITE(benchmark_timings, *boost::unit_test::disabled())
 
-constexpr size_t bench_iters = 1'000;
+constexpr std::size_t bench_iters = 1'000;
 
 BOOST_AUTO_TEST_CASE(micro_benchmark) {
   using namespace std::literals::chrono_literals;
@@ -296,5 +294,4 @@ BOOST_AUTO_TEST_CASE(assume_written) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

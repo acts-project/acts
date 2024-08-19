@@ -10,13 +10,11 @@
 
 #include <string>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 /// Get the full path to a file in the test data directory.
 ///
 /// @param relativePath file path relative to the data directory
 std::string getDataPath(const std::string& relativePath);
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

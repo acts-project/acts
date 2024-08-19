@@ -26,11 +26,11 @@ std::vector<actsvg::svg::object> Acts::Svg::TrackingGeometryConverter::convert(
 
   // Digest the views and globals
   std::vector<actsvg::svg::object> finalViews = cState.finalViews;
-  if (not cState.xyCrossSection.empty()) {
+  if (!cState.xyCrossSection.empty()) {
     finalViews.push_back(
         Acts::Svg::group(cState.xyCrossSection, cOptions.prefix + "layers_xy"));
   }
-  if (not cState.zrCrossSection.empty()) {
+  if (!cState.zrCrossSection.empty()) {
     finalViews.push_back(
         Acts::Svg::group(cState.zrCrossSection, cOptions.prefix + "layers_zr"));
   }
@@ -68,7 +68,7 @@ void Acts::Svg::TrackingGeometryConverter::convert(
           }
         }
         // Collect the xy views
-        if (layerSheets[LayerConverter::eCrossSectionXY].is_defined() and
+        if (layerSheets[LayerConverter::eCrossSectionXY].is_defined() &&
             layer->surfaceRepresentation().type() == Acts::Surface::Cylinder) {
           cState.xyCrossSection.push_back(
               layerSheets[LayerConverter::eCrossSectionXY]);

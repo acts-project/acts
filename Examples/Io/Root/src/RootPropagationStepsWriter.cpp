@@ -42,7 +42,7 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   if (m_outputFile == nullptr) {
     m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
     if (m_outputFile == nullptr) {
-      throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
+      throw std::ios_base::failure("Could not open '" + m_cfg.filePath + "'");
     }
   }
   m_outputFile->cd();
@@ -105,6 +105,10 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
   // Get the event number
   m_eventNr = context.eventNumber;
 
+  // Initialize the last total trials
+  // This is used to calculate the number of trials per step
+  std::size_t lastTotalTrials = 0;
+
   // Loop over the step vector of each test propagation in this
   for (auto& steps : stepCollection) {
     // Clear the vectors for each collection
@@ -153,7 +157,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_dy.push_back(direction.y());
       m_dz.push_back(direction.z());
 
-      double accuracy = step.stepSize.value(Acts::ConstrainedStep::accuracy);
+      double accuracy = step.stepSize.accuracy();
       double actor = step.stepSize.value(Acts::ConstrainedStep::actor);
       double aborter = step.stepSize.value(Acts::ConstrainedStep::aborter);
       double user = step.stepSize.value(Acts::ConstrainedStep::user);
@@ -180,7 +184,8 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_step_usr.push_back(Acts::clampValue<float>(user));
 
       // Stepper efficiency
-      m_nStepTrials.push_back(step.stepSize.nStepTrials);
+      m_nStepTrials.push_back(step.nTotalTrials - lastTotalTrials);
+      lastTotalTrials = step.nTotalTrials;
     }
     m_outputTree->Fill();
   }

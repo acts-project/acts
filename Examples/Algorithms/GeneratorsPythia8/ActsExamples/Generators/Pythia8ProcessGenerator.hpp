@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
 
@@ -23,7 +24,10 @@
 namespace Pythia8 {
 class Pythia;
 }
+
 namespace ActsExamples {
+
+struct Pythia8RandomEngineWrapper;
 
 class Pythia8Generator : public EventGenerator::ParticlesGenerator {
  public:
@@ -40,6 +44,14 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
     bool printShortEventListing = false;
     /// Let pythia print detailed event info
     bool printLongEventListing = false;
+    /// Turn on/off the labeling of secondary vertices
+    /// TODO this is essentially broken as the current code will label any kind
+    /// of decay as secondary
+    bool labelSecondaries = true;
+    /// The spatial threshold to consider a particle originating from a vertex
+    double spatialVertexThreshold = 1.0 * Acts::UnitConstants::um;
+    /// Random seed for the initialization stage of Pythia8
+    unsigned int initializationSeed = 42;
   };
 
   Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl);
@@ -51,7 +63,8 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
   Pythia8Generator& operator=(const Pythia8Generator&) = delete;
   Pythia8Generator& operator=(Pythia8Generator&& other) = delete;
 
-  SimParticleContainer operator()(RandomEngine& rng) override;
+  std::pair<SimVertexContainer, SimParticleContainer> operator()(
+      RandomEngine& rng) override;
 
  private:
   /// Private access to the logging instance
@@ -60,6 +73,7 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
   std::unique_ptr<::Pythia8::Pythia> m_pythia8;
+  std::shared_ptr<Pythia8RandomEngineWrapper> m_pythia8RndmEngine;
   std::mutex m_pythia8Mutex;
 };
 

@@ -16,15 +16,15 @@
 #include <iomanip>
 #include <limits>
 
-Acts::Extent::Extent(
-    const std::array<std::array<ActsScalar, 2>, binValues>& envelope)
+Acts::Extent::Extent(const ExtentEnvelope& envelope)
     : m_constrains(0), m_envelope(envelope) {
-  m_range[binR] =
+  m_range[toUnderlying(BinningValue::binR)] =
       Range1D<ActsScalar>(0., std::numeric_limits<ActsScalar>::max());
-  m_range[binPhi] = Range1D<ActsScalar>(-M_PI, M_PI);
-  m_range[binRPhi] =
+  m_range[toUnderlying(BinningValue::binPhi)] =
+      Range1D<ActsScalar>(-M_PI, M_PI);
+  m_range[toUnderlying(BinningValue::binRPhi)] =
       Range1D<ActsScalar>(0., std::numeric_limits<ActsScalar>::max());
-  m_range[binMag] =
+  m_range[toUnderlying(BinningValue::binMag)] =
       Range1D<ActsScalar>(0., std::numeric_limits<ActsScalar>::max());
 }
 
@@ -35,22 +35,22 @@ void Acts::Extent::extend(const Vector3& vtx,
     // Get the casted value given the binning value description
     ActsScalar cValue = VectorHelpers::cast(vtx, bValue);
     if (fillHistograms) {
-      m_valueHistograms[bValue].push_back(cValue);
+      m_valueHistograms[toUnderlying(bValue)].push_back(cValue);
     }
     // Apply envelope as suggested
     ActsScalar lEnv = applyEnv ? m_envelope[bValue][0] : 0.;
     ActsScalar hEnv = applyEnv ? m_envelope[bValue][1] : 0.;
     ActsScalar mValue = cValue - lEnv;
     // Special protection for radial value
-    if (bValue == binR and mValue < 0.) {
+    if (bValue == BinningValue::binR && mValue < 0.) {
       mValue = std::max(mValue, 0.);
     }
     if (constrains(bValue)) {
-      m_range[bValue].expand(mValue, cValue + hEnv);
+      m_range[toUnderlying(bValue)].expand(mValue, cValue + hEnv);
     } else {
-      m_range[bValue].shrink(mValue, cValue + hEnv);
+      m_range[toUnderlying(bValue)].shrink(mValue, cValue + hEnv);
     }
-    m_constrains.set(bValue);
+    m_constrains.set(toUnderlying(bValue));
   }
 }
 
@@ -63,96 +63,119 @@ void Acts::Extent::extend(const Extent& rhs,
       ActsScalar lEnv = applyEnv ? m_envelope[bValue][0] : 0.;
       ActsScalar hEnv = applyEnv ? m_envelope[bValue][1] : 0.;
       if (constrains(bValue)) {
-        m_range[bValue].expand(rhs.range()[bValue].min() - lEnv,
-                               rhs.range()[bValue].max() + hEnv);
+        m_range[toUnderlying(bValue)].expand(
+            rhs.range()[toUnderlying(bValue)].min() - lEnv,
+            rhs.range()[toUnderlying(bValue)].max() + hEnv);
       } else {
-        m_range[bValue].shrink(rhs.range()[bValue].min() - lEnv,
-                               rhs.range()[bValue].max() + hEnv);
+        m_range[toUnderlying(bValue)].shrink(
+            rhs.range()[toUnderlying(bValue)].min() - lEnv,
+            rhs.range()[toUnderlying(bValue)].max() + hEnv);
       }
-      m_constrains.set(bValue);
+      m_constrains.set(toUnderlying(bValue));
     } else if (rhs.envelope()[bValue] != zeroEnvelope) {
       // Only an envelope given, but value is not constraint -> apply envelope
-      m_range[bValue].expand(m_range[bValue].min() - rhs.envelope()[bValue][0],
-                             m_range[bValue].max() + rhs.envelope()[bValue][1]);
-      m_constrains.set(bValue);
+      m_range[toUnderlying(bValue)].expand(
+          m_range[toUnderlying(bValue)].min() - rhs.envelope()[bValue][0],
+          m_range[toUnderlying(bValue)].max() + rhs.envelope()[bValue][1]);
+      m_constrains.set(toUnderlying(bValue));
     }
   }
 }
 
 void Acts::Extent::addConstrain(const Acts::Extent& rhs,
                                 const ExtentEnvelope& envelope) {
-  for (const auto& bValue : s_binningValues) {
-    if (rhs.constrains(bValue) and not constrains(bValue)) {
+  for (const auto& bValue : allBinningValues()) {
+    if (rhs.constrains(bValue) && !constrains(bValue)) {
       const auto& cRange = rhs.range(bValue);
-      m_range[bValue].setMin(cRange.min() + envelope[bValue][0u]);
-      m_range[bValue].setMax(cRange.max() + envelope[bValue][1u]);
-      m_constrains.set(bValue);
+      m_range[toUnderlying(bValue)].setMin(cRange.min() - envelope[bValue][0u]);
+      m_range[toUnderlying(bValue)].setMax(cRange.max() + envelope[bValue][1u]);
+      m_constrains.set(toUnderlying(bValue));
     }
   }
 }
 
 void Acts::Extent::set(BinningValue bValue, ActsScalar min, ActsScalar max) {
   ActsScalar minval = min;
-  if (bValue == binR and minval < 0.) {
+  if (bValue == BinningValue::binR && minval < 0.) {
     minval = 0.;
   }
-  m_range[bValue] = Range1D{minval, max};
-  m_constrains.set(bValue);
+  m_range[toUnderlying(bValue)] = Range1D<ActsScalar>{minval, max};
+  m_constrains.set(toUnderlying(bValue));
+}
+
+void Acts::Extent::setMin(BinningValue bValue, ActsScalar min) {
+  ActsScalar minval = min;
+  if (bValue == BinningValue::binR && minval < 0.) {
+    minval = 0.;
+  }
+  m_range[toUnderlying(bValue)].setMin(0u, minval);
+  m_constrains.set(toUnderlying(bValue));
+}
+
+void Acts::Extent::setMax(BinningValue bValue, ActsScalar max) {
+  m_range[toUnderlying(bValue)].setMax(0u, max);
+  m_constrains.set(toUnderlying(bValue));
 }
 
 void Acts::Extent::setEnvelope(const ExtentEnvelope& envelope) {
   m_envelope = envelope;
 }
 
-bool Acts::Extent::contains(const Extent& rhs, BinningValue bValue) const {
-  // Helper to check including a constraint bit set check
-  auto checkContainment = [&](BinningValue bvc) -> bool {
-    if (not constrains(bvc)) {
-      return true;
+bool Acts::Extent::contains(const Vector3& vtx) const {
+  Extent checkExtent;
+  for (const auto& bv : allBinningValues()) {
+    if (constrains(bv)) {
+      ActsScalar vtxVal = VectorHelpers::cast(vtx, bv);
+      checkExtent.set(bv, vtxVal, vtxVal);
     }
-    return (rhs.range()[bvc] <= m_range[bvc]);
-  };
-
-  // Check all
-  if (bValue == binValues) {
-    for (int ibv = 0; ibv < (int)binValues; ++ibv) {
-      if (not checkContainment((BinningValue)ibv)) {
-        return false;
-      }
-    }
-    return true;
   }
-  // Check specific
-  return checkContainment(bValue);
+  return contains(checkExtent);
 }
 
-bool Acts::Extent::intersects(const Extent& rhs, BinningValue bValue) const {
+bool Acts::Extent::contains(const Extent& rhs,
+                            std::optional<BinningValue> bValue) const {
   // Helper to check including a constraint bit set check
-  auto checkIntersect = [&](BinningValue bvc) -> bool {
-    if (not constrains(bvc) or not rhs.constrains(bvc)) {
-      return false;
+  auto checkContainment = [&](BinningValue bvc) -> bool {
+    if (!constrains(bvc)) {
+      return true;
     }
-    return (m_range[bvc] && rhs.range()[bvc]);
+    return (rhs.range()[toUnderlying(bvc)] <= m_range[toUnderlying(bvc)]);
   };
 
   // Check all
-  if (bValue == binValues) {
-    for (int ibv = 0; ibv < (int)binValues; ++ibv) {
-      if (checkIntersect((BinningValue)ibv)) {
-        return true;
-      }
-    }
-    return false;
+  if (!bValue.has_value()) {
+    return std::all_of(allBinningValues().begin(), allBinningValues().end(),
+                       checkContainment);
   }
   // Check specific
-  return checkIntersect(bValue);
+  return checkContainment(bValue.value());
+}
+
+bool Acts::Extent::intersects(const Extent& rhs,
+                              std::optional<BinningValue> bValue) const {
+  // Helper to check including a constraint bit set check
+  auto checkIntersect = [&](BinningValue bvc) -> bool {
+    if (!constrains(bvc) || !rhs.constrains(bvc)) {
+      return false;
+    }
+    return (m_range[toUnderlying(bvc)] && rhs.range()[toUnderlying(bvc)]);
+  };
+
+  // Check all
+  if (!bValue.has_value()) {
+    return std::any_of(allBinningValues().begin(), allBinningValues().end(),
+                       checkIntersect);
+  }
+  // Check specific
+  return checkIntersect(bValue.value());
 }
 
 bool Acts::Extent::constrains(BinningValue bValue) const {
-  if (bValue == binValues) {
-    return (m_constrains.count() > 0);
-  }
-  return m_constrains.test(size_t(bValue));
+  return m_constrains.test(static_cast<std::size_t>(bValue));
+}
+
+bool Acts::Extent::constrains() const {
+  return m_constrains.count() > 0;
 }
 
 bool Acts::Extent::operator==(const Extent& e) const {
@@ -162,7 +185,7 @@ bool Acts::Extent::operator==(const Extent& e) const {
   if (m_envelope != e.m_envelope) {
     return false;
   }
-  if (not(m_range == e.m_range)) {
+  if (!(m_range == e.m_range)) {
     return false;
   }
   if (m_valueHistograms != e.m_valueHistograms) {
@@ -173,12 +196,12 @@ bool Acts::Extent::operator==(const Extent& e) const {
 
 std::string Acts::Extent::toString(const std::string& indent) const {
   std::stringstream sl;
-  sl << indent << "Extent in space : " << std::endl;
-  for (size_t ib = 0; ib < static_cast<size_t>(binValues); ++ib) {
-    if (constrains((BinningValue)ib)) {
-      sl << indent << "  - value :" << std::setw(10) << binningValueNames()[ib]
-         << " | range = [" << m_range[ib].min() << ", " << m_range[ib].max()
-         << "]" << std::endl;
+  sl << indent << "Extent in space :" << std::endl;
+  for (const auto& bv : allBinningValues()) {
+    if (constrains(bv)) {
+      sl << indent << "  - value :" << std::setw(10) << binningValueName(bv)
+         << " | range = [" << m_range[toUnderlying(bv)].min() << ", "
+         << m_range[toUnderlying(bv)].max() << "]" << std::endl;
     }
   }
   return sl.str();

@@ -52,7 +52,7 @@ Acts::Result<double> Acts::FsmwMode1dFinder::getMode(
     if (counter == 2) {
       fraction = m_fraction;
     }
-    int step = (int)std::floor(fraction * (end - begin + 1));
+    int step = static_cast<int>(std::floor(fraction * (end - begin + 1)));
     overallweight = 0.;
     {
       auto i = begin;

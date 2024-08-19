@@ -75,7 +75,7 @@ void addMagneticField(Context& ctx) {
         py::class_<Acts::SolenoidBField, Acts::MagneticFieldProvider,
                    std::shared_ptr<Acts::SolenoidBField>>(m, "SolenoidBField")
             .def(py::init<Config>())
-            .def(py::init([](double radius, double length, size_t nCoils,
+            .def(py::init([](double radius, double length, std::size_t nCoils,
                              double bMagCenter) {
                    return Acts::SolenoidBField{
                        Config{radius, length, nCoils, bMagCenter}};
@@ -97,8 +97,8 @@ void addMagneticField(Context& ctx) {
          double lengthUnit, double BFieldUnit, bool firstOctant) {
         const std::filesystem::path file = filename;
 
-        auto mapBins = [](std::array<size_t, 3> bins,
-                          std::array<size_t, 3> sizes) {
+        auto mapBins = [](std::array<std::size_t, 3> bins,
+                          std::array<std::size_t, 3> sizes) {
           return (bins[0] * (sizes[1] * sizes[2]) + bins[1] * sizes[2] +
                   bins[2]);
         };
@@ -130,8 +130,8 @@ void addMagneticField(Context& ctx) {
          double lengthUnit, double BFieldUnit, bool firstQuadrant) {
         const std::filesystem::path file = filename;
 
-        auto mapBins = [](std::array<size_t, 2> bins,
-                          std::array<size_t, 2> sizes) {
+        auto mapBins = [](std::array<std::size_t, 2> bins,
+                          std::array<std::size_t, 2> sizes) {
           return (bins[1] * sizes[0] + bins[0]);
         };
 

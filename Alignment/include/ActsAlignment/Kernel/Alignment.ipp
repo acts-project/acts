@@ -17,7 +17,8 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
     const Acts::GeometryContext& gctx,
     const std::vector<source_link_t>& sourcelinks,
     const start_parameters_t& sParameters, const fit_options_t& fitOptions,
-    const std::unordered_map<const Acts::Surface*, size_t>& idxedAlignSurfaces,
+    const std::unordered_map<const Acts::Surface*, std::size_t>&
+        idxedAlignSurfaces,
     const ActsAlignment::AlignmentMask& alignMask) const {
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -29,7 +30,7 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
   // Perform the fit
   auto fitRes = m_fitter.fit(begin, end, sParameters, fitOptions, tracks);
 
-  if (not fitRes.ok()) {
+  if (!fitRes.ok()) {
     ACTS_WARNING("Fit failure");
     return fitRes.error();
   }
@@ -89,7 +90,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     auto evaluateRes = evaluateTrackAlignmentState(
         fitOptions.geoContext, sourcelinks, sParameters,
         fitOptionsWithRefSurface, alignResult.idxedAlignSurfaces, alignMask);
-    if (not evaluateRes.ok()) {
+    if (!evaluateRes.ok()) {
       ACTS_DEBUG("Evaluation of alignment state for track " << iTraj
                                                             << " failed");
       continue;
@@ -122,7 +123,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   // Get the inverse of chi2 second derivative matrix (we need this to
   // calculate the covariance of the alignment parameters)
   // @Todo: use more stable method for solving the inverse
-  size_t alignDof = alignResult.alignmentDof;
+  std::size_t alignDof = alignResult.alignmentDof;
   Acts::ActsDynamicMatrix sumChi2SecondDerivativeInverse =
       Acts::ActsDynamicMatrix::Zero(alignDof, alignDof);
   sumChi2SecondDerivativeInverse = sumChi2SecondDerivative.inverse();
@@ -163,9 +164,6 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
     // 1. The original transform
     const Acts::Vector3& oldCenter = surface->center(gctx);
     const Acts::Transform3& oldTransform = surface->transform(gctx);
-    const Acts::RotationMatrix3& oldRotation = oldTransform.rotation();
-    // The elements stored below is (rotZ, rotY, rotX)
-    const Acts::Vector3& oldEulerAngles = oldRotation.eulerAngles(2, 1, 0);
 
     // 2. The delta transform
     deltaAlignmentParam = alignResult.deltaAlignmentParameters.segment(
@@ -179,18 +177,17 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
 
     // 3. The new transform
     const Acts::Vector3 newCenter = oldCenter + deltaCenter;
-    // The rotation around global z axis
-    Acts::AngleAxis3 rotZ(oldEulerAngles(0) + deltaEulerAngles(2),
-                          Acts::Vector3::UnitZ());
-    // The rotation around global y axis
-    Acts::AngleAxis3 rotY(oldEulerAngles(1) + deltaEulerAngles(1),
-                          Acts::Vector3::UnitY());
-    // The rotation around global x axis
-    Acts::AngleAxis3 rotX(oldEulerAngles(2) + deltaEulerAngles(0),
-                          Acts::Vector3::UnitX());
-    Eigen::Quaternion<Acts::ActsScalar> newRotation = rotZ * rotY * rotX;
-    const Acts::Transform3 newTransform =
-        Acts::Translation3(newCenter) * newRotation;
+    Acts::Transform3 newTransform = oldTransform;
+    newTransform.translation() = newCenter;
+    // Rotation first around fixed local x, then around fixed local y, and last
+    // around fixed local z, this is the same as first around local z, then
+    // around new loca y, and last around new local x below
+    newTransform *=
+        Acts::AngleAxis3(deltaEulerAngles(2), Acts::Vector3::UnitZ());
+    newTransform *=
+        Acts::AngleAxis3(deltaEulerAngles(1), Acts::Vector3::UnitY());
+    newTransform *=
+        Acts::AngleAxis3(deltaEulerAngles(0), Acts::Vector3::UnitX());
 
     // 4. Update the aligned transform
     //@Todo: use a better way to handle this (need dynamic cast to inherited
@@ -200,7 +197,7 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
                  << deltaAlignmentParam);
     bool updated = alignedTransformUpdater(alignedDetElements.at(index), gctx,
                                            newTransform);
-    if (not updated) {
+    if (!updated) {
       ACTS_ERROR("Update alignment parameters for detector element failed");
       return AlignmentError::AlignmentParametersUpdateFailure;
     }
@@ -289,7 +286,7 @@ ActsAlignment::Alignment<fitter_t>::align(
     auto updateRes = updateAlignmentParameters(
         alignOptions.fitOptions.geoContext, alignOptions.alignedDetElements,
         alignOptions.alignedTransformUpdater, alignResult);
-    if (not updateRes.ok()) {
+    if (!updateRes.ok()) {
       ACTS_ERROR("Update alignment parameters failed: " << updateRes.error());
       return updateRes.error();
     }
@@ -297,7 +294,7 @@ ActsAlignment::Alignment<fitter_t>::align(
   }  // end of all iterations
 
   // Alignment failure if not converged
-  if (not converged) {
+  if (!converged) {
     ACTS_ERROR("Alignment is not converged.");
     alignResult.result = AlignmentError::ConvergeFailure;
   }

@@ -134,7 +134,7 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
       double navigationValue =
           0.5 * (boundaries.at(boundaries.size() - 1) + max);
       // create navigation layer only when necessary
-      if (navigationValue != max) {
+      if (navigationValue != max && lastLayer != nullptr) {
         // create the navigation layer surface from the layer
         std::shared_ptr<const Surface> navLayerSurface =
             createNavigationSurface(gctx, *lastLayer, bValue,
@@ -179,19 +179,19 @@ std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
   // switching he binnig values
   switch (bValue) {
     // case x
-    case binX: {
+    case BinningValue::binX: {
       translation = Vector3(offset, 0., 0.);
     } break;
     // case y
-    case binY: {
+    case BinningValue::binY: {
       translation = Vector3(0., offset, 0.);
     } break;
     // case z
-    case binZ: {
+    case BinningValue::binZ: {
       translation = Vector3(0., 0., offset);
     } break;
     // case R
-    case binR: {
+    case BinningValue::binR: {
       // binning in R and cylinder surface means something different
       if (layerSurface.type() == Surface::Cylinder) {
         break;

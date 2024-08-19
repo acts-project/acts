@@ -69,8 +69,8 @@ struct EventDataView3D {
   /// @param lposition The local anker point of the ellipse
   /// @param transform The transform to global
   static inline std::vector<Vector3> createEllipse(
-      double lambda0, double lambda1, double theta, size_t lseg, double offset,
-      const Vector2& lposition = Vector2(0., 0.),
+      double lambda0, double lambda1, double theta, std::size_t lseg,
+      double offset, const Vector2& lposition = Vector2(0., 0.),
       const Transform3& transform = Transform3::Identity()) {
     double ctheta = std::cos(theta);
     double stheta = std::sin(theta);
@@ -82,7 +82,7 @@ struct EventDataView3D {
     std::vector<Vector3> ellipse;
     ellipse.reserve(lseg);
     double thetaStep = 2 * M_PI / lseg;
-    for (size_t it = 0; it < lseg; ++it) {
+    for (std::size_t it = 0; it < lseg; ++it) {
       double phi = -M_PI + it * thetaStep;
       double cphi = std::cos(phi);
       double sphi = std::sin(phi);
@@ -222,7 +222,8 @@ struct EventDataView3D {
   template <typename traj_t>
   static void drawMultiTrajectory(
       IVisualization3D& helper, const traj_t& multiTraj,
-      const size_t& entryIndex, const GeometryContext& gctx = GeometryContext(),
+      const std::size_t& entryIndex,
+      const GeometryContext& gctx = GeometryContext(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
       const ViewConfig& surfaceConfig = s_viewSensitive,
@@ -238,7 +239,7 @@ struct EventDataView3D {
     // Visit the track states on the trajectory
     multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
       // Only draw the measurement states
-      if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         return true;
       }
 
@@ -258,7 +259,7 @@ struct EventDataView3D {
       // Second, if necessary and present, draw the calibrated measurement (only
       // draw 2D measurement here)
       // @Todo: how to draw 1D measurement?
-      if (state.hasCalibrated() and state.calibratedSize() == 2) {
+      if (state.hasCalibrated() && state.calibratedSize() == 2) {
         const Vector2& lposition = state.template calibrated<2>();
         const SquareMatrix2 covariance =
             state.template calibratedCovariance<2>();
@@ -269,7 +270,7 @@ struct EventDataView3D {
 
       // Last, if necessary and present, draw the track parameters
       // (a) predicted track parameters
-      if (predictedConfig.visible and state.hasPredicted()) {
+      if (predictedConfig.visible && state.hasPredicted()) {
         drawBoundTrackParameters(
             helper,
             BoundTrackParameters(state.referenceSurface().getSharedPtr(),
@@ -279,7 +280,7 @@ struct EventDataView3D {
             predictedConfig, predictedConfig, ViewConfig(false));
       }
       // (b) filtered track parameters
-      if (filteredConfig.visible and state.hasFiltered()) {
+      if (filteredConfig.visible && state.hasFiltered()) {
         drawBoundTrackParameters(
             helper,
             BoundTrackParameters(state.referenceSurface().getSharedPtr(),
@@ -289,7 +290,7 @@ struct EventDataView3D {
             filteredConfig, filteredConfig, ViewConfig(false));
       }
       // (c) smoothed track parameters
-      if (smoothedConfig.visible and state.hasSmoothed()) {
+      if (smoothedConfig.visible && state.hasSmoothed()) {
         drawBoundTrackParameters(
             helper,
             BoundTrackParameters(state.referenceSurface().getSharedPtr(),

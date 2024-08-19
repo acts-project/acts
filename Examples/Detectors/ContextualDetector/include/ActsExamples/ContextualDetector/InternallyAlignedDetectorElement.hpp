@@ -11,8 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Plugins/Identification/Identifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 
@@ -21,9 +19,7 @@
 #include <mutex>
 #include <unordered_map>
 
-namespace ActsExamples {
-
-namespace Contextual {
+namespace ActsExamples::Contextual {
 
 /// @class InternallyAlignedDetectorElement extends GenericDetectorElement
 ///
@@ -121,5 +117,4 @@ inline void InternallyAlignedDetectorElement::clearAlignedTransform(
   }
 }
 
-}  // namespace Contextual
-}  // end of namespace ActsExamples
+}  // namespace ActsExamples::Contextual

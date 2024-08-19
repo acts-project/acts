@@ -1,13 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -21,23 +20,21 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Propagator/detail/SteppingHelper.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/CubicBVHTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <iostream>
-#include <map>
 #include <memory>
 #include <string>
 #include <system_error>
@@ -50,15 +47,14 @@ struct FreeToBoundCorrection;
 }  // namespace Acts
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::perp;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
+MagneticFieldContext mfContext = MagneticFieldContext();
 
 /// This is a simple cache struct to mimic the
 /// Propagator cache
@@ -103,9 +99,6 @@ struct PropagatorState {
       // Previous step size for overstep estimation (ignored here)
       double previousStepSize = 0.;
 
-      /// The tolerance for the stepping
-      double tolerance = s_onSurfaceTolerance;
-
       GeometryContext geoContext = GeometryContext();
     };
 
@@ -145,14 +138,13 @@ struct PropagatorState {
       return s_onSurfaceTolerance;
     }
 
-    Intersection3D::Status updateSurfaceStatus(State& state,
-                                               const Surface& surface,
-                                               Direction navDir,
-                                               const BoundaryCheck& bcheck,
-                                               ActsScalar surfaceTolerance,
-                                               const Logger& logger) const {
+    Intersection3D::Status updateSurfaceStatus(
+        State& state, const Surface& surface, std::uint8_t index,
+        Direction navDir, const BoundaryTolerance& boundaryTolerance,
+        ActsScalar surfaceTolerance, const Logger& logger) const {
       return detail::updateSingleSurfaceStatus<Stepper>(
-          *this, state, surface, navDir, bcheck, surfaceTolerance, logger);
+          *this, state, surface, index, navDir, boundaryTolerance,
+          surfaceTolerance, logger);
     }
 
     template <typename object_intersection_t>
@@ -162,9 +154,9 @@ struct PropagatorState {
       detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
     }
 
-    void setStepSize(State& state, double stepSize,
-                     ConstrainedStep::Type stype = ConstrainedStep::actor,
-                     bool release = true) const {
+    void updateStepSize(State& state, double stepSize,
+                        ConstrainedStep::Type stype,
+                        bool release = true) const {
       state.previousStepSize = state.stepSize.value();
       state.stepSize.update(stepSize, stype, release);
     }
@@ -173,8 +165,8 @@ struct PropagatorState {
       return state.stepSize.value(stype);
     }
 
-    void releaseStepSize(State& state) const {
-      state.stepSize.release(ConstrainedStep::actor);
+    void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
+      state.stepSize.release(stype);
     }
 
     std::string outputStepSize(const State& state) const {
@@ -232,19 +224,11 @@ struct PropagatorState {
 
   /// emulate the options template
   struct Options {
-    /// Debug output
-    /// the string where debug messages are stored (optionally)
-    bool debug = false;
-    std::string debugString = "";
-    /// buffer & formatting for consistent output
-    size_t debugPfxWidth = 30;
-    size_t debugMsgWidth = 50;
-
     Direction direction = Direction::Forward;
 
     const Acts::Logger& logger = Acts::getDummyLogger();
 
-    ActsScalar targetTolerance = s_onSurfaceTolerance;
+    ActsScalar surfaceTolerance = s_onSurfaceTolerance;
   };
 
   /// Navigation cache: the start surface
@@ -260,7 +244,7 @@ struct PropagatorState {
   /// Give some options
   Options options;
 
-  /// The Stepper state - internal statew of the Stepper
+  /// The Stepper state - internal state of the Stepper
   Stepper::State stepping;
 
   /// Navigation state - internal state of the Navigator
@@ -287,12 +271,11 @@ void step(stepper_state_t& sstate) {
 /// @param [in] navLay Number of navigation layers
 /// @param [in] navBound Number of navigation boundaries
 /// @param [in] extSurf Number of external surfaces
-bool testNavigatorStateVectors(Navigator::State& state, size_t navSurf,
-                               size_t navLay, size_t navBound, size_t extSurf) {
+bool testNavigatorStateVectors(Navigator::State& state, std::size_t navSurf,
+                               std::size_t navLay, std::size_t navBound) {
   return ((state.navSurfaces.size() == navSurf) &&
           (state.navLayers.size() == navLay) &&
-          (state.navBoundaries.size() == navBound) &&
-          (state.externalSurfaces.size() == extSurf));
+          (state.navBoundaries.size() == navBound));
 }
 
 /// @brief Method for testing pointers in @c Navigator::State
@@ -325,17 +308,20 @@ bool testNavigatorStatePointers(
 CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
-// the debug boolean
-bool debug = true;
+const double Bz = 2_T;
+auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
+
+Acts::Logging::Level logLevel = Acts::Logging::INFO;
 
 BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+
   // position and direction vector
   Vector4 position4(0., 0., 0, 0);
   Vector3 momentum(1., 1., 0);
 
   // the propagator cache
   PropagatorState state;
-  state.options.debug = debug;
 
   // the stepper cache
   state.stepping.pos4 = position4;
@@ -344,10 +330,8 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   // Stepper
   PropagatorState::Stepper stepper;
 
-  //
-  // (1) Test for inactivity
-  //
-  // Run without anything present
+  ACTS_INFO("(1) Test for inactivity");
+  ACTS_INFO("    a) Run without anything present");
   {
     Navigator::Config navCfg;
     navCfg.resolveSensitive = false;
@@ -356,13 +340,13 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     Navigator navigator{navCfg};
 
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
   }
 
-  // Run with geometry but without resolving
+  ACTS_INFO("    b) Run with geometry but without resolving");
   {
     Navigator::Config navCfg;
     navCfg.resolveSensitive = false;
@@ -372,13 +356,15 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     Navigator navigator{navCfg};
 
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
   }
 
-  // Run with geometry and resolving but broken navigation for various reasons
+  ACTS_INFO(
+      "    c) Run with geometry and resolving but broken navigation for "
+      "various reasons");
   {
     Navigator::Config navCfg;
     navCfg.resolveSensitive = true;
@@ -388,38 +374,36 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     Navigator navigator{navCfg};
 
     state.navigation.navigationBreak = true;
-    // a) Because target is reached
+    ACTS_INFO("        i) Because target is reached");
     state.navigation.targetReached = true;
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
 
-    // b) Because of no target surface
+    ACTS_INFO("        ii) Because of no target surface");
     state.navigation.targetReached = false;
     state.navigation.targetSurface = nullptr;
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
-    // c) Because the target surface is reached
+    ACTS_INFO("        iii) Because the target surface is reached");
     const Surface* startSurf = tGeometry->getBeamline();
     state.stepping.pos4.segment<3>(Acts::ePos0) =
         startSurf->center(state.geoContext);
     const Surface* targetSurf = startSurf;
     state.navigation.targetSurface = targetSurf;
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(
         state.navigation, nullptr, nullptr, nullptr, nullptr, targetSurf,
         nullptr, nullptr, nullptr, targetSurf));
 
-    //
-    // (2) Test the initialisation
-    //
-    // a) Initialise without additional information
+    ACTS_INFO("(2) Test the initialisation");
+    ACTS_INFO("    a) Initialise without additional information");
     state.navigation = Navigator::State();
     state.stepping.pos4 << 0., 0., 0., 0.;
     const TrackingVolume* worldVol = tGeometry->highestTrackingVolume();
@@ -428,25 +412,25 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     const Layer* startLay = startVol->associatedLayer(
         state.geoContext, stepper.position(state.stepping));
     navigator.initialize(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, worldVol, startVol,
                                            startLay, nullptr, nullptr, startVol,
                                            nullptr, nullptr, nullptr));
 
-    // b) Initialise having a start surface
+    ACTS_INFO("    b) Initialise having a start surface");
     state.navigation = Navigator::State();
     state.navigation.startSurface = startSurf;
     navigator.initialize(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(
         state.navigation, worldVol, startVol, startLay, startSurf, startSurf,
         startVol, nullptr, nullptr, nullptr));
 
-    // c) Initialise having a start volume
+    ACTS_INFO("    c) Initialise having a start volume");
     state.navigation = Navigator::State();
     state.navigation.startVolume = startVol;
     navigator.initialize(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, worldVol, startVol,
                                            startLay, nullptr, nullptr, startVol,
                                            nullptr, nullptr, nullptr));
@@ -454,6 +438,8 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
 }
 
 BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+
   // create a navigator
   Navigator::Config navCfg;
   navCfg.trackingGeometry = tGeometry;
@@ -462,32 +448,19 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   navCfg.resolvePassive = false;
   Navigator navigator{navCfg};
 
-  // create a navigator for the Bounding Volume Hierarchy test
-  CubicBVHTrackingGeometry grid(20, 1000, 5);
-  Navigator::Config bvhNavCfg;
-  bvhNavCfg.trackingGeometry = grid.trackingGeometry;
-  bvhNavCfg.resolveSensitive = true;
-  bvhNavCfg.resolveMaterial = true;
-  bvhNavCfg.resolvePassive = false;
-  Navigator BVHNavigator{bvhNavCfg};
-
   // position and direction vector
   Vector4 position4(0., 0., 0, 0);
   Vector3 momentum(1., 1., 0);
 
   // the propagator cache
   PropagatorState state;
-  state.options.debug = debug;
 
   // the stepper cache
   state.stepping.pos4 = position4;
   state.stepping.dir = momentum.normalized();
 
   // forward navigation ----------------------------------------------
-  if (debug) {
-    std::cout << "<<<<<<<<<<<<<<<<<<<<< FORWARD NAVIGATION >>>>>>>>>>>>>>>>>>"
-              << std::endl;
-  }
+  ACTS_INFO("<<<<<<<<<<<<<<<<<<<<< FORWARD NAVIGATION >>>>>>>>>>>>>>>>>>");
 
   // Stepper
   PropagatorState::Stepper stepper;
@@ -510,19 +483,14 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // A layer has been found
   BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1u);
   // The index should points to the begin
-  BOOST_CHECK(state.navigation.navLayerIndex == 0);
+  BOOST_CHECK_EQUAL(state.navigation.navLayerIndex, 0);
   // Cache the beam pipe radius
-  double beamPipeR = perp(state.navigation.navLayer().position());
+  double beamPipeR = perp(state.navigation.navLayer().first.position());
   // step size has been updated
   CHECK_CLOSE_ABS(state.stepping.stepSize.value(), beamPipeR,
                   s_onSurfaceTolerance);
-  if (debug) {
-    std::cout << "<<< Test 1a >>> initialize at "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    // Clear the debug string for the next test
-    state.options.debugString = "";
-  }
+
+  ACTS_INFO("<<< Test 1a >>> initialize at " << toString(state.stepping.pos4));
 
   // Do the step towards the beam pipe
   step(state.stepping);
@@ -536,16 +504,12 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // The layer number has not changed
   BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1u);
   // The index still points to the begin
-  BOOST_CHECK(state.navigation.navLayerIndex == 0);
+  BOOST_CHECK_EQUAL(state.navigation.navLayerIndex, 0);
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
-  if (debug) {
-    std::cout << "<<< Test 1b >>> step to the BeamPipe at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    state.options.debugString = "";
-  }
+  ACTS_INFO("<<< Test 1b >>> step to the BeamPipe at  "
+            << toString(state.stepping.pos4));
 
   // Do the step towards the boundary
   step(state.stepping);
@@ -556,12 +520,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
-  if (debug) {
-    std::cout << "<<< Test 1c >>> step to the Boundary at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    state.options.debugString = "";
-  }
+  ACTS_INFO("<<< Test 1c >>> step to the Boundary at  "
+            << toString(state.stepping.pos4));
 
   // positive return: do the step
   step(state.stepping);
@@ -571,15 +531,11 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
-  if (debug) {
-    std::cout << "<<< Test 1d >>> step to 1st layer at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    state.options.debugString = "";
-  }
+  ACTS_INFO("<<< Test 1d >>> step to 1st layer at  "
+            << toString(state.stepping.pos4));
 
   // Step through the surfaces on first layer
-  for (size_t isf = 0; isf < 5; ++isf) {
+  for (std::size_t isf = 0; isf < 5; ++isf) {
     step(state.stepping);
     // (5-9) re-entering navigator:
     // POST STEP
@@ -587,12 +543,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     // ACTORS - ABORTERS - PRE STEP
     navigator.preStep(state, stepper);
 
-    if (debug) {
-      std::cout << "<<< Test 1e-1i >>> step within 1st layer at  "
-                << toString(state.stepping.pos4) << std::endl;
-      std::cout << state.options.debugString << std::endl;
-      state.options.debugString = "";
-    }
+    ACTS_INFO("<<< Test 1e-1i >>> step within 1st layer at  "
+              << toString(state.stepping.pos4));
   }
 
   // positive return: do the step
@@ -603,15 +555,11 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
-  if (debug) {
-    std::cout << "<<< Test 1j >>> step to 2nd layer at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    state.options.debugString = "";
-  }
+  ACTS_INFO("<<< Test 1j >>> step to 2nd layer at  "
+            << toString(state.stepping.pos4));
 
   // Step through the surfaces on second layer
-  for (size_t isf = 0; isf < 5; ++isf) {
+  for (std::size_t isf = 0; isf < 5; ++isf) {
     step(state.stepping);
     // (11-15) re-entering navigator:
     // POST STEP
@@ -619,12 +567,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     // ACTORS - ABORTERS - PRE STEP
     navigator.preStep(state, stepper);
 
-    if (debug) {
-      std::cout << "<<< Test 1k-1o >>> step within 2nd layer at  "
-                << toString(state.stepping.pos4) << std::endl;
-      std::cout << state.options.debugString << std::endl;
-      state.options.debugString = "";
-    }
+    ACTS_INFO("<<< Test 1k-1o >>> step within 2nd layer at  "
+              << toString(state.stepping.pos4));
   }
 
   // positive return: do the step
@@ -635,15 +579,11 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
-  if (debug) {
-    std::cout << "<<< Test 1p >>> step to 3rd layer at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    state.options.debugString = "";
-  }
+  ACTS_INFO("<<< Test 1p >>> step to 3rd layer at  "
+            << toString(state.stepping.pos4));
 
   // Step through the surfaces on third layer
-  for (size_t isf = 0; isf < 3; ++isf) {
+  for (std::size_t isf = 0; isf < 3; ++isf) {
     step(state.stepping);
     // (17-19) re-entering navigator:
     // POST STEP
@@ -651,12 +591,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     // ACTORS - ABORTERS - PRE STEP
     navigator.preStep(state, stepper);
 
-    if (debug) {
-      std::cout << "<<< Test 1q-1s >>> step within 3rd layer at  "
-                << toString(state.stepping.pos4) << std::endl;
-      std::cout << state.options.debugString << std::endl;
-      state.options.debugString = "";
-    }
+    ACTS_INFO("<<< Test 1q-1s >>> step within 3rd layer at  "
+              << toString(state.stepping.pos4));
   }
 
   // positive return: do the step
@@ -667,15 +603,11 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
-  if (debug) {
-    std::cout << "<<< Test 1t >>> step to 4th layer at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    state.options.debugString = "";
-  }
+  ACTS_INFO("<<< Test 1t >>> step to 4th layer at  "
+            << toString(state.stepping.pos4));
 
   // Step through the surfaces on second layer
-  for (size_t isf = 0; isf < 3; ++isf) {
+  for (std::size_t isf = 0; isf < 3; ++isf) {
     step(state.stepping);
     // (21-23) re-entering navigator:
     // POST STEP
@@ -683,12 +615,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     // ACTORS - ABORTERS - PRE STEP
     navigator.preStep(state, stepper);
 
-    if (debug) {
-      std::cout << "<<< Test 1t-1v >>> step within 4th layer at  "
-                << toString(state.stepping.pos4) << std::endl;
-      std::cout << state.options.debugString << std::endl;
-      state.options.debugString = "";
-    }
+    ACTS_INFO("<<< Test 1t-1v >>> step within 4th layer at  "
+              << toString(state.stepping.pos4));
   }
 
   // positive return: do the step
@@ -699,53 +627,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
-  if (debug) {
-    std::cout << "<<< Test 1w >>> step to boundary at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    state.options.debugString = "";
-  }
-
-  // test the navigation in a bounding volume hierarchy
-  // ----------------------------------------------
-  if (debug) {
-    std::cout << "<<<<<<<<<<<<<<<<<<<<< BVH Navigation >>>>>>>>>>>>>>>>>>"
-              << std::endl;
-  }
-
-  // position and direction vector
-  Vector4 BVHPosition4(0., 0., 0, 0);
-  Vector3 BVHMomentum(1., 1., 0.);
-
-  // the propagator cache
-  PropagatorState BVHState;
-  BVHState.options.debug = debug;
-
-  // the stepper cache
-  BVHState.stepping.pos4 = BVHPosition4;
-  BVHState.stepping.dir = BVHMomentum.normalized();
-
-  // Stepper
-  PropagatorState::Stepper BVHStepper;
-
-  BVHNavigator.initialize(BVHState, BVHStepper);
-
-  // Check that the currentVolume is set
-  BOOST_CHECK_NE(BVHState.navigation.currentVolume, nullptr);
-  // Check that the currentVolume is the startVolume
-  BOOST_CHECK_EQUAL(BVHState.navigation.currentVolume,
-                    BVHState.navigation.startVolume);
-  // Check that the currentSurface is reset to:
-  BOOST_CHECK_EQUAL(BVHState.navigation.currentSurface, nullptr);
-  // No layer has been found
-  BOOST_CHECK_EQUAL(BVHState.navigation.navLayers.size(), 0u);
-  // ACTORS-ABORTERS-TARGET
-  navigator.preStep(BVHState, BVHStepper);
-  // Still no layer
-  BOOST_CHECK_EQUAL(BVHState.navigation.navLayers.size(), 0u);
-  // Surfaces have been found
-  BOOST_CHECK_EQUAL(BVHState.navigation.navSurfaces.size(), 42u);
+  ACTS_INFO("<<< Test 1w >>> step to boundary at  "
+            << toString(state.stepping.pos4));
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

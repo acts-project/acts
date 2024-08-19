@@ -25,7 +25,7 @@
 /// defines the efficiency, fake rate and duplicaiton rate. It aims to make
 /// custom definition and tuning of the reconstruction performance easier.
 /// Multiple files for the reconstructed tracks are allowed.
-/// 
+///
 /// NB: It's very likely that fiducal cuts are already imposed on the truth
 /// particles. Please check the selection criteria in the truth fitting example
 /// which writes out the 'track_finder_particles.root'. For instance, if the
@@ -80,10 +80,10 @@ void defineReconstructionPerformance(
     tReaders.emplace_back((TTree*)trackFile->Get(trackSummaryTreeName.c_str()), true);
   }
 
-  std::vector<size_t> nEvents;
+  std::vector<std::size_t> nEvents;
   nEvents.reserve(nTrackFiles);
   for (const auto& tReader : tReaders) {
-    size_t entries = tReader.tree->GetEntries();
+    std::size_t entries = tReader.tree->GetEntries();
     nEvents.push_back(entries);
   }
 
@@ -130,10 +130,10 @@ void defineReconstructionPerformance(
               << std::endl;
 
     // The container from track-particle matching info (Flushed per event)
-    std::map<uint64_t, std::vector<RecoTrackInfo>> matchedParticles;
+    std::map<std::uint64_t, std::vector<RecoTrackInfo>> matchedParticles;
 
     // Loop over the events to fill plots
-    for (size_t i = 0; i < nEvents[ifile]; ++i) {
+    for (std::size_t i = 0; i < nEvents[ifile]; ++i) {
       if (i % 10 == 0) {
         std::cout << "Processed events: " << i << std::endl;
       }
@@ -151,7 +151,7 @@ void defineReconstructionPerformance(
       // Loop over the tracks
       // The fake rate is defined as the ratio of selected truth-matched tracks
       // over all selected tracks
-      for (size_t j = 0; j < tReaders[ifile].nStates->size(); ++j) {
+      for (std::size_t j = 0; j < tReaders[ifile].nStates->size(); ++j) {
         bool hasFittedParameters = tReaders[ifile].hasFittedParams->at(j);
         auto nMeasurements = tReaders[ifile].nMeasurements->at(j);
         auto nOutliers = tReaders[ifile].nOutliers->at(j);
@@ -203,7 +203,7 @@ void defineReconstructionPerformance(
                     return false;
                   });
         // Fill the duplication rate plots
-        for (size_t k = 0; k < matchedTracks.size(); ++k) {
+        for (std::size_t k = 0; k < matchedTracks.size(); ++k) {
           auto eta = matchedTracks[k].eta;
           auto pt = matchedTracks[k].pt;
           if (k == 0) {
@@ -226,7 +226,7 @@ void defineReconstructionPerformance(
         if (nHits < nHitsMin or pt < ptMin) {
           continue;
         }
-        uint64_t id = particle.particleId;
+        std::uint64_t id = particle.particleId;
 
         // Fill the efficiency plots
         auto ip = matchedParticles.find(id);

@@ -503,9 +503,6 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
     /// -------------------- MB (inner [0]) ---------------
     std::array<std::shared_ptr<const ISurfaceMaterial>, 6> boundaryMaterial{
         nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
-
-    /// Volume signature
-    int volumeSignature = -1;
   };
 
   /// Constructor
@@ -530,7 +527,8 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   ///         processing
   MutableTrackingVolumePtr trackingVolume(
       const GeometryContext& gctx, TrackingVolumePtr existingVolume = nullptr,
-      VolumeBoundsPtr externalBounds = nullptr) const override;
+      std::shared_ptr<const VolumeBounds> externalBounds =
+          nullptr) const override;
 
   /// Set configuration method
   ///

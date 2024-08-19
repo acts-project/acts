@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -27,11 +25,9 @@
 #include <optional>
 #include <utility>
 
-namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
@@ -40,16 +36,16 @@ GeometryContext geoContext = GeometryContext();
 
 BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   // Define the size of the grids
-  constexpr size_t mainGridSize = 400;
-  constexpr size_t trkGridSize = 15;
+  constexpr std::size_t mainGridSize = 400;
+  constexpr std::size_t trkGridSize = 15;
 
-  using Grid = GaussianGridTrackDensity<mainGridSize, trkGridSize>;
+  using Grid = GaussianGridTrackDensity;
 
   double binSize = 0.1;  // mm
   double zMinMax = mainGridSize / 2 * binSize;
 
   // Set up grid density with zMinMax
-  Grid::Config cfg(zMinMax);
+  Grid::Config cfg(zMinMax, mainGridSize, trkGridSize);
   Grid grid(cfg);
 
   // Create some test tracks
@@ -103,7 +99,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
                                ParticleHypothesis::pion());
 
   // The grid to be filled
-  Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero();
+  Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero(mainGridSize);
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching
@@ -118,19 +114,19 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
 
   // Tracks are far away from z-axis (or not in region of interest) and
   // should not have contributed to density grid
-  auto zeroGrid = Grid::MainGridVector::Zero();
+  auto zeroGrid = Grid::MainGridVector::Zero(mainGridSize);
   BOOST_CHECK_EQUAL(mainGrid, zeroGrid);
 
   // Now add track 1 and 2 to grid, separately.
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   auto gridCopy = mainGrid;
 
-  mainGrid = Grid::MainGridVector::Zero();
+  mainGrid = Grid::MainGridVector::Zero(mainGridSize);
   binAndTrackGrid = grid.addTrack(params2, mainGrid);
 
   // Track 1 is closer to z-axis and should thus yield higher
   // density values
-  BOOST_CHECK(gridCopy.sum() > mainGrid.sum());
+  BOOST_CHECK_GT(gridCopy.sum(), mainGrid.sum());
 
   // Track 1 and 2 summed should give higher densities than
   // only track 1 alone
@@ -140,16 +136,17 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   binAndTrackGrid = grid.addTrack(params4, mainGrid);
 
   // Check upper boundary
-  BOOST_CHECK_EQUAL(mainGrid(mainGridSize - int((trkGridSize - 1) / 2) - 2),
-                    0.);
-  BOOST_CHECK(mainGrid(mainGridSize - int((trkGridSize - 1) / 2) - 1) > 0.);
-  BOOST_CHECK(mainGrid(mainGridSize - 1) > 0.);
+  BOOST_CHECK_EQUAL(
+      mainGrid(mainGridSize - static_cast<int>((trkGridSize - 1) / 2) - 2), 0.);
+  BOOST_CHECK_GT(
+      mainGrid(mainGridSize - static_cast<int>((trkGridSize - 1) / 2) - 1), 0.);
+  BOOST_CHECK_GT(mainGrid(mainGridSize - 1), 0.);
 
   binAndTrackGrid = grid.addTrack(params5, mainGrid);
   // Check lower boundary
-  BOOST_CHECK_EQUAL(mainGrid(int((trkGridSize - 1) / 2) + 1), 0.);
-  BOOST_CHECK(mainGrid(int((trkGridSize - 1) / 2)) > 0.);
-  BOOST_CHECK(mainGrid(0) > 0.);
+  BOOST_CHECK_EQUAL(mainGrid(static_cast<int>((trkGridSize - 1) / 2) + 1), 0.);
+  BOOST_CHECK_GT(mainGrid(static_cast<int>((trkGridSize - 1) / 2)), 0.);
+  BOOST_CHECK_GT(mainGrid(0), 0.);
 
   // Check if position of maximum is correct
   auto maxRes = grid.getMaxZPosition(mainGrid);
@@ -157,7 +154,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   BOOST_CHECK_EQUAL(maxBin, 0);
 
   // Check if error is thrown for empty grid
-  mainGrid = Grid::MainGridVector::Zero();
+  mainGrid = Grid::MainGridVector::Zero(mainGridSize);
   auto maxResErr = grid.getMaxZPosition(mainGrid);
   BOOST_CHECK(!maxResErr.ok());
 
@@ -168,7 +165,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   gridCopy = mainGrid;
   binAndTrackGrid = grid.addTrack(params4, mainGrid);
   // Main grid should have changed by adding track4
-  BOOST_CHECK(gridCopy != mainGrid);
+  BOOST_CHECK_NE(gridCopy, mainGrid);
   // Remove track 4 again
   int zBin = binAndTrackGrid.first;
   auto trackGrid = binAndTrackGrid.second;
@@ -183,13 +180,13 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
   constexpr int mainGridSize = 50;
   constexpr int trkGridSize = 11;
 
-  using Grid = Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>;
+  using Grid = Acts::GaussianGridTrackDensity;
 
   double binSize = 0.1;  // mm
   double zMinMax = mainGridSize / 2 * binSize;
 
   // Set up grid density with zMinMax
-  Grid::Config cfg(zMinMax);
+  Grid::Config cfg(zMinMax, mainGridSize, trkGridSize);
   cfg.useHighestSumZPosition = true;
   Grid grid(cfg);
 
@@ -218,7 +215,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
                                ParticleHypothesis::pion());
 
   // The grid to be filled
-  Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero();
+  Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero(mainGridSize);
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching
@@ -246,13 +243,13 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
   constexpr int mainGridSize = 50;
   constexpr int trkGridSize = 11;
 
-  using Grid = Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>;
+  using Grid = Acts::GaussianGridTrackDensity;
 
   double binSize = 0.1;  // mm
   double zMinMax = mainGridSize / 2 * binSize;
 
   // Set up grid density with zMinMax
-  Grid::Config cfg(zMinMax);
+  Grid::Config cfg(zMinMax, mainGridSize, trkGridSize);
   cfg.useHighestSumZPosition = true;
   Grid grid(cfg);
 
@@ -281,7 +278,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
                                ParticleHypothesis::pion());
 
   // The grid to be filled
-  Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero();
+  Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero(mainGridSize);
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching
@@ -306,8 +303,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
 
   BOOST_CHECK_EQUAL(z, posZ2);
   // Check that width was estimated
-  BOOST_CHECK(width != 0.);
+  BOOST_CHECK_NE(width, 0.);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -24,11 +24,11 @@ namespace Acts {
 /// @tparam DIM The number of dimensions of ambient space
 /// @tparam SIDES The number of sides (= side planes) the frustum has (exactly 2
 /// in 2D, minimum 3 in 3D)
-template <typename value_t, size_t DIM, size_t SIDES>
+template <typename value_t, std::size_t DIM, std::size_t SIDES>
 class Frustum {
   using translation_t = Eigen::Translation<value_t, DIM>;
 
-  static constexpr size_t n_normals = SIDES + 1;
+  static constexpr std::size_t n_normals = SIDES + 1;
 
  public:
   /// Re expose the value type
@@ -41,9 +41,9 @@ class Frustum {
   using transform_type = Eigen::Transform<value_t, DIM, Eigen::Affine>;
 
   /// Re expose the number of dimensions
-  static constexpr size_t dim = DIM;
+  static constexpr std::size_t dim = DIM;
   /// Re expose the number of sides
-  static constexpr size_t sides = SIDES;
+  static constexpr std::size_t sides = SIDES;
 
   /// Constructor for the 2D case.
   /// @param origin The origin of the frustum
@@ -51,7 +51,7 @@ class Frustum {
   /// @param opening_angle The opening angle
   /// @note The @p opening_angle is defined as the angle between opposing side
   /// planes. The opening angle needs to be < pi.
-  template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
+  template <std::size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
   Frustum(const VertexType& origin, const VertexType& dir,
           value_type opening_angle);
 
@@ -61,7 +61,7 @@ class Frustum {
   /// @param opening_angle The opening angle
   /// @note The @p opening_angle is defined as the angle between opposing side
   /// planes. The opening angle needs to be < pi.
-  template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
+  template <std::size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
   Frustum(const VertexType& origin, const VertexType& dir,
           value_type opening_angle);
 
@@ -70,7 +70,7 @@ class Frustum {
   /// @param helper The visualization helper
   /// @param far_distance The distance to the virtual "far plane" at which point
   /// the side planes terminate visually.
-  template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
+  template <std::size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
   void draw(IVisualization3D& helper, value_type far_distance = 10) const;
 
   /// Draw a representation of this frustum as an SVG string to an outstream
@@ -81,7 +81,7 @@ class Frustum {
   /// @param far_distance The distance to the virtual "far line" at which point
   /// the side lines terminate visually.
   /// @param unit Multiplicative factor to apply to internal distances
-  template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
+  template <std::size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
   std::ostream& svg(std::ostream& os, value_type w, value_type h,
                     value_type far_distance = 1, value_type unit = 20.) const;
 

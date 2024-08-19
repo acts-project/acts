@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,14 +11,19 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/ParticleOutcome.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <iosfwd>
-#include <limits>
+#include <optional>
 
 namespace ActsFatras {
 
@@ -140,7 +145,7 @@ class Particle {
   Particle &correctEnergy(Scalar delta) {
     const auto newEnergy = std::hypot(m_mass, m_absMomentum) + delta;
     if (newEnergy <= m_mass) {
-      m_absMomentum = Scalar(0);
+      m_absMomentum = Scalar{0};
     } else {
       m_absMomentum = std::sqrt(newEnergy * newEnergy - m_mass * m_mass);
     }
@@ -191,6 +196,10 @@ class Particle {
   }
   /// Unit three-direction, i.e. the normalized momentum three-vector.
   const Vector3 &direction() const { return m_direction; }
+  /// Polar angle.
+  Scalar theta() const { return Acts::VectorHelpers::theta(direction()); }
+  /// Azimuthal angle.
+  Scalar phi() const { return Acts::VectorHelpers::phi(direction()); }
   /// Absolute momentum in the x-y plane.
   Scalar transverseMomentum() const {
     return m_absMomentum * m_direction.segment<2>(Acts::eMom0).norm();
@@ -203,7 +212,7 @@ class Particle {
   Scalar energy() const { return std::hypot(m_mass, m_absMomentum); }
 
   /// Check if the particle is alive, i.e. is not at rest.
-  constexpr bool isAlive() const { return Scalar(0) < m_absMomentum; }
+  constexpr bool isAlive() const { return Scalar{0} < m_absMomentum; }
 
   constexpr bool isSecondary() const {
     return particleId().vertexSecondary() != 0 ||
@@ -236,6 +245,65 @@ class Particle {
   /// Accumulated path within material measured in interaction lengths.
   constexpr Scalar pathInL0() const { return m_pathInL0; }
 
+  /// Set the reference surface.
+  ///
+  /// @param surface reference surface
+  Particle &setReferenceSurface(const Acts::Surface *surface) {
+    m_referenceSurface = surface;
+    return *this;
+  }
+
+  /// Reference surface.
+  const Acts::Surface *referenceSurface() const { return m_referenceSurface; }
+
+  /// Check if the particle has a reference surface.
+  bool hasReferenceSurface() const { return m_referenceSurface != nullptr; }
+
+  /// Bound track parameters.
+  Acts::Result<Acts::BoundTrackParameters> boundParameters(
+      const Acts::GeometryContext &gctx) const {
+    if (!hasReferenceSurface()) {
+      return Acts::Result<Acts::BoundTrackParameters>::failure(
+          std::error_code());
+    }
+    Acts::Result<Acts::Vector2> localResult =
+        m_referenceSurface->globalToLocal(gctx, position(), direction());
+    if (!localResult.ok()) {
+      return localResult.error();
+    }
+    Acts::BoundVector params;
+    params << localResult.value(), phi(), theta(), qOverP(), time();
+    return Acts::BoundTrackParameters(referenceSurface()->getSharedPtr(),
+                                      params, std::nullopt, hypothesis());
+  }
+
+  Acts::CurvilinearTrackParameters curvilinearParameters() const {
+    return Acts::CurvilinearTrackParameters(
+        fourPosition(), direction(), qOverP(), std::nullopt, hypothesis());
+  }
+
+  /// Set the number of hits.
+  ///
+  /// @param nHits number of hits
+  constexpr Particle &setNumberOfHits(std::uint32_t nHits) {
+    m_numberOfHits = nHits;
+    return *this;
+  }
+
+  /// Number of hits.
+  constexpr std::uint32_t numberOfHits() const { return m_numberOfHits; }
+
+  /// Set the outcome of particle.
+  ///
+  /// @param outcome outcome code
+  constexpr Particle &setOutcome(ParticleOutcome outcome) {
+    m_outcome = outcome;
+    return *this;
+  }
+
+  /// Particle outcome.
+  constexpr ParticleOutcome outcome() const { return m_outcome; }
+
  private:
   // identity, i.e. things that do not change over the particle lifetime.
   /// Particle identifier within the event.
@@ -245,17 +313,23 @@ class Particle {
   /// PDG particle number.
   Acts::PdgParticle m_pdg = Acts::PdgParticle::eInvalid;
   // Particle charge and mass.
-  Scalar m_charge = Scalar(0);
-  Scalar m_mass = Scalar(0);
+  Scalar m_charge = Scalar{0};
+  Scalar m_mass = Scalar{0};
   // kinematics, i.e. things that change over the particle lifetime.
   Vector3 m_direction = Vector3::UnitZ();
-  Scalar m_absMomentum = Scalar(0);
+  Scalar m_absMomentum = Scalar{0};
   Vector4 m_position4 = Vector4::Zero();
-  // proper time in the particle rest frame
-  Scalar m_properTime = Scalar(0);
+  /// proper time in the particle rest frame
+  Scalar m_properTime = Scalar{0};
   // accumulated material
-  Scalar m_pathInX0 = Scalar(0);
-  Scalar m_pathInL0 = Scalar(0);
+  Scalar m_pathInX0 = Scalar{0};
+  Scalar m_pathInL0 = Scalar{0};
+  /// number of hits
+  std::uint32_t m_numberOfHits = 0;
+  /// reference surface
+  const Acts::Surface *m_referenceSurface{nullptr};
+  /// outcome
+  ParticleOutcome m_outcome = ParticleOutcome::Alive;
 };
 
 std::ostream &operator<<(std::ostream &os, const Particle &particle);

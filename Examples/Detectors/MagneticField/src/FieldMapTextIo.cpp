@@ -14,13 +14,13 @@
 #include <vector>
 
 namespace {
-constexpr size_t kDefaultSize = 1 << 15;
+constexpr std::size_t kDefaultSize = 1 << 15;
 }
 
 ActsExamples::detail::InterpolatedMagneticField2
 ActsExamples::makeMagneticFieldMapRzFromText(
-    const std::function<size_t(std::array<size_t, 2> binsRZ,
-                               std::array<size_t, 2> nBinsRZ)>&
+    const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
+                                    std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, Acts::ActsScalar lengthUnit,
     Acts::ActsScalar BFieldUnit, bool firstQuadrant) {
@@ -62,8 +62,8 @@ ActsExamples::makeMagneticFieldMapRzFromText(
 
 ActsExamples::detail::InterpolatedMagneticField3
 ActsExamples::makeMagneticFieldMapXyzFromText(
-    const std::function<size_t(std::array<size_t, 3> binsXYZ,
-                               std::array<size_t, 3> nBinsXYZ)>&
+    const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
+                                    std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, Acts::ActsScalar lengthUnit,
     Acts::ActsScalar BFieldUnit, bool firstOctant) {

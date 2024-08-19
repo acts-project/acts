@@ -11,19 +11,20 @@
 #include <system_error>
 #include <type_traits>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 enum class GlobalChiSquareFitterError {
   // ensure all values are non-zero
-  DetAIsZero = 1,
+  AIsNotInvertible = 1,
+  DidNotConverge = 2,
+  NotEnoughMeasurements = 3,
+  UpdatePushedToNewVolume = 4,
 };
 
 std::error_code make_error_code(
     Acts::Experimental::GlobalChiSquareFitterError e);
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 namespace std {
 // register with STL

@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -24,9 +23,7 @@
 
 #include "TGeoManager.h"
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 /// @brief struct to load the global geometry
 struct RootGeometry {
@@ -81,8 +78,8 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
     tgpOptions.volumeNames = {volumeName};
     tgpOptions.targetNames = {"PixelActiveo2", "PixelActiveo4", "PixelActiveo5",
                               "PixelActiveo6"};
-    tgpOptions.parseRanges.push_back({binR, {0., 40.}});
-    tgpOptions.parseRanges.push_back({binZ, {-60., 15.}});
+    tgpOptions.parseRanges.push_back({BinningValue::binR, {0., 40.}});
+    tgpOptions.parseRanges.push_back({BinningValue::binZ, {-60., 15.}});
     tgpOptions.unit = 10.;
 
     std::string axes = "XYZ";
@@ -109,5 +106,4 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

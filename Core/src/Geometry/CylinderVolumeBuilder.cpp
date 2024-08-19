@@ -58,7 +58,7 @@ void Acts::CylinderVolumeBuilder::setLogger(
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeBuilder::trackingVolume(
     const GeometryContext& gctx, TrackingVolumePtr existingVolume,
-    VolumeBoundsPtr externalBounds) const {
+    std::shared_ptr<const VolumeBounds> externalBounds) const {
   ACTS_DEBUG("Configured to build volume : " << m_cfg.volumeName);
   if (existingVolume) {
     ACTS_DEBUG("- will wrap/enclose : " << existingVolume->volumeName());
@@ -258,7 +258,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       [&](VolumeConfig& centralConfig, VolumeConfig& endcapConfig,
           const std::string& endcapName) -> MutableTrackingVolumePtr {
     // No config - no volume
-    if (not endcapConfig) {
+    if (!endcapConfig) {
       return nullptr;
     }
     // Check for ring layout
@@ -314,12 +314,12 @@ Acts::CylinderVolumeBuilder::trackingVolume(
         return ss.str();
       }());
       // Result of the parsing loop
-      if (innerRadii.size() == outerRadii.size() and not innerRadii.empty()) {
+      if (innerRadii.size() == outerRadii.size() && !innerRadii.empty()) {
         bool consistent = true;
         // The inter volume radii
         ACTS_VERBOSE("Checking ring radius consistency");
         std::vector<double> interRadii = {};
-        for (int ir = 1; ir < int(innerRadii.size()); ++ir) {
+        for (std::size_t ir = 1; ir < innerRadii.size(); ++ir) {
           // Check whether inner/outer radii are consistent
           ACTS_VERBOSE(
               "or #" << ir - 1 << " < ir #" << ir << ": " << outerRadii[ir - 1]
@@ -353,13 +353,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
           // Filling loop
           for (const auto& elay : endcapConfig.layers) {
             // Getting the reference radius
-            double test =
-                elay->surfaceRepresentation().binningPositionValue(gctx, binR);
+            double test = elay->surfaceRepresentation().binningPositionValue(
+                gctx, BinningValue::binR);
             // Find the right bin
             auto ringVolume = std::find_if(
                 volumeRminRmax.begin(), volumeRminRmax.end(),
                 [&](const auto& reference) {
-                  return (test > reference.first and test < reference.second);
+                  return (test > reference.first && test < reference.second);
                 });
             if (ringVolume != volumeRminRmax.end()) {
               unsigned int ringBin =
@@ -423,7 +423,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       volumesContainer.push_back(nEndcap);
       volume = nEndcap;
       // Set the inner or outer material
-      if (not m_cfg.buildToRadiusZero) {
+      if (!m_cfg.buildToRadiusZero) {
         volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
                                        Acts::tubeInnerCover);
       }
@@ -439,7 +439,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       volumesContainer.push_back(barrel);
       volume = barrel;
       // Set the inner or outer material
-      if (not m_cfg.buildToRadiusZero) {
+      if (!m_cfg.buildToRadiusZero) {
         volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
                                        Acts::tubeInnerCover);
       }
@@ -454,7 +454,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       volumesContainer.push_back(pEndcap);
       volume = pEndcap;
       // Set the inner or outer material
-      if (not m_cfg.buildToRadiusZero) {
+      if (!m_cfg.buildToRadiusZero) {
         volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
                                        Acts::tubeInnerCover);
       }

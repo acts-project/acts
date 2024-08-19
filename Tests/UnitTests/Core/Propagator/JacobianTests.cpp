@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -36,12 +34,9 @@
 #include <type_traits>
 #include <utility>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
@@ -121,9 +116,9 @@ Transform3 createPlanarTransform(const Vector3& nposition,
 BoundToFreeMatrix convertToMatrix(const std::array<double, 60> P) {
   // initialize to zero
   BoundToFreeMatrix jMatrix = BoundToFreeMatrix::Zero();
-  for (size_t j = 0; j < eBoundSize; ++j) {
-    for (size_t i = 0; i < eFreeSize; ++i) {
-      size_t ijc = eFreeSize + j * eFreeSize + i;
+  for (std::size_t j = 0; j < eBoundSize; ++j) {
+    for (std::size_t i = 0; i < eFreeSize; ++i) {
+      std::size_t ijc = eFreeSize + j * eFreeSize + i;
       jMatrix(i, j) = P[ijc];
     }
   }
@@ -268,5 +263,4 @@ BOOST_AUTO_TEST_CASE(JacobianStrawToGlobalTest) {
   testJacobianToGlobal(atStraw);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -18,12 +17,7 @@
 #include <memory>
 #include <string>
 
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
-
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -71,10 +65,10 @@ BOOST_AUTO_TEST_CASE(PerigeeSurfaceProperties) {
                     std::string("Acts::PerigeeSurface"));
   //
   /// Test dump
-  boost::test_tools::output_test_stream dumpOuput;
-  perigeeSurfaceObject->toStream(tgContext, dumpOuput);
+  boost::test_tools::output_test_stream dumpOutput;
+  dumpOutput << perigeeSurfaceObject->toStream(tgContext);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::PerigeeSurface:\n\
+      dumpOutput.is_equal("Acts::PerigeeSurface:\n\
      Center position  (x, y, z) = (1.0000000, 1.0000000, 1.0000000)"));
 }
 
@@ -94,7 +88,4 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

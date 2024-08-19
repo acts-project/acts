@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
+
 import os
 import argparse
 from pathlib import Path
 
-
+import acts
+from acts import (
+    SurfaceMaterialMapper,
+    Navigator,
+    Propagator,
+    StraightLineStepper,
+    MaterialMapJsonConverter,
+)
 from acts.examples import (
     Sequencer,
     WhiteBoard,
@@ -15,20 +23,6 @@ from acts.examples import (
     JsonMaterialWriter,
     JsonFormat,
 )
-
-import acts
-from acts import (
-    Vector4,
-    UnitConstants as u,
-    SurfaceMaterialMapper,
-    VolumeMaterialMapper,
-    Navigator,
-    Propagator,
-    StraightLineStepper,
-    MaterialMapJsonConverter,
-)
-from common import getOpenDataDetectorDirectory
-from acts.examples.odd import getOpenDataDetector
 
 
 def runMaterialMapping(
@@ -59,7 +53,7 @@ def runMaterialMapping(
     s.addReader(
         RootMaterialTrackReader(
             level=acts.logging.INFO,
-            collection="material-tracks",
+            outputMaterialTracks="material-tracks",
             fileList=[
                 os.path.join(
                     inputDir,
@@ -74,7 +68,7 @@ def runMaterialMapping(
 
     mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
     mmAlgCfg.trackingGeometry = trackingGeometry
-    mmAlgCfg.collection = "material-tracks"
+    mmAlgCfg.inputMaterialTracks = "material-tracks"
 
     if mapSurface:
         navigator = Navigator(
@@ -108,7 +102,7 @@ def runMaterialMapping(
         s.addWriter(
             RootMaterialTrackWriter(
                 level=acts.logging.INFO,
-                collection=mmAlgCfg.collection,
+                inputMaterialTracks=mmAlgCfg.collection,
                 filePath=os.path.join(
                     outputDir,
                     mapName + "_tracks.root",

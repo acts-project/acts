@@ -56,9 +56,10 @@ class ConeVolumeBounds : public VolumeBounds {
   /// @param halflengthZ The minimum z value of the inner and outer cones
   /// @param averagePhi The phi orientation of the sector
   /// @param halfPhiSector The opening angle phi sector
-  ConeVolumeBounds(double innerAlpha, double innerOffsetZ, double outerAlpha,
-                   double outerOffsetZ, double halflengthZ, double averagePhi,
-                   double halfPhiSector) noexcept(false);
+  ConeVolumeBounds(ActsScalar innerAlpha, ActsScalar innerOffsetZ,
+                   ActsScalar outerAlpha, ActsScalar outerOffsetZ,
+                   ActsScalar halflengthZ, ActsScalar averagePhi,
+                   ActsScalar halfPhiSector) noexcept(false);
 
   /// Constructor - for general cylidner-cone setups
   ///
@@ -71,14 +72,14 @@ class ConeVolumeBounds : public VolumeBounds {
   ///
   /// @note depending on cylinderR > coneR it is constructing a cone with
   /// cylindrical cutout or a cylinder with conical cutout
-  ConeVolumeBounds(double cylinderR, double alpha, double offsetZ,
-                   double halflengthZ, double averagePhi,
-                   double halfPhiSector) noexcept(false);
+  ConeVolumeBounds(ActsScalar cylinderR, ActsScalar alpha, ActsScalar offsetZ,
+                   ActsScalar halflengthZ, ActsScalar averagePhi,
+                   ActsScalar halfPhiSector) noexcept(false);
 
   /// Constructor - from a fixed size array
   ///
   /// @param values The bound values
-  ConeVolumeBounds(const std::array<double, eSize>& values) noexcept(false)
+  ConeVolumeBounds(const std::array<ActsScalar, eSize>& values) noexcept(false)
       : m_values(values) {
     checkConsistency();
     buildSurfaceBounds();
@@ -93,14 +94,14 @@ class ConeVolumeBounds : public VolumeBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<ActsScalar> values() const final;
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
   ///
   /// @param pos is the position in volume frame to be checked
   /// @param tol is the absolute tolerance to be applied
-  bool inside(const Vector3& pos, double tol = 0.) const final;
+  bool inside(const Vector3& pos, ActsScalar tol = 0.) const final;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -112,7 +113,7 @@ class ConeVolumeBounds : public VolumeBounds {
   /// It will throw an exception if the orientation prescription is not adequate
   ///
   /// @return a vector of surfaces bounding this volume
-  OrientedSurfaces orientedSurfaces(
+  std::vector<OrientedSurface> orientedSurfaces(
       const Transform3& transform = Transform3::Identity()) const final;
 
   /// Construct bounding box for this shape
@@ -126,30 +127,30 @@ class ConeVolumeBounds : public VolumeBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  ActsScalar get(BoundValues bValue) const { return m_values[bValue]; }
 
   // Return the derived innerRmin
-  double innerRmin() const;
+  ActsScalar innerRmin() const;
 
   // Return the derived innerRmin
-  double innerRmax() const;
+  ActsScalar innerRmax() const;
 
   // Return the derived inner tan(alpha)
-  double innerTanAlpha() const;
+  ActsScalar innerTanAlpha() const;
 
   // Return the derived outerRmin
-  double outerRmin() const;
+  ActsScalar outerRmin() const;
 
   // Return the derived outerRmax
-  double outerRmax() const;
+  ActsScalar outerRmax() const;
 
   // Return the derived outer tan(alpha)
-  double outerTanAlpha() const;
+  ActsScalar outerTanAlpha() const;
 
   /// Output Method for std::ostream
   ///
-  /// @param sl is ostream operator to be dumped into
-  std::ostream& toStream(std::ostream& sl) const final;
+  /// @param os is ostream operator to be dumped into
+  std::ostream& toStream(std::ostream& os) const final;
 
  private:
   /// Check the input values for consistency,
@@ -159,14 +160,8 @@ class ConeVolumeBounds : public VolumeBounds {
   /// Create the surface bounds
   void buildSurfaceBounds();
 
-  /// Templated dump methods
-  /// @tparam stream_t The type of the stream for dumping
-  /// @param dt The stream object
-  template <class stream_t>
-  stream_t& dumpT(stream_t& dt) const;
-
   /// The bound values
-  std::array<double, eSize> m_values;
+  std::array<ActsScalar, eSize> m_values;
   std::shared_ptr<CylinderBounds> m_innerCylinderBounds{nullptr};
   std::shared_ptr<ConeBounds> m_innerConeBounds{nullptr};
   std::shared_ptr<ConeBounds> m_outerConeBounds{nullptr};
@@ -176,54 +171,12 @@ class ConeVolumeBounds : public VolumeBounds {
   std::shared_ptr<PlanarBounds> m_sectorBounds{nullptr};
 
   /// Derived values
-  double m_innerRmin = 0.;
-  double m_innerRmax = 0.;
-  double m_innerTanAlpha = 0.;
-  double m_outerRmin = 0.;
-  double m_outerRmax = 0.;
-  double m_outerTanAlpha = 0.;
+  ActsScalar m_innerRmin = 0.;
+  ActsScalar m_innerRmax = 0.;
+  ActsScalar m_innerTanAlpha = 0.;
+  ActsScalar m_outerRmin = 0.;
+  ActsScalar m_outerRmax = 0.;
+  ActsScalar m_outerTanAlpha = 0.;
 };
-
-inline double ConeVolumeBounds::innerRmin() const {
-  return m_innerRmin;
-}
-
-inline double ConeVolumeBounds::innerRmax() const {
-  return m_innerRmax;
-}
-
-inline double ConeVolumeBounds::innerTanAlpha() const {
-  return m_innerTanAlpha;
-}
-
-inline double ConeVolumeBounds::outerRmin() const {
-  return m_outerRmin;
-}
-
-inline double ConeVolumeBounds::outerRmax() const {
-  return m_outerRmax;
-}
-
-inline double ConeVolumeBounds::outerTanAlpha() const {
-  return m_outerTanAlpha;
-}
-
-inline std::vector<double> ConeVolumeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-template <class stream_t>
-stream_t& ConeVolumeBounds::dumpT(stream_t& dt) const {
-  dt << std::setiosflags(std::ios::fixed);
-  dt << std::setprecision(5);
-  dt << "Acts::ConeVolumeBounds : (innerAlpha, innerOffsetZ, outerAlpha,";
-  dt << "  outerOffsetZ, halflenghZ, averagePhi, halfPhiSector) = ";
-  dt << get(eInnerAlpha) << ", " << get(eInnerOffsetZ) << ", ";
-  dt << get(eOuterAlpha) << ", " << get(eOuterOffsetZ) << ", ";
-  dt << get(eHalfLengthZ) << ", " << get(eAveragePhi) << std::endl;
-  return dt;
-}
 
 }  // namespace Acts

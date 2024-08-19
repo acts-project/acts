@@ -33,7 +33,7 @@ Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
   Intersection2D::Status status = Intersection2D::Status::reachable;
   if (boundCheck) {
     auto edgeToSol = intersection - s0;
-    if (edgeToSol.dot(edge) < 0. or edgeToSol.norm() > (edge).norm()) {
+    if (edgeToSol.dot(edge) < 0. || edgeToSol.norm() > (edge).norm()) {
       status = Intersection2D::Status::unreachable;
     }
   }
@@ -124,7 +124,7 @@ Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectCircleSegment(
   for (const auto& candidate : intersections) {
     if (candidate.pathLength() > 0.) {
       ActsScalar phi = Acts::VectorHelpers::phi(candidate.position());
-      if (phi > phiMin and phi < phiMax) {
+      if (phi > phiMin && phi < phiMax) {
         return candidate;
       }
     }

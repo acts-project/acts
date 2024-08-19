@@ -20,7 +20,9 @@
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
+#include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
+#include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -29,6 +31,7 @@
 #include <cmath>
 #include <functional>
 #include <limits>
+#include <type_traits>
 
 namespace Acts {
 
@@ -55,6 +58,16 @@ class EigenStepper {
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
+  struct Config {
+    std::shared_ptr<const MagneticFieldProvider> bField;
+  };
+
+  struct Options : public StepperPlainOptions {
+    void setPlainOptions(const StepperPlainOptions& options) {
+      static_cast<StepperPlainOptions&>(*this) = options;
+    }
+  };
+
   /// @brief State for track parameter propagation
   ///
   /// It contains the stepping information and is provided thread local
@@ -78,8 +91,10 @@ class EigenStepper {
           stepSize(ssize),
           fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
-      pars.template segment<3>(eFreePos0) = par.position(gctx);
-      pars.template segment<3>(eFreeDir0) = par.direction();
+      Vector3 position = par.position(gctx);
+      Vector3 direction = par.direction();
+      pars.template segment<3>(eFreePos0) = position;
+      pars.template segment<3>(eFreeDir0) = direction;
       pars[eFreeTime] = par.time();
       pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
 
@@ -90,7 +105,7 @@ class EigenStepper {
         // set the covariance transport flag to true and copy
         covTransport = true;
         cov = BoundSquareMatrix(*par.covariance());
-        jacToGlobal = surface.boundToFreeJacobian(gctx, par.parameters());
+        jacToGlobal = surface.boundToFreeJacobian(gctx, position, direction);
       }
     }
 
@@ -119,6 +134,12 @@ class EigenStepper {
 
     /// Accummulated path length state
     double pathAccumulated = 0.;
+
+    /// Total number of performed steps
+    std::size_t nSteps = 0;
+
+    /// Totoal number of attempted steps
+    std::size_t nStepTrials = 0;
 
     /// Adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize;
@@ -152,8 +173,13 @@ class EigenStepper {
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
-  EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField,
-               double overstepLimit = 100 * UnitConstants::um);
+  /// @param bField The magnetic field provider
+  explicit EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField);
+
+  /// @brief Constructor with configuration
+  ///
+  /// @param [in] config The configuration of the stepper
+  explicit EigenStepper(const Config& config) : m_bField(config.bField) {}
 
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
@@ -242,17 +268,19 @@ class EigenStepper {
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] surface The surface provided
+  /// @param [in] index The surface intersection index
   /// @param [in] navDir The navigation direction
-  /// @param [in] bcheck The boundary check for this status update
+  /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A @c Logger instance
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, Direction navDir,
-      const BoundaryCheck& bcheck,
+      State& state, const Surface& surface, std::uint8_t index,
+      Direction navDir, const BoundaryTolerance& boundaryTolerance,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<EigenStepper>(
-        *this, state, surface, navDir, bcheck, surfaceTolerance, logger);
+        *this, state, surface, index, navDir, boundaryTolerance,
+        surfaceTolerance, logger);
   }
 
   /// Update step size
@@ -271,15 +299,14 @@ class EigenStepper {
     detail::updateSingleStepSize<EigenStepper>(state, oIntersection, release);
   }
 
-  /// Set Step size - explicitly with a double
+  /// Update step size - explicitly with a double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
   /// @param release [in] Do we release the step size?
-  void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor,
-                   bool release = true) const {
+  void updateStepSize(State& state, double stepSize,
+                      ConstrainedStep::Type stype, bool release = true) const {
     state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
@@ -295,8 +322,9 @@ class EigenStepper {
   /// Release the Step size
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  void releaseStepSize(State& state) const {
-    state.stepSize.release(ConstrainedStep::actor);
+  /// @param [in] stype The step size type to be released
+  void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
+    state.stepSize.release(stype);
   }
 
   /// Output the Step Size - single component
@@ -304,15 +332,6 @@ class EigenStepper {
   /// @param state [in,out] The stepping state (thread-local cache)
   std::string outputStepSize(const State& state) const {
     return state.stepSize.toString();
-  }
-
-  /// Overstep limit
-  ///
-  /// @param state The stepping state (thread-local cache)
-  double overstepLimit(const State& state) const {
-    (void)state;
-    // A dynamic overstep limit could sit here
-    return -m_overstepLimit;
   }
 
   /// Create and return the bound state at the current position
@@ -335,6 +354,18 @@ class EigenStepper {
       State& state, const Surface& surface, bool transportCov = true,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;
+
+  /// @brief If necessary fill additional members needed for curvilinearState
+  ///
+  /// Compute path length derivatives in case they have not been computed
+  /// yet, which is the case if no step has been executed yet.
+  ///
+  /// @param [in, out] prop_state State that will be presented as @c BoundState
+  /// @param [in] navigator the navigator of the propagation
+  /// @return true if nothing is missing after this call, false otherwise.
+  template <typename propagator_state_t, typename navigator_t>
+  bool prepareCurvilinearState(propagator_state_t& prop_state,
+                               const navigator_t& navigator) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -415,10 +446,12 @@ class EigenStepper {
  protected:
   /// Magnetic field inside of the detector
   std::shared_ptr<const MagneticFieldProvider> m_bField;
-
-  /// Overstep limit
-  double m_overstepLimit;
 };
+
+template <typename navigator_t>
+struct SupportsBoundParameters<EigenStepper<>, navigator_t>
+    : public std::true_type {};
+
 }  // namespace Acts
 
 #include "Acts/Propagator/EigenStepper.ipp"

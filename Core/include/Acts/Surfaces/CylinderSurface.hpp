@@ -14,10 +14,13 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
@@ -38,12 +41,10 @@ class DetectorElementBase;
 /// since it builds the surfaces of all TrackingVolumes at container level
 /// for a cylindrical tracking geometry.
 ///
-/// @image html figures/CylinderSurface.png
+/// @image html CylinderSurface.png
 
-class CylinderSurface : public Surface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+class CylinderSurface : public RegularSurface {
+  friend class Surface;
 
  protected:
   /// Constructor from Transform3 and CylinderBounds
@@ -144,8 +145,10 @@ class CylinderSurface : public Surface {
   Vector3 normal(const GeometryContext& gctx,
                  const Vector3& position) const final;
 
-  /// Normal vector return without argument
-  using Surface::normal;
+  // Use overloads from `RegularSurface`
+  using RegularSurface::globalToLocal;
+  using RegularSurface::localToGlobal;
+  using RegularSurface::normal;
 
   /// Return method for the rotational symmetry axis
   ///
@@ -161,24 +164,21 @@ class CylinderSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
-  /// @param direction is the global momentum direction (ignored in this operation)
   ///
   /// @return The global position by value
-  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& direction) const final;
+  Vector3 localToGlobal(const GeometryContext& gctx,
+                        const Vector2& lposition) const final;
 
   /// Global to local transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be transformed
-  /// @param direction is the global momentum direction (ignored in this operation)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction
@@ -186,7 +186,7 @@ class CylinderSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position to start from
   /// @param direction The direction at start
-  /// @param bcheck the Boundary Check
+  /// @param boundaryTolerance the Boundary Check Tolerance
   /// @param tolerance the tolerance used for the intersection
   ///
   /// If possible returns both solutions for the cylinder
@@ -194,7 +194,9 @@ class CylinderSurface : public Surface {
   /// @return SurfaceIntersection object (contains intersection & surface)
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      const Vector3& direction,
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Path correction due to incident of the track
@@ -219,7 +221,7 @@ class CylinderSurface : public Surface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const override;
+                                      std::size_t lseg) const override;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
@@ -227,11 +229,13 @@ class CylinderSurface : public Surface {
   /// represented with extrinsic Euler angles)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
   AlignmentToPathMatrix alignmentToPathDerivative(
-      const GeometryContext& gctx, const FreeVector& parameters) const final;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const final;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
@@ -243,6 +247,21 @@ class CylinderSurface : public Surface {
   /// cartesian coordinates
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
+
+  /// Merge two cylinder surfaces into a single one.
+  /// @image html Cylinder_Merging.svg
+  /// @note The surfaces need to be *compatible*, i.e. have cylinder bounds
+  ///       that align, and have the same radius
+  /// @param other The other cylinder surface to merge with
+  /// @param direction The binning direction: either @c binZ or @c binRPhi
+  /// @param externalRotation If true, any phi rotation is done in the transform
+  /// @param logger The logger to use
+  /// @return The merged cylinder surface and a boolean indicating if surfaces are reversed
+  /// @note The returned boolean is `false` if `this` is *left* or
+  ///       *counter-clockwise* of @p other, and `true` if not.
+  std::pair<std::shared_ptr<CylinderSurface>, bool> mergedWith(
+      const CylinderSurface& other, BinningValue direction,
+      bool externalRotation, const Logger& logger = getDummyLogger()) const;
 
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
@@ -285,5 +304,8 @@ class CylinderSurface : public Surface {
       const Transform3& transform, const Vector3& position,
       const Vector3& direction) const;
 };
+
+static_assert(RegularSurfaceConcept<CylinderSurface>,
+              "CylinderSurface does not fulfill RegularSurfaceConcept");
 
 }  // namespace Acts

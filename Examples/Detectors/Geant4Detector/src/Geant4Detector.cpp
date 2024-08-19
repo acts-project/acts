@@ -20,6 +20,7 @@
 #include <ostream>
 #include <stdexcept>
 
+#include "G4Transform3D.hh"
 #include "G4VPhysicalVolume.hh"
 
 auto ActsExamples::Geant4::Geant4Detector::constructDetector(
@@ -33,7 +34,7 @@ auto ActsExamples::Geant4::Geant4Detector::constructDetector(
 
   ACTS_INFO("Building an Acts::Detector called '"
             << cfg.name << "' from the Geant4PhysVolume '"
-            << cfg.g4World->GetName());
+            << cfg.g4World->GetName() << "'");
 
   DetectorPtr detector = nullptr;
   ContextDecorators decorators = {};
@@ -54,7 +55,7 @@ auto ActsExamples::Geant4::Geant4Detector::constructTrackingGeometry(
 
   ACTS_INFO("Building an Acts::TrackingGeometry called '"
             << cfg.name << "' from the Geant4PhysVolume '"
-            << cfg.g4World->GetName());
+            << cfg.g4World->GetName() << "'");
 
   ContextDecorators decorators = {};
 

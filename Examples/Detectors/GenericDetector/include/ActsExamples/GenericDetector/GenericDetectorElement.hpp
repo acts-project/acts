@@ -11,8 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Plugins/Identification/Identifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <memory>
@@ -22,20 +20,21 @@ class Surface;
 class PlanarBounds;
 class DiscBounds;
 class ISurfaceMaterial;
-class DigitizationModule;
 }  // namespace Acts
 
-namespace ActsExamples {
-
-namespace Generic {
+namespace ActsExamples::Generic {
 
 /// @class GenericDetectorElement
 ///
 /// This is a lightweight type of detector element,
 /// it simply implements the base class.
 ///
-class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
+class GenericDetectorElement : public Acts::DetectorElementBase {
  public:
+  using identifier_type = unsigned long long;
+  using identifier_diff = long long;
+  using Identifier = identifier_type;
+
   /// Broadcast the ContextType
   using ContextType = Acts::GeometryContext;
 
@@ -51,9 +50,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
       const Identifier identifier,
       std::shared_ptr<const Acts::Transform3> transform,
       std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
-      std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr,
-      std::shared_ptr<const Acts::DigitizationModule> digitizationModule =
-          nullptr);
+      std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
   /// Constructor for single sided detector element
   /// - bound to a Disc Surface
@@ -67,12 +64,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
       const Identifier identifier,
       std::shared_ptr<const Acts::Transform3> transform,
       std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
-      std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr,
-      std::shared_ptr<const Acts::DigitizationModule> digitizationModule =
-          nullptr);
-
-  /// Identifier
-  Identifier identifier() const final;
+      std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
   /// Return local to global transform associated with this detector element
   ///
@@ -89,19 +81,14 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   /// Non-cost access to surface associated with this detector element
   Acts::Surface& surface() override;
 
-  /// Set the identifier after construction (sometimes needed)
-  void assignIdentifier(const Identifier& identifier);
-
   /// The maximal thickness of the detector element wrt normal axis
   double thickness() const override;
 
-  /// Retrieve the DigitizationModule
-  const std::shared_ptr<const Acts::DigitizationModule> digitizationModule()
-      const override;
+  /// The identifier of the detector element
+  Identifier identifier() const;
 
  private:
-  /// the element representation
-  /// identifier
+  // The element identifier
   Identifier m_elementIdentifier;
   /// the transform for positioning in 3D space
   std::shared_ptr<const Acts::Transform3> m_elementTransform;
@@ -112,20 +99,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   /// store either
   std::shared_ptr<const Acts::PlanarBounds> m_elementPlanarBounds = nullptr;
   std::shared_ptr<const Acts::DiscBounds> m_elementDiscBounds = nullptr;
-  /// The Digitization module
-  std::shared_ptr<const Acts::DigitizationModule> m_digitizationModule =
-      nullptr;
 };
-
-inline void ActsExamples::Generic::GenericDetectorElement::assignIdentifier(
-    const Identifier& identifier) {
-  m_elementIdentifier = identifier;
-}
-
-inline Identifier ActsExamples::Generic::GenericDetectorElement::identifier()
-    const {
-  return m_elementIdentifier;
-}
 
 inline const Acts::Transform3&
 ActsExamples::Generic::GenericDetectorElement::transform(
@@ -146,11 +120,9 @@ inline double ActsExamples::Generic::GenericDetectorElement::thickness() const {
   return m_elementThickness;
 }
 
-inline const std::shared_ptr<const Acts::DigitizationModule>
-ActsExamples::Generic::GenericDetectorElement::digitizationModule() const {
-  return m_digitizationModule;
+inline ActsExamples::Generic::GenericDetectorElement::Identifier
+ActsExamples::Generic::GenericDetectorElement::identifier() const {
+  return m_elementIdentifier;
 }
 
-}  // end of namespace Generic
-
-}  // end of namespace ActsExamples
+}  // namespace ActsExamples::Generic

@@ -30,7 +30,7 @@ ActsFatras::PlanarSurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
   Acts::Vector2 exit = pos2Local + 0.5 * seg3Local.segment<2>(0);
   // Actually apply a drift
   // - dirftDir is assumed in local coordinates
-  if (not driftDir.segment<2>(0).isApprox(Acts::Vector2(0., 0.))) {
+  if (!driftDir.segment<2>(0).isApprox(Acts::Vector2(0., 0.))) {
     // Apply the scaled drift
     auto applyDrift = [&](Acts::Vector2& local) {
       auto scaledDriftDir =

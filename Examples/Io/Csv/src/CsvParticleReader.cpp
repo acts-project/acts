@@ -13,6 +13,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -22,8 +23,6 @@
 #include <cmath>
 #include <stdexcept>
 #include <string>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
 
@@ -48,8 +47,8 @@ std::string ActsExamples::CsvParticleReader::CsvParticleReader::name() const {
   return "CsvParticleReader";
 }
 
-std::pair<size_t, size_t> ActsExamples::CsvParticleReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::CsvParticleReader::availableEvents() const {
   return m_eventsRange;
 }
 
@@ -60,18 +59,18 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
   // vt and m are an optional columns
-  dfe::NamedTupleCsvReader<ParticleData> reader(path, {"vt", "m"});
+  ActsExamples::NamedTupleCsvReader<ParticleData> reader(path, {"vt", "m"});
   ParticleData data;
 
   while (reader.read(data)) {
     ActsFatras::Particle particle(ActsFatras::Barcode(data.particle_id),
-                                  Acts::PdgParticle(data.particle_type),
+                                  Acts::PdgParticle{data.particle_type},
                                   data.q * Acts::UnitConstants::e,
                                   data.m * Acts::UnitConstants::GeV);
     particle.setProcess(static_cast<ActsFatras::ProcessType>(data.process));
     particle.setPosition4(
         data.vx * Acts::UnitConstants::mm, data.vy * Acts::UnitConstants::mm,
-        data.vz * Acts::UnitConstants::mm, data.vt * Acts::UnitConstants::ns);
+        data.vz * Acts::UnitConstants::mm, data.vt * Acts::UnitConstants::mm);
     // Only used for direction; normalization/units do not matter
     particle.setDirection(data.px, data.py, data.pz);
     particle.setAbsoluteMomentum(std::hypot(data.px, data.py, data.pz) *

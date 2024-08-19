@@ -1,4 +1,3 @@
-from typing import Type
 import os
 import inspect
 from pathlib import Path
@@ -19,12 +18,7 @@ from helpers import (
 )
 
 import acts
-
-from common import getOpenDataDetectorDirectory
-
-from acts import PlanarModuleStepper, UnitConstants as u
-
-
+from acts import UnitConstants as u
 from acts.examples import (
     ObjPropagationStepsWriter,
     TrackFinderPerformanceWriter,
@@ -34,24 +28,22 @@ from acts.examples import (
     RootTrackParameterWriter,
     RootMaterialTrackWriter,
     RootMaterialWriter,
-    RootPlanarClusterWriter,
     RootSimHitWriter,
-    RootTrajectoryStatesWriter,
-    RootTrajectorySummaryWriter,
+    RootTrackStatesWriter,
+    RootTrackSummaryWriter,
     VertexPerformanceWriter,
     RootMeasurementWriter,
     CsvParticleWriter,
-    CsvPlanarClusterWriter,
     CsvSimHitWriter,
-    CsvMultiTrajectoryWriter,
+    CsvTrackWriter,
     CsvTrackingGeometryWriter,
     CsvMeasurementWriter,
-    PlanarSteppingAlgorithm,
     JsonMaterialWriter,
     JsonFormat,
     Sequencer,
     GenericDetector,
 )
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 
 @pytest.mark.obj
@@ -66,7 +58,7 @@ def test_obj_propagation_step_writer(tmp_path, trk_geo, conf_const, basic_prop_s
     w = conf_const(
         ObjPropagationStepsWriter,
         acts.logging.INFO,
-        collection=alg.config.propagationStepCollection,
+        collection=alg.config.outputPropagationSteps,
         outputDir=str(obj),
     )
 
@@ -118,7 +110,7 @@ def test_root_prop_step_writer(
     w = conf_const(
         RootPropagationStepsWriter,
         acts.logging.INFO,
-        collection=alg.config.propagationStepCollection,
+        collection=alg.config.outputPropagationSteps,
         filePath=str(file),
     )
 
@@ -171,7 +163,7 @@ def test_root_meas_writer(tmp_path, fatras, trk_geo, assert_root_hash):
         inputSimHits=simAlg.config.outputSimHits,
         inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
         filePath=str(out),
-        trackingGeometry=trk_geo,
+        surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),
     )
     config.addBoundIndicesFromDigiConfig(digiAlg.config)
     s.addWriter(RootMeasurementWriter(level=acts.logging.INFO, config=config))
@@ -203,51 +195,6 @@ def test_root_simhits_writer(tmp_path, fatras, conf_const, assert_root_hash):
     s.run()
     assert out.exists()
     assert out.stat().st_size > 2e4
-    assert_root_hash(out.name, out)
-
-
-@pytest.mark.root
-def test_root_clusters_writer(
-    tmp_path, fatras, conf_const, trk_geo, rng, assert_root_hash
-):
-    s = Sequencer(numThreads=1, events=10)  # we're not going to use this one
-    evGen, simAlg, _ = fatras(s)
-    s = Sequencer(numThreads=1, events=10)
-    s.addReader(evGen)
-    s.addAlgorithm(simAlg)
-    digiAlg = PlanarSteppingAlgorithm(
-        level=acts.logging.INFO,
-        inputSimHits=simAlg.config.outputSimHits,
-        outputClusters="clusters",
-        outputSourceLinks="sourcelinks",
-        outputDigiSourceLinks="digi_sourcelinks",
-        outputMeasurements="measurements",
-        outputMeasurementParticlesMap="meas_ptcl_map",
-        outputMeasurementSimHitsMap="meas_sh_map",
-        trackingGeometry=trk_geo,
-        randomNumbers=rng,
-        planarModuleStepper=PlanarModuleStepper(),
-    )
-    s.addAlgorithm(digiAlg)
-
-    out = tmp_path / "clusters.root"
-
-    assert not out.exists()
-
-    s.addWriter(
-        conf_const(
-            RootPlanarClusterWriter,
-            level=acts.logging.INFO,
-            filePath=str(out),
-            inputSimHits=simAlg.config.outputSimHits,
-            inputClusters=digiAlg.config.outputClusters,
-            trackingGeometry=trk_geo,
-        )
-    )
-
-    s.run()
-    assert out.exists()
-    assert out.stat().st_size > 2**10 * 50
     assert_root_hash(out.name, out)
 
 
@@ -298,47 +245,6 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
     assert all(f.stat().st_size > 200 for f in out.iterdir())
 
 
-@pytest.mark.csv
-def test_csv_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
-    s = Sequencer(numThreads=1, events=10)  # we're not going to use this one
-    evGen, simAlg, _ = fatras(s)
-    s = Sequencer(numThreads=1, events=10)
-    s.addReader(evGen)
-    s.addAlgorithm(simAlg)
-    digiAlg = PlanarSteppingAlgorithm(
-        level=acts.logging.WARNING,
-        inputSimHits=simAlg.config.outputSimHits,
-        outputClusters="clusters",
-        outputSourceLinks="sourcelinks",
-        outputDigiSourceLinks="digi_sourcelinks",
-        outputMeasurements="measurements",
-        outputMeasurementParticlesMap="meas_ptcl_map",
-        outputMeasurementSimHitsMap="meas_sh_map",
-        trackingGeometry=trk_geo,
-        randomNumbers=rng,
-        planarModuleStepper=PlanarModuleStepper(),
-    )
-    s.addAlgorithm(digiAlg)
-
-    out = tmp_path / "csv"
-    out.mkdir()
-
-    s.addWriter(
-        conf_const(
-            CsvPlanarClusterWriter,
-            level=acts.logging.WARNING,
-            outputDir=str(out),
-            inputSimHits=simAlg.config.outputSimHits,
-            inputClusters=digiAlg.config.outputClusters,
-            trackingGeometry=trk_geo,
-        )
-    )
-
-    s.run()
-    assert len([f for f in out.iterdir() if f.is_file()]) == s.config.events * 3
-    assert all(f.stat().st_size > 1024 for f in out.iterdir())
-
-
 @pytest.mark.parametrize(
     "writer",
     [
@@ -350,10 +256,9 @@ def test_csv_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
         RootMaterialTrackWriter,
         RootMeasurementWriter,
         RootMaterialWriter,
-        RootPlanarClusterWriter,
         RootSimHitWriter,
-        RootTrajectoryStatesWriter,
-        RootTrajectorySummaryWriter,
+        RootTrackStatesWriter,
+        RootTrackSummaryWriter,
         VertexPerformanceWriter,
         SeedingPerformanceWriter,
     ],
@@ -375,8 +280,8 @@ def test_root_writer_interface(writer, conf_const, tmp_path, trk_geo):
     for k, _ in inspect.getmembers(config):
         if k.startswith("input"):
             kw[k] = "collection"
-        if k == "trackingGeometry":
-            kw[k] = trk_geo
+        if k == "surfaceByIdentifier":
+            kw[k] = trk_geo.geoIdSurfaceMap()
 
     assert conf_const(writer, **kw)
 
@@ -388,9 +293,8 @@ def test_root_writer_interface(writer, conf_const, tmp_path, trk_geo):
     [
         CsvParticleWriter,
         CsvMeasurementWriter,
-        CsvPlanarClusterWriter,
         CsvSimHitWriter,
-        CsvMultiTrajectoryWriter,
+        CsvTrackWriter,
         CsvTrackingGeometryWriter,
     ],
 )
@@ -486,15 +390,14 @@ def test_csv_multitrajectory_writer(tmp_path):
     csv_dir = tmp_path / "csv"
     csv_dir.mkdir()
     s.addWriter(
-        CsvMultiTrajectoryWriter(
+        CsvTrackWriter(
             level=acts.logging.INFO,
-            inputTrajectories="trajectories",
+            inputTracks="tracks",
             inputMeasurementParticlesMap="measurement_particles_map",
             outputDir=str(csv_dir),
         )
     )
     s.run()
-    del s
     assert len([f for f in csv_dir.iterdir() if f.is_file()]) == 10
     assert all(f.stat().st_size > 20 for f in csv_dir.iterdir())
 
@@ -682,6 +585,14 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
         s=s,
     )
 
+    s.addAlgorithm(
+        acts.examples.TracksToTrajectories(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            outputTrajectories="trajectories",
+        )
+    )
+
     out = tmp_path / "trajectories_edm4hep.root"
 
     s.addWriter(
@@ -728,7 +639,7 @@ def test_edm4hep_tracks_writer(tmp_path):
     s.addWriter(
         EDM4hepTrackWriter(
             level=acts.logging.VERBOSE,
-            inputTracks="kfTracks",
+            inputTracks="kf_tracks",
             outputPath=str(out),
             Bz=2 * u.T,
         )
@@ -748,32 +659,9 @@ def test_edm4hep_tracks_writer(tmp_path):
         return
 
     from podio.root_io import Reader
-    from podio.frame import Frame
     import cppyy
 
     reader = Reader(str(out))
-
-    expected = [
-        (31.986961364746094, 30, 16),
-        (28.64777374267578, 30, 16),
-        (11.607606887817383, 22, 12),
-        (5.585886001586914, 22, 12),
-        (20.560943603515625, 20, 11),
-        (28.742727279663086, 28, 15),
-        (27.446802139282227, 22, 12),
-        (30.82959747314453, 24, 13),
-        (24.671127319335938, 26, 14),
-        (16.479907989501953, 20, 11),
-        (10.594233512878418, 22, 12),
-        (25.174715042114258, 28, 15),
-        (27.9674072265625, 26, 14),
-        (4.3012871742248535, 22, 12),
-        (20.492422103881836, 22, 12),
-        (27.92759132385254, 24, 13),
-        (14.514887809753418, 22, 12),
-        (12.876864433288574, 22, 12),
-        (12.951473236083984, 26, 14),
-    ]
 
     actual = []
 
@@ -805,5 +693,5 @@ def test_edm4hep_tracks_writer(tmp_path):
             assert rp.x == 0.0
             assert rp.y == 0.0
             assert rp.z == 0.0
-            assert abs(perigee.D0) < 1e-1
-            assert abs(perigee.Z0) < 1
+            assert abs(perigee.D0) < 1e0
+            assert abs(perigee.Z0) < 1e1

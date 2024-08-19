@@ -1,30 +1,15 @@
 #!/usr/bin/env python3
+
 import os
 import argparse
-import string
-import math
 import time
-from types import FunctionType
+from datetime import datetime
 
 from orion.client import build_experiment
 from orion.storage.base import get_storage
 
-from acts.examples import (
-    Sequencer,
-    WhiteBoard,
-    AlgorithmContext,
-    ProcessCode,
-    RootMaterialTrackReader,
-    RootMaterialTrackWriter,
-    MaterialMapping,
-    JsonMaterialWriter,
-    JsonFormat,
-)
-
 import acts
 from acts import (
-    Vector4,
-    UnitConstants as u,
     SurfaceMaterialMapper,
     VolumeMaterialMapper,
     Navigator,
@@ -32,10 +17,17 @@ from acts import (
     StraightLineStepper,
     MaterialMapJsonConverter,
 )
-
-from common import getOpenDataDetectorDirectory
+from acts.examples import (
+    Sequencer,
+    WhiteBoard,
+    AlgorithmContext,
+    ProcessCode,
+    RootMaterialTrackReader,
+    MaterialMapping,
+    JsonMaterialWriter,
+    JsonFormat,
+)
 from acts.examples.odd import getOpenDataDetector
-from datetime import datetime
 
 
 def runMaterialMappingNoTrack(
@@ -77,13 +69,15 @@ def runMaterialMappingNoTrack(
     s.addReader(
         RootMaterialTrackReader(
             level=acts.logging.INFO,
-            collection="material-tracks",
+            outputMaterialTracks="material-tracks",
             fileList=[
                 os.path.join(
                     inputDir,
-                    "optimised-material-map_tracks.root"
-                    if readCachedSurfaceInformation
-                    else "geant4_material_tracks.root",
+                    (
+                        "optimised-material-map_tracks.root"
+                        if readCachedSurfaceInformation
+                        else "geant4_material_tracks.root"
+                    ),
                 )
             ],
             readCachedSurfaceInformation=readCachedSurfaceInformation,
@@ -93,7 +87,7 @@ def runMaterialMappingNoTrack(
     stepper = StraightLineStepper()
     mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
     mmAlgCfg.trackingGeometry = trackingGeometry
-    mmAlgCfg.collection = "material-tracks"
+    mmAlgCfg.inputMaterialTracks = "material-tracks"
 
     if mapSurface:
         navigator = Navigator(
@@ -173,23 +167,15 @@ def runMaterialMappingVariance(
     matDeco = acts.IMaterialDecorator.fromFile(
         str(os.path.join(inputPath, "geometry-map.json"))
     )
-    detectorTemp, trackingGeometryTemp, decoratorsTemp = getOpenDataDetector(
-        getOpenDataDetectorDirectory(), matDeco
-    )
+    detectorTemp, trackingGeometryTemp, decoratorsTemp = getOpenDataDetector(matDeco)
     matMapDeco = acts.MappingMaterialDecorator(
         tGeometry=trackingGeometryTemp, level=acts.logging.ERROR
     )
     # Update the binning using the bin map corresponding to this trial
     matMapDeco.setBinningMap(binMap)
 
-    del detectorTemp
-    del trackingGeometryTemp
-    del decoratorsTemp
-
     # Decorate the detector with the MappingMaterialDecorator
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory(), matMapDeco
-    )
+    detector, trackingGeometry, decorators = getOpenDataDetector(matMapDeco)
 
     # Sequence for the mapping, only use one thread when mapping material
     sMap = acts.examples.Sequencer(
@@ -209,10 +195,6 @@ def runMaterialMappingVariance(
         s=sMap,
     )
     sMap.run()
-    del sMap  # Need to be deleted to write the material map to cbor
-    del detector
-    del trackingGeometry
-    del decorators
 
     # Compute the variance by rerunning the mapping
     print(
@@ -225,9 +207,7 @@ def runMaterialMappingVariance(
     # Use the material map from the previous mapping as an input
     cborMap = os.path.join(pathExp, (mapName + ".cbor"))
     matDecoVar = acts.IMaterialDecorator.fromFile(cborMap)
-    detectorVar, trackingGeometryVar, decoratorsVar = getOpenDataDetector(
-        getOpenDataDetectorDirectory(), matDecoVar
-    )
+    detectorVar, trackingGeometryVar, decoratorsVar = getOpenDataDetector(matDecoVar)
     s = acts.examples.Sequencer(events=events, numThreads=1, logLevel=acts.logging.INFO)
     for decorator in decoratorsVar:
         s.addContextDecorator(decorator)
@@ -239,13 +219,15 @@ def runMaterialMappingVariance(
     # Read material step information from a ROOT TTRee
     reader = RootMaterialTrackReader(
         level=acts.logging.ERROR,
-        collection="material-tracks",
+        outputMaterialTracks="material-tracks",
         fileList=[
             os.path.join(
                 inputPath,
-                "optimised-material-map_tracks.root"
-                if readCachedSurfaceInformation
-                else "geant4_material_tracks.root",
+                (
+                    "optimised-material-map_tracks.root"
+                    if readCachedSurfaceInformation
+                    else "geant4_material_tracks.root"
+                ),
             )
         ],
         readCachedSurfaceInformation=readCachedSurfaceInformation,
@@ -254,7 +236,7 @@ def runMaterialMappingVariance(
     stepper = StraightLineStepper()
     mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
     mmAlgCfg.trackingGeometry = trackingGeometryVar
-    mmAlgCfg.collection = "material-tracks"
+    mmAlgCfg.inputMaterialTracks = "material-tracks"
 
     if mapSurface:
         navigator = Navigator(
@@ -310,11 +292,6 @@ def runMaterialMappingVariance(
     )
     pipeResult.send(score)
 
-    del mapping
-    del s
-    del detectorVar
-    del trackingGeometryVar
-    del decoratorsVar
     os.remove(cborMap)
 
 
@@ -446,7 +423,6 @@ def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPl
 
 
 if "__main__" == __name__:
-
     print(datetime.now().strftime("%H:%M:%S") + "    Starting")
     # Optimiser arguments
     parser = argparse.ArgumentParser()
@@ -487,16 +463,13 @@ if "__main__" == __name__:
     matDeco = acts.IMaterialDecorator.fromFile(
         str(os.path.join(args.inputPath, "geometry-map.json"))
     )
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory(), matDeco
-    )
+    detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
 
     # Use the MappingMaterialDecorator to create a binning map that can be optimised
     matMapDeco = acts.MappingMaterialDecorator(
         tGeometry=trackingGeometry, level=acts.logging.WARNING
     )
     binDict = matMapDeco.binningMap()
-    del detector, decorators
 
     # Create the pipes that will be used to transfer data to/from the jobs
     from multiprocessing import Process, Pipe
@@ -596,7 +569,7 @@ if "__main__" == __name__:
 
         # Decorate the detector with the MappingMaterialDecorator
         resultDetector, resultTrackingGeometry, resultDecorators = getOpenDataDetector(
-            getOpenDataDetectorDirectory(), matMapDeco
+            matMapDeco
         )
 
         # Sequence for the mapping, only use one thread when mapping material
@@ -618,8 +591,6 @@ if "__main__" == __name__:
             s=rMap,
         )
         rMap.run()
-        del rMap  # Need to be deleted to write the material map to cbor
-        del resultDetector, resultTrackingGeometry, resultDecorators
     print(
         datetime.now().strftime("%H:%M:%S")
         + "    Waiting for all the score to have been stored",

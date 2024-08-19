@@ -25,8 +25,6 @@
 // can not match our naming guidelines.
 namespace Acts {
 
-class VolumeBounds;
-
 void to_json(nlohmann::json& j, const VolumeBounds& bounds);
 
 namespace VolumeBoundsJsonConverter {
@@ -48,7 +46,7 @@ nlohmann::json toJson(const VolumeBounds& bounds);
 /// @return a unique_ptr to a volume bounds object for type polymorphism
 template <typename bounds_t>
 std::unique_ptr<bounds_t> fromJson(const nlohmann::json& jVolumeBounds) {
-  constexpr size_t kValues = bounds_t::BoundValues::eSize;
+  constexpr std::size_t kValues = bounds_t::BoundValues::eSize;
   std::array<ActsScalar, kValues> bValues{};
   std::vector<ActsScalar> bVector = jVolumeBounds["values"];
   std::copy_n(bVector.begin(), kValues, bValues.begin());

@@ -15,10 +15,6 @@ target_compile_features(
   ActsCore
   PUBLIC ${ACTS_CXX_STANDARD_FEATURE})
 
-if(ACTS_CONCEPTS_SUPPORTED)
-  target_compile_definitions(ActsCore PUBLIC ACTS_CONCEPTS_SUPPORTED)
-endif()
-
 target_include_directories(
   ActsCore
   PUBLIC
@@ -53,7 +49,7 @@ if(ACTS_LOG_FAILURE_THRESHOLD)
   message(STATUS "Enable log failure threshold, set to ${ACTS_LOG_FAILURE_THRESHOLD}")
   target_compile_definitions(
     ActsCore
-    PUBLIC 
+    PUBLIC
     -DACTS_LOG_FAILURE_THRESHOLD=${ACTS_LOG_FAILURE_THRESHOLD}
     -DACTS_ENABLE_LOG_FAILURE_THRESHOLD)
 
@@ -63,7 +59,7 @@ if(ACTS_ENABLE_LOG_FAILURE_THRESHOLD)
   message(STATUS "Enable log failure threshold")
   target_compile_definitions(
     ActsCore
-    PUBLIC 
+    PUBLIC
     -DACTS_ENABLE_LOG_FAILURE_THRESHOLD)
 endif()
 
@@ -119,7 +115,6 @@ install(
 
 # target source files are added separately
 add_subdirectory(src/EventData)
-add_subdirectory(src/Digitization)
 add_subdirectory(src/Definitions)
 add_subdirectory(src/Detector)
 add_subdirectory(src/Geometry)

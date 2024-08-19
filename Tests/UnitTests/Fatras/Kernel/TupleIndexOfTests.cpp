@@ -12,12 +12,10 @@
 
 #include <tuple>
 
-namespace ActsFatras {
-namespace detail {
+namespace ActsFatras::detail {
 template <class T, class Tuple>
 struct TupleIndexOf;
-}  // namespace detail
-}  // namespace ActsFatras
+}  // namespace ActsFatras::detail
 
 using ActsFatras::detail::TupleIndexOf;
 

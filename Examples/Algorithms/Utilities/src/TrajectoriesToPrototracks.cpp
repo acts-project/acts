@@ -37,7 +37,7 @@ ProcessCode TrajectoriesToPrototracks::execute(
       ProtoTrack track;
 
       trajectory.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
-        if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
           return true;
         }
 

@@ -9,8 +9,8 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
@@ -67,6 +67,7 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
   frame.put(std::move(hitsPlane), "ActsTrackerHitsPlane");
   frame.put(std::move(hits), "ActsTrackerHitsRaw");
 
+  std::lock_guard guard(m_writeMutex);
   m_writer.writeFrame(frame, "events");
 
   return ActsExamples::ProcessCode::SUCCESS;

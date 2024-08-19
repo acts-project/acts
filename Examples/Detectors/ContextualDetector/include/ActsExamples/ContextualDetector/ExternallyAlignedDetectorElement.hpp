@@ -11,16 +11,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Plugins/Identification/Identifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 
 #include <map>
 
-namespace ActsExamples {
-
-namespace Contextual {
+namespace ActsExamples::Contextual {
 
 /// @class ExternallyAlignedDetectorElement extends GenericDetectorElement
 ///
@@ -44,7 +40,7 @@ class ExternallyAlignedDetectorElement
   struct AlignmentStore {
     // GenericDetector identifiers are sequential
     std::vector<Acts::Transform3> transforms;
-    size_t lastAccessed = 0;
+    std::size_t lastAccessed = 0;
   };
 
   /// @class ContextType
@@ -72,7 +68,7 @@ inline const Acts::Transform3& ExternallyAlignedDetectorElement::transform(
   }
   // cast into the right context object
   const auto& alignContext = gctx.get<ContextType>();
-  identifier_type idValue = identifier_type(identifier());
+  identifier_type idValue = static_cast<identifier_type>(identifier());
 
   if (alignContext.alignmentStore == nullptr) {
     // geometry construction => nominal alignment
@@ -84,5 +80,4 @@ inline const Acts::Transform3& ExternallyAlignedDetectorElement::transform(
   return alignContext.alignmentStore->transforms[idValue];
 }
 
-}  // end of namespace Contextual
-}  // end of namespace ActsExamples
+}  // namespace ActsExamples::Contextual

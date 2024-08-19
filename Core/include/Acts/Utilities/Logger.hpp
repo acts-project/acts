@@ -23,6 +23,8 @@
 #include <thread>
 #include <utility>
 
+/// @defgroup Logging Logging
+
 // clang-format off
 /// @brief macro to use a local Acts::Logger object
 /// @ingroup Logging
@@ -64,11 +66,14 @@
 
 // Debug level agnostic implementation of the ACTS_XYZ logging macros
 #define ACTS_LOG(level, x)                                                     \
-  if (logger().doPrint(level)) {                                               \
-    std::ostringstream os;                                                     \
-    os << x;                                                                   \
-    logger().log(level, os.str());                                             \
-  }
+  do {                                                                         \
+    if (logger().doPrint(level)) {                                             \
+      std::ostringstream os;                                                   \
+      os << x;                                                                 \
+      logger().log(level, os.str());                                           \
+    }                                                                          \
+  }                                                                            \
+  while(0)
 
 /// @brief macro for verbose debug output
 /// @ingroup Logging
@@ -233,6 +238,22 @@ class ThresholdFailure : public std::runtime_error {
   using std::runtime_error::runtime_error;
 };
 
+/// Helper class that changes the failure threshold for the duration of its
+/// lifetime.
+class ScopedFailureThreshold {
+ public:
+  explicit ScopedFailureThreshold(Level level) { setFailureThreshold(level); }
+  ScopedFailureThreshold(const ScopedFailureThreshold&) = delete;
+  ScopedFailureThreshold& operator=(const ScopedFailureThreshold&) = delete;
+  ScopedFailureThreshold(ScopedFailureThreshold&&) = delete;
+  ScopedFailureThreshold& operator=(ScopedFailureThreshold&&) = delete;
+
+  ~ScopedFailureThreshold() noexcept;
+
+ private:
+  Level m_previousLevel{getFailureThreshold()};
+};
+
 /// @brief abstract base class for printing debug output
 ///
 /// Implementations of this interface need to define how and where to @a print
@@ -302,7 +323,7 @@ class DefaultFilterPolicy final : public OutputFilterPolicy {
           "the ACTS_LOG_FAILURE_THRESHOLD=" +
           std::string{levelName(getFailureThreshold())} +
           " configuration. See "
-          "https://acts.readthedocs.io/en/latest/core/"
+          "https://acts.readthedocs.io/en/latest/core/misc/"
           "logging.html#logging-thresholds");
     }
   }
@@ -572,7 +593,7 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
           "ACTS_LOG_FAILURE_THRESHOLD=" +
           std::string{levelName(getFailureThreshold())} +
           " configuration, bailing out. See "
-          "https://acts.readthedocs.io/en/latest/core/"
+          "https://acts.readthedocs.io/en/latest/core/misc/"
           "logging.html#logging-thresholds");
     }
   }
@@ -590,11 +611,9 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   };
 
   /// Make a copy of this print policy with a new name
-  /// @param name the new name
   /// @return the copy
   std::unique_ptr<OutputPrintPolicy> clone(
-      const std::string& name) const override {
-    (void)name;
+      const std::string& /*name*/) const override {
     return std::make_unique<DefaultPrintPolicy>(m_out);
   };
 

@@ -140,7 +140,7 @@ constexpr bool either = std::disjunction<std::bool_constant<Bs>...>::value;
 /// Alias for the negation of a ``require``. This is essentially a NOT ANY test.
 /// @tparam Bs The booleans.
 template <bool... Bs>
-constexpr bool disallow = not require<Bs...>;
+constexpr bool disallow = !require<Bs...>;
 
 /// Alias to ``is_detected`` which unpacks the constexpr boolean value.
 /// @tparam Op The operation
@@ -331,7 +331,7 @@ constexpr bool has_member = identical_to<V, M, T>;
     /* (by stripping it and seeing if something changed */                     \
     template <typename T_>                                                     \
     static constexpr bool is_const =                                           \
-        not std::is_same_v<std::remove_const_t<T_>, T_>;                       \
+        !std::is_same_v<std::remove_const_t<T_>, T_>;                          \
                                                                                \
     /*These following meta-functions basically to this: they check whether or  \
      * not the actual function pointer extracted through ``&T::method_name``   \

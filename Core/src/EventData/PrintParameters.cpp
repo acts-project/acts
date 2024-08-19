@@ -187,7 +187,7 @@ void Acts::detail::printFreeParameters(std::ostream& os,
 }
 
 void Acts::detail::printMeasurement(std::ostream& os, BoundIndices size,
-                                    const uint8_t* indices,
+                                    const std::uint8_t* indices,
                                     const ActsScalar* params,
                                     const ActsScalar* cov) {
   auto s = static_cast<Eigen::Index>(size);
@@ -196,7 +196,7 @@ void Acts::detail::printMeasurement(std::ostream& os, BoundIndices size,
 }
 
 void Acts::detail::printMeasurement(std::ostream& os, FreeIndices size,
-                                    const uint8_t* indices,
+                                    const std::uint8_t* indices,
                                     const ActsScalar* params,
                                     const ActsScalar* cov) {
   auto s = static_cast<Eigen::Index>(size);

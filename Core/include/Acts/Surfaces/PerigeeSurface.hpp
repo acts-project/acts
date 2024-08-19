@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
 
 #include <cstddef>
 #include <iosfwd>
@@ -26,11 +27,9 @@ namespace Acts {
 /// The Surface axis is fixed to be the z-axis of the Tracking frame.
 /// It inherits from StraingLineSurface.
 ///
-/// @image html figures/LineSurface.png
+/// @image html LineSurface.png
 class PerigeeSurface : public LineSurface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+  friend class Surface;
 
  protected:
   /// Constructor from GlobalPosition
@@ -74,15 +73,6 @@ class PerigeeSurface : public LineSurface {
   /// Return properly formatted class name for screen output */
   std::string name() const final;
 
-  /// Output Method for std::ostream
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param sl is the ostream to be dumped into
-  ///
-  /// @return ostreamn object which was streamed into
-  std::ostream& toStream(const GeometryContext& gctx,
-                         std::ostream& sl) const final;
-
   /// Return a Polyhedron for the surfaces
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -90,7 +80,20 @@ class PerigeeSurface : public LineSurface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const final;
+                                      std::size_t lseg) const final;
+
+ protected:
+  /// Output Method for std::ostream
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param sl is the ostream to be dumped into
+  ///
+  /// @return ostreamn object which was streamed into
+  std::ostream& toStreamImpl(const GeometryContext& gctx,
+                             std::ostream& sl) const final;
 };
+
+static_assert(SurfaceConcept<PerigeeSurface>,
+              "PerigeeSurface does not fulfill SurfaceConcept");
 
 }  // namespace Acts

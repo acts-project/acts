@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -18,11 +16,11 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <cmath>
@@ -38,15 +36,9 @@
 
 #include <boost/format.hpp>
 
-using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -58,12 +50,12 @@ struct SurfaceArrayFixture {
   SurfaceArrayFixture() { BOOST_TEST_MESSAGE("setup fixture"); }
   ~SurfaceArrayFixture() { BOOST_TEST_MESSAGE("teardown fixture"); }
 
-  SrfVec fullPhiTestSurfacesEC(size_t n = 10, double shift = 0,
+  SrfVec fullPhiTestSurfacesEC(std::size_t n = 10, double shift = 0,
                                double zbase = 0, double r = 10) {
     SrfVec res;
 
     double phiStep = 2 * M_PI / n;
-    for (size_t i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
 
       Transform3 trans;
@@ -112,11 +104,11 @@ struct SurfaceArrayFixture {
   }
 
   SrfVec straightLineSurfaces(
-      size_t n = 10., double step = 3, const Vector3& origin = {0, 0, 1.5},
+      std::size_t n = 10., double step = 3, const Vector3& origin = {0, 0, 1.5},
       const Transform3& pretrans = Transform3::Identity(),
       const Vector3& dir = {0, 0, 1}) {
     SrfVec res;
-    for (size_t i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       Transform3 trans;
       trans.setIdentity();
       trans.translate(origin + dir * step * i);
@@ -157,7 +149,7 @@ struct SurfaceArrayFixture {
 
     os << std::fixed << std::setprecision(4);
 
-    size_t nVtx = 0;
+    std::size_t nVtx = 0;
     for (const auto& srfx : surfaces) {
       std::shared_ptr<const PlaneSurface> srf =
           std::dynamic_pointer_cast<const PlaneSurface>(srfx);
@@ -172,7 +164,7 @@ struct SurfaceArrayFixture {
 
       // connect them
       os << "f";
-      for (size_t i = 1; i <= bounds->vertices().size(); ++i) {
+      for (std::size_t i = 1; i <= bounds->vertices().size(); ++i) {
         os << " " << nVtx + i;
       }
       os << "\n";
@@ -193,10 +185,9 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
   draw_surfaces(brl, "SurfaceArray_create_BRL_1.obj");
 
-  detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Closed>
-      phiAxis(-M_PI, M_PI, 30u);
-  detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
-      zAxis(-14, 14, 7u);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(-M_PI, M_PI,
+                                                                30u);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> zAxis(-14, 14, 7u);
 
   double angleShift = 2 * M_PI / 30. / 2.;
   auto transform = [angleShift](const Vector3& pos) {
@@ -219,7 +210,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   sa.toStream(tgContext, std::cout);
 
   for (const auto& srf : brl) {
-    Vector3 ctr = srf->binningPosition(tgContext, binR);
+    Vector3 ctr = srf->binningPosition(tgContext, BinningValue::binR);
     std::vector<const Surface*> binContent = sa.at(ctr);
 
     BOOST_CHECK_EQUAL(binContent.size(), 1u);
@@ -239,7 +230,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   SurfaceArray sa2(std::move(sl2), brl);
   sa.toStream(tgContext, std::cout);
   for (const auto& srf : brl) {
-    Vector3 ctr = srf->binningPosition(tgContext, binR);
+    Vector3 ctr = srf->binningPosition(tgContext, BinningValue::binR);
     std::vector<const Surface*> binContent = sa2.at(ctr);
 
     BOOST_CHECK_EQUAL(binContent.size(), 1u);
@@ -281,6 +272,4 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_manyElementsSingleLookup) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -34,9 +34,9 @@ struct RelativisticQuantities {
   float gamma = 0.0f;
 
   RelativisticQuantities(float mass, float qOverP, float absQ) {
-    assert((0 < mass) and "Mass must be positive");
-    assert((qOverP != 0) and "q/p must be non-zero");
-    assert((absQ > 0) and "Absolute charge must be non-zero and positive");
+    assert((0 < mass) && "Mass must be positive");
+    assert((qOverP != 0) && "q/p must be non-zero");
+    assert((absQ > 0) && "Absolute charge must be non-zero and positive");
     // beta²/q² = (p/E)²/q² = p²/(q²m² + q²p²) = 1/(q² + (m²(q/p)²)
     // q²/beta² = q² + m²(q/p)²
     q2OverBeta2 = absQ * absQ + (mass * qOverP) * (mass * qOverP);
@@ -154,7 +154,7 @@ namespace detail {
 inline float computeEnergyLossLandauFwhm(const Acts::MaterialSlab& slab,
                                          const RelativisticQuantities& rq) {
   // return early in case of vacuum or zero thickness
-  if (not slab) {
+  if (!slab) {
     return 0.0f;
   }
 
@@ -171,7 +171,7 @@ inline float computeEnergyLossLandauFwhm(const Acts::MaterialSlab& slab,
 float Acts::computeEnergyLossBethe(const MaterialSlab& slab, float m,
                                    float qOverP, float absQ) {
   // return early in case of vacuum or zero thickness
-  if (not slab) {
+  if (!slab) {
     return 0.0f;
   }
 
@@ -196,7 +196,7 @@ float Acts::computeEnergyLossBethe(const MaterialSlab& slab, float m,
 float Acts::deriveEnergyLossBetheQOverP(const MaterialSlab& slab, float m,
                                         float qOverP, float absQ) {
   // return early in case of vacuum or zero thickness
-  if (not slab) {
+  if (!slab) {
     return 0.0f;
   }
 
@@ -233,7 +233,7 @@ float Acts::deriveEnergyLossBetheQOverP(const MaterialSlab& slab, float m,
 float Acts::computeEnergyLossLandau(const MaterialSlab& slab, float m,
                                     float qOverP, float absQ) {
   // return early in case of vacuum or zero thickness
-  if (not slab) {
+  if (!slab) {
     return 0.0f;
   }
 
@@ -253,7 +253,7 @@ float Acts::computeEnergyLossLandau(const MaterialSlab& slab, float m,
 float Acts::deriveEnergyLossLandauQOverP(const MaterialSlab& slab, float m,
                                          float qOverP, float absQ) {
   // return early in case of vacuum or zero thickness
-  if (not slab) {
+  if (!slab) {
     return 0.0f;
   }
 
@@ -288,7 +288,7 @@ float Acts::deriveEnergyLossLandauQOverP(const MaterialSlab& slab, float m,
 float Acts::computeEnergyLossLandauSigma(const MaterialSlab& slab, float m,
                                          float qOverP, float absQ) {
   // return early in case of vacuum or zero thickness
-  if (not slab) {
+  if (!slab) {
     return 0.0f;
   }
 
@@ -386,7 +386,7 @@ float Acts::computeEnergyLossRadiative(const MaterialSlab& slab,
          "pdg is not absolute");
 
   // return early in case of vacuum or zero thickness
-  if (not slab) {
+  if (!slab) {
     return 0.0f;
   }
 
@@ -401,7 +401,7 @@ float Acts::computeEnergyLossRadiative(const MaterialSlab& slab,
 
   // muon- or muon+
   // TODO magic number 8_GeV
-  if ((absPdg == PdgParticle::eMuon) and (8_GeV < energy)) {
+  if ((absPdg == PdgParticle::eMuon) && (8_GeV < energy)) {
     dEdx += computeMuonDirectPairPhotoNuclearLossMean(energy);
   }
   // scale from energy loss per unit radiation length to total energy
@@ -415,7 +415,7 @@ float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab,
          "pdg is not absolute");
 
   // return early in case of vacuum or zero thickness
-  if (not slab) {
+  if (!slab) {
     return 0.0f;
   }
 
@@ -431,7 +431,7 @@ float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab,
 
   // muon- or muon+
   // TODO magic number 8_GeV
-  if ((absPdg == PdgParticle::eMuon) and (8_GeV < energy)) {
+  if ((absPdg == PdgParticle::eMuon) && (8_GeV < energy)) {
     derE += deriveMuonDirectPairPhotoNuclearLossMeanE(energy);
   }
   // compute derivative w/ respect to q/p by using the chain rule
@@ -504,7 +504,7 @@ float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab,
          "pdg is not absolute");
 
   // return early in case of vacuum or zero thickness
-  if (not slab) {
+  if (!slab) {
     return 0.0f;
   }
 

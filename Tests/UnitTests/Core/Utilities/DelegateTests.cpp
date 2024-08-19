@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -20,8 +19,6 @@
 #include <vector>
 
 using namespace Acts;
-
-namespace bd = boost::unit_test::data;
 
 BOOST_AUTO_TEST_SUITE(DelegateTests)
 
@@ -126,6 +123,21 @@ BOOST_AUTO_TEST_CASE(ConnectRuntime) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(ConnectConstructFuncPtr) {
+  Delegate<int(int, int)> add{DelegateFuncTag<&sumImpl>{}};
+  BOOST_CHECK(add);
+  BOOST_CHECK(add.connected());
+  BOOST_CHECK_EQUAL(add(4, 4), 8);
+
+  Subtractor s{18};
+  Delegate<int(int)> sub{DelegateFuncTag<&Subtractor::execute>{}, &s};
+
+  BOOST_CHECK(sub);
+  BOOST_CHECK(sub.connected());
+
+  BOOST_CHECK_EQUAL(sub(7), 7 - 18);
+}
+
 void modify(int& v, int a) {
   v = a;
 }
@@ -181,21 +193,21 @@ BOOST_AUTO_TEST_CASE(StatefullLambdas) {
 
   BOOST_CHECK(d);
   BOOST_CHECK(d.connected());
-  BOOST_CHECK(d(2) == 1);
+  BOOST_CHECK_EQUAL(d(2), 1);
 
   d.disconnect();
   d = lambda;
 
   BOOST_CHECK(d);
   BOOST_CHECK(d.connected());
-  BOOST_CHECK(d(2) == 2);
+  BOOST_CHECK_EQUAL(d(2), 2);
 
   d.disconnect();
   d.connect(lambda);
 
   BOOST_CHECK(d);
   BOOST_CHECK(d.connected());
-  BOOST_CHECK(d(2) == 3);
+  BOOST_CHECK_EQUAL(d(2), 3);
 
   // This should not compile because of deleted && overloads
   // d.connect([&](int a){ v.push_back(a); return v.size(); });
@@ -223,11 +235,9 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
   {
     auto s = std::make_unique<const SignatureTest>();
     Delegate<void(int&, int)> d;
-    d.connect<&SignatureTest::modify>(std::move(s));
-
-    int v = 0;
-    d(v, 42);
-    BOOST_CHECK_EQUAL(v, 42);
+    (void)d;
+    // This should not compile, as it would be a memory leak
+    // d.connect<&SignatureTest::modify>(std::move(s));
   }
 
   {

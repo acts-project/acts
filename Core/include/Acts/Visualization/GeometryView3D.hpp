@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
@@ -23,7 +23,6 @@ class Surface;
 class SurfaceArray;
 class TrackingVolume;
 struct Polyhedron;
-class AbstractVolume;
 class IVisualization3D;
 
 namespace Experimental {
@@ -31,11 +30,11 @@ class DetectorVolume;
 class Portal;
 }  // namespace Experimental
 
-static ViewConfig s_viewSensitive = ViewConfig({0, 180, 240});
-static ViewConfig s_viewPassive = ViewConfig({240, 280, 0});
-static ViewConfig s_viewVolume = ViewConfig({220, 220, 0});
-static ViewConfig s_viewGrid = ViewConfig({220, 0, 0});
-static ViewConfig s_viewLine = ViewConfig({0, 0, 220});
+static const ViewConfig s_viewSensitive;
+static const ViewConfig s_viewPassive;
+static const ViewConfig s_viewVolume;
+static const ViewConfig s_viewGrid;
+static const ViewConfig s_viewLine;
 
 struct GeometryView3D {
   /// Helper method to draw Polyhedron objects
@@ -78,14 +77,14 @@ struct GeometryView3D {
       const ViewConfig& gridConfig = s_viewGrid,
       const std::string& outputDir = ".");
 
-  /// Helper method to draw AbstractVolume objects
+  /// Helper method to draw Volume objects
   ///
   /// @param [in,out] helper The visualization helper
   /// @param volume The volume to be drawn
   /// @param gctx The geometry context for which it is drawn
   /// @param transform An option additional transform
   /// @param viewConfig The drawing configuration for boundary surfaces
-  static void drawVolume(IVisualization3D& helper, const AbstractVolume& volume,
+  static void drawVolume(IVisualization3D& helper, const Volume& volume,
                          const GeometryContext& gctx,
                          const Transform3& transform = Transform3::Identity(),
                          const ViewConfig& viewConfig = s_viewVolume);
@@ -124,7 +123,7 @@ struct GeometryView3D {
       const ViewConfig& unconnected = ViewConfig({255, 0, 0}),
       const ViewConfig& viewConfig = s_viewSensitive);
 
-  /// Helper method to draw AbstractVolume objects
+  /// Helper method to draw Layer objects
   ///
   /// @param [in,out] helper The visualization helper
   /// @param layer The tracking layer to be drawn
@@ -140,7 +139,7 @@ struct GeometryView3D {
                         const ViewConfig& gridConfig = s_viewGrid,
                         const std::string& outputDir = ".");
 
-  /// Helper method to draw AbstractVolume objects
+  /// Helper method to draw TrackingVolume objects
   ///
   /// @param [in,out] helper The visualization helper
   /// @param tVolume The tracking volume to be drawn

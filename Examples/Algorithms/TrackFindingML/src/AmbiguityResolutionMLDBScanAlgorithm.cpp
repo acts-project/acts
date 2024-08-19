@@ -8,9 +8,9 @@
 
 #include "ActsExamples/TrackFindingML/AmbiguityResolutionMLDBScanAlgorithm.hpp"
 
-#include "Acts/Plugins/Mlpack/AmbiguityDBScanClustering.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/TrackFindingML/AmbiguityDBScanClustering.hpp"
 
 #include <iterator>
 #include <map>
@@ -39,14 +39,14 @@ ActsExamples::AmbiguityResolutionMLDBScanAlgorithm::execute(
   // Read input data
   const auto& tracks = m_inputTracks(ctx);
   // Associate measurement to their respective tracks
-  std::multimap<int, std::pair<int, std::vector<int>>> trackMap =
-      mapTrackHits(tracks, m_cfg.nMeasurementsMin);
+  std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>
+      trackMap = mapTrackHits(tracks, m_cfg.nMeasurementsMin);
   // Cluster the tracks using DBscan
   auto cluster = Acts::dbscanTrackClustering(
       trackMap, tracks, m_cfg.epsilonDBScan, m_cfg.minPointsDBScan);
   // Select the ID of the track we want to keep
-  std::vector<int> goodTracks =
-      m_duplicateClassifier.solveAmbuguity(cluster, tracks);
+  std::vector<std::size_t> goodTracks =
+      m_duplicateClassifier.solveAmbiguity(cluster, tracks);
   // Prepare the output track collection from the IDs
   auto outputTracks = prepareOutputTrack(tracks, goodTracks);
   m_outputTracks(ctx, std::move(outputTracks));

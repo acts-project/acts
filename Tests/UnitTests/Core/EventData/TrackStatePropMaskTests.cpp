@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/context.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/TrackStatePropMask.hpp"
@@ -60,37 +58,37 @@ BOOST_AUTO_TEST_CASE(BitmaskOperators) {
   // test orthogonality
   std::array<PM, 5> values{PM::Predicted, PM::Filtered, PM::Smoothed,
                            PM::Jacobian, PM::Calibrated};
-  for (size_t i = 0; i < values.size(); i++) {
-    for (size_t j = 0; j < values.size(); j++) {
+  for (std::size_t i = 0; i < values.size(); i++) {
+    for (std::size_t j = 0; j < values.size(); j++) {
       PM a = values[i];
       PM b = values[j];
 
       if (i == j) {
-        BOOST_CHECK(cnv(a & b).count() == 1);
+        BOOST_CHECK_EQUAL(cnv(a & b).count(), 1);
       } else {
         BOOST_CHECK(cnv(a & b).none());
       }
     }
   }
 
-  BOOST_CHECK(cnv(PM::Predicted ^ PM::Filtered).count() == 2);
+  BOOST_CHECK_EQUAL(cnv(PM::Predicted ^ PM::Filtered).count(), 2);
   BOOST_CHECK(cnv(PM::Predicted ^ PM::Predicted).none());
-  BOOST_CHECK(~(PM::Predicted | PM::Calibrated) ==
-              (PM::All ^ PM::Predicted ^ PM::Calibrated));
+  BOOST_CHECK_EQUAL(~(PM::Predicted | PM::Calibrated),
+                    (PM::All ^ PM::Predicted ^ PM::Calibrated));
 
   PM base = PM::None;
-  BOOST_CHECK(cnv(base) == 0);
+  BOOST_CHECK_EQUAL(cnv(base), 0);
 
   base &= PM::Filtered;
-  BOOST_CHECK(cnv(base) == 0);
+  BOOST_CHECK_EQUAL(cnv(base), 0);
 
   base |= PM::Filtered;
-  BOOST_CHECK(base == PM::Filtered);
+  BOOST_CHECK_EQUAL(base, PM::Filtered);
 
   base |= PM::Calibrated;
-  BOOST_CHECK(base == (PM::Filtered | PM::Calibrated));
+  BOOST_CHECK_EQUAL(base, (PM::Filtered | PM::Calibrated));
 
   base ^= PM::All;
-  BOOST_CHECK(base == ~(PM::Filtered | PM::Calibrated));
+  BOOST_CHECK_EQUAL(base, ~(PM::Filtered | PM::Calibrated));
 }
 BOOST_AUTO_TEST_SUITE_END()

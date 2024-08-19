@@ -14,14 +14,12 @@
 
 #include <utility>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(ProtoSurfaceMaterial_construction_test) {
-  BinUtility smpBU(10, -10., 10., open, binX);
-  smpBU += BinUtility(10, -10., 10., open, binY);
+  BinUtility smpBU(10, -10., 10., open, BinningValue::binX);
+  smpBU += BinUtility(10, -10., 10., open, BinningValue::binY);
 
   // Constructor from arguments
   ProtoSurfaceMaterial smp(smpBU);
@@ -31,5 +29,4 @@ BOOST_AUTO_TEST_CASE(ProtoSurfaceMaterial_construction_test) {
   ProtoSurfaceMaterial smpCopyMoved(std::move(smpCopy));
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

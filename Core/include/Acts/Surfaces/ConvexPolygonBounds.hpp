@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -67,13 +67,13 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
  public:
   /// Expose number of vertices given as template parameter.
   ///
-  static constexpr size_t num_vertices = N;
+  static constexpr std::size_t num_vertices = N;
   /// Type that's used to store the vertices, in this case a fixed size array.
   ///
   using vertex_array = std::array<Vector2, num_vertices>;
   /// Expose number of parameters as a template parameter
   ///
-  static constexpr size_t eSize = 2 * N;
+  static constexpr std::size_t eSize = 2 * N;
   /// Type that's used to store the vertices, in this case a fixed size array.
   ///
   using value_array = std::array<double, eSize>;
@@ -105,10 +105,10 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// Return whether a local 2D point lies inside of the bounds defined by this
   /// object.
   /// @param lposition The local position to check
-  /// @param bcheck The `BoundaryCheck` object handling tolerances.
+  /// @param boundaryTolerance The `BoundaryTolerance` object handling tolerances.
   /// @return Whether the points is inside
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck) const final;
+              const BoundaryTolerance& boundaryTolerance) const final;
 
   /// Return the vertices
   ///
@@ -142,6 +142,8 @@ constexpr int PolygonDynamic = -1;
 template <>
 class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
  public:
+  constexpr static int eSize = -1;
+
   /// Default constructor, deleted
   ConvexPolygonBounds() = delete;
 
@@ -160,10 +162,10 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// Return whether a local 2D point lies inside of the bounds defined by this
   /// object.
   /// @param lposition The local position to check
-  /// @param bcheck The `BoundaryCheck` object handling tolerances.
+  /// @param boundaryTolerance The `BoundaryTolerance` object handling tolerances.
   /// @return Whether the points is inside
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck) const final;
+              const BoundaryTolerance& boundaryTolerance) const final;
 
   /// Return the vertices
   ///

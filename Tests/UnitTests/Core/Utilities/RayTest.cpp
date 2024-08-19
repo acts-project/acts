@@ -12,10 +12,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Ray.hpp"
 
-using boost::test_tools::output_test_stream;
-
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Utilities)
 BOOST_AUTO_TEST_CASE(ray_construction) {
@@ -23,7 +20,7 @@ BOOST_AUTO_TEST_CASE(ray_construction) {
 
   using Vector2F = Eigen::Matrix<float, 2, 1>;
 
-  output_test_stream output;
+  boost::test_tools::output_test_stream output;
 
   Vector2F dir2(0.5, 0.5);
   Ray<float, 2> ray2({1, 1}, dir2);
@@ -57,5 +54,4 @@ BOOST_AUTO_TEST_CASE(ray_construction) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -10,9 +10,9 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 
 namespace {
 
@@ -31,7 +31,8 @@ void fillGridIndices2D(
         if (ic1 > 0) {
           Acts::ActsScalar v1 = 0.5 * (c1 + boundaries[1u][ic1 - 1]);
           if (casts ==
-              std::array<Acts::BinningValue, 2u>{Acts::binZ, Acts::binR}) {
+              std::array<Acts::BinningValue, 2u>{Acts::BinningValue::binZ,
+                                                 Acts::BinningValue::binR}) {
             Acts::Vector3 zrPosition{v1, 0., v0};
             for (const auto [iv, v] : Acts::enumerate(rootVolumes)) {
               if (v->inside(gctx, zrPosition)) {
@@ -50,20 +51,20 @@ void fillGridIndices2D(
 Acts::Experimental::IndexedRootVolumeFinderBuilder::
     IndexedRootVolumeFinderBuilder(std::vector<Acts::BinningValue> binning)
     : m_casts(std::move(binning)) {
-  if (m_casts != std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR}) {
+  if (m_casts != std::vector<Acts::BinningValue>{Acts::BinningValue::binZ,
+                                                 Acts::BinningValue::binR}) {
     throw std::invalid_argument("Online (z,r) binning is currently supported.");
   }
 }
 
-Acts::Experimental::DetectorVolumeUpdator
+Acts::Experimental::ExternalNavigationDelegate
 Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<DetectorVolume>>& rootVolumes) const {
   auto rzphis =
       detail::CylindricalDetectorHelper::rzphiBoundaries(gctx, rootVolumes);
 
-  using AxesGeneratorType =
-      Acts::Experimental::detail::GridAxisGenerators::VarBoundVarBound;
+  using AxesGeneratorType = Acts::GridAxisGenerators::VarBoundVarBound;
 
   AxesGeneratorType zrAxes{rzphis[1], rzphis[0]};
 
@@ -77,16 +78,18 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
       std::array<std::vector<ActsScalar>, 2u>{rzphis[1], rzphis[0]};
   fillGridIndices2D(gctx, grid, rootVolumes, boundaries, casts);
 
-  using IndexedDetectorVolumeImpl =
-      IndexedUpdatorImpl<GridType, IndexedDetectorVolumeExtractor,
-                         DetectorVolumeFiller>;
+  using IndexedDetectorVolumesImpl =
+      IndexedGridNavigation<IExternalNavigation, GridType,
+                            IndexedDetectorVolumeExtractor,
+                            DetectorVolumeFiller>;
 
   auto indexedDetectorVolumeImpl =
-      std::make_unique<const IndexedDetectorVolumeImpl>(std::move(grid), casts);
+      std::make_unique<const IndexedDetectorVolumesImpl>(std::move(grid),
+                                                         casts);
 
   // Return the root volume finder
-  DetectorVolumeUpdator rootVolumeFinder;
-  rootVolumeFinder.connect<&IndexedDetectorVolumeImpl::update>(
+  ExternalNavigationDelegate rootVolumeFinder;
+  rootVolumeFinder.connect<&IndexedDetectorVolumesImpl::update>(
       std::move(indexedDetectorVolumeImpl));
   return rootVolumeFinder;
 }

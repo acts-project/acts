@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -23,17 +21,13 @@
 
 #include "../Surfaces/SurfaceStub.hpp"
 
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
-
-namespace Acts {
-
-namespace Test {
-
+namespace Acts::Test {
 // Create a test context
 GeometryContext tgContext = GeometryContext();
+}  // namespace Acts::Test
 
-namespace Layers {
+namespace Acts::Test::Layers {
+
 BOOST_AUTO_TEST_SUITE(Layers)
 
 /// Unit test for creating compliant/non-compliant NavigationLayer object
@@ -65,17 +59,17 @@ BOOST_AUTO_TEST_CASE(NavigationLayerProperties) {
   BOOST_CHECK_EQUAL(rawSurfacePtr,
                     &(pNavigationLayer->surfaceRepresentation()));
   // isOnLayer()
-  BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, origin, true));
+  BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, origin,
+                                          BoundaryTolerance::None()));
   // isOnLayer()
   Vector3 crazyPosition{1000., 10000., std::nan("")};
   // layer stub has hard-coded globalToLocal return value
-  BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, crazyPosition, true));
+  BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, crazyPosition,
+                                          BoundaryTolerance::None()));
   // resolve()
   BOOST_CHECK(!pNavigationLayer->resolve(true, true, true));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Layers
-}  // namespace Test
 
-}  // namespace Acts
+}  // namespace Acts::Test::Layers

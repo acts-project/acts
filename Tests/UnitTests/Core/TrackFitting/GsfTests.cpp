@@ -16,7 +16,7 @@
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
-#include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -24,7 +24,7 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
-#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -34,7 +34,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
@@ -64,6 +63,7 @@ namespace {
 
 using namespace Acts;
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
 
 static const auto electron = ParticleHypothesis::electron();
@@ -98,9 +98,12 @@ const GSF gsfZero(makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
 std::default_random_engine rng(42);
 
 auto makeDefaultGsfOptions() {
-  return GsfOptions<VectorMultiTrajectory>{tester.geoCtx, tester.magCtx,
-                                           tester.calCtx, getExtensions(),
-                                           PropagatorPlainOptions()};
+  GsfOptions<VectorMultiTrajectory> opts{tester.geoCtx, tester.magCtx,
+                                         tester.calCtx};
+  opts.extensions = getExtensions();
+  opts.propagatorPlainOptions =
+      PropagatorPlainOptions(tester.geoCtx, tester.magCtx);
+  return opts;
 }
 
 // A Helper type to allow us to put the MultiComponentBoundTrackParameters into

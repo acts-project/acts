@@ -42,8 +42,7 @@ struct EndOfWorldReached;
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Jacobian = BoundMatrix;
 using Covariance = BoundSquareMatrix;
@@ -84,16 +83,14 @@ struct StepWiseActor {
                   const Logger& /*logger*/) const {
     // Listen to the surface and create bound state where necessary
     auto surface = navigator.currentSurface(state.navigation);
-    if (surface and surface->associatedDetectorElement()) {
+    if (surface && surface->associatedDetectorElement()) {
       // Create a bound state and log the jacobian
       auto boundState = stepper.boundState(state.stepping, *surface).value();
       result.jacobians.push_back(std::move(std::get<Jacobian>(boundState)));
       result.paths.push_back(std::get<double>(boundState));
     }
     // Also store the jacobian and full path
-    if ((navigator.navigationBreak(state.navigation) or
-         navigator.targetReached(state.navigation)) and
-        not result.finalized) {
+    if (state.stage == PropagatorStage::postPropagation && !result.finalized) {
       // Set the last stepping parameter
       result.paths.push_back(state.stepping.pathAccumulated);
       // Set the full parameter
@@ -142,11 +139,11 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   using Aborters = AbortList<EndOfWorldReached>;
 
   // Create some options
-  using StepWiseOptions = PropagatorOptions<StepWiseActors, Aborters>;
+  using StepWiseOptions = Propagator::Options<StepWiseActors, Aborters>;
   StepWiseOptions swOptions(tgContext, mfContext);
 
   using PlainActors = ActionList<>;
-  using PlainOptions = PropagatorOptions<PlainActors, Aborters>;
+  using PlainOptions = Propagator::Options<PlainActors, Aborters>;
   PlainOptions pOptions(tgContext, mfContext);
 
   // Run the standard propagation
@@ -186,5 +183,4 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   CHECK_CLOSE_OR_SMALL(pJacobian, accJacobian, 1e-6, 1e-9);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -25,9 +25,7 @@ class TH1F;
 class TH2F;
 class TProfile;
 
-namespace ActsExamples {
-
-namespace PlotHelpers {
+namespace ActsExamples::PlotHelpers {
 /// @brief Nested binning struct for booking plots
 class Binning {
  public:
@@ -45,7 +43,7 @@ class Binning {
   }
 
   Binning(std::string title, std::vector<double> bins)
-      : m_title(std::move(title)), m_bins(std::move(bins)){};
+      : m_title(std::move(title)), m_bins(std::move(bins)) {}
 
   const auto& title() const { return m_title; }
   auto nBins() const { return m_bins.size() - 1; }
@@ -145,6 +143,4 @@ TProfile* bookProf(const char* profName, const char* profTitle,
 void fillProf(TProfile* profile, float xValue, float yValue,
               float weight = 1.0);
 
-}  // namespace PlotHelpers
-
-}  // namespace ActsExamples
+}  // namespace ActsExamples::PlotHelpers

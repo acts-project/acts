@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -26,6 +26,8 @@
 namespace Acts {
 
 /// @class EllipseBounds
+///
+/// @image html EllipseBounds.png
 ///
 /// Class to describe the bounds for a planar ellispoid
 /// surface.
@@ -83,10 +85,10 @@ class EllipseBounds : public PlanarBounds {
   /// tol1 is given
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param bcheck boundary check directive
+  /// @param boundaryTolerance boundary check directive
   /// @return boolean indicator for the success of this operation
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck) const final;
+              const BoundaryTolerance& boundaryTolerance) const final;
 
   /// Return the vertices
   ///
@@ -125,15 +127,15 @@ inline std::vector<double> EllipseBounds::values() const {
 }
 
 inline void EllipseBounds::checkConsistency() noexcept(false) {
-  if (get(eInnerRx) >= get(eOuterRx) or get(eInnerRx) < 0. or
+  if (get(eInnerRx) >= get(eOuterRx) || get(eInnerRx) < 0. ||
       get(eOuterRx) <= 0.) {
     throw std::invalid_argument("EllipseBounds: invalid along x axis");
   }
-  if (get(eInnerRy) >= get(eOuterRy) or get(eInnerRy) < 0. or
+  if (get(eInnerRy) >= get(eOuterRy) || get(eInnerRy) < 0. ||
       get(eOuterRy) <= 0.) {
     throw std::invalid_argument("EllipseBounds: invalid along y axis.");
   }
-  if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
     throw std::invalid_argument("EllipseBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {

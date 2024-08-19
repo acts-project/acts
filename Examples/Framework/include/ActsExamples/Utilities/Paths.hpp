@@ -31,7 +31,7 @@ std::string joinPaths(const std::string& dir, const std::string& name);
 /// @params name basic filename
 /// @params event event number
 std::string perEventFilepath(const std::string& dir, const std::string& name,
-                             size_t event);
+                             std::size_t event);
 
 /// Determine the range of available events in a directory of per-event files.
 ///
@@ -41,7 +41,7 @@ std::string perEventFilepath(const std::string& dir, const std::string& name,
 /// @returns {0, 0} when no matching files could be found
 ///
 /// Event files must be named `[<dir>/]event<XXXXXXXXX>-<name>` to be considered
-std::pair<size_t, size_t> determineEventFilesRange(const std::string& dir,
-                                                   const std::string& name);
+std::pair<std::size_t, std::size_t> determineEventFilesRange(
+    const std::string& dir, const std::string& name);
 
 }  // namespace ActsExamples

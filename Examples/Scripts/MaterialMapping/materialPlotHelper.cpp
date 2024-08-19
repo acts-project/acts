@@ -37,7 +37,7 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
 
 void Initialise_info(sinfo& surface_info,
                      const std::map<std::string, std::string>& surface_name,
-                     const uint64_t& id, const int& type, const float& pos,
+                     const std::uint64_t& id, const int& type, const float& pos,
                      const float& range_min, const float& range_max) {
   Acts::GeometryIdentifier ID(id);
   std::ostringstream layerID;
@@ -46,7 +46,7 @@ void Initialise_info(sinfo& surface_info,
 
   std::string Id_temp = surface_id;
   std::string delimiter = " | ";
-  size_t del_pos = 0;
+  std::size_t del_pos = 0;
   std::vector<std::string> Ids;
   while ((del_pos = Id_temp.find(delimiter)) != std::string::npos) {
     Ids.push_back(Id_temp.substr(0, del_pos));

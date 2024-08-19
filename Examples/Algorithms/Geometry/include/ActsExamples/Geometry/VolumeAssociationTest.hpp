@@ -12,11 +12,9 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 class Detector;
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 namespace ActsExamples {
 

@@ -12,7 +12,6 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
-#include <memory>
 #include <utility>
 
 // #define _ACTS_ANY_ENABLE_VERBOSE
@@ -40,13 +39,13 @@
 
 #if defined(_ACTS_ANY_ENABLE_VERBOSE)
 #define _ACTS_ANY_VERBOSE(x) std::cout << x << std::endl;
-#define _ACTS_ANY_VERBOSE_BUFFER(s, b) \
-  do {                                 \
-    std::cout << "" << s << ": 0x";    \
-    for (char c : b) {                 \
-      std::cout << std::hex << (int)c; \
-    }                                  \
-    std::cout << std::endl;            \
+#define _ACTS_ANY_VERBOSE_BUFFER(s, b)              \
+  do {                                              \
+    std::cout << "" << s << ": 0x";                 \
+    for (char c : b) {                              \
+      std::cout << std::hex << static_cast<int>(c); \
+    }                                               \
+    std::cout << std::endl;                         \
   } while (0)
 #else
 #define _ACTS_ANY_VERBOSE(x)
@@ -106,7 +105,7 @@ static _AnyAllocationReporter s_reporter;
 class AnyBaseAll {};
 
 /// Small opaque cache type which uses small buffer optimization
-template <size_t SIZE>
+template <std::size_t SIZE>
 class AnyBase : public AnyBaseAll {
   static_assert(sizeof(void*) <= SIZE, "Size is too small for a pointer");
 
@@ -122,7 +121,7 @@ class AnyBase : public AnyBaseAll {
         "Type needs to be copy assignable and copy constructible");
 
     m_handler = makeHandler<U>();
-    if constexpr (not heapAllocated<U>()) {
+    if constexpr (!heapAllocated<U>()) {
       // construct into local buffer
       /*U* ptr =*/new (m_data.data()) U(std::forward<Args>(args)...);
       _ACTS_ANY_VERBOSE(
@@ -130,15 +129,14 @@ class AnyBase : public AnyBaseAll {
     } else {
       // too large, heap allocate
       U* heap = new U(std::forward<Args>(args)...);
+      _ACTS_ANY_DEBUG("Allocate type: " << typeid(U).name() << " at " << heap);
       _ACTS_ANY_TRACK_ALLOCATION(T, heap);
       setDataPtr(heap);
     }
   }
 
 #if defined(_ACTS_ANY_ENABLE_VERBOSE)
-  AnyBase() {
-    _ACTS_ANY_VERBOSE("Default construct this=" << this);
-  };
+  AnyBase() { _ACTS_ANY_VERBOSE("Default construct this=" << this); };
 #else
   AnyBase() = default;
 #endif
@@ -175,9 +173,7 @@ class AnyBase : public AnyBaseAll {
     return *reinterpret_cast<const T*>(dataPtr());
   }
 
-  ~AnyBase() {
-    destroy();
-  }
+  ~AnyBase() { destroy(); }
 
   AnyBase(const AnyBase& other) {
     if (m_handler == nullptr && other.m_handler == nullptr) {
@@ -201,15 +197,17 @@ class AnyBase : public AnyBaseAll {
       return *this;
     }
 
-    if (m_handler == nullptr) {  // this object is empty
-      m_handler = other.m_handler;
-      copyConstruct(other);
+    if (m_handler == other.m_handler) {
+      // same type, but checked before they're not both nullptr
+      copy(std::move(other));
     } else {
-      // @TODO: Support assigning between different types
-      if (m_handler != other.m_handler) {
-        throw std::bad_any_cast{};
+      if (m_handler != nullptr) {
+        // this object is not empty, but have different types => destroy
+        destroy();
       }
-      copy(other);
+      assert(m_handler == nullptr);
+      m_handler = other.m_handler;
+      copyConstruct(std::move(other));
     }
     return *this;
   }
@@ -234,22 +232,23 @@ class AnyBase : public AnyBaseAll {
       return *this;
     }
 
-    if (m_handler == nullptr) {  // this object is empty
+    if (m_handler == other.m_handler) {
+      // same type, but checked before they're not both nullptr
+      move(std::move(other));
+    } else {
+      if (m_handler != nullptr) {
+        // this object is not empty, but have different types => destroy
+        destroy();
+      }
+      assert(m_handler == nullptr);
       m_handler = other.m_handler;
       moveConstruct(std::move(other));
-    } else {
-      // @TODO: Support assigning between different types
-      if (m_handler != other.m_handler) {
-        throw std::bad_any_cast{};
-      }
-      move(std::move(other));
     }
+
     return *this;
   }
 
-  operator bool() const {
-    return m_handler != nullptr;
-  }
+  operator bool() const { return m_handler != nullptr; }
 
  private:
   void* dataPtr() {
@@ -260,9 +259,7 @@ class AnyBase : public AnyBaseAll {
     }
   }
 
-  void setDataPtr(void* ptr) {
-    *reinterpret_cast<void**>(m_data.data()) = ptr;
-  }
+  void setDataPtr(void* ptr) { *reinterpret_cast<void**>(m_data.data()) = ptr; }
 
   const void* dataPtr() const {
     if (m_handler->heapAllocated) {
@@ -330,9 +327,10 @@ class AnyBase : public AnyBaseAll {
   void destroy() {
     _ACTS_ANY_VERBOSE("Destructor this=" << this << " handler: " << m_handler);
     if (m_handler != nullptr && m_handler->destroy != nullptr) {
+      _ACTS_ANY_VERBOSE("Non-trivial destruction");
       m_handler->destroy(dataPtr());
-      m_handler = nullptr;
     }
+    m_handler = nullptr;
   }
 
   void moveConstruct(AnyBase&& fromAny) {
@@ -351,6 +349,7 @@ class AnyBase : public AnyBaseAll {
     }
 
     if (m_handler->moveConstruct == nullptr) {
+      _ACTS_ANY_VERBOSE("Trivially move construct");
       // trivially move constructible
       m_data = std::move(fromAny.m_data);
     } else {
@@ -376,6 +375,7 @@ class AnyBase : public AnyBaseAll {
     }
 
     if (m_handler->move == nullptr) {
+      _ACTS_ANY_VERBOSE("Trivially move");
       // trivially movable
       m_data = std::move(fromAny.m_data);
     } else {
@@ -392,6 +392,7 @@ class AnyBase : public AnyBaseAll {
     const void* from = fromAny.dataPtr();
 
     if (m_handler->copyConstruct == nullptr) {
+      _ACTS_ANY_VERBOSE("Trivially copy construct");
       // trivially copy constructible
       m_data = fromAny.m_data;
     } else {
@@ -413,6 +414,7 @@ class AnyBase : public AnyBaseAll {
     const void* from = fromAny.dataPtr();
 
     if (m_handler->copy == nullptr) {
+      _ACTS_ANY_VERBOSE("Trivially copy");
       // trivially copyable
       m_data = fromAny.m_data;
     } else {
@@ -487,18 +489,20 @@ class AnyBase : public AnyBaseAll {
     (*_to) = *_from;
   }
 
-  static constexpr size_t kMaxAlignment = std::max(alignof(std::max_align_t),
+  static constexpr std::size_t kMaxAlignment =
+      std::max(alignof(std::max_align_t),
 #if defined(__AVX512F__)
-                                                   size_t(64)
+               std::size_t{64}
 #elif defined(__AVX__)
-                                                   size_t(32)
+               std::size_t{32}
 #elif defined(__SSE__)
-                                                   size_t(16)
+               std::size_t{16}
 #else
-                                                   size_t(0)  // Neutral element
-                                                              // for maximum
+               std::size_t{0}
+  // Neutral element
+  // for maximum
 #endif
-  );
+      );
 
   alignas(kMaxAlignment) std::array<std::byte, SIZE> m_data{};
   const Handler* m_handler{nullptr};

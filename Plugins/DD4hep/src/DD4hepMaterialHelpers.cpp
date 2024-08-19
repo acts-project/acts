@@ -10,10 +10,10 @@
 
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -35,11 +35,7 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
   Acts::BinUtility bu;
   // Loop over the bins
   for (auto& bin : binning) {
-    // finding the iterator position to determine the binning value
-    auto bit = std::find(Acts::binningValueNames().begin(),
-                         Acts::binningValueNames().end(), bin.first);
-    size_t indx = std::distance(Acts::binningValueNames().begin(), bit);
-    Acts::BinningValue bval = Acts::BinningValue(indx);
+    BinningValue bval = binningValueFromName(bin.first);
     Acts::BinningOption bopt = bin.second;
     double min = 0.;
     double max = 0.;
@@ -69,7 +65,7 @@ void Acts::addLayerProtoMaterial(
       &(layer.surfaceRepresentation())};
   // Now fill (optionally) with the approach surfaces
   auto aDescriptor = layer.approachDescriptor();
-  if (aDescriptor != nullptr and aDescriptor->containedSurfaces().size() >= 2) {
+  if (aDescriptor != nullptr && aDescriptor->containedSurfaces().size() >= 2) {
     // Add the inner and outer approach surface
     const std::vector<const Surface*>& aSurfaces =
         aDescriptor->containedSurfaces();

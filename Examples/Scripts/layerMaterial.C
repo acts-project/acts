@@ -189,7 +189,7 @@ layerMaterial(std::string inFile,
                                 -maxGlobR,
                                 maxGlobR);
 
-  size_t nEntries = loc1->size();
+  std::size_t nEntries = loc1->size();
   for (int i = 0; i < nEntries; i++) {
     // A
     A_loc1->Fill(loc1->at(i), A->at(i));

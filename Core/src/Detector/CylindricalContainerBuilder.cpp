@@ -9,9 +9,13 @@
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 
 #include "Acts/Detector/DetectorComponents.hpp"
+#include "Acts/Detector/DetectorVolumeBuilder.hpp"
+#include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
+#include "Acts/Detector/detail/ProtoMaterialHelper.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 
 #include <algorithm>
@@ -19,11 +23,9 @@
 #include <stdexcept>
 #include <utility>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 class DetectorVolume;
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 namespace {
 
@@ -45,23 +47,23 @@ Acts::Experimental::DetectorComponent::PortalContainer connect(
     const std::vector<Acts::BinningValue>& binning,
     Acts::Logging::Level logLevel) {
   // Return container object
-  Acts::Experimental::DetectorComponent::PortalContainer rContainer;
+  Acts::Experimental::DetectorComponent::PortalContainer portalContainer;
   if (binning.size() == 1u) {
     Acts::BinningValue bv = binning.front();
     // 1-dimensional binning options
     switch (bv) {
-      case Acts::binR: {
-        rContainer =
+      case Acts::BinningValue::binR: {
+        portalContainer =
             Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
                 gctx, objects, {}, logLevel);
       } break;
-      case Acts::binZ: {
-        rContainer =
+      case Acts::BinningValue::binZ: {
+        portalContainer =
             Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
                 gctx, objects, {}, logLevel);
       } break;
-      case Acts::binPhi: {
-        rContainer =
+      case Acts::BinningValue::binPhi: {
+        portalContainer =
             Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
                 gctx, objects, {}, logLevel);
       } break;
@@ -69,13 +71,14 @@ Acts::Experimental::DetectorComponent::PortalContainer connect(
         break;
     }
   } else if (binning ==
-                 std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR} and
+                 std::vector<Acts::BinningValue>{Acts::BinningValue::binZ,
+                                                 Acts::BinningValue::binR} &&
              objects.size() == 2u) {
-    rContainer =
+    portalContainer =
         Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
             gctx, objects, logLevel);
   }
-  return rContainer;
+  return portalContainer;
 }
 }  // namespace
 
@@ -92,7 +95,8 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
   if (m_cfg.binning.size() == 1u) {
     // 1-dimensional case
     auto b = m_cfg.binning.front();
-    if (b != Acts::binR and b != Acts::binZ and b != Acts::binPhi) {
+    if (b != Acts::BinningValue::binR && b != Acts::BinningValue::binZ &&
+        b != Acts::BinningValue::binPhi) {
       throw std::invalid_argument(
           "CylindricalContainerBuilder: 1D binning only supported in z, r, or "
           "phi");
@@ -100,7 +104,8 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
   } else if (m_cfg.binning.size() == 2u) {
     // 2-dimensional case, this is for wrapping
     if (m_cfg.binning !=
-        std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR}) {
+        std::vector<Acts::BinningValue>{Acts::BinningValue::binZ,
+                                        Acts::BinningValue::binR}) {
       throw std::invalid_argument(
           "CylindricalContainerBuilder: 2D binning only supports wrapping in "
           "z-r.");
@@ -114,11 +119,89 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
   }
 }
 
+Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
+    const Acts::Experimental::Blueprint::Node& bpNode,
+    Acts::Logging::Level logLevel)
+    : IDetectorComponentBuilder(),
+      m_logger(getDefaultLogger(bpNode.name + "_cont", logLevel)) {
+  if (bpNode.boundsType != VolumeBounds::BoundsType::eCylinder) {
+    throw std::invalid_argument(
+        "CylindricalContainerBuilder: boundary type must be cylinder - for "
+        "building from a blueprint node.");
+  }
+
+  std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders;
+  for (const auto& child : bpNode.children) {
+    if (child->isLeaf()) {
+      // Volume structure
+      VolumeStructureBuilder::Config vsCfg;
+      vsCfg.transform = child->transform;
+      vsCfg.boundsType = child->boundsType;
+      vsCfg.boundValues = child->boundaryValues;
+      vsCfg.auxiliary = "*** acts auto-generated shape builder ***";
+      auto vsBuilder = std::make_shared<VolumeStructureBuilder>(
+          vsCfg, getDefaultLogger(child->name + "_shape", logLevel));
+      // Detector volume builder
+      DetectorVolumeBuilder::Config dvCfg;
+      dvCfg.name = child->name;
+      dvCfg.externalsBuilder = vsBuilder;
+      dvCfg.internalsBuilder = child->internalsBuilder;
+      dvCfg.geoIdGenerator = child->geoIdGenerator;
+      dvCfg.portalMaterialBinning = child->portalMaterialBinning;
+      dvCfg.auxiliary = "*** acts auto-generated volume builder ***";
+      // Add the builder
+      m_cfg.builders.push_back(std::make_shared<DetectorVolumeBuilder>(
+          dvCfg, getDefaultLogger(child->name, logLevel)));
+    } else {
+      // This evokes the recursive stepping down the tree
+      m_cfg.builders.push_back(
+          std::make_shared<CylindricalContainerBuilder>(*child, logLevel));
+    }
+  }
+
+  if (m_cfg.builders.empty()) {
+    throw std::invalid_argument(
+        "CylindricalContainerBuilder: no sub builders provided.");
+  }
+  m_cfg.binning = bpNode.binning;
+  // Check if binning value is correctly chosen
+  if (m_cfg.binning.size() == 1u) {
+    // 1-dimensional case
+    auto b = m_cfg.binning.front();
+    if (b != Acts::BinningValue::binR && b != Acts::BinningValue::binZ &&
+        b != Acts::BinningValue::binPhi) {
+      throw std::invalid_argument(
+          "CylindricalContainerBuilder: 1D binning only supported in z, r, or "
+          "phi");
+    }
+  } else if (m_cfg.binning.size() == 2u) {
+    // 2-dimensional case, this is for wrapping
+    if (m_cfg.binning !=
+        std::vector<Acts::BinningValue>{Acts::BinningValue::binZ,
+                                        Acts::BinningValue::binR}) {
+      throw std::invalid_argument(
+          "CylindricalContainerBuilder: 2D binning only supports wrapping in "
+          "z-r.");
+    } else if (m_cfg.builders.size() != 2u) {
+      // Wrapping needs exactly one inner (volume or container) and one outer
+      // volume
+      throw std::invalid_argument(
+          "CylindricalContainerBuilder: 2D wrapping in z-r requires exactly "
+          "two builders.");
+    }
+  }
+
+  m_cfg.auxiliary = "*** acts auto-generated from proxy ***";
+  m_cfg.geoIdGenerator = bpNode.geoIdGenerator;
+  m_cfg.rootVolumeFinderBuilder = bpNode.rootVolumeFinderBuilder;
+  m_cfg.portalMaterialBinning = bpNode.portalMaterialBinning;
+}
+
 Acts::Experimental::DetectorComponent
 Acts::Experimental::CylindricalContainerBuilder::construct(
     const GeometryContext& gctx) const {
   // Return container object
-  DetectorComponent::PortalContainer rContainer;
+  DetectorComponent::PortalContainer portalContainer;
   bool atNavigationLevel = true;
 
   // Create the indivudal components, collect for both outcomes
@@ -135,7 +218,7 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
   std::for_each(
       m_cfg.builders.begin(), m_cfg.builders.end(), [&](const auto& builder) {
         auto [cVolumes, cContainer, cRoots] = builder->construct(gctx);
-        atNavigationLevel = (atNavigationLevel and cVolumes.size() == 1u);
+        atNavigationLevel = (atNavigationLevel && cVolumes.size() == 1u);
         // Collect individual components, volumes, containers, roots
         volumes.insert(volumes.end(), cVolumes.begin(), cVolumes.end());
         containers.push_back(cContainer);
@@ -148,24 +231,14 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
     ACTS_VERBOSE(
         "Component volumes are at navigation level: connecting volumes.");
     // Connect volumes
-    rContainer = connect(gctx, volumes, m_cfg.binning, logger().level());
+    portalContainer = connect(gctx, volumes, m_cfg.binning, logger().level());
   } else {
     ACTS_VERBOSE("Components contain sub containers: connect containers.");
     // Connect containers
-    rContainer = connect(gctx, containers, m_cfg.binning, logger().level());
+    portalContainer =
+        connect(gctx, containers, m_cfg.binning, logger().level());
   }
   ACTS_VERBOSE("Number of root volumes: " << rootVolumes.size());
-
-  // Check if a root volume finder is provided
-  if (m_cfg.rootVolumeFinderBuilder) {
-    // Return the container
-    return Acts::Experimental::DetectorComponent{
-        {},
-        rContainer,
-        RootDetectorVolumes{
-            rootVolumes,
-            m_cfg.rootVolumeFinderBuilder->construct(gctx, rootVolumes)}};
-  }
 
   // Geometry Id generation
   if (m_cfg.geoIdGenerator != nullptr) {
@@ -174,15 +247,39 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
     if (m_cfg.geoIdReverseGen) {
       std::for_each(rootVolumes.rbegin(), rootVolumes.rend(), [&](auto& v) {
         m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
+        ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
       });
     } else {
       std::for_each(rootVolumes.begin(), rootVolumes.end(), [&](auto& v) {
         m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
+        ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
       });
     }
   }
 
+  // Assign the proto material
+  // Material assignment from configuration
+  for (const auto& [ip, bDescription] : m_cfg.portalMaterialBinning) {
+    if (portalContainer.find(ip) != portalContainer.end()) {
+      auto bd = detail::ProtoMaterialHelper::attachProtoMaterial(
+          gctx, portalContainer[ip]->surface(), bDescription);
+      ACTS_VERBOSE("-> Assigning proto material to portal " << ip << " with "
+                                                            << bd.toString());
+    }
+  }
+
+  // Check if a root volume finder is provided
+  if (m_cfg.rootVolumeFinderBuilder) {
+    // Return the container
+    return Acts::Experimental::DetectorComponent{
+        volumes, portalContainer,
+        RootDetectorVolumes{
+            rootVolumes,
+            m_cfg.rootVolumeFinderBuilder->construct(gctx, rootVolumes)}};
+  }
+
   // Return the container
   return Acts::Experimental::DetectorComponent{
-      {}, rContainer, RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
+      volumes, portalContainer,
+      RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
 }

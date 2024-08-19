@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <map>
 #include <memory>
@@ -21,7 +22,6 @@
 namespace Acts {
 
 /// Forward declaration of Digitization module is enough
-class DigitizationModule;
 class ISurfaceMaterial;
 
 /// @class DD4hepDetectorElement
@@ -38,6 +38,9 @@ class ISurfaceMaterial;
 ///
 class DD4hepDetectorElement : public TGeoDetectorElement {
  public:
+  // Define the context type
+  using DD4hepVolumeID = dd4hep::DDSegmentation::VolumeID;
+
   /// Broadcast the context type
   using ContextType = GeometryContext;
 
@@ -81,10 +84,28 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
 
   ~DD4hepDetectorElement() override = default;
 
+  // Give access to the DD4hep detector element
+  const dd4hep::DetElement& sourceElement() const { return m_detElement; }
+
  private:
   /// DD4hep detector element
   dd4hep::DetElement m_detElement;
   /// DD4hep segmentation
   dd4hep::Segmentation m_segmentation;
 };
+
+/// This extension holds an ACTS detector element belonging to a DD4hep detector
+/// element, and synchronizes ownership
+struct DD4hepDetectorElementExtension {
+  explicit DD4hepDetectorElementExtension(
+      std::shared_ptr<DD4hepDetectorElement> de)
+      : detectorElement(std::move(de)) {
+    throw_assert(detectorElement != nullptr,
+                 "DD4hepDetectorElement is nullptr");
+  }
+
+ private:
+  std::shared_ptr<DD4hepDetectorElement> detectorElement;
+};
+
 }  // namespace Acts

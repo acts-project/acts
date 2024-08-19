@@ -11,13 +11,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
 #include <algorithm>
 #include <array>
+#include <optional>
 #include <ostream>
 #include <random>
 #include <stdexcept>
@@ -26,9 +28,8 @@
 
 namespace bdata = boost::unit_test::data;
 
-namespace Acts {
+namespace Acts::Test {
 
-namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 /// Unit test for creating compliant/non-compliant TrapezoidBounds object
@@ -127,16 +128,18 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
   /// Test dump
   boost::test_tools::output_test_stream dumpOuput;
   trapezoidBoundsObject.toStream(dumpOuput);
-  BOOST_CHECK(
-      dumpOuput.is_equal("Acts::TrapezoidBounds:  (halfXnegY, halfXposY, "
-                         "halfY) = (1.0000000, 6.0000000, 2.0000000)"));
+  BOOST_CHECK(dumpOuput.is_equal(
+      "Acts::TrapezoidBounds:  (halfXnegY, halfXposY, halfY, rotAngle) = "
+      "(1.0000000, 6.0000000, 2.0000000, 0.0000000)"));
   //
   /// Test inside
-  BOOST_CHECK(trapezoidBoundsObject.inside(inRectangle, BoundaryCheck(true)));
-  BOOST_CHECK(!trapezoidBoundsObject.inside(outside, BoundaryCheck(true)));
+  BOOST_CHECK(
+      trapezoidBoundsObject.inside(inRectangle, BoundaryTolerance::None()));
+  BOOST_CHECK(
+      !trapezoidBoundsObject.inside(outside, BoundaryTolerance::None()));
 
   const auto vertices = trapezoidBoundsObject.vertices();
-  BoundaryCheck bc{true};
+  BoundaryTolerance tolerance = BoundaryTolerance::None();
 
   std::vector<Vector2> testPoints = {
       // inside
@@ -173,20 +176,21 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
 
   for (const auto& p : testPoints) {
     BOOST_TEST_CONTEXT("p=" << p.transpose()) {
-      BOOST_CHECK_EQUAL(bc.isInside(p, vertices),
-                        trapezoidBoundsObject.inside(p, bc));
+      BOOST_CHECK_EQUAL(
+          detail::insidePolygon(vertices, tolerance, p, std::nullopt),
+          trapezoidBoundsObject.inside(p, tolerance));
     }
   }
 }
 
 BOOST_DATA_TEST_CASE(
     TrapezoidInsideCheck,
-    bdata::random((bdata::seed = 1,
-                   bdata::distribution = std::uniform_real_distribution<>(-7,
-                                                                          7))) ^
-        bdata::random(
-            (bdata::seed = 2,
-             bdata::distribution = std::uniform_real_distribution<>(-3, 3))) ^
+    bdata::random(
+        (bdata::engine = std::mt19937(), bdata::seed = 21,
+         bdata::distribution = std::uniform_real_distribution<double>(-7, 7))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-3, 3))) ^
         bdata::xrange(1000) * bdata::make({0.0, 0.1, 0.2, 0.3}),
     x, y, index, tol) {
   (void)index;
@@ -194,14 +198,15 @@ BOOST_DATA_TEST_CASE(
   static const TrapezoidBounds trapezoidBoundsObject(minHalfX, maxHalfX, halfY);
   static const auto vertices = trapezoidBoundsObject.vertices();
 
-  BoundaryCheck bc{true};
+  BoundaryTolerance tolerance = BoundaryTolerance::None();
 
   if (tol != 0.0) {
-    bc = BoundaryCheck{true, true, tol, tol};
+    tolerance = BoundaryTolerance::AbsoluteBound{tol, tol};
   }
 
-  BOOST_CHECK_EQUAL(bc.isInside({x, y}, vertices),
-                    trapezoidBoundsObject.inside({x, y}, bc));
+  BOOST_CHECK_EQUAL(
+      detail::insidePolygon(vertices, tolerance, {x, y}, std::nullopt),
+      trapezoidBoundsObject.inside({x, y}, tolerance));
 }
 
 /// Unit test for testing TrapezoidBounds assignment
@@ -218,6 +223,4 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsAssignment) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

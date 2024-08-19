@@ -26,6 +26,7 @@ Level& getFailureThresholdMutable() {
     if (envvar == nullptr) {
       return level;
     }
+
     std::string slevel = envvar;
     if (slevel == "VERBOSE") {
       level = std::min(level, Level::VERBOSE);
@@ -59,6 +60,17 @@ void setFailureThreshold(Level level) {
   getFailureThresholdMutable() = level;
 }
 
+ScopedFailureThreshold::~ScopedFailureThreshold() noexcept {
+  try {
+    setFailureThreshold(m_previousLevel);
+  } catch (const std::bad_alloc&) {
+    // bad alloc can be thrown when initializing the global static variable
+    std::cerr << "Failed to reset log failure threshold (bad_alloc)"
+              << std::endl;
+    std::terminate();
+  }
+}
+
 #else
 
 void setFailureThreshold(Level /*lvl*/) {
@@ -66,9 +78,11 @@ void setFailureThreshold(Level /*lvl*/) {
       "Compile-time log failure threshold defined (ACTS_LOG_FAILURE_THRESHOLD "
       "is set or ACTS_ENABLE_LOG_FAILURE_THRESHOLD is OFF), unable to "
       "override. See "
-      "https://acts.readthedocs.io/en/latest/core/"
+      "https://acts.readthedocs.io/en/latest/core/misc/"
       "logging.html#logging-thresholds"};
 }
+
+ScopedFailureThreshold::~ScopedFailureThreshold() noexcept = default;
 
 #endif
 

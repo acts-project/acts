@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -21,7 +21,6 @@
 #include <cstddef>
 #include <mutex>
 #include <string>
-#include <vector>
 
 class TFile;
 class TTree;
@@ -34,8 +33,6 @@ struct AlgorithmContext;
 
 class SeedingPerformanceWriter final : public WriterT<SimSeedContainer> {
  public:
-  using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
-
   struct Config {
     /// Input reconstructed seed collection.
     std::string inputSeeds;
@@ -80,11 +77,11 @@ class SeedingPerformanceWriter final : public WriterT<SimSeedContainer> {
   DuplicationPlotTool m_duplicationPlotTool;
   DuplicationPlotTool::DuplicationPlotCache m_duplicationPlotCache{};
 
-  size_t m_nTotalSeeds = 0;
-  size_t m_nTotalMatchedSeeds = 0;
-  size_t m_nTotalParticles = 0;
-  size_t m_nTotalMatchedParticles = 0;
-  size_t m_nTotalDuplicatedParticles = 0;
+  std::size_t m_nTotalSeeds = 0;
+  std::size_t m_nTotalMatchedSeeds = 0;
+  std::size_t m_nTotalParticles = 0;
+  std::size_t m_nTotalMatchedParticles = 0;
+  std::size_t m_nTotalDuplicatedParticles = 0;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{

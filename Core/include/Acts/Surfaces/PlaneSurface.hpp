@@ -12,10 +12,12 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -37,12 +39,10 @@ class SurfaceBounds;
 /// The PlaneSurface extends the Surface class with the possibility to
 /// convert local to global positions (vice versa).
 ///
-/// @image html figures/PlaneSurface.png
+/// @image html PlaneSurface.png
 ///
-class PlaneSurface : public Surface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+class PlaneSurface : public RegularSurface {
+  friend class Surface;
 
  protected:
   /// Copy Constructor
@@ -58,6 +58,8 @@ class PlaneSurface : public Surface {
   PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
                const Transform3& transform);
 
+  /// @deprecated Use `CurvilinearSurface` instead
+  ///
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
   ///
@@ -88,7 +90,12 @@ class PlaneSurface : public Surface {
   /// @param other The source PlaneSurface for assignment
   PlaneSurface& operator=(const PlaneSurface& other);
 
-  /// Normal vector return
+  // Use overloads from `RegularSurface`
+  using RegularSurface::globalToLocal;
+  using RegularSurface::localToGlobal;
+  using RegularSurface::normal;
+
+  /// Get the normal vector of this surface at a given local position
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position is ignored
@@ -97,8 +104,18 @@ class PlaneSurface : public Surface {
   Vector3 normal(const GeometryContext& gctx,
                  const Vector2& lposition) const final;
 
-  /// Normal vector return without argument
-  using Surface::normal;
+  /// Get the normal vector of this surface at a given global position
+  /// @note The @p position is required to be on-surface.
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position is the global positiono (for @ref PlaneSurface this is ignored)
+  /// @return The normal vector
+  Vector3 normal(const GeometryContext& gctx,
+                 const Vector3& position) const final;
+
+  /// Get the normal vector, independent of the location
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The normal vector
+  Vector3 normal(const GeometryContext& gctx) const;
 
   /// The binning position is the position calculated
   /// for a certain binning type
@@ -123,11 +140,10 @@ class PlaneSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition local 2D position in specialized surface frame
-  /// @param direction global 3D momentum direction (optionally ignored)
   ///
   /// @return the global position by value
-  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& direction) const override;
+  Vector3 localToGlobal(const GeometryContext& gctx,
+                        const Vector2& lposition) const override;
 
   /// Global to local transformation
   ///
@@ -137,25 +153,19 @@ class PlaneSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param direction global 3D momentum direction (optionally ignored)
-  /// method symmetry)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const override;
 
   /// Method that calculates the correction due to incident angle
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position global 3D position - considered to be on surface but not
-  /// inside bounds (check is done)
-  /// @param direction global 3D momentum direction (ignored for PlaneSurface)
-  /// @note this is the final implementation of the pathCorrection function
-  ///
+  /// @param position global 3D position (ignored for @ref PlaneSurface)
+  /// @param direction global 3D momentum direction (ignored for @ref PlaneSurface)
   /// @return a double representing the scaling factor
   double pathCorrection(const GeometryContext& gctx, const Vector3& position,
                         const Vector3& direction) const final;
@@ -166,7 +176,7 @@ class PlaneSurface : public Surface {
   /// @param position The start position of the intersection attempt
   /// @param direction The direction of the intersection attempt,
   /// (@note expected to be normalized)
-  /// @param bcheck The boundary check directive
+  /// @param boundaryTolerance The boundary check directive
   /// @param tolerance the tolerance used for the intersection
   ///
   /// <b>mathematical motivation:</b>
@@ -189,7 +199,9 @@ class PlaneSurface : public Surface {
   /// @return the @c SurfaceMultiIntersection object
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      const Vector3& direction,
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Return a Polyhedron for the surfaces
@@ -201,7 +213,7 @@ class PlaneSurface : public Surface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const override;
+                                      std::size_t lseg) const override;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;
@@ -224,4 +236,7 @@ class PlaneSurface : public Surface {
  private:
 };
 
-}  // end of namespace Acts
+static_assert(RegularSurfaceConcept<PlaneSurface>,
+              "PlaneSurface does not fulfill RegularSurfaceConcept");
+
+}  // namespace Acts

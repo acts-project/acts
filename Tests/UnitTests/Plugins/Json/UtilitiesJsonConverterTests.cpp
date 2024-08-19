@@ -13,7 +13,6 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -31,7 +30,7 @@ using namespace Acts;
 BOOST_AUTO_TEST_SUITE(UtilitiesJsonConverter)
 
 BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
-  BinUtility reference(2, 0., 4., open, binR);
+  BinUtility reference(2, 0., 4., open, BinningValue::binR);
 
   std::ofstream out;
 
@@ -55,7 +54,7 @@ BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
   BOOST_CHECK(isEqual(reference, test, 0.0001));
 
   // Increase to two dimensions
-  reference += BinUtility(10., -M_PI, M_PI, closed, binPhi);
+  reference += BinUtility(10., -M_PI, M_PI, closed, BinningValue::binPhi);
   nlohmann::json jtwoDimOut;
   to_json(jtwoDimOut, reference);
   out.open("BinUtility_2D.json");
@@ -76,7 +75,7 @@ BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
 
   // Increase to three dimensions
   std::vector<float> boundaries = {-4., -1.5, 0., 10.};
-  reference += BinUtility(boundaries, open, binZ);
+  reference += BinUtility(boundaries, open, BinningValue::binZ);
   nlohmann::json jthreeDimOut;
   to_json(jthreeDimOut, reference);
   out.open("BinUtility_3D.json");

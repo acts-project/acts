@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -43,7 +43,7 @@ class GreedyAmbiguityResolution {
     std::uint32_t maximumIterations = 1000;
 
     /// Minimum number of measurement to form a track.
-    size_t nMeasurementsMin = 7;
+    std::size_t nMeasurementsMin = 7;
   };
 
   struct State {

@@ -11,6 +11,7 @@ from acts.examples import (
     CsvParticleWriter,
     ParticlesPrinter,
     RootParticleWriter,
+    RootVertexWriter,
 )
 
 # Defaults (given as `None` here) use class defaults defined in
@@ -40,11 +41,12 @@ ParticleSelectorConfig = namedtuple(
         "absEta",  # (min,max)
         "pt",  # (min,max)
         "m",  # (min,max)
+        "measurements",  # (min,max)
         "removeCharged",  # bool
         "removeNeutral",  # bool
         "removeSecondaries",  # bool
     ],
-    defaults=[(None, None)] * 8 + [None] * 3,
+    defaults=[(None, None)] * 9 + [None] * 3,
 )
 
 
@@ -129,12 +131,14 @@ def addParticleGun(
             )
         ],
         outputParticles="particles_input",
+        outputVertices="vertices_input",
         randomNumbers=rnd,
     )
 
     s.addReader(evGen)
 
     s.addWhiteboardAlias("particles", evGen.config.outputParticles)
+    s.addWhiteboardAlias("vertices_truth", evGen.config.outputVertices)
 
     if printParticles:
         s.addAlgorithm(
@@ -171,6 +175,14 @@ def addParticleGun(
             )
         )
 
+        s.addWriter(
+            RootVertexWriter(
+                level=customLogLevel(),
+                inputVertices=evGen.config.outputVertices,
+                filePath=str(outputDirRoot / "vertices.root"),
+            )
+        )
+
     return s
 
 
@@ -185,7 +197,7 @@ def addPythia8(
     cmsEnergy: Optional[float] = None,  # default: 14 * acts.UnitConstants.TeV
     hardProcess: Optional[Iterable] = None,  # default: ["HardQCD:all = on"]
     pileupProcess: Iterable = ["SoftQCD:all = on"],
-    vtxGen: Optional[acts.examples.EventGenerator.VertexGenerator] = None,
+    vtxGen: Optional[EventGenerator.VertexGenerator] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     printParticles: bool = False,
@@ -283,12 +295,14 @@ def addPythia8(
         level=customLogLevel(),
         generators=generators,
         outputParticles="particles_input",
+        outputVertices="vertices_input",
         randomNumbers=rnd,
     )
 
     s.addReader(evGen)
 
     s.addWhiteboardAlias("particles", evGen.config.outputParticles)
+    s.addWhiteboardAlias("vertices_truth", evGen.config.outputVertices)
 
     if printParticles:
         s.addAlgorithm(
@@ -325,6 +339,14 @@ def addPythia8(
             )
         )
 
+        s.addWriter(
+            acts.examples.RootVertexWriter(
+                level=customLogLevel(),
+                inputVertices=evGen.config.outputVertices,
+                filePath=str(outputDirRoot / "pythia8_vertices.root"),
+            )
+        )
+
     return s
 
 
@@ -333,6 +355,7 @@ def addParticleSelection(
     config: ParticleSelectorConfig,
     inputParticles: str,
     outputParticles: str,
+    inputMeasurementParticlesMap: str = "",
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """
@@ -342,7 +365,7 @@ def addParticleSelection(
     ----------
     s: Sequencer
         the sequencer module to which we add the ParticleSelector
-    preselectedParticles: ParticleSelectorConfig
+    config: ParticleSelectorConfig
         the particle selection configuration
     inputParticles: str
         the identifier for the input particles to be selected
@@ -370,6 +393,8 @@ def addParticleSelection(
                 ptMax=config.pt[1],
                 mMin=config.m[0],
                 mMax=config.m[1],
+                measurementsMin=config.measurements[0],
+                measurementsMax=config.measurements[1],
                 removeCharged=config.removeCharged,
                 removeNeutral=config.removeNeutral,
                 removeSecondaries=config.removeSecondaries,
@@ -377,6 +402,7 @@ def addParticleSelection(
             level=customLogLevel(),
             inputParticles=inputParticles,
             outputParticles=outputParticles,
+            inputMeasurementParticlesMap=inputMeasurementParticlesMap,
         )
     )
 
@@ -426,21 +452,22 @@ def addFatras(
 
     # Selector
     if preSelectParticles is not None:
-        particles_selected = "particles_selected"
+        particlesSelected = "fatras_particles_preselected"
         addParticleSelection(
             s,
             preSelectParticles,
             inputParticles=inputParticles,
-            outputParticles=particles_selected,
+            outputParticles=particlesSelected,
         )
+        s.addWhiteboardAlias("particles_selected", particlesSelected)
     else:
-        particles_selected = inputParticles
+        particlesSelected = inputParticles
 
     # Simulation
     alg = acts.examples.FatrasSimulation(
         **acts.examples.defaultKWArgs(
             level=customLogLevel(),
-            inputParticles=particles_selected,
+            inputParticles=particlesSelected,
             outputParticlesInitial=outputParticlesInitial,
             outputParticlesFinal=outputParticlesFinal,
             outputSimHits=outputSimHits,
@@ -476,6 +503,7 @@ def addFatras(
             inputParticles=alg.config.outputParticlesFinal,
             outputParticles=particlesFinal,
         )
+        s.addWhiteboardAlias("particles_selected", particlesFinal)
     else:
         particlesInitial = alg.config.outputParticlesInitial
         particlesFinal = alg.config.outputParticlesFinal
@@ -487,11 +515,11 @@ def addFatras(
     addSimWriters(
         s,
         alg.config.outputSimHits,
+        particlesInitial,
+        particlesFinal,
         outputDirCsv,
         outputDirRoot,
-        logLevel=logLevel,
-        particlesInitial=particlesInitial,
-        particlesFinal=particlesFinal,
+        logLevel,
     )
 
     return s
@@ -499,12 +527,12 @@ def addFatras(
 
 def addSimWriters(
     s: acts.examples.Sequencer,
-    inputSimHits: Optional[str] = None,
+    simHits: Optional[str] = None,
+    particlesInitial="particles_initial",
+    particlesFinal="particles_final",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
-    particlesInitial="particles_initial",
-    particlesFinal="particles_final",
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -531,7 +559,7 @@ def addSimWriters(
         s.addWriter(
             acts.examples.CsvSimHitWriter(
                 level=customLogLevel(),
-                inputSimHits=inputSimHits,
+                inputSimHits=simHits,
                 outputDir=str(outputDirCsv),
                 outputStem="hits",
             )
@@ -545,20 +573,14 @@ def addSimWriters(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
                 inputParticles=particlesInitial,
-                filePath=str(outputDirRoot / "particles_initial.root"),
-            )
-        )
-        s.addWriter(
-            acts.examples.RootParticleWriter(
-                level=customLogLevel(),
-                inputParticles=particlesFinal,
-                filePath=str(outputDirRoot / "particles_final.root"),
+                inputFinalParticles=particlesFinal,
+                filePath=str(outputDirRoot / "particles_simulation.root"),
             )
         )
         s.addWriter(
             acts.examples.RootSimHitWriter(
                 level=customLogLevel(),
-                inputSimHits=inputSimHits,
+                inputSimHits=simHits,
                 filePath=str(outputDirRoot / "hits.root"),
             )
         )
@@ -566,13 +588,14 @@ def addSimWriters(
 
 def getG4DetectorConstructionFactory(
     detector: Any,
+    regionList: List[Any] = [],
 ) -> Any:
     try:
         from acts.examples import TelescopeDetector
         from acts.examples.geant4 import TelescopeG4DetectorConstructionFactory
 
         if type(detector) is TelescopeDetector:
-            return TelescopeG4DetectorConstructionFactory(detector)
+            return TelescopeG4DetectorConstructionFactory(detector, regionList)
     except Exception as e:
         print(e)
 
@@ -581,7 +604,7 @@ def getG4DetectorConstructionFactory(
         from acts.examples.geant4.dd4hep import DDG4DetectorConstructionFactory
 
         if type(detector) is DD4hepDetector:
-            return DDG4DetectorConstructionFactory(detector)
+            return DDG4DetectorConstructionFactory(detector, regionList)
     except Exception as e:
         print(e)
 
@@ -595,12 +618,12 @@ __geant4Handle = None
 def addGeant4(
     s: acts.examples.Sequencer,
     detector: Optional[Any],
-    trackingGeometry: acts.TrackingGeometry,
+    trackingGeometry: Union[acts.TrackingGeometry, acts.Detector],
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
     g4DetectorConstructionFactory: Optional[Any] = None,
     volumeMappings: List[str] = [],
-    materialMappings: List[str] = [],
+    materialMappings: List[str] = ["Silicon"],
     inputParticles: str = "particles_input",
     outputParticlesInitial: str = "particles_initial",
     outputParticlesFinal: str = "particles_final",
@@ -616,6 +639,7 @@ def addGeant4(
     killAfterTime: float = float("inf"),
     killSecondaries: bool = False,
     physicsList: str = "FTFP_BERT",
+    regionList: List[Any] = [],
 ) -> None:
     """This function steers the detector simulation using Geant4
 
@@ -623,7 +647,7 @@ def addGeant4(
     ----------
     s: Sequencer
         the sequencer module to which we add the Geant4 steps (returned from addGeant4)
-    trackingGeometry : tracking geometry
+    trackingGeometry : tracking geometry or detector
     field : magnetic field
     rnd : RandomNumbers, None
         random number generator
@@ -645,28 +669,38 @@ def addGeant4(
         if given, secondary particles are removed from simulation
     """
 
-    from acts.examples.geant4 import Geant4Simulation
+    from acts.examples.geant4 import Geant4Simulation, SensitiveSurfaceMapper
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Selector
     if preSelectParticles is not None:
-        particles_selected = "particles_selected"
+        particlesSelected = "geant4_particles_preselected"
         addParticleSelection(
             s,
             preSelectParticles,
             inputParticles=inputParticles,
-            outputParticles=particles_selected,
+            outputParticles=particlesSelected,
         )
+        s.addWhiteboardAlias("particles_selected", particlesSelected)
     else:
-        particles_selected = inputParticles
+        particlesSelected = inputParticles
 
     if g4DetectorConstructionFactory is None:
         if detector is None:
             raise AttributeError("detector not given")
-        g4DetectorConstructionFactory = getG4DetectorConstructionFactory(detector)
+        g4DetectorConstructionFactory = getG4DetectorConstructionFactory(
+            detector, regionList
+        )
 
     global __geant4Handle
+
+    smmConfig = SensitiveSurfaceMapper.Config()
+    smmConfig.volumeMappings = volumeMappings
+    smmConfig.materialMappings = materialMappings
+    sensitiveMapper = SensitiveSurfaceMapper.create(
+        smmConfig, acts.logging.INFO, trackingGeometry
+    )
 
     # Simulation
     alg = Geant4Simulation(
@@ -674,11 +708,11 @@ def addGeant4(
         geant4Handle=__geant4Handle,
         detectorConstructionFactory=g4DetectorConstructionFactory,
         randomNumbers=rnd,
-        inputParticles=particles_selected,
-        outputSimHits=outputSimHits,
+        inputParticles=particlesSelected,
         outputParticlesInitial=outputParticlesInitial,
         outputParticlesFinal=outputParticlesFinal,
-        trackingGeometry=trackingGeometry,
+        outputSimHits=outputSimHits,
+        sensitiveSurfaceMapper=sensitiveMapper,
         magneticField=field,
         physicsList=physicsList,
         volumeMappings=volumeMappings,
@@ -697,7 +731,7 @@ def addGeant4(
 
     # Selector
     if postSelectParticles is not None:
-        particlesInitial = "geant4_particles_initial_selected"
+        particlesInitial = "geant4_particles_initial_postselected"
         addParticleSelection(
             s,
             postSelectParticles,
@@ -705,13 +739,14 @@ def addGeant4(
             outputParticles=particlesInitial,
         )
 
-        particlesFinal = "geant4_particles_final_selected"
+        particlesFinal = "geant4_particles_final_postselected"
         addParticleSelection(
             s,
             postSelectParticles,
             inputParticles=alg.config.outputParticlesFinal,
             outputParticles=particlesFinal,
         )
+        s.addWhiteboardAlias("particles_selected", particlesFinal)
     else:
         particlesInitial = alg.config.outputParticlesInitial
         particlesFinal = alg.config.outputParticlesFinal
@@ -723,11 +758,11 @@ def addGeant4(
     addSimWriters(
         s,
         alg.config.outputSimHits,
+        particlesInitial,
+        particlesFinal,
         outputDirCsv,
         outputDirRoot,
         logLevel=logLevel,
-        particlesInitial=particlesInitial,
-        particlesFinal=particlesFinal,
     )
 
     return s
@@ -735,7 +770,7 @@ def addGeant4(
 
 def addDigitization(
     s: acts.examples.Sequencer,
-    trackingGeometry: acts.TrackingGeometry,
+    trackingGeometry: Union[acts.TrackingGeometry, acts.Detector],
     field: acts.MagneticFieldProvider,
     digiConfigFile: Union[Path, str],
     outputDirCsv: Optional[Union[Path, str]] = None,
@@ -751,7 +786,7 @@ def addDigitization(
     ----------
     s: Sequencer
         the sequencer module to which we add the Digitization steps (returned from addDigitization)
-    trackingGeometry : tracking geometry
+    trackingGeometry : tracking geometry or detector
     field : magnetic field
     digiConfigFile : Path|str, path
         Configuration (.json) file for digitization or smearing description
@@ -773,7 +808,7 @@ def addDigitization(
         acts.examples.readDigiConfigFromJson(
             str(digiConfigFile),
         ),
-        trackingGeometry=trackingGeometry,
+        surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         randomNumbers=rnd,
         inputSimHits="simhits",
         outputSourceLinks="sourcelinks",
@@ -801,7 +836,7 @@ def addDigitization(
             inputSimHits=digiAlg.config.inputSimHits,
             inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
             filePath=str(outputDirRoot / f"{digiAlg.config.outputMeasurements}.root"),
-            trackingGeometry=trackingGeometry,
+            surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         )
         rmwConfig.addBoundIndicesFromDigiConfig(digiAlg.config)
         s.addWriter(acts.examples.RootMeasurementWriter(rmwConfig, customLogLevel()))

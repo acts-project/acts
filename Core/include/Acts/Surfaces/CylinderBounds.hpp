@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -24,6 +24,7 @@
 namespace Acts {
 
 /// @class CylinderBounds
+/// @image html CylinderBounds.gif
 ///
 /// Bounds for a cylindrical Surface.
 ///
@@ -99,19 +100,10 @@ class CylinderBounds : public SurfaceBounds {
   /// the bounds  Inside can be called without/with tolerances.
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param bcheck boundary check directive
+  /// @param boundaryTolerance boundary check tolerance directive
   /// @return boolean indicator for the success of this operation
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck) const final;
-
-  /// Specialized method for CylinderBounds that checks if a global position
-  /// is within the cylinder cover
-  ///
-  /// @param position is the position in the cylinder frame
-  /// @param bcheck is the boundary check directive
-  /// @return boolean indicator for operation success
-  bool inside3D(const Vector3& position,
-                const BoundaryCheck& bcheck = true) const;
+              const BoundaryTolerance& boundaryTolerance) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
@@ -124,7 +116,8 @@ class CylinderBounds : public SurfaceBounds {
   ///
   /// @param trans is the global transform
   /// @param lseg  are the numbero if phi segments
-  std::vector<Vector3> createCircles(const Transform3 trans, size_t lseg) const;
+  std::vector<Vector3> createCircles(const Transform3 trans,
+                                     std::size_t lseg) const;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
@@ -155,27 +148,6 @@ inline std::vector<double> CylinderBounds::values() const {
 
 inline bool CylinderBounds::coversFullAzimuth() const {
   return m_closed;
-}
-
-inline void CylinderBounds::checkConsistency() noexcept(false) {
-  if (get(eR) <= 0.) {
-    throw std::invalid_argument("CylinderBounds: invalid radial setup.");
-  }
-  if (get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument("CylinderBounds: invalid length setup.");
-  }
-  if (get(eHalfPhiSector) <= 0. or get(eHalfPhiSector) > M_PI) {
-    throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
-  }
-  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
-    throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
-  }
-  if (get(eBevelMinZ) != detail::radian_sym(get(eBevelMinZ))) {
-    throw std::invalid_argument("CylinderBounds: invalid bevel at min Z.");
-  }
-  if (get(eBevelMaxZ) != detail::radian_sym(get(eBevelMaxZ))) {
-    throw std::invalid_argument("CylinderBounds: invalid bevel at max Z.");
-  }
 }
 
 }  // namespace Acts

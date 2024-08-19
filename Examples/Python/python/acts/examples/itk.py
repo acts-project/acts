@@ -31,7 +31,6 @@ def buildITkGeometry(
     jsonconfig: bool = False,
     logLevel=acts.logging.WARNING,
 ):
-
     customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)
     logger = acts.logging.getLogger("buildITkGeometry")
 
@@ -306,7 +305,6 @@ def itkSeedingAlgConfig(
     # variables that do not change for pixel and strip SPs:
     zMax = 3000 * u.mm
     zMin = -3000 * u.mm
-    zOutermostLayers = (-2700 * u.mm, 2700 * u.mm)
     beamPos = (0 * u.mm, 0 * u.mm)
     collisionRegionMin = -200 * u.mm
     collisionRegionMax = 200 * u.mm
@@ -320,6 +318,7 @@ def itkSeedingAlgConfig(
     maxPtScattering = float("inf") * u.GeV
     zBinEdges = [
         -3000.0,
+        -2700.0,
         -2500.0,
         -1400.0,
         -925.0,
@@ -330,9 +329,11 @@ def itkSeedingAlgConfig(
         925.0,
         1400.0,
         2500.0,
+        2700.0,
         3000.0,
     ]  # zBinEdges enables non-equidistant binning in z, in case the binning is not defined the edges are evaluated automatically using equidistant binning
     rRangeMiddleSP = [
+        [40.0, 90.0],
         [40.0, 90.0],
         [40.0, 200.0],
         [46.0, 200.0],
@@ -343,6 +344,7 @@ def itkSeedingAlgConfig(
         [46.0, 200.0],
         [46.0, 200.0],
         [40.0, 200.0],
+        [40.0, 90.0],
         [40.0, 90.0],
     ]  # if useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}. If useVariableMiddleSPRange is set to false and the vector is empty, the cuts won't be applied
     useVariableMiddleSPRange = True  # if useVariableMiddleSPRange is true, the values in rRangeMiddleSP will be calculated based on r values of the SPs and deltaRMiddleSPRange
@@ -380,7 +382,6 @@ def itkSeedingAlgConfig(
 
     # variables that change for pixel and strip SPs:
     if inputSpacePointsType is InputSpacePointsType.PixelSpacePoints:
-        outputSeeds = "PixelSeeds"
         allowSeparateRMax = False
         rMaxGridConfig = 320 * u.mm
         rMaxSeedFinderConfig = rMaxGridConfig
@@ -392,21 +393,22 @@ def itkSeedingAlgConfig(
         interactionPointCut = True
         impactMax = 2 * u.mm
         zBinsCustomLooping = [
-            1,
             2,
             3,
             4,
+            5,
+            12,
             11,
             10,
             9,
-            8,
-            6,
-            5,
             7,
+            6,
+            8,
         ]  # enable custom z looping when searching for SPs, must contain numbers from 1 to the total number of bin in zBinEdges
         zBinNeighborsTop = [
             [0, 0],
             [-1, 0],
+            [-2, 0],
             [-1, 0],
             [-1, 0],
             [-1, 0],
@@ -414,10 +416,12 @@ def itkSeedingAlgConfig(
             [0, 1],
             [0, 1],
             [0, 1],
+            [0, 2],
             [0, 1],
             [0, 0],
         ]  # allows to specify the number of neighbors desired for each bin, [-1,1] means one neighbor on the left and one on the right, if the vector is empty the algorithm returns the 8 surrounding bins
         zBinNeighborsBottom = [
+            [0, 0],
             [0, 1],
             [0, 1],
             [0, 1],
@@ -429,28 +433,25 @@ def itkSeedingAlgConfig(
             [-1, 0],
             [-1, 0],
             [-1, 0],
+            [0, 0],
         ]
         deltaRMiddleMinSPRange = 10 * u.mm
         deltaRMiddleMaxSPRange = 10 * u.mm
-        seedConfirmationFilter = True
         impactWeightFactor = 100
         compatSeedLimit = 3
         numSeedIncrement = 100
         seedWeightIncrement = 0
-        useDetailedDoubleMeasurementInfo = False
         maxSeedsPerSpMConf = 5
         maxQualitySeedsPerSpMConf = 5
         useDeltaRorTopRadius = True
 
         if highOccupancyConfig == True:
             rMaxGridConfig = 250 * u.mm
+            rMaxSeedFinderConfig = rMaxGridConfig
             deltaRMax = 200 * u.mm
-            zBinsCustomLooping = [1, 11, 2, 10, 3, 9, 6, 4, 8, 5, 7]
-            # variables that are only used for highOccupancyConfig configuration:
-            skipZMiddleBinSearch = 2
+            zBinsCustomLooping = [2, 10, 3, 9, 6, 4, 8, 5, 7]
 
     elif inputSpacePointsType is InputSpacePointsType.StripSpacePoints:
-        outputSeeds = "StripSeeds"
         allowSeparateRMax = True
         rMaxGridConfig = 1000.0 * u.mm
         rMaxSeedFinderConfig = 1200.0 * u.mm
@@ -465,6 +466,7 @@ def itkSeedingAlgConfig(
         zBinNeighborsTop = [
             [0, 0],
             [-1, 0],
+            [-2, 0],
             [-1, 0],
             [-1, 0],
             [-1, 0],
@@ -472,10 +474,12 @@ def itkSeedingAlgConfig(
             [0, 1],
             [0, 1],
             [0, 1],
+            [0, 2],
             [0, 1],
             [0, 0],
         ]
         zBinNeighborsBottom = [
+            [0, 0],
             [0, 1],
             [0, 1],
             [0, 1],
@@ -487,15 +491,14 @@ def itkSeedingAlgConfig(
             [-1, 0],
             [-1, 0],
             [-1, 0],
+            [0, 0],
         ]
         deltaRMiddleMinSPRange = 30 * u.mm
         deltaRMiddleMaxSPRange = 150 * u.mm
-        seedConfirmationFilter = False
         impactWeightFactor = 1
         compatSeedLimit = 4
         numSeedIncrement = 1
         seedWeightIncrement = 10100
-        useDetailedDoubleMeasurementInfo = True
         maxSeedsPerSpMConf = 100
         maxQualitySeedsPerSpMConf = 100
         useDeltaRorTopRadius = False
@@ -506,6 +509,7 @@ def itkSeedingAlgConfig(
         collisionRegionMax = 150 * u.mm
         rRangeMiddleSP = [
             [40.0, 80.0],
+            [40.0, 80.0],
             [40.0, 200.0],
             [70.0, 200.0],
             [70.0, 200.0],
@@ -516,10 +520,9 @@ def itkSeedingAlgConfig(
             [70.0, 200.0],
             [40.0, 200.0],
             [40.0, 80.0],
+            [40.0, 80.0],
         ]
         useVariableMiddleSPRange = False
-    else:
-        skipZMiddleBinSearch = 0
 
     # fill namedtuples
     seedFinderConfigArg = SeedFinderConfigArg(
@@ -535,7 +538,6 @@ def itkSeedingAlgConfig(
         maxPtScattering=maxPtScattering,
         zBinEdges=zBinEdges,
         zBinsCustomLooping=zBinsCustomLooping,
-        skipZMiddleBinSearch=skipZMiddleBinSearch,
         rRangeMiddleSP=rRangeMiddleSP,
         useVariableMiddleSPRange=useVariableMiddleSPRange,
         binSizeR=binSizeR,
@@ -549,7 +551,6 @@ def itkSeedingAlgConfig(
         collisionRegion=(collisionRegionMin, collisionRegionMax),
         r=(None, rMaxSeedFinderConfig),
         z=(zMin, zMax),
-        zOutermostLayers=zOutermostLayers,
     )
 
     seedFinderOptionsArg = SeedFinderOptionsArg(bFieldInZ=bFieldInZ, beamPos=beamPos)

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
@@ -28,6 +29,7 @@
 #include <G4Track.hh>
 #include <G4UnitsTable.hh>
 #include <G4VPhysicalVolume.hh>
+#include <G4VTouchable.hh>
 
 class G4PrimaryParticle;
 
@@ -52,7 +54,8 @@ namespace {
 ActsFatras::Hit hitFromStep(const G4StepPoint* preStepPoint,
                             const G4StepPoint* postStepPoint,
                             ActsFatras::Barcode particleId,
-                            Acts::GeometryIdentifier geoId, int32_t index) {
+                            Acts::GeometryIdentifier geoId,
+                            std::int32_t index) {
   static constexpr double convertTime = Acts::UnitConstants::s / CLHEP::s;
   static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
   static constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
@@ -97,6 +100,7 @@ ActsExamples::SensitiveSteppingAction::SensitiveSteppingAction(
 void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     const G4Step* step) {
   // Unit conversions G4->::ACTS
+  static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
 
   // The particle after the step
   G4Track* track = step->GetTrack();
@@ -105,39 +109,73 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   // Bail out if charged & configured to do so
   G4double absCharge = std::abs(track->GetParticleDefinition()->GetPDGCharge());
-  if (not m_cfg.charged and absCharge > 0.) {
+  if (!m_cfg.charged && absCharge > 0.) {
     return;
   }
 
   // Bail out if neutral & configured to do so
-  if (not m_cfg.neutral and absCharge == 0.) {
+  if (!m_cfg.neutral && absCharge == 0.) {
     return;
   }
 
   // Bail out if it is a primary & configured to be ignored
-  if (not m_cfg.primary and primaryParticle != nullptr) {
+  if (!m_cfg.primary && primaryParticle != nullptr) {
     return;
   }
 
   // Bail out if it is a secondary & configured to be ignored
-  if (not m_cfg.secondary and primaryParticle == nullptr) {
+  if (!m_cfg.secondary && primaryParticle == nullptr) {
     return;
   }
 
   // Get the physical volume & check if it has the sensitive string name
-  std::string_view volumeName = track->GetVolume()->GetName();
+  const G4VPhysicalVolume* volume = track->GetVolume();
+  std::string volumeName = volume->GetName();
 
   if (volumeName.find(SensitiveSurfaceMapper::mappingPrefix) ==
       std::string_view::npos) {
     return;
   }
 
-  // Cast out the GeometryIdentifier
-  volumeName = volumeName.substr(SensitiveSurfaceMapper::mappingPrefix.size(),
-                                 std::string_view::npos);
-  char* end = nullptr;
-  const Acts::GeometryIdentifier geoId(
-      std::strtoul(volumeName.data(), &end, 10));
+  // Get PreStepPoint and PostStepPoint
+  const G4StepPoint* preStepPoint = step->GetPreStepPoint();
+  const G4StepPoint* postStepPoint = step->GetPostStepPoint();
+
+  // The G4Touchable for the matching
+  const G4VTouchable* touchable = track->GetTouchable();
+
+  Acts::GeometryIdentifier geoId{};
+
+  // Find the range of candidate surfaces for the current position in the
+  // mapping multimap
+  auto [bsf, esf] = m_surfaceMapping.equal_range(volume);
+  std::size_t nSurfaces = std::distance(bsf, esf);
+
+  ACTS_VERBOSE("Found " << nSurfaces << " candidate surfaces for volume "
+                        << volumeName);
+
+  if (nSurfaces == 0) {
+    ACTS_ERROR("No candidate surfaces found for volume " << volumeName);
+    return;
+  } else if (nSurfaces == 1u) {
+    geoId = bsf->second->geometryId();
+    ACTS_VERBOSE("Unique assignment successful -> to surface " << geoId);
+  } else {
+    // Find the closest surface to the current position
+    Acts::GeometryContext gctx;
+    for (; bsf != esf; ++bsf) {
+      const Acts::Surface* surface = bsf->second;
+      const G4ThreeVector& translation = touchable->GetTranslation();
+      Acts::Vector3 g4VolumePosition(convertLength * translation.x(),
+                                     convertLength * translation.y(),
+                                     convertLength * translation.z());
+      if (surface->center(gctx).isApprox(g4VolumePosition)) {
+        geoId = surface->geometryId();
+        break;
+      }
+    }
+    ACTS_VERBOSE("Replica assignment successful -> to surface " << geoId);
+  }
 
   // This is not the case if we have a particle-ID collision
   if (eventStore().trackIdMapping.find(track->GetTrackID()) ==
@@ -149,10 +187,6 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   ACTS_VERBOSE("Step of " << particleId << " in sensitive volume " << geoId);
 
-  // Get PreStepPoint and PostStepPoint
-  const G4StepPoint* preStepPoint = step->GetPreStepPoint();
-  const G4StepPoint* postStepPoint = step->GetPostStepPoint();
-
   // Set particle hit count to zero, so we have this entry in the map later
   if (eventStore().particleHitCount.find(particleId) ==
       eventStore().particleHitCount.end()) {
@@ -161,7 +195,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   // Extract if we are at volume boundaries
   const bool preOnBoundary = preStepPoint->GetStepStatus() == fGeomBoundary;
-  const bool postOnBoundary = postStepPoint->GetStepStatus() == fGeomBoundary or
+  const bool postOnBoundary = postStepPoint->GetStepStatus() == fGeomBoundary ||
                               postStepPoint->GetStepStatus() == fWorldBoundary;
   const bool particleStopped = (postStepPoint->GetKineticEnergy() == 0.0);
   const bool particleDecayed =
@@ -189,7 +223,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   // Case A: The step starts at the entry of the volume and ends at the exit.
   // Add hit to collection.
-  if (preOnBoundary and postOnBoundary) {
+  if (preOnBoundary && postOnBoundary) {
     ACTS_VERBOSE("-> merge single step to hit");
     ++eventStore().particleHitCount[particleId];
     eventStore().hits.push_back(
@@ -203,7 +237,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   // Case B: The step ends at the exit of the volume. Add hit to hit buffer, and
   // then combine hit buffer
-  if (postOnBoundary or particleStopped or particleDecayed) {
+  if (postOnBoundary || particleStopped || particleDecayed) {
     ACTS_VERBOSE("-> merge buffer to hit");
     auto& buffer = eventStore().hitBuffer;
     buffer.push_back(
@@ -234,7 +268,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   // Case C: The step doesn't end at the exit of the volume. Add the hit to the
   // hit buffer.
-  if (not postOnBoundary) {
+  if (!postOnBoundary) {
     // ACTS_VERBOSE("-> add hit to buffer");
     eventStore().hitBuffer.push_back(
         hitFromStep(preStepPoint, postStepPoint, particleId, geoId, -1));

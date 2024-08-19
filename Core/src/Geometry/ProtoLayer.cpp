@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
@@ -67,13 +67,17 @@ std::ostream& ProtoLayer::toStream(std::ostream& sl) const {
 void ProtoLayer::measure(const GeometryContext& gctx,
                          const std::vector<const Surface*>& surfaces) {
   for (const auto& sf : surfaces) {
-    auto sfPolyhedron = sf->polyhedronRepresentation(gctx, 1);
+    // To prevent problematic isInsidePolygon check for straw surfaces with only
+    // one lseg
+    int lseg = (sf->type() != Surface::Straw) ? 1 : 2;
+    auto sfPolyhedron = sf->polyhedronRepresentation(gctx, lseg);
     const DetectorElementBase* element = sf->associatedDetectorElement();
-    if (element != nullptr) {
+    const auto* regSurface = dynamic_cast<const RegularSurface*>(sf);
+    if (element != nullptr && regSurface != nullptr) {
       // Take the thickness in account if necessary
       double thickness = element->thickness();
       // We need a translation along and opposite half thickness
-      Vector3 sfNormal = sf->normal(gctx, sf->center(gctx));
+      Vector3 sfNormal = regSurface->normal(gctx, sf->center(gctx));
       std::vector<double> deltaT = {-0.5 * thickness, 0.5 * thickness};
       for (const auto& dT : deltaT) {
         Transform3 dtransform = Transform3::Identity();

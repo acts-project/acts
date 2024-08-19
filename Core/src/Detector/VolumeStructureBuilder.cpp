@@ -17,13 +17,14 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 Acts::Experimental::VolumeStructureBuilder::VolumeStructureBuilder(
     const Acts::Experimental::VolumeStructureBuilder::Config& cfg,
     std::unique_ptr<const Acts::Logger> mlogger)
     : IExternalStructureBuilder(), m_cfg(cfg), m_logger(std::move(mlogger)) {
   // Sanity cross-checks
-  if (m_cfg.boundValues.empty() and not m_cfg.extent.has_value()) {
+  if (m_cfg.boundValues.empty() && !m_cfg.extent.has_value()) {
     throw std::invalid_argument(
         "VolumeStructureBuilder: no extent nor boundary values given");
   }
@@ -38,7 +39,7 @@ Acts::Experimental::ExternalStructure
 Acts::Experimental::VolumeStructureBuilder::construct(
     [[maybe_unused]] const Acts::GeometryContext& gctx) const {
   // Print out the auxiliary information
-  if (not m_cfg.auxiliary.empty()) {
+  if (!m_cfg.auxiliary.empty()) {
     ACTS_DEBUG(m_cfg.auxiliary);
   }
 
@@ -68,17 +69,18 @@ Acts::Experimental::VolumeStructureBuilder::construct(
     case VolumeBounds::BoundsType::eCuboid: {
       ACTS_VERBOSE("Building cuboid volume bounds.");
       // Cuboid translation - either parameters / or extent
-      if (boundValues.empty() and m_cfg.extent.has_value()) {
+      if (boundValues.empty() && m_cfg.extent.has_value()) {
         ACTS_VERBOSE("Cuboid: estimate parameters from Extent.");
         const auto& vExtent = m_cfg.extent.value();
-        if (vExtent.constrains(binX) and vExtent.constrains(binY) and
-            vExtent.constrains(binZ)) {
-          eTransform.pretranslate(Vector3(vExtent.medium(binX),
-                                          vExtent.medium(binY),
-                                          vExtent.medium(binZ)));
-          boundValues = {0.5 * vExtent.interval(binX),
-                         0.5 * vExtent.interval(binY),
-                         0.5 * vExtent.interval(binZ)};
+        if (vExtent.constrains(BinningValue::binX) &&
+            vExtent.constrains(BinningValue::binY) &&
+            vExtent.constrains(BinningValue::binZ)) {
+          eTransform.pretranslate(Vector3(vExtent.medium(BinningValue::binX),
+                                          vExtent.medium(BinningValue::binY),
+                                          vExtent.medium(BinningValue::binZ)));
+          boundValues = {0.5 * vExtent.interval(BinningValue::binX),
+                         0.5 * vExtent.interval(BinningValue::binY),
+                         0.5 * vExtent.interval(BinningValue::binZ)};
 
         } else {
           throw std::runtime_error(
@@ -112,16 +114,19 @@ Acts::Experimental::VolumeStructureBuilder::construct(
     case VolumeBounds::BoundsType::eCylinder: {
       ACTS_VERBOSE("Building cylindrical volume bounds.");
       // Cylinder translation - either parameters / or extent
-      if (boundValues.empty() and m_cfg.extent.has_value()) {
+      if (boundValues.empty() && m_cfg.extent.has_value()) {
         ACTS_VERBOSE("Cylinder: estimate parameters from Extent.");
         const auto& vExtent = m_cfg.extent.value();
-        if (vExtent.constrains(binR) and vExtent.constrains(binZ)) {
-          eTransform.pretranslate(Vector3(0., 0., vExtent.medium(binZ)));
-          boundValues = {vExtent.min(binR), vExtent.max(binR),
-                         0.5 * vExtent.interval(binZ)};
-          if (vExtent.constrains(binPhi)) {
-            boundValues.push_back(0.5 * vExtent.interval(binPhi));
-            boundValues.push_back(vExtent.medium(binPhi));
+        if (vExtent.constrains(BinningValue::binR) &&
+            vExtent.constrains(BinningValue::binZ)) {
+          eTransform.pretranslate(
+              Vector3(0., 0., vExtent.medium(BinningValue::binZ)));
+          boundValues = {vExtent.min(BinningValue::binR),
+                         vExtent.max(BinningValue::binR),
+                         0.5 * vExtent.interval(BinningValue::binZ)};
+          if (vExtent.constrains(BinningValue::binPhi)) {
+            boundValues.push_back(0.5 * vExtent.interval(BinningValue::binPhi));
+            boundValues.push_back(vExtent.medium(BinningValue::binPhi));
           }
         } else {
           throw std::runtime_error(
@@ -140,6 +145,10 @@ Acts::Experimental::VolumeStructureBuilder::construct(
         boundValues.push_back(M_PI);
         boundValues.push_back(0.);
       }
+      ACTS_VERBOSE(" - cylindrical shape with [iR, oR, hZ, sPhi, mPhi] = "
+                   << boundValues[0] << ", " << boundValues[1] << ", "
+                   << boundValues[2] << ", " << boundValues[3] << ", "
+                   << boundValues[4]);
       auto bArray =
           to_array<CylinderVolumeBounds::BoundValues::eSize>(boundValues);
       volumeBounds = std::make_unique<CylinderVolumeBounds>(bArray);
@@ -175,8 +184,14 @@ Acts::Experimental::VolumeStructureBuilder::construct(
     default:
       break;
   }
+
+  Transform3 fTransform = m_cfg.transform * eTransform;
+  ACTS_VERBOSE(" - translation: " << Acts::toString(fTransform.translation()));
+  if (!fTransform.rotation().isApprox(
+          Acts::Transform3::Identity().rotation())) {
+    ACTS_VERBOSE(" - rotation: " << Acts::toString(fTransform.rotation()));
+  }
   // Return the transform, the volume bounds, and some default portal
   // generators
-  return {Transform3(m_cfg.transform * eTransform), std::move(volumeBounds),
-          defaultPortalGenerator()};
+  return {fTransform, std::move(volumeBounds), defaultPortalGenerator()};
 }

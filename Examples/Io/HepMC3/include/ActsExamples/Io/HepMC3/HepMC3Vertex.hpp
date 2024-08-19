@@ -15,8 +15,7 @@
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
 
-namespace ActsExamples {
-namespace HepMC3Vertex {
+namespace ActsExamples::HepMC3Vertex {
 
 /// @brief Returns a vertex translated into Acts
 /// @param vertex vertex in HepMC data type
@@ -92,5 +91,4 @@ void position(const std::shared_ptr<HepMC3::GenVertex>& vertex,
 /// @param time new time of the vertex
 void time(const std::shared_ptr<HepMC3::GenVertex>& vertex, double time);
 
-}  // namespace HepMC3Vertex
-}  // namespace ActsExamples
+}  // namespace ActsExamples::HepMC3Vertex

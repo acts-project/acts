@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
@@ -23,6 +23,8 @@
 namespace Acts {
 
 /// @class RectangleBounds
+///
+/// @image html RectangleBounds.gif
 ///
 /// Bounds for a rectangular, planar surface - it can be used to for
 /// rectangles that are symmetrically centered around (0./0.) and for
@@ -77,10 +79,10 @@ class RectangleBounds : public PlanarBounds {
   /// the bounds  Inside can be called without/with tolerances.
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param bcheck boundary check directive
+  /// @param boundaryTolerance boundary check directive
   /// @return boolean indicator for the success of this operation
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck) const final;
+              const BoundaryTolerance& boundaryTolerance) const final;
 
   /// Return the vertices
   ///
@@ -162,7 +164,7 @@ inline double RectangleBounds::get(BoundValues bValue) const {
     case eMaxY:
       return m_max.y();
     default:
-      assert(false and "Invalid BoundValue enum value");
+      assert(false && "Invalid BoundValue enum value");
       return std::numeric_limits<double>::quiet_NaN();
   }
 }

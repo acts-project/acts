@@ -16,6 +16,7 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -34,7 +35,6 @@ class G4VUserPhysicsList;
 class G4FieldManager;
 
 namespace Acts {
-class TrackingGeometry;
 class MagneticFieldProvider;
 class Volume;
 }  // namespace Acts
@@ -111,6 +111,9 @@ class Geant4SimulationBase : public IAlgorithm {
 /// Algorithm to run Geant4 simulation in the ActsExamples framework
 class Geant4Simulation final : public Geant4SimulationBase {
  public:
+  using SensitiveCandidates = std::function<std::vector<const Acts::Surface*>(
+      const Acts::GeometryContext&, const Acts::Vector3&)>;
+
   struct Config : public Geant4SimulationBase::Config {
     /// Name of the output collection : hits
     std::string outputSimHits = "simhits";
@@ -121,11 +124,12 @@ class Geant4Simulation final : public Geant4SimulationBase {
     /// Name of the output collection : final particles
     std::string outputParticlesFinal = "particles_final";
 
-    /// The ACTS tracking geometry
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+    /// The ACTS sensitive surfaces in a mapper, used for hit creation
+    std::shared_ptr<const SensitiveSurfaceMapper> sensitiveSurfaceMapper =
+        nullptr;
 
     /// The ACTS Magnetic field provider
-    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField = nullptr;
 
     /// If a physics list has to be instantiated this one is chosen.
     std::string physicsList = "FTFP_BERT";
@@ -206,7 +210,7 @@ class Geant4MaterialRecording final : public Geant4SimulationBase {
  private:
   Config m_cfg;
 
-  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_outputMaterialTracks{this, "OutputMaterialTracks"};
 };
 

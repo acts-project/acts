@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/KdtSurfacesProvider.hpp"
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
@@ -18,6 +17,7 @@
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -95,31 +95,32 @@ BOOST_AUTO_TEST_CASE(KdtSurfacesProvider) {
   CylindricalTrackingGeometry::DetectorStore dStore;
   auto pSurfaces = pixelSurfaces(dStore);
   // Count the number of surfacees
-  size_t refNumber = 6u * 22u + 14u * (16u + 32u + 52u + 78u);
-  BOOST_CHECK(pSurfaces.size() == refNumber);
+  std::size_t refNumber = 6u * 22u + 14u * (16u + 32u + 52u + 78u);
+  BOOST_CHECK_EQUAL(pSurfaces.size(), refNumber);
 
   using KDTS = Acts::Experimental::KdtSurfaces<>;
-  auto skdt = std::make_shared<KDTS>(KDTS(tContext, pSurfaces, {binZ, binR}));
+  auto skdt = std::make_shared<KDTS>(
+      KDTS(tContext, pSurfaces, {BinningValue::binZ, BinningValue::binR}));
 
   // query: Negative disc 3, it should yield 22 surfaces
   Acts::Extent regionND3;
-  regionND3.set(binZ, -820, -780);
-  regionND3.set(binR, 0., 200.);
+  regionND3.set(BinningValue::binZ, -820, -780);
+  regionND3.set(BinningValue::binR, 0., 200.);
   Acts::Experimental::KdtSurfacesProvider<> end3(skdt, regionND3);
 
   auto nd3 = end3.surfaces(tContext);
-  BOOST_CHECK(nd3.size() == 22u);
+  BOOST_CHECK_EQUAL(nd3.size(), 22u);
 
   // query: 2nd Pixel barrel
   Acts::Extent regionB1;
-  regionB1.set(binZ, -580, 580);
-  regionB1.set(binR, 60., 80.);
+  regionB1.set(BinningValue::binZ, -580, 580);
+  regionB1.set(BinningValue::binR, 60., 80.);
 
   Acts::Experimental::KdtSurfacesProvider<> ba1(skdt, regionB1);
 
   auto b1 = ba1.surfaces(tContext);
   refNumber = 32u * 14u;
-  BOOST_CHECK(b1.size() == refNumber);
+  BOOST_CHECK_EQUAL(b1.size(), refNumber);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

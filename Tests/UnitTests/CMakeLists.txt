@@ -3,6 +3,9 @@
 # the common libraries which are linked to every unittest can be
 # extended by setting the `unittest_extra_libraries` variables before
 # calling the macro.
+
+add_custom_target(unit_tests)
+
 macro(add_unittest _name _source)
   # automatically prefix the target name
   set(_target "ActsUnitTest${_name}")
@@ -11,7 +14,7 @@ macro(add_unittest _name _source)
   target_compile_definitions(
     ${_target}
     PRIVATE "-DBOOST_TEST_DYN_LINK")
-  set_source_files_properties(${_source} PROPERTIES 
+  set_source_files_properties(${_source} PROPERTIES
     COMPILE_DEFINITIONS "BOOST_TEST_MODULE=${_target}")
   target_include_directories(
     ${_target}
@@ -25,10 +28,11 @@ macro(add_unittest _name _source)
       ${unittest_extra_libraries})
   # register as unittest executable
   add_test(NAME ${_name} COMMAND ${_target})
+  add_dependencies(unit_tests ${_target})
 endmacro()
 
 # This function adds a non compile test. To this end it
-# - Adds a target to process the file at `src`, and converts begin/end macros 
+# - Adds a target to process the file at `src`, and converts begin/end macros
 #   to `#if defined` in an extra file
 # - Adds an executable target for that source file, excludes it from the default build
 #   Set a preprocessor define to enable ONE critical section.
@@ -48,7 +52,7 @@ function(add_non_compile_test name src)
   get_filename_component(_filename ${src} NAME)
   set(_processed_source "${CMAKE_CURRENT_BINARY_DIR}/${_filename}")
 
-  # Add a build step to generate the source file by invoking a CMake script 
+  # Add a build step to generate the source file by invoking a CMake script
   add_custom_command(
     OUTPUT ${_processed_source}
     DEPENDS ${src}
@@ -63,7 +67,7 @@ function(add_non_compile_test name src)
       DEPENDS ${_processed_source}
   )
 
-  # Create the executable target, add the generated source code as a 
+  # Create the executable target, add the generated source code as a
   # dependencies, so that it's generated when required.
   set(test "ActsNonCompileTest${name}Closure")
   set(target "${test}_Executable")
@@ -73,7 +77,7 @@ function(add_non_compile_test name src)
 
   # Don't build this target by default
   set_target_properties(${target} PROPERTIES
-    EXCLUDE_FROM_ALL ON 
+    EXCLUDE_FROM_ALL ON
     EXCLUDE_FROM_DEFAULT_BUILD ON)
 
   # Add the test that calls into CMake to build the target. This one we expect to succeed
@@ -96,7 +100,7 @@ function(add_non_compile_test name src)
     add_dependencies(${target} "${name}_generated_source")
 
     set_target_properties(${target} PROPERTIES
-      EXCLUDE_FROM_ALL ON 
+      EXCLUDE_FROM_ALL ON
       EXCLUDE_FROM_DEFAULT_BUILD ON)
 
     add_test(NAME ${test}
@@ -108,7 +112,7 @@ function(add_non_compile_test name src)
 endfunction()
 
 add_subdirectory(Core)
-add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
+add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES AND ACTS_BUILD_EXAMPLES_UNITTESTS)
 add_subdirectory_if(Benchmarks ACTS_BUILD_BENCHMARKS)
 add_subdirectory_if(Fatras ACTS_BUILD_FATRAS)
 add_subdirectory(Plugins)

@@ -14,14 +14,13 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
 #include <stdexcept>
 #include <vector>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
 
@@ -41,8 +40,8 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitWriter::writeT(
   std::string pathSimHit = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<SimHitData> writerSimHit(pathSimHit,
-                                                    m_cfg.outputPrecision);
+  ActsExamples::NamedTupleCsvWriter<SimHitData> writerSimHit(
+      pathSimHit, m_cfg.outputPrecision);
 
   // CsvOutputData struct
   SimHitData simhit;
@@ -58,7 +57,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitWriter::writeT(
     simhit.tx = globalPos4[Acts::ePos0] / Acts::UnitConstants::mm;
     simhit.ty = globalPos4[Acts::ePos1] / Acts::UnitConstants::mm;
     simhit.tz = globalPos4[Acts::ePos2] / Acts::UnitConstants::mm;
-    simhit.tt = globalPos4[Acts::eTime] / Acts::UnitConstants::ns;
+    simhit.tt = globalPos4[Acts::eTime] / Acts::UnitConstants::mm;
     // particle four-momentum before interaction
     simhit.tpx = momentum4Before[Acts::eMom0] / Acts::UnitConstants::GeV;
     simhit.tpy = momentum4Before[Acts::eMom1] / Acts::UnitConstants::GeV;

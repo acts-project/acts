@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
@@ -22,18 +21,17 @@
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <cmath>
+#include <random>
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Some randomness & number crunching
 unsigned int ntests = 10;
 unsigned int nrepts = 2000;
-const bool boundaryCheck = false;
+const BoundaryTolerance boundaryTolerance = BoundaryTolerance::Infinite();
 const bool testPlane = true;
 const bool testDisc = true;
 const bool testCylinder = true;
@@ -81,19 +79,20 @@ MicroBenchmarkResult intersectionTest(const surface_t& surface, double phi,
 
   return Acts::Test::microBenchmark(
       [&] {
-        return surface.intersect(tgContext, origin, direction, boundaryCheck);
+        return surface.intersect(tgContext, origin, direction,
+                                 boundaryTolerance);
       },
       nrepts);
 }
 
 BOOST_DATA_TEST_CASE(
     benchmark_surface_intersections,
-    bdata::random(
-        (bdata::seed = 21,
-         bdata::distribution = std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
+                   bdata::distribution =
+                       std::uniform_real_distribution<double>(-M_PI, M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-0.3, 0.3))) ^
+                           std::uniform_real_distribution<double>(-0.3, 0.3))) ^
         bdata::xrange(ntests),
     phi, theta, index) {
   (void)index;
@@ -122,5 +121,4 @@ BOOST_DATA_TEST_CASE(
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

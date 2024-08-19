@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -29,7 +28,6 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 
 #include <algorithm>
 #include <array>
@@ -45,21 +43,10 @@
 
 #include <boost/format.hpp>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
-
-#define CHECK_ROTATION_ANGLE(t, a, tolerance)               \
-  {                                                         \
-    Vector3 v = (*t) * Vector3(1, 0, 0);                    \
-    CHECK_CLOSE_ABS(VectorHelpers::phi(v), (a), tolerance); \
-  }
 
 using SrfVec = std::vector<std::shared_ptr<const Surface>>;
 
@@ -69,7 +56,7 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
 
   os << std::fixed << std::setprecision(4);
 
-  size_t nVtx = 0;
+  std::size_t nVtx = 0;
   for (const auto& srfx : surfaces) {
     std::shared_ptr<const PlaneSurface> srf =
         std::dynamic_pointer_cast<const PlaneSurface>(srfx);
@@ -84,7 +71,7 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
 
     // connect them
     os << "f";
-    for (size_t i = 1; i <= bounds->vertices().size(); ++i) {
+    for (std::size_t i = 1; i <= bounds->vertices().size(); ++i) {
       os << " " << nVtx + i;
     }
     os << "\n";
@@ -116,10 +103,10 @@ struct LayerCreatorFixture {
     return p_LC->checkBinning(std::forward<Args>(args)...);
   }
 
-  bool checkBinContentSize(const SurfaceArray* sArray, size_t n) {
-    size_t nBins = sArray->size();
+  bool checkBinContentSize(const SurfaceArray* sArray, std::size_t n) {
+    std::size_t nBins = sArray->size();
     bool result = true;
-    for (size_t i = 0; i < nBins; ++i) {
+    for (std::size_t i = 0; i < nBins; ++i) {
       if (!sArray->isValidBin(i)) {
         continue;
       }
@@ -132,12 +119,12 @@ struct LayerCreatorFixture {
     return result;
   }
 
-  SrfVec fullPhiTestSurfacesEC(size_t n = 10, double shift = 0,
+  SrfVec fullPhiTestSurfacesEC(std::size_t n = 10, double shift = 0,
                                double zbase = 0, double r = 10) {
     SrfVec res;
 
     double phiStep = 2 * M_PI / n;
-    for (size_t i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
 
       Transform3 trans;
@@ -253,8 +240,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   // CASE I
   double envR = 0.1, envZ = 0.5;
   ProtoLayer pl(tgContext, srf);
-  pl.envelope[Acts::binR] = {envR, envR};
-  pl.envelope[Acts::binZ] = {envZ, envZ};
+  pl.envelope[Acts::BinningValue::binR] = {envR, envR};
+  pl.envelope[Acts::BinningValue::binZ] = {envZ, envZ};
   std::shared_ptr<CylinderLayer> layer =
       std::dynamic_pointer_cast<CylinderLayer>(
           p_LC->cylinderLayer(tgContext, srf, equidistant, equidistant, pl));
@@ -278,8 +265,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   // CASE II
 
   ProtoLayer pl2(tgContext, srf);
-  pl2.envelope[Acts::binR] = {envR, envR};
-  pl2.envelope[Acts::binZ] = {envZ, envZ};
+  pl2.envelope[Acts::BinningValue::binR] = {envR, envR};
+  pl2.envelope[Acts::BinningValue::binZ] = {envZ, envZ};
   layer = std::dynamic_pointer_cast<CylinderLayer>(
       p_LC->cylinderLayer(tgContext, srf, 30, 7, pl2));
   CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
@@ -314,8 +301,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
 
   // CASE III
   ProtoLayer pl3;
-  pl3.extent.range(Acts::binR).set(1, 20);
-  pl3.extent.range(Acts::binZ).set(-25, 25);
+  pl3.extent.range(Acts::BinningValue::binR).set(1, 20);
+  pl3.extent.range(Acts::BinningValue::binZ).set(-25, 25);
   layer = std::dynamic_pointer_cast<CylinderLayer>(
       p_LC->cylinderLayer(tgContext, srf, equidistant, equidistant, pl3));
   CHECK_CLOSE_REL(layer->thickness(), 19, 1e-3);
@@ -348,8 +335,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   draw_surfaces(surfaces, "LayerCreator_createDiscLayer_EC_1.obj");
 
   ProtoLayer pl(tgContext, surfaces);
-  pl.extent.range(binZ).set(-10, 10);
-  pl.extent.range(binR).set(5., 25.);
+  pl.extent.range(BinningValue::binZ).set(-10, 10);
+  pl.extent.range(BinningValue::binR).set(5., 25.);
   std::shared_ptr<DiscLayer> layer = std::dynamic_pointer_cast<DiscLayer>(
       p_LC->discLayer(tgContext, surfaces, equidistant, equidistant, pl));
   CHECK_CLOSE_REL(layer->thickness(), 20, 1e-3);
@@ -374,10 +361,10 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   // CHECK_CLOSE_REL(actAngle, expAngle, 1e-3);
 
   double envMinR = 1, envMaxR = 1, envZ = 5;
-  size_t nBinsR = 3, nBinsPhi = 30;
+  std::size_t nBinsR = 3, nBinsPhi = 30;
   ProtoLayer pl2(tgContext, surfaces);
-  pl2.envelope[binR] = {envMinR, envMaxR};
-  pl2.envelope[binZ] = {envZ, envZ};
+  pl2.envelope[BinningValue::binR] = {envMinR, envMaxR};
+  pl2.envelope[BinningValue::binZ] = {envZ, envZ};
   layer = std::dynamic_pointer_cast<DiscLayer>(
       p_LC->discLayer(tgContext, surfaces, nBinsR, nBinsPhi, pl2));
 
@@ -432,8 +419,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
 
   double envR = 0, envZ = 0;
   ProtoLayer pl(tgContext, brl);
-  pl.envelope[binR] = {envR, envR};
-  pl.envelope[binZ] = {envZ, envZ};
+  pl.envelope[BinningValue::binR] = {envR, envR};
+  pl.envelope[BinningValue::binZ] = {envZ, envZ};
   std::shared_ptr<CylinderLayer> layer =
       std::dynamic_pointer_cast<CylinderLayer>(
           p_LC->cylinderLayer(tgContext, brl, equidistant, equidistant, pl));
@@ -452,7 +439,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
     // std::cout << "dPHi = " << A->center().phi() - B->center().phi() <<
     // std::endl;
 
-    Vector3 ctr = A->binningPosition(tgContext, binR);
+    Vector3 ctr = A->binningPosition(tgContext, BinningValue::binR);
     auto binContent = layer->surfaceArray()->at(ctr);
     BOOST_CHECK_EQUAL(binContent.size(), 2u);
     std::set<const Surface*> act;
@@ -470,6 +457,4 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

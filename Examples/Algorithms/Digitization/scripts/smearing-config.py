@@ -32,7 +32,6 @@ import sys
 
 
 def add_switch(i, argv, current):
-
     fields = argv[i].split("=")
 
     if len(fields) == 1:
@@ -66,7 +65,6 @@ def get_args_blocks():
         i = add_switch(i, argv, current)
     if current:
         blocks.append(current)
-        current = []
 
     return blocks
 
@@ -147,7 +145,7 @@ def block_to_json(args):
 
             data["bindata"] = [
                 0,  # Acts::Open,
-                0,  # Acts::binX,
+                0,  # Acts::BinningValue::binX,
                 (high - low) / pitch,
                 low,
                 high,

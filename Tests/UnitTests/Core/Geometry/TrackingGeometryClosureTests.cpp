@@ -29,8 +29,7 @@
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -205,8 +204,8 @@ struct CallableHook : public Acts::GeometryIdentifierHook {
 };
 
 BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
-  size_t extra = 0;
-  std::unordered_map<const Surface*, size_t> extraMap;
+  std::size_t extra = 0;
+  std::unordered_map<const Surface*, std::size_t> extraMap;
   auto hookImpl = [&](GeometryIdentifier orig, const Surface& srf) {
     ++extra;
     extraMap[&srf] = extra;
@@ -311,11 +310,14 @@ BOOST_AUTO_TEST_CASE(TrackingGeometry_testVisitSurfaces) {
   // this will also cover TrackingVolume::visitSurfaces
   // it's a pretty bare-bones test, and only asserts that the
   // method is called on the expected number of surfaces
-  size_t nSurfaces = 0;
+  std::size_t nSurfaces = 0;
   tGeometry.visitSurfaces([&nSurfaces](const auto*) { nSurfaces++; });
-
   BOOST_CHECK_EQUAL(nSurfaces, 9u);
+
+  // this will also cover TrackingVolume::visitVolumes
+  std::size_t nVolumes = 0;
+  tGeometry.visitVolumes([&nVolumes](const auto*) { nVolumes++; });
+  BOOST_CHECK_EQUAL(nVolumes, 5u);
 }
 
-}  //  end of namespace Test
-}  //  end of namespace Acts
+}  // namespace Acts::Test

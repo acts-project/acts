@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Direction.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -26,6 +24,13 @@ namespace Acts {
 /// Kalman update step using the gain matrix formalism.
 class GainMatrixUpdater {
   struct InternalTrackState {
+    unsigned int calibratedSize;
+    // This is used to build a covariance matrix view in the .cpp file
+    const double* calibrated;
+    const double* calibratedCovariance;
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Projector projector;
+
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Parameters predicted;
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
@@ -34,28 +39,18 @@ class GainMatrixUpdater {
                      false>::Parameters filtered;
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Covariance filteredCovariance;
-    // This is used to build a covariance matrix view in the .cpp file
-    double* calibrated;
-    double* calibratedCovariance;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Projector projector;
-    unsigned int calibratedSize;
   };
 
  public:
   /// Run the Kalman update step for a single trajectory state.
   ///
   /// @tparam kMeasurementSizeMax
-  /// @param[in] gctx The current geometry context object, e.g. alignment
   /// @param[in,out] trackState The track state
-  /// @param[in] direction The navigation direction
   /// @param[in] logger Where to write logging information to
   template <typename traj_t>
-  Result<void> operator()(const GeometryContext& gctx,
+  Result<void> operator()(const GeometryContext& /*gctx*/,
                           typename traj_t::TrackStateProxy trackState,
-                          Direction direction = Direction::Forward,
                           const Logger& logger = getDummyLogger()) const {
-    (void)gctx;
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
 
     // there should be a calibrated measurement
@@ -80,25 +75,18 @@ class GainMatrixUpdater {
 
     auto [chi2, error] = visitMeasurement(
         InternalTrackState{
+            trackState.calibratedSize(),
+            // Note that we pass raw pointers here which are used in the correct
+            // shape later
+            trackState.effectiveCalibrated().data(),
+            trackState.effectiveCalibratedCovariance().data(),
+            trackState.projector(),
             trackState.predicted(),
             trackState.predictedCovariance(),
             trackState.filtered(),
             trackState.filteredCovariance(),
-            // This abuses an incorrectly sized vector / matrix to access the
-            // data pointer! This works (don't use the matrix as is!), but be
-            // careful!
-            trackState
-                .template calibrated<
-                    MultiTrajectoryTraits::MeasurementSizeMax>()
-                .data(),
-            trackState
-                .template calibratedCovariance<
-                    MultiTrajectoryTraits::MeasurementSizeMax>()
-                .data(),
-            trackState.projector(),
-            trackState.calibratedSize(),
         },
-        direction, logger);
+        logger);
 
     trackState.chi2() = chi2;
 
@@ -107,8 +95,11 @@ class GainMatrixUpdater {
 
  private:
   std::tuple<double, std::error_code> visitMeasurement(
-      InternalTrackState trackState, Direction direction,
-      const Logger& logger) const;
+      InternalTrackState trackState, const Logger& logger) const;
+
+  template <std::size_t N>
+  std::tuple<double, std::error_code> visitMeasurementImpl(
+      InternalTrackState trackState, const Logger& logger) const;
 };
 
 }  // namespace Acts

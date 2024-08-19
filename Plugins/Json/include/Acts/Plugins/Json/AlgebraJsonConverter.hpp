@@ -28,7 +28,7 @@ struct Options {
   /// Write the identity transform explicitly
   bool writeIdentity = false;
   /// Apply a transpose to flip column/row order
-  bool transpose = true;
+  bool transpose = false;
 };
 
 /// @brief The Transform converter to json

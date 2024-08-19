@@ -1,6 +1,6 @@
 
-set(library_sources 
-   src/TGeoCylinderDiscSplitter.cpp  
+set(library_sources
+   src/TGeoCylinderDiscSplitter.cpp
    src/TGeoDetectorElement.cpp
    src/TGeoLayerBuilder.cpp
    src/TGeoParser.cpp
@@ -17,7 +17,7 @@ endif()
 
 add_library(
   ActsPluginTGeo SHARED ${library_sources})
-  
+
 
 target_include_directories(
   ActsPluginTGeo
@@ -26,7 +26,7 @@ target_include_directories(
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
   ActsPluginTGeo
-  PUBLIC ActsCore ActsPluginIdentification ROOT::Geom)
+  PUBLIC ActsCore ROOT::Geom)
 
 install(
   TARGETS ActsPluginTGeo

@@ -18,9 +18,7 @@
 #include <sstream>
 #include <string>
 
-namespace Acts {
-
-namespace TrackingGeometryView3DTest {
+namespace Acts::TrackingGeometryView3DTest {
 
 GeometryContext tgContext = GeometryContext();
 
@@ -66,5 +64,4 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   return cStream.str();
 }
 
-}  // namespace TrackingGeometryView3DTest
-}  // namespace Acts
+}  // namespace Acts::TrackingGeometryView3DTest

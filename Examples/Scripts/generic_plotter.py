@@ -10,7 +10,6 @@ import typer
 import hist
 import pydantic
 import yaml
-import pandas
 import matplotlib.pyplot
 import awkward
 
@@ -47,7 +46,7 @@ def main(
     infile: Path = typer.Argument(
         ..., exists=True, dir_okay=False, help="The input ROOT file"
     ),
-    treename: str = typer.Argument(..., help="The tree to look up branched from"),
+    treename: str = typer.Argument(..., help="The tree to look up branches from"),
     outpath: Path = typer.Argument(
         "outfile", dir_okay=False, help="The output ROOT file"
     ),
@@ -89,7 +88,7 @@ def main(
         config = Config()
     else:
         with config_file.open() as fh:
-            config = Config.parse_obj(yaml.safe_load(fh))
+            config = Config.model_validate(yaml.safe_load(fh))
 
     histograms = {}
 
@@ -103,12 +102,16 @@ def main(
             h = histograms.get(col)
             values = awkward.flatten(df[col], axis=None)
 
+            if len(values) == 0:
+                print(f"WARNING: Branch '{col}' is empty. Skipped.")
+                continue
+
             if h is None:
                 # try to find config
                 found = None
                 for ex, data in config.histograms.items():
                     if re.match(ex, col):
-                        found = data.copy()
+                        found = data.model_copy()
                         print(
                             "Found HistConfig",
                             ex,

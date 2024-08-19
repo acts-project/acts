@@ -1,0 +1,177 @@
+histograms:
+  chi2Sum:
+    min: 0
+    max: 100
+
+  "pull_.*":
+    nbins: 50
+    min: -6
+    max: 6
+
+  eLOC0_fit:
+    min: -1
+    max: 1
+
+  eLOC1_fit:
+    min: -200
+    max: 200
+
+  ePHI_fit:
+    min: -3.14
+    max: 3.14
+
+  eQOP_fit:
+    min: -2
+    max: 2
+
+  eTHETA_fit:
+    min: 0
+    max: 3.14
+
+  eT_fit:
+    min: -2000
+    max: 2000
+
+  err_eLOC0_fit:
+    min: 0
+    max: 0.2
+
+  err_eLOC1_fit:
+    min: 0
+    max: 0.2
+
+  err_ePHI_fit:
+    min: 0
+    max: 0.004
+
+  err_eQOP_fit:
+    min: 0
+    max: 0.1
+
+  err_eT_fit:
+    min: 0
+    max: 2000
+
+  err_eTHETA_fit:
+    min: 0
+    max: 0.004
+
+  ".*Chi2":
+    min: 0
+    max: 10
+
+  measurementLayer|measurementVolume|outlierLayer|outlierVolume:
+    nbins: 30
+    min: 0
+    max: 30
+
+  measurementVolume:
+    nbins: 30
+    min: 0
+    max: 30
+
+  NDF:
+    nbins: 50
+    min: 0
+    max: 50
+
+  nHoles|nMajorityHits|nMeasurements|nOutliers|nSharedHits|nStates:
+    nbins: 30
+    min: 0
+    max: 30
+
+  "res_eLOC0_fit|res_eLOC1_fit":
+    nbins: 80
+    min: -2
+    max: 2
+
+  "res_ePHI_fit|res_eTHETA_fit":
+    nbins: 80
+    min: -0.01
+    max: 0.01
+
+  res_eTHETA_fit:
+    nbins: 80
+    min: -0.001
+    max: 0.001
+
+  res_eQOP_fit:
+    nbins: 80
+    min: -0.01
+    max: 0.01
+
+  res_eT_fit:
+    nbins: 80
+    min: -100
+    max: 100
+
+  t_charge:
+    nbins: 100
+    min: -1.0
+    max: 1.0
+
+  t_time:
+    nbins: 100
+    min: -2000
+    max: 2000
+
+  "t_vx|t_vy":
+    nbins: 100
+    min: -0.04
+    max: 0.04
+
+  t_vz:
+    nbins: 100
+    min: -200
+    max: 200
+
+  "t_px|t_py|t_pz":
+    nbins: 100
+    min: -10
+    max: 10
+
+  t_theta:
+    nbins: 100
+    min: 0
+    max: 3.14
+
+  t_phi:
+    nbins: 100
+    min: -3.14
+    max: 3.14
+
+  t_eta:
+    nbins: 100
+    min: -2.7
+    max: 2.7
+
+  "t_p$":
+    nbins: 100
+    min: 1
+    max: 10
+
+  t_pT:
+    nbins: 100
+    min: 0
+    max: 10
+
+  t_d0:
+    nbins: 100
+    min: -0.05
+    max: 0.05
+
+  t_z0:
+    nbins: 100
+    min: -200
+    max: 200
+
+  trackClassification:
+    nbins: 4
+    min: 0
+    max: 4
+
+exclude:
+  - event_nr
+  - track_nr
+  - hasFittedParams
+  - majorityParticleId

@@ -11,9 +11,7 @@
 #include <boost/hana/set.hpp>
 #include <boost/hana/type.hpp>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 namespace hana = boost::hana;
 
 /**
@@ -72,9 +70,8 @@ constexpr auto type_collector = [](auto t_, auto predicate, auto extractor) {
  * @tparam items The items to filter / collect from.
  */
 template <typename helper, typename... items>
-constexpr auto type_collector_t = type_collector(hana::tuple_t<items...>,
-                                                 helper::predicate,
-                                                 helper::extractor);
+constexpr auto type_collector_t = type_collector(
+    hana::tuple_t<items...>, helper::predicate, helper::extractor);
 
 /**
  * Meta function which returns a compile time bool
@@ -105,6 +102,4 @@ constexpr bool has_action_type_v =
  */
 template <typename T>
 using action_type_t = typename action_type_extractor::extractor_impl<T>;
-}  // namespace detail
-
-}  // namespace Acts
+}  // namespace Acts::detail

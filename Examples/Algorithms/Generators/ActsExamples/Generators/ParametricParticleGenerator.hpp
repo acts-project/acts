@@ -56,7 +56,7 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
     /// Randomize the charge and flip the PDG particle number sign accordingly.
     bool randomizeCharge = false;
     /// Number of particles.
-    size_t numParticles = 1;
+    std::size_t numParticles = 1;
 
     /// Overrides particle charge.
     std::optional<double> charge;
@@ -67,7 +67,8 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
   ParametricParticleGenerator(const Config& cfg);
 
   /// Generate a single primary vertex with the given number of particles.
-  SimParticleContainer operator()(RandomEngine& rng) override;
+  std::pair<SimVertexContainer, SimParticleContainer> operator()(
+      RandomEngine& rng) override;
 
  private:
   Config m_cfg;

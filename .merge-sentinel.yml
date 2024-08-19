@@ -1,16 +1,15 @@
 rules:
   - required_checks:
       - Lint PR / Validate PR title
-      - WIP
       - milestone-set
     required_pattern:
-      - "review-required: *"
+      - "policy-bot: *"
 
   - branch_filter:
      - "main"
      - "develop/*"
     paths_ignore:
-     - "docs/*" 
+     - "docs/*"
 
     required_checks:
      - Docs / docs
@@ -25,6 +24,6 @@ rules:
      - "main"
      - "develop/*"
     paths:
-     - "docs/*" 
+     - "docs/*"
     required_checks:
      - Docs / docs

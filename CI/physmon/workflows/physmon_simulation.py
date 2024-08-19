@@ -9,6 +9,7 @@ from acts.examples.simulation import (
     addFatras,
     addGeant4,
     ParticleSelectorConfig,
+    addPythia8,
 )
 
 from physmon_common import makeSetup
@@ -27,9 +28,6 @@ with tempfile.TemporaryDirectory() as temp:
         events=1000,
         numThreads=1,
         logLevel=acts.logging.INFO,
-        fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
-            Path(__file__).parent.parent / "fpe_masks.yml"
-        ),
     )
 
     for d in setup.decorators:
@@ -61,6 +59,7 @@ with tempfile.TemporaryDirectory() as temp:
                 ]
             ],
             outputParticles="particles_input",
+            outputVertices="vertices_input",
             randomNumbers=rnd,
         )
     )
@@ -99,13 +98,45 @@ with tempfile.TemporaryDirectory() as temp:
     )
 
     s.run()
-    del s
 
     for file, name in [
-        (tp / "fatras" / "particles_initial.root", "particles_initial_fatras.root"),
-        (tp / "fatras" / "particles_final.root", "particles_final_fatras.root"),
-        (tp / "geant4" / "particles_initial.root", "particles_initial_geant4.root"),
-        (tp / "geant4" / "particles_final.root", "particles_final_geant4.root"),
+        (tp / "fatras" / "particles_simulation.root", "particles_fatras.root"),
+        (tp / "geant4" / "particles_simulation.root", "particles_geant4.root"),
+    ]:
+        assert file.exists(), "file not found"
+        shutil.copy(file, setup.outdir / name)
+
+with tempfile.TemporaryDirectory() as temp:
+    s = acts.examples.Sequencer(
+        events=3,
+        numThreads=-1,
+        logLevel=acts.logging.INFO,
+    )
+
+    tp = Path(temp)
+
+    for d in setup.decorators:
+        s.addContextDecorator(d)
+
+    rnd = acts.examples.RandomNumbers(seed=42)
+
+    addPythia8(
+        s,
+        hardProcess=["Top:qqbar2ttbar=on"],
+        npileup=200,
+        vtxGen=acts.examples.GaussianVertexGenerator(
+            mean=acts.Vector4(0, 0, 0, 0),
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
+        ),
+        rnd=rnd,
+        outputDirRoot=tp,
+    )
+
+    s.run()
+
+    for file, name in [
+        (tp / "pythia8_particles.root", "particles_ttbar.root"),
+        (tp / "pythia8_vertices.root", "vertices_ttbar.root"),
     ]:
         assert file.exists(), "file not found"
         shutil.copy(file, setup.outdir / name)

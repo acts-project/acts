@@ -14,9 +14,11 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
@@ -39,10 +41,8 @@ namespace Acts {
 /// Propagations to a cone surface will be returned in
 /// curvilinear coordinates.
 
-class ConeSurface : public Surface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+class ConeSurface : public RegularSurface {
+  friend class Surface;
 
  protected:
   /// Constructor form HepTransform and an opening angle
@@ -134,9 +134,6 @@ class ConeSurface : public Surface {
   Vector3 normal(const GeometryContext& gctx,
                  const Vector3& position) const final;
 
-  /// Normal vector return without argument
-  using Surface::normal;
-
   // Return method for the rotational symmetry axis
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -151,24 +148,26 @@ class ConeSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
-  /// @param direction is the global momentum direction (ignored in this operation)
   ///
   /// @return The global position by value
-  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& direction) const final;
+  Vector3 localToGlobal(const GeometryContext& gctx,
+                        const Vector2& lposition) const final;
+
+  // Use overloads from `RegularSurface`
+  using RegularSurface::globalToLocal;
+  using RegularSurface::localToGlobal;
+  using RegularSurface::normal;
 
   /// Global to local transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be transformed
-  /// @param direction is the global momentum direction (ignored in this operation)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction
@@ -176,7 +175,7 @@ class ConeSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position to start from
   /// @param direction The direction at start
-  /// @param bcheck the Boundary Check
+  /// @param boundaryTolerance the Boundary Check
   /// @param tolerance the tolerance used for the intersection
   ///
   /// If possible returns both solutions for the cylinder
@@ -184,7 +183,9 @@ class ConeSurface : public Surface {
   /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      const Vector3& direction,
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// The pathCorrection for derived classes with thickness
@@ -207,7 +208,7 @@ class ConeSurface : public Surface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const override;
+                                      std::size_t lseg) const override;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;
@@ -218,11 +219,13 @@ class ConeSurface : public Surface {
   /// represented with extrinsic Euler angles)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
   AlignmentToPathMatrix alignmentToPathDerivative(
-      const GeometryContext& gctx, const FreeVector& parameters) const final;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const final;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
@@ -278,5 +281,8 @@ class ConeSurface : public Surface {
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const;
 };
+
+static_assert(RegularSurfaceConcept<ConeSurface>,
+              "ConeSurface does not fulfill RegularSurfaceConcept");
 
 }  // namespace Acts

@@ -1,0 +1,45 @@
+[[white_papers]]
+repository = "https://github.com/acts-project/whitepaper-template"
+slug = "whitepaper-template"
+pdf_url = "https://github.com/acts-project/whitepaper-template/releases/download/v1/main.pdf"
+
+[white_papers.metadata]
+authors = [ "First Author", "Second Author",]
+title = "A whitepaper about a topic"
+description = "This is a whitepaper example. It contains a number of example\npatterns, layouts etc.\nSimple math like $a + b = c$ or even $\\sqrt{s} = 14$ TeV is supported!\n\nQuisque ullamcorper placerat ipsum. Cras nibh. Morbi vel justo vitae lacus\ntincidunt ultrices. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In hac\nhabitasse platea dictumst. Integer tempus convallis augue. Etiam facilisis. Nunc\nelementum fermentum wisi. Aenean placerat. Ut imperdiet, enim sed gravida\nsollicitudin, felis odio placerat quam, ac pulvinar elit purus eget enim. Nunc vitae\ntortor. Proin tempus nibh sit amet nisl. Vivamus quis tortor vitae risus porta\nvehicula."
+[[white_papers]]
+repository = "https://github.com/felix-russo/gaussian-track-densities"
+slug = "gaussian-track-densities"
+pdf_url = "https://github.com/felix-russo/gaussian-track-densities/releases/download/v0.2/main.pdf"
+
+[white_papers.metadata]
+authors = [ "Felix Russo",]
+title = "Gaussian Track Densities"
+description = "Given the impact parameters $(d_0, z_0, t_0)$ of a track in Perigee parametrization, one can model the probability of the particle passing exactly through a point $(d, z, t)$ using a multivariate Gaussian distribution. In this white paper, we derive the maximum and the width of such a distribution for $d = 0$. This is useful in vertex seed finding, where we only consider the track density along the beam axis. We use the analytical results from this white paper in the unit test of the Acts module AdaptiveGridTrackDensity."
+[[white_papers]]
+repository = "https://github.com/acts-project/path-correction-term-from-momentum-variation"
+slug = "correction-for-transport-jacobian"
+pdf_url = "https://github.com/acts-project/path-correction-term-from-momentum-variation/releases/download/v2.0/main.pdf"
+
+[white_papers.metadata]
+authors = [ "Beomki Yeo",]
+title = "A Correction Term for Transport Jacobian from the Direction Variation"
+description = "In the track extension model of ACTS, the covariance of a track is updated for every surface intersection by applying a jacobian matrix, the composition of the coordinate transformation and free space transport. In the derivation of the transport jacobian, it is necessary to consider the path difference coming from the track displacement, which appears as a direction variation term with respect to the path length. \n\n\nThe motivation of this white paper is that the author failed in finding any reference explaining this clearly. (Please let the author know if anyone finds it) There are bunch of references which calculate this term with an ideal helix model, but it is not very useful with the runge-kutta based track extension model. Therefore, in this note, we are deriving the term thoroughly and demonstrate how it is implemented in the source code."
+[[white_papers]]
+repository = "https://github.com/felix-russo/billoir-covariances"
+slug = "billoir-covariances"
+pdf_url = "https://github.com/felix-russo/billoir-covariances/releases/download/v0.0/main.pdf"
+
+[white_papers.metadata]
+authors = [ "Felix Russo",]
+title = "Cross-Covariance Matrices in the Billoir Vertex Fit"
+description = "In this white paper we derive\n\\begin{itemize}\n    \\item the 4x4 covariance matrix of the vertex position,\n    \\item the 4x3 cross-covariance matrix between the vertex position and the $i$-th particle momentum,\n    \\item and the 3x3 cross-covariance matrix between the $i$-th and the $j$-th particle momentum.\n\\end{itemize}"
+[[white_papers]]
+repository = "https://github.com/beomki-yeo/line_surface"
+slug = "line-surface-jacobian"
+pdf_url = "https://github.com/beomki-yeo/line_surface/releases/download/v7.0/main.pdf"
+
+[white_papers.metadata]
+authors = [ "Beomki Yeo",]
+title = "Line Surface Jacobian"
+description = "Line surface used for wire measurements or perigee surface is an unique type of surface where the intersections of a track is not defined on a physical plane. Due to this trait, the underlying mathematics gets quite complicated especially with coordinate transform jacobian whose reference was missing in the source code. (Please let the authors know if anyone finds it). In this white paper, thus we attempt to derive the jacobians for both local-to-global and global-to-local transforms."

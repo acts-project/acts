@@ -44,7 +44,7 @@ TestHostCuts::cutPerMiddleSP(
   }
 
   newSeedsVector.push_back(std::move(seedCandidates[0]));
-  std::size_t itLength = std::min(seedCandidates.size(), std::size_t(5));
+  std::size_t itLength = std::min(seedCandidates.size(), std::size_t{5});
   // don't cut first element
   for (std::size_t i(1); i < itLength; i++) {
     float weight = seedCandidates[i].weight;

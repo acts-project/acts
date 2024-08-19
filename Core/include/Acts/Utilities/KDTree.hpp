@@ -49,7 +49,7 @@ class KDTree {
   using value_t = Type;
 
   /// @brief The type describing a multi-dimensional orthogonal range.
-  using range_t = RangeXD<Dims, Scalar, Vector>;
+  using range_t = RangeXD<Dims, Scalar>;
 
   /// @brief The type of coordinates for points.
   using coordinate_t = Vector<Scalar, Dims>;
@@ -180,9 +180,8 @@ class KDTree {
   /// @param i The iterator to write the output to.
   template <typename OutputIt>
   void rangeSearchInserterWithKey(const range_t &r, OutputIt i) const {
-    rangeSearchMapDiscard(r, [i](const coordinate_t &c, const Type &v) mutable {
-      i = {c, v};
-    });
+    rangeSearchMapDiscard(
+        r, [i](const coordinate_t &c, const Type &v) mutable { i = {c, v}; });
   }
 
   /// @brief Perform an orthogonal range search within the k-d tree, applying
@@ -303,7 +302,7 @@ class KDTree {
     range_t r;
 
     for (std::size_t j = 0; j < Dims; ++j) {
-      r[j] = {min_v[j], nextRepresentable(max_v[j])};
+      r[j] = Range1D<Scalar>{min_v[j], nextRepresentable(max_v[j])};
     }
 
     return r;

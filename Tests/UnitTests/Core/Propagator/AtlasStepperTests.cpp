@@ -19,14 +19,14 @@
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -48,10 +48,10 @@
 #include <type_traits>
 #include <utility>
 
-namespace Acts {
-namespace Test {
-
 using namespace Acts::UnitLiterals;
+
+namespace Acts::Test {
+
 using Acts::VectorHelpers::makeVector4;
 using Covariance = BoundSquareMatrix;
 using Jacobian = BoundMatrix;
@@ -66,8 +66,10 @@ struct MockPropagatorState {
   Stepper::State stepping;
   /// Propagator options with only the relevant components.
   struct {
-    double tolerance = 10_um;
     Direction direction = Direction::Backward;
+    struct {
+      double stepTolerance = 10_um;
+    } stepping;
   } options;
 };
 
@@ -372,7 +374,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   CurvilinearTrackParameters cp(makeVector4(newPos, newTime), unitDir,
                                 newCharge / newAbsMom, newCov,
                                 particleHypothesis);
-  FreeVector freeParams = detail::transformBoundToFreeParameters(
+  FreeVector freeParams = transformBoundToFreeParameters(
       cp.referenceSurface(), geoCtx, cp.parameters());
   Direction navDir = Direction::Forward;
   double stepSize = -256.;
@@ -402,9 +404,9 @@ BOOST_AUTO_TEST_CASE(Reset) {
     copy.previousStepSize = other.previousStepSize;
     copy.tolerance = other.tolerance;
 
-    copy.fieldCache =
-        MagneticFieldProvider::Cache::make<typename field_t::Cache>(
-            other.fieldCache.template get<typename field_t::Cache>());
+    copy.fieldCache = MagneticFieldProvider::Cache(
+        std::in_place_type<typename field_t::Cache>,
+        other.fieldCache.template as<typename field_t::Cache>());
 
     copy.geoContext = other.geoContext;
     copy.debug = other.debug;
@@ -558,14 +560,11 @@ BOOST_AUTO_TEST_CASE(StepSize) {
                                  particleHypothesis),
       stepSize, tolerance);
 
-  // TODO figure out why this fails and what it should be
-  // BOOST_CHECK_EQUAL(stepper.overstepLimit(state), tolerance);
-
-  stepper.setStepSize(state, -5_cm);
+  stepper.updateStepSize(state, -5_cm, ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(state.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(state.stepSize.value(), -5_cm);
 
-  stepper.releaseStepSize(state);
+  stepper.releaseStepSize(state, ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
 }
 
@@ -582,7 +581,8 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   auto target = Surface::makeShared<PlaneSurface>(
       pos + navDir * distance * unitDir, unitDir);
 
-  stepper.updateSurfaceStatus(state, *target, navDir, BoundaryCheck(false));
+  stepper.updateSurfaceStatus(state, *target, 0, navDir,
+                              BoundaryTolerance::Infinite());
   BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::actor), distance);
 
   // test the step size modification in the context of a surface
@@ -590,18 +590,20 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       state,
       target
           ->intersect(state.geoContext, stepper.position(state),
-                      navDir * stepper.direction(state), false)
+                      navDir * stepper.direction(state),
+                      BoundaryTolerance::Infinite())
           .closest(),
       navDir, false);
   BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
 
   // start with a different step size
-  state.stepSize.setValue(navDir * stepSize);
+  state.stepSize.setUser(navDir * stepSize);
   stepper.updateStepSize(
       state,
       target
           ->intersect(state.geoContext, stepper.position(state),
-                      navDir * stepper.direction(state), false)
+                      navDir * stepper.direction(state),
+                      BoundaryTolerance::Infinite())
           .closest(),
       navDir, true);
   BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
@@ -609,5 +611,4 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

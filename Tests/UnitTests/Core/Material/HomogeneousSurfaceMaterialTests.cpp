@@ -18,9 +18,7 @@
 
 #include <utility>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_construction_test) {
@@ -57,7 +55,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_scaling_test) {
   HomogeneousSurfaceMaterial hsm(mat, 1.);
   hsm *= 0.5;
 
-  auto matBin = hsm.materialSlab(0, 0);
+  auto matBin = hsm.materialSlab(Vector3(0., 0., 0.));
 
   BOOST_CHECK_EQUAL(matBin, matHalf);
   BOOST_CHECK_NE(matBin, mat);
@@ -79,12 +77,10 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
 
   auto mat2d = hsmfwd.materialSlab(Vector2{0., 0.});
   auto mat3d = hsmfwd.materialSlab(Vector3{0., 0., 0.});
-  auto matbin = hsmfwd.materialSlab(0, 0);
 
   // Test equality of the copy
   BOOST_CHECK_EQUAL(mat, mat2d);
   BOOST_CHECK_EQUAL(mat, mat3d);
-  BOOST_CHECK_EQUAL(mat, matbin);
 
   Direction fDir = Direction::Forward;
   Direction bDir = Direction::Backward;
@@ -174,5 +170,4 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   BOOST_CHECK_EQUAL(mat, matFwdPre);
   BOOST_CHECK_EQUAL(vacuum, matBwdPre);
 }
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

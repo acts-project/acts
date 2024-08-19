@@ -12,7 +12,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -26,16 +25,17 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <system_error>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 namespace Acts {
 class GeometryIdentifier;
-class TrackingGeometry;
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -60,7 +60,7 @@ struct GeometricConfig {
 
   /// The charge smearer
   ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>
-      chargeSmearer = Digitization::Exact{};
+      chargeSmearer = Digitization::Exact(0);
 
   // The threshold below a cell activation is ignored
   double threshold = 0.;
@@ -68,9 +68,15 @@ struct GeometricConfig {
   // Whether to assume digital readout (activation is either 0 or 1)
   bool digital = false;
 
+  // Flag as strip
+  bool strip = false;
+
+  /// The variances for this digitization
+  std::map<Acts::BoundIndices, std::vector<Acts::ActsScalar>> varianceMap = {};
+
   /// Charge generation (configurable via the chargeSmearer)
   Acts::ActsScalar charge(Acts::ActsScalar path, RandomEngine &rng) const {
-    if (not chargeSmearer) {
+    if (!chargeSmearer) {
       return path;
     }
     auto res = chargeSmearer(path, rng);
@@ -81,13 +87,18 @@ struct GeometricConfig {
     }
   }
 
-  /// Position and Covariance generation (currently not implemented)
-  /// Takes as an argument the clsuter size and an random engine
-  /// @return a vector of uncorrelated covariance values
-  std::vector<Acts::ActsScalar> variances(size_t /*size0*/, size_t /*size1*/,
-                                          RandomEngine & /*rng*/) const {
-    return {};
-  };
+  /// This generates the variances for a given cluster
+  ///
+  /// @note either the variances are directly taken from a pre-read
+  /// variance map, or they are generated from the pitch size
+  ///
+  /// @param csizes is the cluster size in the different dimensions
+  /// @param cmins is the cluster minimum in the different dimensions
+  ///
+  /// @return a vector of variances for the cluster
+  std::vector<Acts::ActsScalar> variances(
+      const std::array<std::size_t, 2u> &csizes,
+      const std::array<std::size_t, 2u> &cmins) const;
 
   /// Drift generation (currently not implemented)
   /// Takes as an argument the position, and a random engine
@@ -111,9 +122,9 @@ struct DigiComponentsConfig {
 class DigitizationConfig {
  public:
   DigitizationConfig(bool merge, double sigma, bool commonCorner)
-      : DigitizationConfig(
-            merge, sigma, commonCorner,
-            Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
+      : DigitizationConfig(merge, sigma, commonCorner,
+                           Acts::GeometryHierarchyMap<DigiComponentsConfig>()) {
+  }
 
   DigitizationConfig(
       bool doMerge, double mergeNsigma, bool mergeCommonCorner,
@@ -134,8 +145,9 @@ class DigitizationConfig {
   std::string outputMeasurementParticlesMap = "measurement_particles_map";
   /// Output collection to map measured hits to simulated hits.
   std::string outputMeasurementSimHitsMap = "measurement_simhits_map";
-  /// Tracking geometry required to access global-to-local transforms.
-  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
+  /// Map of surface by identifier to allow local - to global
+  std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface *>
+      surfaceByIdentifier;
   /// Random numbers tool.
   std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
   /// Do we merge hits or not

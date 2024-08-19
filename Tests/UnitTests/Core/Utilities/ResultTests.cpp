@@ -37,9 +37,7 @@ template <>
 struct is_error_code_enum<MyError> : std::true_type {};
 }  // namespace std
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Utilities)
 
@@ -126,7 +124,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
     res2 = MyError::SomethingElse;
     BOOST_CHECK(!res2.ok());
     BOOST_CHECK_EQUAL(res2.error(), MyError::SomethingElse);
-    BOOST_CHECK(res2.error() != MyError::Failure);
+    BOOST_CHECK_NE(res2.error(), MyError::Failure);
   }
 
   {
@@ -205,7 +203,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
     res2 = MyError::SomethingElse;
     BOOST_CHECK(!res2.ok());
     BOOST_CHECK_EQUAL(res2.error(), MyError::SomethingElse);
-    BOOST_CHECK(res2.error() != MyError::Failure);
+    BOOST_CHECK_NE(res2.error(), MyError::Failure);
   }
 
   {
@@ -225,7 +223,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
     res = MyError::SomethingElse;
     BOOST_CHECK(!res.ok());
     BOOST_CHECK_EQUAL(res.error(), MyError::SomethingElse);
-    BOOST_CHECK(res.error() != MyError::Failure);
+    BOOST_CHECK_NE(res.error(), MyError::Failure);
   }
 
   {
@@ -242,7 +240,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
 }
 
 struct NoCopy {
-  NoCopy(int i) : num(i){};
+  NoCopy(int i) : num(i) {}
   NoCopy(const NoCopy&) = delete;
   NoCopy& operator=(const NoCopy&) = delete;
   NoCopy(NoCopy&&) = default;
@@ -288,7 +286,6 @@ BOOST_AUTO_TEST_CASE(CopyBehaviour) {
 }
 
 Result<void> void_res_func(int b) {
-  (void)b;
   if (b > 5) {
     return MyError::SomethingElse;
   }
@@ -337,5 +334,5 @@ BOOST_AUTO_TEST_CASE(BoolResult) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

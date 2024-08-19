@@ -24,6 +24,8 @@ class MagneticFieldErrorCategory : public std::error_category {
     switch (static_cast<MagneticFieldError>(c)) {
       case MagneticFieldError::OutOfBounds:
         return "Interpolation out of bounds was requested";
+      case MagneticFieldError::NotImplemented:
+        return "The requested functionality is not implemented";
       default:
         return "unknown";
     }

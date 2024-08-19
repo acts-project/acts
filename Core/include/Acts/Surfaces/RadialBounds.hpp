@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -73,11 +73,11 @@ class RadialBounds : public DiscBounds {
   /// For disc surfaces the local position in (r,phi) is checked
   ///
   /// @param lposition local position to be checked
-  /// @param bcheck boundary check directive
+  /// @param boundaryTolerance boundary check directive
   ///
   /// @return is a boolean indicating the operation success
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck) const final;
+              const BoundaryTolerance& boundaryTolerance) const final;
 
   /// Outstream operator
   ///
@@ -146,7 +146,7 @@ inline bool RadialBounds::coversFullAzimuth() const {
 }
 
 inline bool RadialBounds::insideRadialBounds(double R, double tolerance) const {
-  return (R + tolerance > get(eMinR) and R - tolerance < get(eMaxR));
+  return (R + tolerance > get(eMinR) && R - tolerance < get(eMaxR));
 }
 
 inline double RadialBounds::binningValueR() const {
@@ -164,10 +164,10 @@ inline std::vector<double> RadialBounds::values() const {
 }
 
 inline void RadialBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) < 0. or get(eMaxR) <= 0. or get(eMinR) > get(eMaxR)) {
+  if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) > get(eMaxR)) {
     throw std::invalid_argument("RadialBounds: invalid radial setup");
   }
-  if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
     throw std::invalid_argument("RadialBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {

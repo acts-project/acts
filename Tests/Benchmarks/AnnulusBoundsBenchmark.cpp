@@ -55,14 +55,14 @@ int main(int /*argc*/, char** /*argv[]*/) {
   ActsMatrix<2, 2> cov;
   cov << 1.0, 0, 0, 0.05;
 
-  BoundaryCheck bcAbs{true};
-  BoundaryCheck bcTol0{true, false, 1.0, 0};
-  BoundaryCheck bcTol1{false, true, 0, 0.2};
-  BoundaryCheck bcTol01{true, true, 1.0, 0.2};
-  BoundaryCheck bcCov{cov, 1};
+  BoundaryTolerance bcAbs = BoundaryTolerance::None();
+  BoundaryTolerance bcTol0 = BoundaryTolerance::AbsoluteBound{1.0, 0};
+  BoundaryTolerance bcTol1 = BoundaryTolerance::AbsoluteBound{0, 0.2};
+  BoundaryTolerance bcTol01 = BoundaryTolerance::AbsoluteBound{1.0, 0.2};
+  BoundaryTolerance bcCov = BoundaryTolerance::Chi2Bound{cov, 1};
 
   // visualization to make sense of things
-  for (size_t i = 0; i < 10000; i++) {
+  for (std::size_t i = 0; i < 10000; i++) {
     const Vector2 loc{xDist(rng), yDist(rng)};
     auto locPC = toStripFrame(loc);
     bool isInsideAbs = aBounds.inside(locPC, bcAbs);
@@ -129,7 +129,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     auto bench_result = Acts::Test::microBenchmark(iterationWithArg, inputs);
     print_bench_result(bench_name, bench_result);
   };
-  auto run_all_benches = [&](const BoundaryCheck& check,
+  auto run_all_benches = [&](const BoundaryTolerance& check,
                              const std::string& check_name, const Mode mode) {
     // Announce a set of benchmarks
     print_bench_header(check_name);
@@ -145,6 +145,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
       case Mode::SlowOutside:
         num_inside_points = NTESTS;
         num_outside_points = NTESTS_SLOW;
+      default:  // do nothing
+        break;
     };
 
     for (const auto& [loc, inside, label] : testPoints) {

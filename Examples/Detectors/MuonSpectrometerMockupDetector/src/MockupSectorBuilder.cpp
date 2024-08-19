@@ -16,7 +16,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Plugins/Geant4/Geant4Converters.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
@@ -55,7 +55,6 @@ ActsExamples::MockupSectorBuilder::buildChamber(
     const ActsExamples::MockupSectorBuilder::ChamberConfig& chamberConfig) {
   if (g4World == nullptr) {
     throw std::invalid_argument("MockupSector: No g4World initialized");
-    return nullptr;
   }
 
   const Acts::GeometryContext gctx;
@@ -103,20 +102,20 @@ ActsExamples::MockupSectorBuilder::buildChamber(
 
     strawSurfaces.push_back(g4ConvSurf);
 
-    min_max[0].first =
-        std::min(min_max[0].first, (float)g4ConvSurf->center(context).x());
-    min_max[0].second =
-        std::max(min_max[0].second, (float)g4ConvSurf->center(context).x());
+    min_max[0].first = std::min(
+        min_max[0].first, static_cast<float>(g4ConvSurf->center(context).x()));
+    min_max[0].second = std::max(
+        min_max[0].second, static_cast<float>(g4ConvSurf->center(context).x()));
 
-    min_max[1].first =
-        std::min(min_max[1].first, (float)g4ConvSurf->center(context).y());
-    min_max[1].second =
-        std::max(min_max[1].second, (float)g4ConvSurf->center(context).y());
+    min_max[1].first = std::min(
+        min_max[1].first, static_cast<float>(g4ConvSurf->center(context).y()));
+    min_max[1].second = std::max(
+        min_max[1].second, static_cast<float>(g4ConvSurf->center(context).y()));
 
-    min_max[2].first =
-        std::min(min_max[2].first, (float)g4ConvSurf->center(context).z());
-    min_max[2].second =
-        std::max(min_max[2].second, (float)g4ConvSurf->center(context).z());
+    min_max[2].first = std::min(
+        min_max[2].first, static_cast<float>(g4ConvSurf->center(context).z()));
+    min_max[2].second = std::max(
+        min_max[2].second, static_cast<float>(g4ConvSurf->center(context).z()));
   }
 
   // Create the bounds of the detector volumes
@@ -162,7 +161,6 @@ ActsExamples::MockupSectorBuilder::buildSector(
         detVolumes) {
   if (mCfg.NumberOfSectors > maxNumberOfSectors) {
     throw std::invalid_argument("MockupSector:Number of max sectors exceeded");
-    return nullptr;
   }
 
   const Acts::GeometryContext gctx;

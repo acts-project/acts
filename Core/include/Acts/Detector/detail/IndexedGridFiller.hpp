@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,9 +13,10 @@
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -25,9 +26,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
-namespace detail {
+namespace Acts::Experimental::detail {
 
 /// @brief Helper method to generate completely populated bin sequences
 /// that respect the boundary type of the axis
@@ -42,7 +41,7 @@ namespace detail {
 /// @return a vector of bins to be filled
 std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
                                      std::size_t expand, std::size_t nBins,
-                                     Acts::detail::AxisBoundaryType type);
+                                     Acts::AxisBoundaryType type);
 
 /// @brief Helper method to fill local bins given a set of query points
 /// bin in between the extra points are filled, and a possible expansion
@@ -68,13 +67,13 @@ std::set<typename grid_type::index_t> localIndices(
     throw std::runtime_error("IndexedSurfaceGridFiller: no query point given.");
   }
 
-  if (not expansion.empty() and expansion.size() != grid_type::DIM) {
+  if (!expansion.empty() && expansion.size() != grid_type::DIM) {
     throw std::runtime_error(
         "IndexedSurfaceGridFiller: wrong dimension of bin expansion given.");
   }
 
   /// These are the axis bounds type parameters - for correct bin sequences
-  std::array<Acts::detail::AxisBoundaryType, grid_type::DIM> axisTypes{};
+  std::array<Acts::AxisBoundaryType, grid_type::DIM> axisTypes{};
   std::array<std::size_t, grid_type::DIM> axisBins{};
   // Fill the axis types
   for (auto [ia, a] : enumerate(grid.axes())) {
@@ -203,7 +202,9 @@ struct IndexedGridFiller {
       gridQueries.reserve(refs.size());
       for (const auto& ref : refs) {
         // Cast the transform according to the grid binning
-        gridQueries.push_back(iGrid.castPosition(ref));
+        gridQueries.push_back(
+            GridAccessHelpers::castPosition<decltype(iGrid.grid)>(
+                iGrid.transform * ref, iGrid.casts));
       }
       ACTS_DEBUG(gridQueries.size() << " reference points generated.");
       auto lIndices = localIndices<decltype(iGrid.grid)>(
@@ -222,7 +223,7 @@ struct IndexedGridFiller {
     }
 
     // Assign the indices into all
-    if (not aToAll.empty()) {
+    if (!aToAll.empty()) {
       assignToAll(iGrid, aToAll);
     }
   }
@@ -250,6 +251,4 @@ struct IndexedGridFiller {
   const Logger& logger() const { return (*oLogger); }
 };
 
-}  // namespace detail
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental::detail

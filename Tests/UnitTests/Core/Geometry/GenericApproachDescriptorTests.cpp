@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -16,7 +14,7 @@
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -31,13 +29,7 @@
 #include "../Surfaces/SurfaceStub.hpp"
 #include "LayerStub.hpp"
 
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
-
-namespace Acts {
-
-namespace Test {
-namespace Layers {
+namespace Acts::Test::Layers {
 
 // Build a default context for testing
 GeometryContext tgContext = GeometryContext();
@@ -69,10 +61,9 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
       0.,
   };
   Vector3 zDir{0., 0., 1.};
-  BoundaryCheck bcheck{true};
-  double pLimit = std::numeric_limits<double>::max();
-  double oLimit = -100 * UnitConstants::um;
-  double tolerance = s_onSurfaceTolerance;
+  BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
+  double nearLimit = -100 * UnitConstants::um;
+  double farLimit = std::numeric_limits<double>::max();
   //
   std::vector<std::shared_ptr<const Surface>> someSurfaces{
       Surface::makeShared<SurfaceStub>(), Surface::makeShared<SurfaceStub>()};
@@ -82,14 +73,14 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
   BOOST_CHECK_NO_THROW(approachDescriptor.registerLayer(aLayer));
   // approachSurface
   SurfaceIntersection surfIntersection = approachDescriptor.approachSurface(
-      tgContext, origin, zDir, bcheck, pLimit, oLimit, tolerance);
+      tgContext, origin, zDir, boundaryTolerance, nearLimit, farLimit);
   double expectedIntersection = 20.0;  // property of SurfaceStub
   CHECK_CLOSE_REL(surfIntersection.pathLength(), expectedIntersection, 1e-6);
   // containedSurfaces()
   BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().size(),
                     someSurfaces.size());
 
-  for (size_t i = 0; i < someSurfaces.size(); i++) {
+  for (std::size_t i = 0; i < someSurfaces.size(); i++) {
     BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().at(i),
                       someSurfaces.at(i).get());
   }
@@ -101,10 +92,9 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
 BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
   Vector3 origin{0., -0.5, 1.};
   Vector3 direction{0., 1., 0.};
-  BoundaryCheck bcheck{true};
-  double pLimit = std::numeric_limits<double>::max();
-  double oLimit = -100 * UnitConstants::um;
-  double tolerance = s_onSurfaceTolerance;
+  BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
+  double nearLimit = -100 * UnitConstants::um;
+  double farLimit = std::numeric_limits<double>::max();
 
   auto conCyl =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 10., 20.);
@@ -113,8 +103,9 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
 
   GenericApproachDescriptor gad(approachSurface);
 
-  auto sfIntersection = gad.approachSurface(
-      GeometryContext(), origin, direction, bcheck, pLimit, oLimit, tolerance);
+  auto sfIntersection =
+      gad.approachSurface(GeometryContext(), origin, direction,
+                          boundaryTolerance, nearLimit, farLimit);
 
   // No overstepping allowed, the preferred solution should be the forward one
   CHECK_CLOSE_ABS(sfIntersection.pathLength(), 10.5, s_epsilon);
@@ -124,7 +115,4 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Layers
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test::Layers

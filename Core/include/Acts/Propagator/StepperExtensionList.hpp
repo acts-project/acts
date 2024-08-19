@@ -37,7 +37,7 @@ template <typename... extensions>
 struct StepperExtensionList : private detail::Extendable<extensions...> {
  private:
   // Checkout for duplicates in the extensions
-  static_assert(not detail::has_duplicates_v<extensions...>,
+  static_assert(!detail::has_duplicates_v<extensions...>,
                 "same extension type specified several times");
 
   static constexpr unsigned int nExtensions = sizeof...(extensions);

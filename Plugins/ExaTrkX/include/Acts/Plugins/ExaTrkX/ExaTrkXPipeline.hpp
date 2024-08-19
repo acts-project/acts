@@ -31,8 +31,10 @@ struct ExaTrkXTiming {
 
 class ExaTrkXHook {
  public:
-  virtual ~ExaTrkXHook(){};
-  virtual void operator()(const std::any &, const std::any &) const {};
+  virtual ~ExaTrkXHook() {}
+  virtual void operator()(const std::any & /*nodes*/,
+                          const std::any & /*edges*/,
+                          const std::any & /*weights*/) const {};
 };
 
 class ExaTrkXPipeline {
@@ -45,7 +47,6 @@ class ExaTrkXPipeline {
 
   std::vector<std::vector<int>> run(std::vector<float> &features,
                                     std::vector<int> &spacepointIDs,
-                                    int deviceHint = -1,
                                     const ExaTrkXHook &hook = {},
                                     ExaTrkXTiming *timing = nullptr) const;
 

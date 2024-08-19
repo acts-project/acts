@@ -22,6 +22,7 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -35,7 +36,6 @@
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
@@ -71,13 +71,20 @@ class TrackingGeometry;
 namespace {
 
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
 
 static const auto pion = Acts::ParticleHypothesis::pion();
 
+using TrackContainer = Acts::TrackContainer<Acts::VectorTrackContainer,
+                                            Acts::VectorMultiTrajectory,
+                                            Acts::detail::ValueHolder>;
+using TrackStateContainerBackend =
+    typename TrackContainer::TrackStateContainerBackend;
+
 struct Detector {
   // expected number of measurements for the given detector
-  size_t numMeasurements = 6u;
+  std::size_t numMeasurements = 6u;
 
   // geometry
   CubicTrackingGeometry store;
@@ -154,18 +161,16 @@ struct Fixture {
   using ConstantFieldPropagator =
       Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
 
-  using Trajectory = Acts::VectorMultiTrajectory;
-
   using KalmanUpdater = Acts::GainMatrixUpdater;
   using KalmanSmoother = Acts::GainMatrixSmoother;
   using CombinatorialKalmanFilter =
-      Acts::CombinatorialKalmanFilter<ConstantFieldPropagator, Trajectory>;
+      Acts::CombinatorialKalmanFilter<ConstantFieldPropagator, TrackContainer>;
   using TestSourceLinkContainer =
       std::unordered_multimap<Acts::GeometryIdentifier, TestSourceLink>;
   using TestSourceLinkAccessor = TestContainerAccessor<TestSourceLinkContainer>;
   using CombinatorialKalmanFilterOptions =
       Acts::CombinatorialKalmanFilterOptions<TestSourceLinkAccessor::Iterator,
-                                             Trajectory>;
+                                             TrackContainer>;
 
   KalmanUpdater kfUpdater;
   KalmanSmoother kfSmoother;
@@ -194,17 +199,16 @@ struct Fixture {
 
   Acts::MeasurementSelector measSel{measurementSelectorCfg};
 
-  Acts::CombinatorialKalmanFilterExtensions<Trajectory> getExtensions() const {
-    Acts::CombinatorialKalmanFilterExtensions<Trajectory> extensions;
-    extensions.calibrator
-        .template connect<&testSourceLinkCalibrator<Trajectory>>();
-    extensions.updater.template connect<&KalmanUpdater::operator()<Trajectory>>(
-        &kfUpdater);
-    extensions.smoother
-        .template connect<&KalmanSmoother::operator()<Trajectory>>(&kfSmoother);
-    extensions.measurementSelector
-        .template connect<&Acts::MeasurementSelector::select<Trajectory>>(
-            &measSel);
+  Acts::CombinatorialKalmanFilterExtensions<TrackContainer> getExtensions()
+      const {
+    Acts::CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
+    extensions.calibrator.template connect<
+        &testSourceLinkCalibrator<TrackStateContainerBackend>>();
+    extensions.updater.template connect<
+        &KalmanUpdater::operator()<TrackStateContainerBackend>>(&kfUpdater);
+    extensions.measurementSelector.template connect<
+        &Acts::MeasurementSelector::select<TrackStateContainerBackend>>(
+        &measSel);
     return extensions;
   }
 
@@ -246,7 +250,8 @@ struct Fixture {
     // create some measurements
     auto measPropagator = makeStraightPropagator(detector.geometry);
     std::default_random_engine rng(421235);
-    for (size_t trackId = 0u; trackId < startParameters.size(); ++trackId) {
+    for (std::size_t trackId = 0u; trackId < startParameters.size();
+         ++trackId) {
       auto measurements = createMeasurements(
           measPropagator, geoCtx, magCtx, startParameters[trackId],
           detector.resolutions, rng, trackId);
@@ -283,13 +288,11 @@ struct Fixture {
   }
 
   CombinatorialKalmanFilterOptions makeCkfOptions() const {
+    // leave the accessor empty, this will have to be set before running the CKF
     return CombinatorialKalmanFilterOptions(
         geoCtx, magCtx, calCtx,
-        Acts::SourceLinkAccessorDelegate<
-            TestSourceLinkAccessor::Iterator>{},  // leave the accessor empty,
-                                                  // this will have to be set
-                                                  // before running the CKF
-        getExtensions(), Acts::PropagatorPlainOptions());
+        Acts::SourceLinkAccessorDelegate<TestSourceLinkAccessor::Iterator>{},
+        getExtensions(), Acts::PropagatorPlainOptions(geoCtx, magCtx));
   }
 };
 
@@ -306,21 +309,20 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
-  // Set the target surface
-  options.smoothingTargetSurface = pSurface.get();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
   options.sourcelinkAccessor.connect<&Fixture::TestSourceLinkAccessor::range>(
       &slAccessor);
 
-  Acts::TrackContainer tc{Acts::VectorTrackContainer{},
-                          Acts::VectorMultiTrajectory{}};
+  TrackContainer tc{Acts::VectorTrackContainer{},
+                    Acts::VectorMultiTrajectory{}};
 
   // run the CKF for all initial track states
-  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+  for (std::size_t trackId = 0u; trackId < f.startParameters.size();
+       ++trackId) {
     auto res = f.ckf.findTracks(f.startParameters.at(trackId), options, tc);
-    if (not res.ok()) {
+    if (!res.ok()) {
       BOOST_TEST_INFO(res.error() << " " << res.error().message());
     }
     BOOST_REQUIRE(res.ok());
@@ -330,7 +332,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   BOOST_CHECK_EQUAL(tc.size(), 3u);
 
   // check the found tracks
-  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+  for (std::size_t trackId = 0u; trackId < f.startParameters.size();
+       ++trackId) {
     const auto track = tc.getTrack(trackId);
     const auto& params = f.startParameters[trackId];
     BOOST_TEST_INFO("initial parameters before detector:\n" << params);
@@ -339,8 +342,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
 
     // check purity of first found track
     // find the number of hits not originating from the right track
-    size_t numHits = 0u;
-    size_t nummismatchedHits = 0u;
+    std::size_t numHits = 0u;
+    std::size_t nummismatchedHits = 0u;
     for (const auto trackState : track.trackStatesReversed()) {
       numHits += 1u;
       auto sl =
@@ -363,21 +366,20 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
-  // Set the target surface
-  options.smoothingTargetSurface = pSurface.get();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
   options.sourcelinkAccessor.connect<&Fixture::TestSourceLinkAccessor::range>(
       &slAccessor);
 
-  Acts::TrackContainer tc{Acts::VectorTrackContainer{},
-                          Acts::VectorMultiTrajectory{}};
+  TrackContainer tc{Acts::VectorTrackContainer{},
+                    Acts::VectorMultiTrajectory{}};
 
   // run the CKF for all initial track states
-  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+  for (std::size_t trackId = 0u; trackId < f.startParameters.size();
+       ++trackId) {
     auto res = f.ckf.findTracks(f.endParameters.at(trackId), options, tc);
-    if (not res.ok()) {
+    if (!res.ok()) {
       BOOST_TEST_INFO(res.error() << " " << res.error().message());
     }
     BOOST_REQUIRE(res.ok());
@@ -386,7 +388,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   BOOST_CHECK_EQUAL(tc.size(), 3u);
 
   // check the found tracks
-  for (size_t trackId = 0u; trackId < f.endParameters.size(); ++trackId) {
+  for (std::size_t trackId = 0u; trackId < f.endParameters.size(); ++trackId) {
     const auto track = tc.getTrack(trackId);
     const auto& params = f.endParameters[trackId];
     BOOST_TEST_INFO("initial parameters after detector:\n" << params);
@@ -395,8 +397,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
 
     // check purity of first found track
     // find the number of hits not originating from the right track
-    size_t numHits = 0u;
-    size_t nummismatchedHits = 0u;
+    std::size_t numHits = 0u;
+    std::size_t nummismatchedHits = 0u;
     for (const auto trackState : track.trackStatesReversed()) {
       numHits += 1u;
       auto sl =

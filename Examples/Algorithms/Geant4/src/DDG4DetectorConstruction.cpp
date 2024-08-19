@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,7 +11,7 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
 #include <memory>
-#include <stdexcept>
+#include <vector>
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
@@ -23,8 +23,11 @@
 class G4VPhysicalVolume;
 
 ActsExamples::DDG4DetectorConstruction::DDG4DetectorConstruction(
-    std::shared_ptr<DD4hep::DD4hepDetector> detector)
-    : G4VUserDetectorConstruction(), m_detector(std::move(detector)) {}
+    std::shared_ptr<DD4hep::DD4hepDetector> detector,
+    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    : G4VUserDetectorConstruction(),
+      m_detector(std::move(detector)),
+      m_regionCreators(std::move(regionCreators)) {}
 
 ActsExamples::DDG4DetectorConstruction::~DDG4DetectorConstruction() = default;
 
@@ -39,25 +42,33 @@ G4VPhysicalVolume* ActsExamples::DDG4DetectorConstruction::Construct() {
     dd4hep::sim::Geant4Mapping& g4map = dd4hep::sim::Geant4Mapping::instance();
     auto conv = dd4hep::sim::Geant4Converter(dd4hepDetector(),
                                              dd4hep::PrintLevel::VERBOSE);
-    dd4hep::sim::Geant4GeometryInfo* geo_info =
+    dd4hep::sim::Geant4GeometryInfo* geoInfo =
         conv.create(dd4hepDetector().world()).detach();
-    g4map.attach(geo_info);
+    g4map.attach(geoInfo);
     // All volumes are deleted in ~G4PhysicalVolumeStore()
-    m_world = geo_info->world();
+    m_world = geoInfo->world();
     // Create Geant4 volume manager
     g4map.volumeManager();
+
+    // Create regions
+    for (const auto& regionCreator : m_regionCreators) {
+      regionCreator->Construct();
+    }
   }
   return m_world;
 }
 
 ActsExamples::DDG4DetectorConstructionFactory::DDG4DetectorConstructionFactory(
-    std::shared_ptr<DD4hep::DD4hepDetector> detector)
-    : m_detector(std::move(detector)) {}
+    std::shared_ptr<DD4hep::DD4hepDetector> detector,
+    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    : m_detector(std::move(detector)),
+      m_regionCreators(std::move(regionCreators)) {}
 
 ActsExamples::DDG4DetectorConstructionFactory::
     ~DDG4DetectorConstructionFactory() = default;
 
 std::unique_ptr<G4VUserDetectorConstruction>
 ActsExamples::DDG4DetectorConstructionFactory::factorize() const {
-  return std::make_unique<DDG4DetectorConstruction>(m_detector);
+  return std::make_unique<DDG4DetectorConstruction>(m_detector,
+                                                    m_regionCreators);
 }

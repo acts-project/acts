@@ -8,6 +8,10 @@
 
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 
+#ifndef ACTS_EXATRKX_CPUONLY
+#include <c10/cuda/CUDAGuard.h>
+#endif
+
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -19,9 +23,24 @@ namespace Acts {
 
 TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
                                          std::unique_ptr<const Logger> _logger)
-    : m_logger(std::move(_logger)), m_cfg(cfg) {
+    : m_logger(std::move(_logger)),
+      m_cfg(cfg),
+      m_device(torch::Device(torch::kCPU)) {
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
+  if (m_deviceType == torch::kCPU) {
+    ACTS_DEBUG("Running on CPU...");
+  } else {
+    if (cfg.deviceID >= 0 &&
+        static_cast<std::size_t>(cfg.deviceID) < torch::cuda::device_count()) {
+      ACTS_DEBUG("GPU device " << cfg.deviceID << " is being used.");
+      m_device = torch::Device(torch::kCUDA, cfg.deviceID);
+    } else {
+      ACTS_WARNING("GPU device " << cfg.deviceID
+                                 << " not available, falling back to CPU.");
+    }
+  }
+
   ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
                                     << TORCH_VERSION_MINOR << "."
                                     << TORCH_VERSION_PATCH);
@@ -33,7 +52,7 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
 
   try {
     m_model = std::make_unique<torch::jit::Module>();
-    *m_model = torch::jit::load(m_cfg.modelPath.c_str(), m_deviceType);
+    *m_model = torch::jit::load(m_cfg.modelPath.c_str(), m_device);
     m_model->eval();
   } catch (const c10::Error& e) {
     throw std::invalid_argument("Failed to load models: " + e.msg());
@@ -43,43 +62,68 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
 TorchEdgeClassifier::~TorchEdgeClassifier() {}
 
 std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
-    std::any inputNodes, std::any inputEdges, int deviceHint) {
+    std::any inputNodes, std::any inputEdges, torch::Device device) {
   ACTS_DEBUG("Start edge classification");
   c10::InferenceMode guard(true);
-  const torch::Device device(m_deviceType, deviceHint);
+
+  // add a protection to avoid calling for kCPU
+#ifndef ACTS_EXATRKX_CPUONLY
+  std::optional<c10::cuda::CUDAGuard> device_guard;
+  if (device.is_cuda()) {
+    device_guard.emplace(device.index());
+  }
+#endif
 
   auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
   auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
+
+  auto model = m_model->clone();
+  model.to(device);
 
   if (m_cfg.numFeatures > nodes.size(1)) {
     throw std::runtime_error("requested more features then available");
   }
 
-  std::vector<at::Tensor> results;
-  results.reserve(m_cfg.nChunks);
+  torch::Tensor output;
 
-  auto edgeListTmp =
-      m_cfg.undirected ? torch::cat({edgeList, edgeList.flip(0)}, 1) : edgeList;
+  // Scope this to keep inference objects separate
+  {
+    auto edgeListTmp = m_cfg.undirected
+                           ? torch::cat({edgeList, edgeList.flip(0)}, 1)
+                           : edgeList;
 
-  std::vector<torch::jit::IValue> inputTensors(2);
-  inputTensors[0] = m_cfg.numFeatures < nodes.size(1)
-                        ? nodes.index({Slice{}, Slice{None, m_cfg.numFeatures}})
-                        : nodes;
+    std::vector<torch::jit::IValue> inputTensors(2);
+    inputTensors[0] =
+        m_cfg.numFeatures < nodes.size(1)
+            ? nodes.index({Slice{}, Slice{None, m_cfg.numFeatures}})
+            : nodes;
 
-  const auto chunks = at::chunk(at::arange(edgeListTmp.size(1)), m_cfg.nChunks);
-  for (const auto& chunk : chunks) {
-    ACTS_VERBOSE("Process chunk");
-    inputTensors[1] = edgeListTmp.index({Slice(), chunk});
+    if (m_cfg.nChunks > 1) {
+      std::vector<at::Tensor> results;
+      results.reserve(m_cfg.nChunks);
 
-    results.push_back(m_model->forward(inputTensors).toTensor());
-    results.back().squeeze_();
-    results.back().sigmoid_();
+      auto chunks = at::chunk(edgeListTmp, m_cfg.nChunks, 1);
+      for (auto& chunk : chunks) {
+        ACTS_VERBOSE("Process chunk with shape" << chunk.sizes());
+        inputTensors[1] = chunk;
+
+        results.push_back(model.forward(inputTensors).toTensor());
+        results.back().squeeze_();
+      }
+
+      output = torch::cat(results);
+    } else {
+      inputTensors[1] = edgeListTmp;
+      output = model.forward(inputTensors).toTensor();
+      output.squeeze_();
+    }
   }
 
-  auto output = torch::cat(results);
+  output.sigmoid_();
 
   if (m_cfg.undirected) {
-    output = output.index({Slice(None, output.size(0) / 2)});
+    auto newSize = output.size(0) / 2;
+    output = output.index({Slice(None, newSize)});
   }
 
   ACTS_VERBOSE("Size after classifier: " << output.size(0));

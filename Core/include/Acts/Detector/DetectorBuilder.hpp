@@ -16,6 +16,9 @@
 #include <string>
 
 namespace Acts {
+
+class IMaterialDecorator;
+
 namespace Experimental {
 
 class IGeometryIdGenerator;
@@ -37,6 +40,8 @@ class DetectorBuilder final : public IDetectorBuilder {
     std::shared_ptr<const IDetectorComponentBuilder> builder = nullptr;
     /// A geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
+    /// A material decorator
+    std::shared_ptr<const IMaterialDecorator> materialDecorator = nullptr;
     /// Auxiliary information
     std::string auxiliary = "";
   };

@@ -26,20 +26,21 @@ template <typename var_t>
 class CudaVector {
  public:
   CudaVector() = delete;
-  CudaVector(size_t size) {
+  CudaVector(std::size_t size) {
     m_size = size;
     ACTS_CUDA_ERROR_CHECK(
         cudaMalloc((var_t**)&m_devPtr, m_size * sizeof(var_t)));
   }
 
-  CudaVector(size_t size, var_t* vector) {
+  CudaVector(std::size_t size, var_t* vector) {
     m_size = size;
     ACTS_CUDA_ERROR_CHECK(
         cudaMalloc((var_t**)&m_devPtr, m_size * sizeof(var_t)));
     copyH2D(vector, m_size, 0);
   }
 
-  CudaVector(size_t size, var_t* vector, size_t len, size_t offset) {
+  CudaVector(std::size_t size, var_t* vector, std::size_t len,
+             std::size_t offset) {
     m_size = size;
     ACTS_CUDA_ERROR_CHECK(
         cudaMalloc((var_t**)&m_devPtr, m_size * sizeof(var_t)));
@@ -51,14 +52,15 @@ class CudaVector {
       cudaFree(m_devPtr);
   }
 
-  var_t* get(size_t offset = 0) { return m_devPtr + offset; }
+  var_t* get(std::size_t offset = 0) { return m_devPtr + offset; }
 
-  void copyH2D(var_t* vector, size_t len, size_t offset) {
+  void copyH2D(var_t* vector, std::size_t len, std::size_t offset) {
     ACTS_CUDA_ERROR_CHECK(cudaMemcpy(m_devPtr + offset, vector,
                                      len * sizeof(var_t),
                                      cudaMemcpyHostToDevice));
   }
-  void copyH2D(var_t* vector, size_t len, size_t offset, cudaStream_t* stream) {
+  void copyH2D(var_t* vector, std::size_t len, std::size_t offset,
+               cudaStream_t* stream) {
     ACTS_CUDA_ERROR_CHECK(cudaMemcpyAsync(m_devPtr + offset, vector,
                                           len * sizeof(var_t),
                                           cudaMemcpyHostToDevice, *stream));
@@ -70,6 +72,6 @@ class CudaVector {
 
  private:
   var_t* m_devPtr = nullptr;
-  size_t m_size;
+  std::size_t m_size;
 };
 }  // namespace Acts

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-import os
 
-from acts.examples import Sequencer, RootMaterialTrackWriter
+import os
+import argparse
 
 import acts
-from acts import (
-    UnitConstants as u,
-)
-from common import getOpenDataDetectorDirectory
+from acts.examples import Sequencer, RootMaterialTrackWriter
 from acts.examples.odd import getOpenDataDetector
+from acts.examples.simulation import addParticleGun, EtaConfig, ParticleConfig
 
 
 def runMaterialValidation(
+    nevents,
+    ntracks,
     trackingGeometry,
     decorators,
     field,
@@ -19,13 +19,13 @@ def runMaterialValidation(
     outputName="propagation-material",
     s=None,
 ):
-    s = s or Sequencer(events=1000, numThreads=-1)
+    # Create a sequencer
+    s = s or Sequencer(events=nevents, numThreads=-1)
 
     for decorator in decorators:
         s.addContextDecorator(decorator)
 
     nav = acts.Navigator(trackingGeometry=trackingGeometry)
-
     stepper = acts.StraightLineStepper()
     # stepper = acts.EigenStepper(field)
 
@@ -33,24 +33,45 @@ def runMaterialValidation(
 
     rnd = acts.examples.RandomNumbers(seed=42)
 
+    addParticleGun(
+        s,
+        ParticleConfig(num=ntracks, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
+        EtaConfig(-4.0, 4.0),
+        rnd=rnd,
+    )
+
+    # Run particle smearing
+    trackParametersGenerator = acts.examples.ParticleSmearing(
+        level=acts.logging.INFO,
+        inputParticles="particles_input",
+        outputTrackParameters="start_parameters",
+        randomNumbers=rnd,
+        sigmaD0=0.0,
+        sigmaZ0=0.0,
+        sigmaPhi=0.0,
+        sigmaTheta=0.0,
+        sigmaPtRel=0.0,
+    )
+    s.addAlgorithm(trackParametersGenerator)
+
     alg = acts.examples.PropagationAlgorithm(
         propagatorImpl=prop,
         level=acts.logging.INFO,
-        randomNumberSvc=rnd,
-        ntests=1000,
-        sterileLogger=True,
-        propagationStepCollection="propagation-steps",
+        sterileLogger=False,
         recordMaterialInteractions=True,
-        d0Sigma=0,
-        z0Sigma=0,
+        inputTrackParameters="start_parameters",
+        outputPropagationSteps="propagation_steps",
+        outputMaterialTracks="material-tracks",
     )
 
     s.addAlgorithm(alg)
 
+    print(os.path.join(outputDir, (outputName + ".root")))
+
     s.addWriter(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
-            collection=alg.config.propagationMaterialCollection,
+            inputMaterialTracks=alg.config.outputMaterialTracks,
             filePath=os.path.join(outputDir, (outputName + ".root")),
             storeSurface=True,
             storeVolume=True,
@@ -61,14 +82,43 @@ def runMaterialValidation(
 
 
 if "__main__" == __name__:
-    matDeco = acts.IMaterialDecorator.fromFile("material-map.json")
+    p = argparse.ArgumentParser()
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory(), mdecorator=matDeco
+    p.add_argument(
+        "-n", "--events", type=int, default=1000, help="Number of events to process"
+    )
+    p.add_argument(
+        "-t", "--tracks", type=int, default=1000, help="Number of tracks per event"
+    )
+    p.add_argument(
+        "-m", "--map", type=str, help="Input file (optional) for the material map"
+    )
+    p.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default="propagation-material",
+        help="Output file name",
     )
 
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+    args = p.parse_args()
+
+    materialDecorator = (
+        acts.IMaterialDecorator.fromFile(args.map) if args.map != None else None
+    )
+
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        mdecorator=materialDecorator
+    )
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 0 * acts.UnitConstants.T))
 
     runMaterialValidation(
-        trackingGeometry, decorators, field, outputDir=os.getcwd()
+        args.events,
+        args.tracks,
+        trackingGeometry,
+        decorators,
+        field,
+        outputDir=os.getcwd(),
+        outputName=args.output,
     ).run()

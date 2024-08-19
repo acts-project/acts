@@ -12,8 +12,7 @@
 
 #include <random>
 
-namespace ActsFatras {
-namespace detail {
+namespace ActsFatras::detail {
 
 /// Generate scattering angles using a Gaussian mixture model.
 struct GaussianMixture {
@@ -89,5 +88,4 @@ struct GaussianMixture {
   }
 };
 
-}  // namespace detail
-}  // namespace ActsFatras
+}  // namespace ActsFatras::detail

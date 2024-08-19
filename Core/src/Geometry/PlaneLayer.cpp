@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <algorithm>
@@ -53,10 +54,10 @@ void Acts::PlaneLayer::buildApproachDescriptor() {
   // get the appropriate transform, the center and the normal vector
 
   //@todo fix with representing volume
-  const Transform3& lTransform = PlaneSurface::transform(GeometryContext());
+  const Transform3& lTransform = transform(GeometryContext());
   RotationMatrix3 lRotation = lTransform.rotation();
-  const Vector3& lCenter = PlaneSurface::center(GeometryContext());
-  const Vector3& lVector = Surface::normal(GeometryContext(), lCenter);
+  const Vector3& lCenter = center(GeometryContext());
+  const Vector3& lVector = normal(GeometryContext(), lCenter);
   // create new surfaces
   const Transform3 apnTransform = Transform3(
       Translation3(lCenter - 0.5 * Layer::m_layerThickness * lVector) *

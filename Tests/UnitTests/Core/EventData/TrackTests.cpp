@@ -1,32 +1,28 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/GenerateParameters.hpp"
+#include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
-#include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
-#include "Acts/Utilities/Zip.hpp"
 
 #include <cstddef>
 #include <iterator>
@@ -45,9 +41,9 @@ using namespace Acts::UnitLiterals;
 
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;
-using namespace Acts::Test;
+using namespace Acts::detail::Test;
+
 using MultiTrajectoryTraits::IndexType;
-namespace bd = boost::unit_test::data;
 
 const GeometryContext gctx;
 // fixed seed for reproducible tests
@@ -119,166 +115,6 @@ using const_holder_types =
 
 BOOST_AUTO_TEST_SUITE(EventDataTrack)
 
-BOOST_AUTO_TEST_CASE(BuildDefaultHolder) {
-  VectorMultiTrajectory mtj{};
-  VectorTrackContainer vtc{};
-  TrackContainer tc{vtc, mtj};
-
-  static_assert(
-      std::is_same_v<decltype(tc),
-                     TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
-                                    detail::RefHolder>>,
-      "Incorrect deduced type");
-  BOOST_CHECK_EQUAL(&mtj, &tc.trackStateContainer());
-  BOOST_CHECK_EQUAL(&vtc, &tc.container());
-  tc.addTrack();
-
-  std::decay_t<decltype(tc)> copy = tc;
-  BOOST_CHECK_EQUAL(&mtj, &copy.trackStateContainer());
-  BOOST_CHECK_EQUAL(&vtc, &copy.container());
-}
-
-BOOST_AUTO_TEST_CASE(BuildValueHolder) {
-  {
-    VectorMultiTrajectory mtj{};
-    VectorTrackContainer vtc{};
-    TrackContainer tc{std::move(vtc), std::move(mtj)};
-    static_assert(
-        std::is_same_v<decltype(tc), TrackContainer<VectorTrackContainer,
-                                                    VectorMultiTrajectory,
-                                                    detail::ValueHolder>>,
-        "Incorrect deduced type");
-    std::decay_t<decltype(tc)> copy = tc;
-    BOOST_CHECK_NE(&tc.trackStateContainer(), &copy.trackStateContainer());
-    BOOST_CHECK_NE(&tc.container(), &copy.container());
-  }
-  {
-    TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-
-    static_assert(
-        std::is_same_v<decltype(tc), TrackContainer<VectorTrackContainer,
-                                                    VectorMultiTrajectory,
-                                                    detail::ValueHolder>>,
-        "Incorrect deduced type");
-    tc.addTrack();
-    std::decay_t<decltype(tc)> copy = tc;
-    BOOST_CHECK_NE(&tc.trackStateContainer(), &copy.trackStateContainer());
-    BOOST_CHECK_NE(&tc.container(), &copy.container());
-  }
-}
-
-BOOST_AUTO_TEST_CASE(BuildRefHolder) {
-  VectorMultiTrajectory mtj{};
-  VectorTrackContainer vtc{};
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
-
-  static_assert(
-      std::is_same_v<decltype(tc),
-                     TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
-                                    detail::RefHolder>>,
-      "Incorrect deduced type");
-  BOOST_CHECK_EQUAL(&mtj, &tc.trackStateContainer());
-  BOOST_CHECK_EQUAL(&vtc, &tc.container());
-  tc.addTrack();
-  std::decay_t<decltype(tc)> copy = tc;
-  BOOST_CHECK_EQUAL(&mtj, &copy.trackStateContainer());
-  BOOST_CHECK_EQUAL(&vtc, &copy.container());
-}
-
-BOOST_AUTO_TEST_CASE(BuildSharedPtr) {
-  auto mtj = std::make_shared<VectorMultiTrajectory>();
-  auto vtc = std::make_shared<VectorTrackContainer>();
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, std::shared_ptr>
-      tc{vtc, mtj};
-
-  static_assert(
-      std::is_same_v<decltype(tc),
-                     TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
-                                    std::shared_ptr>>,
-      "Incorrect deduced type");
-  BOOST_CHECK_EQUAL(mtj.get(), &tc.trackStateContainer());
-  BOOST_CHECK_EQUAL(vtc.get(), &tc.container());
-  tc.addTrack();
-  std::decay_t<decltype(tc)> copy = tc;
-  BOOST_CHECK_EQUAL(mtj.get(), &copy.trackStateContainer());
-  BOOST_CHECK_EQUAL(vtc.get(), &copy.container());
-}
-
-BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
-  factory_t factory;
-
-  auto& tc = factory.trackContainer();
-
-  static_assert(std::is_same_v<std::decay_t<decltype(tc)>,
-                               typename factory_t::track_container_type>,
-                "Incorrect deduction");
-
-  static_assert(!std::decay_t<decltype(tc)>::ReadOnly,
-                "Should not be read only");
-  BOOST_CHECK(!tc.ReadOnly);
-
-  auto idx = tc.addTrack();
-  auto t = tc.getTrack(idx);
-  auto t2 = tc.getTrack(idx);
-  t.template component<IndexType, "tipIndex"_hash>() = 5;
-
-  BOOST_CHECK_EQUAL((t.template component<IndexType, "tipIndex"_hash>()), 5);
-  BOOST_CHECK_EQUAL(t.tipIndex(), 5);
-  t.tipIndex() = 6;
-  BOOST_CHECK_EQUAL(t.tipIndex(), 6);
-
-  BoundVector pars;
-  pars.setRandom();
-  t.parameters() = pars;
-  BOOST_CHECK_EQUAL(t.parameters(), pars);
-
-  BoundMatrix cov;
-  cov.setRandom();
-  t.covariance() = cov;
-  BOOST_CHECK_EQUAL(t.covariance(), cov);
-
-  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
-
-  t.setReferenceSurface(surface);
-  BOOST_CHECK_EQUAL(surface.get(), &t.referenceSurface());
-
-  TrackAccessor<unsigned int> accNMeasuements("nMeasurements");
-  ConstTrackAccessor<unsigned int> caccNMeasuements("nMeasurements");
-
-  t.nMeasurements() = 42;
-  BOOST_CHECK_EQUAL(t2.nMeasurements(), 42);
-  BOOST_CHECK_EQUAL(accNMeasuements(t), 42);
-  accNMeasuements(t) = 89;
-  BOOST_CHECK_EQUAL(t2.nMeasurements(), 89);
-  BOOST_CHECK_EQUAL(caccNMeasuements(t), 89);
-
-  // does not compile
-  // caccNMeasuements(t) = 66;
-
-  t2.nHoles() = 67;
-  BOOST_CHECK_EQUAL(t.nHoles(), 67);
-
-  t2.nOutliers() = 68;
-  BOOST_CHECK_EQUAL(t.nOutliers(), 68);
-
-  t2.nSharedHits() = 69;
-  BOOST_CHECK_EQUAL(t.nSharedHits(), 69);
-
-  t2.chi2() = 555.0;
-  BOOST_CHECK_EQUAL(t2.chi2(), 555.0);
-
-  t2.nDoF() = 123;
-  BOOST_CHECK_EQUAL(t2.nDoF(), 123);
-
-  // const checks: should not compile
-  // const auto& ctc = tc;
-  // ctc.getTrack(idx).covariance().setRandom();
-  // const auto& ctp = t;
-  // ctp.covariance().setRandom();
-}
-
 BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   factory_t factory;
   auto& tc = factory.trackContainer();
@@ -287,14 +123,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
 
   auto mkts = [&](auto prev) {
     if constexpr (std::is_same_v<decltype(prev), IndexType>) {
-      auto ts =
-          traj.getTrackState(traj.addTrackState(TrackStatePropMask::All, prev));
+      auto ts = traj.makeTrackState(TrackStatePropMask::All, prev);
       TestTrackState pc(rng, 2u);
       fillTrackState<VectorMultiTrajectory>(pc, TrackStatePropMask::All, ts);
       return ts;
     } else {
-      auto ts = traj.getTrackState(
-          traj.addTrackState(TrackStatePropMask::All, prev.index()));
+      auto ts = traj.makeTrackState(TrackStatePropMask::All, prev.index());
       TestTrackState pc(rng, 2u);
       fillTrackState<VectorMultiTrajectory>(pc, TrackStatePropMask::All, ts);
       return ts;
@@ -307,7 +141,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   auto ts4 = mkts(ts3);
   auto ts5 = mkts(ts4);
 
-  auto t = tc.getTrack(tc.addTrack());
+  auto t = tc.makeTrack();
   t.tipIndex() = ts5.index();
 
   std::vector<IndexType> act;
@@ -328,13 +162,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
 
   BOOST_CHECK_EQUAL(t.nTrackStates(), 5);
 
-  auto tNone = tc.getTrack(tc.addTrack());
+  auto tNone = tc.makeTrack();
   BOOST_CHECK_EQUAL(tNone.nTrackStates(), 0);
 
   auto tsRange = tNone.trackStatesReversed();
   BOOST_CHECK(tsRange.begin() == tsRange.end());
 
-  size_t i = 0;
+  std::size_t i = 0;
   for (const auto& state : tNone.trackStatesReversed()) {
     (void)state;
     i++;
@@ -347,7 +181,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackIterator, factory_t, holder_types) {
   auto& tc = factory.trackContainer();
 
   for (unsigned int i = 0; i < 10; i++) {
-    auto t = tc.getTrack(tc.addTrack());
+    auto t = tc.makeTrack();
     t.tipIndex() = i;
   }
   BOOST_CHECK_EQUAL(tc.size(), 10);
@@ -368,7 +202,7 @@ BOOST_AUTO_TEST_CASE(IteratorConcept) {
   TrackContainer tc{vtc, mtj};
 
   for (unsigned int i = 0; i < 10; i++) {
-    auto t = tc.getTrack(tc.addTrack());
+    auto t = tc.makeTrack();
     t.tipIndex() = i;
   }
   BOOST_CHECK_EQUAL(tc.size(), 10);
@@ -430,7 +264,7 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
     TrackContainer tc{vtc, mtj};
 
     for (unsigned int i = 0; i < 10; i++) {
-      auto t = tc.getTrack(tc.addTrack());
+      auto t = tc.makeTrack();
       t.tipIndex() = i;
     }
 
@@ -470,11 +304,11 @@ BOOST_AUTO_TEST_CASE(BuildFromConstRef) {
   TrackContainer mutTc{mutVtc, mutMtj};
   static_assert(!mutTc.ReadOnly, "Unexpectedly read only");
 
-  auto t = mutTc.getTrack(mutTc.addTrack());
+  auto t = mutTc.makeTrack();
   t.appendTrackState();
   t.appendTrackState();
   t.appendTrackState();
-  t = mutTc.getTrack(mutTc.addTrack());
+  t = mutTc.makeTrack();
   t.appendTrackState();
 
   BOOST_CHECK_EQUAL(mutTc.size(), 2);
@@ -532,46 +366,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(DynamicColumns, factory_t, holder_types) {
   tc.template addColumn<float>("col_a");
   BOOST_CHECK(tc.hasColumn("col_a"_hash));
 
-  auto t = tc.getTrack(tc.addTrack());
+  auto t = tc.makeTrack();
   t.template component<float>("col_a") = 5.6f;
   BOOST_CHECK_EQUAL((t.template component<float, "col_a"_hash>()), 5.6f);
 }
 
-BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
-  VectorTrackContainer vtc{};
-  VectorMultiTrajectory mtj{};
-  TrackContainer tc{vtc, mtj};
-
-  auto t = tc.getTrack(tc.addTrack());
-
-  for (size_t i = 0; i < 10; i++) {
-    t.appendTrackState();
-  }
-
-  std::vector<IndexType> exp;
-  exp.resize(t.nTrackStates());
-  std::iota(exp.rbegin(), exp.rend(), 0);
-  std::vector<IndexType> act;
-  std::transform(t.trackStatesReversed().begin(), t.trackStatesReversed().end(),
-                 std::back_inserter(act),
-                 [](const auto& ts) { return ts.index(); });
-
-  BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), act.begin(), act.end());
-
-  // reverse!
-  t.reverseTrackStates();
-
-  std::iota(exp.begin(), exp.end(), 0);
-  act.clear();
-  std::transform(t.trackStatesReversed().begin(), t.trackStatesReversed().end(),
-                 std::back_inserter(act),
-                 [](const auto& ts) { return ts.index(); });
-  BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), act.begin(), act.end());
-}
-
 BOOST_AUTO_TEST_CASE(EnsureDynamicColumns) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  tc.addColumn<size_t>("counter");
+  tc.addColumn<std::size_t>("counter");
   tc.addColumn<bool>("odd");
 
   BOOST_CHECK(tc.hasColumn("counter"));
@@ -590,7 +392,7 @@ BOOST_AUTO_TEST_CASE(EnsureDynamicColumns) {
 
 BOOST_AUTO_TEST_CASE(AppendTrackState) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  auto t = tc.getTrack(tc.addTrack());
+  auto t = tc.makeTrack();
 
   std::vector<VectorMultiTrajectory::TrackStateProxy> trackStates;
   trackStates.push_back(t.appendTrackState());
@@ -602,7 +404,7 @@ BOOST_AUTO_TEST_CASE(AppendTrackState) {
 
   BOOST_CHECK_EQUAL(trackStates.size(), t.nTrackStates());
 
-  for (size_t i = trackStates.size() - 1; i > 0; i--) {
+  for (std::size_t i = trackStates.size() - 1; i > 0; i--) {
     BOOST_CHECK_EQUAL(trackStates.at(i).index(), i);
   }
 }
@@ -611,13 +413,13 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   {
     // let's create an unrelated track first
-    auto t = tc.getTrack(tc.addTrack());
+    auto t = tc.makeTrack();
     for (std::size_t i = 0; i < 10; i++) {
       t.appendTrackState();
     }
   }
 
-  auto t = tc.getTrack(tc.addTrack());
+  auto t = tc.makeTrack();
 
   auto stem = t.appendTrackState();
   t.appendTrackState();
@@ -663,42 +465,37 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
                                 act.end());
 }
 
-BOOST_AUTO_TEST_CASE(CalculateQuantities) {
+BOOST_AUTO_TEST_CASE(ShallowCopy) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  auto t = tc.getTrack(tc.addTrack());
+  auto t = tc.makeTrack();
 
-  auto ts = t.appendTrackState();
-  ts.typeFlags().set(MeasurementFlag);
+  auto ts1 = t.appendTrackState();
+  ts1.predicted().setRandom();
+  auto ts2 = t.appendTrackState();
+  ts2.predicted().setRandom();
+  auto ts3 = t.appendTrackState();
+  ts3.predicted().setRandom();
 
-  ts = t.appendTrackState();
-  ts.typeFlags().set(OutlierFlag);
+  auto t2 = t.shallowCopy();
 
-  ts = t.appendTrackState();
-  ts.typeFlags().set(MeasurementFlag);
-  ts.typeFlags().set(SharedHitFlag);
+  BOOST_CHECK_NE(t.index(), t2.index());
+  BOOST_CHECK_EQUAL(t.nTrackStates(), t2.nTrackStates());
 
-  ts = t.appendTrackState();
-  ts.typeFlags().set(HoleFlag);
+  std::vector<decltype(tc)::TrackStateProxy> trackStates;
+  for (const auto& ts : t.trackStatesReversed()) {
+    trackStates.insert(trackStates.begin(), ts);
+  }
 
-  ts = t.appendTrackState();
-  ts.typeFlags().set(OutlierFlag);
+  auto t2_ts1 = trackStates.at(0);
+  auto t2_ts2 = trackStates.at(1);
+  auto t2_ts3 = trackStates.at(2);
 
-  ts = t.appendTrackState();
-  ts.typeFlags().set(HoleFlag);
-
-  ts = t.appendTrackState();
-  ts.typeFlags().set(MeasurementFlag);
-  ts.typeFlags().set(SharedHitFlag);
-
-  ts = t.appendTrackState();
-  ts.typeFlags().set(OutlierFlag);
-
-  calculateTrackQuantities(t);
-
-  BOOST_CHECK_EQUAL(t.nHoles(), 2);
-  BOOST_CHECK_EQUAL(t.nMeasurements(), 3);
-  BOOST_CHECK_EQUAL(t.nOutliers(), 3);
-  BOOST_CHECK_EQUAL(t.nSharedHits(), 2);
+  BOOST_CHECK_EQUAL(t2_ts1.predicted(), ts1.predicted());
+  BOOST_CHECK_EQUAL(t2_ts1.index(), ts1.index());
+  BOOST_CHECK_EQUAL(t2_ts2.predicted(), ts2.predicted());
+  BOOST_CHECK_EQUAL(t2_ts2.index(), ts2.index());
+  BOOST_CHECK_EQUAL(t2_ts3.predicted(), ts3.predicted());
+  BOOST_CHECK_EQUAL(t2_ts3.index(), ts3.index());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

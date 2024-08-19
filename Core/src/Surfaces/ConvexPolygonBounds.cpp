@@ -8,13 +8,17 @@
 
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+
 #include <algorithm>
+#include <optional>
 #include <ostream>
 
 std::ostream& Acts::ConvexPolygonBoundsBase::toStream(std::ostream& sl) const {
   std::vector<Vector2> vtxs = vertices();
   sl << "Acts::ConvexPolygonBounds<" << vtxs.size() << ">: vertices: [x, y]\n";
-  for (size_t i = 0; i < vtxs.size(); i++) {
+  for (std::size_t i = 0; i < vtxs.size(); i++) {
     const auto& vtx = vtxs[i];
     if (i > 0) {
       sl << ",";
@@ -45,8 +49,10 @@ Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::type() const {
 }
 
 bool Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::inside(
-    const Acts::Vector2& lposition, const Acts::BoundaryCheck& bcheck) const {
-  return bcheck.isInside(lposition, m_vertices);
+    const Acts::Vector2& lposition,
+    const Acts::BoundaryTolerance& boundaryTolerance) const {
+  return detail::insidePolygon(m_vertices, boundaryTolerance, lposition,
+                               std::nullopt);
 }
 
 std::vector<Acts::Vector2> Acts::ConvexPolygonBounds<

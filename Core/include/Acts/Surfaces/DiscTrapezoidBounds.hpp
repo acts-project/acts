@@ -9,7 +9,7 @@
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -77,9 +77,10 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// if only tol0 is given and additional in the phi sector is tol1 is given
   /// @param lposition is the local position to be checked (in polar
   /// coordinates)
-  /// @param bcheck is the boundary check directive
+  /// @param boundaryTolerance is the boundary check directive
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck = true) const final;
+              const BoundaryTolerance& boundaryTolerance =
+                  BoundaryTolerance::None()) const final;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
@@ -197,7 +198,7 @@ inline bool DiscTrapezoidBounds::coversFullAzimuth() const {
 
 inline bool DiscTrapezoidBounds::insideRadialBounds(double R,
                                                     double tolerance) const {
-  return (R + tolerance > get(eMinR) and R - tolerance < get(eMaxR));
+  return (R + tolerance > get(eMinR) && R - tolerance < get(eMaxR));
 }
 
 inline double DiscTrapezoidBounds::binningValueR() const {
@@ -215,10 +216,10 @@ inline std::vector<double> DiscTrapezoidBounds::values() const {
 }
 
 inline void DiscTrapezoidBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) < 0. or get(eMaxR) <= 0. or get(eMinR) > get(eMaxR)) {
+  if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) > get(eMaxR)) {
     throw std::invalid_argument("DiscTrapezoidBounds: invalid radial setup.");
   }
-  if (get(eHalfLengthXminR) < 0. or get(eHalfLengthXmaxR) <= 0.) {
+  if (get(eHalfLengthXminR) < 0. || get(eHalfLengthXmaxR) <= 0.) {
     throw std::invalid_argument("DiscTrapezoidBounds: negative length given.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {

@@ -22,9 +22,8 @@
 
 namespace Acts {
 
-auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
-                                               IndexType iprevious)
-    -> IndexType {
+auto VectorMultiTrajectory::addTrackState_impl(
+    TrackStatePropMask mask, IndexType iprevious) -> IndexType {
   using PropMask = TrackStatePropMask;
 
   m_index.emplace_back();
@@ -85,6 +84,56 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
   }
 
   return index;
+}
+
+void VectorMultiTrajectory::addTrackStateComponents_impl(
+    IndexType istate, TrackStatePropMask mask) {
+  using PropMask = TrackStatePropMask;
+
+  IndexData& p = m_index[istate];
+  PropMask currentMask = p.allocMask;
+
+  assert(m_params.size() == m_cov.size());
+
+  if (ACTS_CHECK_BIT(mask, PropMask::Predicted) &&
+      !ACTS_CHECK_BIT(currentMask, PropMask::Predicted)) {
+    m_params.emplace_back();
+    m_cov.emplace_back();
+    p.ipredicted = m_params.size() - 1;
+  }
+
+  if (ACTS_CHECK_BIT(mask, PropMask::Filtered) &&
+      !ACTS_CHECK_BIT(currentMask, PropMask::Filtered)) {
+    m_params.emplace_back();
+    m_cov.emplace_back();
+    p.ifiltered = m_params.size() - 1;
+  }
+
+  if (ACTS_CHECK_BIT(mask, PropMask::Smoothed) &&
+      !ACTS_CHECK_BIT(currentMask, PropMask::Smoothed)) {
+    m_params.emplace_back();
+    m_cov.emplace_back();
+    p.ismoothed = m_params.size() - 1;
+  }
+
+  assert(m_params.size() == m_cov.size());
+
+  if (ACTS_CHECK_BIT(mask, PropMask::Jacobian) &&
+      !ACTS_CHECK_BIT(currentMask, PropMask::Jacobian)) {
+    m_jac.emplace_back();
+    p.ijacobian = m_jac.size() - 1;
+  }
+
+  if (ACTS_CHECK_BIT(mask, PropMask::Calibrated) &&
+      !ACTS_CHECK_BIT(currentMask, PropMask::Calibrated)) {
+    m_sourceLinks.emplace_back(std::nullopt);
+    p.icalibratedsourcelink = m_sourceLinks.size() - 1;
+
+    m_projectors.emplace_back();
+    p.iprojector = m_projectors.size() - 1;
+  }
+
+  p.allocMask |= mask;
 }
 
 void VectorMultiTrajectory::shareFrom_impl(IndexType iself, IndexType iother,
@@ -187,7 +236,7 @@ void VectorMultiTrajectory::clear_impl() {
 }
 
 void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
-    std::ostream& os, size_t n) {
+    std::ostream& os, std::size_t n) {
   using namespace boost::histogram;
   using cat = axis::category<std::string>;
 
@@ -202,7 +251,7 @@ void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
       os << std::fixed << std::setw(8) << std::setprecision(2) << v / n
          << suffix;
     } else {
-      os << std::fixed << std::setw(8) << double(v) / n << suffix;
+      os << std::fixed << std::setw(8) << static_cast<double>(v) / n << suffix;
     }
     os << std::endl;
   };
@@ -214,7 +263,7 @@ void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
       std::string key = column_axis.bin(c);
       auto v = h.at(c, t);
       if (key == "count") {
-        p(key, static_cast<size_t>(v));
+        p(key, static_cast<std::size_t>(v));
         continue;
       }
       p(key, v / 1024 / 1024, "M");
@@ -242,6 +291,18 @@ void VectorMultiTrajectory::reserve(std::size_t n) {
   for (auto& [key, vec] : m_dynamic) {
     vec->reserve(n);
   }
+}
+
+void VectorMultiTrajectory::copyDynamicFrom_impl(IndexType dstIdx,
+                                                 HashedString key,
+                                                 const std::any& srcPtr) {
+  auto it = m_dynamic.find(key);
+  if (it == m_dynamic.end()) {
+    throw std::invalid_argument{
+        "Destination container does not have matching dynamic column"};
+  }
+
+  it->second->copyFrom(dstIdx, srcPtr);
 }
 
 }  // namespace Acts

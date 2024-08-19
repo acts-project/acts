@@ -77,8 +77,8 @@ class GeometryIdGenerator final : public IGeometryIdGenerator {
 
   ~GeometryIdGenerator() override = default;
 
-  /// @brief Interface method to generata a geometry id cache
-  /// @return a geometry id cache decorated in a std::any object
+  /// @brief Interface method to generate a geometry id cache
+  /// @return a geometry id cache wrapped in a std::any object
   IGeometryIdGenerator::GeoIdCache generateCache() const final;
 
   /// @brief Method for assigning a geometry id to a detector volume
@@ -113,6 +113,103 @@ class GeometryIdGenerator final : public IGeometryIdGenerator {
 
   /// Configuration object
   Config m_cfg;
+
+  /// Private access method to the logger
+  const Logger& logger() const { return *m_logger; }
+
+  /// logging instance
+  std::unique_ptr<const Logger> m_logger;
+};
+
+/// This is a chained tgeometry id generator that will be in seuqnce
+/// @tparam generators_t the generators that will be called in sequence
+///
+/// @note the generators are expected to be of pointer type
+template <typename... generators_t>
+class ChainedGeometryIdGenerator : public IGeometryIdGenerator {
+ public:
+  struct Cache {
+    /// The caches
+    std::array<IGeometryIdGenerator::GeoIdCache, sizeof...(generators_t)>
+        storage;
+  };
+
+  /// The stored generators
+  std::tuple<generators_t...> generators;
+
+  /// Constructor for chained generators_t in a tuple, this will unroll
+  /// the tuple and call them in sequence
+  ///
+  /// @param gens the updators to be called in chain
+  /// @param mlogger is the logging instance
+  ChainedGeometryIdGenerator(const std::tuple<generators_t...>&& gens,
+                             std::unique_ptr<const Logger> mlogger =
+                                 getDefaultLogger("ChainedGeometryIdGenerator",
+                                                  Logging::INFO))
+      : generators(std::move(gens)), m_logger(std::move(mlogger)) {}
+
+  /// @brief Interface method to generate a geometry id cache
+  /// @return a geometry id cache wrapped in a std::any object
+  IGeometryIdGenerator::GeoIdCache generateCache() const final {
+    // Unfold the tuple and add the attachers
+    Cache cache;
+    std::size_t it = 0;
+    std::apply(
+        [&](auto&&... generator) {
+          ((cache.storage[it++] = generator->generateCache()), ...);
+        },
+        generators);
+    return cache;
+  }
+
+  /// @brief Method for assigning a geometry id to a detector volume
+  ///
+  /// @param cache is the cache object for e.g. object counting
+  /// @param dVolume the detector volume to assign the geometry id to
+  void assignGeometryId(IGeometryIdGenerator::GeoIdCache& cache,
+                        DetectorVolume& dVolume) const final {
+    ACTS_VERBOSE("Assigning chained geometry id to volume.");
+    assign(cache, dVolume);
+  }
+
+  /// @brief Method for assigning a geometry id to a portal
+  ///
+  /// @param cache is the cache object for e.g. object counting
+  /// @param portal the portal to assign the geometry id to
+  void assignGeometryId(IGeometryIdGenerator::GeoIdCache& cache,
+                        Portal& portal) const final {
+    ACTS_VERBOSE("Assigning chained geometry id to portal.");
+    assign(cache, portal);
+  }
+
+  /// @brief Method for assigning a geometry id to a surface
+  ///
+  /// @param cache is the cache object for e.g. object counting
+  /// @param surface the surface to assign the geometry id to
+  void assignGeometryId(IGeometryIdGenerator::GeoIdCache& cache,
+                        Surface& surface) const final {
+    ACTS_VERBOSE("Assigning chained geometry id to surface.");
+    assign(cache, surface);
+  }
+
+ private:
+  /// @brief Helper to run through the chain of generators
+  ///
+  /// @tparam gometry_object_t the geometry object type
+  ///
+  /// @param cache object with the array of sub caches
+  /// @param object the object to assign the geometry id to
+  template <typename gometry_object_t>
+  void assign(IGeometryIdGenerator::GeoIdCache& cache,
+              gometry_object_t& object) const {
+    std::size_t it = 0;
+    auto& sCache = std::any_cast<Cache&>(cache);
+    std::apply(
+        [&](auto&&... generator) {
+          (generator->assignGeometryId(sCache.storage[it++], object), ...);
+        },
+        generators);
+  }
 
   /// Private access method to the logger
   const Logger& logger() const { return *m_logger; }

@@ -14,31 +14,22 @@
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <any>
-#include <type_traits>
-
-#if defined(ACTS_CONCEPTS_SUPPORTED)
 #include <concepts>
+#include <type_traits>
 
 namespace Acts {
 
 template <typename C>
-concept ChargeConcept = requires(C c, float f, double d) {
-  {C{f}};
+concept ChargeConcept = requires(C c, C c2, float f, double d) {
+  { C{f} };
+
+  { c == c2 } -> std::same_as<bool>;
+  { c != c2 } -> std::same_as<bool>;
+
   { c.absQ() } -> std::same_as<float>;
-
-  { c.extractCharge(f) } -> std::convertible_to<float>;
-  { c.extractCharge(d) } -> std::convertible_to<float>;
-
-  { c.extractMomentum(f) } -> std::convertible_to<float>;
-  { c.extractMomentum(d) } -> std::convertible_to<float>;
-
-  { c.qOverP(f, f) } -> std::same_as<float>;
+  { c.extractCharge(d) } -> std::same_as<float>;
+  { c.extractMomentum(d) } -> std::same_as<double>;
   { c.qOverP(d, d) } -> std::same_as<double>;
-
-  { c == c } -> std::same_as<bool>;
-  { c != c } -> std::same_as<bool>;
 };
 
 }  // namespace Acts
-
-#endif

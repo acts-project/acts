@@ -11,6 +11,7 @@
 #include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/Json/ExtentJsonConverter.hpp"
+#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
@@ -42,9 +43,9 @@ void Acts::to_json(nlohmann::json& j, const Acts::ProtoVolume& pv) {
     auto& its = pv.internal.value();
     nlohmann::json jinternal;
     if (its.layerType != Surface::SurfaceType::Other) {
-      jinternal["layerType"] = static_cast<int>(its.layerType);
+      jinternal["layerType"] = its.layerType;
     }
-    if (not its.surfaceBinning.empty()) {
+    if (!its.surfaceBinning.empty()) {
       writeBinning(jinternal, its.surfaceBinning, "surfaceBinning");
     }
     j["internalStructure"] = jinternal;
@@ -78,7 +79,7 @@ void Acts::from_json(const nlohmann::json& j, Acts::ProtoVolume& pv) {
                          std::vector<BinningData>& binning,
                          const std::string& key) -> void {
     // return if no surface binning in json
-    if (root.find(key) == root.end() or root[key].is_null()) {
+    if (root.find(key) == root.end() || root[key].is_null()) {
       return;
     }
 
@@ -88,8 +89,8 @@ void Acts::from_json(const nlohmann::json& j, Acts::ProtoVolume& pv) {
   };
 
   // The internal structure
-  if (j.find("internalStructure") != j.end() and
-      not j["internalStructure"].is_null()) {
+  if (j.find("internalStructure") != j.end() &&
+      !j["internalStructure"].is_null()) {
     auto& jinternal = j["internalStructure"];
     Surface::SurfaceType layerType =
         static_cast<Surface::SurfaceType>(jinternal["layerType"]);
@@ -99,8 +100,8 @@ void Acts::from_json(const nlohmann::json& j, Acts::ProtoVolume& pv) {
   }
 
   // The container structure
-  if (j.find("containerStructure") != j.end() and
-      not j["containerStructure"].is_null()) {
+  if (j.find("containerStructure") != j.end() &&
+      !j["containerStructure"].is_null()) {
     std::vector<ProtoVolume> constituentVolumes;
     auto& jcontainer = j["containerStructure"];
     for (const auto& jc : jcontainer["constituents"]) {

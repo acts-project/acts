@@ -96,12 +96,12 @@ class GeometryHierarchyMapJsonConverter {
   /// @return a valid geometry Identifier
   static GeometryIdentifier decodeIdentifier(const nlohmann::json& encoded) {
     return GeometryIdentifier()
-        .setVolume(encoded.value("volume", GeometryIdentifier::Value(0u)))
-        .setBoundary(encoded.value("boundary", GeometryIdentifier::Value(0u)))
-        .setLayer(encoded.value("layer", GeometryIdentifier::Value(0u)))
-        .setApproach(encoded.value("approach", GeometryIdentifier::Value(0u)))
-        .setSensitive(encoded.value("sensitive", GeometryIdentifier::Value(0u)))
-        .setExtra(encoded.value("extra", GeometryIdentifier::Value(0u)));
+        .setVolume(encoded.value("volume", GeometryIdentifier::Value{0u}))
+        .setBoundary(encoded.value("boundary", GeometryIdentifier::Value{0u}))
+        .setLayer(encoded.value("layer", GeometryIdentifier::Value{0u}))
+        .setApproach(encoded.value("approach", GeometryIdentifier::Value{0u}))
+        .setSensitive(encoded.value("sensitive", GeometryIdentifier::Value{0u}))
+        .setExtra(encoded.value("extra", GeometryIdentifier::Value{0u}));
   }
 
  private:
@@ -155,7 +155,7 @@ nlohmann::json GeometryHierarchyMapJsonConverter<value_t, decorator_t>::toJson(
   for (std::size_t i = 0; i < container.size(); ++i) {
     auto entry = encodeIdentifier(container.idAt(i));
     auto value_json = nlohmann::json(container.valueAt(i));
-    if constexpr (not std::is_same<decorator_t, void>::value) {
+    if constexpr (!std::is_same<decorator_t, void>::value) {
       decorateJson(decorator, container.valueAt(i), value_json);
     }
     entry["value"] = std::move(value_json);
@@ -183,7 +183,7 @@ auto GeometryHierarchyMapJsonConverter<value_t, decorator_t>::fromJson(
         "Inconsistent value identifier in Json geometry hierarchy map");
   }
   // decode json entries
-  if (not encoded.contains(kEntriesKey)) {
+  if (!encoded.contains(kEntriesKey)) {
     throw std::invalid_argument(
         "Missing entries in json geometry hierarchy map");
   }

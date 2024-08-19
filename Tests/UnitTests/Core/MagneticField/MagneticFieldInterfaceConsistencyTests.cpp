@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file MagneticFieldInterfaceConsistencyTests.cpp
-
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -20,12 +16,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 MagneticFieldContext mfContext = MagneticFieldContext();
@@ -77,7 +68,7 @@ BOOST_AUTO_TEST_CASE(TestInterpolatedBFieldMapInterfaceConsistency) {
     DummyFieldCell getFieldCell(const Vector3&) const {
       return DummyFieldCell();
     }
-    std::vector<size_t> getNBins() const { return {42}; }
+    std::vector<std::size_t> getNBins() const { return {42}; }
     std::vector<double> getMin() const { return {5}; }
     std::vector<double> getMax() const { return {15}; }
   };
@@ -92,6 +83,4 @@ BOOST_AUTO_TEST_CASE(TestInterpolatedBFieldMapInterfaceConsistency) {
   testInterfaceConsistency(b);
 }
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

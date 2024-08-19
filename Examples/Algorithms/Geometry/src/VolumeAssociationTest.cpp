@@ -59,7 +59,7 @@ ActsExamples::ProcessCode ActsExamples::VolumeAssociationTest::execute(
     if (dv == nullptr) {
       ++failedSearch;
     }
-    if (not dv->inside(ctx.geoContext, pos)) {
+    if (!dv->inside(ctx.geoContext, pos)) {
       ++failedAssignment;
     }
   }

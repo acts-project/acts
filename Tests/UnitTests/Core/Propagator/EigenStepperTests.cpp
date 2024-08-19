@@ -17,7 +17,7 @@
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -43,12 +43,13 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -71,12 +72,10 @@ class ISurfaceMaterial;
 class Logger;
 }  // namespace Acts
 
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
@@ -98,10 +97,12 @@ struct PropState {
   stepper_state_t stepping;
   /// Propagator options which only carry the relevant components
   struct {
-    double tolerance = 1e-4;
-    double stepSizeCutOff = 0.;
-    unsigned int maxRungeKuttaStepTrials = 10000;
     Direction direction = Direction::Forward;
+    struct {
+      double stepTolerance = 1e-4;
+      double stepSizeCutOff = 0.;
+      unsigned int maxRungeKuttaStepTrials = 10000;
+    } stepping;
   } options;
 };
 
@@ -135,7 +136,7 @@ struct EndOfWorld {
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/,
                   const Logger& /*logger*/) const {
-    const double tolerance = state.options.targetTolerance;
+    const double tolerance = state.options.surfaceTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
         std::abs(stepper.position(state.stepping).y()) >= 0.5_m ||
         std::abs(stepper.position(state.stepping).z()) >= 0.5_m) {
@@ -266,11 +267,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();
 
-  es.setStepSize(esState, -1337.);
+  es.updateStepSize(esState, -1337., ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(esState.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), -1337.);
 
-  es.releaseStepSize(esState);
+  es.releaseStepSize(esState, ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(es.outputStepSize(esState), originalStepSize);
 
@@ -342,7 +343,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
                                  charge2 / absMom2, cov2,
                                  ParticleHypothesis::pion());
-  FreeVector freeParams = detail::transformBoundToFreeParameters(
+  FreeVector freeParams = transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   navDir = Direction::Forward;
   double stepSize2 = -2. * stepSize;
@@ -362,9 +363,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
     copy.stepSize = state.stepSize;
     copy.previousStepSize = state.previousStepSize;
 
-    copy.fieldCache =
-        MagneticFieldProvider::Cache::make<typename field_t::Cache>(
-            state.fieldCache.template get<typename field_t::Cache>());
+    copy.fieldCache = MagneticFieldProvider::Cache(
+        std::in_place_type<typename field_t::Cache>,
+        state.fieldCache.template as<typename field_t::Cache>());
 
     copy.geoContext = state.geoContext;
     copy.extension = state.extension;
@@ -458,7 +459,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the intersection in the context of a surface
   auto targetSurface =
       Surface::makeShared<PlaneSurface>(pos + navDir * 2. * dir, dir);
-  es.updateSurfaceStatus(esState, *targetSurface, navDir, BoundaryCheck(false));
+  es.updateSurfaceStatus(esState, *targetSurface, 0, navDir,
+                         BoundaryTolerance::Infinite());
   CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
                   eps);
 
@@ -466,15 +468,17 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   es.updateStepSize(esState,
                     targetSurface
                         ->intersect(esState.geoContext, es.position(esState),
-                                    navDir * es.direction(esState), false)
+                                    navDir * es.direction(esState),
+                                    BoundaryTolerance::Infinite())
                         .closest(),
                     navDir, false);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
-  esState.stepSize.setValue(navDir * stepSize);
+  esState.stepSize.setUser(navDir * stepSize);
   es.updateStepSize(esState,
                     targetSurface
                         ->intersect(esState.geoContext, es.position(esState),
-                                    navDir * es.direction(esState), false)
+                                    navDir * es.direction(esState),
+                                    BoundaryTolerance::Infinite())
                         .closest(),
                     navDir, true);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
@@ -500,23 +504,20 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
 
   // Update in context of a surface
-  freeParams = detail::transformBoundToFreeParameters(
-      bp.referenceSurface(), tgContext, bp.parameters());
-  freeParams.segment<3>(eFreePos0) *= 2;
-  freeParams[eFreeTime] *= 2;
-  freeParams[eFreeQOverP] *= -0.5;
+  freeParams = transformBoundToFreeParameters(bp.referenceSurface(), tgContext,
+                                              bp.parameters());
 
   es.update(esState, freeParams, bp.parameters(), 2 * (*bp.covariance()),
             *plane);
-  CHECK_CLOSE_OR_SMALL(es.position(esState), 2. * pos, eps, eps);
+  CHECK_CLOSE_OR_SMALL(es.position(esState), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
-  CHECK_CLOSE_REL(es.absoluteMomentum(esState), 2 * absMom, eps);
-  BOOST_CHECK_EQUAL(es.charge(esState), -1. * charge);
-  CHECK_CLOSE_OR_SMALL(es.time(esState), 2. * time, eps, eps);
+  CHECK_CLOSE_REL(es.absoluteMomentum(esState), absMom, eps);
+  BOOST_CHECK_EQUAL(es.charge(esState), charge);
+  CHECK_CLOSE_OR_SMALL(es.time(esState), time, eps, eps);
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
 
   // Test a case where no step size adjustment is required
-  ps.options.tolerance = 2. * 4.4258e+09;
+  ps.options.stepping.stepTolerance = 2. * 4.4258e+09;
   double h0 = esState.stepSize.value();
   es.step(ps, mockNavigator);
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
@@ -528,15 +529,15 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                                  stepSize);
   PropState nps(navDir, copyState(*nBfield, nesState));
   // Test that we can reach the minimum step size
-  nps.options.tolerance = 1e-21;
-  nps.options.stepSizeCutOff = 1e20;
+  nps.options.stepping.stepTolerance = 1e-21;
+  nps.options.stepping.stepSizeCutOff = 1e20;
   auto res = nes.step(nps, mockNavigator);
   BOOST_CHECK(!res.ok());
   BOOST_CHECK_EQUAL(res.error(), EigenStepperError::StepSizeStalled);
 
   // Test that the number of trials exceeds
-  nps.options.stepSizeCutOff = 0.;
-  nps.options.maxRungeKuttaStepTrials = 0.;
+  nps.options.stepping.stepSizeCutOff = 0.;
+  nps.options.stepping.maxRungeKuttaStepTrials = 0.;
   res = nes.step(nps, mockNavigator);
   BOOST_CHECK(!res.ok());
   BOOST_CHECK_EQUAL(res.error(), EigenStepperError::StepSizeAdjustmentFailed);
@@ -584,30 +585,22 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_e / 1_GeV,
                                         cov, ParticleHypothesis::pion());
 
-  // Create action list for surface collection
-  ActionList<StepCollector> aList;
-  AbortList<EndOfWorld> abortList;
+  using Stepper = EigenStepper<
+      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
+      detail::HighestValidAuctioneer>;
+  using Propagator = Propagator<Stepper, Navigator>;
+  using PropagatorOptions =
+      Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
 
   // Set options for propagator
-  DenseStepperPropagatorOptions<ActionList<StepCollector>,
-                                AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext);
-  propOpts.actionList = aList;
-  propOpts.abortList = abortList;
+  PropagatorOptions propOpts(tgContext, mfContext);
   propOpts.maxSteps = 100;
-  propOpts.maxStepSize = 1.5_m;
+  propOpts.stepping.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
   auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
-  EigenStepper<
-      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
-      detail::HighestValidAuctioneer>
-      es(bField);
-  Propagator<EigenStepper<StepperExtensionList<DefaultExtension,
-                                               DenseEnvironmentExtension>,
-                          detail::HighestValidAuctioneer>,
-             Navigator>
-      prop(es, naviVac);
+  Stepper es(bField);
+  Propagator prop(es, naviVac);
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
@@ -626,20 +619,20 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
     CHECK_CLOSE_ABS(mom, startMom, 1_keV);
   }
 
-  // Rebuild and check the choice of extension
-  ActionList<StepCollector> aListDef;
+  using DefStepper = EigenStepper<
+      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
+      detail::HighestValidAuctioneer>;
+  using DefPropagator = Acts::Propagator<DefStepper, Navigator>;
+  using DefPropagatorOptions =
+      DefPropagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
 
   // Set options for propagator
-  PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-      propOptsDef(tgContext, mfContext);
-  propOptsDef.actionList = aListDef;
-  propOptsDef.abortList = abortList;
+  DefPropagatorOptions propOptsDef(tgContext, mfContext);
   propOptsDef.maxSteps = 100;
-  propOptsDef.maxStepSize = 1.5_m;
+  propOptsDef.stepping.maxStepSize = 1.5_m;
 
-  EigenStepper<StepperExtensionList<DefaultExtension>> esDef(bField);
-  Propagator<EigenStepper<StepperExtensionList<DefaultExtension>>, Navigator>
-      propDef(esDef, naviVac);
+  DefStepper esDef(bField);
+  DefPropagator propDef(esDef, naviVac);
 
   // Launch and collect results
   const auto& resultDef = propDef.propagate(sbtp, propOptsDef).value();
@@ -691,30 +684,23 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_e / 5_GeV,
                                         cov, ParticleHypothesis::pion());
 
-  // Create action list for surface collection
-  ActionList<StepCollector> aList;
-  AbortList<EndOfWorld> abortList;
+  using Stepper = EigenStepper<
+      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
+      detail::HighestValidAuctioneer>;
+  using Propagator = Propagator<Stepper, Navigator>;
+  using PropagatorOptions =
+      Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
 
   // Set options for propagator
-  DenseStepperPropagatorOptions<ActionList<StepCollector>,
-                                AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext);
-  propOpts.actionList = aList;
-  propOpts.abortList = abortList;
+  PropagatorOptions propOpts(tgContext, mfContext);
   propOpts.maxSteps = 10000;
-  propOpts.maxStepSize = 1.5_m;
+  propOpts.stepping.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
   auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
-  EigenStepper<
-      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
-      detail::HighestValidAuctioneer>
-      es(bField);
-  Propagator<EigenStepper<StepperExtensionList<DefaultExtension,
-                                               DenseEnvironmentExtension>,
-                          detail::HighestValidAuctioneer>,
-             Navigator>
-      prop(es, naviMat);
+  Stepper es(bField);
+  Propagator prop(es, naviMat,
+                  Acts::getDefaultLogger("Propagator", Acts::Logging::VERBOSE));
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
@@ -741,21 +727,23 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
     }
   }
 
+  using DenseStepper =
+      EigenStepper<StepperExtensionList<DenseEnvironmentExtension>,
+                   detail::HighestValidAuctioneer>;
+  using DensePropagator = Acts::Propagator<DenseStepper, Navigator>;
+  using DensePropagatorOptions =
+      DensePropagator::Options<ActionList<StepCollector>,
+                               AbortList<EndOfWorld>>;
+
   // Rebuild and check the choice of extension
   // Set options for propagator
-  DenseStepperPropagatorOptions<ActionList<StepCollector>,
-                                AbortList<EndOfWorld>>
-      propOptsDense(tgContext, mfContext);
-  propOptsDense.actionList = aList;
-  propOptsDense.abortList = abortList;
+  DensePropagatorOptions propOptsDense(tgContext, mfContext);
   propOptsDense.maxSteps = 1000;
-  propOptsDense.maxStepSize = 1.5_m;
+  propOptsDense.stepping.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
-  EigenStepper<StepperExtensionList<DenseEnvironmentExtension>> esDense(bField);
-  Propagator<EigenStepper<StepperExtensionList<DenseEnvironmentExtension>>,
-             Navigator>
-      propDense(esDense, naviMat);
+  DenseStepper esDense(bField);
+  DensePropagator propDense(esDense, naviMat);
 
   // Launch and collect results
   const auto& resultDense = propDense.propagate(sbtp, propOptsDense).value();
@@ -779,15 +767,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
 
   // Re-launch the configuration with magnetic field
   bField->setField(Vector3{0., 1_T, 0.});
-  EigenStepper<
-      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
-      detail::HighestValidAuctioneer>
-      esB(bField);
-  Propagator<EigenStepper<StepperExtensionList<DefaultExtension,
-                                               DenseEnvironmentExtension>,
-                          detail::HighestValidAuctioneer>,
-             Navigator>
-      propB(esB, naviMat);
+  Stepper esB(bField);
+  Propagator propB(esB, naviMat);
 
   const auto& resultB = propB.propagate(sbtp, propOptsDense).value();
   const StepCollector::this_result& stepResultB =
@@ -853,29 +834,23 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
                                   1_e / 5_GeV, Covariance::Identity(),
                                   ParticleHypothesis::pion());
 
-  // Create action list for surface collection
-  AbortList<EndOfWorld> abortList;
-  abortList.get<EndOfWorld>().maxX = 3_m;
+  using Stepper = EigenStepper<
+      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
+      detail::HighestValidAuctioneer>;
+  using Propagator = Acts::Propagator<Stepper, Navigator>;
+  using PropagatorOptions =
+      Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
 
   // Set options for propagator
-  DenseStepperPropagatorOptions<ActionList<StepCollector>,
-                                AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext);
-  propOpts.abortList = abortList;
+  PropagatorOptions propOpts(tgContext, mfContext);
+  propOpts.abortList.get<EndOfWorld>().maxX = 3_m;
   propOpts.maxSteps = 1000;
-  propOpts.maxStepSize = 1.5_m;
+  propOpts.stepping.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
   auto bField = std::make_shared<ConstantBField>(Vector3(0., 1_T, 0.));
-  EigenStepper<
-      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
-      detail::HighestValidAuctioneer>
-      es(bField);
-  Propagator<EigenStepper<StepperExtensionList<DefaultExtension,
-                                               DenseEnvironmentExtension>,
-                          detail::HighestValidAuctioneer>,
-             Navigator>
-      prop(es, naviDet);
+  Stepper es(bField);
+  Propagator prop(es, naviDet);
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
@@ -915,21 +890,22 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Build launcher through vacuum
   // Set options for propagator
 
-  PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-      propOptsDef(tgContext, mfContext);
-  abortList.get<EndOfWorld>().maxX = 1_m;
-  propOptsDef.abortList = abortList;
+  using DefStepper = EigenStepper<StepperExtensionList<DefaultExtension>>;
+  using DefPropagator = Acts::Propagator<DefStepper, Navigator>;
+  using DefPropagatorOptions =
+      DefPropagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
+
+  DefPropagatorOptions propOptsDef(tgContext, mfContext);
+  propOptsDef.abortList.get<EndOfWorld>().maxX = 3_m;
   propOptsDef.maxSteps = 1000;
-  propOptsDef.maxStepSize = 1.5_m;
+  propOptsDef.stepping.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
-  EigenStepper<StepperExtensionList<DefaultExtension>> esDef(bField);
-  Propagator<EigenStepper<StepperExtensionList<DefaultExtension>>, Navigator>
-      propDef(esDef, naviDet);
+  DefStepper esDef(bField);
+  DefPropagator propDef(esDef, naviDet);
 
   // Launch and collect results
-  const auto& resultDef =
-      propDef.propagate(sbtp, *(surs[0]), propOptsDef).value();
+  const auto& resultDef = propDef.propagate(sbtp, propOptsDef).value();
   const StepCollector::this_result& stepResultDef =
       resultDef.get<typename StepCollector::result_type>();
 
@@ -963,41 +939,39 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Build launcher through material
   // Set initial parameters for the particle track by using the result of the
   // first volume
-  CurvilinearTrackParameters sbtpPiecewise(
-      makeVector4(endParams.first, 0), endParams.second,
-      1_e / endParams.second.norm(), std::nullopt, ParticleHypothesis::pion());
+
+  using DenseStepper = EigenStepper<
+      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>>;
+  using DensePropagator = Acts::Propagator<DenseStepper, Navigator>;
+  using DensePropagatorOptions =
+      DensePropagator::Options<ActionList<StepCollector>,
+                               AbortList<EndOfWorld>>;
 
   // Set options for propagator
-  DenseStepperPropagatorOptions<ActionList<StepCollector>,
-                                AbortList<EndOfWorld>>
-      propOptsDense(tgContext, mfContext);
-  abortList.get<EndOfWorld>().maxX = 2_m;
-  propOptsDense.abortList = abortList;
+  DensePropagatorOptions propOptsDense(tgContext, mfContext);
+  propOptsDense.abortList.get<EndOfWorld>().maxX = 3_m;
   propOptsDense.maxSteps = 1000;
-  propOptsDense.maxStepSize = 1.5_m;
+  propOptsDense.stepping.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
-  EigenStepper<StepperExtensionList<DenseEnvironmentExtension>> esDense(bField);
-  Propagator<EigenStepper<StepperExtensionList<DenseEnvironmentExtension>>,
-             Navigator>
-      propDense(esDense, naviDet);
+  DenseStepper esDense(bField);
+  DensePropagator propDense(esDense, naviDet);
 
   // Launch and collect results
-  const auto& resultDense =
-      propDense.propagate(sbtpPiecewise, *(surs[1]), propOptsDense).value();
+  const auto& resultDense = propDense.propagate(sbtp, propOptsDense).value();
   const StepCollector::this_result& stepResultDense =
       resultDense.get<typename StepCollector::result_type>();
 
   // Check the exit situation of the second volume
   for (unsigned int i = 0; i < stepResultDense.position.size(); i++) {
-    if (2_m - stepResultDense.position[i].x() < 1e-4) {
+    if (1_m - stepResultDense.position[i].x() < 1e-4) {
       endParams = std::make_pair(stepResultDense.position[i],
                                  stepResultDense.momentum[i]);
       break;
     }
   }
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-    if (2_m - stepResult.position[i].x() < 1e-4) {
+    if (1_m - stepResult.position[i].x() < 1e-4) {
       endParamsControl =
           std::make_pair(stepResult.position[i], stepResult.momentum[i]);
       break;
@@ -1097,24 +1071,23 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
                                   1_e / 1_GeV, Covariance::Identity(),
                                   ParticleHypothesis::pion());
 
+  using Stepper = EigenStepper<
+      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
+      detail::HighestValidAuctioneer>;
+  using Propagator = Acts::Propagator<Stepper, Navigator>;
+  using PropagatorOptions =
+      Propagator::Options<ActionList<StepCollector, MaterialInteractor>,
+                          AbortList<EndOfWorld>>;
+
   // Set options for propagator
-  DenseStepperPropagatorOptions<ActionList<StepCollector, MaterialInteractor>,
-                                AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext);
+  PropagatorOptions propOpts(tgContext, mfContext);
   propOpts.abortList.get<EndOfWorld>().maxX = 3._m;
   propOpts.maxSteps = 10000;
 
   // Build stepper and propagator
   auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
-  EigenStepper<
-      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
-      detail::HighestValidAuctioneer>
-      es(bField);
-  Propagator<EigenStepper<StepperExtensionList<DefaultExtension,
-                                               DenseEnvironmentExtension>,
-                          detail::HighestValidAuctioneer>,
-             Navigator>
-      prop(es, naviVac);
+  Stepper es(bField);
+  Propagator prop(es, naviVac);
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
@@ -1152,5 +1125,5 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
     }
   }
 }
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

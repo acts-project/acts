@@ -1,0 +1,130 @@
+---
+schema_version: 1
+options:
+  getSyntax: True
+  exposePODMembers: False
+  includeSubfolder: True
+
+components:
+
+    ActsPodioEdm::Vector3f :
+      Members:
+        - float x
+        - float y
+        - float z
+      ExtraCode:
+        declaration: "
+        constexpr Vector3f() : x(0),y(0),z(0) {}\n
+        constexpr Vector3f(float xx, float yy, float zz) : x(xx),y(yy),z(zz) {}\n
+        constexpr Vector3f(const float* v) : x(v[0]),y(v[1]),z(v[2]) {}\n
+        constexpr bool operator==(const Vector3f& v) const { return (x==v.x&&y==v.y&&z==v.z) ; }\n
+        constexpr float operator[](unsigned i) const { return *( &x + i ) ; }\n
+        "
+
+    ActsPodioEdm::Surface:
+      Members:
+        - int surfaceType
+        - int boundsType
+        - uint64_t geometryId
+        - uint64_t identifier
+        - std::array<double, 10> boundValues
+        - uint32_t boundValuesSize
+        - std::array<double, 16> transform
+
+    ActsPodioEdm::TrackInfo:
+      Members:
+        - std::array<double, 6> parameters
+        - std::array<double, 36> covariance // local covariance
+        - uint32_t tipIndex // index of the outermost track state
+        - uint32_t stemIndex // index of the innermost track state
+        - unsigned int nMeasurements // number of measurements
+        - unsigned int nHoles // number of holes
+        - float chi2 // chi squared of the track
+        - unsigned int ndf // number of degrees of freedom
+        - unsigned int nOutliers // number of outliers
+        - unsigned int nSharedHits // number of shared hits
+
+    ActsPodioEdm::TrackStateInfo:
+      Members:
+        - uint32_t previous
+        - uint32_t next
+
+        - uint32_t ipredicted;
+        - uint32_t ifiltered;
+        - uint32_t ismoothed;
+
+        - std::array<double, 6> measurement
+        - std::array<double, 36> measurementCovariance
+        - uint32_t measdim;
+
+        - uint32_t ijacobian
+        - uint64_t projector
+        - bool hasProjector
+
+        - float chi2
+        - double pathLength
+        - uint64_t typeFlags
+
+        - uint64_t uncalibratedIdentifier
+
+    ActsPodioEdm::BoundParametersInfo:
+      Members:
+        - std::array<double, 6> values
+        - std::array<double, 36> covariance
+
+    ActsPodioEdm::JacobianInfo:
+      Members:
+        - std::array<double, 36> values
+
+    ActsPodioEdm::ParticleHypothesis:
+      Members:
+        - uint32_t absPdg
+        - float mass
+        - float absQ
+
+datatypes:
+  ActsPodioEdm::Track:
+    Description: "Reconstructed track"
+    Author : "Paul Gessinger, CERN"
+    Members:
+      - ActsPodioEdm::TrackInfo data // local parameters and covariance
+
+      - ActsPodioEdm::Surface referenceSurface // reference surface
+
+      - ActsPodioEdm::ParticleHypothesis particleHypothesis // particle hypothesis
+
+  ActsPodioEdm::TrackState:
+    Description: "Local state on a track"
+    Author : "Paul Gessinger, CERN"
+    Members:
+      - ActsPodioEdm::TrackStateInfo data // local information
+      - ActsPodioEdm::Surface referenceSurface // reference surface
+
+  ActsPodioEdm::BoundParameters:
+    Description: "Local track parameters"
+    Author : "Paul Gessinger, CERN"
+    Members:
+      - ActsPodioEdm::BoundParametersInfo data // parameter information
+
+  ActsPodioEdm::Jacobian:
+    Description: "Jacobian matrix from the previous track state to the current one"
+    Author : "Paul Gessinger, CERN"
+    Members:
+      - ActsPodioEdm::JacobianInfo data // the jacobian data
+
+      # - int32_t type                         //flagword that defines the type of track.Bits 16-31 are used internally
+      # - float chi2                       //Chi^2 of the track fit
+      # - int32_t ndf                          //number of degrees of freedom of the track fit
+      # - float dEdx                       //dEdx of the track.
+      # - float dEdxError                  //error of dEdx.
+      # - float radiusOfInnermostHit       //radius of the innermost hit that has been used in the track fit
+    # VectorMembers:
+      # - int32_t subDetectorHitNumbers        //number of hits in particular subdetectors.Check/set collection variable TrackSubdetectorNames for decoding the indices
+      # - edm4hep::TrackState trackStates  //track states
+      # - edm4hep::Quantity dxQuantities // different measurements of dx quantities
+    # OneToManyRelations:
+      # - edm4hep::TrackerHit trackerHits  //hits that have been used to create this track
+      # - edm4hep::Track tracks            //tracks (segments) that have been combined to create this track
+    # ExtraCode:
+      # declaration: >
+        # auto data() { return &m_obj->data; }

@@ -1,9 +1,6 @@
 import pytest
 
-import acts
-
 from acts.examples import (
-    TutorialVertexFinderAlgorithm,
     AdaptiveMultiVertexFinderAlgorithm,
     VertexFitterAlgorithm,
     IterativeVertexFinderAlgorithm,
@@ -23,11 +20,9 @@ from acts.examples import (
     TrackFittingAlgorithm,
     SurfaceSortingAlgorithm,
     ParticlesPrinter,
-    HitsPrinter,
     TrackParametersPrinter,
     PropagationAlgorithm,
     DigitizationAlgorithm,
-    PlanarSteppingAlgorithm,
 )
 
 
@@ -37,7 +32,6 @@ from helpers import geant4Enabled, hepmc3Enabled
 @pytest.mark.parametrize(
     "alg",
     [
-        TutorialVertexFinderAlgorithm,
         AdaptiveMultiVertexFinderAlgorithm,
         VertexFitterAlgorithm,
         IterativeVertexFinderAlgorithm,
@@ -57,11 +51,9 @@ from helpers import geant4Enabled, hepmc3Enabled
         TrackFittingAlgorithm,
         SurfaceSortingAlgorithm,
         ParticlesPrinter,
-        HitsPrinter,
         TrackParametersPrinter,
         PropagationAlgorithm,
         # GeantinoRecording,
-        PlanarSteppingAlgorithm,
         # EventRecording,
     ],
 )

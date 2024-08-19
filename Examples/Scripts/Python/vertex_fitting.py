@@ -44,8 +44,7 @@ def runVertexFitting(
             acts.examples.RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
-                particleCollection=inputParticles,
-                orderedEvents=False,
+                outputParticles=inputParticles,
             )
         )
 
@@ -78,12 +77,11 @@ def runVertexFitting(
         logger.info("Reading track summary from %s", inputTrackSummary.resolve())
         assert inputTrackSummary.exists()
         associatedParticles = "associatedTruthParticles"
-        trackSummaryReader = acts.examples.RootTrajectorySummaryReader(
+        trackSummaryReader = acts.examples.RootTrackSummaryReader(
             level=acts.logging.VERBOSE,
             outputTracks=trackParameters,
             outputParticles=associatedParticles,
             filePath=str(inputTrackSummary.resolve()),
-            orderedEvents=False,
         )
         s.addReader(trackSummaryReader)
 

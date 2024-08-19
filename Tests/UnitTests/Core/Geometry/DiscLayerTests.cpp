@@ -6,15 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -28,17 +25,8 @@
 #include <utility>
 #include <vector>
 
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
+namespace Acts::Test::Layers {
 
-namespace Acts {
-
-namespace Test {
-
-// Create a test context
-GeometryContext tgContext = GeometryContext();
-
-namespace Layers {
 BOOST_AUTO_TEST_SUITE(Layers)
 
 /// Unit test for creating compliant/non-compliant DiscLayer object
@@ -94,7 +82,5 @@ BOOST_AUTO_TEST_CASE(DiscLayerProperties) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Layers
-}  // namespace Test
 
-}  // namespace Acts
+}  // namespace Acts::Test::Layers

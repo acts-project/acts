@@ -10,7 +10,6 @@ from acts import GeometryContext, logging
 
 
 def volumeAssociationTest(sequencer, ntests, tdetector):
-
     rnd = acts.examples.RandomNumbers(seed=42)
 
     alg = acts.examples.VolumeAssociationTest(
@@ -59,7 +58,7 @@ def main():
     geoContext = GeometryContext()
 
     # Convert the detector surfaces from GDML
-    [elements, ssurfaces, psurfaces] = acts_g4.convertSurfaces(
+    [_, ssurfaces, psurfaces] = acts_g4.convertSurfaces(
         args.input, [args.sensitives], [args.passives]
     )
     odd = odd_light.get_detector(geoContext, ssurfaces, psurfaces, logging.INFO)

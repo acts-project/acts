@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Clusterization/Clusterization.hpp"
@@ -21,8 +20,7 @@
 
 #include <boost/functional/hash.hpp>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 struct Cell1D {
   Cell1D(int colv) : col(colv) {}
@@ -44,7 +42,7 @@ int getCellColumn(const Cell1D& cell) {
 
 struct Cluster1D {
   std::vector<Cell1D> cells;
-  size_t hash{};
+  std::size_t hash{};
 };
 
 void clusterAddCell(Cluster1D& cl, const Cell1D& cell) {
@@ -69,13 +67,13 @@ BOOST_AUTO_TEST_CASE(Grid_1D_rand) {
   using Cluster = Cluster1D;
   using ClusterC = std::vector<Cluster>;
 
-  size_t minsize = 1;
-  size_t maxsize = 10;
-  size_t minspace = 1;
-  size_t maxspace = 10;
-  size_t nclusters = 100;
+  std::size_t minsize = 1;
+  std::size_t maxsize = 10;
+  std::size_t minspace = 1;
+  std::size_t maxspace = 10;
+  std::size_t nclusters = 100;
   int startSeed = 204769;
-  size_t ntries = 100;
+  std::size_t ntries = 100;
 
   std::cout << "Grid_1D_rand test with parameters:" << std::endl;
   std::cout << "  minsize = " << minsize << std::endl;
@@ -88,18 +86,19 @@ BOOST_AUTO_TEST_CASE(Grid_1D_rand) {
 
   while (ntries-- > 0) {
     std::mt19937_64 rnd(startSeed++);
-    std::uniform_int_distribution<size_t> distr_size(minsize, maxsize);
-    std::uniform_int_distribution<size_t> distr_space(minspace, maxspace);
+    std::uniform_int_distribution<std::uint32_t> distr_size(minsize, maxsize);
+    std::uniform_int_distribution<std::uint32_t> distr_space(minspace,
+                                                             maxspace);
 
     int col = 0;
 
     CellC cells;
     ClusterC clusters;
-    for (size_t i = 0; i < nclusters; i++) {
+    for (std::size_t i = 0; i < nclusters; i++) {
       Cluster cl;
       col += distr_space(rnd);
-      size_t size = distr_size(rnd);
-      for (size_t j = 0; j < size; j++) {
+      std::uint32_t size = distr_size(rnd);
+      for (std::uint32_t j = 0; j < size; j++) {
         Cell cell(col++);
         cells.push_back(cell);
         clusterAddCell(cl, cell);
@@ -122,11 +121,10 @@ BOOST_AUTO_TEST_CASE(Grid_1D_rand) {
     std::sort(newCls.begin(), newCls.end(), clHashComp);
 
     BOOST_CHECK_EQUAL(clusters.size(), newCls.size());
-    for (size_t i = 0; i < clusters.size(); i++) {
+    for (std::size_t i = 0; i < clusters.size(); i++) {
       BOOST_CHECK_EQUAL(clusters.at(i).hash, newCls.at(i).hash);
     }
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

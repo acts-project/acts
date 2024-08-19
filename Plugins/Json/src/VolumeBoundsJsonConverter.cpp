@@ -34,27 +34,20 @@ std::unique_ptr<Acts::VolumeBounds> Acts::VolumeBoundsJsonConverter::fromJson(
   const auto type = jVolumeBounds["type"].get<VolumeBounds::BoundsType>();
 
   switch (type) {
-    case VolumeBounds::BoundsType::eCone: {
+    case VolumeBounds::BoundsType::eCone:
       return fromJson<ConeVolumeBounds>(jVolumeBounds);
-    } break;
-    case VolumeBounds::BoundsType::eCuboid: {
+    case VolumeBounds::BoundsType::eCuboid:
       return fromJson<CuboidVolumeBounds>(jVolumeBounds);
-    } break;
-    case VolumeBounds::BoundsType::eCutoutCylinder: {
+    case VolumeBounds::BoundsType::eCutoutCylinder:
       return fromJson<CutoutCylinderVolumeBounds>(jVolumeBounds);
-    } break;
-    case VolumeBounds::BoundsType::eCylinder: {
+    case VolumeBounds::BoundsType::eCylinder:
       return fromJson<CylinderVolumeBounds>(jVolumeBounds);
-    } break;
-    case VolumeBounds::BoundsType::eTrapezoid: {
+    case VolumeBounds::BoundsType::eTrapezoid:
       return fromJson<TrapezoidVolumeBounds>(jVolumeBounds);
-    } break;
-    case VolumeBounds::BoundsType::eGenericCuboid: {
+    case VolumeBounds::BoundsType::eGenericCuboid:
       return fromJson<GenericCuboidVolumeBounds>(jVolumeBounds);
-    } break;
-    default: {
+    default:
       throw std::invalid_argument("Unknown volume bounds type!");
-    }
   }
   return nullptr;
 }  // namespace Acts

@@ -6,12 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -22,9 +21,8 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Test {
 
-namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 /// Unit test for creating compliant/non-compliant EllipseBounds object
@@ -168,9 +166,11 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
       "20.0000000, 0.0000000, 1.5707963, 0.0000000)"));
   //
   /// Test inside
-  BOOST_CHECK(!ellipseBoundsObject.inside(inRectangle, BoundaryCheck(true)));
+  BOOST_CHECK(
+      !ellipseBoundsObject.inside(inRectangle, BoundaryTolerance::None()));
   // dont understand why this is so:
-  BOOST_CHECK(!ellipseBoundsObject.inside(outsideBy15, BoundaryCheck(true)));
+  BOOST_CHECK(
+      !ellipseBoundsObject.inside(outsideBy15, BoundaryTolerance::None()));
 }
 /// Unit test for testing EllipseBounds assignment
 BOOST_AUTO_TEST_CASE(EllipseBoundsAssignment) {
@@ -193,6 +193,4 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsAssignment) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

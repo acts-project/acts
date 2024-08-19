@@ -12,7 +12,6 @@
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/SingleSeedVertexFinderAlgorithm.hpp"
-#include "ActsExamples/Vertexing/TutorialVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
 
 #include <memory>
@@ -33,29 +32,28 @@ void addVertexing(Context& ctx) {
   auto& m = ctx.get("main");
 
   py::enum_<Seeder>(m, "VertexSeedFinder")
+      .value("TruthSeeder", Seeder::TruthSeeder)
       .value("GaussianSeeder", Seeder::GaussianSeeder)
       .value("AdaptiveGridSeeder", Seeder::AdaptiveGridSeeder);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AdaptiveMultiVertexFinderAlgorithm, mex,
       "AdaptiveMultiVertexFinderAlgorithm", inputTrackParameters,
-      inputTrajectories, outputProtoVertices, outputVertices, seedFinder,
-      bField);
+      inputTruthParticles, inputTruthVertices, outputProtoVertices,
+      outputVertices, seedFinder, bField, minWeight, doSmoothing, maxIterations,
+      useTime, tracksMaxZinterval, initialVariances, doFullSplitting,
+      tracksMaxSignificance, maxMergeVertexSignificance, spatialBinExtent,
+      temporalBinExtent);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::IterativeVertexFinderAlgorithm,
                                 mex, "IterativeVertexFinderAlgorithm",
-                                inputTrackParameters, inputTrajectories,
-                                outputProtoVertices, outputVertices, bField);
+                                inputTrackParameters, outputProtoVertices,
+                                outputVertices, bField, maxIterations);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TutorialVertexFinderAlgorithm,
-                                mex, "TutorialVertexFinderAlgorithm",
-                                inputTrackParameters, inputTrajectories,
-                                outputProtoVertices, bField);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::VertexFitterAlgorithm, mex, "VertexFitterAlgorithm",
-      inputTrackParameters, inputTrajectories, inputProtoVertices,
-      outputVertices, bField, doConstrainedFit, constraintPos, constraintCov);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::VertexFitterAlgorithm, mex,
+                                "VertexFitterAlgorithm", inputTrackParameters,
+                                inputProtoVertices, outputVertices, bField,
+                                doConstrainedFit, constraintPos, constraintCov);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SingleSeedVertexFinderAlgorithm,
                                 mex, "SingleSeedVertexFinderAlgorithm",

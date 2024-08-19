@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import sys
 from pathlib import Path
 import argparse
 
@@ -16,7 +15,7 @@ from acts.examples import (
 
 import acts
 
-from acts import MaterialMapJsonConverter, UnitConstants as u
+from acts import MaterialMapJsonConverter
 
 
 def runITk(
@@ -27,8 +26,8 @@ def runITk(
     outputObj=True,
     outputCsv=False,
     outputJson=False,
+    material=True,
 ):
-
     for ievt in range(events):
         eventStore = WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
         ialg = 0
@@ -82,10 +81,14 @@ def runITk(
                 context=context.geoContext,
             )
 
+            outname = "material-map"
+            if not material:
+                outname = "geometry-map"
+
             jmw = JsonMaterialWriter(
                 level=acts.logging.VERBOSE,
                 converterCfg=jmConverterCfg,
-                fileName=str(json_dir / "material-map"),
+                fileName=str(json_dir / outname),
                 writeFormat=JsonFormat.Json,
             )
 
@@ -140,4 +143,5 @@ if "__main__" == __name__:
         outputCsv=args.output_csv,
         outputObj=args.output_obj,
         outputJson=args.output_json,
+        material=not args.no_material,
     )

@@ -24,9 +24,9 @@ Acts::OnnxRuntimeBase::OnnxRuntimeBase(Ort::Env& env, const char* modelPath) {
   Ort::AllocatorWithDefaultOptions allocator;
 
   // Get the names of the input nodes of the model
-  size_t numInputNodes = m_session->GetInputCount();
+  std::size_t numInputNodes = m_session->GetInputCount();
   // Iterate over all input nodes and get the name
-  for (size_t i = 0; i < numInputNodes; i++) {
+  for (std::size_t i = 0; i < numInputNodes; i++) {
     m_inputNodeNamesAllocated.push_back(
         m_session->GetInputNameAllocated(i, allocator));
     m_inputNodeNames.push_back(m_inputNodeNamesAllocated.back().get());
@@ -39,9 +39,9 @@ Acts::OnnxRuntimeBase::OnnxRuntimeBase(Ort::Env& env, const char* modelPath) {
   }
 
   // Get the names of the output nodes
-  size_t numOutputNodes = m_session->GetOutputCount();
+  std::size_t numOutputNodes = m_session->GetOutputCount();
   // Iterate over all output nodes and get the name
-  for (size_t i = 0; i < numOutputNodes; i++) {
+  for (std::size_t i = 0; i < numOutputNodes; i++) {
     m_outputNodeNamesAllocated.push_back(
         m_session->GetOutputNameAllocated(i, allocator));
     m_outputNodeNames.push_back(m_outputNodeNamesAllocated.back().get());
@@ -57,7 +57,7 @@ Acts::OnnxRuntimeBase::OnnxRuntimeBase(Ort::Env& env, const char* modelPath) {
 std::vector<float> Acts::OnnxRuntimeBase::runONNXInference(
     std::vector<float>& inputTensorValues) const {
   Acts::NetworkBatchInput vectorInput(1, inputTensorValues.size());
-  for (size_t i = 0; i < inputTensorValues.size(); i++) {
+  for (std::size_t i = 0; i < inputTensorValues.size(); i++) {
     vectorInput(0, i) = inputTensorValues[i];
   }
   auto vectorOutput = runONNXInference(vectorInput);
@@ -76,8 +76,8 @@ std::vector<std::vector<std::vector<float>>>
 Acts::OnnxRuntimeBase::runONNXInferenceMultiOutput(
     NetworkBatchInput& inputTensorValues) const {
   int batchSize = inputTensorValues.rows();
-  std::vector<int64_t> inputNodeDims = m_inputNodeDims;
-  std::vector<std::vector<int64_t>> outputNodeDims = m_outputNodeDims;
+  std::vector<std::int64_t> inputNodeDims = m_inputNodeDims;
+  std::vector<std::vector<std::int64_t>> outputNodeDims = m_outputNodeDims;
 
   // The first dim node should correspond to the batch size
   // If it is -1, it is dynamic and should be set to the input size
@@ -86,7 +86,7 @@ Acts::OnnxRuntimeBase::runONNXInferenceMultiOutput(
   }
 
   bool outputDimsMatch = true;
-  for (std::vector<int64_t>& nodeDim : outputNodeDims) {
+  for (std::vector<std::int64_t>& nodeDim : outputNodeDims) {
     if (nodeDim[0] == -1) {
       nodeDim[0] = batchSize;
     }
@@ -127,7 +127,7 @@ Acts::OnnxRuntimeBase::runONNXInferenceMultiOutput(
 
   std::vector<std::vector<std::vector<float>>> multiOutput;
 
-  for (size_t i_out = 0; i_out < outputTensors.size(); i_out++) {
+  for (std::size_t i_out = 0; i_out < outputTensors.size(); i_out++) {
     // Get pointer to output tensor float values
     float* outputTensor = outputTensors.at(i_out).GetTensorMutableData<float>();
     // Get the output values

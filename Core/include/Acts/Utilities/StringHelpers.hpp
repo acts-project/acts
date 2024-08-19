@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -100,6 +101,24 @@ inline std::string toString(const Acts::Transform3& transform,
   std::string rotationOffset = offset + "              ";
   sout << offset << "Rotation    : "
        << toString(transform.rotation(), precision + 2, rotationOffset);
+  return sout.str();
+}
+
+/// Print out a vector of ActsScalar
+/// @param pVector The vector to print
+/// @param precision Numeric output precision
+inline std::string toString(const std::vector<ActsScalar>& pVector,
+                            int precision = 4) {
+  std::ostringstream sout;
+  sout << std::setiosflags(std::ios::fixed) << std::setprecision(precision);
+  sout << "(";
+  for (const auto [i, val] : enumerate(pVector)) {
+    sout << val;
+    if (i != pVector.size() - 1) {
+      sout << ", ";
+    }
+  }
+  sout << ")";
   return sout.str();
 }
 

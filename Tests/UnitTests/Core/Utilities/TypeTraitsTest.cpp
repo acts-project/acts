@@ -6,21 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <type_traits>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
 using namespace Acts::Concepts;
 
-namespace Acts {
+namespace Acts::Test {
 
-namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 // generate traits for methods named foo and bar
@@ -234,5 +229,5 @@ BOOST_AUTO_TEST_CASE(TypeTraitsConcepts) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

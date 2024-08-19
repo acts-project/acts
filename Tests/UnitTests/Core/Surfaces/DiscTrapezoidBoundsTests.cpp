@@ -6,12 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -21,9 +20,8 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Test {
 
-namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 /// Unit tests for DiscTrapezoidBounds constrcuctors
@@ -131,8 +129,10 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
       "0.0000000, 2.5243378, 0.0000000)"));
   //
   /// Test inside
-  BOOST_CHECK(DiscTrapezoidBoundsObject.inside(inSurface, BoundaryCheck(true)));
-  BOOST_CHECK(!DiscTrapezoidBoundsObject.inside(outside, BoundaryCheck(true)));
+  BOOST_CHECK(
+      DiscTrapezoidBoundsObject.inside(inSurface, BoundaryTolerance::None()));
+  BOOST_CHECK(
+      !DiscTrapezoidBoundsObject.inside(outside, BoundaryTolerance::None()));
   //
   /// Test rMin
   CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.rMin(), rMin, 1e-6);
@@ -181,6 +181,4 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsAssignment) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

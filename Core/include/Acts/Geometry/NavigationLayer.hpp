@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
@@ -26,7 +26,6 @@ namespace Acts {
 /// Class to be used for gaps in Volumes as a navigational link.
 /// Navigation Layers have a surface representation, but should usually never be
 /// propagated to.
-
 class NavigationLayer : public Layer {
  public:
   ///  Factory Constructor - the surface representation is given by pointer
@@ -73,11 +72,12 @@ class NavigationLayer : public Layer {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the global position for the check
-  /// @param bcheck is the boundary check directive
+  /// @param boundaryTolerance is the boundary check directive
   ///
   /// @return boolean that indicates if the position is on surface
   bool isOnLayer(const GeometryContext& gctx, const Vector3& gp,
-                 const BoundaryCheck& bcheck = true) const final;
+                 const BoundaryTolerance& boundaryTolerance =
+                     BoundaryTolerance::None()) const final;
 
   /// Accept layer according to the following collection directives
   ///
@@ -122,11 +122,11 @@ inline Vector3 NavigationLayer::binningPosition(const GeometryContext& gctx,
   return m_surfaceRepresentation->binningPosition(gctx, bValue);
 }
 
-inline bool NavigationLayer::isOnLayer(const GeometryContext& gctx,
-                                       const Vector3& gp,
-                                       const BoundaryCheck& bcheck) const {
+inline bool NavigationLayer::isOnLayer(
+    const GeometryContext& gctx, const Vector3& gp,
+    const BoundaryTolerance& boundaryTolerance) const {
   return m_surfaceRepresentation->isOnSurface(gctx, gp, Vector3::Zero(),
-                                              bcheck);
+                                              boundaryTolerance);
 }
 
 inline bool NavigationLayer::resolve(bool /*resolveSensitive*/,

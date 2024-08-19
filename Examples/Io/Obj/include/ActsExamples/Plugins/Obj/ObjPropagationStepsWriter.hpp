@@ -30,10 +30,10 @@ class ObjPropagationStepsWriter
     : public WriterT<std::vector<std::vector<step_t>>> {
  public:
   struct Config {
-    std::string collection;      ///< which collection to write
-    std::string outputDir;       ///< where to place output files
-    double outputScalor = 1.0;   ///< scale output values
-    size_t outputPrecision = 6;  ///< floating point precision
+    std::string collection;           ///< which collection to write
+    std::string outputDir;            ///< where to place output files
+    double outputScalor = 1.0;        ///< scale output values
+    std::size_t outputPrecision = 6;  ///< floating point precision
   };
 
   /// Constructor with arguments
@@ -42,8 +42,8 @@ class ObjPropagationStepsWriter
   /// @param level Output logging level
   ObjPropagationStepsWriter(const Config& cfg,
                             Acts::Logging::Level level = Acts::Logging::INFO)
-      : WriterT<std::vector<std::vector<step_t>>>(cfg.collection,
-                                                  "ObjSpacePointWriter", level),
+      : WriterT<std::vector<std::vector<step_t>>>(
+            cfg.collection, "ObjPropagationStepsWriter", level),
         m_cfg(cfg) {
     if (m_cfg.collection.empty()) {
       throw std::invalid_argument("Missing input collection");
@@ -91,7 +91,7 @@ class ObjPropagationStepsWriter
              << m_cfg.outputScalor * step.position.z() << '\n';
         }
         // Write out the line - only if we have at least two points created
-        size_t vBreak = vCounter + steps.size() - 1;
+        std::size_t vBreak = vCounter + steps.size() - 1;
         for (; vCounter < vBreak; ++vCounter) {
           os << "l " << vCounter << " " << vCounter + 1 << '\n';
         }

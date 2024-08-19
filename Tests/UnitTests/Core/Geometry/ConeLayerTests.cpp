@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -26,13 +24,8 @@
 #include <utility>
 #include <vector>
 
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
+namespace Acts::Test::Layers {
 
-namespace Acts {
-
-namespace Test {
-namespace Layers {
 BOOST_AUTO_TEST_SUITE(Layers)
 
 /// Unit test for creating compliant/non-compliant ConeLayer object
@@ -77,7 +70,5 @@ BOOST_AUTO_TEST_CASE(ConeLayerConstruction) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Layers
-}  // namespace Test
 
-}  // namespace Acts
+}  // namespace Acts::Test::Layers

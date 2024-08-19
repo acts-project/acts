@@ -10,13 +10,14 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 using namespace Acts;
@@ -67,26 +68,42 @@ BOOST_AUTO_TEST_CASE(IndexedRootVolumeFinderBuilderCylindrical) {
   std::vector<std::shared_ptr<DetectorVolume>> rootVolumes = {
       innerV, middleLV, middleDV, middleUV, middleRV, outerV};
 
-  IndexedRootVolumeFinderBuilder builder({Acts::binZ, Acts::binR});
+  IndexedRootVolumeFinderBuilder builder(
+      {Acts::BinningValue::binZ, Acts::BinningValue::binR});
 
   // Let's construct a detector
   auto rootVolumeFinder = builder.construct(tContext, rootVolumes);
 
+  Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+  Acts::Experimental::GeometryIdGenerator generator(
+      generatorConfig,
+      Acts::getDefaultLogger("SequentialIdGenerator", Acts::Logging::VERBOSE));
+  auto cache = generator.generateCache();
+  for (auto& vol : rootVolumes) {
+    generator.assignGeometryId(cache, *vol);
+  }
+
   auto detectorIndexed = Detector::makeShared("IndexedDetector", rootVolumes,
                                               std::move(rootVolumeFinder));
 
-  BOOST_CHECK(detectorIndexed->findDetectorVolume(tContext, {10., 0., 0.}) ==
-              innerV.get());
-  BOOST_CHECK(detectorIndexed->findDetectorVolume(tContext, {25., 0., -93.}) ==
-              middleLV.get());
-  BOOST_CHECK(detectorIndexed->findDetectorVolume(tContext, {35., 0., 0.}) ==
-              middleDV.get());
-  BOOST_CHECK(detectorIndexed->findDetectorVolume(tContext, {55., 0., 0.}) ==
-              middleUV.get());
-  BOOST_CHECK(detectorIndexed->findDetectorVolume(tContext, {40., 0., 92.}) ==
-              middleRV.get());
-  BOOST_CHECK(detectorIndexed->findDetectorVolume(tContext, {65., 0., 0.}) ==
-              outerV.get());
+  BOOST_CHECK_EQUAL(
+      detectorIndexed->findDetectorVolume(tContext, {10., 0., 0.}),
+      innerV.get());
+  BOOST_CHECK_EQUAL(
+      detectorIndexed->findDetectorVolume(tContext, {25., 0., -93.}),
+      middleLV.get());
+  BOOST_CHECK_EQUAL(
+      detectorIndexed->findDetectorVolume(tContext, {35., 0., 0.}),
+      middleDV.get());
+  BOOST_CHECK_EQUAL(
+      detectorIndexed->findDetectorVolume(tContext, {55., 0., 0.}),
+      middleUV.get());
+  BOOST_CHECK_EQUAL(
+      detectorIndexed->findDetectorVolume(tContext, {40., 0., 92.}),
+      middleRV.get());
+  BOOST_CHECK_EQUAL(
+      detectorIndexed->findDetectorVolume(tContext, {65., 0., 0.}),
+      outerV.get());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

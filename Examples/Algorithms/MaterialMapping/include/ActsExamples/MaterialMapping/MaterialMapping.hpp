@@ -26,16 +26,10 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-namespace ActsExamples {
-class IMaterialWriter;
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
 namespace Acts {
 
@@ -81,7 +75,7 @@ class MaterialMapping : public IAlgorithm {
     std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
 
     /// Input collection
-    std::string collection = "material_tracks";
+    std::string inputMaterialTracks = "material_tracks";
 
     /// The material collection to be stored
     std::string mappingMaterialCollection = "mapped_material_tracks";
@@ -107,21 +101,21 @@ class MaterialMapping : public IAlgorithm {
   MaterialMapping(const Config& cfg,
                   Acts::Logging::Level level = Acts::Logging::INFO);
 
-  /// Destructor
-  /// - it also writes out the file
-  ~MaterialMapping() override;
-
   /// Framework execute method
   ///
   /// @param context The algorithm context for event consistency
   ActsExamples::ProcessCode execute(
       const AlgorithmContext& context) const override;
 
+  // Write out the file
+  ProcessCode finalize() override;
+
   /// Return the parameters to optimised the material map for a given surface
   /// Those parameters are the variance and the number of track for each bin
   ///
   /// @param surfaceID the ID of the surface of interest
-  std::vector<std::pair<double, int>> scoringParameters(uint64_t surfaceID);
+  std::vector<std::pair<double, int>> scoringParameters(
+      std::uint64_t surfaceID);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -134,9 +128,9 @@ class MaterialMapping : public IAlgorithm {
       m_mappingStateVol;  //!< Material mapping state
                           //
 
-  ReadDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  ReadDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_inputMaterialTracks{this, "InputMaterialTracks"};
-  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_outputMaterialTracks{this, "OutputMaterialTracks"};
 };
 

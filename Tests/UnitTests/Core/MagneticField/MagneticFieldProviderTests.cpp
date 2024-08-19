@@ -11,11 +11,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 
-namespace tt = boost::test_tools;
-
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 MagneticFieldContext mfContext = MagneticFieldContext();
@@ -38,16 +34,16 @@ BOOST_AUTO_TEST_CASE(TypeErasedCacheType) {
 
   {
     MagneticFieldProvider::Cache cache{
-        MagneticFieldProvider::Cache::make<MyCache>(42, &constructor_called,
-                                                    &destructor_called)};
+        MagneticFieldProvider::Cache(std::in_place_type<MyCache>, 42,
+                                     &constructor_called, &destructor_called)};
     BOOST_CHECK(constructor_called);
     BOOST_CHECK(!destructor_called);
 
-    MyCache& v = cache.get<MyCache>();
+    MyCache& v = cache.as<MyCache>();
     BOOST_CHECK_EQUAL(v.m_value, 42);
     v.m_value = 65;
 
-    MyCache& v2 = cache.get<MyCache>();
+    MyCache& v2 = cache.as<MyCache>();
     BOOST_CHECK_EQUAL(v2.m_value, 65);
   }
 
@@ -55,28 +51,4 @@ BOOST_AUTO_TEST_CASE(TypeErasedCacheType) {
   BOOST_CHECK(destructor_called);
 }
 
-BOOST_AUTO_TEST_CASE(CacheNonCopyable) {
-  struct MyCache {
-    int m_value{0};
-
-    MyCache() = default;
-    MyCache(int value) : m_value(value) {}
-
-    MyCache(const MyCache&) = delete;
-    MyCache& operator=(const MyCache&) = delete;
-
-    MyCache& operator=(MyCache&&) = default;
-    MyCache(MyCache&&) = default;
-  };
-
-  auto cache = MagneticFieldProvider::Cache::make<MyCache>(42);
-  // MyCache c{42};
-  // std::any a;
-  // a = std::move(c);
-  // a.emplace<MyCache>(42);
-  // a = std::make_any<MyCache>(42);
-}
-
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

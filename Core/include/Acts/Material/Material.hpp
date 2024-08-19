@@ -17,6 +17,7 @@
 namespace Acts {
 
 /// Material description for interactions with matter.
+/// @defgroup Material Material
 ///
 /// The following parameters are used to specify the material and its
 /// interactions with traversing particles:
@@ -112,8 +113,8 @@ class Material {
   float m_molarRho = 0.0f;
 
   friend constexpr bool operator==(const Material& lhs, const Material& rhs) {
-    return (lhs.m_x0 == rhs.m_x0) and (lhs.m_l0 == rhs.m_l0) and
-           (lhs.m_ar == rhs.m_ar) and (lhs.m_z == rhs.m_z) and
+    return (lhs.m_x0 == rhs.m_x0) && (lhs.m_l0 == rhs.m_l0) &&
+           (lhs.m_ar == rhs.m_ar) && (lhs.m_z == rhs.m_z) &&
            (lhs.m_molarRho == rhs.m_molarRho);
   }
   friend constexpr bool operator!=(const Material& lhs, const Material& rhs) {

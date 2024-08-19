@@ -70,9 +70,9 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     // Boolean flag if layer is active
     bool active = false;
     // Bins in Y direction
-    size_t binsY = 1;
+    std::size_t binsY = 1;
     // Bins in Z direction
-    size_t binsZ = 1;
+    std::size_t binsZ = 1;
     // Envelope in X
     std::array<ActsScalar, 2u> envelopeX{0, 0};
     // Envelope in Y
@@ -81,6 +81,8 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     std::array<ActsScalar, 2u> envelopeZ{0, 0};
     // An optional rotation for this
     std::optional<RotationMatrix3> rotation{std::nullopt};
+    // Dimension for the binning
+    Acts::BinningValue binningDimension = Acts::BinningValue::binX;
   };
 
   /// @brief This struct stores the data for the construction of a cuboid
@@ -102,6 +104,8 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     std::string name = "Volume";
     // Material
     std::shared_ptr<const IVolumeMaterial> volumeMaterial = nullptr;
+    // Dimension for the binning
+    Acts::BinningValue binningDimension = Acts::BinningValue::binX;
   };
 
   /// @brief This struct stores the configuration of the tracking geometry

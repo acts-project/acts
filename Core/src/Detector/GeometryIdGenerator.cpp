@@ -23,7 +23,7 @@ void Acts::Experimental::GeometryIdGenerator::assignGeometryId(
 
   ACTS_VERBOSE("Processing volume " << dVolume.name());
   // Set to the volume itself
-  if (dVolume.geometryId().volume() == 0 or m_cfg.overrideExistingIds) {
+  if (dVolume.geometryId().volume() == 0 || m_cfg.overrideExistingIds) {
     ++ccache.volumeCount;
     GeometryIdentifier geoID = volumeId(ccache);
     ACTS_VERBOSE("Assigning volume id " << geoID.volume());
@@ -54,7 +54,7 @@ void Acts::Experimental::GeometryIdGenerator::assignGeometryId(
   auto& ccache = std::any_cast<Cache&>(cache);
 
   auto& pSurface = portal.surface();
-  if (pSurface.geometryId().boundary() == 0 or m_cfg.overrideExistingIds) {
+  if (pSurface.geometryId().boundary() == 0 || m_cfg.overrideExistingIds) {
     GeometryIdentifier geoID = volumeId(ccache, false);
     geoID.setBoundary(++ccache.portalCount);
     ACTS_VERBOSE("Assigning portal id " << ccache.portalCount);
@@ -68,9 +68,9 @@ void Acts::Experimental::GeometryIdGenerator::assignGeometryId(
 
   auto rGeoID = surface.geometryId();
   auto geoID = volumeId(ccache, false);
-  if (not m_cfg.overrideExistingIds and rGeoID.value() != 0) {
+  if (!m_cfg.overrideExistingIds && rGeoID.value() != 0) {
     return;
-  } else if ((rGeoID.sensitive() == 0 and rGeoID.passive() == 0) or
+  } else if ((rGeoID.sensitive() == 0 && rGeoID.passive() == 0) ||
              m_cfg.overrideExistingIds) {
     if (surface.associatedDetectorElement() != nullptr) {
       geoID.setSensitive(++ccache.sensitiveCount);
@@ -80,7 +80,7 @@ void Acts::Experimental::GeometryIdGenerator::assignGeometryId(
       geoID.setPassive(++ccache.passiveCount);
     }
     surface.assignGeometryId(geoID);
-  } else if (rGeoID.sensitive() != 0 or rGeoID.passive() != 0) {
+  } else if (rGeoID.sensitive() != 0 || rGeoID.passive() != 0) {
     ACTS_VERBOSE(
         "Surface already has a geometry id, only setting volume and layer id.");
     rGeoID.setVolume(geoID.volume());
@@ -92,7 +92,7 @@ void Acts::Experimental::GeometryIdGenerator::assignGeometryId(
 Acts::GeometryIdentifier Acts::Experimental::GeometryIdGenerator::volumeId(
     Cache& cache, bool incrementLayer) const {
   GeometryIdentifier geoID(0u);
-  if (not m_cfg.containerMode) {
+  if (!m_cfg.containerMode) {
     geoID.setVolume(cache.volumeCount);
   } else {
     geoID.setVolume(m_cfg.containerId);

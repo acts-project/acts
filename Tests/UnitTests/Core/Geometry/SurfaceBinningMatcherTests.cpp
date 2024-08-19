@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -23,9 +22,7 @@
 
 #include <boost/format.hpp>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -58,26 +55,26 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceMatcher) {
       Surface::makeShared<DiscSurface>(identity, similarPhiBounds);
 
   SurfaceBinningMatcher sbm;
-  sbm.tolerances[binR] = {rMinTol, rMaxTol};
-  sbm.tolerances[binPhi] = {phiTol, phiTol};
+  sbm.tolerances[toUnderlying(BinningValue::binR)] = {rMinTol, rMaxTol};
+  sbm.tolerances[toUnderlying(BinningValue::binPhi)] = {phiTol, phiTol};
 
   // Always true
-  for (int ib = 0; ib < binValues; ++ib) {
-    BOOST_CHECK(
-        sbm(tgContext, (BinningValue)ib, oneSurface.get(), oneSurface.get()));
+  for (BinningValue ib : allBinningValues()) {
+    BOOST_CHECK(sbm(tgContext, ib, oneSurface.get(), oneSurface.get()));
   }
   // Not matching in R
-  BOOST_CHECK(!sbm(tgContext, binR, oneSurface.get(), otherSurface.get()));
+  BOOST_CHECK(!sbm(tgContext, BinningValue::binR, oneSurface.get(),
+                   otherSurface.get()));
   // Not matching in phi
-  BOOST_CHECK(!sbm(tgContext, binPhi, oneSurface.get(), otherSurface.get()));
+  BOOST_CHECK(!sbm(tgContext, BinningValue::binPhi, oneSurface.get(),
+                   otherSurface.get()));
 
   // Good enough matching in R
-  BOOST_CHECK(sbm(tgContext, binR, oneSurface.get(), similarRSurface.get()));
+  BOOST_CHECK(sbm(tgContext, BinningValue::binR, oneSurface.get(),
+                  similarRSurface.get()));
   // Good enough matching in phi
-  BOOST_CHECK(
-      sbm(tgContext, binPhi, oneSurface.get(), similarPhiSurface.get()));
+  BOOST_CHECK(sbm(tgContext, BinningValue::binPhi, oneSurface.get(),
+                  similarPhiSurface.get()));
 }
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

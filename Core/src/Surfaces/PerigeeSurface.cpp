@@ -45,8 +45,8 @@ std::string Acts::PerigeeSurface::name() const {
   return "Acts::PerigeeSurface";
 }
 
-std::ostream& Acts::PerigeeSurface::toStream(const GeometryContext& gctx,
-                                             std::ostream& sl) const {
+std::ostream& Acts::PerigeeSurface::toStreamImpl(const GeometryContext& gctx,
+                                                 std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::PerigeeSurface:" << std::endl;
@@ -58,7 +58,7 @@ std::ostream& Acts::PerigeeSurface::toStream(const GeometryContext& gctx,
 }
 
 Acts::Polyhedron Acts::PerigeeSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t /*lseg*/) const {
+    const GeometryContext& gctx, std::size_t /*lseg*/) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;

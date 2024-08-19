@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -20,13 +19,13 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
@@ -50,21 +49,10 @@
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
-
-#define CHECK_ROTATION_ANGLE(t, a, tolerance) \
-  {                                           \
-    Vector3 v = (*t) * Vector3(1, 0, 0);      \
-    CHECK_CLOSE_ABS(phi(v), (a), tolerance);  \
-  }
 
 using SrfVec = std::vector<std::shared_ptr<const Surface>>;
 
@@ -90,22 +78,21 @@ struct SurfaceArrayCreatorFixture {
     return m_SAC.createVariableAxis(std::forward<Args>(args)...);
   }
 
-  template <detail::AxisBoundaryType bdtA, detail::AxisBoundaryType bdtB,
-            typename... Args>
+  template <AxisBoundaryType bdtA, AxisBoundaryType bdtB, typename... Args>
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> makeSurfaceGridLookup2D(
       Args&&... args) {
     return m_SAC.makeSurfaceGridLookup2D<bdtA, bdtB>(
         std::forward<Args>(args)...);
   }
 
-  SrfVec fullPhiTestSurfacesEC(size_t n = 10, double shift = 0,
+  SrfVec fullPhiTestSurfacesEC(std::size_t n = 10, double shift = 0,
                                double zbase = 0, double r = 10, double w = 2,
                                double h = 1) {
     SrfVec res;
     // TODO: The test is extremely numerically unstable in the face of upward
     //       rounding in this multiplication and division. Find out why.
     double phiStep = 2 * M_PI / n;
-    for (size_t i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
       double phi = std::fma(i, phiStep, shift);
 
@@ -127,14 +114,14 @@ struct SurfaceArrayCreatorFixture {
     return res;
   }
 
-  SrfVec fullPhiTestSurfacesBRL(size_t n = 10, double shift = 0,
+  SrfVec fullPhiTestSurfacesBRL(std::size_t n = 10, double shift = 0,
                                 double zbase = 0, double incl = M_PI / 9.,
                                 double w = 2, double h = 1.5) {
     SrfVec res;
     // TODO: The test is extremely numerically unstable in the face of upward
     //       rounding in this multiplication and division. Find out why.
     double phiStep = 2 * M_PI / n;
-    for (size_t i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       double z = zbase;
       double phi = std::fma(i, phiStep, shift);
 
@@ -158,11 +145,11 @@ struct SurfaceArrayCreatorFixture {
   }
 
   SrfVec straightLineSurfaces(
-      size_t n = 10., double step = 3, const Vector3& origin = {0, 0, 1.5},
+      std::size_t n = 10., double step = 3, const Vector3& origin = {0, 0, 1.5},
       const Transform3& pretrans = Transform3::Identity(),
       const Vector3& dir = {0, 0, 1}) {
     SrfVec res;
-    for (size_t i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       Transform3 trans;
       trans.setIdentity();
       trans.translate(origin + dir * step * i);
@@ -218,7 +205,7 @@ struct SurfaceArrayCreatorFixture {
         trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3(0, 1, 0)));
 
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
-        std::shared_ptr<Surface> srfA =
+        std::shared_ptr<PlaneSurface> srfA =
             Surface::makeShared<PlaneSurface>(trans, bounds);
 
         Vector3 nrm = srfA->normal(tgContext);
@@ -246,7 +233,7 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
 
   os << std::fixed << std::setprecision(4);
 
-  size_t nVtx = 0;
+  std::size_t nVtx = 0;
   for (const auto& srfx : surfaces) {
     std::shared_ptr<const PlaneSurface> srf =
         std::dynamic_pointer_cast<const PlaneSurface>(srfx);
@@ -261,7 +248,7 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
 
     // connect them
     os << "f";
-    for (size_t i = 1; i <= bounds->vertices().size(); ++i) {
+    for (std::size_t i = 1; i <= bounds->vertices().size(); ++i) {
       os << " " << nVtx + i;
     }
     os << "\n";
@@ -468,7 +455,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
   BOOST_CHECK_EQUAL(axis.bType, equidistant);
 
   // z rows with varying starting point
-  for (size_t i = 0; i <= 20; i++) {
+  for (std::size_t i = 0; i <= 20; i++) {
     double z0 = -10 + 1. * i;
     surfaces = straightLineSurfaces(10, 3, Vector3(0, 0, z0 + 1.5));
     surfacesRaw = unpack_shared_vector(surfaces);
@@ -576,10 +563,9 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
   std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
   draw_surfaces(brl, "SurfaceArrayCreator_completeBinning_BRL.obj");
 
-  detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Closed>
-      phiAxis(-M_PI, M_PI, 30u);
-  detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
-      zAxis(-14, 14, 7u);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(-M_PI, M_PI,
+                                                                30u);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> zAxis(-14, 14, 7u);
 
   double R = 10.;
   auto globalToLocal = [](const Vector3& pos) {
@@ -604,7 +590,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
 
   // actually filled SA
   for (const auto& srf : brl) {
-    Vector3 ctr = srf->binningPosition(tgContext, binR);
+    Vector3 ctr = srf->binningPosition(tgContext, BinningValue::binR);
     auto binContent = sa.at(ctr);
 
     BOOST_CHECK_EQUAL(binContent.size(), 1u);
@@ -640,8 +626,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
     return itr * Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
   };
 
-  auto sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
-                                    detail::AxisBoundaryType::Bound>(
+  auto sl = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
+                                    AxisBoundaryType::Bound>(
       globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
   sl->fill(tgContext, brlRaw);
@@ -654,7 +640,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
     auto A = pr.first;
     auto B = pr.second;
 
-    Vector3 ctr = A->binningPosition(tgContext, binR);
+    Vector3 ctr = A->binningPosition(tgContext, BinningValue::binR);
     auto binContent = sa.at(ctr);
     BOOST_CHECK_EQUAL(binContent.size(), 2u);
     std::set<const Surface*> act;
@@ -687,8 +673,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
       return itr * Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
     };
 
-    auto sl2 = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
-                                       detail::AxisBoundaryType::Bound>(
+    auto sl2 = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
+                                       AxisBoundaryType::Bound>(
         globalToLocalVar, localToGlobalVar, pAxisPhiVar, pAxisZVar);
 
     sl2->fill(tgContext, brlRaw);
@@ -706,7 +692,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
         1.88496,   2.0944,    2.30383,  2.51327,     2.72271,  3.00831,
         3.14159};
     std::vector<double> zEdgesExp = {-14, -10, -6, -2, 2, 6, 10, 14};
-    size_t i = 0;
+    std::size_t i = 0;
     for (const auto& edge : axes.at(0)->getBinEdges()) {
       BOOST_TEST_INFO("phi edge index " << i);
       auto phiEdge = phiEdgesExp.at(i);
@@ -724,7 +710,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
       auto A = pr.first;
       auto B = pr.second;
 
-      Vector3 ctr = A->binningPosition(tgContext, binR);
+      Vector3 ctr = A->binningPosition(tgContext, BinningValue::binR);
       auto binContent = sa2.at(ctr);
       BOOST_CHECK_EQUAL(binContent.size(), 2u);
       std::set<const Surface*> act;
@@ -741,6 +727,4 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

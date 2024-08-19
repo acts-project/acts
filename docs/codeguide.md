@@ -6,7 +6,7 @@ All guidelines have a short identifier label, e.g. N.1, for easier reference in 
 
 For cases and constructs not explicitly mentioned here, code should fall back to the [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines).
 
-## Acts-specific
+## ACTS-specific
 
 ### A.indices: Always use enum values to access vector/matrix components
 
@@ -160,7 +160,7 @@ static constexpr double kMagic = 1.23;
 ```
 
 Variables defined in the `Acts::UnitConstants` namespace are exempted for usability reasons and use regular variable naming instead.
- 
+
 ### N.6: Enum values use eCamelCase
 
 Enum values use CamelCase with a `e` prefix. They are not really constants but symbolic values, e.g. they can never have an address, and warant a separate convention.

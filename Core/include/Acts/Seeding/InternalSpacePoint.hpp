@@ -10,12 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
-#include <array>
 #include <cmath>
 #include <functional>
-#include <limits>
+#include <optional>
 
 namespace Acts {
+
 template <typename SpacePoint>
 class InternalSpacePoint {
   /////////////////////////////////////////////////////////////////////////////////
@@ -27,7 +27,8 @@ class InternalSpacePoint {
   InternalSpacePoint(std::size_t index, const SpacePoint& sp,
                      const Acts::Vector3& globalPos,
                      const Acts::Vector2& offsetXY,
-                     const Acts::Vector2& variance);
+                     const Acts::Vector2& variance,
+                     std::optional<float> globalTime);
 
   InternalSpacePoint(const InternalSpacePoint<SpacePoint>& sp);
   ~InternalSpacePoint() = default;
@@ -39,6 +40,7 @@ class InternalSpacePoint {
   float x() const { return m_x; }
   float y() const { return m_y; }
   float z() const { return m_z; }
+  std::optional<float> t() const { return m_t; }
   float radius() const { return m_r; }
   float phi() const { return m_phi; }
   float varianceR() const { return m_varianceR; }
@@ -47,13 +49,14 @@ class InternalSpacePoint {
 
  protected:
   std::size_t m_index;
-  float m_x;          // x-coordinate in beam system coordinates
-  float m_y;          // y-coordinate in beam system coordinates
-  float m_z;          // z-coordinate in beam system coordinetes
-  float m_r;          // radius       in beam system coordinates
-  float m_phi;        //
-  float m_varianceR;  //
-  float m_varianceZ;  //
+  float m_x;                 // x-coordinate in beam system coordinates
+  float m_y;                 // y-coordinate in beam system coordinates
+  float m_z;                 // z-coordinate in beam system coordinetes
+  float m_r;                 // radius       in beam system coordinates
+  float m_phi;               //
+  float m_varianceR;         //
+  float m_varianceZ;         //
+  std::optional<float> m_t;  // time
   std::reference_wrapper<const SpacePoint> m_sp;  // external space point
 };
 
@@ -64,7 +67,8 @@ class InternalSpacePoint {
 template <typename SpacePoint>
 inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
     std::size_t index, const SpacePoint& sp, const Acts::Vector3& globalPos,
-    const Acts::Vector2& offsetXY, const Acts::Vector2& variance)
+    const Acts::Vector2& offsetXY, const Acts::Vector2& variance,
+    std::optional<float> globalTime)
     : m_index(index),
       m_x(globalPos.x() - offsetXY.x()),
       m_y(globalPos.y() - offsetXY.y()),
@@ -73,6 +77,7 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
       m_phi(std::atan2(m_y, m_x)),
       m_varianceR(variance.x()),
       m_varianceZ(variance.y()),
+      m_t(globalTime),
       m_sp(sp) {}
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -83,4 +88,4 @@ template <typename SpacePoint>
 inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
     const InternalSpacePoint<SpacePoint>& sp) = default;
 
-}  // end of namespace Acts
+}  // namespace Acts

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -28,8 +28,8 @@
 #include <vector>
 
 namespace Acts {
-template <typename external_spacepoint_t>
-class BinFinder;
+template <std::size_t>
+class GridBinFinder;
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -51,8 +51,8 @@ class SeedingAlgorithm final : public IAlgorithm {
 
     Acts::SeedFilterConfig seedFilterConfig;
     Acts::SeedFinderConfig<SimSpacePoint> seedFinderConfig;
-    Acts::SpacePointGridConfig gridConfig;
-    Acts::SpacePointGridOptions gridOptions;
+    Acts::CylindricalSpacePointGridConfig gridConfig;
+    Acts::CylindricalSpacePointGridOptions gridOptions;
     Acts::SeedFinderOptions seedFinderOptions;
 
     // allow for different values of rMax in gridConfig and seedFinderConfig
@@ -63,7 +63,11 @@ class SeedingAlgorithm final : public IAlgorithm {
     std::vector<std::pair<int, int>> zBinNeighborsBottom;
     // number of phiBin neighbors at each side of the current bin that will be
     // used to search for SPs
-    int numPhiNeighbors = 0;
+    int numPhiNeighbors = 1;
+
+    // Connect custom selections on the space points or to the doublet
+    // compatibility
+    bool useExtraCuts = false;
   };
 
   /// Construct the seeding algorithm.
@@ -82,15 +86,46 @@ class SeedingAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  Acts::SeedFinder<SimSpacePoint> m_seedFinder;
-  std::shared_ptr<const Acts::BinFinder<SimSpacePoint>> m_bottomBinFinder;
-  std::shared_ptr<const Acts::BinFinder<SimSpacePoint>> m_topBinFinder;
+  Acts::SeedFinder<SimSpacePoint,
+                   Acts::CylindricalSpacePointGrid<SimSpacePoint>>
+      m_seedFinder;
+  std::unique_ptr<const Acts::GridBinFinder<2ul>> m_bottomBinFinder;
+  std::unique_ptr<const Acts::GridBinFinder<2ul>> m_topBinFinder;
+
   Config m_cfg;
 
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
       m_inputSpacePoints{};
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+
+  static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
+    float RMin = 50.;
+    float CotThetaMax = 1.5;
+
+    if (bottomRadius < RMin &&
+        (cotTheta > CotThetaMax || cotTheta < -CotThetaMax)) {
+      return false;
+    }
+    return true;
+  }
+
+  static inline bool itkFastTrackingSPselect(const SimSpacePoint& sp) {
+    // At small r we remove points beyond |z| > 200.
+    float r = sp.r();
+    float zabs = std::abs(sp.z());
+    if (zabs > 200. && r < 50.) {
+      return false;
+    }
+
+    /// Remove space points beyond eta=4 if their z is
+    /// larger than the max seed z0 (150.)
+    float cotTheta = 27.2899;  // corresponds to eta=4
+    if ((zabs - 150.) > cotTheta * r) {
+      return false;
+    }
+    return true;
+  }
 };
 
 }  // namespace ActsExamples

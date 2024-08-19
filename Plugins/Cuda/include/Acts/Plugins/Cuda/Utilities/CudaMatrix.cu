@@ -26,36 +26,36 @@ template <typename var_t>
 class CudaMatrix {
  public:
   CudaMatrix() = delete;
-  CudaMatrix(size_t nRows, size_t nCols) {
+  CudaMatrix(std::size_t nRows, std::size_t nCols) {
     m_setSize(nRows, nCols);
     ACTS_CUDA_ERROR_CHECK(
         cudaMalloc((var_t**)&m_devPtr, m_nRows * m_nCols * sizeof(var_t)));
   }
 
-  CudaMatrix(size_t nRows, size_t nCols, var_t* mat) {
+  CudaMatrix(std::size_t nRows, std::size_t nCols, var_t* mat) {
     m_setSize(nRows, nCols);
     ACTS_CUDA_ERROR_CHECK(
         cudaMalloc((var_t**)&m_devPtr, m_nRows * m_nCols * sizeof(var_t)));
     copyH2D(mat, m_size, 0);
   }
 
-  CudaMatrix(size_t nRows, size_t nCols, CpuMatrix<var_t>* mat) {
+  CudaMatrix(std::size_t nRows, std::size_t nCols, CpuMatrix<var_t>* mat) {
     m_setSize(nRows, nCols);
     ACTS_CUDA_ERROR_CHECK(
         cudaMalloc((var_t**)&m_devPtr, m_nRows * m_nCols * sizeof(var_t)));
     copyH2D(mat->get(0, 0), m_size, 0);
   }
 
-  CudaMatrix(size_t nRows, size_t nCols, var_t* mat, size_t len,
-             size_t offset) {
+  CudaMatrix(std::size_t nRows, std::size_t nCols, var_t* mat, std::size_t len,
+             std::size_t offset) {
     m_setSize(nRows, nCols);
     ACTS_CUDA_ERROR_CHECK(
         cudaMalloc((var_t**)&m_devPtr, m_nRows * m_nCols * sizeof(var_t)));
     copyH2D(mat, len, offset);
   }
 
-  CudaMatrix(size_t nRows, size_t nCols, CpuMatrix<var_t>* mat, size_t len,
-             size_t offset) {
+  CudaMatrix(std::size_t nRows, std::size_t nCols, CpuMatrix<var_t>* mat,
+             std::size_t len, std::size_t offset) {
     m_setSize(nRows, nCols);
     ACTS_CUDA_ERROR_CHECK(
         cudaMalloc((var_t**)&m_devPtr, m_nRows * m_nCols * sizeof(var_t)));
@@ -67,18 +67,18 @@ class CudaMatrix {
       cudaFree(m_devPtr);
   }
 
-  var_t* get(size_t row = 0, size_t col = 0) {
+  var_t* get(std::size_t row = 0, std::size_t col = 0) {
     int offset = row + col * m_nRows;
     return m_devPtr + offset;
   }
 
-  void copyH2D(var_t* matrix, size_t len, size_t offset = 0) {
+  void copyH2D(var_t* matrix, std::size_t len, std::size_t offset = 0) {
     ACTS_CUDA_ERROR_CHECK(cudaMemcpy(m_devPtr + offset, matrix,
                                      len * sizeof(var_t),
                                      cudaMemcpyHostToDevice));
   }
 
-  void copyH2D(const var_t* matrix, size_t len, size_t offset = 0) {
+  void copyH2D(const var_t* matrix, std::size_t len, std::size_t offset = 0) {
     ACTS_CUDA_ERROR_CHECK(cudaMemcpy(m_devPtr + offset, matrix,
                                      len * sizeof(var_t),
                                      cudaMemcpyHostToDevice));
@@ -90,11 +90,11 @@ class CudaMatrix {
 
  private:
   var_t* m_devPtr = nullptr;
-  size_t m_nCols;
-  size_t m_nRows;
-  size_t m_size;
+  std::size_t m_nCols;
+  std::size_t m_nRows;
+  std::size_t m_size;
 
-  void m_setSize(size_t row, size_t col) {
+  void m_setSize(std::size_t row, std::size_t col) {
     m_nRows = row;
     m_nCols = col;
     m_size = m_nRows * m_nCols;
