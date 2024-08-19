@@ -44,7 +44,7 @@ Acts::detail::GeoPolygonConverter::operator()(PVConstLink geoPV,
     std::vector<double> tmp={polygon.getXVertex(i), polygon.getYVertex(i)};
     vertices.push_back(tmp);
   }
-  std::vector<ActsScalar> halfLengths = {fabs(vertices[2][0]-vertices[3][0])/2,fabs(vertices[0][0]-vertices[1][0])/2, fabs(vertices[0][1]-vertices[3][1])};
+  std::vector<ActsScalar> halfLengths = {fabs(vertices[2][0]-vertices[3][0])/2,fabs(vertices[0][0]-vertices[1][0])/2, fabs(vertices[0][1]-vertices[3][1])/2};
 
   // Create the surface
   auto minElement = std::min_element(halfLengths.begin(), halfLengths.end());
