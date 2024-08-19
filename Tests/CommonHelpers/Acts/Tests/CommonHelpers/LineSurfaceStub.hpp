@@ -19,32 +19,27 @@ class LineSurfaceStub : public LineSurface {
   LineSurfaceStub() = delete;
   //
   LineSurfaceStub(const Transform3& htrans, double radius, double halfz)
-      : GeometryObject(), LineSurface(htrans, radius, halfz) { /* nop */
-  }
+      : GeometryObject(), LineSurface(htrans, radius, halfz) { /* nop */ }
   //
   LineSurfaceStub(const Transform3& htrans,
                   std::shared_ptr<const LineBounds> lbounds = nullptr)
-      : GeometryObject(), LineSurface(htrans, std::move(lbounds)) { /*nop */
-  }
+      : GeometryObject(), LineSurface(htrans, std::move(lbounds)) { /*nop */ }
   //
   LineSurfaceStub(std::shared_ptr<const LineBounds> lbounds,
                   const DetectorElementBase& detelement)
       : GeometryObject(),
-        LineSurface(std::move(lbounds), detelement) { /* nop */
-  }
+        LineSurface(std::move(lbounds), detelement) { /* nop */ }
 
   //
   LineSurfaceStub(const LineSurfaceStub& ls)
-      : GeometryObject(), LineSurface(ls) { /* nop */
-  }
+      : GeometryObject(), LineSurface(ls) { /* nop */ }
 
   LineSurfaceStub& operator=(const LineSurfaceStub& ls) = default;
 
   //
   LineSurfaceStub(const GeometryContext& gctx, const LineSurfaceStub& ls,
                   const Transform3& t)
-      : GeometryObject(), LineSurface(gctx, ls, t) { /* nop */
-  }
+      : GeometryObject(), LineSurface(gctx, ls, t) { /* nop */ }
 
   /// Return method for the Surface type to avoid dynamic casts
   SurfaceType type() const final { return Surface::Straw; }
