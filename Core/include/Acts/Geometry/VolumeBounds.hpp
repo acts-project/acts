@@ -171,6 +171,6 @@ inline bool operator==(const VolumeBounds& lhs, const VolumeBounds& rhs) {
   return (lhs.type() == rhs.type()) && (lhs.values() == rhs.values());
 }
 
-std::ostream& operator<<(std::ostream& sl, const VolumeBounds::BoundsType& vb);
+std::ostream& operator<<(std::ostream& sl, const VolumeBounds::BoundsType& bt);
 
 }  // namespace Acts
