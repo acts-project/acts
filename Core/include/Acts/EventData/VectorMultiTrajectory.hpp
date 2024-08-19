@@ -439,9 +439,7 @@ class VectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const {
-    return m_index.size();
-  }
+  IndexType size_impl() const { return m_index.size(); }
 
   void clear_impl();
 
@@ -484,7 +482,8 @@ class VectorMultiTrajectory final
     m_measCov.resize(m_measCov.size() + measdim * measdim);
   }
 
-  void setUncalibratedSourceLink_impl(IndexType istate, SourceLink sourceLink) {
+  void setUncalibratedSourceLink_impl(IndexType istate,
+                                      SourceLink&& sourceLink) {
     m_sourceLinks[m_index[istate].iuncalibrated] = std::move(sourceLink);
   }
 
@@ -568,9 +567,7 @@ class ConstVectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const {
-    return m_index.size();
-  }
+  IndexType size_impl() const { return m_index.size(); }
 
   std::any component_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::component_impl<true>(

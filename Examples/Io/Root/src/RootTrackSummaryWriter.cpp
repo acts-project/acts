@@ -425,7 +425,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
              param[Acts::eBoundTime] - t_time};
 
       for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
-        pull[i] = res[i] / error[i];  // MARK: fpeMask(FLTINV, 1, #2284)
+        pull[i] = res[i] / error[i];
       }
     }
 

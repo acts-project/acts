@@ -29,7 +29,7 @@ env:
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:53
+    container: ghcr.io/acts-project/ubuntu2404:58
     steps:
 
       - uses: actions/checkout@v4
@@ -46,21 +46,10 @@ jobs:
         run: >
           ccache -z &&
           cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          --preset=github-ci
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_CXX_FLAGS="-Werror --coverage -g -gz -g1"
-          -DACTS_BUILD_UNITTESTS=on
-          -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
-          -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_ODD=OFF
-          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
-          -DACTS_BUILD_ANALYSIS_APPS=ON
-          -DACTS_BUILD_PLUGIN_ONNX=ON
-          -DACTS_BUILD_PLUGIN_ACTSVG=ON
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       - name: Build
         run: cmake --build build
       - name: ccache stats
@@ -97,7 +86,7 @@ jobs:
 
   build_performance:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:53
+    container: ghcr.io/acts-project/ubuntu2404:58
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
@@ -106,11 +95,10 @@ jobs:
       - name: Configure
         run: >
           cmake -B build -S .
-          -GNinja
+          --preset=github-ci
           -DCMAKE_BUILD_TYPE=RelWithDebInfo
           -DCMAKE_CXX_FLAGS="-Werror"
-          -DACTS_BUILD_EVERYTHING=ON
-          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          -DACTS_BUILD_ODD=OFF
       - name: Measure
         run: cmakeperf collect build/compile_commands.json -o perf.csv
       - name: Results

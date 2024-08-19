@@ -39,15 +39,9 @@ class SourceLink final {
   /// @param upstream The upstream source link to store
   template <typename T, typename = std::enable_if_t<
                             !std::is_same_v<std::decay_t<T>, SourceLink>>>
-  explicit SourceLink(T&& upstream) {
+  explicit SourceLink(T&& upstream) : m_upstream(std::forward<T>(upstream)) {
     static_assert(!std::is_same_v<std::decay_t<T>, SourceLink>,
                   "Cannot wrap SourceLink in SourceLink");
-
-    if constexpr (std::is_same_v<T, std::decay_t<T>>) {
-      m_upstream = any_type{std::forward<T>(upstream)};
-    } else {
-      m_upstream = any_type{static_cast<std::decay_t<T>>(upstream)};
-    }
   }
 
   /// Concrete source link class getter
