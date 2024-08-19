@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
@@ -68,7 +69,7 @@ class PathSeeder {
         : ipP(ipPmag),
           ipDir(std::move(ipPdir)),
           ipVertex(std::move(ipPos)),
-          sourceLinks(std::move(sls)) {};
+          sourceLinks(std::move(sls)){};
   };
 
   /// @brief Delegate to provide the relevant grid
@@ -150,7 +151,7 @@ class PathSeeder {
   };
 
   /// @brief Constructor
-  PathSeeder(const Config& config) : m_cfg(std::move(config)) {};
+  PathSeeder(const Config& config) : m_cfg(std::move(config)){};
 
   /// @brief Destructor
   ~PathSeeder() = default;
