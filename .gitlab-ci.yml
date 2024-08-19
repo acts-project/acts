@@ -373,19 +373,6 @@ linux_ubuntu_2204_clang:
     - ctest --test-dir build -j$(nproc)
 
 
-lcg_104:
-  <<: *lcg_base_job
-
-  variables:
-    LCG_VERSION: "104"
-
-  parallel:
-    matrix:
-      - OS: [alma9]
-        COMPILER:
-          - gcc13
-          - clang16
-
 lcg_105:
   <<: *lcg_base_job
 
