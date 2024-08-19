@@ -50,7 +50,6 @@
 #include <G4VUserPhysicsList.hh>
 #include <G4Version.hh>
 #include <Randomize.hh>
-
 #include <boost/version.hpp>
 
 ActsExamples::Geant4SimulationBase::Geant4SimulationBase(

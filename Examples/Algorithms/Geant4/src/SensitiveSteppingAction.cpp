@@ -30,7 +30,6 @@
 #include <G4UnitsTable.hh>
 #include <G4VPhysicalVolume.hh>
 #include <G4VTouchable.hh>
-
 #include <boost/version.hpp>
 
 class G4PrimaryParticle;
