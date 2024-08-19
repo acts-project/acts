@@ -626,10 +626,7 @@ class TrackStateProxy {
   /// dimensions. The NxM submatrix, where N is the actual dimension of the
   /// measurement, is located in the top left corner, everything else is zero.
   /// @return The overallocated projector
-  [[deprecated(
-      "This will be swapped out in favor of projectorMapping in the "
-      "future")]] Projector
-  projector() const;
+  Projector projector() const;
 
   /// Returns whether a projector is set
   /// @return Whether it is set
@@ -641,8 +638,7 @@ class TrackStateProxy {
   /// is of dimension \f$N\times M\f$, where \f$N\f$ is the actual dimension of the
   /// measurement.
   /// @return The effective projector
-  [[deprecated("This will be dropped in the future")]] EffectiveProjector
-  effectiveProjector() const {
+  EffectiveProjector effectiveProjector() const {
     return projector().topLeftCorner(calibratedSize(), M);
   }
 
