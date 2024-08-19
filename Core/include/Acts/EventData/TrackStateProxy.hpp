@@ -626,9 +626,10 @@ class TrackStateProxy {
   /// dimensions. The NxM submatrix, where N is the actual dimension of the
   /// measurement, is located in the top left corner, everything else is zero.
   /// @return The overallocated projector
-  //[[deprecated("This will be swapped out in favor of projectorMapping in the
-  // future")]]
-  Projector projector() const;
+  [[deprecated(
+      "This will be swapped out in favor of projectorMapping in the "
+      "future")]] Projector
+  projector() const;
 
   /// Returns whether a projector is set
   /// @return Whether it is set
@@ -640,8 +641,8 @@ class TrackStateProxy {
   /// is of dimension \f$N\times M\f$, where \f$N\f$ is the actual dimension of the
   /// measurement.
   /// @return The effective projector
-  //[[deprecated("This will be dropped in the future")]]
-  EffectiveProjector effectiveProjector() const {
+  [[deprecated("This will be dropped in the future")]] EffectiveProjector
+  effectiveProjector() const {
     return projector().topLeftCorner(calibratedSize(), M);
   }
 
@@ -651,8 +652,8 @@ class TrackStateProxy {
   /// @param projector The projector in the form of a dense matrix
   /// @note @p projector is assumed to only have 0s or 1s as components.
   template <typename Derived>
-  //[[deprecated("use setProjector(span) instead")]]
-  void setProjector(const Eigen::MatrixBase<Derived>& projector)
+  [[deprecated("use setProjector(span) instead")]] void setProjector(
+      const Eigen::MatrixBase<Derived>& projector)
     requires(!ReadOnly)
   {
     constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
@@ -685,8 +686,8 @@ class TrackStateProxy {
   ///       to another. Use the `projector` or `effectiveProjector` method if
   ///       you want to access the matrix.
   /// @return The projector bitset
-  //[[deprecated("use projector() instead")]]
-  ProjectorBitset projectorBitset() const {
+  [[deprecated("use projector() instead")]] ProjectorBitset projectorBitset()
+      const {
     return variableBoundSubspaceHelper().projectorBitset();
   }
 
@@ -696,8 +697,8 @@ class TrackStateProxy {
   /// @note This is mainly to copy explicitly a projector from one state
   ///       to another. If you have a projection matrix, set it with
   ///       `setProjector`.
-  //[[deprecated("use setProjector(span) instead")]]
-  void setProjectorBitset(ProjectorBitset proj)
+  [[deprecated("use setProjector(span) instead")]] void setProjectorBitset(
+      ProjectorBitset proj)
     requires(!ReadOnly)
   {
     BoundMatrix projMatrix = bitsetToMatrix<BoundMatrix>(proj);
