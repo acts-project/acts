@@ -34,17 +34,21 @@ std::pair<std::uint32_t, std::uint32_t> splitInt(std::uint64_t v) {
           static_cast<std::uint32_t>(v & 0xFFFFFFFFLL)};
 }
 
-/// In cases when there is built up a particle collection in an iterative way it can be way faster to build up a vector and afterwards use a special constructor to speed up the set creation.
-inline auto particleVectorToSet(std::vector<ActsFatras::Particle> &particles) {
+/// In cases when there is built up a particle collection in an iterative way it
+/// can be way faster to build up a vector and afterwards use a special
+/// constructor to speed up the set creation.
+inline auto particleVectorToSet(std::vector<ActsFatras::Particle>& particles) {
   using namespace ActsExamples;
-  auto cmp = [](const auto &a, const auto &b) {
+  auto cmp = [](const auto& a, const auto& b) {
     return a.particleId().value() == b.particleId().value();
   };
 
   std::sort(particles.begin(), particles.end(), detail::CompareParticleId{});
-  particles.erase(std::unique(particles.begin(), particles.end(), cmp), particles.end());
+  particles.erase(std::unique(particles.begin(), particles.end(), cmp),
+                  particles.end());
 
-  return SimParticleContainer(boost::container::ordered_unique_range_t{}, particles.begin(), particles.end());
+  return SimParticleContainer(boost::container::ordered_unique_range_t{},
+                              particles.begin(), particles.end());
 }
 
 }  // namespace
@@ -266,8 +270,9 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
 
   auto particlesSet = particleVectorToSet(particles);
 
-  if(particlesSet.size() < before) {
-    ACTS_WARNING("Particle IDs not unique for " << before - particles.size() << " particles!");
+  if (particlesSet.size() < before) {
+    ACTS_WARNING("Particle IDs not unique for " << before - particles.size()
+                                                << " particles!");
   }
 
   return particlesSet;
@@ -312,7 +317,7 @@ RootAthenaDumpReader::readMeasurements(SimParticleContainer& particles) const {
     cluster.sizeLoc0 = *maxEta - *minEta;
     cluster.sizeLoc1 = *maxPhi - *minPhi;
 
-    if( totalTot == 0.0 ) {
+    if (totalTot == 0.0) {
       ACTS_VERBOSE("total time over threshold is 0, set all activations to 0");
       nTotalTotZero++;
     }
@@ -322,7 +327,8 @@ RootAthenaDumpReader::readMeasurements(SimParticleContainer& particles) const {
       // Weight the overall collected charge corresponding to the
       // time-over-threshold of each cell Use this as activation (does this make
       // sense?)
-      auto activation = (totalTot != 0.0) ? CLcharge_count[im] * tot / totalTot : 0.0;
+      auto activation =
+          (totalTot != 0.0) ? CLcharge_count[im] * tot / totalTot : 0.0;
 
       // This bases every cluster at zero, but shouldn't matter right now
       ActsFatras::Segmentizer::Bin2D bin;
@@ -398,8 +404,9 @@ RootAthenaDumpReader::readMeasurements(SimParticleContainer& particles) const {
                           << " dummy particles");
   }
 
-  if( nTotalTotZero > 0) {
-    ACTS_WARNING(nTotalTotZero << " / " << nCL << " clusters have zero time-over-threshold");
+  if (nTotalTotZero > 0) {
+    ACTS_WARNING(nTotalTotZero << " / " << nCL
+                               << " clusters have zero time-over-threshold");
   }
 
   return {clusters, measurements, measPartMap};

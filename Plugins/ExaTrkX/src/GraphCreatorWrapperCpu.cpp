@@ -26,8 +26,7 @@ graph<float> GraphCreatorWrapperCpu::build(TTree_hits<float> &hits) {
   TTree_particles<float> particles;
   std::string eventId = "no-id";
 
-  auto [graph, _] =
-      m_graphCreator->build_impl(hits, particles, eventId, false);
+  auto [graph, _] = m_graphCreator->build_impl(hits, particles, eventId, false);
 
   return graph;
 }

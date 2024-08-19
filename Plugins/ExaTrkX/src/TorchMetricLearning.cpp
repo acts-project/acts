@@ -110,7 +110,8 @@ std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
   model.to(device);
 
   std::vector<torch::jit::IValue> inputTensors;
-  auto selectedFeaturesTensor = at::tensor(at::ArrayRef<int>(m_cfg.selectedFeatures));
+  auto selectedFeaturesTensor =
+      at::tensor(at::ArrayRef<int>(m_cfg.selectedFeatures));
   inputTensors.push_back(
       !m_cfg.selectedFeatures.empty()
           ? inputTensor.index({Slice{}, selectedFeaturesTensor})
@@ -137,11 +138,11 @@ std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
                                          << edgeList.size(1));
   ACTS_VERBOSE("Slice of edgelist:\n" << edgeList.slice(1, 0, 5));
   printCudaMemInfo(logger());
-  
+
   // **********************
   // Building Edge Features
   // **********************
-  
+
   // TODO I think this is already somewhere in the codebase
   const float pi = static_cast<float>(M_PI);
   auto resetAngle = [pi](float angle) {
@@ -153,15 +154,15 @@ std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
     }
     return angle;
   };
-  
+
   // TODO Unify edge feature building, this is only to get it in fast
   constexpr static std::size_t numEdgeFeatures = 4;
   std::vector<float> edgeFeatureVector;
-  edgeFeatureVector.reserve(numEdgeFeatures*edgeList.size(1));
-  for(auto i=0; i< edgeList.size(1); ++i) {
+  edgeFeatureVector.reserve(numEdgeFeatures * edgeList.size(1));
+  for (auto i = 0; i < edgeList.size(1); ++i) {
     auto src = edgeList.index({0, i}).item<int>();
     auto dst = edgeList.index({1, i}).item<int>();
-    
+
     // Edge features
     // See
     // https://gitlab.cern.ch/gnn4itkteam/acorn/-/blob/dev/acorn/utils/loading_utils.py?ref_type=heads#L288
@@ -179,7 +180,7 @@ std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
       edgeFeatureVector.push_back(f);
     }
   }
-  
+
   auto edgeFeatures =
       detail::vectorToTensor2D(edgeFeatureVector, numEdgeFeatures).clone();
 

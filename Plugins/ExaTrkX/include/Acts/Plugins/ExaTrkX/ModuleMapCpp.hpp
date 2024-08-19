@@ -14,8 +14,6 @@
 #include <memory>
 #include <string>
 
-
-
 namespace Acts {
 
 namespace detail {

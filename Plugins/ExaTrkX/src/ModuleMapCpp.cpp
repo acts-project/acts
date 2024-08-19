@@ -8,16 +8,14 @@
 
 #include "Acts/Plugins/ExaTrkX/ModuleMapCpp.hpp"
 
+#include "Acts/Plugins/ExaTrkX/detail/GraphCreatorWrapper.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
-#include "Acts/Plugins/ExaTrkX/detail/GraphCreatorWrapper.hpp"
 
-#include <map>
-
-#include <graph_creator>
-#include <module_map_triplet>
 #include <TTree_hits>
-
+#include <graph_creator>
+#include <map>
+#include <module_map_triplet>
 
 using namespace torch::indexing;
 
@@ -26,13 +24,17 @@ namespace Acts {
 ModuleMapCpp::ModuleMapCpp(const Config &cfg,
                            std::unique_ptr<const Acts::Logger> logger_)
     : m_cfg(cfg), m_logger(std::move(logger_)) {
-  if(!m_cfg.useGpu) {
-    m_graphCreator = std::make_unique<detail::GraphCreatorWrapperCpu>(m_cfg.moduleMapPath);
+  if (!m_cfg.useGpu) {
+    m_graphCreator =
+        std::make_unique<detail::GraphCreatorWrapperCpu>(m_cfg.moduleMapPath);
   } else {
 #ifndef ACTS_EXATRKX_CPUONLY
-    m_graphCreator = std::make_unique<detail::GraphCreatorWrapperCuda>(m_cfg.moduleMapPath, m_cfg.gpuDevice);
+    m_graphCreator = std::make_unique<detail::GraphCreatorWrapperCuda>(
+        m_cfg.moduleMapPath, m_cfg.gpuDevice);
 #else
-    throw std::runtime_error("Cannot use cuda version of GraphModuleMap (CUDA is not enabled in CMake)");
+    throw std::runtime_error(
+        "Cannot use cuda version of GraphModuleMap (CUDA is not enabled in "
+        "CMake)");
 #endif
   }
 }
@@ -46,28 +48,28 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     throw std::invalid_argument(
         "Module Ids do not match number of graph nodes");
   }
-/*
-  if (m_cfg.checkModuleConsistencyPerEvent) {
-    ACTS_DEBUG("Perform consistency check...");
-    auto uniqueModuleIds = moduleIds;
-    std::sort(uniqueModuleIds.begin(), uniqueModuleIds.end());
-    auto end = std::unique(uniqueModuleIds.begin(), uniqueModuleIds.end());
-    uniqueModuleIds.erase(end, uniqueModuleIds.end());
-    ACTS_DEBUG("There are " << uniqueModuleIds.size() << " modules");
+  /*
+    if (m_cfg.checkModuleConsistencyPerEvent) {
+      ACTS_DEBUG("Perform consistency check...");
+      auto uniqueModuleIds = moduleIds;
+      std::sort(uniqueModuleIds.begin(), uniqueModuleIds.end());
+      auto end = std::unique(uniqueModuleIds.begin(), uniqueModuleIds.end());
+      uniqueModuleIds.erase(end, uniqueModuleIds.end());
+      ACTS_DEBUG("There are " << uniqueModuleIds.size() << " modules");
 
-    std::vector<uint64_t> moduleIdIntersection;
-    moduleIdIntersection.reserve(
-        std::max(uniqueModuleIds.size(), m_uniqueDoupletModuleIds.size()));
+      std::vector<uint64_t> moduleIdIntersection;
+      moduleIdIntersection.reserve(
+          std::max(uniqueModuleIds.size(), m_uniqueDoupletModuleIds.size()));
 
-    std::set_intersection(uniqueModuleIds.begin(), uniqueModuleIds.end(),
-                          m_uniqueDoupletModuleIds.begin(),
-                          m_uniqueDoupletModuleIds.end(),
-                          std::back_inserter(moduleIdIntersection));
+      std::set_intersection(uniqueModuleIds.begin(), uniqueModuleIds.end(),
+                            m_uniqueDoupletModuleIds.begin(),
+                            m_uniqueDoupletModuleIds.end(),
+                            std::back_inserter(moduleIdIntersection));
 
-    ACTS_DEBUG(
-        "Intersection with doublet modules: " << moduleIdIntersection.size());
-  }
-*/
+      ACTS_DEBUG(
+          "Intersection with doublet modules: " << moduleIdIntersection.size());
+    }
+  */
   const auto numFeatures = inputValues.size() / numNodes;
 
   hits<float> hitsCollection(false, false);

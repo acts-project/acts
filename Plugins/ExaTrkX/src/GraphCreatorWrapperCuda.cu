@@ -8,13 +8,14 @@
 
 #include "Acts/Plugins/ExaTrkX/detail/GraphCreatorWrapper.hpp"
 
+#include <CUDA_graph_creator>
 #include <TTree_hits>
 #include <graph>
-#include <CUDA_graph_creator>
 
 namespace Acts::detail {
 
-GraphCreatorWrapperCuda::GraphCreatorWrapperCuda(const std::string &path, int device) {
+GraphCreatorWrapperCuda::GraphCreatorWrapperCuda(const std::string &path,
+                                                 int device) {
   int cudaBlocks = 512;
   m_graphCreator = std::make_unique<CUDA_graph_creator<float>>(
       cudaBlocks, device, path, 10,
@@ -29,4 +30,3 @@ graph<float> GraphCreatorWrapperCuda::build(TTree_hits<float> &hits) {
 }
 
 }  // namespace Acts::detail
-

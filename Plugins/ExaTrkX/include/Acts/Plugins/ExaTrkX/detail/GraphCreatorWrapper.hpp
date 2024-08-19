@@ -8,11 +8,10 @@
 
 #pragma once
 
+#include <TTree_hits>
+#include <graph>
 #include <memory>
 #include <string>
-
-#include <graph>
-#include <TTree_hits>
 
 template <typename T>
 class graph_creator;
@@ -23,33 +22,33 @@ class CUDA_graph_creator;
 namespace Acts::detail {
 
 class GraphCreatorWrapperBase {
-public:
+ public:
   virtual ~GraphCreatorWrapperBase() {}
   virtual graph<float> build(TTree_hits<float> &hits) = 0;
 };
 
 class GraphCreatorWrapperCpu : public GraphCreatorWrapperBase {
-public:
+ public:
   GraphCreatorWrapperCpu(const std::string &path);
   ~GraphCreatorWrapperCpu();
 
   virtual graph<float> build(TTree_hits<float> &hits) override;
 
-private:
+ private:
   std::unique_ptr<graph_creator<float>> m_graphCreator;
 };
 
 #ifndef ACTS_EXATRKX_CPUONLY
 class GraphCreatorWrapperCuda : public GraphCreatorWrapperBase {
-public:
+ public:
   GraphCreatorWrapperCuda(const std::string &path, int device);
   ~GraphCreatorWrapperCuda();
 
   virtual graph<float> build(TTree_hits<float> &hits) override;
 
-private:
+ private:
   std::unique_ptr<CUDA_graph_creator<float>> m_graphCreator;
 };
 #endif
 
-}
+}  // namespace Acts::detail

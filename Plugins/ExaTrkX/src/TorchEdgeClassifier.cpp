@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
+
 #include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
 
 #include <chrono>
@@ -104,13 +105,15 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
                             : edgeIndex;
 
     std::vector<torch::jit::IValue> inputTensors(2);
-    auto selectedFeaturesTensor = at::tensor(at::ArrayRef<int>(m_cfg.selectedFeatures));
+    auto selectedFeaturesTensor =
+        at::tensor(at::ArrayRef<int>(m_cfg.selectedFeatures));
     at::Tensor selectedNodeFeatures =
         !m_cfg.selectedFeatures.empty()
             ? nodeFeatures.index({Slice{}, selectedFeaturesTensor}).clone()
             : nodeFeatures;
 
-    ACTS_DEBUG("selected nodeFeatures: " << detail::TensorDetails{selectedNodeFeatures});
+    ACTS_DEBUG("selected nodeFeatures: "
+               << detail::TensorDetails{selectedNodeFeatures});
     inputTensors[0] = selectedNodeFeatures;
 
     if (edgeFeatures && m_cfg.useEdgeFeatures) {
@@ -160,7 +163,7 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
   printCudaMemInfo(logger());
   t5 = std::chrono::high_resolution_clock::now();
 
-  auto milliseconds = [](const auto &a, const auto &b) {
+  auto milliseconds = [](const auto& a, const auto& b) {
     return std::chrono::duration<double, std::milli>(b - a).count();
   };
   ACTS_DEBUG("Time anycast, device guard:  " << milliseconds(t0, t1));
@@ -174,4 +177,3 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
 }
 
 }  // namespace Acts
-

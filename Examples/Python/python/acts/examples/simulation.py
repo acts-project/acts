@@ -45,7 +45,7 @@ ParticleSelectorConfig = namedtuple(
         "removeCharged",  # bool
         "removeNeutral",  # bool
         "removeSecondaries",  # bool
-        "excludeAbsPdgs", # List[unsigned]
+        "excludeAbsPdgs",  # List[unsigned]
     ],
     defaults=[(None, None)] * 9 + [None] * 4,
 )
