@@ -133,8 +133,8 @@ unsigned int FpeMonitor::Result::numStackTraces() const {
   return m_stracktraces.size();
 }
 
-const std::vector<FpeMonitor::Result::FpeInfo>
-    &FpeMonitor::Result::stackTraces() const {
+const std::vector<FpeMonitor::Result::FpeInfo> &
+FpeMonitor::Result::stackTraces() const {
   return m_stracktraces;
 }
 
@@ -167,11 +167,11 @@ void FpeMonitor::Result::deduplicate() {
   m_stracktraces.clear();
 
   for (auto &info : copy) {
-    auto it = std::find_if(
-        m_stracktraces.begin(), m_stracktraces.end(),
-        [&info](const FpeInfo &el) {
-          return areFpesEquivalent({el.type, *el.st}, {info.type, *info.st});
-        });
+    auto it = std::find_if(m_stracktraces.begin(), m_stracktraces.end(),
+                           [&info](const FpeInfo &el) {
+                             return areFpesEquivalent({el.type, *el.st},
+                                                      {info.type, *info.st});
+                           });
     if (it != m_stracktraces.end()) {
       it->count += info.count;
       continue;

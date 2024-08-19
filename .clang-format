@@ -1,10 +1,9 @@
----
 BasedOnStyle: Google
 Language: Cpp
 AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Inline
-AllowShortIfStatementsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
 PointerAlignment: Left
 ColumnLimit: 80
@@ -28,4 +27,3 @@ IncludeCategories:
   - Regex:    '^<.*>'
     Priority: 3
   # all headers not explicitly listed will be assigned to the last group
----

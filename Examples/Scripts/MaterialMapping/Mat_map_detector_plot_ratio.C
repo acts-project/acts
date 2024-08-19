@@ -22,7 +22,7 @@ void plot_ratio(std::vector<TH2F*> Map_prop, std::vector<TH2F*> Map_geant, std::
   Proj_eta_prop->Divide(Unit_Map_prop->ProjectionX());
   TH1D *Proj_eta_geant = (TH1D*) Map_geant[0]->ProjectionX()->Clone();
   Proj_eta_geant->Divide(Unit_Map_geant->ProjectionX());
-    
+
   TH1D *Proj_phi_prop = (TH1D*) Map_prop[0]->ProjectionY()->Clone();
   Proj_phi_prop->Divide(Unit_Map_prop->ProjectionY());
   TH1D *Proj_phi_geant = (TH1D*) Map_geant[0]->ProjectionY()->Clone();
@@ -77,7 +77,7 @@ void plot_ratio(std::vector<TH2F*> Map_prop, std::vector<TH2F*> Map_geant, std::
   delete vol;
   delete Unit_Map_prop;
   delete Unit_Map_geant;
-} 
+}
 
 
 /// Plot the material ratio between the geantino scan and the map validation for each detector.
