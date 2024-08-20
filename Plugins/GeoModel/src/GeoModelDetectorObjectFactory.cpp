@@ -92,7 +92,7 @@ void Acts::GeoModelDetectorObjectFactory::convertSensitive(
   const GeoShape *shape = logVol->getShape();
   int shapeId = shape->typeID();
   std::string name = logVol->getName();
-  const Acts::IGeoShapeConverter& converter =
+  std::shared_ptr<const Acts::IGeoShapeConverter> converter =
       Acts::geoShapesConverters(shapeId);
   if (converter == nullptr) {
     throw std::runtime_error("The converter for " + recType(*shape) +
@@ -168,7 +168,7 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
     if (convertBox(name)) {
       const GeoLogVol *logVol =
           physVol->getLogVol();  // get logVol for the shape of the volume
-      const GeoShape *shape = logVol->getShape();  // get shape
+      const GeoShape shape = logVol->getShape();  // get shape
       const Acts::Transform3 &fpvtransform = fpv->getAbsoluteTransform(nullptr);
 
       // convert bounding boxes with surfaces inside
