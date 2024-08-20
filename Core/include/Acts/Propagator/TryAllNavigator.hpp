@@ -563,8 +563,8 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// It acts as an internal state which is created for every propagation and
   /// meant to keep thread-local navigation information.
   struct State : public TryAllNavigatorBase::State {
-    explicit State(const Options& options)
-        : TryAllNavigatorBase::State(options) {}
+    explicit State(const Options& options_)
+        : TryAllNavigatorBase::State(options_) {}
 
     /// The vector of navigation candidates to work through
     std::vector<detail::NavigationObjectCandidate> navigationCandidates;
