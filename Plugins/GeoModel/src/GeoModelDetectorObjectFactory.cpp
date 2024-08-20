@@ -92,8 +92,8 @@ void Acts::GeoModelDetectorObjectFactory::convertSensitive(
   const GeoShape *shape = logVol->getShape();
   int shapeId = shape->typeID();
   std::string name = logVol->getName();
-  std::shared_ptr<const Acts::IGeoShapeConverter> converter =
-      Acts::GeoShapesConverters(shapeId);
+  const Acts::IGeoShapeConverter& converter =
+      Acts::geoShapesConverters(shapeId);
   if (converter == nullptr) {
     throw std::runtime_error("The converter for " + recType(*shape) +
                              " is nullptr");
