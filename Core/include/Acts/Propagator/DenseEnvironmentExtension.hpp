@@ -124,7 +124,12 @@ struct DenseEnvironmentExtension {
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
-      auto volumeMaterial = navigator.currentVolumeMaterial(state.navigation);
+      const auto* volumeMaterial =
+          navigator.currentVolumeMaterial(state.navigation);
+      if (volumeMaterial == nullptr) {
+        // This function is very hot, so we prefer to terminate here
+        std::terminate();
+      }
       ThisVector3 position = stepper.position(state.stepping);
       material = volumeMaterial->material(position.template cast<double>());
       initialMomentum = stepper.absoluteMomentum(state.stepping);

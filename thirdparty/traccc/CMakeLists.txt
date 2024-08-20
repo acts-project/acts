@@ -15,7 +15,12 @@ message(STATUS "Building traccc as part of the Acts project")
 set(TRACCC_VERSION "${_acts_traccc_version}")
 
 # Declare where to get traccc from.
-FetchContent_Declare(traccc ${ACTS_TRACCC_SOURCE})
+FetchContent_Declare(
+    traccc
+    ${ACTS_TRACCC_SOURCE}
+    # Needed until https://github.com/acts-project/traccc/pull/682 and https://github.com/acts-project/traccc/pull/683 are deployed
+    PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/warnings.diff
+)
 
 if(ACTS_CUSTOM_SCALARTYPE)
     set(ACTS_TRACCC_SCALARTYPE ${ACTS_CUSTOM_SCALARTYPE})
@@ -46,6 +51,11 @@ set(TRACCC_SETUP_DFELIBS
 set(TRACCC_SETUP_DETRAY ON CACHE BOOL "Set up Detray as part of Traccc")
 set(TRACCC_SETUP_ACTS OFF CACHE BOOL "Do not set up ACTS as part of Traccc")
 set(TRACCC_SETUP_TBB OFF CACHE BOOL "Do not set up TBB as part of Traccc")
+set(TRACCC_SETUP_BENCHMARKS
+    OFF
+    CACHE BOOL
+    "Do not set up google benchmarks as part of Traccc"
+)
 
 set(TRACCC_BUILD_TESTING
     OFF
