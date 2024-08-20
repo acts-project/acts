@@ -64,7 +64,7 @@ class DirectNavigator {
   /// propagation/extrapolation step and keep thread-local navigation
   /// information
   struct State {
-    explicit State(const Options& options) : options(options) {}
+    explicit State(const Options& options_) : options(options_) {}
 
     Options options;
 

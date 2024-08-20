@@ -63,7 +63,7 @@ class TryAllNavigatorBase {
   /// It acts as an internal state which is created for every propagation and
   /// meant to keep thread-local navigation information.
   struct State {
-    explicit State(const Options& options) : options(options) {}
+    explicit State(const Options& options_) : options(options_) {}
 
     Options options;
 

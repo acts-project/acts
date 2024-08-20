@@ -44,37 +44,41 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     terminatedNormally = false;
 
     if constexpr (std::is_same_v<N, Acts::Navigator>) {
-      SurfaceIntersection nextTargetIntersection =
-          SurfaceIntersection::invalid();
+      auto getNextTargetIntersection = [&]() {
+        for (int i = 0; i < 1000; ++i) {
+          SurfaceIntersection nextTargetIntersection =
+              m_navigator.estimateNextTarget(
+                  state.navigation, state.position,
+                  state.options.direction * state.direction);
+          if (!nextTargetIntersection.isValid()) {
+            return nextTargetIntersection;
+          }
+          IntersectionStatus preStepSurfaceStatus =
+              m_stepper.updateSurfaceStatus(
+                  state.stepping, *nextTargetIntersection.object(),
+                  nextTargetIntersection.index(), state.options.direction,
+                  BoundaryTolerance::None(), s_onSurfaceTolerance, logger());
+          if (preStepSurfaceStatus >= Acts::IntersectionStatus::reachable) {
+            return nextTargetIntersection;
+          }
+          m_navigator.registerSurfaceStatus(
+              state.navigation, state.position,
+              state.options.direction * state.direction,
+              *nextTargetIntersection.object(), preStepSurfaceStatus);
+        }
+
+        ACTS_ERROR(
+            "getNextTargetIntersection failed to find a valid target surface.");
+        return SurfaceIntersection::invalid();
+      };
+
+      // Pre-Stepping: target setting
+      state.stage = PropagatorStage::preStep;
+
+      SurfaceIntersection nextTargetIntersection = getNextTargetIntersection();
 
       // Propagation loop : stepping
       for (; state.steps < state.options.maxSteps; ++state.steps) {
-        // Pre-Stepping: target setting
-        state.stage = PropagatorStage::preStep;
-
-        if (!nextTargetIntersection.isValid()) {
-          for (int i = 0; i < 3; ++i) {
-            nextTargetIntersection = m_navigator.estimateNextTarget(
-                state.navigation, state.position,
-                state.options.direction * state.direction);
-            if (!nextTargetIntersection.isValid()) {
-              break;
-            }
-            IntersectionStatus preStepSurfaceStatus =
-                m_stepper.updateSurfaceStatus(
-                    state.stepping, *nextTargetIntersection.object(),
-                    nextTargetIntersection.index(), state.options.direction,
-                    BoundaryTolerance::None(), s_onSurfaceTolerance, logger());
-            if (preStepSurfaceStatus >= Acts::IntersectionStatus::reachable) {
-              break;
-            }
-            m_navigator.registerSurfaceStatus(
-                state.navigation, state.position,
-                state.options.direction * state.direction,
-                *nextTargetIntersection.object(), preStepSurfaceStatus);
-          }
-        }
-
         // Perform a propagation step - it takes the propagation state
         Result<double> res = m_stepper.step(state, m_navigator);
         if (!res.ok()) {
@@ -122,6 +126,13 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
         if (state.options.abortList(state, m_stepper, m_navigator, logger())) {
           terminatedNormally = true;
           break;
+        }
+
+        // Pre-Stepping: target setting
+        state.stage = PropagatorStage::preStep;
+
+        if (m_navigator.currentSurface(state.navigation) != nullptr) {
+          nextTargetIntersection = getNextTargetIntersection();
         }
       }
     } else {
@@ -203,12 +214,12 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename target_aborter_t, typename path_aborter_t>
-auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
-                                       const Surface& target,
-                                       const propagator_options_t& options)
-    const -> Result<action_list_t_result_t<
-              StepperBoundTrackParameters,
-              typename propagator_options_t::action_list_type>> {
+auto Acts::Propagator<S, N>::propagate(
+    const parameters_t& start, const Surface& target,
+    const propagator_options_t& options) const
+    -> Result<action_list_t_result_t<
+        StepperBoundTrackParameters,
+        typename propagator_options_t::action_list_type>> {
   static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
@@ -358,13 +369,12 @@ auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
 
 template <typename S, typename N>
 template <typename propagator_state_t, typename propagator_options_t>
-auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
-                                        Result<void> propagationResult,
-                                        const Surface& target,
-                                        const propagator_options_t& /*options*/)
-    const -> Result<action_list_t_result_t<
-              StepperBoundTrackParameters,
-              typename propagator_options_t::action_list_type>> {
+auto Acts::Propagator<S, N>::makeResult(
+    propagator_state_t state, Result<void> propagationResult,
+    const Surface& target, const propagator_options_t& /*options*/) const
+    -> Result<action_list_t_result_t<
+        StepperBoundTrackParameters,
+        typename propagator_options_t::action_list_type>> {
   // Type of track parameters produced at the end of the propagation
   using ReturnParameterType = StepperBoundTrackParameters;
 
