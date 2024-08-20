@@ -45,12 +45,13 @@ Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
 
 Acts::Surface::~Surface() = default;
 
-bool Acts::Surface::isOnSurface(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction,
-    const BoundaryTolerance& boundaryTolerance) const {
+bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
+                                const Vector3& position,
+                                const Vector3& direction,
+                                const BoundaryTolerance& boundaryTolerance,
+                                double tolerance) const {
   // global to local transformation
-  auto lpResult = globalToLocal(gctx, position, direction);
+  auto lpResult = globalToLocal(gctx, position, direction, tolerance);
   if (!lpResult.ok()) {
     return false;
   }
