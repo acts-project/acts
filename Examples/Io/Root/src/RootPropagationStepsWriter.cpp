@@ -72,7 +72,7 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("layer_id", &m_layerID);
   m_outputTree->Branch("approach_id", &m_approachID);
   m_outputTree->Branch("sensitive_id", &m_sensitiveID);
-  m_outputTree->Branch("sensitive_id", &m_extraID);
+  m_outputTree->Branch("extra_id", &m_extraID);
   m_outputTree->Branch("material", &m_material);
   m_outputTree->Branch("g_x", &m_x);
   m_outputTree->Branch("g_y", &m_y);
