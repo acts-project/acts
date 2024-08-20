@@ -89,8 +89,12 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// Get the name of the logical volume
   const std::string& logVolName() const;
 
-  /// Get/Set a custom name (e.g. database entry)
+  /// Get the string identifier of the corresponding database entry
+  /// Note: This is not by defnitition a unique identifier, there can be
+  /// several detector elements created from a single database entry.
   const std::string& databaseEntryName() const { return m_entryName; };
+
+  /// Set the corresponding database entry string
   void setDatabaseEntryName(const std::string& n) { m_entryName = n; };
 
  protected:
