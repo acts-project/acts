@@ -97,8 +97,8 @@ void Acts::GeoModelDetectorObjectFactory::convertSensitive(
   if (converter == nullptr) {
     throw std::runtime_error("The converter for " + recType(*shape) +
                              " is nullptr");
-
   }
+
   auto converted = converter->toSensitiveSurface(geoPV, transform);
   if (converted.ok()) {
     sensitives.push_back(converted.value());
@@ -110,7 +110,8 @@ void Acts::GeoModelDetectorObjectFactory::convertSensitive(
                  << logVol->getMaterial()->getName() << ")");
 
     if (!el || !sf) {
-      throw std::runtime_error("The Detector Element or the Surface is nullptr");
+      throw std::runtime_error(
+          "The Detector Element or the Surface is nullptr");
     }
     return;
   }
@@ -173,7 +174,7 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
 
       // convert bounding boxes with surfaces inside
       std::shared_ptr<Experimental::DetectorVolume> box =
-          Acts::GeoModel::convertVolume(gctx, shape, name, fpvtransform,
+          Acts::GeoModel::convertVolume(gctx, *shape, name, fpvtransform,
                                         sensitives);
       cache.boundingBoxes.push_back(box);
     }
