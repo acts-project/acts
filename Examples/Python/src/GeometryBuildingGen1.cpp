@@ -103,8 +103,6 @@ void addGeometryBuildingGen1(Context &ctx) {
   }
 
   {
-    // NOTE Here we break the interface down from a transform to a zshift, since
-    // this is the only thing used
     auto helper =
         py::class_<Acts::CylinderVolumeHelper>(m, "CylinderVolumeHelper")
             .def(py::init([](const Acts::CylinderVolumeHelper::Config &cfg,
@@ -116,9 +114,7 @@ void addGeometryBuildingGen1(Context &ctx) {
                  [](const Acts::CylinderVolumeHelper &self,
                     GeometryContext gctx, const LayerVector &layers,
                     std::shared_ptr<VolumeBounds> volumeBounds,
-                    ActsScalar zShift, const std::string &name) {
-                   auto trafo = Transform3::Identity();
-                   trafo.translate(Acts::Vector3{0.0, 0.0, zShift});
+                    const Transform3 &trafo, const std::string &name) {
                    return self.createTrackingVolume(
                        gctx, layers, {}, volumeBounds, {}, trafo, name);
                  })
