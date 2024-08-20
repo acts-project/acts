@@ -98,7 +98,6 @@ void Acts::GeoModelDetectorObjectFactory::convertSensitive(
     throw std::runtime_error("The converter for " + recType(*shape) +
                              " is nullptr");
 
-    return;
   }
   auto converted = converter->toSensitiveSurface(geoPV, transform);
   if (converted.ok()) {
