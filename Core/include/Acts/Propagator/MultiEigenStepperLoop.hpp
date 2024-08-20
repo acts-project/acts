@@ -148,7 +148,7 @@ namespace detail {
 
 struct MaxMomentumComponent {
   template <typename component_range_t>
-  const auto& operator()(const component_range_t& cmps) const {
+  const auto operator()(const component_range_t& cmps) const {
     return *std::max_element(cmps.begin(), cmps.end(),
                              [&](const auto& a, const auto& b) {
                                return std::abs(a.state.pars[eFreeQOverP]) <
@@ -159,7 +159,7 @@ struct MaxMomentumComponent {
 
 struct MaxWeightComponent {
   template <typename component_range_t>
-  const auto& operator()(const component_range_t& cmps) {
+  const auto operator()(const component_range_t& cmps) {
     return *std::max_element(
         cmps.begin(), cmps.end(),
         [&](const auto& a, const auto& b) { return a.weight < b.weight; });
@@ -223,9 +223,9 @@ struct SingleComponentReducer {
 
 }  // namespace detail
 
-using MaxMomentumComponentReducerLoop =
+using MaxMomentumReducerLoop =
     detail::SingleComponentReducer<detail::MaxMomentumComponent>;
-using MaxWeightComponentReducerLoop =
+using MaxWeightReducerLoop =
     detail::SingleComponentReducer<detail::MaxWeightComponent>;
 
 /// @brief Stepper based on the EigenStepper, but handles Multi-Component Tracks
@@ -242,7 +242,7 @@ using MaxWeightComponentReducerLoop =
 /// @tparam small_vector_size A size-hint how much memory should be allocated
 /// by the small vector
 template <typename extensionlist_t = StepperExtensionList<DefaultExtension>,
-          typename component_reducer_t = MaxWeightComponentReducerLoop,
+          typename component_reducer_t = WeightedComponentReducerLoop,
           typename auctioneer_t = detail::VoidAuctioneer>
 class MultiEigenStepperLoop
     : public EigenStepper<extensionlist_t, auctioneer_t> {

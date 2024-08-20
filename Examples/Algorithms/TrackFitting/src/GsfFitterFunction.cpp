@@ -60,7 +60,7 @@ namespace {
 
 using MultiStepper = Acts::MultiEigenStepperLoop<
     Acts::StepperExtensionList<Acts::DefaultExtension>,
-    Acts::MaxWeightComponentReducerLoop>;
+    Acts::MaxWeightReducerLoop>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
 
