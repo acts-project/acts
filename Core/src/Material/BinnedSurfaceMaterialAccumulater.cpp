@@ -26,8 +26,6 @@ Acts::BinnedSurfaceMaterialAccumulater::createState() const {
   /// Create the surface accumulation
   for (const auto& surface : m_cfg.materialSurfaces) {
     GeometryIdentifier geoID = surface->geometryId();
-    ACTS_DEBUG("Material surface: " << geoID << " | " << geoID.value() << "\n"
-                                    << surface->toStream({}));
 
     // Get the Surface Material
     const ISurfaceMaterial* surfaceMaterial = surface->surfaceMaterial();
@@ -44,7 +42,6 @@ Acts::BinnedSurfaceMaterialAccumulater::createState() const {
       ACTS_DEBUG("       - (proto) binning from ProtoSurfaceMateria is "
                  << binUtility);
       // Now adjust to surface type
-      std::cout << binUtility.binningData().size() << std::endl;
       binUtility = adjustBinUtility(binUtility, *surface, m_cfg.geoContext);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << binUtility);
