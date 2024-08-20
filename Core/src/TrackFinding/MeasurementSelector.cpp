@@ -98,17 +98,22 @@ MeasurementSelector::Cuts MeasurementSelector::getCutsByTheta(
   if (!config.etaBins.empty()) {
     const double eta = std::atanh(std::cos(theta));
     const double etaAbs = std::abs(eta);
-    for (; bin < config.etaBins.size(); bin++) {
+    for (; bin < config.etaBins.size(); ++bin) {
       if (config.etaBins[bin] >= etaAbs) {
         break;
       }
     }
   }
 
-  const double chi2CutOffMeasurement = config.chi2CutOff.at(bin);
-  const double chi2CutOffOutlier = config.chi2CutOffOutlier.empty()
-                                       ? std::numeric_limits<double>::infinity()
-                                       : config.chi2CutOffOutlier.at(bin);
+  auto getBinOrBack = [](const auto& vec, std::size_t bin) {
+    return bin < vec.size() ? vec[bin] : vec.back();
+  };
+
+  const double chi2CutOffMeasurement = getBinOrBack(config.chi2CutOff, bin);
+  const double chi2CutOffOutlier =
+      config.chi2CutOffOutlier.empty()
+          ? std::numeric_limits<double>::infinity()
+          : getBinOrBack(config.chi2CutOffOutlier, bin);
   const std::size_t numMeasurementsCutOff =
       config.numMeasurementsCutOff.at(bin);
   return {chi2CutOffMeasurement, chi2CutOffOutlier, numMeasurementsCutOff};
