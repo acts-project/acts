@@ -102,7 +102,8 @@ class MeasurementSelector {
     std::size_t numMeasurements{};
   };
 
-  static Cuts getCutsByTheta(const MeasurementSelectorCuts& config, double theta);
+  static Cuts getCutsByTheta(const MeasurementSelectorCuts& config,
+                             double theta);
   Result<Cuts> getCuts(const GeometryIdentifier& geoID, double theta) const;
 
   double calculateChi2(
