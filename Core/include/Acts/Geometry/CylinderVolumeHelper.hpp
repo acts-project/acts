@@ -60,6 +60,8 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
                        std::unique_ptr<const Logger> logger = getDefaultLogger(
                            "CylinderVolumeHelper", Logging::INFO));
 
+  ~CylinderVolumeHelper() override = default;
+
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
   /// @param gctx is the geometry context for witch the volume is built

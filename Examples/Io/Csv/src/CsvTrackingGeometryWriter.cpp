@@ -18,7 +18,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -29,13 +28,8 @@
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
-#ifdef HAVE_GEOMODEL
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
-#endif
-
 #include <array>
 #include <cstddef>
-#include <regex>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -118,36 +112,6 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
     data.module_t = surface.associatedDetectorElement()->thickness() /
                     Acts::UnitConstants::mm;
   }
-
-#ifdef HAVE_GEOMODEL
-  if (auto gmEl = dynamic_cast<const Acts::GeoModelDetectorElementITk*>(
-          surface.associatedDetectorElement());
-      gmEl != nullptr) {
-    data.bec = gmEl->barrelEndcap();
-    data.etam = gmEl->etaModule();
-    data.layw = gmEl->layerWheel();
-    data.phim = gmEl->phiModule();
-    data.side = gmEl->side();
-  }
-#endif
-
-#define COPY_VTX(a, b) data.v##a##_##b = vtxs[a][b]
-
-  if (auto anBnds = dynamic_cast<const Acts::AnnulusBounds*>(&bounds);
-      anBnds != nullptr) {
-    auto vtxs = anBnds->vertices(0);
-    assert(vtxs.size() == 4);
-    COPY_VTX(0, 0);
-    COPY_VTX(0, 1);
-    COPY_VTX(1, 0);
-    COPY_VTX(1, 1);
-    COPY_VTX(2, 0);
-    COPY_VTX(2, 1);
-    COPY_VTX(3, 0);
-    COPY_VTX(3, 1);
-  }
-
-#undef COPY_VTX
 }
 
 /// Write a single surface.
