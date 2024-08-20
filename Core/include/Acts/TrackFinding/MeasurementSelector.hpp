@@ -114,8 +114,6 @@ class MeasurementSelector {
                        false>::Covariance predictedCovariance,
       BoundSubspaceIndices projector, unsigned int calibratedSize) const;
 
-  static void validateCuts(const MeasurementSelectorCuts& cuts);
-
   Config m_config;
 };
 

@@ -27,29 +27,7 @@ MeasurementSelector::MeasurementSelector(const MeasurementSelectorCuts& cuts)
     : MeasurementSelector({{GeometryIdentifier(), cuts}}) {}
 
 MeasurementSelector::MeasurementSelector(Config config)
-    : m_config(std::move(config)) {
-  for (const auto& cuts : m_config) {
-    validateCuts(cuts);
-  }
-}
-
-void MeasurementSelector::validateCuts(const MeasurementSelectorCuts& cuts) {
-  if (!cuts.chi2CutOffOutlier.empty() &&
-      cuts.chi2CutOff.size() != cuts.chi2CutOffOutlier.size()) {
-    throw std::invalid_argument(
-        "chi2CutOff and chi2CutOffOutlier must have the same size");
-  }
-
-  if (cuts.chi2CutOff.size() != cuts.numMeasurementsCutOff.size()) {
-    throw std::invalid_argument(
-        "chi2CutOff and numMeasurementsCutOff must have the same size");
-  }
-
-  if (cuts.chi2CutOff.size() != cuts.etaBins.size() + 1) {
-    throw std::invalid_argument(
-        "chi2CutOff must have one more element than etaBins");
-  }
-}
+    : m_config(std::move(config)) {}
 
 double MeasurementSelector::calculateChi2(
     const double* fullCalibrated, const double* fullCalibratedCovariance,
@@ -105,17 +83,18 @@ MeasurementSelector::Cuts MeasurementSelector::getCutsByTheta(
     }
   }
 
-  auto getBinOrBack = [](const auto& vec, std::size_t bin) {
-    return bin < vec.size() ? vec[bin] : vec.back();
+  auto getBinOrBackOrMax = [](const auto& vec, std::size_t bin) {
+    using Value = std::remove_reference_t<decltype(vec[0])>;
+    static constexpr Value max = std::numeric_limits<Value>::max();
+    return vec.empty() ? max : (bin < vec.size() ? vec[bin] : vec.back());
   };
 
-  const double chi2CutOffMeasurement = getBinOrBack(config.chi2CutOff, bin);
+  const double chi2CutOffMeasurement =
+      getBinOrBackOrMax(config.chi2CutOff, bin);
   const double chi2CutOffOutlier =
-      config.chi2CutOffOutlier.empty()
-          ? std::numeric_limits<double>::infinity()
-          : getBinOrBack(config.chi2CutOffOutlier, bin);
+      getBinOrBackOrMax(config.chi2CutOffOutlier, bin);
   const std::size_t numMeasurementsCutOff =
-      getBinOrBack(config.numMeasurementsCutOff, bin);
+      getBinOrBackOrMax(config.numMeasurementsCutOff, bin);
   return {chi2CutOffMeasurement, chi2CutOffOutlier, numMeasurementsCutOff};
 }
 
