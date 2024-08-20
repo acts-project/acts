@@ -59,7 +59,8 @@ const MagneticFieldContext magCtx;
 const GeometryContext geoCtx;
 
 using MultiStepperLoop =
-    MultiEigenStepperLoop<StepperExtensionList<DefaultExtension>>;
+    MultiEigenStepperLoop<StepperExtensionList<DefaultExtension>,
+                          MaxWeightReducerLoop>;
 using SingleStepper = EigenStepper<StepperExtensionList<DefaultExtension>>;
 
 const double defaultStepSize = 123.;
@@ -132,6 +133,86 @@ auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
       Vector3::Zero(), Vector3{1., 0., 0.});
 
   return MultiComponentBoundTrackParameters(surface, cmps, particleHypothesis);
+}
+
+//////////////////////
+/// Test the reducers
+//////////////////////
+BOOST_AUTO_TEST_CASE(test_weighted_reducer) {
+  // Can use this multistepper since we only care about the state which is
+  // invariant
+  using MultiState = typename MultiStepperLoop::State;
+
+  constexpr std::size_t N = 4;
+  const auto multi_pars = makeDefaultBoundPars(false, N);
+
+  MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultStepSize);
+  SingleStepper singleStepper(defaultBField);
+
+  WeightedComponentReducerLoop reducer{};
+
+  Acts::Vector3 pos = Acts::Vector3::Zero();
+  Acts::Vector3 dir = Acts::Vector3::Zero();
+  for (const auto &[sstate, weight, _] : state.components) {
+    pos += weight * singleStepper.position(sstate);
+    dir += weight * singleStepper.direction(sstate);
+  }
+  dir.normalize();
+
+  BOOST_CHECK_EQUAL(reducer.position(state), pos);
+  BOOST_CHECK_EQUAL(reducer.direction(state), dir);
+}
+
+BOOST_AUTO_TEST_CASE(test_max_weight_reducer) {
+  // Can use this multistepper since we only care about the state which is
+  // invariant
+  using MultiState = typename MultiStepperLoop::State;
+
+  constexpr std::size_t N = 4;
+  const auto multi_pars = makeDefaultBoundPars(false, N);
+  MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultStepSize);
+  SingleStepper singleStepper(defaultBField);
+
+  double w = 0.1;
+  double wSum = 0.0;
+  for (auto &[sstate, weight, _] : state.components) {
+    weight = w;
+    wSum += w;
+    w += 0.1;
+  }
+  BOOST_CHECK_EQUAL(wSum, 1.0);
+  BOOST_CHECK_EQUAL(state.components.back().weight, 0.4);
+
+  MaxWeightReducerLoop reducer{};
+  BOOST_CHECK_EQUAL(reducer.position(state),
+                    singleStepper.position(state.components.back().state));
+  BOOST_CHECK_EQUAL(reducer.direction(state),
+                    singleStepper.direction(state.components.back().state));
+}
+
+BOOST_AUTO_TEST_CASE(test_max_momentum_reducer) {
+  // Can use this multistepper since we only care about the state which is
+  // invariant
+  using MultiState = typename MultiStepperLoop::State;
+
+  constexpr std::size_t N = 4;
+  const auto multi_pars = makeDefaultBoundPars(false, N);
+  MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultStepSize);
+  SingleStepper singleStepper(defaultBField);
+
+  double p = 1.0;
+  double q = 1.0;
+  for (auto &[sstate, weight, _] : state.components) {
+    sstate.pars[eFreeQOverP] = q / p;
+    p *= 2.0;
+  }
+  BOOST_CHECK_EQUAL(state.components.back().state.pars[eFreeQOverP], q / 8.0);
+
+  MaxMomentumReducerLoop reducer{};
+  BOOST_CHECK_EQUAL(reducer.position(state),
+                    singleStepper.position(state.components.back().state));
+  BOOST_CHECK_EQUAL(reducer.direction(state),
+                    singleStepper.direction(state.components.back().state));
 }
 
 //////////////////////////////////////////////////////

@@ -151,7 +151,7 @@ struct MaxMomentumComponent {
   auto operator()(const component_range_t& cmps) const {
     return std::max_element(cmps.begin(), cmps.end(),
                             [&](const auto& a, const auto& b) {
-                              return std::abs(a.state.pars[eFreeQOverP]) <
+                              return std::abs(a.state.pars[eFreeQOverP]) >
                                      std::abs(b.state.pars[eFreeQOverP]);
                             });
   }
