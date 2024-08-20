@@ -148,19 +148,19 @@ namespace detail {
 
 struct MaxMomentumComponent {
   template <typename component_range_t>
-  const auto operator()(const component_range_t& cmps) const {
-    return *std::max_element(cmps.begin(), cmps.end(),
-                             [&](const auto& a, const auto& b) {
-                               return std::abs(a.state.pars[eFreeQOverP]) <
-                                      std::abs(b.state.pars[eFreeQOverP]);
-                             });
+  auto operator()(const component_range_t& cmps) const {
+    return std::max_element(cmps.begin(), cmps.end(),
+                            [&](const auto& a, const auto& b) {
+                              return std::abs(a.state.pars[eFreeQOverP]) <
+                                     std::abs(b.state.pars[eFreeQOverP]);
+                            });
   }
 };
 
 struct MaxWeightComponent {
   template <typename component_range_t>
-  const auto operator()(const component_range_t& cmps) {
-    return *std::max_element(
+  auto operator()(const component_range_t& cmps) {
+    return std::max_element(
         cmps.begin(), cmps.end(),
         [&](const auto& a, const auto& b) { return a.weight < b.weight; });
   }
@@ -171,53 +171,53 @@ struct SingleComponentReducer {
   template <typename stepper_state_t>
   static Vector3 position(const stepper_state_t& s) {
     return component_chooser_t{}(s.components)
-        .state.pars.template segment<3>(eFreePos0);
+        ->state.pars.template segment<3>(eFreePos0);
   }
 
   template <typename stepper_state_t>
   static Vector3 direction(const stepper_state_t& s) {
     return component_chooser_t{}(s.components)
-        .state.pars.template segment<3>(eFreeDir0);
+        ->state.pars.template segment<3>(eFreeDir0);
   }
 
   template <typename stepper_state_t>
   static ActsScalar qOverP(const stepper_state_t& s) {
-    const auto& cmp = component_chooser_t{}(s.components);
-    return cmp.state.pars[eFreeQOverP];
+    const auto cmp = component_chooser_t{}(s.components);
+    return cmp->state.pars[eFreeQOverP];
   }
 
   template <typename stepper_state_t>
   static ActsScalar absoluteMomentum(const stepper_state_t& s) {
-    const auto& cmp = component_chooser_t{}(s.components);
-    return s.particleHypothesis.extractMomentum(cmp.state.pars[eFreeQOverP]);
+    const auto cmp = component_chooser_t{}(s.components);
+    return s.particleHypothesis.extractMomentum(cmp->state.pars[eFreeQOverP]);
   }
 
   template <typename stepper_state_t>
   static Vector3 momentum(const stepper_state_t& s) {
-    const auto& cmp = component_chooser_t{}(s.components);
-    return s.particleHypothesis.extractMomentum(cmp.state.pars[eFreeQOverP]) *
-           cmp.state.pars.template segment<3>(eFreeDir0);
+    const auto cmp = component_chooser_t{}(s.components);
+    return s.particleHypothesis.extractMomentum(cmp->state.pars[eFreeQOverP]) *
+           cmp->state.pars.template segment<3>(eFreeDir0);
   }
 
   template <typename stepper_state_t>
   static ActsScalar charge(const stepper_state_t& s) {
-    const auto& cmp = component_chooser_t{}(s.components);
-    return s.particleHypothesis.extractCharge(cmp.state.pars[eFreeQOverP]);
+    const auto cmp = component_chooser_t{}(s.components);
+    return s.particleHypothesis.extractCharge(cmp->state.pars[eFreeQOverP]);
   }
 
   template <typename stepper_state_t>
   static ActsScalar time(const stepper_state_t& s) {
-    return component_chooser_t{}(s.components).state.pars[eFreeTime];
+    return component_chooser_t{}(s.components)->state.pars[eFreeTime];
   }
 
   template <typename stepper_state_t>
   static FreeVector pars(const stepper_state_t& s) {
-    return component_chooser_t{}(s.components).state.pars;
+    return component_chooser_t{}(s.components)->state.pars;
   }
 
   template <typename stepper_state_t>
   static FreeVector cov(const stepper_state_t& s) {
-    return component_chooser_t{}(s.components).state.cov;
+    return component_chooser_t{}(s.components)->state.cov;
   }
 };
 
