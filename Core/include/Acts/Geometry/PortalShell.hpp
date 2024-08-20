@@ -43,16 +43,23 @@ class CylinderPortalShell : public PortalShell {
 
   using enum Face;
 
+  virtual std::size_t size() const = 0;
+
   virtual Portal* portal(Face face) = 0;
+  virtual const std::shared_ptr<Portal>& portalPtr(Face face) = 0;
+
+  virtual void setPortal(std::shared_ptr<Portal> portal, Face face) = 0;
 };
 
 class SingleCylinderPortalShell : public CylinderPortalShell {
  public:
   SingleCylinderPortalShell(TrackingVolume& volume);
 
-  std::size_t size() const;
+  std::size_t size() const final;
 
   Portal* portal(Face face) final;
+  const std::shared_ptr<Portal>& portalPtr(Face face) final;
+  void setPortal(std::shared_ptr<Portal> portal, Face face) final;
 
  private:
   std::array<std::shared_ptr<Portal>, 6> m_portals{};
@@ -64,11 +71,15 @@ class CylinderStackPortalShell : public CylinderPortalShell {
   CylinderStackPortalShell(std::vector<CylinderPortalShell*> shells,
                            BinningValue direction);
 
+  std::size_t size() const final;
   Portal* portal(Face face) final;
+  const std::shared_ptr<Portal>& portalPtr(Face face) final;
+  void setPortal(std::shared_ptr<Portal> portal, Face face) final;
 
  private:
   BinningValue m_direction;
   std::vector<CylinderPortalShell*> m_shells;
+  bool m_hasInnerCylinder{true};
 };
 
 }  // namespace Acts
