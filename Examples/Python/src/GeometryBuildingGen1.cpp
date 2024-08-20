@@ -102,17 +102,6 @@ void addGeometryBuildingGen1(Context &ctx) {
     py::class_<Config>(creator, "Config").def(py::init<>());
   }
 
-  py::class_<Acts::VolumeBounds, std::shared_ptr<Acts::VolumeBounds>>(
-      m, "VolumeBounds");
-
-  py::class_<Acts::CylinderVolumeBounds,
-             std::shared_ptr<Acts::CylinderVolumeBounds>, Acts::VolumeBounds>(
-      m, "CylinderVolumeBounds")
-      .def(py::init<ActsScalar, ActsScalar, ActsScalar, ActsScalar, ActsScalar,
-                    ActsScalar, ActsScalar>(),
-           "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = M_PI, "avgphi"_a = 0.,
-           "bevelMinZ"_a = 0., "bevelMaxZ"_a = 0.);
-
   {
     // NOTE Here we break the interface down from a transform to a zshift, since
     // this is the only thing used
