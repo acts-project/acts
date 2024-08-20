@@ -115,7 +115,7 @@ MeasurementSelector::Cuts MeasurementSelector::getCutsByTheta(
           ? std::numeric_limits<double>::infinity()
           : getBinOrBack(config.chi2CutOffOutlier, bin);
   const std::size_t numMeasurementsCutOff =
-      config.numMeasurementsCutOff.at(bin);
+      getBinOrBack(config.numMeasurementsCutOff, bin);
   return {chi2CutOffMeasurement, chi2CutOffOutlier, numMeasurementsCutOff};
 }
 
