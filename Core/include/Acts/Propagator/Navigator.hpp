@@ -385,7 +385,7 @@ class Navigator {
       initializeTarget(state, stepper);
     }
 
-    auto target = [&]() {
+    auto tryTargetNextSurface = [&]() {
       // Try targeting the surfaces - then layers - then boundaries
 
       if (state.navigation.navigationStage <= Stage::surfaceTarget &&
@@ -408,7 +408,7 @@ class Navigator {
       return false;
     };
 
-    if (target()) {
+    if (tryTargetNextSurface()) {
       // Proceed to the next surface
       return;
     }
@@ -439,7 +439,7 @@ class Navigator {
     ACTS_VERBOSE(volInfo(state) << "Resolved volume and layer.");
 
     // Rerun the targeting
-    if (target()) {
+    if (tryTargetNextSurface()) {
       return;
     }
 
@@ -818,8 +818,8 @@ class Navigator {
       ++state.navigation.navLayerIndex;
     }
 
-    // Re-initialize target at last layer, only in case it is the target
-    // volume This avoids a wrong target volume estimation
+    // Re-initialize target at last layer, only in case it is the target volume
+    // This avoids a wrong target volume estimation
     if (state.navigation.currentVolume == state.navigation.targetVolume) {
       initializeTarget(state, stepper);
     }
