@@ -85,7 +85,7 @@ readMaps(const std::filesystem::path& path) {
 
   for (auto it = lst->begin(); it != lst->end(); ++it) {
     TKey* key = static_cast<TKey*>(*it);
-    if (std::strcmp(key->GetClassName(), "TH2D") == 0) {
+    if (key != nullptr && std::strcmp(key->GetClassName(), "TH2D") == 0) {
       auto [geoId, var] = parseMapKey(key->GetName());
 
       TH2D hist;

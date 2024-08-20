@@ -128,6 +128,8 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
         if (tube == nullptr) {
           ACTS_ERROR(" Disc layer has wrong shape - needs to be TGeoTubeSeg!");
+          throw std::logic_error{
+              "Disc layer has wrong shape - needs to be TGeoTubeSeg!"};
         }
         // extract the boundaries
         double rMin = tube->GetRmin() * UnitConstants::cm;
@@ -299,6 +301,8 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
         if (tube == nullptr) {
           ACTS_ERROR(
               " Cylinder layer has wrong shape - needs to be TGeoTubeSeg!");
+          throw std::logic_error{
+              " Cylinder layer has wrong shape - needs to be TGeoTubeSeg!"};
         }
 
         // extract the boundaries
