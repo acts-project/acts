@@ -8,12 +8,11 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
 
+class GeometryContext;
 class Surface;
 
 /// @brief The void navigator struct as a default navigator
@@ -35,7 +34,7 @@ struct VoidNavigator {
 
   /// @brief Nested State struct, minimal requirement
   struct State {
-    explicit State(const Options& options_) : options(options_) {}
+    explicit State(const Options& options) : options(options) {}
 
     Options options;
   };
@@ -63,19 +62,35 @@ struct VoidNavigator {
 
   void navigationBreak(State& /*state*/, bool /*navigationBreak*/) const {}
 
-  void initialize(State& /*state*/, const Vector3& /*position*/,
-                  const Vector3& /*direction*/) const {}
+  /// Navigation call - void
+  ///
+  /// @tparam propagator_state_t is the type of Propagatgor state
+  /// @tparam stepper_t Type of the Stepper
+  ///
+  /// Empty call, compiler should optimise that
+  template <typename propagator_state_t, typename stepper_t>
+  void initialize(propagator_state_t& /*state*/,
+                  const stepper_t& /*stepper*/) const {}
 
-  SurfaceIntersection estimateNextTarget(State& /*state*/,
-                                         const Vector3& /*position*/,
-                                         const Vector3& /*direction*/) const {
-    return SurfaceIntersection::invalid();
-  }
+  /// Navigation call - void
+  ///
+  /// @tparam propagator_state_t is the type of Propagatgor state
+  /// @tparam stepper_t Type of the Stepper
+  ///
+  /// Empty call, compiler should optimise that
+  template <typename propagator_state_t, typename stepper_t>
+  void preStep(propagator_state_t& /*state*/,
+               const stepper_t& /*stepper*/) const {}
 
-  void registerSurfaceStatus(State& /*state*/, const Vector3& /*position*/,
-                             const Vector3& /*direction*/,
-                             const Surface& /*surface*/,
-                             IntersectionStatus /*surfaceStatus*/) const {}
+  /// Navigation call - void
+  ///
+  /// @tparam propagator_state_t is the type of Propagatgor state
+  /// @tparam stepper_t Type of the Stepper
+  ///
+  /// Empty call, compiler should optimise that
+  template <typename propagator_state_t, typename stepper_t>
+  void postStep(propagator_state_t& /*state*/,
+                const stepper_t& /*stepper*/) const {}
 };
 
 }  // namespace Acts

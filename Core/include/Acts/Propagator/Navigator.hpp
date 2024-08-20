@@ -346,6 +346,20 @@ class Navigator {
     }
   }
 
+  /// Navigation call - void
+  ///
+  /// @tparam propagator_state_t is the type of Propagatgor state
+  /// @tparam stepper_t Type of the Stepper
+  ///
+  /// Empty call, compiler should optimise that
+  template <typename propagator_state_t, typename stepper_t>
+  void initialize(propagator_state_t& state, const stepper_t& stepper) const {
+    Vector3 position = stepper.position(state.stepping);
+    Vector3 direction = stepper.direction(state.stepping);
+
+    initialize(state.navigation, position, direction);
+  }
+
   /// @brief Navigator estimateNextTarget call
   ///
   /// Call options
@@ -398,11 +412,6 @@ class Navigator {
   void registerSurfaceStatus(State& state, const Vector3& position,
                              const Vector3& direction, const Surface& surface,
                              IntersectionStatus surfaceStatus) const {
-    // Check if the navigator is inactive
-    if (inactive(state)) {
-      return;
-    }
-
     ACTS_VERBOSE(volInfo(state)
                  << "Entering Navigator::registerSurfaceStatus.");
 

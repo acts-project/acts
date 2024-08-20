@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,9 +26,11 @@
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
+#include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -153,16 +155,17 @@ const int ntests = 5;
 
 // This tests the Options
 BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
-  using null_optionsType = EigenPropagatorType::Options<>;
-  null_optionsType null_options(tgContext, mfContext);
-  // todo write null options test
+  using NullOptionsType = EigenPropagatorType::Options<>;
+  NullOptionsType nullOptions(tgContext, mfContext);
+  // TODO write null options test
 
   using ActionListType = ActionList<PerpendicularMeasure>;
   using AbortConditionsType = AbortList<>;
+  using OptionsType =
+      PropagatorOptions<StepperPlainOptions, NavigatorPlainOptions,
+                        ActionListType, AbortConditionsType>;
 
-  using optionsType = PropagatorOptions<ActionListType, AbortConditionsType>;
-
-  optionsType options(tgContext, mfContext);
+  OptionsType options(tgContext, mfContext);
 }
 
 BOOST_DATA_TEST_CASE(

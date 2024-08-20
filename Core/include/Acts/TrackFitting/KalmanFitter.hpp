@@ -555,9 +555,7 @@ class KalmanFitter {
       navigationOptions.startSurface = &st.referenceSurface();
       navigationOptions.targetSurface = nullptr;
       state.navigation = navigator.makeState(navigationOptions);
-      navigator.initialize(
-          state.navigation, stepper.position(state.stepping),
-          state.options.direction * stepper.direction(state.stepping));
+      navigator.initialize(state, stepper);
 
       // Update material effects for last measurement state in reversed
       // direction
@@ -1037,9 +1035,7 @@ class KalmanFitter {
       navigationOptions.startSurface = &surface;
       navigationOptions.targetSurface = nullptr;
       state.navigation = navigator.makeState(navigationOptions);
-      navigator.initialize(
-          state.navigation, stepper.position(state.stepping),
-          state.options.direction * stepper.direction(state.stepping));
+      navigator.initialize(state, stepper);
 
       return Result<void>::success();
     }
