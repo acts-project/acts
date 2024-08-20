@@ -31,21 +31,21 @@ class GeoModelDetectorObjectFactory {
     std::vector<std::string> queries = {};
   };
   struct Config {
-    // /// List for names to match
+    // List for names to match
     std::vector<std::string> nameList;
-    /// List for materials to match
+    // List for materials to match
     std::vector<std::string> materialList;
 
-    /// boolean flag to build subvolumes
+    // boolean flag to build subvolumes
     bool convertSubVolumes = false;
 
-    /// flag to build the desired bounding Boxes
+    // flag to build the desired bounding Boxes
     std::vector<std::string> convertBox;
   };
   struct Cache {
-    /// The created detector elements and their surfaces
+    // The created detector elements and their surfaces
     std::vector<GeoModelSensitiveSurface> sensitiveSurfaces;
-    /// The created representation of bounding box
+    // The created representation of bounding box
     std::vector<GeoModelBoundingBox> boundingBoxes;
   };
 
@@ -70,7 +70,6 @@ class GeoModelDetectorObjectFactory {
 
  private:
   std::unique_ptr<const Logger> m_logger;
-  // std::string name;
   Config m_cfg;
 
   const Logger& logger() const { return *m_logger; }

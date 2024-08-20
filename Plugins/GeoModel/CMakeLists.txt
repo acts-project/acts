@@ -24,7 +24,6 @@ target_include_directories(
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
     ActsPluginGeoModel
-  #PUBLIC ActsCore GeoModelKernel GeoModelCore::GeoModelHelpers GeoModelIO::GeoModelDBManager GeoModelIO::GeoModelRead)
   PUBLIC ActsCore GeoModelCore::GeoModelKernel GeoModelIO::GeoModelDBManager GeoModelIO::GeoModelRead)
 
 install(
