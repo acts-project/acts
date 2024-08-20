@@ -55,7 +55,6 @@ void addGeometryBuildingGen1(Context &ctx) {
 
     auto config =
         py::class_<LayerCreator::Config>(creator, "Config").def(py::init<>());
-    ;
 
     ACTS_PYTHON_STRUCT_BEGIN(config, LayerCreator::Config);
     ACTS_PYTHON_MEMBER(surfaceArrayCreator);
@@ -148,8 +147,6 @@ void addGeometryBuildingGen1(Context &ctx) {
     ACTS_PYTHON_MEMBER(passiveLayerRzBins);
     ACTS_PYTHON_STRUCT_END();
   }
-
-  {}
 }
 
 }  // namespace Acts::Python
