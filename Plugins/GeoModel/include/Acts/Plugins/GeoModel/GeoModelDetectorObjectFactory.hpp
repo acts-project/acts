@@ -42,6 +42,7 @@ class GeoModelDetectorObjectFactory {
     /// flag to build the desired bounding Boxes
     std::vector<std::string> convertBox;
   };
+  
   struct Cache {
     /// The created detector elements and their surfaces
     std::vector<GeoModelSensitiveSurface> sensitiveSurfaces;
