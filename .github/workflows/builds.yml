@@ -20,22 +20,29 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r1
+  DEPENDENCY_DIR: ${{ github.workspace }}/install
 
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:58
+    container: ghcr.io/acts-project/ubuntu2404:59
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-    steps:
-      - name: Install git lfs
-        run: apt-get update && apt-get install -y git-lfs
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v2.tar.zst
 
+    steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
+
+      - name: Install dependencies
+        run: >
+          apt-get update && apt-get install -y git-lfs zstd curl
+          && CI/dependencies.sh
+          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
+          && python3 -m pip install pyyaml jinja2
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
@@ -108,19 +115,25 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:58
+    container: ghcr.io/acts-project/ubuntu2404:59
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v2.tar.zst
 
     steps:
-      - name: Install git lfs
-        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
+
+      - name: Install dependencies
+        run: >
+          apt-get update && apt-get install -y git-lfs zstd curl
+          && CI/dependencies.sh
+          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
+          && python3 -m pip install pyyaml jinja2
 
       - uses: actions/download-artifact@v4
         with:
@@ -145,19 +158,24 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:58
+    container: ghcr.io/acts-project/ubuntu2404:59
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v2.tar.zst
 
     steps:
-      - name: Install git lfs
-        run: apt-get update && apt-get install -y git-lfs time
-
       - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
+
+      - name: Install dependencies
+        run: >
+          apt-get update && apt-get install -y git-lfs zstd curl
+          && CI/dependencies.sh
+          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
+          && python3 -m pip install pyyaml jinja2
 
       - uses: actions/download-artifact@v4
         with:
@@ -232,18 +250,23 @@ jobs:
             std: 20
           - image: ubuntu2204_clang
             std: 20
-    container: ghcr.io/acts-project/${{ matrix.image }}:58
+    container: ghcr.io/acts-project/${{ matrix.image }}:59
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.v2.tar.zst
     steps:
-      - name: Install git lfs
-        run: apt-get update && apt-get install -y git-lfs
-
       - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
+
+      - name: Install dependencies
+        run: >
+          apt-get update && apt-get install -y git-lfs zstd curl
+          && CI/dependencies.sh
+          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
+          && python3 -m pip install pyyaml jinja2
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
@@ -307,7 +330,6 @@ jobs:
     runs-on: macos-14
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
-      DEPENDENCY_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
       DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/macos-14/deps.v2.tar.zst
       # Works around an issue where root's RPATH is wrong for tbb, thus won't find it
@@ -324,9 +346,7 @@ jobs:
       - name: Install dependencies
         run: >
           brew install cmake ninja ccache xerces-c
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.zst ${{ env.DEPENDENCY_URL }}
-          && mkdir ${{ env.DEPENDENCY_DIR }}
-          && tar -xf deps.tar.zst -C ${{ env.DEPENDENCY_DIR }}
+          && CI/dependencies.sh
           && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
           && python3 -m pip install pyyaml jinja2
 
