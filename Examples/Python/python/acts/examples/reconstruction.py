@@ -130,7 +130,7 @@ TrackSelectorConfig = namedtuple(
         "maxChi2",
         "nMeasurementsGroupMin",
     ],
-    defaults=[(None, None)] * 7 + [None] * 6,
+    defaults=[(None, None)] * 7 + [None] * 7,
 )
 
 CkfConfig = namedtuple(
