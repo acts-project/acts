@@ -74,7 +74,7 @@ void Acts::GeoModelDetectorObjectFactory::construct(
                     ->getPublishedNodes<std::string, GeoFullPhysVol *>(q);
 
     // go through each fpv
-    for (auto &[name, fpv] : qFPV) {
+    for (const auto &[name, fpv] : qFPV) {
       PVConstLink physVol{fpv};
       // if the match lambda returns false skip the rest of the loop
       if (!matches(name, physVol)) {
