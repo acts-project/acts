@@ -15,19 +15,19 @@
 namespace {
 constexpr double s_densityCnvFactor = 1. / GeoModelKernelUnits::gram;
 }
-Acts::Material Acts::GeoModel::geoMaterialConverter(const GeoMaterial* gm,
+Acts::Material Acts::GeoModel::geoMaterialConverter(const GeoMaterial& gm,
                                                     bool useMolarDensity) {
-  double x0 = gm->getRadLength();
-  double l0 = gm->getIntLength();
-  double density = gm->getDensity() * s_densityCnvFactor;
+  double x0 = gm.getRadLength();
+  double l0 = gm.getIntLength();
+  double density = gm.getDensity() * s_densityCnvFactor;
   double A = 0.;
   double Z = 0.;
   // Get number elements
-  int numberOfElements = gm->getNumElements();
+  int numberOfElements = gm.getNumElements();
   // Loop
   for (int iEl = 0; iEl < numberOfElements; ++iEl) {
-    const GeoElement* geoEl = gm->getElement(iEl);
-    double fraction = gm->getFraction(iEl);
+    const GeoElement* geoEl = gm.getElement(iEl);
+    double fraction = gm.getFraction(iEl);
     A += fraction * (geoEl->getA() / GeoModelKernelUnits::gram);
     Z += fraction * geoEl->getZ();
   }

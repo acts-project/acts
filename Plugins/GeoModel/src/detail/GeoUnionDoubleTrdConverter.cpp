@@ -143,7 +143,6 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
   }
 
   // Create the element and the surface (we assume both have equal thickness)
-  // PVConstLink pVolume{&geoFPV};
   auto detectorElement =
       GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
           geoPV, trapezoidBounds, transform, elA->thickness());
