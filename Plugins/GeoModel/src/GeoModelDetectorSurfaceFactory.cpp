@@ -100,10 +100,7 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
         if (converted.ok()) {
           // Add the element and surface to the cache
           cache.sensitiveSurfaces.push_back(converted.value());
-          auto &[el, sf] = converted.value();
-
-          // Set the name to the element
-          el->setDatabaseEntryName(name);
+          const auto &[el, sf] = converted.value();
           success = true;
           ACTS_VERBOSE("successfully converted "
                        << name << " (" << vname << " / " << recType(shape)

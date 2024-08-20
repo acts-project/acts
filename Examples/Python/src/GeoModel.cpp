@@ -46,10 +46,7 @@ void addGeoModel(Context& ctx) {
 
   py::class_<Acts::GeoModelDetectorElement,
              std::shared_ptr<Acts::GeoModelDetectorElement>>(
-      gm, "GeoModelDetectorElement")
-      .def("logVolName", &Acts::GeoModelDetectorElement::logVolName)
-      .def("databaseEntryName",
-           &Acts::GeoModelDetectorElement::databaseEntryName);
+      gm, "GeoModelDetectorElement");
 
   // Shape converters
   {
