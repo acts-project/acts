@@ -65,8 +65,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   Acts::GeoModelDetectorObjectFactory::Cache gmCache;
 
   // create factory instance
-  Acts::GeoModelDetectorObjectFactory factory =
-      Acts::GeoModelDetectorObjectFactory(gmConfig);
+  Acts::GeoModelDetectorObjectFactory factory(gmConfig);
 
   // convert GeoFullPhysVol
   factory.convertFpv("LogVolumeXY", fphysXY, gmCache, gContext);

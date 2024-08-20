@@ -83,7 +83,6 @@ Acts::detail::GeoIntersectionAnnulusConverter::operator()(
         }
 
         // Create the detector element
-        // PVConstLink pVolume{&geoFPV};
         auto detectorElement =
             GeoModelDetectorElement::createDetectorElement<DiscSurface>(
                 geoPV, annulusBounds, annulusTransform, thickness);
