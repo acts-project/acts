@@ -3,7 +3,7 @@
 # the code. when running running on readthedocs.org, the build is fully driven
 # by Sphinx, including running Doxygen.
 #
-# this CMake-based build is only intended for local development. 
+# this CMake-based build is only intended for local development.
 
 set(sphinx_build ${CMAKE_CURRENT_SOURCE_DIR}/_build)
 set(sphinx_doctrees ${CMAKE_CURRENT_SOURCE_DIR}/_build/doctrees)
@@ -17,7 +17,7 @@ list(APPEND sphinx_command "-W;--keep-going")
 list(APPEND sphinx_command "-t;run_doxygen;-t;lazy_autodoc")
 
 if(DEFINED ENV{CI})
-  list(APPEND sphinx_command "-b;linkcheck")
+    list(APPEND sphinx_command "-b;linkcheck")
 endif()
 
 list(APPEND sphinx_command "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -27,11 +27,14 @@ message(${sphinx_command})
 
 # standard target to build the documentation without automatic API generation
 add_custom_target(
-  docs
-  COMMAND ${Sphinx_EXECUTABLE} ${sphinx_command}
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "Build documentation")
+    docs
+    COMMAND ${Sphinx_EXECUTABLE} ${sphinx_command}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Build documentation"
+)
 
 install(
-  DIRECTORY ${sphinx_html}/
-  DESTINATION ${CMAKE_INSTALL_DOCDIR}/Acts OPTIONAL)
+    DIRECTORY ${sphinx_html}/
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}/Acts
+    OPTIONAL
+)

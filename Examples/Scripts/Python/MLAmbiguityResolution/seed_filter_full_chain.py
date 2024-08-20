@@ -15,7 +15,7 @@ def readDataSet(CKS_files: list[str]) -> pd.DataFrame:
     """Read the dataset from the different files, remove the pure duplicate tracks and combine the datasets"""
     """
     @param[in] CKS_files: DataFrame contain the data from each track files (1 file per events usually)
-    @return: combined DataFrame containing all the track, ordered by events and then by truth particle ID in each events 
+    @return: combined DataFrame containing all the track, ordered by events and then by truth particle ID in each events
     """
     data = []
     for f in CKS_files:
@@ -29,7 +29,7 @@ def prepareInferenceData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     """Prepare the data"""
     """
     @param[in] data: input DataFrame to be prepared
-    @return: array of the network input and the corresponding truth  
+    @return: array of the network input and the corresponding truth
     """
     # Remove truth and useless variable
     target_column = "good/duplicate/fake"
@@ -60,7 +60,7 @@ def clusterSeed(
     @param[in] event: input DataFrame that contain all track in one event
     @param[in] DBSCAN_eps: minimum radius used by the DBSCAN to cluster track together
     @param[in] DBSCAN_min_samples: minimum number of tracks needed for DBSCAN to create a cluster
-    @return: DataFrame identical to the output with an added column with the cluster 
+    @return: DataFrame identical to the output with an added column with the cluster
     """
     # Perform the DBSCAN clustering and sort the Db by cluster ID
     trackDir = event[["eta", "phi", "vertexZ", "pT"]].to_numpy()

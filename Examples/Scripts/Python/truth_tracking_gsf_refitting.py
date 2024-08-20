@@ -48,6 +48,39 @@ def runRefittingGsf(
         )
     )
 
+    s.addAlgorithm(
+        acts.examples.TrackTruthMatcher(
+            level=acts.logging.INFO,
+            inputTracks="gsf_tracks",
+            inputParticles="truth_seeds_selected",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            outputTrackParticleMatching="refit_track_particle_matching",
+            outputParticleTrackMatching="refit_particle_track_matching",
+        )
+    )
+
+    s.addWriter(
+        acts.examples.RootTrackStatesWriter(
+            level=acts.logging.INFO,
+            inputTracks="gsf_tracks",
+            inputParticles="truth_seeds_selected",
+            inputTrackParticleMatching="refit_track_particle_matching",
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            filePath=str(outputDir / "trackstates_gsf_refit.root"),
+        )
+    )
+
+    s.addWriter(
+        acts.examples.RootTrackSummaryWriter(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            inputParticles="truth_seeds_selected",
+            inputTrackParticleMatching="refit_track_particle_matching",
+            filePath=str(outputDir / "tracksummary_gsf_refit.root"),
+        )
+    )
+
     s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
@@ -64,7 +97,7 @@ def runRefittingGsf(
 if __name__ == "__main__":
     outputDir = Path.cwd()
 
-    # detector, trackingGeometry, _ = getOpenDataDetector()
+    # detector, trackingGeometry, decorators = getOpenDataDetector()
     detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

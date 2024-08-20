@@ -82,8 +82,8 @@ class Geant4Manager {
       const std::string &name) const;
 
   /// Get the current list of physics list factories.
-  const std::unordered_map<std::string, std::shared_ptr<PhysicsListFactory>>
-      &getPhysicsListFactories() const;
+  const std::unordered_map<std::string, std::shared_ptr<PhysicsListFactory>> &
+  getPhysicsListFactories() const;
 
  private:
   Geant4Manager();
