@@ -12,7 +12,9 @@
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -108,6 +110,10 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
       const Acts::SurfaceBounds& sbounds = surface->bounds();
       //check straws
       if (surface->type() == Acts::Surface::SurfaceType::Straw) {
+        const Acts::CylinderBounds* cylBounds = dynamic_cast<const Acts::CylinderBounds*>(&bounds);
+        //std::cout << cylBounds->get() << " " << cylBounds->getHalfLengthZ() << std::endl;
+        //std::cout << gm_tube_rmin << " " << gm_tube_rmax << " " << gm_tube_hlz << std::endl;
+
 
       }
       // rectangle Surface check corner position without trf
