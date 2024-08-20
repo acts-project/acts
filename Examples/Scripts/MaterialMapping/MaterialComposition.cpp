@@ -20,6 +20,7 @@
 
 #include <TApplication.h>
 #include <boost/program_options.hpp>
+#include <boost/version.hpp>
 #include <nlohmann/json.hpp>
 
 #define BOOST_AVAILABLE 1
