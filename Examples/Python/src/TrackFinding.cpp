@@ -350,8 +350,8 @@ void addTrackFinding(Context& ctx) {
           for (const auto& [id, cuts] : input) {
             const auto& [bins, chi2Measurement, chi2Outlier, num] = cuts;
             converted.emplace_back(
-                id, MeasurementSelectorCuts{bins, chi2Measurement, chi2Outlier,
-                                            num});
+                id, MeasurementSelectorCuts{bins, chi2Measurement, num,
+                                            chi2Outlier});
           }
           return std::make_unique<MeasurementSelector::Config>(converted);
         };
@@ -359,7 +359,7 @@ void addTrackFinding(Context& ctx) {
     py::class_<MeasurementSelectorCuts>(m, "MeasurementSelectorCuts")
         .def(py::init<>())
         .def(py::init<std::vector<double>, std::vector<double>,
-                      std::vector<double>, std::vector<std::size_t>>())
+                      std::vector<std::size_t>, std::vector<double>>())
         .def_readwrite("etaBins", &MeasurementSelectorCuts::etaBins)
         .def_readwrite("chi2CutOffMeasurement",
                        &MeasurementSelectorCuts::chi2CutOff)

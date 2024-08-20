@@ -39,10 +39,10 @@ struct MeasurementSelectorCuts {
   std::vector<double> etaBins{};
   /// Maximum local chi2 contribution to classify as measurement.
   std::vector<double> chi2CutOff{15};
-  /// Maximum local chi2 contribution to classify as outlier.
-  std::vector<double> chi2CutOffOutlier{25};
   /// Maximum number of associated measurements on a single surface.
   std::vector<std::size_t> numMeasurementsCutOff{1};
+  /// Maximum local chi2 contribution to classify as outlier.
+  std::vector<double> chi2CutOffOutlier{};
 };
 
 /// @brief Measurement selection struct selecting those measurements compatible
@@ -102,8 +102,8 @@ class MeasurementSelector {
     std::size_t numMeasurements{};
   };
 
-  static Cuts getCutsByEta(const MeasurementSelectorCuts& config, double eta);
-  Result<Cuts> getCuts(const GeometryIdentifier& geoID, double eta) const;
+  static Cuts getCutsByTheta(const MeasurementSelectorCuts& config, double theta);
+  Result<Cuts> getCuts(const GeometryIdentifier& geoID, double theta) const;
 
   double calculateChi2(
       const double* fullCalibrated, const double* fullCalibratedCovariance,

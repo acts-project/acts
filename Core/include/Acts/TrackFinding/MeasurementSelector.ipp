@@ -27,12 +27,11 @@ MeasurementSelector::select(
   }
 
   // Get geoID of this surface
-  auto geoID = candidates.front().referenceSurface().geometryId();
-  // Get the eta of the first track state
-  const auto eta =
-      std::atanh(std::cos(candidates.front().predicted()[eBoundTheta]));
+  GeometryIdentifier geoID = candidates.front().referenceSurface().geometryId();
+  // Get the theta of the first track state
+  const double theta = candidates.front().predicted()[eBoundTheta];
   // Find the appropriate cuts
-  auto cutsResult = getCuts(geoID, eta);
+  const auto cutsResult = getCuts(geoID, theta);
   if (!cutsResult.ok()) {
     return cutsResult.error();
   }

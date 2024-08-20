@@ -91,13 +91,17 @@ double MeasurementSelector::calculateChi2(
       });
 }
 
-MeasurementSelector::Cuts MeasurementSelector::getCutsByEta(
-    const MeasurementSelectorCuts& config, double eta) {
-  const double etaAbs = std::abs(eta);
+MeasurementSelector::Cuts MeasurementSelector::getCutsByTheta(
+    const MeasurementSelectorCuts& config, double theta) {
   std::size_t bin = 0;
-  for (; bin < config.etaBins.size(); bin++) {
-    if (config.etaBins[bin] >= etaAbs) {
-      break;
+
+  if (!config.etaBins.empty()) {
+    const double eta = std::atanh(std::cos(theta));
+    const double etaAbs = std::abs(eta);
+    for (; bin < config.etaBins.size(); bin++) {
+      if (config.etaBins[bin] >= etaAbs) {
+        break;
+      }
     }
   }
 
@@ -111,7 +115,7 @@ MeasurementSelector::Cuts MeasurementSelector::getCutsByEta(
 }
 
 Result<MeasurementSelector::Cuts> MeasurementSelector::getCuts(
-    const GeometryIdentifier& geoID, double eta) const {
+    const GeometryIdentifier& geoID, double theta) const {
   // Find the appropriate cuts
   auto cuts = m_config.find(geoID);
   if (cuts == m_config.end()) {
@@ -121,7 +125,7 @@ Result<MeasurementSelector::Cuts> MeasurementSelector::getCuts(
     return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
   }
   assert(!cuts->chi2CutOff.empty());
-  return getCutsByEta(*cuts, eta);
+  return getCutsByTheta(*cuts, theta);
 }
 
 }  // namespace Acts
