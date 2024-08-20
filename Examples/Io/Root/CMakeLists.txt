@@ -24,23 +24,25 @@ add_library(
   src/RootAthenaDumpReader.cpp
 )
 target_include_directories(
-  ActsExamplesIoRoot
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+    ActsExamplesIoRoot
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
 target_link_libraries(
-  ActsExamplesIoRoot
-  PUBLIC
-    ActsCore ActsExamplesDigitization
-    ActsExamplesFramework ActsExamplesPropagation
-    ActsExamplesTruthTracking ActsExamplesMaterialMapping
-    Threads::Threads
-  PRIVATE
-    ROOT::Core ROOT::Hist ROOT::Tree)
+    ActsExamplesIoRoot
+    PUBLIC
+        ActsCore
+        ActsExamplesDigitization
+        ActsExamplesFramework
+        ActsExamplesPropagation
+        ActsExamplesTruthTracking
+        ActsExamplesMaterialMapping
+        Threads::Threads
+    PRIVATE ROOT::Core ROOT::Hist ROOT::Tree
+)
 
-ROOT_GENERATE_DICTIONARY(
-  ActsExamplesIoRootDict MODULE ActsExamplesIoRoot LINKDEF LinkDef.hpp)
-set_target_properties(
-  ActsExamplesIoRootDict PROPERTIES CXX_CLANG_TIDY "")
+root_generate_dictionary(
+  ActsExamplesIoRootDict MODULE ActsExamplesIoRoot LINKDEF LinkDef.hpp
+)
+set_target_properties(ActsExamplesIoRootDict PROPERTIES CXX_CLANG_TIDY "")
 
-install(
-  TARGETS ActsExamplesIoRoot
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS ActsExamplesIoRoot LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
