@@ -64,11 +64,6 @@ BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
     spVec.push_back(sp.get());
   }
 
-  using AnnoyMetric = Annoy::Euclidean;
-  using AnnoyModel =
-      Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
-                        Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
-
   /// Random seed for Annoy
   unsigned int annoySeed = 123456789;
 
@@ -132,11 +127,6 @@ BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
   for (const auto& sp : testVector) {
     spVec.push_back(sp.get());
   }
-
-  using AnnoyMetric = Annoy::Euclidean;
-  using AnnoyModel =
-      Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
-                        Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 
   /// Random seed for Annoy
   unsigned int annoySeed = 123456789;
