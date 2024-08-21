@@ -277,6 +277,12 @@ if (ACTS_SETUP_BOOST)
     add_subdirectory(thirdparty/boost)
   endif()
 
+    if(Boost_VERSION VERSION_EQUAL "1.85.0")
+        message(
+            WARNING
+            "Boost 1.85.0 is known to be broken (https://github.com/boostorg/container/issues/273). Please use a different version."
+        )
+    endif()
 endif()
 
 if(ACTS_SETUP_EIGEN3)

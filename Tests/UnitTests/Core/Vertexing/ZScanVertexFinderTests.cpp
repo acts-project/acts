@@ -101,8 +101,6 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
 
-    using BilloirFitter = FullBilloirVertexFitter;
-
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
         Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
@@ -219,8 +217,6 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
-
-    using BilloirFitter = FullBilloirVertexFitter;
 
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
