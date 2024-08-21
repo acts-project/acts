@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -27,7 +28,10 @@ class PortalLinkBase;
 
 class Portal {
  public:
-  Portal(std::shared_ptr<RegularSurface> surface);
+  Portal(Direction direction, std::unique_ptr<PortalLinkBase> link);
+
+  Portal(Direction direction, std::shared_ptr<RegularSurface> surface,
+         TrackingVolume& volume);
 
   static std::shared_ptr<Portal> fuse(const std::shared_ptr<Portal>& aPortal,
                                       const std::shared_ptr<Portal>& bPortal);
@@ -39,6 +43,9 @@ class Portal {
   const TrackingVolume* resolveVolume(const GeometryContext& gctx,
                                       const Vector3& position,
                                       const Vector3& direction) const;
+
+  void setLink(Direction direction, std::unique_ptr<PortalLinkBase> link);
+  const PortalLinkBase* getLink(Direction direction) const;
 
  private:
   // @TODO: Potentially short circuit the virtual call
@@ -65,6 +72,9 @@ class PortalLinkBase {
 
   // @TODO: Does this need boundary tolerance?
   virtual const TrackingVolume* resolveVolume(
+      const GeometryContext& gctx, const Vector3& position) const = 0;
+
+  virtual const TrackingVolume* resolveVolume(
       const GeometryContext& gctx, const Vector2& position) const = 0;
 
   static std::unique_ptr<PortalLinkBase> merge(
@@ -74,7 +84,11 @@ class PortalLinkBase {
 
   virtual void toStream(std::ostream& os) const = 0;
 
-  friend std::ostream& operator<<(std::ostream& os, const PortalLinkBase& link);
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const PortalLinkBase& link) {
+    link.toStream(os);
+    return os;
+  }
 
   const RegularSurface& surface() const { return *m_surface; }
 

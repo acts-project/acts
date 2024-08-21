@@ -13,6 +13,7 @@
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
@@ -21,9 +22,30 @@
 
 namespace Acts {
 
-Portal::Portal(std::shared_ptr<RegularSurface> surface)
-    : m_surface(std::move(surface)) {
-  throw_assert(m_surface, "Portal surface is nullptr");
+Portal::Portal(Direction direction, std::unique_ptr<PortalLinkBase> link) {
+  setLink(direction, std::move(link));
+}
+
+Portal::Portal(Direction direction, std::shared_ptr<RegularSurface> surface,
+               TrackingVolume& volume)
+    : Portal(direction,
+             std::make_unique<TrivialPortalLink>(std::move(surface), volume)) {}
+
+void Portal::setLink(Direction direction,
+                     std::unique_ptr<PortalLinkBase> link) {
+  if (direction == Direction::AlongNormal) {
+    m_alongNormal = std::move(link);
+  } else {
+    m_oppositeNormal = std::move(link);
+  }
+}
+
+const PortalLinkBase* Portal::getLink(Direction direction) const {
+  if (direction == Direction::AlongNormal) {
+    return m_alongNormal.get();
+  } else {
+    return m_oppositeNormal.get();
+  }
 }
 
 const TrackingVolume* Portal::resolveVolume(const GeometryContext& gctx,
@@ -32,8 +54,9 @@ const TrackingVolume* Portal::resolveVolume(const GeometryContext& gctx,
   const Vector3 normal = m_surface->normal(gctx, position);
   Direction side = Direction::fromScalar(normal.dot(direction));
 
-  const std::unique_ptr<PortalLinkBase>& link =
-      side == Direction::AlongNormal ? m_alongNormal : m_oppositeNormal;
+  const PortalLinkBase* link = side == Direction::AlongNormal
+                                   ? m_alongNormal.get()
+                                   : m_oppositeNormal.get();
 
   return nullptr;
   if (link == nullptr) {
@@ -41,13 +64,8 @@ const TrackingVolume* Portal::resolveVolume(const GeometryContext& gctx,
     // we know it. (i feel fine)
     return nullptr;
   } else {
-    // return link->resolveVolume(position);
+    return link->resolveVolume(gctx, position);
   }
-}
-
-std::ostream& operator<<(std::ostream& os, const PortalLinkBase& link) {
-  link.toStream(os);
-  return os;
 }
 
 void PortalLinkBase::checkMergePreconditions(const PortalLinkBase& a,
@@ -82,6 +100,10 @@ void PortalLinkBase::checkMergePreconditions(const PortalLinkBase& a,
     throw_assert(
         direction == BinningValue::binR || direction == BinningValue::binPhi,
         "Invalid binning direction: " + binningValueName(direction));
+
+    throw_assert(dynamic_cast<const RadialBounds*>(&discA->bounds()) &&
+                     dynamic_cast<const RadialBounds*>(&discB->bounds()),
+                 "DiscSurface bounds must be RadialBounds");
 
   } else {
     throw std::logic_error{"Surface type is not supported"};
