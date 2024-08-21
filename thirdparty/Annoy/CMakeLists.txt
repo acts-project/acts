@@ -30,3 +30,8 @@ FetchContent_Declare(
 # Make the fetched content available.
 # Annoy contains a CMakeLists.txt file, so it will be added as a subdirectory.
 FetchContent_MakeAvailable(Annoy)
+
+target_compile_options(
+    Annoy
+    INTERFACE "-Wno-old-style-cast" "-Wno-zero-as-null-pointer-constant"
+)
