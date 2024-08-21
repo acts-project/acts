@@ -22,8 +22,6 @@ bool Acts::NavigationStreamHelper::processStream(NavigationStream& stream,
   // surface.
   //
   for (size_t& index = stream.currentIndex;  index < stream.candidates.size(); ++index) {
-
-    std::cout << "Processing candidate " << index << std::endl;
     // Get the candidate, and resolve the tuple
     NavigationStream::Candidate& candidate = stream.currentCandidate();
     auto& [sIntersection, portal, bTolerance] = candidate;
@@ -50,7 +48,6 @@ bool Acts::NavigationStreamHelper::processStream(NavigationStream& stream,
 
       // Valid solution is either on surface or updates the distance
       if (rsIntersection.isValid()) {
-        std::cout << " is valid " << std::endl;
         // Valid intersection, we assume ordering, update
         sIntersection = rsIntersection;
         if (!initial) {
@@ -82,9 +79,9 @@ bool Acts::NavigationStreamHelper::processStream(NavigationStream& stream,
 
   // Set the range and initialize
   stream.candidates.resize(std::distance(stream.candidates.begin(), firstInvalid));
+  stream.currentIndex = 0;
   if (stream.candidates.empty()) {
     return false;
   }
-  stream.currentIndex = 0;
   return true;
 }
