@@ -79,9 +79,6 @@ detray::io::mask_payload Acts::DetrayConverter::convertMask(
 
 detray::io::surface_payload Acts::DetrayConverter::convertSurface(
     const Acts::GeometryContext& gctx, const Surface& surface, bool portal) {
-  using material_link_payload =
-      detray::io::typed_link_payload<detray::io::material_id>;
-
   detray::io::surface_payload surfacePayload;
 
   surfacePayload.transform = convertTransform(surface.transform(gctx));
@@ -176,13 +173,13 @@ std::vector<detray::io::surface_payload> Acts::DetrayConverter::convertPortal(
       std::array<ActsScalar, 2u> clipRange = {0., 0.};
       std::vector<ActsScalar> boundValues = surfaceAdjusted->bounds().values();
       if (surfaceType == Surface::SurfaceType::Cylinder &&
-          cast == Acts::BinningValue::binZ) {
+          cast == BinningValue::binZ) {
         ActsScalar zPosition = surfaceAdjusted->center(gctx).z();
         clipRange = {
             zPosition - boundValues[CylinderBounds::BoundValues::eHalfLengthZ],
             zPosition + boundValues[CylinderBounds::BoundValues::eHalfLengthZ]};
       } else if (surfaceType == Surface::SurfaceType::Disc &&
-                 cast == Acts::BinningValue::binR) {
+                 cast == BinningValue::binR) {
         clipRange = {boundValues[RadialBounds::BoundValues::eMinR],
                      boundValues[RadialBounds::BoundValues::eMaxR]};
       } else {
