@@ -64,30 +64,31 @@ class Portal {
 
   Portal(Config&& config);
 
-  //    portal1   portal2
-  //      +---+   +---+
-  //      |   |   |   |
-  //      |   |   |   |
-  // <----+   | + |   +---->
-  //      |   |   |   |
-  //      |   |   |   |
-  //      +---+   +---+
-  // @note This is a destructive operaion on the portals involved
+  ///    portal1   portal2
+  ///      +---+   +---+
+  ///      |   |   |   |
+  ///      |   |   |   |
+  /// <----+   | + |   +---->
+  ///      |   |   |   |
+  ///      |   |   |   |
+  ///      +---+   +---+
+  /// @note This is a destructive operaion on the portals involved
+  /// @TODO: Handle material on portal surfaces
   static Portal fuse(Portal& aPortal, Portal& bPortal,
                      const Logger& logger = getDummyLogger());
 
-  //         ^                     ^
-  //         |                     |
-  //  portal1|              portal2|
-  // +-------+-------+     +-------+-------+
-  // |               |  +  |               |
-  // +-------+-------+     +-------+-------+
-  //         |                     |
-  //         |                     |
-  //         v                     v
-  // @note This is a destructive operation on both portals, their
-  //       links will be moved to produce merged links, which can fail
-  //       if the portal links are not compatible
+  ///         ^                     ^
+  ///         |                     |
+  ///  portal1|              portal2|
+  /// +-------+-------+     +-------+-------+
+  /// |               |  +  |               |
+  /// +-------+-------+     +-------+-------+
+  ///         |                     |
+  ///         |                     |
+  ///         v                     v
+  /// @note This is a destructive operation on both portals, their
+  ///       links will be moved to produce merged links, which can fail
+  ///       if the portal links are not compatible
   static Portal merge(Portal& aPortal, Portal& bPortal, BinningValue direction,
                       const Logger& logger = getDummyLogger());
 

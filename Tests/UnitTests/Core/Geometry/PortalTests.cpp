@@ -434,4 +434,9 @@ BOOST_AUTO_TEST_SUITE_END()  // Portals
 
 BOOST_AUTO_TEST_SUITE_END()  // Geometry
 
+// @TODO: Test portal with material
+// - Material on either: works as long as portal surfaces are COMPATIBLE
+// - Material on both: works if portals have IDENTICAL surface, or COMPATIBLE
+//                     surfaces and IDENTICAL material
+
 }  // namespace Acts::Test
