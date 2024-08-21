@@ -41,8 +41,8 @@ jobs:
         run: >
           apt-get update && apt-get install -y git-lfs zstd curl
           && CI/dependencies.sh
-          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
-          && python3 -m pip install pyyaml jinja2
+          && ${{ env.DEPENDENCY_DIR }}/bin/python3 -m venv venv
+          && venv/bin/python3 -m pip install pyyaml jinja2
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
@@ -65,6 +65,7 @@ jobs:
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DPython_EXECUTABLE=$PWD/venv/bin/python3
           -DACTS_BUILD_PLUGIN_ONNX=ON
 
       - name: Build
@@ -132,8 +133,8 @@ jobs:
         run: >
           apt-get update && apt-get install -y git-lfs zstd curl
           && CI/dependencies.sh
-          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
-          && python3 -m pip install pyyaml jinja2
+          && ${{ env.DEPENDENCY_DIR }}/bin/python3 -m venv venv
+          && venv/bin/python3 -m pip install pyyaml jinja2
 
       - uses: actions/download-artifact@v4
         with:
@@ -174,8 +175,8 @@ jobs:
         run: >
           apt-get update && apt-get install -y git-lfs zstd curl
           && CI/dependencies.sh
-          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
-          && python3 -m pip install pyyaml jinja2
+          && ${{ env.DEPENDENCY_DIR }}/bin/python3 -m venv venv
+          && venv/bin/python3 -m pip install pyyaml jinja2
 
       - uses: actions/download-artifact@v4
         with:
@@ -265,8 +266,8 @@ jobs:
         run: >
           apt-get update && apt-get install -y git-lfs zstd curl
           && CI/dependencies.sh
-          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
-          && python3 -m pip install pyyaml jinja2
+          && ${{ env.DEPENDENCY_DIR }}/bin/python3 -m venv venv
+          && venv/bin/python3 -m pip install pyyaml jinja2
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
@@ -288,6 +289,7 @@ jobs:
           --preset=github-ci
           -DCMAKE_CXX_STANDARD=${{ matrix.std }}
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DPython_EXECUTABLE=$PWD/venv/bin/python3
 
       - name: Build
         run: cmake --build build
@@ -347,8 +349,8 @@ jobs:
         run: >
           brew install cmake ninja ccache xerces-c
           && CI/dependencies.sh
-          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
-          && python3 -m pip install pyyaml jinja2
+          && ${{ env.DEPENDENCY_DIR }}/bin/python3 -m venv venv
+          && venv/bin/python3 -m pip install pyyaml jinja2
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
@@ -368,6 +370,7 @@ jobs:
           -DCMAKE_PREFIX_PATH="${{ env.DEPENDENCY_DIR }}"
           -DPython_EXECUTABLE=${{ env.DEPENDENCY_DIR }}/bin/python3
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
+          -DPython_EXECUTABLE=$PWD/venv/bin/python3
       - name: Build
         run: cmake --build build
       - name: ccache stats
