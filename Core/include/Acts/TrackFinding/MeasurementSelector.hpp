@@ -75,7 +75,7 @@ class MeasurementSelector {
   /// @brief Constructor with config
   ///
   /// @param config a config instance
-  explicit MeasurementSelector(Config config);
+  explicit MeasurementSelector(const Config& config);
 
   /// @brief Function that select the measurements compatible with
   /// the given track parameter on a surface
@@ -95,14 +95,24 @@ class MeasurementSelector {
          bool& isOutlier, const Logger& logger) const;
 
  private:
+  struct InternalCutBin {
+    double maxAbsTheta{};
+    std::size_t maxNumMeasurements{};
+    double maxChi2Measurement{};
+    double maxChi2Outlier{};
+  };
+  using InternalCutBins = std::vector<InternalCutBin>;
+  using InternalConfig = Acts::GeometryHierarchyMap<InternalCutBins>;
+
   struct Cuts {
+    std::size_t numMeasurements{};
     double chi2Measurement{};
     double chi2Outlier{};
-    std::size_t numMeasurements{};
   };
 
-  static Cuts getCutsByTheta(const MeasurementSelectorCuts& config,
-                             double theta);
+  static InternalCutBins convertCutBins(const MeasurementSelectorCuts& config);
+
+  static Cuts getCutsByTheta(const InternalCutBins& config, double theta);
   Result<Cuts> getCuts(const GeometryIdentifier& geoID, double theta) const;
 
   double calculateChi2(
@@ -115,7 +125,7 @@ class MeasurementSelector {
                        false>::Projector projector,
       unsigned int calibratedSize) const;
 
-  Config m_config;
+  InternalConfig m_config;
 };
 
 }  // namespace Acts

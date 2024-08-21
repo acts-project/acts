@@ -10,8 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <limits>
 
 namespace Acts {
@@ -23,8 +25,43 @@ MeasurementSelector::MeasurementSelector()
 MeasurementSelector::MeasurementSelector(const MeasurementSelectorCuts& cuts)
     : MeasurementSelector({{GeometryIdentifier(), cuts}}) {}
 
-MeasurementSelector::MeasurementSelector(Config config)
-    : m_config(std::move(config)) {}
+MeasurementSelector::MeasurementSelector(const Config& config) {
+  std::vector<InternalConfig::InputElement> tmp;
+  tmp.reserve(config.size());
+  for (std::size_t i = 0; i < config.size(); ++i) {
+    GeometryIdentifier geoID = config.idAt(i);
+    MeasurementSelectorCuts cuts = config.valueAt(i);
+
+    InternalCutBins internalCuts = convertCutBins(cuts);
+    tmp.emplace_back(geoID, std::move(internalCuts));
+  }
+  m_config = InternalConfig(std::move(tmp));
+}
+
+MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
+    const MeasurementSelectorCuts& config) {
+  InternalCutBins cutBins;
+
+  auto getBinOrBackOrMax = [](const auto& vec, std::size_t bin) {
+    using Value = std::remove_reference_t<decltype(vec[0])>;
+    static constexpr Value max = std::numeric_limits<Value>::max();
+    return vec.empty() ? max : (bin < vec.size() ? vec[bin] : vec.back());
+  };
+
+  for (std::size_t bin = 0; bin < config.etaBins.size() + 1; ++bin) {
+    InternalCutBin cuts;
+    cuts.maxAbsTheta = bin < config.etaBins.size()
+                           ? std::acos(std::tanh(config.etaBins[bin]))
+                           : std::numeric_limits<double>::max();
+    cuts.maxNumMeasurements =
+        getBinOrBackOrMax(config.numMeasurementsCutOff, bin);
+    cuts.maxChi2Measurement = getBinOrBackOrMax(config.chi2CutOff, bin);
+    cuts.maxChi2Outlier = getBinOrBackOrMax(config.chi2CutOffOutlier, bin);
+    cutBins.push_back(cuts);
+  }
+
+  return cutBins;
+}
 
 double MeasurementSelector::calculateChi2(
     const double* fullCalibrated, const double* fullCalibratedCovariance,
@@ -67,30 +104,18 @@ double MeasurementSelector::calculateChi2(
 }
 
 MeasurementSelector::Cuts MeasurementSelector::getCutsByTheta(
-    const MeasurementSelectorCuts& config, double theta) {
-  std::size_t bin = 0;
+    const InternalCutBins& config, double theta) {
+  const double absTheta = std::abs(theta);
 
-  if (!config.etaBins.empty()) {
-    const double eta = std::atanh(std::cos(theta));
-    const double etaAbs = std::abs(eta);
-    for (; bin < config.etaBins.size(); ++bin) {
-      if (config.etaBins[bin] >= etaAbs) {
-        break;
-      }
-    }
-  }
+  auto it = std::find_if(config.begin(), config.end(),
+                         [absTheta](const InternalCutBin& cuts) {
+                           return absTheta < cuts.maxAbsTheta;
+                         });
+  assert(it != config.end());
+  std::size_t bin = std::distance(config.begin(), it);
 
-  auto getBinOrBackOrMax = [bin](const auto& vec) {
-    using Value = std::remove_reference_t<decltype(vec[0])>;
-    static constexpr Value max = std::numeric_limits<Value>::max();
-    return vec.empty() ? max : (bin < vec.size() ? vec[bin] : vec.back());
-  };
-
-  const double chi2CutOffMeasurement = getBinOrBackOrMax(config.chi2CutOff);
-  const double chi2CutOffOutlier = getBinOrBackOrMax(config.chi2CutOffOutlier);
-  const std::size_t numMeasurementsCutOff =
-      getBinOrBackOrMax(config.numMeasurementsCutOff);
-  return {chi2CutOffMeasurement, chi2CutOffOutlier, numMeasurementsCutOff};
+  return {config[bin].maxNumMeasurements, config[bin].maxChi2Measurement,
+          config[bin].maxChi2Outlier};
 }
 
 Result<MeasurementSelector::Cuts> MeasurementSelector::getCuts(
