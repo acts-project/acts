@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/PortalLinkBase.hpp"
 
 #include <boost/container/small_vector.hpp>
 

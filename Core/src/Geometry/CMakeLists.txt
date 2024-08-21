@@ -40,4 +40,5 @@ target_sources(
         GridPortalLinkMerging.cpp
         TrivialPortalLink.cpp
         CompositePortalLink.cpp
+        PortalLinkBase.cpp
 )

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
