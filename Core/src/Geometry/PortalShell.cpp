@@ -11,6 +11,7 @@
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
 #include <algorithm>
