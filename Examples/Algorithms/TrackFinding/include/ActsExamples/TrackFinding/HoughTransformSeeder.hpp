@@ -130,9 +130,11 @@ namespace ActsExamples {
 /// the vectors, so we can get the Index layer
 // using HoughHist =
 //     Acts::DynamicArray<std::pair<int, std::unordered_set<unsigned>>, 2>;
-using Axis = Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>;
-using HoughHist = Acts::Grid<std::pair<int,std::unordered_set<unsigned>>, Axis, Axis>;
-//using Index = HoughHist::index_t;
+using Axis =
+    Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>;
+using HoughHist =
+    Acts::Grid<std::pair<int, std::unordered_set<unsigned>>, Axis, Axis>;
+// using Index = HoughHist::index_t;
 
 enum HoughHitType { SP = 0, MEASUREMENT = 1 };
 

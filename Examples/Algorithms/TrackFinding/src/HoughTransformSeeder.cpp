@@ -223,9 +223,10 @@ ActsExamples::HoughTransformSeeder::createLayerHoughHist(unsigned layer,
                                                          int subregion) const {
   // ActsExamples::HoughHist houghHist(m_cfg.houghHistSize_y,
   //
-  
-  ActsExamples::HoughHist houghHist(Axis(0, m_cfg.houghHistSize_y, m_cfg.houghHistSize_y),
-                                    Axis(0, m_cfg.houghHistSize_x, m_cfg.houghHistSize_x));                                  
+
+  ActsExamples::HoughHist houghHist(
+      Axis(0, m_cfg.houghHistSize_y, m_cfg.houghHistSize_y),
+      Axis(0, m_cfg.houghHistSize_x, m_cfg.houghHistSize_x));
   for (unsigned index = 0; index < houghMeasurementStructs.size(); index++) {
     HoughMeasurementStruct* meas = houghMeasurementStructs[index].get();
     if (meas->layer != layer) {
@@ -258,8 +259,9 @@ ActsExamples::HoughTransformSeeder::createLayerHoughHist(unsigned layer,
 
 ActsExamples::HoughHist ActsExamples::HoughTransformSeeder::createHoughHist(
     int subregion) const {
-  ActsExamples::HoughHist houghHist(Axis(0, m_cfg.houghHistSize_y, m_cfg.houghHistSize_y),
-                                    Axis(0, m_cfg.houghHistSize_x, m_cfg.houghHistSize_x));
+  ActsExamples::HoughHist houghHist(
+      Axis(0, m_cfg.houghHistSize_y, m_cfg.houghHistSize_y),
+      Axis(0, m_cfg.houghHistSize_x, m_cfg.houghHistSize_x));
 
   for (unsigned i = 0; i < m_cfg.nLayers; i++) {
     HoughHist layerHoughHist = createLayerHoughHist(i, subregion);
@@ -301,10 +303,12 @@ bool ActsExamples::HoughTransformSeeder::passThreshold(
           continue;
         }
         if (y + j < m_cfg.houghHistSize_y && x + i < m_cfg.houghHistSize_x) {
-          if (houghHist.atLocalBins({y + j, x + i}).first > houghHist.atLocalBins({y, x}).first) {
+          if (houghHist.atLocalBins({y + j, x + i}).first >
+              houghHist.atLocalBins({y, x}).first) {
             return false;
           }
-          if (houghHist.atLocalBins({y + j, x + i}).first == houghHist.atLocalBins({y, x}).first) {
+          if (houghHist.atLocalBins({y + j, x + i}).first ==
+              houghHist.atLocalBins({y, x}).first) {
             if (houghHist.atLocalBins({y + j, x + i}).second.size() >
                 houghHist.atLocalBins({y, x}).second.size()) {
               return false;
