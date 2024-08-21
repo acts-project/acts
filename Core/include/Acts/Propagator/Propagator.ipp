@@ -44,8 +44,8 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     terminatedNormally = false;
 
     if constexpr (std::is_same_v<N, Acts::Navigator>) {
-      auto getNextTargetIntersection = [&]() {
-        for (int i = 0; i < 10; ++i) {
+      auto getNextTargetIntersection = [&]() -> Result<SurfaceIntersection> {
+        for (int i = 0; i < 100; ++i) {
           SurfaceIntersection nextTargetIntersection =
               m_navigator.estimateNextTarget(
                   state.navigation, state.position,
@@ -69,13 +69,18 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
 
         ACTS_ERROR(
             "getNextTargetIntersection failed to find a valid target surface.");
-        return SurfaceIntersection::invalid();
+        return Result<SurfaceIntersection>::failure(PropagatorError::Failure);
       };
 
       // Pre-Stepping: target setting
       state.stage = PropagatorStage::preStep;
 
-      SurfaceIntersection nextTargetIntersection = getNextTargetIntersection();
+      auto nextTargetIntersectionResult = getNextTargetIntersection();
+      if (!nextTargetIntersectionResult.ok()) {
+        return nextTargetIntersectionResult.error();
+      }
+      SurfaceIntersection nextTargetIntersection =
+          *nextTargetIntersectionResult;
 
       // Propagation loop : stepping
       for (; state.steps < state.options.maxSteps; ++state.steps) {
@@ -116,7 +121,7 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
               state.navigation, state.position,
               state.options.direction * state.direction,
               *nextTargetIntersection.object(), postStepSurfaceStatus);
-          if (postStepSurfaceStatus == IntersectionStatus::onSurface) {
+          if (postStepSurfaceStatus != IntersectionStatus::reachable) {
             nextTargetIntersection = SurfaceIntersection::invalid();
           }
         }
@@ -128,11 +133,20 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
           break;
         }
 
+        // Update the position and direction because actors might have changed
+        // it
+        state.position = m_stepper.position(state.stepping);
+        state.direction = m_stepper.direction(state.stepping);
+
         // Pre-Stepping: target setting
         state.stage = PropagatorStage::preStep;
 
         if (m_navigator.currentSurface(state.navigation) != nullptr) {
-          nextTargetIntersection = getNextTargetIntersection();
+          nextTargetIntersectionResult = getNextTargetIntersection();
+          if (!nextTargetIntersectionResult.ok()) {
+            return nextTargetIntersectionResult.error();
+          }
+          nextTargetIntersection = *nextTargetIntersectionResult;
         }
       }
     } else {
