@@ -158,24 +158,23 @@ void ActsExamples::ScalingCalibrator::calibrate(
   assert(measurement.contains(Acts::eBoundLoc1) &&
          "Measurement does not contain the required bound loc1");
 
-  auto boundLoc0 = measurement.indexOf(Acts::eBoundLoc0);
-  auto boundLoc1 = measurement.indexOf(Acts::eBoundLoc1);
+  auto boundLoc0 = measurement.subspace().indexOf(Acts::eBoundLoc0);
+  auto boundLoc1 = measurement.subspace().indexOf(Acts::eBoundLoc1);
 
   Measurement measurementCopy = measurement;
-  measurementCopy.parameters()[boundLoc0] += ct.x_offset;
-  measurementCopy.parameters()[boundLoc1] += ct.y_offset;
-  measurementCopy.covariance()(boundLoc0, boundLoc0) *= ct.x_scale;
-  measurementCopy.covariance()(boundLoc1, boundLoc1) *= ct.y_scale;
+  measurementCopy.effectiveParameters()[boundLoc0] += ct.x_offset;
+  measurementCopy.effectiveParameters()[boundLoc1] += ct.y_offset;
+  measurementCopy.effectiveCovariance()(boundLoc0, boundLoc0) *= ct.x_scale;
+  measurementCopy.effectiveCovariance()(boundLoc1, boundLoc1) *= ct.y_scale;
 
   Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
     trackState.allocateCalibrated(kMeasurementSize);
     trackState.calibrated<kMeasurementSize>() =
-        measurementCopy.parameters<kMeasurementSize>();
+        measurement.parameters<kMeasurementSize>();
     trackState.calibratedCovariance<kMeasurementSize>() =
         measurementCopy.covariance<kMeasurementSize>();
-    trackState.setSubspaceIndices(
-        measurementCopy.subspaceIndices<kMeasurementSize>());
+    trackState.setProjector(measurement.subspace().fullProjector<double>());
   });
 }

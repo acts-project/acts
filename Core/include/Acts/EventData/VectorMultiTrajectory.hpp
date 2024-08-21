@@ -13,7 +13,6 @@
 #include "Acts/EventData/MultiTrajectoryBackendConcept.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
-#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
 #include "Acts/Utilities/HashedString.hpp"
@@ -133,7 +132,7 @@ class VectorMultiTrajectoryBase {
         h("meas", isMeas, weight(meas_size));
         h("measCov", isMeas, weight(meas_cov_size));
         h("sourceLinks", isMeas, weight(sizeof(const SourceLink)));
-        h("projectors", isMeas, weight(sizeof(BoundSubspaceIndices)));
+        h("projectors", isMeas, weight(sizeof(ProjectorBitset)));
       }
 
       if (ts.hasJacobian() &&
@@ -327,7 +326,7 @@ class VectorMultiTrajectoryBase {
 
   std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_jac;
   std::vector<std::optional<SourceLink>> m_sourceLinks;
-  std::vector<BoundSubspaceIndices> m_projectors;
+  std::vector<ProjectorBitset> m_projectors;
 
   // owning vector of shared pointers to surfaces
   //
