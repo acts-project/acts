@@ -87,7 +87,7 @@ struct SimulationActor {
   void operator()(propagator_state_t &state, stepper_t &stepper,
                   navigator_t &navigator, result_type &result,
                   const Acts::Logger &logger) const {
-    assert(generator and "The generator pointer must be valid");
+    assert(generator && "The generator pointer must be valid");
 
     // actors are called once more after the propagation terminated
     if (!result.isAlive) {
@@ -127,8 +127,8 @@ struct SimulationActor {
         (result.properTimeLimit - result.particle.properTime() <
          result.properTimeLimit * properTimeRelativeTolerance)) {
       auto descendants = decay.run(generator, result.particle);
-      for (auto &&descendant : descendants) {
-        result.generatedParticles.emplace_back(std::move(descendant));
+      for (const auto &descendant : descendants) {
+        result.generatedParticles.emplace_back(descendant);
       }
       result.isAlive = false;
       return;

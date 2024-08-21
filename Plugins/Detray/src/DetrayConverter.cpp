@@ -12,7 +12,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/PortalNavigation.hpp"
-#include "Acts/Plugins/Detray/DetrayConversionHelper.hpp"
+#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -69,8 +69,7 @@ detray::io::transform_payload Acts::DetrayConverter::convertTransform(
 detray::io::mask_payload Acts::DetrayConverter::convertMask(
     const Acts::SurfaceBounds& bounds, bool portal) {
   detray::io::mask_payload maskPayload;
-  auto [shape, boundaries] =
-      DetrayConversionHelper::maskFromBounds(bounds, portal);
+  auto [shape, boundaries] = DetrayJsonHelper::maskFromBounds(bounds, portal);
   maskPayload.shape = static_cast<io::mask_payload::mask_shape>(shape);
   maskPayload.boundaries = static_cast<std::vector<real_io>>(boundaries);
   // default maskPayload.volume_link
@@ -80,9 +79,6 @@ detray::io::mask_payload Acts::DetrayConverter::convertMask(
 
 detray::io::surface_payload Acts::DetrayConverter::convertSurface(
     const Acts::GeometryContext& gctx, const Surface& surface, bool portal) {
-  using material_link_payload =
-      detray::io::typed_link_payload<detray::io::material_id>;
-
   detray::io::surface_payload surfacePayload;
 
   surfacePayload.transform = convertTransform(surface.transform(gctx));
@@ -176,12 +172,14 @@ std::vector<detray::io::surface_payload> Acts::DetrayConverter::convertPortal(
       // Pick the surface dimension - via poly
       std::array<ActsScalar, 2u> clipRange = {0., 0.};
       std::vector<ActsScalar> boundValues = surfaceAdjusted->bounds().values();
-      if (surfaceType == Surface::SurfaceType::Cylinder && cast == binZ) {
+      if (surfaceType == Surface::SurfaceType::Cylinder &&
+          cast == BinningValue::binZ) {
         ActsScalar zPosition = surfaceAdjusted->center(gctx).z();
         clipRange = {
             zPosition - boundValues[CylinderBounds::BoundValues::eHalfLengthZ],
             zPosition + boundValues[CylinderBounds::BoundValues::eHalfLengthZ]};
-      } else if (surfaceType == Surface::SurfaceType::Disc && cast == binR) {
+      } else if (surfaceType == Surface::SurfaceType::Disc &&
+                 cast == BinningValue::binR) {
         clipRange = {boundValues[RadialBounds::BoundValues::eMinR],
                      boundValues[RadialBounds::BoundValues::eMaxR]};
       } else {

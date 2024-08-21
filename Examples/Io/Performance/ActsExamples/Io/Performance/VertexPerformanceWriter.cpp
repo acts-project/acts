@@ -12,8 +12,8 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -436,8 +436,8 @@ ProcessCode VertexPerformanceWriter::writeT(
   // We compare the reconstructed momenta to the true momenta at the vertex. For
   // this, we propagate the reconstructed tracks to the PCA of the true vertex
   // position. Setting up propagator:
-  Acts::EigenStepper<> stepper(m_cfg.bField);
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+  Acts::SympyStepper stepper(m_cfg.bField);
+  using Propagator = Acts::Propagator<Acts::SympyStepper>;
   auto propagator = std::make_shared<Propagator>(stepper);
 
   struct ToTruthMatching {

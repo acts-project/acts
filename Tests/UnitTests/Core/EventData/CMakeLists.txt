@@ -12,5 +12,6 @@ target_sources(ActsUnitTestTrack PUBLIC TrackTestsExtra.cpp)
 add_unittest(SourceLink SourceLinkTests.cpp)
 add_unittest(TrackStatePropMask TrackStatePropMaskTests.cpp)
 add_unittest(ParticleHypothesis ParticleHypothesisTests.cpp)
+add_unittest(MultiTrajectoryHelpers MultiTrajectoryHelpersTests.cpp)
 
 add_non_compile_test(MultiTrajectory TrackContainerComplianceTests.cpp)
