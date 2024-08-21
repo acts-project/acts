@@ -41,9 +41,7 @@
 #include <variant>
 #include <vector>
 
-#ifndef ACTS_EXAMPLES_NO_TBB
 #include <tbb/combinable.h>
-#endif
 
 namespace Acts {
 class MagneticFieldProvider;
@@ -184,13 +182,11 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   mutable std::atomic<std::size_t> m_nSelectedTracks{0};
   mutable std::atomic<std::size_t> m_nStoppedBranches{0};
 
-#ifndef ACTS_EXAMPLES_NO_TBB
   mutable tbb::combinable<Acts::VectorMultiTrajectory::Statistics>
       m_memoryStatistics{[]() {
         auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
         return mtj->statistics();
       }};
-#endif
 };
 
 // TODO this is somewhat duplicated in AmbiguityResolutionAlgorithm.cpp
