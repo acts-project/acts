@@ -185,7 +185,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
           std::vector<std::vector<std::vector<Index>>> hitIndicesAll(
               m_cfg.nLayers);  // [layer,vector<Index]
           std::vector<std::size_t> nHitsPerLayer(m_cfg.nLayers);
-          for (auto measurementIndex : m_houghHist.get(y, x).second) {
+          for (auto measurementIndex : m_houghHist.atLocalBins({y, x}).second) {
             HoughMeasurementStruct* meas =
                 houghMeasurementStructs[measurementIndex].get();
             hitIndicesAll[meas->layer].push_back(meas->indices);
@@ -221,9 +221,11 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
 ActsExamples::HoughHist
 ActsExamples::HoughTransformSeeder::createLayerHoughHist(unsigned layer,
                                                          int subregion) const {
-  ActsExamples::HoughHist houghHist(m_cfg.houghHistSize_y,
-                                    m_cfg.houghHistSize_x);
-
+  // ActsExamples::HoughHist houghHist(m_cfg.houghHistSize_y,
+  //
+  
+  ActsExamples::HoughHist houghHist(Axis(0, m_cfg.houghHistSize_y, m_cfg.houghHistSize_y),
+                                    Axis(0, m_cfg.houghHistSize_x, m_cfg.houghHistSize_x));                                  
   for (unsigned index = 0; index < houghMeasurementStructs.size(); index++) {
     HoughMeasurementStruct* meas = houghMeasurementStructs[index].get();
     if (meas->layer != layer) {
@@ -244,8 +246,8 @@ ActsExamples::HoughTransformSeeder::createLayerHoughHist(unsigned layer,
       // Update the houghHist
       for (unsigned y = y_bin_min; y < y_bin_max; y++) {
         for (unsigned x = xBins.first; x < xBins.second; x++) {
-          houghHist.get(y, x).first++;
-          houghHist.get(y, x).second.insert(index);
+          houghHist.atLocalBins({y, x}).first++;
+          houghHist.atLocalBins({y, x}).second.insert(index);
         }
       }
     }
@@ -256,18 +258,18 @@ ActsExamples::HoughTransformSeeder::createLayerHoughHist(unsigned layer,
 
 ActsExamples::HoughHist ActsExamples::HoughTransformSeeder::createHoughHist(
     int subregion) const {
-  ActsExamples::HoughHist houghHist(m_cfg.houghHistSize_y,
-                                    m_cfg.houghHistSize_x);
+  ActsExamples::HoughHist houghHist(Axis(0, m_cfg.houghHistSize_y, m_cfg.houghHistSize_y),
+                                    Axis(0, m_cfg.houghHistSize_x, m_cfg.houghHistSize_x));
 
   for (unsigned i = 0; i < m_cfg.nLayers; i++) {
     HoughHist layerHoughHist = createLayerHoughHist(i, subregion);
     for (unsigned x = 0; x < m_cfg.houghHistSize_x; ++x) {
       for (unsigned y = 0; y < m_cfg.houghHistSize_y; ++y) {
-        if (layerHoughHist.get(y, x).first > 0) {
-          houghHist.get(y, x).first++;
-          houghHist.get(y, x).second.insert(
-              layerHoughHist.get(y, x).second.begin(),
-              layerHoughHist.get(y, x).second.end());
+        if (layerHoughHist.atLocalBins({y, x}).first > 0) {
+          houghHist.atLocalBins({y, x}).first++;
+          houghHist.atLocalBins({y, x}).second.insert(
+              layerHoughHist.atLocalBins({y, x}).second.begin(),
+              layerHoughHist.atLocalBins({y, x}).second.end());
         }
       }
     }
@@ -284,7 +286,7 @@ bool ActsExamples::HoughTransformSeeder::passThreshold(
     return false;
   }
   for (unsigned i = 0; i < m_cfg.threshold.size(); i++) {
-    if (houghHist.get(y, x - width + i).first < m_cfg.threshold[i]) {
+    if (houghHist.atLocalBins({y, x - width + i}).first < m_cfg.threshold[i]) {
       return false;
     }
   }
@@ -299,16 +301,16 @@ bool ActsExamples::HoughTransformSeeder::passThreshold(
           continue;
         }
         if (y + j < m_cfg.houghHistSize_y && x + i < m_cfg.houghHistSize_x) {
-          if (houghHist.get(y + j, x + i).first > houghHist.get(y, x).first) {
+          if (houghHist.atLocalBins({y + j, x + i}).first > houghHist.atLocalBins({y, x}).first) {
             return false;
           }
-          if (houghHist.get(y + j, x + i).first == houghHist.get(y, x).first) {
-            if (houghHist.get(y + j, x + i).second.size() >
-                houghHist.get(y, x).second.size()) {
+          if (houghHist.atLocalBins({y + j, x + i}).first == houghHist.atLocalBins({y, x}).first) {
+            if (houghHist.atLocalBins({y + j, x + i}).second.size() >
+                houghHist.atLocalBins({y, x}).second.size()) {
               return false;
             }
-            if (houghHist.get(y + j, x + i).second.size() ==
-                    houghHist.get(y, x).second.size() &&
+            if (houghHist.atLocalBins({y + j, x + i}).second.size() ==
+                    houghHist.atLocalBins({y, x}).second.size() &&
                 j <= 0 && i <= 0) {
               return false;  // favor bottom-left (low phi, low neg q/pt)
             }
