@@ -19,10 +19,10 @@
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorSurfaceFactory.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelModuleSplitter.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
-#include "Acts/Plugins/GeoModel/SplitModulesByRadius.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -185,12 +185,12 @@ void addGeoModel(Context& ctx) {
                        &Acts::GeoModelBlueprintCreater::Options::table);
   }
 
-  py::class_<Acts::ModuleByRadiusSplitter>(gm, "ModuleByRadiusSplitter")
+  py::class_<Acts::GeoModelModuleSplitter>(gm, "GeoModelModuleSplitter")
       .def(py::init<std::map<std::string, std::vector<double>>, double,
                     Acts::Logging::Level>(),
            "designs"_a, "tolerance"_a = 1.e-3, "level"_a = Acts::Logging::INFO)
-      .def("split", &Acts::ModuleByRadiusSplitter::split, "surface"_a,
-           "detElement"_a, "gctx"_a);
+      .def("split", &Acts::GeoModelModuleSplitter::split, "detElement"_a,
+           "gctx"_a);
 
   py::class_<Acts::GeoModelDetectorElementITk,
              std::shared_ptr<Acts::GeoModelDetectorElementITk>>(
