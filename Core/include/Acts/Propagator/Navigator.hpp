@@ -357,7 +357,7 @@ class Navigator {
     Vector3 position = stepper.position(state.stepping);
     Vector3 direction = stepper.direction(state.stepping);
 
-    initialize(state.navigation, position, direction);
+    initialize(state.navigation, position, state.options.direction * direction);
   }
 
   /// @brief Navigator estimateNextTarget call
