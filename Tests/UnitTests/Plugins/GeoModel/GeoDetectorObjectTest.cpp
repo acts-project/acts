@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
 
   //define dimensions
   double gm_box_hlx = 100, gm_box_hly = 200, gm_box_hlz = 2;
-  double gm_tube_rmin = 5, gm_tube_rmax =5, gm_tube_hlz = 100;
+  double gm_tube_rmin = 5, gm_tube_rmax =6, gm_tube_hlz = 100;
   double gm_rsurf_hlx = 100, gm_rsurf_hly = 200, gm_rsurf_hlz = 2;
   double gm_poly_z = 2;
   std::vector<double> trapX_verts = {-123, 123, 153, -153};
@@ -110,15 +110,12 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
       const Acts::SurfaceBounds& sbounds = surface->bounds();
       //check straws
       if (surface->type() == Acts::Surface::SurfaceType::Straw) {
-        const Acts::CylinderBounds* cylBounds = dynamic_cast<const Acts::CylinderBounds*>(&bounds);
-        //std::cout << cylBounds->get() << " " << cylBounds->getHalfLengthZ() << std::endl;
-        //std::cout << gm_tube_rmin << " " << gm_tube_rmax << " " << gm_tube_hlz << std::endl;
-
-
+        const auto* lineBounds = dynamic_cast<const Acts::LineBounds*>(&sbounds);
+        BOOST_CHECK(gm_tube_rmax == lineBounds->get(Acts::LineBounds::eR));
+        BOOST_CHECK(gm_tube_hlz == lineBounds->get(Acts::LineBounds::eHalfLengthZ));
       }
       // rectangle Surface check corner position without trf
       if (sbounds.type() == Acts::SurfaceBounds::eRectangle) {
-        //std::cout << surface->type() << std::endl;
         double csxmin = sbounds.values()[0];
         double csymin = sbounds.values()[1];
         double csxmax = sbounds.values()[2];
