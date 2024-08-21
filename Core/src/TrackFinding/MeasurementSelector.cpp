@@ -103,7 +103,6 @@ Result<MeasurementSelector::Cuts> MeasurementSelector::getCuts(
     // even as outliers)
     return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
   }
-  assert(!cuts->chi2CutOff.empty());
   return getCutsByTheta(*cuts, theta);
 }
 
