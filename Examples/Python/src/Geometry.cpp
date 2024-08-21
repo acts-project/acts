@@ -152,7 +152,7 @@ void addGeometry(Context& ctx) {
                          Acts::Logging::Level level) {
           auto logger = Acts::getDefaultLogger("TrackingGeometry", level);
           auto trkGeo = std::make_shared<Acts::TrackingGeometry>(
-              volPtr, matDec ? matDec.get() : nullptr, hook, *logger);
+              volPtr, matDec.get(), hook, *logger);
           return trkGeo;
         }))
         .def("visitSurfaces",
