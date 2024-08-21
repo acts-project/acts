@@ -163,15 +163,17 @@ set_option_if(
   ACTS_BUILD_EXAMPLES
 )
 set_option_if(
-
   ACTS_BUILD_PLUGIN_DETRAY
-  ACTS_BUILD_PLUGIN_TRACCC)
+  ACTS_BUILD_PLUGIN_TRACCC
+)
 set_option_if(
   ACTS_BUILD_PLUGIN_JSON
-  ACTS_BUILD_PLUGIN_DETRAY)
+  ACTS_BUILD_PLUGIN_DETRAY
+)
 set_option_if(
   ACTS_BUILD_PLUGIN_COVFIE
-  ACTS_BUILD_PLUGIN_DETRAY)
+  ACTS_BUILD_PLUGIN_DETRAY
+)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -256,26 +258,39 @@ if(POLICY CMP0135)
 endif()
 
 # required packages
-if (ACTS_SETUP_BOOST)
-  if (ACTS_USE_SYSTEM_BOOST)
-    if(POLICY CMP0167)
-      cmake_policy(SET CMP0167 NEW)
-    endif()
+if(ACTS_SETUP_BOOST)
+    if(ACTS_USE_SYSTEM_BOOST)
+        if(POLICY CMP0167)
+            cmake_policy(SET CMP0167 NEW)
+        endif()
 
-    # Enable both program_options and unit_test_framework to reduce complexity
-    # Also Cuda tests seem to use program_options
-    if( ACTS_BUILD_ANALYSIS_APPS OR ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_BENCHMARKS )
-      find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options unit_test_framework)
+        # Enable both program_options and unit_test_framework to reduce complexity
+        # Also Cuda tests seem to use program_options
+        if(
+            ACTS_BUILD_ANALYSIS_APPS
+            OR ACTS_BUILD_UNITTESTS
+            OR ACTS_BUILD_INTEGRATIONTESTS
+            OR ACTS_BUILD_BENCHMARKS
+        )
+            find_package(
+                Boost
+                ${_acts_boost_version}
+                REQUIRED
+                COMPONENTS program_options unit_test_framework
+            )
+        else()
+            find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
+        endif()
+
+        if(Boost_VERSION VERSION_LESS _acts_boost_recommended_version)
+            message(
+                WARNING
+                "Found Boost ${Boost_VERSION} - recommended is at least ${_acts_boost_recommended_version}"
+            )
+        endif()
     else()
-      find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
+        add_subdirectory(thirdparty/boost)
     endif()
-
-    if(Boost_VERSION VERSION_LESS _acts_boost_recommended_version)
-      message(WARNING "Found Boost ${Boost_VERSION} - recommended is at least ${_acts_boost_recommended_version}")
-    endif()
-  else()
-    add_subdirectory(thirdparty/boost)
-  endif()
 
     if(Boost_VERSION VERSION_EQUAL "1.85.0")
         message(
@@ -428,41 +443,41 @@ if(ACTS_BUILD_PLUGIN_GEANT4)
     find_package(Geant4 REQUIRED CONFIG COMPONENTS gdml)
 endif()
 if(ACTS_BUILD_PLUGIN_DETRAY)
-  if(ACTS_USE_SYSTEM_DETRAY)
-    find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
-  else()
-    add_subdirectory(thirdparty/detray)
-  endif()
+    if(ACTS_USE_SYSTEM_DETRAY)
+        find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
+    else()
+        add_subdirectory(thirdparty/detray)
+    endif()
 
-  if (ACTS_USE_SYSTEM_VECMEM)
-    find_package(vecmem ${_acts_vecmem_version} REQUIRED)
-  else()
-    add_subdirectory(thirdparty/vecmem)
-    # Make the "VecMem language code" available for the whole project.
-    include( "${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake" )
-  endif()
+    if(ACTS_USE_SYSTEM_VECMEM)
+        find_package(vecmem ${_acts_vecmem_version} REQUIRED)
+    else()
+        add_subdirectory(thirdparty/vecmem)
+        # Make the "VecMem language code" available for the whole project.
+        include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
+    endif()
 
-  if (ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
-    find_package(algebra-plugins ${_acts_algebraplugins_version} REQUIRED)
-  else()
-    add_subdirectory(thirdparty/algebra-plugins)
-  endif()
+    if(ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
+        find_package(algebra-plugins ${_acts_algebraplugins_version} REQUIRED)
+    else()
+        add_subdirectory(thirdparty/algebra-plugins)
+    endif()
 endif()
 if(ACTS_BUILD_PLUGIN_COVFIE)
-  if(ACTS_USE_SYSTEM_COVFIE)
-    find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
-  else()
-    add_subdirectory(thirdparty/covfie)
-  endif()
+    if(ACTS_USE_SYSTEM_COVFIE)
+        find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
+    else()
+        add_subdirectory(thirdparty/covfie)
+    endif()
 endif()
 if(ACTS_BUILD_PLUGIN_TRACCC)
-  # traccc also depends on vecmem and covfie, but those plugins should always
-  # be enabled if traccc is.
-  if(ACTS_USE_SYSTEM_TRACCC)
-    find_package(traccc ${_acts_traccc_version} REQUIRED CONFIG)
-  else()
-    add_subdirectory(thirdparty/traccc)
-  endif()
+    # traccc also depends on vecmem and covfie, but those plugins should always
+    # be enabled if traccc is.
+    if(ACTS_USE_SYSTEM_TRACCC)
+        find_package(traccc ${_acts_traccc_version} REQUIRED CONFIG)
+    else()
+        add_subdirectory(thirdparty/traccc)
+    endif()
 endif()
 
 # examples dependencies

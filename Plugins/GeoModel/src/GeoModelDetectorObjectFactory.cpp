@@ -169,7 +169,7 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
     if (convertBox(name)) {
       const GeoLogVol *logVol =
           physVol->getLogVol();  // get logVol for the shape of the volume
-      const GeoShape* shape = logVol->getShape();  // get shape
+      const GeoShape *shape = logVol->getShape();  // get shape
       const Acts::Transform3 &fpvtransform = fpv->getAbsoluteTransform(nullptr);
 
       // convert bounding boxes with surfaces inside
