@@ -306,6 +306,8 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
     SingleCylinderPortalShell shell1{vol1};
     SingleCylinderPortalShell shell2{vol2};
 
+    BOOST_CHECK_NE(shell1.portal(PositiveDisc), shell2.portal(NegativeDisc));
+
     CylinderStackPortalShell stack{{&shell1, &shell2}, BinningValue::binZ};
     BOOST_CHECK_EQUAL(stack.size(), 4);
 
@@ -319,6 +321,9 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
 
     BOOST_CHECK_EQUAL(stack.portal(PositiveDisc), shell2.portal(PositiveDisc));
     BOOST_CHECK_EQUAL(stack.portal(NegativeDisc), shell1.portal(NegativeDisc));
+
+    // Disc portals have been fused
+    BOOST_CHECK_EQUAL(shell1.portal(PositiveDisc), shell2.portal(NegativeDisc));
 
     shell1 = SingleCylinderPortalShell{vol1};
     shell2 = SingleCylinderPortalShell{vol2};
@@ -342,11 +347,17 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
 
     SingleCylinderPortalShell shell1{vol1};
     SingleCylinderPortalShell shell2{vol2};
+
     BOOST_CHECK_EQUAL(shell1.portal(InnerCylinder), nullptr);
     BOOST_CHECK_EQUAL(shell2.portal(InnerCylinder), nullptr);
 
+    BOOST_CHECK_NE(shell1.portal(PositiveDisc), shell2.portal(NegativeDisc));
+
     CylinderStackPortalShell stack{{&shell1, &shell2}, BinningValue::binZ};
     BOOST_CHECK_EQUAL(stack.size(), 3);
+
+    // Disc portals have been fused
+    BOOST_CHECK_EQUAL(shell1.portal(PositiveDisc), shell2.portal(NegativeDisc));
 
     const auto* iCyl = stack.portal(InnerCylinder);
     BOOST_CHECK_EQUAL(iCyl, nullptr);
@@ -384,8 +395,14 @@ BOOST_AUTO_TEST_CASE(RDirection) {
     SingleCylinderPortalShell shell1{vol1};
     SingleCylinderPortalShell shell2{vol2};
 
+    BOOST_CHECK_NE(shell1.portal(OuterCylinder), shell2.portal(InnerCylinder));
+
     CylinderStackPortalShell stack{{&shell1, &shell2}, BinningValue::binR};
     BOOST_CHECK_EQUAL(stack.size(), 4);
+
+    // Internal cylinder portals have been fused
+    BOOST_CHECK_EQUAL(shell1.portal(OuterCylinder),
+                      shell2.portal(InnerCylinder));
 
     const auto* nDisc = stack.portal(NegativeDisc);
     const auto* pDisc = stack.portal(PositiveDisc);
@@ -409,6 +426,51 @@ BOOST_AUTO_TEST_CASE(RDirection) {
     BOOST_CHECK_THROW(
         CylinderStackPortalShell({&shell1, &shell2}, BinningValue::binZ),
         SurfaceMergingException);
+  }
+
+  BOOST_TEST_CONTEXT("rMin==0") {
+    TrackingVolume vol1(
+        Transform3::Identity(),
+        std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm));
+
+    TrackingVolume vol2(
+        Transform3::Identity(),
+        std::make_shared<CylinderVolumeBounds>(100_mm, 150_mm, 100_mm));
+
+    SingleCylinderPortalShell shell1{vol1};
+    SingleCylinderPortalShell shell2{vol2};
+
+    BOOST_CHECK_EQUAL(shell1.portal(InnerCylinder), nullptr);
+    BOOST_CHECK_NE(shell1.portal(OuterCylinder), shell2.portal(InnerCylinder));
+
+    CylinderStackPortalShell stack{{&shell1, &shell2}, BinningValue::binR};
+    BOOST_CHECK_EQUAL(stack.size(), 4);
+
+    // Internal cylinder portals have been fused
+    BOOST_CHECK_EQUAL(shell1.portal(OuterCylinder),
+                      shell2.portal(InnerCylinder));
+
+    const auto* nDisc = stack.portal(NegativeDisc);
+    const auto* pDisc = stack.portal(PositiveDisc);
+
+    BOOST_CHECK_EQUAL(shell1.portal(NegativeDisc), nDisc);
+    BOOST_CHECK_EQUAL(shell2.portal(NegativeDisc), nDisc);
+    BOOST_CHECK_EQUAL(shell1.portal(PositiveDisc), pDisc);
+    BOOST_CHECK_EQUAL(shell2.portal(PositiveDisc), pDisc);
+
+    BOOST_CHECK_EQUAL(stack.portal(InnerCylinder), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(OuterCylinder),
+                      shell2.portal(OuterCylinder));
+
+    shell1 = SingleCylinderPortalShell{vol1};
+    shell2 = SingleCylinderPortalShell{vol2};
+
+    BOOST_CHECK_THROW(CylinderStackPortalShell({&shell1}, BinningValue::binR),
+                      std::invalid_argument);
+
+    BOOST_CHECK_THROW(
+        CylinderStackPortalShell({&shell1, &shell2}, BinningValue::binZ),
+        std::invalid_argument);
   }
 }
 

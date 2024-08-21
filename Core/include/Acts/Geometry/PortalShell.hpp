@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <array>
 #include <memory>
@@ -69,7 +70,8 @@ class CylinderStackPortalShell : public CylinderPortalShell {
  public:
   /// @note The shells must be ordered in the given direction
   CylinderStackPortalShell(std::vector<CylinderPortalShell*> shells,
-                           BinningValue direction);
+                           BinningValue direction,
+                           const Logger& logger = getDummyLogger());
 
   std::size_t size() const final;
   Portal* portal(Face face) final;

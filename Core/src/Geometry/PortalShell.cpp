@@ -86,7 +86,8 @@ std::size_t SingleCylinderPortalShell::size() const {
 }
 
 CylinderStackPortalShell::CylinderStackPortalShell(
-    std::vector<CylinderPortalShell*> shells, BinningValue direction)
+    std::vector<CylinderPortalShell*> shells, BinningValue direction,
+    const Logger& logger)
     : m_direction{direction}, m_shells{std::move(shells)} {
   if (m_shells.size() < 2) {
     throw std::invalid_argument("Invalid number of shells");
@@ -97,20 +98,20 @@ CylinderStackPortalShell::CylinderStackPortalShell(
     throw std::invalid_argument("Invalid shell pointer");
   }
 
-  auto merge = [direction, &shells = m_shells](Face face) {
+  auto merge = [direction, &shells = m_shells, &logger](Face face) {
     std::vector<std::shared_ptr<Portal>> portals;
     std::transform(shells.begin(), shells.end(), std::back_inserter(portals),
                    [face](auto* shell) { return shell->portalPtr(face); });
 
     auto merged = std::accumulate(
         std::next(portals.begin()), portals.end(), portals.front(),
-        [direction](const auto& aPortal,
-                    const auto& bPortal) -> std::shared_ptr<Portal> {
+        [&](const auto& aPortal,
+            const auto& bPortal) -> std::shared_ptr<Portal> {
           assert(aPortal != nullptr);
           assert(bPortal != nullptr);
 
           return std::make_shared<Portal>(
-              Portal::merge(*aPortal, *bPortal, direction));
+              Portal::merge(*aPortal, *bPortal, direction, logger));
         });
 
     // reset merged portal on all shells
@@ -119,9 +120,24 @@ CylinderStackPortalShell::CylinderStackPortalShell(
     }
   };
 
+  auto fuse = [&shells = m_shells, &logger](Face faceA, Face faceB) {
+    for (std::size_t i = 1; i < shells.size(); i++) {
+      auto& shellA = shells.at(i - 1);
+      auto& shellB = shells.at(i);
+      auto fused = std::make_shared<Portal>(Portal::fuse(
+          *shellA->portalPtr(faceA), *shellB->portalPtr(faceB), logger));
+
+      shellA->setPortal(fused, faceA);
+      shellB->setPortal(fused, faceB);
+    }
+  };
+
   if (direction == BinningValue::binR) {
     merge(PositiveDisc);
     merge(NegativeDisc);
+
+    fuse(OuterCylinder, InnerCylinder);
+
   } else if (direction == BinningValue::binZ) {
     bool allHaveInnerCylinders = std::ranges::all_of(
         m_shells, [](const auto* shell) { return shell->size() == 4; });
@@ -140,9 +156,14 @@ CylinderStackPortalShell::CylinderStackPortalShell(
     if (m_hasInnerCylinder) {
       merge(InnerCylinder);
     }
+
+    fuse(PositiveDisc, NegativeDisc);
+
   } else {
     throw std::invalid_argument("Invalid direction");
   }
+
+  // @TODO: Handle portal fusing
 }
 
 std::size_t CylinderStackPortalShell::size() const {
