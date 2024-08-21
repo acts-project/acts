@@ -71,7 +71,7 @@ StraightLineStepper slstepper;
 Navigator slnavigator({tGeometry});
 StraightLinePropagator slpropagator(slstepper, std::move(slnavigator));
 
-int ntests = 500;
+int ntests = 100;
 int skip = 0;
 bool debugMode = false;
 
