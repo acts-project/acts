@@ -26,7 +26,11 @@ const TrackingVolume* TrivialPortalLink::resolveVolume(
 }
 
 const TrackingVolume* TrivialPortalLink::resolveVolume(
-    const GeometryContext& /*gctx*/, const Vector3& /*position*/) const {
+    const GeometryContext& gctx, const Vector3& position) const {
+  static_cast<void>(gctx);
+  static_cast<void>(position);
+  assert(m_surface->isOnSurface(gctx, position) &&
+         "Trivial portal lookup point should be on surface");
   return m_volume;
 }
 
