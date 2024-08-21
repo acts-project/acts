@@ -16,6 +16,7 @@ def runGeant4(
     trackingGeometry,
     field,
     outputDir,
+    materialMappings=["Silicon"],
     s: acts.examples.Sequencer = None,
 ):
     s = s or acts.examples.Sequencer(events=100, numThreads=1)
@@ -35,6 +36,7 @@ def runGeant4(
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
         rnd=rnd,
+        materialMappings=materialMappings,
     )
     return s
 

@@ -40,22 +40,7 @@ struct SensitiveCandidates {
   ///
   /// @return a vector of sensitive surfaces
   std::vector<const Acts::Surface*> operator()(
-      const Acts::GeometryContext& gctx, const Acts::Vector3& position) const {
-    std::vector<const Acts::Surface*> surfaces;
-
-    if (trackingGeometry != nullptr) {
-      auto layer = trackingGeometry->associatedLayer(gctx, position);
-
-      if (layer->surfaceArray() != nullptr) {
-        for (const auto& surface : layer->surfaceArray()->surfaces()) {
-          if (surface->associatedDetectorElement() != nullptr) {
-            surfaces.push_back(surface);
-          }
-        }
-      }
-    }
-    return surfaces;
-  }
+      const Acts::GeometryContext& gctx, const Acts::Vector3& position) const;
 };
 
 /// This Mapper takes a (non-const) Geant4 geometry and maps

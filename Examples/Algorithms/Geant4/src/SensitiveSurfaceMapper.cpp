@@ -19,6 +19,32 @@
 #include <G4Material.hh>
 #include <G4VPhysicalVolume.hh>
 
+std::vector<const Acts::Surface*> ActsExamples::SensitiveCandidates::operator()(
+    const Acts::GeometryContext& gctx, const Acts::Vector3& position) const {
+  std::vector<const Acts::Surface*> surfaces;
+
+  if (trackingGeometry == nullptr) {
+    return surfaces;
+  }
+
+  const auto layer = trackingGeometry->associatedLayer(gctx, position);
+  if (layer == nullptr) {
+    return surfaces;
+  }
+
+  const auto surfaceArray = layer->surfaceArray();
+  if (surfaceArray == nullptr) {
+    return surfaces;
+  }
+
+  for (const auto& surface : surfaceArray->surfaces()) {
+    if (surface->associatedDetectorElement() != nullptr) {
+      surfaces.push_back(surface);
+    }
+  }
+  return surfaces;
+}
+
 ActsExamples::SensitiveSurfaceMapper::SensitiveSurfaceMapper(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
