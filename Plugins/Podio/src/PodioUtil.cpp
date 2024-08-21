@@ -217,9 +217,6 @@ void recoverDynamicColumns(
     std::unordered_map<HashedString,
                        std::unique_ptr<podio_detail::ConstDynamicColumnBase>>&
         dynamic) {
-  using load_type = std::unique_ptr<podio_detail::DynamicColumnBase> (*)(
-      const podio::CollectionBase*);
-
   // See
   // https://github.com/AIDASoft/podio/blob/858c0ff0b841705d1b18aafd57569fcbd1beda91/include/podio/UserDataCollection.h#L30-L31
   using types = TypeList<float, double, std::int8_t, std::int16_t, std::int32_t,
