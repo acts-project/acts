@@ -677,6 +677,7 @@ ProcessCode TrackFindingAlgorithm::finalize() {
   ACTS_INFO("- selected tracks: " << m_nSelectedTracks);
   ACTS_INFO("- stopped branches: " << m_nStoppedBranches);
 
+#ifndef ACTS_EXAMPLES_NO_TBB
   auto memoryStatistics =
       m_memoryStatistics.combine([](const auto& a, const auto& b) {
         Acts::VectorMultiTrajectory::Statistics c;
@@ -686,6 +687,7 @@ ProcessCode TrackFindingAlgorithm::finalize() {
   std::stringstream ss;
   memoryStatistics.toStream(ss);
   ACTS_DEBUG("Track State memory statistics (averaged):\n" << ss.str());
+#endif
   return ProcessCode::SUCCESS;
 }
 

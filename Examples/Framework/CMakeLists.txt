@@ -42,12 +42,11 @@ if(ACTS_USE_EXAMPLES_TBB)
   find_package(TBB ${_acts_tbb_version} CONFIG)
   if(NOT TBB_FOUND)
     # no version check possible when using the find module
-    find_package(TBB ${_acts_tbb_version} MODULE REQUIRED)
+    find_package(TBB ${_acts_tbb_version} MODULE)
+    if(NOT TBB_FOUND)
+      message(FATAL_ERROR "Couldn't find tbb. Either provide it or enable single-threaded build via ACTS_USE_EXAMPLES_TBB=OFF")
+    endif()
   endif()
-else()
-  set(TBB_FOUND FALSE)
-endif()
-if(TBB_FOUND)
   target_link_libraries(
     ActsExamplesFramework
     PUBLIC TBB::tbb)
