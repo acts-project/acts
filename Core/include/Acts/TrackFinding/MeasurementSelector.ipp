@@ -101,7 +101,7 @@ MeasurementSelector::select(
     }
   }
 
-  if (passedCandidates <= 1ul || cuts.numMeasurements == 1ul) {
+  if (passedCandidates <= 1ul) {
     // return single item range, no sorting necessary
     ACTS_VERBOSE("Returning only 1 element chi2=" << minChi2);
     return Result::success(std::make_pair(candidates.begin() + minIndex,
