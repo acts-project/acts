@@ -193,7 +193,7 @@ class HoughPlane {
   /// @return the set of layer indices that have hits for this cell
    std::unordered_set<unsigned> layers(std::size_t xBin,
                                        std::size_t yBin) const {
-    return m_houghHist.atLocalBins(Index{xBin, yBin}).layers();
+    return m_houghHist.atLocalBins({xBin, yBin}).layers();
   }
 
   /// @brief get the (weighted) number of layers  with hits in one cell of the histogram
@@ -201,7 +201,7 @@ class HoughPlane {
   /// @param yBin: bin index in the second coordinate
   /// @return the (weighed) number of layers that have hits for this cell
   YieldType nLayers(std::size_t xBin, std::size_t yBin) const {
-    return m_houghHist.atLocalBins(Index{xBin,yBin}).nLayers();
+    return m_houghHist.atLocalBins({xBin,yBin}).nLayers();
   }
 
   /// @brief get the identifiers of all hits in one cell of the histogram
@@ -210,7 +210,7 @@ class HoughPlane {
   /// @return the set of identifiers of the hits for this cell
   std::unordered_set<identifier_t> hitIds(std::size_t xBin, std::size_t yBin) const {
 
-    const auto hits_span = m_houghHist.atLocalBins(Index{xBin, yBin}).getHits();
+    const auto hits_span = m_houghHist.atLocalBins({xBin, yBin}).getHits();
     
     return std::unordered_set<identifier_t>(hits_span.begin(), hits_span.end());
   }
@@ -219,7 +219,7 @@ class HoughPlane {
   /// @param yBin: bin index in the second coordinate
   /// @return the (weighted) number of hits for this cell
   YieldType nHits(std::size_t xBin, std::size_t yBin) const {
-    return m_houghHist.atLocalBins(Index{xBin, yBin}).nHits();
+    return m_houghHist.atLocalBins({xBin, yBin}).nHits();
   }
 
   /// @brief access the (weighted) number of hits in one cell of the histogram from globalBin index
