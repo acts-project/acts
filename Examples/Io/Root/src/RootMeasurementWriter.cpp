@@ -154,10 +154,10 @@ struct RootMeasurementWriter::DigitizationTree {
   /// @param m The measurement
   void fillBoundMeasurement(const Measurement& m) {
     for (unsigned int i = 0; i < m.size(); ++i) {
-      auto ib = m.subspaceIndices()[i];
+      auto ib = m.subspace()[i];
 
-      recBound[ib] = m.parameters()[i];
-      varBound[ib] = m.covariance()(i, i);
+      recBound[ib] = m.effectiveParameters()[i];
+      varBound[ib] = m.effectiveCovariance()(i, i);
 
       residual[ib] = recBound[ib] - trueBound[ib];
       pull[ib] = residual[ib] / std::sqrt(varBound[ib]);
