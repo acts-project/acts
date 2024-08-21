@@ -48,6 +48,22 @@ class Portal {
   Portal(std::unique_ptr<PortalLinkBase> alongNormal,
          std::unique_ptr<PortalLinkBase> oppositeNormal);
 
+  struct Config {
+    struct Link {
+      Link() = default;
+      Link(std::shared_ptr<RegularSurface> surface, TrackingVolume& volume)
+          : m_surface(std::move(surface)), m_volume(&volume) {}
+
+      std::shared_ptr<RegularSurface> m_surface = nullptr;
+      TrackingVolume* m_volume = nullptr;
+    };
+
+    Link alongNormal;
+    Link oppositeNormal;
+  };
+
+  Portal(Config&& config);
+
   //    portal1   portal2
   //      +---+   +---+
   //      |   |   |   |
@@ -56,9 +72,9 @@ class Portal {
   //      |   |   |   |
   //      |   |   |   |
   //      +---+   +---+
-  static std::unique_ptr<Portal> fuse(const std::shared_ptr<Portal>& aPortal,
-                                      const std::shared_ptr<Portal>& bPortal,
-                                      const Logger& logger = getDummyLogger());
+  // @note This is a destructive operaion on the portals involved
+  static Portal fuse(Portal& aPortal, Portal& bPortal,
+                     const Logger& logger = getDummyLogger());
 
   //         ^                     ^
   //         |                     |
@@ -69,17 +85,25 @@ class Portal {
   //         |                     |
   //         |                     |
   //         v                     v
-  static std::unique_ptr<Portal> merge(const std::shared_ptr<Portal>& aPortal,
-                                       const std::shared_ptr<Portal>& bPortal,
-                                       BinningValue direction,
-                                       const Logger& logger = getDummyLogger());
+  // @note This is a destructive operation on both portals, their
+  //       links will be moved to produce merged links, which can fail
+  //       if the portal links are not compatible
+  static Portal merge(Portal& aPortal, Portal& bPortal, BinningValue direction,
+                      const Logger& logger = getDummyLogger());
 
   const TrackingVolume* resolveVolume(const GeometryContext& gctx,
                                       const Vector3& position,
                                       const Vector3& direction) const;
 
   void setLink(Direction direction, std::unique_ptr<PortalLinkBase> link);
+  void setLink(Direction direction, std::shared_ptr<RegularSurface> surface,
+               TrackingVolume& volume);
+
   const PortalLinkBase* getLink(Direction direction) const;
+
+  bool isValid() const;
+
+  const RegularSurface& surface() const;
 
  private:
   // @TODO: Potentially short circuit the virtual call
@@ -88,8 +112,8 @@ class Portal {
 
   std::shared_ptr<RegularSurface> m_surface;
 
-  std::shared_ptr<PortalLinkBase> m_alongNormal;
-  std::shared_ptr<PortalLinkBase> m_oppositeNormal;
+  std::unique_ptr<PortalLinkBase> m_alongNormal;
+  std::unique_ptr<PortalLinkBase> m_oppositeNormal;
 };
 
 template <typename S>
@@ -112,9 +136,8 @@ class PortalLinkBase {
       const GeometryContext& gctx, const Vector2& position) const = 0;
 
   static std::unique_ptr<PortalLinkBase> merge(
-      const std::shared_ptr<PortalLinkBase>& a,
-      const std::shared_ptr<PortalLinkBase>& b, BinningValue direction,
-      const Logger& logger = getDummyLogger());
+      std::unique_ptr<PortalLinkBase> a, std::unique_ptr<PortalLinkBase> b,
+      BinningValue direction, const Logger& logger = getDummyLogger());
 
   virtual void toStream(std::ostream& os) const = 0;
 
@@ -125,6 +148,9 @@ class PortalLinkBase {
   }
 
   const RegularSurface& surface() const { return *m_surface; }
+  void setSurface(std::shared_ptr<RegularSurface> surface) {
+    m_surface = std::move(surface);
+  }
 
   std::shared_ptr<RegularSurface> surfacePtr() const { return m_surface; }
 

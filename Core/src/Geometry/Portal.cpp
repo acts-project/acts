@@ -34,11 +34,33 @@ Portal::Portal(Direction direction, std::shared_ptr<RegularSurface> surface,
 
 Portal::Portal(std::unique_ptr<PortalLinkBase> alongNormal,
                std::unique_ptr<PortalLinkBase> oppositeNormal) {
+  if (alongNormal == nullptr && oppositeNormal == nullptr) {
+    throw std::invalid_argument("At least one link must be provided");
+  }
+
   if (alongNormal != nullptr) {
     setLink(Direction::AlongNormal, std::move(alongNormal));
   }
   if (oppositeNormal != nullptr) {
     setLink(Direction::OppositeNormal, std::move(oppositeNormal));
+  }
+}
+
+Portal::Portal(Config&& config) {
+  if (!config.alongNormal.m_surface && !config.oppositeNormal.m_surface) {
+    throw std::invalid_argument("At least one link must be provided");
+  }
+
+  if (config.alongNormal.m_surface) {
+    setLink(Direction::AlongNormal, std::make_unique<TrivialPortalLink>(
+                                        std::move(config.alongNormal.m_surface),
+                                        *config.alongNormal.m_volume));
+  }
+  if (config.oppositeNormal.m_surface) {
+    setLink(Direction::OppositeNormal,
+            std::make_unique<TrivialPortalLink>(
+                std::move(config.oppositeNormal.m_surface),
+                *config.oppositeNormal.m_volume));
   }
 }
 
@@ -53,7 +75,7 @@ void Portal::setLink(Direction direction,
 
   // check if surfaces are identical
   if (other != nullptr && link->surface() != other->surface()) {
-    throw std::runtime_error("Cannot set two different surfaces");
+    throw PortalFusingException();
   }
   active = std::move(link);
 
@@ -61,7 +83,17 @@ void Portal::setLink(Direction direction,
   // reset the other side to the exact same surface instance
   if (m_surface == nullptr) {
     m_surface = active->surfacePtr();
+  } else {
+    // already have a surface, let's set it on the link we just assigned
+    active->setSurface(m_surface);
   }
+}
+
+void Portal::setLink(Direction direction,
+                     std::shared_ptr<RegularSurface> surface,
+                     TrackingVolume& volume) {
+  setLink(direction,
+          std::make_unique<TrivialPortalLink>(std::move(surface), volume));
 }
 
 const PortalLinkBase* Portal::getLink(Direction direction) const {
@@ -92,18 +124,31 @@ const TrackingVolume* Portal::resolveVolume(const GeometryContext& gctx,
   }
 }
 
-std::unique_ptr<Portal> Portal::merge(const std::shared_ptr<Portal>& aPortal,
-                                      const std::shared_ptr<Portal>& bPortal,
-                                      BinningValue direction,
-                                      const Logger& logger) {
+bool Portal::isValid() const {
+  return m_alongNormal != nullptr || m_oppositeNormal != nullptr;
+}
+
+const RegularSurface& Portal::surface() const {
+  assert(m_surface != nullptr);
+  return *m_surface;
+}
+
+Portal Portal::merge(Portal& aPortal, Portal& bPortal, BinningValue direction,
+                     const Logger& logger) {
   ACTS_DEBUG("Merging to portals along " << direction);
+
+  if (&aPortal == &bPortal) {
+    ACTS_ERROR("Cannot merge a portal with itself");
+    throw PortalMergingException{};
+  }
+
   std::unique_ptr<PortalLinkBase> mergedAlongNormal = nullptr;
   std::unique_ptr<PortalLinkBase> mergedOppositeNormal = nullptr;
 
-  bool aHasAlongNormal = aPortal->m_alongNormal != nullptr;
-  bool aHasOppositeNormal = aPortal->m_oppositeNormal != nullptr;
-  bool bHasAlongNormal = bPortal->m_alongNormal != nullptr;
-  bool bHasOppositeNormal = bPortal->m_oppositeNormal != nullptr;
+  bool aHasAlongNormal = aPortal.m_alongNormal != nullptr;
+  bool aHasOppositeNormal = aPortal.m_oppositeNormal != nullptr;
+  bool bHasAlongNormal = bPortal.m_alongNormal != nullptr;
+  bool bHasOppositeNormal = bPortal.m_oppositeNormal != nullptr;
 
   if (aHasAlongNormal != bHasAlongNormal ||
       aHasOppositeNormal != bHasOppositeNormal) {
@@ -111,8 +156,8 @@ std::unique_ptr<Portal> Portal::merge(const std::shared_ptr<Portal>& aPortal,
     throw PortalMergingException();
   }
 
-  if (aPortal->m_alongNormal != nullptr) {
-    if (bPortal->m_alongNormal == nullptr) {
+  if (aPortal.m_alongNormal != nullptr) {
+    if (bPortal.m_alongNormal == nullptr) {
       ACTS_ERROR(
           "Portal A has link along normal, while b does not. This is not "
           "supported");
@@ -120,12 +165,13 @@ std::unique_ptr<Portal> Portal::merge(const std::shared_ptr<Portal>& aPortal,
     }
 
     ACTS_VERBOSE("Portals have links along normal, merging");
-    mergedAlongNormal = PortalLinkBase::merge(
-        aPortal->m_alongNormal, bPortal->m_alongNormal, direction, logger);
+    mergedAlongNormal = PortalLinkBase::merge(std::move(aPortal.m_alongNormal),
+                                              std::move(bPortal.m_alongNormal),
+                                              direction, logger);
   }
 
-  if (aPortal->m_oppositeNormal != nullptr) {
-    if (bPortal->m_oppositeNormal == nullptr) {
+  if (aPortal.m_oppositeNormal != nullptr) {
+    if (bPortal.m_oppositeNormal == nullptr) {
       ACTS_ERROR(
           "Portal A has link opposite normal, while b does not. This is not "
           "supported");
@@ -133,19 +179,53 @@ std::unique_ptr<Portal> Portal::merge(const std::shared_ptr<Portal>& aPortal,
     }
 
     ACTS_VERBOSE("Portals have links opposite normal, merging");
-    mergedOppositeNormal =
-        PortalLinkBase::merge(aPortal->m_oppositeNormal,
-                              bPortal->m_oppositeNormal, direction, logger);
+    mergedOppositeNormal = PortalLinkBase::merge(
+        std::move(aPortal.m_oppositeNormal),
+        std::move(bPortal.m_oppositeNormal), direction, logger);
   }
 
-  return std::make_unique<Portal>(std::move(mergedAlongNormal),
-                                  std::move(mergedOppositeNormal));
+  aPortal.m_surface.reset();
+  bPortal.m_surface.reset();
+  return Portal{std::move(mergedAlongNormal), std::move(mergedOppositeNormal)};
 }
 
-std::unique_ptr<Portal> Portal::fuse(const std::shared_ptr<Portal>& aPortal,
-                                     const std::shared_ptr<Portal>& bPortal,
-                                     const Logger& logger) {
-  return nullptr;
+Portal Portal::fuse(Portal& aPortal, Portal& bPortal, const Logger& logger) {
+  ACTS_DEBUG("Fusing two portals");
+  if (&aPortal == &bPortal) {
+    ACTS_ERROR("Cannot merge a portal with itself");
+    throw PortalMergingException{};
+  }
+
+  bool aHasAlongNormal = aPortal.m_alongNormal != nullptr;
+  bool aHasOppositeNormal = aPortal.m_oppositeNormal != nullptr;
+  bool bHasAlongNormal = bPortal.m_alongNormal != nullptr;
+  bool bHasOppositeNormal = bPortal.m_oppositeNormal != nullptr;
+
+  if (aPortal.m_surface == nullptr || bPortal.m_surface == nullptr) {
+    ACTS_ERROR("Portals have no surface");
+    throw PortalFusingException();
+  }
+
+  if (*aPortal.m_surface != *bPortal.m_surface) {
+    ACTS_ERROR("Portals have different surfaces");
+    throw PortalFusingException();
+  }
+
+  if (aHasAlongNormal == bHasAlongNormal ||
+      aHasOppositeNormal == bHasOppositeNormal) {
+    ACTS_ERROR("Portals have the same links attached");
+    throw PortalFusingException();
+  }
+
+  aPortal.m_surface.reset();
+  bPortal.m_surface.reset();
+  if (aHasAlongNormal) {
+    return Portal{std::move(aPortal.m_alongNormal),
+                  std::move(bPortal.m_oppositeNormal)};
+  } else {
+    return Portal{std::move(bPortal.m_alongNormal),
+                  std::move(aPortal.m_oppositeNormal)};
+  }
 }
 
 void PortalLinkBase::checkMergePreconditions(const PortalLinkBase& a,
@@ -191,9 +271,8 @@ void PortalLinkBase::checkMergePreconditions(const PortalLinkBase& a,
 }
 
 std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
-    const std::shared_ptr<PortalLinkBase>& a,
-    const std::shared_ptr<PortalLinkBase>& b, BinningValue direction,
-    const Logger& logger) {
+    std::unique_ptr<PortalLinkBase> a, std::unique_ptr<PortalLinkBase> b,
+    BinningValue direction, const Logger& logger) {
   ACTS_DEBUG("Merging two arbitrary portals");
 
   ACTS_VERBOSE(" - a: " << *a);
@@ -216,81 +295,87 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
   // Composite Trivial
   // Composite Composite
 
-  if (auto aGrid = std::dynamic_pointer_cast<GridPortalLink>(a); aGrid) {
-    if (auto bGrid = std::dynamic_pointer_cast<GridPortalLink>(b); bGrid) {
+  auto gridMerge =
+      [&](const GridPortalLink& aGrid,
+          const GridPortalLink& bGrid) -> std::unique_ptr<PortalLinkBase> {
+    assert(a != nullptr);
+    assert(b != nullptr);
+    auto merged = GridPortalLink::merge(aGrid, bGrid, direction, logger);
+    if (merged == nullptr) {
+      return std::make_unique<CompositePortalLink>(std::move(a), std::move(b),
+                                                   direction);
+    }
+    return merged;
+  };
+
+  if (const auto* aGrid = dynamic_cast<const GridPortalLink*>(a.get());
+      aGrid != nullptr) {
+    if (const auto* bGrid = dynamic_cast<const GridPortalLink*>(b.get());
+        bGrid != nullptr) {
       ACTS_VERBOSE("Merging two grid portals");
-      return GridPortalLink::merge(aGrid, bGrid, direction, logger);
+      return gridMerge(*aGrid, *bGrid);
 
-    } else if (auto bTrivial = std::dynamic_pointer_cast<TrivialPortalLink>(b);
-               bTrivial) {
+    } else if (const auto* bTrivial =
+                   dynamic_cast<const TrivialPortalLink*>(b.get());
+               bTrivial != nullptr) {
       ACTS_VERBOSE("Merging a grid portal with a trivial portal");
-      return GridPortalLink::merge(aGrid, bTrivial->makeGrid(direction),
-                                   direction, logger);
+      return gridMerge(*aGrid, *bTrivial->makeGrid(direction));
 
-    } else if (auto bComposite =
-                   std::dynamic_pointer_cast<CompositePortalLink>(b);
-               bComposite) {
+    } else if (dynamic_cast<const CompositePortalLink*>(b.get()) != nullptr) {
       ACTS_WARNING("Merging a grid portal with a composite portal");
-      return std::make_unique<CompositePortalLink>(aGrid, bComposite,
+      return std::make_unique<CompositePortalLink>(std::move(a), std::move(b),
                                                    direction);
 
     } else {
-      throw std::logic_error{"Portal type is not supported"};
+      throw std::logic_error{"Portal link type is not supported"};
     }
 
-  } else if (auto aTrivial = std::dynamic_pointer_cast<TrivialPortalLink>(a);
-             aTrivial) {
-    if (auto bGrid = std::dynamic_pointer_cast<GridPortalLink>(b); bGrid) {
+  } else if (const auto* aTrivial =
+                 dynamic_cast<const TrivialPortalLink*>(a.get());
+             aTrivial != nullptr) {
+    if (const auto* bGrid = dynamic_cast<const GridPortalLink*>(b.get());
+        bGrid) {
       ACTS_VERBOSE("Merging a trivial portal with a grid portal");
-      return GridPortalLink::merge(aTrivial->makeGrid(direction), bGrid,
-                                   direction, logger);
+      return gridMerge(*aTrivial->makeGrid(direction), *bGrid);
 
-    } else if (auto bTrivial =
-                   std::dynamic_pointer_cast<const TrivialPortalLink>(b);
-               bTrivial) {
+    } else if (const auto* bTrivial =
+                   dynamic_cast<const TrivialPortalLink*>(b.get());
+               bTrivial != nullptr) {
       ACTS_VERBOSE("Merging two trivial portals");
-      return GridPortalLink::merge(aTrivial->makeGrid(direction),
-                                   bTrivial->makeGrid(direction), direction,
-                                   logger);
+      return gridMerge(*aTrivial->makeGrid(direction),
+                       *bTrivial->makeGrid(direction));
 
-    } else if (auto bComposite =
-                   std::dynamic_pointer_cast<CompositePortalLink>(b);
-               bComposite) {
+    } else if (dynamic_cast<const CompositePortalLink*>(b.get()) != nullptr) {
       ACTS_WARNING("Merging a trivial portal with a composite portal");
-      return std::make_unique<CompositePortalLink>(aTrivial, bComposite,
+      return std::make_unique<CompositePortalLink>(std::move(a), std::move(b),
                                                    direction);
 
     } else {
-      throw std::logic_error{"Portal type is not supported"};
+      throw std::logic_error{"Portal link type is not supported"};
     }
 
-  } else if (auto aComposite =
-                 std::dynamic_pointer_cast<CompositePortalLink>(a);
-             aComposite) {
-    if (auto bGrid = std::dynamic_pointer_cast<GridPortalLink>(b); bGrid) {
+  } else if (dynamic_cast<const CompositePortalLink*>(a.get()) != nullptr) {
+    if (dynamic_cast<const GridPortalLink*>(b.get()) != nullptr) {
       ACTS_WARNING("Merging a composite portal with a grid portal");
-      return std::make_unique<CompositePortalLink>(aComposite, bGrid,
+      return std::make_unique<CompositePortalLink>(std::move(a), std::move(b),
                                                    direction);
 
-    } else if (auto bTrivial = std::dynamic_pointer_cast<TrivialPortalLink>(b);
-               bTrivial) {
+    } else if (dynamic_cast<const TrivialPortalLink*>(b.get()) != nullptr) {
       ACTS_WARNING("Merging a composite portal with a trivial portal");
-      return std::make_unique<CompositePortalLink>(aComposite, bTrivial,
+      return std::make_unique<CompositePortalLink>(std::move(a), std::move(b),
                                                    direction);
 
-    } else if (auto bComposite =
-                   std::dynamic_pointer_cast<CompositePortalLink>(b);
-               bComposite) {
+    } else if (dynamic_cast<CompositePortalLink*>(b.get()) != nullptr) {
       ACTS_WARNING("Merging two composite portals");
-      return std::make_unique<CompositePortalLink>(aComposite, bComposite,
+      return std::make_unique<CompositePortalLink>(std::move(a), std::move(b),
                                                    direction);
 
     } else {
-      throw std::logic_error{"Portal type is not supported"};
+      throw std::logic_error{"Portal link type is not supported"};
     }
 
   } else {
-    throw std::logic_error{"Portal type is not supported"};
+    throw std::logic_error{"Portal link type is not supported"};
   }
 }
 
