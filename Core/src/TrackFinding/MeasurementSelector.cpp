@@ -83,18 +83,16 @@ MeasurementSelector::Cuts MeasurementSelector::getCutsByTheta(
     }
   }
 
-  auto getBinOrBackOrMax = [](const auto& vec, std::size_t bin) {
+  auto getBinOrBackOrMax = [bin](const auto& vec) {
     using Value = std::remove_reference_t<decltype(vec[0])>;
     static constexpr Value max = std::numeric_limits<Value>::max();
     return vec.empty() ? max : (bin < vec.size() ? vec[bin] : vec.back());
   };
 
-  const double chi2CutOffMeasurement =
-      getBinOrBackOrMax(config.chi2CutOff, bin);
-  const double chi2CutOffOutlier =
-      getBinOrBackOrMax(config.chi2CutOffOutlier, bin);
+  const double chi2CutOffMeasurement = getBinOrBackOrMax(config.chi2CutOff);
+  const double chi2CutOffOutlier = getBinOrBackOrMax(config.chi2CutOffOutlier);
   const std::size_t numMeasurementsCutOff =
-      getBinOrBackOrMax(config.numMeasurementsCutOff, bin);
+      getBinOrBackOrMax(config.numMeasurementsCutOff);
   return {chi2CutOffMeasurement, chi2CutOffOutlier, numMeasurementsCutOff};
 }
 
