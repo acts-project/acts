@@ -51,7 +51,9 @@ class PortalLinkBase {
     m_surface = std::move(surface);
   }
 
-  std::shared_ptr<RegularSurface> surfacePtr() const { return m_surface; }
+  const std::shared_ptr<RegularSurface>& surfacePtr() const {
+    return m_surface;
+  }
 
  protected:
   static void checkMergePreconditions(const PortalLinkBase& a,
