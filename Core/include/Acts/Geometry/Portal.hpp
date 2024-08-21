@@ -23,6 +23,7 @@ class TrackingVolume;
 class CylinderSurface;
 class PlaneSurface;
 class DiscSurface;
+class Surface;
 
 class PortalLinkBase;
 
@@ -107,6 +108,8 @@ class Portal {
   const RegularSurface& surface() const;
 
  private:
+  static bool isSameSurface(const Surface& a, const Surface& b);
+
   // @TODO: Potentially short circuit the virtual call
   // using VolumeResolver = Delegate<const TrackingVolume*(const Vector3&
   // position)>;

@@ -8,11 +8,13 @@
 
 #include "Acts/Geometry/Portal.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <stdexcept>
 
@@ -64,24 +66,39 @@ void Portal::setLink(Direction direction,
                      std::unique_ptr<PortalLinkBase> link) {
   assert(link != nullptr);
 
-  auto& active =
+  auto& target =
       direction == Direction::AlongNormal ? m_alongNormal : m_oppositeNormal;
   auto& other =
       direction == Direction::AlongNormal ? m_oppositeNormal : m_alongNormal;
 
   // check if surfaces are identical
-  if (other != nullptr && link->surface() != other->surface()) {
+  if (m_surface != nullptr && !isSameSurface(link->surface(), *m_surface)) {
     throw PortalFusingException();
   }
-  active = std::move(link);
 
-  // @TODO: To avoid numerical issues with not-exactly-identical surfaces,
-  // reset the other side to the exact same surface instance
-  if (m_surface == nullptr) {
-    m_surface = active->surfacePtr();
+  // check if they both have material but are not the same surface
+  if (m_surface != nullptr && (m_surface.get() != &link->surface()) &&
+      link->surface().surfaceMaterial() != nullptr &&
+      m_surface->surfaceMaterial() != nullptr) {
+    throw PortalFusingException();
+  }
+
+  target = std::move(link);
+
+  if (other == nullptr) {
+    // We don't have an existing surface, take the one we just got
+    m_surface = target->surfacePtr();
+    return;
+  }
+
+  if (target->surface().surfaceMaterial() != nullptr) {
+    // new link has material: assign that to existing link
+    m_surface = target->surfacePtr();
+    other->setSurface(m_surface);
   } else {
-    // already have a surface, let's set it on the link we just assigned
-    active->setSurface(m_surface);
+    // none have material, or the existing surface had material: assign the
+    // existing surface by convention
+    target->setSurface(m_surface);
   }
 }
 
@@ -135,6 +152,12 @@ Portal Portal::merge(Portal& aPortal, Portal& bPortal, BinningValue direction,
 
   if (&aPortal == &bPortal) {
     ACTS_ERROR("Cannot merge a portal with itself");
+    throw PortalMergingException{};
+  }
+
+  if (aPortal.m_surface->surfaceMaterial() != nullptr ||
+      bPortal.m_surface->surfaceMaterial() != nullptr) {
+    ACTS_ERROR("Cannot merge portals with material");
     throw PortalMergingException{};
   }
 
@@ -202,8 +225,20 @@ Portal Portal::fuse(Portal& aPortal, Portal& bPortal, const Logger& logger) {
     throw PortalFusingException();
   }
 
-  if (*aPortal.m_surface != *bPortal.m_surface) {
+  if (aPortal.m_surface->associatedDetectorElement() != nullptr ||
+      bPortal.m_surface->associatedDetectorElement() != nullptr) {
+    ACTS_ERROR("Cannot fuse portals with detector elements");
+    throw PortalFusingException();
+  }
+
+  if (!isSameSurface(*aPortal.m_surface, *bPortal.m_surface)) {
     ACTS_ERROR("Portals have different surfaces");
+    throw PortalFusingException();
+  }
+
+  if (aPortal.m_surface->surfaceMaterial() != nullptr &&
+      bPortal.m_surface->surfaceMaterial() != nullptr) {
+    ACTS_ERROR("Cannot fuse portals if both have material");
     throw PortalFusingException();
   }
 
@@ -216,12 +251,38 @@ Portal Portal::fuse(Portal& aPortal, Portal& bPortal, const Logger& logger) {
   aPortal.m_surface.reset();
   bPortal.m_surface.reset();
   if (aHasAlongNormal) {
+    ACTS_VERBOSE("Taking along normal from lhs, opposite normal from rhs");
     return Portal{std::move(aPortal.m_alongNormal),
                   std::move(bPortal.m_oppositeNormal)};
   } else {
+    ACTS_VERBOSE("Taking along normal from rhs, opposite normal from lhs");
     return Portal{std::move(bPortal.m_alongNormal),
                   std::move(aPortal.m_oppositeNormal)};
   }
 }
+
+bool Portal::isSameSurface(const Surface& a, const Surface& b) {
+  if (&a == &b) {
+    return true;
+  }
+
+  if (a.type() != b.type()) {
+    return false;
+  }
+
+  if (a.bounds() != b.bounds()) {
+    return false;
+  }
+
+  // We've explicitly checked above that both surfaces do not have detector
+  // elements!
+  Acts::GeometryContext gctx;
+
+  if (!a.transform(gctx).isApprox(b.transform(gctx), 1e-9)) {
+    return false;
+  }
+
+  return true;
+};
 
 }  // namespace Acts
