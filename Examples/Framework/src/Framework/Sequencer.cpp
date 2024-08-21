@@ -46,6 +46,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/core/demangle.hpp>
+#include <boost/stacktrace/stacktrace.hpp>
 
 namespace ActsExamples {
 
