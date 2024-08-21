@@ -36,7 +36,7 @@ class GaussianTrackDensity {
     /// @param upperBound_ The upper bound
     /// @param time_ Time component 
     TrackEntry(double z_, double c0_, double c1_, double c2_,
-               double lowerBound_, double upperBound_,double time_)
+               double lowerBound_, double upperBound_,double time_) //need more coeffs
         : z(z_),
           time(time_),
           c0(c0_),
@@ -63,12 +63,12 @@ class GaussianTrackDensity {
 
   /// @brief The Config struct
   struct Config {
-    Config(double d0Sig = 3.5, double z0Sig = 12.,double tScale = 1.)
+    Config(double d0Sig = 3.5, double z0Sig = 12.,double t0Sig = 1.)
         : d0MaxSignificance(d0Sig),
           z0MaxSignificance(z0Sig),
           d0SignificanceCut(d0Sig * d0Sig),
           z0SignificanceCut(z0Sig * z0Sig),
-          timeScale(tScale) {}
+          t0SignificanceCut(t0Sig) {}
 
     // Assumed shape of density function:
     // Gaussian (true) or parabolic (false)
@@ -83,7 +83,7 @@ class GaussianTrackDensity {
     double z0SignificanceCut;
 
     //Time scale for time-based weights
-    double timeScale;
+    double t0SignificanceCut;
 
     // Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
@@ -124,16 +124,27 @@ class GaussianTrackDensity {
   ///
   /// @return Pair of position of global maximum and Gaussian width
   Result<std::optional<std::pair<double, double>>> globalMaximumWithWidth(
-      State& state, const std::vector<InputTrack>& trackList,double time) const; //do we need time here?
+      State& state, const std::vector<InputTrack>& trackList) const; //do we need time here?
 
   /// @brief Calculates the z position of the global maximum
   ///
   /// @param state The track density state
   /// @param trackList All input tracks
   ///
-  /// @return z position of the global maximum
+  /// @return z position of the global maximum -- NEED a different return type
   Result<std::optional<double>> globalMaximum(
-      State& state, const std::vector<InputTrack>& trackList,double time) const;
+      State& state, const std::vector<InputTrack>& trackList) const;
+
+  // /// @brief Returns the z-t position of maximum track density
+  // /// and the estimated z-width of the maximum
+  // ///
+  // /// @param densityMap Map between bins and corresponding density
+  // /// values
+  // ///
+  // /// @return The z-t position of the maximum track density and
+  // /// its width
+  // Result<ZTPositionAndWidth> getMaxZTPositionAndWidth(
+  //     DensityMap& densityMap) const; // added from AdaptiveGridTrackDensity.hpp to incorporate time, still need to modify to fit script here // unknown type name, what do i need to import?
 
  private:
   /// The configuration
@@ -154,7 +165,7 @@ class GaussianTrackDensity {
   ///
   /// @return Track density, first and second derivatives
   std::tuple<double, double, double> trackDensityAndDerivatives(State& state,
-                                                                double z,double time) const;
+                                                                double z,double time) const; // need bigger matrix for time derivatives
 
   /// @brief Update the current maximum values
   ///
@@ -185,7 +196,7 @@ class GaussianTrackDensity {
   class GaussianTrackDensityStore {
    public:
     // Initialise at the z coordinate at which the density is to be evaluated
-    GaussianTrackDensityStore(double z_coordinate, double t_coordinate, double time_scale) : m_z(z_coordinate), m_time(t_coordinate), m_timeScale(time_scale) {}
+    GaussianTrackDensityStore(double z_coordinate, double t_coordinate, double time_scale) : m_z(z_coordinate), m_time(t_coordinate){} //, m_timeScale(time_scale) {}
 
     // Add the contribution of a single track to the density
     void addTrackToDensity(const TrackEntry& entry);
@@ -196,15 +207,15 @@ class GaussianTrackDensity {
     }
 
 
-   private:
-    double computeTimeFactor(double entryTime, double currentTime) const {
-      return std::exp(-std::fabs(entryTime - currentTime) / m_timeScale);
-    }
+  //  private:
+  //   double computeTimeFactor(double entryTime, double currentTime) const {
+  //     return std::exp(-std::fabs(entryTime - currentTime) / m_timeScale);
+  //   } NOT NECESSARY 
   
     // Store density and derivatives for z position m_z
     double m_z;
     double m_time; //Time member
-    double m_timeScale;
+    //double m_timeScale;
     double m_density{0};
     double m_firstDerivative{0};
     double m_secondDerivative{0};

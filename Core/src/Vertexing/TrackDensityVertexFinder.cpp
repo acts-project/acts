@@ -20,7 +20,7 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::TrackDensityVertexFinder::find(
 
   // Calculate z seed position
   auto zAndWidthRes = m_cfg.trackDensityEstimator.globalMaximumWithWidth(
-      densityState, trackVector,referenceTime);
+      densityState, trackVector);
   if (!zAndWidthRes.ok()) {
     return zAndWidthRes.error();
   }

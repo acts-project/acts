@@ -16,7 +16,7 @@ namespace Acts {
 
 Result<std::optional<std::pair<double, double>>>
 Acts::GaussianTrackDensity::globalMaximumWithWidth(
-    State& state, const std::vector<InputTrack>& trackList,double time) const {
+    State& state, const std::vector<InputTrack>& trackList) const {
   auto result = addTracks(state, trackList);
   if (!result.ok()) {
     return result.error();
@@ -28,6 +28,7 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
 
   for (const auto& track : state.trackEntries) {
     double trialZ = track.z;
+    double time = track.time;
 
     auto [density, firstDerivative, secondDerivative] =
         trackDensityAndDerivatives(state, trialZ,time);
@@ -67,8 +68,8 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
 }
 
 Result<std::optional<double>> Acts::GaussianTrackDensity::globalMaximum(
-    State& state, const std::vector<InputTrack>& trackList,double time) const {
-  auto maxRes = globalMaximumWithWidth(state, trackList, time);
+    State& state, const std::vector<InputTrack>& trackList) const {
+  auto maxRes = globalMaximumWithWidth(state, trackList);
   if (!maxRes.ok()) {
     return maxRes.error();
   }
@@ -102,12 +103,12 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
         perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1);
 
     //Add time into Cov 
-    const double covDT = perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundTime);
-    const double covZT = perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundTime);
-    const double covTT = perigeeCov(BoundIndices::eBoundTime, BoundIndices::eBoundTime);
+    const double covDT = perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundTime); // = 0
+    const double covZT = perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundTime); // = 0
+    const double covTT = perigeeCov(BoundIndices::eBoundTime, BoundIndices::eBoundTime); // = 1 ?
 
 
-    //const double covDeterminant = (perigeeCov.block<3, 3>(0, 0)).determinant();
+   //const double covDeterminant = (perigeeCov.block<2, 2>(0, 0)).determinant();
 
     // Update determinant for 3x3 matrix because I'm not sure how perigee works
     Eigen::Matrix3d covMatrix;
@@ -116,28 +117,54 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
                  covDT, covZT, covTT;
     const double covDeterminant = covMatrix.determinant();
 
+    //std::cout << "covDD: " << covDD << std::endl;
+    //std::cout << "covZT: " << covZZ << std::endl;
+    //std::cout << "covDeterminant: " << covDeterminant << std::endl;
 
     // Do track selection based on track cov matrix and m_cfg.d0SignificanceCut
     if ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut) ||
         (covZZ <= 0) || (covDeterminant <= 0)) {
+          std::cout << "Truth statement: " << ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut) || (covZZ <= 0) || (covDeterminant <= 0)) << std::endl;
       continue;
     }
+
+    //std::cout << "1st part of truth: " << ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut)) << std::endl;
+    //std::cout << "2nd part of truth: " << ((covZZ <= 0) || (covDeterminant <= 0)) << std::endl;
+    //std::cout << "Truth statement: " << ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut) ||
+        //(covZZ <= 0) || (covDeterminant <= 0)) << std::endl;
+
+
 
     // Calculate track density quantities
     //Change time to covTT
     double constantTerm =
         -(d0 * d0 * covZZ + z0 * z0 * covDD + 2. * d0 * z0 * covDZ +
           2. * d0 * time * covDT + 2. * z0 * time * covZT + time * time * covTT) /
-        (2. * covDeterminant);
+        (2. * covDeterminant); //has to be 0 or less
+
+    // double constantTerm =
+    //     -(d0 * d0 * covZZ + z0 * z0 * covDD + 2. * d0 * z0 * covDZ) /
+    //     (2. * covDeterminant);
     const double linearTerm =
         (d0 * covDZ + z0 * covDD + time * covZT) / covDeterminant;
     const double quadraticTerm = -covDD / (2. * covDeterminant);
-    double discriminant =
+    double discriminant =(
         linearTerm * linearTerm -
-        4. * quadraticTerm * (constantTerm + 2. * m_cfg.z0SignificanceCut);
+        4. * quadraticTerm * (constantTerm + 2. * m_cfg.z0SignificanceCut));
 
-    std::cout << discriminant;
-    
+    std::cout << "Constant Term: " << constantTerm << std::endl;
+    std::cout << "d0: " << d0 << std::endl;
+    std::cout << "z0: " << z0 << std::endl;
+    std::cout << "time: " << time << std::endl;
+    std::cout << "covZZ: " << covZZ << std::endl;
+    std::cout << "covDD: " << covDD << std::endl;
+    std::cout << "covDZ: " << covDZ << std::endl;
+    std::cout << "covDT: " << covDT << std::endl;
+    std::cout << "covZT: " << covZT << std::endl;
+    std::cout << "covTT: " << covTT << std::endl;
+    std::cout << "covDeterminant: " << covDeterminant << std::endl;
+    std::cout << "discriminant: " << discriminant << std::endl;  
+
     if (discriminant < 0) {
       continue;
     }
@@ -157,7 +184,7 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
 std::tuple<double, double, double>
 Acts::GaussianTrackDensity::trackDensityAndDerivatives(State& state,
                                                        double z, double time) const {
-  GaussianTrackDensityStore densityResult(z,time,m_cfg.timeScale);
+  GaussianTrackDensityStore densityResult(z,time,m_cfg.t0SignificanceCut);
   for (const auto& trackEntry : state.trackEntries) {
     densityResult.addTrackToDensity(trackEntry);
   }
@@ -191,10 +218,10 @@ void Acts::GaussianTrackDensity::GaussianTrackDensityStore::addTrackToDensity(
     m_firstDerivative += deltaPrime;
     m_secondDerivative += 2. * entry.c2 * delta + qPrime * deltaPrime;
 
-    double timeFactor = computeTimeFactor(entry.time, m_time);
-    m_density *= timeFactor;
-    m_firstDerivative *= timeFactor;
-    m_secondDerivative *= timeFactor;
+    // double timeFactor = computeTimeFactor(entry.time, m_time);
+    // m_density *= timeFactor;
+    // m_firstDerivative *= timeFactor;
+    // m_secondDerivative *= timeFactor;
   }
 }
 
