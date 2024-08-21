@@ -52,7 +52,10 @@ AnnoyModel HashingTrainingAlgorithm<SpacePointContainer>::execute(
     Scalar phi = atan2(y, x);
 
     std::vector<double> vec(f);
-    vec[0] = phi;
+    // Avoid potential null pointer dereference
+    if (f >= 1) {
+      vec[0] = phi;
+    }
     if (f >= 2) {
       Scalar z = spacePoint->z() / Acts::UnitConstants::mm;
       Scalar r2 = x * x + y * y;
