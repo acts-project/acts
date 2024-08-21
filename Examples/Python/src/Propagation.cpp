@@ -116,8 +116,8 @@ void addPropagation(Context& ctx) {
       ActsExamples::PropagationAlgorithm, mex, "PropagationAlgorithm",
       propagatorImpl, sterileLogger, debugOutput, energyLoss,
       multipleScattering, recordMaterialInteractions, ptLoopers, maxStepSize,
-      covarianceTransport, inputTrackParameters, outputPropagationSteps,
-      outputMaterialTracks);
+      covarianceTransport, inputTrackParameters, outputSummaryCollection,
+      outputMaterialCollection);
 
   py::class_<ActsExamples::PropagatorInterface,
              std::shared_ptr<ActsExamples::PropagatorInterface>>(
