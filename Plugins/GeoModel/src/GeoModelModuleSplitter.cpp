@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/SplitModulesByRadius.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelModuleSplitter.hpp"
 
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -16,14 +16,12 @@
 
 namespace Acts {
 
-std::optional<std::vector<std::pair<std::shared_ptr<Surface>,
-                                    std::shared_ptr<GeoModelDetectorElement>>>>
-ModuleByRadiusSplitter::split(
-    std::shared_ptr<Surface> surface,
-    std::shared_ptr<GeoModelDetectorElement> detElement,
-    const Acts::GeometryContext &gctx) const {
+auto GeoModelModuleSplitter::split(DetectorElementPtr detElement,
+                                   const Acts::GeometryContext &gctx) const
+    -> std::optional<std::vector<DetectorElementPtr>> {
   const auto &logger = *m_logger;
 
+  auto surface = detElement->surface().getSharedPtr();
   auto annulusBounds = dynamic_cast<const AnnulusBounds *>(&surface->bounds());
 
   if (annulusBounds == nullptr) {
@@ -31,25 +29,24 @@ ModuleByRadiusSplitter::split(
     return std::nullopt;
   }
 
-  std::optional<std::vector<std::pair<
-      std::shared_ptr<Surface>, std::shared_ptr<GeoModelDetectorElement>>>>
-      result;
+  std::optional<std::vector<DetectorElementPtr>> result;
 
-  for (auto [design, radii] : m_designs) {
+  for (auto [patternName, radii] : m_splitPatterns) {
     if ((std::abs(radii.front() - annulusBounds->rMin()) > m_tolerance) ||
         (std::abs(radii.back() - annulusBounds->rMax()) > m_tolerance)) {
-      ACTS_VERBOSE("Skip design '" << design << "' for element '"
-                                   << detElement->databaseEntryName());
+      ACTS_VERBOSE("Skip pattern '" << patternName << "' for element '"
+                                    << detElement->databaseEntryName());
       continue;
     }
 
     radii.front() = annulusBounds->rMin();
     radii.back() = annulusBounds->rMax();
 
-    ACTS_DEBUG("Accept design '" << design << "' for element '"
-                                 << detElement->databaseEntryName());
+    ACTS_DEBUG("Accept pattern '" << patternName << "' for element '"
+                                  << detElement->databaseEntryName());
 
     result.emplace();
+    result->reserve(radii.size() - 1);
     const auto origValues = annulusBounds->values();
 
     for (auto i = 0ul; i < radii.size() - 1; ++i) {
@@ -64,11 +61,9 @@ ModuleByRadiusSplitter::split(
           GeoModelDetectorElement::createDetectorElement<DiscSurface>(
               detElement->physicalVolume(), bounds, detElement->transform(gctx),
               detElement->thickness());
-      auto newSurface = newDetElement->surface().getSharedPtr();
-
       newDetElement->setDatabaseEntryName(detElement->databaseEntryName());
 
-      result->emplace_back(newSurface, newDetElement);
+      result->push_back(newDetElement);
     }
 
     return result;
