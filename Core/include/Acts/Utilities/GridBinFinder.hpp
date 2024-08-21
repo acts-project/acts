@@ -29,6 +29,7 @@ namespace Acts {
 template <std::size_t DIM>
 class GridBinFinder {
  public:
+  static constexpr std::size_t dimCubed = Acts::detail::ipow(3, DIM);
   /// @brief Constructor
   /// @tparam args ... Input parameters provided by the user
   ///
@@ -63,9 +64,9 @@ class GridBinFinder {
   ///
   /// @pre The provided local position must be a valid local bins configuration in the grid
   template <typename stored_t, class... Axes>
-  boost::container::small_vector<std::size_t, Acts::detail::ipow(3, DIM)>
-  findBins(const std::array<std::size_t, DIM>& locPosition,
-           const Acts::Grid<stored_t, Axes...>& grid) const;
+  boost::container::small_vector<std::size_t, dimCubed> findBins(
+      const std::array<std::size_t, DIM>& locPosition,
+      const Acts::Grid<stored_t, Axes...>& grid) const;
 
  private:
   /// @brief Store the values provided by the user for each axis in the grid

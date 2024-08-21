@@ -64,6 +64,8 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const {
       if (tube == nullptr) {
         ACTS_ERROR(
             "[L] Cylinder layer has wrong shape - needs to be TGeoTubeSeg!");
+        throw std::logic_error{
+            "[L] Cylinder layer has wrong shape - needs to be TGeoTubeSeg!"};
       }
 
       // Extract the boundaries
