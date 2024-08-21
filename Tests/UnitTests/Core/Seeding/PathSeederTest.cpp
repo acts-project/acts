@@ -57,7 +57,7 @@ class NoFieldIntersectionFinder {
   // Find the intersections along the path
   // and return them in the order of the path
   // length
-  const std::vector<std::pair<GeometryIdentifier, Vector3>> operator()(
+  std::vector<std::pair<GeometryIdentifier, Vector3>> operator()(
       const GeometryContext& geoCtx, const Vector3& position,
       const Vector3& direction, [[maybe_unused]] const ActsScalar& Pmag = 0,
       [[maybe_unused]] const ActsScalar& Charge = 0) const {
@@ -128,7 +128,7 @@ class SourceLinkGrid {
   };
 
   // Get the source link grid for a given geometry id
-  const GridType operator()(const GeometryIdentifier& geoId) const {
+  GridType operator()(const GeometryIdentifier& geoId) const {
     return m_lookupTables.at(geoId.sensitive());
   }
 };
@@ -136,7 +136,7 @@ class SourceLinkGrid {
 // A simple path width provider to set
 // the grid lookup boundaries around the
 // intersection point
-const std::pair<ActsScalar, ActsScalar> getPathWidth(
+std::pair<ActsScalar, ActsScalar> getPathWidth(
     const GeometryContext& /*gctx*/, const GeometryIdentifier& /*geoId*/) {
   return {0.1, 0.1};
 }
@@ -147,8 +147,8 @@ class SourceLinkCalibrator {
  public:
   SourceLinkSurfaceAccessor m_surfaceAccessor;
 
-  const Vector3 operator()(const GeometryContext& geoCtx,
-                           const SourceLink& sourceLink) const {
+  Vector3 operator()(const GeometryContext& geoCtx,
+                     const SourceLink& sourceLink) const {
     auto ssl = sourceLink.get<detail::Test::TestSourceLink>();
     auto res = m_surfaceAccessor(sourceLink)
                    ->localToGlobal(geoCtx, ssl.parameters, Vector3{0, 1, 0});
@@ -163,8 +163,8 @@ class TrackEstimator {
  public:
   Vector3 ip;
 
-  const std::tuple<ActsScalar, ActsScalar, Vector3, Vector3, Vector3>
-  operator()(const GeometryContext& /*geoCtx*/, const Vector3& pivot) const {
+  std::tuple<ActsScalar, ActsScalar, Vector3, Vector3, Vector3> operator()(
+      const GeometryContext& /*geoCtx*/, const Vector3& pivot) const {
     Vector3 direction = (pivot - ip).normalized();
     return {1_e, 1._GeV, ip, direction, direction};
   };

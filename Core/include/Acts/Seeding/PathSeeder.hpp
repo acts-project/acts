@@ -79,8 +79,7 @@ class PathSeeder {
   /// @arg The geometry identifier to use
   ///
   /// @return The grid filled with source links
-  using SourceLinkGridLookup =
-      Delegate<const GridType(const GeometryIdentifier&)>;
+  using SourceLinkGridLookup = Delegate<GridType(const GeometryIdentifier&)>;
 
   /// @brief Delegate to estimate the IP parameters
   /// and the momentum direction at the first tracking layer
@@ -91,8 +90,8 @@ class PathSeeder {
   /// @return Particle charge, the IP momentum magnitude, the IP vertex position,
   /// the IP momentum direction, the momentum direction at the
   /// first tracking layer
-  using TrackEstimator = Delegate<
-      const std::tuple<ActsScalar, ActsScalar, Vector3, Vector3, Vector3>(
+  using TrackEstimator =
+      Delegate<std::tuple<ActsScalar, ActsScalar, Vector3, Vector3, Vector3>(
           const GeometryContext&, const Vector3&)>;
 
   /// @brief Delegate to transform the source link to the
@@ -103,7 +102,7 @@ class PathSeeder {
   ///
   /// @return The global position of the source link measurement
   using SourceLinkCalibrator =
-      Delegate<const Vector3(const GeometryContext&, const SourceLink&)>;
+      Delegate<Vector3(const GeometryContext&, const SourceLink&)>;
 
   /// @brief Delegate to find the intersections for the given pivot
   /// source link
@@ -115,7 +114,7 @@ class PathSeeder {
   /// @arg The IP momentum magnitude
   /// @arg The particle charge
   using IntersectionLookup =
-      Delegate<const std::vector<std::pair<GeometryIdentifier, Vector3>>(
+      Delegate<std::vector<std::pair<GeometryIdentifier, Vector3>>(
           const GeometryContext&, const Vector3&, const Vector3&,
           const ActsScalar&, const ActsScalar&)>;
 
@@ -129,7 +128,7 @@ class PathSeeder {
   ///
   /// @return The path width in the bin0 and bin1 direction
   /// defined with respect to the surface normal
-  using PathWidthLookup = Delegate<const std::pair<ActsScalar, ActsScalar>(
+  using PathWidthLookup = Delegate<std::pair<ActsScalar, ActsScalar>(
       const GeometryContext&, const GeometryIdentifier&)>;
 
   /// @brief The nested configuration struct
