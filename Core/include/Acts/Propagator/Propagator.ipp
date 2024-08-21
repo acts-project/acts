@@ -45,13 +45,13 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
 
     if constexpr (std::is_same_v<N, Acts::Navigator>) {
       auto getNextTargetIntersection = [&]() {
-        for (int i = 0; i < 1000; ++i) {
+        for (int i = 0; i < 10; ++i) {
           SurfaceIntersection nextTargetIntersection =
               m_navigator.estimateNextTarget(
                   state.navigation, state.position,
                   state.options.direction * state.direction);
           if (!nextTargetIntersection.isValid()) {
-            return nextTargetIntersection;
+            return SurfaceIntersection::invalid();
           }
           IntersectionStatus preStepSurfaceStatus =
               m_stepper.updateSurfaceStatus(
