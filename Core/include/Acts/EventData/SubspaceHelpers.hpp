@@ -37,7 +37,7 @@ inline static bool checkSubspaceIndices(const Container& container,
   if (subspaceSize > fullSize) {
     return false;
   }
-  if (container.size() != subspaceSize) {
+  if (static_cast<std::size_t>(container.size()) != subspaceSize) {
     return false;
   }
   for (auto it = container.begin(); it != container.end();) {
@@ -103,6 +103,7 @@ class SubspaceHelperBase {
  public:
   static constexpr std::size_t kFullSize = FullSize;
 
+  using FullVector = ActsVector<kFullSize>;
   using FullSquareMatrix = ActsSquareMatrix<kFullSize>;
 
   bool empty() const { return self().empty(); }
@@ -112,6 +113,19 @@ class SubspaceHelperBase {
 
   auto begin() const { return self().begin(); }
   auto end() const { return self().end(); }
+
+  template <typename indices_t>
+  bool contains(indices_t i) const {
+    return std::find(begin(), end(), static_cast<Derived::IndexType>(i)) !=
+           end();
+  }
+
+  template <typename indices_t>
+  std::size_t indexOf(indices_t i) const {
+    auto it = std::find(begin(), end(), static_cast<Derived::IndexType>(i));
+    assert(it != end());
+    return std::distance(begin(), it);
+  }
 
   FullSquareMatrix fullProjector() const {
     FullSquareMatrix result = FullSquareMatrix::Zero();
@@ -133,6 +147,33 @@ class SubspaceHelperBase {
     requires(kFullSize <= 8)
   {
     return matrixToBitset(fullProjector()).to_ullong();
+  }
+
+  template <typename EigenDerived>
+  FullVector expandVector(
+      const Eigen::DenseBase<EigenDerived>& subspaceVector) const {
+    assert(static_cast<std::size_t>(subspaceVector.size()) == size() &&
+           "Invalid subspace vector size");
+    FullVector result = FullVector::Zero();
+    for (auto [i, index] : enumerate(*this)) {
+      result(index) = subspaceVector(i);
+    }
+    return result;
+  }
+
+  template <typename EigenDerived>
+  FullSquareMatrix expandMatrix(
+      const Eigen::DenseBase<EigenDerived>& subspaceMatrix) const {
+    assert(static_cast<std::size_t>(subspaceMatrix.rows()) == size() &&
+           static_cast<std::size_t>(subspaceMatrix.cols()) == size() &&
+           "Invalid subspace matrix size");
+    FullSquareMatrix result = FullSquareMatrix::Zero();
+    for (auto [i, indexI] : enumerate(*this)) {
+      for (auto [j, indexJ] : enumerate(*this)) {
+        result(indexI, indexJ) = subspaceMatrix(i, j);
+      }
+    }
+    return result;
   }
 
  private:
@@ -171,6 +212,8 @@ class VariableSubspaceHelper
 
   auto begin() const { return m_indices.begin(); }
   auto end() const { return m_indices.end(); }
+
+  const Container& indices() const { return m_indices; }
 
  private:
   Container m_indices;
@@ -218,6 +261,8 @@ class FixedSubspaceHelper
 
   auto begin() const { return m_indices.begin(); }
   auto end() const { return m_indices.end(); }
+
+  const Container& indices() const { return m_indices; }
 
   Projector projector() const {
     Projector result = Projector::Zero();
