@@ -30,6 +30,9 @@ class GeoModelDetectorObjectFactory {
   struct Options {
     std::vector<std::string> queries = {};
   };
+
+  // substring matching for additional parameters
+  // empty vectors will be matched to everything
   struct Config {
     // List for names to match
     std::vector<std::string> nameList;
