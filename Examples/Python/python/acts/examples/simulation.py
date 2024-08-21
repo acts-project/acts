@@ -608,6 +608,12 @@ def getG4DetectorConstructionFactory(
     except Exception as e:
         print(e)
 
+    try:
+        from acts.examples.geant4.geomodel import GeoModelDetectorConstructionFactory
+        return GeoModelDetectorConstructionFactory(detector, regionList)
+    except Exception as e:
+        print(e)
+
     raise AttributeError(f"cannot find a suitable detector construction for {detector}")
 
 
