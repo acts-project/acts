@@ -185,6 +185,8 @@ void addGeometry(Context& ctx) {
   }
 
   {
+    py::class_<Acts::Volume, std::shared_ptr<Acts::Volume>>(m, "Volume");
+
     py::class_<Acts::TrackingVolume, Acts::Volume,
                std::shared_ptr<Acts::TrackingVolume>>(m, "TrackingVolume")
         .def(py::init([](std::shared_ptr<const Acts::VolumeBounds> bounds,
