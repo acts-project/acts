@@ -611,6 +611,7 @@ def getG4DetectorConstructionFactory(
     try:
         from acts import geomodel as gm
         from acts.examples.geant4.geomodel import GeoModelDetectorConstructionFactory
+
         if type(detector) is gm.GeoModelTree:
             return GeoModelDetectorConstructionFactory(detector, regionList)
     except Exception as e:
