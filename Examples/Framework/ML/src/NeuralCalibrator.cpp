@@ -113,13 +113,14 @@ void ActsExamples::NeuralCalibrator::calibrate(
   assert(measurement.contains(Acts::eBoundLoc1) &&
          "Measurement does not contain the required bound loc1");
 
-  auto boundLoc0 = measurement.indexOf(Acts::eBoundLoc0);
-  auto boundLoc1 = measurement.indexOf(Acts::eBoundLoc1);
+  auto boundLoc0 = measurement.subspace().indexOf(Acts::eBoundLoc0);
+  auto boundLoc1 = measurement.subspace().indexOf(Acts::eBoundLoc1);
 
-  Acts::Vector2 localPosition{measurement.parameters()[boundLoc0],
-                              measurement.parameters()[boundLoc1]};
-  Acts::Vector2 localCovariance{measurement.covariance()(boundLoc0, boundLoc0),
-                                measurement.covariance()(boundLoc1, boundLoc1)};
+  Acts::Vector2 localPosition{measurement.effectiveParameters()[boundLoc0],
+                              measurement.effectiveParameters()[boundLoc1]};
+  Acts::Vector2 localCovariance{
+      measurement.effectiveCovariance()(boundLoc0, boundLoc0),
+      measurement.effectiveCovariance()(boundLoc1, boundLoc1)};
 
   Acts::Vector3 dir = Acts::makeDirectionFromPhiTheta(
       trackParameters[Acts::eBoundPhi], trackParameters[Acts::eBoundTheta]);
@@ -172,10 +173,11 @@ void ActsExamples::NeuralCalibrator::calibrate(
   std::size_t iVar0 = 3 * m_nComponents + iMax * 2;
 
   Measurement measurementCopy = measurement;
-  measurementCopy.parameters()[boundLoc0] = output[iLoc0];
-  measurementCopy.parameters()[boundLoc1] = output[iLoc0 + 1];
-  measurementCopy.covariance()(boundLoc0, boundLoc0) = output[iVar0];
-  measurementCopy.covariance()(boundLoc1, boundLoc1) = output[iVar0 + 1];
+  measurementCopy.effectiveParameters()[boundLoc0] = output[iLoc0];
+  measurementCopy.effectiveParameters()[boundLoc1] = output[iLoc0 + 1];
+  measurementCopy.effectiveCovariance()(boundLoc0, boundLoc0) = output[iVar0];
+  measurementCopy.effectiveCovariance()(boundLoc1, boundLoc1) =
+      output[iVar0 + 1];
 
   Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
@@ -185,7 +187,6 @@ void ActsExamples::NeuralCalibrator::calibrate(
         measurementCopy.parameters<kMeasurementSize>();
     trackState.calibratedCovariance<kMeasurementSize>() =
         measurementCopy.covariance<kMeasurementSize>();
-    trackState.setSubspaceIndices(
-        measurementCopy.subspaceIndices<kMeasurementSize>());
+    trackState.setProjector(measurementCopy.subspace().fullProjector<double>());
   });
 }
