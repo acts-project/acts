@@ -252,6 +252,8 @@ class Surface : public virtual GeometryObject,
   /// @param position global position to be evaludated
   /// @param direction global momentum direction (required for line-type surfaces)
   /// @param boundaryTolerance BoundaryTolerance directive for this onSurface check
+  /// @param tolerance optional tolerance within which a point is considered
+  /// valid on surface
   ///
   /// @return boolean indication if operation was successful
   bool isOnSurface(
