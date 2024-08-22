@@ -20,7 +20,7 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r1
-  DEPENDENCY_DIR: ${{ github.workspace }}/install
+  DEPENDENCY_DIR: ${{ github.workspace }}/deps
 
 jobs:
   linux_ubuntu:
