@@ -29,9 +29,11 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
   auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
   auto fphysXY = new GeoFullPhysVol(logXY);
   auto rBounds = std::make_shared<Acts::RectangleBounds>(100, 200);
+
+  PVConstLink physXY{fphysXY};
   auto elementXY =
       Acts::GeoModelDetectorElement::createDetectorElement<Acts::PlaneSurface>(
-          *fphysXY, rBounds, Acts::Transform3::Identity(), 2.0);
+          physXY, rBounds, Acts::Transform3::Identity(), 2.0);
 
   const Acts::Surface& surface = elementXY->surface();
   BOOST_CHECK(surface.type() == Acts::Surface::SurfaceType::Plane);
