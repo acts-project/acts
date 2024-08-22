@@ -541,9 +541,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 ACTS_WARNING("Second track has no reference surface.");
                 continue;
               }
-              if (secondTrack.nMeasurements() <= 1) {
-                continue;
-              }
 
               // TODO a copy of the track should not be necessary but is the
               //      safest way with the current EDM
@@ -558,8 +555,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               secondTrackCopy.reverseTrackStates(true);
 
               firstState.previous() =
-                  (*std::next(secondTrackCopy.trackStatesReversed().begin()))
-                      .index();
+                  secondTrackCopy.outermostTrackState().index();
 
               // finalize the track candidate
 
