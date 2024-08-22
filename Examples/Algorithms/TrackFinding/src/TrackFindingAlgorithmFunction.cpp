@@ -49,8 +49,9 @@ struct TrackFinderFunctionImpl
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options,
-      ActsExamples::TrackContainer& tracks) const override {
-    return trackFinder.findTracks(initialParameters, options, tracks);
+      ActsExamples::TrackContainer& tracks,
+      ActsExamples::TrackProxy track) const override {
+    return trackFinder.findTracks(initialParameters, options, tracks, track);
   };
 };
 

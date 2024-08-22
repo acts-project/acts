@@ -1213,6 +1213,8 @@ class CombinatorialKalmanFilter {
   /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
   ///                  finding
   /// @param trackContainer Input track container to use
+  /// @param track The track to be used as the root branch
+  ///
   /// @note The input measurements are given in the form of @c SourceLinks.
   ///       It's @c calibrator_t's job to turn them into calibrated measurements
   ///       used in the track finding.
@@ -1224,7 +1226,8 @@ class CombinatorialKalmanFilter {
   auto findTracks(const start_parameters_t& initialParameters,
                   const CombinatorialKalmanFilterOptions<
                       source_link_iterator_t, track_container_t>& tfOptions,
-                  track_container_t& trackContainer) const
+                  track_container_t& trackContainer,
+                  track_container_t::TrackProxy track) const
       -> Result<std::vector<
           typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
     using SourceLinkAccessor =
@@ -1285,8 +1288,7 @@ class CombinatorialKalmanFilter {
     r.tracks = &trackContainer;
     r.trackStates = &trackContainer.trackStateContainer();
 
-    auto rootBranch = trackContainer.makeTrack();
-    r.activeBranches.push_back(rootBranch);
+    r.activeBranches.push_back(track);
 
     auto propagationResult = m_propagator.propagate(propState);
 
@@ -1322,11 +1324,35 @@ class CombinatorialKalmanFilter {
       return error.error();
     }
 
-    for (const auto& track : combKalmanResult.collectedTracks) {
-      calculateTrackQuantities(track);
-    }
-
     return std::move(combKalmanResult.collectedTracks);
+  }
+
+  /// Combinatorial Kalman Filter implementation, calls the Kalman filter
+  ///
+  /// @tparam source_link_iterator_t Type of the source link iterator
+  /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam parameters_t Type of parameters used for local parameters
+  ///
+  /// @param initialParameters The initial track parameters
+  /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
+  ///                  finding
+  /// @param trackContainer Input track container to use
+  /// @note The input measurements are given in the form of @c SourceLinks.
+  ///       It's @c calibrator_t's job to turn them into calibrated measurements
+  ///       used in the track finding.
+  ///
+  /// @return a container of track finding result for all the initial track
+  /// parameters
+  template <typename source_link_iterator_t, typename start_parameters_t,
+            typename parameters_t = BoundTrackParameters>
+  auto findTracks(const start_parameters_t& initialParameters,
+                  const CombinatorialKalmanFilterOptions<
+                      source_link_iterator_t, track_container_t>& tfOptions,
+                  track_container_t& trackContainer) const
+      -> Result<std::vector<
+          typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
+    auto rootBranch = trackContainer.makeTrack();
+    return findTracks(initialParameters, tfOptions, trackContainer, rootBranch);
   }
 };
 
