@@ -344,7 +344,6 @@ jobs:
           --preset=github-ci
           -DCMAKE_PREFIX_PATH="${{ env.DEPENDENCY_DIR }}"
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
-          -DPython_EXECUTABLE=$PWD/venv/bin/python3
 
       - name: Build
         run: cmake --build build
