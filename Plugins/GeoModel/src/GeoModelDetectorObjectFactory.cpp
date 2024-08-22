@@ -139,7 +139,6 @@ Acts::GeoModelDetectorObjectFactory::findAllSubVolumes(PVConstLink vol) {
   }
   return sensitives;
 }
-// lambda to determine if object fits querry
 
 bool Acts::GeoModelDetectorObjectFactory::convertBox(std::string name) {
   auto convB = std::any_of(
@@ -147,6 +146,7 @@ bool Acts::GeoModelDetectorObjectFactory::convertBox(std::string name) {
       [&](const auto &n) { return name.find(n) != std::string::npos; });
   return convB;
 }
+
 void Acts::GeoModelDetectorObjectFactory::convertFpv(
     std::string name, GeoFullPhysVol *fpv, Cache &cache,
     const GeometryContext &gctx) {

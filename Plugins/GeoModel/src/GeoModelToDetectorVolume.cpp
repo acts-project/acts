@@ -83,8 +83,8 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         std::make_shared<CuboidVolumeBounds>(
             (xmax - xmin) / 2, (ymax - ymin) / 2, (zmax - zmin) / 2);
     return Experimental::DetectorVolumeFactory::construct(
-        portalGenerator, context, name, transform, bounds, sensSurfaces, a,
-        Experimental::tryNoVolumes(), Experimental::tryAllPortalsAndSurfaces());
+        portalGenerator, context, name, transform, bounds,
+        Experimental::tryAllPortalsAndSurfaces());
   } else if (shape.typeID() == GeoTrd::getClassTypeID()) {
     const GeoTrd* trd = dynamic_cast<const GeoTrd*>(&shape);
     double x1 = trd->getXHalfLength1();
