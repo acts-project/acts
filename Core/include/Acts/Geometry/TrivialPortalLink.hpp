@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 
 namespace Acts {
@@ -27,11 +28,13 @@ class TrivialPortalLink final : public PortalLinkBase {
     os << "TrivialPortalLink<vol=" << m_volume << ">";
   }
 
-  const TrackingVolume* resolveVolume(const GeometryContext& gctx,
-                                      const Vector2& position) const final;
+  const TrackingVolume* resolveVolume(
+      const GeometryContext& gctx, const Vector2& position,
+      double tolerance = s_onSurfaceTolerance) const final;
 
-  const TrackingVolume* resolveVolume(const GeometryContext& gctx,
-                                      const Vector3& position) const final;
+  const TrackingVolume* resolveVolume(
+      const GeometryContext& gctx, const Vector3& position,
+      double tolerance = s_onSurfaceTolerance) const final;
 
  private:
   TrackingVolume* m_volume;

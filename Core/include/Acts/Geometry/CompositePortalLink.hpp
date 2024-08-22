@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 
 #include <iosfwd>
@@ -24,11 +25,13 @@ class CompositePortalLink final : public PortalLinkBase {
 
   void toStream(std::ostream& os) const final;
 
-  const TrackingVolume* resolveVolume(const GeometryContext& gctx,
-                                      const Vector2& position) const final;
+  const TrackingVolume* resolveVolume(
+      const GeometryContext& gctx, const Vector2& position,
+      double tolerance = s_onSurfaceTolerance) const final;
 
-  const TrackingVolume* resolveVolume(const GeometryContext& gctx,
-                                      const Vector3& position) const final;
+  const TrackingVolume* resolveVolume(
+      const GeometryContext& gctx, const Vector3& position,
+      double tolerance = s_onSurfaceTolerance) const final;
 
   std::size_t depth() const;
 

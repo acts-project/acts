@@ -268,19 +268,21 @@ class GridPortalLinkT final : public GridPortalLink {
     }
   }
 
-  const TrackingVolume* resolveVolume(const GeometryContext& gctx,
-                                      const Vector3& position) const final {
-    auto res = m_surface->globalToLocal(gctx, position);
+  const TrackingVolume* resolveVolume(
+      const GeometryContext& gctx, const Vector3& position,
+      double tolerance = s_onSurfaceTolerance) const final {
+    auto res = m_surface->globalToLocal(gctx, position, tolerance);
     if (!res.ok()) {
       throw std::invalid_argument{"Cannot resolve position"};
     }
 
     const Vector2& local = *res;
-    return resolveVolume(gctx, local);
+    return resolveVolume(gctx, local, tolerance);
   }
 
-  const TrackingVolume* resolveVolume(const GeometryContext& /*gctx*/,
-                                      const Vector2& position) const final {
+  const TrackingVolume* resolveVolume(
+      const GeometryContext& /*gctx*/, const Vector2& position,
+      double /*tolerance*/ = s_onSurfaceTolerance) const final {
     // @TODO: Should this be an exception or nullptr? Or not even checked at all?
     if (!surface().insideBounds(position, BoundaryTolerance::None())) {
       throw std::invalid_argument{"Position is outside surface bounds"};

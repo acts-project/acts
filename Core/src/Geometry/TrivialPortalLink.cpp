@@ -21,15 +21,19 @@ std::unique_ptr<GridPortalLink> TrivialPortalLink::makeGrid(
 }
 
 const TrackingVolume* TrivialPortalLink::resolveVolume(
-    const GeometryContext& /*gctx*/, const Vector2& /*position*/) const {
+    const GeometryContext& /*gctx*/, const Vector2& /*position*/,
+    double /*tolerance*/) const {
   return m_volume;
 }
 
 const TrackingVolume* TrivialPortalLink::resolveVolume(
-    const GeometryContext& gctx, const Vector3& position) const {
+    const GeometryContext& gctx, const Vector3& position,
+    double tolerance) const {
   static_cast<void>(gctx);
   static_cast<void>(position);
-  assert(m_surface->isOnSurface(gctx, position) &&
+  static_cast<void>(tolerance);
+  assert(m_surface->isOnSurface(gctx, position, BoundaryTolerance::None(),
+                                tolerance) &&
          "Trivial portal lookup point should be on surface");
   return m_volume;
 }

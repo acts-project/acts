@@ -29,10 +29,12 @@ class PortalLinkBase {
 
   // @TODO: Does this need boundary tolerance?
   virtual const TrackingVolume* resolveVolume(
-      const GeometryContext& gctx, const Vector3& position) const = 0;
+      const GeometryContext& gctx, const Vector3& position,
+      double tolerance = s_onSurfaceTolerance) const = 0;
 
   virtual const TrackingVolume* resolveVolume(
-      const GeometryContext& gctx, const Vector2& position) const = 0;
+      const GeometryContext& gctx, const Vector2& position,
+      double tolerance = s_onSurfaceTolerance) const = 0;
 
   static std::unique_ptr<PortalLinkBase> merge(
       std::unique_ptr<PortalLinkBase> a, std::unique_ptr<PortalLinkBase> b,

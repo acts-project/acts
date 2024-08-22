@@ -45,19 +45,23 @@ CompositePortalLink::CompositePortalLink(std::unique_ptr<PortalLinkBase> a,
 }
 
 const TrackingVolume* CompositePortalLink::resolveVolume(
-    const GeometryContext& gctx, const Vector2& position) const {
+    const GeometryContext& gctx, const Vector2& position,
+    double tolerance) const {
   // In this overload, we have to go back to global, because the children have
   // their own local coordinate systems
   Vector3 global = m_surface->localToGlobal(gctx, position);
-  return resolveVolume(gctx, global);
+  return resolveVolume(gctx, global, tolerance);
 }
 
 const TrackingVolume* CompositePortalLink::resolveVolume(
-    const GeometryContext& gctx, const Vector3& position) const {
-  assert(m_surface->isOnSurface(gctx, position));
+    const GeometryContext& gctx, const Vector3& position,
+    double tolerance) const {
+  assert(m_surface->isOnSurface(gctx, position, BoundaryTolerance::None(),
+                                tolerance));
 
   for (const auto& child : m_children) {
-    if (child->surface().isOnSurface(gctx, position)) {
+    if (child->surface().isOnSurface(gctx, position, BoundaryTolerance::None(),
+                                     tolerance)) {
       return child->resolveVolume(gctx, position);
     }
   }
