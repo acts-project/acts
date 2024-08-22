@@ -36,7 +36,7 @@ struct NavigationStream {
   /// The query point for the navigation stream
   ///
   /// This holds the position and direction from which the navigation stream
-  /// should either be initialzed or updated.
+  /// should either be initialized or updated.
   struct QueryPoint {
     /// The position of the query point
     Vector3 position = Vector3::Zero();
@@ -71,7 +71,7 @@ struct NavigationStream {
   /// The currently active candidate
   std::size_t currentIndex = 0u;
 
-  /// Swtich to next next candidate
+  /// Switch to next next candidate
   ///
   /// @return true if a next candidate is available
   bool switchToNextCandidate() {
