@@ -61,6 +61,7 @@ run $CURL \
 
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
     run "${destination}/bin/python3" -m venv "${GITHUB_WORKSPACE}/venv"
-    "${GITHUB_WORKSPACE}/venv/bin/python3" -m pip install pyyaml jinja2
+    run "${GITHUB_WORKSPACE}/venv/bin/python3" -m pip install pyyaml jinja2
     echo "PATH=${destination}/bin:${PATH}" >> $GITHUB_ENV
+    echo "CMAKE_PREFIX_PATH=${destination}" >> $GITHUB_ENV
 fi
