@@ -24,6 +24,7 @@
 
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoTube.h>
+#include <GeoModelKernel/GeoTrd.h>
 #include <GeoModelKernel/GeoSimplePolygonBrep.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
@@ -52,12 +53,17 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   auto boxXY = new GeoBox(gm_box_hlx, gm_box_hly, gm_box_hlz);
   auto tube = new GeoTube(gm_tube_rmin, gm_tube_rmax, gm_tube_hlz);
   auto ssurface = new GeoBox(gm_rsurf_hlx, gm_rsurf_hly, gm_rsurf_hlz);
+  double halfX1 = fabs(trapX_verts[0]-trapX_verts[1])/2;
+  double halfX2 = fabs(trapX_verts[2]-trapX_verts[3])/2;
+  double halfY1 = fabs(trapY_verts[0]-trapY_verts[2])/2;
+  double halfY2 = fabs(trapY_verts[1]-trapY_verts[3])/2;
+  auto trd = new GeoTrd(1, 1, halfX1, halfX2, halfY1);
   auto trap = new GeoSimplePolygonBrep(gm_poly_z);
-  for(int i=0;i<trapX_verts.size();i++){
+  for(long unsigned int i=0;i<trapX_verts.size();i++){
     trap->addVertex(trapX_verts[i], trapY_verts[i]);
   }
   auto poly = new GeoSimplePolygonBrep(gm_poly_z);
-  for(int i=0;i<polyX_verts.size();i++){
+  for(long unsigned int i=0;i<polyX_verts.size();i++){
     poly->addVertex(polyX_verts[i], polyY_verts[i]);
   }
 
@@ -66,7 +72,8 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
   auto logTube = new GeoLogVol("LogTube", tube, al);
   auto logSurface = new GeoLogVol("LogSurface", ssurface, al);
-  auto logTrap = new GeoLogVol("LogPoly", trap, al);
+  auto logTrap = new GeoLogVol("LogTrap", trap, al);
+  auto logTrd = new GeoLogVol("LogTrd", trd, al);
   auto logPoly = new GeoLogVol("LogPoly", poly, al);
 
   // create physvols
@@ -74,12 +81,14 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   auto physTube = new GeoFullPhysVol(logTube);
   auto physSurface = new GeoFullPhysVol(logSurface);
   auto physTrap = new GeoFullPhysVol(logTrap);
+  auto physTrd = new GeoFullPhysVol(logTrd);
   auto physPoly = new GeoFullPhysVol(logPoly);
 
   // build hierarchy
   fphysXY->add(physTube);
   fphysXY->add(physSurface);
   fphysXY->add(physTrap);
+  fphysXY->add(physTrd);
   fphysXY->add(physPoly);
 
   PVConstLink physVol{fphysXY};
@@ -128,7 +137,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
       if (sbounds.type() == Acts::SurfaceBounds::eTrapezoid) {
         const auto* trapBounds = dynamic_cast<const Acts::TrapezoidBounds*>(&sbounds);
         std::vector<Acts::Vector2> trapVerts = trapBounds->vertices();
-        for(int i=0;i<trapVerts.size();i++){
+        for(long unsigned int i=0;i<trapVerts.size();i++){
           BOOST_CHECK(trapVerts[i][0]==trapX_verts[i]);
           BOOST_CHECK(trapVerts[i][1]==trapY_verts[i]);
         }
@@ -136,7 +145,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
       if (sbounds.type() == Acts::SurfaceBounds::eDiamond) {
         const auto* polyBounds = dynamic_cast<const Acts::DiamondBounds*>(&sbounds);
         std::vector<Acts::Vector2> polyVerts = polyBounds->vertices();
-        for(int i=0;i<polyVerts.size();i++){
+        for(long unsigned int i=0;i<polyVerts.size();i++){
           BOOST_CHECK(polyVerts[i][0]==polyX_verts[i]);
           BOOST_CHECK(polyVerts[i][1]==polyY_verts[i]);
         }

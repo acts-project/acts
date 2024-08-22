@@ -49,9 +49,6 @@ Acts::detail::GeoPolygonConverter::operator()(PVConstLink geoPV,
               [](const std::vector<double>& a, const std::vector<double>& b) {
                   return a[1] < b[1]; 
               });
-  for (auto vert : vertices){
-    std::cout << vert[0] << " " << vert[1] << std::endl;
-  }
   if(nVertices==4){
     double hlxnegy = fabs(vertices[0][0]-vertices[1][0])/2;
     double hlxposy = fabs(vertices[2][0]-vertices[3][0])/2;
