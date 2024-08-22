@@ -1121,6 +1121,10 @@ class Gx2Fitter {
           const GeometryIdentifier geoId =
               trackState.referenceSurface().geometryId();
           auto scatteringMapId = scatteringMap.find(geoId);
+          if (scatteringMapId == nullptr) {
+            throw std::runtime_error(
+                "Null pointer dereference: scatteringMapId is nullptr.");
+          }
           doMaterial = doMaterial && scatteringMapId->second.materialIsValid;
         }
 
