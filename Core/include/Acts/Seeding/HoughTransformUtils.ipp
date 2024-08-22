@@ -60,8 +60,9 @@ void Acts::HoughTransformUtils::HoughCell<identifier_t>::fill(
     const identifier_t& identifier, unsigned layer, YieldType weight) {
   // add the hit to the list of hits in the cell
 
-  if (m_ihit != 0 && m_hits[m_ihit - 1] == identifier)
+  if (m_ihit != 0 && m_hits[m_ihit - 1] == identifier) {
     return;
+  }
 
   if (m_ihit == m_hits.size()) {
     m_hits.resize(m_hits.size() + m_assignBatch);
