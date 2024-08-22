@@ -119,6 +119,15 @@ class FixedSizeSubspace {
   /// @return Axis index in the full space
   constexpr std::size_t operator[](std::size_t i) const { return m_axes[i]; }
 
+  std::size_t indexOf(std::size_t axis) const {
+    for (std::size_t i = 0; i < kSize; ++i) {
+      if (m_axes[i] == axis) {
+        return i;
+      }
+    }
+    return kSize;
+  }
+
   /// Axis indices that comprise the subspace.
   ///
   /// The specific container and index type should be considered an
@@ -266,6 +275,15 @@ class VariableSizeSubspace {
     return m_axes[i];
   }
 
+  std::size_t indexOf(std::size_t axis) const {
+    for (std::size_t i = 0; i < m_size; ++i) {
+      if (m_axes[i] == axis) {
+        return i;
+      }
+    }
+    return m_size;
+  }
+
   /// Check if the given axis index in the full space is part of the subspace.
   constexpr bool contains(std::size_t index) const {
     bool isContained = false;
@@ -301,40 +319,6 @@ class VariableSizeSubspace {
       expn(m_axes[i], i) = 1;
     }
     return expn;
-  }
-
-  std::uint64_t projectorBits() const {
-    std::uint64_t result = 0;
-
-    for (std::size_t i = 0; i < m_size; ++i) {
-      for (std::size_t j = 0; j < kFullSize; ++j) {
-        // the bit order is defined in `Acts/Utilities/AlgebraHelpers.hpp`
-        // in `matrixToBitset`
-        std::size_t index = m_size * kFullSize - 1 - (i + j * m_size);
-        if (m_axes[i] == j) {
-          result |= (1ull << index);
-        }
-      }
-    }
-
-    return result;
-  }
-
-  std::uint64_t fullProjectorBits() const {
-    std::uint64_t result = 0;
-
-    for (std::size_t i = 0; i < kFullSize; ++i) {
-      for (std::size_t j = 0; j < kFullSize; ++j) {
-        // the bit order is defined in `Acts/Utilities/AlgebraHelpers.hpp`
-        // in `matrixToBitset`
-        std::size_t index = kFullSize * kFullSize - 1 - (i + j * kFullSize);
-        if (i < m_size && m_axes[i] == j) {
-          result |= (1ull << index);
-        }
-      }
-    }
-
-    return result;
   }
 };
 

@@ -13,6 +13,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -23,8 +24,6 @@
 #include <cmath>
 #include <stdexcept>
 #include <string>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
 
@@ -54,7 +53,7 @@ ProcessCode CsvExaTrkXGraphReader::read(const AlgorithmContext& ctx) {
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
   // vt and m are an optional columns
-  dfe::NamedTupleCsvReader<GraphData> reader(path, {"vt", "m"});
+  ActsExamples::NamedTupleCsvReader<GraphData> reader(path, {"vt", "m"});
   GraphData data;
 
   Graph g;

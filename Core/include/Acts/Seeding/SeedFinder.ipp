@@ -36,11 +36,10 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
 }
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
-template <template <typename...> typename container_t, typename sp_range_t>
+template <typename container_t, typename sp_range_t>
 void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
-    const grid_t& grid,
-    std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
+    const grid_t& grid, container_t& outputCollection,
     const sp_range_t& bottomSPsIdx, const std::size_t middleSPsIdx,
     const sp_range_t& topSPsIdx,
     const Acts::Range1D<float>& rMiddleSPRange) const {
@@ -200,8 +199,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     }
 
     m_config.seedFilter->filterSeeds_1SpFixed(
-        state.spacePointData, state.candidates_collector,
-        seedFilterState.numQualitySeeds, outIt);
+        state.spacePointData, state.candidates_collector, outputCollection);
 
   }  // loop on mediums
 }
@@ -573,7 +571,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
         state.compatBottomSP[b]->radius() > seedFilterState.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }
-    if (m_config.seedConfirmation && seedFilterState.numQualitySeeds) {
+    if (m_config.seedConfirmation &&
+        state.candidates_collector.nHighQualityCandidates()) {
       minCompatibleTopSPs++;
     }
 
@@ -831,20 +830,4 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
   }  // loop on bottoms
 }
 
-template <typename external_spacepoint_t, typename grid_t, typename platform_t>
-template <typename sp_range_t>
-std::vector<Seed<external_spacepoint_t>>
-SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
-    const Acts::SeedFinderOptions& options, const grid_t& grid,
-    const sp_range_t& bottomSPs, const std::size_t middleSPs,
-    const sp_range_t& topSPs) const {
-  SeedingState state;
-  const Acts::Range1D<float> rMiddleSPRange;
-  std::vector<Seed<external_spacepoint_t>> ret;
-
-  createSeedsForGroup(options, state, grid, std::back_inserter(ret), bottomSPs,
-                      middleSPs, topSPs, rMiddleSPRange);
-
-  return ret;
-}
 }  // namespace Acts

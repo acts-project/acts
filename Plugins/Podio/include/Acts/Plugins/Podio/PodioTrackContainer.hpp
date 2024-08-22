@@ -15,10 +15,14 @@
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/Plugins/Podio/PodioDynamicColumns.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 #include "ActsPodioEdm/ParticleHypothesis.h"
 #include "ActsPodioEdm/Track.h"
 #include "ActsPodioEdm/TrackCollection.h"
 #include "ActsPodioEdm/TrackInfo.h"
+#pragma GCC diagnostic pop
 
 #include <mutex>
 #include <stdexcept>
@@ -307,7 +311,9 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
       m_dynamic;
 };
 
-ACTS_STATIC_CHECK_CONCEPT(TrackContainerBackend, MutablePodioTrackContainer);
+static_assert(
+    TrackContainerBackend<MutablePodioTrackContainer>,
+    "MutablePodioTrackContainer does not fulfill TrackContainerBackend");
 
 class ConstPodioTrackContainer : public PodioTrackContainerBase {
  public:
@@ -394,6 +400,8 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
   std::vector<HashedString> m_dynamicKeys;
 };
 
-ACTS_STATIC_CHECK_CONCEPT(ConstTrackContainerBackend, ConstPodioTrackContainer);
+static_assert(
+    ConstTrackContainerBackend<ConstPodioTrackContainer>,
+    "ConstPodioTrackContainer does not fulfill ConstTrackContainerBackend");
 
 }  //  namespace Acts
