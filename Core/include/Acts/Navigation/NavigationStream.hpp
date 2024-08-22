@@ -69,7 +69,7 @@ struct NavigationStream {
   std::vector<Candidate> candidates;
 
   /// The currently active candidate range
-  size_t currentIndex = 0u;
+  std::size_t currentIndex = 0u;
 
   /// Progress to next next candidate
   ///

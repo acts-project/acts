@@ -101,8 +101,8 @@ bool Acts::NavigationStreamHelper::updateStream(
   const Vector3& direction = queryPoint.direction;
 
   // Loop over the (currently valid) candidates and update
-  for (size_t& index = stream.currentIndex; index < stream.candidates.size();
-       ++index) {
+  for (std::size_t& index = stream.currentIndex;
+       index < stream.candidates.size(); ++index) {
     // Get the candidate, and resolve the tuple
     NavigationStream::Candidate& candidate = stream.currentCandidate();
     auto& [sIntersection, portal, bTolerance] = candidate;

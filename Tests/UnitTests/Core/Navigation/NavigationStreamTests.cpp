@@ -221,12 +221,12 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
                   std::numeric_limits<ActsScalar>::epsilon());
   // Oh noooo, an actor just kicked in and changed the direction
   qPoint.direction = Vector3(0., 1., 1.).normalized();
-  // All ist lost, no surface is reachable anymore
+  // All is lost, no surface is reachable anymore
   BOOST_CHECK(!NavigationStreamHelper::updateStream(nStream, gContext, qPoint));
 }
 
 BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinders) {
-  // Create the cylinder setu
+  // Create the cylinder setup
   auto surfaces = createCylinders();
 
   // Let us fill the surfaces into the navigation stream
