@@ -24,8 +24,9 @@
 
 namespace Acts {
 
-auto VectorMultiTrajectory::addTrackState_impl(
-    TrackStatePropMask mask, IndexType iprevious) -> IndexType {
+auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
+                                               IndexType iprevious)
+    -> IndexType {
   using PropMask = TrackStatePropMask;
 
   m_index.emplace_back();
@@ -76,7 +77,7 @@ auto VectorMultiTrajectory::addTrackState_impl(
     m_sourceLinks.emplace_back(std::nullopt);
     p.icalibratedsourcelink = m_sourceLinks.size() - 1;
 
-    m_projectors.push_back(kBoundSubspaceIndicesInvalid);
+    m_projectors.push_back(0);
     p.iprojector = m_projectors.size() - 1;
   }
 
@@ -131,7 +132,7 @@ void VectorMultiTrajectory::addTrackStateComponents_impl(
     m_sourceLinks.emplace_back(std::nullopt);
     p.icalibratedsourcelink = m_sourceLinks.size() - 1;
 
-    m_projectors.push_back(kBoundSubspaceIndicesInvalid);
+    m_projectors.push_back(0);
     p.iprojector = m_projectors.size() - 1;
   }
 

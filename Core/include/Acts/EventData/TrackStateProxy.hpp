@@ -705,7 +705,8 @@ class TrackStateProxy {
 
   BoundSubspaceIndices boundSubspaceIndices() const {
     assert(has<hashString("projector")>());
-    return component<BoundSubspaceIndices, hashString("projector")>();
+    return deserializeSubspaceIndices<eBoundSize>(
+        component<SerializedSubspaceIndices, hashString("projector")>());
   }
 
   template <std::size_t measdim>
@@ -721,29 +722,30 @@ class TrackStateProxy {
     requires(!ReadOnly)
   {
     assert(has<hashString("projector")>());
-    component<BoundSubspaceIndices, hashString("projector")>() = boundSubspace;
+    component<SerializedSubspaceIndices, hashString("projector")>() =
+        serializeSubspaceIndices(boundSubspace);
   }
 
   template <std::size_t measdim>
-  void setSubspaceIndices(SubspaceIndices<measdim> proj)
-    requires(!ReadOnly)
+  void setSubspaceIndices(SubspaceIndices<measdim> subspace)
+    requires(!ReadOnly && measdim <= eBoundSize)
   {
     assert(has<hashString("projector")>());
-    BoundSubspaceIndices& boundSubspace =
-        component<BoundSubspaceIndices, hashString("projector")>();
-    std::copy(proj.begin(), proj.end(), boundSubspace.begin());
+    BoundSubspaceIndices boundSubspace{};
+    std::copy(subspace.begin(), subspace.end(), boundSubspace.begin());
+    setBoundSubspaceIndices(boundSubspace);
   }
 
   template <std::size_t measdim, typename index_t>
   void setSubspaceIndices(std::array<index_t, measdim> subspaceIndices)
-    requires(!ReadOnly)
+    requires(!ReadOnly && measdim <= eBoundSize)
   {
     assert(has<hashString("projector")>());
-    BoundSubspaceIndices& boundSubspace =
-        component<BoundSubspaceIndices, hashString("projector")>();
+    BoundSubspaceIndices boundSubspace{};
     std::transform(subspaceIndices.begin(), subspaceIndices.end(),
                    boundSubspace.begin(),
                    [](index_t i) { return static_cast<std::uint8_t>(i); });
+    setBoundSubspaceIndices(boundSubspace);
   }
 
   VariableBoundSubspaceHelper variableBoundSubspaceHelper() const {

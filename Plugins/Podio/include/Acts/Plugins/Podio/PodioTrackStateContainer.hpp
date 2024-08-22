@@ -124,10 +124,7 @@ class PodioTrackStateContainerBase {
       case "smoothed"_hash:
         return &data.ismoothed;
       case "projector"_hash:
-        // workaround podio not allowing `std::uint8_t` as a type
-        return reinterpret_cast<std::conditional_t<
-            EnsureConst, const BoundSubspaceIndices*, BoundSubspaceIndices*>>(
-            &data.projector);
+        return data.projector;
       case "measdim"_hash:
         return &data.measdim;
       case "chi2"_hash:

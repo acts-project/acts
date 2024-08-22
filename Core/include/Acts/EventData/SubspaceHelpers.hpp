@@ -21,6 +21,15 @@
 
 namespace Acts {
 
+/// Check subspace indices for consistency
+///
+/// @tparam Container type of the container
+///
+/// @param container the container of indices
+/// @param fullSize the full size of the subspace
+/// @param subspaceSize the size of the subspace
+///
+/// @return true if the indices are consistent
 template <typename Container>
 inline static bool checkSubspaceIndices(const Container& container,
                                         std::size_t fullSize,
@@ -44,6 +53,51 @@ inline static bool checkSubspaceIndices(const Container& container,
   return true;
 }
 
+/// Serialize subspace indices to a single 64 bit integer
+///
+/// @tparam FullSize the full size of the subspace
+///
+/// @param indices the subspace indices
+///
+/// @return the serialized subspace indices
+template <std::size_t FullSize>
+inline static SerializedSubspaceIndices serializeSubspaceIndices(
+    const SubspaceIndices<FullSize>& indices)
+  requires(FullSize <= 8)
+{
+  SerializedSubspaceIndices result = 0;
+  for (std::size_t i = 0; i < FullSize; ++i) {
+    result |= static_cast<SerializedSubspaceIndices>(indices[i]) << (i * 8);
+  }
+  return result;
+}
+
+/// Deserialize subspace indices from a single 64 bit integer
+///
+/// @tparam FullSize the full size of the subspace
+///
+/// @param serialized the serialized subspace indices
+///
+/// @return the subspace indices
+template <std::size_t FullSize>
+inline static SubspaceIndices<FullSize> deserializeSubspaceIndices(
+    SerializedSubspaceIndices serialized)
+  requires(FullSize <= 8)
+{
+  SubspaceIndices<FullSize> result;
+  for (std::size_t i = 0; i < FullSize; ++i) {
+    result[i] = static_cast<std::uint8_t>(serialized >> (i * 8));
+  }
+  return result;
+}
+
+namespace detail {
+
+/// Helper base class for subspace operations which provides common
+/// functionality for fixed and variable subspace helpers
+///
+/// @tparam Derived the derived type
+/// @tparam FullSize the full size of the subspace
 template <typename Derived, std::size_t FullSize>
 class SubspaceHelperBase {
  public:
@@ -85,10 +139,16 @@ class SubspaceHelperBase {
   const Derived& self() const { return static_cast<const Derived&>(*this); }
 };
 
+}  // namespace detail
+
+/// Helper class for variable subspace operations
+///
+/// @tparam FullSize the full size of the subspace
+/// @tparam index_t the index type
 template <std::size_t FullSize, typename index_t = std::uint8_t>
 class VariableSubspaceHelper
-    : public SubspaceHelperBase<VariableSubspaceHelper<FullSize, index_t>,
-                                FullSize> {
+    : public detail::SubspaceHelperBase<
+          VariableSubspaceHelper<FullSize, index_t>, FullSize> {
  public:
   static constexpr std::size_t kFullSize = FullSize;
 
@@ -116,10 +176,15 @@ class VariableSubspaceHelper
   Container m_indices;
 };
 
+/// Helper class for fixed subspace operations
+///
+/// @tparam FullSize the full size of the subspace
+/// @tparam SubspaceSize the size of the subspace
+/// @tparam index_t the index type
 template <std::size_t FullSize, std::size_t SubspaceSize,
           typename index_t = std::uint8_t>
 class FixedSubspaceHelper
-    : public SubspaceHelperBase<
+    : public detail::SubspaceHelperBase<
           FixedSubspaceHelper<FullSize, SubspaceSize, index_t>, FullSize> {
  public:
   static constexpr std::size_t kFullSize = FullSize;
@@ -230,6 +295,14 @@ using FixedBoundSubspaceHelper =
 using VariableBoundSubspaceHelper =
     VariableSubspaceHelper<Acts::eBoundSize, std::uint8_t>;
 
+/// Convert a projector to subspace indices
+///
+/// @tparam kFullSize the full size of the subspace
+/// @tparam Derived the derived type
+///
+/// @param projector the projector
+///
+/// @return the subspace indices
 template <std::size_t kFullSize, typename Derived>
 SubspaceIndices<kFullSize> projectorToSubspaceIndices(
     const Eigen::DenseBase<Derived>& projector) {
