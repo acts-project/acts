@@ -11,7 +11,6 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
-#include <limits>
 #include <tuple>
 #include <vector>
 
