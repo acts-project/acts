@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,10 +19,14 @@
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 #include "ActsPodioEdm/BoundParametersCollection.h"
 #include "ActsPodioEdm/JacobianCollection.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
 #include "ActsPodioEdm/TrackStateInfo.h"
+#pragma GCC diagnostic pop
 
 #include <any>
 #include <memory>
@@ -32,8 +36,6 @@
 
 #include <podio/CollectionBase.h>
 #include <podio/Frame.h>
-
-#include "podio/UserDataCollection.h"
 
 namespace Acts {
 
@@ -122,10 +124,7 @@ class PodioTrackStateContainerBase {
       case "smoothed"_hash:
         return &data.ismoothed;
       case "projector"_hash:
-        // workaround podio not allowing `std::uint8_t` as a type
-        return reinterpret_cast<std::conditional_t<
-            EnsureConst, const BoundSubspaceIndices*, BoundSubspaceIndices*>>(
-            &data.projector);
+        return &data.projector;
       case "measdim"_hash:
         return &data.measdim;
       case "chi2"_hash:

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,9 +10,9 @@
 
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 
 #include <cstddef>
 #include <mutex>
@@ -25,7 +25,7 @@ class TTree;
 namespace ActsExamples {
 struct AlgorithmContext;
 
-/// @class RootPropagationStepsWriter
+/// @class RootPropagationSummaryWriter
 ///
 /// Write out the steps of test propgations for stepping validation,
 /// each step sequence is one entry in the root file for optimised
@@ -36,17 +36,18 @@ struct AlgorithmContext;
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootPropagationStepsWriter : public WriterT<PropagationSummaries> {
+class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
  public:
   struct Config {
     /// particle collection to write
-    std::string collection = "propagation_steps";
+    std::string inputSummaryCollection = "propagation_summary";
+
     /// path of the output file
     std::string filePath = "";
     /// file access mode
     std::string fileMode = "RECREATE";
     /// name of the output tree
-    std::string treeName = "propagation_steps";
+    std::string treeName = "propagation_summary";
     /// common root file
     TFile* rootFile = nullptr;
   };
@@ -54,11 +55,11 @@ class RootPropagationStepsWriter : public WriterT<PropagationSummaries> {
   /// Constructor with
   /// @param cfg configuration struct
   /// @param output logging level
-  RootPropagationStepsWriter(const Config& cfg,
-                             Acts::Logging::Level level = Acts::Logging::INFO);
+  RootPropagationSummaryWriter(
+      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Virtual destructor
-  ~RootPropagationStepsWriter() override;
+  ~RootPropagationSummaryWriter() override;
 
   /// End-of-run hook
   ProcessCode finalize() override;
@@ -104,47 +105,10 @@ class RootPropagationStepsWriter : public WriterT<PropagationSummaries> {
   float m_pt = 0;
   float m_p = 0;
 
-  /// volume identifier
-  std::vector<int> m_volumeID;
-  /// boundary identifier
-  std::vector<int> m_boundaryID;
-  /// layer identifier if
-  std::vector<int> m_layerID;
-  /// surface identifier
-  std::vector<int> m_approachID;
-  /// surface identifier
-  std::vector<int> m_sensitiveID;
-  /// surface identifier
-  std::vector<int> m_extraID;
-  /// flag material if present
-  std::vector<int> m_material;
-  /// global x
-  std::vector<float> m_x;
-  /// global y
-  std::vector<float> m_y;
-  /// global z
-  std::vector<float> m_z;
-  /// global r
-  std::vector<float> m_r;
-  /// global direction x
-  std::vector<float> m_dx;
-  /// global direction y
-  std::vector<float> m_dy;
-  /// global direction z
-  std::vector<float> m_dz;
-  /// step type
-  std::vector<int> m_step_type;
-  /// accuracy
-  std::vector<float> m_step_acc;
-  /// actor check
-  std::vector<float> m_step_act;
-  /// aborter
-  std::vector<float> m_step_abt;
-  /// user
-  std::vector<float> m_step_usr;
-  /// Number of iterations needed by the stepsize finder (e.g. Runge-Kutta) of
-  /// the stepper.
-  std::vector<std::size_t> m_nStepTrials;
+  // steper statistics
+  int m_nSteps = 0;
+  int m_nStepTrials = 0;
+  int m_pathLength = 0;
 };
 
 }  // namespace ActsExamples
