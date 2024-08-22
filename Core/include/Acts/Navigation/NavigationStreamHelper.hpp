@@ -23,10 +23,8 @@ using namespace Experimental;
 
 class Surface;
 
-/// Fillers and attachers for surfaces to act on the navigation state
 namespace NavigationStreamHelper {
-/// Helper struct that allows to fill surfaces into the candidate vector it
-/// allows to use common navigation structs for volume, portal, surfaces
+/// Helper struct that allows to fill surfaces into the candidate vector
 ///
 /// @param nStream the navigation stream that is being filled
 /// @param surfaces the surfaces that are filled in
@@ -40,8 +38,7 @@ inline static void fillSurfaces(NavigationStream& nStream,
   });
 }
 
-/// Helper struct that allows to fill surfaces into the candidate vector it
-/// allows to use common navigation structs for volume, portal, surfaces
+/// Helper struct that allows to fill portals into the candidate vector
 ///
 /// @param nStream the navigation stream that is being filled
 /// @param portals the portals that are filled in
@@ -71,7 +68,7 @@ bool initializeStream(NavigationStream& stream, const GeometryContext& gctx,
                       const NavigationStream::QueryPoint& queryPoint,
                       BoundaryTolerance cTolerance);
 
-/// Convenience method to upsate a stream from a new position,
+/// Convenience method to update a stream from a new query point,
 /// this could be called from navigation delegates that do not require
 /// a local state or from the navigator on the target stream
 ///

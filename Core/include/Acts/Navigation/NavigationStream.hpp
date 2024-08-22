@@ -27,17 +27,16 @@ class Surface;
 
 /// @brief The NavigationStream is a container for the navigation candidates
 ///
-/// The current candidates are stored in a vector with a range defined
-/// by a pair of indices. This implementation allows passed or unreachable
-/// candidates to be shaddowed without removing them from the container.
+/// The current candidates are stored in a vector of candidates, where an index
+/// is used to indicate the current active candidate.
 ///
 /// @todo the NavigationStream should hold also the current volume it is in
 /// if it represents the geometry stream.
-///
-/// A surface proximity parameter can be used to chose which sort of
-/// intersection path length update is needed.
 struct NavigationStream {
-  /// @brief the Query ppoint for updating the navigation stream
+  /// The query point for the navigation stream
+  ///
+  /// This holds the position and direction from which the navigation stream
+  /// should either be initialzed or updated.
   struct QueryPoint {
     /// The position of the query point
     Vector3 position = Vector3::Zero();
@@ -45,16 +44,15 @@ struct NavigationStream {
     Vector3 direction = Vector3::Zero();
   };
 
-  /// This is a candidate type for a Surface intersection
-  using SurfaceIntersection = ObjectIntersection<Surface>;
-
-  /// This is a candidate object of the navigation stream
-  /// a Surface intersection
-  /// a Portal : set if the surface represents a portal
-  /// a BoundaryTolerance : the boundary tolerance used for the intersection
+  /// This is a candidate object of the navigation stream, it holds:
+  ///
+  /// - a Surface intersection
+  /// - a Portal : set if the surface represents a portal
+  /// - a BoundaryTolerance : the boundary tolerance used for the intersection
   struct Candidate {
     /// The intersection
-    SurfaceIntersection intersection = SurfaceIntersection::invalid();
+    ObjectIntersection<Surface> intersection =
+        ObjectIntersection<Surface>::invalid();
     /// The portal
     const Portal* portal = nullptr;
     /// The boundary tolerance
@@ -65,13 +63,13 @@ struct NavigationStream {
     ActsScalar pathLength() const { return intersection.pathLength(); }
   };
 
-  /// The candidates for the navigation
+  /// The candidates of this navigation stream
   std::vector<Candidate> candidates;
 
-  /// The currently active candidate range
+  /// The currently active candidate
   std::size_t currentIndex = 0u;
 
-  /// Progress to next next candidate
+  /// Swtich to next next candidate
   ///
   /// @return true if a next candidate is available
   bool switchToNextCandidate() {
@@ -82,15 +80,15 @@ struct NavigationStream {
     return false;
   }
 
-  /// @brief Const-access the current candidate
+  /// Const access the current candidate
   const Candidate& currentCandidate() const {
     return candidates.at(currentIndex);
   }
 
-  /// @brief Noncost-access the current candidate
+  /// Non-cost access the current candidate
   Candidate& currentCandidate() { return candidates.at(currentIndex); }
 
-  /// @brief Access the current candidate
+  /// The number of active candidates
   std::size_t activeCandidates() const {
     return (candidates.size() - currentIndex);
   }
