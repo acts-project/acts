@@ -24,17 +24,34 @@ using namespace Experimental;
 class Surface;
 
 namespace NavigationStreamHelper {
+
+/// Helper struct that allows to fill a surface into the candidate vector
+///
+/// @param nStream the navigation stream that is being filled
+/// @param surface the surface to be filled
+/// @param bTolerance the boundary tolerance used for the intersection
+/// @param abortTarget a boolean that indicates if this surface is an abort target
+inline static void fillSurface(NavigationStream& nStream,
+                               const Surface* surface,
+                               BoundaryTolerance bTolerance,
+                               bool abortTarget = false) {
+  nStream.candidates.push_back(NavigationStream::Candidate{
+      ObjectIntersection<Surface>(surface), nullptr, bTolerance, abortTarget});
+}
+
 /// Helper struct that allows to fill surfaces into the candidate vector
 ///
 /// @param nStream the navigation stream that is being filled
 /// @param surfaces the surfaces that are filled in
 /// @param bTolerance the boundary tolerance used for the intersection
+/// @param abortTarget a boolean that indicates if those surfaces are abort targets
 inline static void fillSurfaces(NavigationStream& nStream,
                                 const std::vector<const Surface*>& surfaces,
-                                BoundaryTolerance bTolerance) {
+                                BoundaryTolerance bTolerance,
+                                bool abortTarget = false) {
   std::for_each(surfaces.begin(), surfaces.end(), [&](const auto& s) {
     nStream.candidates.push_back(NavigationStream::Candidate{
-        ObjectIntersection<Surface>(s), nullptr, bTolerance});
+        ObjectIntersection<Surface>(s), nullptr, bTolerance, abortTarget});
   });
 }
 

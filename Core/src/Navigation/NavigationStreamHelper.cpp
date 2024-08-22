@@ -36,7 +36,8 @@ bool Acts::NavigationStreamHelper::initializeStream(
 
   // A container collecting additional valid ones from multi intersections
   std::vector<NavigationStream::Candidate> miCandidates = {};
-  for (auto& [sIntersection, portal, bTolerance] : stream.candidates) {
+  for (auto& [sIntersection, portal, bTolerance, abortTarget] :
+       stream.candidates) {
     // Get the surface from the object intersection
     const Surface* surface = sIntersection.object();
     // Intersect the surface
@@ -75,12 +76,12 @@ bool Acts::NavigationStreamHelper::initializeStream(
             });
 
   // The we find the first invalid candidate
-  auto firstInvalid =
-      std::find_if(stream.candidates.begin(), stream.candidates.end(),
-                   [](const NavigationStream::Candidate& a) {
-                     const auto& [aIntersection, aPortal, aTolerance] = a;
-                     return !aIntersection.isValid();
-                   });
+  auto firstInvalid = std::find_if(
+      stream.candidates.begin(), stream.candidates.end(),
+      [](const NavigationStream::Candidate& a) {
+        const auto& [aIntersection, aPortal, aTolerance, abortTarget] = a;
+        return !aIntersection.isValid();
+      });
 
   // Set the range and initialize
   stream.candidates.resize(
@@ -105,7 +106,7 @@ bool Acts::NavigationStreamHelper::updateStream(
        index < stream.candidates.size(); ++index) {
     // Get the candidate, and resolve the tuple
     NavigationStream::Candidate& candidate = stream.currentCandidate();
-    auto& [sIntersection, portal, bTolerance] = candidate;
+    auto& [sIntersection, portal, bTolerance, abortTarget] = candidate;
     // Get the surface from the object intersection
     const Surface* surface = sIntersection.object();
     // (re-)Intersect the surface

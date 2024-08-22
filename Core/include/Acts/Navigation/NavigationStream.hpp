@@ -57,6 +57,8 @@ struct NavigationStream {
     const Portal* portal = nullptr;
     /// The boundary tolerance
     BoundaryTolerance bTolerance = BoundaryTolerance::None();
+    /// Target flag: true if this Candidate represents an abortTarget
+    bool abortTarget = false;
     /// Convenience access to surface
     const Surface& surface() const { return *intersection.object(); }
     /// Cinvencience access to the path length
