@@ -41,7 +41,10 @@ jobs:
           apt-get update && apt-get install -y git-lfs zstd curl
           && CI/dependencies.sh
 
-      - run: ls -al ${DEPENDENCY_DIR}
+      - run: |
+          ls -al ${DEPENDENCY_DIR}
+          echo $PATH
+          which python3
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
