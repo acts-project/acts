@@ -20,7 +20,6 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r1
-  DEPENDENCY_DIR: ${GITHUB_WORKSPACE}/deps
 
 jobs:
   linux_ubuntu:
@@ -41,11 +40,8 @@ jobs:
         run: >
           apt-get update && apt-get install -y git-lfs zstd curl
           && CI/dependencies.sh
-          && ls -al /__w/acts/acts/deps
-          && ls -al ${{ env.DEPENDENCY_DIR }}
-          && ls -al ${{ env.DEPENDENCY_DIR }}/bin
-          && ${{ env.DEPENDENCY_DIR }}/bin/python3.* -m venv venv
-          && venv/bin/python3 -m pip install pyyaml jinja2
+
+      - run: ls -al ${DEPENDENCY_DIR}
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
@@ -68,7 +64,6 @@ jobs:
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DPython_EXECUTABLE=$PWD/venv/bin/python3
           -DACTS_BUILD_PLUGIN_ONNX=ON
 
       - name: Build

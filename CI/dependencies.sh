@@ -2,17 +2,26 @@
 set -e
 set -u
 
+function run() { 
+    set -x
+    "$@" 
+    { set +x;  } 2> /dev/null
+}
+
+
 
 url=${1:-${DEPENDENCY_URL:-}}
-destination=${2:-${DEPENDENCY_DIR:-}}
+
+if [ -n "${GITHUB_ACTIONS:-}" ]; then
+    destination="${GITHUB_WORKSPACE}/dependencies"
+    echo "DEPENDENCY_DIR=${destination}" >> $GITHUB_ENV
+else
+    destination=${2}
+fi
+
 
 if [ -z "${url}" ]; then
     echo "url is not set"
-    exit 1
-fi
-
-if [ -z "${destination}" ]; then
-    echo "destination is not set"
     exit 1
 fi
 
@@ -38,11 +47,9 @@ if [ -z "$TAR" ]; then
     exit 1
 fi
 
-mkdir -p "${destination}"
+run mkdir -p "${destination}"
 
-
-
-$CURL \
+run $CURL \
   --retry 5 \
   --connect-timeout 2 \
   --location $url \
@@ -51,3 +58,9 @@ $CURL \
     -x \
     --strip-components=1 \
     --directory "${destination}"
+
+if [ -n "${GITHUB_ACTIONS:-}" ]; then
+    run "${destination}/bin/python3" -m venv "${GITHUB_WORKSPACE}/venv"
+    "${GITHUB_WORKSPACE}/venv/bin/python3" -m pip install pyyaml jinja2
+    echo "PATH=${destination}/bin:${PATH}" >> $GITHUB_ENV
+fi
