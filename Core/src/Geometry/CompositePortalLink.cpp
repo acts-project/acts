@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 
+#include <iostream>
 #include <stdexcept>
 
 namespace Acts {
@@ -112,6 +113,10 @@ std::size_t CompositePortalLink::depth() const {
 
 std::size_t CompositePortalLink::size() const {
   return m_children.size();
+}
+
+void CompositePortalLink::toStream(std::ostream& os) const {
+  os << "CompositePortalLink";
 }
 
 }  // namespace Acts

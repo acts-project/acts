@@ -11,23 +11,25 @@
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 
+#include <iosfwd>
+
 #include <boost/container/small_vector.hpp>
 
 namespace Acts {
 
 class CompositePortalLink final : public PortalLinkBase {
  public:
-  void toStream(std::ostream& os) const final { os << "CompositePortalLink"; }
+  CompositePortalLink(std::unique_ptr<PortalLinkBase> a,
+                      std::unique_ptr<PortalLinkBase> b, BinningValue direction,
+                      bool flatten = true);
+
+  void toStream(std::ostream& os) const final;
 
   const TrackingVolume* resolveVolume(const GeometryContext& gctx,
                                       const Vector2& position) const final;
 
   const TrackingVolume* resolveVolume(const GeometryContext& gctx,
                                       const Vector3& position) const final;
-
-  CompositePortalLink(std::unique_ptr<PortalLinkBase> a,
-                      std::unique_ptr<PortalLinkBase> b, BinningValue direction,
-                      bool flatten = true);
 
   std::size_t depth() const;
 
