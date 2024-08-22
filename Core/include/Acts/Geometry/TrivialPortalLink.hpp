@@ -16,22 +16,45 @@ namespace Acts {
 class TrackingVolume;
 class GridPortalLink;
 
+/// Trivial portal link links to a single target volume on every point on a
+/// surface
 class TrivialPortalLink final : public PortalLinkBase {
  public:
+  /// Construct a trivial portal link from a surface and a volume
+  /// @param surface is the surface
+  /// @param volume is the target
   TrivialPortalLink(std::shared_ptr<RegularSurface> surface,
                     TrackingVolume& volume)
       : PortalLinkBase(std::move(surface)), m_volume{&volume} {}
 
+  /// Make a 1D grid portal link from this trivial portal link
+  /// The grid size is automatically determined from the surface bounds.
+  /// @param direction The binning direction
+  /// @return A grid
   std::unique_ptr<GridPortalLink> makeGrid(BinningValue direction) const;
 
+  /// Print the portal link to a stream
+  /// @param os output stream
   void toStream(std::ostream& os) const final {
     os << "TrivialPortalLink<vol=" << m_volume << ">";
   }
 
+  /// Resolve the volume for a 2D position
+  /// @note Always returns the single target volume
+  /// @param gctx is the geometry context
+  /// @param position is the 2D position
+  /// @param tolerance is the tolerance
+  /// @return The target volume (can be null)
   const TrackingVolume* resolveVolume(
       const GeometryContext& gctx, const Vector2& position,
       double tolerance = s_onSurfaceTolerance) const final;
 
+  /// Resolve the volume for a 3D position
+  /// @note Always returns the single target volume
+  /// @param gctx is the geometry context
+  /// @param position is the 2D position
+  /// @param tolerance is the tolerance
+  /// @return The target volume (can be null)
   const TrackingVolume* resolveVolume(
       const GeometryContext& gctx, const Vector3& position,
       double tolerance = s_onSurfaceTolerance) const final;
