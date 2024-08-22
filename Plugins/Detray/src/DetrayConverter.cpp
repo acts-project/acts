@@ -34,47 +34,6 @@
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
-/*#include "Acts/Plugins/Detray/DetrayConverter.hpp"
-
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-//dbg
-//#include "Acts/Detector/ProtoDetector.hpp"
-
-
-#include "Acts/Detector/Portal.hpp"
-#include "Acts/Navigation/PortalNavigation.hpp"
-#include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
-
-#include "Acts/Plugins/Detray/DetrayConversionHelper.hpp"
-
-#include "Acts/Surfaces/CylinderBounds.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Surfaces/RegularSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
-
-#include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
-//dbg
-#include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/GridAxisGenerators.hpp"*/
-
-//for surface grids
-
-
-#include "detray/io/frontend/detector_writer.hpp"
-
-//#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
-//#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
-//#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
-//#include "Acts/Plugins/Json/DetectorVolumeJsonConverter.hpp"
-
 
 
 using namespace detray;
@@ -101,7 +60,6 @@ int findVolume(
 
 
 //convert surface grids to detray format
-//TO DO add methods
 
 /// detray geometry writer function, debug purposes
 void Acts::DetrayConverter::writeToJson(
@@ -371,8 +329,6 @@ detray::io::volume_payload Acts::DetrayConverter::convertVolume(
 
   return volumePayload;
 }
-
-//SURFACE GRIDS 
 
 //convertAxis
 detray::io::axis_payload  Acts::DetrayConverter::convertAxis(
