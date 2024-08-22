@@ -192,9 +192,7 @@ class ObjectIntersection {
 
   constexpr std::uint8_t index() const { return m_index; }
 
-  constexpr static ObjectIntersection invalid() {
-    return ObjectIntersection();
-  }
+  constexpr static ObjectIntersection invalid() { return ObjectIntersection(); }
 
   constexpr static bool pathLengthOrder(
       const ObjectIntersection& aIntersection,

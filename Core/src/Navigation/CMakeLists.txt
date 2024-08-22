@@ -1,5 +1,1 @@
-target_sources(
-    ActsCore
-    PRIVATE
-        NavigationStreamHelper.cpp
-)
+target_sources(ActsCore PRIVATE NavigationStreamHelper.cpp)

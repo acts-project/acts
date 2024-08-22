@@ -10,64 +10,69 @@
 
 #include "Acts/Surfaces/Surface.hpp"
 
-bool Acts::NavigationStreamHelper::processStream(NavigationStream& stream,
-                                                const GeometryContext& gctx,
-                                                const Vector3& position,
-                                                const Vector3& direction,
-                                                bool initial,
-                                                BoundaryTolerance cTolerance) {
-  // Loop over the (currently valid) candidates
-  //
-  // Except for the initial update, the loop is stopped at the first reachable
-  // surface.
-  //
-  for (size_t& index = stream.currentIndex;  index < stream.candidates.size(); ++index) {
-    // Get the candidate, and resolve the tuple
-    NavigationStream::Candidate& candidate = stream.currentCandidate();
-    auto& [sIntersection, portal, bTolerance] = candidate;
-    // Take the candidate Tolerance in case it is an intial update and not a portal
-    const BoundaryTolerance& tolerance = (portal || !initial) ? bTolerance : cTolerance;
+bool Acts::NavigationStreamHelper::initializeStream(
+    NavigationStream& stream, const GeometryContext& gctx,
+    const NavigationStream::QueryPoint& queryPoint,
+    BoundaryTolerance cTolerance) {
+  // Position and direction from the query point
+  const Vector3& position = queryPoint.position;
+  const Vector3& direction = queryPoint.direction;
 
+  // De-duplicate first (necessary to deal correctly with multiple
+  // intersections) - sort them by surface pointer
+  std::sort(stream.candidates.begin(), stream.candidates.end(),
+            [](const NavigationStream::Candidate& a,
+               const NavigationStream::Candidate& b) {
+              return (&a.surface()) < (&b.surface());
+            });
+  // Remove duplicates on basis of the surface pointer
+  stream.candidates.erase(
+      std::unique(stream.candidates.begin(), stream.candidates.end(),
+                  [](const NavigationStream::Candidate& a,
+                     const NavigationStream::Candidate& b) {
+                    return (&a.surface()) == (&b.surface());
+                  }),
+      stream.candidates.end());
+
+  // A container collecting additional valid ones from multi intersections
+  std::vector<NavigationStream::Candidate> miCandidates = {};
+  for (auto& [sIntersection, portal, bTolerance] : stream.candidates) {
     // Get the surface from the object intersection
     const Surface* surface = sIntersection.object();
-    // (re-)Intersect the surface
+    // Intersect the surface
     auto multiIntersection = surface->intersect(
-        gctx, position, direction, tolerance, s_onSurfaceTolerance);
+        gctx, position, direction, cTolerance, s_onSurfaceTolerance);
 
     // Split them into valid intersections
+    bool miCandidate = false;
     for (auto& rsIntersection : multiIntersection.split()) {
-      // Skip negative solutions for inital update, overstepping can not happen
-      if (initial && rsIntersection.pathLength() < 0.) {
+      // Skip negative solutions
+      if (rsIntersection.pathLength() < 0.) {
         continue;
       }
-
-      // Skip wrong index solution for non-inital updates
-      if (!initial && rsIntersection.index() != sIntersection.index()) {
-        continue;
-      }
-
       // Valid solution is either on surface or updates the distance
       if (rsIntersection.isValid()) {
-        // Valid intersection, we assume ordering, update
-        sIntersection = rsIntersection;
-        if (!initial) {
-          // We are done with the current candidate
-          return true;
+        if (!miCandidate) {
+          sIntersection = rsIntersection;
+          miCandidate = true;
+        } else {
+          miCandidates.push_back(
+              NavigationStream::Candidate{rsIntersection, portal, bTolerance});
         }
       }
     }
   }
 
-  // In the initial update case, we need to sort and estimate the range
-  std::sort(
-      stream.candidates.begin(), stream.candidates.end(),
-      [](const NavigationStream::Candidate& a,
-         const NavigationStream::Candidate& b) {
-        const auto& [aIntersection, aPortal, aTolerance] = a;
-        const auto& [bIntersection, bPortal, bTolerance] = b;
-        return (aIntersection.pathLength() < bIntersection.pathLength()) &&
-               aIntersection.isValid();
-      });
+  // Append the multi intersection candidates
+  stream.candidates.insert(stream.candidates.end(), miCandidates.begin(),
+                           miCandidates.end());
+
+  // Sort the candidates by path length
+  std::sort(stream.candidates.begin(), stream.candidates.end(),
+            [](const NavigationStream::Candidate& a,
+               const NavigationStream::Candidate& b) {
+              return a.intersection.pathLength() < b.intersection.pathLength();
+            });
 
   // The we find the first invalid candidate
   auto firstInvalid =
@@ -78,10 +83,47 @@ bool Acts::NavigationStreamHelper::processStream(NavigationStream& stream,
                    });
 
   // Set the range and initialize
-  stream.candidates.resize(std::distance(stream.candidates.begin(), firstInvalid));
+  stream.candidates.resize(
+      std::distance(stream.candidates.begin(), firstInvalid));
+
   stream.currentIndex = 0;
   if (stream.candidates.empty()) {
     return false;
   }
   return true;
+}
+
+bool Acts::NavigationStreamHelper::updateStream(
+    NavigationStream& stream, const GeometryContext& gctx,
+    const NavigationStream::QueryPoint& queryPoint) {
+  // Position and direction from the query point
+  const Vector3& position = queryPoint.position;
+  const Vector3& direction = queryPoint.direction;
+
+  // Loop over the (currently valid) candidates and update
+  for (size_t& index = stream.currentIndex; index < stream.candidates.size();
+       ++index) {
+    // Get the candidate, and resolve the tuple
+    NavigationStream::Candidate& candidate = stream.currentCandidate();
+    auto& [sIntersection, portal, bTolerance] = candidate;
+    // Get the surface from the object intersection
+    const Surface* surface = sIntersection.object();
+    // (re-)Intersect the surface
+    auto multiIntersection = surface->intersect(
+        gctx, position, direction, bTolerance, s_onSurfaceTolerance);
+    // Split them into valid intersections
+    for (auto& rsIntersection : multiIntersection.split()) {
+      // Skip wrong index solution
+      if (rsIntersection.index() != sIntersection.index()) {
+        continue;
+      }
+      // Valid solution is either on surface or updates the distance
+      if (rsIntersection.isValid()) {
+        sIntersection = rsIntersection;
+        return true;
+      }
+    }
+  }
+  // No candidate was reachable
+  return false;
 }

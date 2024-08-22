@@ -19,7 +19,7 @@ namespace Acts {
 
 // To be removed when the namespace Experimental is omitted
 namespace Experimental {
-  class Portal;
+class Portal;
 }
 using namespace Experimental;
 
@@ -31,9 +31,20 @@ class Surface;
 /// by a pair of indices. This implementation allows passed or unreachable
 /// candidates to be shaddowed without removing them from the container.
 ///
-/// A surface proximity parameter can be used to chose which sort of intersection
-/// path length update is needed.
+/// @todo the NavigationStream should hold also the current volume it is in
+/// if it represents the geometry stream.
+///
+/// A surface proximity parameter can be used to chose which sort of
+/// intersection path length update is needed.
 struct NavigationStream {
+  /// @brief the Query ppoint for updating the navigation stream
+  struct QueryPoint {
+    /// The position of the query point
+    Vector3 position = Vector3::Zero();
+    /// The direction of the query point
+    Vector3 direction = Vector3::Zero();
+  };
+
   /// This is a candidate type for a Surface intersection
   using SurfaceIntersection = ObjectIntersection<Surface>;
 
@@ -41,17 +52,17 @@ struct NavigationStream {
   /// a Surface intersection
   /// a Portal : set if the surface represents a portal
   /// a BoundaryTolerance : the boundary tolerance used for the intersection
-  struct  Candidate {
-      /// The intersection 
-      SurfaceIntersection intersection = SurfaceIntersection::invalid();
-      /// The portal
-      const Portal* portal = nullptr;
-      /// The boundary tolerance
-      BoundaryTolerance bTolerance = BoundaryTolerance::None();
-      /// Convenience access to surface
-      const Surface& surface() const {
-          return *intersection.object();
-      }
+  struct Candidate {
+    /// The intersection
+    SurfaceIntersection intersection = SurfaceIntersection::invalid();
+    /// The portal
+    const Portal* portal = nullptr;
+    /// The boundary tolerance
+    BoundaryTolerance bTolerance = BoundaryTolerance::None();
+    /// Convenience access to surface
+    const Surface& surface() const { return *intersection.object(); }
+    /// Cinvencience access to the path length
+    ActsScalar pathLength() const { return intersection.pathLength(); }
   };
 
   /// The candidates for the navigation
@@ -60,15 +71,24 @@ struct NavigationStream {
   /// The currently active candidate range
   size_t currentIndex = 0u;
 
+  /// Progress to next next candidate
+  ///
+  /// @return true if a next candidate is available
+  bool switchToNextCandidate() {
+    if (currentIndex < candidates.size()) {
+      ++currentIndex;
+      return true;
+    }
+    return false;
+  }
+
   /// @brief Const-access the current candidate
   const Candidate& currentCandidate() const {
     return candidates.at(currentIndex);
   }
-  
+
   /// @brief Noncost-access the current candidate
-  Candidate& currentCandidate() {
-    return candidates.at(currentIndex);
-  }
+  Candidate& currentCandidate() { return candidates.at(currentIndex); }
 
   /// @brief Access the current candidate
   std::size_t activeCandidates() const {
