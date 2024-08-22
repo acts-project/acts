@@ -475,9 +475,6 @@ class Gx2Fitter {
     // TODO description
     const parameters_t* parametersWithHypothesis = nullptr;
 
-    /// TODO desription
-    bool isFinalPropagation = false;
-
     /// TODO description
     std::unordered_map<GeometryIdentifier, ScatteringProperties>*
         scatteringMap = nullptr;
@@ -543,9 +540,15 @@ class Gx2Fitter {
         const GeometryIdentifier geoId = surface->geometryId();
         ACTS_DEBUG("Surface " << geoId << " detected.");
 
+        // TODO description
+        // later, we also check, if the material slab is valid, otherwise we
+        // ignore it completely.
+        bool doMaterial =
+            multipleScattering && surface->surfaceMaterial() != nullptr;
+
         // Found material - add an scatteringAngles entry if not done yet.
         // Handling will happen later
-        if (multipleScattering && surface->surfaceMaterial() != nullptr) {
+        if (doMaterial) {
           ACTS_DEBUG("    The surface contains material, ...");
 
           auto scatteringMapId = scatteringMap->find(geoId);
@@ -578,9 +581,12 @@ class Gx2Fitter {
             scatteringMap->emplace(
                 geoId, ScatteringProperties{BoundVector::Zero(), invSigma2,
                                             slabIsValid});
+            scatteringMapId = scatteringMap->find(geoId);
           } else {
             ACTS_DEBUG("    ... found entry in scattering map.");
           }
+
+          doMaterial = doMaterial && scatteringMapId->second.materialIsValid;
         }
 
         // Check if we have a measurement surface
@@ -616,17 +622,10 @@ class Gx2Fitter {
             // Not const since, we might need to update with scattering angles
             auto& [boundParams, jacobian, pathLength] = *res;
 
-            // Fill the track state
-            trackStateProxy.predicted() = boundParams.parameters();
-            trackStateProxy.predictedCovariance() = state.stepping.cov;
-
-            trackStateProxy.jacobian() = jacobian;
-            trackStateProxy.pathLength() = pathLength;
-
             // For material surfaces, we also update the angles with the
             // available scattering information
-            if (multipleScattering && surface->surfaceMaterial() != nullptr) {
-              std::cout << "Material on measurement surface." << std::endl;
+            if (doMaterial) {
+//              std::cout << "Material on measurement surface." << std::endl;
               ACTS_DEBUG("    Update parameters with scattering angles.");
               auto scatteringMapId = scatteringMap->find(geoId);
               ACTS_VERBOSE("    scatteringAngles:\n"
@@ -637,6 +636,22 @@ class Gx2Fitter {
                   scatteringMapId->second.scatteringAngles;
               ACTS_VERBOSE("    boundParams after the update:\n"
                            << boundParams);
+            }
+
+            // Fill the track state
+            trackStateProxy.predicted() = boundParams.parameters();
+            trackStateProxy.predictedCovariance() = state.stepping.cov;
+
+            trackStateProxy.jacobian() = jacobian;
+            trackStateProxy.pathLength() = pathLength;
+
+            if (doMaterial) {
+              stepper.update(state.stepping,
+                             transformBoundToFreeParameters(
+                                 trackStateProxy.referenceSurface(),
+                                 state.geoContext, trackStateProxy.predicted()),
+                             trackStateProxy.predicted(),
+                             trackStateProxy.predictedCovariance(), *surface);
             }
           }
 
@@ -670,8 +685,7 @@ class Gx2Fitter {
           // Update the number of holes count only when encountering a
           // measurement
           result.measurementHoles = result.missedActiveSurfaces.size();
-        } else if (false && !isFinalPropagation && multipleScattering &&
-                   (surface->surfaceMaterial() != nullptr)) {
+        } else if (doMaterial) {
           // Here we handle material for multipleScattering. If holes exist, we
           // also handle them already. We create a full trackstate (unlike for
           // simple holes), since we need to evaluate the material later
@@ -708,15 +722,6 @@ class Gx2Fitter {
             // Not const since, we might need to update with scattering angles
             auto& [boundParams, jacobian, pathLength] = *res;
 
-            // Fill the track state
-            // TODO Do we need to get a prediction? -> yes, otherwise the
-            // trackstates are broken
-            trackStateProxy.predicted() = boundParams.parameters();
-            trackStateProxy.predictedCovariance() = state.stepping.cov;
-
-            trackStateProxy.jacobian() = jacobian;
-            trackStateProxy.pathLength() = pathLength;
-
             // For material surfaces, we also update the angles with the
             // available scattering information
             // We can skip the if here, since we already kno, that we do
@@ -732,6 +737,24 @@ class Gx2Fitter {
                   scatteringMapId->second.scatteringAngles;
               ACTS_VERBOSE("    boundParams after the update:\n"
                            << boundParams);
+            }
+
+            // Fill the track state
+            // TODO Do we need to get a prediction? -> yes, otherwise the
+            // trackstates are broken
+            trackStateProxy.predicted() = boundParams.parameters();
+            trackStateProxy.predictedCovariance() = state.stepping.cov;
+
+            trackStateProxy.jacobian() = jacobian;
+            trackStateProxy.pathLength() = pathLength;
+
+            {
+              stepper.update(state.stepping,
+                             transformBoundToFreeParameters(
+                                 trackStateProxy.referenceSurface(),
+                                 state.geoContext, trackStateProxy.predicted()),
+                             trackStateProxy.predicted(),
+                             trackStateProxy.predictedCovariance(), *surface);
             }
           }
 
@@ -943,7 +966,8 @@ class Gx2Fitter {
     // a following iteration in a different volume.
     const TrackingVolume* startVolume = nullptr;
 
-    // Store, if we want to do multiple scattering. We still need to pass this option to the Actor.
+    // Store, if we want to do multiple scattering. We still need to pass this
+    // option to the Actor.
     const bool multipleScattering = gx2fOptions.multipleScattering;
 
     // TODO description
@@ -986,7 +1010,6 @@ class Gx2Fitter {
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
       gx2fActor.multipleScattering = multipleScattering;
-      gx2fActor.isFinalPropagation = false;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
@@ -1054,11 +1077,6 @@ class Gx2Fitter {
             continue;
           }
 
-          // For now we only allow material on measurement surfaces
-          if (!typeFlags.test(TrackStateFlag::MeasurementFlag)) {
-            continue;
-          }
-
           // Get and store geoId for the current material surface
           const GeometryIdentifier geoId =
               trackState.referenceSurface().geometryId();
@@ -1097,10 +1115,18 @@ class Gx2Fitter {
         const bool stateHasMaterial =
             typeFlags.test(TrackStateFlag::MaterialFlag);
 
+        bool doMaterial = multipleScattering && stateHasMaterial;
+
+        if (doMaterial) {
+          const GeometryIdentifier geoId =
+              trackState.referenceSurface().geometryId();
+          auto scatteringMapId = scatteringMap.find(geoId);
+          doMaterial = doMaterial && scatteringMapId->second.materialIsValid;
+        }
+
         // We only consider states with a measurement
         // TODO also material only states
-        // if (!(stateHasMeasurement || (stateHasMaterial && multipleScattering))) {
-        if (!stateHasMeasurement) {
+        if (!stateHasMeasurement && !doMaterial) {
           ACTS_INFO("    Skip state.");
           continue;
         }
@@ -1146,17 +1172,12 @@ class Gx2Fitter {
 
         // TODO for now I bundle with the measurement. Let's develop
         // material-only states later.
-        if (stateHasMeasurement && multipleScattering &&
-            stateHasMaterial) {
+        if (doMaterial) {
           // Get and store geoId for the current material surface
           const GeometryIdentifier geoId =
               trackState.referenceSurface().geometryId();
           ACTS_VERBOSE("    Add material effects for " << geoId);
           auto scatteringMapId = scatteringMap.find(geoId);
-          if (!scatteringMapId->second.materialIsValid) {
-            ACTS_VERBOSE("    ... Skip material, since it is not valid.");
-            continue;
-          }
 
           geoIdVector.emplace_back(geoId);
 
@@ -1363,7 +1384,6 @@ class Gx2Fitter {
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
       gx2fActor.multipleScattering = multipleScattering;
-      gx2fActor.isFinalPropagation = false;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
