@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 
 #include <iosfwd>
