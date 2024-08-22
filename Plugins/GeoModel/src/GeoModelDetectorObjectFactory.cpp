@@ -139,8 +139,7 @@ Acts::GeoModelDetectorObjectFactory::findAllSubVolumes(PVConstLink vol) {
   }
   return sensitives;
 }
-    //lambda to determine if object fits querry
-
+// lambda to determine if object fits querry
 
 bool Acts::GeoModelDetectorObjectFactory::convertBox(std::string name) {
   auto convB = std::any_of(
