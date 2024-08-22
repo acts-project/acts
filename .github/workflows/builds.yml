@@ -20,6 +20,7 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r1
+  DEPENDENCY_DIR: ${GITHUB_WORKSPACE}/deps
 
 jobs:
   linux_ubuntu:
@@ -29,7 +30,6 @@ jobs:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
       DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v2.tar.zst
-      DEPENDENCY_DIR: ${{ github.workspace }}/deps
 
     steps:
       - uses: actions/checkout@v4
