@@ -35,7 +35,8 @@ struct GeoUnionDoubleTrdConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface> operator()(const GeoFullPhysVol& geoFPV,
+
+  Result<GeoModelSensitiveSurface> operator()(PVConstLink geoFPV,
                                               const GeoShapeUnion& geoUnion,
                                               const Transform3& absTransform,
                                               bool sensitive) const;
