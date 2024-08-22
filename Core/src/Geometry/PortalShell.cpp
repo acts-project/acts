@@ -20,7 +20,8 @@
 
 namespace Acts {
 
-SingleCylinderPortalShell::SingleCylinderPortalShell(TrackingVolume& volume) {
+SingleCylinderPortalShell::SingleCylinderPortalShell(
+    const GeometryContext& gctx, TrackingVolume& volume) {
   assert(volume.volumeBounds().type() == VolumeBounds::BoundsType::eCylinder);
   const auto& bounds =
       dynamic_cast<const CylinderVolumeBounds&>(volume.volumeBounds());
@@ -30,8 +31,8 @@ SingleCylinderPortalShell::SingleCylinderPortalShell(TrackingVolume& volume) {
 
   auto handle = [&](Face face, std::size_t from) {
     const auto& source = orientedSurfaces.at(from);
-    m_portals.at(toUnderlying(face)) =
-        std::make_shared<Portal>(source.direction, source.surface, volume);
+    m_portals.at(toUnderlying(face)) = std::make_shared<Portal>(
+        gctx, source.direction, source.surface, volume);
   };
 
   if (orientedSurfaces.size() == 6) {
@@ -87,8 +88,8 @@ std::size_t SingleCylinderPortalShell::size() const {
 }
 
 CylinderStackPortalShell::CylinderStackPortalShell(
-    std::vector<CylinderPortalShell*> shells, BinningValue direction,
-    const Logger& logger)
+    const GeometryContext& gctx, std::vector<CylinderPortalShell*> shells,
+    BinningValue direction, const Logger& logger)
     : m_direction{direction}, m_shells{std::move(shells)} {
   if (m_shells.size() < 2) {
     throw std::invalid_argument("Invalid number of shells");
@@ -99,7 +100,7 @@ CylinderStackPortalShell::CylinderStackPortalShell(
     throw std::invalid_argument("Invalid shell pointer");
   }
 
-  auto merge = [direction, &shells = m_shells, &logger](Face face) {
+  auto merge = [&gctx, direction, &shells = m_shells, &logger](Face face) {
     std::vector<std::shared_ptr<Portal>> portals;
     std::transform(shells.begin(), shells.end(), std::back_inserter(portals),
                    [face](auto* shell) { return shell->portalPtr(face); });
@@ -112,7 +113,7 @@ CylinderStackPortalShell::CylinderStackPortalShell(
           assert(bPortal != nullptr);
 
           return std::make_shared<Portal>(
-              Portal::merge(*aPortal, *bPortal, direction, logger));
+              Portal::merge(gctx, *aPortal, *bPortal, direction, logger));
         });
 
     // reset merged portal on all shells
@@ -121,12 +122,12 @@ CylinderStackPortalShell::CylinderStackPortalShell(
     }
   };
 
-  auto fuse = [&shells = m_shells, &logger](Face faceA, Face faceB) {
+  auto fuse = [&gctx, &shells = m_shells, &logger](Face faceA, Face faceB) {
     for (std::size_t i = 1; i < shells.size(); i++) {
       auto& shellA = shells.at(i - 1);
       auto& shellB = shells.at(i);
       auto fused = std::make_shared<Portal>(Portal::fuse(
-          *shellA->portalPtr(faceA), *shellB->portalPtr(faceB), logger));
+          gctx, *shellA->portalPtr(faceA), *shellB->portalPtr(faceB), logger));
 
       shellA->setPortal(fused, faceA);
       shellB->setPortal(fused, faceB);

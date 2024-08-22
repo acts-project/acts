@@ -19,6 +19,7 @@ namespace Acts {
 
 class Portal;
 class TrackingVolume;
+class GeometryContext;
 
 class PortalShell {
  public:
@@ -54,7 +55,8 @@ class CylinderPortalShell : public PortalShell {
 
 class SingleCylinderPortalShell : public CylinderPortalShell {
  public:
-  SingleCylinderPortalShell(TrackingVolume& volume);
+  SingleCylinderPortalShell(const GeometryContext& gctx,
+                            TrackingVolume& volume);
 
   std::size_t size() const final;
 
@@ -69,7 +71,8 @@ class SingleCylinderPortalShell : public CylinderPortalShell {
 class CylinderStackPortalShell : public CylinderPortalShell {
  public:
   /// @note The shells must be ordered in the given direction
-  CylinderStackPortalShell(std::vector<CylinderPortalShell*> shells,
+  CylinderStackPortalShell(const GeometryContext& gctx,
+                           std::vector<CylinderPortalShell*> shells,
                            BinningValue direction,
                            const Logger& logger = getDummyLogger());
 
