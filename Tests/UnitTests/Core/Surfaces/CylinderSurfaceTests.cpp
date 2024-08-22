@@ -182,8 +182,12 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   Vector3 offSurface{100, 1, 2};
   BOOST_CHECK(cylinderSurfaceObject->isOnSurface(
       testContext, globalPosition, momentum, BoundaryTolerance::None()));
+  BOOST_CHECK(cylinderSurfaceObject->isOnSurface(testContext, globalPosition,
+                                                 BoundaryTolerance::None()));
   BOOST_CHECK(!cylinderSurfaceObject->isOnSurface(
       testContext, offSurface, momentum, BoundaryTolerance::None()));
+  BOOST_CHECK(!cylinderSurfaceObject->isOnSurface(testContext, offSurface,
+                                                  BoundaryTolerance::None()));
   //
   /// intersection test
   Vector3 direction{-1., 0, 0};

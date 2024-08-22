@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,9 +35,7 @@ ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
 }
 
 ActsExamples::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
-  if (m_detector != nullptr) {
-    m_detector->destroyInstance();
-  }
+  drop();
 }
 
 ActsExamples::ProcessCode
@@ -131,6 +129,16 @@ ActsExamples::DD4hep::DD4hepGeometryService::trackingGeometry(
     buildTrackingGeometry(gctx);
   }
   return m_trackingGeometry;
+}
+
+void ActsExamples::DD4hep::DD4hepGeometryService::drop() {
+  if (m_detector == nullptr) {
+    return;
+  }
+  dd4hep::Detector::destroyInstance(m_cfg.name);
+  m_detector = nullptr;
+  m_geometry = dd4hep::DetElement();
+  m_trackingGeometry = nullptr;
 }
 
 void ActsExamples::DD4hep::sortFCChhDetElements(

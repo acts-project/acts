@@ -46,14 +46,13 @@ class TrackProxyIterator {
   using pointer = void;
   using reference = void;
 
-  TrackProxyIterator(container_t& container,
-                     IndexType itrack) requires(!ReadOnly)
+  TrackProxyIterator(container_t& container, IndexType itrack)
+    requires(!ReadOnly)
       : m_container(&container), m_itrack(itrack) {}
 
-  TrackProxyIterator(const container_t& container,
-                     IndexType itrack) requires ReadOnly
-      : m_container(&container),
-        m_itrack(itrack) {}
+  TrackProxyIterator(const container_t& container, IndexType itrack)
+    requires ReadOnly
+      : m_container(&container), m_itrack(itrack) {}
 
   TrackProxyIterator& operator++() {
     m_itrack++;
@@ -90,7 +89,9 @@ class TrackProxyIterator {
 
   ProxyType operator*() const { return m_container->getTrack(m_itrack); }
 
-  ProxyType operator*() requires(!ReadOnly) {
+  ProxyType operator*()
+    requires(!ReadOnly)
+  {
     return m_container->getTrack(m_itrack);
   }
 
@@ -281,7 +282,9 @@ class TrackProxy {
   /// track container
   /// @note Only available if the track proxy is not read-only
   /// @return mutable reference to the tip index
-  IndexType& tipIndex() requires(!ReadOnly) {
+  IndexType& tipIndex()
+    requires(!ReadOnly)
+  {
     return component<IndexType>(hashString("tipIndex"));
   }
 
@@ -290,7 +293,9 @@ class TrackProxy {
   /// forward-linked.
   /// @note Only available if the track proxy is not read-only
   /// @return mutable reference to the stem index
-  IndexType& stemIndex() requires(!ReadOnly) {
+  IndexType& stemIndex()
+    requires(!ReadOnly)
+  {
     return component<IndexType>(hashString("stemIndex"));
   }
 
@@ -304,8 +309,9 @@ class TrackProxy {
   // looks like a false-positive. clang-tidy believes `srf` is not movable.
   /// Set a new reference surface for this track
   /// @param srf The surface to set
-  void setReferenceSurface(std::shared_ptr<const Surface> srf) requires(
-      !ReadOnly) {
+  void setReferenceSurface(std::shared_ptr<const Surface> srf)
+    requires(!ReadOnly)
+  {
     m_container->container().setReferenceSurface_impl(m_index, std::move(srf));
   }
   // NOLINTEND(performance-unnecessary-value-param)
@@ -335,7 +341,9 @@ class TrackProxy {
   /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return Proxy vector for the parameters
-  Parameters parameters() requires(!ReadOnly) {
+  Parameters parameters()
+    requires(!ReadOnly)
+  {
     return m_container->parameters(m_index);
   }
 
@@ -343,45 +351,35 @@ class TrackProxy {
   /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return Proxy matrix for the covariance
-  Covariance covariance() requires(!ReadOnly) {
+  Covariance covariance()
+    requires(!ReadOnly)
+  {
     return m_container->covariance(m_index);
   }
 
   /// Access the theta parameter of the track at the reference surface
   /// @return The theta parameter
-  ActsScalar theta() const {
-    return parameters()[eBoundTheta];
-  }
+  ActsScalar theta() const { return parameters()[eBoundTheta]; }
 
   /// Access the phi parameter of the track at the reference surface
   /// @return The phi parameter
-  ActsScalar phi() const {
-    return parameters()[eBoundPhi];
-  }
+  ActsScalar phi() const { return parameters()[eBoundPhi]; }
 
   /// Access the loc0 parameter of the track at the reference surface
   /// @return The loc0 parameter
-  ActsScalar loc0() const {
-    return parameters()[eBoundLoc0];
-  }
+  ActsScalar loc0() const { return parameters()[eBoundLoc0]; }
 
   /// Access the loc1 parameter of the track at the reference surface
   /// @return The loc1 parameter
-  ActsScalar loc1() const {
-    return parameters()[eBoundLoc1];
-  }
+  ActsScalar loc1() const { return parameters()[eBoundLoc1]; }
 
   /// Access the time parameter of the track at the reference surface
   /// @return The time parameter
-  ActsScalar time() const {
-    return parameters()[eBoundTime];
-  }
+  ActsScalar time() const { return parameters()[eBoundTime]; }
 
   /// Access the q/p (curvature) parameter of the track at the reference surface
   /// @return The q/p parameter
-  ActsScalar qOverP() const {
-    return parameters()[eBoundQOverP];
-  }
+  ActsScalar qOverP() const { return parameters()[eBoundQOverP]; }
 
   /// Get the particle hypothesis
   /// @return the particle hypothesis
@@ -392,8 +390,9 @@ class TrackProxy {
   /// Set a new particle hypothesis for this track
   /// @note Only available if the track proxy is not read-only
   /// @param particleHypothesis The particle hypothesis to set
-  void setParticleHypothesis(
-      const ParticleHypothesis& particleHypothesis) requires(!ReadOnly) {
+  void setParticleHypothesis(const ParticleHypothesis& particleHypothesis)
+    requires(!ReadOnly)
+  {
     m_container->container().setParticleHypothesis_impl(m_index,
                                                         particleHypothesis);
   }
@@ -401,9 +400,7 @@ class TrackProxy {
   /// Get the charge of the tack
   /// @note this depends on the charge hypothesis
   /// @return The absolute track momentum
-  ActsScalar charge() const {
-    return particleHypothesis().qFromQOP(qOverP());
-  }
+  ActsScalar charge() const { return particleHypothesis().qFromQOP(qOverP()); }
 
   /// Get the absolute momentum of the tack
   /// @return The absolute track momentum
@@ -425,9 +422,7 @@ class TrackProxy {
 
   /// Get the global momentum vector
   /// @return the global momentum vector
-  Vector3 momentum() const {
-    return absoluteMomentum() * direction();
-  }
+  Vector3 momentum() const { return absoluteMomentum() * direction(); }
 
   /// Return the number of track states associated to this track
   /// @note This is calculated by iterating over the track states which is
@@ -448,7 +443,9 @@ class TrackProxy {
   /// Return the number of measurements for the track. Const version
   /// @note Only available if the track proxy is not read-only
   /// @return The number of measurements
-  unsigned int& nMeasurements() requires(!ReadOnly) {
+  unsigned int& nMeasurements()
+    requires(!ReadOnly)
+  {
     return component<unsigned int, hashString("nMeasurements")>();
   }
 
@@ -463,7 +460,9 @@ class TrackProxy {
   /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return The number of holes
-  unsigned int& nHoles() requires(!ReadOnly) {
+  unsigned int& nHoles()
+    requires(!ReadOnly)
+  {
     return component<unsigned int, hashString("nHoles")>();
   }
 
@@ -477,7 +476,9 @@ class TrackProxy {
   /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return The number of outliers
-  unsigned int& nOutliers() requires(!ReadOnly) {
+  unsigned int& nOutliers()
+    requires(!ReadOnly)
+  {
     return component<unsigned int, hashString("nOutliers")>();
   }
 
@@ -491,7 +492,9 @@ class TrackProxy {
   /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return The number of shared hits
-  unsigned int& nSharedHits() requires(!ReadOnly) {
+  unsigned int& nSharedHits()
+    requires(!ReadOnly)
+  {
     return component<unsigned int, hashString("nSharedHits")>();
   }
 
@@ -505,21 +508,23 @@ class TrackProxy {
   /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return The chi squared
-  float& chi2() requires(!ReadOnly) {
+  float& chi2()
+    requires(!ReadOnly)
+  {
     return component<float, hashString("chi2")>();
   }
 
   /// Return the chi squared for the track. Const version
   /// @return The chi squared
-  float chi2() const {
-    return component<float, hashString("chi2")>();
-  }
+  float chi2() const { return component<float, hashString("chi2")>(); }
 
   /// Return a mutable reference to the number of degrees of freedom for the
   /// track. Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return The number of degrees of freedom
-  unsigned int& nDoF() requires(!ReadOnly) {
+  unsigned int& nDoF()
+    requires(!ReadOnly)
+  {
     return component<unsigned int, hashString("ndf")>();
   }
 
@@ -532,9 +537,7 @@ class TrackProxy {
   /// Return the index of this track in the track container
   /// @note This is separate from the tip index
   /// @return the track index
-  IndexType index() const {
-    return m_index;
-  }
+  IndexType index() const { return m_index; }
 
   /// @}
 
@@ -551,7 +554,9 @@ class TrackProxy {
 
   /// Return a mutable track state proxy to the outermost track state
   /// @return The outermost track state proxy
-  TrackStateProxy outermostTrackState() requires(!ReadOnly) {
+  TrackStateProxy outermostTrackState()
+    requires(!ReadOnly)
+  {
     return m_container->trackStateContainer().getTrackState(tipIndex());
   }
 
@@ -575,7 +580,9 @@ class TrackProxy {
   /// @note This is only available, if the track is forward linked
   /// @note Only available if the track proxy is not read-only
   /// @return The innermost track state proxy
-  auto innermostTrackState() requires(!ReadOnly) {
+  auto innermostTrackState()
+    requires(!ReadOnly)
+  {
     using proxy_t = decltype(m_container->trackStateContainer().getTrackState(
         std::declval<IndexType>()));
 
@@ -601,7 +608,9 @@ class TrackProxy {
   /// @note Only available if the track proxy is not read-only
   /// @note This range is from the outside inwards!
   /// @return Track state range to iterate over
-  auto trackStatesReversed() requires(!ReadOnly) {
+  auto trackStatesReversed()
+    requires(!ReadOnly)
+  {
     return m_container->reverseTrackStateRange(m_index);
   }
 
@@ -626,7 +635,9 @@ class TrackProxy {
   /// @warning This access direction is only possible if the track states are
   ///          **forward-linked**.
   /// @return Track state range to iterate over
-  auto trackStates() requires(!ReadOnly) {
+  auto trackStates()
+    requires(!ReadOnly)
+  {
     return m_container->forwardTrackStateRange(m_index);
   }
 
@@ -640,7 +651,9 @@ class TrackProxy {
   /// Forward connect a track.
   /// This means setting indices from the inside out on all track states.
   /// @note Only available if the track proxy is not read-only
-  void linkForward() requires(!ReadOnly) {
+  void linkForward()
+    requires(!ReadOnly)
+  {
     IndexType last = kInvalid;
     for (auto ts : trackStatesReversed()) {
       ts.template component<IndexType>(hashString("next")) = last;
@@ -655,8 +668,9 @@ class TrackProxy {
   /// @note Only available if the track proxy is not read-only
   /// @param mask The allocation prop mask for the new track state
   /// @return The newly added track state
-  auto appendTrackState(
-      TrackStatePropMask mask = TrackStatePropMask::All) requires(!ReadOnly) {
+  auto appendTrackState(TrackStatePropMask mask = TrackStatePropMask::All)
+    requires(!ReadOnly)
+  {
     auto& tsc = m_container->trackStateContainer();
     auto ts = tsc.makeTrackState(mask, tipIndex());
     tipIndex() = ts.index();
@@ -669,8 +683,9 @@ class TrackProxy {
   /// @param other The track proxy
   /// @param copyTrackStates Copy the track state sequence from @p other
   template <typename track_proxy_t>
-  void copyFrom(const track_proxy_t& other,
-                bool copyTrackStates = true) requires(!ReadOnly) {
+  void copyFrom(const track_proxy_t& other, bool copyTrackStates = true)
+    requires(!ReadOnly)
+  {
     // @TODO: Add constraint on which track proxies are allowed,
     // this is only implicit right now
 
@@ -711,7 +726,9 @@ class TrackProxy {
   /// Creates  a *shallow copy* of the track. Track states are not copied, but
   /// the resulting track points at the same track states as the original.
   /// @note Only available if the track proxy is not read-only
-  TrackProxy shallowCopy() requires(!ReadOnly) {
+  TrackProxy shallowCopy()
+    requires(!ReadOnly)
+  {
     auto ts = container().makeTrack();
     ts.copyFrom(*this, false);
     ts.tipIndex() = tipIndex();
@@ -726,7 +743,9 @@ class TrackProxy {
   /// @note This is dangerous with branching track state sequences, as it will break them
   /// @note This also automatically forward-links the track!
   /// @param invertJacobians Whether to invert the Jacobians of the track states
-  void reverseTrackStates(bool invertJacobians = false) requires(!ReadOnly) {
+  void reverseTrackStates(bool invertJacobians = false)
+    requires(!ReadOnly)
+  {
     IndexType current = tipIndex();
     IndexType next = kInvalid;
     IndexType prev = kInvalid;
@@ -779,7 +798,9 @@ class TrackProxy {
   /// @tparam key String key for the component to access
   /// @return Mutable reference to the component given by @p key
   template <typename T, HashedString key>
-  constexpr T& component() requires(!ReadOnly) {
+  constexpr T& component()
+    requires(!ReadOnly)
+  {
     return m_container->template component<T, key>(m_index);
   }
 
@@ -788,7 +809,9 @@ class TrackProxy {
   /// @param key String key for the component to access
   /// @return Mutable reference to the component given by @p key
   template <typename T>
-  constexpr T& component(HashedString key) requires(!ReadOnly) {
+  constexpr T& component(HashedString key)
+    requires(!ReadOnly)
+  {
     return m_container->template component<T>(key, m_index);
   }
 
@@ -798,7 +821,9 @@ class TrackProxy {
   /// @note This might hash the @p key at runtime instead of compile-time
   /// @return Mutable reference to the component given by @p key
   template <typename T>
-  constexpr T& component(std::string_view key) requires(!ReadOnly) {
+  constexpr T& component(std::string_view key)
+    requires(!ReadOnly)
+  {
     return m_container->template component<T>(hashString(key), m_index);
   }
 
@@ -853,15 +878,15 @@ class TrackProxy {
   /// Return a reference to the track container backend, mutable version.
   /// @note Only available if the track proxy is not read-only
   /// @return reference to the track container backend
-  auto& container() requires(!ReadOnly) {
+  auto& container()
+    requires(!ReadOnly)
+  {
     return *m_container;
   }
 
   /// Return a reference to the track container backend, const version.
   /// @return reference to the track container backend
-  const auto& container() const {
-    return *m_container;
-  }
+  const auto& container() const { return *m_container; }
 
  private:
   TrackProxy(detail_tc::ConstIf<TrackContainer<Container, Trajectory, holder_t>,

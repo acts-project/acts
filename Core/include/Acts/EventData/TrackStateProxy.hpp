@@ -312,7 +312,9 @@ class TrackStateProxy {
   /// the track sequence
   /// @note Only available if the track state proxy is not read-only
   /// @return The index of the previous track state.
-  IndexType& previous() requires(!ReadOnly) {
+  IndexType& previous()
+    requires(!ReadOnly)
+  {
     return component<IndexType, hashString("previous")>();
   }
 
@@ -330,14 +332,18 @@ class TrackStateProxy {
   /// Unset an optional track state component
   /// @note Only available if the track state proxy is not read-only
   /// @param target The component to unset
-  void unset(TrackStatePropMask target) requires(!ReadOnly) {
+  void unset(TrackStatePropMask target)
+    requires(!ReadOnly)
+  {
     m_traj->self().unset(target, m_istate);
   }
 
   /// Add additional components to the track state
   /// @note Only available if the track state proxy is not read-only
   /// @param mask The bitmask that instructs which components to allocate
-  void addComponents(TrackStatePropMask mask) requires(!ReadOnly) {
+  void addComponents(TrackStatePropMask mask)
+    requires(!ReadOnly)
+  {
     m_traj->self().addTrackStateComponents_impl(m_istate, mask);
   }
 
@@ -361,8 +367,9 @@ class TrackStateProxy {
   /// Set the reference surface to a given value
   /// @param srf Shared pointer to the surface to set
   /// @note This overload is only present in case @c ReadOnly is false.
-  void setReferenceSurface(std::shared_ptr<const Surface> srf) requires(
-      !ReadOnly) {
+  void setReferenceSurface(std::shared_ptr<const Surface> srf)
+    requires(!ReadOnly)
+  {
     m_traj->setReferenceSurface(m_istate, std::move(srf));
   }
   // NOLINTEND(performance-unnecessary-value-param)
@@ -372,7 +379,9 @@ class TrackStateProxy {
   /// value directly into the backing store.
   /// @note this overload is only enabled in case the proxy is not read-only
   /// @return Mutable reference to the chi2 value
-  float& chi2() requires(!ReadOnly) {
+  float& chi2()
+    requires(!ReadOnly)
+  {
     return component<float, hashString("chi2")>();
   }
 
@@ -401,7 +410,9 @@ class TrackStateProxy {
   /// This overloaded is only enabled if not read-only, and returns a mutable
   /// reference.
   /// @return reference to the type flags.
-  TrackStateType typeFlags() requires(!ReadOnly) {
+  TrackStateType typeFlags()
+    requires(!ReadOnly)
+  {
     return TrackStateType{
         component<TrackStateType::raw_type, hashString("typeFlags")>()};
   }
@@ -455,7 +466,9 @@ class TrackStateProxy {
         component<IndexType, hashString("predicted")>());
   }
 
-  Covariance predictedCovariance() requires(!ReadOnly) {
+  Covariance predictedCovariance()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("predicted")>());
     return m_traj->self().covariance(
         component<IndexType, hashString("predicted")>());
@@ -477,7 +490,9 @@ class TrackStateProxy {
   /// Filtered track parameters vector
   /// @return The filtered parameters
   /// @note Mutable version
-  Parameters filtered() requires(!ReadOnly) {
+  Parameters filtered()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("filtered")>());
     return m_traj->self().parameters(
         component<IndexType, hashString("filtered")>());
@@ -495,7 +510,9 @@ class TrackStateProxy {
   /// Filtered track parameters covariance matrix
   /// @return The filtered parameters covariance
   /// @note Mutable version
-  Covariance filteredCovariance() requires(!ReadOnly) {
+  Covariance filteredCovariance()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("filtered")>());
     return m_traj->self().covariance(
         component<IndexType, hashString("filtered")>());
@@ -517,7 +534,9 @@ class TrackStateProxy {
   /// Smoothed track parameters vector
   /// @return The smoothed parameters
   /// @note Mutable version
-  Parameters smoothed() requires(!ReadOnly) {
+  Parameters smoothed()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("smoothed")>());
     return m_traj->self().parameters(
         component<IndexType, hashString("smoothed")>());
@@ -535,7 +554,9 @@ class TrackStateProxy {
   /// Smoothed track parameters covariance matrix
   /// @return the parameter covariance matrix
   /// @note Mutable version
-  Covariance smoothedCovariance() requires(!ReadOnly) {
+  Covariance smoothedCovariance()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("smoothed")>());
     return m_traj->self().covariance(
         component<IndexType, hashString("smoothed")>());
@@ -556,7 +577,9 @@ class TrackStateProxy {
   /// Returns the jacobian from the previous trackstate to this one
   /// @return The jacobian matrix
   /// @note Mutable version
-  Covariance jacobian() requires(!ReadOnly) {
+  Covariance jacobian()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("jacobian")>());
     return m_traj->self().jacobian(m_istate);
   }
@@ -623,8 +646,9 @@ class TrackStateProxy {
   /// @param projector The projector in the form of a dense matrix
   /// @note @p projector is assumed to only have 0s or 1s as components.
   template <typename Derived>
-  void setProjector(const Eigen::MatrixBase<Derived>& projector) requires(
-      !ReadOnly) {
+  void setProjector(const Eigen::MatrixBase<Derived>& projector)
+    requires(!ReadOnly)
+  {
     constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
     constexpr int cols = Eigen::MatrixBase<Derived>::ColsAtCompileTime;
 
@@ -667,7 +691,9 @@ class TrackStateProxy {
   /// @note This is mainly to copy explicitly a projector from one state
   ///       to another. If you have a projection matrix, set it with
   ///       `setProjector`.
-  void setProjectorBitset(ProjectorBitset proj) requires(!ReadOnly) {
+  void setProjectorBitset(ProjectorBitset proj)
+    requires(!ReadOnly)
+  {
     assert(has<hashString("projector")>());
     component<ProjectorBitset, hashString("projector")>() = proj;
   }
@@ -680,8 +706,9 @@ class TrackStateProxy {
   /// Set an uncalibrated source link
   /// @param sourceLink The uncalibrated source link to set
   template <typename source_link_t>
-  void setUncalibratedSourceLink(source_link_t&& sourceLink) requires(
-      !ReadOnly) {
+  void setUncalibratedSourceLink(source_link_t&& sourceLink)
+    requires(!ReadOnly)
+  {
     m_traj->setUncalibratedSourceLink(m_istate,
                                       std::forward<source_link_t>(sourceLink));
   }
@@ -690,8 +717,9 @@ class TrackStateProxy {
   /// @param sourceLink The uncalibrated source link to set
   /// @note Use the overload with an rvalue reference, this
   ///       overload will be removed ith the next major version
-  void setUncalibratedSourceLink(const SourceLink& sourceLink) requires(
-      !ReadOnly) {
+  void setUncalibratedSourceLink(const SourceLink& sourceLink)
+    requires(!ReadOnly)
+  {
     m_traj->setUncalibratedSourceLink(m_istate, SourceLink{sourceLink});
   }
 
@@ -720,7 +748,9 @@ class TrackStateProxy {
   /// @return The measurement vector
   /// @note Mutable version
   template <std::size_t measdim>
-  Calibrated<measdim> calibrated() requires(!ReadOnly) {
+  Calibrated<measdim> calibrated()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("calibrated")>());
     return m_traj->self().template calibrated<measdim>(m_istate);
   }
@@ -738,7 +768,9 @@ class TrackStateProxy {
   /// covariance is located in the top left corner, everything else is zeroed.
   /// @return The measurement covariance matrix
   template <std::size_t measdim>
-  CalibratedCovariance<measdim> calibratedCovariance() requires(!ReadOnly) {
+  CalibratedCovariance<measdim> calibratedCovariance()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("calibratedCov")>());
     return m_traj->self().template calibratedCovariance<measdim>(m_istate);
   }
@@ -746,7 +778,9 @@ class TrackStateProxy {
   /// Mutable dynamic measurement vector with only the valid dimensions.
   /// @warning The dynamic vector has a runtime overhead!
   /// @return The effective calibrated measurement vector
-  EffectiveCalibrated effectiveCalibrated() requires(!ReadOnly) {
+  EffectiveCalibrated effectiveCalibrated()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("calibrated")>());
     return m_traj->self().effectiveCalibrated(m_istate);
   }
@@ -811,8 +845,9 @@ class TrackStateProxy {
   /// @param shareSource Which component to share from
   /// @param shareTarget Which component to share as. This should be different from
   ///                    as @p shareSource, e.g. predicted can be shared as filtered.
-  void shareFrom(TrackStatePropMask shareSource,
-                 TrackStatePropMask shareTarget) requires(!ReadOnly) {
+  void shareFrom(TrackStatePropMask shareSource, TrackStatePropMask shareTarget)
+    requires(!ReadOnly)
+  {
     shareFrom(*this, shareSource, shareTarget);
   }
 
@@ -823,7 +858,9 @@ class TrackStateProxy {
   ///       same @c MultiTrajectory instance
   template <bool ReadOnlyOther>
   void shareFrom(const TrackStateProxy<Trajectory, M, ReadOnlyOther>& other,
-                 TrackStatePropMask component) requires(!ReadOnly) {
+                 TrackStatePropMask component)
+    requires(!ReadOnly)
+  {
     shareFrom(other, component, component);
   }
 
@@ -836,8 +873,9 @@ class TrackStateProxy {
   ///       or projector. See @c TrackStatePropMask.
   template <bool ReadOnlyOther>
   void shareFrom(const TrackStateProxy<Trajectory, M, ReadOnlyOther>& other,
-                 TrackStatePropMask shareSource,
-                 TrackStatePropMask shareTarget) requires(!ReadOnly) {
+                 TrackStatePropMask shareSource, TrackStatePropMask shareTarget)
+    requires(!ReadOnly)
+  {
     assert(m_traj == other.m_traj &&
            "Cannot share components across MultiTrajectories");
 
@@ -860,7 +898,9 @@ class TrackStateProxy {
   template <TrackStateProxyConcept track_state_proxy_t>
   void copyFrom(const track_state_proxy_t& other,
                 TrackStatePropMask mask = TrackStatePropMask::All,
-                bool onlyAllocated = true) requires(!ReadOnly) {
+                bool onlyAllocated = true)
+    requires(!ReadOnly)
+  {
     using PM = TrackStatePropMask;
 
     if (onlyAllocated) {
@@ -1016,7 +1056,9 @@ class TrackStateProxy {
   /// @tparam key String key for the component to access
   /// @return Mutable reference to the component given by @p key
   template <typename T, HashedString key>
-  constexpr T& component() requires(!ReadOnly) {
+  constexpr T& component()
+    requires(!ReadOnly)
+  {
     return m_traj->template component<T, key>(m_istate);
   }
 
@@ -1025,7 +1067,9 @@ class TrackStateProxy {
   /// @param key String key for the component to access
   /// @return Mutable reference to the component given by @p key
   template <typename T>
-  constexpr T& component(HashedString key) requires(!ReadOnly) {
+  constexpr T& component(HashedString key)
+    requires(!ReadOnly)
+  {
     return m_traj->template component<T>(key, m_istate);
   }
 
@@ -1035,7 +1079,9 @@ class TrackStateProxy {
   /// @note This might hash the @p key at runtime instead of compile-time
   /// @return Mutable reference to the component given by @p key
   template <typename T>
-  constexpr T& component(std::string_view key) requires(!ReadOnly) {
+  constexpr T& component(std::string_view key)
+    requires(!ReadOnly)
+  {
     return m_traj->template component<T>(hashString(key), m_istate);
   }
 
@@ -1071,7 +1117,9 @@ class TrackStateProxy {
 
   /// Return a mutable reference to the underlying backend container
   /// @return A reference to the backend container
-  MultiTrajectory<Trajectory>& trajectory() requires(!ReadOnly) {
+  MultiTrajectory<Trajectory>& trajectory()
+    requires(!ReadOnly)
+  {
     return *m_traj;
   }
 
@@ -1081,7 +1129,11 @@ class TrackStateProxy {
 
   /// Get a mutable reference to the track state container backend
   /// @return a mutable reference to the backend
-  auto& container() requires(!ReadOnly) { return *m_traj; }
+  auto& container()
+    requires(!ReadOnly)
+  {
+    return *m_traj;
+  }
 
   /// Get a const reference to the track state container backend
   /// @return a const reference to the backend
