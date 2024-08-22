@@ -39,6 +39,9 @@ jobs:
       - name: Install dependencies
         run: CI/dependencies.sh
 
+      - run: which python3
+      - run: echo $PATH
+
       - name: Restore ccache
         uses: actions/cache/restore@v4
         id: ccache-restore
@@ -339,7 +342,6 @@ jobs:
       - name: Configure
         run: >
           ccache -z
-          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
           && cmake -B build -S .
           --preset=github-ci
           -DCMAKE_PREFIX_PATH="${{ env.DEPENDENCY_DIR }}"
