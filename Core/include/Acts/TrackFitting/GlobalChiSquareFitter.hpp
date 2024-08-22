@@ -973,6 +973,9 @@ class Gx2Fitter {
     // TODO description
     std::unordered_map<GeometryIdentifier, ScatteringProperties> scatteringMap;
 
+    // TODO description
+    BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
+
     ACTS_VERBOSE("params:\n" << params);
 
     /// Actual Fitting /////////////////////////////////////////////////////////
@@ -1270,6 +1273,38 @@ class Gx2Fitter {
                    << deltaParamsExtended << "\n"
                    << "oldChi2sum = " << oldChi2sum << "\n"
                    << "chi2sum = " << chi2sum);
+      std::cout << "        chi2sum = " << chi2sum << std::endl;
+
+
+      // create inversion here for testing. if it works think of how to do it just once
+      {
+        // make invertible
+        for (int i = 0; i < aMatrixExtended.rows(); ++i) {
+          if (aMatrixExtended(i, i) == 0.) {
+            aMatrixExtended(i, i) = 1.;
+          }
+        }
+
+        if (ndfSystem == 4) {
+          constexpr std::size_t reducedMatrixSize = 4;
+
+          fullCovariancePredicted
+              .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+              aMatrixExtended.inverse().topLeftCorner<reducedMatrixSize, reducedMatrixSize>();
+        } else if (ndfSystem == 5) {
+          constexpr std::size_t reducedMatrixSize = 5;
+
+          fullCovariancePredicted
+              .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+              aMatrixExtended.inverse().topLeftCorner<reducedMatrixSize, reducedMatrixSize>();
+        } else {
+          constexpr std::size_t reducedMatrixSize = 6;
+
+          fullCovariancePredicted
+              .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+              aMatrixExtended.inverse().topLeftCorner<reducedMatrixSize, reducedMatrixSize>();
+        }
+      }
 
       if ((gx2fOptions.relChi2changeCutOff != 0) && (nUpdate > 0) &&
           (std::abs(chi2sum / oldChi2sum - 1) <
@@ -1283,7 +1318,7 @@ class Gx2Fitter {
       // TODO investigate further
       if (chi2sum > oldChi2sum + 1e-5) {
         ACTS_DEBUG("chi2 not converging monotonically");
-        //        break;
+        break;
       }
 
       if (multipleScattering) {
@@ -1291,13 +1326,10 @@ class Gx2Fitter {
         for (std::size_t matSurface = 0; matSurface < nMaterialSurfaces;
              matSurface++) {
           const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
-
-          auto scatteringMapId = scatteringMap.find(geoIdVector[matSurface]);
-          if (scatteringMapId == scatteringMap.end()) {
-            // TODO make proper error and return
-            ACTS_ERROR("No scattering angles found for material surface"
-                       << geoIdVector[matSurface]);
-          }
+          const GeometryIdentifier geoId = geoIdVector[matSurface];
+          assert(scatteringMap.find(geoId) != scatteringMap.end() &&
+                 "No scattering angles found for material surface");
+          auto scatteringMapId = scatteringMap.find(geoId);
           scatteringMapId->second.scatteringAngles.block<2, 1>(2, 0) +=
               deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
         }
@@ -1310,59 +1342,69 @@ class Gx2Fitter {
     ACTS_VERBOSE("final params:\n" << params);
     /// Finish Fitting /////////////////////////////////////////////////////////
 
+    std::cout << "scattering angles:" << std::endl;
+    for (const auto& [key, value] : scatteringMap) {
+      if (!value.materialIsValid) {
+        continue;
+      }
+      const auto angs = value.scatteringAngles;
+      std::cout << "    ( " << angs[eBoundTheta] << " | " << angs[eBoundPhi]
+                << " )" << std::endl;
+    }
+
     // Since currently most of our tracks converge in 4-5 updates, we want to
     // set nUpdateMax higher than that to guarantee convergence for most tracks.
     // In cases, where we set a smaller nUpdateMax, it's because we want to
     // investigate the behaviour of the fitter before it converges, like in some
     // unit-tests.
-    if (nUpdate == gx2fOptions.nUpdateMax && gx2fOptions.nUpdateMax > 5) {
-      ACTS_INFO("Did not converge in " << gx2fOptions.nUpdateMax
-                                       << " updates.");
-      return Experimental::GlobalChiSquareFitterError::DidNotConverge;
-    }
+    //    if (nUpdate == gx2fOptions.nUpdateMax && gx2fOptions.nUpdateMax > 5) {
+    //      ACTS_INFO("Did not converge in " << gx2fOptions.nUpdateMax
+    //                                       << " updates.");
+    //      return Experimental::GlobalChiSquareFitterError::DidNotConverge;
+    //    }
 
     // Calculate covariance of the fitted parameters with inverse of [a]
-    BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
-    bool aMatrixIsInvertible = false;
-    if (ndfSystem == 4) {
-      constexpr std::size_t reducedMatrixSize = 4;
-
-      auto safeReducedCovariance = safeInverse(
-          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
-      if (safeReducedCovariance) {
-        aMatrixIsInvertible = true;
-        fullCovariancePredicted
-            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-            *safeReducedCovariance;
-      }
-    } else if (ndfSystem == 5) {
-      constexpr std::size_t reducedMatrixSize = 5;
-
-      auto safeReducedCovariance = safeInverse(
-          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
-      if (safeReducedCovariance) {
-        aMatrixIsInvertible = true;
-        fullCovariancePredicted
-            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-            *safeReducedCovariance;
-      }
-    } else {
-      constexpr std::size_t reducedMatrixSize = 6;
-
-      auto safeReducedCovariance = safeInverse(
-          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
-      if (safeReducedCovariance) {
-        aMatrixIsInvertible = true;
-        fullCovariancePredicted
-            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-            *safeReducedCovariance;
-      }
-    }
-
-    if (!aMatrixIsInvertible && gx2fOptions.nUpdateMax > 0) {
-      ACTS_ERROR("aMatrix is not invertible.");
-      return Experimental::GlobalChiSquareFitterError::AIsNotInvertible;
-    }
+//    BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
+//    bool aMatrixIsInvertible = false;
+//    if (ndfSystem == 4) {
+//      constexpr std::size_t reducedMatrixSize = 4;
+//
+//      auto safeReducedCovariance = safeInverse(
+//          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
+//      if (safeReducedCovariance) {
+//        aMatrixIsInvertible = true;
+//        fullCovariancePredicted
+//            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+//            *safeReducedCovariance;
+//      }
+//    } else if (ndfSystem == 5) {
+//      constexpr std::size_t reducedMatrixSize = 5;
+//
+//      auto safeReducedCovariance = safeInverse(
+//          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
+//      if (safeReducedCovariance) {
+//        aMatrixIsInvertible = true;
+//        fullCovariancePredicted
+//            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+//            *safeReducedCovariance;
+//      }
+//    } else {
+//      constexpr std::size_t reducedMatrixSize = 6;
+//
+//      auto safeReducedCovariance = safeInverse(
+//          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
+//      if (safeReducedCovariance) {
+//        aMatrixIsInvertible = true;
+//        fullCovariancePredicted
+//            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+//            *safeReducedCovariance;
+//      }
+//    }
+//
+//    if (!aMatrixIsInvertible && gx2fOptions.nUpdateMax > 0) {
+//      ACTS_ERROR("aMatrix is not invertible.");
+//      return Experimental::GlobalChiSquareFitterError::AIsNotInvertible;
+//    }
 
     ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
 
