@@ -1213,7 +1213,7 @@ class CombinatorialKalmanFilter {
   /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
   ///                  finding
   /// @param trackContainer Input track container to use
-  /// @param track The track to be used as the root branch
+  /// @param rootBranch The track to be used as the root branch
   ///
   /// @note The input measurements are given in the form of @c SourceLinks.
   ///       It's @c calibrator_t's job to turn them into calibrated measurements
@@ -1227,7 +1227,7 @@ class CombinatorialKalmanFilter {
                   const CombinatorialKalmanFilterOptions<
                       source_link_iterator_t, track_container_t>& tfOptions,
                   track_container_t& trackContainer,
-                  track_container_t::TrackProxy track) const
+                  typename track_container_t::TrackProxy rootBranch) const
       -> Result<std::vector<
           typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
     using SourceLinkAccessor =
@@ -1288,7 +1288,7 @@ class CombinatorialKalmanFilter {
     r.tracks = &trackContainer;
     r.trackStates = &trackContainer.trackStateContainer();
 
-    r.activeBranches.push_back(track);
+    r.activeBranches.push_back(rootBranch);
 
     auto propagationResult = m_propagator.propagate(propState);
 
@@ -1322,6 +1322,10 @@ class CombinatorialKalmanFilter {
                  << " with the initial parameters: "
                  << initialParameters.parameters().transpose());
       return error.error();
+    }
+
+    for (const auto& track : combKalmanResult.collectedTracks) {
+      calculateTrackQuantities(track);
     }
 
     return std::move(combKalmanResult.collectedTracks);
