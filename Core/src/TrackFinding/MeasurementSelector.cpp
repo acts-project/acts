@@ -111,12 +111,13 @@ double MeasurementSelector::calculateChi2(
 
 MeasurementSelector::Cuts MeasurementSelector::getCutsByTheta(
     const InternalCutBins& config, double theta) {
+  // since theta is in [0, pi] and we have a symmetric cut in eta, we can just
+  // look at the positive half of the Z axis
+  const double constrainedTheta = std::min(theta, M_PI - theta);
+
   auto it = std::find_if(config.begin(), config.end(),
-                         [theta](const InternalCutBin& cuts) {
-                           // since theta is in [0, pi] and we have a symmetric
-                           // cut in eta, we can just look at the positive half
-                           // of the Z axis
-                           return std::min(theta, M_PI - theta) < cuts.maxTheta;
+                         [constrainedTheta](const InternalCutBin& cuts) {
+                           return constrainedTheta < cuts.maxTheta;
                          });
   assert(it != config.end());
   std::size_t bin = std::distance(config.begin(), it);
