@@ -146,10 +146,6 @@ class GridPortalLink : public PortalLinkBase {
 
   BinningValue direction() const { return m_direction; }
 
-  /// This is primarily for testing / inspection
-  virtual void visitBins(
-      const std::function<void(const TrackingVolume*)> func) const = 0;
-
   static void fillMergedGrid(const GridPortalLink& a, const GridPortalLink& b,
                              GridPortalLink& merged, BinningValue direction,
                              const Logger& logger);
@@ -288,22 +284,6 @@ class GridPortalLinkT final : public GridPortalLink {
       throw std::invalid_argument{"Position is outside surface bounds"};
     }
     return m_grid.atPosition(m_projection(position));
-  }
-
-  void visitBins(
-      const std::function<void(const TrackingVolume*)> func) const final {
-    auto loc = m_grid.numLocalBins();
-    if constexpr (GridType::DIM == 1) {
-      for (std::size_t i = 1; i <= loc[0]; i++) {
-        func(m_grid.atLocalBins({i}));
-      }
-    } else {
-      for (std::size_t i = 1; i <= loc[0]; i++) {
-        for (std::size_t j = 1; j <= loc[1]; j++) {
-          func(m_grid.atLocalBins({i, j}));
-        }
-      }
-    }
   }
 
  protected:
