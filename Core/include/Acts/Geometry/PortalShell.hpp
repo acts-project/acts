@@ -21,16 +21,16 @@ class Portal;
 class TrackingVolume;
 class GeometryContext;
 
-class PortalShell {
+class PortalShellBase {
  public:
   // virtual void apply(TrackingVolume& volume) const = 0;
 
-  virtual ~PortalShell() = default;
+  virtual ~PortalShellBase() = default;
 
  private:
 };
 
-class CylinderPortalShell : public PortalShell {
+class CylinderPortalShell : public PortalShellBase {
  public:
   // These values are synchronized with the BoundarySurfaceFace enum.
   // Once Gen1 is removed, this can be changed.
