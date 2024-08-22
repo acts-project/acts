@@ -136,10 +136,6 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   }
   std::string volumeName = volume->GetName();
 
-  ACTS_VERBOSE("Step in volume "
-               << volumeName << " with material "
-               << volume->GetLogicalVolume()->GetMaterial()->GetName());
-
   if (volumeName.find(SensitiveSurfaceMapper::mappingPrefix) ==
       std::string_view::npos) {
     return;
