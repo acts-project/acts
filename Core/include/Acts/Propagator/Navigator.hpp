@@ -282,7 +282,8 @@ class Navigator {
 
       assert(state.navigation.currentSurface->isOnSurface(
                  state.geoContext, stepper.position(state.stepping),
-                 stepper.direction(state.stepping), BoundaryTolerance::None(),
+                 stepper.direction(state.stepping),
+                 BoundaryTolerance::Infinite(),
                  state.options.surfaceTolerance) &&
              "Stepper not on surface");
     }
@@ -536,7 +537,8 @@ class Navigator {
     if (state.navigation.currentSurface != nullptr) {
       assert(state.navigation.currentSurface->isOnSurface(
                  state.geoContext, stepper.position(state.stepping),
-                 stepper.direction(state.stepping), BoundaryTolerance::None(),
+                 stepper.direction(state.stepping),
+                 BoundaryTolerance::Infinite(),
                  state.options.surfaceTolerance) &&
              "Stepper not on surface");
     }
