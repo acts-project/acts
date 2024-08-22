@@ -42,6 +42,14 @@ MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
     const MeasurementSelectorCuts& config) {
   InternalCutBins cutBins;
 
+  auto getEtaOrInf = [](const auto& vec, std::size_t bin) {
+    if (bin >= vec.size()) {
+      return std::numeric_limits<double>::infinity();
+    }
+    assert(vec[bin] >= 0 && "Eta bins must be positive");
+    return vec[bin];
+  };
+
   auto getBinOrBackOrMax = [](const auto& vec, std::size_t bin) {
     using Value = std::remove_reference_t<decltype(vec[0])>;
     static constexpr Value max = std::numeric_limits<Value>::max();
@@ -50,9 +58,7 @@ MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
 
   for (std::size_t bin = 0; bin < config.etaBins.size() + 1; ++bin) {
     InternalCutBin cuts;
-    cuts.maxAbsTheta = bin < config.etaBins.size()
-                           ? std::acos(std::tanh(config.etaBins[bin]))
-                           : std::numeric_limits<double>::max();
+    cuts.maxTheta = getEtaOrInf(config.etaBins, bin);
     cuts.maxNumMeasurements =
         getBinOrBackOrMax(config.numMeasurementsCutOff, bin);
     cuts.maxChi2Measurement = getBinOrBackOrMax(config.chi2CutOff, bin);
@@ -105,11 +111,12 @@ double MeasurementSelector::calculateChi2(
 
 MeasurementSelector::Cuts MeasurementSelector::getCutsByTheta(
     const InternalCutBins& config, double theta) {
-  const double absTheta = std::abs(theta);
-
   auto it = std::find_if(config.begin(), config.end(),
-                         [absTheta](const InternalCutBin& cuts) {
-                           return absTheta < cuts.maxAbsTheta;
+                         [theta](const InternalCutBin& cuts) {
+                           // since theta is in [0, pi] and we have a symmetric
+                           // cut in eta, we can just look at the positive half
+                           // of the Z axis
+                           return std::min(theta, M_PI - theta) < cuts.maxTheta;
                          });
   assert(it != config.end());
   std::size_t bin = std::distance(config.begin(), it);

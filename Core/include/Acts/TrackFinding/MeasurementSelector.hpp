@@ -96,7 +96,7 @@ class MeasurementSelector {
 
  private:
   struct InternalCutBin {
-    double maxAbsTheta{};
+    double maxTheta{};
     std::size_t maxNumMeasurements{};
     double maxChi2Measurement{};
     double maxChi2Outlier{};
