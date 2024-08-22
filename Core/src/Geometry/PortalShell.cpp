@@ -88,7 +88,7 @@ std::size_t SingleCylinderPortalShell::size() const {
 }
 
 CylinderStackPortalShell::CylinderStackPortalShell(
-    const GeometryContext& gctx, std::vector<CylinderPortalShell*> shells,
+    const GeometryContext& gctx, std::vector<CylinderPortalShellBase*> shells,
     BinningValue direction, const Logger& logger)
     : m_direction{direction}, m_shells{std::move(shells)} {
   if (m_shells.size() < 2) {

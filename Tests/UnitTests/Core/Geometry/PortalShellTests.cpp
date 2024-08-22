@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   SingleCylinderPortalShell shell1{gctx, cyl1};
   BOOST_CHECK_EQUAL(shell1.size(), 4);
 
-  using enum CylinderPortalShell::Face;
+  using enum CylinderPortalShellBase::Face;
 
   const auto* pDisc = shell1.portal(PositiveDisc);
   BOOST_REQUIRE_NE(pDisc, nullptr);
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
 //              inner cylinder
 
 BOOST_AUTO_TEST_CASE(PortalAssignment) {
-  using enum CylinderPortalShell::Face;
+  using enum CylinderPortalShellBase::Face;
   TrackingVolume vol(
       Transform3::Identity(),
       std::make_shared<CylinderVolumeBounds>(30_mm, 100_mm, 100_mm));
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
 
 BOOST_AUTO_TEST_SUITE(CylinderStack)
 BOOST_AUTO_TEST_CASE(ZDirection) {
-  using enum CylinderPortalShell::Face;
+  using enum CylinderPortalShellBase::Face;
   BOOST_TEST_CONTEXT("rMin>0") {
     TrackingVolume vol1(
         Transform3{Translation3{Vector3::UnitZ() * -100_mm}},
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
 }
 
 BOOST_AUTO_TEST_CASE(RDirection) {
-  using enum CylinderPortalShell::Face;
+  using enum CylinderPortalShellBase::Face;
   BOOST_TEST_CONTEXT("rMin>0") {
     TrackingVolume vol1(
         Transform3::Identity(),

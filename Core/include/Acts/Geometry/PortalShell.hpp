@@ -30,7 +30,7 @@ class PortalShellBase {
  private:
 };
 
-class CylinderPortalShell : public PortalShellBase {
+class CylinderPortalShellBase : public PortalShellBase {
  public:
   // These values are synchronized with the BoundarySurfaceFace enum.
   // Once Gen1 is removed, this can be changed.
@@ -53,7 +53,7 @@ class CylinderPortalShell : public PortalShellBase {
   virtual void setPortal(std::shared_ptr<Portal> portal, Face face) = 0;
 };
 
-class SingleCylinderPortalShell : public CylinderPortalShell {
+class SingleCylinderPortalShell : public CylinderPortalShellBase {
  public:
   SingleCylinderPortalShell(const GeometryContext& gctx,
                             TrackingVolume& volume);
@@ -68,11 +68,11 @@ class SingleCylinderPortalShell : public CylinderPortalShell {
   std::array<std::shared_ptr<Portal>, 6> m_portals{};
 };
 
-class CylinderStackPortalShell : public CylinderPortalShell {
+class CylinderStackPortalShell : public CylinderPortalShellBase {
  public:
   /// @note The shells must be ordered in the given direction
   CylinderStackPortalShell(const GeometryContext& gctx,
-                           std::vector<CylinderPortalShell*> shells,
+                           std::vector<CylinderPortalShellBase*> shells,
                            BinningValue direction,
                            const Logger& logger = getDummyLogger());
 
@@ -83,7 +83,7 @@ class CylinderStackPortalShell : public CylinderPortalShell {
 
  private:
   BinningValue m_direction;
-  std::vector<CylinderPortalShell*> m_shells;
+  std::vector<CylinderPortalShellBase*> m_shells;
   bool m_hasInnerCylinder{true};
 };
 
