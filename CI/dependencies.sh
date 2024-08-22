@@ -2,9 +2,9 @@
 set -e
 set -u
 
-function run() { 
+function run() {
     set -x
-    "$@" 
+    "$@"
     { set +x;  } 2> /dev/null
 }
 
