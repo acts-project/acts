@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <cstddef>
@@ -38,14 +38,10 @@ class SurfaceBoundsStub : public SurfaceBounds {
 #endif
 
   ~SurfaceBoundsStub() override = default;
-  BoundsType type() const final {
-    return SurfaceBounds::eOther;
-  }
-  std::vector<double> values() const override {
-    return m_values;
-  }
+  BoundsType type() const final { return SurfaceBounds::eOther; }
+  std::vector<double> values() const override { return m_values; }
   bool inside(const Vector2& /*lpos*/,
-              const BoundaryCheck& /*bcheck*/) const final {
+              const BoundaryTolerance& /*boundaryTolerance*/) const final {
     return true;
   }
 

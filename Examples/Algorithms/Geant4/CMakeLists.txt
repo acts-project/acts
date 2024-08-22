@@ -1,4 +1,5 @@
-set(ACTS_EXAMPLES_G4SOURCES
+add_library(
+  ActsExamplesGeant4 SHARED
     src/GdmlDetectorConstruction.cpp
     src/TelescopeG4DetectorConstruction.cpp
     src/Geant4Simulation.cpp
@@ -14,16 +15,6 @@ set(ACTS_EXAMPLES_G4SOURCES
     src/PhysicsListFactory.cpp
     src/Geant4Manager.cpp)
 
-if (ACTS_BUILD_EXAMPLES_DD4HEP)
-    list(APPEND ACTS_EXAMPLES_G4SOURCES src/DDG4DetectorConstruction.cpp)
-endif()
-
-if (ACTS_BUILD_PLUGIN_GEOMODEL)
-  list(APPEND ACTS_EXAMPLES_G4SOURCES src/GeoModelDetectorConstruction.cpp)
-endif()
-
-add_library(
-  ActsExamplesGeant4 SHARED ${ACTS_EXAMPLES_G4SOURCES})
 target_compile_definitions(
   ActsExamplesGeant4
   PUBLIC ${Geant4_DEFINITIONS})
@@ -50,12 +41,19 @@ if (ACTS_BUILD_EXAMPLES_DD4HEP)
     ActsExamplesGeant4
     PUBLIC ActsExamplesDetectorDD4hep DD4hep::DDCore DD4hep::DDG4)
   endif()
+
+  target_sources(ActsExamplesGeant4 PUBLIC src/DDG4DetectorConstruction.cpp)
 endif()
 
 if (ACTS_BUILD_PLUGIN_GEOMODEL)
+
+  target_sources(ActsExamplesGeant4 PUBLIC src/GeoModelDetectorConstruction.cpp)
+
+  find_library(GeoModel2G4_LIBRARY GeoModel2G4 REQUIRED)
+
   target_link_libraries(
     ActsExamplesGeant4
-    PUBLIC ActsPluginGeoModel GeoModel2G4)
+    PUBLIC ActsPluginGeoModel ${GeoModel2G4_LIBRARY})
 endif()
 
 install(

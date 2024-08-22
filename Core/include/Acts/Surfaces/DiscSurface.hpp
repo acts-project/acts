@@ -13,14 +13,13 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
@@ -269,7 +268,7 @@ class DiscSurface : public RegularSurface {
   /// @param position The global position as a starting point
   /// @param direction The global direction at the starting point
   ///        @note expected to be normalized (no checking)
-  /// @param bcheck The boundary check prescription
+  /// @param boundaryTolerance The boundary check prescription
   /// @param tolerance the tolerance used for the intersection
   ///
   /// <b>Mathematical motivation:</b>
@@ -292,7 +291,8 @@ class DiscSurface : public RegularSurface {
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      const BoundaryCheck& bcheck = BoundaryCheck(false),
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Implement the binningValue
@@ -335,19 +335,22 @@ class DiscSurface : public RegularSurface {
   /// @image html Disc_Merging.svg
   /// @note The surfaces need to be *compatible*, i.e. have disc bounds
   ///       that align
-  /// @param gctx The current geometry context object, e.g. alignment
   /// @param other The other disc surface to merge with
   /// @param direction The binning direction: either @c binR or @c binPhi
+  /// @param externalRotation If true, any phi rotation is done in the transform
   /// @param logger The logger to use
-  /// @return The merged disc surface
-  std::shared_ptr<DiscSurface> mergedWith(
-      const GeometryContext& gctx, const DiscSurface& other,
-      BinningValue direction, const Logger& logger = getDummyLogger()) const;
+  /// @return The merged disc surface and a boolean indicating if surfaces are reversed
+  /// @note The returned boolean is `false` if `this` is *left* or
+  ///       *counter-clockwise* of @p other, and `true` if not.
+  std::pair<std::shared_ptr<DiscSurface>, bool> mergedWith(
+      const DiscSurface& other, BinningValue direction, bool externalRotation,
+      const Logger& logger = getDummyLogger()) const;
 
  protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
 };
 
-ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, DiscSurface);
+static_assert(RegularSurfaceConcept<DiscSurface>,
+              "DiscSurface does not fulfill RegularSurfaceConcept");
 
 }  // namespace Acts

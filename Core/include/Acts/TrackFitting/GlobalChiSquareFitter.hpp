@@ -16,11 +16,11 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/AbortList.hpp"
@@ -38,6 +38,7 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 
 #include <functional>
 #include <limits>
@@ -68,7 +69,7 @@ struct Gx2FitterExtensions {
                     const SourceLink&, TrackStateProxy)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        Direction, const Logger&)>;
+                                        const Logger&)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
@@ -221,6 +222,10 @@ struct Gx2FitterResult {
 
   // Count how many surfaces have been hit
   std::size_t surfaceCount = 0;
+
+  // Monitor which volume we start in. We do not allow to switch the start of a
+  // following iteration in a different volume.
+  const TrackingVolume* startVolume = nullptr;
 };
 
 /// addToGx2fSums Function
@@ -397,6 +402,10 @@ class Gx2Fitter {
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};
 
+    /// Monitor which volume we start in. We do not allow to switch the start of
+    /// a following iteration in a different volume.
+    const TrackingVolume* startVolume = nullptr;
+
     /// @brief Gx2f actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagator state
@@ -424,7 +433,7 @@ class Gx2Fitter {
       }
 
       // End the propagation and return to the fitter
-      if (result.finished) {
+      if (result.finished || !result.result.ok()) {
         // Remove the missing surfaces that occur after the last measurement
         if (result.measurementStates > 0) {
           result.missedActiveSurfaces.resize(result.measurementHoles);
@@ -433,15 +442,18 @@ class Gx2Fitter {
         return;
       }
 
-      // Add the measurement surface as external surface to the navigator.
-      // We will try to hit those surface by ignoring boundary checks.
-      if (state.navigation.externalSurfaces.size() == 0) {
-        for (auto measurementIt = inputMeasurements->begin();
-             measurementIt != inputMeasurements->end(); measurementIt++) {
-          navigator.insertExternalSurface(state.navigation,
-                                          measurementIt->first);
-        }
+      if (startVolume != nullptr &&
+          startVolume != state.navigation.startVolume) {
+        ACTS_INFO("The update pushed us to a new volume from '"
+                  << startVolume->volumeName() << "' to '"
+                  << state.navigation.startVolume->volumeName()
+                  << "'. Starting to abort.");
+        result.result = Result<void>(
+            Experimental::GlobalChiSquareFitterError::UpdatePushedToNewVolume);
+
+        return;
       }
+      result.startVolume = state.navigation.startVolume;
 
       // Update:
       // - Waiting for a current surface
@@ -606,12 +618,14 @@ class Gx2Fitter {
             // MaterialUpdateStage::FullUpdate);
           }
         } else {
-          ACTS_INFO("Surface " << geoId << " has no measurement/material/hole.")
+          ACTS_INFO("Surface " << geoId
+                               << " has no measurement/material/hole.");
         }
       }
       ACTS_VERBOSE("result.processedMeasurements: "
                    << result.processedMeasurements << "\n"
-                   << "inputMeasurements.size(): " << inputMeasurements->size())
+                   << "inputMeasurements.size(): "
+                   << inputMeasurements->size());
       if (result.processedMeasurements >= inputMeasurements->size()) {
         ACTS_INFO("Actor: finish: all measurements found.");
         result.finished = true;
@@ -671,8 +685,8 @@ class Gx2Fitter {
            const Gx2FitterOptions<traj_t>& gx2fOptions,
            TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
       const -> std::enable_if_t<
-          !_isdn, Result<typename TrackContainer<track_container_t, traj_t,
-                                                 holder_t>::TrackProxy>> {
+                !_isdn, Result<typename TrackContainer<
+                            track_container_t, traj_t, holder_t>::TrackProxy>> {
     // Preprocess Measurements (SourceLinks -> map)
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
@@ -696,7 +710,8 @@ class Gx2Fitter {
     using Actors = Acts::ActionList<GX2FActor>;
     using Aborters = Acts::AbortList<GX2FAborter>;
 
-    using PropagatorOptions = Acts::PropagatorOptions<Actors, Aborters>;
+    using PropagatorOptions =
+        typename propagator_t::template Options<Actors, Aborters>;
 
     start_parameters_t params = sParameters;
     BoundVector deltaParams = BoundVector::Zero();
@@ -709,8 +724,8 @@ class Gx2Fitter {
     // new track and delete it after updating the parameters. However, if we
     // would work on the externally provided track container, it would be
     // difficult to remove the correct track, if it contains more than one.
-    Acts::VectorTrackContainer trackContainerTempBackend;
-    Acts::VectorMultiTrajectory trajectoryTempBackend;
+    track_container_t trackContainerTempBackend;
+    traj_t trajectoryTempBackend;
     TrackContainer trackContainerTemp{trackContainerTempBackend,
                                       trajectoryTempBackend};
 
@@ -722,6 +737,10 @@ class Gx2Fitter {
     // Here we will store, the ndf of the system. It automatically deduces if we
     // want to fit e.g. q/p and adjusts itself later.
     std::size_t ndfSystem = std::numeric_limits<std::size_t>::max();
+
+    // Monitor which volume we start in. We do not allow to switch the start of
+    // a following iteration in a different volume.
+    const TrackingVolume* startVolume = nullptr;
 
     ACTS_VERBOSE("params:\n" << params);
 
@@ -745,11 +764,19 @@ class Gx2Fitter {
       Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
       // Set options for propagator
       PropagatorOptions propagatorOptions(geoCtx, magCtx);
+
+      // Add the measurement surface as external surface to the navigator.
+      // We will try to hit those surface by ignoring boundary checks.
+      for (const auto& [surfaceId, _] : inputMeasurements) {
+        propagatorOptions.navigation.insertExternalSurface(surfaceId);
+      }
+
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
+      gx2fActor.startVolume = startVolume;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
@@ -762,6 +789,7 @@ class Gx2Fitter {
 
       auto propagationResult = m_propagator.template propagate(propagatorState);
 
+      // Run the fitter
       auto result = m_propagator.template makeResult(std::move(propagatorState),
                                                      propagationResult,
                                                      propagatorOptions, false);
@@ -775,6 +803,13 @@ class Gx2Fitter {
       // makeMeasurements
       auto& propRes = *result;
       GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
+
+      if (!gx2fResult.result.ok()) {
+        ACTS_INFO("GlobalChiSquareFitter failed in actor: "
+                  << gx2fResult.result.error() << ", "
+                  << gx2fResult.result.error().message());
+        return gx2fResult.result.error();
+      }
 
       auto track = trackContainerTemp.makeTrack();
       tipIndex = gx2fResult.lastMeasurementIndex;
@@ -831,7 +866,7 @@ class Gx2Fitter {
                              trackState, *m_addToSumLogger);
           } else {
             ACTS_ERROR("Can not process state with measurement with "
-                       << measDim << " dimensions.")
+                       << measDim << " dimensions.");
             throw std::domain_error(
                 "Found measurement with less than 1 or more than 6 "
                 "dimension(s).");
@@ -839,9 +874,9 @@ class Gx2Fitter {
         } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
           // Handle hole
           // TODO: write hole handling
-          ACTS_VERBOSE("Placeholder: Handle hole.")
+          ACTS_VERBOSE("Placeholder: Handle hole.");
         } else {
-          ACTS_WARNING("Unknown state encountered")
+          ACTS_WARNING("Unknown state encountered");
         }
         // TODO: Material handling. Should be there for hole and measurement
       }
@@ -903,6 +938,7 @@ class Gx2Fitter {
       }
 
       oldChi2sum = chi2sum;
+      startVolume = gx2fResult.startVolume;
     }
     ACTS_DEBUG("Finished to iterate");
     ACTS_VERBOSE("final params:\n" << params);
@@ -993,7 +1029,7 @@ class Gx2Fitter {
 
     if (!trackContainer.hasColumn(
             Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
-      trackContainer.template addColumn<std::size_t>("Gx2fnUpdateColumn");
+      trackContainer.template addColumn<std::uint32_t>("Gx2fnUpdateColumn");
     }
 
     // Prepare track for return
@@ -1005,8 +1041,9 @@ class Gx2Fitter {
 
     if (trackContainer.hasColumn(
             Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
-      ACTS_DEBUG("Add nUpdate to track")
-      track.template component<std::size_t>("Gx2fnUpdateColumn") = nUpdate;
+      ACTS_DEBUG("Add nUpdate to track");
+      track.template component<std::uint32_t>("Gx2fnUpdateColumn") =
+          static_cast<std::uint32_t>(nUpdate);
     }
 
     // TODO write test for calculateTrackQuantities

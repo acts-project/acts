@@ -81,6 +81,11 @@ class RiddersPropagator {
     std::vector<double> deviationsDisc = {-3e-5, -1e-5, 1e-5, 3e-5};
   };
 
+  template <typename action_list_t = ActionList<>,
+            typename aborter_list_t = AbortList<>>
+  using Options =
+      typename propagator_t::template Options<action_list_t, aborter_list_t>;
+
   /// @brief Constructor using a propagator
   ///
   /// @param [in] propagator Underlying propagator that will be used

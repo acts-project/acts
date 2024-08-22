@@ -198,7 +198,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             DigitizedParameters dParameters;
 
             if (simHit.depositedEnergy() < m_cfg.minEnergyDeposit) {
-              ACTS_VERBOSE("Skip hit because energy deposit to small")
+              ACTS_VERBOSE("Skip hit because energy deposit to small");
               continue;
             }
 
@@ -214,7 +214,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
                   cfg.segmentation, cfg.thickness);
               if (!channelsRes.ok() || channelsRes->empty()) {
                 ACTS_DEBUG(
-                    "Geometric channelization did not work, skipping this hit.")
+                    "Geometric channelization did not work, skipping this "
+                    "hit.");
                 continue;
               }
               ACTS_VERBOSE("Activated " << channelsRes->size()
@@ -247,7 +248,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             // Check on success - threshold could have eliminated all channels
             if (dParameters.values.empty()) {
               ACTS_VERBOSE(
-                  "Parameter digitization did not yield a measurement.")
+                  "Parameter digitization did not yield a measurement.");
               continue;
             }
 

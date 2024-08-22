@@ -160,7 +160,8 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @return Set of neighboring bin indices (global)
   NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::size_t size = 1) const {
-    return neighborHoodIndices(idx, std::make_pair(-size, size));
+    return neighborHoodIndices(idx,
+                               std::make_pair(-static_cast<int>(size), size));
   }
 
   /// @brief Get #size bins which neighbor the one given
@@ -391,6 +392,17 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
     return binEdges;
   }
 
+  friend std::ostream& operator<<(std::ostream& os, const Axis& axis) {
+    os << "Axis<Equidistant, " << bdt << ">(";
+    os << axis.m_min << ", ";
+    os << axis.m_max << ", ";
+    os << axis.m_bins << ")";
+    return os;
+  }
+
+ protected:
+  void toStream(std::ostream& os) const override { os << *this; }
+
  private:
   /// minimum of binning range
   ActsScalar m_min{};
@@ -418,7 +430,8 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// Create a binning structure with @c nBins variable-sized bins from the
   /// given bin boundaries. @c nBins is given by the number of bin edges
   /// reduced by one.
-  Axis(std::vector<ActsScalar> binEdges) : m_binEdges(std::move(binEdges)) {}
+  explicit Axis(std::vector<ActsScalar> binEdges)
+      : m_binEdges(std::move(binEdges)) {}
 
   /// @param [in] typeTag boundary type tag
   /// @param [in] binEdges vector of bin edges
@@ -461,7 +474,8 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// @return Set of neighboring bin indices (global)
   NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::size_t size = 1) const {
-    return neighborHoodIndices(idx, std::make_pair(-size, size));
+    return neighborHoodIndices(idx,
+                               std::make_pair(-static_cast<int>(size), size));
   }
 
   /// @brief Get #size bins which neighbor the one given
@@ -691,6 +705,19 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges
   std::vector<ActsScalar> getBinEdges() const override { return m_binEdges; }
+
+  friend std::ostream& operator<<(std::ostream& os, const Axis& axis) {
+    os << "Axis<Variable, " << bdt << ">(";
+    os << axis.m_binEdges.front();
+    for (std::size_t i = 1; i < axis.m_binEdges.size(); i++) {
+      os << ", " << axis.m_binEdges[i];
+    }
+    os << ")";
+    return os;
+  }
+
+ protected:
+  void toStream(std::ostream& os) const override { os << *this; }
 
  private:
   /// vector of bin edges (sorted in ascending order)

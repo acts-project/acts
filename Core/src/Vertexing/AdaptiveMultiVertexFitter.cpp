@@ -120,7 +120,7 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::addVtxToFit(
   if (state.vtxInfoMap[&newVertex].trackLinks.empty()) {
     ACTS_ERROR(
         "newVertex does not have any associated tracks (i.e., its trackLinks "
-        "are empty).")
+        "are empty).");
     return VertexingError::EmptyInput;
   }
 
@@ -159,8 +159,8 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::addVtxToFit(
             }
           }
         }  // End for loop over range of associated vertices
-      }    // End loop over trackLinks
-    }      // End loop over lastIterAddedVertices
+      }  // End loop over trackLinks
+    }  // End loop over lastIterAddedVertices
 
     lastIterAddedVertices = currentIterAddedVertices;
     currentIterAddedVertices.clear();

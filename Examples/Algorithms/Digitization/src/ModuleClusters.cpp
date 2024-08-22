@@ -32,7 +32,7 @@ void ModuleClusters::add(DigitizedParameters params, simhit_t simhit) {
 
   if (m_merge && !params.cluster.channels.empty()) {
     // Break-up the cluster
-    for (auto cell : params.cluster.channels) {
+    for (const auto& cell : params.cluster.channels) {
       ModuleValue mval_cell = mval;
       mval_cell.value = cell;
       m_moduleValues.push_back(std::move(mval_cell));
@@ -219,7 +219,7 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
         thisvec.push_back(std::move(values.at(j)));
       }
     }  // Loop on `j'
-  }    // Loop on `i'
+  }  // Loop on `i'
   return retv;
 }
 
