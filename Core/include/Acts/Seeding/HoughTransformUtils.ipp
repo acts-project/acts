@@ -394,9 +394,9 @@ void Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<identifier_t>::
   // now we have to collect the non empty neighbours of this cell and check them
   // as well
   for (auto step : m_stepDirections) {
-    std::array newCandxy = {nextCand[0] + step.first,
-                            nextCand[1] + step.second};
-    // if we are moving out of the bounds the dynamic array will throw exception
+    std::array<unsigned long, 2> newCandxy = {nextCand[0] + step.first,
+                                              nextCand[1] + step.second};
+    // check if we are moving out of the bounds
     if (newCandxy[0] >= houghPlane.nBinsX() ||
         newCandxy[1] >= houghPlane.nBinsY()) {
       continue;
