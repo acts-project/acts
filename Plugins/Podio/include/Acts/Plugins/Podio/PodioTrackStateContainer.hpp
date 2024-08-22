@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -124,7 +124,7 @@ class PodioTrackStateContainerBase {
       case "smoothed"_hash:
         return &data.ismoothed;
       case "projector"_hash:
-        return data.projector;
+        return &data.projector;
       case "measdim"_hash:
         return &data.measdim;
       case "chi2"_hash:
