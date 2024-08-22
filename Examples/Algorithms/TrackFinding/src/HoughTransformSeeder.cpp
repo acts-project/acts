@@ -221,9 +221,6 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
 ActsExamples::HoughHist
 ActsExamples::HoughTransformSeeder::createLayerHoughHist(unsigned layer,
                                                          int subregion) const {
-  // ActsExamples::HoughHist houghHist(m_cfg.houghHistSize_y,
-  //
-
   ActsExamples::HoughHist houghHist(
       Axis(0, m_cfg.houghHistSize_y, m_cfg.houghHistSize_y),
       Axis(0, m_cfg.houghHistSize_x, m_cfg.houghHistSize_x));

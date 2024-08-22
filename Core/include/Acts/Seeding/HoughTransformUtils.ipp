@@ -105,11 +105,8 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fillBin(
     std::size_t binX, std::size_t binY, const identifier_t& identifier,
     unsigned layer, double w) {
   // mark that this bin was filled with non trivial content
-  // if(m_touchedBins.size() == m_ibin){
-  //   m_touchedBins.resize(m_touchedBins.size() + m_assignBatch);
-  // }
+
   m_touchedBins.insert(globalBin({binX, binY}));
-  // m_ibin+=1;
 
   // add content to the cell
   m_houghHist.atLocalBins({binX, binY}).fill(identifier, layer, w);
@@ -255,7 +252,6 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
 
   // now loop over all non empty bins
   for (const std::size_t nbin : nonEmptyBins) {
-    // std::array<std::size_t,2> xy = plane.axisBins(nbin);
     //  we only consider cells above threshold from now on.
     //  each is a potential candidate to seed or join an island
     //  We also add each to our yield map

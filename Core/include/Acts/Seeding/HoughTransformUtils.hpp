@@ -158,7 +158,7 @@ class HoughPlane {
   using Axis =
       Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>;
   using HoughHist = Grid<HoughCell<identifier_t>, Axis, Axis>;
-  using Index = HoughHist::index_t;
+  using Index = typename HoughHist::index_t;
 
   /// @brief instantiate the (empty) hough plane
   /// @param cfg: configuration

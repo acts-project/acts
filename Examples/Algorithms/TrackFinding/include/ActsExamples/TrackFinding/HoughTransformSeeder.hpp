@@ -128,13 +128,10 @@ namespace ActsExamples {
 /// each bin. Size m_houghHistSize_y * m_houghHistSize_x. (NOTE y is row
 /// coordinate) For now, what is stored is actually the index of the object in
 /// the vectors, so we can get the Index layer
-// using HoughHist =
-//     Acts::DynamicArray<std::pair<int, std::unordered_set<unsigned>>, 2>;
 using Axis =
     Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>;
 using HoughHist =
     Acts::Grid<std::pair<int, std::unordered_set<unsigned>>, Axis, Axis>;
-// using Index = HoughHist::index_t;
 
 enum HoughHitType { SP = 0, MEASUREMENT = 1 };
 
