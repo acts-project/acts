@@ -63,6 +63,6 @@ if [ -n "${GITHUB_ACTIONS:-}" ]; then
     venv="${GITHUB_WORKSPACE}/venv"
     run "${destination}/bin/python3" -m venv "${venv}"
     run "${venv}/bin/python3" -m pip install pyyaml jinja2
-    echo "PATH=${destination}/bin/:${venv}/bin:${PATH}" >> $GITHUB_ENV
+    echo "PATH=${venv}/bin:${destination}/bin/:${PATH}" >> $GITHUB_ENV
     echo "CMAKE_PREFIX_PATH=${destination}" >> $GITHUB_ENV
 fi
