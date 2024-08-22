@@ -120,10 +120,7 @@ MeasurementSelector::Cuts MeasurementSelector::getCutsByTheta(
                            return constrainedTheta < cuts.maxTheta;
                          });
   assert(it != config.end());
-  std::size_t bin = std::distance(config.begin(), it);
-
-  return {config[bin].maxNumMeasurements, config[bin].maxChi2Measurement,
-          config[bin].maxChi2Outlier};
+  return {it->maxNumMeasurements, it->maxChi2Measurement, it->maxChi2Outlier};
 }
 
 Result<MeasurementSelector::Cuts> MeasurementSelector::getCuts(
