@@ -26,37 +26,52 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
   double maxDensity = 0.;
   double maxSecondDerivative = 0.;
 
+//stand in variables
+  double other1=0.;
+  double other2=0.;
+  double other3=0.;
+  double other4=0.;
+  double other5=0.;
+  double other6=0.;
+
+if (state.trackEntries.empty()) {
+    std::cout << "Track Entries is empty." << std::endl;}
   for (const auto& track : state.trackEntries) {
     double trialZ = track.z;
     double time = track.time;
 
-    auto [density, firstDerivative, secondDerivative] =
-        trackDensityAndDerivatives(state, trialZ,time);
-    if (secondDerivative >= 0. || density <= 0.) {
-      continue;
-    }
-    std::tie(maxPosition, maxDensity, maxSecondDerivative) =
-        updateMaximum(trialZ, density, secondDerivative, maxPosition,
-                      maxDensity, maxSecondDerivative);
+    //,tfirstDerivative, tsecondDerivative,dzdt] =
 
-    trialZ += stepSize(density, firstDerivative, secondDerivative);
-    std::tie(density, firstDerivative, secondDerivative) =
+    auto [density, zfirstDerivative, zsecondDerivative,tfirstDerivative, tsecondDerivative,dzdt] =
         trackDensityAndDerivatives(state, trialZ,time);
 
-    if (secondDerivative >= 0. || density <= 0.) {
+    std::cout << "Truth statement: " << (zsecondDerivative >= 0. || density <= 0.) << std::endl;
+    if (zsecondDerivative >= 0. || density <= 0.) {
       continue;
     }
+    //added other1-3 to have 6 params
     std::tie(maxPosition, maxDensity, maxSecondDerivative) =
-        updateMaximum(trialZ, density, secondDerivative, maxPosition,
+        updateMaximum(trialZ, density, zsecondDerivative, maxPosition,
                       maxDensity, maxSecondDerivative);
-    trialZ += stepSize(density, firstDerivative, secondDerivative);
-    std::tie(density, firstDerivative, secondDerivative) =
+
+    trialZ += stepSize(density, zfirstDerivative, zsecondDerivative);
+    std::tie(density, zfirstDerivative, zsecondDerivative, other1, other2, other3) =
         trackDensityAndDerivatives(state, trialZ,time);
-    if (secondDerivative >= 0. || density <= 0.) {
+
+    if (zsecondDerivative >= 0. || density <= 0.) {
       continue;
     }
     std::tie(maxPosition, maxDensity, maxSecondDerivative) =
-        updateMaximum(trialZ, density, secondDerivative, maxPosition,
+        updateMaximum(trialZ, density, zsecondDerivative, maxPosition,
+                      maxDensity, maxSecondDerivative);
+    trialZ += stepSize(density, zfirstDerivative, zsecondDerivative);
+    std::tie(density, zfirstDerivative, zsecondDerivative,other4,other5,other6) =
+        trackDensityAndDerivatives(state, trialZ,time);
+    if (zsecondDerivative >= 0. || density <= 0.) {
+      continue;
+    }
+    std::tie(maxPosition, maxDensity, maxSecondDerivative) =
+        updateMaximum(trialZ, density, zsecondDerivative, maxPosition,
                       maxDensity, maxSecondDerivative);
   }
 
@@ -163,12 +178,13 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
     std::cout << "covZT: " << covZT << std::endl;
     std::cout << "covTT: " << covTT << std::endl;
     std::cout << "covDeterminant: " << covDeterminant << std::endl;
-    std::cout << "discriminant: " << discriminant << std::endl;  
+    std::cout << "discriminant: " << (discriminant) << std::endl;  
 
     if (discriminant < 0) {
-      continue;
+      
+      continue; //continue means skip the rest i think --> discrimant should be higher than 0!
     }
-
+  
     // Add the track to the current maps in the state
     discriminant = std::sqrt(discriminant);
     const double zMax = (-linearTerm - discriminant) / (2. * quadraticTerm);
@@ -177,21 +193,33 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
 
     state.trackEntries.emplace_back(z0, constantTerm, linearTerm, quadraticTerm,
                                     zMin, zMax,time); // Included time
+
   }
   return Result<void>::success();
 }
 
-std::tuple<double, double, double>
+std::tuple<double, double, double, double, double, double> //added 3 doubles since output has 6 'param' --> solved something (not what I was aiming for but less errors)
 Acts::GaussianTrackDensity::trackDensityAndDerivatives(State& state,
                                                        double z, double time) const {
   GaussianTrackDensityStore densityResult(z,time,m_cfg.t0SignificanceCut);
   for (const auto& trackEntry : state.trackEntries) {
+    std::cout << "Stuff: " << std::endl;  
     densityResult.addTrackToDensity(trackEntry);
   }
-  return densityResult.densityAndDerivatives();
+  auto [density, zfirstDerivative, zsecondDerivative, tfirstDerivative, tsecondDerivative, dzdt] = densityResult.densityAndDerivatives();
+
+  std::cout << "Density: " << density 
+          << ", zFirstDerivative: " << zfirstDerivative 
+          << ", zSecondDerivative: " << zsecondDerivative 
+          << ", tFirstDerivative: " << tfirstDerivative 
+          << ", tSecondDerivative: " << tsecondDerivative 
+          << ", dz/dt: " << dzdt 
+          << std::endl;
+
+  return densityResult.densityAndDerivatives(); //what does this even return?
 }
 
-std::tuple<double, double, double> Acts::GaussianTrackDensity::updateMaximum(
+std::tuple<double, double, double> Acts::GaussianTrackDensity::updateMaximum( //added 3 doubles and tests to return same size-ish --> more errors and not helping --> if max time then need to implement
     double newZ, double newValue, double newSecondDerivative, double maxZ,
     double maxValue, double maxSecondDerivative) const {
   if (newValue > maxValue) {
@@ -215,13 +243,12 @@ void Acts::GaussianTrackDensity::GaussianTrackDensityStore::addTrackToDensity(
     double qPrime = entry.c1 + 2. * m_z * entry.c2;
     double deltaPrime = delta * qPrime;
     m_density += delta;
-    m_firstDerivative += deltaPrime;
-    m_secondDerivative += 2. * entry.c2 * delta + qPrime * deltaPrime;
-
-    // double timeFactor = computeTimeFactor(entry.time, m_time);
-    // m_density *= timeFactor;
-    // m_firstDerivative *= timeFactor;
-    // m_secondDerivative *= timeFactor;
+    m_zfirstDerivative += deltaPrime;
+    m_zsecondDerivative += 2. * entry.c2 * delta + qPrime * deltaPrime;
+    m_tfirstDerivative += delta;
+    m_tsecondDerivative += delta;
+    m_dzdt += delta;
+  
   }
 }
 

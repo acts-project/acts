@@ -35,6 +35,7 @@ class GaussianTrackDensity {
     /// @param lowerBound_ The lower bound
     /// @param upperBound_ The upper bound
     /// @param time_ Time component 
+    
     TrackEntry(double z_, double c0_, double c1_, double c2_,
                double lowerBound_, double upperBound_,double time_) //need more coeffs
         : z(z_),
@@ -163,8 +164,8 @@ class GaussianTrackDensity {
   /// @param state The track density state
   /// @param z z-position along the beamline
   ///
-  /// @return Track density, first and second derivatives
-  std::tuple<double, double, double> trackDensityAndDerivatives(State& state,
+  /// @return Track density, z-first and z-second derivatives,t-first and t-second derivatives,dzdt
+  std::tuple<double, double, double,double,double,double> trackDensityAndDerivatives(State& state,
                                                                 double z,double time) const; // need bigger matrix for time derivatives
 
   /// @brief Update the current maximum values
@@ -177,7 +178,7 @@ class GaussianTrackDensity {
   /// @param maxSecondDerivative Maximum of the second derivative
   /// @return The max z position, the max value at z position, the max second
   /// derivative
-  std::tuple<double, double, double> updateMaximum(
+  std::tuple<double, double, double> updateMaximum( //added 3 doubles --> more errors
       double newZ, double newValue, double newSecondDerivative, double maxZ,
       double maxValue, double maxSecondDerivative) const;
 
@@ -202,8 +203,8 @@ class GaussianTrackDensity {
     void addTrackToDensity(const TrackEntry& entry);
 
     // Return density, first and second derivatives
-    inline std::tuple<double, double, double> densityAndDerivatives() const {
-      return {m_density, m_firstDerivative, m_secondDerivative};
+    inline std::tuple<double, double, double,double,double,double> densityAndDerivatives() const {
+      return {m_density, m_zfirstDerivative, m_zsecondDerivative,m_tfirstDerivative, m_tsecondDerivative,m_dzdt};
     }
 
 
@@ -217,8 +218,11 @@ class GaussianTrackDensity {
     double m_time; //Time member
     //double m_timeScale;
     double m_density{0};
-    double m_firstDerivative{0};
-    double m_secondDerivative{0};
+    double m_zfirstDerivative{0};
+    double m_zsecondDerivative{0};
+    double m_tfirstDerivative{0};
+    double m_tsecondDerivative{0};
+    double m_dzdt{0};
 
 
   };
