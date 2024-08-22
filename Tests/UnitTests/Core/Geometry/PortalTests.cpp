@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
   auto cyl2 = Surface::makeShared<CylinderSurface>(
       Transform3{Translation3{Vector3::UnitZ() * 100_mm}}, 50_mm, 100_mm);
 
-  Portal portal1{Direction::AlongNormal,
+  Portal portal1{gctx, Direction::AlongNormal,
                  std::make_unique<TrivialPortalLink>(cyl1, *vol1)};
   BOOST_CHECK(portal1.isValid());
 
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
                                           -Vector3::UnitX()),
                     nullptr);
 
-  Portal portal2{Direction::AlongNormal, cyl2, *vol2};
+  Portal portal2{gctx, Direction::AlongNormal, cyl2, *vol2};
   BOOST_CHECK(portal2.isValid());
 
   BOOST_CHECK_EQUAL(portal2.resolveVolume(gctx, Vector3{50_mm, 0_mm, 100_mm},
@@ -93,13 +93,15 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
                                           Vector3::UnitX()),
                     vol2.get());
 
-  Portal portal3{std::make_unique<TrivialPortalLink>(cyl2, *vol2), nullptr};
+  Portal portal3{gctx, std::make_unique<TrivialPortalLink>(cyl2, *vol2),
+                 nullptr};
   BOOST_CHECK(portal3.isValid());
 
   BOOST_CHECK_NE(portal3.getLink(Direction::AlongNormal), nullptr);
   BOOST_CHECK_EQUAL(portal3.getLink(Direction::OppositeNormal), nullptr);
 
-  Portal portal4{nullptr, std::make_unique<TrivialPortalLink>(cyl2, *vol2)};
+  Portal portal4{gctx, nullptr,
+                 std::make_unique<TrivialPortalLink>(cyl2, *vol2)};
   BOOST_CHECK(portal4.isValid());
 
   BOOST_CHECK_EQUAL(portal4.getLink(Direction::AlongNormal), nullptr);
@@ -116,7 +118,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
   //                               |
   //                               v
   BOOST_CHECK_THROW(
-      Portal::merge(portal1, portal4, BinningValue::binZ, *logger),
+      Portal::merge(gctx, portal1, portal4, BinningValue::binZ, *logger),
       PortalMergingException);
 
   // This call leaves both valid because the exception is thrown before the
@@ -134,7 +136,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
 
   // Cannot merge in binRPhi
   BOOST_CHECK_THROW(
-      Portal::merge(portal1, portal2, BinningValue::binRPhi, *logger),
+      Portal::merge(gctx, portal1, portal2, BinningValue::binRPhi, *logger),
       SurfaceMergingException);
 
   // The call above leaves both portals invalid because the excpeption is thrown
@@ -150,11 +152,11 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
   // +---------------+     +---------------+
 
   // Reset portals to valid to continue
-  portal1 = Portal{{.alongNormal = {cyl1, *vol1}}};
-  portal2 = Portal{{.alongNormal = {cyl2, *vol2}}};
+  portal1 = Portal{gctx, {.alongNormal = {cyl1, *vol1}}};
+  portal2 = Portal{gctx, {.alongNormal = {cyl2, *vol2}}};
 
   Portal merged12 =
-      Portal::merge(portal1, portal2, BinningValue::binZ, *logger);
+      Portal::merge(gctx, portal1, portal2, BinningValue::binZ, *logger);
   BOOST_CHECK_NE(merged12.getLink(Direction::AlongNormal), nullptr);
   BOOST_CHECK_EQUAL(merged12.getLink(Direction::OppositeNormal), nullptr);
 
@@ -179,28 +181,28 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
                                            -Vector3::UnitX()),
                     nullptr);
 
-  portal1 = Portal{{.alongNormal = {cyl1, *vol1}}};
+  portal1 = Portal{gctx, {.alongNormal = {cyl1, *vol1}}};
 
   // Can't merge with self
   BOOST_CHECK_THROW(
-      Portal::merge(portal1, portal1, BinningValue::binZ, *logger),
+      Portal::merge(gctx, portal1, portal1, BinningValue::binZ, *logger),
       PortalMergingException);
 
   // Can't merge because the surfaces are the same
-  portal1 = Portal{{.alongNormal = {cyl1, *vol1}}};
-  portal2 = Portal{{.alongNormal = {cyl1, *vol2}}};
+  portal1 = Portal{gctx, {.alongNormal = {cyl1, *vol1}}};
+  portal2 = Portal{gctx, {.alongNormal = {cyl1, *vol2}}};
   BOOST_CHECK_THROW(
-      Portal::merge(portal1, portal2, BinningValue::binZ, *logger),
+      Portal::merge(gctx, portal1, portal2, BinningValue::binZ, *logger),
       AssertionFailureException);
 
   // Can't merge because surface has material
   auto material =
       std::make_shared<HomogeneousSurfaceMaterial>(MaterialSlab{});  // vacuum
   cyl2->assignSurfaceMaterial(material);
-  portal1 = Portal{{.alongNormal = {cyl1, *vol1}}};
-  portal2 = Portal{{.alongNormal = {cyl2, *vol2}}};
+  portal1 = Portal{gctx, {.alongNormal = {cyl1, *vol1}}};
+  portal2 = Portal{gctx, {.alongNormal = {cyl2, *vol2}}};
   BOOST_CHECK_THROW(
-      Portal::merge(portal1, portal2, BinningValue::binZ, *logger),
+      Portal::merge(gctx, portal1, portal2, BinningValue::binZ, *logger),
       PortalMergingException);
 }
 
@@ -221,10 +223,10 @@ BOOST_AUTO_TEST_CASE(Disc) {
       Transform3::Identity(), std::make_shared<RadialBounds>(100_mm, 150_mm));
 
   Portal portal1{
-      {.alongNormal = {disc1, *vol1}, .oppositeNormal = {disc1, *vol2}}};
+      gctx, {.alongNormal = {disc1, *vol1}, .oppositeNormal = {disc1, *vol2}}};
 
   Portal portal2{
-      {.alongNormal = {disc2, *vol3}, .oppositeNormal = {disc2, *vol4}}};
+      gctx, {.alongNormal = {disc2, *vol3}, .oppositeNormal = {disc2, *vol4}}};
 
   BOOST_CHECK(portal1.isValid());
   BOOST_CHECK(portal2.isValid());
@@ -244,14 +246,14 @@ BOOST_AUTO_TEST_CASE(Disc) {
                     vol4.get());
 
   BOOST_CHECK_THROW(
-      Portal::merge(portal1, portal2, BinningValue::binZ, *logger),
+      Portal::merge(gctx, portal1, portal2, BinningValue::binZ, *logger),
       AssertionFailureException);
 
   BOOST_CHECK(portal1.isValid());
   BOOST_CHECK(portal2.isValid());
 
   BOOST_CHECK_THROW(
-      Portal::merge(portal1, portal2, BinningValue::binPhi, *logger),
+      Portal::merge(gctx, portal1, portal2, BinningValue::binPhi, *logger),
       SurfaceMergingException);
 
   // Portals not valid anymore because they were moved before the exception was
@@ -260,11 +262,11 @@ BOOST_AUTO_TEST_CASE(Disc) {
   BOOST_CHECK(!portal2.isValid());
 
   // recreate them
-  portal1 =
-      Portal{{.alongNormal = {disc1, *vol1}, .oppositeNormal = {disc1, *vol2}}};
+  portal1 = Portal{
+      gctx, {.alongNormal = {disc1, *vol1}, .oppositeNormal = {disc1, *vol2}}};
 
-  portal2 =
-      Portal{{.alongNormal = {disc2, *vol3}, .oppositeNormal = {disc2, *vol4}}};
+  portal2 = Portal{
+      gctx, {.alongNormal = {disc2, *vol3}, .oppositeNormal = {disc2, *vol4}}};
 
   //         ^                     ^
   //         |                     |
@@ -276,7 +278,7 @@ BOOST_AUTO_TEST_CASE(Disc) {
   //         |                     |
   //         v                     v
   Portal merged12 =
-      Portal::merge(portal1, portal2, BinningValue::binR, *logger);
+      Portal::merge(gctx, portal1, portal2, BinningValue::binR, *logger);
 
   BOOST_CHECK_EQUAL(merged12.resolveVolume(gctx, Vector3{55_mm, 0_mm, 0_mm},
                                            Vector3::UnitZ()),
@@ -296,12 +298,12 @@ BOOST_AUTO_TEST_CASE(Disc) {
   auto material =
       std::make_shared<HomogeneousSurfaceMaterial>(MaterialSlab{});  // vacuum
   disc2->assignSurfaceMaterial(material);
-  portal1 =
-      Portal{{.alongNormal = {disc1, *vol1}, .oppositeNormal = {disc1, *vol2}}};
-  portal2 =
-      Portal{{.alongNormal = {disc2, *vol3}, .oppositeNormal = {disc2, *vol4}}};
+  portal1 = Portal{
+      gctx, {.alongNormal = {disc1, *vol1}, .oppositeNormal = {disc1, *vol2}}};
+  portal2 = Portal{
+      gctx, {.alongNormal = {disc2, *vol3}, .oppositeNormal = {disc2, *vol4}}};
   BOOST_CHECK_THROW(
-      Portal::merge(portal1, portal2, BinningValue::binR, *logger),
+      Portal::merge(gctx, portal1, portal2, BinningValue::binR, *logger),
       PortalMergingException);
 }
 
@@ -309,7 +311,6 @@ BOOST_AUTO_TEST_SUITE_END()  // Merging
 
 BOOST_AUTO_TEST_SUITE(Fusing)
 
-// @TODO: Test fusing portals with different surfaces fails
 BOOST_AUTO_TEST_CASE(Separated) {
   auto vol1 = makeDummyVolume();
   vol1->setVolumeName("vol1");
@@ -322,26 +323,26 @@ BOOST_AUTO_TEST_CASE(Separated) {
   auto cyl2 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
                                                    60_mm, 100_mm);
 
-  Portal portal1{{.oppositeNormal = {cyl1, *vol1}}};
+  Portal portal1{gctx, {.oppositeNormal = {cyl1, *vol1}}};
 
-  Portal portal2{{.alongNormal = {cyl2, *vol2}}};
+  Portal portal2{gctx, {.alongNormal = {cyl2, *vol2}}};
 
   BOOST_CHECK(portal1.isValid());
   BOOST_CHECK(portal2.isValid());
 
   // Surfaces have a 10mm gap in r
-  BOOST_CHECK_THROW(Portal::fuse(portal1, portal2, *logger),
+  BOOST_CHECK_THROW(Portal::fuse(gctx, portal1, portal2, *logger),
                     PortalFusingException);
 
   BOOST_CHECK(portal1.isValid());
   BOOST_CHECK(portal2.isValid());
 
   // Same way can't set cyl2 as other link
-  BOOST_CHECK_THROW(portal1.setLink(Direction::AlongNormal, cyl2, *vol2),
+  BOOST_CHECK_THROW(portal1.setLink(gctx, Direction::AlongNormal, cyl2, *vol2),
                     PortalFusingException);
   BOOST_CHECK_EQUAL(portal1.getLink(Direction::AlongNormal), nullptr);
 
-  Portal portal1b{{.oppositeNormal = {cyl1, *vol1}}};
+  Portal portal1b{gctx, {.oppositeNormal = {cyl1, *vol1}}};
   BOOST_CHECK(portal1b.isValid());
 
   //    portal1     portal1b
@@ -352,7 +353,7 @@ BOOST_AUTO_TEST_CASE(Separated) {
   //      |   |        |   |
   //      |   |        |   |
   //      +---+        +---+
-  BOOST_CHECK_THROW(Portal::fuse(portal1, portal1b, *logger),
+  BOOST_CHECK_THROW(Portal::fuse(gctx, portal1, portal1b, *logger),
                     PortalFusingException);
   BOOST_CHECK(portal1.isValid());
   BOOST_CHECK(portal1b.isValid());
@@ -372,9 +373,9 @@ BOOST_AUTO_TEST_CASE(Separated) {
   //   |   |          |   |
   //   |   |          |   |
   //   +---+          +---+
-  Portal portal2b{{.alongNormal = {disc2, *vol2}}};
+  Portal portal2b{gctx, {.alongNormal = {disc2, *vol2}}};
 
-  BOOST_CHECK_THROW(Portal::fuse(portal2, portal2b, *logger),
+  BOOST_CHECK_THROW(Portal::fuse(gctx, portal2, portal2b, *logger),
                     PortalFusingException);
   BOOST_CHECK(portal1.isValid());
   BOOST_CHECK(portal2.isValid());
@@ -388,10 +389,10 @@ BOOST_AUTO_TEST_CASE(Separated) {
   //      |   |        |   |
   //      +---+        +---+
   Portal portal2c{
-      {.alongNormal = {disc2, *vol1}, .oppositeNormal = {disc2, *vol2}}};
+      gctx, {.alongNormal = {disc2, *vol1}, .oppositeNormal = {disc2, *vol2}}};
   BOOST_CHECK(portal2c.isValid());
 
-  BOOST_CHECK_THROW(Portal::fuse(portal2, portal2c, *logger),
+  BOOST_CHECK_THROW(Portal::fuse(gctx, portal2, portal2c, *logger),
                     PortalFusingException);
   BOOST_CHECK(portal2.isValid());
   BOOST_CHECK(portal2c.isValid());
@@ -419,16 +420,16 @@ BOOST_AUTO_TEST_CASE(Success) {
   //      |   |   |   |
   //      |   |   |   |
   //      +---+   +---+
-  Portal portal1{{.oppositeNormal = {cyl1, *vol1}}};
+  Portal portal1{gctx, {.oppositeNormal = {cyl1, *vol1}}};
   BOOST_CHECK_EQUAL(&portal1.getLink(Direction::OppositeNormal)->surface(),
                     cyl1.get());
 
-  Portal portal2{{.alongNormal = {cyl2, *vol2}}};
+  Portal portal2{gctx, {.alongNormal = {cyl2, *vol2}}};
 
   BOOST_CHECK(portal1.isValid());
   BOOST_CHECK(portal2.isValid());
 
-  Portal portal3 = Portal::fuse(portal1, portal2, *logger);
+  Portal portal3 = Portal::fuse(gctx, portal1, portal2, *logger);
   // Input portals get invalidated by the fuse
   BOOST_CHECK(!portal1.isValid());
   BOOST_CHECK(!portal2.isValid());
@@ -461,27 +462,27 @@ BOOST_AUTO_TEST_CASE(Material) {
   //      |   |   |   |
   //      |   |   |   |
   //      +---+   +---+
-  Portal portal1{{.oppositeNormal = {cyl1, *vol1}}};
-  Portal portal2{{.alongNormal = {cyl2, *vol2}}};
+  Portal portal1{gctx, {.oppositeNormal = {cyl1, *vol1}}};
+  Portal portal2{gctx, {.alongNormal = {cyl2, *vol2}}};
 
   auto material =
       std::make_shared<HomogeneousSurfaceMaterial>(MaterialSlab{});  // vacuum
 
   cyl1->assignSurfaceMaterial(material);
 
-  Portal portal12 = Portal::fuse(portal1, portal2, *logger);
+  Portal portal12 = Portal::fuse(gctx, portal1, portal2, *logger);
 
   // cyl1 had material, so this surface needs to be retained
   BOOST_CHECK_EQUAL(&portal12.surface(), cyl1.get());
   BOOST_CHECK_EQUAL(portal12.surface().surfaceMaterial(), material.get());
 
   // Reset portals
-  portal1 = Portal{{.oppositeNormal = {cyl1, *vol1}}};
-  portal2 = Portal{{.alongNormal = {cyl2, *vol2}}};
+  portal1 = Portal{gctx, {.oppositeNormal = {cyl1, *vol1}}};
+  portal2 = Portal{gctx, {.alongNormal = {cyl2, *vol2}}};
   cyl2->assignSurfaceMaterial(material);
 
   // Both have material, this should fail
-  BOOST_CHECK_THROW(Portal::fuse(portal1, portal2, *logger),
+  BOOST_CHECK_THROW(Portal::fuse(gctx, portal1, portal2, *logger),
                     PortalFusingException);
   // Portals should stay valid
   BOOST_CHECK(portal1.isValid());
@@ -489,7 +490,7 @@ BOOST_AUTO_TEST_CASE(Material) {
 
   cyl1->assignSurfaceMaterial(nullptr);
 
-  portal12 = Portal::fuse(portal1, portal2, *logger);
+  portal12 = Portal::fuse(gctx, portal1, portal2, *logger);
 
   // cyl2 had material, so this surface needs to be retained
   BOOST_CHECK_EQUAL(&portal12.surface(), cyl2.get());
@@ -501,7 +502,7 @@ BOOST_AUTO_TEST_SUITE_END()  // Fusing
 BOOST_AUTO_TEST_CASE(Construction) {
   auto vol1 = makeDummyVolume();
 
-  // @TODO: Displaced surfaces fail
+  // Displaced surfaces fail
   auto disc1 = Surface::makeShared<DiscSurface>(
       Transform3::Identity(), std::make_shared<RadialBounds>(50_mm, 100_mm));
 
@@ -510,21 +511,16 @@ BOOST_AUTO_TEST_CASE(Construction) {
       std::make_shared<RadialBounds>(50_mm, 100_mm));
 
   BOOST_CHECK_THROW(std::make_unique<Portal>(
-                        std::make_unique<TrivialPortalLink>(disc1, *vol1),
+                        gctx, std::make_unique<TrivialPortalLink>(disc1, *vol1),
                         std::make_unique<TrivialPortalLink>(disc2, *vol1)),
                     PortalFusingException);
 
-  BOOST_CHECK_THROW((Portal{nullptr, nullptr}), std::invalid_argument);
-  BOOST_CHECK_THROW(Portal{{}}, std::invalid_argument);
+  BOOST_CHECK_THROW((Portal{gctx, nullptr, nullptr}), std::invalid_argument);
+  BOOST_CHECK_THROW(Portal(gctx, {}), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()  // Portals
 
 BOOST_AUTO_TEST_SUITE_END()  // Geometry
-
-// @TODO: Test portal with material
-// - Material on either: works as long as portal surfaces are COMPATIBLE
-// - Material on both: works if portals have IDENTICAL surface, or COMPATIBLE
-//                     surfaces and IDENTICAL material
 
 }  // namespace Acts::Test

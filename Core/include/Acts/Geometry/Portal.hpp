@@ -41,12 +41,14 @@ class PortalFusingException : public std::exception {
 
 class Portal {
  public:
-  Portal(Direction direction, std::unique_ptr<PortalLinkBase> link);
+  Portal(const GeometryContext& gctx, Direction direction,
+         std::unique_ptr<PortalLinkBase> link);
 
-  Portal(Direction direction, std::shared_ptr<RegularSurface> surface,
-         TrackingVolume& volume);
+  Portal(const GeometryContext& gctx, Direction direction,
+         std::shared_ptr<RegularSurface> surface, TrackingVolume& volume);
 
-  Portal(std::unique_ptr<PortalLinkBase> alongNormal,
+  Portal(const GeometryContext& gctx,
+         std::unique_ptr<PortalLinkBase> alongNormal,
          std::unique_ptr<PortalLinkBase> oppositeNormal);
 
   struct Config {
@@ -63,7 +65,7 @@ class Portal {
     Link oppositeNormal;
   };
 
-  Portal(Config&& config);
+  Portal(const GeometryContext& gctx, Config&& config);
 
   ///    portal1   portal2
   ///      +---+   +---+
@@ -75,8 +77,8 @@ class Portal {
   ///      +---+   +---+
   /// @note This is a destructive operaion on the portals involved
   /// @TODO: Handle material on portal surfaces
-  static Portal fuse(Portal& aPortal, Portal& bPortal,
-                     const Logger& logger = getDummyLogger());
+  static Portal fuse(const GeometryContext& gctx, Portal& aPortal,
+                     Portal& bPortal, const Logger& logger = getDummyLogger());
 
   ///         ^                     ^
   ///         |                     |
@@ -90,16 +92,18 @@ class Portal {
   /// @note This is a destructive operation on both portals, their
   ///       links will be moved to produce merged links, which can fail
   ///       if the portal links are not compatible
-  static Portal merge(Portal& aPortal, Portal& bPortal, BinningValue direction,
+  static Portal merge(const GeometryContext& gctx, Portal& aPortal,
+                      Portal& bPortal, BinningValue direction,
                       const Logger& logger = getDummyLogger());
 
   const TrackingVolume* resolveVolume(const GeometryContext& gctx,
                                       const Vector3& position,
                                       const Vector3& direction) const;
 
-  void setLink(Direction direction, std::unique_ptr<PortalLinkBase> link);
-  void setLink(Direction direction, std::shared_ptr<RegularSurface> surface,
-               TrackingVolume& volume);
+  void setLink(const GeometryContext& gctx, Direction direction,
+               std::unique_ptr<PortalLinkBase> link);
+  void setLink(const GeometryContext& gctx, Direction direction,
+               std::shared_ptr<RegularSurface> surface, TrackingVolume& volume);
 
   const PortalLinkBase* getLink(Direction direction) const;
 
@@ -108,7 +112,8 @@ class Portal {
   const RegularSurface& surface() const;
 
  private:
-  static bool isSameSurface(const Surface& a, const Surface& b);
+  static bool isSameSurface(const GeometryContext& gctx, const Surface& a,
+                            const Surface& b);
 
   // @TODO: Potentially short circuit the virtual call
   // using VolumeResolver = Delegate<const TrackingVolume*(const Vector3&

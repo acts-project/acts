@@ -20,49 +20,52 @@
 
 namespace Acts {
 
-Portal::Portal(Direction direction, std::unique_ptr<PortalLinkBase> link) {
-  setLink(direction, std::move(link));
+Portal::Portal(const GeometryContext& gctx, Direction direction,
+               std::unique_ptr<PortalLinkBase> link) {
+  setLink(gctx, direction, std::move(link));
   assert(m_surface != nullptr);
 }
 
-Portal::Portal(Direction direction, std::shared_ptr<RegularSurface> surface,
-               TrackingVolume& volume)
-    : Portal(direction,
+Portal::Portal(const GeometryContext& gctx, Direction direction,
+               std::shared_ptr<RegularSurface> surface, TrackingVolume& volume)
+    : Portal(gctx, direction,
              std::make_unique<TrivialPortalLink>(std::move(surface), volume)) {}
 
-Portal::Portal(std::unique_ptr<PortalLinkBase> alongNormal,
+Portal::Portal(const GeometryContext& gctx,
+               std::unique_ptr<PortalLinkBase> alongNormal,
                std::unique_ptr<PortalLinkBase> oppositeNormal) {
   if (alongNormal == nullptr && oppositeNormal == nullptr) {
     throw std::invalid_argument("At least one link must be provided");
   }
 
   if (alongNormal != nullptr) {
-    setLink(Direction::AlongNormal, std::move(alongNormal));
+    setLink(gctx, Direction::AlongNormal, std::move(alongNormal));
   }
   if (oppositeNormal != nullptr) {
-    setLink(Direction::OppositeNormal, std::move(oppositeNormal));
+    setLink(gctx, Direction::OppositeNormal, std::move(oppositeNormal));
   }
 }
 
-Portal::Portal(Config&& config) {
+Portal::Portal(const GeometryContext& gctx, Config&& config) {
   if (!config.alongNormal.m_surface && !config.oppositeNormal.m_surface) {
     throw std::invalid_argument("At least one link must be provided");
   }
 
   if (config.alongNormal.m_surface) {
-    setLink(Direction::AlongNormal, std::make_unique<TrivialPortalLink>(
-                                        std::move(config.alongNormal.m_surface),
-                                        *config.alongNormal.m_volume));
+    setLink(gctx, Direction::AlongNormal,
+            std::make_unique<TrivialPortalLink>(
+                std::move(config.alongNormal.m_surface),
+                *config.alongNormal.m_volume));
   }
   if (config.oppositeNormal.m_surface) {
-    setLink(Direction::OppositeNormal,
+    setLink(gctx, Direction::OppositeNormal,
             std::make_unique<TrivialPortalLink>(
                 std::move(config.oppositeNormal.m_surface),
                 *config.oppositeNormal.m_volume));
   }
 }
 
-void Portal::setLink(Direction direction,
+void Portal::setLink(const GeometryContext& gctx, Direction direction,
                      std::unique_ptr<PortalLinkBase> link) {
   assert(link != nullptr);
 
@@ -72,7 +75,8 @@ void Portal::setLink(Direction direction,
       direction == Direction::AlongNormal ? m_oppositeNormal : m_alongNormal;
 
   // check if surfaces are identical
-  if (m_surface != nullptr && !isSameSurface(link->surface(), *m_surface)) {
+  if (m_surface != nullptr &&
+      !isSameSurface(gctx, link->surface(), *m_surface)) {
     throw PortalFusingException();
   }
 
@@ -102,10 +106,10 @@ void Portal::setLink(Direction direction,
   }
 }
 
-void Portal::setLink(Direction direction,
+void Portal::setLink(const GeometryContext& gctx, Direction direction,
                      std::shared_ptr<RegularSurface> surface,
                      TrackingVolume& volume) {
-  setLink(direction,
+  setLink(gctx, direction,
           std::make_unique<TrivialPortalLink>(std::move(surface), volume));
 }
 
@@ -146,7 +150,8 @@ const RegularSurface& Portal::surface() const {
   return *m_surface;
 }
 
-Portal Portal::merge(Portal& aPortal, Portal& bPortal, BinningValue direction,
+Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
+                     Portal& bPortal, BinningValue direction,
                      const Logger& logger) {
   ACTS_DEBUG("Merging to portals along " << direction);
 
@@ -205,10 +210,12 @@ Portal Portal::merge(Portal& aPortal, Portal& bPortal, BinningValue direction,
 
   aPortal.m_surface.reset();
   bPortal.m_surface.reset();
-  return Portal{std::move(mergedAlongNormal), std::move(mergedOppositeNormal)};
+  return Portal{gctx, std::move(mergedAlongNormal),
+                std::move(mergedOppositeNormal)};
 }
 
-Portal Portal::fuse(Portal& aPortal, Portal& bPortal, const Logger& logger) {
+Portal Portal::fuse(const GeometryContext& gctx, Portal& aPortal,
+                    Portal& bPortal, const Logger& logger) {
   ACTS_DEBUG("Fusing two portals");
   if (&aPortal == &bPortal) {
     ACTS_ERROR("Cannot merge a portal with itself");
@@ -231,7 +238,7 @@ Portal Portal::fuse(Portal& aPortal, Portal& bPortal, const Logger& logger) {
     throw PortalFusingException();
   }
 
-  if (!isSameSurface(*aPortal.m_surface, *bPortal.m_surface)) {
+  if (!isSameSurface(gctx, *aPortal.m_surface, *bPortal.m_surface)) {
     ACTS_ERROR("Portals have different surfaces");
     throw PortalFusingException();
   }
@@ -252,16 +259,17 @@ Portal Portal::fuse(Portal& aPortal, Portal& bPortal, const Logger& logger) {
   bPortal.m_surface.reset();
   if (aHasAlongNormal) {
     ACTS_VERBOSE("Taking along normal from lhs, opposite normal from rhs");
-    return Portal{std::move(aPortal.m_alongNormal),
+    return Portal{gctx, std::move(aPortal.m_alongNormal),
                   std::move(bPortal.m_oppositeNormal)};
   } else {
     ACTS_VERBOSE("Taking along normal from rhs, opposite normal from lhs");
-    return Portal{std::move(bPortal.m_alongNormal),
+    return Portal{gctx, std::move(bPortal.m_alongNormal),
                   std::move(aPortal.m_oppositeNormal)};
   }
 }
 
-bool Portal::isSameSurface(const Surface& a, const Surface& b) {
+bool Portal::isSameSurface(const GeometryContext& gctx, const Surface& a,
+                           const Surface& b) {
   if (&a == &b) {
     return true;
   }
@@ -273,10 +281,6 @@ bool Portal::isSameSurface(const Surface& a, const Surface& b) {
   if (a.bounds() != b.bounds()) {
     return false;
   }
-
-  // We've explicitly checked above that both surfaces do not have detector
-  // elements!
-  Acts::GeometryContext gctx;
 
   if (!a.transform(gctx).isApprox(b.transform(gctx), 1e-9)) {
     return false;
