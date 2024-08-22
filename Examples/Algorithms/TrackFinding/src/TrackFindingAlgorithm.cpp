@@ -366,6 +366,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                    ctx.calibContext, slAccessorDelegate,
                                    extensions, secondPropOptions);
   secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
+  secondOptions.skipFirstSurface = true;
 
   using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
   using ExtrapolatorOptions =

@@ -234,6 +234,10 @@ struct CombinatorialKalmanFilterOptions {
 
   /// Whether to consider energy loss.
   bool energyLoss = true;
+
+  /// Skip the first surface
+  /// @note This is useful if the first surface should not be considered in a second reverse pass
+  bool skipFirstSurface = false;
 };
 
 template <typename track_container_t>
@@ -524,6 +528,9 @@ class CombinatorialKalmanFilter {
     /// Whether to consider energy loss.
     bool energyLoss = true;
 
+    /// Skip the first surface
+    bool skipFirstSurface = false;
+
     /// Calibration context for the finding run
     const CalibrationContext* calibrationContextPtr{nullptr};
 
@@ -544,6 +551,11 @@ class CombinatorialKalmanFilter {
       assert(result.trackStates && "No MultiTrajectory set");
 
       if (result.finished) {
+        return;
+      }
+
+      if (state.stage == PropagatorStage::prePropagation && skipFirstSurface) {
+        ACTS_VERBOSE("Skip first surface");
         return;
       }
 
@@ -1253,6 +1265,7 @@ class CombinatorialKalmanFilter {
     combKalmanActor.targetReached.surface = tfOptions.targetSurface;
     combKalmanActor.multipleScattering = tfOptions.multipleScattering;
     combKalmanActor.energyLoss = tfOptions.energyLoss;
+    combKalmanActor.skipFirstSurface = tfOptions.skipFirstSurface;
     combKalmanActor.actorLogger = m_actorLogger.get();
     combKalmanActor.updaterLogger = m_updaterLogger.get();
     combKalmanActor.calibrationContextPtr = &tfOptions.calibrationContext.get();
