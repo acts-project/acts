@@ -111,7 +111,7 @@ def addParticleGun(
                 multiplicity=FixedMultiplicityGenerator(n=multiplicity),
                 vertex=vtxGen
                 or acts.examples.GaussianVertexGenerator(
-                    mean=acts.Vector4(100, 0, 0, 0),
+                    mean=acts.Vector4(0, 0, 0, 0),
                     stddev=acts.Vector4(0, 0, 0, 0),
                 ),
                 particles=acts.examples.ParametricParticleGenerator(
