@@ -7,7 +7,14 @@ find_package(
     Acts
     CONFIG
     REQUIRED
-    COMPONENTS Core Fatras PluginJson PluginLegacy PluginTGeo PluginCovfie
+    COMPONENTS
+        Core
+        Fatras
+        PluginJson
+        PluginLegacy
+        PluginTGeo
+        PluginCovfie
+        PluginDetray
 )
 
 # place artifacts in GNU-like paths, e.g. binaries in `<build>/bin`
@@ -31,6 +38,7 @@ target_link_libraries(
         ActsPluginLegacy
         ActsPluginTGeo
         ActsPluginCovfie
+        ActsPluginDetray
 )
 
 option(DD4HEP "Build with DD4hep" ON)

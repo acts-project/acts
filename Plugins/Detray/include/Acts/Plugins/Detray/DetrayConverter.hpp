@@ -38,53 +38,10 @@ class DetrayConverter {
   /// @param options the conversion options
   ///
   /// @returns a detector of requested return type
-  template <typename detector_t = DetrayDetector>
-  detector_t convert(
+  DetrayDetector convert(
       const GeometryContext& gctx, const Detector& detector,
       vecmem::memory_resource& mr,
-      [[maybe_unused]] const DetrayConversionUtils::Options& options = {}) {
-    // The building cache object
-    DetrayConversionUtils::GeometryIdCache geoIdCache;
-
-    typename detector_t::name_map names = {{0u, detector.name()}};
-
-    // build detector
-    detray::detector_builder<typename detector_t::metadata> detectorBuilder{};
-    // (1) geometry
-    detray::io::detector_payload detectorPayload =
-        DetrayGeometryConverter::convertDetector(geoIdCache, gctx, detector,
-                                                 logger());
-    detray::io::geometry_reader::convert<detector_t>(detectorBuilder, names,
-                                                     detectorPayload);
-    // (2) material
-    if constexpr (detray::detail::has_material_grids_v<detector_t>) {
-      if (options.convertMaterial) {
-        detray::io::detector_grids_payload<detray::io::material_slab_payload,
-                                           detray::io::material_id>
-            materialPayload =
-                DetrayMaterialConverter::convertSurfaceMaterialGrids(
-                    geoIdCache, detector, logger());
-        detray::io::material_map_reader<>::convert<detector_t>(
-            detectorBuilder, names, materialPayload);
-      }
-    }
-
-    detector_t detrayDetector(detectorBuilder.build(mr));
-
-    // Checks and print
-    detray::detail::check_consistency(detrayDetector);
-
-    // If configured, write the detector to json
-    if (options.writeToJson) {
-      // Create a writer configuration and write it out
-      detray::io::detector_writer_config writerConfig{};
-      writerConfig.m_write_material = options.convertMaterial;
-      writerConfig.m_write_grids = options.convertSurfaceGrids;
-      writeToJson(detrayDetector, names, writerConfig);
-    }
-
-    return detrayDetector;
-  }
+      [[maybe_unused]] const DetrayConversionUtils::Options& options = {});
 
   /// Write the detector to json output
   ///

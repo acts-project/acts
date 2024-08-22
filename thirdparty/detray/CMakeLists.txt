@@ -30,6 +30,11 @@ set(DETRAY_CUSTOM_SCALARTYPE
     "Scalar type to use in the Detray code"
 )
 
+set(DETRAY_BUILD_CUDA
+    OFF
+    CACHE BOOL
+    "Turn off the build of the Detray CUDA code"
+)
 set(DETRAY_BUILD_TESTING
     OFF
     CACHE BOOL
