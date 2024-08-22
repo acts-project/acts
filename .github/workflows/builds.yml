@@ -24,7 +24,7 @@ env:
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:62
+    container: ghcr.io/acts-project/ubuntu2404:63
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -109,7 +109,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:62
+    container: ghcr.io/acts-project/ubuntu2404:63
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -147,7 +147,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:62
+    container: ghcr.io/acts-project/ubuntu2404:63
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -235,7 +235,7 @@ jobs:
             std: 20
           - image: ubuntu2204_clang
             std: 20
-    container: ghcr.io/acts-project/${{ matrix.image }}:62
+    container: ghcr.io/acts-project/${{ matrix.image }}:63
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -313,8 +313,6 @@ jobs:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
       DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/macos-14/deps.v2.tar.zst
-      # Works around an issue where root's RPATH is wrong for tbb, thus won't find it
-      DYLD_LIBRARY_PATH: "${{ github.workspace }}/install/tbb/2021.11.0/lib"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -325,7 +323,9 @@ jobs:
         run: uname -p
 
       - name: Install dependencies
-        run: CI/dependencies.sh
+        run: >
+          brew install cmake ninja ccache xerces-c
+          && CI/dependencies.sh
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
