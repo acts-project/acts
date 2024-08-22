@@ -254,11 +254,10 @@ class Surface : public virtual GeometryObject,
   /// @param boundaryTolerance BoundaryTolerance directive for this onSurface check
   ///
   /// @return boolean indication if operation was successful
-  bool isOnSurface(
-      const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
-      const BoundaryTolerance& boundaryTolerance = BoundaryTolerance::None(),
-      double tolerance = s_onSurfaceTolerance) const;
+  bool isOnSurface(const GeometryContext& gctx, const Vector3& position,
+                   const Vector3& direction,
+                   const BoundaryTolerance& boundaryTolerance =
+                       BoundaryTolerance::None()) const;
 
   /// The insideBounds method for local positions
   ///
