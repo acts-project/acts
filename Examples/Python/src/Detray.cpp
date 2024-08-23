@@ -39,6 +39,5 @@ void addDetray(Context& ctx) {
   }
 
   { mex.def("writeToJson", &DetrayGeometryConverter::writeToJson); }
-
 }
 }  // namespace Acts::Python

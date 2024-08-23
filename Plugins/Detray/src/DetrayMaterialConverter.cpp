@@ -194,9 +194,11 @@ Acts::DetrayMaterialConverter::convertSurfaceMaterialGrids(
             convertSurfaceMaterial(*surface->surfaceMaterial(), logger);
         // Loop over the equal range and fill one grid each, this is needed
         // as the initial portal could be split into multiple surfaces
-        for (auto itr = it.first; itr != it.second; ++itr) {
+        for (auto itr = surfaceIndices.first; itr != surfaceIndices.second;
+             ++itr) {
           // Fill the surface index
-          materialGrid.owner_link = surfaceIndices->second;
+          materialGrid.owner_link =
+              detray::io::single_link_payload{itr->second};
           // Fill the grid
           volumeMaterialGrids.push_back(materialGrid);
         }

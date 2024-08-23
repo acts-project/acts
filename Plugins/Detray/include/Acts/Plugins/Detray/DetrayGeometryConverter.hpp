@@ -91,7 +91,7 @@ std::vector<detray::io::surface_payload> convertPortal(
 
 /// Conversion method for volume objects to detray::volume payloads
 ///
-/// @param cache [in, out] object 
+/// @param cache [in, out] object
 /// @param gctx the geometry context
 /// @param volume the volume to be converted
 /// @param detectorVolumes the detector volumes for the link lookup
@@ -99,8 +99,8 @@ std::vector<detray::io::surface_payload> convertPortal(
 ///
 /// @return the volume_payload for portals and volumes by @param volume acts object
 detray::io::volume_payload convertVolume(
-    DetrayConversionUtils::Cache& cache,
-    const GeometryContext& gctx, const Experimental::DetectorVolume& volume,
+    DetrayConversionUtils::Cache& cache, const GeometryContext& gctx,
+    const Experimental::DetectorVolume& volume,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
     const Acts::Logger& logger);
 

@@ -37,7 +37,8 @@ class DetrayConverter {
   template <typename detector_t = DetrayDetector>
   std::tuple<detector_t, vecmem::memory_resource&> convertDetector(
       const GeometryContext& gctx, const Detector& detector,
-      vecmem::memory_resource& mr, const DetrayConversionUtils::Options& options = {}) {
+      vecmem::memory_resource& mr,
+      const DetrayConversionUtils::Options& options = {}) {
     // The detector payload which will be handed back
     detray::io::detector_payload detectorPayload;
 

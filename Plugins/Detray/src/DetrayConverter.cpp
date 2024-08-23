@@ -8,5 +8,6 @@
 
 #include "Acts/Plugins/Detray/DetrayConverter.hpp"
 
-Acts::DetrayConverter::DetrayConverter(std::unique_ptr<const Acts::Logger> logger)
+Acts::DetrayConverter::DetrayConverter(
+    std::unique_ptr<const Acts::Logger> logger)
     : m_logger(std::move(logger)) {}
