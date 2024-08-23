@@ -11,7 +11,9 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 
+#ifdef __cpp_lib_format
 #include <format>
+#endif
 
 namespace Acts {
 
@@ -199,6 +201,8 @@ void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
 }
 
 void GridPortalLink::printContents(std::ostream& os) const {
+  static_cast<void>(os);
+#ifdef __cpp_lib_format
   std::size_t dim = grid().axes().size();
   os << "----- GRID " << dim << "d -----" << std::endl;
   os << grid() << " along " << direction() << std::endl;
@@ -275,6 +279,7 @@ void GridPortalLink::printContents(std::ostream& os) const {
       os << std::endl;
     }
   }
+#endif
 }
 
 void GridPortalLink::fillGrid1dTo2d(FillDirection dir,
