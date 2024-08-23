@@ -11,9 +11,8 @@
 
 class GeoMaterial;
 
-namespace Acts {
+namespace Acts::GeoModel {
 
-namespace GeoModel {
 /// @brief Convert GeoMaterial to Acts::Material
 ///
 /// @param gm The GeoMaterial to be converted
@@ -21,5 +20,4 @@ namespace GeoModel {
 Material geoMaterialConverter(const GeoMaterial& gm,
                               bool useMolarDensity = true);
 
-}  // namespace GeoModel
-}  // namespace Acts
+}  // namespace Acts::GeoModel
