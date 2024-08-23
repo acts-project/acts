@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/Detector.hpp"
-#include "Acts/Plugins/Detray/DetrayConverter.hpp"
+#include "Acts/Plugins/Detray/DetrayGeometryConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 
 #include <memory>
@@ -38,27 +38,7 @@ void addDetray(Context& ctx) {
                                                             "detray_detector");
   }
 
-  { mex.def("writeToJson", &DetrayConverter::writeToJson); }
-  /**
-          {
-              /// @brief Converts an Acts::Detector to a detray::detector
-              mex.def("convertDetectorToDetray",
-                      [](const Acts::GeometryContext& gctx,
-                      const Acts::Experimental::Detector& acts_detector,
-                      const std::string& name) -> auto
-     {//detector<default_metadata>
+  { mex.def("writeToJson", &DetrayGeometryConverter::writeToJson); }
 
-                          // Create a host memory resource
-                          vecmem::host_memory_resource host_mr;
-                          // Convert Acts detector to detray detector using the
-     detray converter function auto det_tuple =
-     DetrayConverter::detrayConvert(acts_detector, gctx, host_mr);
-
-                          return true; //TO DO:: cannot return tuple
-
-                      });
-          }
-
-          **/
 }
 }  // namespace Acts::Python
