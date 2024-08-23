@@ -114,8 +114,8 @@ class TrackingVolume : public Volume {
   ~TrackingVolume() override;
   TrackingVolume(const TrackingVolume&) = delete;
   TrackingVolume& operator=(const TrackingVolume&) = delete;
-
   TrackingVolume(TrackingVolume&&) = default;
+  TrackingVolume& operator=(TrackingVolume&&) = default;
 
   /// Constructor for a container Volume
   /// - vacuum filled volume either as a for other tracking volumes
