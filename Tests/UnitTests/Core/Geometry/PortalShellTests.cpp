@@ -55,38 +55,49 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
 
   const auto* pDisc = shell1.portal(PositiveDisc);
   BOOST_REQUIRE_NE(pDisc, nullptr);
-  BOOST_CHECK_EQUAL(pDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm},
-                                         -Vector3::UnitZ()),
-                    &cyl1);
-  BOOST_CHECK_EQUAL(pDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm},
-                                         Vector3::UnitZ()),
-                    nullptr);
+  BOOST_CHECK_EQUAL(
+      pDisc
+          ->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm}, -Vector3::UnitZ())
+          .value(),
+      &cyl1);
+  BOOST_CHECK_EQUAL(
+      pDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm}, Vector3::UnitZ())
+          .value(),
+      nullptr);
 
   const auto* nDisc = shell1.portal(NegativeDisc);
   BOOST_REQUIRE_NE(nDisc, nullptr);
-  BOOST_CHECK_EQUAL(nDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
-                                         -Vector3::UnitZ()),
+  BOOST_CHECK_EQUAL(nDisc
+                        ->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
+                                        -Vector3::UnitZ())
+                        .value(),
                     nullptr);
-  BOOST_CHECK_EQUAL(nDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
-                                         Vector3::UnitZ()),
-                    &cyl1);
+  BOOST_CHECK_EQUAL(
+      nDisc
+          ->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm}, Vector3::UnitZ())
+          .value(),
+      &cyl1);
 
   const auto* oCyl = shell1.portal(OuterCylinder);
   BOOST_REQUIRE_NE(oCyl, nullptr);
   BOOST_CHECK_EQUAL(
-      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, Vector3::UnitX()),
+      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, Vector3::UnitX())
+          .value(),
       nullptr);
   BOOST_CHECK_EQUAL(
-      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, -Vector3::UnitX()),
+      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, -Vector3::UnitX())
+          .value(),
       &cyl1);
 
   const auto* iCyl = shell1.portal(InnerCylinder);
   BOOST_REQUIRE_NE(iCyl, nullptr);
   BOOST_CHECK_EQUAL(
-      iCyl->resolveVolume(gctx, Vector3{30_mm, 0_mm, 10_mm}, Vector3::UnitX()),
+      iCyl->resolveVolume(gctx, Vector3{30_mm, 0_mm, 10_mm}, Vector3::UnitX())
+          .value(),
       &cyl1);
   BOOST_CHECK_EQUAL(
-      iCyl->resolveVolume(gctx, Vector3{30_mm, 0_mm, 10_mm}, -Vector3::UnitX()),
+      iCyl->resolveVolume(gctx, Vector3{30_mm, 0_mm, 10_mm}, -Vector3::UnitX())
+          .value(),
       nullptr);
 
   SingleCylinderPortalShell shell2{gctx, cyl2};
@@ -94,29 +105,38 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
 
   pDisc = shell2.portal(PositiveDisc);
   BOOST_REQUIRE_NE(pDisc, nullptr);
-  BOOST_CHECK_EQUAL(pDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm},
-                                         -Vector3::UnitZ()),
-                    &cyl2);
-  BOOST_CHECK_EQUAL(pDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm},
-                                         Vector3::UnitZ()),
-                    nullptr);
+  BOOST_CHECK_EQUAL(
+      pDisc
+          ->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm}, -Vector3::UnitZ())
+          .value(),
+      &cyl2);
+  BOOST_CHECK_EQUAL(
+      pDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm}, Vector3::UnitZ())
+          .value(),
+      nullptr);
 
   nDisc = shell2.portal(NegativeDisc);
   BOOST_REQUIRE_NE(nDisc, nullptr);
-  BOOST_CHECK_EQUAL(nDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
-                                         -Vector3::UnitZ()),
+  BOOST_CHECK_EQUAL(nDisc
+                        ->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
+                                        -Vector3::UnitZ())
+                        .value(),
                     nullptr);
-  BOOST_CHECK_EQUAL(nDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
-                                         Vector3::UnitZ()),
-                    &cyl2);
+  BOOST_CHECK_EQUAL(
+      nDisc
+          ->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm}, Vector3::UnitZ())
+          .value(),
+      &cyl2);
 
   oCyl = shell2.portal(OuterCylinder);
   BOOST_REQUIRE_NE(oCyl, nullptr);
   BOOST_CHECK_EQUAL(
-      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, Vector3::UnitX()),
+      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, Vector3::UnitX())
+          .value(),
       nullptr);
   BOOST_CHECK_EQUAL(
-      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, -Vector3::UnitX()),
+      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, -Vector3::UnitX())
+          .value(),
       &cyl2);
 
   iCyl = shell2.portal(InnerCylinder);
@@ -127,38 +147,49 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
 
   pDisc = shell3.portal(PositiveDisc);
   BOOST_REQUIRE_NE(pDisc, nullptr);
-  BOOST_CHECK_EQUAL(pDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm},
-                                         -Vector3::UnitZ()),
-                    &cyl3);
-  BOOST_CHECK_EQUAL(pDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm},
-                                         Vector3::UnitZ()),
-                    nullptr);
+  BOOST_CHECK_EQUAL(
+      pDisc
+          ->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm}, -Vector3::UnitZ())
+          .value(),
+      &cyl3);
+  BOOST_CHECK_EQUAL(
+      pDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm}, Vector3::UnitZ())
+          .value(),
+      nullptr);
 
   nDisc = shell3.portal(NegativeDisc);
   BOOST_REQUIRE_NE(nDisc, nullptr);
-  BOOST_CHECK_EQUAL(nDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
-                                         -Vector3::UnitZ()),
+  BOOST_CHECK_EQUAL(nDisc
+                        ->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
+                                        -Vector3::UnitZ())
+                        .value(),
                     nullptr);
-  BOOST_CHECK_EQUAL(nDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
-                                         Vector3::UnitZ()),
-                    &cyl3);
+  BOOST_CHECK_EQUAL(
+      nDisc
+          ->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm}, Vector3::UnitZ())
+          .value(),
+      &cyl3);
 
   oCyl = shell3.portal(OuterCylinder);
   BOOST_REQUIRE_NE(oCyl, nullptr);
   BOOST_CHECK_EQUAL(
-      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, Vector3::UnitX()),
+      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, Vector3::UnitX())
+          .value(),
       nullptr);
   BOOST_CHECK_EQUAL(
-      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, -Vector3::UnitX()),
+      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, -Vector3::UnitX())
+          .value(),
       &cyl3);
 
   iCyl = shell3.portal(InnerCylinder);
   BOOST_REQUIRE_NE(iCyl, nullptr);
   BOOST_CHECK_EQUAL(
-      iCyl->resolveVolume(gctx, Vector3{30_mm, 0_mm, 10_mm}, Vector3::UnitX()),
+      iCyl->resolveVolume(gctx, Vector3{30_mm, 0_mm, 10_mm}, Vector3::UnitX())
+          .value(),
       &cyl3);
   BOOST_CHECK_EQUAL(
-      iCyl->resolveVolume(gctx, Vector3{30_mm, 0_mm, 10_mm}, -Vector3::UnitX()),
+      iCyl->resolveVolume(gctx, Vector3{30_mm, 0_mm, 10_mm}, -Vector3::UnitX())
+          .value(),
       nullptr);
 
   auto anglePoint = [](double angle, double r, double z) {
@@ -170,45 +201,54 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   Vector3 point = anglePoint(-45_degree, 35_mm, 10_mm);
   Vector3 dir = Vector3::UnitZ().cross(point).normalized();
   Vector3 idir = (-Vector3::UnitZ()).cross(point).normalized();
-  BOOST_CHECK_EQUAL(nPhi->resolveVolume(gctx, point, dir), nullptr);
-  BOOST_CHECK_EQUAL(nPhi->resolveVolume(gctx, point, idir), &cyl3);
+  BOOST_CHECK_EQUAL(nPhi->resolveVolume(gctx, point, dir).value(), nullptr);
+  BOOST_CHECK_EQUAL(nPhi->resolveVolume(gctx, point, idir).value(), &cyl3);
 
   const auto* pPhi = shell3.portal(PositivePhiPlane);
   BOOST_REQUIRE_NE(pPhi, nullptr);
   point = anglePoint(45_degree, 35_mm, 10_mm);
   dir = Vector3::UnitZ().cross(point).normalized();
   idir = (-Vector3::UnitZ()).cross(point).normalized();
-  BOOST_CHECK_EQUAL(pPhi->resolveVolume(gctx, point, dir), nullptr);
-  BOOST_CHECK_EQUAL(pPhi->resolveVolume(gctx, point, idir), &cyl3);
+  BOOST_CHECK_EQUAL(pPhi->resolveVolume(gctx, point, dir).value(), nullptr);
+  BOOST_CHECK_EQUAL(pPhi->resolveVolume(gctx, point, idir).value(), &cyl3);
 
   SingleCylinderPortalShell shell4{gctx, cyl4};
   BOOST_CHECK_EQUAL(shell4.size(), 5);
 
   pDisc = shell4.portal(PositiveDisc);
   BOOST_REQUIRE_NE(pDisc, nullptr);
-  BOOST_CHECK_EQUAL(pDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm},
-                                         -Vector3::UnitZ()),
-                    &cyl4);
-  BOOST_CHECK_EQUAL(pDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm},
-                                         Vector3::UnitZ()),
-                    nullptr);
+  BOOST_CHECK_EQUAL(
+      pDisc
+          ->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm}, -Vector3::UnitZ())
+          .value(),
+      &cyl4);
+  BOOST_CHECK_EQUAL(
+      pDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, 100_mm}, Vector3::UnitZ())
+          .value(),
+      nullptr);
 
   nDisc = shell4.portal(NegativeDisc);
   BOOST_REQUIRE_NE(nDisc, nullptr);
-  BOOST_CHECK_EQUAL(nDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
-                                         -Vector3::UnitZ()),
+  BOOST_CHECK_EQUAL(nDisc
+                        ->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
+                                        -Vector3::UnitZ())
+                        .value(),
                     nullptr);
-  BOOST_CHECK_EQUAL(nDisc->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
-                                         Vector3::UnitZ()),
-                    &cyl4);
+  BOOST_CHECK_EQUAL(
+      nDisc
+          ->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm}, Vector3::UnitZ())
+          .value(),
+      &cyl4);
 
   oCyl = shell4.portal(OuterCylinder);
   BOOST_REQUIRE_NE(oCyl, nullptr);
   BOOST_CHECK_EQUAL(
-      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, Vector3::UnitX()),
+      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, Vector3::UnitX())
+          .value(),
       nullptr);
   BOOST_CHECK_EQUAL(
-      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, -Vector3::UnitX()),
+      oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, -Vector3::UnitX())
+          .value(),
       &cyl4);
 
   iCyl = shell4.portal(InnerCylinder);
@@ -219,16 +259,16 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   point = anglePoint(-45_degree, 35_mm, 10_mm);
   dir = Vector3::UnitZ().cross(point).normalized();
   idir = (-Vector3::UnitZ()).cross(point).normalized();
-  BOOST_CHECK_EQUAL(nPhi->resolveVolume(gctx, point, dir), nullptr);
-  BOOST_CHECK_EQUAL(nPhi->resolveVolume(gctx, point, idir), &cyl4);
+  BOOST_CHECK_EQUAL(nPhi->resolveVolume(gctx, point, dir).value(), nullptr);
+  BOOST_CHECK_EQUAL(nPhi->resolveVolume(gctx, point, idir).value(), &cyl4);
 
   pPhi = shell4.portal(PositivePhiPlane);
   BOOST_REQUIRE_NE(pPhi, nullptr);
   point = anglePoint(45_degree, 35_mm, 10_mm);
   dir = Vector3::UnitZ().cross(point).normalized();
   idir = (-Vector3::UnitZ()).cross(point).normalized();
-  BOOST_CHECK_EQUAL(pPhi->resolveVolume(gctx, point, dir), nullptr);
-  BOOST_CHECK_EQUAL(pPhi->resolveVolume(gctx, point, idir), &cyl4);
+  BOOST_CHECK_EQUAL(pPhi->resolveVolume(gctx, point, dir).value(), nullptr);
+  BOOST_CHECK_EQUAL(pPhi->resolveVolume(gctx, point, idir).value(), &cyl4);
 }
 
 //              outer cylinder
