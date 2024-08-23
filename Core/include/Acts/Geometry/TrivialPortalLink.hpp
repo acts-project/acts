@@ -35,9 +35,7 @@ class TrivialPortalLink final : public PortalLinkBase {
 
   /// Print the portal link to a stream
   /// @param os output stream
-  void toStream(std::ostream& os) const final {
-    os << "TrivialPortalLink<vol=" << m_volume << ">";
-  }
+  void toStream(std::ostream& os) const final;
 
   /// Resolve the volume for a 2D position
   /// @note Always returns the single target volume
