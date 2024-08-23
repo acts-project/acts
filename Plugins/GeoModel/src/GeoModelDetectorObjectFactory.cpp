@@ -86,7 +86,7 @@ void Acts::GeoModelDetectorObjectFactory::construct(
 }
 
 void Acts::GeoModelDetectorObjectFactory::convertSensitive(
-    PVConstLink geoPV, const Acts::Transform3 &transform,
+    const PVConstLink &geoPV, const Acts::Transform3 &transform,
     std::vector<GeoModelSensitiveSurface> &sensitives) {
   const GeoLogVol *logVol = geoPV->getLogVol();
   const GeoShape *shape = logVol->getShape();
@@ -120,7 +120,7 @@ void Acts::GeoModelDetectorObjectFactory::convertSensitive(
 }
 
 std::vector<GeoChildNodeWithTrf>
-Acts::GeoModelDetectorObjectFactory::findAllSubVolumes(PVConstLink vol) {
+Acts::GeoModelDetectorObjectFactory::findAllSubVolumes(const PVConstLink &vol) {
   std::vector<GeoChildNodeWithTrf> subvolumes = getChildrenWithRef(vol, false);
   std::vector<GeoChildNodeWithTrf> sensitives;
   for (auto subvolume : subvolumes) {
@@ -147,19 +147,19 @@ bool Acts::GeoModelDetectorObjectFactory::convertBox(std::string name) {
   return convB;
 }
 void Acts::GeoModelDetectorObjectFactory::convertFpv(
-    std::string name, GeoFullPhysVol *fpv, Cache &cache,
+    const std::string &name, GeoFullPhysVol *fpv, Cache &cache,
     const GeometryContext &gctx) {
   PVConstLink physVol{fpv};
 
   // get children
   std::vector<GeoChildNodeWithTrf> subvolumes =
       getChildrenWithRef(physVol, false);
-  if (subvolumes.size() > 0) {
+  if (!subvolumes.empty()) {
     // vector containing all subvolumes to be converted to surfaces
     std::vector<GeoChildNodeWithTrf> surfaces = findAllSubVolumes(physVol);
     std::vector<GeoModelSensitiveSurface> sensitives;
 
-    for (auto surface : surfaces) {
+    for (const auto &surface : surfaces) {
       const Transform3 &transform =
           fpv->getAbsoluteTransform() * surface.transform;
       convertSensitive(surface.volume, transform, sensitives);
@@ -186,7 +186,7 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
 }
 // lambda to determine if object fits query
 bool Acts::GeoModelDetectorObjectFactory::matches(const std::string &name,
-                                                  PVConstLink physvol) {
+                                                  const PVConstLink &physvol) {
   if (m_cfg.nameList.empty() && m_cfg.materialList.empty()) {
     return true;
   }

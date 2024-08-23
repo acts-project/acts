@@ -27,7 +27,7 @@ struct GeoShiftConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface> operator()(PVConstLink geoPV,
+  Result<GeoModelSensitiveSurface> operator()(const PVConstLink& geoPV,
                                               const GeoShapeShift& geoShift,
                                               const Transform3& absTransform,
                                               bool sensitive) const;
