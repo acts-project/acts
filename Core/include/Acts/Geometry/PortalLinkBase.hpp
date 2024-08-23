@@ -38,7 +38,7 @@ class PortalLinkBase {
   /// Virtual destructor in case the object is held as a derived
   virtual ~PortalLinkBase() = default;
 
-  /// Resolve a volume given a gobal position. Depending on the derived class,
+  /// Resolve a volume given a global position. Depending on the derived class,
   /// the global position might be converted to a local position before lookup.
   /// @param gctx The geometry context
   /// @param position The global position

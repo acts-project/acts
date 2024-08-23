@@ -183,7 +183,7 @@ class GridPortalLink : public PortalLinkBase {
   /// |                                           |
   /// +-------------------------------------------+
   ///
-  /// Two grids whos directions are not shared are merged (ordering does not
+  /// Two grids whose directions are not shared are merged (ordering does not
   /// matter here). The routine will expand one of the grids to match the
   /// other's binning, by subdividing the grid in the as-of-yet unbinned
   /// direction, while filling all bins with the original bin contents.
@@ -191,7 +191,7 @@ class GridPortalLink : public PortalLinkBase {
   ///
   /// Mixed merge scenarios
   /// The order is normalized by always taking the 2D grid as the left hand
-  /// side. The 1D grid is expaned to match the binning in the as-of-yet
+  /// side. The 1D grid is expanded to match the binning in the as-of-yet
   /// unbinned direction with the binning taken from the 2D grid.
   ///
   /// +-----------------------------------------+
@@ -333,11 +333,11 @@ class GridPortalLink : public PortalLinkBase {
   void printContents(std::ostream& os) const;
 
  protected:
-  /// Helper fucntion to check consistency for grid on a cylinder surface
+  /// Helper function to check consistency for grid on a cylinder surface
   /// @param cyl The cylinder surface
   void checkConsistency(const CylinderSurface& cyl) const;
 
-  /// Helper fucntion to check consistency for grid on a disc surface
+  /// Helper function to check consistency for grid on a disc surface
   /// @param disc The disc surface
   void checkConsistency(const DiscSurface& disc) const;
 

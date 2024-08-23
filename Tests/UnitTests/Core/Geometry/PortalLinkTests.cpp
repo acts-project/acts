@@ -1602,8 +1602,8 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
 
   auto fillCheckerBoard = [&](auto& grid) {
     auto loc = grid.numLocalBins();
-    for (size_t i = 1; i <= loc[0]; ++i) {
-      for (size_t j = 1; j <= loc[1]; ++j) {
+    for (std::size_t i = 1; i <= loc[0]; ++i) {
+      for (std::size_t j = 1; j <= loc[1]; ++j) {
         grid.atLocalBins({i, j}) = (i + j) % 2 == 0 ? vol1.get() : vol2.get();
       }
     }
@@ -1611,8 +1611,8 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
 
   auto checkCheckerBoard = [&](const auto& grid) {
     auto loc = grid.numLocalBins();
-    for (size_t i = 1; i <= loc[0]; ++i) {
-      for (size_t j = 1; j <= loc[1]; ++j) {
+    for (std::size_t i = 1; i <= loc[0]; ++i) {
+      for (std::size_t j = 1; j <= loc[1]; ++j) {
         const auto* vol = grid.atLocalBins({i, j});
         if (vol != ((i + j) % 2 == 0 ? vol1.get() : vol2.get())) {
           BOOST_ERROR("Is not a checkerboard pattern");
