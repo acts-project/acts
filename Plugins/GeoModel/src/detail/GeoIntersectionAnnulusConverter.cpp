@@ -26,7 +26,7 @@
 
 Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoIntersectionAnnulusConverter::operator()(
-    PVConstLink geoPV, const GeoShapeIntersection& geoIntersection,
+    const PVConstLink& geoPV, const GeoShapeIntersection& geoIntersection,
     const Transform3& absTransform, bool sensitive) const {
   /// auto-calculate the unit length conversion
   static constexpr ActsScalar unitLength =
