@@ -55,6 +55,7 @@ class TrivialPortalLink final : public PortalLinkBase {
   /// @param position is the 2D position
   /// @param tolerance is the tolerance
   /// @return The target volume (can be null)
+  /// @note The position is assumed to be on the associated surface.
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector3& position,
       double tolerance = s_onSurfaceTolerance) const final;

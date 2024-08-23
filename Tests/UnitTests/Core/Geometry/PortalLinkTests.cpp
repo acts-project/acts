@@ -491,11 +491,6 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
         gridZ->resolveVolume(gctx, Vector2{20_degree * 30_mm, 90_mm}).value(),
         vol.get());
 
-    // Exception when queried for out of bounds
-    BOOST_CHECK_THROW(
-        gridZ->resolveVolume(gctx, Vector2{20_degree * 30_mm, 110_mm}).value(),
-        std::invalid_argument);
-
     auto gridRPhi = trivial->makeGrid(BinningValue::binRPhi);
     BOOST_REQUIRE(gridRPhi);
 
@@ -520,12 +515,6 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
         gridRPhiSector->resolveVolume(gctx, Vector2{20_degree * 30_mm, 90_mm})
             .value(),
         vol.get());
-
-    // Exception when queried for out of bounds
-    BOOST_CHECK_THROW(
-        gridRPhiSector->resolveVolume(gctx, Vector2{40_degree * 30_mm, 90_mm})
-            .value(),
-        std::invalid_argument);
 
     BOOST_CHECK_EQUAL(gridRPhiSector->grid().axes().size(), 1);
     Axis axisRPhiSectorExpected{AxisBound, -30_degree * 30_mm,
@@ -560,9 +549,6 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     BOOST_CHECK_EQUAL(
         gridR->resolveVolume(gctx, Vector2{90_mm, 10_degree}).value(),
         vol.get());
-    BOOST_CHECK_THROW(
-        gridR->resolveVolume(gctx, Vector2{110_mm, 0_degree}).value(),
-        std::invalid_argument);
 
     auto gridPhi = trivial->makeGrid(BinningValue::binPhi);
     BOOST_REQUIRE(gridPhi);
@@ -575,9 +561,6 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     BOOST_CHECK_EQUAL(
         gridPhi->resolveVolume(gctx, Vector2{90_mm, 10_degree}).value(),
         vol.get());
-    BOOST_CHECK_THROW(
-        gridPhi->resolveVolume(gctx, Vector2{110_mm, 0_degree}).value(),
-        std::invalid_argument);
   }
 }
 

@@ -518,6 +518,7 @@ class GridPortalLinkT final : public GridPortalLink {
 
   /// Lookup the tracking volume at a position on the surface
   /// @param position The local position
+  /// @note The position is required to be on the associated surface
   /// @return The tracking volume (can be null)
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& /*gctx*/, const Vector2& position,
