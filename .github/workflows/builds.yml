@@ -135,6 +135,9 @@ jobs:
       - name: Unpack build
         run: mkdir build && tar xf build.tar.gz -C build
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+
       - run: |
           ls -al ${DEPENDENCY_DIR}/
           ls -al ${DEPENDENCY_DIR}/share
