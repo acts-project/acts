@@ -66,7 +66,7 @@ Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
 }  // namespace
 
 Result<GeoModelSensitiveSurface> GeoShiftConverter::operator()(
-    PVConstLink geoPV, const GeoShapeShift& geoShift,
+    const PVConstLink& geoPV, const GeoShapeShift& geoShift,
     const Transform3& absTransform, bool sensitive) const {
   auto r = impl<GeoTrd, detail::GeoTrdConverter, PlaneSurface, TrapezoidBounds>(
       geoPV, geoShift, absTransform, sensitive);
