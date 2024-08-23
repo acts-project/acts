@@ -48,6 +48,10 @@ using namespace Acts::UnitLiterals;
 
 /// @brief Reducer struct for the Loop MultiEigenStepper which reduces the
 /// multicomponent state to simply by summing the weighted values
+///
+/// @note Usage is not encouraged, since it can lead to navigation failures
+/// as the global position might not be on surface, even if all components
+/// are on surface
 struct WeightedComponentReducerLoop {
   template <typename component_range_t>
   static Vector3 toVector3(const component_range_t& comps,
@@ -140,74 +144,96 @@ struct WeightedComponentReducerLoop {
   }
 };
 
-struct MaxMomentumReducerLoop {
-  template <typename component_range_t>
-  static const auto& maxAbsoluteMomentumIt(const component_range_t& cmps) {
-    return *std::max_element(cmps.begin(), cmps.end(),
-                             [&](const auto& a, const auto& b) {
-                               return std::abs(a.state.pars[eFreeQOverP]) >
-                                      std::abs(b.state.pars[eFreeQOverP]);
-                             });
-  }
+namespace detail {
 
+struct MaxMomentumComponent {
+  template <typename component_range_t>
+  auto operator()(const component_range_t& cmps) const {
+    return std::max_element(cmps.begin(), cmps.end(),
+                            [&](const auto& a, const auto& b) {
+                              return std::abs(a.state.pars[eFreeQOverP]) >
+                                     std::abs(b.state.pars[eFreeQOverP]);
+                            });
+  }
+};
+
+struct MaxWeightComponent {
+  template <typename component_range_t>
+  auto operator()(const component_range_t& cmps) {
+    return std::max_element(
+        cmps.begin(), cmps.end(),
+        [&](const auto& a, const auto& b) { return a.weight < b.weight; });
+  }
+};
+
+template <typename component_chooser_t>
+struct SingleComponentReducer {
   template <typename stepper_state_t>
   static Vector3 position(const stepper_state_t& s) {
-    return maxAbsoluteMomentumIt(s.components)
-        .state.pars.template segment<3>(eFreePos0);
+    return component_chooser_t{}(s.components)
+        ->state.pars.template segment<3>(eFreePos0);
   }
 
   template <typename stepper_state_t>
   static Vector3 direction(const stepper_state_t& s) {
-    return maxAbsoluteMomentumIt(s.components)
-        .state.pars.template segment<3>(eFreeDir0);
+    return component_chooser_t{}(s.components)
+        ->state.pars.template segment<3>(eFreeDir0);
   }
 
   template <typename stepper_state_t>
   static ActsScalar qOverP(const stepper_state_t& s) {
-    const auto& cmp = maxAbsoluteMomentumIt(s.components);
-    return cmp.state.pars[eFreeQOverP];
+    const auto cmp = component_chooser_t{}(s.components);
+    return cmp->state.pars[eFreeQOverP];
   }
 
   template <typename stepper_state_t>
   static ActsScalar absoluteMomentum(const stepper_state_t& s) {
-    const auto& cmp = maxAbsoluteMomentumIt(s.components);
-    return std::abs(cmp.state.absCharge / cmp.state.pars[eFreeQOverP]);
+    const auto cmp = component_chooser_t{}(s.components);
+    return s.particleHypothesis.extractMomentum(cmp->state.pars[eFreeQOverP]);
   }
 
   template <typename stepper_state_t>
   static Vector3 momentum(const stepper_state_t& s) {
-    const auto& cmp = maxAbsoluteMomentumIt(s.components);
-    return std::abs(cmp.state.absCharge / cmp.state.pars[eFreeQOverP]) *
-           cmp.state.pars.template segment<3>(eFreeDir0);
+    const auto cmp = component_chooser_t{}(s.components);
+    return s.particleHypothesis.extractMomentum(cmp->state.pars[eFreeQOverP]) *
+           cmp->state.pars.template segment<3>(eFreeDir0);
   }
 
   template <typename stepper_state_t>
   static ActsScalar charge(const stepper_state_t& s) {
-    return maxAbsoluteMomentumIt(s.components).state.absCharge;
+    const auto cmp = component_chooser_t{}(s.components);
+    return s.particleHypothesis.extractCharge(cmp->state.pars[eFreeQOverP]);
   }
 
   template <typename stepper_state_t>
   static ActsScalar time(const stepper_state_t& s) {
-    return maxAbsoluteMomentumIt(s.components).state.pars[eFreeTime];
+    return component_chooser_t{}(s.components)->state.pars[eFreeTime];
   }
 
   template <typename stepper_state_t>
   static FreeVector pars(const stepper_state_t& s) {
-    return maxAbsoluteMomentumIt(s.components).state.pars;
+    return component_chooser_t{}(s.components)->state.pars;
   }
 
   template <typename stepper_state_t>
   static FreeVector cov(const stepper_state_t& s) {
-    return maxAbsoluteMomentumIt(s.components).state.cov;
+    return component_chooser_t{}(s.components)->state.cov;
   }
 };
+
+}  // namespace detail
+
+using MaxMomentumReducerLoop =
+    detail::SingleComponentReducer<detail::MaxMomentumComponent>;
+using MaxWeightReducerLoop =
+    detail::SingleComponentReducer<detail::MaxWeightComponent>;
 
 /// @brief Stepper based on the EigenStepper, but handles Multi-Component Tracks
 /// (e.g., for the GSF). Internally, this only manages a vector of
 /// EigenStepper::States. This simplifies implementation, but has several
 /// drawbacks:
-/// * There are certain redundancies between the global State and the component
-/// states
+/// * There are certain redundancies between the global State and the
+/// component states
 /// * The components do not share a single magnetic-field-cache
 /// @tparam extensionlist_t See EigenStepper for details
 /// @tparam component_reducer_t How to map the multi-component state to a single
