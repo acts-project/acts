@@ -79,8 +79,7 @@ Acts::detail::GeoPolygonConverter::operator()(
     auto surface = detectorElement->surface().getSharedPtr();
     // Return the detector element and surface
     return std::make_tuple(detectorElement, surface);
-  }
-  else if (nVertices == 6) {
+  } else if (nVertices == 6) {
     double hlxnegy = fabs(vertices[0][0] - vertices[1][0]) / 2;
     double hlxzeroy = fabs(vertices[2][0] - vertices[3][0]) / 2;
     double hlxposy = fabs(vertices[4][0] - vertices[5][0]) / 2;
@@ -119,8 +118,9 @@ Acts::detail::GeoPolygonConverter::operator()(
     auto surface = detectorElement->surface().getSharedPtr();
     // Return the detector element and surface
     return std::make_tuple(detectorElement, surface);
-  }
-  else{
-    throw std::runtime_error("GeoSimplePolygonBrep with "+std::to_string(nVertices)+" can not be converted");
+  } else {
+    throw std::runtime_error("GeoSimplePolygonBrep with " +
+                             std::to_string(nVertices) +
+                             " can not be converted");
   }
 }
