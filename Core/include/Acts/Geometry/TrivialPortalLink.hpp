@@ -45,7 +45,7 @@ class TrivialPortalLink final : public PortalLinkBase {
   /// @param position is the 2D position
   /// @param tolerance is the tolerance
   /// @return The target volume (can be null)
-  const TrackingVolume* resolveVolume(
+  Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector2& position,
       double tolerance = s_onSurfaceTolerance) const final;
 
@@ -55,7 +55,7 @@ class TrivialPortalLink final : public PortalLinkBase {
   /// @param position is the 2D position
   /// @param tolerance is the tolerance
   /// @return The target volume (can be null)
-  const TrackingVolume* resolveVolume(
+  Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector3& position,
       double tolerance = s_onSurfaceTolerance) const final;
 

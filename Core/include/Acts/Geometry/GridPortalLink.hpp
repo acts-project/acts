@@ -504,12 +504,12 @@ class GridPortalLinkT final : public GridPortalLink {
   /// @param tolerance The tolerance for the lookup
   /// @note The position is required to be on the associated surface
   /// @return The tracking volume (can be null)
-  const TrackingVolume* resolveVolume(
+  Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector3& position,
       double tolerance = s_onSurfaceTolerance) const final {
     auto res = m_surface->globalToLocal(gctx, position, tolerance);
     if (!res.ok()) {
-      throw std::invalid_argument{"Cannot resolve position"};
+      return res.error();
     }
 
     const Vector2& local = *res;
@@ -521,13 +521,10 @@ class GridPortalLinkT final : public GridPortalLink {
   /// @param position The local position
   /// @param tolerance The tolerance for the lookup
   /// @return The tracking volume (can be null)
-  const TrackingVolume* resolveVolume(
+  Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& /*gctx*/, const Vector2& position,
       double /*tolerance*/ = s_onSurfaceTolerance) const final {
-    // @TODO: Should this be an exception or nullptr? Or not even checked at all?
-    if (!surface().insideBounds(position, BoundaryTolerance::None())) {
-      throw std::invalid_argument{"Position is outside surface bounds"};
-    }
+    assert(surface().insideBounds(position, BoundaryTolerance::None()));
     return m_grid.atPosition(m_projection(position));
   }
 

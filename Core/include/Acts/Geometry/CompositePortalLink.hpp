@@ -60,7 +60,7 @@ class CompositePortalLink final : public PortalLinkBase {
   /// @param gctx The geometry context
   /// @param position The 2D position
   /// @param tolerance The tolerance
-  const TrackingVolume* resolveVolume(
+  Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector2& position,
       double tolerance = s_onSurfaceTolerance) const final;
 
@@ -69,7 +69,7 @@ class CompositePortalLink final : public PortalLinkBase {
   /// @param gctx The geometry context
   /// @param position The 3D position
   /// @param tolerance The tolerance
-  const TrackingVolume* resolveVolume(
+  Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector3& position,
       double tolerance = s_onSurfaceTolerance) const final;
 

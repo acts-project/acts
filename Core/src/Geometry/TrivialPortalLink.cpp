@@ -20,13 +20,13 @@ std::unique_ptr<GridPortalLink> TrivialPortalLink::makeGrid(
   return GridPortalLink::make(m_surface, *m_volume, direction);
 }
 
-const TrackingVolume* TrivialPortalLink::resolveVolume(
+Result<const TrackingVolume*> TrivialPortalLink::resolveVolume(
     const GeometryContext& /*gctx*/, const Vector2& /*position*/,
     double /*tolerance*/) const {
   return m_volume;
 }
 
-const TrackingVolume* TrivialPortalLink::resolveVolume(
+Result<const TrackingVolume*> TrivialPortalLink::resolveVolume(
     const GeometryContext& gctx, const Vector3& position,
     double tolerance) const {
   static_cast<void>(gctx);

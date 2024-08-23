@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 
@@ -44,7 +45,7 @@ class PortalLinkBase {
   /// @param tolerance The tolerance for the lookup
   ///
   /// @return The tracking volume or null if no connection was found
-  virtual const TrackingVolume* resolveVolume(
+  virtual Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector3& position,
       double tolerance = s_onSurfaceTolerance) const = 0;
 
@@ -55,7 +56,7 @@ class PortalLinkBase {
   /// @param tolerance The tolerance for the lookup
   ///
   /// @return The tracking volume or null if no connection was found
-  virtual const TrackingVolume* resolveVolume(
+  virtual Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector2& position,
       double tolerance = s_onSurfaceTolerance) const = 0;
 

@@ -476,7 +476,8 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     auto trivial = std::make_unique<TrivialPortalLink>(cyl, *vol);
     BOOST_REQUIRE(trivial);
 
-    BOOST_CHECK_EQUAL(trivial->resolveVolume(gctx, Vector2{1, 2}), vol.get());
+    BOOST_CHECK_EQUAL(trivial->resolveVolume(gctx, Vector2{1, 2}).value(),
+                      vol.get());
 
     auto gridZ = trivial->makeGrid(BinningValue::binZ);
     BOOST_REQUIRE(gridZ);
@@ -487,12 +488,12 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     BOOST_CHECK_EQUAL(*gridZ->grid().axes().front(), axisZExpected);
 
     BOOST_CHECK_EQUAL(
-        gridZ->resolveVolume(gctx, Vector2{20_degree * 30_mm, 90_mm}),
+        gridZ->resolveVolume(gctx, Vector2{20_degree * 30_mm, 90_mm}).value(),
         vol.get());
 
     // Exception when queried for out of bounds
     BOOST_CHECK_THROW(
-        gridZ->resolveVolume(gctx, Vector2{20_degree * 30_mm, 110_mm}),
+        gridZ->resolveVolume(gctx, Vector2{20_degree * 30_mm, 110_mm}).value(),
         std::invalid_argument);
 
     auto gridRPhi = trivial->makeGrid(BinningValue::binRPhi);
@@ -509,19 +510,21 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     auto trivialPhi = std::make_unique<TrivialPortalLink>(cylPhi, *vol);
     BOOST_REQUIRE(trivialPhi);
 
-    BOOST_CHECK_EQUAL(trivialPhi->resolveVolume(gctx, Vector2{1, 2}),
+    BOOST_CHECK_EQUAL(trivialPhi->resolveVolume(gctx, Vector2{1, 2}).value(),
                       vol.get());
 
     auto gridRPhiSector = trivialPhi->makeGrid(BinningValue::binRPhi);
     BOOST_REQUIRE(gridRPhiSector);
 
     BOOST_CHECK_EQUAL(
-        gridRPhiSector->resolveVolume(gctx, Vector2{20_degree * 30_mm, 90_mm}),
+        gridRPhiSector->resolveVolume(gctx, Vector2{20_degree * 30_mm, 90_mm})
+            .value(),
         vol.get());
 
     // Exception when queried for out of bounds
     BOOST_CHECK_THROW(
-        gridRPhiSector->resolveVolume(gctx, Vector2{40_degree * 30_mm, 90_mm}),
+        gridRPhiSector->resolveVolume(gctx, Vector2{40_degree * 30_mm, 90_mm})
+            .value(),
         std::invalid_argument);
 
     BOOST_CHECK_EQUAL(gridRPhiSector->grid().axes().size(), 1);
@@ -543,7 +546,8 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     BOOST_REQUIRE(trivial);
 
     // Doesn't matter which position
-    BOOST_CHECK_EQUAL(trivial->resolveVolume(gctx, Vector2{1, 2}), vol.get());
+    BOOST_CHECK_EQUAL(trivial->resolveVolume(gctx, Vector2{1, 2}).value(),
+                      vol.get());
 
     auto gridR = trivial->makeGrid(BinningValue::binR);
     BOOST_REQUIRE(gridR);
@@ -553,10 +557,12 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     Axis axisRExpected{AxisBound, 30_mm, 100_mm, 1};
     BOOST_CHECK_EQUAL(*gridR->grid().axes().front(), axisRExpected);
 
-    BOOST_CHECK_EQUAL(gridR->resolveVolume(gctx, Vector2{90_mm, 10_degree}),
-                      vol.get());
-    BOOST_CHECK_THROW(gridR->resolveVolume(gctx, Vector2{110_mm, 0_degree}),
-                      std::invalid_argument);
+    BOOST_CHECK_EQUAL(
+        gridR->resolveVolume(gctx, Vector2{90_mm, 10_degree}).value(),
+        vol.get());
+    BOOST_CHECK_THROW(
+        gridR->resolveVolume(gctx, Vector2{110_mm, 0_degree}).value(),
+        std::invalid_argument);
 
     auto gridPhi = trivial->makeGrid(BinningValue::binPhi);
     BOOST_REQUIRE(gridPhi);
@@ -566,10 +572,12 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     Axis axisPhiExpected{AxisClosed, -M_PI, M_PI, 1};
     BOOST_CHECK_EQUAL(*gridPhi->grid().axes().front(), axisPhiExpected);
 
-    BOOST_CHECK_EQUAL(gridPhi->resolveVolume(gctx, Vector2{90_mm, 10_degree}),
-                      vol.get());
-    BOOST_CHECK_THROW(gridPhi->resolveVolume(gctx, Vector2{110_mm, 0_degree}),
-                      std::invalid_argument);
+    BOOST_CHECK_EQUAL(
+        gridPhi->resolveVolume(gctx, Vector2{90_mm, 10_degree}).value(),
+        vol.get());
+    BOOST_CHECK_THROW(
+        gridPhi->resolveVolume(gctx, Vector2{110_mm, 0_degree}).value(),
+        std::invalid_argument);
   }
 }
 
@@ -1685,7 +1693,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
 
     for (const auto& [loc, vol] : locations) {
       BOOST_TEST_CONTEXT(loc.transpose())
-      BOOST_CHECK_EQUAL(merged->resolveVolume(gctx, loc), vol);
+      BOOST_CHECK_EQUAL(merged->resolveVolume(gctx, loc).value(), vol);
     }
 
     std::vector<std::vector<const TrackingVolume*>> contents = {
@@ -1758,7 +1766,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
 
     for (const auto& [loc, vol] : locations) {
       BOOST_TEST_CONTEXT(loc.transpose())
-      BOOST_CHECK_EQUAL(merged->resolveVolume(gctx, loc), vol);
+      BOOST_CHECK_EQUAL(merged->resolveVolume(gctx, loc).value(), vol);
     }
 
     std::vector<std::vector<const TrackingVolume*>> contents = {
@@ -1975,7 +1983,7 @@ BOOST_AUTO_TEST_CASE(RDirection) {
 
   for (const auto& [loc, vol] : locations) {
     BOOST_TEST_CONTEXT(loc.transpose())
-    BOOST_CHECK_EQUAL(merged->resolveVolume(gctx, loc), vol);
+    BOOST_CHECK_EQUAL(merged->resolveVolume(gctx, loc).value(), vol);
   }
 
   grid1->printContents(std::cout);
@@ -2044,7 +2052,7 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
 
   for (const auto& [loc, vol] : locations) {
     BOOST_TEST_CONTEXT((Vector2{loc[0], loc[1] / 1_degree}.transpose()))
-    BOOST_CHECK_EQUAL(merged->resolveVolume(gctx, loc), vol);
+    BOOST_CHECK_EQUAL(merged->resolveVolume(gctx, loc).value(), vol);
   }
 }
 
@@ -2081,10 +2089,12 @@ BOOST_AUTO_TEST_CASE(CompositeConstruction) {
   auto compositeCopy = std::make_unique<CompositePortalLink>(
       copy(trivial1), copy(trivial2), BinningValue::binR);
 
-  BOOST_CHECK_EQUAL(composite->resolveVolume(gctx, Vector2{40_mm, 0_degree}),
-                    vol1.get());
-  BOOST_CHECK_EQUAL(composite->resolveVolume(gctx, Vector2{70_mm, 0_degree}),
-                    vol2.get());
+  BOOST_CHECK_EQUAL(
+      composite->resolveVolume(gctx, Vector2{40_mm, 0_degree}).value(),
+      vol1.get());
+  BOOST_CHECK_EQUAL(
+      composite->resolveVolume(gctx, Vector2{70_mm, 0_degree}).value(),
+      vol2.get());
 
   BOOST_CHECK_EQUAL(composite->depth(), 1);
 
@@ -2110,12 +2120,15 @@ BOOST_AUTO_TEST_CASE(CompositeConstruction) {
   CompositePortalLink composite2(std::move(composite), copy(trivial3),
                                  BinningValue::binR, false);
 
-  BOOST_CHECK_EQUAL(composite2.resolveVolume(gctx, Vector2{40_mm, 0_degree}),
-                    vol1.get());
-  BOOST_CHECK_EQUAL(composite2.resolveVolume(gctx, Vector2{70_mm, 0_degree}),
-                    vol2.get());
-  BOOST_CHECK_EQUAL(composite2.resolveVolume(gctx, Vector2{100_mm, 0_degree}),
-                    vol3.get());
+  BOOST_CHECK_EQUAL(
+      composite2.resolveVolume(gctx, Vector2{40_mm, 0_degree}).value(),
+      vol1.get());
+  BOOST_CHECK_EQUAL(
+      composite2.resolveVolume(gctx, Vector2{70_mm, 0_degree}).value(),
+      vol2.get());
+  BOOST_CHECK_EQUAL(
+      composite2.resolveVolume(gctx, Vector2{100_mm, 0_degree}).value(),
+      vol3.get());
 
   // Two without flattening
   BOOST_CHECK_EQUAL(composite2.depth(), 2);
@@ -2127,11 +2140,13 @@ BOOST_AUTO_TEST_CASE(CompositeConstruction) {
   BOOST_CHECK_EQUAL(composite2Flat.depth(), 1);
 
   BOOST_CHECK_EQUAL(
-      composite2Flat.resolveVolume(gctx, Vector2{40_mm, 0_degree}), vol1.get());
+      composite2Flat.resolveVolume(gctx, Vector2{40_mm, 0_degree}).value(),
+      vol1.get());
   BOOST_CHECK_EQUAL(
-      composite2Flat.resolveVolume(gctx, Vector2{70_mm, 0_degree}), vol2.get());
+      composite2Flat.resolveVolume(gctx, Vector2{70_mm, 0_degree}).value(),
+      vol2.get());
   BOOST_CHECK_EQUAL(
-      composite2Flat.resolveVolume(gctx, Vector2{100_mm, 0_degree}),
+      composite2Flat.resolveVolume(gctx, Vector2{100_mm, 0_degree}).value(),
       vol3.get());
 }
 
@@ -2304,12 +2319,15 @@ BOOST_AUTO_TEST_CASE(CompositeOther) {
 
   BOOST_CHECK_EQUAL(composite123->depth(), 1);
 
-  BOOST_CHECK_EQUAL(composite123->resolveVolume(gctx, Vector2{40_mm, 0_degree}),
-                    vol1.get());
-  BOOST_CHECK_EQUAL(composite123->resolveVolume(gctx, Vector2{70_mm, 0_degree}),
-                    vol2.get());
   BOOST_CHECK_EQUAL(
-      composite123->resolveVolume(gctx, Vector2{100_mm, 0_degree}), vol3.get());
+      composite123->resolveVolume(gctx, Vector2{40_mm, 0_degree}).value(),
+      vol1.get());
+  BOOST_CHECK_EQUAL(
+      composite123->resolveVolume(gctx, Vector2{70_mm, 0_degree}).value(),
+      vol2.get());
+  BOOST_CHECK_EQUAL(
+      composite123->resolveVolume(gctx, Vector2{100_mm, 0_degree}).value(),
+      vol3.get());
 
   BOOST_CHECK_EQUAL(composite123->size(), 3);
 }
