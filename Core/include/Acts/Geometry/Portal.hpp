@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 
@@ -96,9 +97,9 @@ class Portal {
                       Portal& bPortal, BinningValue direction,
                       const Logger& logger = getDummyLogger());
 
-  const TrackingVolume* resolveVolume(const GeometryContext& gctx,
-                                      const Vector3& position,
-                                      const Vector3& direction) const;
+  Result<const TrackingVolume*> resolveVolume(const GeometryContext& gctx,
+                                              const Vector3& position,
+                                              const Vector3& direction) const;
 
   void setLink(const GeometryContext& gctx, Direction direction,
                std::unique_ptr<PortalLinkBase> link);

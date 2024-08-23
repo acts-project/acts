@@ -74,24 +74,32 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
                  std::make_unique<TrivialPortalLink>(cyl1, *vol1)};
   BOOST_CHECK(portal1.isValid());
 
-  BOOST_CHECK_EQUAL(portal1.resolveVolume(gctx, Vector3{50_mm, 0_mm, -100_mm},
-                                          Vector3::UnitX()),
-                    vol1.get());
+  BOOST_CHECK_EQUAL(
+      portal1
+          .resolveVolume(gctx, Vector3{50_mm, 0_mm, -100_mm}, Vector3::UnitX())
+          .value(),
+      vol1.get());
 
-  BOOST_CHECK_EQUAL(portal1.resolveVolume(gctx, Vector3{50_mm, 0_mm, -100_mm},
-                                          -Vector3::UnitX()),
-                    nullptr);
+  BOOST_CHECK_EQUAL(
+      portal1
+          .resolveVolume(gctx, Vector3{50_mm, 0_mm, -100_mm}, -Vector3::UnitX())
+          .value(),
+      nullptr);
 
   Portal portal2{gctx, Direction::AlongNormal, cyl2, *vol2};
   BOOST_CHECK(portal2.isValid());
 
-  BOOST_CHECK_EQUAL(portal2.resolveVolume(gctx, Vector3{50_mm, 0_mm, 100_mm},
-                                          -Vector3::UnitX()),
-                    nullptr);
+  BOOST_CHECK_EQUAL(
+      portal2
+          .resolveVolume(gctx, Vector3{50_mm, 0_mm, 100_mm}, -Vector3::UnitX())
+          .value(),
+      nullptr);
 
-  BOOST_CHECK_EQUAL(portal2.resolveVolume(gctx, Vector3{50_mm, 0_mm, 100_mm},
-                                          Vector3::UnitX()),
-                    vol2.get());
+  BOOST_CHECK_EQUAL(
+      portal2
+          .resolveVolume(gctx, Vector3{50_mm, 0_mm, 100_mm}, Vector3::UnitX())
+          .value(),
+      vol2.get());
 
   Portal portal3{gctx, std::make_unique<TrivialPortalLink>(cyl2, *vol2),
                  nullptr};
@@ -126,13 +134,16 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
   BOOST_CHECK(portal1.isValid());
   BOOST_CHECK(portal2.isValid());
 
-  BOOST_CHECK_EQUAL(portal2.resolveVolume(gctx, Vector3{50_mm, 0_mm, 50_mm},
-                                          Vector3::UnitX()),
-                    vol2.get());
+  BOOST_CHECK_EQUAL(
+      portal2.resolveVolume(gctx, Vector3{50_mm, 0_mm, 50_mm}, Vector3::UnitX())
+          .value(),
+      vol2.get());
 
-  BOOST_CHECK_EQUAL(portal2.resolveVolume(gctx, Vector3{50_mm, 0_mm, 50_mm},
-                                          -Vector3::UnitX()),
-                    nullptr);
+  BOOST_CHECK_EQUAL(
+      portal2
+          .resolveVolume(gctx, Vector3{50_mm, 0_mm, 50_mm}, -Vector3::UnitX())
+          .value(),
+      nullptr);
 
   // Cannot merge in binRPhi
   BOOST_CHECK_THROW(
@@ -165,21 +176,29 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
   BOOST_REQUIRE_NE(grid12, nullptr);
   grid12->printContents(std::cout);
 
-  BOOST_CHECK_EQUAL(merged12.resolveVolume(gctx, Vector3{50_mm, 0_mm, -50_mm},
-                                           Vector3::UnitX()),
-                    vol1.get());
+  BOOST_CHECK_EQUAL(
+      merged12
+          .resolveVolume(gctx, Vector3{50_mm, 0_mm, -50_mm}, Vector3::UnitX())
+          .value(),
+      vol1.get());
 
-  BOOST_CHECK_EQUAL(merged12.resolveVolume(gctx, Vector3{50_mm, 0_mm, 50_mm},
-                                           Vector3::UnitX()),
-                    vol2.get());
+  BOOST_CHECK_EQUAL(
+      merged12
+          .resolveVolume(gctx, Vector3{50_mm, 0_mm, 50_mm}, Vector3::UnitX())
+          .value(),
+      vol2.get());
 
-  BOOST_CHECK_EQUAL(merged12.resolveVolume(gctx, Vector3{50_mm, 0_mm, -50_mm},
-                                           -Vector3::UnitX()),
-                    nullptr);
+  BOOST_CHECK_EQUAL(
+      merged12
+          .resolveVolume(gctx, Vector3{50_mm, 0_mm, -50_mm}, -Vector3::UnitX())
+          .value(),
+      nullptr);
 
-  BOOST_CHECK_EQUAL(merged12.resolveVolume(gctx, Vector3{50_mm, 0_mm, 50_mm},
-                                           -Vector3::UnitX()),
-                    nullptr);
+  BOOST_CHECK_EQUAL(
+      merged12
+          .resolveVolume(gctx, Vector3{50_mm, 0_mm, 50_mm}, -Vector3::UnitX())
+          .value(),
+      nullptr);
 
   portal1 = Portal{gctx, {.alongNormal = {cyl1, *vol1}}};
 
@@ -232,18 +251,23 @@ BOOST_AUTO_TEST_CASE(Disc) {
   BOOST_CHECK(portal2.isValid());
 
   BOOST_CHECK_EQUAL(
-      portal1.resolveVolume(gctx, Vector3{55_mm, 0_mm, 0_mm}, Vector3::UnitZ()),
+      portal1.resolveVolume(gctx, Vector3{55_mm, 0_mm, 0_mm}, Vector3::UnitZ())
+          .value(),
       vol1.get());
-  BOOST_CHECK_EQUAL(portal1.resolveVolume(gctx, Vector3{55_mm, 0_mm, 0_mm},
-                                          -Vector3::UnitZ()),
-                    vol2.get());
+  BOOST_CHECK_EQUAL(
+      portal1.resolveVolume(gctx, Vector3{55_mm, 0_mm, 0_mm}, -Vector3::UnitZ())
+          .value(),
+      vol2.get());
 
-  BOOST_CHECK_EQUAL(portal2.resolveVolume(gctx, Vector3{105_mm, 0_mm, 0_mm},
-                                          Vector3::UnitZ()),
-                    vol3.get());
-  BOOST_CHECK_EQUAL(portal2.resolveVolume(gctx, Vector3{105_mm, 0_mm, 0_mm},
-                                          -Vector3::UnitZ()),
-                    vol4.get());
+  BOOST_CHECK_EQUAL(
+      portal2.resolveVolume(gctx, Vector3{105_mm, 0_mm, 0_mm}, Vector3::UnitZ())
+          .value(),
+      vol3.get());
+  BOOST_CHECK_EQUAL(
+      portal2
+          .resolveVolume(gctx, Vector3{105_mm, 0_mm, 0_mm}, -Vector3::UnitZ())
+          .value(),
+      vol4.get());
 
   BOOST_CHECK_THROW(
       Portal::merge(gctx, portal1, portal2, BinningValue::binZ, *logger),
@@ -280,19 +304,26 @@ BOOST_AUTO_TEST_CASE(Disc) {
   Portal merged12 =
       Portal::merge(gctx, portal1, portal2, BinningValue::binR, *logger);
 
-  BOOST_CHECK_EQUAL(merged12.resolveVolume(gctx, Vector3{55_mm, 0_mm, 0_mm},
-                                           Vector3::UnitZ()),
-                    vol1.get());
-  BOOST_CHECK_EQUAL(merged12.resolveVolume(gctx, Vector3{55_mm, 0_mm, 0_mm},
-                                           -Vector3::UnitZ()),
-                    vol2.get());
+  BOOST_CHECK_EQUAL(
+      merged12.resolveVolume(gctx, Vector3{55_mm, 0_mm, 0_mm}, Vector3::UnitZ())
+          .value(),
+      vol1.get());
+  BOOST_CHECK_EQUAL(
+      merged12
+          .resolveVolume(gctx, Vector3{55_mm, 0_mm, 0_mm}, -Vector3::UnitZ())
+          .value(),
+      vol2.get());
 
-  BOOST_CHECK_EQUAL(merged12.resolveVolume(gctx, Vector3{105_mm, 0_mm, 0_mm},
-                                           Vector3::UnitZ()),
-                    vol3.get());
-  BOOST_CHECK_EQUAL(merged12.resolveVolume(gctx, Vector3{105_mm, 0_mm, 0_mm},
-                                           -Vector3::UnitZ()),
-                    vol4.get());
+  BOOST_CHECK_EQUAL(
+      merged12
+          .resolveVolume(gctx, Vector3{105_mm, 0_mm, 0_mm}, Vector3::UnitZ())
+          .value(),
+      vol3.get());
+  BOOST_CHECK_EQUAL(
+      merged12
+          .resolveVolume(gctx, Vector3{105_mm, 0_mm, 0_mm}, -Vector3::UnitZ())
+          .value(),
+      vol4.get());
 
   // Can't merge because surface has material
   auto material =

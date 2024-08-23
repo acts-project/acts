@@ -121,9 +121,9 @@ const PortalLinkBase* Portal::getLink(Direction direction) const {
   }
 }
 
-const TrackingVolume* Portal::resolveVolume(const GeometryContext& gctx,
-                                            const Vector3& position,
-                                            const Vector3& direction) const {
+Result<const TrackingVolume*> Portal::resolveVolume(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
   assert(m_surface != nullptr);
   const Vector3 normal = m_surface->normal(gctx, position);
   Direction side = Direction::fromScalar(normal.dot(direction));
@@ -137,7 +137,11 @@ const TrackingVolume* Portal::resolveVolume(const GeometryContext& gctx,
     // we know it. (i feel fine)
     return nullptr;
   } else {
-    return link->resolveVolume(gctx, position);
+    auto res = link->resolveVolume(gctx, position);
+    if (!res.ok()) {
+      return res.error();
+    }
+    return *res;
   }
 }
 
