@@ -135,12 +135,6 @@ jobs:
       - name: Unpack build
         run: mkdir build && tar xf build.tar.gz -C build
 
-      - run: |
-          ls -al ${DEPENDENCY_DIR}/
-          ls -al ${DEPENDENCY_DIR}/share
-          ls -al ${DEPENDENCY_DIR}/share/Geant4
-          ls -al ${DEPENDENCY_DIR}/share/Geant4/data
-
       - name: Python level tests
         shell: bash
         env:
