@@ -39,6 +39,9 @@ jobs:
       - name: Install dependencies
         run: CI/dependencies.sh
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+
       - run: which python3
       - run: echo $PATH
 
