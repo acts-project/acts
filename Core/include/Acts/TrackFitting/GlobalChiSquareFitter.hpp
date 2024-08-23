@@ -1214,11 +1214,13 @@ class Gx2Fitter {
                 invCov * sinThetaLoc * sinThetaLoc;
             bVectorExtended(deltaPosition, 0) -=
                 invCov * scatteringAngles[eBoundPhi] * sinThetaLoc;
+            chi2sum += invCov * scatteringAngles[eBoundPhi] * sinThetaLoc * scatteringAngles[eBoundPhi] * sinThetaLoc;
 
             // Theta Contribution
             aMatrixExtended(deltaPosition + 1, deltaPosition + 1) += invCov;
             bVectorExtended(deltaPosition + 1, 0) -=
                 invCov * scatteringAngles[eBoundTheta];
+            chi2sum += invCov * scatteringAngles[eBoundTheta] * scatteringAngles[eBoundTheta];
           }
         }
       }

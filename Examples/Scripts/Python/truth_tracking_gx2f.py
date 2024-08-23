@@ -102,7 +102,7 @@ def runTruthTrackingGx2f(
         trackingGeometry,
         field,
         nUpdateMax=10,
-        relChi2changeCutOff=1e-7,
+        relChi2changeCutOff=1e-2,
         # relChi2changeCutOff=0,
         multipleScattering=True,
         # multipleScattering=False,
