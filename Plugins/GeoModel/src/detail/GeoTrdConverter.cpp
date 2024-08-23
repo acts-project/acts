@@ -36,7 +36,7 @@ Acts::detail::GeoTrdConverter::operator()(PVConstLink geoPV,
   Transform3 transform = Transform3::Identity();
   transform.translation() = unitLength * absTransform.translation();
 
-  // GeoTrd coorinates: x is the extrusion direction, y is orthogonal to the
+  // GeoTrd coordinates: x is the extrusion direction, y is orthogonal to the
   // symmetry axis and z is along the symmetry axis
   ActsScalar halfX1 = geoTrd.getXHalfLength1();
   ActsScalar halfX2 = geoTrd.getXHalfLength2();
