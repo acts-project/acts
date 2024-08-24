@@ -121,7 +121,6 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   /// The number of ndf of the measurements+outliers
   std::vector<unsigned int> m_NDF;
   /// The chi2 on all measurement states
-
   std::vector<std::vector<double>> m_measurementChi2;
   /// The chi2 on all outlier states
   std::vector<std::vector<double>> m_outlierChi2;

@@ -254,8 +254,6 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
       double p_eta = eta(particle.direction());
       double c_phi = phi(closeParticle.direction());
       double c_eta = eta(closeParticle.direction());
-      
-    
       double distance = sqrt(pow(p_phi - c_phi, 2) + pow(p_eta - c_eta, 2));
       if (minDeltaR == -1 || distance < minDeltaR) {
         minDeltaR = distance;

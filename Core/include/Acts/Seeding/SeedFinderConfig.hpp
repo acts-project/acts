@@ -37,10 +37,10 @@ struct SeedFinderConfig {
   float phiMax = M_PI;
   float zMin = -2800 * Acts::UnitConstants::mm;
   float zMax = 2800 * Acts::UnitConstants::mm;
-  float rMax = 800 * Acts::UnitConstants::mm;
+  float rMax = 600 * Acts::UnitConstants::mm;
   /// WARNING: if rMin is smaller than impactMax, the bin size will be 2*pi,
   /// which will make seeding very slow!
-  float rMin = 100 * Acts::UnitConstants::mm;
+  float rMin = 33 * Acts::UnitConstants::mm;
 
   /// Vector containing the z-bin edges for non equidistant binning in z
   std::vector<float> zBinEdges;
@@ -58,8 +58,8 @@ struct SeedFinderConfig {
   /// The range can be defined manually with (rMinMiddle, rMaxMiddle). If
   /// useVariableMiddleSPRange is set to false and the vector rRangeMiddleSP is
   /// empty, we use (rMinMiddle, rMaxMiddle) to cut the middle space-points
-  float rMinMiddle = 110.f * Acts::UnitConstants::mm;
-  float rMaxMiddle = 200.f * Acts::UnitConstants::mm;
+  float rMinMiddle = 60.f * Acts::UnitConstants::mm;
+  float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
   /// If useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can
   /// be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}
   bool useVariableMiddleSPRange = false;
@@ -126,7 +126,7 @@ struct SeedFinderConfig {
   /// Maximum transverse momentum for scattering calculation
   float maxPtScattering = 10 * Acts::UnitConstants::GeV;
   /// Maximum value of impact parameter estimation of the seed candidates
-  float impactMax = 300. * Acts::UnitConstants::mm;
+  float impactMax = 20. * Acts::UnitConstants::mm;
   /// Parameter which can loosen the tolerance of the track seed to form a
   /// helix. This is useful for e.g. misaligned seeding.
   float helixCutTolerance = 1.;

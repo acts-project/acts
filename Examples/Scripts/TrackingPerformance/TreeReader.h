@@ -374,7 +374,6 @@ struct TrackSummaryReader : public TreeReader {
   std::vector<bool>* hasFittedParams = new std::vector<bool>;
 
   // True parameters
-
   std::vector<float>* t_d0 = new std::vector<float>;
   std::vector<float>* t_z0 = new std::vector<float>;
   std::vector<float>* t_phi = new std::vector<float>;
