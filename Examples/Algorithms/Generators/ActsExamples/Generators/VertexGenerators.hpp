@@ -79,4 +79,4 @@ struct GaussianDisplacedVertexPositionGenerator
     return Acts::Vector4(x, y, z, t);
   }
 };
-}
+}  // namespace ActsExamples
