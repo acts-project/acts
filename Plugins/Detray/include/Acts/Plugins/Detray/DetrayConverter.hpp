@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 
@@ -28,7 +29,6 @@ class Surface;
 class SurfaceBounds;
 
 namespace Experimental {
-class Detector;
 class DetectorVolume;
 class Portal;
 }  //  namespace Experimental

@@ -2,6 +2,7 @@ import pytest
 
 import acts
 import acts.examples
+from acts.examples.simulation import addParticleGun, EtaConfig, ParticleConfig
 
 
 class AssertCollectionExistsAlg(acts.examples.IAlgorithm):
@@ -42,6 +43,33 @@ def test_steppers(conf_const, trk_geo):
         s = stepper(acts.NullBField())
         assert s
 
+        seq = acts.examples.Sequencer(
+            events=10, numThreads=1, logLevel=acts.logging.WARNING
+        )
+
+        rnd = acts.examples.RandomNumbers(seed=42)
+
+        addParticleGun(
+            seq,
+            ParticleConfig(num=10, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
+            EtaConfig(-4.0, 4.0),
+            rnd=rnd,
+        )
+
+        # Run particle smearing
+        trackParametersGenerator = acts.examples.ParticleSmearing(
+            level=acts.logging.INFO,
+            inputParticles="particles_input",
+            outputTrackParameters="start_parameters",
+            randomNumbers=rnd,
+            sigmaD0=0.0,
+            sigmaZ0=0.0,
+            sigmaPhi=0.0,
+            sigmaTheta=0.0,
+            sigmaPtRel=0.0,
+        )
+        seq.addAlgorithm(trackParametersGenerator)
+
         prop = acts.examples.ConcretePropagator(
             acts.Propagator(stepper=s, navigator=nav)
         )
@@ -50,20 +78,17 @@ def test_steppers(conf_const, trk_geo):
             acts.examples.PropagationAlgorithm,
             level=acts.logging.WARNING,
             propagatorImpl=prop,
-            randomNumberSvc=acts.examples.RandomNumbers(),
-            propagationStepCollection="propagation_steps",
+            inputTrackParameters="start_parameters",
+            outputSummaryCollection="propagation_summary",
             sterileLogger=False,
-            ntests=10,
         )
 
-        seq = acts.examples.Sequencer(
-            events=10, numThreads=1, logLevel=acts.logging.WARNING
-        )
         seq.addAlgorithm(alg)
         chkAlg = AssertCollectionExistsAlg(
-            "propagation_steps", "chk_alg", level=acts.logging.WARNING
+            "propagation_summary", "chk_alg", level=acts.logging.WARNING
         )
         seq.addAlgorithm(chkAlg)
+
         seq.run()
 
     assert acts.StraightLineStepper()

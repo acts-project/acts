@@ -12,7 +12,7 @@
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
-#if __GNUC__ == 13
+#if __GNUC__ >= 12
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 #include <Eigen/Core>

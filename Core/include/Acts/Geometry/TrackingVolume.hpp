@@ -23,7 +23,6 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
 
@@ -115,6 +114,8 @@ class TrackingVolume : public Volume {
   ~TrackingVolume() override;
   TrackingVolume(const TrackingVolume&) = delete;
   TrackingVolume& operator=(const TrackingVolume&) = delete;
+  TrackingVolume(TrackingVolume&&) = default;
+  TrackingVolume& operator=(TrackingVolume&&) = default;
 
   /// Constructor for a container Volume
   /// - vacuum filled volume either as a for other tracking volumes
@@ -174,7 +175,7 @@ class TrackingVolume : public Volume {
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
-  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
     if (!restrictToSensitives) {
       // Visit the boundary surfaces
@@ -225,7 +226,7 @@ class TrackingVolume : public Volume {
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
-  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
     visitSurfaces(std::forward<visitor_t>(visitor), true);
   }
@@ -239,7 +240,7 @@ class TrackingVolume : public Volume {
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
-  template <ACTS_CONCEPT(TrackingVolumeVisitor) visitor_t>
+  template <TrackingVolumeVisitor visitor_t>
   void visitVolumes(visitor_t&& visitor) const {
     visitor(this);
     if (m_confinedVolumes != nullptr) {
@@ -256,6 +257,10 @@ class TrackingVolume : public Volume {
 
   /// Returns the VolumeName - for debug reason, might be depreciated later
   const std::string& volumeName() const;
+
+  /// Set the volume name to @p volumeName
+  /// @param volumeName is the new name of
+  void setVolumeName(const std::string& volumeName);
 
   /// Return the material of the volume
   const IVolumeMaterial* volumeMaterial() const;

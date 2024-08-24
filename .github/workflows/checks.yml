@@ -13,31 +13,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  format:
+  lint:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/format14:51
+    env:
+      PRE_COMMIT_HOME: '/tmp/pre-commit'
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Check
-        run: >
-          git config --global safe.directory "$GITHUB_WORKSPACE"
-          && CI/check_format .
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: changed
-          path: changed
-  format-py:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install black
-        run: pip install black[jupyter]==24.4.2
-      - name: Run black format check
-        run: black --check . --extend-exclude ".*thirdparty.*"
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PRE_COMMIT_HOME }}
+          key: ${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files --show-diff-on-failure
 
   license:
     runs-on: ubuntu-latest
@@ -67,16 +66,6 @@ jobs:
       - name: Check
         run: >
           CI/check_pragma_once.sh
-  end_of_line:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Check
-        run: >
-          CI/check_end_of_file.py . --exclude "thirdparty/*" --reject-multiple-newlines --github
   type_t:
     runs-on: ubuntu-latest
     steps:

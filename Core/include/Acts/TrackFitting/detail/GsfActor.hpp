@@ -188,7 +188,7 @@ struct GsfActor {
     // All components must have status "on surface". It is however possible,
     // that currentSurface is nullptr and all components are "on surface" (e.g.,
     // for surfaces excluded from the navigation)
-    using Status = Acts::Intersection3D::Status;
+    using Status [[maybe_unused]] = Acts::Intersection3D::Status;
     assert(std::all_of(
         stepperComponents.begin(), stepperComponents.end(),
         [](const auto& cmp) { return cmp.status() == Status::onSurface; }));
@@ -368,6 +368,7 @@ struct GsfActor {
                            result_type& result) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
     const auto p_prev = old_bound.absoluteMomentum();
+    const auto& particleHypothesis = old_bound.particleHypothesis();
 
     // Evaluate material slab
     auto slab = surface.surfaceMaterial()->materialSlab(
@@ -423,7 +424,8 @@ struct GsfActor {
       }();
 
       assert(p_prev + delta_p > 0. && "new momentum must be > 0");
-      new_pars[eBoundQOverP] = old_bound.charge() / (p_prev + delta_p);
+      new_pars[eBoundQOverP] =
+          particleHypothesis.qOverP(p_prev + delta_p, old_bound.charge());
 
       // compute inverse variance of p from mixture and update covariance
       auto new_cov = old_bound.covariance().value();
