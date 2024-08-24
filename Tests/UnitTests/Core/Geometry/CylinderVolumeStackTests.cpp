@@ -868,7 +868,7 @@ BOOST_DATA_TEST_CASE(Baseline,
   std::transform(
       volumes.begin(), volumes.end(), std::back_inserter(originalBounds),
       [](const auto& vol) {
-        return *dynamic_cast<const CylinderVolumeBounds*>(&vol->volumeBounds());
+        return dynamic_cast<const CylinderVolumeBounds&>(vol->volumeBounds());
       });
 
   if (f < 0.0) {

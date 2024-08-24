@@ -8,7 +8,7 @@ source of field data.
 
 Algorithms which need magnetic field information (e.g.
 {class}`Acts::AtlasStepper`, {class}`Acts::EigenStepper`) accept the magnetic
-field as an explicit argument. 
+field as an explicit argument.
 
 ## Provider interface
 
@@ -27,7 +27,7 @@ The implementation is then free to use and update this cache instance as
 needed. Before a client can issue field lookup calls, it needs to obtain an
 initialized instance of this cache object. This can be achieved generically for
 all implementations by using {func}`Acts::MagneticFieldProvider::makeCache`.
-This function accepts an instance of {type}`Acts::MagneticFieldContext`, see
+This function accepts an instance of {class}`Acts::MagneticFieldContext`, see
 [](#magnetic-field-context) for details.
 
 The main lookup method of {class}`Acts::MagneticFieldProvider` is
@@ -61,7 +61,7 @@ Acts::Vector3 fieldValue = *lookupResult;
 
 ## Magnetic field context
 
-:::{doxygentypedef} Acts::MagneticFieldContext
+:::{doxygenclass} Acts::MagneticFieldContext
 :outline:
 :::
 
@@ -72,7 +72,7 @@ values. The library itself does not make any assumptions on the content of this
 context type (it is implemented using `std::any`), but passes a reference
 through the call-chain to the field implementation. An experiment specific
 field implementation is then expected to performa cast to the concrete type,
-and use the contents. 
+and use the contents.
 
 An example use case of the context could be to look up conditions data /
 records for the value of the magnetic field at the time of the event.
@@ -162,7 +162,7 @@ to speed it up.
 :::
 
 ACTS also provides a field provider that calculates the field vectors
-analytically for a [solenoid](https://en.wikipedia.org/wiki/Solenoid) field. 
+analytically for a [solenoid](https://en.wikipedia.org/wiki/Solenoid) field.
 
 :::{figure} figures/bfield/quiver.png
 :width: 600
@@ -178,7 +178,7 @@ The implementation has configurable solenoid parameters:
 :::
 
 :::{note}
-A configuration of 
+A configuration of
 ```cpp
 SolenoidBField::Config cfg;
 cfg.length = 5.8_m;
@@ -239,4 +239,3 @@ analytical implementation and is much faster to lookup:
 
 :::{doxygenclass} Acts::MagneticFieldProvider
 :::
-

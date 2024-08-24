@@ -119,12 +119,12 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename target_aborter_t, typename path_aborter_t>
-auto Acts::Propagator<S, N>::propagate(
-    const parameters_t& start, const Surface& target,
-    const propagator_options_t& options) const
-    -> Result<action_list_t_result_t<
-        StepperBoundTrackParameters,
-        typename propagator_options_t::action_list_type>> {
+auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
+                                       const Surface& target,
+                                       const propagator_options_t& options)
+    const -> Result<action_list_t_result_t<
+              StepperBoundTrackParameters,
+              typename propagator_options_t::action_list_type>> {
   static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
@@ -159,16 +159,18 @@ auto Acts::Propagator<S, N>::makeState(
 
   // The expanded options (including path limit)
   auto eOptions = options.extend(abortList);
+  eOptions.navigation.startSurface = &start.referenceSurface();
+  eOptions.navigation.targetSurface = nullptr;
   using OptionsType = decltype(eOptions);
-  // Initialize the internal propagator state
   using StateType =
       action_list_t_state_t<OptionsType,
                             typename propagator_options_t::action_list_type>;
+  // Initialize the internal propagator state
   StateType state{
       eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
                           eOptions.stepping.maxStepSize),
-      m_navigator.makeState(&start.referenceSurface(), nullptr)};
+      m_navigator.makeState(eOptions.navigation)};
 
   static_assert(
       Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,
@@ -199,6 +201,8 @@ auto Acts::Propagator<S, N>::makeState(
 
   // Create the extended options and declare their type
   auto eOptions = options.extend(abortList);
+  eOptions.navigation.startSurface = &start.referenceSurface();
+  eOptions.navigation.targetSurface = &target;
   using OptionsType = decltype(eOptions);
 
   // Initialize the internal propagator state
@@ -209,7 +213,7 @@ auto Acts::Propagator<S, N>::makeState(
       eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
                           eOptions.stepping.maxStepSize),
-      m_navigator.makeState(&start.referenceSurface(), &target)};
+      m_navigator.makeState(eOptions.navigation)};
 
   static_assert(
       Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,
@@ -270,12 +274,13 @@ auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
 
 template <typename S, typename N>
 template <typename propagator_state_t, typename propagator_options_t>
-auto Acts::Propagator<S, N>::makeResult(
-    propagator_state_t state, Result<void> propagationResult,
-    const Surface& target, const propagator_options_t& /*options*/) const
-    -> Result<action_list_t_result_t<
-        StepperBoundTrackParameters,
-        typename propagator_options_t::action_list_type>> {
+auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
+                                        Result<void> propagationResult,
+                                        const Surface& target,
+                                        const propagator_options_t& /*options*/)
+    const -> Result<action_list_t_result_t<
+              StepperBoundTrackParameters,
+              typename propagator_options_t::action_list_type>> {
   // Type of track parameters produced at the end of the propagation
   using ReturnParameterType = StepperBoundTrackParameters;
 

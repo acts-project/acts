@@ -59,12 +59,10 @@ class DetectorNavigator {
   /// created for every propagation/extrapolation step
   /// and keep thread-local navigation information
   struct State : public NavigationState {
-    /// Navigation state - external state: the start surface
-    const Surface* startSurface = nullptr;
+    Options options;
+
     /// Navigation state - external state: the current surface
     const Surface* currentSurface = nullptr;
-    /// Navigation state - external state: the target surface
-    const Surface* targetSurface = nullptr;
     /// Indicator if the target is reached
     bool targetReached = false;
     /// Navigation state : a break has been detected
@@ -81,12 +79,10 @@ class DetectorNavigator {
                                                   Logging::Level::INFO))
       : m_cfg{cfg}, m_logger{std::move(_logger)} {}
 
-  State makeState(const Surface* startSurface,
-                  const Surface* targetSurface) const {
-    State result;
-    result.startSurface = startSurface;
-    result.targetSurface = targetSurface;
-    return result;
+  State makeState(const Options& options) const {
+    State state;
+    state.options = options;
+    return state;
   }
 
   const Surface* currentSurface(const State& state) const {
@@ -102,11 +98,11 @@ class DetectorNavigator {
   }
 
   const Surface* startSurface(const State& state) const {
-    return state.startSurface;
+    return state.options.startSurface;
   }
 
   const Surface* targetSurface(const State& state) const {
-    return state.targetSurface;
+    return state.options.targetSurface;
   }
 
   bool targetReached(const State& state) const { return state.targetReached; }
@@ -129,11 +125,6 @@ class DetectorNavigator {
 
   void navigationBreak(State& state, bool navigationBreak) const {
     state.navigationBreak = navigationBreak;
-  }
-
-  void insertExternalSurface(State& /*state*/,
-                             GeometryIdentifier /*geoid*/) const {
-    // TODO what about external surfaces?
   }
 
   /// Initialize call - start of propagation
@@ -305,7 +296,7 @@ class DetectorNavigator {
                      << posInfo(state, stepper)
                      << "this is a portal, updating to new volume.");
         nState.currentPortal = nextPortal;
-
+        nState.currentSurface = &nextPortal->surface();
         nState.surfaceCandidates.clear();
         nState.surfaceCandidateIndex = 0;
 

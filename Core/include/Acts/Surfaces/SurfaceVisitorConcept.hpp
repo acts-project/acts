@@ -8,10 +8,7 @@
 
 #pragma once
 
-#include <memory>
-
-#if defined(__cpp_concepts)
-#include <concepts>
+#include <utility>
 
 namespace Acts {
 
@@ -19,14 +16,12 @@ class Surface;
 
 template <typename T>
 concept SurfaceVisitor = requires(T v) {
-  {v(std::declval<const Surface*>())};
+  { v(std::declval<const Surface*>()) };
 };
 
 template <typename T>
 concept MutableSurfaceVisitor = requires(T v) {
-  {v(std::declval<Surface*>())};
+  { v(std::declval<Surface*>()) };
 };
 
 }  // namespace Acts
-
-#endif

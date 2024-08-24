@@ -65,7 +65,7 @@ name encountered. It can be set from the XML using DD4hep's plugin mechanism
 and the provided `ParametersPlugin` like:
 
 ```xml
-<detector id="ODD_PixelEndcapN_ID" name="PixelEndcapN" 
+<detector id="ODD_PixelEndcapN_ID" name="PixelEndcapN"
           type="ODDPixelEndcap" readout="PixelEndcapReadout" vis="invisible">
   <type_flags type="DetType_TRACKER + DetType_ENDCAP"/>
   <!-- ... -->
@@ -75,7 +75,7 @@ and the provided `ParametersPlugin` like:
   <plugin name="DD4hep_ParametersPlugin">
     <argument value="PixelEndcapN"/>
     <argument value="layer_pattern: str=PixelEndcapN\d|PixelEndplate"/>
-  </plugin>	
+  </plugin>
 </plugins>
 ```
 
@@ -109,7 +109,7 @@ following conditions need to be met:
 - The detector needs to have a barrel-endcap structure: Every hierarchy of
   subdetectors (e.g. PixelDetector, StripDetector,...) needs to be decomposed
   into
-  
+
   1. {barrel}
   2. {barrel + 2 endcaps}
   3. {2 endcaps} - in case there is no barrel at this stage (e.g. forward end caps)
@@ -121,7 +121,7 @@ following conditions need to be met:
   assembly using the `DD4hep_SubdetectorAssembly` constructor which is
   provided by DD4hep. Example of usage in xml file (where Barrel0, nEndCap0
   and pEndCap0 are sub detectors defined in the file `PixelTracker.xml`):
-  
+
   ```xml
   <include ref="PixelTracker.xml"/>
   <detectors>
@@ -147,7 +147,7 @@ following conditions need to be met:
   - Layers when containing sensitive material and/or the layer should
     carry material (which will be mapped on the layer if indicated), or
     the layer is sensitive itself.
-  
+
     ```{note}
     The layer does not need to be a direct child of the volume (barrel or
     endcap), it an be nested in substructures
@@ -227,7 +227,7 @@ ACTS geometry translation uses parameters attached to DD4hep detector elements v
     <plugin name="DD4hep_ParametersPlugin">
       <argument value="Solenoid"/>
       <argument value="passive_layer: bool = true"/>
-    </plugin>	
+    </plugin>
   </plugins>
 </lccdd>
 ```

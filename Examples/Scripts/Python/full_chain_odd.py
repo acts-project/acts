@@ -319,6 +319,16 @@ if args.reco:
             if args.ttbar
             else TruthSeedRanges()
         ),
+        initialSigmas=[
+            1 * u.mm,
+            1 * u.mm,
+            1 * u.degree,
+            1 * u.degree,
+            0.1 * u.e / u.GeV,
+            1 * u.ns,
+        ],
+        initialSigmaPtRel=0.1,
+        initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
@@ -349,6 +359,9 @@ if args.reco:
             maxOutliers=2,
         ),
         CkfConfig(
+            chi2CutOffMeasurement=15.0,
+            chi2CutOffOutlier=25.0,
+            numMeasurementsCutOff=10,
             seedDeduplication=True,
             stayOnSeed=True,
             pixelVolumes={16, 17, 18},
@@ -408,7 +421,7 @@ if args.reco:
     addVertexFitting(
         s,
         field,
-        vertexFinder=VertexFinder.Iterative,
+        vertexFinder=VertexFinder.AMVF,
         outputDirRoot=outputDir if args.output_root else None,
     )
 
