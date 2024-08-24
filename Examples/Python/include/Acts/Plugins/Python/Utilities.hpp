@@ -24,8 +24,10 @@ struct Context {
 
   pybind11::module_& get(const std::string& name) { return modules.at(name); }
 
-  template <typename... Args, typename = std::enable_if_t<sizeof...(Args) >= 2>>
-  auto get(Args&&... args) {
+  template <typename... Args>
+  auto get(Args&&... args)
+    requires(sizeof...(Args) >= 2)
+  {
     return std::make_tuple((modules.at(args))...);
   }
 };
