@@ -75,6 +75,7 @@ class TrackSelector {
     std::size_t minMeasurements = 0;
     std::size_t maxHoles = std::numeric_limits<std::size_t>::max();
     std::size_t maxOutliers = std::numeric_limits<std::size_t>::max();
+    std::size_t maxHolesAndOutliers = std::numeric_limits<std::size_t>::max();
     std::size_t maxSharedHits = std::numeric_limits<std::size_t>::max();
     double maxChi2 = inf;
 
@@ -311,6 +312,7 @@ inline std::ostream& operator<<(std::ostream& os,
   print("pt", cuts.ptMin, cuts.ptMax);
   print("nHoles", 0, cuts.maxHoles);
   print("nOutliers", 0, cuts.maxOutliers);
+  print("nHoles + nOutliers", 0, cuts.maxHolesAndOutliers);
   print("nSharedHits", 0, cuts.maxSharedHits);
   print("chi2", 0.0, cuts.maxChi2);
   os << " - " << cuts.minMeasurements << " <= nMeasurements\n";
@@ -434,6 +436,8 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
          checkMin(track.nMeasurements(), cuts.minMeasurements) &&
          checkMax(track.nHoles(), cuts.maxHoles) &&
          checkMax(track.nOutliers(), cuts.maxOutliers) &&
+         checkMax(track.nHoles() + track.nOutliers(),
+                  cuts.maxHolesAndOutliers) &&
          checkMax(track.nSharedHits(), cuts.maxSharedHits) &&
          checkMax(track.chi2(), cuts.maxChi2) &&
          cuts.measurementCounter.isValidTrack(track);
