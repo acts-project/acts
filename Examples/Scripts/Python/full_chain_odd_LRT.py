@@ -216,29 +216,27 @@ else:
     if not args.ttbar:
         addParticleGun(
             s,
-           
             MomentumConfig(
                 args.gun_pt_range[0] * u.GeV,
                 args.gun_pt_range[1] * u.GeV,
                 transverse=True,
             ),
-             
             EtaConfig(args.gun_eta_range[0], args.gun_eta_range[1]),
             PhiConfig(0.0, 360.0 * u.degree),
             ParticleConfig(
                 args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
             ),
             outputDirRoot=pathlib.Path("/home/aicha/Atlas/NewVertices"),
-            vtxGen = acts.examples.GaussianDisplacedVertexPositionGenerator(
-                rMean=50, rStdDev= 50* u.mm, 
-                zMean=2, zStdDev=55.5 * u.mm, 
-                tMean=0, tStdDev=1.0 * u.ns
-             ),
-
-
+            vtxGen=acts.examples.GaussianDisplacedVertexPositionGenerator(
+                rMean=50,
+                rStdDev=50 * u.mm,
+                zMean=2,
+                zStdDev=55.5 * u.mm,
+                tMean=0,
+                tStdDev=1.0 * u.ns,
+            ),
             multiplicity=args.gun_multiplicity,
             rnd=rnd,
-           
         )
     else:
         addPythia8(
@@ -317,7 +315,6 @@ if args.reco:
     addSeeding(
         s,
         trackingGeometry,
-        
         field,
         (
             TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))

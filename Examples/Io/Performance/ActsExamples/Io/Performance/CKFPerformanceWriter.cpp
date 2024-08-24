@@ -260,8 +260,7 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
     }
 
     // Fill efficiency plots
-    m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR,
-                       isReconstructed);
+    m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR, isReconstructed);
     // Fill number of duplicated tracks for this particle
     m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
                                nMatchedTracks - 1);

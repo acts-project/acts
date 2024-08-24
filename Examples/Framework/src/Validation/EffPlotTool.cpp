@@ -28,7 +28,7 @@ void ActsExamples::EffPlotTool::book(
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bDeltaR = m_cfg.varBinning.at("DeltaR");
   PlotHelpers::Binning bProdR = m_cfg.varBinning.at("prodR");
-  
+
   // efficiency vs pT
   effPlotCache.trackEff_vs_pT = PlotHelpers::bookEff(
       "trackeff_vs_pT", "Tracking efficiency;Truth pT [GeV/c];Efficiency", bPt);
