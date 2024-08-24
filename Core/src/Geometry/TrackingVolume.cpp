@@ -563,6 +563,10 @@ const std::string& TrackingVolume::volumeName() const {
   return m_name;
 }
 
+void TrackingVolume::setVolumeName(const std::string& volumeName) {
+  m_name = volumeName;
+}
+
 const IVolumeMaterial* TrackingVolume::volumeMaterial() const {
   return m_volumeMaterial.get();
 }
