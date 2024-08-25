@@ -50,6 +50,9 @@ class TryAllNavigatorBase {
   };
 
   struct Options : public NavigatorPlainOptions {
+    explicit Options(const GeometryContext& gctx)
+        : NavigatorPlainOptions(gctx) {}
+
     void setPlainOptions(const NavigatorPlainOptions& options) {
       static_cast<NavigatorPlainOptions&>(*this) = options;
     }
@@ -60,6 +63,8 @@ class TryAllNavigatorBase {
   /// It acts as an internal state which is created for every propagation and
   /// meant to keep thread-local navigation information.
   struct State {
+    explicit State(const Options& options_) : options(options_) {}
+
     Options options;
 
     // Starting geometry information of the navigation which should only be set
@@ -98,10 +103,10 @@ class TryAllNavigatorBase {
   State makeState(const Options& options) const {
     assert(options.startSurface != nullptr && "Start surface must be set");
 
-    State state;
-    state.options = options;
+    State state(options);
     state.startSurface = options.startSurface;
     state.targetSurface = options.targetSurface;
+
     return state;
   }
 
@@ -558,6 +563,9 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// It acts as an internal state which is created for every propagation and
   /// meant to keep thread-local navigation information.
   struct State : public TryAllNavigatorBase::State {
+    explicit State(const Options& options_)
+        : TryAllNavigatorBase::State(options_) {}
+
     /// The vector of navigation candidates to work through
     std::vector<detail::NavigationObjectCandidate> navigationCandidates;
     /// The vector of active intersection candidates to work through
@@ -589,10 +597,10 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   State makeState(const Options& options) const {
     assert(options.startSurface != nullptr && "Start surface must be set");
 
-    State state;
-    state.options = options;
+    State state(options);
     state.startSurface = options.startSurface;
     state.targetSurface = options.targetSurface;
+
     return state;
   }
 

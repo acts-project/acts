@@ -54,7 +54,7 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
   }
 
   const double nearLimit = std::numeric_limits<double>::lowest();
-  const double farLimit = state.stepSize.value(ConstrainedStep::aborter);
+  const double farLimit = std::numeric_limits<double>::max();
 
   if (sIntersection.isValid() &&
       detail::checkPathLength(sIntersection.pathLength(), nearLimit, farLimit,

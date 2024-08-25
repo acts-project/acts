@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,6 +25,7 @@
 #include <vector>
 
 namespace Acts {
+class GeometryContext;
 
 /// This is a fully guided navigator that progresses through a pre-given
 /// sequence of surfaces.
@@ -40,6 +41,9 @@ class DirectNavigator {
   struct Config {};
 
   struct Options : public NavigatorPlainOptions {
+    explicit Options(const GeometryContext& gctx)
+        : NavigatorPlainOptions(gctx) {}
+
     /// The Surface sequence
     SurfaceSequence surfaces;
 
@@ -60,6 +64,8 @@ class DirectNavigator {
   /// propagation/extrapolation step and keep thread-local navigation
   /// information
   struct State {
+    explicit State(const Options& options_) : options(options_) {}
+
     Options options;
 
     /// Index of the next surface to try
@@ -80,8 +86,7 @@ class DirectNavigator {
       : m_logger{std::move(_logger)} {}
 
   State makeState(const Options& options) const {
-    State state;
-    state.options = options;
+    State state(options);
     return state;
   }
 

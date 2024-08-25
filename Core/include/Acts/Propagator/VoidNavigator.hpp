@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,8 +9,10 @@
 #pragma once
 
 #include "Acts/Propagator/NavigatorOptions.hpp"
+
 namespace Acts {
 
+class GeometryContext;
 class Surface;
 
 /// @brief The void navigator struct as a default navigator
@@ -22,6 +24,9 @@ struct VoidNavigator {
   struct Config {};
 
   struct Options : public NavigatorPlainOptions {
+    explicit Options(const GeometryContext& gctx)
+        : NavigatorPlainOptions(gctx) {}
+
     void setPlainOptions(const NavigatorPlainOptions& options) {
       static_cast<NavigatorPlainOptions&>(*this) = options;
     }
@@ -29,12 +34,13 @@ struct VoidNavigator {
 
   /// @brief Nested State struct, minimal requirement
   struct State {
+    explicit State(const Options& options_) : options(options_) {}
+
     Options options;
   };
 
   State makeState(const Options& options) const {
-    State state;
-    state.options = options;
+    State state(options);
     return state;
   }
 
