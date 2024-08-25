@@ -322,8 +322,8 @@ if args.reco:
             else TruthSeedRanges()
         ),
         geoSelectionConfigFile=oddSeedingSel,
-        outputDirRoot="/home/aicha/Atlas/seeding_root_output",
-        outputDirCsv="/home/aicha/Atlas/seeding_csv_output",
+        outputDirRoot=outputDir if args.output_root else None,
+        outputDirCsv=outputDir if args.output_csv else None,
     )
 
     if seedFilter_ML:

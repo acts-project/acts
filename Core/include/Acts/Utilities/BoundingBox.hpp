@@ -290,10 +290,10 @@ class AxisAlignedBoundingBox {
    * @param color The color to use for drawing
    * @param trf An optional transform to apply first.
    */
-  template <std::size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
   void draw(IVisualization3D& helper,
             std::array<int, 3> color = {120, 120, 120},
-            const transform_type& trf = transform_type::Identity()) const;
+            const transform_type& trf = transform_type::Identity()) const
+    requires(DIM == 3);
 
   /**
    * Draw this bounding box as SVG. This method is only available for the 2D
@@ -307,19 +307,19 @@ class AxisAlignedBoundingBox {
    * @param fillcolor Color to fill the box with.
    * @return The outstream given in @p os.
    */
-  template <std::size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
   std::ostream& svg(std::ostream& os, value_type w, value_type h,
                     value_type unit = 10, const std::string& label = "",
-                    const std::string& fillcolor = "grey") const;
+                    const std::string& fillcolor = "grey") const
+    requires(DIM == 2);
 
  private:
-  template <std::size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
   std::pair<VertexType, VertexType> transformVertices(
-      const transform_type& trf) const;
+      const transform_type& trf) const
+    requires(DIM == 2);
 
-  template <std::size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
   std::pair<VertexType, VertexType> transformVertices(
-      const transform_type& trf) const;
+      const transform_type& trf) const
+    requires(DIM == 3);
 
   const entity_t* m_entity;
   VertexType m_vmin;
