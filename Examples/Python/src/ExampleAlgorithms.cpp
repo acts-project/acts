@@ -105,6 +105,7 @@ void addExampleAlgorithms(Context& ctx) {
       ACTS_PYTHON_MEMBER(minMeasurements);
       ACTS_PYTHON_MEMBER(maxHoles);
       ACTS_PYTHON_MEMBER(maxOutliers);
+      ACTS_PYTHON_MEMBER(maxHolesAndOutliers);
       ACTS_PYTHON_MEMBER(maxSharedHits);
       ACTS_PYTHON_MEMBER(maxChi2);
       ACTS_PYTHON_MEMBER(measurementCounter);

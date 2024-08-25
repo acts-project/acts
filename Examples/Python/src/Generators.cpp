@@ -115,6 +115,43 @@ void addGenerators(Context& ctx) {
           &ActsExamples::GaussianPrimaryVertexPositionGenerator::stddev)
       .def_readwrite(
           "mean", &ActsExamples::GaussianPrimaryVertexPositionGenerator::mean);
+  py::class_<
+      ActsExamples::GaussianDisplacedVertexPositionGenerator,
+      ActsExamples::EventGenerator::PrimaryVertexPositionGenerator,
+      std::shared_ptr<ActsExamples::GaussianDisplacedVertexPositionGenerator>>(
+      mex, "GaussianDisplacedVertexPositionGenerator")
+      .def(py::init<>())
+      .def(py::init([](double rMean, double rStdDev, double zMean,
+                       double zStdDev, double tMean, double tStdDev) {
+             ActsExamples::GaussianDisplacedVertexPositionGenerator g;
+             g.rMean = rMean;
+             g.rStdDev = rStdDev;
+             g.zMean = zMean;
+             g.zStdDev = zStdDev;
+             g.tMean = tMean;
+             g.tStdDev = tStdDev;
+             return g;
+           }),
+           py::arg("rMean"), py::arg("rStdDev"), py::arg("zMean"),
+           py::arg("zStdDev"), py::arg("tMean"), py::arg("tStdDev"))
+      .def_readwrite(
+          "rMean",
+          &ActsExamples::GaussianDisplacedVertexPositionGenerator::rMean)
+      .def_readwrite(
+          "rStdDev",
+          &ActsExamples::GaussianDisplacedVertexPositionGenerator::rStdDev)
+      .def_readwrite(
+          "zMean",
+          &ActsExamples::GaussianDisplacedVertexPositionGenerator::zMean)
+      .def_readwrite(
+          "zStdDev",
+          &ActsExamples::GaussianDisplacedVertexPositionGenerator::zStdDev)
+      .def_readwrite(
+          "tMean",
+          &ActsExamples::GaussianDisplacedVertexPositionGenerator::tMean)
+      .def_readwrite(
+          "tStdDev",
+          &ActsExamples::GaussianDisplacedVertexPositionGenerator::tStdDev);
 
   py::class_<
       ActsExamples::FixedPrimaryVertexPositionGenerator,
