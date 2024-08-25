@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <concepts>
 #include <optional>
 #include <sstream>
 #include <system_error>
@@ -61,15 +62,13 @@ class Result {
   /// @tparam T2 Type of the potential assignment
   /// @param value The potential value, could be an actual valid value or an
   /// error.
-  template <
-      typename T2, typename _E = E, typename _T = T,
-      typename = std::enable_if_t<
-          (!std::is_same_v<_T, _E> && !std::is_constructible_v<_T, _E> &&
-           !std::is_convertible_v<_T, _E> && !std::is_constructible_v<_E, _T> &&
-           !std::is_convertible_v<_E, _T> &&
-           !(std::is_convertible_v<T2, _T> && std::is_convertible_v<T2, _E>))>>
+  template <typename T2>
   Result(T2 value) noexcept
-      : m_var(std::conditional_t<std::is_convertible_v<T2, _T>, T, E>{
+    requires(!std::same_as<T, E> && !std::constructible_from<T, E> &&
+             !std::convertible_to<T, E> && !std::constructible_from<E, T> &&
+             !std::convertible_to<E, T> &&
+             !(std::convertible_to<T2, T> && std::convertible_to<T2, E>))
+      : m_var(std::conditional_t<std::is_convertible_v<T2, T>, T, E>{
             std::move(value)}) {}
 
   /// @brief Assignment operator from arbitrary value
@@ -79,15 +78,14 @@ class Result {
   /// @param value The potential value, could be an actual valid value or an
   /// error.
   /// @return The assigned instance
-  template <
-      typename T2, typename _E = E, typename _T = T,
-      typename = std::enable_if_t<
-          (!std::is_same_v<_T, _E> && !std::is_constructible_v<_T, _E> &&
-           !std::is_convertible_v<_T, _E> && !std::is_constructible_v<_E, _T> &&
-           !std::is_convertible_v<_E, _T> &&
-           !(std::is_convertible_v<T2, _T> && std::is_convertible_v<T2, _E>))>>
-  Result<T, E>& operator=(T2 value) noexcept {
-    m_var = std::move(std::conditional_t<std::is_convertible_v<T2, _T>, T, E>{
+  template <typename T2>
+  Result<T, E>& operator=(T2 value) noexcept
+    requires(!std::same_as<T, E> && !std::constructible_from<T, E> &&
+             !std::convertible_to<T, E> && !std::constructible_from<E, T> &&
+             !std::convertible_to<E, T> &&
+             !(std::convertible_to<T2, T> && std::convertible_to<T2, E>))
+  {
+    m_var = std::move(std::conditional_t<std::is_convertible_v<T2, T>, T, E>{
         std::move(value)});
     return *this;
   }
