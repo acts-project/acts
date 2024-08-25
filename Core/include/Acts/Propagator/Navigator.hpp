@@ -15,6 +15,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -278,6 +279,13 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state)
                    << "Current surface set to start surface "
                    << state.navigation.currentSurface->geometryId());
+
+      assert(state.navigation.currentSurface->isOnSurface(
+                 state.geoContext, stepper.position(state.stepping),
+                 stepper.direction(state.stepping),
+                 BoundaryTolerance::Infinite(),
+                 state.options.surfaceTolerance) &&
+             "Stepper not on surface");
     }
 
     // Fast Navigation initialization for start condition:
@@ -524,6 +532,15 @@ class Navigator {
     } else {
       ACTS_VERBOSE(volInfo(state)
                    << "Status could not be determined - good luck.");
+    }
+
+    if (state.navigation.currentSurface != nullptr) {
+      assert(state.navigation.currentSurface->isOnSurface(
+                 state.geoContext, stepper.position(state.stepping),
+                 stepper.direction(state.stepping),
+                 BoundaryTolerance::Infinite(),
+                 state.options.surfaceTolerance) &&
+             "Stepper not on surface");
     }
   }
 
