@@ -368,8 +368,7 @@ struct TrackSummaryReader : public TreeReader {
   std::vector<std::vector<double>>* outlierLayer =
       new std::vector<std::vector<double>>;
   std::vector<unsigned int>* nMajorityHits = new std::vector<unsigned int>;
-  std::vector<std::uint64_t>* majorityParticleId =
-      new std::vector<std::uint64_t>;
+  std::vector<std::uint64_t>* majorityParticleId = new std::vector<std::uint64_t>;
 
   std::vector<bool>* hasFittedParams = new std::vector<bool>;
 
@@ -437,8 +436,7 @@ struct ParticleReader : public TreeReader {
   }
 
   // Get all the particles with requested event id
-  std::vector<ParticleInfo> getParticles(
-      const std::uint32_t& eventNumber) const {
+  std::vector<ParticleInfo> getParticles(const std::uint32_t& eventNumber) const {
     // Find the start entry and the batch size for this event
     std::string eventNumberStr = std::to_string(eventNumber);
     std::string findStartEntry = "event_id<" + eventNumberStr;
