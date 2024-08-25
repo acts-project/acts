@@ -14,6 +14,7 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
+#include <concepts>
 #include <iostream>
 #include <type_traits>
 #include <utility>
@@ -37,9 +38,10 @@ class SourceLink final {
   /// Constructor from concrete sourcelink
   /// @tparam T The source link type
   /// @param upstream The upstream source link to store
-  template <typename T, typename = std::enable_if_t<
-                            !std::is_same_v<std::decay_t<T>, SourceLink>>>
-  explicit SourceLink(T&& upstream) : m_upstream(std::forward<T>(upstream)) {
+  template <typename T>
+  explicit SourceLink(T&& upstream)
+    requires(!std::same_as<std::decay_t<T>, SourceLink>)
+      : m_upstream(std::forward<T>(upstream)) {
     static_assert(!std::is_same_v<std::decay_t<T>, SourceLink>,
                   "Cannot wrap SourceLink in SourceLink");
   }

@@ -59,8 +59,8 @@ class Ray {
   /// Helper to draw this ray using a given visualization helper.
   /// @param helper The visualization helper
   /// @param far_distance The "length" of the drawn line representing the ray
-  template <std::size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
-  void draw(IVisualization3D& helper, value_type far_distance = 10) const;
+  void draw(IVisualization3D& helper, value_type far_distance = 10) const
+    requires(DIM == 3);
 
  private:
   VertexType m_origin;

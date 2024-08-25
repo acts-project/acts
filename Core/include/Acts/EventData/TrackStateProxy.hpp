@@ -397,8 +397,9 @@ class TrackStateProxy {
   /// This overloaded is only enabled if not read-only, and returns a mutable
   /// reference.
   /// @return Mutable reference to the pathlength.
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  double& pathLength() {
+  double& pathLength()
+    requires(!ReadOnly)
+  {
     return component<double, hashString("pathLength")>();
   }
 
@@ -453,8 +454,9 @@ class TrackStateProxy {
         component<IndexType, hashString("predicted")>());
   }
 
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  Parameters predicted() {
+  Parameters predicted()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("predicted")>());
     return m_traj->self().parameters(
         component<IndexType, hashString("predicted")>());
