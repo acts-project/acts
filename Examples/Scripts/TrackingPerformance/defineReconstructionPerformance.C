@@ -164,8 +164,8 @@ void defineReconstructionPerformance(
       }
 
       // Loop over the tracks
-      // The fake rate is defined as the ratio of selected truth-matched
-      // tracks over all selected tracks
+      // The fake rate is defined as the ratio of selected truth-matched tracks
+      // over all selected tracks
       for (std::size_t j = 0; j < tReaders[ifile].nStates->size(); ++j) {
         bool hasFittedParameters = tReaders[ifile].hasFittedParams->at(j);
         auto nMeasurements = tReaders[ifile].nMeasurements->at(j);
@@ -199,8 +199,8 @@ void defineReconstructionPerformance(
 
       // Loop over all selected and truth-matched tracks
       // The duplicate rate is defined as the ratio of duplicate tracks among
-      // all the selected truth-matched tracks (only one track is 'real';
-      // others are 'duplicated')
+      // all the selected truth-matched tracks (only one track is 'real'; others
+      // are 'duplicated')
       for (auto& [id, matchedTracks] : matchedParticles) {
         // Sort all tracks matched to this particle according to majority prob
         // and track quality
@@ -239,8 +239,8 @@ void defineReconstructionPerformance(
       }
 
       // Loop over all truth particles in this event
-      // The efficiency is defined as the ratio of selected particles that
-      // have been matched with reco
+      // The efficiency is defined as the ratio of selected particles that have
+      // been matched with reco
       for (const auto& particle : particles[i]) {
         auto nHits = particle.nHits;
         auto eta = particle.eta;
