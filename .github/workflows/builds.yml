@@ -186,10 +186,12 @@ jobs:
         run: >
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
+          && which python3
           && python3 -m pip install histcmp==0.6.8 matplotlib
           && python3 -m pip install -r Examples/Scripts/requirements.txt
           && geant4-config --install-datasets
           && source build/this_acts_withdeps.sh
+          && which python3
           && echo "::endgroup::"
           && CI/physmon/phys_perf_mon.sh all physmon
 
