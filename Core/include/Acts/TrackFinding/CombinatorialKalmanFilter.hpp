@@ -617,11 +617,10 @@ class CombinatorialKalmanFilter {
           stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
         }
 
-        if (!result.activeBranches.empty()) {
-          // Record the active branch and remove it from the list
-          storeLastActiveBranch(result);
-          result.activeBranches.pop_back();
-        }
+        // Record the active branch and remove it from the list
+        storeLastActiveBranch(result);
+        result.activeBranches.pop_back();
+
         // If no more active branches, done with filtering; Otherwise, reset
         // propagation state to track state at next active branch
         if (result.activeBranches.empty()) {
