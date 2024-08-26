@@ -349,8 +349,6 @@ struct GaussianSumFitter {
                                   ? *options.referenceSurface
                                   : sParameters.referenceSurface();
 
-      using PM = TrackStatePropMask;
-
       const auto& params = *fwdGsfResult.lastMeasurementState;
       auto state =
           m_propagator.template makeState<MultiComponentBoundTrackParameters,

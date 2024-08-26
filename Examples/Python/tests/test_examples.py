@@ -412,8 +412,8 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
 
     root_files = [
         (
-            "propagation_steps.root",
-            "propagation_steps",
+            "propagation_summary.root",
+            "propagation_summary",
             10000,
         )
     ]
