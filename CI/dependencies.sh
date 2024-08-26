@@ -73,4 +73,6 @@ if [ -n "${GITHUB_ACTIONS:-}" ]; then
     echo "CMAKE_PREFIX_PATH=${destination}" >> $GITHUB_ENV
     echo "LD_LIBRARY_PATH=${destination}/lib" >> $GITHUB_ENV
     echo "ROOT_INCLUDE_PATH=${destination}/include" >> $GITHUB_ENV
+    # Geant4 puts CLHEP in a subdirectory
+    echo "ROOT_INCLUDE_PATH=${destination}/include/Geant4" >> $GITHUB_ENV
 fi
