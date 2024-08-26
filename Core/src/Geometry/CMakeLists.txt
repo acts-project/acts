@@ -35,4 +35,10 @@ target_sources(
         Volume.cpp
         VolumeBounds.cpp
         CylinderVolumeStack.cpp
+        GridPortalLink.cpp
+        GridPortalLinkMerging.cpp
+        TrivialPortalLink.cpp
+        CompositePortalLink.cpp
+        PortalLinkBase.cpp
+        PortalError.cpp
 )
