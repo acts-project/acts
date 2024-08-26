@@ -235,6 +235,9 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
   ACTS_VERBOSE(" - a: " << a->surface().bounds());
   ACTS_VERBOSE(" - b: " << b->surface().bounds());
 
+  // This tolerance is used checking bin equivalence. It's not intended to be
+  // user configurable, as we don't foresee cases where the tolerance would have
+  // to be adjusteed to the input geometry.
   constexpr auto tolerance = s_onSurfaceTolerance;
 
   std::shared_ptr<RegularSurface> mergedSurface = nullptr;
@@ -563,6 +566,5 @@ std::unique_ptr<PortalLinkBase> GridPortalLink::merge(const GridPortalLink& a,
 
   return merged;
 }
-
 
 }  // namespace Acts

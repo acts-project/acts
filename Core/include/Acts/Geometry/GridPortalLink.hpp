@@ -463,7 +463,8 @@ class GridPortalLinkT final : public GridPortalLink {
   }
 
   /// Makes a 2D grid from a 1D grid by extending it using an optional axis
-  /// @param other The axis to use for the missing direction
+  /// @param other The axis to use for the missing direction,
+  ///              can be null for auto determination
   /// @return A unique pointer to the 2D grid portal link
   std::unique_ptr<GridPortalLink> extendTo2d(const IAxis* other) const final {
     if constexpr (DIM == 2) {
