@@ -72,4 +72,5 @@ if [ -n "${GITHUB_ACTIONS:-}" ]; then
     echo "PATH=${venv}/bin:${destination}/bin/:${PATH}" >> $GITHUB_ENV
     echo "CMAKE_PREFIX_PATH=${destination}" >> $GITHUB_ENV
     echo "LD_LIBRARY_PATH=${destination}/lib" >> $GITHUB_ENV
+    echo "ROOT_INCLUDE_PATH=${destination}/include" >> $GITHUB_ENV
 fi
