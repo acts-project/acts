@@ -44,7 +44,7 @@ convertSurfaceMaterial(const ISurfaceMaterial& material,
 
 /// Conversion method for material grids
 ///
-/// @param cache object to have the link assoication from the geometry building
+/// @param cache object to have the link association from the geometry building
 /// @param detector the detector object
 /// @param logger the logger object for screen output
 ///

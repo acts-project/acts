@@ -129,7 +129,9 @@ Acts::DetrayMaterialConverter::convertSurfaceMaterial(
     } else if (bVal0 == BinningValue::binX && bVal1 == BinningValue::binY) {
       gridIndexType = 2;
     } else {
-      std::runtime_error("Unsupported binning for Detray");
+      std::runtime_error(
+          "Unsupported binning for Detray, grid index type is set to " +
+          std::to_string(gridIndexType));
     }
 
     // Now convert the (modified) bin utility

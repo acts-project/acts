@@ -332,7 +332,7 @@ detray::io::volume_payload Acts::DetrayGeometryConverter::convertVolume(
     });
   }
   ACTS_VERBOSE(" > " << volume.portals().size()
-                     << " inital ACTS portals split into final "
+                     << " initial ACTS portals split into final "
                      << portalCounter << " detray portals");
 
   return volumePayload;
