@@ -573,34 +573,34 @@ class GridPortalLinkT final : public GridPortalLink {
       return position;
     } else {
       if constexpr (std::is_same_v<surface_t, CylinderSurface>) {
+        static_assert(direction == BinningValue::binRPhi ||
+                          direction == BinningValue::binZ,
+                      "Invalid binning direction");
+
         if constexpr (direction == BinningValue::binRPhi) {
           return ActsVector<1>{position[0]};
         } else if constexpr (direction == BinningValue::binZ) {
           return ActsVector<1>{position[1]};
-        } else {
-          []<bool flag = false>() {
-            static_assert(flag, "invalid direction");
-          }();
         }
       } else if constexpr (std::is_same_v<surface_t, DiscSurface>) {
+        static_assert(direction == BinningValue::binR ||
+                          direction == BinningValue::binPhi,
+                      "Invalid binning direction");
+
         if constexpr (direction == BinningValue::binR) {
           return ActsVector<1>{position[0]};
         } else if constexpr (direction == BinningValue::binPhi) {
           return ActsVector<1>{position[1]};
-        } else {
-          []<bool flag = false>() {
-            static_assert(flag, "invalid direction");
-          }();
         }
       } else if constexpr (std::is_same_v<surface_t, PlaneSurface>) {
+        static_assert(
+            direction == BinningValue::binX || direction == BinningValue::binY,
+            "Invalid binning direction");
+
         if constexpr (direction == BinningValue::binX) {
           return ActsVector<1>{position[0]};
         } else if constexpr (direction == BinningValue::binY) {
           return ActsVector<1>{position[1]};
-        } else {
-          []<bool flag = false>() {
-            static_assert(flag, "invalid direction");
-          }();
         }
       }
     }
