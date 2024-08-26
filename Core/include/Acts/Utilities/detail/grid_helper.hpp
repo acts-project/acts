@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 
 #include <array>
 #include <set>
@@ -802,7 +802,7 @@ struct grid_helper {
       const std::array<std::size_t, sizeof...(Axes)>& localIndices,
       std::size_t size, const std::tuple<Axes...>& axes) {
     return neighborHoodIndices(
-        localIndices, std::make_pair(static_cast<int>(-size), size), axes);
+        localIndices, std::make_pair(-static_cast<int>(size), size), axes);
   }
 
   /// @brief get global bin indices for bins in specified neighborhood

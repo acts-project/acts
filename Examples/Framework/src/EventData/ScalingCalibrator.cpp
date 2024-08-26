@@ -6,8 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/EventData/ScalingCalibrator.hpp"
+
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/Measurement.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -16,8 +18,6 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include <Acts/Definitions/TrackParametrization.hpp>
-#include <ActsExamples/EventData/ScalingCalibrator.hpp>
 
 #include <algorithm>
 #include <array>
@@ -85,7 +85,7 @@ readMaps(const std::filesystem::path& path) {
 
   for (auto it = lst->begin(); it != lst->end(); ++it) {
     TKey* key = static_cast<TKey*>(*it);
-    if (std::strcmp(key->GetClassName(), "TH2D") == 0) {
+    if (key != nullptr && std::strcmp(key->GetClassName(), "TH2D") == 0) {
       auto [geoId, var] = parseMapKey(key->GetName());
 
       TH2D hist;
@@ -134,7 +134,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
     const Acts::CalibrationContext& /*cctx*/,
     const Acts::SourceLink& sourceLink,
     Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
-  trackState.setUncalibratedSourceLink(sourceLink);
+  trackState.setUncalibratedSourceLink(Acts::SourceLink{sourceLink});
   const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
 
   assert((idxSourceLink.index() < measurements.size()) &&
@@ -151,32 +151,30 @@ void ActsExamples::ScalingCalibrator::calibrate(
   const Cluster& cl = clusters->at(idxSourceLink.index());
   ConstantTuple ct = m_calib_maps.at(mgid).at(cl.sizeLoc0, cl.sizeLoc1);
 
-  std::visit(
-      [&](const auto& meas) {
-        auto E = meas.expander();
-        auto P = meas.projector();
+  const auto& measurement = measurements[idxSourceLink.index()];
 
-        Acts::ActsVector<Acts::eBoundSize> fpar = E * meas.parameters();
+  assert(measurement.contains(Acts::eBoundLoc0) &&
+         "Measurement does not contain the required bound loc0");
+  assert(measurement.contains(Acts::eBoundLoc1) &&
+         "Measurement does not contain the required bound loc1");
 
-        Acts::ActsSquareMatrix<Acts::eBoundSize> fcov =
-            E * meas.covariance() * E.transpose();
+  auto boundLoc0 = measurement.subspace().indexOf(Acts::eBoundLoc0);
+  auto boundLoc1 = measurement.subspace().indexOf(Acts::eBoundLoc1);
 
-        fpar[Acts::eBoundLoc0] += ct.x_offset;
-        fpar[Acts::eBoundLoc1] += ct.y_offset;
-        fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) *= ct.x_scale;
-        fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) *= ct.y_scale;
+  Measurement measurementCopy = measurement;
+  measurementCopy.effectiveParameters()[boundLoc0] += ct.x_offset;
+  measurementCopy.effectiveParameters()[boundLoc1] += ct.y_offset;
+  measurementCopy.effectiveCovariance()(boundLoc0, boundLoc0) *= ct.x_scale;
+  measurementCopy.effectiveCovariance()(boundLoc1, boundLoc1) *= ct.y_scale;
 
-        constexpr std::size_t kSize =
-            std::remove_reference_t<decltype(meas)>::size();
-        std::array<Acts::BoundIndices, kSize> indices = meas.indices();
-        Acts::ActsVector<kSize> cpar = P * fpar;
-        Acts::ActsSquareMatrix<kSize> ccov = P * fcov * P.transpose();
+  Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
+    constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
-        Acts::Measurement<Acts::BoundIndices, kSize> cmeas(
-            Acts::SourceLink{idxSourceLink}, indices, cpar, ccov);
-
-        trackState.allocateCalibrated(cmeas.size());
-        trackState.setCalibrated(cmeas);
-      },
-      (measurements)[idxSourceLink.index()]);
+    trackState.allocateCalibrated(kMeasurementSize);
+    trackState.calibrated<kMeasurementSize>() =
+        measurement.parameters<kMeasurementSize>();
+    trackState.calibratedCovariance<kMeasurementSize>() =
+        measurementCopy.covariance<kMeasurementSize>();
+    trackState.setProjector(measurement.subspace().fullProjector<double>());
+  });
 }

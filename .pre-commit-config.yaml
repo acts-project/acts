@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v14.0.0'
+    rev: 'v18.1.8'
     hooks:
       - id: clang-format
         types_or: [file]
@@ -10,11 +10,21 @@ repos:
     rev: v3.2.0
     hooks:
     - id: trailing-whitespace
+      exclude: \.(diff|patch)$
     - id: end-of-file-fixer
+      exclude: \.(diff|patch)$
     - id: check-yaml
     - id: check-added-large-files
 
-  - repo: https://github.com/psf/black
-    rev: 23.12.1
+
+  # Using this mirror lets us use mypyc-compiled black, which is about 2x faster
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 24.4.2
     hooks:
-    - id: black
+    - id: black-jupyter
+
+  - repo: https://github.com/BlankSpruce/gersemi
+    rev: 0.15.0
+    hooks:
+    - id: gersemi
+      args: ["-i", "--no-warn-about-unknown-commands"]

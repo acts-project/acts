@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <exception>
+#include <fstream>
 #include <functional>
 #include <iterator>
 #include <limits>
@@ -50,8 +51,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/core/demangle.hpp>
-#include <dfe/dfe_io_dsv.hpp>
-#include <dfe/dfe_namedtuple.hpp>
 
 namespace ActsExamples {
 
@@ -67,7 +66,8 @@ std::string_view getAlgorithmType(const SequenceElement& element) {
   return "Algorithm";
 }
 
-// Saturated addition that does not overflow and exceed SIZE_MAX.
+// Saturated addition that does not overflow and exceed
+// std::numeric_limits<std::size_t>::max().
 //
 // From http://locklessinc.com/articles/sat_arithmetic/
 std::size_t saturatedAdd(std::size_t a, std::size_t b) {
@@ -219,7 +219,7 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
                            << " '" << handle->key()
                            << "' at this point in the sequence."
                            << "\n   Needed for read data handle '"
-                           << handle->name() << "'")
+                           << handle->name() << "'");
       valid = false;
     }
   }
@@ -290,7 +290,9 @@ std::vector<std::string> Sequencer::listAlgorithmNames() const {
 }
 
 std::pair<std::size_t, std::size_t> Sequencer::determineEventsRange() const {
-  constexpr auto kInvalidEventsRange = std::make_pair(SIZE_MAX, SIZE_MAX);
+  constexpr auto kInvalidEventsRange =
+      std::make_pair(std::numeric_limits<std::size_t>::max(),
+                     std::numeric_limits<std::size_t>::max());
 
   // Note on skipping events:
   //
@@ -303,7 +305,7 @@ std::pair<std::size_t, std::size_t> Sequencer::determineEventsRange() const {
 
   // determine intersection of event ranges available from readers
   std::size_t beg = 0u;
-  std::size_t end = SIZE_MAX;
+  std::size_t end = std::numeric_limits<std::size_t>::max();
   for (const auto& reader : m_readers) {
     auto available = reader->availableEvents();
     beg = std::max(beg, available.first);
@@ -329,7 +331,8 @@ std::pair<std::size_t, std::size_t> Sequencer::determineEventsRange() const {
     return kInvalidEventsRange;
   }
   // events range was not defined by either the readers or user command line.
-  if ((beg == 0u) && (end == SIZE_MAX) && (!m_cfg.events.has_value())) {
+  if ((beg == 0u) && (end == std::numeric_limits<std::size_t>::max()) &&
+      (!m_cfg.events.has_value())) {
     ACTS_ERROR("Could not determine number of events");
     return kInvalidEventsRange;
   }
@@ -386,27 +389,20 @@ inline std::string perEvent(D duration, std::size_t numEvents) {
   return asString(duration / numEvents) + "/event";
 }
 
-// Store timing data
-struct TimingInfo {
-  std::string identifier;
-  double time_total_s = 0;
-  double time_perevent_s = 0;
-
-  DFE_NAMEDTUPLE(TimingInfo, identifier, time_total_s, time_perevent_s);
-};
-
 void storeTiming(const std::vector<std::string>& identifiers,
                  const std::vector<Duration>& durations, std::size_t numEvents,
                  const std::string& path) {
-  dfe::NamedTupleTsvWriter<TimingInfo> writer(path, 4);
+  std::ofstream file(path);
+
+  file << "identifier,time_total_s,time_perevent_s\n";
+
   for (std::size_t i = 0; i < identifiers.size(); ++i) {
-    TimingInfo info;
-    info.identifier = identifiers[i];
-    info.time_total_s =
+    const auto time_total_s =
         std::chrono::duration_cast<Seconds>(durations[i]).count();
-    info.time_perevent_s = info.time_total_s / numEvents;
-    writer.append(info);
+    file << identifiers[i] << "," << time_total_s << ","
+         << time_total_s / numEvents << "\n";
   }
+  file << "\n";
 }
 }  // namespace
 
@@ -421,7 +417,8 @@ int Sequencer::run() {
   // processing only works w/ a well-known number of events
   // error message is already handled by the helper function
   std::pair<std::size_t, std::size_t> eventsRange = determineEventsRange();
-  if ((eventsRange.first == SIZE_MAX) && (eventsRange.second == SIZE_MAX)) {
+  if ((eventsRange.first == std::numeric_limits<std::size_t>::max()) &&
+      (eventsRange.second == std::numeric_limits<std::size_t>::max())) {
     return EXIT_FAILURE;
   }
 
@@ -622,10 +619,9 @@ void Sequencer::fpeReport() const {
 
     std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
         sorted;
-    std::transform(
-        merged.stackTraces().begin(), merged.stackTraces().end(),
-        std::back_inserter(sorted),
-        [](const auto& f) -> const auto& { return f; });
+    std::transform(merged.stackTraces().begin(), merged.stackTraces().end(),
+                   std::back_inserter(sorted),
+                   [](const auto& f) -> const auto& { return f; });
     std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) {
       return a.get().count > b.get().count;
     });

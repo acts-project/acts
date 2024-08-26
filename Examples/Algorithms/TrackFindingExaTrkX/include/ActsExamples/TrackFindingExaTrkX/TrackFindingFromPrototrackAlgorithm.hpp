@@ -8,11 +8,9 @@
 
 #pragma once
 
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"

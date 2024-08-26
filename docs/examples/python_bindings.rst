@@ -40,7 +40,7 @@ sets up the particle propagation and runs a few events.
        randomNumberSvc=rnd,
        ntests=1000,
        sterileLogger=False,
-       propagationStepCollection="propagation-steps",
+       outputSummaryCollection="propagation_summary",
    )
 
    s.addAlgorithm(alg)
@@ -49,11 +49,11 @@ sets up the particle propagation and runs a few events.
    objDir = outputDir + "/obj"
    if not os.path.exists(objDir):
       os.mkdir(objDir)
-   
+
    s.addWriter(
        acts.examples.ObjPropagationStepsWriter(
            level=acts.logging.INFO,
-           collection="propagation-steps",
+           collection="propagation_summary",
            outputDir=objDir,
        )
    )
@@ -61,7 +61,7 @@ sets up the particle propagation and runs a few events.
    s.addWriter(
        acts.examples.RootPropagationStepsWriter(
            level=acts.logging.INFO,
-           collection="propagation-steps",
+           collection="propagation_summary",
            filePath=outputDir + "/propagation_steps.root",
        )
    )
@@ -97,7 +97,7 @@ then simply run ``pytest`` from the repository root.
    :name: python-virtualenv
 
    It is **strongly recommended** to use a `virtual environment`_ for
-   this purpose! For example, run 
+   this purpose! For example, run
 
    .. code-block:: console
 
@@ -132,7 +132,7 @@ that looks like
    test_ckf_tracks_example_truth_estimate__trackstates_ckf.root: ac4485c09a68fca3d056cb8d9adb81695e68d822629e48c71fd2b6d2bbd31f88
    # ...
 
-where the left side before the ``:`` indicates the test in which the check is performed and the name of the ROOT file 
+where the left side before the ``:`` indicates the test in which the check is performed and the name of the ROOT file
 that is checked. The right side is the reference hash.
 
 .. note:: The file from which reference hashes are loaded can be changed by setting the environment variable ``ROOT_HASH_FILE``
@@ -140,7 +140,7 @@ that is checked. The right side is the reference hash.
 
 These checks have two purposes:
 
-1. Detect regressions in the algorithms: if an algorithm produces different output, the test will catch it. This also means that 
+1. Detect regressions in the algorithms: if an algorithm produces different output, the test will catch it. This also means that
    if algorithmic changes are made that intentionally change the output, the reference hashes also have to be updated.
 
    .. warning:: Please make sure to check the contents of a changed file are correct/reasonable before updating the reference hash!
@@ -189,7 +189,7 @@ To update the reference hashes, simply replace the corresponding entries in ``ro
 
 .. note:: The CI runs the ROOT hash checks. However, we have observed the hashes to change between different machines.
           This is believed to be due to differences in math libraries producing slightly different outputs. As a consequence,
-          locally obtained file hashes might cause CI failures, as the CI hashes are different. 
+          locally obtained file hashes might cause CI failures, as the CI hashes are different.
 
           For local testing, it is therefore advisable to use ``ROOT_HASH_FILE`` to use a different file for the reference hashes
           and populated it with known-good reference hashes from the ``main`` branch, before testing your developments.

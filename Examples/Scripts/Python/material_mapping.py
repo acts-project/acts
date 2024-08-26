@@ -59,9 +59,11 @@ def runMaterialMapping(
             fileList=[
                 os.path.join(
                     inputDir,
-                    mapName + "_tracks.root"
-                    if readCachedSurfaceInformation
-                    else "geant4_material_tracks.root",
+                    (
+                        mapName + "_tracks.root"
+                        if readCachedSurfaceInformation
+                        else "geant4_material_tracks.root"
+                    ),
                 )
             ],
             readCachedSurfaceInformation=readCachedSurfaceInformation,
@@ -153,8 +155,7 @@ if "__main__" == __name__:
 
     mapName = args.outFile.split(".")[0]
 
-    matDeco = acts.IMaterialDecorator.fromFile("geometry-map.json")
-    detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+    detector, trackingGeometry, decorators = getOpenDataDetector(None)
 
     runMaterialMapping(
         trackingGeometry,

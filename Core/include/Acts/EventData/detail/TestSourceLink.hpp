@@ -10,13 +10,14 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Measurement.hpp"
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/detail/Subspace.hpp"
 
 #include <algorithm>
 #include <array>
@@ -27,6 +28,8 @@
 
 namespace Acts::detail::Test {
 
+struct TestSourceLinkSurfaceAccessor;
+
 /// A minimal source link implementation for testing.
 ///
 /// Instead of storing a reference to a measurement or raw data, the measurement
@@ -35,6 +38,8 @@ namespace Acts::detail::Test {
 /// identifier is stored that can be used to store additional information. How
 /// this is interpreted depends on the specific tests.
 struct TestSourceLink final {
+  using SurfaceAccessor = TestSourceLinkSurfaceAccessor;
+
   GeometryIdentifier m_geometryId{};
   std::size_t sourceId = 0u;
   // use eBoundSize to indicate unused indices
@@ -87,16 +92,29 @@ struct TestSourceLink final {
     return os;
   }
   constexpr std::size_t index() const { return sourceId; }
-
-  struct SurfaceAccessor {
-    const Acts::TrackingGeometry& trackingGeometry;
-
-    const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
-      const auto& testSourceLink = sourceLink.get<TestSourceLink>();
-      return trackingGeometry.findSurface(testSourceLink.m_geometryId);
-    }
-  };
 };
+
+struct TestSourceLinkSurfaceAccessor {
+  const TrackingGeometry& geometry;
+
+  const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
+    const auto& testSourceLink = sourceLink.get<TestSourceLink>();
+    return geometry.findSurface(testSourceLink.m_geometryId);
+  }
+};
+
+namespace Experimental {
+
+struct TestSourceLinkSurfaceAccessor {
+  const Acts::Experimental::Detector& geometry;
+
+  const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
+    const auto& testSourceLink = sourceLink.get<TestSourceLink>();
+    return geometry.findSurface(testSourceLink.m_geometryId);
+  }
+};
+
+}  // namespace Experimental
 
 inline std::ostream& operator<<(std::ostream& os,
                                 const TestSourceLink& sourceLink) {
@@ -107,31 +125,31 @@ inline std::ostream& operator<<(std::ostream& os,
 ///
 /// @param gctx Unused
 /// @param trackState TrackState to calibrated
-/// @return The measurement used
 template <typename trajectory_t>
-Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
+void testSourceLinkCalibratorReturn(
     const GeometryContext& /*gctx*/, const CalibrationContext& /*cctx*/,
     const SourceLink& sourceLink,
     typename trajectory_t::TrackStateProxy trackState) {
   TestSourceLink sl = sourceLink.template get<TestSourceLink>();
 
-  trackState.setUncalibratedSourceLink(sourceLink);
+  trackState.setUncalibratedSourceLink(SourceLink{sourceLink});
 
   if ((sl.indices[0] != Acts::eBoundSize) &&
       (sl.indices[1] != Acts::eBoundSize)) {
-    auto meas =
-        makeMeasurement(trackState.getUncalibratedSourceLink(), sl.parameters,
-                        sl.covariance, sl.indices[0], sl.indices[1]);
     trackState.allocateCalibrated(2);
-    trackState.setCalibrated(meas);
-    return meas;
+    trackState.template calibrated<2>() = sl.parameters;
+    trackState.template calibratedCovariance<2>() = sl.covariance;
+    trackState.setProjector(FixedSizeSubspace<BoundIndices::eBoundSize, 2>(
+                                std::array{sl.indices[0], sl.indices[1]})
+                                .projector<double>());
   } else if (sl.indices[0] != Acts::eBoundSize) {
-    auto meas = makeMeasurement(
-        trackState.getUncalibratedSourceLink(), sl.parameters.head<1>(),
-        sl.covariance.topLeftCorner<1, 1>(), sl.indices[0]);
     trackState.allocateCalibrated(1);
-    trackState.setCalibrated(meas);
-    return meas;
+    trackState.template calibrated<1>() = sl.parameters.head<1>();
+    trackState.template calibratedCovariance<1>() =
+        sl.covariance.topLeftCorner<1, 1>();
+    trackState.setProjector(FixedSizeSubspace<BoundIndices::eBoundSize, 1>(
+                                std::array{sl.indices[0]})
+                                .projector<double>());
   } else {
     throw std::runtime_error(
         "Tried to extract measurement from invalid TestSourceLink");

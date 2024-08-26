@@ -11,12 +11,12 @@ def prepareDataSet(data: pd.DataFrame) -> pd.DataFrame:
     """Format the dataset that have been written from the Csv file"""
     """
     @param[in] data: input DataFrame containing 1 event
-    @return: Formatted DataFrame 
+    @return: Formatted DataFrame
     """
     data = data
     # Remove tracks with less than 7 measurements
     data = data[data["nMeasurements"] > 6]
-    # data = data.sort_values("good/duplicate/fake", ascending=False)
+    data = data.sort_values("good/duplicate/fake", ascending=False)
     # Remove pure duplicate (tracks purely identical) keep the ones good one if among them.
     data = data.drop_duplicates(
         subset=[

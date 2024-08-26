@@ -38,7 +38,7 @@ double rms(const std::vector<double>& values, double mean) {
 
 // Common test method that will be instantiated for each scattering model.
 template <typename Scattering>
-void test(const Scattering& scattering, uint32_t seed,
+void test(const Scattering& scattering, std::uint32_t seed,
           const ActsFatras::Particle& before) {
   std::ranlux48 gen(seed);
   ActsFatras::Particle after = before;

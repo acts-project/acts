@@ -8,7 +8,6 @@
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 
 #include <stdexcept>

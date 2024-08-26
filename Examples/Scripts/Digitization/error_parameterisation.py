@@ -237,8 +237,8 @@ def run_error_parametriation(
 </head>
 <body>
 <div class="wrapper">
-    <a href="{previous}">Previous volume</a> | 
-    <a href="../index.html">Back to index</a> | 
+    <a href="{previous}">Previous volume</a> |
+    <a href="../index.html">Back to index</a> |
     <a href="{next}">Next volume</a><br>
     <h1>Error Parameterisation : volume {vid} </h1>
     Generated: {date}<br>

@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -24,15 +25,24 @@ void ActsExamples::PassThroughCalibrator::calibrate(
     const Acts::CalibrationContext& /*cctx*/,
     const Acts::SourceLink& sourceLink,
     Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
-  trackState.setUncalibratedSourceLink(sourceLink);
+  trackState.setUncalibratedSourceLink(Acts::SourceLink{sourceLink});
   const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
 
   assert((idxSourceLink.index() < measurements.size()) &&
          "Source link index is outside the container bounds");
 
-  std::visit(
-      [&trackState](const auto& meas) { trackState.setCalibrated(meas); },
-      measurements[idxSourceLink.index()]);
+  const auto& measurement = measurements[idxSourceLink.index()];
+
+  Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
+    constexpr std::size_t kMeasurementSize = decltype(N)::value;
+
+    trackState.allocateCalibrated(kMeasurementSize);
+    trackState.calibrated<kMeasurementSize>() =
+        measurement.parameters<kMeasurementSize>();
+    trackState.calibratedCovariance<kMeasurementSize>() =
+        measurement.covariance<kMeasurementSize>();
+    trackState.setProjector(measurement.subspace().fullProjector<double>());
+  });
 }
 
 ActsExamples::MeasurementCalibratorAdapter::MeasurementCalibratorAdapter(

@@ -14,9 +14,9 @@
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -242,10 +242,10 @@ class SurfaceArrayCreator {
     using namespace UnitLiterals;
     using VectorHelpers::perp;
 
-    if (bValue == Acts::binPhi) {
+    if (bValue == Acts::BinningValue::binPhi) {
       // Take the two binning positions
-      auto pos1 = a->binningPosition(gctx, binR),
-           pos2 = b->binningPosition(gctx, binR);
+      auto pos1 = a->binningPosition(gctx, BinningValue::binR),
+           pos2 = b->binningPosition(gctx, BinningValue::binR);
 
       // Project them on the (x, y) plane, where Phi angles are calculated
       auto proj1 = pos1.head<2>(), proj2 = pos2.head<2>();
@@ -260,14 +260,16 @@ class SurfaceArrayCreator {
       return std::abs(dPhi) < M_PI / 180.;
     }
 
-    if (bValue == Acts::binZ) {
-      return (std::abs(a->binningPosition(gctx, binR).z() -
-                       b->binningPosition(gctx, binR).z()) < 1_um);
+    if (bValue == Acts::BinningValue::binZ) {
+      return (std::abs(a->binningPosition(gctx, BinningValue::binR).z() -
+                       b->binningPosition(gctx, BinningValue::binR).z()) <
+              1_um);
     }
 
-    if (bValue == Acts::binR) {
-      return (std::abs(perp(a->binningPosition(gctx, binR)) -
-                       perp(b->binningPosition(gctx, binR))) < 1_um);
+    if (bValue == Acts::BinningValue::binR) {
+      return (std::abs(perp(a->binningPosition(gctx, BinningValue::binR)) -
+                       perp(b->binningPosition(gctx, BinningValue::binR))) <
+              1_um);
     }
 
     return false;
@@ -362,8 +364,8 @@ class SurfaceArrayCreator {
   /// @param localToGlobal transform callable
   /// @param pAxisA ProtoAxis object for axis A
   /// @param pAxisB ProtoAxis object for axis B
-  template <detail::AxisBoundaryType bdtA, detail::AxisBoundaryType bdtB,
-            typename F1, typename F2>
+  template <AxisBoundaryType bdtA, AxisBoundaryType bdtB, typename F1,
+            typename F2>
   static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
   makeSurfaceGridLookup2D(F1 globalToLocal, F2 localToGlobal, ProtoAxis pAxisA,
                           ProtoAxis pAxisB) {
@@ -374,8 +376,8 @@ class SurfaceArrayCreator {
     // clang-format off
     if (pAxisA.bType == equidistant && pAxisB.bType == equidistant) {
 
-      detail::Axis<detail::AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
-      detail::Axis<detail::AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
+      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
+      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
       ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
@@ -383,8 +385,8 @@ class SurfaceArrayCreator {
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
 
-      detail::Axis<detail::AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
-      detail::Axis<detail::AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
+      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
+      Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
       ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
@@ -392,8 +394,8 @@ class SurfaceArrayCreator {
 
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
 
-      detail::Axis<detail::AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
-      detail::Axis<detail::AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
+      Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
+      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
       ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
@@ -401,8 +403,8 @@ class SurfaceArrayCreator {
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
 
-      detail::Axis<detail::AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
-      detail::Axis<detail::AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
+      Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
+      Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
       ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(

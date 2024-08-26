@@ -58,7 +58,7 @@ def test_obj_propagation_step_writer(tmp_path, trk_geo, conf_const, basic_prop_s
     w = conf_const(
         ObjPropagationStepsWriter,
         acts.logging.INFO,
-        collection=alg.config.propagationStepCollection,
+        collection=alg.config.outputSummaryCollection,
         outputDir=str(obj),
     )
 
@@ -110,7 +110,7 @@ def test_root_prop_step_writer(
     w = conf_const(
         RootPropagationStepsWriter,
         acts.logging.INFO,
-        collection=alg.config.propagationStepCollection,
+        collection=alg.config.outputSummaryCollection,
         filePath=str(file),
     )
 
@@ -398,7 +398,6 @@ def test_csv_multitrajectory_writer(tmp_path):
         )
     )
     s.run()
-    del s
     assert len([f for f in csv_dir.iterdir() if f.is_file()]) == 10
     assert all(f.stat().st_size > 20 for f in csv_dir.iterdir())
 

@@ -18,6 +18,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <algorithm>
@@ -28,8 +29,6 @@
 #include <list>
 #include <stdexcept>
 #include <vector>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
 
@@ -87,11 +86,11 @@ struct CompareHitId {
     return left.hit_id < right.hit_id;
   }
   template <typename T>
-  constexpr bool operator()(uint64_t left_id, const T& right) const {
+  constexpr bool operator()(std::uint64_t left_id, const T& right) const {
     return left_id < right.hit_id;
   }
   template <typename T>
-  constexpr bool operator()(const T& left, uint64_t right_id) const {
+  constexpr bool operator()(const T& left, std::uint64_t right_id) const {
     return left.hit_id < right_id;
   }
 };
@@ -108,7 +107,7 @@ inline std::vector<Data> readEverything(
     const std::string& inputDir, const std::string& filename,
     const std::vector<std::string>& optionalColumns, std::size_t event) {
   std::string path = ActsExamples::perEventFilepath(inputDir, filename, event);
-  dfe::NamedTupleCsvReader<Data> reader(path, optionalColumns);
+  ActsExamples::NamedTupleCsvReader<Data> reader(path, optionalColumns);
 
   std::vector<Data> everything;
   Data one;

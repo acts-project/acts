@@ -76,9 +76,9 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
   mlCfg.mlSurfaces = strawSurfaces;
 
   mlCfg.mlBinning = {
-      ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound,
+      ProtoBinning(Acts::BinningValue::binX, Acts::AxisBoundaryType::Bound,
                    -vBounds[0], vBounds[0], nSurfacesX, 1u),
-      ProtoBinning(Acts::binY, Acts::detail::AxisBoundaryType::Bound,
+      ProtoBinning(Acts::BinningValue::binY, Acts::AxisBoundaryType::Bound,
                    -vBounds[1], vBounds[1], nSurfacesY, 0u)};
   mlCfg.mlBounds = vBounds;
 
@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
   nState.currentVolume->updateNavigationState(tContext, nState);
 
   // check the surface candidates after update (12 surfaces + 6 portals but only
-  // 5 are reachable)
-  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 5u);
+  // 5 are reachable, but one excluded due to new > s_onTolerance rule)
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 4u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

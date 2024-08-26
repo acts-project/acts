@@ -22,6 +22,7 @@ BOOST_AUTO_TEST_SUITE(EventDataSourceLink)
 
 BOOST_AUTO_TEST_CASE(TestSourceLinkCoverage) {
   using Acts::detail::Test::TestSourceLink;
+
   TestSourceLink ts;
   Acts::Vector2 stddev(0.01, 0.1);
   Acts::SquareMatrix2 cov = stddev.cwiseProduct(stddev).asDiagonal();
@@ -49,6 +50,21 @@ BOOST_AUTO_TEST_CASE(Construct) {
     BOOST_CHECK_EQUAL(sl.get<MySourceLink>().geometryId(), msl.geometryId());
     BOOST_CHECK_THROW(sl.get<int>(), std::bad_any_cast);
   }
+}
+
+BOOST_AUTO_TEST_CASE(Reassign) {
+  int value = 5;
+  Acts::SourceLink sl{value};
+
+  BOOST_CHECK_EQUAL(sl.get<int>(), value);
+  BOOST_CHECK_THROW(sl.get<double>(), std::bad_any_cast);
+
+  double otherValue = 42.42;
+
+  // this changes the stored type
+  sl = Acts::SourceLink{otherValue};
+  BOOST_CHECK_EQUAL(sl.get<double>(), otherValue);
+  BOOST_CHECK_THROW(sl.get<int>(), std::bad_any_cast);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

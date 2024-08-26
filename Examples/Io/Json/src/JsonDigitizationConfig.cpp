@@ -69,9 +69,10 @@ void to_json(nlohmann::json& j, const ActsFatras::SingleParameterSmearFunction<
     return;
   }
   // Exact
-  auto exact = f.target<const Digitization::Digital>();
+  auto exact = f.target<const Digitization::Exact>();
   if (exact != nullptr) {
     j["type"] = "Exact";
+    j["stddev"] = exact->sigma;
     return;
   }
 
@@ -96,13 +97,13 @@ void from_json(
   } else if (sType == "Uniform") {
     Acts::BinningData bd;
     from_json(j["bindata"], bd);
-    f = Digitization::Uniform(std::move(bd));
+    f = Digitization::Uniform(bd);
   } else if (sType == "Digitial") {
     Acts::BinningData bd;
     from_json(j["bindata"], bd);
-    f = Digitization::Digital(std::move(bd));
+    f = Digitization::Digital(bd);
   } else if (sType == "Exact") {
-    f = Digitization::Exact{};
+    f = Digitization::Exact(j["stddev"]);
   } else {
     throw std::invalid_argument("Unknown smearer type '" + sType + "'");
   }

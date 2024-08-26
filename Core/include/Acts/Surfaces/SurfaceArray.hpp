@@ -10,10 +10,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 
 #include <iostream>
 #include <type_traits>
@@ -159,7 +159,7 @@ class SurfaceArray {
     void fill(const GeometryContext& gctx,
               const SurfaceVector& surfaces) override {
       for (const auto& srf : surfaces) {
-        Vector3 pos = srf->binningPosition(gctx, binR);
+        Vector3 pos = srf->binningPosition(gctx, BinningValue::binR);
         lookup(pos).push_back(srf);
       }
 
@@ -194,7 +194,8 @@ class SurfaceArray {
         Vector3 binCtr = getBinCenter(b);
         minPath = std::numeric_limits<double>::max();
         for (const auto& srf : surfaces) {
-          curPath = (binCtr - srf->binningPosition(gctx, binR)).norm();
+          curPath =
+              (binCtr - srf->binningPosition(gctx, BinningValue::binR)).norm();
 
           if (curPath < minPath) {
             minPath = curPath;
@@ -327,16 +328,18 @@ class SurfaceArray {
     /// interface stays the same, since we don't care what happens
     /// here on the callers end
     /// This is the version for DIM>1
-    template <std::size_t D = DIM, std::enable_if_t<D != 1, int> = 0>
-    Vector3 getBinCenterImpl(std::size_t bin) const {
+    Vector3 getBinCenterImpl(std::size_t bin) const
+      requires(DIM != 1)
+    {
       return m_localToGlobal(ActsVector<DIM>(
           m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin)).data()));
     }
 
     /// Internal method, see above.
     /// This is the version for DIM==1
-    template <std::size_t D = DIM, std::enable_if_t<D == 1, int> = 0>
-    Vector3 getBinCenterImpl(std::size_t bin) const {
+    Vector3 getBinCenterImpl(std::size_t bin) const
+      requires(DIM == 1)
+    {
       point_t pos = m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin));
       return m_localToGlobal(pos);
     }

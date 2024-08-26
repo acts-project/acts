@@ -12,7 +12,6 @@
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 
-#include <iostream>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -48,7 +47,8 @@ MaterialMapping::MaterialMapping(const MaterialMapping::Config& cfg,
   }
 }
 
-MaterialMapping::~MaterialMapping() {
+ProcessCode MaterialMapping::finalize() {
+  ACTS_INFO("Finalizing material mappig output");
   Acts::DetectorMaterialMaps detectorMaterial;
 
   if (m_cfg.materialSurfaceMapper && m_cfg.materialVolumeMapper) {
@@ -93,6 +93,8 @@ MaterialMapping::~MaterialMapping() {
   for (auto& imw : m_cfg.materialWriters) {
     imw->writeMaterial(detectorMaterial);
   }
+
+  return ProcessCode::SUCCESS;
 }
 
 ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
@@ -125,7 +127,7 @@ ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
 }
 
 std::vector<std::pair<double, int>> MaterialMapping::scoringParameters(
-    uint64_t surfaceID) {
+    std::uint64_t surfaceID) {
   std::vector<std::pair<double, int>> scoringParameters;
 
   if (m_cfg.materialSurfaceMapper) {

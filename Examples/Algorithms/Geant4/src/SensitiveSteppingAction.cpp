@@ -30,6 +30,7 @@
 #include <G4UnitsTable.hh>
 #include <G4VPhysicalVolume.hh>
 #include <G4VTouchable.hh>
+#include <boost/version.hpp>
 
 class G4PrimaryParticle;
 
@@ -54,7 +55,8 @@ namespace {
 ActsFatras::Hit hitFromStep(const G4StepPoint* preStepPoint,
                             const G4StepPoint* postStepPoint,
                             ActsFatras::Barcode particleId,
-                            Acts::GeometryIdentifier geoId, int32_t index) {
+                            Acts::GeometryIdentifier geoId,
+                            std::int32_t index) {
   static constexpr double convertTime = Acts::UnitConstants::s / CLHEP::s;
   static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
   static constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
@@ -129,6 +131,10 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   // Get the physical volume & check if it has the sensitive string name
   const G4VPhysicalVolume* volume = track->GetVolume();
+  if (volume == nullptr) {
+    ACTS_ERROR("No volume found for track " << track->GetTrackID());
+    std::terminate();
+  }
   std::string volumeName = volume->GetName();
 
   if (volumeName.find(SensitiveSurfaceMapper::mappingPrefix) ==

@@ -36,7 +36,7 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
             .intersect(state.geoContext,
                        cmpState.pars.template segment<3>(eFreePos0),
                        cmpState.pars.template segment<3>(eFreeDir0),
-                       BoundaryCheck(false))
+                       BoundaryTolerance::Infinite())
             .closest()
             .position();
 
@@ -63,9 +63,8 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
 }
 
 template <typename E, typename R, typename A>
-auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
-                                                      bool transportCov) const
-    -> CurvilinearState {
+auto MultiEigenStepperLoop<E, R, A>::curvilinearState(
+    State& state, bool transportCov) const -> CurvilinearState {
   assert(!state.components.empty());
 
   std::vector<
@@ -80,7 +79,7 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
 
     cmps.emplace_back(state.components[i].weight,
                       cp.fourPosition(state.geoContext), cp.direction(),
-                      (cp.charge() / cp.absoluteMomentum()),
+                      cp.qOverP(),
                       cp.covariance().value_or(BoundSquareMatrix::Zero()));
     accumulatedPathLength += state.components[i].weight * pl;
   }

@@ -25,7 +25,7 @@
 /// defines the efficiency, fake rate and duplicaiton rate. It aims to make
 /// custom definition and tuning of the reconstruction performance easier.
 /// Multiple files for the reconstructed tracks are allowed.
-/// 
+///
 /// NB: It's very likely that fiducal cuts are already imposed on the truth
 /// particles. Please check the selection criteria in the truth fitting example
 /// which writes out the 'track_finder_particles.root'. For instance, if the
@@ -130,7 +130,7 @@ void defineReconstructionPerformance(
               << std::endl;
 
     // The container from track-particle matching info (Flushed per event)
-    std::map<uint64_t, std::vector<RecoTrackInfo>> matchedParticles;
+    std::map<std::uint64_t, std::vector<RecoTrackInfo>> matchedParticles;
 
     // Loop over the events to fill plots
     for (std::size_t i = 0; i < nEvents[ifile]; ++i) {
@@ -226,7 +226,7 @@ void defineReconstructionPerformance(
         if (nHits < nHitsMin or pt < ptMin) {
           continue;
         }
-        uint64_t id = particle.particleId;
+        std::uint64_t id = particle.particleId;
 
         // Fill the efficiency plots
         auto ip = matchedParticles.find(id);

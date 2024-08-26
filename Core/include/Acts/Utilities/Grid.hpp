@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
+#include "Acts/Utilities/TypeTag.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <array>
@@ -18,6 +19,7 @@
 #include <set>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -30,6 +32,36 @@ class GridLocalIterator;
 
 namespace Acts {
 
+/// Base class for all grid types
+class IGrid {
+ public:
+  virtual ~IGrid() = default;
+
+  /// Get a dynamically sized vector of axis objects for inspection
+  /// @return a vector of axis pointers
+  virtual boost::container::small_vector<const IAxis*, 3> axes() const = 0;
+
+  /// Helper to print out the grid
+  /// @param os the output stream
+  /// @param grid the grid to print
+  /// @return the output stream
+  friend std::ostream& operator<<(std::ostream& os, const IGrid& grid) {
+    grid.toStream(os);
+    return os;
+  }
+
+  friend bool operator==(const IGrid& lhs, const IGrid& rhs) {
+    auto lhsAxes = lhs.axes();
+    auto rhsAxes = rhs.axes();
+    return lhsAxes.size() == rhsAxes.size() &&
+           std::equal(lhsAxes.begin(), lhsAxes.end(), rhsAxes.begin(),
+                      [](const IAxis* a, const IAxis* b) { return *a == *b; });
+  }
+
+ protected:
+  virtual void toStream(std::ostream& os) const = 0;
+};
+
 /// @brief class for describing a regular multi-dimensional grid
 ///
 /// @tparam T    type of values stored inside the bins of the grid
@@ -41,7 +73,7 @@ namespace Acts {
 ///
 /// @note @c T must be default-constructible.
 template <typename T, class... Axes>
-class Grid final {
+class Grid final : public IGrid {
  public:
   /// number of dimensions of the grid
   static constexpr std::size_t DIM = sizeof...(Axes);
@@ -61,11 +93,6 @@ class Grid final {
   /// local iterator type
   using local_iterator_t = Acts::GridLocalIterator<T, Axes...>;
 
-  /// @brief default constructor
-  ///
-  /// @param [in] axes actual axis objects spanning the grid
-  Grid(std::tuple<Axes...>& axes) = delete;
-
   /// @brief Constructor from const axis tuple, this will allow
   /// creating a grid with a different value type from a template
   /// grid object.
@@ -80,6 +107,33 @@ class Grid final {
   Grid(std::tuple<Axes...>&& axes) : m_axes(std::move(axes)) {
     m_values.resize(size());
   }
+
+  /// @brief constructor from parameters pack of axes
+  /// @param axes
+  Grid(Axes&&... axes) : m_axes(std::forward_as_tuple(axes...)) {
+    m_values.resize(size());
+  }
+
+  /// @brief constructor from parameters pack of axes
+  /// @param axes
+  Grid(const Axes&... axes) : m_axes(std::tuple(axes...)) {
+    m_values.resize(size());
+  }
+
+  /// @brief constructor from parameters pack of axes and type tag
+  /// @param axes
+  Grid(TypeTag<T> /*tag*/, Axes&&... axes)
+      : m_axes(std::forward_as_tuple(axes...)) {
+    m_values.resize(size());
+  }
+
+  /// @brief constructor from parameters pack of axes and type tag
+  /// @param axes
+  Grid(TypeTag<T> /*tag*/, const Axes&... axes) : m_axes(std::tuple(axes...)) {
+    m_values.resize(size());
+  }
+
+  // Grid(TypeTag<T> /*tag*/, Axes&... axes) = delete;
 
   /// @brief access value stored in bin for a given point
   ///
@@ -366,11 +420,11 @@ class Grid final {
   /// indices must start at 0.
   /// @note Bin values are interpreted as being the field values at the
   /// lower-left corner of the corresponding hyper-box.
-  template <class Point, typename U = T,
-            typename = std::enable_if_t<
-                detail::can_interpolate<Point, std::array<ActsScalar, DIM>,
-                                        std::array<ActsScalar, DIM>, U>::value>>
-  T interpolate(const Point& point) const {
+  template <class Point>
+  T interpolate(const Point& point) const
+    requires(Concepts::interpolatable<T, Point, std::array<ActsScalar, DIM>,
+                                      std::array<ActsScalar, DIM>>)
+  {
     // there are 2^DIM corner points used during the interpolation
     constexpr std::size_t nCorners = 1 << DIM;
 
@@ -516,8 +570,11 @@ class Grid final {
   const std::tuple<Axes...>& axesTuple() const { return m_axes; }
 
   /// @brief get the axes as an array of IAxis pointers
-  std::array<const IAxis*, DIM> axes() const {
-    return detail::grid_helper::getAxes(m_axes);
+  boost::container::small_vector<const IAxis*, 3> axes() const override {
+    boost::container::small_vector<const IAxis*, 3> result;
+    auto axes = detail::grid_helper::getAxes(m_axes);
+    std::copy(axes.begin(), axes.end(), std::back_inserter(result));
+    return result;
   }
 
   /// begin iterator for global bins
@@ -547,6 +604,11 @@ class Grid final {
     return local_iterator_t(*this, std::move(endline), navigator);
   }
 
+ protected:
+  void toStream(std::ostream& os) const override {
+    printAxes(os, std::make_index_sequence<sizeof...(Axes)>());
+  }
+
  private:
   /// set of axis defining the multi-dimensional grid
   std::tuple<Axes...> m_axes;
@@ -560,6 +622,24 @@ class Grid final {
       const index_t& localBins) const {
     return detail::grid_helper::closestPointsIndices(localBins, m_axes);
   }
+
+  template <std::size_t... Is>
+  void printAxes(std::ostream& os, std::index_sequence<Is...> /*s*/) const {
+    auto printOne = [&os, this]<std::size_t index>(
+                        std::integral_constant<std::size_t, index>) {
+      if constexpr (index > 0) {
+        os << ", ";
+      }
+      os << std::get<index>(m_axes);
+    };
+    (printOne(std::integral_constant<std::size_t, Is>()), ...);
+  }
 };
+
+template <typename T, class... Axes>
+Grid(TypeTag<T> /*type*/, Axes&&... axes) -> Grid<T, Axes...>;
+
+template <typename T, class... Axes>
+Grid(TypeTag<T> /*type*/, Axes&... axes) -> Grid<T, Axes...>;
 
 }  // namespace Acts

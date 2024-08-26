@@ -54,7 +54,7 @@ jobs:
           -b linkcheck
           . _build/html/
 
-          
+
       - uses: actions/upload-artifact@v4
         with:
           name: acts-docs

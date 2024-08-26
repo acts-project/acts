@@ -3,8 +3,8 @@
 ## Quick start
 
 ACTS is developed in C++ and is built using [CMake](https://cmake.org). Building
-the core library requires a C++17 compatible compiler,
-[Boost](http://boost.org), and [Eigen](http://eigen.tuxfamily.org). The
+the core library requires a C++20 compatible compiler,
+[Boost](https://www.boost.org), and [Eigen](https://eigen.tuxfamily.org). The
 following commands will clone the repository, configure, and build the core
 library:
 
@@ -25,8 +25,8 @@ The following dependencies are required to build the ACTS core library:
 
 -   A C++17 compatible compiler (recent versions of either gcc and clang should work)
 -   [CMake](https://cmake.org) >= 3.14
--   [Boost](http://boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
--   [Eigen](http://eigen.tuxfamily.org) >= 3.3.7
+-   [Boost](https://www.boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
+-   [Eigen](https://eigen.tuxfamily.org) >= 3.3.7
 
 The following dependencies are optional and are needed to build additional
 components:
@@ -34,7 +34,7 @@ components:
 -   [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the Exa.TrkX plugin and its examples
 -   [DD4hep](http://dd4hep.cern.ch) >= 1.11 for the DD4hep plugin and some examples
 -   [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
--   [Geant4](http://geant4.org/) for some examples
+-   [Geant4](https://geant4.org/) for some examples
 -   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
 -   [Intel Threading Building Blocks](https://github.com/oneapi-src/oneTBB) >= 2020.1 for the examples
 -   [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the Exa.TrkX plugin and some examples
@@ -124,10 +124,13 @@ A set of container images is available through the [ACTS container
 registry][acts_containers]. The following containers are used as part of the
 continuous integration setup and come with all dependencies pre-installed.
 
--   `centos7-lcg101-gcc11`: based on CentOS 7 with HEP-specific software from
-    LCG 101 using the GCC 11 compiler
--   `ubuntu2204`: based on Ubuntu 22.04 with manual installation of HEP-specific
-    software
+- `ubuntu2204`
+- `ubuntu2404`
+
+Furthermore, we are also testing on, but do not provide the corresponding containers:
+
+- `alma9` (HEP-specific software from LCG 104 or 105 and gcc13 or clang16)
+- `macOS-10.15`
 
 :::{attention}
 We stopped producing fully-contained LCG containers in favor of running LCG
@@ -141,13 +144,13 @@ available tags, e.g. for the `ubuntu2004` image, you can use the following
 command:
 
 ```console
-$ docker search --list-tags ghcr.io/acts-project/ubuntu2004
+$ docker search --list-tags ghcr.io/acts-project/ubuntu2404
 ```
 
-The following command then downloads a stable tag of the `ubuntu2004` image:
+The following command then downloads a stable tag of the `ubuntu2404` image:
 
 ```console
-$ docker pull ghcr.io/acts-project/ubuntu2004:v9
+$ docker pull ghcr.io/acts-project/ubuntu2404:51
 ```
 
 This should print the image id as part of the output. You can also find out the
@@ -254,12 +257,20 @@ components.
 <!-- CMAKE_OPTS_BEGIN -->
 | Option                              | Description                                                                                                                                                                                                                        |
 |-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ACTS_BUILD_EVERYTHING               | Build with most options enabled (except<br>HepMC3 and documentation)<br> type: `bool`, default: `OFF`                                                                                                                              |
 | ACTS_PARAMETER_DEFINITIONS_HEADER   | Use a different (track) parameter<br>definitions header<br> type: `filepath`, default: `""`                                                                                                                                        |
 | ACTS_SOURCELINK_SBO_SIZE            | Customize the SBO size used by<br>SourceLink<br> type: `string`, default: `""`                                                                                                                                                     |
 | ACTS_FORCE_ASSERTIONS               | Force assertions regardless of build<br>type<br> type: `bool`, default: `OFF`                                                                                                                                                      |
 | ACTS_USE_SYSTEM_LIBS                | Use system libraries by default<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
 | ACTS_USE_SYSTEM_ACTSVG              | Use the ActSVG system library<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                             |
+| ACTS_USE_SYSTEM_GEOMODEL            | Use a system-provided GeoModel<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                            |
+| ACTS_USE_SYSTEM_COVFIE              | Use a system-provided covfie<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
+| ACTS_USE_SYSTEM_DETRAY              | Use a system-provided detray<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
+| ACTS_USE_SYSTEM_TRACCC              | Use a system-provided traccc<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
+| ACTS_USE_SYSTEM_VECMEM              | Use a system-provided vecmem<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
+| ACTS_USE_SYSTEM_ALGEBRAPLUGINS      | Use a system-provided algebra-plugins<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                     |
+| ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the<br>system instead of the bundled version<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                               |
+| ACTS_USE_SYSTEM_PYBIND11            | Use a system installation of pybind11<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                     |
+| ACTS_USE_SYSTEM_EIGEN3              | Use a system-provided eigen3<br> type: `bool`, default: `ON`                                                                                                                                                                       |
 | ACTS_BUILD_PLUGIN_ACTSVG            | Build SVG display plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                          |
 | ACTS_BUILD_PLUGIN_CUDA              | Build CUDA plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
@@ -267,35 +278,19 @@ components.
 | ACTS_BUILD_PLUGIN_EDM4HEP           | Build EDM4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
 | ACTS_BUILD_PLUGIN_FPEMON            | Build FPE monitoring plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
 | ACTS_BUILD_PLUGIN_GEOMODEL          | Build GeoModel plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                             |
-| ACTS_BUILD_PLUGIN_COVFIE            | Build Covfie plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
-| ACTS_BUILD_PLUGIN_DETRAY            | Build Detray plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_TRACCC            | Build Traccc plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
-| ACTS_USE_SYSTEM_GEOMODEL            | Use a system-provided GeoModel<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                            |
 | ACTS_BUILD_PLUGIN_GEANT4            | Build Geant4 plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_EXATRKX           | Build the Exa.TrkX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
 | ACTS_EXATRKX_ENABLE_ONNX            | Build the Onnx backend for the exatrkx<br>plugin<br> type: `bool`, default: `OFF`                                                                                                                                                  |
 | ACTS_EXATRKX_ENABLE_TORCH           | Build the torchscript backend for the<br>exatrkx plugin<br> type: `bool`, default: `ON`                                                                                                                                            |
+| ACTS_EXATRKX_ENABLE_CUDA            | Enable CUDA for the exatrkx plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                |
 | ACTS_BUILD_PLUGIN_JSON              | Build json plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
-| ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the<br>system instead of the bundled version<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                               |
 | ACTS_BUILD_PLUGIN_LEGACY            | Build legacy plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
-| ACTS_SETUP_COVFIE                   | Explicitly set up covfie for the project<br> type: `bool`, default: `OFF`                                                                                                                                                          |
-| ACTS_USE_SYSTEM_COVFIE              | Use a system-provided covfie<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
-| ACTS_SETUP_DETRAY                   | Explicitly set up detray for the project<br> type: `bool`, default: `OFF`                                                                                                                                                          |
-| ACTS_USE_SYSTEM_DETRAY              | Use a system-provided detray<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
-| ACTS_SETUP_TRACCC                   | Explicitly set up traccc for the project<br> type: `bool`, default: `OFF`                                                                                                                                                          |
-| ACTS_USE_SYSTEM_TRACCC              | Use a system-provided traccc<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
-| ACTS_SETUP_DFELIBS                  | Explicitly set up dfelibs for the<br>project<br> type: `bool`, default: `ON`                                                                                                                                                       |
-| ACTS_USE_SYSTEM_DFELIBS             | Use a system-provided dfelibs<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                             |
-| ACTS_SETUP_VECMEM                   | Explicitly set up vecmem for the project<br> type: `bool`, default: `OFF`                                                                                                                                                          |
-| ACTS_USE_SYSTEM_VECMEM              | Use a system-provided vecmem<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
-| ACTS_SETUP_ALGEBRAPLUGINS           | Explicitly set up algebra-plugins for<br>the project<br> type: `bool`, default: `OFF`                                                                                                                                              |
-| ACTS_USE_SYSTEM_ALGEBRAPLUGINS      | Use a system-provided algebra-plugins<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                     |
 | ACTS_BUILD_PLUGIN_TGEO              | Build TGeo plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package<br> type: `bool`, default: `OFF`                                                                                                                                                            |
 | ACTS_BUILD_FATRAS_GEANT4            | Build Geant4 Fatras package<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
 | ACTS_BUILD_ALIGNMENT                | Build Alignment package<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
-| ACTS_BUILD_EXAMPLES                 | Build standalone examples<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
 | ACTS_BUILD_EXAMPLES_DD4HEP          | Build DD4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_EDM4HEP         | Build EDM4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_EXATRKX         | Build the Exa.TrkX example code<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
@@ -303,19 +298,17 @@ components.
 | ACTS_BUILD_EXAMPLES_HEPMC3          | Build HepMC3-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | Build python bindings for the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
-| ACTS_USE_SYSTEM_PYBIND11            | Use a system installation of pybind11<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                     |
 | ACTS_USE_EXAMPLES_TBB               | Use Threading Building Blocks library in<br>the examples<br> type: `bool`, default: `ON`                                                                                                                                           |
 | ACTS_BUILD_ANALYSIS_APPS            | Build Analysis applications in the<br>examples<br> type: `bool`, default: `OFF`                                                                                                                                                    |
 | ACTS_BUILD_BENCHMARKS               | Build benchmarks<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
 | ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
 | ACTS_BUILD_UNITTESTS                | Build unit tests<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
+| ACTS_BUILD_EXAMPLES_UNITTESTS       | Build unit tests<br> type: `bool`, default: `ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES`                                                                                                                                         |
 | ACTS_BUILD_NONCOMPILE_TESTS         | Build tests that check build failure<br>invariants<br> type: `bool`, default: `OFF`                                                                                                                                                |
 | ACTS_RUN_CLANG_TIDY                 | Run clang-tidy static analysis<br> type: `bool`, default: `OFF`                                                                                                                                                                    |
 | ACTS_BUILD_DOCS                     | Build documentation<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_SETUP_BOOST                    | Explicitly set up Boost for the project<br> type: `bool`, default: `ON`                                                                                                                                                            |
-| ACTS_USE_SYSTEM_BOOST               | Use a system-provided boost<br> type: `bool`, default: `ON`                                                                                                                                                                        |
 | ACTS_SETUP_EIGEN3                   | Explicitly set up Eigen3 for the project<br> type: `bool`, default: `ON`                                                                                                                                                           |
-| ACTS_USE_SYSTEM_EIGEN3              | Use a system-provided eigen3<br> type: `bool`, default: `ON`                                                                                                                                                                       |
 | ACTS_BUILD_ODD                      | Build the OpenDataDetector<br> type: `bool`, default: `OFF`                                                                                                                                                                        |
 | ACTS_ENABLE_CPU_PROFILING           | Enable CPU profiling using gperftools<br> type: `bool`, default: `OFF`                                                                                                                                                             |
 | ACTS_ENABLE_MEMORY_PROFILING        | Enable memory profiling using gperftools<br> type: `bool`, default: `OFF`                                                                                                                                                          |
@@ -324,18 +317,22 @@ components.
 | ACTS_LOG_FAILURE_THRESHOLD          | Log level above which an exception<br>should be automatically thrown. If<br>ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set<br>and this is unset, this will enable a<br>runtime check of the log level.<br> type: `string`, default: `""` |
 <!-- CMAKE_OPTS_END -->
 
-
 All ACTS-specific options are disabled or empty by default and must be
-specifically requested. Some of the options have interdependencies that are
-automatically handled, e.g. enabling any of the specific
-`ACTS_BUILD_EXAMPLES_...` options will also enable the overall
-`ACTS_BUILD_EXAMPLES` option. You only need to tell the build system what you
-want and it will figure out the rest.
+specifically requested.
+
+ACTS comes with a couple of CMakePresets which allow to collect and
+origanize common configuration workflows. On the surface the current
+list of presets contains:
+
+- `dev` as a base for developer configurations. This enables everything
+  necessary for running the ODD full chain examples with Fatras. It
+  sets the cpp standard to 20, the generator to ninja and enables ccache.
+- `perf` is similar to `dev` but tweaked for performance measurements.
 
 In addition to the ACTS-specific options, many generic options are available
 that modify various aspects of the build. The following options are some of the
 most common ones. For more details, have a look at the annotated list of [useful
-CMake variables](https://cmake.org/Wiki/CMake_Useful_Variables) or at the [CMake
+CMake variables](https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/Useful-Variables) or at the [CMake
 documentation](https://cmake.org/documentation/).
 
 | Option               | Description                                                                                                                       |
@@ -362,7 +359,7 @@ The following environment variables might be useful.
 ## The OpenDataDetector
 
 ACTS comes packaged with a detector modeled using DD4hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map.
-It is available via the git submodule feature by performing the following steps ([`git lfs`](https://git-lfs.github.com/) need to be installed on your machine):
+It is available via the git submodule feature by performing the following steps ([`git lfs`](https://git-lfs.com/) need to be installed on your machine):
 
 ```console
 $ git submodule init

@@ -18,21 +18,15 @@
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Concepts.hpp"
-#include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Ray.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
 
 #include <cstddef>
-#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -120,6 +114,8 @@ class TrackingVolume : public Volume {
   ~TrackingVolume() override;
   TrackingVolume(const TrackingVolume&) = delete;
   TrackingVolume& operator=(const TrackingVolume&) = delete;
+  TrackingVolume(TrackingVolume&&) = default;
+  TrackingVolume& operator=(TrackingVolume&&) = default;
 
   /// Constructor for a container Volume
   /// - vacuum filled volume either as a for other tracking volumes
@@ -127,12 +123,9 @@ class TrackingVolume : public Volume {
   /// @param transform is the global 3D transform to position the volume in
   /// space
   /// @param volbounds is the description of the volume boundaries
-  /// @param containedVolumeArray are the static volumes that fill this volume
   /// @param volumeName is a string identifier
   TrackingVolume(const Transform3& transform,
                  std::shared_ptr<const VolumeBounds> volbounds,
-                 const std::shared_ptr<const TrackingVolumeArray>&
-                     containedVolumeArray = nullptr,
                  const std::string& volumeName = "undefined");
 
   /// Constructor for a full equipped Tracking Volume
@@ -182,7 +175,7 @@ class TrackingVolume : public Volume {
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
-  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
     if (!restrictToSensitives) {
       // Visit the boundary surfaces
@@ -233,7 +226,7 @@ class TrackingVolume : public Volume {
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
-  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
     visitSurfaces(std::forward<visitor_t>(visitor), true);
   }
@@ -247,7 +240,7 @@ class TrackingVolume : public Volume {
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
-  template <ACTS_CONCEPT(TrackingVolumeVisitor) visitor_t>
+  template <TrackingVolumeVisitor visitor_t>
   void visitVolumes(visitor_t&& visitor) const {
     visitor(this);
     if (m_confinedVolumes != nullptr) {
@@ -264,6 +257,10 @@ class TrackingVolume : public Volume {
 
   /// Returns the VolumeName - for debug reason, might be depreciated later
   const std::string& volumeName() const;
+
+  /// Set the volume name to @p volumeName
+  /// @param volumeName is the new name of
+  void setVolumeName(const std::string& volumeName);
 
   /// Return the material of the volume
   const IVolumeMaterial* volumeMaterial() const;

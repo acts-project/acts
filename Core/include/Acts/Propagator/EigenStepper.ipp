@@ -15,8 +15,7 @@
 
 template <typename E, typename A>
 Acts::EigenStepper<E, A>::EigenStepper(
-    std::shared_ptr<const MagneticFieldProvider> bField,
-    double /*overstepLimit*/)
+    std::shared_ptr<const MagneticFieldProvider> bField)
     : m_bField(std::move(bField)) {}
 
 template <typename E, typename A>
@@ -101,9 +100,8 @@ bool Acts::EigenStepper<E, A>::prepareCurvilinearState(
 }
 
 template <typename E, typename A>
-auto Acts::EigenStepper<E, A>::curvilinearState(State& state,
-                                                bool transportCov) const
-    -> CurvilinearState {
+auto Acts::EigenStepper<E, A>::curvilinearState(
+    State& state, bool transportCov) const -> CurvilinearState {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
       state.jacToGlobal, state.pars, state.particleHypothesis,
@@ -188,7 +186,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     // Whether to use fast power function if available
     constexpr bool tryUseFastPow{false};
 
-    double x = state.options.stepTolerance / errorEstimate_;
+    double x = state.options.stepping.stepTolerance / errorEstimate_;
 
     if constexpr (exponent == 0.25 && !tryUseFastPow) {
       // This is 3x faster than std::pow
@@ -207,7 +205,8 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     // For details about these values see ATL-SOFT-PUB-2009-001
     constexpr double marginFactor = 4.0;
 
-    return errorEstimate_ <= marginFactor * state.options.stepTolerance;
+    return errorEstimate_ <=
+           marginFactor * state.options.stepping.stepTolerance;
   };
 
   // The following functor starts to perform a Runge-Kutta step of a certain
@@ -285,14 +284,14 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
 
     // If step size becomes too small the particle remains at the initial
     // place
-    if (std::abs(h) < std::abs(state.options.stepSizeCutOff)) {
+    if (std::abs(h) < std::abs(state.options.stepping.stepSizeCutOff)) {
       // Not moving due to too low momentum needs an aborter
       return EigenStepperError::StepSizeStalled;
     }
 
     // If the parameter is off track too much or given stepSize is not
     // appropriate
-    if (nStepTrials > state.options.maxRungeKuttaStepTrials) {
+    if (nStepTrials > state.options.stepping.maxRungeKuttaStepTrials) {
       // Too many trials, have to abort
       return EigenStepperError::StepSizeAdjustmentFailed;
     }
