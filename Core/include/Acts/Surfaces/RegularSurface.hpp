@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
@@ -105,11 +106,13 @@ class RegularSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global position to be evaludated
   /// @param boundaryTolerance BoundaryTolerance directive for this onSurface check
+  /// @param tolerance optional tolerance within which a point is considered on surface
   ///
   /// @return boolean indication if operation was successful
-  bool isOnSurface(const GeometryContext& gctx, const Vector3& position,
-                   const BoundaryTolerance& boundaryTolerance =
-                       BoundaryTolerance::None()) const;
+  bool isOnSurface(
+      const GeometryContext& gctx, const Vector3& position,
+      const BoundaryTolerance& boundaryTolerance = BoundaryTolerance::None(),
+      double tolerance = s_onSurfaceTolerance) const;
 
   using Surface::isOnSurface;
 };
