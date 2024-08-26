@@ -255,9 +255,6 @@ struct CombinatorialKalmanFilterResult {
   /// Indices into `tracks` which mark active branches
   std::vector<TrackProxy> collectedTracks;
 
-  /// This is used internally to store candidate trackstates
-  std::shared_ptr<TrackStateContainerBackend> stateBuffer;
-
   /// Track state candidates buffer
   std::vector<TrackStateProxy> trackStateCandidates;
 
@@ -363,8 +360,6 @@ class CombinatorialKalmanFilter {
                         std::random_access_iterator_tag>) {
         trackStateCandidates.reserve(std::distance(slBegin, slEnd));
       }
-
-      bufferTrajectory.clear();
 
       // Calibrate all the source links on the surface since the selection has
       // to be done based on calibrated measurement
@@ -627,11 +622,10 @@ class CombinatorialKalmanFilter {
           stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
         }
 
-        if (!result.activeBranches.empty()) {
-          // Record the active branch and remove it from the list
-          storeLastActiveBranch(result);
-          result.activeBranches.pop_back();
-        }
+        // Record the active branch and remove it from the list
+        storeLastActiveBranch(result);
+        result.activeBranches.pop_back();
+
         // If no more active branches, done with filtering; Otherwise, reset
         // propagation state to track state at next active branch
         if (result.activeBranches.empty()) {
@@ -739,7 +733,7 @@ class CombinatorialKalmanFilter {
             Acts::Result<CkfTypes::BranchVector<TrackIndexType>>;
         TrackStatesResult tsRes = trackStateCandidateCreator(
             state.geoContext, *calibrationContextPtr, *surface, boundState,
-            slBegin, slEnd, prevTip, *result.stateBuffer,
+            slBegin, slEnd, prevTip, *result.trackStates,
             result.trackStateCandidates, *result.trackStates, logger());
         if (!tsRes.ok()) {
           ACTS_ERROR(
@@ -1240,7 +1234,6 @@ class CombinatorialKalmanFilter {
                   track_container_t& trackContainer) const
       -> Result<std::vector<
           typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
-    using TrackContainer = typename std::decay_t<decltype(trackContainer)>;
     using SourceLinkAccessor =
         SourceLinkAccessorDelegate<source_link_iterator_t>;
 
@@ -1298,7 +1291,6 @@ class CombinatorialKalmanFilter {
             .template get<CombinatorialKalmanFilterResult<track_container_t>>();
     r.tracks = &trackContainer;
     r.trackStates = &trackContainer.trackStateContainer();
-    r.stateBuffer = std::make_shared<TrackStateContainerBackend>();
 
     auto rootBranch = trackContainer.makeTrack();
     r.activeBranches.push_back(rootBranch);
@@ -1335,10 +1327,6 @@ class CombinatorialKalmanFilter {
                  << " with the initial parameters: "
                  << initialParameters.parameters().transpose());
       return error.error();
-    }
-
-    for (const auto& track : combKalmanResult.collectedTracks) {
-      calculateTrackQuantities(track);
     }
 
     return std::move(combKalmanResult.collectedTracks);

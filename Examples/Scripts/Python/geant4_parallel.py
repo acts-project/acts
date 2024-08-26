@@ -23,15 +23,12 @@ from functools import partial
 #
 
 
-def runGeant4EventRange(beginEvent, endEvent, outputDir):
+def runGeant4EventRange(detector, trackingGeometry, beginEvent, endEvent, outputDir):
     import acts
     import acts.examples
     from acts.examples.simulation import addParticleGun, addGeant4, EtaConfig
-    from acts.examples.odd import getOpenDataDetector
 
     u = acts.UnitConstants
-
-    detector, trackingGeometry, decorators = getOpenDataDetector()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     rnd = acts.examples.RandomNumbers(seed=42)
@@ -59,10 +56,13 @@ def runGeant4EventRange(beginEvent, endEvent, outputDir):
     )
 
     s.run()
-    del s
 
 
 if "__main__" == __name__:
+    from acts.examples.odd import getOpenDataDetector
+
+    detector, trackingGeometry, decorators = getOpenDataDetector()
+
     n_events = 100
     n_jobs = 8
 
