@@ -32,7 +32,11 @@ class PortalLinkBase {
   /// called from derived classes
   /// @param surface The surface
   explicit PortalLinkBase(std::shared_ptr<RegularSurface> surface)
-      : m_surface(std::move(surface)) {}
+      : m_surface(std::move(surface)) {
+    if (!m_surface) {
+      throw std::invalid_argument("Surface pointer must not be null");
+    }
+  }
 
  public:
   /// Virtual destructor in case the object is held as a derived
