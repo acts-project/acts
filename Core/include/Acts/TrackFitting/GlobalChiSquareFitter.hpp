@@ -463,9 +463,12 @@ class Gx2Fitter {
         const GeometryIdentifier geoId = surface->geometryId();
         ACTS_DEBUG("Surface " << geoId << " detected.");
 
+        bool doMaterial =
+            multipleScattering && surface->surfaceMaterial() != nullptr;
+
         // Found material
-        if (surface->surfaceMaterial() != nullptr) {
-          ACTS_DEBUG("    The surface contains material.");
+        if (doMaterial) {
+          ACTS_DEBUG("    The surface contains material, ...");
         }
 
         // Check if we have a measurement surface
@@ -538,12 +541,27 @@ class Gx2Fitter {
           // Update the number of holes count only when encountering a
           // measurement
           result.measurementHoles = result.missedActiveSurfaces.size();
+        } else if (doMaterial) {
+          // Here we handle material for multipleScattering. If holes exist, we
+          // also handle them already. We create a full trackstate (unlike for
+          // simple holes), since we need to evaluate the material later
+          // TODO add material handling
+          ACTS_DEBUG(
+              "    The surface contains no measurement, but material and maybe "
+              "a hole.");
         } else if (surface->associatedDetectorElement() != nullptr ||
                    surface->surfaceMaterial() != nullptr) {
-          // Here we handle material and holes
-          // TODO add material handling
-          ACTS_VERBOSE("Non-Measurement surface " << surface->geometryId()
-                                                  << " detected.");
+          // Here we handle holes. If material hasn't been handled before
+          // (because multipleScattering is turned off), we will also handle it
+          // here
+          if (multipleScattering) {
+            ACTS_DEBUG(
+                "    The surface contains no measurement, but maybe a hole.");
+          } else {
+            ACTS_DEBUG(
+                "    The surface contains no measurement, but maybe a hole "
+                "and/or material.");
+          }
 
           // We only create track states here if there is already a measurement
           // detected (no holes before the first measurement)
@@ -610,16 +628,11 @@ class Gx2Fitter {
           } else {
             ACTS_DEBUG("    Ignoring hole, because no preceding measurements.");
           }
-
-          if (surface->surfaceMaterial() != nullptr) {
-            // TODO write similar to KF?
-            // Update state and stepper with material effects
-            // materialInteractor(surface, state, stepper, navigator,
-            // MaterialUpdateStage::FullUpdate);
-          }
         } else {
-          ACTS_INFO("Surface " << geoId
-                               << " has no measurement/material/hole.");
+          // It may contain material if we are not doing multiple scattering.
+          // But then it is irrelevant.
+          ACTS_DEBUG(
+              "    The surface contains no measurement/(material)/hole.");
         }
       }
       ACTS_VERBOSE("result.processedMeasurements: "
@@ -701,6 +714,10 @@ class Gx2Fitter {
     }
     ACTS_VERBOSE("inputMeasurements.size() = " << inputMeasurements.size());
 
+    // Store, if we want to do multiple scattering. We still need to pass this
+    // option to the Actor.
+    const bool multipleScattering = gx2fOptions.multipleScattering;
+
     /// Fully understand Aborter, Actor, Result later
     // Create the ActionList and AbortList
     using GX2FAborter = Aborter<parameters_t>;
@@ -773,6 +790,7 @@ class Gx2Fitter {
 
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
+      gx2fActor.multipleScattering = multipleScattering;
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
@@ -819,7 +837,7 @@ class Gx2Fitter {
       // Usually, this only happens during the first iteration, due to bad
       // initial parameters.
       if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
-        ACTS_INFO("Did not find any measurements in nUpdate"
+        ACTS_INFO("Did not find any measurements in nUpdate "
                   << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
@@ -837,14 +855,29 @@ class Gx2Fitter {
       BoundMatrix jacobianFromStart = BoundMatrix::Identity();
 
       for (const auto& trackState : track.trackStates()) {
-        auto typeFlags = trackState.typeFlags();
-        if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
-          // Handle measurement
+        ACTS_VERBOSE("Start to investigate trackState ...");
+        const auto typeFlags = trackState.typeFlags();
+        const bool stateHasMeasurement =
+            typeFlags.test(TrackStateFlag::MeasurementFlag);
+        const bool stateHasMaterial =
+            typeFlags.test(TrackStateFlag::MaterialFlag);
+
+        const bool doMaterial = multipleScattering && stateHasMaterial;
+
+        // We only consider states with a measurement (and/or material)
+        if (!stateHasMeasurement && !doMaterial) {
+          ACTS_INFO("    Skip state.");
+          continue;
+        }
+
+        jacobianFromStart = trackState.jacobian() * jacobianFromStart;
+
+        // Handle measurement
+        if (stateHasMeasurement) {
+          ACTS_VERBOSE("    Handle measurement");
 
           auto measDim = trackState.calibratedSize();
           countNdf += measDim;
-
-          jacobianFromStart = trackState.jacobian() * jacobianFromStart;
 
           if (measDim == 1) {
             addToGx2fSums<1>(aMatrix, bVector, chi2sum, jacobianFromStart,
@@ -871,19 +904,21 @@ class Gx2Fitter {
                 "Found measurement with less than 1 or more than 6 "
                 "dimension(s).");
           }
-        } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
-          // Handle hole
-          // TODO: write hole handling
-          ACTS_VERBOSE("Placeholder: Handle hole.");
-        } else {
-          ACTS_WARNING("Unknown state encountered");
         }
-        // TODO: Material handling. Should be there for hole and measurement
+
+        // Handle material
+        if (doMaterial) {
+          // Get and store geoId for the current material surface
+          const GeometryIdentifier geoId =
+              trackState.referenceSurface().geometryId();
+          ACTS_VERBOSE("    Add material effects for " << geoId);
+          // TODO implement material later
+        }
       }
 
       // Get required number of degrees of freedom ndfSystem.
       // We have only 3 cases, because we always have l0, l1, phi, theta
-      // 4: no magentic field -> q/p is empty
+      // 4: no magnetic field -> q/p is empty
       // 5: no time measurement -> time not fittable
       // 6: full fit
       if (aMatrix(4, 4) == 0) {
@@ -1015,9 +1050,11 @@ class Gx2Fitter {
       PropagatorOptions propagatorOptions(geoCtx, magCtx);
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
+      gx2fActor.multipleScattering = multipleScattering;
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
+      gx2fActor.startVolume = startVolume;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
