@@ -34,8 +34,8 @@ std::unique_ptr<GridPortalLink> makeGrid(
   ACTS_VERBOSE("Make resulting merged grid");
 
   // This is to make it possible to construct Axis with the tuple arguments
-  auto axisFactory = [](auto&&... axisArgs) {
-    return Axis{std::forward<decltype(axisArgs)>(axisArgs)...};
+  auto axisFactory = []<typename... Ts>(Ts&&... axisArgs) {
+    return Axis{std::forward<Ts>(axisArgs)...};
   };
 
   // Avoid copy-pasting identical code twice below
@@ -103,7 +103,7 @@ std::unique_ptr<GridPortalLink> mergeVariable(
 
   if (direction == BinningValue::binR) {
     ACTS_VERBOSE("Performing asymmetric merge");
-    std::copy(edgesA.begin(), edgesA.end(), std::back_inserter(binEdges));
+    std::ranges::copy(edgesA, std::back_inserter(binEdges));
 
   } else {
     ACTS_VERBOSE("Performing symmetrized merge");
@@ -115,8 +115,8 @@ std::unique_ptr<GridPortalLink> mergeVariable(
     ActsScalar shift = axisA.getMax() - halfWidth;
     ACTS_VERBOSE("    ~> shift: " << shift);
 
-    std::transform(edgesA.begin(), edgesA.end(), std::back_inserter(binEdges),
-                   [&](ActsScalar edge) { return edge + shift; });
+    std::ranges::transform(edgesA, std::back_inserter(binEdges),
+                           [&](ActsScalar edge) { return edge + shift; });
   }
 
   ActsScalar stitchPoint = binEdges.back();
@@ -138,8 +138,10 @@ std::unique_ptr<GridPortalLink> mergeEquidistant(
   ACTS_VERBOSE("~> axis a: " << axisA);
   ACTS_VERBOSE("~> axis b: " << axisB);
 
-  ActsScalar binsWidthA = (axisA.getMax() - axisA.getMin()) / axisA.getNBins();
-  ActsScalar binsWidthB = (axisB.getMax() - axisB.getMin()) / axisB.getNBins();
+  ActsScalar binsWidthA = (axisA.getMax() - axisA.getMin()) /
+                          static_cast<ActsScalar>(axisA.getNBins());
+  ActsScalar binsWidthB = (axisB.getMax() - axisB.getMin()) /
+                          static_cast<ActsScalar>(axisB.getNBins());
 
   ACTS_VERBOSE("  ~> binWidths: " << binsWidthA << " vs " << binsWidthB);
 
@@ -425,6 +427,7 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(const GridPortalLink* a,
                                                  const GridPortalLink* b,
                                                  BinningValue direction,
                                                  const Logger& logger) {
+  using enum BinningValue;
   assert(a->dim() == 2 || a->dim() == 1);
   assert(b->dim() == 2 || b->dim() == 1);
 
@@ -445,11 +448,11 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(const GridPortalLink* a,
     if (cylinder != nullptr) {
       return mergeGridPortals(
           a, b, cylinder, &dynamic_cast<const CylinderSurface&>(b->surface()),
-          BinningValue::binRPhi, BinningValue::binZ, direction, logger);
+          binRPhi, binZ, direction, logger);
     } else if (disc != nullptr) {
-      return mergeGridPortals(
-          a, b, disc, &dynamic_cast<const DiscSurface&>(b->surface()),
-          BinningValue::binR, BinningValue::binPhi, direction, logger);
+      return mergeGridPortals(a, b, disc,
+                              &dynamic_cast<const DiscSurface&>(b->surface()),
+                              binR, binPhi, direction, logger);
     } else {
       // @TODO: Support PlaneSurface
       ACTS_VERBOSE("Surface type is not supported here, falling back");
@@ -464,12 +467,11 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(const GridPortalLink* a,
       ACTS_VERBOSE("~> Adding complementary axis");
 
       if (cylinder != nullptr) {
-        otherAxis = direction == BinningValue::binRPhi
-                        ? a->grid().axes().back()
-                        : a->grid().axes().front();
+        otherAxis = direction == binRPhi ? a->grid().axes().back()
+                                         : a->grid().axes().front();
       } else if (disc != nullptr) {
-        otherAxis = direction == BinningValue::binR ? a->grid().axes().back()
-                                                    : a->grid().axes().front();
+        otherAxis = direction == binR ? a->grid().axes().back()
+                                      : a->grid().axes().front();
       } else {
         ACTS_VERBOSE("Surface type is not supported here, falling back");
         return nullptr;

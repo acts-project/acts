@@ -58,20 +58,18 @@ class GridPortalLink : public PortalLinkBase {
   static std::unique_ptr<GridPortalLinkT<axis_t>> make(
       std::shared_ptr<RegularSurface> surface, BinningValue direction,
       axis_t&& axis) {
+    using enum BinningValue;
     if (dynamic_cast<const CylinderSurface*>(surface.get()) != nullptr) {
-      if (direction != BinningValue::binZ &&
-          direction != BinningValue::binRPhi) {
+      if (direction != binZ && direction != binRPhi) {
         throw std::invalid_argument{"Invalid binning direction"};
       }
-    } else if (dynamic_cast<const DiscSurface*>(surface.get()) != nullptr) {
-      if (direction != BinningValue::binR &&
-          direction != BinningValue::binPhi) {
-        throw std::invalid_argument{"Invalid binning direction"};
-      }
+    } else if (dynamic_cast<const DiscSurface*>(surface.get()) != nullptr &&
+               direction != binR && direction != binPhi) {
+      throw std::invalid_argument{"Invalid binning direction"};
     }
 
-    return std::make_unique<GridPortalLinkT<axis_t>>(surface, direction,
-                                                     std::move(axis));
+    return std::make_unique<GridPortalLinkT<axis_t>>(
+        surface, direction, std::forward<axis_t>(axis));
   }
 
   /// Factory function for a two-dimensional grid portal link, which allows
@@ -347,7 +345,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @param other The axis to use for the missing direction,
   ///              can be null for auto determination
   /// @return A unique pointer to the 2D grid portal link
-  std::unique_ptr<GridPortalLink> extendTo2d(
+  std::unique_ptr<GridPortalLink> extendTo2dImpl(
       const std::shared_ptr<CylinderSurface>& surface,
       const IAxis* other) const;
 
@@ -356,7 +354,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @param other The axis to use for the missing direction,
   ///              can be null for auto determination
   /// @return A unique pointer to the 2D grid portal link
-  std::unique_ptr<GridPortalLink> extendTo2d(
+  std::unique_ptr<GridPortalLink> extendTo2dImpl(
       const std::shared_ptr<DiscSurface>& surface, const IAxis* other) const;
 
   /// Helper enum to declare which local direction to fill
@@ -415,14 +413,16 @@ class GridPortalLinkT final : public GridPortalLink {
                   BinningValue direction, Axes&&... axes)
       : GridPortalLink(std::move(surface), direction),
         m_grid(std::tuple{std::move(axes)...}) {
+    using enum BinningValue;
+
     if (const auto* cylinder =
             dynamic_cast<const CylinderSurface*>(m_surface.get())) {
       checkConsistency(*cylinder);
 
-      if (direction == BinningValue::binRPhi) {
-        m_projection = &projection<CylinderSurface, BinningValue::binRPhi>;
-      } else if (direction == BinningValue::binZ) {
-        m_projection = &projection<CylinderSurface, BinningValue::binZ>;
+      if (direction == binRPhi) {
+        m_projection = &projection<CylinderSurface, binRPhi>;
+      } else if (direction == binZ) {
+        m_projection = &projection<CylinderSurface, binZ>;
       } else {
         throw std::invalid_argument{"Invalid binning direction"};
       }
@@ -431,10 +431,10 @@ class GridPortalLinkT final : public GridPortalLink {
                    dynamic_cast<const DiscSurface*>(m_surface.get())) {
       checkConsistency(*disc);
 
-      if (direction == BinningValue::binR) {
-        m_projection = &projection<DiscSurface, BinningValue::binR>;
+      if (direction == binR) {
+        m_projection = &projection<DiscSurface, binR>;
       } else if (direction == BinningValue::binPhi) {
-        m_projection = &projection<DiscSurface, BinningValue::binPhi>;
+        m_projection = &projection<DiscSurface, binPhi>;
       } else {
         throw std::invalid_argument{"Invalid binning direction"};
       }
@@ -446,7 +446,7 @@ class GridPortalLinkT final : public GridPortalLink {
 
   /// Get the grid
   /// @return The grid
-  const GridType& grid() const final { return m_grid; }
+  const GridType& grid() const override { return m_grid; }
 
   /// Get the grid
   /// @return The grid
@@ -454,11 +454,11 @@ class GridPortalLinkT final : public GridPortalLink {
 
   /// Get the number of dimensions of the grid
   /// @return The number of dimensions
-  unsigned int dim() const final { return DIM; }
+  unsigned int dim() const override { return DIM; }
 
   /// Prints an identification to the output stream
   /// @param os The output stream
-  void toStream(std::ostream& os) const final {
+  void toStream(std::ostream& os) const override {
     os << "GridPortalLink<dim=" << dim() << ">";
   }
 
@@ -466,16 +466,17 @@ class GridPortalLinkT final : public GridPortalLink {
   /// @param other The axis to use for the missing direction,
   ///              can be null for auto determination
   /// @return A unique pointer to the 2D grid portal link
-  std::unique_ptr<GridPortalLink> extendTo2d(const IAxis* other) const final {
+  std::unique_ptr<GridPortalLink> extendTo2d(
+      const IAxis* other) const override {
     if constexpr (DIM == 2) {
       return std::make_unique<GridPortalLinkT<Axes...>>(*this);
     } else {
       if (auto cylinder =
               std::dynamic_pointer_cast<CylinderSurface>(m_surface)) {
-        return GridPortalLink::extendTo2d(cylinder, other);
+        return extendTo2dImpl(cylinder, other);
       } else if (auto disc =
                      std::dynamic_pointer_cast<DiscSurface>(m_surface)) {
-        return GridPortalLink::extendTo2d(disc, other);
+        return extendTo2dImpl(disc, other);
       } else {
         throw std::logic_error{
             "Surface type is not supported (this should not happen)"};
@@ -485,7 +486,7 @@ class GridPortalLinkT final : public GridPortalLink {
 
   /// Set the volume on all grid bins
   /// @param volume The volume to set
-  void setVolume(TrackingVolume* volume) final {
+  void setVolume(TrackingVolume* volume) override {
     auto loc = m_grid.numLocalBins();
     if constexpr (GridType::DIM == 1) {
       for (std::size_t i = 1; i <= loc[0]; i++) {
@@ -508,7 +509,7 @@ class GridPortalLinkT final : public GridPortalLink {
   /// @return The tracking volume (can be null)
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector3& position,
-      double tolerance = s_onSurfaceTolerance) const final {
+      double tolerance = s_onSurfaceTolerance) const override {
     auto res = m_surface->globalToLocal(gctx, position, tolerance);
     if (!res.ok()) {
       return res.error();
@@ -524,7 +525,7 @@ class GridPortalLinkT final : public GridPortalLink {
   /// @return The tracking volume (can be null)
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& /*gctx*/, const Vector2& position,
-      double /*tolerance*/ = s_onSurfaceTolerance) const final {
+      double /*tolerance*/ = s_onSurfaceTolerance) const override {
     assert(surface().insideBounds(position, BoundaryTolerance::None()));
     return m_grid.atPosition(m_projection(position));
   }
@@ -532,7 +533,7 @@ class GridPortalLinkT final : public GridPortalLink {
  protected:
   /// Type erased access to the number of bins
   /// @return The number of bins in each direction
-  IndexType numLocalBins() const final {
+  IndexType numLocalBins() const override {
     typename GridType::index_t idx = m_grid.numLocalBins();
     IndexType result;
     for (std::size_t i = 0; i < DIM; i++) {
@@ -544,7 +545,7 @@ class GridPortalLinkT final : public GridPortalLink {
   /// Type erased local bin access
   /// @param indices The bin indices
   /// @return The tracking volume at the bin
-  TrackingVolume*& atLocalBins(IndexType indices) final {
+  TrackingVolume*& atLocalBins(IndexType indices) override {
     throw_assert(indices.size() == DIM, "Invalid number of indices");
     typename GridType::index_t idx;
     for (std::size_t i = 0; i < DIM; i++) {
@@ -556,7 +557,7 @@ class GridPortalLinkT final : public GridPortalLink {
   /// Type erased local bin access
   /// @param indices The bin indices
   /// @return The tracking volume at the bin
-  TrackingVolume* atLocalBins(IndexType indices) const final {
+  TrackingVolume* atLocalBins(IndexType indices) const override {
     throw_assert(indices.size() == DIM, "Invalid number of indices");
     typename GridType::index_t idx;
     for (std::size_t i = 0; i < DIM; i++) {
@@ -570,37 +571,35 @@ class GridPortalLinkT final : public GridPortalLink {
   /// possible 1D grid.
   template <class surface_t, BinningValue direction>
   static ActsVector<DIM> projection(const Vector2& position) {
+    using enum BinningValue;
     if constexpr (DIM == 2) {
       return position;
     } else {
       if constexpr (std::is_same_v<surface_t, CylinderSurface>) {
-        static_assert(direction == BinningValue::binRPhi ||
-                          direction == BinningValue::binZ,
+        static_assert(direction == binRPhi || direction == binZ,
                       "Invalid binning direction");
 
-        if constexpr (direction == BinningValue::binRPhi) {
+        if constexpr (direction == binRPhi) {
           return ActsVector<1>{position[0]};
-        } else if constexpr (direction == BinningValue::binZ) {
+        } else if constexpr (direction == binZ) {
           return ActsVector<1>{position[1]};
         }
       } else if constexpr (std::is_same_v<surface_t, DiscSurface>) {
-        static_assert(direction == BinningValue::binR ||
-                          direction == BinningValue::binPhi,
+        static_assert(direction == binR || direction == binPhi,
                       "Invalid binning direction");
 
-        if constexpr (direction == BinningValue::binR) {
+        if constexpr (direction == binR) {
           return ActsVector<1>{position[0]};
-        } else if constexpr (direction == BinningValue::binPhi) {
+        } else if constexpr (direction == binPhi) {
           return ActsVector<1>{position[1]};
         }
       } else if constexpr (std::is_same_v<surface_t, PlaneSurface>) {
-        static_assert(
-            direction == BinningValue::binX || direction == BinningValue::binY,
-            "Invalid binning direction");
+        static_assert(direction == binX || direction == binY,
+                      "Invalid binning direction");
 
-        if constexpr (direction == BinningValue::binX) {
+        if constexpr (direction == binX) {
           return ActsVector<1>{position[0]};
-        } else if constexpr (direction == BinningValue::binY) {
+        } else if constexpr (direction == binY) {
           return ActsVector<1>{position[1]};
         }
       }

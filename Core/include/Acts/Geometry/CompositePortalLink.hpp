@@ -51,7 +51,7 @@ class CompositePortalLink final : public PortalLinkBase {
 
   /// Print the composite portal link
   /// @param os The output stream
-  void toStream(std::ostream& os) const final;
+  void toStream(std::ostream& os) const override;
 
   /// Resolve the volume for a 2D position
   /// @note This will transform the position to global coordinates before
@@ -62,7 +62,7 @@ class CompositePortalLink final : public PortalLinkBase {
   /// @param tolerance The on-surface tolerance
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector2& position,
-      double tolerance = s_onSurfaceTolerance) const final;
+      double tolerance = s_onSurfaceTolerance) const override;
 
   /// Resolve the volume for a 3D position
   /// @note @p position is assumed to be on surface
@@ -71,7 +71,7 @@ class CompositePortalLink final : public PortalLinkBase {
   /// @param tolerance The tolerance
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector3& position,
-      double tolerance = s_onSurfaceTolerance) const final;
+      double tolerance = s_onSurfaceTolerance) const override;
 
   /// Get the depth of the composite tree
   /// @return The depth
