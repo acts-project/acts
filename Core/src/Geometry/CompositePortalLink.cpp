@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/CompositePortalLink.hpp"
 
+#include "Acts/Geometry/PortalError.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -70,10 +71,7 @@ Result<const TrackingVolume*> CompositePortalLink::resolveVolume(
     }
   }
 
-  // @TODO: Should this be an error or just return nullptr?
-  // I guess technically it's an error, since if we got here, we should be
-  // on one of the merged surfaces.
-  throw std::runtime_error{"CompositePortalLink: Neither portal is on surface"};
+  return PortalError::PositionNotOnAnyChildPortalLink;
 }
 
 std::shared_ptr<RegularSurface> CompositePortalLink::mergedSurface(
