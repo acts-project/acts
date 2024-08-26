@@ -24,7 +24,7 @@
 #include <GeoModelKernel/Units.h>
 
 Acts::Result<Acts::GeoModelSensitiveSurface>
-Acts::detail::GeoTrdConverter::operator()(PVConstLink geoPV,
+Acts::detail::GeoTrdConverter::operator()(const PVConstLink& geoPV,
                                           const GeoTrd& geoTrd,
                                           const Transform3& absTransform,
                                           bool sensitive) const {
