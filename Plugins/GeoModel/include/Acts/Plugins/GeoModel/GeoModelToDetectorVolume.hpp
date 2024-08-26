@@ -21,6 +21,7 @@ namespace GeoModel {
 /// @param shape the GeoModel shape
 /// @param transform the transform to be applied
 /// @return the DetectorVolume
+Volume package(const Transform3& trf, const GeoShape& shape);
 std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeometryContext& context, const GeoShape& shape,
     const std::string& name, const GeoTrf::Transform3D transform,

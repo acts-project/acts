@@ -168,6 +168,8 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
     cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(),
                                    sensitives.begin(), sensitives.end());
     if (convertBox(name)) {
+      //TODO 
+      //TODO adapt convertVolume to accept Acts::Volume
       const GeoLogVol *logVol =
           physVol->getLogVol();  // get logVol for the shape of the volume
       const GeoShape *shape = logVol->getShape();  // get shape
