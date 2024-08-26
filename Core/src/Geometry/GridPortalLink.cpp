@@ -11,10 +11,6 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 
-#ifdef __cpp_lib_format
-#include <format>
-#endif
-
 namespace Acts {
 
 std::unique_ptr<GridPortalLink> GridPortalLink::make(
@@ -201,11 +197,17 @@ void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
 }
 
 void GridPortalLink::printContents(std::ostream& os) const {
-  static_cast<void>(os);
-#ifdef __cpp_lib_format
   std::size_t dim = grid().axes().size();
   os << "----- GRID " << dim << "d -----" << std::endl;
   os << grid() << " along " << direction() << std::endl;
+
+  auto lpad = [](const std::string& s, std::size_t n) {
+    return s.size() < n ? std::string(n - s.size(), ' ') + s : s;
+  };
+
+  auto rpad = [](const std::string& s, std::size_t n) {
+    return s.size() < n ? s + std::string(n - s.size(), ' ') : s;
+  };
 
   std::string loc0;
   std::string loc1;
@@ -232,54 +234,57 @@ void GridPortalLink::printContents(std::ostream& os) const {
     auto loc = numLocalBins();
 
     if (flipped) {
-      os << std::format("{} >       i=0 ", loc1);
+      os << lpad(loc1, 4) << " > " << lpad("i=0", 10) << " ";
       for (std::size_t i = 1; i <= loc.at(0) + 1; i++) {
-        os << std::format("{:>11} ", std::format("i={}", i));
+        os << lpad("i=" + std::to_string(i), 13) + " ";
       }
       os << std::endl;
 
-      os << "  ";
+      os << std::string(4, ' ');
       for (std::size_t i = 0; i <= loc.at(0) + 1; i++) {
         std::string name = "0x0";
         if (const auto* v = atLocalBins({i}); v != nullptr) {
           name = v->volumeName();
         }
-        name = name.substr(0, std::min(name.size(), std::size_t{11}));
-        os << std::format("{:>11}", name) << " ";
+        name = name.substr(0, std::min(name.size(), std::size_t{13}));
+        os << lpad(name, 13) << " ";
       }
       os << std::endl;
 
     } else {
-      os << std::format("v {}", loc0) << std::endl;
+      os << "v " << loc0 << std::endl;
       for (std::size_t i = 0; i <= loc.at(0) + 1; i++) {
         os << "i=" << i << " ";
         std::string name = "0x0";
         if (const auto* v = atLocalBins({i}); v != nullptr) {
           name = v->volumeName();
         }
-        name = name.substr(0, std::min(name.size(), std::size_t{11}));
-        os << std::format("{:>11}", name) << " ";
+        name = name.substr(0, std::min(name.size(), std::size_t{13}));
+        os << lpad(name, 13) << " ";
         os << std::endl;
       }
     }
 
   } else {
     auto loc = numLocalBins();
-    os << std::format("v {}|{} >   j=0 ", loc0, loc1, 0);
+    os << rpad("v " + loc0 + "|" + loc1 + " >", 14) + "j=0 ";
     for (std::size_t j = 1; j <= loc.at(1) + 1; j++) {
-      os << std::format("{:>11} ", std::format("j={}", j));
+      os << lpad("j=" + std::to_string(j), 13) << " ";
     }
     os << std::endl;
     for (std::size_t i = 0; i <= loc.at(0) + 1; i++) {
       os << "i=" << i << " ";
       for (std::size_t j = 0; j <= loc.at(1) + 1; j++) {
-        const void* v = atLocalBins({i, j});
-        os << std::format("{:11}", v) << " ";
+        std::string name = "0x0";
+        if (const auto* v = atLocalBins({i, j}); v != nullptr) {
+          name = v->volumeName();
+        }
+        name = name.substr(0, std::min(name.size(), std::size_t{13}));
+        os << lpad(name, 13) << " ";
       }
       os << std::endl;
     }
   }
-#endif
 }
 
 void GridPortalLink::fillGrid1dTo2d(FillDirection dir,
