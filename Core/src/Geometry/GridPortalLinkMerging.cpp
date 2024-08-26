@@ -564,6 +564,5 @@ std::unique_ptr<PortalLinkBase> GridPortalLink::merge(const GridPortalLink& a,
   return merged;
 }
 
-// @TODO: Optimize build-time memory consumption of this file
 
 }  // namespace Acts

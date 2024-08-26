@@ -34,12 +34,12 @@ namespace Acts {
 /// |       |      |       |
 /// +-------+      +-------+
 ///
-/// During resolution, it will consult each of it's children and return result
-/// of the resolution on the first surface where the lookup position is within
+/// During resolution, it will consult each of it's children and return
+/// the result on the first surface where the lookup position is within
 /// bounds.
 class CompositePortalLink final : public PortalLinkBase {
  public:
-  /// Construct a composite portal from two arbitrary other portal link. The
+  /// Construct a composite portal from two arbitrary other portal links. The
   /// only requirement is that the portal link surfaces are mergeable.
   /// @param a The first portal link
   /// @param b The second portal link
@@ -59,7 +59,7 @@ class CompositePortalLink final : public PortalLinkBase {
   /// @note @p position is assumed to be on surface
   /// @param gctx The geometry context
   /// @param position The 2D position
-  /// @param tolerance The tolerance
+  /// @param tolerance The on-surface tolerance
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector2& position,
       double tolerance = s_onSurfaceTolerance) const final;
