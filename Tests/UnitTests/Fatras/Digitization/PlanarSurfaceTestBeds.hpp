@@ -52,8 +52,10 @@ struct PlanarSurfaceTestBeds {
     auto rectangle = std::make_shared<Acts::RectangleBounds>(xhalf, yhalf);
     auto rSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         Acts::Transform3::Identity(), rectangle);
-    Acts::BinUtility pixelated(15, -xhalf, xhalf, Acts::open, Acts::binX);
-    pixelated += Acts::BinUtility(26, -yhalf, yhalf, Acts::open, Acts::binY);
+    Acts::BinUtility pixelated(15, -xhalf, xhalf, Acts::open,
+                               Acts::BinningValue::binX);
+    pixelated += Acts::BinUtility(26, -yhalf, yhalf, Acts::open,
+                                  Acts::BinningValue::binY);
     RectangleRandom rRandom(xhalf * rScale, yhalf * rScale);
 
     // Cartesian strip test in Trapezoid
@@ -64,8 +66,10 @@ struct PlanarSurfaceTestBeds {
         std::make_shared<Acts::TrapezoidBounds>(xhalfminy, xhalfmaxy, yhalf);
     auto tSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         Acts::Transform3::Identity(), trapezoid);
-    Acts::BinUtility stripsX(35, -xhalfmaxy, xhalfmaxy, Acts::open, Acts::binX);
-    stripsX += Acts::BinUtility(1, -yhalf, yhalf, Acts::open, Acts::binY);
+    Acts::BinUtility stripsX(35, -xhalfmaxy, xhalfmaxy, Acts::open,
+                             Acts::BinningValue::binX);
+    stripsX += Acts::BinUtility(1, -yhalf, yhalf, Acts::open,
+                                Acts::BinningValue::binY);
     TrapezoidRandom tRandom(xhalfminy * rScale, xhalfmaxy * rScale,
                             yhalf * rScale);
 
@@ -81,9 +85,10 @@ struct PlanarSurfaceTestBeds {
         std::make_shared<Acts::DiscTrapezoidBounds>(xmin, xmax, rmin, rmax);
     auto dtSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
         Acts::Transform3::Identity(), discTrapezoid);
-    Acts::BinUtility stripsPhi(1, rmin, rmax, Acts::open, Acts::binR);
+    Acts::BinUtility stripsPhi(1, rmin, rmax, Acts::open,
+                               Acts::BinningValue::binR);
     stripsPhi += Acts::BinUtility(25, M_PI_2 - alpha, M_PI_2 + alpha,
-                                  Acts::open, Acts::binPhi);
+                                  Acts::open, Acts::BinningValue::binPhi);
     TrapezoidRandom dtRandom(xmin * rScale, xmax * rScale, rmin * irScale,
                              ymax * rScale);
 
@@ -92,9 +97,10 @@ struct PlanarSurfaceTestBeds {
         std::make_shared<Acts::RadialBounds>(rmin, rmax, M_PI_4, M_PI_2);
     auto dSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
         Acts::Transform3::Identity(), discRadial);
-    Acts::BinUtility rphiseg(10, rmin, rmax, Acts::open, Acts::binR);
+    Acts::BinUtility rphiseg(10, rmin, rmax, Acts::open,
+                             Acts::BinningValue::binR);
     rphiseg += Acts::BinUtility(20, (M_PI_2 - M_PI_4), (M_PI_2 + M_PI_4),
-                                Acts::open, Acts::binPhi);
+                                Acts::open, Acts::BinningValue::binPhi);
 
     DiscRandom dRandom(rmin * irScale, rmax * rScale,
                        (M_PI_2 - M_PI_4) * irScale, (M_PI_2 + M_PI_4) * rScale);
@@ -119,9 +125,10 @@ struct PlanarSurfaceTestBeds {
       rmax = std::max(rmax, r);
     });
 
-    Acts::BinUtility stripsPhiA(1, rmin, rmax, Acts::open, Acts::binR);
-    stripsPhiA +=
-        Acts::BinUtility(12, phimin, phimax, Acts::open, Acts::binPhi);
+    Acts::BinUtility stripsPhiA(1, rmin, rmax, Acts::open,
+                                Acts::BinningValue::binR);
+    stripsPhiA += Acts::BinUtility(12, phimin, phimax, Acts::open,
+                                   Acts::BinningValue::binPhi);
     AnnulusRandom aRandom(rmin * irScale, rmax * rScale, phimin * rScale,
                           phimax * rScale, aorigin.x(), aorigin.y());
 

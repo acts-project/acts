@@ -70,7 +70,7 @@ ProtoGrid convert(const grid_type& grid,
 
   // 1D case (more to be filled in later)
   if constexpr (grid_type::DIM == 1u) {
-    if (bValues[0u] == binPhi &&
+    if (bValues[0u] == BinningValue::binPhi &&
         axes[0]->getBoundaryType() == AxisBoundaryType::Closed) {
       // swap     needed
       edges1 = axes[0]->getBinEdges();
@@ -78,7 +78,7 @@ ProtoGrid convert(const grid_type& grid,
     }
     if (cOptions.optionalBound.has_value()) {
       auto [boundRange, boundValue] = cOptions.optionalBound.value();
-      if (boundValue == binR) {
+      if (boundValue == BinningValue::binR) {
         // good - no swap needed
         edges0 = {boundRange[0u], boundRange[1u]};
       }
@@ -89,21 +89,26 @@ ProtoGrid convert(const grid_type& grid,
     // Assign
     edges0 = axes[0]->getBinEdges();
     edges1 = axes[1]->getBinEdges();
-    if (bValues[0] == binPhi && bValues[1] == binZ) {
+    if (bValues[0] == BinningValue::binPhi &&
+        bValues[1] == BinningValue::binZ) {
       //  swap needed
       std::swap(edges0, edges1);
       pGrid._type = actsvg::proto::grid::e_z_phi;
-    } else if (bValues[0] == binPhi && bValues[1] == binR) {
+    } else if (bValues[0] == BinningValue::binPhi &&
+               bValues[1] == BinningValue::binR) {
       // swap needed
       std::swap(edges0, edges1);
       pGrid._type = actsvg::proto::grid::e_r_phi;
-    } else if (bValues[0] == binZ && bValues[1] == binPhi) {
+    } else if (bValues[0] == BinningValue::binZ &&
+               bValues[1] == BinningValue::binPhi) {
       // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_z_phi;
-    } else if (bValues[0] == binR && bValues[1] == binPhi) {
+    } else if (bValues[0] == BinningValue::binR &&
+               bValues[1] == BinningValue::binPhi) {
       // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_r_phi;
-    } else if (bValues[0] == binX && bValues[1] == binY) {
+    } else if (bValues[0] == BinningValue::binX &&
+               bValues[1] == BinningValue::binY) {
       // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_x_y;
     }

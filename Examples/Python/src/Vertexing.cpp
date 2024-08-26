@@ -32,18 +32,23 @@ void addVertexing(Context& ctx) {
   auto& m = ctx.get("main");
 
   py::enum_<Seeder>(m, "VertexSeedFinder")
+      .value("TruthSeeder", Seeder::TruthSeeder)
       .value("GaussianSeeder", Seeder::GaussianSeeder)
       .value("AdaptiveGridSeeder", Seeder::AdaptiveGridSeeder);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AdaptiveMultiVertexFinderAlgorithm, mex,
       "AdaptiveMultiVertexFinderAlgorithm", inputTrackParameters,
-      outputProtoVertices, outputVertices, seedFinder, useTime, bField);
+      inputTruthParticles, inputTruthVertices, outputProtoVertices,
+      outputVertices, seedFinder, bField, minWeight, doSmoothing, maxIterations,
+      useTime, tracksMaxZinterval, initialVariances, doFullSplitting,
+      tracksMaxSignificance, maxMergeVertexSignificance, spatialBinExtent,
+      temporalBinExtent);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::IterativeVertexFinderAlgorithm,
                                 mex, "IterativeVertexFinderAlgorithm",
                                 inputTrackParameters, outputProtoVertices,
-                                outputVertices, bField);
+                                outputVertices, bField, maxIterations);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::VertexFitterAlgorithm, mex,
                                 "VertexFitterAlgorithm", inputTrackParameters,

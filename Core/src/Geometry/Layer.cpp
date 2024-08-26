@@ -12,7 +12,9 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
 #include <functional>
@@ -131,13 +133,13 @@ Acts::Layer::compatibleSurfaces(
     // - it is the final one don't use the boundary check at all
     SurfaceIntersection endInter =
         options.endObject
-            ->intersect(gctx, position, direction, BoundaryCheck(true))
+            ->intersect(gctx, position, direction, BoundaryTolerance::None())
             .closest();
     // non-valid intersection with the end surface provided at this layer
     // indicates wrong direction or faulty setup
     // -> do not return compatible surfaces since they may lead you on a wrong
     // navigation path
-    if (endInter) {
+    if (endInter.isValid()) {
       farLimit = endInter.pathLength();
     } else {
       return sIntersections;
@@ -186,18 +188,17 @@ Acts::Layer::compatibleSurfaces(
     if (!acceptSurface(sf, sensitive)) {
       return;
     }
-    bool boundaryCheck = options.boundaryCheck.isEnabled();
+    BoundaryTolerance boundaryTolerance = options.boundaryTolerance;
     if (std::find(options.externalSurfaces.begin(),
                   options.externalSurfaces.end(),
                   sf.geometryId()) != options.externalSurfaces.end()) {
-      boundaryCheck = false;
+      boundaryTolerance = BoundaryTolerance::Infinite();
     }
     // the surface intersection
     SurfaceIntersection sfi =
-        sf.intersect(gctx, position, direction, BoundaryCheck(boundaryCheck))
-            .closest();
-    if (sfi &&
-        detail::checkIntersection(sfi.intersection(), nearLimit, farLimit) &&
+        sf.intersect(gctx, position, direction, boundaryTolerance).closest();
+    if (sfi.isValid() &&
+        detail::checkPathLength(sfi.pathLength(), nearLimit, farLimit) &&
         isUnique(sfi)) {
       sIntersections.push_back(sfi);
     }
@@ -267,8 +268,8 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
   auto findValidIntersection =
       [&](const SurfaceMultiIntersection& sfmi) -> SurfaceIntersection {
     for (const auto& sfi : sfmi.split()) {
-      if (sfi &&
-          detail::checkIntersection(sfi.intersection(), nearLimit, farLimit)) {
+      if (sfi.isValid() &&
+          detail::checkPathLength(sfi.pathLength(), nearLimit, farLimit)) {
         return sfi;
       }
     }
@@ -280,13 +281,14 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
   // Approach descriptor present and resolving is necessary
   if (m_approachDescriptor && (resolvePS || resolveMS)) {
     SurfaceIntersection aSurface = m_approachDescriptor->approachSurface(
-        gctx, position, direction, options.boundaryCheck, nearLimit, farLimit);
+        gctx, position, direction, options.boundaryTolerance, nearLimit,
+        farLimit);
     return aSurface;
   }
 
   // Intersect and check the representing surface
   const Surface& rSurface = surfaceRepresentation();
   auto sIntersection =
-      rSurface.intersect(gctx, position, direction, options.boundaryCheck);
+      rSurface.intersect(gctx, position, direction, options.boundaryTolerance);
   return findValidIntersection(sIntersection);
 }

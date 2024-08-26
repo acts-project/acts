@@ -25,99 +25,26 @@ using namespace Acts::UnitLiterals;
 
 namespace {
 
-class ExamplesEdmHook : public Acts::ExaTrkXHook {
-  double m_targetPT = 0.5_GeV;
-  std::size_t m_targetSize = 3;
+struct LoopHook : public Acts::ExaTrkXHook {
+  std::vector<Acts::ExaTrkXHook*> hooks;
 
-  std::unique_ptr<const Acts::Logger> m_logger;
-  std::unique_ptr<Acts::TorchTruthGraphMetricsHook> m_truthGraphHook;
-  std::unique_ptr<Acts::TorchTruthGraphMetricsHook> m_targetGraphHook;
-  std::unique_ptr<Acts::TorchGraphStoreHook> m_graphStoreHook;
-
-  const Acts::Logger& logger() const { return *m_logger; }
-
-  struct HitInfo {
-    std::size_t spacePointIndex;
-    std::int32_t hitIndex;
-  };
-
- public:
-  ExamplesEdmHook(const SimSpacePointContainer& spacepoints,
-                  const IndexMultimap<Index>& measHitMap,
-                  const SimHitContainer& simhits,
-                  const SimParticleContainer& particles,
-                  std::size_t targetMinHits, double targetMinPT,
-                  const Acts::Logger& logger)
-      : m_targetPT(targetMinPT),
-        m_targetSize(targetMinHits),
-        m_logger(logger.clone("MetricsHook")) {
-    // Associate tracks to graph, collect momentum
-    std::unordered_map<ActsFatras::Barcode, std::vector<HitInfo>> tracks;
-
-    for (auto i = 0ul; i < spacepoints.size(); ++i) {
-      const auto measId = spacepoints[i]
-                              .sourceLinks()[0]
-                              .template get<IndexSourceLink>()
-                              .index();
-
-      auto [a, b] = measHitMap.equal_range(measId);
-      for (auto it = a; it != b; ++it) {
-        const auto& hit = *simhits.nth(it->second);
-
-        tracks[hit.particleId()].push_back({i, hit.index()});
-      }
-    }
-
-    // Collect edges for truth graph and target graph
-    std::vector<std::int64_t> truthGraph;
-    std::vector<std::int64_t> targetGraph;
-
-    for (auto& [pid, track] : tracks) {
-      // Sort by hit index, so the edges are connected correctly
-      std::sort(track.begin(), track.end(), [](const auto& a, const auto& b) {
-        return a.hitIndex < b.hitIndex;
-      });
-
-      auto found = particles.find(pid);
-      if (found == particles.end()) {
-        ACTS_WARNING("Did not find " << pid << ", skip track");
-        continue;
-      }
-
-      for (auto i = 0ul; i < track.size() - 1; ++i) {
-        truthGraph.push_back(track[i].spacePointIndex);
-        truthGraph.push_back(track[i + 1].spacePointIndex);
-
-        if (found->transverseMomentum() > m_targetPT &&
-            track.size() >= m_targetSize) {
-          targetGraph.push_back(track[i].spacePointIndex);
-          targetGraph.push_back(track[i + 1].spacePointIndex);
-        }
-      }
-    }
-
-    m_truthGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
-        truthGraph, logger.clone());
-    m_targetGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
-        targetGraph, logger.clone());
-    m_graphStoreHook = std::make_unique<Acts::TorchGraphStoreHook>();
-  }
-
-  ~ExamplesEdmHook() {}
-
-  auto storedGraph() const { return m_graphStoreHook->storedGraph(); }
+  ~LoopHook() {}
 
   void operator()(const std::any& nodes, const std::any& edges,
                   const std::any& weights) const override {
-    ACTS_INFO("Metrics for total graph:");
-    (*m_truthGraphHook)(nodes, edges, weights);
-    ACTS_INFO("Metrics for target graph (pT > "
-              << m_targetPT / Acts::UnitConstants::GeV
-              << " GeV, nHits >= " << m_targetSize << "):");
-    (*m_targetGraphHook)(nodes, edges, weights);
-    (*m_graphStoreHook)(nodes, edges, weights);
+    for (auto hook : hooks) {
+      (*hook)(nodes, edges, weights);
+    }
   }
 };
+
+// TODO do we have these function in the repo somewhere?
+float theta(float r, float z) {
+  return std::atan2(r, z);
+}
+float eta(float r, float z) {
+  return -std::log(std::tan(0.5 * theta(r, z)));
+}
 
 }  // namespace
 
@@ -147,7 +74,7 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
                                    dummyInput.data() + dummyInput.size());
   std::vector<int> spacepointIDs;
   std::iota(spacepointIDs.begin(), spacepointIDs.end(), 0);
-  
+
   runPipeline(dummyInputVec, spacepointIDs);
   }
 #endif
@@ -156,41 +83,57 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   m_inputClusters.maybeInitialize(m_cfg.inputClusters);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 
-  m_inputSimHits.maybeInitialize(m_cfg.inputSimHits);
-  m_inputParticles.maybeInitialize(m_cfg.inputParticles);
-  m_inputMeasurementMap.maybeInitialize(m_cfg.inputMeasurementSimhitsMap);
-
+  m_inputTruthGraph.maybeInitialize(m_cfg.inputTruthGraph);
   m_outputGraph.maybeInitialize(m_cfg.outputGraph);
 
   // reserve space for timing
   m_timing.classifierTimes.resize(
       m_cfg.edgeClassifiers.size(),
       decltype(m_timing.classifierTimes)::value_type{0.f});
+
+  // Check if we want cluster features but do not have them
+  const static std::array clFeatures = {
+      NodeFeature::eClusterX, NodeFeature::eClusterY,  NodeFeature::eCellCount,
+      NodeFeature::eCellSum,  NodeFeature::eCluster1R, NodeFeature::eCluster2R};
+
+  auto wantClFeatures = std::any_of(
+      m_cfg.nodeFeatures.begin(), m_cfg.nodeFeatures.end(), [&](const auto& f) {
+        return std::find(clFeatures.begin(), clFeatures.end(), f) !=
+               clFeatures.end();
+      });
+
+  if (wantClFeatures && !m_inputClusters.isInitialized()) {
+    throw std::invalid_argument("Cluster features requested, but not provided");
+  }
+
+  if (m_cfg.nodeFeatures.size() != m_cfg.featureScales.size()) {
+    throw std::invalid_argument(
+        "Number of features mismatches number of scale parameters.");
+  }
 }
 
 /// Allow access to features with nice names
-enum feat : std::size_t {
-  eR = 0,
-  ePhi,
-  eZ,
-  eCellCount,
-  eCellSum,
-  eClusterX,
-  eClusterY
-};
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  // Setup hooks
+  LoopHook hook;
+
+  std::unique_ptr<Acts::TorchTruthGraphMetricsHook> truthGraphHook;
+  if (m_inputTruthGraph.isInitialized()) {
+    truthGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
+        m_inputTruthGraph(ctx).edges, this->logger().clone());
+    hook.hooks.push_back(&*truthGraphHook);
+  }
+
+  std::unique_ptr<Acts::TorchGraphStoreHook> graphStoreHook;
+  if (m_outputGraph.isInitialized()) {
+    graphStoreHook = std::make_unique<Acts::TorchGraphStoreHook>();
+    hook.hooks.push_back(&*graphStoreHook);
+  }
+
   // Read input data
   auto spacepoints = m_inputSpacePoints(ctx);
-
-  auto hook = std::make_unique<Acts::ExaTrkXHook>();
-  if (m_inputSimHits.isInitialized() && m_inputMeasurementMap.isInitialized()) {
-    hook = std::make_unique<ExamplesEdmHook>(
-        spacepoints, m_inputMeasurementMap(ctx), m_inputSimHits(ctx),
-        m_inputParticles(ctx), m_cfg.targetMinHits, m_cfg.targetMinPT,
-        logger());
-  }
 
   std::optional<ClusterContainer> clusters;
   if (m_inputClusters.isInitialized()) {
@@ -200,60 +143,76 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // Convert Input data to a list of size [num_measurements x
   // measurement_features]
   const std::size_t numSpacepoints = spacepoints.size();
-  const std::size_t numFeatures = clusters ? 7 : 3;
-  ACTS_INFO("Received " << numSpacepoints << " spacepoints");
+  const std::size_t numFeatures = m_cfg.nodeFeatures.size();
+  ACTS_DEBUG("Received " << numSpacepoints << " spacepoints");
+  ACTS_DEBUG("Construct " << numFeatures << " node features");
 
   std::vector<float> features(numSpacepoints * numFeatures);
   std::vector<int> spacepointIDs;
 
   spacepointIDs.reserve(spacepoints.size());
 
-  double sumCells = 0.0;
-  double sumActivation = 0.0;
-
-  for (auto i = 0ul; i < numSpacepoints; ++i) {
-    const auto& sp = spacepoints[i];
-
-    // I would prefer to use a std::span or boost::span here once available
-    float* featurePtr = features.data() + i * numFeatures;
+  for (auto isp = 0ul; isp < numSpacepoints; ++isp) {
+    const auto& sp = spacepoints[isp];
 
     // For now just take the first index since does require one single index
     // per spacepoint
-    const auto& sl = sp.sourceLinks()[0].template get<IndexSourceLink>();
-    spacepointIDs.push_back(sl.index());
+    // TODO does it work for the module map construction to use only the first
+    // sp?
+    const auto& sl1 = sp.sourceLinks()[0].template get<IndexSourceLink>();
 
-    featurePtr[eR] = std::hypot(sp.x(), sp.y()) / m_cfg.rScale;
-    featurePtr[ePhi] = std::atan2(sp.y(), sp.x()) / m_cfg.phiScale;
-    featurePtr[eZ] = sp.z() / m_cfg.zScale;
+    // TODO this makes it a bit useless, refactor so we do not need to pass this
+    // to the pipeline
+    spacepointIDs.push_back(isp);
 
-    if (clusters) {
-      const auto& cluster = clusters->at(sl.index());
-      const auto& chnls = cluster.channels;
+    // This should be fine, because check in constructor
+    Cluster* cl1 = clusters ? &clusters->at(sl1.index()) : nullptr;
+    Cluster* cl2 = cl1;
 
-      featurePtr[eCellCount] = cluster.channels.size() / m_cfg.cellCountScale;
-      featurePtr[eCellSum] =
-          std::accumulate(chnls.begin(), chnls.end(), 0.0,
-                          [](double s, const Cluster::Cell& c) {
-                            return s + c.activation;
-                          }) /
-          m_cfg.cellSumScale;
-      featurePtr[eClusterX] = cluster.sizeLoc0 / m_cfg.clusterXScale;
-      featurePtr[eClusterY] = cluster.sizeLoc1 / m_cfg.clusterYScale;
+    if (sp.sourceLinks().size() == 2) {
+      const auto& sl2 = sp.sourceLinks()[1].template get<IndexSourceLink>();
+      cl2 = clusters ? &clusters->at(sl2.index()) : nullptr;
+    }
 
-      sumCells += featurePtr[eCellCount];
-      sumActivation += featurePtr[eCellSum];
+    // I would prefer to use a std::span or boost::span here once available
+    float* f = features.data() + isp * numFeatures;
+
+    using NF = NodeFeature;
+
+    for (auto ift = 0ul; ift < numFeatures; ++ift) {
+      // clang-format off
+      switch(m_cfg.nodeFeatures[ift]) {
+        break; case NF::eR:           f[ift] = std::hypot(sp.x(), sp.y());
+        break; case NF::ePhi:         f[ift] = std::atan2(sp.y(), sp.x());
+        break; case NF::eZ:           f[ift] = sp.z();
+        break; case NF::eX:           f[ift] = sp.x();
+        break; case NF::eY:           f[ift] = sp.y();
+        break; case NF::eEta:         f[ift] = eta(std::hypot(sp.x(), sp.y()), sp.z());
+        break; case NF::eClusterX:    f[ift] = cl1->sizeLoc0;
+        break; case NF::eClusterY:    f[ift] = cl1->sizeLoc1;
+        break; case NF::eCellSum:     f[ift] = cl1->sumActivations();
+        break; case NF::eCellCount:   f[ift] = cl1->channels.size();
+        break; case NF::eCluster1R:   f[ift] = std::hypot(cl1->globalPosition[Acts::ePos0], cl1->globalPosition[Acts::ePos1]);
+        break; case NF::eCluster2R:   f[ift] = std::hypot(cl2->globalPosition[Acts::ePos0], cl2->globalPosition[Acts::ePos1]);
+        break; case NF::eCluster1Phi: f[ift] = std::atan2(cl1->globalPosition[Acts::ePos1], cl1->globalPosition[Acts::ePos0]);
+        break; case NF::eCluster2Phi: f[ift] = std::atan2(cl2->globalPosition[Acts::ePos1], cl2->globalPosition[Acts::ePos0]);
+        break; case NF::eCluster1Z:   f[ift] = cl1->globalPosition[Acts::ePos2];
+        break; case NF::eCluster2Z:   f[ift] = cl2->globalPosition[Acts::ePos2];
+        break; case NF::eCluster1Eta: f[ift] = eta(std::hypot(cl1->globalPosition[Acts::ePos0], cl1->globalPosition[Acts::ePos1]), cl1->globalPosition[Acts::ePos2]);
+        break; case NF::eCluster2Eta: f[ift] = eta(std::hypot(cl2->globalPosition[Acts::ePos0], cl2->globalPosition[Acts::ePos1]), cl2->globalPosition[Acts::ePos2]);
+      }
+      // clang-format on
+
+      f[ift] /= m_cfg.featureScales[ift];
     }
   }
-
-  ACTS_DEBUG("Avg cell count: " << sumCells / spacepoints.size());
-  ACTS_DEBUG("Avg activation: " << sumActivation / sumCells);
 
   // Run the pipeline
   const auto trackCandidates = [&]() {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     Acts::ExaTrkXTiming timing;
-    auto res = m_pipeline.run(features, spacepointIDs, *hook, &timing);
+    auto res = m_pipeline.run(features, spacepointIDs, hook, &timing);
 
     m_timing.graphBuildingTime(timing.graphBuildingTime.count());
 
@@ -294,13 +253,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   ACTS_INFO("Created " << protoTracks.size() << " proto tracks");
   m_outputProtoTracks(ctx, std::move(protoTracks));
 
-  if (auto dhook = dynamic_cast<ExamplesEdmHook*>(&*hook);
-      dhook && m_outputGraph.isInitialized()) {
-    auto graph = dhook->storedGraph();
+  if (m_outputGraph.isInitialized()) {
+    auto graph = graphStoreHook->storedGraph();
     std::transform(
         graph.first.begin(), graph.first.end(), graph.first.begin(),
         [&](const auto& a) -> std::int64_t { return spacepointIDs.at(a); });
-    m_outputGraph(ctx, std::move(graph));
+    m_outputGraph(ctx, {graph.first, graph.second});
   }
 
   return ActsExamples::ProcessCode::SUCCESS;

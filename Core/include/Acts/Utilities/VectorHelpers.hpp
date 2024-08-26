@@ -21,14 +21,6 @@
 
 namespace Acts::VectorHelpers {
 
-namespace detail {
-template <class T>
-using phi_method_t = decltype(std::declval<const T>().phi());
-
-template <class T>
-using has_phi_method = Concepts::is_detected<phi_method_t, T>;
-}  // namespace detail
-
 /// Calculate phi (transverse plane angle) from compatible Eigen types
 /// @tparam Derived Eigen derived concrete type
 /// @param v Any vector like Eigen type, static or dynamic
@@ -55,9 +47,12 @@ double phi(const Eigen::MatrixBase<Derived>& v) noexcept {
 /// @tparam T anything that has a phi method
 /// @param v Any type that implements a phi method
 /// @return The phi value
-template <typename T,
-          std::enable_if_t<detail::has_phi_method<T>::value, int> = 0>
-double phi(const T& v) noexcept {
+template <typename T>
+double phi(const T& v) noexcept
+  requires requires {
+    { v.phi() } -> std::floating_point;
+  }
+{
   return v.phi();
 }
 
@@ -154,23 +149,23 @@ inline std::array<ActsScalar, 4> evaluateTrigonomics(const Vector3& direction) {
 /// binning values.
 inline double cast(const Vector3& position, BinningValue bval) {
   switch (bval) {
-    case binX:
+    case BinningValue::binX:
       return position[0];
-    case binY:
+    case BinningValue::binY:
       return position[1];
-    case binZ:
+    case BinningValue::binZ:
       return position[2];
-    case binR:
+    case BinningValue::binR:
       return perp(position);
-    case binPhi:
+    case BinningValue::binPhi:
       return phi(position);
-    case binRPhi:
+    case BinningValue::binRPhi:
       return perp(position) * phi(position);
-    case binH:
+    case BinningValue::binH:
       return theta(position);
-    case binEta:
+    case BinningValue::binEta:
       return eta(position);
-    case binMag:
+    case BinningValue::binMag:
       return position.norm();
     default:
       assert(false && "Invalid BinningValue enum value");

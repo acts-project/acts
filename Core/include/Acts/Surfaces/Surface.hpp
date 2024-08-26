@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,7 +17,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
@@ -63,6 +63,8 @@ using SurfaceMultiIntersection = ObjectMultiIntersection<Surface>;
 class Surface : public virtual GeometryObject,
                 public std::enable_shared_from_this<Surface> {
  public:
+  friend struct GeometryContextOstreamWrapper<Surface>;
+
   /// @enum SurfaceType
   ///
   /// This enumerator simplifies the persistency & calculations,
@@ -249,21 +251,24 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global position to be evaludated
   /// @param direction global momentum direction (required for line-type surfaces)
-  /// @param bcheck BoundaryCheck directive for this onSurface check
+  /// @param boundaryTolerance BoundaryTolerance directive for this onSurface check
+  /// @param tolerance optional tolerance within which a point is considered on surface
   ///
   /// @return boolean indication if operation was successful
-  bool isOnSurface(const GeometryContext& gctx, const Vector3& position,
-                   const Vector3& direction,
-                   const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
+  bool isOnSurface(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction,
+      const BoundaryTolerance& boundaryTolerance = BoundaryTolerance::None(),
+      double tolerance = s_onSurfaceTolerance) const;
 
   /// The insideBounds method for local positions
   ///
   /// @param lposition The local position to check
-  /// @param bcheck BoundaryCheck directive for this onSurface check
+  /// @param boundaryTolerance BoundaryTolerance directive for this onSurface check
   /// @return boolean indication if operation was successful
-  virtual bool insideBounds(
-      const Vector2& lposition,
-      const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
+  virtual bool insideBounds(const Vector2& lposition,
+                            const BoundaryTolerance& boundaryTolerance =
+                                BoundaryTolerance::None()) const;
 
   /// Local to global transformation
   /// Generalized local to global transformation for the surface types. Since
@@ -389,22 +394,25 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position to start from
   /// @param direction The direction at start
-  /// @param bcheck the Boundary Check
+  /// @param boundaryTolerance the BoundaryTolerance
   /// @param tolerance the tolerance used for the intersection
   ///
   /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
   virtual SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      const BoundaryCheck& bcheck = BoundaryCheck(false),
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
       ActsScalar tolerance = s_onSurfaceTolerance) const = 0;
 
-  /// Output Method for std::ostream, to be overloaded by child classes
-  ///
+  /// Helper method for printing: the returned object captures the
+  /// surface and the geometry context and will print the surface
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param sl is the ostream to be dumped into
-  virtual std::ostream& toStream(const GeometryContext& gctx,
-                                 std::ostream& sl) const;
+  /// @return The wrapper object for printing
+  GeometryContextOstreamWrapper<Surface> toStream(
+      const GeometryContext& gctx) const {
+    return {*this, gctx};
+  }
 
   /// Output into a std::string
   ///
@@ -477,9 +485,16 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const Vector3& position) const = 0;
 
  protected:
+  /// Output Method for std::ostream, to be overloaded by child classes
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param sl is the ostream to be dumped into
+  virtual std::ostream& toStreamImpl(const GeometryContext& gctx,
+                                     std::ostream& sl) const;
+
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
-  Transform3 m_transform = Transform3::Identity();
+  std::unique_ptr<const Transform3> m_transform{};
 
   /// Pointer to the a DetectorElementBase
   const DetectorElementBase* m_associatedDetElement{nullptr};
@@ -514,16 +529,5 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const;
 };
-
-/// Print surface information to the provided stream. Internally invokes the
-/// `surface.toStream(...)`-method. This can be easily used e.g. like `std::cout
-/// << std::tie(surface, geometryContext);`
-inline std::ostream& operator<<(
-    std::ostream& os,
-    const std::tuple<const Surface&, const GeometryContext&>& tup) {
-  const auto [surface, gctx] = tup;
-  surface.toStream(gctx, os);
-  return os;
-}
 
 }  // namespace Acts

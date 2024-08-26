@@ -55,12 +55,12 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binR && bval != binPhi) {
+    } else if (bval != BinningValue::binR && bval != BinningValue::binPhi) {
       throw std::invalid_argument("Disc binning must be: phi, r");
     }
     float min = 0., max = 0.;
     // Perform the value adjustment
-    if (bval == binPhi) {
+    if (bval == BinningValue::binPhi) {
       min = minPhi;
       max = maxPhi;
     } else {
@@ -106,15 +106,16 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binRPhi && bval != binPhi && bval != binZ) {
+    } else if (bval != BinningValue::binRPhi && bval != BinningValue::binPhi &&
+               bval != BinningValue::binZ) {
       throw std::invalid_argument("Cylinder binning must be: rphi, phi, z");
     }
     float min = 0., max = 0.;
     // Perform the value adjustment
-    if (bval == binPhi) {
+    if (bval == BinningValue::binPhi) {
       min = minPhi;
       max = maxPhi;
-    } else if (bval == binRPhi) {
+    } else if (bval == BinningValue::binRPhi) {
       min = cR * minPhi;
       max = cR * maxPhi;
     } else {
@@ -158,12 +159,12 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binX && bval != binY) {
+    } else if (bval != BinningValue::binX && bval != BinningValue::binY) {
       throw std::invalid_argument("Rectangle binning must be: x, y. ");
     }
     float min = 0., max = 0.;
     // Perform the value adjustment
-    if (bval == binX) {
+    if (bval == BinningValue::binX) {
       min = minX;
       max = maxX;
     } else {
@@ -208,12 +209,12 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binX && bval != binY) {
+    } else if (bval != BinningValue::binX && bval != BinningValue::binY) {
       throw std::invalid_argument("Rectangle binning must be: x, y. ");
     }
     float min = 0., max = 0.;
     // Perform the value adjustment
-    if (bval == binX) {
+    if (bval == BinningValue::binX) {
       min = -1 * halfX;
       max = halfX;
     } else {
@@ -238,37 +239,29 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
 static inline BinUtility adjustBinUtility(const BinUtility& bu,
                                           const Surface& surface,
                                           const GeometryContext& gctx) {
-  // The surface type is a cylinder
-  if (surface.type() == Surface::Cylinder) {
-    // Cast to Cylinder bounds and return
-    auto cBounds = dynamic_cast<const CylinderBounds*>(&(surface.bounds()));
-    // Return specific adjustment
-    return adjustBinUtility(bu, *cBounds, surface.transform(gctx));
-
-  } else if (surface.type() == Surface::Disc) {
-    // Cast to Cylinder bounds and return
-    auto rBounds = dynamic_cast<const RadialBounds*>(&(surface.bounds()));
-    // Return specific adjustment
-    return adjustBinUtility(bu, *rBounds, surface.transform(gctx));
-  } else if (surface.type() == Surface::Plane) {
-    if (surface.bounds().type() == SurfaceBounds::eRectangle) {
-      // Cast to Plane bounds and return
-      auto pBounds = dynamic_cast<const RectangleBounds*>(&(surface.bounds()));
-      // Return specific adjustment
-      return adjustBinUtility(bu, *pBounds, surface.transform(gctx));
-    } else if (surface.bounds().type() == SurfaceBounds::eTrapezoid) {
-      // Cast to Plane bounds and return
-      auto pBounds = dynamic_cast<const TrapezoidBounds*>(&(surface.bounds()));
-      // Return specific adjustment
-      return adjustBinUtility(bu, *pBounds, surface.transform(gctx));
-    } else {
-      throw std::invalid_argument(
-          "Bin adjustment not implemented for this type of plane surface yet!");
+  if (auto b = dynamic_cast<const CylinderBounds*>(&(surface.bounds()));
+      b != nullptr) {
+    return adjustBinUtility(bu, *b, surface.transform(gctx));
+  }
+  if (auto b = dynamic_cast<const RadialBounds*>(&(surface.bounds()));
+      b != nullptr) {
+    return adjustBinUtility(bu, *b, surface.transform(gctx));
+  }
+  if (surface.type() == Surface::Plane) {
+    if (auto b = dynamic_cast<const RectangleBounds*>(&(surface.bounds()));
+        b != nullptr) {
+      return adjustBinUtility(bu, *b, surface.transform(gctx));
+    }
+    if (auto b = dynamic_cast<const TrapezoidBounds*>(&(surface.bounds()));
+        b != nullptr) {
+      return adjustBinUtility(bu, *b, surface.transform(gctx));
     }
   }
 
+  std::stringstream ss;
+  ss << surface.toStream({});
   throw std::invalid_argument(
-      "Bin adjustment not implemented for this surface yet!");
+      "Bin adjustment not implemented for this surface yet:\n" + ss.str());
 }
 
 }  // namespace Acts

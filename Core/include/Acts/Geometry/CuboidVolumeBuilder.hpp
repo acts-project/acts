@@ -81,6 +81,8 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     std::array<ActsScalar, 2u> envelopeZ{0, 0};
     // An optional rotation for this
     std::optional<RotationMatrix3> rotation{std::nullopt};
+    // Dimension for the binning
+    Acts::BinningValue binningDimension = Acts::BinningValue::binX;
   };
 
   /// @brief This struct stores the data for the construction of a cuboid
@@ -102,6 +104,8 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     std::string name = "Volume";
     // Material
     std::shared_ptr<const IVolumeMaterial> volumeMaterial = nullptr;
+    // Dimension for the binning
+    Acts::BinningValue binningDimension = Acts::BinningValue::binX;
   };
 
   /// @brief This struct stores the configuration of the tracking geometry

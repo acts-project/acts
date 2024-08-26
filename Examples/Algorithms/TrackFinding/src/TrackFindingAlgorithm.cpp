@@ -20,15 +20,14 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -176,20 +175,26 @@ void visitSeedIdentifiers(const TrackProxy& track, Visitor visitor) {
 
 class BranchStopper {
  public:
-  using Config =
-      std::optional<std::variant<Acts::TrackSelector::Config,
-                                 Acts::TrackSelector::EtaBinnedConfig>>;
   using BranchStopperResult =
       Acts::CombinatorialKalmanFilterBranchStopperResult;
 
+  struct BrachState {
+    std::size_t nPixelHoles = 0;
+    std::size_t nStripHoles = 0;
+  };
+
+  static constexpr Acts::ProxyAccessor<BrachState> branchStateAccessor =
+      Acts::ProxyAccessor<BrachState>(Acts::hashString("MyBranchState"));
+
   mutable std::atomic<std::size_t> m_nStoppedBranches{0};
 
-  explicit BranchStopper(const Config& config) : m_config(config) {}
+  explicit BranchStopper(const TrackFindingAlgorithm::Config& config)
+      : m_cfg(config) {}
 
   BranchStopperResult operator()(
-      const Acts::CombinatorialKalmanFilterTipState& tipState,
-      Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
-    if (!m_config.has_value()) {
+      const TrackContainer::TrackProxy& track,
+      const TrackContainer::TrackStateProxy& trackState) const {
+    if (!m_cfg.trackSelectorCfg.has_value()) {
       return BranchStopperResult::Continue;
     }
 
@@ -205,19 +210,41 @@ class BranchStopper {
             return config.hasCuts(eta) ? &config.getCuts(eta) : nullptr;
           }
         },
-        *m_config);
+        *m_cfg.trackSelectorCfg);
 
     if (singleConfig == nullptr) {
       ++m_nStoppedBranches;
       return BranchStopperResult::StopAndDrop;
     }
 
-    bool enoughMeasurements =
-        tipState.nMeasurements >= singleConfig->minMeasurements;
-    bool tooManyHoles = tipState.nHoles > singleConfig->maxHoles;
-    bool tooManyOutliers = tipState.nOutliers > singleConfig->maxOutliers;
+    bool tooManyHolesPS = false;
+    if (!(m_cfg.pixelVolumes.empty() && m_cfg.stripVolumes.empty())) {
+      auto& branchState = branchStateAccessor(track);
+      // count both holes and outliers as holes for pixel/strip counts
+      if (trackState.typeFlags().test(Acts::TrackStateFlag::HoleFlag) ||
+          trackState.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+        if (m_cfg.pixelVolumes.count(
+                trackState.referenceSurface().geometryId().volume()) >= 1) {
+          ++branchState.nPixelHoles;
+        } else if (m_cfg.stripVolumes.count(
+                       trackState.referenceSurface().geometryId().volume()) >=
+                   1) {
+          ++branchState.nStripHoles;
+        }
+      }
+      tooManyHolesPS = branchState.nPixelHoles > m_cfg.maxPixelHoles ||
+                       branchState.nStripHoles > m_cfg.maxStripHoles;
+    }
 
-    if (tooManyHoles || tooManyOutliers) {
+    bool enoughMeasurements =
+        track.nMeasurements() >= singleConfig->minMeasurements;
+    bool tooManyHoles =
+        track.nHoles() > singleConfig->maxHoles || tooManyHolesPS;
+    bool tooManyOutliers = track.nOutliers() > singleConfig->maxOutliers;
+    bool tooManyHolesAndOutliers = (track.nHoles() + track.nOutliers()) >
+                                   singleConfig->maxHolesAndOutliers;
+
+    if (tooManyHoles || tooManyOutliers || tooManyHolesAndOutliers) {
       ++m_nStoppedBranches;
       return enoughMeasurements ? BranchStopperResult::StopAndKeep
                                 : BranchStopperResult::StopAndDrop;
@@ -227,7 +254,7 @@ class BranchStopper {
   }
 
  private:
-  Config m_config;
+  const TrackFindingAlgorithm::Config& m_cfg;
 };
 
 }  // namespace
@@ -301,17 +328,15 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   MeasurementSelector measSel{
       Acts::MeasurementSelector(m_cfg.measurementSelectorCfg)};
 
-  using Extensions =
-      Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>;
+  using Extensions = Acts::CombinatorialKalmanFilterExtensions<TrackContainer>;
 
-  BranchStopper branchStopper(m_cfg.trackSelectorCfg);
+  BranchStopper branchStopper(m_cfg);
 
   Extensions extensions;
   extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
       &calibrator);
-  extensions.updater.connect<
-      &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
-      &kfUpdater);
+  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
+      typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
   extensions.measurementSelector.connect<&MeasurementSelector::select>(
       &measSel);
   extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
@@ -322,33 +347,40 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       slAccessorDelegate;
   slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
 
-  Acts::PropagatorPlainOptions firstPropOptions;
+  Acts::PropagatorPlainOptions firstPropOptions(ctx.geoContext,
+                                                ctx.magFieldContext);
   firstPropOptions.maxSteps = m_cfg.maxSteps;
-  firstPropOptions.direction = Acts::Direction::Forward;
+  firstPropOptions.direction = m_cfg.reverseSearch ? Acts::Direction::Backward
+                                                   : Acts::Direction::Forward;
 
-  Acts::PropagatorPlainOptions secondPropOptions;
+  Acts::PropagatorPlainOptions secondPropOptions(ctx.geoContext,
+                                                 ctx.magFieldContext);
   secondPropOptions.maxSteps = m_cfg.maxSteps;
   secondPropOptions.direction = firstPropOptions.direction.invert();
 
   // Set the CombinatorialKalmanFilter options
-  TrackFindingAlgorithm::TrackFinderOptions firstOptions(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, firstPropOptions);
+  TrackFinderOptions firstOptions(ctx.geoContext, ctx.magFieldContext,
+                                  ctx.calibContext, slAccessorDelegate,
+                                  extensions, firstPropOptions);
+  firstOptions.targetSurface = m_cfg.reverseSearch ? pSurface.get() : nullptr;
 
-  TrackFindingAlgorithm::TrackFinderOptions secondOptions(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, secondPropOptions);
-  secondOptions.targetSurface = pSurface.get();
+  TrackFinderOptions secondOptions(ctx.geoContext, ctx.magFieldContext,
+                                   ctx.calibContext, slAccessorDelegate,
+                                   extensions, secondPropOptions);
+  secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
 
-  Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
-      Acts::EigenStepper<>(m_cfg.magneticField),
+  using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
+  using ExtrapolatorOptions =
+      Extrapolator::template Options<Acts::ActionList<Acts::MaterialInteractor>,
+                                     Acts::AbortList<Acts::EndOfWorldReached>>;
+
+  Extrapolator extrapolator(
+      Acts::SympyStepper(m_cfg.magneticField),
       Acts::Navigator({m_cfg.trackingGeometry},
                       logger().cloneWithSuffix("Navigator")),
       logger().cloneWithSuffix("Propagator"));
 
-  Acts::PropagatorOptions<Acts::ActionList<Acts::MaterialInteractor>,
-                          Acts::AbortList<Acts::EndOfWorldReached>>
-      extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
+  ExtrapolatorOptions extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
@@ -363,6 +395,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   TrackContainer tracks(trackContainer, trackStateContainer);
   TrackContainer tracksTemp(trackContainerTemp, trackStateContainerTemp);
+
+  // Note that not all backends support PODs as column types
+  tracks.addColumn<BranchStopper::BrachState>("MyBranchState");
+  tracksTemp.addColumn<BranchStopper::BrachState>("MyBranchState");
 
   tracks.addColumn<unsigned int>("trackGroup");
   tracksTemp.addColumn<unsigned int>("trackGroup");
@@ -502,7 +538,11 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
-              if (secondTrack.nTrackStates() < 2) {
+              if (!secondTrack.hasReferenceSurface()) {
+                ACTS_WARNING("Second track has no reference surface.");
+                continue;
+              }
+              if (secondTrack.nMeasurements() <= 1) {
                 continue;
               }
 
@@ -522,26 +562,49 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                   (*std::next(secondTrackCopy.trackStatesReversed().begin()))
                       .index();
 
-              Acts::calculateTrackQuantities(trackCandidate);
+              // finalize the track candidate
 
-              // TODO This extrapolation should not be necessary
-              // TODO The CKF is targeting this surface and should communicate
-              //      the resulting parameters
-              // TODO Removing this requires changes in the core CKF
-              //      implementation
-              auto secondExtrapolationResult =
-                  Acts::extrapolateTrackToReferenceSurface(
-                      trackCandidate, *pSurface, extrapolator,
-                      extrapolationOptions, m_cfg.extrapolationStrategy,
-                      logger());
-              if (!secondExtrapolationResult.ok()) {
-                m_nFailedExtrapolation++;
-                ACTS_ERROR("Second extrapolation for seed "
-                           << iSeed << " and track " << secondTrack.index()
-                           << " failed with error "
-                           << secondExtrapolationResult.error());
-                continue;
+              if (!m_cfg.reverseSearch) {
+                // these parameters are already extrapolated by the CKF and have
+                // the optimal resolution. note that we did not smooth all the
+                // states.
+
+                trackCandidate.parameters() = secondTrackCopy.parameters();
+                trackCandidate.covariance() = secondTrackCopy.covariance();
+                trackCandidate.setReferenceSurface(
+                    secondTrackCopy.referenceSurface().getSharedPtr());
+              } else {
+                // smooth the full track and extrapolate to the reference
+
+                auto secondSmoothingResult =
+                    Acts::smoothTrack(ctx.geoContext, trackCandidate, logger());
+                if (!secondSmoothingResult.ok()) {
+                  m_nFailedSmoothing++;
+                  ACTS_ERROR("Second smoothing for seed "
+                             << iSeed << " and track " << secondTrack.index()
+                             << " failed with error "
+                             << secondSmoothingResult.error());
+                  continue;
+                }
+
+                trackCandidate.reverseTrackStates(true);
+
+                auto secondExtrapolationResult =
+                    Acts::extrapolateTrackToReferenceSurface(
+                        trackCandidate, *pSurface, extrapolator,
+                        extrapolationOptions, m_cfg.extrapolationStrategy,
+                        logger());
+                if (!secondExtrapolationResult.ok()) {
+                  m_nFailedExtrapolation++;
+                  ACTS_ERROR("Second extrapolation for seed "
+                             << iSeed << " and track " << secondTrack.index()
+                             << " failed with error "
+                             << secondExtrapolationResult.error());
+                  continue;
+                }
               }
+
+              Acts::calculateTrackQuantities(trackCandidate);
 
               addTrack(trackCandidate);
 

@@ -19,6 +19,7 @@
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
@@ -57,7 +58,9 @@ using namespace ActsExamples;
 
 namespace {
 
-using MultiStepper = Acts::MultiEigenStepperLoop<>;
+using MultiStepper = Acts::MultiEigenStepperLoop<
+    Acts::StepperExtensionList<Acts::DefaultExtension>,
+    Acts::MaxWeightReducerLoop>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
 
@@ -103,23 +106,28 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         &updater);
 
     Acts::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
-        options.geoContext,
-        options.magFieldContext,
-        options.calibrationContext,
-        extensions,
-        options.propOptions,
-        &(*options.referenceSurface),
-        maxComponents,
-        weightCutoff,
-        abortOnError,
-        disableAllMaterialHandling};
+        options.geoContext, options.magFieldContext,
+        options.calibrationContext};
+    gsfOptions.extensions = extensions;
+    gsfOptions.propagatorPlainOptions = options.propOptions;
+    gsfOptions.referenceSurface = options.referenceSurface;
+    gsfOptions.maxComponents = maxComponents;
+    gsfOptions.weightCutoff = weightCutoff;
+    gsfOptions.abortOnError = abortOnError;
+    gsfOptions.disableAllMaterialHandling = disableAllMaterialHandling;
     gsfOptions.componentMergeMethod = mergeMethod;
 
     gsfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
-    gsfOptions.extensions.surfaceAccessor
-        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
-            &m_slSurfaceAccessor);
+
+    if (options.doRefit) {
+      gsfOptions.extensions.surfaceAccessor
+          .connect<&RefittingCalibrator::accessSurface>();
+    } else {
+      gsfOptions.extensions.surfaceAccessor
+          .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+              &m_slSurfaceAccessor);
+    }
     switch (reductionAlg) {
       case MixtureReductionAlgorithm::weightCut: {
         gsfOptions.extensions.mixtureReducer

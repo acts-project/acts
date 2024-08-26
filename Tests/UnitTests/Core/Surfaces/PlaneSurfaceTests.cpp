@@ -150,17 +150,21 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 
   /// Test isOnSurface
   Vector3 offSurface{0, 1, -2.};
+  BOOST_CHECK(planeSurfaceObject->isOnSurface(
+      tgContext, globalPosition, momentum, BoundaryTolerance::None()));
   BOOST_CHECK(planeSurfaceObject->isOnSurface(tgContext, globalPosition,
-                                              momentum, BoundaryCheck(true)));
+                                              BoundaryTolerance::None()));
   BOOST_CHECK(!planeSurfaceObject->isOnSurface(tgContext, offSurface, momentum,
-                                               BoundaryCheck(true)));
+                                               BoundaryTolerance::None()));
+  BOOST_CHECK(!planeSurfaceObject->isOnSurface(tgContext, offSurface,
+                                               BoundaryTolerance::None()));
   //
   // Test intersection
   Vector3 direction{0., 0., 1.};
-  auto sfIntersection =
-      planeSurfaceObject
-          ->intersect(tgContext, offSurface, direction, BoundaryCheck(true))
-          .closest();
+  auto sfIntersection = planeSurfaceObject
+                            ->intersect(tgContext, offSurface, direction,
+                                        BoundaryTolerance::None())
+                            .closest();
   Intersection3D expectedIntersect{Vector3{0, 1, 2}, 4.,
                                    Intersection3D::Status::reachable};
   BOOST_CHECK(sfIntersection);
@@ -234,14 +238,21 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
 
   auto planeExtent = plane->polyhedronRepresentation(tgContext, 1).extent();
 
-  CHECK_CLOSE_ABS(planeExtent.min(binZ), -rHx, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.max(binZ), rHx, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.min(binX), -rHy, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.max(binX), rHy, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.min(binY), yPs, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.max(binY), yPs, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.min(binR), yPs, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.max(binR), std::hypot(yPs, rHy),
+  CHECK_CLOSE_ABS(planeExtent.min(BinningValue::binZ), -rHx,
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.max(BinningValue::binZ), rHx,
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.min(BinningValue::binX), -rHy,
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.max(BinningValue::binX), rHy,
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.min(BinningValue::binY), yPs,
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.max(BinningValue::binY), yPs,
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.min(BinningValue::binR), yPs,
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.max(BinningValue::binR), std::hypot(yPs, rHy),
                   s_onSurfaceTolerance);
 
   // Now rotate
@@ -253,17 +264,19 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
 
   auto planeExtentRot =
       planeRot->polyhedronRepresentation(tgContext, 1).extent();
-  CHECK_CLOSE_ABS(planeExtentRot.min(binZ), -rHx, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.max(binZ), rHx, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.min(binX), -rHy * std::cos(alpha),
+  CHECK_CLOSE_ABS(planeExtentRot.min(BinningValue::binZ), -rHx,
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.max(binX), rHy * std::cos(alpha),
+  CHECK_CLOSE_ABS(planeExtentRot.max(BinningValue::binZ), rHx,
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.min(binY), yPs - rHy * std::sin(alpha),
+  CHECK_CLOSE_ABS(planeExtentRot.min(BinningValue::binX),
+                  -rHy * std::cos(alpha), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtentRot.max(BinningValue::binX), rHy * std::cos(alpha),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.max(binY), yPs + rHy * std::sin(alpha),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.min(binR), yPs * std::cos(alpha),
+  CHECK_CLOSE_ABS(planeExtentRot.min(BinningValue::binY),
+                  yPs - rHy * std::sin(alpha), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtentRot.max(BinningValue::binY),
+                  yPs + rHy * std::sin(alpha), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtentRot.min(BinningValue::binR), yPs * std::cos(alpha),
                   s_onSurfaceTolerance);
 }
 
@@ -278,16 +291,16 @@ BOOST_AUTO_TEST_CASE(RotatedTrapezoid) {
   std::shared_ptr<TrapezoidBounds> bounds =
       std::make_shared<TrapezoidBounds>(shortHalfX, longHalfX, halfY);
 
-  BOOST_CHECK(bounds->inside(edgePoint, BoundaryCheck(true)));
+  BOOST_CHECK(bounds->inside(edgePoint, BoundaryTolerance::None()));
   BOOST_CHECK(!bounds->inside(Eigen::Rotation2D(-rotAngle) * edgePoint,
-                              BoundaryCheck(true)));
+                              BoundaryTolerance::None()));
 
   std::shared_ptr<TrapezoidBounds> rotatedBounds =
       std::make_shared<TrapezoidBounds>(shortHalfX, longHalfX, halfY, rotAngle);
 
-  BOOST_CHECK(!rotatedBounds->inside(edgePoint, BoundaryCheck(true)));
+  BOOST_CHECK(!rotatedBounds->inside(edgePoint, BoundaryTolerance::None()));
   BOOST_CHECK(rotatedBounds->inside(Eigen::Rotation2D(-rotAngle) * edgePoint,
-                                    BoundaryCheck(true)));
+                                    BoundaryTolerance::None()));
 }
 
 /// Unit test for testing PlaneSurface alignment derivatives
@@ -323,7 +336,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
                                                     direction);
   // The expected results
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
-  expAlignToPath << 1, 0, 0, 2, -1, -2;
+  expAlignToPath << 1, 0, 0, 2, -1, 0;
 
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
@@ -349,9 +362,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
       alignToBound.block<1, 6>(eBoundLoc1, eAlignmentCenter0);
   // The expected results
   AlignmentToPathMatrix expAlignToloc0;
-  expAlignToloc0 << 0, 0, 1, 0, 0, 0;
+  expAlignToloc0 << 0, 0, 1, 0, 0, 2;
   AlignmentToPathMatrix expAlignToloc1;
-  expAlignToloc1 << 0, -1, 0, 0, 0, 0;
+  expAlignToloc1 << 0, -1, 0, 0, 0, -1;
   // Check if the calculated derivatives are as expected
   CHECK_CLOSE_ABS(alignToloc0, expAlignToloc0, 1e-10);
   CHECK_CLOSE_ABS(alignToloc1, expAlignToloc1, 1e-10);

@@ -45,7 +45,8 @@ Acts::Experimental::detail::DetectorVolumeConsistency::checkCenterAlignment(
   checkRotationAlignment(gctx, volumes);
 
   // Get the reference axis
-  Vector3 refAxis = volumes[0u]->transform(gctx).rotation().col(axisValue);
+  Vector3 refAxis =
+      volumes[0u]->transform(gctx).rotation().col(toUnderlying(axisValue));
 
   for (auto [iv, v] : enumerate(volumes)) {
     if (iv > 0) {
