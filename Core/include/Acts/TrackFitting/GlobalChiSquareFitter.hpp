@@ -622,19 +622,6 @@ class Gx2Fitter {
                                << " has no measurement/material/hole.");
         }
       }
-      ACTS_VERBOSE("result.processedMeasurements: "
-                   << result.processedMeasurements << "\n"
-                   << "inputMeasurements.size(): "
-                   << inputMeasurements->size());
-      if (result.processedMeasurements >= inputMeasurements->size()) {
-        ACTS_INFO("Actor: finish: all measurements found.");
-        result.finished = true;
-      }
-
-      if (result.surfaceCount > 900) {
-        ACTS_INFO("Actor: finish due to limit. Result might be garbage.");
-        result.finished = true;
-      }
     }
   };
 
