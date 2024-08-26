@@ -503,10 +503,6 @@ class Gx2Fitter {
       } else if (state.navigation.navigationBreak) {
         ACTS_INFO("Actor: finish: navigationBreak.");
         result.finished = true;
-      } else if (result.surfaceCount > 900) {
-        // TODO Keep it in for now, but check in the future, if we can remove it
-        ACTS_INFO("Actor: finish due to limit. Result might be garbage.");
-        result.finished = true;
       }
 
       // End the propagation and return to the fitter
@@ -802,9 +798,6 @@ class Gx2Fitter {
             return;
           }
 
-          ACTS_DEBUG("    Handle hole.");  // (We are not sure yet, if it maybe
-                                           // is just material
-
           auto& fittedStates = *result.fittedStates;
 
           // Add a <trackStateMask> TrackState entry multi trajectory. This
@@ -837,7 +830,6 @@ class Gx2Fitter {
 
           // Get and set the type flags
           auto typeFlags = trackStateProxy.typeFlags();
-          // TODO no parameters for hole?
           typeFlags.set(TrackStateFlag::ParameterFlag);
           if (surface->surfaceMaterial() != nullptr) {
             ACTS_VERBOSE("    It is material.");
