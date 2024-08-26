@@ -117,8 +117,6 @@ class TrackingVolume : public Volume {
   TrackingVolume(TrackingVolume&&) = default;
   TrackingVolume& operator=(TrackingVolume&&) = default;
 
-  TrackingVolume(TrackingVolume&&) = default;
-
   /// Constructor for a container Volume
   /// - vacuum filled volume either as a for other tracking volumes
   ///
