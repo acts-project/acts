@@ -595,7 +595,7 @@ class Gx2Fitter {
               typeFlags.set(TrackStateFlag::ParameterFlag);
               if (surface->surfaceMaterial() != nullptr) {
                 ACTS_DEBUG(
-                    "    There is also material, but we don't handle it.");
+                    "    There is also material, but we will not handle it.");
                 typeFlags.set(TrackStateFlag::MaterialFlag);
               }
 
@@ -622,7 +622,10 @@ class Gx2Fitter {
             ACTS_DEBUG("    Ignoring hole, because no preceding measurements.");
           }
         } else {
-          ACTS_DEBUG("    The surface contains no measurement/material/hole.");
+          // It may contain material if we are not doing multiple scattering.
+          // But then it is irrelevant.
+          ACTS_DEBUG(
+              "    The surface contains no measurement/(material)/hole.");
         }
       }
       ACTS_VERBOSE("result.processedMeasurements: "
