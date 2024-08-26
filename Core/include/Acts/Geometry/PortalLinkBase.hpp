@@ -31,7 +31,7 @@ class PortalLinkBase {
   /// Constructor from a surface. This constructor is only
   /// called from derived classes
   /// @param surface The surface
-  PortalLinkBase(std::shared_ptr<RegularSurface> surface)
+  explicit PortalLinkBase(std::shared_ptr<RegularSurface> surface)
       : m_surface(std::move(surface)) {}
 
  public:
