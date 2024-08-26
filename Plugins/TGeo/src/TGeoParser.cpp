@@ -68,23 +68,26 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
 
       bool accept = true;
       if (!options.parseRanges.empty()) {
-        auto shape =
-            dynamic_cast<TGeoBBox*>(state.node->GetVolume()->GetShape());
         // It uses the bounding box of TGeoBBox
-        // @TODO this should be replace by a proper TGeo to Acts::VolumeBounds
-        // and vertices converision which would make a more appropriate parsomg
-        double dx = options.unit * shape->GetDX();
-        double dy = options.unit * shape->GetDY();
-        double dz = options.unit * shape->GetDZ();
-        for (auto x : std::vector<double>{-dx, dx}) {
-          for (auto y : std::vector<double>{-dy, dy}) {
-            for (auto z : std::vector<double>{-dz, dz}) {
-              Vector3 edge = etrf * Vector3(x, y, z);
-              for (auto& check : options.parseRanges) {
-                double val = VectorHelpers::cast(edge, check.first);
-                if (val < check.second.first || val > check.second.second) {
-                  accept = false;
-                  break;
+        if (auto* shape =
+                dynamic_cast<TGeoBBox*>(state.node->GetVolume()->GetShape());
+            shape != nullptr) {
+          // @TODO this should be replace by a proper TGeo to Acts::VolumeBounds
+          // and vertices converision which would make a more appropriate
+          // parsomg
+          double dx = options.unit * shape->GetDX();
+          double dy = options.unit * shape->GetDY();
+          double dz = options.unit * shape->GetDZ();
+          for (auto x : std::vector<double>{-dx, dx}) {
+            for (auto y : std::vector<double>{-dy, dy}) {
+              for (auto z : std::vector<double>{-dz, dz}) {
+                Vector3 edge = etrf * Vector3(x, y, z);
+                for (auto& check : options.parseRanges) {
+                  double val = VectorHelpers::cast(edge, check.first);
+                  if (val < check.second.first || val > check.second.second) {
+                    accept = false;
+                    break;
+                  }
                 }
               }
             }

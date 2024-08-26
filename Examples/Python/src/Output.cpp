@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -36,6 +36,7 @@
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
+#include "ActsExamples/Io/Root/RootPropagationSummaryWriter.hpp"
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 #include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
@@ -104,10 +105,9 @@ namespace Acts::Python {
 void addOutput(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
-  ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::ObjPropagationStepsWriter<Acts::detail::Step>, mex,
-      "ObjPropagationStepsWriter", collection, outputDir, outputScalor,
-      outputPrecision);
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::ObjPropagationStepsWriter, mex,
+                             "ObjPropagationStepsWriter", collection, outputDir,
+                             outputScalor, outputPrecision);
 
   {
     auto c = py::class_<ViewConfig>(m, "ViewConfig").def(py::init<>());
@@ -173,6 +173,10 @@ void addOutput(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootPropagationStepsWriter, mex,
                              "RootPropagationStepsWriter", collection, filePath,
                              fileMode);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootPropagationSummaryWriter, mex,
+                             "RootPropagationSummaryWriter",
+                             inputSummaryCollection, filePath, fileMode);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootParticleWriter, mex,
                              "RootParticleWriter", inputParticles,

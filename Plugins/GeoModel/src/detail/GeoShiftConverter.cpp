@@ -16,11 +16,16 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
+#include <GeoModelKernel/GeoShapeShift.h>
+#include <GeoModelKernel/GeoTube.h>
+
 namespace Acts::detail {
+
+namespace {
 
 template <typename ContainedShape, typename Converter, typename Surface,
           typename Bounds>
-Result<GeoModelSensitiveSurface> impl(const GeoFullPhysVol& geoFPV,
+Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
                                       const GeoShapeShift& geoShift,
                                       const Transform3& absTransform,
                                       bool sensitive) {
@@ -34,7 +39,7 @@ Result<GeoModelSensitiveSurface> impl(const GeoFullPhysVol& geoFPV,
   const Transform3& shift = geoShift.getX();
 
   const auto& conversionRes =
-      Converter{}(geoFPV, *trd, absTransform * shift, sensitive);
+      Converter{}(geoPV, *trd, absTransform * shift, sensitive);
   if (!conversionRes.ok()) {
     return conversionRes.error();
   }
@@ -58,18 +63,20 @@ Result<GeoModelSensitiveSurface> impl(const GeoFullPhysVol& geoFPV,
   return std::make_tuple(newEl, newSurface);
 }
 
+}  // namespace
+
 Result<GeoModelSensitiveSurface> GeoShiftConverter::operator()(
-    const GeoFullPhysVol& geoFPV, const GeoShapeShift& geoShift,
+    const PVConstLink& geoPV, const GeoShapeShift& geoShift,
     const Transform3& absTransform, bool sensitive) const {
   auto r = impl<GeoTrd, detail::GeoTrdConverter, PlaneSurface, TrapezoidBounds>(
-      geoFPV, geoShift, absTransform, sensitive);
+      geoPV, geoShift, absTransform, sensitive);
 
   if (r.ok()) {
     return r;
   }
 
   r = impl<GeoBox, detail::GeoBoxConverter, PlaneSurface, RectangleBounds>(
-      geoFPV, geoShift, absTransform, sensitive);
+      geoPV, geoShift, absTransform, sensitive);
 
   if (r.ok()) {
     return r;
@@ -77,7 +84,7 @@ Result<GeoModelSensitiveSurface> GeoShiftConverter::operator()(
 
   // For now this does straw by default
   r = impl<GeoTube, detail::GeoTubeConverter, StrawSurface, LineBounds>(
-      geoFPV, geoShift, absTransform, sensitive);
+      geoPV, geoShift, absTransform, sensitive);
 
   if (r.ok()) {
     return r;

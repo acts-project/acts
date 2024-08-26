@@ -76,8 +76,7 @@ BOOST_AUTO_TEST_CASE(Update) {
 
   // Gain matrix update and filtered state
   BOOST_CHECK(GainMatrixUpdater()
-                  .
-                  operator()<VectorMultiTrajectory>(tgContext, ts)
+                  .operator()<VectorMultiTrajectory>(tgContext, ts)
                   .ok());
 
   // Check for regression. This does NOT test if the math is correct, just that
@@ -127,8 +126,7 @@ BOOST_AUTO_TEST_CASE(UpdateFailed) {
 
   // Gain matrix update and filtered state
   BOOST_CHECK(GainMatrixUpdater()
-                  .
-                  operator()<VectorMultiTrajectory>(tgContext, ts)
+                  .operator()<VectorMultiTrajectory>(tgContext, ts)
                   .error() == KalmanFitterError::UpdateFailed);
 }
 

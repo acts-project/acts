@@ -123,6 +123,9 @@ with tempfile.TemporaryDirectory() as temp:
             maxOutliers=2,
         ),
         CkfConfig(
+            chi2CutOffMeasurement=15.0,
+            chi2CutOffOutlier=25.0,
+            numMeasurementsCutOff=10,
             seedDeduplication=True,
             stayOnSeed=True,
         ),
@@ -187,7 +190,6 @@ with tempfile.TemporaryDirectory() as temp:
     )
 
     s.run()
-    del s
 
     shutil.move(
         tp / "performance_ambi.root",

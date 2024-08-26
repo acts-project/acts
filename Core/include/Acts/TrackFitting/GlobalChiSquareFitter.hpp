@@ -779,8 +779,8 @@ class Gx2Fitter {
           result.lastTrackIndex = currentTrackIndex;
 
           ++result.processedStates;
-        } else if ((surface->associatedDetectorElement() != nullptr) ||
-                   (surface->surfaceMaterial() != nullptr)) {
+        } else if (surface->associatedDetectorElement() != nullptr ||
+                   surface->surfaceMaterial() != nullptr) {
           // Here we handle holes. If material hasn't been handled before
           // (because multipleScattering is turned off), we will also handle it
           // here
@@ -902,15 +902,15 @@ class Gx2Fitter {
   /// @return the output as an output track
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters,
-            typename track_container_t, template <typename> class holder_t,
-            bool _isdn = isDirectNavigator>
+            typename track_container_t, template <typename> class holder_t>
   auto fit(source_link_iterator_t it, source_link_iterator_t end,
            const start_parameters_t& sParameters,
            const Gx2FitterOptions<traj_t>& gx2fOptions,
            TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const -> std::enable_if_t<
-          !_isdn, Result<typename TrackContainer<track_container_t, traj_t,
-                                                 holder_t>::TrackProxy>> {
+      const -> Result<typename TrackContainer<track_container_t, traj_t,
+                                              holder_t>::TrackProxy>
+    requires(!isDirectNavigator)
+  {
     // Preprocess Measurements (SourceLinks -> map)
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
@@ -924,6 +924,10 @@ class Gx2Fitter {
       inputMeasurements.emplace(geoId, std::move(sl));
     }
     ACTS_VERBOSE("inputMeasurements.size() = " << inputMeasurements.size());
+
+    // Store, if we want to do multiple scattering. We still need to pass this
+    // option to the Actor.
+    const bool multipleScattering = gx2fOptions.multipleScattering;
 
     /// Fully understand Aborter, Actor, Result later
     // Create the ActionList and AbortList
@@ -966,10 +970,6 @@ class Gx2Fitter {
     // a following iteration in a different volume.
     const TrackingVolume* startVolume = nullptr;
 
-    // Store, if we want to do multiple scattering. We still need to pass this
-    // option to the Actor.
-    const bool multipleScattering = gx2fOptions.multipleScattering;
-
     // TODO description
     std::unordered_map<GeometryIdentifier, ScatteringProperties> scatteringMap;
 
@@ -1006,13 +1006,13 @@ class Gx2Fitter {
 
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
+      gx2fActor.multipleScattering = multipleScattering;
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
       gx2fActor.startVolume = startVolume;
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
-      gx2fActor.multipleScattering = multipleScattering;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
@@ -1131,8 +1131,7 @@ class Gx2Fitter {
           doMaterial = doMaterial && scatteringMapId->second.materialIsValid;
         }
 
-        // We only consider states with a measurement
-        // TODO also material only states
+        // We only consider states with a measurement (and/or material)
         if (!stateHasMeasurement && !doMaterial) {
           ACTS_INFO("    Skip state.");
           continue;
@@ -1143,8 +1142,8 @@ class Gx2Fitter {
           jac = trackState.jacobian() * jac;
         }
 
+        // Handle measurement
         if (stateHasMeasurement) {
-          // Handle measurement
           ACTS_VERBOSE("    Handle measurement");
 
           auto measDim = trackState.calibratedSize();
@@ -1177,8 +1176,7 @@ class Gx2Fitter {
           }
         }
 
-        // TODO for now I bundle with the measurement. Let's develop
-        // material-only states later.
+        // Handle material
         if (doMaterial) {
           // Get and store geoId for the current material surface
           const GeometryIdentifier geoId =
@@ -1425,13 +1423,13 @@ class Gx2Fitter {
       PropagatorOptions propagatorOptions(geoCtx, magCtx);
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
+      gx2fActor.multipleScattering = multipleScattering;
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
       gx2fActor.startVolume = startVolume;
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
-      gx2fActor.multipleScattering = multipleScattering;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
