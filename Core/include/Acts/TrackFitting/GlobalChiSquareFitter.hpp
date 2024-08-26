@@ -625,6 +625,19 @@ class Gx2Fitter {
           ACTS_DEBUG("    The surface contains no measurement/material/hole.");
         }
       }
+      ACTS_VERBOSE("result.processedMeasurements: "
+                   << result.processedMeasurements << "\n"
+                   << "inputMeasurements.size(): "
+                   << inputMeasurements->size());
+      if (result.processedMeasurements >= inputMeasurements->size()) {
+        ACTS_INFO("Actor: finish: all measurements found.");
+        result.finished = true;
+      }
+
+      if (result.surfaceCount > 900) {
+        ACTS_INFO("Actor: finish due to limit. Result might be garbage.");
+        result.finished = true;
+      }
     }
   };
 
@@ -839,7 +852,7 @@ class Gx2Fitter {
         const bool stateHasMaterial =
             typeFlags.test(TrackStateFlag::MaterialFlag);
 
-        bool doMaterial = multipleScattering && stateHasMaterial;
+        const bool doMaterial = multipleScattering && stateHasMaterial;
 
         // We only consider states with a measurement (and/or material)
         if (!stateHasMeasurement && !doMaterial) {
