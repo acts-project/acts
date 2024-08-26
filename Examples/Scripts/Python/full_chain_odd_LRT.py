@@ -226,11 +226,14 @@ else:
             ParticleConfig(
                 args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
             ),
-            vtxGen=acts.examples.GaussianVertexGenerator(
-                mean=acts.Vector4(0, 0, 0, 0),
-                stddev=acts.Vector4(
-                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
-                ),
+            outputDirRoot=pathlib.Path("/home/aicha/Atlas/NewVertices"),
+            vtxGen=acts.examples.GaussianDisplacedVertexPositionGenerator(
+                rMean=2,
+                rStdDev=0.0125 * u.mm,
+                zMean=2,
+                zStdDev=55.5 * u.mm,
+                tMean=0,
+                tStdDev=1.0 * u.ns,
             ),
             multiplicity=args.gun_multiplicity,
             rnd=rnd,
@@ -240,7 +243,7 @@ else:
             s,
             hardProcess=["Top:qqbar2ttbar=on"],
             npileup=args.ttbar_pu,
-            vtxGen=acts.examples.GaussianVertexGenerator(
+            vtxGen=acts.examples.GaussianDisplacedVertexPositionGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
@@ -318,16 +321,6 @@ if args.reco:
             if args.ttbar
             else TruthSeedRanges()
         ),
-        initialSigmas=[
-            1 * u.mm,
-            1 * u.mm,
-            1 * u.degree,
-            1 * u.degree,
-            0.1 * u.e / u.GeV,
-            1 * u.ns,
-        ],
-        initialSigmaPtRel=0.1,
-        initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
@@ -358,9 +351,6 @@ if args.reco:
             maxOutliers=2,
         ),
         CkfConfig(
-            chi2CutOffMeasurement=15.0,
-            chi2CutOffOutlier=25.0,
-            numMeasurementsCutOff=10,
             seedDeduplication=True,
             stayOnSeed=True,
             pixelVolumes={16, 17, 18},
@@ -420,7 +410,7 @@ if args.reco:
     addVertexFitting(
         s,
         field,
-        vertexFinder=VertexFinder.AMVF,
+        vertexFinder=VertexFinder.Iterative,
         outputDirRoot=outputDir if args.output_root else None,
     )
 

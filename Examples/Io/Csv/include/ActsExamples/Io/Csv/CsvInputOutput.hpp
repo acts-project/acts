@@ -35,6 +35,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "Acts/Utilities/Concepts.hpp"
+
 #include <array>
 #include <cassert>
 #include <fstream>
@@ -210,12 +212,10 @@ class DsvWriter {
   std::ofstream m_file;
   std::size_t m_num_columns;
 
-  // enable_if to prevent this overload to be used for std::vector<T> as well
   template <typename T>
-  static std::enable_if_t<std::is_arithmetic<std::decay_t<T>>::value ||
-                              std::is_convertible<T, std::string>::value,
-                          unsigned>
-  write(T&& x, std::ostream& os);
+  unsigned write(T&& x, std::ostream& os)
+    requires(Acts::Concepts::arithmetic<std::decay_t<T>> ||
+             std::convertible_to<T, std::string>);
   template <typename T, typename Allocator>
   static unsigned write(const std::vector<T, Allocator>& xs, std::ostream& os);
 };
@@ -445,10 +445,10 @@ inline void DsvWriter<Delimiter>::append(Arg0&& arg0, Args&&... args) {
 
 template <char Delimiter>
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<std::decay_t<T>>::value ||
-                            std::is_convertible<T, std::string>::value,
-                        unsigned>
-DsvWriter<Delimiter>::write(T&& x, std::ostream& os) {
+inline unsigned DsvWriter<Delimiter>::write(T&& x, std::ostream& os)
+  requires(Acts::Concepts::arithmetic<std::decay_t<T>> ||
+           std::convertible_to<T, std::string>)
+{
   os << x;
   return 1u;
 }
