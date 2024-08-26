@@ -39,9 +39,6 @@ jobs:
       - name: Install dependencies
         run: CI/dependencies.sh
 
-      - run: which python3
-      - run: echo $PATH
-
       - name: Restore ccache
         uses: actions/cache/restore@v4
         id: ccache-restore
@@ -186,11 +183,12 @@ jobs:
         run: >
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
-          && which python3
           && python3 -m pip install histcmp==0.6.8 matplotlib
           && python3 -m pip install -r Examples/Scripts/requirements.txt
           && geant4-config --install-datasets
+          && venv_python=$(which python3)
           && source build/this_acts_withdeps.sh
+          && export PATH=$(dirname venv_python):$PATH
           && which python3
           && echo "::endgroup::"
           && CI/physmon/phys_perf_mon.sh all physmon
