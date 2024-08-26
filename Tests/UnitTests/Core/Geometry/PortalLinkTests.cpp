@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
 
     // Extend to a 2D grid with auto phi binning
 
-    auto grid2dCyl1 = grid1dCyl->make2DGrid(nullptr);
+    auto grid2dCyl1 = grid1dCyl->extendTo2d(nullptr);
     BOOST_REQUIRE(grid2dCyl1);
     BOOST_CHECK_EQUAL(grid2dCyl1->grid().axes().size(), 2);
     BOOST_CHECK_EQUAL(grid2dCyl1->surface().bounds(), cyl->bounds());
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
     checkAllBins(concrete);
 
     Axis axis1Explicit{AxisClosed, -M_PI * 30_mm, M_PI * 30_mm, 13};
-    auto grid2dCyl1Explicit = grid1dCyl->make2DGrid(&axis1Explicit);
+    auto grid2dCyl1Explicit = grid1dCyl->extendTo2d(&axis1Explicit);
     BOOST_REQUIRE(grid2dCyl1Explicit);
     BOOST_CHECK_EQUAL(grid2dCyl1Explicit->grid().axes().size(), 2);
     axis1 = grid2dCyl1Explicit->grid().axes().front();
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
                                                 45_degree * 30_mm, 10}),
                       std::invalid_argument);
 
-    auto grid2dCylPhi = grid1dCylPhi->make2DGrid(nullptr);
+    auto grid2dCylPhi = grid1dCylPhi->extendTo2d(nullptr);
     BOOST_CHECK_EQUAL(grid2dCylPhi->grid().axes().size(), 2);
     BOOST_CHECK_EQUAL(grid2dCylPhi->surface().bounds(), cylPhi->bounds());
     const auto* axis1Phi = grid2dCylPhi->grid().axes().front();
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
     checkAllBins(concrete3);
 
     Axis axis1PhiExplicit{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 13};
-    auto grid2dCylPhiExplicit = grid1dCylPhi->make2DGrid(&axis1PhiExplicit);
+    auto grid2dCylPhiExplicit = grid1dCylPhi->extendTo2d(&axis1PhiExplicit);
     BOOST_REQUIRE(grid2dCylPhiExplicit);
     BOOST_CHECK_EQUAL(grid2dCylPhiExplicit->grid().axes().size(), 2);
     axis1Phi = grid2dCylPhiExplicit->grid().axes().front();
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(Disc) {
     checkAllBins(*gridPhi);
 
     // Test making 2D grids from the 1D ones
-    auto grid2d = grid1->make2DGrid(nullptr);
+    auto grid2d = grid1->extendTo2d(nullptr);
     BOOST_REQUIRE(grid2d);
     BOOST_CHECK_EQUAL(grid2d->grid().axes().size(), 2);
     const auto* axis1 = grid2d->grid().axes().front();
@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(Disc) {
                                      Axis<Equidistant, Closed>>&>(*grid2d));
 
     Axis axis2Explicit{AxisClosed, -180_degree, 180_degree, 3};
-    auto grid2dExplicit = grid1->make2DGrid(&axis2Explicit);
+    auto grid2dExplicit = grid1->extendTo2d(&axis2Explicit);
     BOOST_REQUIRE(grid2dExplicit);
     BOOST_CHECK_EQUAL(grid2dExplicit->grid().axes().size(), 2);
     axis1 = grid2dExplicit->grid().axes().front();
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(Disc) {
     auto gridPhiBinnedInR = GridPortalLink::make(
         discPhi, BinningValue::binR, Axis{AxisBound, 30_mm, 100_mm, 3});
     gridPhiBinnedInR->setVolume(vol.get());
-    auto grid2dPhiNonClosed = gridPhiBinnedInR->make2DGrid(nullptr);
+    auto grid2dPhiNonClosed = gridPhiBinnedInR->extendTo2d(nullptr);
     BOOST_REQUIRE(grid2dPhiNonClosed);
     BOOST_CHECK_EQUAL(grid2dPhiNonClosed->grid().axes().size(), 2);
     Axis gridPhiBinnedInRExpected{AxisBound, 30_mm, 100_mm, 3};
@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(Disc) {
 
     Axis axisPhiNonClosedExplicit{AxisBound, -45_degree, 45_degree, 3};
     auto grid2dPhiNonClosedExplicit =
-        gridPhiBinnedInR->make2DGrid(&axisPhiNonClosedExplicit);
+        gridPhiBinnedInR->extendTo2d(&axisPhiNonClosedExplicit);
     BOOST_REQUIRE(grid2dPhiNonClosedExplicit);
     BOOST_CHECK_EQUAL(grid2dPhiNonClosedExplicit->grid().axes().size(), 2);
     axisPhiNonClosed = grid2dPhiNonClosedExplicit->grid().axes().back();
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(Disc) {
                                      decltype(axisPhiNonClosedExplicit)>&>(
             *grid2dPhiNonClosedExplicit));
 
-    auto grid2dPhi = gridPhi->make2DGrid(nullptr);
+    auto grid2dPhi = gridPhi->extendTo2d(nullptr);
     BOOST_REQUIRE(grid2dPhi);
     BOOST_CHECK_EQUAL(grid2dPhi->grid().axes().size(), 2);
     Axis axis2dPhiExpected{AxisBound, 30_mm, 100_mm, 1};
@@ -423,7 +423,7 @@ BOOST_AUTO_TEST_CASE(Disc) {
                                      decltype(axisPhi1Expected)>&>(*grid2dPhi));
 
     Axis axis2dPhiExplicit{AxisBound, 30_mm, 100_mm, 3};
-    auto grid2dPhiExplicit = gridPhi->make2DGrid(&axis2dPhiExplicit);
+    auto grid2dPhiExplicit = gridPhi->extendTo2d(&axis2dPhiExplicit);
     BOOST_REQUIRE(grid2dPhiExplicit);
     BOOST_CHECK_EQUAL(grid2dPhiExplicit->grid().axes().size(), 2);
     BOOST_CHECK_EQUAL(*grid2dPhiExplicit->grid().axes().front(),

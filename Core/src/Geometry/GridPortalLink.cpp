@@ -305,7 +305,7 @@ void GridPortalLink::fillGrid1dTo2d(FillDirection dir,
   }
 }
 
-std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
+std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2d(
     const std::shared_ptr<CylinderSurface>& surface, const IAxis* other) const {
   assert(dim() == 1);
   if (direction() == BinningValue::binRPhi) {
@@ -362,7 +362,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
   }
 }
 
-std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
+std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2d(
     const std::shared_ptr<DiscSurface>& surface, const IAxis* other) const {
   assert(dim() == 1);
 

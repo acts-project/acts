@@ -307,7 +307,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @param other The axis to use for the missing direction,
   ///              can be null for auto determination
   /// @return A unique pointer to the 2D grid portal link
-  virtual std::unique_ptr<GridPortalLink> make2DGrid(
+  virtual std::unique_ptr<GridPortalLink> extendTo2d(
       const IAxis* other) const = 0;
 
   /// The binning direction of the grid
@@ -347,7 +347,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @param other The axis to use for the missing direction,
   ///              can be null for auto determination
   /// @return A unique pointer to the 2D grid portal link
-  std::unique_ptr<GridPortalLink> extendTo2D(
+  std::unique_ptr<GridPortalLink> extendTo2d(
       const std::shared_ptr<CylinderSurface>& surface,
       const IAxis* other) const;
 
@@ -356,7 +356,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @param other The axis to use for the missing direction,
   ///              can be null for auto determination
   /// @return A unique pointer to the 2D grid portal link
-  std::unique_ptr<GridPortalLink> extendTo2D(
+  std::unique_ptr<GridPortalLink> extendTo2d(
       const std::shared_ptr<DiscSurface>& surface, const IAxis* other) const;
 
   /// Helper enum to declare which local direction to fill
@@ -465,16 +465,16 @@ class GridPortalLinkT final : public GridPortalLink {
   /// Makes a 2D grid from a 1D grid by extending it using an optional axis
   /// @param other The axis to use for the missing direction
   /// @return A unique pointer to the 2D grid portal link
-  std::unique_ptr<GridPortalLink> make2DGrid(const IAxis* other) const final {
+  std::unique_ptr<GridPortalLink> extendTo2d(const IAxis* other) const final {
     if constexpr (DIM == 2) {
       return std::make_unique<GridPortalLinkT<Axes...>>(*this);
     } else {
       if (auto cylinder =
               std::dynamic_pointer_cast<CylinderSurface>(m_surface)) {
-        return extendTo2D(cylinder, other);
+        return GridPortalLink::extendTo2d(cylinder, other);
       } else if (auto disc =
                      std::dynamic_pointer_cast<DiscSurface>(m_surface)) {
-        return extendTo2D(disc, other);
+        return GridPortalLink::extendTo2d(disc, other);
       } else {
         throw std::logic_error{
             "Surface type is not supported (this should not happen)"};

@@ -294,9 +294,9 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
           a->direction() == direction ? surfaceB : surfaceA;
 
       // Extend the aligned one by the other one's axis
-      auto aligned2D = aligned->make2DGrid(other->grid().axes().front());
+      auto aligned2D = aligned->extendTo2d(other->grid().axes().front());
       // Edtend the other one with a single bin
-      auto other2D = other->make2DGrid(nullptr);
+      auto other2D = other->extendTo2d(nullptr);
 
       assert(aligned2D != nullptr);
       assert(other2D != nullptr);
@@ -329,8 +329,8 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       } else {
         ACTS_VERBOSE("=> parallel merge");
 
-        auto a2D = a->make2DGrid(nullptr);
-        auto b2D = b->make2DGrid(nullptr);
+        auto a2D = a->extendTo2d(nullptr);
+        auto b2D = b->extendTo2d(nullptr);
         assert(a2D != nullptr);
         assert(b2D != nullptr);
 
@@ -351,8 +351,8 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
 
       } else {
         ACTS_VERBOSE("=> parallel merge");
-        auto a2D = a->make2DGrid(nullptr);
-        auto b2D = b->make2DGrid(nullptr);
+        auto a2D = a->extendTo2d(nullptr);
+        auto b2D = b->extendTo2d(nullptr);
         assert(a2D != nullptr);
         assert(b2D != nullptr);
 
@@ -475,7 +475,7 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(const GridPortalLink* a,
       ACTS_VERBOSE("1D grid is binned in complementary direction");
     }
 
-    auto b2D = b->make2DGrid(otherAxis);
+    auto b2D = b->extendTo2d(otherAxis);
     ACTS_VERBOSE("-> new grid: " << b2D->grid());
     return mergeGridPortals(a, b2D.get(), direction, logger);
   }
