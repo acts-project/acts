@@ -549,10 +549,19 @@ class Gx2Fitter {
           ACTS_DEBUG(
               "    The surface contains no measurement, but material and maybe "
               "a hole.");
-        } else if (surface->associatedDetectorElement() != nullptr) {
-          // Here we handle holes.
-          ACTS_DEBUG(
-              "    The surface contains no measurement, but maybe a hole.");
+        } else if (surface->associatedDetectorElement() != nullptr ||
+                   surface->surfaceMaterial() != nullptr) {
+          // Here we handle holes. If material hasn't been handled before
+          // (because multipleScattering is turned off), we will also handle it
+          // here
+          if (multipleScattering) {
+            ACTS_DEBUG(
+                "    The surface contains no measurement, but maybe a hole.");
+          } else {
+            ACTS_DEBUG(
+                "    The surface contains no measurement, but maybe a hole "
+                "and/or material.");
+          }
 
           // We only create track states here if there is already a measurement
           // detected (no holes before the first measurement)
@@ -594,8 +603,6 @@ class Gx2Fitter {
               auto typeFlags = trackStateProxy.typeFlags();
               typeFlags.set(TrackStateFlag::ParameterFlag);
               if (surface->surfaceMaterial() != nullptr) {
-                ACTS_DEBUG(
-                    "    There is also material, but we will not handle it.");
                 typeFlags.set(TrackStateFlag::MaterialFlag);
               }
 
