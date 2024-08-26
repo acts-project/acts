@@ -317,7 +317,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
     // 1D direction is binRPhi, so add a Z axis
     ActsScalar hlZ = surface->bounds().get(CylinderBounds::eHalfLengthZ);
 
-    auto grid = axisRPhi.visit([other, &surface, hlZ](const auto& axis0) {
+    auto grid = axisRPhi.visit([&](const auto& axis0) {
       Axis axisZ{AxisBound, -hlZ, hlZ, 1};
       const IAxis* axis = other != nullptr ? other : &axisZ;
       return axis->visit(
@@ -337,26 +337,24 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
     ActsScalar hlPhi = surface->bounds().get(CylinderBounds::eHalfPhiSector);
     ActsScalar hlRPhi = r * hlPhi;
 
-    auto axis = [&axisZ, hlRPhi, other, &surface, this](auto bdt) {
-      auto grid =
-          axisZ.visit([bdt, hlRPhi, other, &surface](const auto& axis1) {
-            Axis axisRPhi{bdt, -hlRPhi, hlRPhi, 1};
-            const IAxis* axis = other != nullptr ? other : &axisRPhi;
-            return axis->visit(
-                [&surface,
-                 &axis1](const auto& axis0) -> std::unique_ptr<GridPortalLink> {
-                  return GridPortalLink::make(surface, axis0, axis1);
-                });
-          });
+    auto makeGrid = [&](auto bdt) {
+      auto grid = axisZ.visit([&](const auto& axis1) {
+        Axis axisRPhi{bdt, -hlRPhi, hlRPhi, 1};
+        const IAxis* axis = other != nullptr ? other : &axisRPhi;
+        return axis->visit(
+            [&](const auto& axis0) -> std::unique_ptr<GridPortalLink> {
+              return GridPortalLink::make(surface, axis0, axis1);
+            });
+      });
 
       fillGrid1dTo2d(FillDirection::loc0, *this, *grid);
       return grid;
     };
 
     if (surface->bounds().coversFullAzimuth()) {
-      return axis(AxisClosed);
+      return makeGrid(AxisClosed);
     } else {
-      return axis(AxisBound);
+      return makeGrid(AxisBound);
     }
   }
 }
@@ -376,13 +374,12 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
     // 1D direction is binR, so add a phi axis
     ActsScalar hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
 
-    auto axis = [&axisR, hlPhi, other, &surface, this](auto bdt) {
-      auto grid = axisR.visit([hlPhi, other, &surface, bdt](const auto& axis0) {
+    auto makeGrid = [&](auto bdt) {
+      auto grid = axisR.visit([&](const auto& axis0) {
         Axis axisPhi{bdt, -hlPhi, hlPhi, 1};
         const IAxis* axis = other != nullptr ? other : &axisPhi;
         return axis->visit(
-            [&surface,
-             &axis0](const auto& axis1) -> std::unique_ptr<GridPortalLink> {
+            [&](const auto& axis1) -> std::unique_ptr<GridPortalLink> {
               return GridPortalLink::make(surface, axis0, axis1);
             });
       });
@@ -392,9 +389,9 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
     };
 
     if (bounds->coversFullAzimuth()) {
-      return axis(AxisClosed);
+      return makeGrid(AxisClosed);
     } else {
-      return axis(AxisBound);
+      return makeGrid(AxisBound);
     }
   } else {
     const auto& axisPhi = *grid().axes().front();
@@ -402,7 +399,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
     ActsScalar rMin = bounds->get(RadialBounds::eMinR);
     ActsScalar rMax = bounds->get(RadialBounds::eMaxR);
 
-    auto grid = axisPhi.visit([rMin, rMax, other, &surface](const auto& axis1) {
+    auto grid = axisPhi.visit([&](const auto& axis1) {
       Axis axisR{AxisBound, rMin, rMax, 1};
       const IAxis* axis = other != nullptr ? other : &axisR;
       return axis->visit(
