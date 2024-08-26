@@ -42,11 +42,10 @@ class PortalFusingException : public std::exception {
 
 class Portal {
  public:
-  Portal(const GeometryContext& gctx, Direction direction,
-         std::unique_ptr<PortalLinkBase> link);
+  Portal(Direction direction, std::unique_ptr<PortalLinkBase> link);
 
-  Portal(const GeometryContext& gctx, Direction direction,
-         std::shared_ptr<RegularSurface> surface, TrackingVolume& volume);
+  Portal(Direction direction, std::shared_ptr<RegularSurface> surface,
+         TrackingVolume& volume);
 
   Portal(const GeometryContext& gctx,
          std::unique_ptr<PortalLinkBase> alongNormal,

@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
   auto cyl2 = Surface::makeShared<CylinderSurface>(
       Transform3{Translation3{Vector3::UnitZ() * 100_mm}}, 50_mm, 100_mm);
 
-  Portal portal1{gctx, Direction::AlongNormal,
+  Portal portal1{Direction::AlongNormal,
                  std::make_unique<TrivialPortalLink>(cyl1, *vol1)};
   BOOST_CHECK(portal1.isValid());
 
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
           .value(),
       nullptr);
 
-  Portal portal2{gctx, Direction::AlongNormal, cyl2, *vol2};
+  Portal portal2{Direction::AlongNormal, cyl2, *vol2};
   BOOST_CHECK(portal2.isValid());
 
   BOOST_CHECK_EQUAL(
@@ -548,6 +548,23 @@ BOOST_AUTO_TEST_CASE(Construction) {
 
   BOOST_CHECK_THROW((Portal{gctx, nullptr, nullptr}), std::invalid_argument);
   BOOST_CHECK_THROW(Portal(gctx, {}), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(InvalidConstruction) {
+  BOOST_CHECK_THROW(Portal(Direction::AlongNormal, nullptr),
+                    std::invalid_argument);
+
+  auto vol1 = makeDummyVolume();
+
+  BOOST_CHECK_THROW(Portal(Direction::AlongNormal, nullptr, *vol1),
+                    std::invalid_argument);
+
+  auto disc1 = Surface::makeShared<DiscSurface>(
+      Transform3::Identity(), std::make_shared<RadialBounds>(50_mm, 100_mm));
+  Portal portal(Direction::AlongNormal, disc1, *vol1);
+
+  BOOST_CHECK_THROW(portal.setLink(gctx, Direction::AlongNormal, nullptr),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()  // Portals

@@ -20,15 +20,23 @@
 
 namespace Acts {
 
-Portal::Portal(const GeometryContext& gctx, Direction direction,
-               std::unique_ptr<PortalLinkBase> link) {
-  setLink(gctx, direction, std::move(link));
-  assert(m_surface != nullptr);
+Portal::Portal(Direction direction, std::unique_ptr<PortalLinkBase> link) {
+  if (link == nullptr) {
+    throw std::invalid_argument("Link must not be null");
+  }
+
+  m_surface = link->surfacePtr();
+
+  if (direction == Direction::AlongNormal) {
+    m_alongNormal = std::move(link);
+  } else {
+    m_oppositeNormal = std::move(link);
+  }
 }
 
-Portal::Portal(const GeometryContext& gctx, Direction direction,
-               std::shared_ptr<RegularSurface> surface, TrackingVolume& volume)
-    : Portal(gctx, direction,
+Portal::Portal(Direction direction, std::shared_ptr<RegularSurface> surface,
+               TrackingVolume& volume)
+    : Portal(direction,
              std::make_unique<TrivialPortalLink>(std::move(surface), volume)) {}
 
 Portal::Portal(const GeometryContext& gctx,
@@ -67,7 +75,9 @@ Portal::Portal(const GeometryContext& gctx, Config&& config) {
 
 void Portal::setLink(const GeometryContext& gctx, Direction direction,
                      std::unique_ptr<PortalLinkBase> link) {
-  assert(link != nullptr);
+  if (link == nullptr) {
+    throw std::invalid_argument("Link must not be null");
+  }
 
   auto& target =
       direction == Direction::AlongNormal ? m_alongNormal : m_oppositeNormal;
