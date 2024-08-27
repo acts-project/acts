@@ -38,30 +38,30 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   auto al = new GeoMaterial("Aluminium", 1.0);
 
   // define dimensions
-  double gm_box_hlx = 100, gm_box_hly = 200, gm_box_hlz = 2;
-  double gm_tube_rmin = 5, gm_tube_rmax = 6, gm_tube_hlz = 100;
-  double gm_rsurf_hlx = 100, gm_rsurf_hly = 200, gm_rsurf_hlz = 2;
-  double gm_poly_z = 2;
-  std::vector<double> trapX_verts = {-103, 103, 183, -183};
-  std::vector<double> trapY_verts = {-50, -50, 50, 50};
-  std::vector<double> polyX_verts = {-60, 60, 153, 123, -123, -153};
-  std::vector<double> polyY_verts = {-50, -50, 0, 50, 50, 0};
+  double gmBoxHlx = 100, gmBoxHly = 200, gmBoxHlz = 2;
+  double gmTubeRmin = 5, gmTubeRmax = 6, gmTubeHlz = 100;
+  double gmRsurfHlx = 100, gmRsurfHly = 200, gmRsurfHlz = 2;
+  double gmPolyZ = 2;
+  std::vector<double> trapXVerts = {-103, 103, 183, -183};
+  std::vector<double> trapYVerts = {-50, -50, 50, 50};
+  std::vector<double> polyXVerts = {-60, 60, 153, 123, -123, -153};
+  std::vector<double> polyYVerts = {-50, -50, 0, 50, 50, 0};
 
   // create shapes
-  auto boxXY = new GeoBox(gm_box_hlx, gm_box_hly, gm_box_hlz);
-  auto tube = new GeoTube(gm_tube_rmin, gm_tube_rmax, gm_tube_hlz);
-  auto ssurface = new GeoBox(gm_rsurf_hlx, gm_rsurf_hly, gm_rsurf_hlz);
-  double halfX1 = fabs(trapX_verts[0] - trapX_verts[1]) / 2;
-  double halfX2 = fabs(trapX_verts[2] - trapX_verts[3]) / 2;
-  double halfY1 = fabs(trapY_verts[0] - trapY_verts[2]) / 2;
+  auto boxXY = new GeoBox(gmBoxHlx, gmBoxHly, gmBoxHlz);
+  auto tube = new GeoTube(gmTubeRmin, gmTubeRmax, gmTubeHlz);
+  auto ssurface = new GeoBox(gmRsurfHlx, gmRsurfHly, gmRsurfHlz);
+  double halfX1 = fabs(trapXVerts[0] - trapXVerts[1]) / 2;
+  double halfX2 = fabs(trapXVerts[2] - trapXVerts[3]) / 2;
+  double halfY1 = fabs(trapYVerts[0] - trapYVerts[2]) / 2;
   auto trd = new GeoTrd(1, 1, halfX1, halfX2, halfY1);
-  auto trap = new GeoSimplePolygonBrep(gm_poly_z);
-  for (long unsigned int i = 0; i < trapX_verts.size(); i++) {
-    trap->addVertex(trapX_verts[i], trapY_verts[i]);
+  auto trap = new GeoSimplePolygonBrep(gmPolyZ);
+  for (long unsigned int i = 0; i < trapXVerts.size(); i++) {
+    trap->addVertex(trapXVerts[i], trapYVerts[i]);
   }
-  auto poly = new GeoSimplePolygonBrep(gm_poly_z);
-  for (long unsigned int i = 0; i < polyX_verts.size(); i++) {
-    poly->addVertex(polyX_verts[i], polyY_verts[i]);
+  auto poly = new GeoSimplePolygonBrep(gmPolyZ);
+  for (long unsigned int i = 0; i < polyXVerts.size(); i++) {
+    poly->addVertex(polyXVerts[i], polyYVerts[i]);
   }
 
   // create logvols
@@ -105,9 +105,9 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   // checking the dimension of the converted bounding boxes
   for (auto box : gmCache.boundingBoxes) {
     const Acts::VolumeBounds& bounds = box->volumeBounds();
-    BOOST_CHECK(gm_box_hlx == bounds.values()[0]);
-    BOOST_CHECK(gm_box_hly == bounds.values()[1]);
-    BOOST_CHECK(gm_box_hlz == bounds.values()[2]);
+    BOOST_CHECK(gmBoxHlx == bounds.values()[0]);
+    BOOST_CHECK(gmBoxHly == bounds.values()[1]);
+    BOOST_CHECK(gmBoxHlz == bounds.values()[2]);
     std::vector<const Acts::Surface*> surfaces = box->surfaces();
 
     for (auto surface : surfaces) {
@@ -116,8 +116,8 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
       if (surface->type() == Acts::Surface::SurfaceType::Straw) {
         const auto* lineBounds =
             dynamic_cast<const Acts::LineBounds*>(&sbounds);
-        BOOST_CHECK(gm_tube_rmax == lineBounds->get(Acts::LineBounds::eR));
-        BOOST_CHECK(gm_tube_hlz ==
+        BOOST_CHECK(gmTubeRmax == lineBounds->get(Acts::LineBounds::eR));
+        BOOST_CHECK(gmTubeHlz ==
                     lineBounds->get(Acts::LineBounds::eHalfLengthZ));
       }
       // rectangle Surface check corner position without trf
@@ -126,10 +126,10 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
         double csymin = sbounds.values()[1];
         double csxmax = sbounds.values()[2];
         double csymax = sbounds.values()[3];
-        BOOST_CHECK(gm_rsurf_hlx == -csxmin);
-        BOOST_CHECK(gm_rsurf_hly == -csymin);
-        BOOST_CHECK(gm_rsurf_hlx == csxmax);
-        BOOST_CHECK(gm_rsurf_hly == csymax);
+        BOOST_CHECK(gmRsurfHlx == -csxmin);
+        BOOST_CHECK(gmRsurfHly == -csymin);
+        BOOST_CHECK(gmRsurfHlx == csxmax);
+        BOOST_CHECK(gmRsurfHly == csymax);
       }
       // trap Surface without trf
       if (sbounds.type() == Acts::SurfaceBounds::eTrapezoid) {
@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
             dynamic_cast<const Acts::TrapezoidBounds*>(&sbounds);
         std::vector<Acts::Vector2> trapVerts = trapBounds->vertices();
         for (long unsigned int i = 0; i < trapVerts.size(); i++) {
-          BOOST_CHECK(trapVerts[i][0] == trapX_verts[i]);
-          BOOST_CHECK(trapVerts[i][1] == trapY_verts[i]);
+          BOOST_CHECK(trapVerts[i][0] == trapXVerts[i]);
+          BOOST_CHECK(trapVerts[i][1] == trapYVerts[i]);
         }
       }
       if (sbounds.type() == Acts::SurfaceBounds::eDiamond) {
@@ -146,8 +146,8 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
             dynamic_cast<const Acts::DiamondBounds*>(&sbounds);
         std::vector<Acts::Vector2> polyVerts = polyBounds->vertices();
         for (long unsigned int i = 0; i < polyVerts.size(); i++) {
-          BOOST_CHECK(polyVerts[i][0] == polyX_verts[i]);
-          BOOST_CHECK(polyVerts[i][1] == polyY_verts[i]);
+          BOOST_CHECK(polyVerts[i][0] == polyXVerts[i]);
+          BOOST_CHECK(polyVerts[i][1] == polyYVerts[i]);
         }
       }
     }

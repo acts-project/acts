@@ -30,7 +30,7 @@ struct GeoPolygonConverter {
   ///
   /// @return The detector element and surface
   Result<GeoModelSensitiveSurface> operator()(
-      PVConstLink geoPV, const GeoSimplePolygonBrep& geoPolygon,
+      const PVConstLink& geoPV, const GeoSimplePolygonBrep& geoPolygon,
       const Transform3& absTransform, bool sensitive) const;
 };
 }  // namespace detail

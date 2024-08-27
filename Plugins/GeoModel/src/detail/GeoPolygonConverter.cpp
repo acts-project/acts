@@ -25,7 +25,7 @@
 
 Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoPolygonConverter::operator()(
-    PVConstLink geoPV, const GeoSimplePolygonBrep& polygon,
+    const PVConstLink& geoPV, const GeoSimplePolygonBrep& polygon,
     const Transform3& absTransform, bool sensitive) const {
   /// auto-calculate the unit length conversion
   static constexpr ActsScalar unitLength =
@@ -40,8 +40,8 @@ Acts::detail::GeoPolygonConverter::operator()(
   std::vector<std::vector<double>> vertices;
 
   for (int i = 0; i < nVertices; i++) {
-    std::vector<double> tmp = {polygon.getXVertex(i), polygon.getYVertex(i)};
-    vertices.push_back(tmp);
+    //std::vector<double> tmp = {polygon.getXVertex(i), polygon.getYVertex(i)};
+    vertices.push_back({polygon.getXVertex(i), polygon.getYVertex(i)});
   }
   // sort based on the y-coordinate
   std::sort(vertices.begin(), vertices.end(),
