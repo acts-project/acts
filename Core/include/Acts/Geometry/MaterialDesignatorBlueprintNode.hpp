@@ -9,9 +9,10 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Utilities/GraphViz.hpp"
 namespace Acts {
 
-class MaterialDesignatorBlueprintNode : public BlueprintNode {
+class MaterialDesignatorBlueprintNode final : public BlueprintNode {
  public:
   const std::string& name() const override {
     const static std::string s_name = "Material";
@@ -30,13 +31,14 @@ class MaterialDesignatorBlueprintNode : public BlueprintNode {
     return children().at(0).build(logger);
   }
 
-  void connect(TrackingVolume& parent,
-               const Logger& logger = Acts::getDummyLogger()) override {
+  PortalShellBase& connect(
+      const GeometryContext& gctx,
+      const Logger& logger = Acts::getDummyLogger()) override {
     if (children().size() != 1) {
       throw std::runtime_error(
           "MaterialDesignatorBlueprintNode must have exactly one child");
     }
-    children().at(0).connect(parent, logger);
+    return children().at(0).connect(gctx, logger);
   }
 
   void visualize(IVisualization3D& vis,
@@ -46,6 +48,11 @@ class MaterialDesignatorBlueprintNode : public BlueprintNode {
           "MaterialDesignatorBlueprintNode must have exactly one child");
     }
     children().at(0).visualize(vis, gctx);
+  }
+
+  void addToGraphviz(std::ostream& os) const override {
+    os << GraphViz::Node{.id = name(), .shape = GraphViz::Shape::InvTrapezium};
+    BlueprintNode::addToGraphviz(os);
   }
 
  private:

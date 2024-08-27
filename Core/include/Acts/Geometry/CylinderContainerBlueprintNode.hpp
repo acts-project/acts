@@ -10,12 +10,13 @@
 
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
+#include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 
-class CylinderContainerBlueprintNode : public BlueprintNode {
+class CylinderContainerBlueprintNode final : public BlueprintNode {
  public:
   CylinderContainerBlueprintNode(
       const std::string& name, BinningValue direction,
@@ -30,8 +31,9 @@ class CylinderContainerBlueprintNode : public BlueprintNode {
 
   Volume& build(const Logger& logger = Acts::getDummyLogger()) override;
 
-  void connect(TrackingVolume& parent,
-               const Logger& logger = Acts::getDummyLogger()) override;
+  CylinderStackPortalShell& connect(
+      const GeometryContext& gctx,
+      const Logger& logger = Acts::getDummyLogger()) override;
 
   void visualize(IVisualization3D& vis,
                  const GeometryContext& gctx) const override;
@@ -51,6 +53,8 @@ class CylinderContainerBlueprintNode : public BlueprintNode {
   }
 
  private:
+  void addToGraphviz(std::ostream& os) const override;
+
   std::string m_name;
 
   BinningValue m_direction;
@@ -60,6 +64,10 @@ class CylinderContainerBlueprintNode : public BlueprintNode {
   // Is only initialized during `build`
   std::vector<Volume*> m_childVolumes;
   std::optional<CylinderVolumeStack> m_stack{std::nullopt};
+
+  std::vector<std::unique_ptr<TrackingVolume>> m_gapVolumes;
+
+  std::optional<CylinderStackPortalShell> m_shell{std::nullopt};
 };
 
 }  // namespace Acts

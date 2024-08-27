@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
 namespace Acts {
@@ -22,24 +23,24 @@ class StaticBlueprintNode : public BlueprintNode {
 
   Volume& build(const Logger& logger = Acts::getDummyLogger()) override;
 
-  void connect(TrackingVolume& parent,
-               const Logger& logger = Acts::getDummyLogger()) override;
+  PortalShellBase& connect(
+      const GeometryContext& gctx,
+      const Logger& logger = Acts::getDummyLogger()) override;
 
   void visualize(IVisualization3D& vis,
                  const GeometryContext& gctx) const override;
-
-  // This connects averything to the static volume contained here
-  void connect(const Logger& logger = Acts::getDummyLogger());
 
   std::unique_ptr<TrackingVolume> releaseVolume() {
     return std::move(m_volume);
   }
 
-  // protected:
-  // void addToGraphviz(std::ostream& os) const override;
+ protected:
+  void addToGraphviz(std::ostream& os) const override;
 
  private:
   std::unique_ptr<TrackingVolume> m_volume;
+
+  std::unique_ptr<PortalShellBase> m_shell;
 };
 
 }  // namespace Acts

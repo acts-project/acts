@@ -9,6 +9,9 @@
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
@@ -27,28 +30,34 @@ Volume& StaticBlueprintNode::build(const Logger& logger) {
   return *m_volume;
 }
 
-void StaticBlueprintNode::connect(TrackingVolume& parent,
-                                  const Logger& logger) {
+PortalShellBase& StaticBlueprintNode::connect(const GeometryContext& gctx,
+                                              const Logger& logger) {
   ACTS_DEBUG(prefix() << "static connect");
-  if (!m_volume) {
+  if (m_volume == nullptr) {
     throw std::runtime_error("Volume is not built");
   }
 
-  for (auto& child : children()) {
-    child.connect(*m_volume);
-  }
-  parent.addVolume(std::move(m_volume));
-}
-
-void StaticBlueprintNode::connect(const Logger& logger) {
-  ACTS_DEBUG(prefix() << "static connect");
-  if (!m_volume) {
-    throw std::runtime_error("Volume is not built");
-  }
+  ACTS_VERBOSE("Connecting parent volume ("
+               << name() << ") with " << children().size() << " children");
 
   for (auto& child : children()) {
-    child.connect(*m_volume);
+    auto& shell = child.connect(gctx, logger);
+    // Register ourselves on the outside of the shell
+    shell.connectOuter(*m_volume);
   }
+
+  VolumeBounds::BoundsType type = m_volume->volumeBounds().type();
+  if (type == VolumeBounds::eCylinder) {
+    m_shell = std::make_unique<SingleCylinderPortalShell>(*m_volume);
+
+  } else if (type == VolumeBounds::eCuboid) {
+    throw std::logic_error("Cuboid is not implemented yet");
+
+  } else {
+    throw std::logic_error("Volume type is not supported");
+  }
+
+  return *m_shell;
 }
 
 void StaticBlueprintNode::visualize(IVisualization3D& vis,
@@ -56,9 +65,6 @@ void StaticBlueprintNode::visualize(IVisualization3D& vis,
   if (!m_volume) {
     throw std::runtime_error("Volume is not built");
   }
-
-  std::cout << "Visualizing StaticBlueprintNode " << name() << std::endl;
-  std::cout << (*m_volume) << std::endl;
 
   ViewConfig viewConfig{{100, 100, 100}};
 
@@ -68,9 +74,46 @@ void StaticBlueprintNode::visualize(IVisualization3D& vis,
 }
 
 const std::string& StaticBlueprintNode::name() const {
+  static const std::string uninitialized = "uninitialized";
+  if (m_volume == nullptr) {
+    return uninitialized;
+  }
   return m_volume->volumeName();
 }
 
-// void StaticBlueprintNode::addToGraphviz(std::ostream& os) const {}
+void StaticBlueprintNode::addToGraphviz(std::ostream& os) const {
+  std::stringstream ss;
+  ss << "<b>" << name() << "</b>";
+  ss << "<br/>";
+  switch (m_volume->volumeBounds().type()) {
+    case VolumeBounds::eCylinder:
+      ss << "Cylinder";
+      break;
+    case VolumeBounds::eCuboid:
+      ss << "Cuboid";
+      break;
+    case VolumeBounds::eCone:
+      ss << "Cone";
+      break;
+    case VolumeBounds::eCutoutCylinder:
+      ss << "CutoutCylinder";
+      break;
+    case VolumeBounds::eGenericCuboid:
+      ss << "GenericCuboid";
+      break;
+    case VolumeBounds::eTrapezoid:
+      ss << "Trapezoid";
+      break;
+    default:
+      ss << "Other";
+  }
+
+  GraphViz::Node node{
+      .id = name(), .label = ss.str(), .shape = GraphViz::Shape::Rectangle};
+
+  os << node;
+
+  BlueprintNode::addToGraphviz(os);
+}
 
 }  // namespace Acts

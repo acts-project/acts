@@ -15,6 +15,8 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <utility>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
@@ -110,7 +112,8 @@ void addBlueprint(Context& ctx) {
       return node;
     }
 
-    void exit(py::object, py::object, py::object) {}
+    void exit(const py::object& /*type*/, const py::object& /*value*/,
+              const py::object& /*traceback*/) {}
   };
 
   py::class_<AddStaticVolumeHelper>(m, "_AddStaticVolumeHelper")
@@ -130,7 +133,7 @@ void addBlueprint(Context& ctx) {
           .def(
               "addStaticVolume",
               [](BlueprintNode& self, const Transform3& transform,
-                 std::shared_ptr<const VolumeBounds> bounds,
+                 const std::shared_ptr<const VolumeBounds>& bounds,
                  const std::string& name) {
                 auto node = std::make_shared<Acts::StaticBlueprintNode>(
                     std::make_unique<Acts::TrackingVolume>(transform, bounds,
@@ -145,8 +148,8 @@ void addBlueprint(Context& ctx) {
               "StaticVolume",
               [](BlueprintNode& self, const Transform3& transform,
                  std::shared_ptr<const VolumeBounds> bounds,
-                 std::optional<std::string> name = std::nullopt) {
-                return AddStaticVolumeHelper{self, transform, bounds,
+                 const std::optional<std::string>& name = std::nullopt) {
+                return AddStaticVolumeHelper{self, transform, std::move(bounds),
                                              name.value_or("undefined")};
               },
               py::arg("transform"), py::arg("bounds"),
@@ -168,7 +171,8 @@ void addBlueprint(Context& ctx) {
               "CylinderContainer",
               [](BlueprintNode& self, BinningValue direction,
                  std::optional<std::string> name = std::nullopt) {
-                return AddCylinderContainerHelper{self, direction, name};
+                return AddCylinderContainerHelper{self, direction,
+                                                  std::move(name)};
               },
               py::arg("direction"), py::arg("name") = std::nullopt)
 
@@ -181,10 +185,10 @@ void addBlueprint(Context& ctx) {
           .def_property_readonly("children",
                                  py::overload_cast<>(&BlueprintNode::children))
           .def_property_readonly("name", &BlueprintNode::name)
-          .def("graphviz",
-               [](BlueprintNode& self, py::object fh) {
+          .def("graphViz",
+               [](BlueprintNode& self, const py::object& fh) {
                  std::stringstream ss;
-                 self.graphviz(ss);
+                 self.graphViz(ss);
                  fh.attr("write")(ss.str());
                })
           .def("visualize", &BlueprintNode::visualize)

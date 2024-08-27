@@ -81,7 +81,7 @@ if True:
 
 
 with open("blueprint.dot", "w") as fh:
-    root.graphviz(fh)
+    root.graphViz(fh)
 
 vis = acts.ObjVisualization3D()
 

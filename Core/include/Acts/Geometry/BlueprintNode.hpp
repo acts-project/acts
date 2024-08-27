@@ -22,6 +22,7 @@ namespace Acts {
 
 class Volume;
 class TrackingVolume;
+class PortalShellBase;
 class IVisualization3D;
 class CylinderContainerBlueprintNode;
 class MaterialDesignatorBlueprintNode;
@@ -39,9 +40,12 @@ class BlueprintNode {
 
   virtual Volume& build(const Logger& logger = Acts::getDummyLogger()) = 0;
 
-  // @TODO: This should return the portal "shell"
-  virtual void connect(TrackingVolume& parent,
-                       const Logger& logger = Acts::getDummyLogger()) = 0;
+  virtual PortalShellBase& connect(
+      const GeometryContext& gctx,
+      const Logger& logger = Acts::getDummyLogger()) = 0;
+
+  // virtual void finalize(TrackingVolume& parent,
+  //                       const Logger& logger = Acts::getDummyLogger()) = 0;
 
   virtual void visualize(IVisualization3D& vis,
                          const GeometryContext& gctx) const;
@@ -74,14 +78,12 @@ class BlueprintNode {
 
   std::size_t depth() const;
 
-  void graphviz(std::ostream& os) const;
+  void graphViz(std::ostream& os) const;
+  virtual void addToGraphviz(std::ostream& os) const;
 
  protected:
   std::string prefix() const;
   std::string indent() const;
-
-  // Internal method to append to an existing graphviz output stream
-  virtual void addToGraphviz(std::ostream& os) const;
 
  private:
   std::size_t m_depth{0};

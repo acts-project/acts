@@ -9,7 +9,10 @@
 #include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
 
 #include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
@@ -51,21 +54,37 @@ Volume& CylinderContainerBlueprintNode::build(const Logger& logger) {
   return m_stack.value();
 }
 
-void CylinderContainerBlueprintNode::connect(TrackingVolume& parent,
-                                             const Logger& logger) {
+CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
+    const GeometryContext& gctx, const Logger& logger) {
   ACTS_DEBUG(prefix() << "cylinder container connect");
   if (!m_stack.has_value()) {
     throw std::runtime_error("Volume is not built");
   }
 
+  std::vector<CylinderPortalShell*> shells;
+  ACTS_VERBOSE("Collecting child shells from " << children().size()
+                                               << " children");
   for (auto& child : children()) {
-    child.connect(parent);
+    PortalShellBase& shell = child.connect(gctx, logger);
+    if (auto* cylShell = dynamic_cast<CylinderPortalShell*>(&shell);
+        cylShell != nullptr) {
+      shells.push_back(cylShell);
+    } else {
+      throw std::runtime_error("Child volume is not a cylinder");
+    }
   }
 
-  for (auto& gap : m_stack->gaps()) {
-    auto tv = std::make_unique<TrackingVolume>(*gap);
-    parent.addVolume(std::move(tv));
-  }
+  ACTS_VERBOSE("Producing merged cylinder stack shell in " << m_direction
+                                                           << " direction");
+  m_shell.emplace(gctx, std::move(shells), m_direction, logger);
+
+  return m_shell.value();
+
+  // This goes into finalize at the end
+  // for (auto& gap : m_stack->gaps()) {
+  //   auto tv = std::make_unique<TrackingVolume>(*gap);
+  //   parent.addVolume(std::move(tv));
+  // }
 }
 
 void CylinderContainerBlueprintNode::visualize(
@@ -111,6 +130,18 @@ CylinderContainerBlueprintNode::setResizeStrategy(
   }
   m_resizeStrategy = resizeStrategy;
   return *this;
+}
+
+void CylinderContainerBlueprintNode::addToGraphviz(std::ostream& os) const {
+  GraphViz::Node node{.id = name(),
+                      .label = "<b>" + name() + "</b><br/>Cylinder",
+                      .shape = GraphViz::Shape::Folder};
+  os << node << std::endl;
+  for (const auto& child : children()) {
+    os << indent() << GraphViz::Edge{{.id = name()}, {.id = child.name()}}
+       << std::endl;
+    child.addToGraphviz(os);
+  }
 }
 
 }  // namespace Acts

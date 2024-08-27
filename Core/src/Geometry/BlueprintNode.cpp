@@ -93,7 +93,7 @@ MaterialDesignatorBlueprintNode& BlueprintNode::addMaterial(
   return *material;
 }
 
-void BlueprintNode::graphviz(std::ostream& os) const {
+void BlueprintNode::graphViz(std::ostream& os) const {
   os << "digraph BlueprintNode {" << std::endl;
   addToGraphviz(os);
   os << "}" << std::endl;
