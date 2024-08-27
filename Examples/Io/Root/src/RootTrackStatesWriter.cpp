@@ -433,13 +433,14 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         }
 
         // fill the truth hit info
-        m_t_x.push_back(truthPos4[Acts::ePos0]);
-        m_t_y.push_back(truthPos4[Acts::ePos1]);
-        m_t_z.push_back(truthPos4[Acts::ePos2]);
-        m_t_r.push_back(perp(truthPos4.template segment<3>(Acts::ePos0)));
-        m_t_dx.push_back(truthUnitDir[Acts::eMom0]);
-        m_t_dy.push_back(truthUnitDir[Acts::eMom1]);
-        m_t_dz.push_back(truthUnitDir[Acts::eMom2]);
+        m_t_x.push_back(static_cast<float>(truthPos4[Acts::ePos0]));
+        m_t_y.push_back(static_cast<float>(truthPos4[Acts::ePos1]));
+        m_t_z.push_back(static_cast<float>(truthPos4[Acts::ePos2]));
+        m_t_r.push_back(static_cast<float>(
+            perp(truthPos4.template segment<3>(Acts::ePos0))));
+        m_t_dx.push_back(static_cast<float>(truthUnitDir[Acts::eMom0]));
+        m_t_dy.push_back(static_cast<float>(truthUnitDir[Acts::eMom1]));
+        m_t_dz.push_back(static_cast<float>(truthUnitDir[Acts::eMom2]));
 
         // get the truth track parameter at this track State
         truthParams[Acts::eBoundLoc0] = truthLocal[Acts::ePos0];
@@ -449,12 +450,13 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         truthParams[Acts::eBoundTime] = truthPos4[Acts::eTime];
 
         // fill the truth track parameter at this track State
-        m_t_eLOC0.push_back(truthParams[Acts::eBoundLoc0]);
-        m_t_eLOC1.push_back(truthParams[Acts::eBoundLoc1]);
-        m_t_ePHI.push_back(truthParams[Acts::eBoundPhi]);
-        m_t_eTHETA.push_back(truthParams[Acts::eBoundTheta]);
-        m_t_eQOP.push_back(truthParams[Acts::eBoundQOverP]);
-        m_t_eT.push_back(truthParams[Acts::eBoundTime]);
+        m_t_eLOC0.push_back(static_cast<float>(truthParams[Acts::eBoundLoc0]));
+        m_t_eLOC1.push_back(static_cast<float>(truthParams[Acts::eBoundLoc1]));
+        m_t_ePHI.push_back(static_cast<float>(truthParams[Acts::eBoundPhi]));
+        m_t_eTHETA.push_back(
+            static_cast<float>(truthParams[Acts::eBoundTheta]));
+        m_t_eQOP.push_back(static_cast<float>(truthParams[Acts::eBoundQOverP]));
+        m_t_eT.push_back(static_cast<float>(truthParams[Acts::eBoundTime]));
 
         // expand the local measurements into the full bound space
         Acts::BoundVector meas = state.effectiveProjector().transpose() *
@@ -465,11 +467,11 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
             surface.localToGlobal(ctx.geoContext, local, truthUnitDir);
 
         // fill the measurement info
-        m_lx_hit.push_back(local[Acts::ePos0]);
-        m_ly_hit.push_back(local[Acts::ePos1]);
-        m_x_hit.push_back(global[Acts::ePos0]);
-        m_y_hit.push_back(global[Acts::ePos1]);
-        m_z_hit.push_back(global[Acts::ePos2]);
+        m_lx_hit.push_back(static_cast<float>(local[Acts::ePos0]));
+        m_ly_hit.push_back(static_cast<float>(local[Acts::ePos1]));
+        m_x_hit.push_back(static_cast<float>(global[Acts::ePos0]));
+        m_y_hit.push_back(static_cast<float>(global[Acts::ePos1]));
+        m_z_hit.push_back(static_cast<float>(global[Acts::ePos2]));
       }
 
       // lambda to get the fitted track parameters
@@ -685,25 +687,35 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           auto H = state.effectiveProjector();
           auto V = state.effectiveCalibratedCovariance();
           auto resCov = V + H * covariance * H.transpose();
-          Acts::ActsDynamicVector res(state.calibratedSize());
-          res.setZero();
+          Acts::ActsDynamicVector res =
+              state.effectiveCalibrated() - H * parameters;
 
-          res = state.effectiveCalibrated() - H * parameters;
+          double resX = res[Acts::eBoundLoc0];
+          double errX = V(Acts::eBoundLoc0, Acts::eBoundLoc0) >= 0
+                            ? std::sqrt(V(Acts::eBoundLoc0, Acts::eBoundLoc0))
+                            : nan;
+          double pullX =
+              resCov(Acts::eBoundLoc0, Acts::eBoundLoc0) >= 0
+                  ? resX / std::sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0))
+                  : nan;
 
-          m_res_x_hit.push_back(res[Acts::eBoundLoc0]);
-          m_err_x_hit.push_back(
-              std::sqrt(V(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-          m_pull_x_hit.push_back(
-              res[Acts::eBoundLoc0] /
-              std::sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+          m_res_x_hit.push_back(static_cast<float>(resX));
+          m_err_x_hit.push_back(static_cast<float>(errX));
+          m_pull_x_hit.push_back(static_cast<float>(pullX));
 
           if (state.calibratedSize() >= 2) {
-            m_res_y_hit.push_back(res[Acts::eBoundLoc1]);
-            m_err_y_hit.push_back(
-                std::sqrt(V(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-            m_pull_y_hit.push_back(
-                res[Acts::eBoundLoc1] /
-                std::sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+            double resY = res[Acts::eBoundLoc1];
+            double errY = V(Acts::eBoundLoc1, Acts::eBoundLoc1) >= 0
+                              ? std::sqrt(V(Acts::eBoundLoc1, Acts::eBoundLoc1))
+                              : nan;
+            double pullY = resCov(Acts::eBoundLoc1, Acts::eBoundLoc1) >= 0
+                               ? resY / std::sqrt(resCov(Acts::eBoundLoc1,
+                                                         Acts::eBoundLoc1))
+                               : nan;
+
+            m_res_y_hit.push_back(static_cast<float>(resY));
+            m_err_y_hit.push_back(static_cast<float>(errY));
+            m_pull_y_hit.push_back(static_cast<float>(pullY));
           } else {
             m_res_y_hit.push_back(nan);
             m_err_y_hit.push_back(nan);
