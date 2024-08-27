@@ -120,7 +120,7 @@ struct PointwiseMaterialInteraction {
     slab.scaleThickness(pathCorrection);
 
     // Get the surface material & properties from them
-    return slab.isValid();
+    return slab;
   }
 
   /// @brief This function evaluate the material effects
