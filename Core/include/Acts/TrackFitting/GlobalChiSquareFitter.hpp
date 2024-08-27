@@ -370,8 +370,8 @@ class Gx2Fitter {
   /// @tparam calibrator_t The type of calibrator
   /// @tparam outlier_finder_t Type of the outlier finder class
   ///
-  /// The GX2FnActor does not rely on the measurements to be
-  /// sorted along the track. /// TODO is this true?
+  /// The GX2F tor does not rely on the measurements to be sorted along the
+  /// track.
   template <typename parameters_t>
   class Actor {
    public:
