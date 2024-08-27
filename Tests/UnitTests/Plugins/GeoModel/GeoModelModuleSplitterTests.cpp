@@ -23,9 +23,9 @@ BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
 const GeometryContext gctx;
 
-const auto box = new GeoBox(100, 200, 2);
-const auto log = new GeoLogVol("LogVolume", box, nullptr);
-const auto vol = new GeoFullPhysVol(log);
+const auto box = GeoIntrusivePtr(new GeoBox(100, 200, 2));
+const auto log = GeoIntrusivePtr(new GeoLogVol("LogVolume", box, nullptr));
+const auto vol = GeoIntrusivePtr(new GeoFullPhysVol(log));
 
 const std::array<double, AnnulusBounds::eSize> annulusParams{
     /* rmin      */ 384.0,
@@ -41,7 +41,7 @@ auto makeDetElement() {
 
   return GeoModelDetectorElement::createDetectorElement<DiscSurface,
                                                         AnnulusBounds>(
-      *vol, bounds, Transform3::Identity(), 0.5);
+      vol, bounds, Transform3::Identity(), 0.5);
 }
 
 BOOST_AUTO_TEST_CASE(ModuleSplitterTest_empty) {
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(ModuleSplitterTest_non_annulus) {
 
   auto detEl =
       GeoModelDetectorElement::createDetectorElement<DiscSurface, RadialBounds>(
-          *vol, bounds, Transform3::Identity(), 0.5);
+          vol, bounds, Transform3::Identity(), 0.5);
 
   const std::map<std::string, std::vector<double>> patterns{
       {"A", {1.0, 5.0, 10.0}}};
