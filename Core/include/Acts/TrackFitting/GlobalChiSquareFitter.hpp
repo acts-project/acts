@@ -536,11 +536,13 @@ class Gx2Fitter {
         const GeometryIdentifier geoId = surface->geometryId();
         ACTS_DEBUG("Surface " << geoId << " detected.");
 
+        const bool surfaceIsSensitive =
+            (surface->associatedDetectorElement() != nullptr);
+        const bool surfaceHasMaterial = (surface->surfaceMaterial() != nullptr);
         // TODO description
         // later, we also check, if the material slab is valid, otherwise we
         // ignore it completely.
-        bool doMaterial =
-            multipleScattering && surface->surfaceMaterial() != nullptr;
+        bool doMaterial = multipleScattering && surfaceHasMaterial;
 
         // Found material - add an scatteringAngles entry if not done yet.
         // Handling will happen later
@@ -659,7 +661,7 @@ class Gx2Fitter {
           // Get and set the type flags
           auto typeFlags = trackStateProxy.typeFlags();
           typeFlags.set(TrackStateFlag::ParameterFlag);
-          if (surface->surfaceMaterial() != nullptr) {
+          if (surfaceHasMaterial) {
             typeFlags.set(TrackStateFlag::MaterialFlag);
           }
 
@@ -775,8 +777,7 @@ class Gx2Fitter {
           result.lastTrackIndex = currentTrackIndex;
 
           ++result.processedStates;
-        } else if (surface->associatedDetectorElement() != nullptr ||
-                   surface->surfaceMaterial() != nullptr) {
+        } else if (surfaceIsSensitive || surfaceHasMaterial) {
           // Here we handle holes. If material hasn't been handled before
           // (because multipleScattering is turned off), we will also handle it
           // here
@@ -790,8 +791,11 @@ class Gx2Fitter {
           }
 
           // We only create track states here if there is already a measurement
-          // detected (no holes before the first measurement)
-          if (result.measurementStates <= 0) {
+          // detected (no holes before the first measurement) or if we encounter
+          // material
+          const bool precedingMeasurementExists =
+              (result.measurementStates > 0);
+          if (!precedingMeasurementExists && !surfaceHasMaterial) {
             ACTS_DEBUG(
                 "    Ignoring hole, because there are no preceding "
                 "measurements.");
@@ -831,14 +835,14 @@ class Gx2Fitter {
           // Get and set the type flags
           auto typeFlags = trackStateProxy.typeFlags();
           typeFlags.set(TrackStateFlag::ParameterFlag);
-          if (surface->surfaceMaterial() != nullptr) {
-            ACTS_VERBOSE("    It is material.");
+          if (surfaceHasMaterial) {
+            ACTS_DEBUG("    It is material.");
             typeFlags.set(TrackStateFlag::MaterialFlag);
           }
 
           // Set hole only, if we are on a sensitive surface
-          if (surface->associatedDetectorElement() != nullptr) {
-            ACTS_VERBOSE("    It is a hole.");
+          if (surfaceIsSensitive && precedingMeasurementExists) {
+            ACTS_DEBUG("    It is a hole.");
             typeFlags.set(TrackStateFlag::HoleFlag);
             // Count the missed surface
             result.missedActiveSurfaces.push_back(surface);
