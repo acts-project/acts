@@ -62,8 +62,7 @@ struct access<Eigen::Matrix<T, D, 1>, Index> {
 }  // namespace boost::geometry::traits
 
 namespace {
-template <typename T>
-void writeG4Polyhedron(Acts::ObjVisualization3D<T>& visualizer,
+void writeG4Polyhedron(Acts::IVisualization3D& visualizer,
                        const G4Polyhedron& polyhedron,
                        Acts::Transform3 trafo = Acts::Transform3::Identity(),
                        Acts::ColorRGB color = {0, 0, 0}) {
