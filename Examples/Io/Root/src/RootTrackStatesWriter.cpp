@@ -669,7 +669,9 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         // track parameters pull
         Acts::BoundVector pulls;
         for (Eigen::Index i = 0; i < parameters.size(); ++i) {
-          pulls[i] = !std::isnan(errors[i]) ? residuals[i] / errors[i] : nan;
+          pulls[i] = (!std::isnan(errors[i]) && errors[i] > 0)
+                         ? residuals[i] / errors[i]
+                         : nan;
         }
         m_pull_eLOC0[ipar].push_back(
             static_cast<float>(pulls[Acts::eBoundLoc0]));
@@ -695,7 +697,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
                             ? std::sqrt(V(Acts::eBoundLoc0, Acts::eBoundLoc0))
                             : nan;
           double pullX =
-              resCov(Acts::eBoundLoc0, Acts::eBoundLoc0) >= 0
+              resCov(Acts::eBoundLoc0, Acts::eBoundLoc0) > 0
                   ? resX / std::sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0))
                   : nan;
 
@@ -708,7 +710,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
             double errY = V(Acts::eBoundLoc1, Acts::eBoundLoc1) >= 0
                               ? std::sqrt(V(Acts::eBoundLoc1, Acts::eBoundLoc1))
                               : nan;
-            double pullY = resCov(Acts::eBoundLoc1, Acts::eBoundLoc1) >= 0
+            double pullY = resCov(Acts::eBoundLoc1, Acts::eBoundLoc1) > 0
                                ? resY / std::sqrt(resCov(Acts::eBoundLoc1,
                                                          Acts::eBoundLoc1))
                                : nan;
