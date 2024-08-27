@@ -296,7 +296,6 @@ void Acts::GeometryView3D::drawTrackingVolume(
   std::string vname = tVolume.volumeName();
   if (writeIt) {
     std::vector<std::string> repChar = {"::" /*, "|", " ", "{", "}"*/};
-    // std::cout << "PRE: " << vname << std::endl;
     for (const auto& rchar : repChar) {
       while (vname.find(rchar) != std::string::npos) {
         vname.replace(vname.find(rchar), rchar.size(), std::string("_"));

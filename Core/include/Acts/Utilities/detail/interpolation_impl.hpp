@@ -10,8 +10,7 @@
 
 #include <array>
 
-namespace Acts::detail {
-
+namespace Acts::Concepts {
 /// @brief check types for requirements needed by interpolation
 ///
 /// @tparam Point1 type for specifying geometric positions
@@ -29,8 +28,7 @@ namespace Acts::detail {
 ///
 /// is @c true if all @c Point types and @c Value fulfill the type
 /// requirements for being used in the interpolation function, otherwise it is
-/// @c false. This expression can be employed in @c std::enable_if_t to use
-/// SFINAE patterns to enable/disable (member) functions.
+/// @c false.
 template <typename Point1, typename Point2, typename Point3, typename Value>
 struct can_interpolate {
   template <typename C>
@@ -57,6 +55,15 @@ struct can_interpolate {
       std::is_same<std::true_type,
                    decltype(point_type_test<Point3>(nullptr))>::value;
 };
+
+/// @brief concept equivalent to `can_interpolate`
+/// @todo this is a concept based on a traditional type trait, meaning it won't
+/// have nice errors; should be rewritten as a real concept!
+template <typename T, typename P1, typename P2, typename P3>
+concept interpolatable = can_interpolate<P1, P2, P3, T>::value;
+}  // namespace Acts::Concepts
+
+namespace Acts::detail {
 
 /// @brief determine number of dimension from power of 2
 ///
