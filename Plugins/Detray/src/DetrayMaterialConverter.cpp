@@ -125,18 +125,20 @@ Acts::DetrayMaterialConverter::convertSurfaceMaterial(
     BinningValue bVal1 = bUtility.binningData()[1u].binvalue;
 
     // Translate into grid index type
-    int gridIndexType = 0;
+    detray::io::material_id gridIndexType = detray::io::material_id::unknown;
     if (bVal0 == BinningValue::binR && bVal1 == BinningValue::binPhi) {
-      gridIndexType = 0;
+      gridIndexType = detray::io::material_id::ring2_map;
     } else if (bVal0 == BinningValue::binPhi && bVal1 == BinningValue::binZ) {
-      gridIndexType = 3;
+      gridIndexType = detray::io::material_id::concentric_cylinder2_map;
     } else if (bVal0 == BinningValue::binX && bVal1 == BinningValue::binY) {
-      gridIndexType = 2;
+      gridIndexType = detray::io::material_id::rectangle2_map;
     } else {
-      std::runtime_error(
-          "Unsupported binning for Detray, grid index type is set to " +
-          std::to_string(gridIndexType));
+      std::runtime_error("Unsupported binning for Detray");
     }
+
+    detray::io::typed_link_payload<detray::io::material_id> linkPayload{
+        gridIndexType, 0u};
+    materialGrid.grid_link = linkPayload;
 
     // Now convert the (modified) bin utility
     for (const auto& bData : bUtility.binningData()) {
