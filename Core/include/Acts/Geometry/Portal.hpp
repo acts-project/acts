@@ -77,7 +77,7 @@ class Portal {
 
   /// Helper struct for the arguments to the portal constructor below using
   /// designated initializers.
-  struct Config {
+  struct Arguments {
     /// Aggregate over a surface and a volume with optional semantics
     struct Link {
       Link() = default;
@@ -98,15 +98,15 @@ class Portal {
   };
 
   /// Constructor that takes a geometry context and an rvalue reference to a
-  /// helper config struct from above. This pattern allows you to use designated
+  /// helper struct from above. This pattern allows you to use designated
   /// initializers to construct this object like:
   /// ```cpp
   /// Portal{gctx, {.oppositeNormal = {cyl1, *vol1}}};
   /// Portal{gctx, {.alongNormal = {cyl2, *vol2}}};
   /// ```
   /// @param gctx The geometry context
-  /// @param config The configuration struct
-  Portal(const GeometryContext& gctx, Config&& config);
+  /// @param args The struct containing the arguments
+  Portal(const GeometryContext& gctx, Arguments&& args);
 
   /// Fuse two portals together. Fusing is the combination of two portal links
   /// on the same logical surfaces. The actual surface instances can be
