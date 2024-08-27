@@ -16,15 +16,8 @@ namespace Acts {
 /// mapping of Acts::GeometryIdentifiers to ITk modules in a straight-forward
 /// way.
 class GeoModelDetectorElementITk : public GeoModelDetectorElement {
-  int m_hardware;
-  int m_barrelEndcap;
-  int m_layerWheel;
-  int m_etaModule;
-  int m_phiModule;
-  int m_side;
-
  public:
-  GeoModelDetectorElementITk(const GeoFullPhysVol& geoPhysVol,
+  GeoModelDetectorElementITk(const PVConstLink& geoPhysVol,
                              std::shared_ptr<Surface> surface,
                              const Transform3& sfTransform,
                              ActsScalar thickness, int hardware,
@@ -51,6 +44,14 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
                       std::shared_ptr<Surface> srf, const GeometryContext& gctx,
                       int hardware, int barrelEndcap, int layerWheel,
                       int etaModule, int phiModule, int side);
+
+ private:
+  int m_hardware;
+  int m_barrelEndcap;
+  int m_layerWheel;
+  int m_etaModule;
+  int m_phiModule;
+  int m_side;
 };
 
 }  // namespace Acts

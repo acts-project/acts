@@ -32,7 +32,7 @@ Acts::GeoModelDetectorElementITk::convertFromGeomodel(
     auto surface = Surface::makeShared<surface_t>(bounds, *itkEl.get());
     itkEl->attachSurface(surface);
     itkEl->setDatabaseEntryName(detEl->databaseEntryName());
-    return std::make_pair(itkEl, surface);
+    return std::pair{itkEl, surface};
   };
 
   if (srf->type() == Acts::Surface::Plane &&
