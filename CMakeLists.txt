@@ -279,14 +279,10 @@ if(ACTS_SETUP_BOOST)
     endif()
 
     if(Boost_VERSION VERSION_EQUAL "1.85.0")
-        set(message
+        message(
+            WARNING
             "Boost 1.85.0 is known to be broken (https://github.com/boostorg/container/issues/273). Please use a different version."
         )
-        if(ACTS_IGNORE_BOOST_1850_ERROR)
-            message(WARNING ${message})
-        else()
-            message(SEND_ERROR ${message})
-        endif()
     endif()
 endif()
 

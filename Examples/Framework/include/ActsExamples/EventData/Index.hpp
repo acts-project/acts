@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 
 #include <boost/container/flat_map.hpp>
+#include <boost/version.hpp>
 
 namespace ActsExamples {
 
@@ -53,8 +55,11 @@ inline boost::container::flat_multimap<value_t, Index> invertIndexMultimap(
     inverse.insert(i);
   }
 #else
-  inverse.insert(unordered.begin(), unordered.end());
+  std::sort(unordered.begin(), unordered.end());
+  inverse.insert(boost::container::ordered_range_t{}, unordered.begin(),
+                 unordered.end());
 #endif
+
   return inverse;
 }
 
