@@ -81,7 +81,7 @@ void Portal::setLink(const GeometryContext& gctx, Direction direction,
 
   auto& target =
       direction == Direction::AlongNormal ? m_alongNormal : m_oppositeNormal;
-  auto& other =
+  const auto& other =
       direction == Direction::AlongNormal ? m_oppositeNormal : m_alongNormal;
 
   // check if surfaces are identical
