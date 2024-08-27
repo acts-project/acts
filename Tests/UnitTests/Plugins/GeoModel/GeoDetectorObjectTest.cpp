@@ -34,8 +34,8 @@ BOOST_AUTO_TEST_SUITE(GeoModelDetObj)
 
 BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   // define materials
-  auto material = new GeoMaterial("Material", 1.0);
-  auto al = new GeoMaterial("Aluminium", 1.0);
+  GeoIntrusivePtr<GeoMaterial> material(new GeoMaterial("Material", 1.0));
+  GeoIntrusivePtr<GeoMaterial> al(new GeoMaterial("Aluminium", 1.0));
 
   // define dimensions
   double gmBoxHlx = 100, gmBoxHly = 200, gmBoxHlz = 2;
@@ -48,37 +48,41 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   std::vector<double> polyYVerts = {-50, -50, 0, 50, 50, 0};
 
   // create shapes
-  auto boxXY = new GeoBox(gmBoxHlx, gmBoxHly, gmBoxHlz);
-  auto tube = new GeoTube(gmTubeRmin, gmTubeRmax, gmTubeHlz);
-  auto ssurface = new GeoBox(gmRsurfHlx, gmRsurfHly, gmRsurfHlz);
+  GeoIntrusivePtr<GeoBox> boxXY(new GeoBox(gmBoxHlx, gmBoxHly, gmBoxHlz));
+  GeoIntrusivePtr<GeoTube> tube(new GeoTube(gmTubeRmin, gmTubeRmax, gmTubeHlz));
+  GeoIntrusivePtr<GeoBox> ssurface(
+      new GeoBox(gmRsurfHlx, gmRsurfHly, gmRsurfHlz));
   double halfX1 = fabs(trapXVerts[0] - trapXVerts[1]) / 2;
   double halfX2 = fabs(trapXVerts[2] - trapXVerts[3]) / 2;
   double halfY1 = fabs(trapYVerts[0] - trapYVerts[2]) / 2;
-  auto trd = new GeoTrd(1, 1, halfX1, halfX2, halfY1);
-  auto trap = new GeoSimplePolygonBrep(gmPolyZ);
+  GeoIntrusivePtr<GeoTrd> trd(new GeoTrd(1, 1, halfX1, halfX2, halfY1));
+  GeoIntrusivePtr<GeoSimplePolygonBrep> trap(new GeoSimplePolygonBrep(gmPolyZ));
   for (long unsigned int i = 0; i < trapXVerts.size(); i++) {
     trap->addVertex(trapXVerts[i], trapYVerts[i]);
   }
-  auto poly = new GeoSimplePolygonBrep(gmPolyZ);
+  // auto poly = new GeoSimplePolygonBrep(gmPolyZ);
+  GeoIntrusivePtr<GeoSimplePolygonBrep> poly(new GeoSimplePolygonBrep(gmPolyZ));
   for (long unsigned int i = 0; i < polyXVerts.size(); i++) {
     poly->addVertex(polyXVerts[i], polyYVerts[i]);
   }
 
   // create logvols
-  auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
-  auto logTube = new GeoLogVol("LogTube", tube, al);
-  auto logSurface = new GeoLogVol("LogSurface", ssurface, al);
-  auto logTrap = new GeoLogVol("LogTrap", trap, al);
-  auto logTrd = new GeoLogVol("LogTrd", trd, al);
-  auto logPoly = new GeoLogVol("LogPoly", poly, al);
+  GeoIntrusivePtr<GeoLogVol> logXY(
+      new GeoLogVol("LogVolumeXY", boxXY, material.get()));
+  GeoIntrusivePtr<GeoLogVol> logTube(new GeoLogVol("LogTube", tube, al));
+  GeoIntrusivePtr<GeoLogVol> logSurface(
+      new GeoLogVol("LogSurface", ssurface, al));
+  GeoIntrusivePtr<GeoLogVol> logTrap(new GeoLogVol("LogTrap", trap, al));
+  GeoIntrusivePtr<GeoLogVol> logTrd(new GeoLogVol("LogTrd", trd, al));
+  GeoIntrusivePtr<GeoLogVol> logPoly(new GeoLogVol("LogPoly", poly, al));
 
   // create physvols
-  auto fphysXY = new GeoFullPhysVol(logXY);
-  auto physTube = new GeoFullPhysVol(logTube);
-  auto physSurface = new GeoFullPhysVol(logSurface);
-  auto physTrap = new GeoFullPhysVol(logTrap);
-  auto physTrd = new GeoFullPhysVol(logTrd);
-  auto physPoly = new GeoFullPhysVol(logPoly);
+  GeoIntrusivePtr<GeoFullPhysVol> fphysXY(new GeoFullPhysVol(logXY));
+  GeoIntrusivePtr<GeoFullPhysVol> physTube(new GeoFullPhysVol(logTube));
+  GeoIntrusivePtr<GeoFullPhysVol> physSurface(new GeoFullPhysVol(logSurface));
+  GeoIntrusivePtr<GeoFullPhysVol> physTrap(new GeoFullPhysVol(logTrap));
+  GeoIntrusivePtr<GeoFullPhysVol> physTrd(new GeoFullPhysVol(logTrd));
+  GeoIntrusivePtr<GeoFullPhysVol> physPoly(new GeoFullPhysVol(logPoly));
 
   // build hierarchy
   fphysXY->add(physTube);
