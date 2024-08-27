@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   factory.convertFpv("LogVolumeXY", fphysXY, gmCache, gContext);
 
   // checking the dimension of the converted bounding boxes
-  for (auto box : gmCache.boundingBoxes) {
+  for (const auto& box : gmCache.boundingBoxes) {
     const Acts::VolumeBounds& bounds = box->volumeBounds();
     BOOST_CHECK(gmBoxHlx == bounds.values()[0]);
     BOOST_CHECK(gmBoxHly == bounds.values()[1]);
