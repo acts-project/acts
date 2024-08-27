@@ -44,15 +44,6 @@ int findVolume(
 }
 }  // namespace
 
-/// detray geometry writer function, debug purposes
-void Acts::DetrayGeometryConverter::writeToJson(
-    const DetrayDetector& dDetector,
-    const typename DetrayDetector::name_map& names,
-    detray::io::detector_writer_config writer_cfg) {
-  writer_cfg.format(detray::io::format::json);
-  detray::io::write_detector(dDetector, names, writer_cfg);
-}
-
 detray::io::transform_payload Acts::DetrayGeometryConverter::convertTransform(
     const Transform3& t) {
   detray::io::transform_payload tfPayload;

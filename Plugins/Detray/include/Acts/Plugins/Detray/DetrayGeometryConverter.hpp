@@ -36,15 +36,6 @@ class Portal;
 
 namespace DetrayGeometryConverter {
 
-/// Write the detector to json output
-///
-/// @param dDetector is the detray detector (converted)
-/// @param names a name map for the detector volumes
-/// @param writer_cfg the writer configuration
-void writeToJson(const DetrayDetector& dDetector,
-                 const typename DetrayDetector::name_map& names = {},
-                 detray::io::detector_writer_config writer_cfg = {});
-
 /// Conversion method for transform objects to detray::transform payloads
 ///
 /// @param t the transform to be converted

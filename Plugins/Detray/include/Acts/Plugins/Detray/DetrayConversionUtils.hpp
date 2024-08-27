@@ -30,6 +30,8 @@ struct Options {
   bool convertMaterial = true;
   /// Option to switch on/off the surface grid conversin
   bool convertSurfaceGrids = true;
+  /// Option to switch on/off the export to json
+  bool writeToJson = false;
 };
 
 /// Detray conversion cache object
