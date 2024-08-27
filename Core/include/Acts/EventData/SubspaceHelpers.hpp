@@ -116,13 +116,14 @@ class SubspaceHelperBase {
 
   template <typename indices_t>
   bool contains(indices_t i) const {
-    return std::find(begin(), end(), static_cast<Derived::IndexType>(i)) !=
-           end();
+    return std::find(begin(), end(),
+                     static_cast<typename Derived::IndexType>(i)) != end();
   }
 
   template <typename indices_t>
   std::size_t indexOf(indices_t i) const {
-    auto it = std::find(begin(), end(), static_cast<Derived::IndexType>(i));
+    auto it =
+        std::find(begin(), end(), static_cast<typename Derived::IndexType>(i));
     assert(it != end());
     return std::distance(begin(), it);
   }
