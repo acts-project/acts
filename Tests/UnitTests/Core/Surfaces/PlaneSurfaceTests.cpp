@@ -152,7 +152,11 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   Vector3 offSurface{0, 1, -2.};
   BOOST_CHECK(planeSurfaceObject->isOnSurface(
       tgContext, globalPosition, momentum, BoundaryTolerance::None()));
+  BOOST_CHECK(planeSurfaceObject->isOnSurface(tgContext, globalPosition,
+                                              BoundaryTolerance::None()));
   BOOST_CHECK(!planeSurfaceObject->isOnSurface(tgContext, offSurface, momentum,
+                                               BoundaryTolerance::None()));
+  BOOST_CHECK(!planeSurfaceObject->isOnSurface(tgContext, offSurface,
                                                BoundaryTolerance::None()));
   //
   // Test intersection
@@ -332,7 +336,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
                                                     direction);
   // The expected results
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
-  expAlignToPath << 1, 0, 0, 2, -1, -2;
+  expAlignToPath << 1, 0, 0, 2, -1, 0;
 
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
@@ -358,9 +362,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
       alignToBound.block<1, 6>(eBoundLoc1, eAlignmentCenter0);
   // The expected results
   AlignmentToPathMatrix expAlignToloc0;
-  expAlignToloc0 << 0, 0, 1, 0, 0, 0;
+  expAlignToloc0 << 0, 0, 1, 0, 0, 2;
   AlignmentToPathMatrix expAlignToloc1;
-  expAlignToloc1 << 0, -1, 0, 0, 0, 0;
+  expAlignToloc1 << 0, -1, 0, 0, 0, -1;
   // Check if the calculated derivatives are as expected
   CHECK_CLOSE_ABS(alignToloc0, expAlignToloc0, 1e-10);
   CHECK_CLOSE_ABS(alignToloc1, expAlignToloc1, 1e-10);

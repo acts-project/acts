@@ -164,9 +164,6 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
     // 1. The original transform
     const Acts::Vector3& oldCenter = surface->center(gctx);
     const Acts::Transform3& oldTransform = surface->transform(gctx);
-    const Acts::RotationMatrix3& oldRotation = oldTransform.rotation();
-    // The elements stored below is (rotZ, rotY, rotX)
-    const Acts::Vector3& oldEulerAngles = oldRotation.eulerAngles(2, 1, 0);
 
     // 2. The delta transform
     deltaAlignmentParam = alignResult.deltaAlignmentParameters.segment(
@@ -180,18 +177,17 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
 
     // 3. The new transform
     const Acts::Vector3 newCenter = oldCenter + deltaCenter;
-    // The rotation around global z axis
-    Acts::AngleAxis3 rotZ(oldEulerAngles(0) + deltaEulerAngles(2),
-                          Acts::Vector3::UnitZ());
-    // The rotation around global y axis
-    Acts::AngleAxis3 rotY(oldEulerAngles(1) + deltaEulerAngles(1),
-                          Acts::Vector3::UnitY());
-    // The rotation around global x axis
-    Acts::AngleAxis3 rotX(oldEulerAngles(2) + deltaEulerAngles(0),
-                          Acts::Vector3::UnitX());
-    Eigen::Quaternion<Acts::ActsScalar> newRotation = rotZ * rotY * rotX;
-    const Acts::Transform3 newTransform =
-        Acts::Translation3(newCenter) * newRotation;
+    Acts::Transform3 newTransform = oldTransform;
+    newTransform.translation() = newCenter;
+    // Rotation first around fixed local x, then around fixed local y, and last
+    // around fixed local z, this is the same as first around local z, then
+    // around new loca y, and last around new local x below
+    newTransform *=
+        Acts::AngleAxis3(deltaEulerAngles(2), Acts::Vector3::UnitZ());
+    newTransform *=
+        Acts::AngleAxis3(deltaEulerAngles(1), Acts::Vector3::UnitY());
+    newTransform *=
+        Acts::AngleAxis3(deltaEulerAngles(0), Acts::Vector3::UnitX());
 
     // 4. Update the aligned transform
     //@Todo: use a better way to handle this (need dynamic cast to inherited

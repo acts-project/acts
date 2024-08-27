@@ -16,9 +16,7 @@
 
 #include <GeoModelKernel/GeoShapeShift.h>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 
 struct GeoShiftConverter {
   /// @brief Convert a GeoBox to a detector element and surface
@@ -29,11 +27,10 @@ struct GeoShiftConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface> operator()(const GeoFullPhysVol& geoFPV,
+  Result<GeoModelSensitiveSurface> operator()(const PVConstLink& geoPV,
                                               const GeoShapeShift& geoShift,
                                               const Transform3& absTransform,
                                               bool sensitive) const;
 };
-}  // namespace detail
 
-}  // namespace Acts
+}  // namespace Acts::detail
