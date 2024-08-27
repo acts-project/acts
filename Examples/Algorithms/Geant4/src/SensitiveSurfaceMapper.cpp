@@ -139,15 +139,14 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
     G4VPhysicalVolume* g4PhysicalVolume,
     const Acts::Transform3& motherTransform) const {
   // Make sure the unit conversion is correct
+  constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
 
   auto g4ToActsVector = [](const G4ThreeVector& g4vec) {
-    constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
     return Acts::Vector3(g4vec[0] * convertLength, g4vec[1] * convertLength,
                          g4vec[2] * convertLength);
   };
 
   auto actsToG4Vec = [](const Acts::Vector3& actsVec) {
-    constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
     return G4ThreeVector(actsVec[0] / convertLength, actsVec[1] / convertLength,
                          actsVec[2] / convertLength);
   };
