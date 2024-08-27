@@ -292,8 +292,6 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
 
     sensitiveSteppingActionAccess->assignSurfaceMapping(
         sState.g4VolumeToSurfaces);
-
-    throw "stop here";
   }
 
   m_inputParticles.initialize(cfg.inputParticles);

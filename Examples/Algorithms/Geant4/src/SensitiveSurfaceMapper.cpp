@@ -18,6 +18,7 @@
 #include <ostream>
 #include <ranges>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 #include <G4LogicalVolume.hh>
@@ -28,25 +29,26 @@
 #include <boost/container/flat_set.hpp>
 #include <boost/geometry.hpp>
 
+// Add some type traits for boost::geometry, so we can use the machinery
+// directly with Acts::Vector2 / Eigen::Matrix
 namespace boost::geometry::traits {
 
-template <typename T, std::size_t D>
+template <typename T, int D>
 struct tag<Eigen::Matrix<T, D, 1>> {
   using type = point_tag;
 };
-template <typename T, std::size_t D>
-struct dimension<Eigen::Matrix<T, D, 1>>
-    : std::integral_constant<std::size_t, D> {};
-template <typename T, std::size_t D>
+template <typename T, int D>
+struct dimension<Eigen::Matrix<T, D, 1>> : std::integral_constant<int, D> {};
+template <typename T, int D>
 struct coordinate_type<Eigen::Matrix<T, D, 1>> {
   using type = T;
 };
-template <typename T, std::size_t D>
+template <typename T, int D>
 struct coordinate_system<Eigen::Matrix<T, D, 1>> {
   using type = boost::geometry::cs::cartesian;
 };
 
-template <typename T, std::size_t D, std::size_t Index>
+template <typename T, int D, std::size_t Index>
 struct access<Eigen::Matrix<T, D, 1>, Index> {
   static_assert(Index < D, "Out of range");
   using Point = Eigen::Matrix<T, D, 1>;
@@ -68,9 +70,13 @@ void writeG4Polyhedron(Acts::ObjVisualization3D<T>& visualizer,
   constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
 
   for (int i = 1; i <= polyhedron.GetNoFacets(); ++i) {
-    G4Point3D points[100];
+    // This is a bit ugly but I didn't find an easy way to compute this
+    // beforehand.
+    constexpr std::size_t maxPoints = 1000;
+    G4Point3D points[maxPoints];
     int nPoints = 0;
     polyhedron.GetFacet(i, nPoints, points);
+    assert(nPoints < maxPoints);
 
     std::vector<Acts::Vector3> faces;
     for (int j = 0; j < nPoints; ++j) {
