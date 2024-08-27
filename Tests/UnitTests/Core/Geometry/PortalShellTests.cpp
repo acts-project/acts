@@ -26,6 +26,19 @@ using namespace Acts::UnitLiterals;
 namespace Acts::Test {
 GeometryContext gctx;
 
+std::size_t getVolumeIndex() {
+  static std::size_t i = 1;
+  return i++;
+}
+
+auto makeVolume(auto&&... pars) {
+  TrackingVolume vol(Transform3::Identity(),
+                     std::make_shared<CylinderVolumeBounds>(
+                         std::forward<decltype(pars)>(pars)...));
+  vol.setVolumeName("cyl" + std::to_string(getVolumeIndex()));
+  return std::move(vol);
+};
+
 BOOST_AUTO_TEST_SUITE(PortalShellTests)
 
 BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
@@ -34,15 +47,6 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   // | --------- | ------ | --- |
   // | rMin > 0  | 1      | 3   |
   // | rMin == 0 | 2      | 4   |
-
-  std::size_t i = 1;
-  auto makeVolume = [&](auto&&... pars) {
-    TrackingVolume vol(Transform3::Identity(),
-                       std::make_shared<CylinderVolumeBounds>(
-                           std::forward<decltype(pars)>(pars)...));
-    vol.setVolumeName("cyl" + std::to_string(i++));
-    return std::move(vol);
-  };
 
   auto cyl1 = makeVolume(30_mm, 40_mm, 100_mm);
   auto cyl2 = makeVolume(0_mm, 40_mm, 100_mm);
@@ -530,7 +534,33 @@ BOOST_AUTO_TEST_CASE(RDirection) {
   }
 }
 
-// @TODO: Should CylinderStackPortalShell also do the fusing?
+BOOST_AUTO_TEST_CASE(ConnectOuter) {
+  auto cyl1 = makeVolume(30_mm, 40_mm, 100_mm);
+  auto cyl2 = makeVolume(0_mm, 50_mm, 110_mm);
+
+  SingleCylinderPortalShell shell{cyl1};
+
+  using enum CylinderPortalShell::Face;
+  BOOST_CHECK_EQUAL(
+      shell.portal(OuterCylinder)->getLink(Direction::AlongNormal), nullptr);
+  BOOST_CHECK_EQUAL(
+      shell.portal(InnerCylinder)->getLink(Direction::OppositeNormal), nullptr);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveDisc)->getLink(Direction::AlongNormal),
+                    nullptr);
+  BOOST_CHECK_EQUAL(
+      shell.portal(NegativeDisc)->getLink(Direction::OppositeNormal), nullptr);
+
+  shell.connectOuter(cyl2);
+
+  BOOST_CHECK_NE(shell.portal(OuterCylinder)->getLink(Direction::AlongNormal),
+                 nullptr);
+  BOOST_CHECK_NE(
+      shell.portal(InnerCylinder)->getLink(Direction::OppositeNormal), nullptr);
+  BOOST_CHECK_NE(shell.portal(PositiveDisc)->getLink(Direction::AlongNormal),
+                 nullptr);
+  BOOST_CHECK_NE(shell.portal(NegativeDisc)->getLink(Direction::OppositeNormal),
+                 nullptr);
+}
 
 BOOST_AUTO_TEST_SUITE_END()  // CylinderStack
 BOOST_AUTO_TEST_SUITE_END()

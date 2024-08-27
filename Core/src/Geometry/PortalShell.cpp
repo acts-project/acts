@@ -19,6 +19,16 @@
 
 namespace Acts {
 
+void CylinderPortalShell::connectOuter(TrackingVolume& volume) {
+  for (Face face : {PositiveDisc, NegativeDisc, OuterCylinder, InnerCylinder,
+                    NegativePhiPlane, PositivePhiPlane}) {
+    auto* portalAtFace = portal(face);
+    if (portalAtFace != nullptr) {
+      portalAtFace->fill(volume);
+    }
+  }
+}
+
 SingleCylinderPortalShell::SingleCylinderPortalShell(TrackingVolume& volume) {
   if (volume.volumeBounds().type() != VolumeBounds::BoundsType::eCylinder) {
     throw std::invalid_argument("Invalid volume bounds type");

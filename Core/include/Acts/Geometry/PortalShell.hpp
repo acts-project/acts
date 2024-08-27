@@ -27,6 +27,8 @@ class PortalShellBase {
 
   virtual ~PortalShellBase() = default;
 
+  virtual void connectOuter(TrackingVolume& volume) = 0;
+
  private:
 };
 
@@ -51,6 +53,8 @@ class CylinderPortalShell : public PortalShellBase {
   virtual const std::shared_ptr<Portal>& portalPtr(Face face) = 0;
 
   virtual void setPortal(std::shared_ptr<Portal> portal, Face face) = 0;
+
+  void connectOuter(TrackingVolume& volume) override;
 };
 
 class SingleCylinderPortalShell : public CylinderPortalShell {
