@@ -93,8 +93,8 @@ class Portal {
 
     /// Entry for the link along normal
     /// Entry for the link opposite normal
-    Link alongNormal;
-    Link oppositeNormal;
+    Link alongNormal{};
+    Link oppositeNormal{};
   };
 
   /// Constructor that takes a geometry context and an rvalue reference to a
