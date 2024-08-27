@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
       Portal::merge(gctx, portal1, portal2, BinningValue::binRPhi, *logger),
       SurfaceMergingException);
 
-  // The call above leaves both portals invalid because the excpeption is thrown
+  // The call above leaves both portals invalid because the exception is thrown
   // after the pointers are moved (during durface merging)
   BOOST_CHECK(!portal1.isValid());
   BOOST_CHECK(!portal2.isValid());

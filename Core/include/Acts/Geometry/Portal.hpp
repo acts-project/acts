@@ -68,7 +68,7 @@ class Portal {
   /// Constructor for a portal from two links. One of the links can be
   /// `nullptr`, but at least one of them needs to be set. If both are set, they
   /// need to be valid compatible links that can be fused.
-  /// @param gcxt The geometry context
+  /// @param gctx The geometry context
   /// @param alongNormal The link along the normal of the surface
   /// @param oppositeNormal The link opposite to the normal of the
   Portal(const GeometryContext& gctx,
@@ -78,7 +78,7 @@ class Portal {
   /// Helper struct for the arguments to the portal constructor below using
   /// designated initializers.
   struct Config {
-    /// Aggreggate over a surface and a volume with optional semantics
+    /// Aggregate over a surface and a volume with optional semantics
     struct Link {
       Link() = default;
       /// Constructor from a surface and a volume
@@ -127,8 +127,8 @@ class Portal {
   ///       portal needs to have the *along normal* slot filled, and the
   ///       otherone one needs to have the *opposite normal* slot filled. If
   ///       portals share a filled slot, the function throws an exception.
-  /// @note This is a destructive operaion on the portals involved
-  /// @param gcxt The geometry context
+  /// @note This is a destructive operation on the portals involved
+  /// @param gctx The geometry context
   /// @param aPortal The first portal
   /// @param bPortal The second portal
   /// @param logger The logger to push output to
@@ -157,7 +157,7 @@ class Portal {
   /// @note This is a destructive operation on both portals, their
   ///       links will be moved to produce merged links, which can fail
   ///       if the portal links are not compatible
-  /// @param gcxt The geometry context
+  /// @param gctx The geometry context
   /// @param aPortal The first portal
   /// @param bPortal The second portal
   /// @param direction The direction of the merge (e.g. along z)
