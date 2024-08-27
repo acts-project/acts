@@ -19,6 +19,7 @@
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
@@ -57,7 +58,9 @@ using namespace ActsExamples;
 
 namespace {
 
-using MultiStepper = Acts::MultiEigenStepperLoop<>;
+using MultiStepper = Acts::MultiEigenStepperLoop<
+    Acts::StepperExtensionList<Acts::DefaultExtension>,
+    Acts::MaxWeightReducerLoop>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
 
