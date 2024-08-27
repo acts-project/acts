@@ -303,4 +303,21 @@ bool Portal::isSameSurface(const GeometryContext& gctx, const Surface& a,
   return true;
 };
 
+void Portal::fill(TrackingVolume& volume) {
+  if (m_alongNormal != nullptr && m_oppositeNormal != nullptr) {
+    throw std::logic_error{"Portal is already filled"};
+  }
+
+  if (m_surface == nullptr) {
+    throw std::logic_error{"Portal has no existing link set, can't fill"};
+  }
+
+  if (m_alongNormal == nullptr) {
+    m_alongNormal = std::make_unique<TrivialPortalLink>(m_surface, volume);
+  } else {
+    assert(m_oppositeNormal == nullptr);
+    m_oppositeNormal = std::make_unique<TrivialPortalLink>(m_surface, volume);
+  }
+}
+
 }  // namespace Acts

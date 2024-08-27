@@ -208,6 +208,10 @@ class Portal {
   /// @return True if the portal is valid
   bool isValid() const;
 
+  /// Create and attach a trivial portal link to the empty slot of this portal
+  /// @param volume The target volume to connect to
+  void fill(TrackingVolume& volume);
+
   /// Access the portal surface that is shared between the two links
   /// @return The portal surface
   const RegularSurface& surface() const;

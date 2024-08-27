@@ -567,6 +567,34 @@ BOOST_AUTO_TEST_CASE(InvalidConstruction) {
                     std::invalid_argument);
 }
 
+BOOST_AUTO_TEST_CASE(PortalFill) {
+  auto vol1 = makeDummyVolume();
+  auto vol2 = makeDummyVolume();
+
+  auto cyl1 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
+                                                   50_mm, 100_mm);
+
+  Portal portal1{gctx, {.oppositeNormal = {cyl1, *vol1}}};
+  Portal portal2{gctx, {.alongNormal = {cyl1, *vol2}}};
+
+  // Fuse these to make portal 1 and 2 empty
+  Portal::fuse(gctx, portal1, portal2, *logger);
+
+  BOOST_CHECK_THROW(portal1.fill(*vol2), std::logic_error);
+
+  portal1 = Portal{gctx, {.oppositeNormal = {cyl1, *vol1}}};
+  portal2 = Portal{gctx, {.alongNormal = {cyl1, *vol2}}};
+
+  BOOST_CHECK_EQUAL(portal1.getLink(Direction::AlongNormal), nullptr);
+  BOOST_CHECK_NE(portal1.getLink(Direction::OppositeNormal), nullptr);
+
+  portal1.fill(*vol2);
+  BOOST_CHECK_NE(portal1.getLink(Direction::AlongNormal), nullptr);
+  BOOST_CHECK_NE(portal1.getLink(Direction::OppositeNormal), nullptr);
+
+  BOOST_CHECK_THROW(portal1.fill(*vol2), std::logic_error);
+}
+
 BOOST_AUTO_TEST_SUITE_END()  // Portals
 
 BOOST_AUTO_TEST_SUITE_END()  // Geometry
