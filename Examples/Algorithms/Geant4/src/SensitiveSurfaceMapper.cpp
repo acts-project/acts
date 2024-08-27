@@ -223,9 +223,9 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
 
   // Fall back to query all surfaces
   if (candidateSurfaces.empty()) {
-    ACTS_WARNING("No candidate surfaces for volume '"
-                 << volumeName << "' at " << g4AbsPosition.transpose()
-                 << ", query all surfaces");
+    ACTS_DEBUG("No candidate surfaces for volume '" << volumeName << "' at "
+                                                    << g4AbsPosition.transpose()
+                                                    << ", query all surfaces");
     candidateSurfaces = m_cfg.candidateSurfaces->queryAll();
   }
 
