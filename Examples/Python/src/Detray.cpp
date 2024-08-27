@@ -14,7 +14,6 @@
 #include <string>
 
 #include <detray/builders/detector_builder.hpp>
-#include <detray/io/frontend/detector_reader_config.hpp>
 #include <pybind11/pybind11.h>
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>

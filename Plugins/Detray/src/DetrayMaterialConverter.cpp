@@ -32,9 +32,9 @@ struct MaterialSurfaceSelector {
   }
 };
 
-/// This creates dummy axes to allow homogenous material for the moment
+/// This creates dummy axes to allow homogeneous material for the moment
 /// to be represented as grid surface material
-std::vector<detray::io::axis_payload> homogenousAxesPayloads() {
+std::vector<detray::io::axis_payload> homogeneousAxesPayloads() {
   Acts::BinningData bDataX(Acts::BinningValue::binX, -1, 1);
   bDataX.option = Acts::BinningOption::closed;
   Acts::BinningData bDataY(Acts::BinningValue::binY, -1, 1);
@@ -83,7 +83,7 @@ Acts::DetrayMaterialConverter::convertSurfaceMaterial(
     detray::io::grid_bin_payload<detray::io::material_slab_payload> slabBin{
         {0, 0}, {slab}};
     // Filling axes and bins
-    materialGrid.axes = homogenousAxesPayloads();
+    materialGrid.axes = homogeneousAxesPayloads();
     materialGrid.bins = {slabBin};
     return materialGrid;
   }

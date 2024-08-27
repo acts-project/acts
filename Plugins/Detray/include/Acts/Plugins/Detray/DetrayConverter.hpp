@@ -73,7 +73,6 @@ class DetrayConverter {
 
     // Checks and print
     detray::detail::check_consistency(detrayDetector);
-    converterPrint(detrayDetector, names);
 
     // If configured, write the detector to json
     if (options.writeToJson) {
