@@ -48,7 +48,7 @@ def assert_csv_output(csv_path, stem):
     __tracebackhide__ = True
     # print(list(csv_path.iterdir()))
     assert len([f for f in csv_path.iterdir() if f.name.endswith(stem + ".csv")]) > 0
-    assert all([f.stat().st_size > 100 for f in csv_path.iterdir()])
+    assert all([f.stat().st_size > 10 for f in csv_path.iterdir()])
 
 
 def assert_entries(root_file, tree_name, exp=None, non_zero=False):

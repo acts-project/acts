@@ -189,7 +189,7 @@ jobs:
           && venv_python=$(which python3)
           && echo $venv_python
           && source build/this_acts_withdeps.sh
-          && export PATH=$(dirname venv_python):$PATH
+          && export PATH=$(dirname $venv_python):$PATH
           && echo $PATH
           && which python3
           && echo "::endgroup::"
