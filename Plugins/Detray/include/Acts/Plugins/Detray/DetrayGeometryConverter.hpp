@@ -21,6 +21,7 @@
 #include "detray/definitions/geometry.hpp"
 #include "detray/io/common/geometry_reader.hpp"
 #include "detray/io/frontend/detector_writer.hpp"
+#include "detray/io/frontend/detector_writer_config.hpp"
 #include "detray/io/frontend/payloads.hpp"
 #include "detray/utils/consistency_checker.hpp"
 
@@ -31,6 +32,7 @@ class SurfaceBounds;
 
 namespace Experimental {
 class DetectorVolume;
+class Detector;
 class Portal;
 }  //  namespace Experimental
 
@@ -91,7 +93,7 @@ std::vector<detray::io::surface_payload> convertPortal(
 
 /// Conversion method for volume objects to detray::volume payloads
 ///
-/// @param cache [in, out] object
+/// @param geoIdCache [in, out] object
 /// @param gctx the geometry context
 /// @param volume the volume to be converted
 /// @param detectorVolumes the detector volumes for the link lookup
@@ -99,18 +101,23 @@ std::vector<detray::io::surface_payload> convertPortal(
 ///
 /// @return the volume_payload for portals and volumes by @param volume acts object
 detray::io::volume_payload convertVolume(
-    DetrayConversionUtils::Cache& cache, const GeometryContext& gctx,
-    const Experimental::DetectorVolume& volume,
+    DetrayConversionUtils::GeometryIdCache& geoIdCache,
+    const GeometryContext& gctx, const Experimental::DetectorVolume& volume,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
     const Acts::Logger& logger);
 
-/// Conversion method for (common) header payload
+/// Conversion method for detector objects to detray::detector payload
 ///
-/// @param detector is the detector to be converted
+/// @param geoIdCache [in, out] object
+/// @param gctx the geometry context
+/// @param detector the detector to be converted
+/// @param logger the logger object for screen output
 ///
-/// @return a geometry header payload
-detray::io::geo_header_payload convertHead(
-    const Acts::Experimental::Detector& detector);
+/// @return the detector_payload for portals and volumes by @param detector acts object
+detray::io::detector_payload convertDetector(
+    DetrayConversionUtils::GeometryIdCache& geoIdCache,
+    const GeometryContext& gctx, const Experimental::Detector& detector,
+    const Acts::Logger& logger);
 
 }  // namespace DetrayGeometryConverter
 }  // namespace Acts

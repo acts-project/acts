@@ -38,21 +38,23 @@ detray::io::material_slab_payload convertMaterialSlab(
 /// @param logger the logger object for screen output
 ///
 /// @return a surface material
-detray::io::grid_payload<detray::io::material_slab_payload>
+detray::io::grid_payload<detray::io::material_slab_payload,
+                         detray::io::material_id>
 convertSurfaceMaterial(const ISurfaceMaterial& material,
                        const Acts::Logger& logger);
 
 /// Conversion method for material grids
 ///
-/// @param cache object to have the link association from the geometry building
+/// @param geoIdCache object to have the link association from the geometry building
 /// @param detector the detector object
 /// @param logger the logger object for screen output
 ///
 /// @return the volume_payload for portals and volumes by @param volume acts object
-detray::io::detector_grids_payload<detray::io::material_slab_payload>
-convertSurfaceMaterialGrids(const DetrayConversionUtils::Cache& cache,
-                            const Experimental::Detector& detector,
-                            const Logger& logger);
+detray::io::detector_grids_payload<detray::io::material_slab_payload,
+                                   detray::io::material_id>
+convertSurfaceMaterialGrids(
+    const DetrayConversionUtils::GeometryIdCache& geoIdCache,
+    const Experimental::Detector& detector, const Logger& logger);
 
 }  // namespace DetrayMaterialConverter
 

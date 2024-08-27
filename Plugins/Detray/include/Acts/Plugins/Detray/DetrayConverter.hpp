@@ -35,24 +35,21 @@ class DetrayConverter {
   ///
   /// @returns a detector of requested return type
   template <typename detector_t = DetrayDetector>
-  std::tuple<detector_t, vecmem::memory_resource&> convertDetector(
+  std::tuple<detector_t, vecmem::memory_resource&> convert(
       const GeometryContext& gctx, const Detector& detector,
       vecmem::memory_resource& mr,
       [[maybe_unused]] const DetrayConversionUtils::Options& options = {}) {
-    // The detector payload which will be handed back
-    detray::io::detector_payload detectorPayload;
-
     // The building cache object
-    DetrayConversionUtils::Cache cache;
+    DetrayConversionUtils::GeometryIdCache geoIdCache;
 
-    for (const auto volume : detector.volumes()) {
-      detectorPayload.volumes.push_back(DetrayGeometryConverter::convertVolume(
-          cache, gctx, *volume, detector.volumes(), logger()));
-    }
+    detray::io::detector_payload detectorPayload =
+        DetrayGeometryConverter::convertDetector(geoIdCache, gctx, detector,
+                                                 logger());
+
     typename detector_t::name_map names = {{0u, detector.name()}};
 
     // build detector
-    detray::detector_builder<detray::default_metadata> detectorBuilder{};
+    detray::detector_builder<typename detector_t::metadata> detectorBuilder{};
     detray::io::geometry_reader::convert<detector_t>(detectorBuilder, names,
                                                      detectorPayload);
     // @todo: insert material map reader here

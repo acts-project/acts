@@ -32,6 +32,8 @@ struct MaterialSurfaceSelector {
   }
 };
 
+/// This creates dummy axes to allow homogenous material for the moment
+/// to be represented as grid surface material
 std::vector<detray::io::axis_payload> homogenousAxesPayloads() {
   Acts::BinningData bDataX(Acts::BinningValue::binX, -1, 1);
   bDataX.option = Acts::BinningOption::closed;
@@ -56,14 +58,16 @@ Acts::DetrayMaterialConverter::convertMaterialSlab(
       {material.X0(), material.L0(), material.Ar(), material.Z(),
        material.massDensity(), material.molarDensity(), 0.}};
   slab.type = detray::io::material_id::slab;
-  // @todo surface link and material type ?
   return slab;
 }
 
-detray::io::grid_payload<detray::io::material_slab_payload>
+detray::io::grid_payload<detray::io::material_slab_payload,
+                         detray::io::material_id>
 Acts::DetrayMaterialConverter::convertSurfaceMaterial(
     const ISurfaceMaterial& material, const Logger& logger) {
-  detray::io::grid_payload<detray::io::material_slab_payload> materialGrid;
+  detray::io::grid_payload<detray::io::material_slab_payload,
+                           detray::io::material_id>
+      materialGrid;
 
   // Check the material types
   // (1) homogeneous -> 1 x 1 bin grid with closed axes
@@ -163,16 +167,19 @@ Acts::DetrayMaterialConverter::convertSurfaceMaterial(
       "DetrayMaterialConverter: unknown surface material type detected.");
 }
 
-detray::io::detector_grids_payload<detray::io::material_slab_payload>
+detray::io::detector_grids_payload<detray::io::material_slab_payload,
+                                   detray::io::material_id>
 Acts::DetrayMaterialConverter::convertSurfaceMaterialGrids(
-    const DetrayConversionUtils::Cache& cache,
+    const DetrayConversionUtils::GeometryIdCache& geoIdCache,
     const Experimental::Detector& detector, const Logger& logger) {
   // The material grid payload
-  detray::io::detector_grids_payload<detray::io::material_slab_payload>
+  detray::io::detector_grids_payload<detray::io::material_slab_payload,
+                                     detray::io::material_id>
       materialGrids;
 
   using DetrayMaterialGrid =
-      detray::io::grid_payload<detray::io::material_slab_payload>;
+      detray::io::grid_payload<detray::io::material_slab_payload,
+                               detray::io::material_id>;
 
   // Loop over the volumes in order to assign the right volume links
   for (const auto& volume : detector.volumes()) {
@@ -184,14 +191,14 @@ Acts::DetrayMaterialConverter::convertSurfaceMaterialGrids(
                << " surfaces/portals with material in volume "
                << volume->name());
     // Find the voluem index first
-    auto volumeIndex = cache.volumeLinks.find(volume->geometryId());
-    if (volumeIndex != cache.volumeLinks.end()) {
+    auto volumeIndex = geoIdCache.volumeLinks.find(volume->geometryId());
+    if (volumeIndex != geoIdCache.volumeLinks.end()) {
       std::vector<DetrayMaterialGrid> volumeMaterialGrids = {};
       // Now convert the surfaces
       for (const auto& surface : selector.surfaces) {
         // Find the surface index
         auto surfaceIndices =
-            cache.localSurfaceLinks.equal_range(surface->geometryId());
+            geoIdCache.localSurfaceLinks.equal_range(surface->geometryId());
         DetrayMaterialGrid materialGrid =
             convertSurfaceMaterial(*surface->surfaceMaterial(), logger);
         // Loop over the equal range and fill one grid each, this is needed

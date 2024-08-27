@@ -34,7 +34,7 @@ struct Options {
 ///
 /// This object is used to synchronize link information between the
 /// different converters (geometry, material, surface grids)
-struct Cache {
+struct GeometryIdCache {
   /// This is a multimap to pass volume local surface link information
   /// The portal splitting requires a multimap implementation here
   std::multimap<GeometryIdentifier, unsigned long> localSurfaceLinks;
@@ -67,7 +67,7 @@ detray::axis::binning convertBinningType(BinningType bType);
 ///
 /// @param bData the binning data to be converted
 ///
-/// @return a dtray axis payload
+/// @return a detray axis payload
 detray::io::axis_payload convertBinningData(const BinningData& bData);
 
 }  // namespace DetrayConversionUtils

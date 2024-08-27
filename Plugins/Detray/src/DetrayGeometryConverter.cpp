@@ -281,7 +281,8 @@ Acts::DetrayGeometryConverter::convertPortal(
 }
 
 detray::io::volume_payload Acts::DetrayGeometryConverter::convertVolume(
-    DetrayConversionUtils::Cache& cache, const GeometryContext& gctx,
+    DetrayConversionUtils::GeometryIdCache& geoIdCache,
+    const GeometryContext& gctx,
     const Acts::Experimental::DetectorVolume& volume,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
     const Acts::Logger& logger) {
@@ -295,7 +296,7 @@ detray::io::volume_payload Acts::DetrayGeometryConverter::convertVolume(
   volumePayload.transform = convertTransform(volume.transform(gctx));
 
   // Remember the link
-  cache.volumeLinks[volume.geometryId()] = volumePayload.index.link;
+  geoIdCache.volumeLinks[volume.geometryId()] = volumePayload.index.link;
 
   // iterate over surfaces and portals keeping the same surf_pd.index_in_coll
   std::size_t sIndex = 0;
@@ -303,7 +304,7 @@ detray::io::volume_payload Acts::DetrayGeometryConverter::convertVolume(
     io::surface_payload surfacePayload = convertSurface(gctx, *surface, false);
     // Set the index in the collection & remember it in the cache
     surfacePayload.index_in_coll = sIndex++;
-    cache.localSurfaceLinks.insert(
+    geoIdCache.localSurfaceLinks.insert(
         {surface->geometryId(), surfacePayload.index_in_coll.value()});
     // Set mask to volume link
     surfacePayload.mask.volume_link.link =
@@ -324,7 +325,7 @@ detray::io::volume_payload Acts::DetrayGeometryConverter::convertVolume(
     std::for_each(portals.begin(), portals.end(), [&](auto& portalPayload) {
       // Set the index in the collection & remember it in the cache
       portalPayload.index_in_coll = sIndex++;
-      cache.localSurfaceLinks.insert(
+      geoIdCache.localSurfaceLinks.insert(
           {geoID, portalPayload.index_in_coll.value()});
       // Add it to the surfaces
       volumePayload.surfaces.push_back(portalPayload);
@@ -336,4 +337,23 @@ detray::io::volume_payload Acts::DetrayGeometryConverter::convertVolume(
                      << portalCounter << " detray portals");
 
   return volumePayload;
+}
+
+detray::io::detector_payload Acts::DetrayGeometryConverter::convertDetector(
+    DetrayConversionUtils::GeometryIdCache& geoIdCache,
+    const GeometryContext& gctx, const Acts::Experimental::Detector& detector,
+    const Acts::Logger& logger) {
+  ACTS_DEBUG("DetrayGeometryConverter: converting detector"
+             << detector.name() << " with " << detector.volumes().size()
+             << " volumes.");
+
+  // The detector payload which will be handed back
+  detray::io::detector_payload detectorPayload;
+
+  for (const auto volume : detector.volumes()) {
+    detectorPayload.volumes.push_back(
+        convertVolume(geoIdCache, gctx, *volume, detector.volumes(), logger));
+  }
+
+  return detectorPayload;
 }
