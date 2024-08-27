@@ -27,9 +27,16 @@ Acts::GeoModelDetectorElementITk::convertFromGeomodel(
 
     auto itkEl = std::make_shared<GeoModelDetectorElementITk>(
         detEl->physicalVolume(), nullptr, detEl->transform(gctx),
-        detEl->thickness(), hardware, barrelEndcap, layerWheel, etaModule,
-        phiModule, side);
+        detEl->thickness());
     auto surface = Surface::makeShared<surface_t>(bounds, *itkEl.get());
+
+    itkEl->m_hardware = hardware;
+    itkEl->m_barrelEndcap = barrelEndcap;
+    itkEl->m_layerWheel = layerWheel;
+    itkEl->m_etaModule = etaModule;
+    itkEl->m_etaModule = phiModule;
+    itkEl->m_side = side;
+
     itkEl->attachSurface(surface);
     itkEl->setDatabaseEntryName(detEl->databaseEntryName());
     return std::pair{itkEl, surface};

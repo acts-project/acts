@@ -20,16 +20,8 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
   GeoModelDetectorElementITk(const PVConstLink& geoPhysVol,
                              std::shared_ptr<Surface> surface,
                              const Transform3& sfTransform,
-                             ActsScalar thickness, int hardware,
-                             int barrelEndcap, int layerWheel, int etaModule,
-                             int phiModule, int side)
-      : GeoModelDetectorElement(geoPhysVol, surface, sfTransform, thickness),
-        m_hardware(hardware),
-        m_barrelEndcap(barrelEndcap),
-        m_layerWheel(layerWheel),
-        m_etaModule(etaModule),
-        m_phiModule(phiModule),
-        m_side(side) {}
+                             ActsScalar thickness)
+      : GeoModelDetectorElement(geoPhysVol, surface, sfTransform, thickness) {}
 
   int hardware() const { return m_hardware; }
   int barrelEndcap() const { return m_barrelEndcap; }
@@ -46,12 +38,12 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
                       int etaModule, int phiModule, int side);
 
  private:
-  int m_hardware;
-  int m_barrelEndcap;
-  int m_layerWheel;
-  int m_etaModule;
-  int m_phiModule;
-  int m_side;
+  int m_hardware{};
+  int m_barrelEndcap{};
+  int m_layerWheel{};
+  int m_etaModule{};
+  int m_phiModule{};
+  int m_side{};
 };
 
 }  // namespace Acts
