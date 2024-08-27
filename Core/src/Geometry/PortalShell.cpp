@@ -16,13 +16,14 @@
 
 #include <algorithm>
 #include <numeric>
-#include <ranges>
 
 namespace Acts {
 
-SingleCylinderPortalShell::SingleCylinderPortalShell(
-    const GeometryContext& gctx, TrackingVolume& volume) {
-  assert(volume.volumeBounds().type() == VolumeBounds::BoundsType::eCylinder);
+SingleCylinderPortalShell::SingleCylinderPortalShell(TrackingVolume& volume) {
+  if (volume.volumeBounds().type() != VolumeBounds::BoundsType::eCylinder) {
+    throw std::invalid_argument("Invalid volume bounds type");
+  }
+
   const auto& bounds =
       dynamic_cast<const CylinderVolumeBounds&>(volume.volumeBounds());
 
@@ -164,8 +165,6 @@ CylinderStackPortalShell::CylinderStackPortalShell(
   } else {
     throw std::invalid_argument("Invalid direction");
   }
-
-  // @TODO: Handle portal fusing
 }
 
 std::size_t CylinderStackPortalShell::size() const {

@@ -12,6 +12,7 @@
 #include <boost/test/unit_test_suite.hpp>
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/Portal.hpp"
@@ -47,6 +48,13 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   auto cyl2 = makeVolume(0_mm, 40_mm, 100_mm);
   auto cyl3 = makeVolume(30_mm, 40_mm, 100_mm, 45_degree);
   auto cyl4 = makeVolume(0_mm, 40_mm, 100_mm, 45_degree);
+
+  TrackingVolume boxVolume(
+      Transform3::Identity(),
+      std::make_shared<CuboidVolumeBounds>(10_mm, 10_mm, 10_mm));
+
+  BOOST_CHECK_THROW(SingleCylinderPortalShell{boxVolume},
+                    std::invalid_argument);
 
   SingleCylinderPortalShell shell1{cyl1};
   BOOST_CHECK_EQUAL(shell1.size(), 4);
