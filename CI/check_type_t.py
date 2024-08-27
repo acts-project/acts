@@ -56,7 +56,7 @@ def main():
 
     exit_code = 0
 
-    files = []
+    inputs = []
 
     if len(args.input) == 1 and os.path.isdir(args.input[0]):
         # walk over all files
@@ -80,12 +80,12 @@ def main():
                 if any([fnmatch(str(filepath), e) for e in args.exclude]):
                     continue
 
-                files.append(filepath)
+                inputs.append(filepath)
     else:
         for file in args.input:
-            files.append(Path(file))
+            inputs.append(Path(file))
 
-    for filepath in files:
+    for filepath in inputs:
         for c_type in type_list:
             changed_lines = handle_file(file=filepath, fix=args.fix, c_type=c_type)
             if len(changed_lines) > 0:
