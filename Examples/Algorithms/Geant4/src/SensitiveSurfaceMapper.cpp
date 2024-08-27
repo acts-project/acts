@@ -76,7 +76,7 @@ void writeG4Polyhedron(Acts::ObjVisualization3D<T>& visualizer,
     G4Point3D points[maxPoints];
     int nPoints = 0;
     polyhedron.GetFacet(i, nPoints, points);
-    assert(nPoints < maxPoints);
+    assert(static_cast<std::size_t>(nPoints) < maxPoints);
 
     std::vector<Acts::Vector3> faces;
     for (int j = 0; j < nPoints; ++j) {
