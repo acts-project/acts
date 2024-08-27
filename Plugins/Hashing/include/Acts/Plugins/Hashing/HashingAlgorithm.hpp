@@ -18,17 +18,7 @@ class HashingAlgorithm {
  public:
   explicit HashingAlgorithm(const HashingAlgorithmConfig& cfg);
 
-  /**
-   * @brief Destroy the object.
-   */
-  ~HashingAlgorithm() = default;
-
   HashingAlgorithm() = default;
-  HashingAlgorithm(const HashingAlgorithm<external_spacepoint_t,
-                                          SpacePointContainer>&) = delete;
-  HashingAlgorithm<external_spacepoint_t, SpacePointContainer>& operator=(
-      const HashingAlgorithm<external_spacepoint_t, SpacePointContainer>&) =
-      default;
 
   template <typename collection_t>
   void execute(SpacePointContainer& spacePoints, AnnoyModel* annoyModel,
@@ -42,4 +32,5 @@ class HashingAlgorithm {
 };
 
 }  // namespace Acts
+
 #include "Acts/Plugins/Hashing/HashingAlgorithm.ipp"

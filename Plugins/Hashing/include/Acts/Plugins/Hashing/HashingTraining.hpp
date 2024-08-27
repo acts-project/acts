@@ -34,4 +34,5 @@ class HashingTrainingAlgorithm {
 };
 
 }  // namespace Acts
+
 #include "Acts/Plugins/Hashing/HashingTraining.ipp"
