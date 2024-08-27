@@ -75,6 +75,8 @@ class IAxis {
             case Variable:
               return callable(
                   dynamic_cast<const Axis<AxisType::Variable, bdt>&>(*this));
+            default:
+              throw std::logic_error("Unknown axis type");
           }
         };
 
@@ -86,6 +88,8 @@ class IAxis {
         return switchOnType(AxisBound);
       case Closed:
         return switchOnType(AxisClosed);
+      default:
+        throw std::logic_error("Unknown axis type");
     }
   }
 

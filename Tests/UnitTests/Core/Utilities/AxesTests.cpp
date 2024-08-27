@@ -438,6 +438,10 @@ BOOST_AUTO_TEST_CASE(AxisVisit) {
     BOOST_CHECK(
         (std::is_same_v<std::decay_t<decltype(axis)>, Axis<Variable, Closed>>));
   });
+
+  std::vector<double> edges =
+      varClosed.visit([](const auto& axis) { return axis.getBinEdges(); });
+  BOOST_CHECK_EQUAL(edges.size(), varClosed.getBinEdges().size());
 }
 
 BOOST_AUTO_TEST_CASE(Output) {
