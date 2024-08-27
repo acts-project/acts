@@ -71,11 +71,9 @@ detray::io::axis_payload Acts::DetrayConversionUtils::convertBinningData(
   // Set the binning value
   axis.label = convertBinningValue(bData.binvalue);
   // Set the binning range
+  axis.edges = {};
   if (bData.type == BinningType::equidistant) {
-    axis.edges = {};
-    for (std::size_t ib = 0; ib <= bData.bins(); ++ib) {
-      axis.edges.push_back(bData.min + ib * bData.step);
-    }
+    axis.edges = {bData.min, bData.max};
   } else {
     axis.edges.insert(axis.edges.end(), bData.boundaries().begin(),
                       bData.boundaries().end());
