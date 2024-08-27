@@ -47,7 +47,7 @@ bool trapezoidsAreMergeable(const std::vector<Acts::Vector3> &vtxsa,
 namespace Acts::detail {
 
 Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
-    const GeoFullPhysVol &geoFPV, const GeoShapeUnion &geoUnion,
+    const PVConstLink &geoPV, const GeoShapeUnion &geoUnion,
     const Transform3 &absTransform, bool sensitive) const {
   const auto shiftA = dynamic_cast<const GeoShapeShift *>(geoUnion.getOpA());
   const auto shiftB = dynamic_cast<const GeoShapeShift *>(geoUnion.getOpB());
@@ -57,12 +57,12 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
   }
 
   auto shiftARes =
-      detail::GeoShiftConverter{}(geoFPV, *shiftA, absTransform, sensitive);
+      detail::GeoShiftConverter{}(geoPV, *shiftA, absTransform, sensitive);
   if (!shiftARes.ok()) {
     return shiftARes.error();
   }
   auto shiftBRes =
-      detail::GeoShiftConverter{}(geoFPV, *shiftB, absTransform, sensitive);
+      detail::GeoShiftConverter{}(geoPV, *shiftB, absTransform, sensitive);
   if (!shiftBRes.ok()) {
     return shiftBRes.error();
   }
@@ -145,7 +145,7 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
   // Create the element and the surface (we assume both have equal thickness)
   auto detectorElement =
       GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
-          geoFPV, trapezoidBounds, transform, elA->thickness());
+          geoPV, trapezoidBounds, transform, elA->thickness());
   auto surface = detectorElement->surface().getSharedPtr();
 
   return std::make_tuple(detectorElement, surface);

@@ -20,15 +20,14 @@ namespace Acts::detail {
 template <typename Shape, typename Converter>
 struct GenericGeoShapeConverter : public IGeoShapeConverter {
   Acts::Result<Acts::GeoModelSensitiveSurface> toSensitiveSurface(
-      const GeoFullPhysVol& geoFPV) const override {
+      PVConstLink geoPV, const Transform3& transform) const override {
     // Retrieve logical volume and absolute transform
-    const GeoLogVol* logVol = geoFPV.getLogVol();
-    const Transform3& transform = geoFPV.getAbsoluteTransform(nullptr);
+    const GeoLogVol* logVol = geoPV->getLogVol();
     if (logVol != nullptr) {
       const GeoShape* geoShape = logVol->getShape();
       auto concreteShape = dynamic_cast<const Shape*>(geoShape);
       if (concreteShape != nullptr) {
-        return Converter{}(geoFPV, *concreteShape, transform, true);
+        return Converter{}(geoPV, *concreteShape, transform, true);
       }
       return Result<GeoModelSensitiveSurface>::failure(
           GeoModelConversionError::WrongShapeForConverter);
@@ -38,17 +37,16 @@ struct GenericGeoShapeConverter : public IGeoShapeConverter {
   }
 
   Acts::Result<std::shared_ptr<Acts::Surface>> toPassiveSurface(
-      const GeoFullPhysVol& geoFPV) const override {
+      PVConstLink geoPV, const Transform3& transform) const override {
     // Retrieve logical volume and absolute transform
-    const GeoLogVol* logVol = geoFPV.getLogVol();
-    const Transform3& transform = geoFPV.getAbsoluteTransform(nullptr);
+    const GeoLogVol* logVol = geoPV->getLogVol();
     if (logVol != nullptr) {
       const GeoShape* geoShape = logVol->getShape();
 
       auto concreteShape = dynamic_cast<const Shape*>(geoShape);
       if (concreteShape != nullptr) {
         // Conversion function call with sensitive = false
-        auto res = Converter{}(geoFPV, *concreteShape, transform, false);
+        auto res = Converter{}(geoPV, *concreteShape, transform, false);
         if (!res.ok()) {
           return res.error();
         }

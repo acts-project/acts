@@ -41,9 +41,6 @@ class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator {
                                                   Logging::INFO))
       : m_logger(std::move(logger)) {}
 
-  /// Destructor
-  ~TrackingVolumeArrayCreator() override = default;
-
   /// create a tracking volume array
   ///
   /// @param [in] gctx the geometry context for this building
