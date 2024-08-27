@@ -55,8 +55,7 @@ class CylinderPortalShellBase : public PortalShellBase {
 
 class SingleCylinderPortalShell : public CylinderPortalShellBase {
  public:
-  SingleCylinderPortalShell(const GeometryContext& gctx,
-                            TrackingVolume& volume);
+  explicit SingleCylinderPortalShell(TrackingVolume& volume);
 
   std::size_t size() const final;
 

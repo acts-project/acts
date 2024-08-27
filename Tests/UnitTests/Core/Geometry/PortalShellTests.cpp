@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   auto cyl3 = makeVolume(30_mm, 40_mm, 100_mm, 45_degree);
   auto cyl4 = makeVolume(0_mm, 40_mm, 100_mm, 45_degree);
 
-  SingleCylinderPortalShell shell1{gctx, cyl1};
+  SingleCylinderPortalShell shell1{cyl1};
   BOOST_CHECK_EQUAL(shell1.size(), 4);
 
   using enum CylinderPortalShellBase::Face;
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  SingleCylinderPortalShell shell2{gctx, cyl2};
+  SingleCylinderPortalShell shell2{cyl2};
   BOOST_CHECK_EQUAL(shell2.size(), 3);
 
   pDisc = shell2.portal(PositiveDisc);
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   iCyl = shell2.portal(InnerCylinder);
   BOOST_CHECK_EQUAL(iCyl, nullptr);
 
-  SingleCylinderPortalShell shell3{gctx, cyl3};
+  SingleCylinderPortalShell shell3{cyl3};
   BOOST_CHECK_EQUAL(shell3.size(), 6);
 
   pDisc = shell3.portal(PositiveDisc);
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   BOOST_CHECK_EQUAL(pPhi->resolveVolume(gctx, point, dir).value(), nullptr);
   BOOST_CHECK_EQUAL(pPhi->resolveVolume(gctx, point, idir).value(), &cyl3);
 
-  SingleCylinderPortalShell shell4{gctx, cyl4};
+  SingleCylinderPortalShell shell4{cyl4};
   BOOST_CHECK_EQUAL(shell4.size(), 5);
 
   pDisc = shell4.portal(PositiveDisc);
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
       Transform3::Identity(),
       std::make_shared<CylinderVolumeBounds>(30_mm, 100_mm, 100_mm));
 
-  SingleCylinderPortalShell shell{gctx, vol};
+  SingleCylinderPortalShell shell{vol};
 
   const auto* iCyl = shell.portal(InnerCylinder);
   const auto* pDisc = shell.portal(PositiveDisc);
@@ -302,8 +302,8 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
 
   auto grid = oCylLink->makeGrid(BinningValue::binZ);
 
-  auto portal2 = std::make_shared<Portal>(gctx, Direction::OppositeNormal,
-                                          std::move(grid));
+  auto portal2 =
+      std::make_shared<Portal>(Direction::OppositeNormal, std::move(grid));
   shell.setPortal(portal2, OuterCylinder);
   BOOST_CHECK_EQUAL(shell.portal(OuterCylinder), portal2.get());
 
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   grid = nDiscLink->makeGrid(BinningValue::binR);
 
   auto portal3 =
-      std::make_shared<Portal>(gctx, Direction::AlongNormal, std::move(grid));
+      std::make_shared<Portal>(Direction::AlongNormal, std::move(grid));
   shell.setPortal(portal3, NegativeDisc);
   BOOST_CHECK_EQUAL(shell.portal(NegativeDisc), portal3.get());
 
@@ -343,8 +343,8 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
         Transform3{Translation3{Vector3::UnitZ() * 100_mm}},
         std::make_shared<CylinderVolumeBounds>(30_mm, 100_mm, 100_mm));
 
-    SingleCylinderPortalShell shell1{gctx, vol1};
-    SingleCylinderPortalShell shell2{gctx, vol2};
+    SingleCylinderPortalShell shell1{vol1};
+    SingleCylinderPortalShell shell2{vol2};
 
     BOOST_CHECK_NE(shell1.portal(PositiveDisc), shell2.portal(NegativeDisc));
 
@@ -366,8 +366,8 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
     // Disc portals have been fused
     BOOST_CHECK_EQUAL(shell1.portal(PositiveDisc), shell2.portal(NegativeDisc));
 
-    shell1 = SingleCylinderPortalShell{gctx, vol1};
-    shell2 = SingleCylinderPortalShell{gctx, vol2};
+    shell1 = SingleCylinderPortalShell{vol1};
+    shell2 = SingleCylinderPortalShell{vol2};
 
     BOOST_CHECK_THROW(
         CylinderStackPortalShell(gctx, {&shell1}, BinningValue::binZ),
@@ -387,8 +387,8 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
         Transform3{Translation3{Vector3::UnitZ() * 100_mm}},
         std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm));
 
-    SingleCylinderPortalShell shell1{gctx, vol1};
-    SingleCylinderPortalShell shell2{gctx, vol2};
+    SingleCylinderPortalShell shell1{vol1};
+    SingleCylinderPortalShell shell2{vol2};
 
     BOOST_CHECK_EQUAL(shell1.portal(InnerCylinder), nullptr);
     BOOST_CHECK_EQUAL(shell2.portal(InnerCylinder), nullptr);
@@ -412,8 +412,8 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
     BOOST_CHECK_EQUAL(stack.portal(PositiveDisc), shell2.portal(PositiveDisc));
     BOOST_CHECK_EQUAL(stack.portal(NegativeDisc), shell1.portal(NegativeDisc));
 
-    shell1 = SingleCylinderPortalShell{gctx, vol1};
-    shell2 = SingleCylinderPortalShell{gctx, vol2};
+    shell1 = SingleCylinderPortalShell{vol1};
+    shell2 = SingleCylinderPortalShell{vol2};
 
     BOOST_CHECK_THROW(
         CylinderStackPortalShell(gctx, {&shell1}, BinningValue::binZ),
@@ -436,8 +436,8 @@ BOOST_AUTO_TEST_CASE(RDirection) {
         Transform3::Identity(),
         std::make_shared<CylinderVolumeBounds>(100_mm, 150_mm, 100_mm));
 
-    SingleCylinderPortalShell shell1{gctx, vol1};
-    SingleCylinderPortalShell shell2{gctx, vol2};
+    SingleCylinderPortalShell shell1{vol1};
+    SingleCylinderPortalShell shell2{vol2};
 
     BOOST_CHECK_NE(shell1.portal(OuterCylinder), shell2.portal(InnerCylinder));
 
@@ -462,8 +462,8 @@ BOOST_AUTO_TEST_CASE(RDirection) {
     BOOST_CHECK_EQUAL(stack.portal(OuterCylinder),
                       shell2.portal(OuterCylinder));
 
-    shell1 = SingleCylinderPortalShell{gctx, vol1};
-    shell2 = SingleCylinderPortalShell{gctx, vol2};
+    shell1 = SingleCylinderPortalShell{vol1};
+    shell2 = SingleCylinderPortalShell{vol2};
 
     BOOST_CHECK_THROW(
         CylinderStackPortalShell(gctx, {&shell1}, BinningValue::binR),
@@ -483,8 +483,8 @@ BOOST_AUTO_TEST_CASE(RDirection) {
         Transform3::Identity(),
         std::make_shared<CylinderVolumeBounds>(100_mm, 150_mm, 100_mm));
 
-    SingleCylinderPortalShell shell1{gctx, vol1};
-    SingleCylinderPortalShell shell2{gctx, vol2};
+    SingleCylinderPortalShell shell1{vol1};
+    SingleCylinderPortalShell shell2{vol2};
 
     BOOST_CHECK_EQUAL(shell1.portal(InnerCylinder), nullptr);
     BOOST_CHECK_NE(shell1.portal(OuterCylinder), shell2.portal(InnerCylinder));
@@ -509,8 +509,8 @@ BOOST_AUTO_TEST_CASE(RDirection) {
     BOOST_CHECK_EQUAL(stack.portal(OuterCylinder),
                       shell2.portal(OuterCylinder));
 
-    shell1 = SingleCylinderPortalShell{gctx, vol1};
-    shell2 = SingleCylinderPortalShell{gctx, vol2};
+    shell1 = SingleCylinderPortalShell{vol1};
+    shell2 = SingleCylinderPortalShell{vol2};
 
     BOOST_CHECK_THROW(
         CylinderStackPortalShell(gctx, {&shell1}, BinningValue::binR),

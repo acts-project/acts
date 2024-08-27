@@ -31,8 +31,8 @@ SingleCylinderPortalShell::SingleCylinderPortalShell(
 
   auto handle = [&](Face face, std::size_t from) {
     const auto& source = orientedSurfaces.at(from);
-    m_portals.at(toUnderlying(face)) = std::make_shared<Portal>(
-        gctx, source.direction, source.surface, volume);
+    m_portals.at(toUnderlying(face)) =
+        std::make_shared<Portal>(source.direction, source.surface, volume);
   };
 
   if (orientedSurfaces.size() == 6) {
