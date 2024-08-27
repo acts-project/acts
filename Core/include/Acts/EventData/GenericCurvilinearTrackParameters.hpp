@@ -82,8 +82,7 @@ class GenericCurvilinearTrackParameters
   template <typename other_track_parameter_t>
   static GenericCurvilinearTrackParameters create(
       const other_track_parameter_t& other) {
-    static_assert(
-        Concepts::BoundTrackParametersConcept<other_track_parameter_t>);
+    static_assert(BoundTrackParametersConcept<other_track_parameter_t>);
 
     return GenericCurvilinearTrackParameters(
         other.fourPosition(), other.particleHypothesis(), other.covariance());
