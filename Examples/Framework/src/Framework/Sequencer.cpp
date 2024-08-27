@@ -400,9 +400,9 @@ void storeTiming(const std::vector<std::string>& identifiers,
     const auto time_total_s =
         std::chrono::duration_cast<Seconds>(durations[i]).count();
     file << identifiers[i] << "," << time_total_s << ","
-         << time_total_s / numEvents;
+         << time_total_s / numEvents << "\n";
   }
-  file << std::endl;
+  file << "\n";
 }
 }  // namespace
 
@@ -619,10 +619,9 @@ void Sequencer::fpeReport() const {
 
     std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
         sorted;
-    std::transform(
-        merged.stackTraces().begin(), merged.stackTraces().end(),
-        std::back_inserter(sorted),
-        [](const auto& f) -> const auto& { return f; });
+    std::transform(merged.stackTraces().begin(), merged.stackTraces().end(),
+                   std::back_inserter(sorted),
+                   [](const auto& f) -> const auto& { return f; });
     std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) {
       return a.get().count > b.get().count;
     });

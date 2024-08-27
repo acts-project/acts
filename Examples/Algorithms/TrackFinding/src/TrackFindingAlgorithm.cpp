@@ -241,8 +241,10 @@ class BranchStopper {
     bool tooManyHoles =
         track.nHoles() > singleConfig->maxHoles || tooManyHolesPS;
     bool tooManyOutliers = track.nOutliers() > singleConfig->maxOutliers;
+    bool tooManyHolesAndOutliers = (track.nHoles() + track.nOutliers()) >
+                                   singleConfig->maxHolesAndOutliers;
 
-    if (tooManyHoles || tooManyOutliers) {
+    if (tooManyHoles || tooManyOutliers || tooManyHolesAndOutliers) {
       ++m_nStoppedBranches;
       return enoughMeasurements ? BranchStopperResult::StopAndKeep
                                 : BranchStopperResult::StopAndDrop;

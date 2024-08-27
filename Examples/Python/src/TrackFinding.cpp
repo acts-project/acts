@@ -339,27 +339,33 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    auto constructor = [](const std::vector<std::pair<
-                              GeometryIdentifier,
-                              std::tuple<std::vector<double>,
-                                         std::vector<double>,
-                                         std::vector<std::size_t>>>>& input) {
-      std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
-          converted;
-      converted.reserve(input.size());
-      for (const auto& [id, cuts] : input) {
-        const auto& [bins, chi2, num] = cuts;
-        converted.emplace_back(id, MeasurementSelectorCuts{bins, chi2, num});
-      }
-      return std::make_unique<MeasurementSelector::Config>(converted);
-    };
+    auto constructor =
+        [](const std::vector<std::pair<
+               GeometryIdentifier,
+               std::tuple<std::vector<double>, std::vector<double>,
+                          std::vector<double>, std::vector<std::size_t>>>>&
+               input) {
+          std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
+              converted;
+          converted.reserve(input.size());
+          for (const auto& [id, cuts] : input) {
+            const auto& [bins, chi2Measurement, chi2Outlier, num] = cuts;
+            converted.emplace_back(
+                id, MeasurementSelectorCuts{bins, chi2Measurement, num,
+                                            chi2Outlier});
+          }
+          return std::make_unique<MeasurementSelector::Config>(converted);
+        };
 
     py::class_<MeasurementSelectorCuts>(m, "MeasurementSelectorCuts")
         .def(py::init<>())
         .def(py::init<std::vector<double>, std::vector<double>,
-                      std::vector<std::size_t>>())
+                      std::vector<std::size_t>, std::vector<double>>())
         .def_readwrite("etaBins", &MeasurementSelectorCuts::etaBins)
-        .def_readwrite("chi2CutOff", &MeasurementSelectorCuts::chi2CutOff)
+        .def_readwrite("chi2CutOffMeasurement",
+                       &MeasurementSelectorCuts::chi2CutOff)
+        .def_readwrite("chi2CutOffOutlier",
+                       &MeasurementSelectorCuts::chi2CutOffOutlier)
         .def_readwrite("numMeasurementsCutOff",
                        &MeasurementSelectorCuts::numMeasurementsCutOff);
 
