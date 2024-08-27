@@ -12,7 +12,7 @@ FOR YOUR INFORMATION AND MUST BE REMOVED BEFORE SUBMITTING THE ISSUE.
 
 - [ ] If the issue reports a bug:
 
-    - [ ] Please suggest whether this bug is critical / a blocker. One of the 
+    - [ ] Please suggest whether this bug is critical / a blocker. One of the
           maintainers will assign a corresponding labels.
     - [ ] Does the description contain all necessary information to reproduce
           the error?

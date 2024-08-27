@@ -3,15 +3,15 @@
 Analysis applications
 ================================
 
-The ACTS examples come with a certain variety of ROOT based validation and performance writers, 
+The ACTS examples come with a certain variety of ROOT based validation and performance writers,
 whose output can be use to understand various aspects of the reconstruction in more detail.
 
 The building of these applications can be switched on by setting ``ACTS_BUILD_ANALYSIS_APPS=On``,
 which requires (on top of the Core dependencies) ROOT for the analysis code.
 
-These analysis applications are steered via BOOST program options, hence a quick ``<APP> -h`` will 
+These analysis applications are steered via BOOST program options, hence a quick ``<APP> -h`` will
 quickly show the relevant options, they can be executed in silent mode, i.e. without opening
-a window, when specifying the `-s` option. 
+a window, when specifying the `-s` option.
 
 Material Composition Analysis
 -----------------------------
@@ -114,14 +114,14 @@ The source code for this application can be found in ``Examples/Scripts/Material
 Tracking Performance Analysis
 -----------------------------
 
-Two different applications are available for analysing the output of track fitting and 
+Two different applications are available for analysing the output of track fitting and
 track finding, sitting on top of the corresponding ROOT output writers from the Example
 applications.
 
 
 **Residuals and Pull analysis per layer**
 
-To investigate the per layer residual and pull distributions, one can use the 
+To investigate the per layer residual and pull distributions, one can use the
 `ActsAnalysisResidualAndPulls` application, which runs on top of the ROOT file
 produced by the ``RootTrackStatesWriter``.
 
@@ -144,11 +144,11 @@ The following options are available:
     --save arg (=png)                Output save format (to be interpreted by
                                        ROOT).
 
-Again, this application is capable of running in silent mode (``-s``) without 
+Again, this application is capable of running in silent mode (``-s``) without
 opening a dedicated screen window.
 
 Originally designed for the ``Acts::KalmanFilter`` output, it is capable of
-producing histograms of the ``--predicted``, ``--filtered`` and ``--smoothed`` track 
+producing histograms of the ``--predicted``, ``--filtered`` and ``--smoothed`` track
 states (i.e. track parameters) and will do so per layer and volume.
 
 On request (``--fit``) the resulting distributions can be fitted for the summary plots
@@ -157,10 +157,10 @@ that are created, otherwise the RMS and its mean are taken.
 The application will (by parsing the geometry id range) automatically determine the different
 layers and volumes and create detailed and summary plots for all of them.
 
-As a example, the pull distributions for *predicted, filtered* and *smoothed* track states 
+As a example, the pull distributions for *predicted, filtered* and *smoothed* track states
 is shown below.
 
-.. figure:: figures/analysis_apps/aa_rp_layers.png  
+.. figure:: figures/analysis_apps/aa_rp_layers.png
    :width: 500
 
 
@@ -213,12 +213,12 @@ The following options are available:
 	  --outliers                            Auxiliary information for outliers
 	  --shared                              Auxiliary information for shared
 
-This application is highly configurable and produces residual and pull 
+This application is highly configurable and produces residual and pull
 (regional, integral and summary) plots for the fitted perigee parameters of track fitting.
 It can be run in ```eta,phi,pT``` bins, and as the different histograms in the various bins
-will require different histogram ranges, these will be automatically determined. 
+will require different histogram ranges, these will be automatically determined.
 
-However, this process is relatively slow and makes comparisons between runs difficult, 
+However, this process is relatively slow and makes comparisons between runs difficult,
 thus the range configuration can be written out by specifying a ``--config-output`` JSON file,
 and successively re-using it with a ``--config-input`` flag in future analysis runs.
 
@@ -228,14 +228,13 @@ using the ``--peak-events`` option.
 Some example histograms (transverse impact parameter ``d0`` distribution or a summary plot showing
 the number of detector hits, are added below).
 
-.. figure:: figures/analysis_apps/aa_ts_d0.png  
+.. figure:: figures/analysis_apps/aa_ts_d0.png
    :width: 500
 
 
-.. figure:: figures/analysis_apps/aa_ts_nhits.png  
+.. figure:: figures/analysis_apps/aa_ts_nhits.png
    :width: 500
 
 
 
 The source code for these applications can be found in ``Examples/Scripts/TrackingPerformance``.
-

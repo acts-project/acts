@@ -657,6 +657,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         m_res_eT[ipar].push_back(parameters[Acts::eBoundTime] - truthTIME);
 
         // track parameters pull
+        // MARK: fpeMaskBegin(FLTDIV, 1, #2348)
         m_pull_eLOC0[ipar].push_back(
             (parameters[Acts::eBoundLoc0] - truthLOC0) /
             std::sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
@@ -671,12 +672,10 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         m_pull_eQOP[ipar].push_back(
             (parameters[Acts::eBoundQOverP] - truthQOP) /
             std::sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
-        double sigmaTime =
-            std::sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
         m_pull_eT[ipar].push_back(
-            sigmaTime == 0.0
-                ? nan
-                : (parameters[Acts::eBoundTime] - truthTIME) / sigmaTime);
+            (parameters[Acts::eBoundTime] - truthTIME) /
+            std::sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+        // MARK: fpeMaskEnd(FLTDIV)
 
         if (ipar == ePredicted) {
           // local hit residual info

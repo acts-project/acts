@@ -379,20 +379,29 @@ double Acts::DiscSurface::pathCorrection(const GeometryContext& gctx,
   return 1. / std::abs(normal(gctx).dot(direction));
 }
 
-std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
-    const GeometryContext& gctx, const DiscSurface& other,
-    BinningValue direction, const Logger& logger) const {
+std::pair<std::shared_ptr<Acts::DiscSurface>, bool>
+Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
+                              bool externalRotation,
+                              const Logger& logger) const {
   using namespace Acts::UnitLiterals;
 
-  ACTS_DEBUG("Merging disc surfaces in " << binningValueName(direction)
-                                         << " direction");
+  ACTS_DEBUG("Merging disc surfaces in " << direction << " direction");
 
-  Transform3 otherLocal = transform(gctx).inverse() * other.transform(gctx);
+  if (m_associatedDetElement != nullptr ||
+      other.m_associatedDetElement != nullptr) {
+    throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+                                  "CylinderSurface::merge: surfaces are "
+                                  "associated with a detector element");
+  }
+  assert(m_transform != nullptr && other.m_transform != nullptr);
+
+  Transform3 otherLocal = m_transform->inverse() * *other.m_transform;
 
   constexpr auto tolerance = s_onSurfaceTolerance;
 
   // surface cannot have any relative rotation
-  if (!otherLocal.linear().isApprox(RotationMatrix3::Identity())) {
+  if (std::abs(otherLocal.linear().col(eX)[eZ]) >= tolerance ||
+      std::abs(otherLocal.linear().col(eY)[eZ]) >= tolerance) {
     ACTS_ERROR("DiscSurface::merge: surfaces have relative rotation");
     throw SurfaceMergingException(
         getSharedPtr(), other.getSharedPtr(),
@@ -449,6 +458,13 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
                                 << otherHlPhi / 1_degree);
 
   if (direction == Acts::BinningValue::binR) {
+    if (std::abs(otherLocal.linear().col(eY)[eX]) >= tolerance &&
+        (!bounds->coversFullAzimuth() || !otherBounds->coversFullAzimuth())) {
+      throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+                                    "DiscSurface::merge: surfaces have "
+                                    "relative rotation in z and phi sector");
+    }
+
     if (std::abs(minR - otherMaxR) > tolerance &&
         std::abs(maxR - otherMinR) > tolerance) {
       ACTS_ERROR("DiscSurface::merge: surfaces are not touching r");
@@ -478,7 +494,8 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
     auto newBounds =
         std::make_shared<RadialBounds>(newMinR, newMaxR, hlPhi, avgPhi);
 
-    return Surface::makeShared<DiscSurface>(transform(gctx), newBounds);
+    return {Surface::makeShared<DiscSurface>(*m_transform, newBounds),
+            minR > otherMinR};
 
   } else if (direction == Acts::BinningValue::binPhi) {
     if (std::abs(maxR - otherMaxR) > tolerance ||
@@ -489,22 +506,49 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
           "DiscSurface::merge: surfaces don't have same r bounds");
     }
 
+    // Figure out signed relative rotation
+    Vector2 rotatedX = otherLocal.linear().col(eX).head<2>();
+    ActsScalar zrotation = std::atan2(rotatedX[1], rotatedX[0]);
+
+    ACTS_VERBOSE("this:  [" << avgPhi / 1_degree << " +- " << hlPhi / 1_degree
+                            << "]");
+    ACTS_VERBOSE("other: [" << otherAvgPhi / 1_degree << " +- "
+                            << otherHlPhi / 1_degree << "]");
+
+    ACTS_VERBOSE("Relative rotation around local z: " << zrotation / 1_degree);
+
+    ActsScalar prevOtherAvgPhi = otherAvgPhi;
+    otherAvgPhi = detail::radian_sym(otherAvgPhi + zrotation);
+    ACTS_VERBOSE("~> local other average phi: "
+                 << otherAvgPhi / 1_degree
+                 << " (was: " << prevOtherAvgPhi / 1_degree << ")");
+
     try {
-      auto [newHlPhi, newAvgPhi] = detail::mergedPhiSector(
+      auto [newHlPhi, newAvgPhi, reversed] = detail::mergedPhiSector(
           hlPhi, avgPhi, otherHlPhi, otherAvgPhi, logger, tolerance);
+
+      Transform3 newTransform = *m_transform;
+
+      if (externalRotation) {
+        ACTS_VERBOSE("Modifying transform for external rotation of "
+                     << newAvgPhi / 1_degree);
+        newTransform = newTransform * AngleAxis3(newAvgPhi, Vector3::UnitZ());
+        newAvgPhi = 0.;
+      }
 
       auto newBounds =
           std::make_shared<RadialBounds>(minR, maxR, newHlPhi, newAvgPhi);
 
-      return Surface::makeShared<DiscSurface>(transform(gctx), newBounds);
+      return {Surface::makeShared<DiscSurface>(newTransform, newBounds),
+              reversed};
     } catch (const std::invalid_argument& e) {
       throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                     e.what());
     }
 
   } else {
-    ACTS_ERROR("DiscSurface::merge: invalid direction "
-               << binningValueName(direction));
+    ACTS_ERROR("DiscSurface::merge: invalid direction " << direction);
+
     throw SurfaceMergingException(
         getSharedPtr(), other.getSharedPtr(),
         "DiscSurface::merge: invalid direction " + binningValueName(direction));
