@@ -69,12 +69,12 @@ BOOST_AUTO_TEST_CASE(ModuleSplitterTest_non_annulus) {
 
 BOOST_AUTO_TEST_CASE(ModuleSplitterTest_split) {
   auto detEl = makeDetElement();
-  auto midR = 0.5 * (annulusParams[1] - annulusParams[0]);
+  auto midR = annulusParams[0] + 0.5 * (annulusParams[1] - annulusParams[0]);
   const std::map<std::string, std::vector<double>> patterns{
       {"A", {annulusParams[0], midR, annulusParams[1]}}};
 
   double tolerance = 1.e-8;
-  GeoModelModuleSplitter splitter(patterns, tolerance);
+  GeoModelModuleSplitter splitter(patterns, tolerance, Acts::Logging::VERBOSE);
 
   auto res = splitter.split(detEl, gctx);
   BOOST_REQUIRE(res.has_value());

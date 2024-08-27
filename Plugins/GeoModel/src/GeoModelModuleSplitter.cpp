@@ -55,6 +55,13 @@ auto GeoModelModuleSplitter::split(DetectorElementPtr detElement,
       values[AnnulusBounds::eMinR] = radii[i];
       values[AnnulusBounds::eMaxR] = radii[i + 1];
 
+      ACTS_VERBOSE("Make new annulus bounds: " << [&]() {
+        std::stringstream ss;
+        for (auto v : values) {
+          ss << v << " ";
+        }
+        return ss.str();
+      }());
       auto bounds = std::make_shared<AnnulusBounds>(values);
 
       auto newDetElement =
