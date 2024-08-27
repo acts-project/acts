@@ -708,7 +708,7 @@ def addGeant4(
     smmConfig.volumeMappings = volumeMappings
     smmConfig.materialMappings = materialMappings
     sensitiveMapper = SensitiveSurfaceMapper.create(
-        smmConfig, acts.logging.INFO, trackingGeometry
+        smmConfig, customLogLevel(), trackingGeometry
     )
 
     # Simulation
