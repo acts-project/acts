@@ -32,36 +32,99 @@
 
 BOOST_AUTO_TEST_SUITE(GeoModelDetObj)
 
-BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
+struct GeoDims{
+  std::vector<double> boxO;
+  std::vector<double> boxI;
+  std::vector<double> tube;
+  std::vector<std::vector<double>> trapVerts;
+  std::vector<double> trapHls;
+  std::vector<std::vector<double>> polyVerts;
+  double poly_z;
+};
+void test(Acts::GeoModelDetectorObjectFactory::Cache cache, GeoModelDetObj::GeoDims geoDims){
+
+  for (auto box : cache.boundingBoxes) {
+    const Acts::VolumeBounds& bounds = box->volumeBounds();
+    for(long unsigned int i=0; i<geoDims.boxO.size();i++){
+      BOOST_CHECK(geoDims.boxO[i] == bounds.values()[i]);
+    }
+    std::vector<const Acts::Surface*> surfaces = box->surfaces();
+
+    for (auto surface : surfaces) {
+      const Acts::SurfaceBounds& sbounds = surface->bounds();
+      // check straws
+      if (surface->type() == Acts::Surface::SurfaceType::Straw) {
+        const auto* lineBounds =
+            dynamic_cast<const Acts::LineBounds*>(&sbounds);
+        BOOST_CHECK(geoDims.tube[1] == lineBounds->get(Acts::LineBounds::eR));
+        BOOST_CHECK(geoDims.tube[2] ==
+                    lineBounds->get(Acts::LineBounds::eHalfLengthZ));
+      }
+      // rectangle Surface check corner position without trf
+      if (sbounds.type() == Acts::SurfaceBounds::eRectangle) {
+        double csxmin = sbounds.values()[0];
+        double csymin = sbounds.values()[1];
+        double csxmax = sbounds.values()[2];
+        double csymax = sbounds.values()[3];
+        BOOST_CHECK(geoDims.boxI[0] == -csxmin);
+        BOOST_CHECK(geoDims.boxI[1] == -csymin);
+        BOOST_CHECK(geoDims.boxI[0] == csxmax);
+        BOOST_CHECK(geoDims.boxI[1] == csymax);
+      }
+      // trap Surface without trf
+      if (sbounds.type() == Acts::SurfaceBounds::eTrapezoid) {
+        const auto* trapBounds =
+            dynamic_cast<const Acts::TrapezoidBounds*>(&sbounds);
+        std::vector<Acts::Vector2> trapVerts = trapBounds->vertices();
+
+        for (long unsigned int i = 0; i < trapVerts.size(); i++) {
+          BOOST_CHECK(trapVerts[i][0] == geoDims.trapVerts[i][0]);
+          BOOST_CHECK(trapVerts[i][1] == geoDims.trapVerts[i][1]);
+        }
+      }
+      if (sbounds.type() == Acts::SurfaceBounds::eDiamond) {
+        const auto* polyBounds =
+            dynamic_cast<const Acts::DiamondBounds*>(&sbounds);
+        std::vector<Acts::Vector2> polyVerts = polyBounds->vertices();
+        for (long unsigned int i = 0; i < polyVerts.size(); i++) {
+          BOOST_CHECK(polyVerts[i][0] == geoDims.polyVerts[i][0]);
+          BOOST_CHECK(polyVerts[i][1] == geoDims.polyVerts[i][1]);
+        }
+      }
+    }
+  }
+}
+struct GeoGeometry{
+  std::vector<GeoFullPhysVol*> fpvs;
+  GeoDims dim;
+};
+GeoGeometry constructGeoModel(){
   // define materials
   auto material = new GeoMaterial("Material", 1.0);
   auto al = new GeoMaterial("Aluminium", 1.0);
 
   // define dimensions
-  double gm_box_hlx = 100, gm_box_hly = 200, gm_box_hlz = 2;
-  double gm_tube_rmin = 5, gm_tube_rmax = 6, gm_tube_hlz = 100;
-  double gm_rsurf_hlx = 100, gm_rsurf_hly = 200, gm_rsurf_hlz = 2;
-  double gm_poly_z = 2;
-  std::vector<double> trapX_verts = {-103, 103, 183, -183};
-  std::vector<double> trapY_verts = {-50, -50, 50, 50};
-  std::vector<double> polyX_verts = {-60, 60, 153, 123, -123, -153};
-  std::vector<double> polyY_verts = {-50, -50, 0, 50, 50, 0};
+  GeoDims geoDims;
+  geoDims.boxO ={100, 200, 2};
+  geoDims.boxI ={100, 150, 1};
+  geoDims.trapVerts = {{-103,-50},{103,-50},{183,50},{-183,50}};
+  geoDims.polyVerts ={{-60,-50},{60,-50},{153,0},{123,50},{-123,50},{-153,0}};
+  geoDims.tube = {5, 6, 100};
+  geoDims.poly_z = 2;
+  geoDims.trapHls = {fabs(geoDims.trapVerts[0][0] - geoDims.trapVerts[1][0]) / 2, fabs(geoDims.trapVerts[2][0] - geoDims.trapVerts[3][0]) / 2, fabs(geoDims.trapVerts[0][1] - geoDims.trapVerts[2][1]) / 2};
 
   // create shapes
-  auto boxXY = new GeoBox(gm_box_hlx, gm_box_hly, gm_box_hlz);
-  auto tube = new GeoTube(gm_tube_rmin, gm_tube_rmax, gm_tube_hlz);
-  auto ssurface = new GeoBox(gm_rsurf_hlx, gm_rsurf_hly, gm_rsurf_hlz);
-  double halfX1 = fabs(trapX_verts[0] - trapX_verts[1]) / 2;
-  double halfX2 = fabs(trapX_verts[2] - trapX_verts[3]) / 2;
-  double halfY1 = fabs(trapY_verts[0] - trapY_verts[2]) / 2;
-  auto trd = new GeoTrd(1, 1, halfX1, halfX2, halfY1);
-  auto trap = new GeoSimplePolygonBrep(gm_poly_z);
-  for (long unsigned int i = 0; i < trapX_verts.size(); i++) {
-    trap->addVertex(trapX_verts[i], trapY_verts[i]);
+  auto boxXY = new GeoBox(geoDims.boxO[0], geoDims.boxO[1], geoDims.boxO[2]);
+  auto tube = new GeoTube(geoDims.tube[0], geoDims.tube[1], geoDims.tube[2]);
+  auto ssurface = new GeoBox(geoDims.boxI[0], geoDims.boxI[1], geoDims.boxI[2]);
+  auto trd = new GeoTrd(1, 1, geoDims.trapHls[0], geoDims.trapHls[1], geoDims.trapHls[2]);
+  auto trap = new GeoSimplePolygonBrep(geoDims.poly_z);
+  for (const auto& tVert : geoDims.trapVerts) {
+    trap->addVertex(tVert[0], tVert[1]);
   }
-  auto poly = new GeoSimplePolygonBrep(gm_poly_z);
-  for (long unsigned int i = 0; i < polyX_verts.size(); i++) {
-    poly->addVertex(polyX_verts[i], polyY_verts[i]);
+  auto poly = new GeoSimplePolygonBrep(geoDims.poly_z);
+  for (const auto& pVert : geoDims.polyVerts) {
+    poly->addVertex(pVert[0], pVert[1]);
   }
 
   // create logvols
@@ -73,21 +136,32 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   auto logPoly = new GeoLogVol("LogPoly", poly, al);
 
   // create physvols
-  auto fphysXY = new GeoFullPhysVol(logXY);
-  auto physTube = new GeoFullPhysVol(logTube);
-  auto physSurface = new GeoFullPhysVol(logSurface);
-  auto physTrap = new GeoFullPhysVol(logTrap);
-  auto physTrd = new GeoFullPhysVol(logTrd);
-  auto physPoly = new GeoFullPhysVol(logPoly);
+  std::vector<GeoFullPhysVol*> fpvs;
+  fpvs.push_back(new GeoFullPhysVol(logXY));
+  fpvs.push_back(new GeoFullPhysVol(logTube));
+  fpvs.push_back(new GeoFullPhysVol(logSurface));
+  fpvs.push_back(new GeoFullPhysVol(logTrap));
+  fpvs.push_back(new GeoFullPhysVol(logTrd));
+  fpvs.push_back(new GeoFullPhysVol(logPoly));
+  GeoGeometry ret;
+  ret.fpvs=fpvs;
+  ret.dim=geoDims;
+  return ret;
+}
 
+BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
+  GeoGeometry geom = constructGeoModel();
+  GeoDims geoDims = geom.dim;
+  std::vector<GeoFullPhysVol*> fpvs= geom.fpvs;
+
+  int index = 0;
+  GeoFullPhysVol* parentVol = fpvs[index];
+  fpvs.erase(fpvs.begin() + index);
   // build hierarchy
-  fphysXY->add(physTube);
-  fphysXY->add(physSurface);
-  fphysXY->add(physTrap);
-  fphysXY->add(physTrd);
-  fphysXY->add(physPoly);
+  for (const auto& fpv : fpvs){
+    parentVol->add(fpv);
+  }
 
-  PVConstLink physVol{fphysXY};
   auto rBounds = std::make_shared<Acts::RectangleBounds>(100, 200);
 
   // create pars for conversion
@@ -98,60 +172,11 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
 
   // create factory instance
   Acts::GeoModelDetectorObjectFactory factory(gmConfig);
-
   // convert GeoFullPhysVol
-  factory.convertFpv("LogVolumeXY", fphysXY, gmCache, gContext);
+  factory.convertFpv("LogVolumeXY", parentVol, gmCache, gContext);
 
   // checking the dimension of the converted bounding boxes
-  for (auto box : gmCache.boundingBoxes) {
-    const Acts::VolumeBounds& bounds = box->volumeBounds();
-    BOOST_CHECK(gm_box_hlx == bounds.values()[0]);
-    BOOST_CHECK(gm_box_hly == bounds.values()[1]);
-    BOOST_CHECK(gm_box_hlz == bounds.values()[2]);
-    std::vector<const Acts::Surface*> surfaces = box->surfaces();
-
-    for (auto surface : surfaces) {
-      const Acts::SurfaceBounds& sbounds = surface->bounds();
-      // check straws
-      if (surface->type() == Acts::Surface::SurfaceType::Straw) {
-        const auto* lineBounds =
-            dynamic_cast<const Acts::LineBounds*>(&sbounds);
-        BOOST_CHECK(gm_tube_rmax == lineBounds->get(Acts::LineBounds::eR));
-        BOOST_CHECK(gm_tube_hlz ==
-                    lineBounds->get(Acts::LineBounds::eHalfLengthZ));
-      }
-      // rectangle Surface check corner position without trf
-      if (sbounds.type() == Acts::SurfaceBounds::eRectangle) {
-        double csxmin = sbounds.values()[0];
-        double csymin = sbounds.values()[1];
-        double csxmax = sbounds.values()[2];
-        double csymax = sbounds.values()[3];
-        BOOST_CHECK(gm_rsurf_hlx == -csxmin);
-        BOOST_CHECK(gm_rsurf_hly == -csymin);
-        BOOST_CHECK(gm_rsurf_hlx == csxmax);
-        BOOST_CHECK(gm_rsurf_hly == csymax);
-      }
-      // trap Surface without trf
-      if (sbounds.type() == Acts::SurfaceBounds::eTrapezoid) {
-        const auto* trapBounds =
-            dynamic_cast<const Acts::TrapezoidBounds*>(&sbounds);
-        std::vector<Acts::Vector2> trapVerts = trapBounds->vertices();
-        for (long unsigned int i = 0; i < trapVerts.size(); i++) {
-          BOOST_CHECK(trapVerts[i][0] == trapX_verts[i]);
-          BOOST_CHECK(trapVerts[i][1] == trapY_verts[i]);
-        }
-      }
-      if (sbounds.type() == Acts::SurfaceBounds::eDiamond) {
-        const auto* polyBounds =
-            dynamic_cast<const Acts::DiamondBounds*>(&sbounds);
-        std::vector<Acts::Vector2> polyVerts = polyBounds->vertices();
-        for (long unsigned int i = 0; i < polyVerts.size(); i++) {
-          BOOST_CHECK(polyVerts[i][0] == polyX_verts[i]);
-          BOOST_CHECK(polyVerts[i][1] == polyY_verts[i]);
-        }
-      }
-    }
-  }
+  test(gmCache, geoDims);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
