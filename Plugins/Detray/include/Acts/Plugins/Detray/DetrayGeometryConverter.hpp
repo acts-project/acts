@@ -17,13 +17,11 @@
 
 #include <vector>
 
-#include "detray/builders/detector_builder.hpp"
-#include "detray/definitions/geometry.hpp"
-#include "detray/io/common/geometry_reader.hpp"
-#include "detray/io/frontend/detector_writer.hpp"
-#include "detray/io/frontend/detector_writer_config.hpp"
-#include "detray/io/frontend/payloads.hpp"
-#include "detray/utils/consistency_checker.hpp"
+#include <detray/builders/detector_builder.hpp>
+#include <detray/definitions/geometry.hpp>
+#include <detray/io/frontend/detector_writer.hpp>
+#include <detray/io/frontend/payloads.hpp>
+#include <detray/utils/consistency_checker.hpp>
 
 namespace Acts {
 

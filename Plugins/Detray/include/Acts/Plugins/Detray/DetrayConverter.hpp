@@ -16,6 +16,9 @@
 
 #include <memory>
 
+#include <detray/io/common/geometry_reader.hpp>
+#include <detray/io/common/material_map_reader.hpp>
+
 namespace Acts {
 
 using namespace Experimental;
@@ -35,31 +38,43 @@ class DetrayConverter {
   ///
   /// @returns a detector of requested return type
   template <typename detector_t = DetrayDetector>
-  std::tuple<detector_t, vecmem::memory_resource&> convert(
+  detector_t convert(
       const GeometryContext& gctx, const Detector& detector,
       vecmem::memory_resource& mr,
       [[maybe_unused]] const DetrayConversionUtils::Options& options = {}) {
     // The building cache object
     DetrayConversionUtils::GeometryIdCache geoIdCache;
 
-    detray::io::detector_payload detectorPayload =
-        DetrayGeometryConverter::convertDetector(geoIdCache, gctx, detector,
-                                                 logger());
-
     typename detector_t::name_map names = {{0u, detector.name()}};
 
     // build detector
     detray::detector_builder<typename detector_t::metadata> detectorBuilder{};
+    // (1) geometry
+    detray::io::detector_payload detectorPayload =
+        DetrayGeometryConverter::convertDetector(geoIdCache, gctx, detector,
+                                                 logger());
     detray::io::geometry_reader::convert<detector_t>(detectorBuilder, names,
                                                      detectorPayload);
-    // @todo: insert material map reader here
+    // (2) material
+    if constexpr (detray::detail::has_material_grids_v<detector_t>) {
+      if (options.convertMaterial) {
+        detray::io::detector_grids_payload<detray::io::material_slab_payload,
+                                           detray::io::material_id>
+            materialPayload =
+                DetrayMaterialConverter::convertSurfaceMaterialGrids(
+                    geoIdCache, detector, logger());
+        detray::io::material_map_reader<>::convert<detector_t>(
+            detectorBuilder, names, materialPayload);
+      }
+    }
+
     detector_t detrayDetector(detectorBuilder.build(mr));
 
     // checks and print
     detray::detail::check_consistency(detrayDetector);
     converterPrint(detrayDetector, names);
 
-    return {std::move(detrayDetector), mr};
+    return detrayDetector;
   }
 
  private:
