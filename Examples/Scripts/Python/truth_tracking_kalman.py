@@ -88,7 +88,7 @@ def runTruthTrackingKalman(
         assert inputHitsPath.exists()
         s.addReader(
             acts.examples.RootSimHitReader(
-                level=acts.logging.VERBOSE,
+                level=acts.logging.INFO,
                 filePath=str(inputHitsPath.resolve()),
                 outputSimHits="simhits",
             )
