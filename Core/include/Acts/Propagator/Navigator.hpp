@@ -168,10 +168,6 @@ class Navigator {
     const Layer* currentLayer = nullptr;
     /// Navigation state - external state: the current surface
     const Surface* currentSurface = nullptr;
-    /// Navigation state: the target volume
-    const TrackingVolume* targetVolume = nullptr;
-    /// Navigation state: the target layer
-    const Layer* targetLayer = nullptr;
     /// Navigation state: the target surface
     const Surface* targetSurface = nullptr;
 
@@ -348,16 +344,7 @@ class Navigator {
     if (state.navigation.startLayer != nullptr) {
       ACTS_VERBOSE(volInfo(state) << "Start layer to be resolved.");
       // We provide the layer to the resolve surface method in this case
-      bool startResolved = resolveSurfaces(state, stepper);
-      if (!startResolved &&
-          state.navigation.startLayer == state.navigation.targetLayer) {
-        ACTS_VERBOSE(volInfo(state)
-                     << "Start is target layer and we have no surface "
-                        "candidates. Nothing left to do.");
-        // set the navigation break
-        state.navigation.navigationBreak = true;
-        stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
-      }
+      resolveSurfaces(state, stepper);
     }
   }
 
@@ -569,19 +556,6 @@ class Navigator {
         state.navigation.navigationStage = Stage::boundaryTarget;
         ACTS_VERBOSE(volInfo(state) << "Staying focussed on boundary.");
       }
-    } else if (state.navigation.currentVolume ==
-               state.navigation.targetVolume) {
-      if (state.navigation.targetSurface == nullptr) {
-        ACTS_WARNING(volInfo(state)
-                     << "No further navigation action, proceed to "
-                        "target. This is very likely an error");
-      } else {
-        ACTS_VERBOSE(volInfo(state)
-                     << "No further navigation action, proceed to target.");
-      }
-      // Set navigation break and release the navigation step size
-      state.navigation.navigationBreak = true;
-      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
     } else {
       ACTS_VERBOSE(volInfo(state)
                    << "Status could not be determined - good luck.");
@@ -745,12 +719,6 @@ class Navigator {
       } else {
         ACTS_VERBOSE(volInfo(state)
                      << "Last surface on layer reached, and no layer.");
-        if (state.navigation.currentVolume == state.navigation.targetVolume) {
-          ACTS_VERBOSE(volInfo(state)
-                       << "This is the target volume, stop navigation.");
-          state.navigation.navigationBreak = true;
-          stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
-        }
       }
     }
 
@@ -828,25 +796,8 @@ class Navigator {
       ++state.navigation.navLayerIndex;
     }
 
-    // Screen output
-    if (logger().doPrint(Logging::VERBOSE)) {
-      std::ostringstream os;
-      os << "Last layer";
-      if (state.navigation.currentVolume == state.navigation.targetVolume) {
-        os << " (final volume) done, proceed to target.";
-      } else {
-        os << " done, target volume boundary.";
-      }
-      logger().log(Logging::VERBOSE, os.str());
-    }
+    ACTS_VERBOSE(volInfo(state) << "Last layer done, target volume boundary.");
 
-    // Set the navigation break if necessary
-    if (state.navigation.currentVolume == state.navigation.targetVolume) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "This is the target volume, stop navigation.");
-      state.navigation.navigationBreak = true;
-      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
-    }
     return false;
   }
 
@@ -888,14 +839,6 @@ class Navigator {
                       "stopping navigation.");
       stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       return false;
-    } else if (state.navigation.currentVolume ==
-               state.navigation.targetVolume) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "In target volume: no need to resolve boundary, "
-                      "stopping navigation.");
-      state.navigation.navigationBreak = true;
-      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
-      return true;
     }
 
     // Helper function to find boundaries
