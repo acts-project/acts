@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/Portal.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
@@ -143,7 +144,7 @@ Result<const TrackingVolume*> Portal::resolveVolume(
     const Vector3& direction) const {
   assert(m_surface != nullptr);
   const Vector3 normal = m_surface->normal(gctx, position);
-  Direction side = Direction::fromScalar(normal.dot(direction));
+  Direction side = Direction::fromScalarZeroAsPositive(normal.dot(direction));
 
   const PortalLinkBase* link = side == Direction::AlongNormal
                                    ? m_alongNormal.get()
@@ -303,7 +304,8 @@ bool Portal::isSameSurface(const GeometryContext& gctx, const Surface& a,
     return false;
   }
 
-  if (!a.transform(gctx).isApprox(b.transform(gctx), 1e-9)) {
+  if (!a.transform(gctx).isApprox(b.transform(gctx),
+                                  s_transformEquivalentTolerance)) {
     return false;
   }
 
