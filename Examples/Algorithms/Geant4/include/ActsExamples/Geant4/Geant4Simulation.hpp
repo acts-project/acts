@@ -134,10 +134,6 @@ class Geant4Simulation final : public Geant4SimulationBase {
     /// If a physics list has to be instantiated this one is chosen.
     std::string physicsList = "FTFP_BERT";
 
-    std::vector<std::string> volumeMappings;
-
-    std::vector<std::string> materialMappings = {"Silicon"};
-
     std::shared_ptr<const Acts::Volume> killVolume;
     double killAfterTime = std::numeric_limits<double>::infinity();
     bool killSecondaries = false;
