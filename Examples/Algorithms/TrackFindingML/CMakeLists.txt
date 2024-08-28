@@ -1,6 +1,6 @@
 set(SOURCES 
-  src/AmbiguityResolutionMLAlgorithm.cpp
-  src/SeedFilterMLAlgorithm.cpp
+    src/AmbiguityResolutionMLAlgorithm.cpp
+    src/SeedFilterMLAlgorithm.cpp
 )
 
 add_library(ActsExamplesTrackFindingML SHARED ${SOURCES})

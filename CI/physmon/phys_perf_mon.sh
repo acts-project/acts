@@ -250,7 +250,7 @@ function trackfinding() {
             $path/performance_ckf_greedy_solver
     fi
 
-    if [ -f $refdir/$path/performance_ml_solver.root ]; then   
+    if [ -f $refdir/$path/performance_ml_solver.root ]; then
         run_histcmp \
             $outdir/data/$path/performance_ml_solver.root \
             $refdir/$path/performance_ml_solver.root \

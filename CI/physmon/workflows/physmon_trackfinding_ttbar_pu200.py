@@ -144,7 +144,8 @@ with tempfile.TemporaryDirectory() as temp:
             maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=6
         ),
         outputDirRoot=tp / "ml_solver",
-        onnxModelFile=Path(__file__).resolve().parent.parent.parent / "thirdparty/OpenDataDetector/data/duplicateClassifier.onnx",
+        onnxModelFile=Path(__file__).resolve().parent.parent.parent 
+        / "thirdparty/OpenDataDetector/data/duplicateClassifier.onnx",
     )
 
     s.addAlgorithm(
