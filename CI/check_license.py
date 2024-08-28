@@ -189,7 +189,7 @@ def main():
     exit = 0
     srcs = list(srcs)
     nsrcs = len(srcs)
-    step = int(nsrcs / 20)
+    step = max(int(nsrcs / 20), 1)
     for i, src in enumerate(srcs):
         if any([fnmatch(src, e) for e in args.exclude]):
             continue
