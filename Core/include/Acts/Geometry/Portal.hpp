@@ -30,16 +30,12 @@ class PortalLinkBase;
 
 /// Exception thrown when portals cannot be merged
 class PortalMergingException : public std::exception {
-  const char* what() const noexcept override {
-    return "Failure to merge portals";
-  }
+  const char* what() const noexcept override;
 };
 
 /// Exception thrown when portals cannot be fused
 class PortalFusingException : public std::exception {
-  const char* what() const noexcept override {
-    return "Failure to fuse portals";
-  }
+  const char* what() const noexcept override;
 };
 
 /// A portal connects two or more neighboring volumes. Each volume has a set of

@@ -20,6 +20,14 @@
 
 namespace Acts {
 
+const char* PortalMergingException::what() const noexcept {
+  return "Failure to merge portals";
+}
+
+const char* PortalFusingException::what() const noexcept {
+  return "Failure to fuse portals";
+}
+
 Portal::Portal(Direction direction, std::unique_ptr<PortalLinkBase> link) {
   if (link == nullptr) {
     throw std::invalid_argument("Link must not be null");
