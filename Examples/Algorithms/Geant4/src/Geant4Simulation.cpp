@@ -90,6 +90,8 @@ void ActsExamples::Geant4SimulationBase::commonInitialization() {
     runManager().SetUserInitialization(m_detectorConstruction);
     runManager().InitializeGeometry();
   }
+
+  m_geant4Instance->tweakLogging(m_geant4Level);
 }
 
 G4RunManager& ActsExamples::Geant4SimulationBase::runManager() const {
