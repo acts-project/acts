@@ -15,6 +15,14 @@
 
 #include <type_traits>
 
+namespace Acts::detail {
+template <typename Stepper, typename StateType, typename N>
+concept propagator_stepper_compatible_with =
+    requires(const Stepper& s, StateType& st, const N& n) {
+      { s.step(st, n) } -> std::same_as<Acts::Result<double>>;
+    };
+}  // namespace Acts::detail
+
 template <typename S, typename N>
 template <typename propagator_state_t>
 auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
@@ -125,7 +133,7 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
     const -> Result<action_list_t_result_t<
               StepperBoundTrackParameters,
               typename propagator_options_t::action_list_type>> {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+  static_assert(BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
   auto state = makeState<parameters_t, propagator_options_t, target_aborter_t,
@@ -142,7 +150,7 @@ template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
 auto Acts::Propagator<S, N>::makeState(
     const parameters_t& start, const propagator_options_t& options) const {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+  static_assert(BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
   // Type of track parameters produced by the propagation
@@ -173,8 +181,7 @@ auto Acts::Propagator<S, N>::makeState(
       m_navigator.makeState(eOptions.navigation)};
 
   static_assert(
-      Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,
-                           StateType&, const N&>,
+      detail::propagator_stepper_compatible_with<S, StateType, N>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
@@ -189,7 +196,7 @@ template <typename parameters_t, typename propagator_options_t,
 auto Acts::Propagator<S, N>::makeState(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options) const {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+  static_assert(BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
   // Type of provided options
@@ -216,8 +223,7 @@ auto Acts::Propagator<S, N>::makeState(
       m_navigator.makeState(eOptions.navigation)};
 
   static_assert(
-      Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,
-                           StateType&, const N&>,
+      detail::propagator_stepper_compatible_with<S, StateType, N>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 

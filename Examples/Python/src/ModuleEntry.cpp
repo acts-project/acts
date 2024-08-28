@@ -40,6 +40,7 @@ using namespace Acts::Python;
 
 namespace Acts::Python {
 void addContext(Context& ctx);
+void addAny(Context& ctx);
 void addUnits(Context& ctx);
 void addFramework(Context& ctx);
 void addLogging(Context& ctx);
@@ -108,6 +109,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   }
 
   addContext(ctx);
+  addAny(ctx);
   addUnits(ctx);
   addFramework(ctx);
   addLogging(ctx);
