@@ -32,7 +32,7 @@ GeoModelModuleSplitter::split(
 
   std::vector<std::shared_ptr<GeoModelDetectorElement>> result;
 
-  for (auto [patternName, radii] : m_splitPatterns) {
+  for (const auto& [patternName, radii] : m_splitPatterns) {
     if ((std::abs(radii.front() - annulusBounds->rMin()) > m_tolerance) ||
         (std::abs(radii.back() - annulusBounds->rMax()) > m_tolerance)) {
       ACTS_VERBOSE("Skip pattern '" << patternName << "' for element '"
@@ -47,7 +47,7 @@ GeoModelModuleSplitter::split(
                                   << detElement->databaseEntryName() << "'");
 
     result.reserve(radii.size() - 1);
-    for (auto i = 0ul; i < radii.size() - 1; ++i) {
+    for (std::size_t i = 0ul; i < radii.size() - 1; ++i) {
       ACTS_VERBOSE("Make new annulus bounds: " << [&]() {
         std::stringstream ss;
         for (auto v : annulusBounds->values()) {
