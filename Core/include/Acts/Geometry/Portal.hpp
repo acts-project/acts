@@ -106,8 +106,8 @@ class Portal {
 
   /// Fuse two portals together. Fusing is the combination of two portal links
   /// on the same logical surfaces. The actual surface instances can be
-  /// different, as long as they are geometrically equivalent (within numericla
-  /// precistion). The resulting portal will have one portal along the shared
+  /// different, as long as they are geometrically equivalent (within numerical
+  /// precision). The resulting portal will have one portal along the shared
   /// surface's normal vector, and one opposite that vector.
   ///
   ///    portal1   portal2
@@ -198,9 +198,9 @@ class Portal {
   /// @return The link (can be null)
   const PortalLinkBase* getLink(Direction direction) const;
 
-  /// Returns true if the portal is valid, that means it has at least on
+  /// Returns true if the portal is valid, that means it has at least one
   /// non-null link associated.Portals can be in an invalid state after they get
-  /// merge or fused with other portals.
+  /// merged or fused with other portals.
   /// @return True if the portal is valid
   bool isValid() const;
 
