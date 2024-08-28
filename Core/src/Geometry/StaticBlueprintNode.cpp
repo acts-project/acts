@@ -31,6 +31,7 @@ Volume& StaticBlueprintNode::build(const Logger& logger) {
 }
 
 PortalShellBase& StaticBlueprintNode::connect(const GeometryContext& gctx,
+                                              TrackingVolume& parent,
                                               const Logger& logger) {
   ACTS_DEBUG(prefix() << "static connect");
   if (m_volume == nullptr) {
@@ -41,7 +42,7 @@ PortalShellBase& StaticBlueprintNode::connect(const GeometryContext& gctx,
                << name() << ") with " << children().size() << " children");
 
   for (auto& child : children()) {
-    auto& shell = child.connect(gctx, logger);
+    auto& shell = child.connect(gctx, parent, logger);
     // Register ourselves on the outside of the shell
     shell.connectOuter(*m_volume);
   }

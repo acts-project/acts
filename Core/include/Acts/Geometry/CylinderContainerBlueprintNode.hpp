@@ -14,6 +14,8 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <map>
+
 namespace Acts {
 
 class CylinderContainerBlueprintNode final : public BlueprintNode {
@@ -32,7 +34,7 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
   Volume& build(const Logger& logger = Acts::getDummyLogger()) override;
 
   CylinderStackPortalShell& connect(
-      const GeometryContext& gctx,
+      const GeometryContext& gctx, TrackingVolume& parent,
       const Logger& logger = Acts::getDummyLogger()) override;
 
   void visualize(IVisualization3D& vis,
@@ -55,6 +57,8 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
  private:
   void addToGraphviz(std::ostream& os) const override;
 
+  bool isGapVolume(const Volume& volume) const;
+
   std::string m_name;
 
   BinningValue m_direction;
@@ -64,8 +68,11 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
   // Is only initialized during `build`
   std::vector<Volume*> m_childVolumes;
   std::optional<CylinderVolumeStack> m_stack{std::nullopt};
+  std::map<const Volume*, BlueprintNode*> m_volumeToNode;
 
-  std::vector<std::unique_ptr<TrackingVolume>> m_gapVolumes;
+  std::vector<
+      std::pair<std::unique_ptr<TrackingVolume>, SingleCylinderPortalShell>>
+      m_gapVolumes;
 
   std::optional<CylinderStackPortalShell> m_shell{std::nullopt};
 };

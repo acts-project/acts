@@ -15,6 +15,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -68,7 +69,7 @@ BOOST_AUTO_TEST_CASE(StaticBlueprintNodeConstruction) {
   vis.write(ofs);
 
   node.build();
-  node.connect();
+  // node.connect();
 
   auto world = node.releaseVolume();
 
@@ -93,7 +94,7 @@ BOOST_AUTO_TEST_CASE(CylinderContainerNode) {
   }
 
   TrackingVolume dummy{Transform3::Identity(), cylBounds};
-  BOOST_CHECK_THROW(root->connect(dummy), std::runtime_error);
+  BOOST_CHECK_THROW(root->connect(gctx, dummy), std::runtime_error);
 
   ObjVisualization3D vis;
   // Can't visualize before having called build
@@ -105,7 +106,7 @@ BOOST_AUTO_TEST_CASE(CylinderContainerNode) {
 
   TrackingVolume top{world.transform(), world.volumeBoundsPtr()};
 
-  root->connect(top, *logger);
+  root->connect(gctx, top, *logger);
 
   vis.write("container.obj");
 }
@@ -196,7 +197,11 @@ BOOST_AUTO_TEST_CASE(NodeApiTest) {
   vis.write("api_test.obj");
 
   std::ofstream dot{"api_test.dot"};
-  root->graphviz(dot);
+  root->graphViz(dot);
+
+  auto worldTv = std::make_unique<TrackingVolume>(world);
+
+  root->connect(gctx, *worldTv, *logger);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

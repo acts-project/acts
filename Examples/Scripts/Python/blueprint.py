@@ -85,7 +85,7 @@ with open("blueprint.dot", "w") as fh:
 
 vis = acts.ObjVisualization3D()
 
-root.build(level=acts.logging.VERBOSE)
+volume = root.build(level=acts.logging.VERBOSE)
 
 gctx = acts.GeometryContext()
 root.visualize(vis, gctx)

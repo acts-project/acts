@@ -24,7 +24,7 @@ class StaticBlueprintNode : public BlueprintNode {
   Volume& build(const Logger& logger = Acts::getDummyLogger()) override;
 
   PortalShellBase& connect(
-      const GeometryContext& gctx,
+      const GeometryContext& gctx, TrackingVolume& parent,
       const Logger& logger = Acts::getDummyLogger()) override;
 
   void visualize(IVisualization3D& vis,

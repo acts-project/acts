@@ -32,13 +32,13 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   }
 
   PortalShellBase& connect(
-      const GeometryContext& gctx,
+      const GeometryContext& gctx, TrackingVolume& parent,
       const Logger& logger = Acts::getDummyLogger()) override {
     if (children().size() != 1) {
       throw std::runtime_error(
           "MaterialDesignatorBlueprintNode must have exactly one child");
     }
-    return children().at(0).connect(gctx, logger);
+    return children().at(0).connect(gctx, parent, logger);
   }
 
   void visualize(IVisualization3D& vis,

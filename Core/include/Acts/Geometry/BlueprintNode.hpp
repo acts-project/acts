@@ -41,7 +41,7 @@ class BlueprintNode {
   virtual Volume& build(const Logger& logger = Acts::getDummyLogger()) = 0;
 
   virtual PortalShellBase& connect(
-      const GeometryContext& gctx,
+      const GeometryContext& gctx, TrackingVolume& parent,
       const Logger& logger = Acts::getDummyLogger()) = 0;
 
   // virtual void finalize(TrackingVolume& parent,

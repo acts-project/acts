@@ -16,6 +16,8 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
+#include <algorithm>
+
 namespace Acts {
 
 CylinderContainerBlueprintNode::CylinderContainerBlueprintNode(
@@ -35,11 +37,16 @@ Volume& CylinderContainerBlueprintNode::build(const Logger& logger) {
   ACTS_DEBUG(prefix() << "cylinder container build");
 
   if (m_stack.has_value()) {
+    ACTS_ERROR(prefix() << "Volume is already built");
     throw std::runtime_error("Volume is already built");
   }
 
   for (auto& child : children()) {
-    m_childVolumes.push_back(&child.build(logger));
+    Volume& volume = child.build(logger);
+    m_childVolumes.push_back(&volume);
+    // We need to remember which volume we got from which child, so we can
+    // assemble a correct portal shell later
+    m_volumeToNode[&volume] = &child;
   }
   ACTS_VERBOSE(prefix() << "-> Collected " << m_childVolumes.size()
                         << " child volumes");
@@ -55,36 +62,69 @@ Volume& CylinderContainerBlueprintNode::build(const Logger& logger) {
 }
 
 CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
-    const GeometryContext& gctx, const Logger& logger) {
+    const GeometryContext& gctx, TrackingVolume& parent, const Logger& logger) {
   ACTS_DEBUG(prefix() << "cylinder container connect");
   if (!m_stack.has_value()) {
+    ACTS_ERROR(prefix() << "Volume is not built");
     throw std::runtime_error("Volume is not built");
   }
 
   std::vector<CylinderPortalShell*> shells;
-  ACTS_VERBOSE("Collecting child shells from " << children().size()
-                                               << " children");
-  for (auto& child : children()) {
-    PortalShellBase& shell = child.connect(gctx, logger);
-    if (auto* cylShell = dynamic_cast<CylinderPortalShell*>(&shell);
-        cylShell != nullptr) {
-      shells.push_back(cylShell);
+  ACTS_VERBOSE(prefix() << "Collecting child shells from " << children().size()
+                        << " children");
+
+  // We have child volumes and gaps as bare Volumes in `m_childVolumes` after
+  // `build()` has completed. For the stack shell, we need TrackingVolumes in
+  // the right order.
+
+  for (Volume* volume : m_childVolumes) {
+    if (isGapVolume(*volume)) {
+      // We need to create a TrackingVolume from the gap and put it in the shell
+      auto gapPtr = std::make_unique<TrackingVolume>(*volume);
+      TrackingVolume& gap = *gapPtr;
+      auto& p = m_gapVolumes.emplace_back(std::move(gapPtr),
+                                          SingleCylinderPortalShell{gap});
+
+      shells.push_back(&p.second);
     } else {
-      throw std::runtime_error("Child volume is not a cylinder");
+      // Figure out which child we got this volume from
+      auto it = m_volumeToNode.find(volume);
+      if (it == m_volumeToNode.end()) {
+        throw std::runtime_error("Volume not found in child volumes");
+      }
+      BlueprintNode& child = *it->second;
+
+      CylinderPortalShell* shell = dynamic_cast<CylinderPortalShell*>(
+          &child.connect(gctx, parent, logger));
+      if (shell == nullptr) {
+        ACTS_ERROR(prefix()
+                   << "Child volume of cylinder stack is not a cylinder");
+        throw std::runtime_error(
+            "Child volume of cylinder stack is not a cylinder");
+      }
+
+      shells.push_back(shell);
     }
   }
 
-  ACTS_VERBOSE("Producing merged cylinder stack shell in " << m_direction
-                                                           << " direction");
+  // Sanity checks
+  throw_assert(shells.size() == m_childVolumes.size(),
+               "Number of shells does not match number of child volumes");
+
+  throw_assert(std::ranges::none_of(
+                   shells, [](const auto* shell) { return shell == nullptr; }),
+               "Invalid shell pointer");
+
+  ACTS_VERBOSE(prefix() << "Producing merged cylinder stack shell in "
+                        << m_direction << " direction");
   m_shell.emplace(gctx, std::move(shells), m_direction, logger);
 
   return m_shell.value();
+}
 
-  // This goes into finalize at the end
-  // for (auto& gap : m_stack->gaps()) {
-  //   auto tv = std::make_unique<TrackingVolume>(*gap);
-  //   parent.addVolume(std::move(tv));
-  // }
+bool CylinderContainerBlueprintNode::isGapVolume(const Volume& volume) const {
+  return std::ranges::any_of(
+      m_stack->gaps(), [&](const auto& gap) { return gap.get() == &volume; });
 }
 
 void CylinderContainerBlueprintNode::visualize(
