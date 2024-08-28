@@ -204,7 +204,7 @@ with tempfile.TemporaryDirectory() as temp:
         "tracksummary_ckf.root",
         "performance_ckf.root",
         "performance_ckf_greedy_solver.root",
-        "performance_ckf_ml_solver",
+        "performance_ckf_ml_solver.root",
         "performance_vertexing_amvf_gauss_notime.root",
         "performance_vertexing_amvf_grid_time.root",
     ]:
