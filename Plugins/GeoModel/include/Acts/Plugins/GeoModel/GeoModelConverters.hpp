@@ -23,6 +23,7 @@
 
 #include <memory>
 #include <tuple>
+#include <unordered_map>
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
@@ -67,5 +68,26 @@ using GeoTubeConverter =
 using GeoUnionDoubleTrdConverter =
     detail::GenericGeoShapeConverter<GeoShapeUnion,
                                      detail::GeoUnionDoubleTrdConverter>;
+
+/// @brief The map that maps the converters with the shapes
+
+inline std::shared_ptr<const IGeoShapeConverter> geoShapesConverters(
+    int geoShapeId) {
+  static const std::unordered_map<int,
+                                  std::shared_ptr<const IGeoShapeConverter>>
+      converters{
+          {GeoBox::getClassTypeID(), std::make_shared<GeoBoxConverter>()},
+          {GeoShapeIntersection::getClassTypeID(),
+           std::make_shared<GeoIntersectionAnnulusConverter>()},
+          {GeoShapeShift::getClassTypeID(),
+           std::make_shared<GeoShiftConverter>()},
+          {GeoTrd::getClassTypeID(), std::make_shared<GeoTrdConverter>()},
+          {GeoTube::getClassTypeID(), std::make_shared<GeoTubeConverter>()},
+          {GeoShapeUnion::getClassTypeID(),
+           std::make_shared<GeoUnionDoubleTrdConverter>()}};
+  auto itr = converters.find(geoShapeId);
+
+  return itr != converters.end() ? itr->second : nullptr;
+};
 
 }  // namespace Acts

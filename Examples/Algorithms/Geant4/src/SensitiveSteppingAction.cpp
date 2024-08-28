@@ -30,6 +30,7 @@
 #include <G4UnitsTable.hh>
 #include <G4VPhysicalVolume.hh>
 #include <G4VTouchable.hh>
+#include <boost/version.hpp>
 
 class G4PrimaryParticle;
 
@@ -130,6 +131,9 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   // Get the physical volume & check if it has the sensitive string name
   const G4VPhysicalVolume* volume = track->GetVolume();
+  if (volume == nullptr) {
+    throw std::runtime_error("No volume found, terminate simulation");
+  }
   std::string volumeName = volume->GetName();
 
   if (volumeName.find(SensitiveSurfaceMapper::mappingPrefix) ==

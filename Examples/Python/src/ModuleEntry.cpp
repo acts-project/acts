@@ -40,6 +40,7 @@ using namespace Acts::Python;
 
 namespace Acts::Python {
 void addContext(Context& ctx);
+void addAny(Context& ctx);
 void addUnits(Context& ctx);
 void addFramework(Context& ctx);
 void addLogging(Context& ctx);
@@ -51,6 +52,7 @@ void addEventData(Context& ctx);
 void addPropagation(Context& ctx);
 
 void addGeometry(Context& ctx);
+void addGeometryBuildingGen1(Context& ctx);
 void addExperimentalGeometry(Context& ctx);
 
 void addMagneticField(Context& ctx);
@@ -66,6 +68,7 @@ void addTrackFitting(Context& ctx);
 void addTrackFinding(Context& ctx);
 void addVertexing(Context& ctx);
 void addAmbiguityResolution(Context& ctx);
+void addUtilities(Context& ctx);
 
 // Plugins
 void addDigitization(Context& ctx);
@@ -106,6 +109,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   }
 
   addContext(ctx);
+  addAny(ctx);
   addUnits(ctx);
   addFramework(ctx);
   addLogging(ctx);
@@ -115,6 +119,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addEventData(ctx);
 
   addPropagation(ctx);
+  addGeometryBuildingGen1(ctx);
   addGeometry(ctx);
   addExperimentalGeometry(ctx);
 
@@ -130,6 +135,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addTrackFinding(ctx);
   addVertexing(ctx);
   addAmbiguityResolution(ctx);
+  addUtilities(ctx);
 
   addDigitization(ctx);
   addPythia8(ctx);

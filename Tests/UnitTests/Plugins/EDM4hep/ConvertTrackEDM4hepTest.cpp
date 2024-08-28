@@ -12,7 +12,6 @@
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -25,6 +24,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <algorithm>
@@ -263,7 +263,6 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
   TrackContainer tracks(trackContainer, trackStateContainer);
 
-  using mutable_proxy_t = decltype(tracks)::TrackProxy;
   using const_proxy_t = decltype(tracks)::ConstTrackProxy;
 
   std::mt19937 rng{42};

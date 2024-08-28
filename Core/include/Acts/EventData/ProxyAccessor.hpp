@@ -22,7 +22,7 @@ concept MutableProxyType = requires(T t, HashedString key) {
 
   {
     t.template component<int>(key)
-    } -> std::same_as<std::conditional_t<T::ReadOnly, const int&, int&>>;
+  } -> std::same_as<std::conditional_t<T::ReadOnly, const int&, int&>>;
 };
 
 template <typename T>
@@ -32,7 +32,7 @@ concept ConstProxyType = requires(T t, HashedString key) {
 };
 
 template <typename T>
-concept ProxyType = (MutableProxyType<T> || ConstProxyType<T>)&&requires {
+concept ProxyType = (MutableProxyType<T> || ConstProxyType<T>) && requires {
   typename T::ConstProxyType;
 
   requires ConstProxyType<typename T::ConstProxyType>;
@@ -80,9 +80,10 @@ struct ProxyAccessorBase {
   /// @tparam proxy_t the type of the proxy
   /// @param proxy the proxy object to access
   /// @return mutable reference to the column behind the key
-  template <detail::MutableProxyType proxy_t, bool RO = ReadOnly,
-            typename = std::enable_if_t<!RO>>
-  T& operator()(proxy_t proxy) const {
+  template <detail::MutableProxyType proxy_t>
+  T& operator()(proxy_t proxy) const
+    requires(!ReadOnly)
+  {
     static_assert(!proxy_t::ReadOnly,
                   "Cannot get mutable ref for const track proxy");
     return proxy.template component<T>(key);
@@ -92,9 +93,10 @@ struct ProxyAccessorBase {
   /// @tparam proxy_t the type of the track proxy
   /// @param proxy the proxy to access
   /// @return const reference to the column behind the key
-  template <detail::ProxyType proxy_t, bool RO = ReadOnly,
-            typename = std::enable_if_t<RO>>
-  const T& operator()(proxy_t proxy) const {
+  template <detail::ProxyType proxy_t>
+  const T& operator()(proxy_t proxy) const
+    requires(ReadOnly)
+  {
     if constexpr (proxy_t::ReadOnly) {
       return proxy.template component<T>(key);
 

@@ -1,6 +1,6 @@
 # The ACTS project
 
-The *A Common Tracking Software (ACTS)* project is an attempt to preserve and evolve the track reconstruction software of the LHC era towards HL-LHC and beyond. It has been initiated in 2016 starting from the [ATLAS Common Tracking Software](https://gitlab.cern.ch/atlas/athena/-/tree/main/Tracking). Given the changing computing landscape, dedicated care of parallel code execution is taken, and is written in `C++17`.
+The *A Common Tracking Software (ACTS)* project is an attempt to preserve and evolve the track reconstruction software of the LHC era towards HL-LHC and beyond. It has been initiated in 2016 starting from the [ATLAS Common Tracking Software](https://gitlab.cern.ch/atlas/athena/-/tree/main/Tracking). Given the changing computing landscape, dedicated care of parallel code execution is taken, and is written in `C++20`.
 
 A [coherent write-up of the project](https://link.springer.com/article/10.1007/s41781-021-00078-8) has been published in 2022 in Springer's CSBS.
 
@@ -11,8 +11,8 @@ ACTS is designed as a library that *contains components* for assembling a track 
 The library is structured as follows:
  * The `Core` library contains considered production ready components (except for components located in the `Acts::Experimental` namespace) that can be interfaced to experiment code
  * The `Plugin` folder contains additional extensions that can be optionally switched on to use increase the functionality of the software suite, but also in general increase dependencies to other/thirdparty libraries
- * The `Fatras` library contains a fast track simulation module, that is based on the same concepts that are used for the [ATLAS Fatras](https://cds.cern.ch/record/1091969) fast track simulation  
- * An `Examples` folder that contains a minimal test framework used for showcasing and integration testing, 
+ * The `Fatras` library contains a fast track simulation module, that is based on the same concepts that are used for the [ATLAS Fatras](https://cds.cern.ch/record/1091969) fast track simulation
+ * An `Examples` folder that contains a minimal test framework used for showcasing and integration testing,
  * A `Tests` folder that contains unit tests, benchmark tests and other integration tests
 
 
@@ -33,4 +33,3 @@ ACTS should also provide a testbed for fruitful algorithm R&D, and hence is clos
 In addition, two dedicated R&D lines are part of the `acts-project`, one for machine learning based/inspired modules [acts-machine-learning](mailto:acts-machine-learning@cern.ch), and one for massively parallel code execution [acts-parallelization](mailto:acts-parallelization@cern.ch), which mainly focuses on GPU accelerators and portability.
 
 Code spill-over from the R&D lines into the main ACTS repository are performed on demand and depending on the maturity of the R&D projects.
-

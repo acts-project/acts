@@ -21,7 +21,7 @@ TruthSeedRanges = namedtuple(
 
 ParticleSmearingSigmas = namedtuple(
     "ParticleSmearingSigmas",
-    ["d0", "d0PtA", "d0PtB", "z0", "z0PtA", "z0PtB", "t0", "phi", "theta", "pRel"],
+    ["d0", "d0PtA", "d0PtB", "z0", "z0PtA", "z0PtB", "t0", "phi", "theta", "ptRel"],
     defaults=[None] * 10,
 )
 
@@ -125,17 +125,19 @@ TrackSelectorConfig = namedtuple(
         "nMeasurementsMin",
         "maxHoles",
         "maxOutliers",
+        "maxHolesAndOutliers",
         "maxSharedHits",
         "maxChi2",
         "nMeasurementsGroupMin",
     ],
-    defaults=[(None, None)] * 7 + [None] * 6,
+    defaults=[(None, None)] * 7 + [None] * 7,
 )
 
 CkfConfig = namedtuple(
     "CkfConfig",
     [
-        "chi2CutOff",
+        "chi2CutOffMeasurement",
+        "chi2CutOffOutlier",
         "numMeasurementsCutOff",
         "maxSteps",
         "seedDeduplication",
@@ -145,7 +147,7 @@ CkfConfig = namedtuple(
         "maxPixelHoles",
         "maxStripHoles",
     ],
-    defaults=[15.0, 10, None, None, None, None, None, None, None],
+    defaults=[15.0, 25.0, 10, None, None, None, None, None, None, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -220,6 +222,7 @@ def addSeeding(
     truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialSigmas: Optional[list] = None,
+    initialSigmaPtRel: Optional[float] = None,
     initialVarInflation: Optional[list] = None,
     seedFinderConfigArg: SeedFinderConfigArg = SeedFinderConfigArg(),
     seedFinderOptionsArg: SeedFinderOptionsArg = SeedFinderOptionsArg(),
@@ -252,7 +255,7 @@ def addSeeding(
         TruthSeedSelector configuration. Each range is specified as a tuple of (min,max).
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TruthSeedSelector.hpp
         If specified as None, don't run ParticleSmearing at all (and use addCKFTracks(selectedParticles="particles"))
-    particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, pRel)
+    particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, ptRel)
         ParticleSmearing configuration.
         Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
     initialSigmas : list
@@ -308,14 +311,15 @@ def addSeeding(
     if seedingAlgorithm == SeedingAlgorithm.TruthSmeared:
         logger.info("Using smeared truth particles for seeding")
         addTruthSmearedSeeding(
-            s,
-            rnd,
-            selectedParticles,
-            particleSmearingSigmas,
-            initialSigmas,
-            initialVarInflation,
-            particleHypothesis,
-            logLevel,
+            s=s,
+            rnd=rnd,
+            selectedParticles=selectedParticles,
+            particleSmearingSigmas=particleSmearingSigmas,
+            initialSigmas=initialSigmas,
+            initialSigmaPtRel=initialSigmaPtRel,
+            initialVarInflation=initialVarInflation,
+            particleHypothesis=particleHypothesis,
+            logLevel=logLevel,
         )
     else:
         spacePoints = addSpacePointsMaking(
@@ -389,6 +393,7 @@ def addSeeding(
             magneticField=field,
             **acts.examples.defaultKWArgs(
                 initialSigmas=initialSigmas,
+                initialSigmaPtRel=initialSigmaPtRel,
                 initialVarInflation=initialVarInflation,
                 particleHypothesis=particleHypothesis,
             ),
@@ -478,6 +483,7 @@ def addTruthSmearedSeeding(
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
     initialSigmas: Optional[List[float]],
+    initialSigmaPtRel: Optional[float],
     initialVarInflation: Optional[List[float]],
     particleHypothesis: Optional[acts.ParticleHypothesis],
     logLevel: acts.logging.Level = None,
@@ -504,8 +510,9 @@ def addTruthSmearedSeeding(
             sigmaT0=particleSmearingSigmas.t0,
             sigmaPhi=particleSmearingSigmas.phi,
             sigmaTheta=particleSmearingSigmas.theta,
-            sigmaPRel=particleSmearingSigmas.pRel,
+            sigmaPtRel=particleSmearingSigmas.ptRel,
             initialSigmas=initialSigmas,
+            initialSigmaPtRel=initialSigmaPtRel,
             initialVarInflation=initialVarInflation,
             particleHypothesis=particleHypothesis,
         ),
@@ -1108,6 +1115,7 @@ def addKalmanTracks(
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="kf_track_particle_matching",
         outputParticleTrackMatching="kf_particle_track_matching",
+        doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
@@ -1159,6 +1167,7 @@ def addTruthTrackingGsf(
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="gsf_track_particle_matching",
         outputParticleTrackMatching="gsf_particle_track_matching",
+        doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
@@ -1184,6 +1193,7 @@ def addCKFTracks(
     ] = None,
     ckfConfig: CkfConfig = CkfConfig(),
     twoWay: bool = True,
+    reverseSearch: bool = False,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
@@ -1241,6 +1251,7 @@ def addCKFTracks(
                 minMeasurements=c.nMeasurementsMin,
                 maxHoles=c.maxHoles,
                 maxOutliers=c.maxOutliers,
+                maxHolesAndOutliers=c.maxHolesAndOutliers,
                 maxSharedHits=c.maxSharedHits,
                 maxChi2=c.maxChi2,
                 measurementCounter=c.nMeasurementsGroupMin,
@@ -1269,7 +1280,8 @@ def addCKFTracks(
                     acts.GeometryIdentifier(),
                     (
                         [],
-                        [ckfConfig.chi2CutOff],
+                        [ckfConfig.chi2CutOffMeasurement],
+                        [ckfConfig.chi2CutOffOutlier],
                         [ckfConfig.numMeasurementsCutOff],
                     ),
                 )
@@ -1293,6 +1305,7 @@ def addCKFTracks(
             trackSelectorCfg=trkSelCfg,
             maxSteps=ckfConfig.maxSteps,
             twoWay=twoWay,
+            reverseSearch=reverseSearch,
             seedDeduplication=ckfConfig.seedDeduplication,
             stayOnSeed=ckfConfig.stayOnSeed,
             pixelVolumes=ckfConfig.pixelVolumes,
@@ -1304,20 +1317,21 @@ def addCKFTracks(
     s.addAlgorithm(trackFinder)
     s.addWhiteboardAlias("tracks", trackFinder.config.outputTracks)
 
-    matcher = acts.examples.TrackTruthMatcher(
+    matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=trackFinder.config.outputTracks,
         inputParticles="particles_selected",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="ckf_track_particle_matching",
         outputParticleTrackMatching="ckf_particle_track_matching",
+        doubleMatching=True,
     )
-    s.addAlgorithm(matcher)
+    s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
-        "track_particle_matching", matcher.config.outputTrackParticleMatching
+        "track_particle_matching", matchAlg.config.outputTrackParticleMatching
     )
     s.addWhiteboardAlias(
-        "particle_track_matching", matcher.config.outputParticleTrackMatching
+        "particle_track_matching", matchAlg.config.outputParticleTrackMatching
     )
 
     addTrackWriters(
@@ -1384,6 +1398,7 @@ def addGx2fTracks(
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="gx2f_track_particle_matching",
         outputParticleTrackMatching="gx2f_particle_track_matching",
+        doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
@@ -1623,20 +1638,23 @@ def addExaTrkX(
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("prototracks", findingAlg.config.outputProtoTracks)
 
-    matchAlg = acts.examples.ProtoTrackTruthMatcher(
+    # TODO convert prototracks to tracks
+
+    matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputProtoTracks=findingAlg.config.outputProtoTracks,
         inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
-        outputProtoTrackParticleMatching="exatrkx_prototrack_particle_matching",
-        outputParticleProtoTrackMatching="exatrkx_particle_prototrack_matching",
+        outputTrackParticleMatching="exatrkx_track_particle_matching",
+        outputParticleTrackMatching="exatrkx_particle_track_matching",
+        doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
-        "prototrack_particle_matching", matchAlg.config.outputProtoTrackParticleMatching
+        "track_particle_matching", matchAlg.config.outputTrackParticleMatching
     )
     s.addWhiteboardAlias(
-        "particle_prototrack_matching", matchAlg.config.outputParticleProtoTrackMatching
+        "particle_track_matching", matchAlg.config.outputParticleTrackMatching
     )
 
     # Write truth track finding / seeding performance
@@ -1648,7 +1666,7 @@ def addExaTrkX(
                 # the original selected particles after digitization
                 inputParticles="particles_initial",
                 inputMeasurementParticlesMap="measurement_particles_map",
-                inputProtoTrackParticleMatching=matchAlg.config.outputProtoTrackParticleMatching,
+                inputTrackParticleMatching=matchAlg.config.outputTrackParticleMatching,
                 filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
             )
         )
@@ -1693,6 +1711,7 @@ def addAmbiguityResolution(
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="ambi_track_particle_matching",
         outputParticleTrackMatching="ambi_particle_track_matching",
+        doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
