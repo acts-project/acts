@@ -177,10 +177,10 @@ ActsExamples::Geant4SimulationBase::geant4Handle() const {
 ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
                                                  Acts::Logging::Level level)
     : Geant4SimulationBase(cfg, "Geant4Simulation", level), m_cfg(cfg) {
-  m_geant4Instance = m_cfg.geant4Handle
-                         ? m_cfg.geant4Handle
-                         : Geant4Manager::instance().createHandle(
-                               m_geant4Level, m_cfg.physicsList);
+  m_geant4Instance =
+      m_cfg.geant4Handle
+          ? m_cfg.geant4Handle
+          : Geant4Manager::instance().createHandle(m_cfg.physicsList);
   if (m_geant4Instance->physicsListName != m_cfg.physicsList) {
     throw std::runtime_error("inconsistent physics list");
   }
@@ -333,7 +333,6 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
       m_cfg.geant4Handle
           ? m_cfg.geant4Handle
           : Geant4Manager::instance().createHandle(
-                m_geant4Level,
                 std::make_unique<MaterialPhysicsList>(
                     m_logger->cloneWithSuffix("MaterialPhysicsList")),
                 physicsListName);
