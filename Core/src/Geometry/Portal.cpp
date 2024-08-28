@@ -63,21 +63,20 @@ Portal::Portal(const GeometryContext& gctx,
 }
 
 Portal::Portal(const GeometryContext& gctx, Arguments&& args) {
-  if (!args.alongNormal.m_surface && !args.oppositeNormal.m_surface) {
+  if (!args.alongNormal.surface && !args.oppositeNormal.surface) {
     throw std::invalid_argument("At least one link must be provided");
   }
 
-  if (args.alongNormal.m_surface) {
-    setLink(
-        gctx, Direction::AlongNormal,
-        std::make_unique<TrivialPortalLink>(
-            std::move(args.alongNormal.m_surface), *args.alongNormal.m_volume));
+  if (args.alongNormal.surface) {
+    setLink(gctx, Direction::AlongNormal,
+            std::make_unique<TrivialPortalLink>(
+                std::move(args.alongNormal.surface), *args.alongNormal.volume));
   }
-  if (args.oppositeNormal.m_surface) {
+  if (args.oppositeNormal.surface) {
     setLink(gctx, Direction::OppositeNormal,
             std::make_unique<TrivialPortalLink>(
-                std::move(args.oppositeNormal.m_surface),
-                *args.oppositeNormal.m_volume));
+                std::move(args.oppositeNormal.surface),
+                *args.oppositeNormal.volume));
   }
 }
 

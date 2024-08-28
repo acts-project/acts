@@ -78,13 +78,13 @@ class Portal {
     struct Link {
       Link() = default;
       /// Constructor from a surface and a volume
-      Link(std::shared_ptr<RegularSurface> surface, TrackingVolume& volume)
-          : m_surface(std::move(surface)), m_volume(&volume) {}
+      Link(std::shared_ptr<RegularSurface> surfaceIn, TrackingVolume& volumeIn)
+          : surface(std::move(surfaceIn)), volume(&volumeIn) {}
 
       /// The associated surface
-      std::shared_ptr<RegularSurface> m_surface = nullptr;
+      std::shared_ptr<RegularSurface> surface = nullptr;
       /// The associated volume
-      TrackingVolume* m_volume = nullptr;
+      TrackingVolume* volume = nullptr;
     };
 
     /// Entry for the link along normal
