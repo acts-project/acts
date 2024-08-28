@@ -1330,6 +1330,10 @@ class CombinatorialKalmanFilter {
       return error.error();
     }
 
+    for (const auto& track : combKalmanResult.collectedTracks) {
+      calculateTrackQuantities(track);
+    }
+
     return std::move(combKalmanResult.collectedTracks);
   }
 };
