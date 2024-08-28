@@ -21,23 +21,29 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
+#include "Acts/Plugins/Detray/DetrayGeometryConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <fstream>
 #include <memory>
 #include <vector>
+
+#include <detray/io/frontend/payloads.hpp>
 
 using namespace Acts;
 using namespace Acts::Experimental;
 
 GeometryContext tContext;
+
+auto logger =
+    Acts::getDefaultLogger("DetrayGeometryConverterTests", Acts::Logging::INFO);
 
 /// @brief A mockup volume builder, it generates volumes with
 /// a single surface filled in in order to use the CylindricalContainerBuilder
@@ -92,14 +98,81 @@ class CylindricalVolumeBuilder : public IDetectorComponentBuilder {
 
 BOOST_AUTO_TEST_SUITE(DetrayConversion)
 
+BOOST_AUTO_TEST_CASE(DetrayTransformConversion) {
+  auto transform = Transform3::Identity();
+  transform.pretranslate(Vector3(1., 2., 3.));
+  transform.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3::UnitZ()));
+
+  detray::io::transform_payload payload =
+      DetrayGeometryConverter::convertTransform(transform);
+  // Transform is correctly translated
+  CHECK_CLOSE_ABS(payload.tr[0u], 1.,
+                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(payload.tr[1u], 2.,
+                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(payload.tr[2u], 3.,
+                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+  // Rotation is correctly translated
+  const auto rotation = transform.rotation();
+  CHECK_CLOSE_ABS(payload.rot[0u], rotation(0, 0),
+                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(payload.rot[1u], rotation(0, 1),
+                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(payload.rot[2u], rotation(0, 2),
+                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(payload.rot[3u], rotation(1, 0),
+                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(payload.rot[4u], rotation(1, 1),
+                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(payload.rot[5u], rotation(1, 2),
+                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(payload.rot[6u], rotation(2, 0),
+                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(payload.rot[7u], rotation(2, 1),
+                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(payload.rot[8u], rotation(2, 2),
+                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+}
+
+BOOST_AUTO_TEST_CASE(DetrayMaskConversion) {
+  // Placeholder, masks are tested for the moment through the DetrayJsonHelper,
+  // this code will move over here when the "toJsonDetray" will become
+  // deprecated
+}
+
 BOOST_AUTO_TEST_CASE(DetraySurfaceConversion) {
-}
+  // Translate a cylinder
+  auto cylinderSurface = Acts::Surface::makeShared<CylinderSurface>(
+      Transform3::Identity(), std::make_shared<CylinderBounds>(20., 100.));
 
-BOOST_AUTO_TEST_CASE(DetrayPortalConversion) {
-}
+  detray::io::surface_payload payload = DetrayGeometryConverter::convertSurface(
+      tContext, *cylinderSurface, false);
 
+  // Check the payload
+  BOOST_CHECK(!payload.index_in_coll.has_value());
+  BOOST_CHECK(payload.mask.shape == detray::io::shape_id::cylinder2);
+}
 
 BOOST_AUTO_TEST_CASE(DetrayVolumeConversion) {
+  auto beampipe = std::make_shared<
+      CylindricalVolumeBuilder<CylinderSurface, CylinderBounds>>(
+      Transform3::Identity(), CylinderVolumeBounds(0., 50., 400.),
+      CylinderBounds(25., 380.), "BeamPipe");
+
+  auto [volumes, portals, rootVolumes] = beampipe->construct(tContext);
+  auto volume = volumes.front();
+
+  DetrayConversionUtils::GeometryIdCache geoIdCache;
+
+  detray::io::volume_payload payload = DetrayGeometryConverter::convertVolume(
+      geoIdCache, tContext, *volume, {volume.get()}, *logger);
+
+  // Check the volume payload
+  BOOST_CHECK(payload.name == "BeamPipe");
+  BOOST_CHECK(payload.type == detray::volume_id::e_cylinder);
+  // 3 portals and 1 surface contained
+  BOOST_CHECK_EQUAL(payload.surfaces.size(), 4u);
+  BOOST_CHECK(!payload.acc_links.has_value());
 }
 
 BOOST_AUTO_TEST_CASE(CylindricalDetector) {
@@ -141,7 +214,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
   barrelRCfg.binning = {BinningValue::binR};
 
   auto barrel = std::make_shared<CylindricalContainerBuilder>(
-      barrelRCfg, getDefaultLogger("BarrelBuilderR", Logging::VERBOSE));
+      barrelRCfg, getDefaultLogger("BarrelBuilderR", Logging::INFO));
 
   Transform3 posZ = Transform3::Identity();
   posZ.pretranslate(Vector3(0., 0., 300.));
@@ -156,8 +229,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
   barrelEndcapCfg.binning = {BinningValue::binZ};
 
   auto barrelEndcap = std::make_shared<CylindricalContainerBuilder>(
-      barrelEndcapCfg,
-      getDefaultLogger("BarrelEndcapBuilder", Logging::VERBOSE));
+      barrelEndcapCfg, getDefaultLogger("BarrelEndcapBuilder", Logging::INFO));
 
   // Create the barrel container builder
   CylindricalContainerBuilder::Config detectorCfg;
@@ -165,7 +237,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
   detectorCfg.binning = {BinningValue::binR};
 
   auto containerBuilder = std::make_shared<CylindricalContainerBuilder>(
-      detectorCfg, getDefaultLogger("DetectorBuilder", Logging::VERBOSE));
+      detectorCfg, getDefaultLogger("DetectorBuilder", Logging::INFO));
 
   // Detector builder
   auto gigConfig = GeometryIdGenerator::Config();
@@ -179,6 +251,15 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
 
   auto detector = DetectorBuilder(dCfg).construct(tContext);
 
+  // Convert the detector
+  DetrayConversionUtils::GeometryIdCache geoIdCache;
+
+  detray::io::detector_payload payload =
+      DetrayGeometryConverter::convertDetector(geoIdCache, tContext, *detector,
+                                               *logger);
+
+  // test the payload
+  BOOST_CHECK_EQUAL(payload.volumes.size(), 6u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
