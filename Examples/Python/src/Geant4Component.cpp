@@ -178,8 +178,6 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(sensitiveSurfaceMapper);
     ACTS_PYTHON_MEMBER(magneticField);
     ACTS_PYTHON_MEMBER(physicsList);
-    ACTS_PYTHON_MEMBER(volumeMappings);
-    ACTS_PYTHON_MEMBER(materialMappings);
     ACTS_PYTHON_MEMBER(killVolume);
     ACTS_PYTHON_MEMBER(killAfterTime);
     ACTS_PYTHON_MEMBER(killSecondaries);
