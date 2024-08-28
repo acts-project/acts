@@ -25,4 +25,9 @@ concept nothrow_move_constructible =
 /// @brief Concept that is true if T is an arithmetic type.
 template <typename T>
 concept arithmetic = std::integral<T> || std::floating_point<T>;
+
+/// @brief Concept that is satisfied iff both of its arguments decay to the
+/// same type.
+template <typename T1, typename T2>
+concept decayed_same_as = std::same_as<std::decay_t<T1>, std::decay_t<T2> >;
 }  // namespace Acts::Concepts

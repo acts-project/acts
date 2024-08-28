@@ -106,18 +106,16 @@ class Propagator final
   /// Re-define bound track parameters dependent on the stepper
   using StepperBoundTrackParameters =
       detail::stepper_bound_parameters_type_t<stepper_t>;
-  static_assert(
-      Concepts::BoundTrackParametersConcept<StepperBoundTrackParameters>,
-      "Stepper bound track parameters do not fulfill bound "
-      "parameters concept.");
+  static_assert(BoundTrackParametersConcept<StepperBoundTrackParameters>,
+                "Stepper bound track parameters do not fulfill bound "
+                "parameters concept.");
 
   /// Re-define curvilinear track parameters dependent on the stepper
   using StepperCurvilinearTrackParameters =
       detail::stepper_curvilinear_parameters_type_t<stepper_t>;
-  static_assert(
-      Concepts::BoundTrackParametersConcept<StepperCurvilinearTrackParameters>,
-      "Stepper bound track parameters do not fulfill bound "
-      "parameters concept.");
+  static_assert(BoundTrackParametersConcept<StepperCurvilinearTrackParameters>,
+                "Stepper bound track parameters do not fulfill bound "
+                "parameters concept.");
 
   using Jacobian = BoundMatrix;
   using BoundState = std::tuple<StepperBoundTrackParameters, Jacobian, double>;
