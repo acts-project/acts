@@ -47,7 +47,7 @@ struct SensitiveCandidatesBase {
   /// @return a vector of sensitive surfaces
   virtual std::vector<const Acts::Surface*> queryAll() const = 0;
 
-  virtual ~SensitiveCandidatesBase() {}
+  virtual ~SensitiveCandidatesBase() = default;
 };
 
 /// Implementation of the SensitiveCandidates for Gen1 geometry
@@ -128,9 +128,9 @@ class SensitiveSurfaceMapper {
   /// @param state state object after a call to remapSensitiveNames
   /// @param gctx the geometry context
   /// @param writeMissingG4VolsAsObj write the Geant4 volumes that are
-  /// not mapped to an obj file
+  /// not mapped to 'missing_g4_volumes.obj' in the working directory
   /// @param writeMissingSurfacesAsObj write the sensitive surfaces that
-  /// where not mapped to an obj file
+  /// where not mapped to 'missing_acts_surfaces.obj' in the working directory
   /// @return Returns true only if all sensitive surfaces where mapped
   bool checkMapping(const State& state, const Acts::GeometryContext& gctx,
                     bool writeMissingG4VolsAsObj = false,
