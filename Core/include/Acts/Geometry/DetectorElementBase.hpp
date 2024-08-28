@@ -31,7 +31,9 @@ class Surface;
 
 class DetectorElementBase {
  public:
-  DetectorElementBase() = default;
+  /// Construct a detector element. It will have ownership of the surface
+  DetectorElementBase(std::shared_ptr<Surface>&& surface)
+      : m_surface(surface) {}
   virtual ~DetectorElementBase() = default;
 
   /// Return the transform for the Element proxy mechanism
