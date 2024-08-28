@@ -24,8 +24,10 @@ struct Context {
 
   pybind11::module_& get(const std::string& name) { return modules.at(name); }
 
-  template <typename... Args, typename = std::enable_if_t<sizeof...(Args) >= 2>>
-  auto get(Args&&... args) {
+  template <typename... Args>
+  auto get(Args&&... args)
+    requires(sizeof...(Args) >= 2)
+  {
     return std::make_tuple((modules.at(args))...);
   }
 };
@@ -34,10 +36,7 @@ template <typename T, typename Ur, typename Ut>
 void pythonRangeProperty(T& obj, const std::string& name, Ur Ut::*begin,
                          Ur Ut::*end) {
   obj.def_property(
-      name.c_str(),
-      [=](Ut& self) {
-        return std::pair{self.*begin, self.*end};
-      },
+      name.c_str(), [=](Ut& self) { return std::pair{self.*begin, self.*end}; },
       [=](Ut& self, std::pair<Ur, Ur> p) {
         self.*begin = p.first;
         self.*end = p.second;

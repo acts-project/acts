@@ -26,7 +26,7 @@ class DigitizationErrorCategory : public std::error_category {
       case DigitizationError::SmearingOutOfRange:
         return "Smeared out of surface bounds.";
       case DigitizationError::SmearingError:
-        return "Smearing error occured.";
+        return "Smearing error occurred.";
       case DigitizationError::UndefinedSurface:
         return "Surface undefined for this operation.";
       case DigitizationError::MaskingError:

@@ -31,4 +31,16 @@ Vector3 RegularSurface::localToGlobal(const GeometryContext& gctx,
   return localToGlobal(gctx, lposition);
 }
 
+bool RegularSurface::isOnSurface(const GeometryContext& gctx,
+                                 const Vector3& position,
+                                 const BoundaryTolerance& boundaryTolerance,
+                                 double tolerance) const {
+  // global to local transformation
+  auto lpResult = globalToLocal(gctx, position, tolerance);
+  if (!lpResult.ok()) {
+    return false;
+  }
+  return bounds().inside(lpResult.value(), boundaryTolerance);
+}
+
 }  // namespace Acts

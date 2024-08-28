@@ -24,7 +24,7 @@
 #include <GeoModelKernel/Units.h>
 
 Acts::Result<Acts::GeoModelSensitiveSurface>
-Acts::detail::GeoTrdConverter::operator()(const GeoFullPhysVol& geoFPV,
+Acts::detail::GeoTrdConverter::operator()(const PVConstLink& geoPV,
                                           const GeoTrd& geoTrd,
                                           const Transform3& absTransform,
                                           bool sensitive) const {
@@ -84,8 +84,7 @@ Acts::detail::GeoTrdConverter::operator()(const GeoFullPhysVol& geoFPV,
 
   auto trapezoidBounds =
       std::make_shared<TrapezoidBounds>(minHalfX, maxHalfX, halfZ);
-  // std::cout << "     TrapezoidBounds: minHalfX=" << minHalfX << ", maxHalfX="
-  // << maxHalfX << ", halfz=" << halfZ << std::endl;
+
   if (!sensitive) {
     auto surface =
         Surface::makeShared<PlaneSurface>(transform, trapezoidBounds);
@@ -93,9 +92,10 @@ Acts::detail::GeoTrdConverter::operator()(const GeoFullPhysVol& geoFPV,
   }
 
   // Create the element and the surface
+
   auto detectorElement =
       GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
-          geoFPV, trapezoidBounds, transform, thickness);
+          geoPV, trapezoidBounds, transform, thickness);
   auto surface = detectorElement->surface().getSharedPtr();
   return std::make_tuple(detectorElement, surface);
 }
