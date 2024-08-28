@@ -53,12 +53,12 @@ struct Range {
   }
 };
 
-/// Select objects that fullfil all selectors.
+/// Select objects that fulfill all selectors.
 template <typename... selectors_t>
 using CombineAnd =
     detail::CombineSelectors<true, std::logical_and<bool>, selectors_t...>;
 
-/// Select objects that fullfil at least one selector.
+/// Select objects that fulfill at least one selector.
 template <typename... selectors_t>
 using CombineOr =
     detail::CombineSelectors<false, std::logical_or<bool>, selectors_t...>;
