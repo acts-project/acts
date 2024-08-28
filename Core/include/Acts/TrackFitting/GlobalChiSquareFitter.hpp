@@ -252,7 +252,7 @@ struct ScatteringProperties {
   /// @param scatteringAngles_ The vector of scattering angles.
   /// @param invCovarianceMaterial_ The inverse covariance of the material.
   /// @param materialIsValid_ A boolean flag indicating whether the material is valid.
-  ScatteringProperties(const BoundVector scatteringAngles_,
+  ScatteringProperties(const BoundVector& scatteringAngles_,
                        const ActsScalar invCovarianceMaterial_,
                        const bool materialIsValid_)
       : scatteringAngles(scatteringAngles_),
@@ -590,7 +590,8 @@ class Gx2Fitter {
             const double sigma =
                 static_cast<double>(Acts::computeMultipleScatteringTheta0(
                     interaction.slab, particle.absolutePdg(), particle.mass(),
-                    parametersWithHypothesis->parameters()[eBoundQOverP],
+                    static_cast<float>(
+                        parametersWithHypothesis->parameters()[eBoundQOverP]),
                     particle.absoluteCharge()));
             ACTS_VERBOSE(
                 "        The Highland formula gives sigma = " << sigma);
@@ -746,7 +747,7 @@ class Gx2Fitter {
 
           // For material surfaces, we also update the angles with the
           // available scattering information
-          // We can skip the if here, since we already kno, that we do
+          // We can skip the if here, since we already know, that we do
           // multipleScattering and have material
           {
             ACTS_DEBUG("    Update parameters with scattering angles.");
@@ -1377,7 +1378,7 @@ class Gx2Fitter {
       if (!value.materialIsValid) {
         continue;
       }
-      const auto angles = value.scatteringAngles;
+      const auto& angles = value.scatteringAngles;
       ACTS_VERBOSE("    ( " << angles[eBoundTheta] << " | " << angles[eBoundPhi]
                             << " )");
     }
