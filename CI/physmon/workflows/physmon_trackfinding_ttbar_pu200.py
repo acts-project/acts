@@ -19,7 +19,9 @@ from acts.examples.reconstruction import (
     CkfConfig,
     addCKFTracks,
     addAmbiguityResolution,
+    addAmbiguityResolutionML,
     AmbiguityResolutionConfig,
+    AmbiguityResolutionMLConfig,
     addVertexFitting,
     VertexFinder,
     TrackSelectorConfig,
@@ -133,7 +135,16 @@ with tempfile.TemporaryDirectory() as temp:
             maximumIterations=100000,
             nMeasurementsMin=6,
         ),
-        outputDirRoot=tp,
+        outputDirRoot=tp / "greedy_solver",
+    )
+
+    addAmbiguityResolutionML(
+        s,
+        AmbiguityResolutionMLConfig(
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=6
+        ),
+        outputDirRoot=tp / "ml_solver",
+        onnxModelFile=Path(__file__).resolve().parent.parent.parent / "thirdparty/OpenDataDetector/data/duplicateClassifier.onnx",
     )
 
     s.addAlgorithm(
@@ -171,21 +182,24 @@ with tempfile.TemporaryDirectory() as temp:
 
     s.run()
 
-    shutil.move(
-        tp / "performance_ambi.root",
-        tp / "performance_ckf_ambi.root",
-    )
     for vertexing in ["amvf_gauss_notime", "amvf_grid_time"]:
         shutil.move(
             tp / f"{vertexing}/performance_vertexing.root",
             tp / f"performance_vertexing_{vertexing}.root",
         )
 
+    for solver in ["greedy_solver", "ml_solver"]:
+        shutil.move(
+            tp / f"{solver}/performance_ambi.root",
+            tp / f"performance_ckf_{solver}.root",
+        )
+
     for file in [
         "performance_seeding.root",
         "tracksummary_ckf.root",
         "performance_ckf.root",
-        "performance_ckf_ambi.root",
+        "performance_ckf_greedy_solver.root",
+        "performance_ckf_ml_solver",
         "performance_vertexing_amvf_gauss_notime.root",
         "performance_vertexing_amvf_grid_time.root",
     ]:

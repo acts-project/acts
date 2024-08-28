@@ -193,7 +193,7 @@ with tempfile.TemporaryDirectory() as temp:
 
     shutil.move(
         tp / "performance_ambi.root",
-        tp / "performance_ckf_ambi.root",
+        tp / "performance_ckf_greedy_solver.root",
     )
     for vertexing in ["ivf_notime", "amvf_gauss_notime", "amvf_grid_time"]:
         shutil.move(
@@ -205,7 +205,7 @@ with tempfile.TemporaryDirectory() as temp:
         "performance_seeding.root",
         "tracksummary_ckf.root",
         "performance_ckf.root",
-        "performance_ckf_ambi.root",
+        "performance_ckf_greedy_solver.root",
         "performance_vertexing_ivf_notime.root",
         "performance_vertexing_amvf_gauss_notime.root",
         "performance_vertexing_amvf_grid_time.root",

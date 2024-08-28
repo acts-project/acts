@@ -241,13 +241,22 @@ function trackfinding() {
         $path/tracksummary_ckf.html \
         $path/tracksummary_ckf_plots
 
-    if [ -f $refdir/$path/performance_ckf_ambi.root ]; then
+    if [ -f $refdir/$path/performance_ckf_greedy_solver.root ]; then
         run_histcmp \
-            $outdir/data/$path/performance_ckf_ambi.root \
-            $refdir/$path/performance_ckf_ambi.root \
+            $outdir/data/$path/performance_ckf_greedy_solver.root \
+            $refdir/$path/performance_ckf_greedy_solver.root \
             "Ambisolver | ${name}" \
-            $path/performance_ckf_ambi.html \
-            $path/performance_ckf_ambi
+            $path/performance_ckf_greedy_solver.html \
+            $path/performance_ckf_greedy_solver
+    fi
+
+    if [ -f $refdir/$path/performance_ml_solver.root ]; then   
+        run_histcmp \
+            $outdir/data/$path/performance_ml_solver.root \
+            $refdir/$path/performance_ml_solver.root \
+            "ML Ambisolver | ${name}" \
+            $path/performance_ml_solver.html
+            $path/performance_ml
     fi
 }
 
