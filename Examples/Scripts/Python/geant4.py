@@ -8,12 +8,6 @@ import acts.examples
 from acts.examples.simulation import addParticleGun, addGeant4, EtaConfig
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
-from acts.examples.dd4hep import (
-    DD4hepDetector,
-    DD4hepDetectorOptions,
-    DD4hepGeometryService,
-)
-
 u = acts.UnitConstants
 
 
@@ -63,6 +57,12 @@ if "__main__" == __name__:
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     if args.experimental:
+        from acts.examples.dd4hep import (
+            DD4hepDetector,
+            DD4hepDetectorOptions,
+            DD4hepGeometryService,
+        )
+
         print(">>> Running experimental geometry <<<")
         odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
 
