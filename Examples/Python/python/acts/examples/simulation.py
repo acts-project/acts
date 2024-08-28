@@ -724,8 +724,6 @@ def addGeant4(
         sensitiveSurfaceMapper=sensitiveMapper,
         magneticField=field,
         physicsList=physicsList,
-        volumeMappings=volumeMappings,
-        materialMappings=materialMappings,
         killVolume=killVolume,
         killAfterTime=killAfterTime,
         killSecondaries=killSecondaries,

@@ -22,7 +22,7 @@
 #include <GeoModelKernel/Units.h>
 
 Acts::Result<Acts::GeoModelSensitiveSurface>
-Acts::detail::GeoBoxConverter::operator()(PVConstLink geoPV,
+Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
                                           const GeoBox& geoBox,
                                           const Transform3& absTransform,
                                           bool sensitive) const {

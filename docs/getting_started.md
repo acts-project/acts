@@ -184,9 +184,11 @@ container $ cmake --build build
 ### On your local machine
 
 Building and running ACTS on your local machine is not officially supported.
-However, if you have the necessary prerequisites installed it is possible to use
-it locally. ACTS developers regularly use different Linux distributions
-and macOS to build and develop ACTS.
+However, if you have the necessary prerequisites installed it is possible to
+use it locally. ACTS developers regularly use different Linux distributions and
+macOS to build and develop ACTS. It is possible to use Spack to more easily
+install ACTS' dependencies; see the [building with Spack](misc/spack) page for
+more information.
 
 (build_docs)=
 ## Building the documentation

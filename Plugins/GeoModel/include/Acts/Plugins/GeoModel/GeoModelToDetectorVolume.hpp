@@ -13,9 +13,8 @@
 #include "GeoModelKernel/GeoDefinitions.h"
 class GeoShape;
 
-namespace Acts {
+namespace Acts::GeoModel {
 
-namespace GeoModel {
 /// @brief Convert a GeoModel shape to a DetectorVolume
 ///
 /// @param shape the GeoModel shape
@@ -23,7 +22,7 @@ namespace GeoModel {
 /// @return the DetectorVolume
 std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeometryContext& context, const GeoShape& shape,
-    const std::string& name, const GeoTrf::Transform3D transform,
+    const std::string& name, const GeoTrf::Transform3D& transform,
     const std::vector<GeoModelSensitiveSurface>& sensitives);
-}  // namespace GeoModel
-}  // namespace Acts
+
+}  // namespace Acts::GeoModel
