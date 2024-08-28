@@ -1,4 +1,4 @@
-set(SOURCES 
+set(SOURCES
     src/AmbiguityResolutionMLAlgorithm.cpp
     src/SeedFilterMLAlgorithm.cpp
 )
