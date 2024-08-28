@@ -62,6 +62,18 @@ struct NavigationStream {
     const Surface& surface() const { return *intersection.object(); }
     /// Cinvencience access to the path length
     ActsScalar pathLength() const { return intersection.pathLength(); }
+
+    /// Order along the path length
+    ///
+    /// @param aCandidate is the first candidate
+    /// @param bCandidate is the second candidate
+    ///
+    /// @return true if aCandidate is closer to the origin
+    constexpr static bool pathLengthOrder(const Candidate& aCandidate,
+                                          const Candidate& bCandidate) {
+      return ObjectIntersection<Surface>::pathLengthOrder(
+          aCandidate.intersection, bCandidate.intersection);
+    }
   };
 
   /// The candidates of this navigation stream
@@ -90,7 +102,7 @@ struct NavigationStream {
   Candidate& currentCandidate() { return candidates.at(currentIndex); }
 
   /// The number of active candidates
-  std::size_t activeCandidates() const {
+  std::size_t remainingCandidates() const {
     return (candidates.size() - currentIndex);
   }
 };

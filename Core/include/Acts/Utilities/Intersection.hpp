@@ -149,14 +149,6 @@ class ObjectIntersection {
                                const object_t* object, std::uint8_t index = 0)
       : m_intersection(intersection), m_object(object), m_index(index) {}
 
-  /// Invalid object intersection - only holding the object itself
-  ///
-  /// @param object is the object to be instersected
-  constexpr ObjectIntersection(const object_t* object)
-      : m_intersection(Intersection3D::invalid()),
-        m_object(object),
-        m_index(0) {}
-
   /// Returns whether the intersection was successful or not
   /// @deprecated
   [[deprecated("Use isValid() instead")]] constexpr explicit operator bool()
@@ -192,7 +184,10 @@ class ObjectIntersection {
 
   constexpr std::uint8_t index() const { return m_index; }
 
-  constexpr static ObjectIntersection invalid() { return ObjectIntersection(); }
+  constexpr static ObjectIntersection invalid(
+      const object_t* object = nullptr) {
+    return ObjectIntersection(Intersection3D::invalid(), object);
+  }
 
   constexpr static bool pathLengthOrder(
       const ObjectIntersection& aIntersection,

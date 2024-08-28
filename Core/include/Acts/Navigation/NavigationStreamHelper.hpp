@@ -35,8 +35,9 @@ inline static void fillSurface(NavigationStream& nStream,
                                const Surface* surface,
                                BoundaryTolerance bTolerance,
                                bool abortTarget = false) {
-  nStream.candidates.push_back(NavigationStream::Candidate{
-      ObjectIntersection<Surface>(surface), nullptr, bTolerance, abortTarget});
+  nStream.candidates.push_back(
+      NavigationStream::Candidate{ObjectIntersection<Surface>::invalid(surface),
+                                  nullptr, bTolerance, abortTarget});
 }
 
 /// Helper struct that allows to fill surfaces into the candidate vector
@@ -50,8 +51,9 @@ inline static void fillSurfaces(NavigationStream& nStream,
                                 BoundaryTolerance bTolerance,
                                 bool abortTarget = false) {
   std::for_each(surfaces.begin(), surfaces.end(), [&](const auto& s) {
-    nStream.candidates.push_back(NavigationStream::Candidate{
-        ObjectIntersection<Surface>(s), nullptr, bTolerance, abortTarget});
+    nStream.candidates.push_back(
+        NavigationStream::Candidate{ObjectIntersection<Surface>::invalid(s),
+                                    nullptr, bTolerance, abortTarget});
   });
 }
 
@@ -63,7 +65,7 @@ inline static void fillPortals(NavigationStream& nStream,
                                const std::vector<const Portal*>& portals) {
   std::for_each(portals.begin(), portals.end(), [&](const auto& p) {
     nStream.candidates.push_back(NavigationStream::Candidate{
-        ObjectIntersection<Surface>(&(p->surface())), p,
+        ObjectIntersection<Surface>::invalid(&(p->surface())), p,
         BoundaryTolerance::None()});
   });
 }
@@ -74,6 +76,7 @@ inline static void fillPortals(NavigationStream& nStream,
 /// @param gctx is the geometry context
 /// @param queryPoint holds current position, direction, etc.
 /// @param cTolerance is the candidate search tolerance
+/// @param onSurfaceTolerance is the tolerance for on-surface intersections
 ///
 /// This method will first de-duplicate the candidates on basis of the surface
 /// pointer to make sure that the multi-intersections are handled correctly.
@@ -83,7 +86,8 @@ inline static void fillPortals(NavigationStream& nStream,
 /// @return true if the stream is active, false indicates that there are no valid candidates
 bool initializeStream(NavigationStream& stream, const GeometryContext& gctx,
                       const NavigationStream::QueryPoint& queryPoint,
-                      BoundaryTolerance cTolerance);
+                      BoundaryTolerance cTolerance,
+                      ActsScalar onSurfaceTolerance = s_onSurfaceTolerance);
 
 /// Convenience method to update a stream from a new query point,
 /// this could be called from navigation delegates that do not require
@@ -92,10 +96,12 @@ bool initializeStream(NavigationStream& stream, const GeometryContext& gctx,
 /// @param stream [in, out] is the navigation stream to be updated
 /// @param gctx is the geometry context
 /// @param queryPoint holds current position, direction, etc.
+/// @param onSurfaceTolerance is the tolerance for on-surface intersections
 ///
 /// @return true if the stream is active, false indicate no valid candidates left
 bool updateStream(NavigationStream& stream, const GeometryContext& gctx,
-                  const NavigationStream::QueryPoint& queryPoint);
+                  const NavigationStream::QueryPoint& queryPoint,
+                  ActsScalar onSurfaceTolerance = s_onSurfaceTolerance);
 
 }  // namespace NavigationStreamHelper
 
