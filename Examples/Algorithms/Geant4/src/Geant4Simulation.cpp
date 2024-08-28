@@ -299,7 +299,10 @@ ActsExamples::Geant4Simulation::~Geant4Simulation() = default;
 
 ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  Geant4SimulationBase::execute(ctx);
+  auto ret = Geant4SimulationBase::execute(ctx);
+  if (ret != ProcessCode::SUCCESS) {
+    return ret;
+  }
 
   // Output handling: Simulation
   m_outputParticlesInitial(
@@ -401,7 +404,10 @@ ActsExamples::Geant4MaterialRecording::~Geant4MaterialRecording() = default;
 
 ActsExamples::ProcessCode ActsExamples::Geant4MaterialRecording::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  Geant4SimulationBase::execute(ctx);
+  const auto ret = Geant4SimulationBase::execute(ctx);
+  if (ret != ProcessCode::SUCCESS) {
+    return ret;
+  }
 
   // Output handling: Material tracks
   m_outputMaterialTracks(

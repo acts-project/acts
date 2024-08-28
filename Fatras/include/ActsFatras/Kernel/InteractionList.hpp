@@ -119,7 +119,7 @@ using PointLikeIndices = TupleFilter<IsPointLikeProcess, processes_t>;
 ///
 /// Continuous processes scale with the passed material. They tpyically
 /// describe effective results of a large number of small interactions such as
-/// multiple scattering or ionisation. Continous process types **must** provide
+/// multiple scattering or ionisation. Continuous process types **must** provide
 /// a call operator with the following signature:
 ///
 ///     template <typename generator_t>
@@ -167,7 +167,7 @@ using PointLikeIndices = TupleFilter<IsPointLikeProcess, processes_t>;
 ///   destruction is typically of more interest to the user and this simplifies
 ///   validation.
 ///
-/// The physics processes are extendable by the user to accomodate their
+/// The physics processes are extendable by the user to accommodate their
 /// specific requirements. While the set of available physics processes must be
 /// configured at compile-time, within that set, processes can again be
 /// selectively disabled at run-time. By default all processes are applied.
@@ -221,7 +221,7 @@ class InteractionList {
   /// @param[in]     slab      is the passed material
   /// @param[in,out] particle  is the particle being updated
   /// @param[out]    generated is the container of generated particles
-  /// @return Break condition, i.e. whether a process stoped the propagation
+  /// @return Break condition, i.e. whether a process stopped the propagation
   template <typename generator_t>
   bool runContinuous(generator_t& rng, const Acts::MaterialSlab& slab,
                      Particle& particle,

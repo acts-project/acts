@@ -8,12 +8,6 @@ import acts.examples
 from acts.examples.simulation import addParticleGun, addGeant4, EtaConfig
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
-from acts.examples.dd4hep import (
-    DD4hepDetector,
-    DD4hepDetectorOptions,
-    DD4hepGeometryService,
-)
-
 u = acts.UnitConstants
 
 
@@ -22,6 +16,7 @@ def runGeant4(
     trackingGeometry,
     field,
     outputDir,
+    materialMappings=["Silicon"],
     s: acts.examples.Sequencer = None,
 ):
     s = s or acts.examples.Sequencer(events=100, numThreads=1)
@@ -41,6 +36,7 @@ def runGeant4(
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
         rnd=rnd,
+        materialMappings=materialMappings,
     )
     return s
 
@@ -59,6 +55,12 @@ if "__main__" == __name__:
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     if args.experimental:
+        from acts.examples.dd4hep import (
+            DD4hepDetector,
+            DD4hepDetectorOptions,
+            DD4hepGeometryService,
+        )
+
         print(">>> Running experimental geometry <<<")
         odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
 
