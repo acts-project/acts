@@ -16,20 +16,21 @@
 
 namespace Acts {
 
-auto GeoModelModuleSplitter::split(DetectorElementPtr detElement,
-                                   const Acts::GeometryContext &gctx) const
-    -> std::optional<std::vector<DetectorElementPtr>> {
+std::vector<std::shared_ptr<GeoModelDetectorElement>>
+GeoModelModuleSplitter::split(
+    std::shared_ptr<GeoModelDetectorElement> detElement,
+    const Acts::GeometryContext &gctx) const {
   const auto &logger = *m_logger;
 
-  auto surface = detElement->surface().getSharedPtr();
-  auto annulusBounds = dynamic_cast<const AnnulusBounds *>(&surface->bounds());
+  const auto surface = detElement->surface().getSharedPtr();
+  const auto annulusBounds =
+      dynamic_cast<const AnnulusBounds *>(&surface->bounds());
 
   if (annulusBounds == nullptr) {
-    ACTS_DEBUG("Not annulus bounds");
-    return std::nullopt;
+    throw std::runtime_error("Surfaces does not has annulus bounds");
   }
 
-  std::optional<std::vector<DetectorElementPtr>> result;
+  std::vector<std::shared_ptr<GeoModelDetectorElement>> result;
 
   for (auto [patternName, radii] : m_splitPatterns) {
     if ((std::abs(radii.front() - annulusBounds->rMin()) > m_tolerance) ||
@@ -43,26 +44,24 @@ auto GeoModelModuleSplitter::split(DetectorElementPtr detElement,
     radii.back() = annulusBounds->rMax();
 
     ACTS_DEBUG("Accept pattern '" << patternName << "' for element '"
-                                  << detElement->databaseEntryName());
+                                  << detElement->databaseEntryName() << "'");
 
-    result.emplace();
-    result->reserve(radii.size() - 1);
-    const auto origValues = annulusBounds->values();
-
+    result.reserve(radii.size() - 1);
     for (auto i = 0ul; i < radii.size() - 1; ++i) {
-      std::array<double, AnnulusBounds::eSize> values;
-      std::copy(origValues.begin(), origValues.end(), values.begin());
-      values[AnnulusBounds::eMinR] = radii[i];
-      values[AnnulusBounds::eMaxR] = radii[i + 1];
-
       ACTS_VERBOSE("Make new annulus bounds: " << [&]() {
         std::stringstream ss;
-        for (auto v : values) {
+        for (auto v : annulusBounds->values()) {
           ss << v << " ";
         }
         return ss.str();
       }());
-      auto bounds = std::make_shared<AnnulusBounds>(values);
+
+      auto bounds = std::make_shared<AnnulusBounds>(
+          radii[i], radii[i + 1], annulusBounds->get(AnnulusBounds::eMinPhiRel),
+          annulusBounds->get(AnnulusBounds::eMaxPhiRel),
+          Vector2{annulusBounds->get(AnnulusBounds::eOriginX),
+                  annulusBounds->get(AnnulusBounds::eOriginY)},
+          annulusBounds->get(AnnulusBounds::eAveragePhi));
 
       auto newDetElement =
           GeoModelDetectorElement::createDetectorElement<DiscSurface>(
@@ -70,17 +69,19 @@ auto GeoModelModuleSplitter::split(DetectorElementPtr detElement,
               detElement->thickness());
       newDetElement->setDatabaseEntryName(detElement->databaseEntryName());
 
-      result->push_back(newDetElement);
+      result.push_back(newDetElement);
     }
 
     return result;
   }
 
-  ACTS_WARNING("Could not split '" << detElement->databaseEntryName()
-                                   << "' (rmin: " << annulusBounds->rMin()
-                                   << ", rmax: " << annulusBounds->rMax()
-                                   << ")");
-  return result;
+  throw std::runtime_error([&]() {
+    std::stringstream ss;
+    ss << "Could not split '" << detElement->databaseEntryName()
+       << "' (rmin: " << annulusBounds->rMin()
+       << ", rmax: " << annulusBounds->rMax() << ")";
+    return ss.str();
+  }());
 }
 
 }  // namespace Acts

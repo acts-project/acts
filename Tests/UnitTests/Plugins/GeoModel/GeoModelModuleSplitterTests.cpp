@@ -39,9 +39,11 @@ const std::array<double, AnnulusBounds::eSize> annulusParams{
 auto makeDetElement() {
   auto bounds = std::make_shared<AnnulusBounds>(annulusParams);
 
-  return GeoModelDetectorElement::createDetectorElement<DiscSurface,
-                                                        AnnulusBounds>(
+  auto el = GeoModelDetectorElement::createDetectorElement<DiscSurface,
+                                                           AnnulusBounds>(
       vol, bounds, Transform3::Identity(), 0.5);
+  el->setDatabaseEntryName("UnitTestDetectorElement");
+  return el;
 }
 
 BOOST_AUTO_TEST_CASE(ModuleSplitterTest_empty) {
@@ -50,7 +52,7 @@ BOOST_AUTO_TEST_CASE(ModuleSplitterTest_empty) {
 
   GeoModelModuleSplitter splitter(patterns);
 
-  BOOST_CHECK(splitter.split(detEl, gctx) == std::nullopt);
+  BOOST_CHECK_THROW(splitter.split(detEl, gctx), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(ModuleSplitterTest_non_annulus) {
@@ -64,7 +66,7 @@ BOOST_AUTO_TEST_CASE(ModuleSplitterTest_non_annulus) {
       {"A", {1.0, 5.0, 10.0}}};
   GeoModelModuleSplitter splitter(patterns);
 
-  BOOST_CHECK(splitter.split(detEl, gctx) == std::nullopt);
+  BOOST_CHECK_THROW(splitter.split(detEl, gctx), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(ModuleSplitterTest_split) {
@@ -77,18 +79,24 @@ BOOST_AUTO_TEST_CASE(ModuleSplitterTest_split) {
   GeoModelModuleSplitter splitter(patterns, tolerance, Acts::Logging::VERBOSE);
 
   auto res = splitter.split(detEl, gctx);
-  BOOST_REQUIRE(res.has_value());
-  BOOST_REQUIRE(res->size() == 2);
+  BOOST_REQUIRE(res.size() == 2);
 
-  BOOST_CHECK_CLOSE(res->at(0)->surface().bounds().values()[0],
+  BOOST_CHECK_CLOSE(res.at(0)->surface().bounds().values().at(0),
                     annulusParams[0], tolerance);
-  BOOST_CHECK_CLOSE(res->at(0)->surface().bounds().values()[1], midR,
+  BOOST_CHECK_CLOSE(res.at(0)->surface().bounds().values().at(1), midR,
                     tolerance);
 
-  BOOST_CHECK_CLOSE(res->at(1)->surface().bounds().values()[0], midR,
+  BOOST_CHECK_CLOSE(res.at(1)->surface().bounds().values().at(0), midR,
                     tolerance);
-  BOOST_CHECK_CLOSE(res->at(1)->surface().bounds().values()[1],
+  BOOST_CHECK_CLOSE(res.at(1)->surface().bounds().values().at(1),
                     annulusParams[1], tolerance);
+
+  for (const auto &r : res) {
+    for (std::size_t i = 2; i < annulusParams.size(); ++i) {
+      BOOST_CHECK_CLOSE(r->surface().bounds().values().at(i),
+                        annulusParams.at(i), tolerance);
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

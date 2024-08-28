@@ -20,15 +20,20 @@ namespace Acts {
 /// This class allows to split modules with annulus shape along into several
 /// parts with the help of a list of radii. This is used for building
 /// an ITk geometry.
+/// The splitting works based on a provided list of radii [r0, r1, ..., rN]:
+/// An annulus bound with radial constraint (rA, rB) is split in N-1 bounds
+/// with radii (r0,r1), (r1,r2), ...
+/// A pattern is only accepted, if rA ~ r0 and rB ~ r1 up to a configurable
+/// tolerance.
 class GeoModelModuleSplitter {
  public:
-  using DetectorElementPtr = std::shared_ptr<GeoModelDetectorElement>;
-
   /// Construct the module splitter
   /// @param splitPatterns A map of named split patterns
   /// @param tolerance The tolerance applied when matching the split
   /// patterns to the modules
   /// @param level The level of the internal logger
+  /// @throws std::runtime_error if the suface does not has annulus
+  /// bounds or no pattern matches
   GeoModelModuleSplitter(
       const std::map<std::string, std::vector<double>> &splitPatterns,
       double tolerance = 1.e-3,
@@ -40,8 +45,9 @@ class GeoModelModuleSplitter {
   /// Perform the split for a detector element
   /// @param detElement The detector element to split
   /// @param gctx The geometry context
-  std::optional<std::vector<DetectorElementPtr>> split(
-      DetectorElementPtr detElement, const GeometryContext &gctx) const;
+  std::vector<std::shared_ptr<GeoModelDetectorElement>> split(
+      std::shared_ptr<GeoModelDetectorElement> detElement,
+      const GeometryContext &gctx) const;
 
  private:
   std::map<std::string, std::vector<double>> m_splitPatterns;

@@ -193,7 +193,7 @@ void addGeoModel(Context& ctx) {
   py::class_<Acts::GeoModelModuleSplitter>(gm, "GeoModelModuleSplitter")
       .def(py::init<std::map<std::string, std::vector<double>>, double,
                     Acts::Logging::Level>(),
-           "designs"_a, "tolerance"_a = 1.e-3, "level"_a = Acts::Logging::INFO)
+           "designs"_a, "tolerance", "level"_a)
       .def("split", &Acts::GeoModelModuleSplitter::split, "detElement"_a,
            "gctx"_a);
 
