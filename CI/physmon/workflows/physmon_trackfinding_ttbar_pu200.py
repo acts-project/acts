@@ -135,7 +135,7 @@ with tempfile.TemporaryDirectory() as temp:
             maximumIterations=100000,
             nMeasurementsMin=6,
         ),
-        outputDirRoot=tp / "greedy_solver",
+        outputDirRoot=tp,
     )
 
     addAmbiguityResolutionML(
@@ -143,7 +143,7 @@ with tempfile.TemporaryDirectory() as temp:
         AmbiguityResolutionMLConfig(
             maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=6
         ),
-        outputDirRoot=tp / "ml_solver",
+        outputDirRoot=tp,
         onnxModelFile=Path(__file__).resolve().parent.parent.parent.parent
         / "thirdparty/OpenDataDetector/data/duplicateClassifier.onnx",
     )
@@ -183,16 +183,20 @@ with tempfile.TemporaryDirectory() as temp:
 
     s.run()
 
+    shutil.move(
+        tp / "performance_ambi.root",
+        tp / "performance_ckf_greedy_solver.root",
+    )
+
+    shutil.move(
+        tp / "performance_ambiML.root",
+        tp / "performance_ckf_ml_solver.root",
+    )
+
     for vertexing in ["amvf_gauss_notime", "amvf_grid_time"]:
         shutil.move(
             tp / f"{vertexing}/performance_vertexing.root",
             tp / f"performance_vertexing_{vertexing}.root",
-        )
-
-    for solver in ["greedy_solver", "ml_solver"]:
-        shutil.move(
-            tp / f"{solver}/performance_ambi.root",
-            tp / f"performance_ckf_{solver}.root",
         )
 
     for file in [
