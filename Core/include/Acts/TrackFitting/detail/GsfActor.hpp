@@ -145,9 +145,9 @@ struct GsfActor {
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, result_type& result,
-                  const Logger& /*logger*/) const {
+  void act(propagator_state_t& state, const stepper_t& stepper,
+           const navigator_t& navigator, result_type& result,
+           const Logger& /*logger*/) const {
     assert(result.fittedStates && "No MultiTrajectory set");
 
     // Return is we found an error earlier
@@ -331,6 +331,14 @@ struct GsfActor {
       ACTS_VERBOSE("Stop navigation because all measurements are found");
       navigator.navigationBreak(state.navigation, true);
     }
+  }
+
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  bool check(propagator_state_t& state, const stepper_t& /*stepper*/,
+             const navigator_t& navigator, result_type& /*result*/,
+             const Logger& /*logger*/) const {
+    return navigator.navigationBreak(state.navigation);
   }
 
   template <typename propagator_state_t, typename stepper_t,

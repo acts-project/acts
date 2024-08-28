@@ -31,8 +31,7 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
@@ -117,8 +116,10 @@ struct EndOfWorld {
   /// Maximum value in x-direction of the detector
   double maxX = 1_m;
 
-  /// @brief Constructor
-  EndOfWorld() = default;
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  void act(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+           const navigator_t& /*navigator*/, const Logger& /*logger*/) const {}
 
   /// @brief Main call operator for the abort operation
   ///
@@ -133,9 +134,8 @@ struct EndOfWorld {
   /// @return Boolean statement if the particle is still in the detector
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/,
-                  const Logger& /*logger*/) const {
+  bool check(propagator_state_t& state, const stepper_t& stepper,
+             const navigator_t& /*navigator*/, const Logger& /*logger*/) const {
     const double tolerance = state.options.surfaceTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
         std::abs(stepper.position(state.stepping).y()) >= 0.5_m ||
@@ -175,11 +175,19 @@ struct StepCollector {
   /// @param [out] result Struct which is filled with the data
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/, result_type& result,
-                  const Logger& /*logger*/) const {
+  void act(propagator_state_t& state, const stepper_t& stepper,
+           const navigator_t& /*navigator*/, result_type& result,
+           const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
     result.momentum.push_back(stepper.momentum(state.stepping));
+  }
+
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  bool check(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+             const navigator_t& /*navigator*/, result_type& /*result*/,
+             const Logger& /*logger*/) const {
+    return false;
   }
 };
 
@@ -590,7 +598,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
       detail::HighestValidAuctioneer>;
   using Propagator = Propagator<Stepper, Navigator>;
   using PropagatorOptions =
-      Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
+      Propagator::Options<ActorList<StepCollector, EndOfWorld>>;
 
   // Set options for propagator
   PropagatorOptions propOpts(tgContext, mfContext);
@@ -624,7 +632,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
       detail::HighestValidAuctioneer>;
   using DefPropagator = Acts::Propagator<DefStepper, Navigator>;
   using DefPropagatorOptions =
-      DefPropagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
+      DefPropagator::Options<ActorList<StepCollector, EndOfWorld>>;
 
   // Set options for propagator
   DefPropagatorOptions propOptsDef(tgContext, mfContext);
@@ -689,7 +697,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
       detail::HighestValidAuctioneer>;
   using Propagator = Propagator<Stepper, Navigator>;
   using PropagatorOptions =
-      Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
+      Propagator::Options<ActorList<StepCollector, EndOfWorld>>;
 
   // Set options for propagator
   PropagatorOptions propOpts(tgContext, mfContext);
@@ -732,8 +740,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
                    detail::HighestValidAuctioneer>;
   using DensePropagator = Acts::Propagator<DenseStepper, Navigator>;
   using DensePropagatorOptions =
-      DensePropagator::Options<ActionList<StepCollector>,
-                               AbortList<EndOfWorld>>;
+      DensePropagator::Options<ActorList<StepCollector, EndOfWorld>>;
 
   // Rebuild and check the choice of extension
   // Set options for propagator
@@ -839,11 +846,11 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
       detail::HighestValidAuctioneer>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
   using PropagatorOptions =
-      Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
+      Propagator::Options<ActorList<StepCollector, EndOfWorld>>;
 
   // Set options for propagator
   PropagatorOptions propOpts(tgContext, mfContext);
-  propOpts.abortList.get<EndOfWorld>().maxX = 3_m;
+  propOpts.actorList.get<EndOfWorld>().maxX = 3_m;
   propOpts.maxSteps = 1000;
   propOpts.stepping.maxStepSize = 1.5_m;
 
@@ -893,10 +900,10 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   using DefStepper = EigenStepper<StepperExtensionList<DefaultExtension>>;
   using DefPropagator = Acts::Propagator<DefStepper, Navigator>;
   using DefPropagatorOptions =
-      DefPropagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
+      DefPropagator::Options<ActorList<StepCollector, EndOfWorld>>;
 
   DefPropagatorOptions propOptsDef(tgContext, mfContext);
-  propOptsDef.abortList.get<EndOfWorld>().maxX = 3_m;
+  propOptsDef.actorList.get<EndOfWorld>().maxX = 3_m;
   propOptsDef.maxSteps = 1000;
   propOptsDef.stepping.maxStepSize = 1.5_m;
 
@@ -944,12 +951,11 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>>;
   using DensePropagator = Acts::Propagator<DenseStepper, Navigator>;
   using DensePropagatorOptions =
-      DensePropagator::Options<ActionList<StepCollector>,
-                               AbortList<EndOfWorld>>;
+      DensePropagator::Options<ActorList<StepCollector, EndOfWorld>>;
 
   // Set options for propagator
   DensePropagatorOptions propOptsDense(tgContext, mfContext);
-  propOptsDense.abortList.get<EndOfWorld>().maxX = 3_m;
+  propOptsDense.actorList.get<EndOfWorld>().maxX = 3_m;
   propOptsDense.maxSteps = 1000;
   propOptsDense.stepping.maxStepSize = 1.5_m;
 
@@ -1075,13 +1081,12 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
       detail::HighestValidAuctioneer>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
-  using PropagatorOptions =
-      Propagator::Options<ActionList<StepCollector, MaterialInteractor>,
-                          AbortList<EndOfWorld>>;
+  using PropagatorOptions = Propagator::Options<
+      ActorList<StepCollector, MaterialInteractor, EndOfWorld>>;
 
   // Set options for propagator
   PropagatorOptions propOpts(tgContext, mfContext);
-  propOpts.abortList.get<EndOfWorld>().maxX = 3._m;
+  propOpts.actorList.get<EndOfWorld>().maxX = 3._m;
   propOpts.maxSteps = 10000;
 
   // Build stepper and propagator

@@ -29,6 +29,11 @@ struct PathLimitReached {
   /// Boolean switch for Loop protection
   double internalLimit = std::numeric_limits<double>::max();
 
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  void act(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+           const navigator_t& /*navigator*/, const Logger& /*logger*/) const {}
+
   /// boolean operator for abort condition without using the result
   ///
   /// @tparam propagator_state_t Type of the propagator state
@@ -41,8 +46,8 @@ struct PathLimitReached {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, const Logger& logger) const {
+  bool check(propagator_state_t& state, const stepper_t& stepper,
+             const navigator_t& navigator, const Logger& logger) const {
     (void)navigator;
 
     // Check if the maximum allowed step size has to be updated
@@ -79,6 +84,11 @@ struct SurfaceReached {
   SurfaceReached() = default;
   SurfaceReached(double nLimit) : nearLimit(nLimit) {}
 
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  void act(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+           const navigator_t& /*navigator*/, const Logger& /*logger*/) const {}
+
   /// boolean operator for abort condition without using the result
   ///
   /// @tparam propagator_state_t Type of the propagator state
@@ -91,8 +101,8 @@ struct SurfaceReached {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, const Logger& logger) const {
+  bool check(propagator_state_t& state, const stepper_t& stepper,
+             const navigator_t& navigator, const Logger& logger) const {
     if (surface == nullptr) {
       ACTS_VERBOSE("SurfaceReached aborter | Target surface not set.");
       return false;
@@ -166,6 +176,11 @@ struct ForcedSurfaceReached : SurfaceReached {
 struct EndOfWorldReached {
   EndOfWorldReached() = default;
 
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  void act(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+           const navigator_t& /*navigator*/, const Logger& /*logger*/) const {}
+
   /// boolean operator for abort condition without using the result
   ///
   /// @tparam propagator_state_t Type of the propagator state
@@ -175,9 +190,8 @@ struct EndOfWorldReached {
   /// @param [in] navigator The navigator object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
-                  const navigator_t& navigator,
-                  const Logger& /*logger*/) const {
+  bool check(propagator_state_t& state, const stepper_t& /*stepper*/,
+             const navigator_t& navigator, const Logger& /*logger*/) const {
     bool endOfWorld = navigator.endOfWorldReached(state.navigation);
     return endOfWorld;
   }
@@ -187,8 +201,13 @@ struct EndOfWorldReached {
 struct AnySurfaceReached {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, const Logger& logger) const {
+  void act(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+           const navigator_t& /*navigator*/, const Logger& /*logger*/) const {}
+
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  bool check(propagator_state_t& state, const stepper_t& stepper,
+             const navigator_t& navigator, const Logger& logger) const {
     (void)stepper;
     (void)logger;
 

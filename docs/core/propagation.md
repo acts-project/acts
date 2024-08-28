@@ -52,7 +52,7 @@ The actors and aborters are instantiated with the options and can be accessed wi
 
 ```cpp
 auto options = MyOptions();
-options.actionList.get<MyActor1>().foo = bar;
+options.actorList.get<MyActor1>().foo = bar;
 options.maxStepSize = 100;
 ```
 

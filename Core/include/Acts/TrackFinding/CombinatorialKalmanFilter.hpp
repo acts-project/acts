@@ -24,8 +24,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -538,9 +537,9 @@ class CombinatorialKalmanFilter {
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    void operator()(propagator_state_t& state, const stepper_t& stepper,
-                    const navigator_t& navigator, result_type& result,
-                    const Logger& /*logger*/) const {
+    void act(propagator_state_t& state, const stepper_t& stepper,
+             const navigator_t& navigator, result_type& result,
+             const Logger& /*logger*/) const {
       assert(result.trackStates && "No MultiTrajectory set");
 
       if (result.finished) {
@@ -585,11 +584,11 @@ class CombinatorialKalmanFilter {
       }
 
       const bool isEndOfWorldReached =
-          endOfWorldReached(state, stepper, navigator, logger());
+          endOfWorldReached.check(state, stepper, navigator, logger());
       const bool isPathLimitReached =
-          result.pathLimitReached(state, stepper, navigator, logger());
+          result.pathLimitReached.check(state, stepper, navigator, logger());
       const bool isTargetReached =
-          targetReached(state, stepper, navigator, logger());
+          targetReached.check(state, stepper, navigator, logger());
       const bool allBranchesStopped = result.activeBranches.empty();
       if (isEndOfWorldReached || isPathLimitReached || isTargetReached ||
           allBranchesStopped) {
@@ -640,6 +639,14 @@ class CombinatorialKalmanFilter {
           result.finished = true;
         }
       }
+    }
+
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    bool check(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+               const navigator_t& /*navigator*/, const result_type& result,
+               const Logger& /*logger*/) const {
+      return !result.lastError.ok() || result.finished;
     }
 
     /// @brief CombinatorialKalmanFilter actor operation: reset propagation
@@ -1181,21 +1188,6 @@ class CombinatorialKalmanFilter {
     const Logger& logger() const { return *actorLogger; }
   };
 
-  template <typename source_link_accessor_t, typename parameters_t>
-  class Aborter {
-   public:
-    /// Broadcast the action type
-    using action_type = Actor<source_link_accessor_t, parameters_t>;
-
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t, typename result_t>
-    bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/, const result_t& result,
-                    const Logger& /*logger*/) const {
-      return !result.lastError.ok() || result.finished;
-    }
-  };
-
   /// Void path limit reached aborter to replace the default since the path
   /// limit is handled in the CKF actor internally.
   struct StubPathLimitReached {
@@ -1203,9 +1195,15 @@ class CombinatorialKalmanFilter {
 
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/,
-                    const Logger& /*logger*/) const {
+    void act(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+             const navigator_t& /*navigator*/, const Logger& /*logger*/) const {
+    }
+
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    bool check(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+               const navigator_t& /*navigator*/,
+               const Logger& /*logger*/) const {
       return false;
     }
   };
@@ -1238,17 +1236,13 @@ class CombinatorialKalmanFilter {
     using SourceLinkAccessor =
         SourceLinkAccessorDelegate<source_link_iterator_t>;
 
-    // Create the ActionList and AbortList
-    using CombinatorialKalmanFilterAborter =
-        Aborter<SourceLinkAccessor, parameters_t>;
+    // Create the ActorList
     using CombinatorialKalmanFilterActor =
         Actor<SourceLinkAccessor, parameters_t>;
-    using Actors = ActionList<CombinatorialKalmanFilterActor>;
-    using Aborters = AbortList<CombinatorialKalmanFilterAborter>;
+    using Actors = ActorList<CombinatorialKalmanFilterActor>;
 
     // Create relevant options for the propagation options
-    using PropagatorOptions =
-        typename propagator_t::template Options<Actors, Aborters>;
+    using PropagatorOptions = typename propagator_t::template Options<Actors>;
     PropagatorOptions propOptions(tfOptions.geoContext,
                                   tfOptions.magFieldContext);
 
@@ -1257,7 +1251,7 @@ class CombinatorialKalmanFilter {
 
     // Catch the actor
     auto& combKalmanActor =
-        propOptions.actionList.template get<CombinatorialKalmanFilterActor>();
+        propOptions.actorList.template get<CombinatorialKalmanFilterActor>();
     combKalmanActor.targetReached.surface = tfOptions.targetSurface;
     combKalmanActor.multipleScattering = tfOptions.multipleScattering;
     combKalmanActor.energyLoss = tfOptions.energyLoss;

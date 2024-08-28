@@ -15,8 +15,7 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
