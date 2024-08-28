@@ -464,179 +464,190 @@ class Gx2Fitter {
       }
       result.startVolume = state.navigation.startVolume;
 
-      // Update:
-      // - Waiting for a current surface
+      // We are only interested in surfaces. If we are not on a surface, we
+      // continue the navigation
       auto surface = navigator.currentSurface(state.navigation);
-      if (surface != nullptr) {
-        ++result.surfaceCount;
-        const GeometryIdentifier geoId = surface->geometryId();
-        ACTS_DEBUG("Surface " << geoId << " detected.");
-        const bool surfaceIsSensitive =
-            (surface->associatedDetectorElement() != nullptr);
-        const bool surfaceHasMaterial = (surface->surfaceMaterial() != nullptr);
-        const bool doMaterial = multipleScattering && surfaceHasMaterial;
+      if (surface == nullptr) {
+        return;
+      }
 
-        // Found material
-        if (doMaterial) {
-          ACTS_DEBUG("    The surface contains material, ...");
-        }
+      ++result.surfaceCount;
+      const GeometryIdentifier geoId = surface->geometryId();
+      ACTS_DEBUG("Surface " << geoId << " detected.");
+      const bool surfaceIsSensitive =
+          (surface->associatedDetectorElement() != nullptr);
+      const bool surfaceHasMaterial = (surface->surfaceMaterial() != nullptr);
+      const bool doMaterial = multipleScattering && surfaceHasMaterial;
 
-        // Check if we have a measurement surface
-        if (auto sourcelink_it = inputMeasurements->find(geoId);
-            sourcelink_it != inputMeasurements->end()) {
-          ACTS_DEBUG("    The surface contains a measurement.");
+      // Found material
+      if (doMaterial) {
+        ACTS_DEBUG("    The surface contains material, ...");
+      }
 
-          // Transport the covariance to the surface
-          stepper.transportCovarianceToBound(state.stepping, *surface,
-                                             freeToBoundCorrection);
+      // Here we handle all measurements
+      if (auto sourcelink_it = inputMeasurements->find(geoId);
+          sourcelink_it != inputMeasurements->end()) {
+        ACTS_DEBUG("    The surface contains a measurement.");
 
-          // TODO generalize the update of the currentTrackIndex
-          auto& fittedStates = *result.fittedStates;
+        // Transport the covariance to the surface
+        stepper.transportCovarianceToBound(state.stepping, *surface,
+                                           freeToBoundCorrection);
 
-          // Add a <trackStateMask> TrackState entry multi trajectory. This
-          // allocates storage for all components, which we will set later.
-          typename traj_t::TrackStateProxy trackStateProxy =
-              fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
-                                          result.lastTrackIndex);
-          const std::size_t currentTrackIndex = trackStateProxy.index();
+        // TODO generalize the update of the currentTrackIndex
+        auto& fittedStates = *result.fittedStates;
 
-          // Set the trackStateProxy components with the state from the ongoing
-          // propagation
-          {
-            trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-            // Bind the transported state to the current surface
-            auto res = stepper.boundState(state.stepping, *surface, false,
-                                          freeToBoundCorrection);
-            if (!res.ok()) {
-              result.result = res.error();
-              return;
-            }
-            const auto& [boundParams, jacobian, pathLength] = *res;
+        // Add a <trackStateMask> TrackState entry multi trajectory. This
+        // allocates storage for all components, which we will set later.
+        typename traj_t::TrackStateProxy trackStateProxy =
+            fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
+                                        result.lastTrackIndex);
+        const std::size_t currentTrackIndex = trackStateProxy.index();
 
-            // Fill the track state
-            trackStateProxy.predicted() = boundParams.parameters();
-            trackStateProxy.predictedCovariance() = state.stepping.cov;
-
-            trackStateProxy.jacobian() = jacobian;
-            trackStateProxy.pathLength() = pathLength;
-          }
-
-          // We have predicted parameters, so calibrate the uncalibrated input
-          // measurement
-          extensions.calibrator(state.geoContext, *calibrationContext,
-                                sourcelink_it->second, trackStateProxy);
-
-          // Get and set the type flags
-          auto typeFlags = trackStateProxy.typeFlags();
-          typeFlags.set(TrackStateFlag::ParameterFlag);
-          if (surfaceHasMaterial) {
-            typeFlags.set(TrackStateFlag::MaterialFlag);
-          }
-
-          // Set the measurement type flag
-          typeFlags.set(TrackStateFlag::MeasurementFlag);
-          // We count the processed measurement
-          ++result.processedMeasurements;
-
-          result.lastMeasurementIndex = currentTrackIndex;
-          result.lastTrackIndex = currentTrackIndex;
-
-          // TODO check for outlier first
-          // We count the state with measurement
-          ++result.measurementStates;
-
-          // We count the processed state
-          ++result.processedStates;
-
-          // Update the number of holes count only when encountering a
-          // measurement
-          result.measurementHoles = result.missedActiveSurfaces.size();
-        } else if (doMaterial) {
-          // Here we handle material for multipleScattering. If holes exist, we
-          // also handle them already. We create a full trackstate (unlike for
-          // simple holes), since we need to evaluate the material later
-          // TODO add material handling
-          ACTS_DEBUG(
-              "    The surface contains no measurement, but material and maybe "
-              "a hole.");
-        } else if (surfaceIsSensitive || surfaceHasMaterial) {
-          // Here we handle holes. If material hasn't been handled before
-          // (because multipleScattering is turned off), we will also handle it
-          // here
-          if (multipleScattering) {
-            ACTS_DEBUG(
-                "    The surface contains no measurement, but maybe a hole.");
-          } else {
-            ACTS_DEBUG(
-                "    The surface contains no measurement, but maybe a hole "
-                "and/or material.");
-          }
-
-          // We only create track states here if there is already a measurement
-          // detected (no holes before the first measurement) or if we encounter
-          // material
-          const bool precedingMeasurementExists =
-              (result.measurementStates > 0);
-          if (!precedingMeasurementExists && !surfaceHasMaterial) {
-            ACTS_DEBUG(
-                "    Ignoring hole, because there are no preceding "
-                "measurements.");
+        // Set the trackStateProxy components with the state from the ongoing
+        // propagation
+        {
+          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+          // Bind the transported state to the current surface
+          auto res = stepper.boundState(state.stepping, *surface, false,
+                                        freeToBoundCorrection);
+          if (!res.ok()) {
+            result.result = res.error();
             return;
           }
+          const auto& [boundParams, jacobian, pathLength] = *res;
 
-          auto& fittedStates = *result.fittedStates;
+          // Fill the track state
+          trackStateProxy.predicted() = boundParams.parameters();
+          trackStateProxy.predictedCovariance() = state.stepping.cov;
 
-          // Add a <trackStateMask> TrackState entry multi trajectory. This
-          // allocates storage for all components, which we will set later.
-          typename traj_t::TrackStateProxy trackStateProxy =
-              fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
-                                          result.lastTrackIndex);
-          const std::size_t currentTrackIndex = trackStateProxy.index();
-
-          // Set the trackStateProxy components with the state from the
-          // ongoing propagation
-          {
-            trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-            // Bind the transported state to the current surface
-            auto res = stepper.boundState(state.stepping, *surface, false,
-                                          freeToBoundCorrection);
-            if (!res.ok()) {
-              result.result = res.error();
-              return;
-            }
-            const auto& [boundParams, jacobian, pathLength] = *res;
-
-            // Fill the track state
-            trackStateProxy.predicted() = boundParams.parameters();
-            trackStateProxy.predictedCovariance() = state.stepping.cov;
-
-            trackStateProxy.jacobian() = jacobian;
-            trackStateProxy.pathLength() = pathLength;
-          }
-
-          // Get and set the type flags
-          auto typeFlags = trackStateProxy.typeFlags();
-          typeFlags.set(TrackStateFlag::ParameterFlag);
-          if (surfaceHasMaterial) {
-            ACTS_DEBUG("    It is material.");
-            typeFlags.set(TrackStateFlag::MaterialFlag);
-          }
-
-          // Set hole only, if we are on a sensitive surface
-          if (surfaceIsSensitive && precedingMeasurementExists) {
-            ACTS_DEBUG("    It is a hole.");
-            typeFlags.set(TrackStateFlag::HoleFlag);
-            // Count the missed surface
-            result.missedActiveSurfaces.push_back(surface);
-          }
-
-          result.lastTrackIndex = currentTrackIndex;
-
-          ++result.processedStates;
-        } else {
-          ACTS_DEBUG("    The surface contains no measurement/material/hole.");
+          trackStateProxy.jacobian() = jacobian;
+          trackStateProxy.pathLength() = pathLength;
         }
+
+        // We have predicted parameters, so calibrate the uncalibrated input
+        // measurement
+        extensions.calibrator(state.geoContext, *calibrationContext,
+                              sourcelink_it->second, trackStateProxy);
+
+        // Get and set the type flags
+        auto typeFlags = trackStateProxy.typeFlags();
+        typeFlags.set(TrackStateFlag::ParameterFlag);
+        if (surfaceHasMaterial) {
+          typeFlags.set(TrackStateFlag::MaterialFlag);
+        }
+
+        // Set the measurement type flag
+        typeFlags.set(TrackStateFlag::MeasurementFlag);
+        // We count the processed measurement
+        ++result.processedMeasurements;
+
+        result.lastMeasurementIndex = currentTrackIndex;
+        result.lastTrackIndex = currentTrackIndex;
+
+        // TODO check for outlier first
+        // We count the state with measurement
+        ++result.measurementStates;
+
+        // We count the processed state
+        ++result.processedStates;
+
+        // Update the number of holes count only when encountering a
+        // measurement
+        result.measurementHoles = result.missedActiveSurfaces.size();
+
+        return;
       }
+
+      // Here we handle material for multipleScattering. If holes exist, we also
+      // handle them already. We create a full trackstate (unlike for simple
+      // holes), since we need to evaluate the material later
+      if (doMaterial) {
+        // TODO add material handling
+        ACTS_DEBUG(
+            "    The surface contains no measurement, but material and maybe "
+            "a hole.");
+
+        return;
+      }
+
+      // Here we handle holes. If material hasn't been handled before (because
+      // multipleScattering is turned off), we will also handle it here
+      if (surfaceIsSensitive || surfaceHasMaterial) {
+        if (multipleScattering) {
+          ACTS_DEBUG(
+              "    The surface contains no measurement, but maybe a hole.");
+        } else {
+          ACTS_DEBUG(
+              "    The surface contains no measurement, but maybe a hole "
+              "and/or material.");
+        }
+
+        // We only create track states here if there is already a measurement
+        // detected (no holes before the first measurement) or if we encounter
+        // material
+        const bool precedingMeasurementExists = (result.measurementStates > 0);
+        if (!precedingMeasurementExists && !surfaceHasMaterial) {
+          ACTS_DEBUG(
+              "    Ignoring hole, because there are no preceding "
+              "measurements.");
+          return;
+        }
+
+        auto& fittedStates = *result.fittedStates;
+
+        // Add a <trackStateMask> TrackState entry multi trajectory. This
+        // allocates storage for all components, which we will set later.
+        typename traj_t::TrackStateProxy trackStateProxy =
+            fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
+                                        result.lastTrackIndex);
+        const std::size_t currentTrackIndex = trackStateProxy.index();
+
+        // Set the trackStateProxy components with the state from the
+        // ongoing propagation
+        {
+          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+          // Bind the transported state to the current surface
+          auto res = stepper.boundState(state.stepping, *surface, false,
+                                        freeToBoundCorrection);
+          if (!res.ok()) {
+            result.result = res.error();
+            return;
+          }
+          const auto& [boundParams, jacobian, pathLength] = *res;
+
+          // Fill the track state
+          trackStateProxy.predicted() = boundParams.parameters();
+          trackStateProxy.predictedCovariance() = state.stepping.cov;
+
+          trackStateProxy.jacobian() = jacobian;
+          trackStateProxy.pathLength() = pathLength;
+        }
+
+        // Get and set the type flags
+        auto typeFlags = trackStateProxy.typeFlags();
+        typeFlags.set(TrackStateFlag::ParameterFlag);
+        if (surfaceHasMaterial) {
+          ACTS_DEBUG("    It is material.");
+          typeFlags.set(TrackStateFlag::MaterialFlag);
+        }
+
+        // Set hole only, if we are on a sensitive surface
+        if (surfaceIsSensitive && precedingMeasurementExists) {
+          ACTS_DEBUG("    It is a hole.");
+          typeFlags.set(TrackStateFlag::HoleFlag);
+          // Count the missed surface
+          result.missedActiveSurfaces.push_back(surface);
+        }
+
+        result.lastTrackIndex = currentTrackIndex;
+
+        ++result.processedStates;
+
+        return;
+      }
+
+      ACTS_DEBUG("    The surface contains no measurement/material/hole.");
+      return;
     }
   };
 
