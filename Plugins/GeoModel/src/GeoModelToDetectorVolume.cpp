@@ -44,22 +44,13 @@ Volume package(const Transform3& trf, const GeoShape& shape){
         std::make_shared<CylinderVolumeBounds>(tubs->getRMin(), tubs->getRMax(),
                                                tubs->getZHalfLength(),
                                                tubs->getDPhi() / 2);
+    //TODO check transform
     GeoTrf::Transform3D newTransform =
         trf * GeoTrf::RotateZ3D(tubs->getSPhi() + 0.5 * tubs->getDPhi());
   }
   else if (shape.typeID() == GeoBox::getClassTypeID()) {
     const GeoBox* box = dynamic_cast<const GeoBox*>(&shape);
     bounds = std::make_shared<const CuboidVolumeBounds>(box->getXHalfLength(), box->getYHalfLength(), box->getZHalfLength());
-  }
-  //TODO check that
-  else if (shape.typeID() == GeoSimplePolygonBrep::getClassTypeID()) {
-    const GeoSimplePolygonBrep* brep =
-        dynamic_cast<const GeoSimplePolygonBrep*>(&shape);
-    double xmin{0}, xmax{0}, ymin{0}, ymax{0}, zmin{0}, zmax{0};
-    brep->extent(xmin, ymin, zmin, xmax, ymax, zmax);
-    bounds =
-        std::make_shared<CuboidVolumeBounds>(
-            (xmax - xmin) / 2, (ymax - ymin) / 2, (zmax - zmin) / 2);
   }
   else if (shape.typeID() == GeoTrd::getClassTypeID()) {
     const GeoTrd* trd = dynamic_cast<const GeoTrd*>(&shape);

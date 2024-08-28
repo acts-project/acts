@@ -26,7 +26,6 @@
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoMaterial.h>
-#include <GeoModelKernel/GeoSimplePolygonBrep.h>
 #include <GeoModelKernel/GeoTrd.h>
 #include <GeoModelKernel/GeoTube.h>
 
@@ -82,15 +81,6 @@ void test(Acts::GeoModelDetectorObjectFactory::Cache cache, GeoModelDetObj::GeoD
           BOOST_CHECK(trapVerts[i][1] == geoDims.trapVerts[i][1]);
         }
       }
-      if (sbounds.type() == Acts::SurfaceBounds::eDiamond) {
-        const auto* polyBounds =
-            dynamic_cast<const Acts::DiamondBounds*>(&sbounds);
-        std::vector<Acts::Vector2> polyVerts = polyBounds->vertices();
-        for (long unsigned int i = 0; i < polyVerts.size(); i++) {
-          BOOST_CHECK(polyVerts[i][0] == geoDims.polyVerts[i][0]);
-          BOOST_CHECK(polyVerts[i][1] == geoDims.polyVerts[i][1]);
-        }
-      }
     }
   }
 }
@@ -118,31 +108,19 @@ GeoGeometry constructGeoModel(){
   auto tube = new GeoTube(geoDims.tube[0], geoDims.tube[1], geoDims.tube[2]);
   auto ssurface = new GeoBox(geoDims.boxI[0], geoDims.boxI[1], geoDims.boxI[2]);
   auto trd = new GeoTrd(1, 1, geoDims.trapHls[0], geoDims.trapHls[1], geoDims.trapHls[2]);
-  auto trap = new GeoSimplePolygonBrep(geoDims.poly_z);
-  for (const auto& tVert : geoDims.trapVerts) {
-    trap->addVertex(tVert[0], tVert[1]);
-  }
-  auto poly = new GeoSimplePolygonBrep(geoDims.poly_z);
-  for (const auto& pVert : geoDims.polyVerts) {
-    poly->addVertex(pVert[0], pVert[1]);
-  }
 
   // create logvols
   auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
   auto logTube = new GeoLogVol("LogTube", tube, al);
   auto logSurface = new GeoLogVol("LogSurface", ssurface, al);
-  auto logTrap = new GeoLogVol("LogTrap", trap, al);
   auto logTrd = new GeoLogVol("LogTrd", trd, al);
-  auto logPoly = new GeoLogVol("LogPoly", poly, al);
 
   // create physvols
   std::vector<GeoFullPhysVol*> fpvs;
   fpvs.push_back(new GeoFullPhysVol(logXY));
   fpvs.push_back(new GeoFullPhysVol(logTube));
   fpvs.push_back(new GeoFullPhysVol(logSurface));
-  fpvs.push_back(new GeoFullPhysVol(logTrap));
   fpvs.push_back(new GeoFullPhysVol(logTrd));
-  fpvs.push_back(new GeoFullPhysVol(logPoly));
   GeoGeometry ret;
   ret.fpvs=fpvs;
   ret.dim=geoDims;
