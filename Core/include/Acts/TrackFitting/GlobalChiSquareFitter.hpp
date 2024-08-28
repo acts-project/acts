@@ -228,7 +228,8 @@ struct Gx2FitterResult {
   const TrackingVolume* startVolume = nullptr;
 };
 
-/// addToGx2fSums Function
+/// @brief Process measurements and fill the aMatrix and bVector
+///
 /// The function processes each measurement for the GX2F Actor fitting process.
 /// It extracts the information from the track state and adds it to aMatrix,
 /// bVector, and chi2sum.
@@ -246,64 +247,72 @@ template <std::size_t kMeasDim, typename track_state_t>
 void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
                    const BoundMatrix& jacobianFromStart,
                    const track_state_t& trackState, const Logger& logger) {
-  BoundVector predicted = trackState.predicted();
-
-  ActsVector<kMeasDim> measurement = trackState.template calibrated<kMeasDim>();
-
-  ActsSquareMatrix<kMeasDim> covarianceMeasurement =
+  // First we get back the covariance and try to invert it. If the inversion
+  // fails, we can already abort.
+  const ActsSquareMatrix<kMeasDim> covarianceMeasurement =
       trackState.template calibratedCovariance<kMeasDim>();
 
-  ActsMatrix<kMeasDim, eBoundSize> projector =
+  const auto safeInvCovMeasurement = safeInverse(covarianceMeasurement);
+  if (!safeInvCovMeasurement) {
+    ACTS_WARNING("addToGx2fSums: safeInvCovMeasurement failed.");
+    ACTS_VERBOSE("    covarianceMeasurement:\n" << covarianceMeasurement);
+    return;
+  }
+
+  const BoundVector predicted = trackState.predicted();
+
+  const ActsVector<kMeasDim> measurement =
+      trackState.template calibrated<kMeasDim>();
+
+  const ActsMatrix<kMeasDim, eBoundSize> projector =
       trackState.projector().template topLeftCorner<kMeasDim, eBoundSize>();
 
-  ActsMatrix<kMeasDim, eBoundSize> projJacobian = projector * jacobianFromStart;
+  const ActsMatrix<kMeasDim, eBoundSize> projJacobian =
+      projector * jacobianFromStart;
 
-  ActsMatrix<kMeasDim, 1> projPredicted = projector * predicted;
+  const ActsMatrix<kMeasDim, 1> projPredicted = projector * predicted;
 
-  ActsVector<kMeasDim> residual = measurement - projPredicted;
+  const ActsVector<kMeasDim> residual = measurement - projPredicted;
 
-  ACTS_VERBOSE("Contributions in addToGx2fSums:\n"
-               << "kMeasDim: " << kMeasDim << "\n"
-               << "predicted" << predicted.transpose() << "\n"
-               << "measurement: " << measurement.transpose() << "\n"
-               << "covarianceMeasurement:\n"
-               << covarianceMeasurement << "\n"
-               << "projector:\n"
-               << projector.eval() << "\n"
-               << "projJacobian:\n"
-               << projJacobian.eval() << "\n"
-               << "projPredicted: " << (projPredicted.transpose()).eval()
-               << "\n"
-               << "residual: " << (residual.transpose()).eval());
+  // Finally contribute to chi2sum, aMatrix, and bVector
+  chi2sum += (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
 
-  auto safeInvCovMeasurement = safeInverse(covarianceMeasurement);
+  aMatrix +=
+      (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
+          .eval();
 
-  if (safeInvCovMeasurement) {
-    chi2sum +=
-        (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
-    aMatrix +=
-        (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
-            .eval();
-    bVector +=
-        (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).eval();
+  bVector += (residual.transpose() * (*safeInvCovMeasurement) * projJacobian)
+                 .eval()
+                 .transpose();
 
-    ACTS_VERBOSE(
-        "aMatrixMeas:\n"
-        << (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
-               .eval()
-        << "\n"
-        << "bVectorMeas: "
-        << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian)
-               .eval()
-        << "\n"
-        << "chi2sumMeas: "
-        << (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0)
-        << "\n"
-        << "safeInvCovMeasurement:\n"
-        << (*safeInvCovMeasurement));
-  } else {
-    ACTS_WARNING("safeInvCovMeasurement failed");
-  }
+  ACTS_VERBOSE(
+      "Contributions in addToGx2fSums:\n"
+      << "kMeasDim: " << kMeasDim << "\n"
+      << "predicted" << predicted.transpose() << "\n"
+      << "measurement: " << measurement.transpose() << "\n"
+      << "covarianceMeasurement:\n"
+      << covarianceMeasurement << "\n"
+      << "projector:\n"
+      << projector.eval() << "\n"
+      << "projJacobian:\n"
+      << projJacobian.eval() << "\n"
+      << "projPredicted: " << (projPredicted.transpose()).eval() << "\n"
+      << "residual: " << (residual.transpose()).eval() << "\n"
+      << "jacobianFromStart:\n"
+      << jacobianFromStart << "aMatrixMeas:\n"
+      << (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
+             .eval()
+      << "\n"
+      << "bVectorMeas: "
+      << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).eval()
+      << "\n"
+      << "chi2sumMeas: "
+      << (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0)
+      << "\n"
+      << "safeInvCovMeasurement:\n"
+      << (*safeInvCovMeasurement));
+
+  return;
 }
 
 /// calculateDeltaParams Function
@@ -361,8 +370,8 @@ class Gx2Fitter {
   /// @tparam calibrator_t The type of calibrator
   /// @tparam outlier_finder_t Type of the outlier finder class
   ///
-  /// The GX2FnActor does not rely on the measurements to be
-  /// sorted along the track. /// TODO is this true?
+  /// The GX2F tor does not rely on the measurements to be sorted along the
+  /// track.
   template <typename parameters_t>
   class Actor {
    public:
