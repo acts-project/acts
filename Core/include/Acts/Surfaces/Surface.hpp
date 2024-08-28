@@ -98,11 +98,6 @@ class Surface : public virtual GeometryObject,
   /// @param other Source surface for copy.
   Surface(const Surface& other);
 
-  /// Constructor from DetectorElementBase: Element proxy
-  ///
-  /// @param detelement Detector element which is represented by this surface
-  Surface(const DetectorElementBase& detelement);
-
   /// Copy constructor with optional shift
   ///
   /// @note copy construction invalidates the association

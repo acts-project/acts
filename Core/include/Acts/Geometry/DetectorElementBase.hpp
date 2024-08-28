@@ -40,14 +40,17 @@ class DetectorElementBase {
   virtual const Transform3& transform(const GeometryContext& gctx) const = 0;
 
   /// Return surface representation - const return pattern
-  virtual const Surface& surface() const = 0;
+  virtual const Surface& surface() const { return *m_surface; };
 
   /// Non-const return pattern
-  virtual Surface& surface() = 0;
+  virtual Surface& surface() { return *m_surface; };
 
   /// Returns the thickness of the module
   /// @return double that indicates the thickness of the module
   virtual double thickness() const = 0;
+
+ private:
+  std::shared_ptr<Surface> m_surface;
 };
 
 }  // namespace Acts
