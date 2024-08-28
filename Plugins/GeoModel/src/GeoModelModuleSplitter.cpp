@@ -32,7 +32,8 @@ GeoModelModuleSplitter::split(
 
   std::vector<std::shared_ptr<GeoModelDetectorElement>> result;
 
-  for (const auto& [patternName, radii] : m_splitPatterns) {
+  // Copy needed, because we assign to the radii later
+  for (auto [patternName, radii] : m_splitPatterns) {
     if ((std::abs(radii.front() - annulusBounds->rMin()) > m_tolerance) ||
         (std::abs(radii.back() - annulusBounds->rMax()) > m_tolerance)) {
       ACTS_VERBOSE("Skip pattern '" << patternName << "' for element '"
