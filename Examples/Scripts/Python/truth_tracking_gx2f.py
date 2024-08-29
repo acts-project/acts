@@ -34,7 +34,7 @@ def runTruthTrackingGx2f(
     )
 
     s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO, trackFpes=False,
+        events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
 
     rnd = acts.examples.RandomNumbers(seed=42)
@@ -101,11 +101,9 @@ def runTruthTrackingGx2f(
         s,
         trackingGeometry,
         field,
-        nUpdateMax=10,
-        relChi2changeCutOff=1e-2,
-        # relChi2changeCutOff=0,
+        nUpdateMax=17,
+        relChi2changeCutOff=1e-7,
         multipleScattering=True,
-        # multipleScattering=False,
     )
 
     s.addAlgorithm(

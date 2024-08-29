@@ -52,9 +52,13 @@ namespace Acts::Experimental {
 namespace Gx2fConstants {
 constexpr std::string_view gx2fnUpdateColumn = "Gx2fnUpdateColumn";
 
-// A projector used for scattering. By using
-// Jacobian * phiThetaProjector
-// one gets only the derivatives for the variables phi and theta.
+// Mask for the track states. We don't need Smoothed and Filtered
+constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Predicted |
+                                              TrackStatePropMask::Jacobian |
+                                              TrackStatePropMask::Calibrated;
+
+// A projector used for scattering. By using Jacobian * phiThetaProjector one
+// gets only the derivatives for the variables phi and theta.
 const Eigen::Matrix<double, eBoundSize, 2> phiThetaProjector = [] {
   Eigen::Matrix<double, eBoundSize, 2> m =
       Eigen::Matrix<double, eBoundSize, 2>::Zero();
@@ -62,11 +66,6 @@ const Eigen::Matrix<double, eBoundSize, 2> phiThetaProjector = [] {
   m(eBoundTheta, 1) = 1.0;
   return m;
 }();
-
-// Mask for the track states. We don't need Smoothed and Filtered
-constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Predicted |
-                                              TrackStatePropMask::Jacobian |
-                                              TrackStatePropMask::Calibrated;
 }  // namespace Gx2fConstants
 
 /// Extension struct which holds delegates to customise the GX2F behaviour
@@ -351,7 +350,7 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
 
   const ActsVector<kMeasDim> residual = measurement - projPredicted;
 
-  // Finally contribute to chi2sum, aMtrix, and bVector
+  // Finally contribute to chi2sum, aMatrix, and bVector
   chi2sum += (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
 
   aMatrixExtended +=
@@ -377,7 +376,8 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
       << "projPredicted: " << (projPredicted.transpose()).eval() << "\n"
       << "residual: " << (residual.transpose()).eval() << "\n"
       << "extendedJacobian:\n"
-      << extendedJacobian << "aMatrixMeas:\n"
+      << extendedJacobian << "\n"
+      << "aMatrixMeas:\n"
       << (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
              .eval()
       << "\n"
@@ -477,20 +477,22 @@ void addMaterialToGx2fSums(
   return;
 }
 
-/// calculateDeltaParams Function
-/// This function calculates the delta parameters for a given aMatrix and
-/// bVector, depending on the number of degrees of freedom of the system, by
-/// solving the equation
-///  [a] * delta = b
+/// @brief Calculate and update the covariance of the fitted parameters
 ///
+/// This function calculates the covariance of the fitted parameters using
+/// cov = inv([a])
+/// It then updates the first square block of size ndfSystem. This ensures,
+/// that we only update the covariance for fitted parameters. (In case of
+/// no qop/time fit)
+///
+/// @param fullCovariancePredicted The covariance matrix to update
 /// @param aMatrix The matrix containing the coefficients of the linear system.
-/// @param bVector The vector containing the right-hand side values of the linear system.
-/// @param ndfSystem The number of degrees of freedom, determining the size of the submatrix and subvector to be solved.
+/// @param ndfSystem The number of degrees of freedom, determining the size of meaning full block
 ///
 /// @return deltaParams The calculated delta parameters.
-BoundVector calculateDeltaParams(const BoundMatrix& aMatrix,
-                                 const BoundVector& bVector,
-                                 const std::size_t ndfSystem);
+void updateCovariancePredicted(BoundMatrix& fullCovariancePredicted,
+                               Eigen::MatrixXd& aMatrixExtended,
+                               const std::size_t ndfSystem);
 
 /// Global Chi Square fitter (GX2F) implementation.
 ///
@@ -1094,11 +1096,11 @@ class Gx2Fitter {
     // nUpdate is initialized outside to save its state for the track
     std::size_t nUpdate = 0;
     for (nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
-      ACTS_INFO("nUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
+      ACTS_DEBUG("nUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
 
       // update params
       params.parameters() += deltaParams;
-      ACTS_INFO("updated params:\n" << params);
+      ACTS_VERBOSE("updated params:\n" << params);
 
       // set up propagator and co
       Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
@@ -1215,23 +1217,28 @@ class Gx2Fitter {
       std::vector<BoundMatrix> jacobianFromStart;
       jacobianFromStart.emplace_back(BoundMatrix::Identity());
 
+      // This vector stores the IDs for each visited material in order. We use
+      // it later for updating the scattering angles. We cannot use
+      // scatteringMap directly, since we cannot guarantee, that we will visit
+      // all stored material in each propagation.
       std::vector<GeometryIdentifier> geoIdVector;
 
       for (const auto& trackState : track.trackStates()) {
-        ACTS_DEBUG("Start to investigate trackState ...");
+        // Get and store geoId for the current surface
+        const GeometryIdentifier geoId =
+            trackState.referenceSurface().geometryId();
+        ACTS_DEBUG("Start to investigate trackState on surface " << geoId);
         const auto typeFlags = trackState.typeFlags();
         const bool stateHasMeasurement =
             typeFlags.test(TrackStateFlag::MeasurementFlag);
         const bool stateHasMaterial =
             typeFlags.test(TrackStateFlag::MaterialFlag);
 
+        // First we figure out, if we would need to look into material surfaces
+        // at all. Later, we also check, if the material slab is valid,
+        // otherwise we modify this flag to ignore the material completely.
         bool doMaterial = multipleScattering && stateHasMaterial;
-
         if (doMaterial) {
-          // Get and store geoId for the current material surface
-          const GeometryIdentifier geoId =
-              trackState.referenceSurface().geometryId();
-
           const auto scatteringMapId = scatteringMap.find(geoId);
           assert(scatteringMapId != scatteringMap.end() &&
                  "No scattering angles found for material surface.");
@@ -1292,17 +1299,13 @@ class Gx2Fitter {
         // Handle material
         if (doMaterial) {
           ACTS_DEBUG("    Handle material");
-          // Add for this material a new jacobian
+          // Add for this material a new Jacobian, starting from this surface.
           jacobianFromStart.emplace_back(BoundMatrix::Identity());
 
           // Add the material contribution to the system
           addMaterialToGx2fSums(aMatrixExtended, bVectorExtended, chi2sum,
                                 geoIdVector.size(), scatteringMap, trackState,
                                 *m_addToSumLogger);
-
-          // Get and store geoId for the current material surface
-          const GeometryIdentifier geoId =
-              trackState.referenceSurface().geometryId();
 
           geoIdVector.emplace_back(geoId);
         }
@@ -1360,80 +1363,15 @@ class Gx2Fitter {
                    << "chi2sum = " << chi2sum);
       std::cout << "        chi2sum = " << chi2sum << std::endl;
 
-      // create inversion here for testing. if it works think of how to do it
-      // just once
-      //      {
-      //        // make invertible
-      //        for (int i = 0; i < aMatrixExtended.rows(); ++i) {
-      //          if (aMatrixExtended(i, i) == 0.) {
-      //            aMatrixExtended(i, i) = 1.;
-      //          }
-      //        }
-      //
-      //        if (ndfSystem == 4) {
-      //          constexpr std::size_t reducedMatrixSize = 4;
-      //
-      //          fullCovariancePredicted
-      //              .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-      //              aMatrixExtended.inverse()
-      //                  .topLeftCorner<reducedMatrixSize,
-      //                  reducedMatrixSize>();
-      //        } else if (ndfSystem == 5) {
-      //          constexpr std::size_t reducedMatrixSize = 5;
-      //
-      //          fullCovariancePredicted
-      //              .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-      //              aMatrixExtended.inverse()
-      //                  .topLeftCorner<reducedMatrixSize,
-      //                  reducedMatrixSize>();
-      //        } else {
-      //          constexpr std::size_t reducedMatrixSize = 6;
-      //
-      //          fullCovariancePredicted
-      //              .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-      //              aMatrixExtended.inverse()
-      //                  .topLeftCorner<reducedMatrixSize,
-      //                  reducedMatrixSize>();
-      //        }
-      //      }
-
       if ((gx2fOptions.relChi2changeCutOff != 0) && (nUpdate > 0) &&
           (std::abs(chi2sum / oldChi2sum - 1) <
            gx2fOptions.relChi2changeCutOff)) {
         ACTS_INFO("Abort with relChi2changeCutOff after "
                   << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
                   << " iterations.");
-        {
-          // make invertible
-          for (int i = 0; i < aMatrixExtended.rows(); ++i) {
-            if (aMatrixExtended(i, i) == 0.) {
-              aMatrixExtended(i, i) = 1.;
-            }
-          }
+        updateCovariancePredicted(fullCovariancePredicted, aMatrixExtended,
+                                  ndfSystem);
 
-          if (ndfSystem == 4) {
-            constexpr std::size_t reducedMatrixSize = 4;
-
-            fullCovariancePredicted
-                .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-                aMatrixExtended.inverse()
-                    .topLeftCorner<reducedMatrixSize, reducedMatrixSize>();
-          } else if (ndfSystem == 5) {
-            constexpr std::size_t reducedMatrixSize = 5;
-
-            fullCovariancePredicted
-                .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-                aMatrixExtended.inverse()
-                    .topLeftCorner<reducedMatrixSize, reducedMatrixSize>();
-          } else {
-            constexpr std::size_t reducedMatrixSize = 6;
-
-            fullCovariancePredicted
-                .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-                aMatrixExtended.inverse()
-                    .topLeftCorner<reducedMatrixSize, reducedMatrixSize>();
-          }
-        }
         ACTS_INFO("relChi2changeCutOff\n" << fullCovariancePredicted);
         break;
       }
@@ -1441,39 +1379,31 @@ class Gx2Fitter {
       // TODO investigate further
       if (chi2sum > oldChi2sum + 1e-5) {
         ACTS_DEBUG("chi2 not converging monotonically");
-        {
-          // make invertible
-          for (int i = 0; i < aMatrixExtended.rows(); ++i) {
-            if (aMatrixExtended(i, i) == 0.) {
-              aMatrixExtended(i, i) = 1.;
-            }
-          }
 
-          if (ndfSystem == 4) {
-            constexpr std::size_t reducedMatrixSize = 4;
+        updateCovariancePredicted(fullCovariancePredicted, aMatrixExtended,
+                                  ndfSystem);
 
-            fullCovariancePredicted
-                .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-                aMatrixExtended.inverse()
-                    .topLeftCorner<reducedMatrixSize, reducedMatrixSize>();
-          } else if (ndfSystem == 5) {
-            constexpr std::size_t reducedMatrixSize = 5;
-
-            fullCovariancePredicted
-                .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-                aMatrixExtended.inverse()
-                    .topLeftCorner<reducedMatrixSize, reducedMatrixSize>();
-          } else {
-            constexpr std::size_t reducedMatrixSize = 6;
-
-            fullCovariancePredicted
-                .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-                aMatrixExtended.inverse()
-                    .topLeftCorner<reducedMatrixSize, reducedMatrixSize>();
-          }
-        }
         ACTS_INFO("chi2 not converging monotonically\n"
                   << fullCovariancePredicted);
+        break;
+      }
+
+      // If this is the final iteration, update the covariance and break.
+      // Otherwise, we would update the scattering angles too much.
+      if (nUpdate == gx2fOptions.nUpdateMax - 1) {
+        // Since currently most of our tracks converge in 4-5 updates, we want
+        // to set nUpdateMax higher than that to guarantee convergence for most
+        // tracks. In cases, where we set a smaller nUpdateMax, it's because we
+        // want to investigate the behaviour of the fitter before it converges,
+        // like in some unit-tests.
+        if (gx2fOptions.nUpdateMax > 5) {
+          ACTS_INFO("Did not converge in " << gx2fOptions.nUpdateMax
+                                           << " updates.");
+          return Experimental::GlobalChiSquareFitterError::DidNotConverge;
+        }
+
+        updateCovariancePredicted(fullCovariancePredicted, aMatrixExtended,
+                                  ndfSystem);
         break;
       }
 
@@ -1506,17 +1436,6 @@ class Gx2Fitter {
       const auto& angles = value.scatteringAngles;
       ACTS_VERBOSE("    ( " << angles[eBoundTheta] << " | " << angles[eBoundPhi]
                             << " )");
-    }
-
-    // Since currently most of our tracks converge in 4-5 updates, we want to
-    // set nUpdateMax higher than that to guarantee convergence for most tracks.
-    // In cases, where we set a smaller nUpdateMax, it's because we want to
-    // investigate the behaviour of the fitter before it converges, like in some
-    // unit-tests.
-    if (nUpdate == gx2fOptions.nUpdateMax && gx2fOptions.nUpdateMax > 5) {
-      ACTS_INFO("Did not converge in " << gx2fOptions.nUpdateMax
-                                       << " updates.");
-      return Experimental::GlobalChiSquareFitterError::DidNotConverge;
     }
 
     ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
