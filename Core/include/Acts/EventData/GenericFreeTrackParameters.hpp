@@ -91,8 +91,7 @@ class GenericFreeTrackParameters {
   template <typename other_track_parameter_t>
   static GenericFreeTrackParameters create(
       const other_track_parameter_t& other) {
-    static_assert(
-        Concepts::FreeTrackParametersConcept<other_track_parameter_t>);
+    static_assert(FreeTrackParametersConcept<other_track_parameter_t>);
 
     return GenericFreeTrackParameters(
         other.parameters(), other.particleHypothesis(), other.covariance());

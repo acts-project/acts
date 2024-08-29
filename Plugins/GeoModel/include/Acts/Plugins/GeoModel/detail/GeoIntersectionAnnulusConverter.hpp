@@ -29,7 +29,7 @@ struct GeoIntersectionAnnulusConverter {
   ///
   /// @return The detector element and surface
   Result<GeoModelSensitiveSurface> operator()(
-      const GeoFullPhysVol& geoFPV, const GeoShapeIntersection& geoIntersection,
+      const PVConstLink& geoPV, const GeoShapeIntersection& geoIntersection,
       const Transform3& absTransform, bool sensitive) const;
 };
 

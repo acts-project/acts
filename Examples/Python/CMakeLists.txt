@@ -15,6 +15,7 @@ pybind11_add_module(ActsPythonBindings
   src/Digitization.cpp
   src/Material.cpp
   src/Geometry.cpp
+  src/GeometryBuildingGen1.cpp
   src/ExampleAlgorithms.cpp
   src/MagneticField.cpp
   src/Output.cpp
@@ -96,8 +97,11 @@ endif()
 if(ACTS_BUILD_PLUGIN_TRACCC)
     target_link_libraries(ActsPythonBindings PUBLIC ActsPluginDetray)
     target_sources(ActsPythonBindings PRIVATE src/Detray.cpp)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginCovfie)
+    target_sources(ActsPythonBindings PRIVATE src/Covfie.cpp)
 else()
     target_sources(ActsPythonBindings PRIVATE src/DetrayStub.cpp)
+    target_sources(ActsPythonBindings PRIVATE src/CovfieStub.cpp)
 endif()
 
 if(ACTS_BUILD_PLUGIN_ACTSVG)
