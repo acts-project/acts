@@ -129,14 +129,6 @@ struct SurfaceObserver {
       }
     }
   }
-
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  bool check(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-             const navigator_t& /*navigator*/, result_type& /*result*/,
-             const Logger& /*logger*/) const {
-    return false;
-  }
 };
 
 // Global definitions

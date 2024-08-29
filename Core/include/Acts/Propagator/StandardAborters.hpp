@@ -29,11 +29,6 @@ struct PathLimitReached {
   /// Boolean switch for Loop protection
   double internalLimit = std::numeric_limits<double>::max();
 
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void act(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-           const navigator_t& /*navigator*/, const Logger& /*logger*/) const {}
-
   /// boolean operator for abort condition without using the result
   ///
   /// @tparam propagator_state_t Type of the propagator state
@@ -82,12 +77,7 @@ struct SurfaceReached {
   double nearLimit = -100 * UnitConstants::um;
 
   SurfaceReached() = default;
-  SurfaceReached(double nLimit) : nearLimit(nLimit) {}
-
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void act(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-           const navigator_t& /*navigator*/, const Logger& /*logger*/) const {}
+  explicit SurfaceReached(double nLimit) : nearLimit(nLimit) {}
 
   /// boolean operator for abort condition without using the result
   ///
@@ -174,13 +164,6 @@ struct ForcedSurfaceReached : SurfaceReached {
 /// This is the condition that the end of World has been reached
 /// it then triggers an propagation abort
 struct EndOfWorldReached {
-  EndOfWorldReached() = default;
-
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void act(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-           const navigator_t& /*navigator*/, const Logger& /*logger*/) const {}
-
   /// boolean operator for abort condition without using the result
   ///
   /// @tparam propagator_state_t Type of the propagator state
@@ -199,11 +182,6 @@ struct EndOfWorldReached {
 
 /// Aborter that checks if the propagation has reached any surface
 struct AnySurfaceReached {
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void act(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-           const navigator_t& /*navigator*/, const Logger& /*logger*/) const {}
-
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool check(propagator_state_t& state, const stepper_t& stepper,

@@ -52,14 +52,6 @@ struct StateRecorder {
            const Acts::Logger& /*logger*/) const {
     result.push_back(state.navigation);
   }
-
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  bool check(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-             const navigator_t& /*navigator*/, result_type& /*result*/,
-             const Acts::Logger& /*logger*/) const {
-    return false;
-  }
 };
 
 BOOST_AUTO_TEST_SUITE(DetectorNavigator)

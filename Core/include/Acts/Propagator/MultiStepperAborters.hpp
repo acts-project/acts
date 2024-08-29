@@ -25,12 +25,7 @@ struct MultiStepperSurfaceReached : public SurfaceReached {
   double averageOnSurfaceTolerance = 0.2;
 
   MultiStepperSurfaceReached() = default;
-  MultiStepperSurfaceReached(double oLimit) : SurfaceReached(oLimit) {}
-
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void act(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-           const navigator_t& /*navigator*/, const Logger& /*logger*/) const {}
+  explicit MultiStepperSurfaceReached(double oLimit) : SurfaceReached(oLimit) {}
 
   /// boolean operator for abort condition without using the result
   ///

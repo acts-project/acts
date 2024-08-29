@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -115,11 +115,6 @@ static constexpr MockNavigator mockNavigator;
 struct EndOfWorld {
   /// Maximum value in x-direction of the detector
   double maxX = 1_m;
-
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void act(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-           const navigator_t& /*navigator*/, const Logger& /*logger*/) const {}
 
   /// @brief Main call operator for the abort operation
   ///
