@@ -41,6 +41,14 @@ target_link_libraries(
     PRIVATE ROOT::Core ROOT::Hist ROOT::Tree
 )
 
+if(ACTS_BUILD_PLUGIN_GEOMODEL AND ACTS_BUILD_PLUGIN_EXATRKX)
+    target_link_libraries(ActsExamplesIoRoot PRIVATE ActsPluginGeoModel)
+    target_sources(
+        ActsExamplesIoRoot
+        PRIVATE src/RootAthenaDumpGeoIdCollector.cpp
+    )
+endif()
+
 root_generate_dictionary(
   ActsExamplesIoRootDict MODULE ActsExamplesIoRoot LINKDEF LinkDef.hpp
 )

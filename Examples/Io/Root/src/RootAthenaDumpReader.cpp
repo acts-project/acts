@@ -240,6 +240,20 @@ RootAthenaDumpReader::RootAthenaDumpReader(
 
 }  // constructor
 
+Acts::GeometryIdentifier RootAthenaDumpReader::getGeoId(
+    std::uint64_t athenaModuleId) const {
+  if (m_cfg.geometryIdMap == nullptr) {
+    return Acts::GeometryIdentifier{athenaModuleId};
+  }
+  auto& map = m_cfg.geometryIdMap->left;
+  if (map.find(athenaModuleId) != map.end()) {
+    return map.at(athenaModuleId);
+  }
+  ACTS_WARNING(
+      "Missing geometry identifier in map, fall back to athena module ID");
+  return Acts::GeometryIdentifier{athenaModuleId};
+}
+
 SimParticleContainer RootAthenaDumpReader::readParticles() const {
   std::vector<ActsFatras::Particle> particles;
   particles.reserve(nPartEVT);
@@ -378,7 +392,7 @@ RootAthenaDumpReader::readMeasurements(SimParticleContainer& particles) const {
       digiPars.variances = {locCov[0]};
     }
 
-    IndexSourceLink sl(Acts::GeometryIdentifier{CLmoduleID[im]}, im);
+    IndexSourceLink sl(getGeoId(CLmoduleID[im]), im);
 
     measurements.push_back(createMeasurement(digiPars, sl));
 
@@ -452,20 +466,14 @@ RootAthenaDumpReader::readSpacepoints() const {
     const auto cl1Index = SPCL1_index[isp];
     assert(cl1Index >= 0 && cl1Index < nCL);
 
-    // NOTE This of course does not produce a valid Acts-stlye geometry id, but
-    // we can use it for the module map
-    IndexSourceLink first(Acts::GeometryIdentifier{CLmoduleID[cl1Index]},
-                          cl1Index);
+    IndexSourceLink first(getGeoId(CLmoduleID[cl1Index]), cl1Index);
     sLinks.emplace_back(first);
 
     if (type == eStrip) {
       const auto cl2Index = SPCL2_index[isp];
       assert(cl2Index >= 0 && cl2Index < nCL);
 
-      // NOTE This of course does not produce a valid Acts-stlye geometry id,
-      // but we can use it for the module map
-      IndexSourceLink second(Acts::GeometryIdentifier{CLmoduleID[cl2Index]},
-                             cl2Index);
+      IndexSourceLink second(getGeoId(CLmoduleID[cl2Index]), cl2Index);
       sLinks.emplace_back(second);
     }
 

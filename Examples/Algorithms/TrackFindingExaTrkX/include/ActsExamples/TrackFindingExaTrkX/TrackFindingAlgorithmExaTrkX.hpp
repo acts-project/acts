@@ -13,6 +13,7 @@
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchGraphStoreHook.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Graph.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -120,6 +121,9 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
 
     /// Remove track candidates with 2 or less hits
     bool filterShortTracks = false;
+
+    /// Optionally remap the geometry Ids that are put into the chain
+    std::shared_ptr<GeometryIdMapActsAthena> geometryIdMap;
   };
 
   /// Constructor of the track finding algorithm

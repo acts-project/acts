@@ -150,7 +150,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
   std::vector<float> features(numSpacepoints * numFeatures);
   std::vector<int> spacepointIDs;
-  std::vector<uint64_t> moduleIds;
+  std::vector<std::uint64_t> moduleIds;
 
   spacepointIDs.reserve(spacepoints.size());
   moduleIds.reserve(spacepoints.size());
@@ -168,7 +168,11 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     // to the pipeline
     spacepointIDs.push_back(isp);
 
-    moduleIds.push_back(sl1.geometryId().value());
+    if (m_cfg.geometryIdMap != nullptr) {
+      moduleIds.push_back(m_cfg.geometryIdMap->right.at(sl1.geometryId()));
+    } else {
+      moduleIds.push_back(sl1.geometryId().value());
+    }
 
     // This should be fine, because check in constructor
     Cluster* cl1 = clusters ? &clusters->at(sl1.index()) : nullptr;

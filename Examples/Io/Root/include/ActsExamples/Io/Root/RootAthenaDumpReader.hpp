@@ -9,11 +9,13 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Io/Root/RootAthenaDumpGeoIdCollecter.hpp"
 #include <ActsExamples/EventData/Cluster.hpp>
 #include <ActsExamples/EventData/SimParticle.hpp>
 #include <ActsExamples/EventData/Track.hpp>
@@ -69,6 +71,9 @@ class RootAthenaDumpReader : public IReader {
 
     bool skipOverlapSPsPhi = false;
     bool skipOverlapSPsEta = false;
+
+    std::shared_ptr<ActsExamples::GeometryIdMapActsAthena> geometryIdMap =
+        nullptr;
   };
 
   RootAthenaDumpReader(const RootAthenaDumpReader &) = delete;
@@ -104,6 +109,8 @@ class RootAthenaDumpReader : public IReader {
 
   /// The config class
   Config m_cfg;
+
+  Acts::GeometryIdentifier getGeoId(std::uint64_t athenaModuleId) const;
 
   /// Helper method to read particles
   SimParticleContainer readParticles() const;

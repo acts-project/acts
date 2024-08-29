@@ -17,6 +17,7 @@
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
@@ -329,6 +330,9 @@ void addExaTrkXTrackFinding(Context &ctx) {
       inputMeasurements, inputSourceLinks, inputInitialTrackParameters,
       outputTracks, measurementSelectorCfg, trackingGeometry, magneticField,
       findTracks, tag);
+
+  py::class_<GeometryIdMapActsAthena, std::shared_ptr<GeometryIdMapActsAthena>>(
+      mex, "GeometryIdMapActsAthena");
 }
 
 }  // namespace Acts::Python
