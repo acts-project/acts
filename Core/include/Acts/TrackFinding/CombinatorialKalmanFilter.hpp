@@ -982,6 +982,8 @@ class CombinatorialKalmanFilter {
           typeFlags.set(TrackStateFlag::MeasurementFlag);
           // Increment number of measurements
           newBranch.nMeasurements()++;
+          newBranch.nDoF() += trackState.calibratedSize();
+          newBranch.chi2() += trackState.chi2();
         } else {
           ACTS_WARNING("Cannot handle this track state flags");
           continue;
