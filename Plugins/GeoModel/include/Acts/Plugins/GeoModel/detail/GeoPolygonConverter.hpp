@@ -17,9 +17,7 @@
 
 #include <GeoModelKernel/GeoSimplePolygonBrep.h>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 struct GeoPolygonConverter {
   /// @brief Convert a GeoBox to a detector element and surface
   ///
@@ -30,9 +28,7 @@ struct GeoPolygonConverter {
   ///
   /// @return The detector element and surface
   Result<GeoModelSensitiveSurface> operator()(
-      PVConstLink geoPV, const GeoSimplePolygonBrep& geoPolygon,
+      const PVConstLink& geoPV, const GeoSimplePolygonBrep& geoPolygon,
       const Transform3& absTransform, bool sensitive) const;
 };
-}  // namespace detail
-
-}  // namespace Acts
+}  // namespace Acts::detail

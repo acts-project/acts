@@ -28,8 +28,7 @@
 #include <GeoModelKernel/GeoTube.h>
 #include <GeoModelKernel/GeoTubs.h>
 
-namespace Acts {
-namespace GeoModel {
+namespace Acts::GeoModel {
 Volume package(const Transform3& trf, const GeoShape& shape) {
   std::shared_ptr<const VolumeBounds> bounds;
   GeoTrf::Transform3D newTrf = trf;
@@ -129,7 +128,7 @@ Volume package(const Transform3& trf, const GeoShape& shape) {
 
 std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeometryContext& context, const GeoShape& shape,
-    const std::string& name, const GeoTrf::Transform3D transform,
+    const std::string& name, const GeoTrf::Transform3D& transform,
     const std::vector<GeoModelSensitiveSurface>& sensitives) {
   // dummy volume for conversion with surfaces
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> a;
@@ -149,5 +148,5 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
       sensSurfaces, a, Experimental::tryNoVolumes(),
       Experimental::tryAllPortalsAndSurfaces());
 }
-}  // namespace GeoModel
-}  // namespace Acts
+
+}  // namespace Acts::GeoModel

@@ -124,36 +124,6 @@ Acts::Layer::compatibleSurfaces(
   double nearLimit = options.nearLimit;
   double farLimit = options.farLimit;
 
-  // TODO this looks like a major hack; is this really needed?
-  // (0) End surface check
-  // @todo: - we might be able to skip this by use of options.pathLimit
-  // check if you have to stop at the endSurface
-  if (options.endObject != nullptr) {
-    // intersect the end surface
-    // - it is the final one don't use the boundary check at all
-    SurfaceIntersection endInter =
-        options.endObject
-            ->intersect(gctx, position, direction, BoundaryTolerance::None())
-            .closest();
-    // non-valid intersection with the end surface provided at this layer
-    // indicates wrong direction or faulty setup
-    // -> do not return compatible surfaces since they may lead you on a wrong
-    // navigation path
-    if (endInter.isValid()) {
-      farLimit = endInter.pathLength();
-    } else {
-      return sIntersections;
-    }
-  } else {
-    // compatibleSurfaces() should only be called when on the layer,
-    // i.e. the maximum path limit is given by the layer thickness times
-    // path correction, we take a safety factor of 1.5
-    // -> this avoids punch through for cylinders
-    double pCorrection =
-        surfaceRepresentation().pathCorrection(gctx, position, direction);
-    farLimit = 1.5 * thickness() * pCorrection;
-  }
-
   auto isUnique = [&](const SurfaceIntersection& b) {
     auto find_it = std::find_if(
         sIntersections.begin(), sIntersections.end(), [&b](const auto& a) {

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <Acts/Utilities/Concepts.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
 #include <algorithm>
@@ -71,9 +72,7 @@ class WhiteBoard {
     virtual ~IHolder() = default;
     virtual const std::type_info& type() const = 0;
   };
-  template <typename T,
-            typename =
-                std::enable_if_t<std::is_nothrow_move_constructible<T>::value>>
+  template <Acts::Concepts::nothrow_move_constructible T>
   struct HolderT : public IHolder {
     T value;
 
