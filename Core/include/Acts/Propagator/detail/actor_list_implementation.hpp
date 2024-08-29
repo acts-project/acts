@@ -11,6 +11,7 @@
 #include "Acts/Propagator/ActorConcepts.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
+#include <tuple>
 #include <utility>
 
 namespace Acts::detail {
@@ -64,81 +65,35 @@ struct actor_caller {
   }
 };
 
-}  // end of anonymous namespace
-
-/// The dummy list call implementation
-template <typename... actors>
-struct actor_list_impl;
-
-/// The action list call implementation
-/// - it calls 'action' on the current entry of the tuple
-/// - then broadcasts the action call to the remaining tuple
-template <typename first, typename... others>
-struct actor_list_impl<first, others...> {
-  template <typename T, typename propagator_state_t, typename stepper_t,
+}  // namespace
+template <typename... actors_t>
+struct actor_list_impl {
+  template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
-  static void act(const T& actor_tuple, propagator_state_t& state,
-                  const stepper_t& stepper, const navigator_t& navigator,
-                  Args&&... args) {
-    const auto& this_actor = std::get<first>(actor_tuple);
-    actor_caller::act(this_actor, state, stepper, navigator, args...);
-    actor_list_impl<others...>::act(actor_tuple, state, stepper, navigator,
-                                    args...);
+  static void act(const std::tuple<actors_t...>& actor_tuple,
+                  propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& navigator, Args&&... args) {
+    std::apply(
+        [&](const actors_t&... actor) {
+          (actor_caller::act(actor, state, stepper, navigator,
+                             std::forward<Args>(args)...),
+           ...);
+        },
+        actor_tuple);
   }
 
-  template <typename T, typename propagator_state_t, typename stepper_t,
+  template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
-  static bool check(const T& actor_tuple, propagator_state_t& state,
-                    const stepper_t& stepper, const navigator_t& navigator,
-                    Args&&... args) {
-    const auto& this_actor = std::get<first>(actor_tuple);
-    return actor_caller::check(this_actor, state, stepper, navigator,
-                               args...) ||
-           actor_list_impl<others...>::check(actor_tuple, state, stepper,
-                                             navigator, args...);
-  }
-};
-
-/// The action list call implementation
-/// - it calls 'action' on the last entry of the tuple
-template <typename last>
-struct actor_list_impl<last> {
-  template <typename T, typename propagator_state_t, typename stepper_t,
-            typename navigator_t, typename... Args>
-  static void act(const T& actors_tuple, propagator_state_t& state,
-                  const stepper_t& stepper, const navigator_t& navigator,
-                  Args&&... args) {
-    const auto& this_actor = std::get<last>(actors_tuple);
-    actor_caller::act(this_actor, state, stepper, navigator,
-                      std::forward<Args>(args)...);
-  }
-
-  template <typename T, typename propagator_state_t, typename stepper_t,
-            typename navigator_t, typename... Args>
-  static bool check(const T& actors_tuple, propagator_state_t& state,
-                    const stepper_t& stepper, const navigator_t& navigator,
-                    Args&&... args) {
-    const auto& this_actor = std::get<last>(actors_tuple);
-    return actor_caller::check(this_actor, state, stepper, navigator,
-                               std::forward<Args>(args)...);
-  }
-};
-
-/// The empty action list call implementation
-template <>
-struct actor_list_impl<> {
-  template <typename T, typename propagator_state_t, typename stepper_t,
-            typename navigator_t, typename... Args>
-  static void act(const T& /*actors_tuple*/, propagator_state_t& /*state*/,
-                  const stepper_t& /*stepper*/,
-                  const navigator_t& /*navigator*/, Args&&... /*args*/) {}
-
-  template <typename T, typename propagator_state_t, typename stepper_t,
-            typename navigator_t, typename... Args>
-  static bool check(const T& /*actors_tuple*/, propagator_state_t& /*state*/,
-                    const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/, Args&&... /*args*/) {
-    return false;
+  static bool check(const std::tuple<actors_t...>& actor_tuple,
+                    propagator_state_t& state, const stepper_t& stepper,
+                    const navigator_t& navigator, Args&&... args) {
+    return std::apply(
+        [&](const actors_t&... actor) {
+          return (actor_caller::check(actor, state, stepper, navigator,
+                                      std::forward<Args>(args)...) ||
+                  ...);
+        },
+        actor_tuple);
   }
 };
 
