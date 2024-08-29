@@ -1271,40 +1271,23 @@ class Gx2Fitter {
         if (stateHasMeasurement) {
           ACTS_DEBUG("    Handle measurement.");
 
-          auto measDim = trackState.calibratedSize();
-          countNdf += measDim;
+          const auto measDim = trackState.calibratedSize();
 
-          if (measDim == 1) {
-            addMeasurementToGx2fSums<1>(aMatrixExtended, bVectorExtended,
-                                        chi2sum, jacobianFromStart, trackState,
-                                        *m_addToSumLogger);
-          } else if (measDim == 2) {
-            addMeasurementToGx2fSums<2>(aMatrixExtended, bVectorExtended,
-                                        chi2sum, jacobianFromStart, trackState,
-                                        *m_addToSumLogger);
-          } else if (measDim == 3) {
-            addMeasurementToGx2fSums<3>(aMatrixExtended, bVectorExtended,
-                                        chi2sum, jacobianFromStart, trackState,
-                                        *m_addToSumLogger);
-          } else if (measDim == 4) {
-            addMeasurementToGx2fSums<4>(aMatrixExtended, bVectorExtended,
-                                        chi2sum, jacobianFromStart, trackState,
-                                        *m_addToSumLogger);
-          } else if (measDim == 5) {
-            addMeasurementToGx2fSums<5>(aMatrixExtended, bVectorExtended,
-                                        chi2sum, jacobianFromStart, trackState,
-                                        *m_addToSumLogger);
-          } else if (measDim == 6) {
-            addMeasurementToGx2fSums<6>(aMatrixExtended, bVectorExtended,
-                                        chi2sum, jacobianFromStart, trackState,
-                                        *m_addToSumLogger);
-          } else {
+          if (measDim < 1 || 6 < measDim) {
             ACTS_ERROR("Can not process state with measurement with "
                        << measDim << " dimensions.");
             throw std::domain_error(
                 "Found measurement with less than 1 or more than 6 "
                 "dimension(s).");
           }
+
+          countNdf += measDim;
+
+          visit_measurement(measDim, [&](auto N) {
+            addMeasurementToGx2fSums<N>(aMatrixExtended, bVectorExtended,
+                                        chi2sum, jacobianFromStart, trackState,
+                                        *m_addToSumLogger);
+          });
         }
 
         // Handle material

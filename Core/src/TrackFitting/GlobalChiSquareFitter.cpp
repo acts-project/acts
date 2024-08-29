@@ -22,28 +22,10 @@ void updateCovariancePredicted(BoundMatrix& fullCovariancePredicted,
     }
   }
 
-  if (ndfSystem == 4) {
-    constexpr std::size_t reducedMatrixSize = 4;
-
-    fullCovariancePredicted
-        .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-        aMatrixExtended.inverse()
-            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>();
-  } else if (ndfSystem == 5) {
-    constexpr std::size_t reducedMatrixSize = 5;
-
-    fullCovariancePredicted
-        .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-        aMatrixExtended.inverse()
-            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>();
-  } else {
-    constexpr std::size_t reducedMatrixSize = 6;
-
-    fullCovariancePredicted
-        .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-        aMatrixExtended.inverse()
-            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>();
-  }
+  visit_measurement(ndfSystem, [&](auto N) {
+    fullCovariancePredicted.topLeftCorner<N, N>() =
+        aMatrixExtended.inverse().topLeftCorner<N, N>();
+  });
 
   return;
 }
