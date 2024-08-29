@@ -282,8 +282,13 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
         "Remapping selected volumes from Geant4 to Acts::Surface::GeometryID");
     cfg.sensitiveSurfaceMapper->remapSensitiveNames(
         sState, Acts::GeometryContext{}, g4World, Acts::Transform3::Identity());
-    ACTS_INFO("Remapping successful for " << sState.g4VolumeToSurfaces.size()
-                                          << " selected volumes.");
+
+    auto allSurfacesMapped = cfg.sensitiveSurfaceMapper->checkMapping(
+        sState, Acts::GeometryContext{}, false, false);
+    if (!allSurfacesMapped) {
+      ACTS_WARNING(
+          "Not all sensitive surfaces have been mapped to Geant4 volumes!");
+    }
 
     sensitiveSteppingActionAccess->assignSurfaceMapping(
         sState.g4VolumeToSurfaces);
