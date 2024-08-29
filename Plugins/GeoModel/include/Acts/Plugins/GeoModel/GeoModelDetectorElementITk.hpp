@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 
 namespace Acts {
 
@@ -20,16 +21,34 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
   GeoModelDetectorElementITk(const PVConstLink& geoPhysVol,
                              std::shared_ptr<Surface> surface,
                              const Transform3& sfTransform,
-                             ActsScalar thickness)
-      : GeoModelDetectorElement(geoPhysVol, surface, sfTransform, thickness) {}
+                             ActsScalar thickness, int hardware,
+                             int barrelEndcap, int layerWheel, int etaModule,
+                             int phiModule, int side);
 
-  int hardware() const { return m_hardware; }
-  int barrelEndcap() const { return m_barrelEndcap; }
-  int layerWheel() const { return m_layerWheel; }
-  int phiModule() const { return m_phiModule; }
-  int etaModule() const { return m_etaModule; }
-  int side() const { return m_side; }
+  /// Access the hardware specifier (pixel=0, strip=1)
+  int hardware() const;
 
+  /// Access the barrel-endcap specifier (-2,0,2)
+  int barrelEndcap() const;
+
+  /// Access the layer specifier
+  int layerWheel() const;
+
+  /// Access the phi module specifier
+  int phiModule() const;
+
+  /// Access the eta module specifier
+  int etaModule() const;
+
+  /// Access the side (for double sided strip modules)
+  int side() const;
+
+  /// A unique identifier that represents the combination of specifiers
+  std::size_t value() const;
+
+  /// Convert a GeoModelDetectorElement to a GeoModelDetectorElementITk
+  /// A new surface is constructed.
+  /// @todo Remove redundancy in signature once plugin is refactored
   static std::tuple<std::shared_ptr<GeoModelDetectorElementITk>,
                     std::shared_ptr<Surface>>
   convertFromGeomodel(std::shared_ptr<GeoModelDetectorElement> detEl,
@@ -38,12 +57,7 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
                       int etaModule, int phiModule, int side);
 
  private:
-  int m_hardware{};
-  int m_barrelEndcap{};
-  int m_layerWheel{};
-  int m_etaModule{};
-  int m_phiModule{};
-  int m_side{};
+  Acts::MultiIndex<std::size_t, 1, 2, 20, 20, 20, 1> m_identifier;
 };
 
 }  // namespace Acts
