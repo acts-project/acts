@@ -14,7 +14,7 @@
 namespace Acts {
 
 class ITkIdentifier {
-  Acts::MultiIndex<std::size_t, 1, 2, 20, 20, 20, 1> m_identifier;
+  Acts::MultiIndex<std::size_t, 1, 2, 20, 20, 20, 1> m_identifier{};
 
  public:
   ITkIdentifier(int hardware, int barrelEndcap, int layerWheel, int etaModule,
@@ -53,7 +53,8 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
                              ActsScalar thickness, int hardware,
                              int barrelEndcap, int layerWheel, int etaModule,
                              int phiModule, int side)
-      : GeoModelDetectorElement(geoPhysVol, surface, sfTransform, thickness),
+      : GeoModelDetectorElement(geoPhysVol, std::move(surface), sfTransform,
+                                thickness),
         m_identifier(hardware, barrelEndcap, layerWheel, etaModule, phiModule,
                      side) {}
 
