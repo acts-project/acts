@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversion) {
   BOOST_CHECK(!payload.index_in_coll.has_value());
   BOOST_CHECK(payload.mask.shape == detray::io::shape_id::cylinder2);
   BOOST_CHECK_EQUAL(payload.source, sgID.value());
-  BOOST_CHECK(payload.type != detray::surface_id::e_portal);
+  BOOST_CHECK(payload.type == detray::surface_id::e_sensitive);
 }
 
 BOOST_AUTO_TEST_CASE(DetrayVolumeConversion) {
