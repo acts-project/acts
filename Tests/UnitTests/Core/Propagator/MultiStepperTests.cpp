@@ -46,6 +46,11 @@
 #include <vector>
 
 namespace Acts {
+namespace Concepts {
+template <typename T>
+concept has_components = requires { typename T::components; };
+}  // namespace Concepts
+
 struct MultiStepperSurfaceReached;
 }  // namespace Acts
 
@@ -105,9 +110,6 @@ struct DummyPropState {
     options.direction = direction;
   }
 };
-
-template <typename T>
-using components_t = typename T::components;
 
 // Makes random bound parameters and covariance and a plane surface at {0,0,0}
 // with normal {1,0,0}. Optionally some external fixed bound parameters can be
@@ -251,7 +253,7 @@ void test_multi_stepper_state() {
   // covTransport in the MultiEigenStepperLoop is redundant and
   // thus not part of the interface. However, we want to check them for
   // consistency.
-  if constexpr (Acts::Concepts::exists<components_t, MultiState>) {
+  if constexpr (Acts::Concepts::has_components<MultiState>) {
     BOOST_CHECK(!state.covTransport);
     for (const auto &cmp : state.components) {
       BOOST_CHECK_EQUAL(cmp.state.covTransport, Cov);

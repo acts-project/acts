@@ -13,7 +13,6 @@
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <algorithm>
