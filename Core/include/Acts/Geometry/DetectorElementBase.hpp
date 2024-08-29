@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 #include <memory>
 #include <vector>
@@ -32,9 +33,16 @@ class Surface;
 class DetectorElementBase {
  public:
   /// Construct a detector element. It will have ownership of the surface
-  DetectorElementBase(std::shared_ptr<Surface>&& surface)
-      : m_surface(surface) {}
-  virtual ~DetectorElementBase() = default;
+  DetectorElementBase(std::shared_ptr<Surface>&& surface) : m_surface(surface) {
+    if (m_surface->m_associatedDetElement != nullptr) {
+      throw std::runtime_error("Detector Element already associated");
+    }
+
+    m_surface->m_associatedDetElement = this;
+  }
+  virtual ~DetectorElementBase() {
+    m_surface->m_associatedDetElement = nullptr;
+  }
 
   /// Return the transform for the Element proxy mechanism
   ///

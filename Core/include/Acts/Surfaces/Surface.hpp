@@ -64,6 +64,7 @@ class Surface : public virtual GeometryObject,
                 public std::enable_shared_from_this<Surface> {
  public:
   friend struct GeometryContextOstreamWrapper<Surface>;
+  friend class DetectorElementBase;
 
   /// @enum SurfaceType
   ///
@@ -224,11 +225,6 @@ class Surface : public virtual GeometryObject,
   /// @return SurfaceMaterial as shared_pointer, can be nullptr
   const std::shared_ptr<const ISurfaceMaterial>& surfaceMaterialSharedPtr()
       const;
-
-  /// Assign a detector element
-  ///
-  /// @param detelement Detector element which is represented by this surface
-  void assignDetectorElement(const DetectorElementBase& detelement);
 
   /// Assign the surface material description
   ///
@@ -491,9 +487,6 @@ class Surface : public virtual GeometryObject,
   /// (translation, rotation) the surface in global space
   std::unique_ptr<const Transform3> m_transform{};
 
-  /// Pointer to the a DetectorElementBase
-  const DetectorElementBase* m_associatedDetElement{nullptr};
-
   /// The associated layer Layer - layer in which the Surface is be embedded,
   /// nullptr if not associated
   const Layer* m_associatedLayer{nullptr};
@@ -523,6 +516,9 @@ class Surface : public virtual GeometryObject,
   AlignmentToBoundMatrix alignmentToBoundDerivativeWithoutCorrection(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const;
+
+  /// Pointer to the a DetectorElementBase
+  const DetectorElementBase* m_associatedDetElement{nullptr};
 };
 
 }  // namespace Acts
