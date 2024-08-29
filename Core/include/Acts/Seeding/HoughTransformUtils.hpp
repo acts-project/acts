@@ -293,8 +293,8 @@ class HoughPlane {
 
   std::size_t m_assignBatch{20};
 
-  std::unordered_set<std::size_t>
-      m_touchedBins{};  // track the bins with non-trivial content
+  /// track the bins with non-trivial content
+  std::unordered_set<std::size_t> m_touchedBins{};
 
   std::size_t m_iBin = 0;
 
