@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
@@ -24,14 +26,14 @@ using namespace Experimental;
 
 class Surface;
 
-/// @brief The NavigationStream is a container for the navigation candidates
+/// The NavigationStream is a container for the navigation candidates that
+/// are currentlu processed in a given context. The context could be local to a
+/// volume, or global to an entire track following.
 ///
 /// The current candidates are stored in a vector of candidates, where an index
 /// is used to indicate the current active candidate.
-///
-/// @todo the NavigationStream should hold also the current volume it is in
-/// if it represents the geometry stream.
-struct NavigationStream {
+class NavigationStream {
+ public:
   /// The query point for the navigation stream
   ///
   /// This holds the position and direction from which the navigation stream
@@ -56,8 +58,6 @@ struct NavigationStream {
     const Portal* portal = nullptr;
     /// The boundary tolerance
     BoundaryTolerance bTolerance = BoundaryTolerance::None();
-    /// Target flag: true if this Candidate represents an abortTarget
-    bool abortTarget = false;
     /// Convenience access to surface
     const Surface& surface() const { return *intersection.object(); }
     /// Cinvencience access to the path length
@@ -76,18 +76,12 @@ struct NavigationStream {
     }
   };
 
-  /// The candidates of this navigation stream
-  std::vector<Candidate> candidates;
-
-  /// The currently active candidate
-  std::size_t currentIndex = 0u;
-
   /// Switch to next next candidate
   ///
   /// @return true if a next candidate is available
   bool switchToNextCandidate() {
-    if (currentIndex < candidates.size()) {
-      ++currentIndex;
+    if (m_currentIndex < m_candidates.size()) {
+      ++m_currentIndex;
       return true;
     }
     return false;
@@ -95,16 +89,92 @@ struct NavigationStream {
 
   /// Const access the current candidate
   const Candidate& currentCandidate() const {
-    return candidates.at(currentIndex);
+    return m_candidates.at(m_currentIndex);
   }
 
+  /// Current Index
+  std::size_t currentIndex() const { return m_currentIndex; }
+
+  /// Non-cost access the candidate vector
+  std::vector<Candidate>& candidates() { return m_candidates; }
+
+  /// Const access the candidate vector
+  const std::vector<Candidate>& candidates() const { return m_candidates; }
+
   /// Non-cost access the current candidate
-  Candidate& currentCandidate() { return candidates.at(currentIndex); }
+  ///
+  /// This will throw and out of bounds exception if the stream is not
+  /// valid anymore.
+  Candidate& currentCandidate() { return m_candidates.at(m_currentIndex); }
 
   /// The number of active candidates
   std::size_t remainingCandidates() const {
-    return (candidates.size() - currentIndex);
+    return (m_candidates.size() - m_currentIndex);
   }
+
+  /// Fill one surface into the candidate vector
+  ///
+  /// @param surface the surface to be filled
+  /// @param bTolerance the boundary tolerance used for the intersection
+  void addSurfaceCandidate(const Surface* surface,
+                           BoundaryTolerance bTolerance);
+
+  /// Fill n surfaces into the candidate vector
+  ///
+  /// @param surfaces the surfaces that are filled in
+  /// @param bTolerance the boundary tolerance used for the intersection
+  void addSurfaceCandidates(const std::vector<const Surface*>& surfaces,
+                            BoundaryTolerance bTolerance);
+
+  /// Fill one portal into the candidate vector
+  ///
+  /// @param nStream the navigation stream that is being filled
+  /// @param portal the portals that are filled in
+  void addPortalCandidate(const Portal* portal);
+
+  /// Fill n portals into the candidate vector
+  ///
+  /// @param nStream the navigation stream that is being filled
+  /// @param portals the portals that are filled in
+  void addPortalCandidates(const std::vector<const Portal*>& portals);
+
+  /// Initialize the stream from a query point
+  ///
+  /// @param gctx is the geometry context
+  /// @param queryPoint holds current position, direction, etc.
+  /// @param cTolerance is the candidate search tolerance
+  /// @param onSurfaceTolerance is the tolerance for on-surface intersections
+  ///
+  /// This method will first de-duplicate the candidates on basis of the surface
+  /// pointer to make sure that the multi-intersections are handled correctly.
+  /// This will allow intializeStream() to be called even as a re-initialization
+  /// and still work correctly with at one time valid candidates.
+  ///
+  /// @return true if the stream is active, false indicates that there are no valid candidates
+  bool initialize(const GeometryContext& gctx,
+                  const NavigationStream::QueryPoint& queryPoint,
+                  BoundaryTolerance cTolerance,
+                  ActsScalar onSurfaceTolerance = s_onSurfaceTolerance);
+
+  /// Convenience method to update a stream from a new query point,
+  /// this could be called from navigation delegates that do not require
+  /// a local state or from the navigator on the target stream
+  ///
+  /// @param gctx is the geometry context
+  /// @param queryPoint holds current position, direction, etc.
+  /// @param onSurfaceTolerance is the tolerance for on-surface intersections
+  ///
+  /// @return true if the stream is active, false indicate no valid candidates left
+  bool update(const GeometryContext& gctx,
+              const NavigationStream::QueryPoint& queryPoint,
+              ActsScalar onSurfaceTolerance = s_onSurfaceTolerance);
+
+ private:
+  /// The candidates of this navigation stream
+  std::vector<Candidate> m_candidates;
+
+  /// The currently active candidate
+  std::size_t m_currentIndex = 0u;
 };
 
 }  // namespace Acts
