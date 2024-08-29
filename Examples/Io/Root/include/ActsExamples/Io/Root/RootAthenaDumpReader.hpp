@@ -74,6 +74,7 @@ class RootAthenaDumpReader : public IReader {
 
     std::shared_ptr<ActsExamples::GeometryIdMapActsAthena> geometryIdMap =
         nullptr;
+    std::shared_ptr<Acts::TrackingGeometry> trackingGeometry = nullptr;
   };
 
   RootAthenaDumpReader(const RootAthenaDumpReader &) = delete;
@@ -110,15 +111,14 @@ class RootAthenaDumpReader : public IReader {
   /// The config class
   Config m_cfg;
 
-  Acts::GeometryIdentifier getGeoId(std::uint64_t athenaModuleId) const;
-
   /// Helper method to read particles
   SimParticleContainer readParticles() const;
 
   /// Helper method to read measurements
   std::tuple<ClusterContainer, MeasurementContainer,
              IndexMultimap<ActsFatras::Barcode>>
-  readMeasurements(SimParticleContainer &particles) const;
+  readMeasurements(SimParticleContainer &particles,
+                   const Acts::GeometryContext &gctx) const;
 
   /// Helper method to read spacepoints
   std::pair<SimSpacePointContainer, SimSpacePointContainer> readSpacepoints()

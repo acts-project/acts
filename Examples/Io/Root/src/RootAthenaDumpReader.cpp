@@ -240,20 +240,6 @@ RootAthenaDumpReader::RootAthenaDumpReader(
 
 }  // constructor
 
-Acts::GeometryIdentifier RootAthenaDumpReader::getGeoId(
-    std::uint64_t athenaModuleId) const {
-  if (m_cfg.geometryIdMap == nullptr) {
-    return Acts::GeometryIdentifier{athenaModuleId};
-  }
-  auto& map = m_cfg.geometryIdMap->left;
-  if (map.find(athenaModuleId) != map.end()) {
-    return map.at(athenaModuleId);
-  }
-  ACTS_WARNING(
-      "Missing geometry identifier in map, fall back to athena module ID");
-  return Acts::GeometryIdentifier{athenaModuleId};
-}
-
 SimParticleContainer RootAthenaDumpReader::readParticles() const {
   std::vector<ActsFatras::Particle> particles;
   particles.reserve(nPartEVT);
@@ -294,7 +280,8 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
 
 std::tuple<ClusterContainer, MeasurementContainer,
            IndexMultimap<ActsFatras::Barcode>>
-RootAthenaDumpReader::readMeasurements(SimParticleContainer& particles) const {
+RootAthenaDumpReader::readMeasurements(
+    SimParticleContainer& particles, const Acts::GeometryContext& gctx) const {
   ClusterContainer clusters(nCL);
   clusters.reserve(nCL);
 
@@ -379,22 +366,43 @@ RootAthenaDumpReader::readMeasurements(SimParticleContainer& particles) const {
                                 << CLloc_direction3[im]);
     const auto& locCov = CLlocal_cov->at(im);
 
+    std::optional<IndexSourceLink> sl;
+    std::vector<double> localParams;
+    if (m_cfg.geometryIdMap && m_cfg.trackingGeometry) {
+      auto geoId = m_cfg.geometryIdMap->left.at(CLmoduleID[im]);
+      sl = IndexSourceLink(geoId, im);
+
+      auto surface = m_cfg.trackingGeometry->findSurface(geoId);
+      if (surface == nullptr) {
+        throw std::runtime_error("surface is not in tracking geometry");
+      }
+
+      auto loc = surface->globalToLocal(gctx, cluster.globalPosition,
+                                        cluster.localDirection);
+      if (loc.ok()) {
+        throw std::runtime_error("Global to local failed!");
+      }
+
+      localParams = std::vector<double>(loc->begin(), loc->end());
+    } else {
+      sl = IndexSourceLink(Acts::GeometryIdentifier(CLmoduleID[im]), im);
+      localParams = {CLloc_direction1[im], CLloc_direction2[im]};
+    }
+
     DigitizedParameters digiPars;
     if (type == ePixel) {
       digiPars.indices = {Acts::eBoundLoc0, Acts::eBoundLoc1};
-      digiPars.values = {CLloc_direction1[im], CLloc_direction2[im]};
       assert(locCov.size() == 4);
       digiPars.variances = {locCov[0], locCov[3]};
+      digiPars.values = localParams;
     } else {
-      digiPars.values = {CLloc_direction1[im]};
       digiPars.indices = {Acts::eBoundLoc0};
       assert(!locCov.empty());
       digiPars.variances = {locCov[0]};
+      digiPars.values = {localParams[0]};
     }
 
-    IndexSourceLink sl(getGeoId(CLmoduleID[im]), im);
-
-    measurements.push_back(createMeasurement(digiPars, sl));
+    measurements.push_back(createMeasurement(digiPars, *sl));
 
     // Create measurement particles map and particles container
     for (const auto& [subevt, barcode] :
@@ -465,6 +473,13 @@ RootAthenaDumpReader::readSpacepoints() const {
 
     const auto cl1Index = SPCL1_index[isp];
     assert(cl1Index >= 0 && cl1Index < nCL);
+
+    auto getGeoId = [&](auto athenaId) {
+      if (m_cfg.geometryIdMap == nullptr) {
+        return Acts::GeometryIdentifier{athenaId};
+      }
+      return m_cfg.geometryIdMap->left.at(athenaId);
+    };
 
     IndexSourceLink first(getGeoId(CLmoduleID[cl1Index]), cl1Index);
     sLinks.emplace_back(first);
@@ -568,7 +583,7 @@ ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
   auto candidateParticles = readParticles();
 
   auto [clusters, measurements, candidateMeasPartMap] =
-      readMeasurements(candidateParticles);
+      readMeasurements(candidateParticles, ctx.geoContext);
 
   auto [spacePoints, pixelSpacePoints] = readSpacepoints();
 
