@@ -66,6 +66,7 @@ struct actor_caller {
 };
 
 }  // namespace
+
 template <typename... actors_t>
 struct actor_list_impl {
   template <typename propagator_state_t, typename stepper_t,
