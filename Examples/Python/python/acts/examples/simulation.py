@@ -610,6 +610,15 @@ def getG4DetectorConstructionFactory(
     except Exception as e:
         print(e)
 
+    try:
+        from acts import geomodel as gm
+        from acts.examples.geant4.geomodel import GeoModelDetectorConstructionFactory
+
+        if type(detector) is gm.GeoModelTree:
+            return GeoModelDetectorConstructionFactory(detector, regionList)
+    except Exception as e:
+        print(e)
+
     raise AttributeError(f"cannot find a suitable detector construction for {detector}")
 
 
@@ -701,7 +710,7 @@ def addGeant4(
     smmConfig.volumeMappings = volumeMappings
     smmConfig.materialMappings = materialMappings
     sensitiveMapper = SensitiveSurfaceMapper.create(
-        smmConfig, acts.logging.INFO, trackingGeometry
+        smmConfig, customLogLevel(), trackingGeometry
     )
 
     # Simulation
@@ -717,8 +726,6 @@ def addGeant4(
         sensitiveSurfaceMapper=sensitiveMapper,
         magneticField=field,
         physicsList=physicsList,
-        volumeMappings=volumeMappings,
-        materialMappings=materialMappings,
         killVolume=killVolume,
         killAfterTime=killAfterTime,
         killSecondaries=killSecondaries,
