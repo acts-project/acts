@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
 
   auto [itkElement, _] = Acts::GeoModelDetectorElementITk::convertFromGeomodel(
       element, element->surface().getSharedPtr(), gctx, hardware, barrelEndcap,
-      layerWheel, etaModule, phiModule, side);
+      layerWheel, phiModule, etaModule, side);
 
   BOOST_CHECK_EQUAL(element->surface().type(), itkElement->surface().type());
   BOOST_CHECK_EQUAL(element->surface().bounds().type(),
