@@ -13,12 +13,10 @@
 #include <memory>
 #include <string>
 
+#include <detray/builders/detector_builder.hpp>
 #include <pybind11/pybind11.h>
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
-
-#include "detray/builders/detector_builder.hpp"
-#include "detray/io/frontend/detector_reader_config.hpp"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -39,26 +37,5 @@ void addDetray(Context& ctx) {
   }
 
   { mex.def("writeToJson", &DetrayConverter::writeToJson); }
-  /**
-          {
-              /// @brief Converts an Acts::Detector to a detray::detector
-              mex.def("convertDetectorToDetray",
-                      [](const Acts::GeometryContext& gctx,
-                      const Acts::Experimental::Detector& acts_detector,
-                      const std::string& name) -> auto
-     {//detector<default_metadata>
-
-                          // Create a host memory resource
-                          vecmem::host_memory_resource host_mr;
-                          // Convert Acts detector to detray detector using the
-     detray converter function auto det_tuple =
-     DetrayConverter::detrayConvert(acts_detector, gctx, host_mr);
-
-                          return true; //TO DO:: cannot return tuple
-
-                      });
-          }
-
-          **/
 }
 }  // namespace Acts::Python
