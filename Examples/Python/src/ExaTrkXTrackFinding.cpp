@@ -273,12 +273,12 @@ void addExaTrkXTrackFinding(Context &ctx) {
 #undef ADD_FEATURE_ENUMS
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
-                                "TrackFindingAlgorithmExaTrkX",
-                                inputSpacePoints, inputClusters,
-                                inputTruthGraph, outputProtoTracks, outputGraph,
-                                graphConstructor, edgeClassifiers, trackBuilder,
-                                nodeFeatures, featureScales, filterShortTracks);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
+      "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputClusters,
+      inputTruthGraph, outputProtoTracks, outputGraph, graphConstructor,
+      edgeClassifiers, trackBuilder, nodeFeatures, featureScales,
+      filterShortTracks, geometryIdMap);
 
   {
     auto cls =

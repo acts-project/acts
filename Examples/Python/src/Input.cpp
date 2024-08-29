@@ -96,7 +96,7 @@ void addInput(Context& ctx) {
       inputfile, outputMeasurements, outputPixelSpacePoints,
       outputStripSpacePoints, outputSpacePoints, outputClusters,
       outputMeasurementParticlesMap, outputParticles, onlyPassedParticles,
-      skipOverlapSPsPhi, skipOverlapSPsEta);
+      skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap, trackingGeometry);
 
 #ifdef WITH_GEOMODEL_PLUGIN
   py::class_<GeometryIdMapActsAthena, std::shared_ptr<GeometryIdMapActsAthena>>(
