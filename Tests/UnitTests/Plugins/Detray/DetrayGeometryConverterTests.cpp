@@ -145,12 +145,17 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversion) {
   auto cylinderSurface = Acts::Surface::makeShared<CylinderSurface>(
       Transform3::Identity(), std::make_shared<CylinderBounds>(20., 100.));
 
+  auto sgID = Acts::GeometryIdentifier().setSensitive(1);
+  cylinderSurface->assignGeometryId(sgID);
+
   detray::io::surface_payload payload = DetrayGeometryConverter::convertSurface(
       tContext, *cylinderSurface, false);
 
   // Check the payload
   BOOST_CHECK(!payload.index_in_coll.has_value());
   BOOST_CHECK(payload.mask.shape == detray::io::shape_id::cylinder2);
+  BOOST_CHECK_EQUAL(payload.source, sgID.value());
+  BOOST_CHECK(payload.type != detray::surface_id::e_portal);
 }
 
 BOOST_AUTO_TEST_CASE(DetrayVolumeConversion) {
@@ -172,6 +177,15 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversion) {
   BOOST_CHECK(payload.type == detray::volume_id::e_cylinder);
   // 3 portals and 1 surface contained
   BOOST_CHECK_EQUAL(payload.surfaces.size(), 4u);
+  // Let's count
+  std::size_t nPortals = 0;
+  for (auto& s : payload.surfaces) {
+    if (s.type == detray::surface_id::e_portal) {
+      nPortals++;
+    }
+  }
+  BOOST_CHECK_EQUAL(nPortals, 3u);
+  // No acceleration structure for the moment
   BOOST_CHECK(!payload.acc_links.has_value());
 }
 
@@ -258,8 +272,31 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
       DetrayGeometryConverter::convertDetector(geoIdCache, tContext, *detector,
                                                *logger);
 
-  // test the payload
+  // Test the payload - we have six volumes
   BOOST_CHECK_EQUAL(payload.volumes.size(), 6u);
+
+  // The first volume is the beam pipe volume
+  BOOST_CHECK_EQUAL(payload.volumes[0].name, "BeamPipe");
+  // The beam pipe should have 1 surface and 5 portals
+  // the original cylinder cover is split into 3 portals
+  BOOST_CHECK_EQUAL(payload.volumes[0].surfaces.size(), 6u);
+  // The second volume should be the negative endcap
+  BOOST_CHECK_EQUAL(payload.volumes[1].name, "NegativeEndcap");
+  // The negative endcap should have 1 surface and 6 portals
+  BOOST_CHECK_EQUAL(payload.volumes[1].surfaces.size(), 7u);
+  // Barrel 0,1,2 follow
+  BOOST_CHECK_EQUAL(payload.volumes[2].name, "Barrel0");
+  BOOST_CHECK_EQUAL(payload.volumes[3].name, "Barrel1");
+  BOOST_CHECK_EQUAL(payload.volumes[4].name, "Barrel2");
+  // No portal splitting for those, hence we remain at 5 surfaces
+  // i.e. 4 portals and one surface
+  BOOST_CHECK_EQUAL(payload.volumes[2].surfaces.size(), 5u);
+  BOOST_CHECK_EQUAL(payload.volumes[3].surfaces.size(), 5u);
+  BOOST_CHECK_EQUAL(payload.volumes[4].surfaces.size(), 5u);
+  // Finally the positive endcap
+  BOOST_CHECK_EQUAL(payload.volumes[5].name, "PositiveEndcap");
+  // The positive endcap should have again 1 surface and 6 portals
+  BOOST_CHECK_EQUAL(payload.volumes[5].surfaces.size(), 7u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

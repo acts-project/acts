@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(DetrayMaterialSlabConversion) {
   detray::io::material_slab_payload payload =
       Acts::DetrayMaterialConverter::convertMaterialSlab(materialSlab12345);
 
-  // Material tuype should be set to slab
+  // Material type should be set to slab
   BOOST_CHECK(payload.type ==
               detray::io::material_slab_payload::mat_type::slab);
   // Thickness should be set to one
@@ -105,6 +105,28 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionX) {
   // axis is dummy
   BOOST_CHECK(payload.axes[1u].label == detray::axis::label::e_y);
   BOOST_CHECK_EQUAL(payload.axes[1u].bins, 1u);
+
+  // Check the local indices
+  BOOST_CHECK_EQUAL(payload.bins[0u].loc_index.size(), 2u);
+
+  // Bins should be : [0,0], [1,0], [2,0], [3,0]
+  //
+  // [0,0] - materialSlab12345
+  BOOST_CHECK_EQUAL(payload.bins[0u].loc_index[0], 0u);
+  BOOST_CHECK_EQUAL(payload.bins[0u].loc_index[1], 0u);
+  BOOST_CHECK_EQUAL(payload.bins[0u].content[0u].mat.params[0u], 1.);
+  // [1,0] - materialSlab678910
+  BOOST_CHECK_EQUAL(payload.bins[1u].loc_index[0], 1u);
+  BOOST_CHECK_EQUAL(payload.bins[1u].loc_index[1], 0u);
+  BOOST_CHECK_EQUAL(payload.bins[1u].content[0u].mat.params[0u], 6.);
+  // [2,0] - materialSlab54321
+  BOOST_CHECK_EQUAL(payload.bins[2u].loc_index[0], 2u);
+  BOOST_CHECK_EQUAL(payload.bins[2u].loc_index[1], 0u);
+  BOOST_CHECK_EQUAL(payload.bins[2u].content[0u].mat.params[0u], 5.);
+  // [3,0] - materialSlab109876
+  BOOST_CHECK_EQUAL(payload.bins[3u].loc_index[0], 3u);
+  BOOST_CHECK_EQUAL(payload.bins[3u].loc_index[1], 0u);
+  BOOST_CHECK_EQUAL(payload.bins[3u].content[0u].mat.params[0u], 10.);
 }
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionY) {
@@ -143,6 +165,28 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionY) {
                   std::numeric_limits<Acts::ActsScalar>::epsilon());
   BOOST_CHECK(payload.axes[1u].binning == detray::axis::binning::e_regular);
   BOOST_CHECK(payload.axes[1u].bounds == detray::axis::bounds::e_closed);
+
+  // Check the local indices
+  BOOST_CHECK_EQUAL(payload.bins[0u].loc_index.size(), 2u);
+
+  // Bins should be : [0,0], [0,1], [0,2], [0,3]
+  //
+  // [0, 0] - materialSlab12345
+  BOOST_CHECK_EQUAL(payload.bins[0u].loc_index[0], 0u);
+  BOOST_CHECK_EQUAL(payload.bins[0u].loc_index[1], 0u);
+  BOOST_CHECK_EQUAL(payload.bins[0u].content[0u].mat.params[0u], 1.);
+  // [0, 1]  - materialSlab678910
+  BOOST_CHECK_EQUAL(payload.bins[1u].loc_index[0], 0u);
+  BOOST_CHECK_EQUAL(payload.bins[1u].loc_index[1], 1u);
+  BOOST_CHECK_EQUAL(payload.bins[1u].content[0u].mat.params[0u], 6.);
+  // [0, 2] - materialSlab54321
+  BOOST_CHECK_EQUAL(payload.bins[2u].loc_index[0], 0u);
+  BOOST_CHECK_EQUAL(payload.bins[2u].loc_index[1], 2u);
+  BOOST_CHECK_EQUAL(payload.bins[2u].content[0u].mat.params[0u], 5.);
+  // [0, 3] - materialSlab109876
+  BOOST_CHECK_EQUAL(payload.bins[3u].loc_index[0], 0u);
+  BOOST_CHECK_EQUAL(payload.bins[3u].loc_index[1], 3u);
+  BOOST_CHECK_EQUAL(payload.bins[3u].content[0u].mat.params[0u], 10.);
 }
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionXY) {
@@ -174,6 +218,31 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionXY) {
   BOOST_CHECK(payload.axes[1u].label == detray::axis::label::e_y);
   BOOST_CHECK_EQUAL(payload.bins.size(), 4u);
   BOOST_CHECK(!payload.transform.has_value());
+  // 2 bins in x, 2 bins in y
+  BOOST_CHECK_EQUAL(payload.axes[0u].bins, 2u);
+  BOOST_CHECK_EQUAL(payload.axes[1u].bins, 2u);
+
+  // Check the local indices
+  BOOST_CHECK_EQUAL(payload.bins[0u].loc_index.size(), 2u);
+
+  // Bins should be : [0,0], [1,0], [0,1], [1,1]
+  //
+  // [0, 0] - materialSlab12345
+  BOOST_CHECK_EQUAL(payload.bins[0u].loc_index[0], 0u);
+  BOOST_CHECK_EQUAL(payload.bins[0u].loc_index[1], 0u);
+  BOOST_CHECK_EQUAL(payload.bins[0u].content[0u].mat.params[0u], 1.);
+  // [0, 1]  - materialSlab678910
+  BOOST_CHECK_EQUAL(payload.bins[1u].loc_index[0], 1u);
+  BOOST_CHECK_EQUAL(payload.bins[1u].loc_index[1], 0u);
+  BOOST_CHECK_EQUAL(payload.bins[1u].content[0u].mat.params[0u], 6.);
+  // [1, 0] - materialSlab54321
+  BOOST_CHECK_EQUAL(payload.bins[2u].loc_index[0], 0u);
+  BOOST_CHECK_EQUAL(payload.bins[2u].loc_index[1], 1u);
+  BOOST_CHECK_EQUAL(payload.bins[2u].content[0u].mat.params[0u], 5.);
+  // [1, 1] - materialSlab109876
+  BOOST_CHECK_EQUAL(payload.bins[3u].loc_index[0], 1u);
+  BOOST_CHECK_EQUAL(payload.bins[3u].loc_index[1], 1u);
+  BOOST_CHECK_EQUAL(payload.bins[3u].content[0u].mat.params[0u], 10.);
 }
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionR) {
