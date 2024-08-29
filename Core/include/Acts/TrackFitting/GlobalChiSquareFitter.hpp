@@ -246,6 +246,7 @@ struct Gx2FitterResult {
 /// material, and a validity flag indicating whether the material is valid for
 /// the scattering process.
 struct ScatteringProperties {
+ public:
   /// @brief Constructor to initialize scattering properties.
   ///
   /// @param scatteringAngles_ The vector of scattering angles.
@@ -258,20 +259,30 @@ struct ScatteringProperties {
         invCovarianceMaterial(invCovarianceMaterial_),
         materialIsValid(materialIsValid_) {}
 
-  /// No default construction allowed.
-  ScatteringProperties() = delete;
+  // Accessor for the scattering angles.
+  const BoundVector& getScatteringAngles() const { return scatteringAngles; }
 
+  // Accessor for a modifiable reference to the scattering angles
+  BoundVector& modifyScatteringAngles() { return scatteringAngles; }
+
+  // Accessor for the inverse covariance of the material.
+  ActsScalar getInvCovarianceMaterial() const { return invCovarianceMaterial; }
+
+  // Accessor for the material validity flag.
+  bool isMaterialValid() const { return materialIsValid; }
+
+ private:
   /// Vector of scattering angles. The vector is usually all zeros except for
   /// eBoundPhi and eBoundTheta.
   BoundVector scatteringAngles;
 
   /// Inverse covariance of the material. Compute with e.g. the Highland
   /// formula.
-  const ActsScalar invCovarianceMaterial;
+  ActsScalar invCovarianceMaterial;
 
   /// Flag indicating whether the material is valid. Commonly vacuum and zero
   /// thickness material will be ignored.
-  const bool materialIsValid;
+  bool materialIsValid;
 };
 
 /// @brief Process measurements and fill the aMatrix and bVector
@@ -430,9 +441,9 @@ void addMaterialToGx2fSums(
   const std::size_t deltaPosition = eBoundSize + 2 * nMaterialsHandled;
 
   const BoundVector& scatteringAngles =
-      scatteringMapId->second.scatteringAngles;
+      scatteringMapId->second.getScatteringAngles();
 
-  const ActsScalar invCov = scatteringMapId->second.invCovarianceMaterial;
+  const ActsScalar invCov = scatteringMapId->second.getInvCovarianceMaterial();
 
   // Phi contribution
   aMatrixExtended(deltaPosition, deltaPosition) +=
@@ -695,7 +706,7 @@ class Gx2Fitter {
           ACTS_DEBUG("    ... found entry in scattering map.");
         }
 
-        doMaterial = doMaterial && scatteringMapId->second.materialIsValid;
+        doMaterial = doMaterial && scatteringMapId->second.isMaterialValid();
       }
 
       // Here we handle all measurements
@@ -737,11 +748,11 @@ class Gx2Fitter {
             ACTS_DEBUG("    Update parameters with scattering angles.");
             const auto scatteringMapId = scatteringMap->find(geoId);
             ACTS_VERBOSE("    scatteringAngles:\n"
-                         << scatteringMapId->second.scatteringAngles
+                         << scatteringMapId->second.getScatteringAngles()
                          << "\n    boundParams before the update:\n"
                          << boundParams);
             boundParams.parameters() +=
-                scatteringMapId->second.scatteringAngles;
+                scatteringMapId->second.getScatteringAngles();
             ACTS_VERBOSE("    boundParams after the update:\n" << boundParams);
           }
 
@@ -840,11 +851,11 @@ class Gx2Fitter {
             ACTS_DEBUG("    Update parameters with scattering angles.");
             const auto scatteringMapId = scatteringMap->find(geoId);
             ACTS_VERBOSE("    scatteringAngles:\n"
-                         << scatteringMapId->second.scatteringAngles
+                         << scatteringMapId->second.getScatteringAngles()
                          << "\n    boundParams before the update:\n"
                          << boundParams);
             boundParams.parameters() +=
-                scatteringMapId->second.scatteringAngles;
+                scatteringMapId->second.getScatteringAngles();
             ACTS_VERBOSE("    boundParams after the update:\n" << boundParams);
           }
 
@@ -1195,7 +1206,7 @@ class Gx2Fitter {
           const auto scatteringMapId = scatteringMap.find(geoId);
           assert(scatteringMapId != scatteringMap.end() &&
                  "No scattering angles found for material surface.");
-          if (!scatteringMapId->second.materialIsValid) {
+          if (!scatteringMapId->second.isMaterialValid()) {
             continue;
           }
 
@@ -1242,7 +1253,7 @@ class Gx2Fitter {
           const auto scatteringMapId = scatteringMap.find(geoId);
           assert(scatteringMapId != scatteringMap.end() &&
                  "No scattering angles found for material surface.");
-          doMaterial = doMaterial && scatteringMapId->second.materialIsValid;
+          doMaterial = doMaterial && scatteringMapId->second.isMaterialValid();
         }
 
         // We only consider states with a measurement (and/or material)
@@ -1409,7 +1420,7 @@ class Gx2Fitter {
           const auto scatteringMapId = scatteringMap.find(geoId);
           assert(scatteringMapId != scatteringMap.end() &&
                  "No scattering angles found for material surface.");
-          scatteringMapId->second.scatteringAngles.block<2, 1>(2, 0) +=
+          scatteringMapId->second.modifyScatteringAngles().block<2, 1>(2, 0) +=
               deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
         }
       }
@@ -1423,10 +1434,10 @@ class Gx2Fitter {
 
     ACTS_VERBOSE("Final scattering angles:");
     for (const auto& [key, value] : scatteringMap) {
-      if (!value.materialIsValid) {
+      if (!value.isMaterialValid()) {
         continue;
       }
-      const auto& angles = value.scatteringAngles;
+      const auto& angles = value.getScatteringAngles();
       ACTS_VERBOSE("    ( " << angles[eBoundTheta] << " | " << angles[eBoundPhi]
                             << " )");
     }
