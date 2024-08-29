@@ -45,7 +45,6 @@ Volume package(const Transform3& trf, const GeoShape& shape){
         std::make_shared<CylinderVolumeBounds>(tubs->getRMin(), tubs->getRMax(),
                                                tubs->getZHalfLength(),
                                                tubs->getDPhi() / 2);
-    //TODO check transform
     newTrf = trf * GeoTrf::RotateZ3D(tubs->getSPhi() + 0.5 * tubs->getDPhi());
   }
   else if (shape.typeID() == GeoBox::getClassTypeID()) {
