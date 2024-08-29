@@ -1361,7 +1361,6 @@ class Gx2Fitter {
                    << deltaParamsExtended << "\n"
                    << "oldChi2sum = " << oldChi2sum << "\n"
                    << "chi2sum = " << chi2sum);
-      std::cout << "        chi2sum = " << chi2sum << std::endl;
 
       if ((gx2fOptions.relChi2changeCutOff != 0) && (nUpdate > 0) &&
           (std::abs(chi2sum / oldChi2sum - 1) <
@@ -1371,20 +1370,14 @@ class Gx2Fitter {
                   << " iterations.");
         updateCovariancePredicted(fullCovariancePredicted, aMatrixExtended,
                                   ndfSystem);
-
-        ACTS_INFO("relChi2changeCutOff\n" << fullCovariancePredicted);
         break;
       }
 
-      // TODO investigate further
       if (chi2sum > oldChi2sum + 1e-5) {
         ACTS_DEBUG("chi2 not converging monotonically");
 
         updateCovariancePredicted(fullCovariancePredicted, aMatrixExtended,
                                   ndfSystem);
-
-        ACTS_INFO("chi2 not converging monotonically\n"
-                  << fullCovariancePredicted);
         break;
       }
 
