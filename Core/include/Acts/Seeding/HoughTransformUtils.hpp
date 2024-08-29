@@ -123,19 +123,19 @@ class HoughCell {
   /// (weighted) number of unique hits on this cell
   YieldType m_nHits{0};
 
-  // index for the hits -- keeps track of vector's size
-  std::size_t m_ihit{0};
-  // index for the layers -- keeps track of vector's size
-  std::size_t m_ilayer{0};
+  /// index for the hits -- keeps track of vector's size
+  std::size_t m_iHit{0};
+  /// index for the layers -- keeps track of vector's size
+  std::size_t m_iLayer{0};
 
-  // a batch to resize the vector of the hits or the layers
+  /// a batch to resize the vector of the hits or the layers
   std::size_t m_assignBatch{20};
 
-  std::vector<unsigned> m_layers{std::vector<unsigned>(
-      m_assignBatch)};  // vector of layers with hits on this cell
+  /// vector of layers with hits on this cell
+  std::vector<unsigned> m_layers{std::vector<unsigned>(m_assignBatch)};
 
-  std::vector<identifier_t> m_hits{
-      std::vector<identifier_t>(m_assignBatch)};  // vector of hits on this cell
+  /// vector of hits on this cell
+  std::vector<identifier_t> m_hits{std::vector<identifier_t>(m_assignBatch)};
 };
 
 /// @brief Configuration - number of bins in each axis.
@@ -286,16 +286,17 @@ class HoughPlane {
   YieldType m_maxHits = 0.0f;    // track the maximum number of hits seen
   YieldType m_maxLayers = 0.0f;  // track the maximum number of layers seen
 
-  std::pair<std::size_t, std::size_t> m_maxLocHits = {
-      0, 0};  // track the location of the maximum in hits
-  std::pair<std::size_t, std::size_t> m_maxLocLayers = {
-      0, 0};  // track the location of the maximum in layers
+  /// track the location of the maximum in hits
+  std::pair<std::size_t, std::size_t> m_maxLocHits = {0, 0};
+  /// track the location of the maximum in layers
+  std::pair<std::size_t, std::size_t> m_maxLocLayers = {0, 0};
+
   std::size_t m_assignBatch{20};
 
   std::unordered_set<std::size_t>
       m_touchedBins{};  // track the bins with non-trivial content
 
-  std::size_t m_ibin = 0;
+  std::size_t m_iBin = 0;
 
   HoughPlaneConfig m_cfg;  // the configuration object
   HoughHist m_houghHist;   // the histogram data object

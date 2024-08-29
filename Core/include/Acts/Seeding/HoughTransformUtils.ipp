@@ -42,7 +42,7 @@ template <class identifier_t>
 std::span<const identifier_t, std::dynamic_extent>
 Acts::HoughTransformUtils::HoughCell<identifier_t>::getHits() const {
   std::span<const identifier_t, std::dynamic_extent> hits(m_hits.begin(),
-                                                          m_ihit);
+                                                          m_iHit);
   return hits;
 }
 
@@ -50,7 +50,7 @@ template <class identifier_t>
 std::span<const unsigned, std::dynamic_extent>
 Acts::HoughTransformUtils::HoughCell<identifier_t>::getLayers() const {
   std::span<const unsigned, std::dynamic_extent> layers(m_layers.begin(),
-                                                        m_ilayer);
+                                                        m_iLayer);
 
   return layers;
 }
@@ -60,23 +60,23 @@ void Acts::HoughTransformUtils::HoughCell<identifier_t>::fill(
     const identifier_t& identifier, unsigned layer, YieldType weight) {
   // add the hit to the list of hits in the cell
 
-  if (m_ihit != 0 && m_hits[m_ihit - 1] == identifier) {
+  if (m_iHit != 0 && m_hits[m_iHit - 1] == identifier) {
     return;
   }
 
-  if (m_ihit == m_hits.size()) {
+  if (m_iHit == m_hits.size()) {
     m_hits.resize(m_hits.size() + m_assignBatch);
   }
 
-  if (m_ilayer == m_layers.size()) {
+  if (m_iLayer == m_layers.size()) {
     m_layers.resize(m_layers.size() + m_assignBatch);
   }
 
-  m_hits[m_ihit] = identifier;
-  m_layers[m_ilayer] = layer;
+  m_hits[m_iHit] = identifier;
+  m_layers[m_iLayer] = layer;
 
-  m_ihit += 1;
-  m_ilayer += 1;
+  m_iHit += 1;
+  m_iLayer += 1;
 
   m_nHits += weight;
   m_nLayers += weight;
@@ -87,8 +87,8 @@ void Acts::HoughTransformUtils::HoughCell<identifier_t>::reset() {
   m_nHits = 0;
   m_nLayers = 0;
 
-  m_ilayer = 0;
-  m_ihit = 0;
+  m_iLayer = 0;
+  m_iHit = 0;
 }
 
 template <class identifier_t>
@@ -135,7 +135,7 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::reset() {
   m_maxHits = 0.;
   m_maxLayers = 0.;
   // and reset the list of nontrivial bins
-  m_ibin = 0;
+  m_iBin = 0;
   m_touchedBins.clear();
 }
 
