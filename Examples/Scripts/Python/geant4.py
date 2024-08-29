@@ -17,6 +17,7 @@ def runGeant4(
     field,
     outputDir,
     materialMappings=["Silicon"],
+    volumeMappings=[],
     s: acts.examples.Sequencer = None,
 ):
     s = s or acts.examples.Sequencer(events=100, numThreads=1)
@@ -37,6 +38,7 @@ def runGeant4(
         outputDirRoot=outputDir,
         rnd=rnd,
         materialMappings=materialMappings,
+        volumeMappings=volumeMappings,
     )
     return s
 
