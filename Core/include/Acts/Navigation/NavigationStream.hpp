@@ -117,14 +117,14 @@ class NavigationStream {
   /// @param surface the surface to be filled
   /// @param bTolerance the boundary tolerance used for the intersection
   void addSurfaceCandidate(const Surface* surface,
-                           BoundaryTolerance bTolerance);
+                           const BoundaryTolerance& bTolerance);
 
   /// Fill n surfaces into the candidate vector
   ///
   /// @param surfaces the surfaces that are filled in
   /// @param bTolerance the boundary tolerance used for the intersection
   void addSurfaceCandidates(const std::vector<const Surface*>& surfaces,
-                            BoundaryTolerance bTolerance);
+                            const BoundaryTolerance& bTolerance);
 
   /// Fill one portal into the candidate vector
   ///
@@ -151,7 +151,7 @@ class NavigationStream {
   /// @return true if the stream is active, false indicates that there are no valid candidates
   bool initialize(const GeometryContext& gctx,
                   const NavigationStream::QueryPoint& queryPoint,
-                  BoundaryTolerance cTolerance,
+                  const BoundaryTolerance& cTolerance,
                   ActsScalar onSurfaceTolerance = s_onSurfaceTolerance);
 
   /// Convenience method to update a stream from a new query point,
