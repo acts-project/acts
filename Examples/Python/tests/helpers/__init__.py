@@ -58,6 +58,13 @@ try:
 except ImportError:
     onnxEnabled = False
 
+try:
+    from acts import covfie
+
+    covfieEnabled = True
+except ImportError:
+    covfieEnabled = False
+
 
 try:
     import acts.examples
