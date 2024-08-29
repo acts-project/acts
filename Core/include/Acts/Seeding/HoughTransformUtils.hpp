@@ -120,8 +120,10 @@ class HoughCell {
  private:
   /// data members
 
-  YieldType m_nLayers{0};  // (weighted) number of layers with hits on this cell
-  YieldType m_nHits{0};    // (weighted) number of unique hits on this cell
+  /// (weighted) number of layers with hits on this cell
+  YieldType m_nLayers{0};
+  /// (weighted) number of unique hits on this cell
+  YieldType m_nHits{0};
 
   // index for the hits -- keeps track of vector's size
   std::size_t m_ihit{0};
