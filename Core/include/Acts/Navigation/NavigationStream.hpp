@@ -128,13 +128,11 @@ class NavigationStream {
 
   /// Fill one portal into the candidate vector
   ///
-  /// @param nStream the navigation stream that is being filled
   /// @param portal the portals that are filled in
   void addPortalCandidate(const Portal* portal);
 
   /// Fill n portals into the candidate vector
   ///
-  /// @param nStream the navigation stream that is being filled
   /// @param portals the portals that are filled in
   void addPortalCandidates(const std::vector<const Portal*>& portals);
 
