@@ -118,8 +118,6 @@ class HoughCell {
   void reset();
 
  private:
-  /// data members
-
   /// (weighted) number of layers with hits on this cell
   YieldType m_nLayers{0};
   /// (weighted) number of unique hits on this cell
