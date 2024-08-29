@@ -13,17 +13,12 @@
 
 namespace Acts {
 
-/// Specialization of the GeoModelDetectorElement for the ITk. This allows
-/// mapping of Acts::GeometryIdentifiers to ITk modules in a straight-forward
-/// way.
-class GeoModelDetectorElementITk : public GeoModelDetectorElement {
+class ITkIdentifier {
+  Acts::MultiIndex<std::size_t, 1, 2, 20, 20, 20, 1> m_identifier;
+
  public:
-  GeoModelDetectorElementITk(const PVConstLink& geoPhysVol,
-                             std::shared_ptr<Surface> surface,
-                             const Transform3& sfTransform,
-                             ActsScalar thickness, int hardware,
-                             int barrelEndcap, int layerWheel, int etaModule,
-                             int phiModule, int side);
+  ITkIdentifier(int hardware, int barrelEndcap, int layerWheel, int etaModule,
+                int phiModule, int side);
 
   /// Access the hardware specifier (pixel=0, strip=1)
   int hardware() const;
@@ -45,6 +40,24 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
 
   /// A unique identifier that represents the combination of specifiers
   std::size_t value() const;
+};
+
+/// Specialization of the GeoModelDetectorElement for the ITk. This allows
+/// mapping of Acts::GeometryIdentifiers to ITk modules in a straight-forward
+/// way.
+class GeoModelDetectorElementITk : public GeoModelDetectorElement {
+ public:
+  GeoModelDetectorElementITk(const PVConstLink& geoPhysVol,
+                             std::shared_ptr<Surface> surface,
+                             const Transform3& sfTransform,
+                             ActsScalar thickness, int hardware,
+                             int barrelEndcap, int layerWheel, int etaModule,
+                             int phiModule, int side)
+      : GeoModelDetectorElement(geoPhysVol, surface, sfTransform, thickness),
+        m_identifier(hardware, barrelEndcap, layerWheel, etaModule, phiModule,
+                     side) {}
+
+  ITkIdentifier identifier() const { return m_identifier; }
 
   /// Convert a GeoModelDetectorElement to a GeoModelDetectorElementITk
   /// A new surface is constructed.
@@ -57,7 +70,7 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
                       int etaModule, int phiModule, int side);
 
  private:
-  Acts::MultiIndex<std::size_t, 1, 2, 20, 20, 20, 1> m_identifier;
+  ITkIdentifier m_identifier;
 };
 
 }  // namespace Acts
