@@ -33,7 +33,7 @@ class Surface;
 class DetectorElementBase {
  public:
   /// Construct a detector element. It will have ownership of the surface
-  DetectorElementBase(std::shared_ptr<Surface>&& surface) : m_surface(surface) {
+  explicit DetectorElementBase(std::shared_ptr<Surface>&& surface) : m_surface(surface) {
     if (m_surface->m_associatedDetElement != nullptr) {
       throw std::runtime_error("Detector Element already associated");
     }
