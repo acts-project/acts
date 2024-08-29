@@ -31,7 +31,7 @@
 
 BOOST_AUTO_TEST_SUITE(GeoModelDetObj)
 
-struct GeoDims{
+struct GeoDims {
   std::vector<double> boxO;
   std::vector<double> boxI;
   std::vector<double> tube;
@@ -40,11 +40,11 @@ struct GeoDims{
   std::vector<std::vector<double>> polyVerts;
   double poly_z;
 };
-void test(Acts::GeoModelDetectorObjectFactory::Cache cache, GeoModelDetObj::GeoDims geoDims){
-
+void test(Acts::GeoModelDetectorObjectFactory::Cache cache,
+          GeoModelDetObj::GeoDims geoDims) {
   for (auto box : cache.boundingBoxes) {
     const Acts::VolumeBounds& bounds = box->volumeBounds();
-    for(long unsigned int i=0; i<geoDims.boxO.size();i++){
+    for (long unsigned int i = 0; i < geoDims.boxO.size(); i++) {
       BOOST_CHECK(geoDims.boxO[i] == bounds.values()[i]);
     }
     std::vector<const Acts::Surface*> surfaces = box->surfaces();
@@ -84,30 +84,35 @@ void test(Acts::GeoModelDetectorObjectFactory::Cache cache, GeoModelDetObj::GeoD
     }
   }
 }
-struct GeoGeometry{
+struct GeoGeometry {
   std::vector<GeoFullPhysVol*> fpvs;
   GeoDims dim;
 };
-GeoGeometry constructGeoModel(){
+GeoGeometry constructGeoModel() {
   // define materials
   auto material = new GeoMaterial("Material", 1.0);
   auto al = new GeoMaterial("Aluminium", 1.0);
 
   // define dimensions
   GeoDims geoDims;
-  geoDims.boxO ={100, 200, 2};
-  geoDims.boxI ={100, 150, 1};
-  geoDims.trapVerts = {{-103,-50},{103,-50},{183,50},{-183,50}};
-  geoDims.polyVerts ={{-60,-50},{60,-50},{153,0},{123,50},{-123,50},{-153,0}};
+  geoDims.boxO = {100, 200, 2};
+  geoDims.boxI = {100, 150, 1};
+  geoDims.trapVerts = {{-103, -50}, {103, -50}, {183, 50}, {-183, 50}};
+  geoDims.polyVerts = {{-60, -50}, {60, -50},  {153, 0},
+                       {123, 50},  {-123, 50}, {-153, 0}};
   geoDims.tube = {5, 6, 100};
   geoDims.poly_z = 2;
-  geoDims.trapHls = {fabs(geoDims.trapVerts[0][0] - geoDims.trapVerts[1][0]) / 2, fabs(geoDims.trapVerts[2][0] - geoDims.trapVerts[3][0]) / 2, fabs(geoDims.trapVerts[0][1] - geoDims.trapVerts[2][1]) / 2};
+  geoDims.trapHls = {
+      fabs(geoDims.trapVerts[0][0] - geoDims.trapVerts[1][0]) / 2,
+      fabs(geoDims.trapVerts[2][0] - geoDims.trapVerts[3][0]) / 2,
+      fabs(geoDims.trapVerts[0][1] - geoDims.trapVerts[2][1]) / 2};
 
   // create shapes
   auto boxXY = new GeoBox(geoDims.boxO[0], geoDims.boxO[1], geoDims.boxO[2]);
   auto tube = new GeoTube(geoDims.tube[0], geoDims.tube[1], geoDims.tube[2]);
   auto ssurface = new GeoBox(geoDims.boxI[0], geoDims.boxI[1], geoDims.boxI[2]);
-  auto trd = new GeoTrd(1, 1, geoDims.trapHls[0], geoDims.trapHls[1], geoDims.trapHls[2]);
+  auto trd = new GeoTrd(1, 1, geoDims.trapHls[0], geoDims.trapHls[1],
+                        geoDims.trapHls[2]);
 
   // create logvols
   auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
@@ -122,21 +127,21 @@ GeoGeometry constructGeoModel(){
   fpvs.push_back(new GeoFullPhysVol(logSurface));
   fpvs.push_back(new GeoFullPhysVol(logTrd));
   GeoGeometry ret;
-  ret.fpvs=fpvs;
-  ret.dim=geoDims;
+  ret.fpvs = fpvs;
+  ret.dim = geoDims;
   return ret;
 }
 
 BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   GeoGeometry geom = constructGeoModel();
   GeoDims geoDims = geom.dim;
-  std::vector<GeoFullPhysVol*> fpvs= geom.fpvs;
+  std::vector<GeoFullPhysVol*> fpvs = geom.fpvs;
 
   int index = 0;
   GeoFullPhysVol* parentVol = fpvs[index];
   fpvs.erase(fpvs.begin() + index);
   // build hierarchy
-  for (const auto& fpv : fpvs){
+  for (const auto& fpv : fpvs) {
     parentVol->add(fpv);
   }
 
