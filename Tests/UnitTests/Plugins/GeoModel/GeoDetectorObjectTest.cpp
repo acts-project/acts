@@ -140,8 +140,6 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
     parentVol->add(fpv);
   }
 
-  auto rBounds = std::make_shared<Acts::RectangleBounds>(100, 200);
-
   // create pars for conversion
   Acts::GeoModelDetectorObjectFactory::Config gmConfig;
   gmConfig.convertBox = {"LogVolumeXY"};

@@ -32,6 +32,7 @@ namespace Acts {
 namespace GeoModel {
 Volume package(const Transform3& trf, const GeoShape& shape){
   std::shared_ptr<const VolumeBounds> bounds;
+  GeoTrf::Transform3D newTrf = trf;
   if (shape.typeID() == GeoTube::getClassTypeID()) {
     const GeoTube* tube = dynamic_cast<const GeoTube*>(&shape);
     bounds =
@@ -45,8 +46,7 @@ Volume package(const Transform3& trf, const GeoShape& shape){
                                                tubs->getZHalfLength(),
                                                tubs->getDPhi() / 2);
     //TODO check transform
-    GeoTrf::Transform3D newTransform =
-        trf * GeoTrf::RotateZ3D(tubs->getSPhi() + 0.5 * tubs->getDPhi());
+    newTrf = trf * GeoTrf::RotateZ3D(tubs->getSPhi() + 0.5 * tubs->getDPhi());
   }
   else if (shape.typeID() == GeoBox::getClassTypeID()) {
     const GeoBox* box = dynamic_cast<const GeoBox*>(&shape);
@@ -66,32 +66,24 @@ Volume package(const Transform3& trf, const GeoShape& shape){
         bounds =
             std::make_shared<TrapezoidVolumeBounds>(x1, x2, z, y1);
         constexpr double rotationAngle = M_PI / 2;
-        GeoTrf::Transform3D newTransform =
-            trf * GeoTrf::RotateX3D(rotationAngle);
+        newTrf = trf * GeoTrf::RotateX3D(rotationAngle);
       } else {
         bounds =
             std::make_shared<TrapezoidVolumeBounds>(x2, x1, z, y1);
         constexpr double rotationAngle = M_PI;
-        GeoTrf::Transform3D newTransform = trf *
-                                           GeoTrf::RotateY3D(rotationAngle) *
-                                           GeoTrf::RotateZ3D(rotationAngle);
+        newTrf = trf * GeoTrf::RotateY3D(rotationAngle) * GeoTrf::RotateZ3D(rotationAngle);
       }
     } else if (x1 == x2) {
       if (y1 < y2) {
         bounds =
             std::make_shared<TrapezoidVolumeBounds>(y1, y2, z, x1);
         auto rotationAngle = M_PI / 2;
-        GeoTrf::Transform3D newTransform = trf *
-                                           GeoTrf::RotateZ3D(rotationAngle) *
-                                           GeoTrf::RotateX3D(rotationAngle);
+        newTrf = trf * GeoTrf::RotateZ3D(rotationAngle) * GeoTrf::RotateX3D(rotationAngle);
       } else {
         bounds =
             std::make_shared<TrapezoidVolumeBounds>(y2, y1, z, x1);
         auto rotationAngle = M_PI;
-        GeoTrf::Transform3D newTransform =
-            trf * GeoTrf::RotateX3D(rotationAngle) *
-            GeoTrf::RotateZ3D(rotationAngle / 2) *
-            GeoTrf::RotateX3D(rotationAngle / 2);
+        newTrf= trf * GeoTrf::RotateX3D(rotationAngle) * GeoTrf::RotateZ3D(rotationAngle / 2) * GeoTrf::RotateX3D(rotationAngle / 2);
       }
     } else {
       throw std::runtime_error("FATAL: Translating GeoTrd to ACTS failed");
@@ -136,14 +128,14 @@ Volume package(const Transform3& trf, const GeoShape& shape){
     const GeoShapeShift* shiftShape =
         dynamic_cast<const GeoShapeShift*>(&shape);
     const GeoShape* shapeOp = shiftShape->getOp();
-    GeoTrf::Transform3D newTransform = trf * shiftShape->getX();
+    newTrf = trf * shiftShape->getX();
     return package(trf, *shapeOp);
   }
   else{
     throw std::runtime_error("FATAL: Unsupported GeoModel shape");
   }
 
-  Volume vol = Volume(trf, bounds);
+  Volume vol = Volume(newTrf, bounds);
   return vol;
 }
 
