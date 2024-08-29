@@ -549,6 +549,8 @@ class Gx2Fitter {
       }
       result.startVolume = state.navigation.startVolume;
 
+      // We are only interested in surfaces. If we are not on a surface, we
+      // continue the navigation
       auto surface = navigator.currentSurface(state.navigation);
       if (surface == nullptr) {
         return;
@@ -608,7 +610,7 @@ class Gx2Fitter {
         doMaterial = doMaterial && scatteringMapId->second.materialIsValid;
       }
 
-      // Check if we have a measurement surface
+      // Here we handle all measurements
       if (auto sourcelink_it = inputMeasurements->find(geoId);
           sourcelink_it != inputMeasurements->end()) {
         ACTS_DEBUG("    The surface contains a measurement.");
