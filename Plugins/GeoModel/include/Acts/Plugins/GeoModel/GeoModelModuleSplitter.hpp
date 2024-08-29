@@ -32,7 +32,7 @@ class GeoModelModuleSplitter {
   /// @param tolerance The tolerance applied when matching the split
   /// patterns to the modules
   /// @param level The level of the internal logger
-  /// @throws std::runtime_error if the suface does not has annulus
+  /// @throws std::runtime_error if the surface does not has annulus
   /// bounds or no pattern matches
   GeoModelModuleSplitter(
       const std::map<std::string, std::vector<double>> &splitPatterns,
