@@ -17,7 +17,9 @@
 #include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelModuleSplitter.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
@@ -46,7 +48,10 @@ void addGeoModel(Context& ctx) {
 
   py::class_<Acts::GeoModelDetectorElement,
              std::shared_ptr<Acts::GeoModelDetectorElement>>(
-      gm, "GeoModelDetectorElement");
+      gm, "GeoModelDetectorElement")
+      .def("logVolName", &Acts::GeoModelDetectorElement::logVolName)
+      .def("databaseEntryName",
+           &Acts::GeoModelDetectorElement::databaseEntryName);
 
   // Shape converters
   {
@@ -184,5 +189,17 @@ void addGeoModel(Context& ctx) {
         .def_readwrite("table",
                        &Acts::GeoModelBlueprintCreater::Options::table);
   }
+
+  py::class_<Acts::GeoModelModuleSplitter>(gm, "GeoModelModuleSplitter")
+      .def(py::init<std::map<std::string, std::vector<double>>, double,
+                    Acts::Logging::Level>(),
+           "self"_a, "designs"_a, "tolerance", "level"_a)
+      .def("split", &Acts::GeoModelModuleSplitter::split, "detElement"_a,
+           "gctx"_a);
+
+  py::class_<Acts::GeoModelDetectorElementITk,
+             std::shared_ptr<Acts::GeoModelDetectorElementITk>>(
+      gm, "GeoModelDetectorElementITk");
+  gm.def("convertToItk", &GeoModelDetectorElementITk::convertFromGeomodel);
 }
 }  // namespace Acts::Python

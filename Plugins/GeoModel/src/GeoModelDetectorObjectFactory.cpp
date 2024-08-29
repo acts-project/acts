@@ -164,6 +164,9 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
           fpv->getAbsoluteTransform() * surface.transform;
       convertSensitive(surface.volume, transform, sensitives);
     }
+    for (auto &[detEl, _] : sensitives) {
+      detEl->setDatabaseEntryName(name);
+    }
     cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(),
                                    sensitives.begin(), sensitives.end());
     if (convertBox(name)) {
@@ -179,9 +182,16 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
       cache.boundingBoxes.push_back(box);
     }
   } else {
+    const auto prevSize = cache.sensitiveSurfaces.size();
+
     // convert fpvs to surfaces
     const Transform3 &transform = fpv->getAbsoluteTransform();
     convertSensitive(fpv, transform, cache.sensitiveSurfaces);
+
+    for (auto i = prevSize; i < cache.sensitiveSurfaces.size(); ++i) {
+      auto &[detEl, _] = cache.sensitiveSurfaces[i];
+      detEl->setDatabaseEntryName(name);
+    }
   }
 }
 // lambda to determine if object fits query
