@@ -21,11 +21,9 @@ namespace Acts {
 constexpr static std::array<std::pair<unsigned, int>, 3> s_barrelEndcapMap{
     {{0, 0}, {1, 2}, {2, -2}}};
 
-Acts::GeoModelDetectorElementITk::GeoModelDetectorElementITk(
-    const PVConstLink& geoPhysVol, std::shared_ptr<Surface> surface,
-    const Transform3& sfTransform, ActsScalar thickness, int hardware,
-    int barrelEndcap, int layerWheel, int etaModule, int phiModule, int side)
-    : GeoModelDetectorElement(geoPhysVol, surface, sfTransform, thickness) {
+Acts::ITkIdentifier::ITkIdentifier(int hardware, int barrelEndcap,
+                                   int layerWheel, int etaModule, int phiModule,
+                                   int side) {
   m_identifier.set(0, hardware);
 
   auto found = std::ranges::find(s_barrelEndcapMap, barrelEndcap,
@@ -40,11 +38,11 @@ Acts::GeoModelDetectorElementITk::GeoModelDetectorElementITk(
   m_identifier.set(5, side);
 }
 
-int Acts::GeoModelDetectorElementITk::hardware() const {
+int Acts::ITkIdentifier::hardware() const {
   return m_identifier.level(0);
 }
 
-int Acts::GeoModelDetectorElementITk::barrelEndcap() const {
+int Acts::ITkIdentifier::barrelEndcap() const {
   auto found = std::ranges::find(s_barrelEndcapMap, m_identifier.level(1),
                                  &std::pair<unsigned, int>::first);
   if (found == s_barrelEndcapMap.end()) {
@@ -53,23 +51,23 @@ int Acts::GeoModelDetectorElementITk::barrelEndcap() const {
   return found->second;
 }
 
-int Acts::GeoModelDetectorElementITk::layerWheel() const {
+int Acts::ITkIdentifier::layerWheel() const {
   return m_identifier.level(2);
 }
 
-int Acts::GeoModelDetectorElementITk::phiModule() const {
+int Acts::ITkIdentifier::phiModule() const {
   return m_identifier.level(3);
 }
 
-int Acts::GeoModelDetectorElementITk::etaModule() const {
+int Acts::ITkIdentifier::etaModule() const {
   return m_identifier.level(4);
 }
 
-int Acts::GeoModelDetectorElementITk::side() const {
+int Acts::ITkIdentifier::side() const {
   return m_identifier.level(5);
 }
 
-std::size_t Acts::GeoModelDetectorElementITk::value() const {
+std::size_t Acts::ITkIdentifier::value() const {
   return m_identifier.value();
 }
 
