@@ -451,18 +451,22 @@ class Gx2Fitter {
         return;
       }
 
-      if (startVolume != nullptr &&
-          startVolume != state.navigation.startVolume) {
-        ACTS_INFO("The update pushed us to a new volume from '"
-                  << startVolume->volumeName() << "' to '"
-                  << state.navigation.startVolume->volumeName()
-                  << "'. Starting to abort.");
-        result.result = Result<void>(
-            Experimental::GlobalChiSquareFitterError::UpdatePushedToNewVolume);
-
-        return;
+      if (state.stage == PropagatorStage::prePropagation) {
+        if (startVolume != nullptr &&
+            startVolume != state.navigation.startVolume) {
+          ACTS_INFO("The update pushed us to a new volume from '"
+                    << startVolume->volumeName() << "' to '"
+                    << ((state.navigation.startVolume != nullptr)
+                            ? state.navigation.startVolume->volumeName()
+                            : "nullptr")
+                    << "'. Starting to abort.");
+          result.result =
+              Result<void>(Experimental::GlobalChiSquareFitterError::
+                               UpdatePushedToNewVolume);
+          return;
+        }
+        result.startVolume = state.navigation.startVolume;
       }
-      result.startVolume = state.navigation.startVolume;
 
       // We are only interested in surfaces. If we are not on a surface, we
       // continue the navigation
