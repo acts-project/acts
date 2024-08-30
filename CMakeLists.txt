@@ -90,7 +90,7 @@ option(ACTS_BUILD_DOCS "Build documentation" OFF)
 option(ACTS_SETUP_BOOST "Explicitly set up Boost for the project" ON)
 option(ACTS_SETUP_EIGEN3 "Explicitly set up Eigen3 for the project" ON)
 option(ACTS_BUILD_ODD "Build the OpenDataDetector" OFF)
-# profiling related optios
+# profiling related options
 option(ACTS_ENABLE_CPU_PROFILING "Enable CPU profiling using gperftools" OFF)
 option(ACTS_ENABLE_MEMORY_PROFILING "Enable memory profiling using gperftools" OFF)
 set(ACTS_GPERF_INSTALL_DIR "" CACHE STRING "Hint to help find gperf if profiling is enabled")
@@ -298,7 +298,7 @@ find_package(Filesystem REQUIRED)
 
 # the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
 # only local scope, i.e. they are not accessible her for dependencies added
-# via `add_subdirectory`. this overrides the `project(...)` funcion for
+# via `add_subdirectory`. this overrides the `project(...)` function for
 # sub-projects such that the resulting `<project_name>_VERSION` has
 # global scope and is accessible within the main project later on.
 cmake_policy(SET CMP0048 NEW)
