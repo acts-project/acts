@@ -497,7 +497,7 @@ void addMaterialToGx2fSums(
 /// no qop/time fit)
 ///
 /// @param fullCovariancePredicted The covariance matrix to update
-/// @param aMatrix The matrix containing the coefficients of the linear system.
+/// @param aMatrixExtended The matrix containing the coefficients of the linear system.
 /// @param ndfSystem The number of degrees of freedom, determining the size of meaning full block
 ///
 /// @return deltaParams The calculated delta parameters.
@@ -1194,8 +1194,10 @@ class Gx2Fitter {
         ACTS_DEBUG("Count the valid material surfaces.");
         for (const auto& trackState : track.trackStates()) {
           const auto typeFlags = trackState.typeFlags();
+          const bool stateHasMaterial =
+              typeFlags.test(TrackStateFlag::MaterialFlag);
 
-          if (!typeFlags.test(TrackStateFlag::MaterialFlag)) {
+          if (!stateHasMaterial) {
             continue;
           }
 
