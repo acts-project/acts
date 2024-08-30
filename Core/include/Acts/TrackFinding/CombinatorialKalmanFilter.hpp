@@ -556,7 +556,7 @@ class CombinatorialKalmanFilter {
 
       if (state.stage == PropagatorStage::prePropagation &&
           skipPrePropagationUpdate) {
-        ACTS_VERBOSE("Skip first surface");
+        ACTS_VERBOSE("Skip pre-propagation update (first surface)");
         return;
       }
 
