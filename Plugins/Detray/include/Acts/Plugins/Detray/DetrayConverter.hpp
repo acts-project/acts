@@ -69,11 +69,13 @@ class DetrayConverter {
       if (options.convertMaterial) {
         detray::io::detector_grids_payload<detray::io::material_slab_payload,
                                            detray::io::material_id>
-            materialPayload =
+            materialGridsPayload =
                 DetrayMaterialConverter::convertSurfaceMaterialGrids(
                     geoIdCache, detector, logger());
-        // detray::io::material_map_reader<>::convert<detector_t>(
-        //     detectorBuilder, names, materialPayload);
+        detray::io::material_map_reader<std::integral_constant<
+            std::size_t, 2>>::convert<detector_t>(detectorBuilder, names,
+                                                  std::move(
+                                                      materialGridsPayload));
       }
     }
 
