@@ -85,7 +85,7 @@ void test(Acts::GeoModelDetectorObjectFactory::Cache cache,
   }
 }
 struct GeoGeometry {
-  std::vector<GeoFullPhysVol*> fpvs;
+  std::vector<GeoIntrusivePtr<GeoFullPhysVol>> fpvs;
   GeoDims dim;
 };
 GeoGeometry constructGeoModel() {
@@ -108,20 +108,25 @@ GeoGeometry constructGeoModel() {
       fabs(geoDims.trapVerts[0][1] - geoDims.trapVerts[2][1]) / 2};
 
   // create shapes
-  auto boxXY = new GeoBox(geoDims.boxO[0], geoDims.boxO[1], geoDims.boxO[2]);
-  auto tube = new GeoTube(geoDims.tube[0], geoDims.tube[1], geoDims.tube[2]);
-  auto ssurface = new GeoBox(geoDims.boxI[0], geoDims.boxI[1], geoDims.boxI[2]);
-  auto trd = new GeoTrd(1, 1, geoDims.trapHls[0], geoDims.trapHls[1],
-                        geoDims.trapHls[2]);
+  GeoIntrusivePtr<GeoBox> boxXY(
+      new GeoBox(geoDims.boxO[0], geoDims.boxO[1], geoDims.boxO[2]));
+  GeoIntrusivePtr<GeoTube> tube(
+      new GeoTube(geoDims.tube[0], geoDims.tube[1], geoDims.tube[2]));
+  GeoIntrusivePtr<GeoBox> ssurface(
+      new GeoBox(geoDims.boxI[0], geoDims.boxI[1], geoDims.boxI[2]));
+  GeoIntrusivePtr<GeoTrd> trd(new GeoTrd(
+      1, 1, geoDims.trapHls[0], geoDims.trapHls[1], geoDims.trapHls[2]));
 
   // create logvols
-  auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
-  auto logTube = new GeoLogVol("LogTube", tube, al);
-  auto logSurface = new GeoLogVol("LogSurface", ssurface, al);
-  auto logTrd = new GeoLogVol("LogTrd", trd, al);
+  GeoIntrusivePtr<GeoLogVol> logXY(
+      new GeoLogVol("LogVolumeXY", boxXY, material));
+  GeoIntrusivePtr<GeoLogVol> logTube(new GeoLogVol("LogTube", tube, al));
+  GeoIntrusivePtr<GeoLogVol> logSurface(
+      new GeoLogVol("LogSurface", ssurface, al));
+  GeoIntrusivePtr<GeoLogVol> logTrd(new GeoLogVol("LogTrd", trd, al));
 
   // create physvols
-  std::vector<GeoFullPhysVol*> fpvs;
+  std::vector<GeoIntrusivePtr<GeoFullPhysVol>> fpvs;
   fpvs.push_back(new GeoFullPhysVol(logXY));
   fpvs.push_back(new GeoFullPhysVol(logTube));
   fpvs.push_back(new GeoFullPhysVol(logSurface));
@@ -135,7 +140,7 @@ GeoGeometry constructGeoModel() {
 BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   GeoGeometry geom = constructGeoModel();
   GeoDims geoDims = geom.dim;
-  std::vector<GeoFullPhysVol*> fpvs = geom.fpvs;
+  std::vector<GeoIntrusivePtr<GeoFullPhysVol>> fpvs = geom.fpvs;
 
   int index = 0;
   GeoFullPhysVol* parentVol = fpvs[index];
