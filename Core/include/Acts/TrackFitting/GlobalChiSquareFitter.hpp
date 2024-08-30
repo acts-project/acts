@@ -255,34 +255,34 @@ struct ScatteringProperties {
   ScatteringProperties(const BoundVector& scatteringAngles_,
                        const ActsScalar invCovarianceMaterial_,
                        const bool materialIsValid_)
-      : scatteringAngles(scatteringAngles_),
-        invCovarianceMaterial(invCovarianceMaterial_),
-        materialIsValid(materialIsValid_) {}
+      : m_scatteringAngles(scatteringAngles_),
+        m_invCovarianceMaterial(invCovarianceMaterial_),
+        m_materialIsValid(materialIsValid_) {}
 
   // Accessor for the scattering angles.
-  const BoundVector& getScatteringAngles() const { return scatteringAngles; }
+  const BoundVector& scatteringAngles() const { return m_scatteringAngles; }
 
   // Accessor for a modifiable reference to the scattering angles
-  BoundVector& modifyScatteringAngles() { return scatteringAngles; }
+  BoundVector& scatteringAngles() { return m_scatteringAngles; }
 
   // Accessor for the inverse covariance of the material.
-  ActsScalar getInvCovarianceMaterial() const { return invCovarianceMaterial; }
+  ActsScalar invCovarianceMaterial() const { return m_invCovarianceMaterial; }
 
   // Accessor for the material validity flag.
-  bool isMaterialValid() const { return materialIsValid; }
+  bool materialIsValid() const { return m_materialIsValid; }
 
  private:
   /// Vector of scattering angles. The vector is usually all zeros except for
   /// eBoundPhi and eBoundTheta.
-  BoundVector scatteringAngles;
+  BoundVector m_scatteringAngles;
 
   /// Inverse covariance of the material. Compute with e.g. the Highland
   /// formula.
-  ActsScalar invCovarianceMaterial;
+  ActsScalar m_invCovarianceMaterial;
 
   /// Flag indicating whether the material is valid. Commonly vacuum and zero
   /// thickness material will be ignored.
-  bool materialIsValid;
+  bool m_materialIsValid;
 };
 
 /// @brief Process measurements and fill the aMatrix and bVector
@@ -441,9 +441,9 @@ void addMaterialToGx2fSums(
   const std::size_t deltaPosition = eBoundSize + 2 * nMaterialsHandled;
 
   const BoundVector& scatteringAngles =
-      scatteringMapId->second.getScatteringAngles();
+      scatteringMapId->second.scatteringAngles();
 
-  const ActsScalar invCov = scatteringMapId->second.getInvCovarianceMaterial();
+  const ActsScalar invCov = scatteringMapId->second.invCovarianceMaterial();
 
   // Phi contribution
   aMatrixExtended(deltaPosition, deltaPosition) +=
@@ -693,7 +693,7 @@ class Gx2Fitter {
                     particle.absoluteCharge()));
             ACTS_VERBOSE(
                 "        The Highland formula gives sigma = " << sigma);
-            invSigma2 = 1. / sigma / sigma;
+            invSigma2 = 1. / std::pow(sigma, 2);
           } else {
             ACTS_VERBOSE("        Material slab is not valid.");
           }
@@ -706,7 +706,7 @@ class Gx2Fitter {
           ACTS_DEBUG("    ... found entry in scattering map.");
         }
 
-        doMaterial = doMaterial && scatteringMapId->second.isMaterialValid();
+        doMaterial = doMaterial && scatteringMapId->second.materialIsValid();
       }
 
       // Here we handle all measurements
@@ -748,11 +748,11 @@ class Gx2Fitter {
             ACTS_DEBUG("    Update parameters with scattering angles.");
             const auto scatteringMapId = scatteringMap->find(geoId);
             ACTS_VERBOSE("    scatteringAngles:\n"
-                         << scatteringMapId->second.getScatteringAngles()
+                         << scatteringMapId->second.scatteringAngles()
                          << "\n    boundParams before the update:\n"
                          << boundParams);
             boundParams.parameters() +=
-                scatteringMapId->second.getScatteringAngles();
+                scatteringMapId->second.scatteringAngles();
             ACTS_VERBOSE("    boundParams after the update:\n" << boundParams);
           }
 
@@ -847,17 +847,15 @@ class Gx2Fitter {
           // available scattering information
           // We can skip the if here, since we already know, that we do
           // multipleScattering and have material
-          {
-            ACTS_DEBUG("    Update parameters with scattering angles.");
-            const auto scatteringMapId = scatteringMap->find(geoId);
-            ACTS_VERBOSE("    scatteringAngles:\n"
-                         << scatteringMapId->second.getScatteringAngles()
-                         << "\n    boundParams before the update:\n"
-                         << boundParams);
-            boundParams.parameters() +=
-                scatteringMapId->second.getScatteringAngles();
-            ACTS_VERBOSE("    boundParams after the update:\n" << boundParams);
-          }
+          ACTS_DEBUG("    Update parameters with scattering angles.");
+          const auto scatteringMapId = scatteringMap->find(geoId);
+          ACTS_VERBOSE("    scatteringAngles:\n"
+                       << scatteringMapId->second.scatteringAngles()
+                       << "\n    boundParams before the update:\n"
+                       << boundParams);
+          boundParams.parameters() +=
+              scatteringMapId->second.scatteringAngles();
+          ACTS_VERBOSE("    boundParams after the update:\n" << boundParams);
 
           // Fill the track state
           trackStateProxy.predicted() = boundParams.parameters();
@@ -866,14 +864,12 @@ class Gx2Fitter {
           trackStateProxy.jacobian() = jacobian;
           trackStateProxy.pathLength() = pathLength;
 
-          {
-            stepper.update(state.stepping,
-                           transformBoundToFreeParameters(
-                               trackStateProxy.referenceSurface(),
-                               state.geoContext, trackStateProxy.predicted()),
-                           trackStateProxy.predicted(),
-                           trackStateProxy.predictedCovariance(), *surface);
-          }
+          stepper.update(state.stepping,
+                         transformBoundToFreeParameters(
+                             trackStateProxy.referenceSurface(),
+                             state.geoContext, trackStateProxy.predicted()),
+                         trackStateProxy.predicted(),
+                         trackStateProxy.predictedCovariance(), *surface);
         }
 
         // Get and set the type flags
@@ -1208,7 +1204,7 @@ class Gx2Fitter {
           const auto scatteringMapId = scatteringMap.find(geoId);
           assert(scatteringMapId != scatteringMap.end() &&
                  "No scattering angles found for material surface.");
-          if (!scatteringMapId->second.isMaterialValid()) {
+          if (!scatteringMapId->second.materialIsValid()) {
             continue;
           }
 
@@ -1255,7 +1251,7 @@ class Gx2Fitter {
           const auto scatteringMapId = scatteringMap.find(geoId);
           assert(scatteringMapId != scatteringMap.end() &&
                  "No scattering angles found for material surface.");
-          doMaterial = doMaterial && scatteringMapId->second.isMaterialValid();
+          doMaterial = doMaterial && scatteringMapId->second.materialIsValid();
         }
 
         // We only consider states with a measurement (and/or material)
@@ -1405,7 +1401,7 @@ class Gx2Fitter {
           const auto scatteringMapId = scatteringMap.find(geoId);
           assert(scatteringMapId != scatteringMap.end() &&
                  "No scattering angles found for material surface.");
-          scatteringMapId->second.modifyScatteringAngles().block<2, 1>(2, 0) +=
+          scatteringMapId->second.scatteringAngles().block<2, 1>(2, 0) +=
               deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
         }
       }
@@ -1419,10 +1415,10 @@ class Gx2Fitter {
 
     ACTS_VERBOSE("Final scattering angles:");
     for (const auto& [key, value] : scatteringMap) {
-      if (!value.isMaterialValid()) {
+      if (!value.materialIsValid()) {
         continue;
       }
-      const auto& angles = value.getScatteringAngles();
+      const auto& angles = value.scatteringAngles();
       ACTS_VERBOSE("    ( " << angles[eBoundTheta] << " | " << angles[eBoundPhi]
                             << " )");
     }
