@@ -39,9 +39,9 @@ struct SterileContinuousProcess {
   }
 };
 
-static_assert(detail::IsContinuousProcess<SterileContinuousProcess>::value,
+static_assert(detail::ContinuousProcessConcept<SterileContinuousProcess>,
               "Is not a continuous process");
-static_assert(!detail::IsPointLikeProcess<SterileContinuousProcess>::value,
+static_assert(!detail::PointLikeProcessConcept<SterileContinuousProcess>,
               "Is a point-like process");
 
 /// Continuous process that DOES trigger a break
@@ -53,9 +53,9 @@ struct FatalContinuousProcess {
     return true;
   }
 };
-static_assert(detail::IsContinuousProcess<FatalContinuousProcess>::value,
+static_assert(detail::ContinuousProcessConcept<FatalContinuousProcess>,
               "Is not a continuous process");
-static_assert(!detail::IsPointLikeProcess<FatalContinuousProcess>::value,
+static_assert(!detail::PointLikeProcessConcept<FatalContinuousProcess>,
               "Is a point-like process");
 
 /// EM-like point-like process that triggers on X0 and keeps the particle alive.
@@ -77,9 +77,9 @@ struct X0PointLikeProcess {
   }
 };
 
-static_assert(!detail::IsContinuousProcess<X0PointLikeProcess>::value,
+static_assert(!detail::ContinuousProcessConcept<X0PointLikeProcess>,
               "Is a continuous process");
-static_assert(detail::IsPointLikeProcess<X0PointLikeProcess>::value,
+static_assert(detail::PointLikeProcessConcept<X0PointLikeProcess>,
               "Is not a point-like process");
 
 /// Nuclear-like point-like process that triggers on L0 and kills the particle.
@@ -103,9 +103,9 @@ struct L0PointLikeProcess {
   }
 };
 
-static_assert(!detail::IsContinuousProcess<L0PointLikeProcess>::value,
+static_assert(!detail::ContinuousProcessConcept<L0PointLikeProcess>,
               "Is a continuous process");
-static_assert(detail::IsPointLikeProcess<L0PointLikeProcess>::value,
+static_assert(detail::PointLikeProcessConcept<L0PointLikeProcess>,
               "Is not a point-like process");
 
 struct Fixture {
