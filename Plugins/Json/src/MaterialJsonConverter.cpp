@@ -687,7 +687,7 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
     if (bUtility.dimensions() == 1u) {
       if (bUtility.binningData()[0u].binvalue == BinningValue::binR) {
         // Turn to R-Phi
-        bUtility += BinUtility(1u, -M_PI, M_PI, closed, BinningValue::binR);
+        bUtility += BinUtility(1u, -M_PI, M_PI, closed, BinningValue::binPhi);
       } else if (bUtility.binningData()[0u].binvalue == BinningValue::binZ) {
         // Turn to Phi-Z - swap needed
         BinUtility nbUtility(1u, -M_PI, M_PI, closed, BinningValue::binPhi);
