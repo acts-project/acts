@@ -30,12 +30,29 @@ namespace Acts::Python {
 void addDetray(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
+  auto detray = m.def_submodule("detray");
   {
     py::class_<detector<default_metadata>,
-               std::shared_ptr<detector<default_metadata>>>(m,
+               std::shared_ptr<detector<default_metadata>>>(detray,
                                                             "detray_detector");
   }
 
-  { mex.def("writeToJson", &DetrayConverter::writeToJson); }
+  {
+    // This test function will convert an ACTS detector into a detray detector
+    // and write it to the corresponding json files.
+    //
+    // The memory resource and the detector are destroyed after the function
+    detray.def("writeToJson", [](const GeometryContext& gctx,
+                                 const Experimental::Detector& detector) {
+      auto memoryRessource = vecmem::host_memory_resource();
+
+      DetrayConverter::Options options;
+      options.writeToJson = true;
+      options.convertMaterial = false;
+      options.convertSurfaceGrids = true;
+      auto detrayDetector =
+          DetrayConverter().convert<>(gctx, detector, memoryRessource, options);
+    });
+  }
 }
 }  // namespace Acts::Python
