@@ -47,6 +47,37 @@ const auto gx2fLogger = Acts::getDefaultLogger("Gx2f", logLevel);
 
 namespace Acts::Test {
 
+/// @brief Helper function to visualise measurements in a 3D environment.
+///
+/// This function iterates through the provided measurements and visualises each
+/// one using the specified 3D visualisation helper. The visualisation takes
+/// into account the surface transformations and localisation errors.
+///
+/// @param helper The 3D visualisation helper used to draw the measurements.
+/// @param measurements A collection of measurements to be visualised, containing source links with parameters and covariance information.
+/// @param geometry A shared pointer to the constant tracking geometry used to find surfaces associated with measurements.
+/// @param geoCtx The geometry context used for transformations and accessing geometry-related information.
+/// @param locErrorScale Scaling factor for localisation errors. Default value is 1.0.
+/// @param viewConfig Configuration settings for the visualisation view. Default value is s_viewMeasurement.
+static void drawMeasurements(
+    IVisualization3D& helper, const Measurements& measurements,
+    const std::shared_ptr<const TrackingGeometry>& geometry,
+    const Acts::GeometryContext& geoCtx, double locErrorScale = 1.,
+    const ViewConfig& viewConfig = s_viewMeasurement) {
+  std::cout << "\n*** Draw measurements ***\n" << std::endl;
+
+  for (auto& singleMeasurement : measurements.sourceLinks) {
+    auto cov = singleMeasurement.covariance;
+    auto lposition = singleMeasurement.parameters;
+
+    auto surf = geometry->findSurface(singleMeasurement.m_geometryId);
+    auto transf = surf->transform(geoCtx);
+
+    EventDataView3D::drawMeasurement(helper, lposition, cov, transf,
+                                     locErrorScale, viewConfig);
+  }
+}
+
 //// Construct initial track parameters.
 Acts::CurvilinearTrackParameters makeParameters(
     const ActsScalar x = 0.0_m, const ActsScalar y = 0.0_m,
@@ -1119,6 +1150,51 @@ BOOST_AUTO_TEST_CASE(Material) {
   ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                               startParametersFit, gx2fOptions, tracks);
+
+  // Helper to visualise the detector
+  {
+    std::cout << "\n*** Create .obj of Detector ***\n" << std::endl;
+    // Only need for obj
+    ObjVisualization3D obj;
+
+    bool triangulate = true;
+    ViewConfig viewSensitive = ViewConfig({0, 180, 240});
+    viewSensitive.triangulate = triangulate;
+    ViewConfig viewPassive = ViewConfig({240, 280, 0});
+    viewPassive.triangulate = triangulate;
+    ViewConfig viewVolume = ViewConfig({220, 220, 0});
+    viewVolume.triangulate = triangulate;
+    ViewConfig viewContainer = ViewConfig({220, 220, 0});
+    viewContainer.triangulate = triangulate;
+    ViewConfig viewGrid = ViewConfig({220, 0, 0});
+    viewGrid.nSegments = 8;
+    viewGrid.offset = 3.;
+    viewGrid.triangulate = triangulate;
+
+    std::string tag = "gx2f_toydet";
+
+    const Acts::TrackingVolume& tgVolume =
+        *(detector.geometry->highestTrackingVolume());
+
+    GeometryView3D::drawTrackingVolume(obj, tgVolume, geoCtx, viewContainer,
+                                       viewVolume, viewPassive, viewSensitive,
+                                       viewGrid, true, tag);
+  }
+  // Helper to visualise the measurements
+  {
+    std::cout << "\n*** Create .obj of measurements ***\n" << std::endl;
+    ObjVisualization3D obj;
+
+    double localErrorScale = 10000000.;
+    ViewConfig mcolor({255, 145, 48});
+    mcolor.offset = 2;
+    //  mcolor.visible = true;
+
+    drawMeasurements(obj, measurements, detector.geometry, geoCtx,
+                     localErrorScale, mcolor);
+
+    obj.write("meas");
+  }
 
   BOOST_REQUIRE(res.ok());
 
