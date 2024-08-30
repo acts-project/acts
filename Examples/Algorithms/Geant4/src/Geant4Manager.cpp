@@ -31,12 +31,10 @@
 
 namespace ActsExamples {
 
-Geant4Handle::Geant4Handle(int _logLevel,
-                           std::unique_ptr<G4RunManager> _runManager,
+Geant4Handle::Geant4Handle(std::unique_ptr<G4RunManager> _runManager,
                            std::unique_ptr<G4VUserPhysicsList> _physicsList,
                            std::string _physicsListName)
-    : logLevel(_logLevel),
-      runManager(std::move(_runManager)),
+    : runManager(std::move(_runManager)),
       physicsList(_physicsList.release()),
       physicsListName(std::move(_physicsListName)) {
   if (runManager == nullptr) {
@@ -81,12 +79,12 @@ std::shared_ptr<Geant4Handle> Geant4Manager::currentHandle() const {
 }
 
 std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(
-    int logLevel, const std::string& physicsList) {
-  return createHandle(logLevel, createPhysicsList(physicsList), physicsList);
+    const std::string& physicsList) {
+  return createHandle(createPhysicsList(physicsList), physicsList);
 }
 
 std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(
-    int logLevel, std::unique_ptr<G4VUserPhysicsList> physicsList,
+    std::unique_ptr<G4VUserPhysicsList> physicsList,
     std::string physicsListName) {
   if (!m_handle.expired()) {
     throw std::runtime_error("creating a second handle is prohibited");
@@ -100,7 +98,7 @@ std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(
   auto runManager = std::unique_ptr<G4RunManager>(
       G4RunManagerFactory::CreateRunManager(G4RunManagerType::SerialOnly));
 
-  auto handle = std::make_shared<Geant4Handle>(logLevel, std::move(runManager),
+  auto handle = std::make_shared<Geant4Handle>(std::move(runManager),
                                                std::move(physicsList),
                                                std::move(physicsListName));
 
