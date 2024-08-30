@@ -62,6 +62,7 @@ detray::io::mask_payload convertMask(const SurfaceBounds& bounds,
 detray::io::surface_payload convertSurface(const GeometryContext& gctx,
                                            const Surface& surface,
                                            bool portal = false);
+
 /// Conversion method for Portal object to detray::portal payloads
 ///
 /// @param gctx the geometry context
