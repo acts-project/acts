@@ -432,25 +432,6 @@ class Gx2Fitter {
                     const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
-      // Sanity check in the pre propagation phase
-      if (state.stage == PropagatorStage::prePropagation) {
-        // Check if we are in the expected volume
-        if (startVolume != nullptr &&
-            startVolume != state.navigation.startVolume) {
-          ACTS_INFO("The update pushed us to a new volume from '"
-                    << startVolume->volumeName() << "' to '"
-                    << ((state.navigation.startVolume != nullptr)
-                            ? state.navigation.startVolume->volumeName()
-                            : "nullptr")
-                    << "'. Starting to abort.");
-          result.result =
-              Result<void>(Experimental::GlobalChiSquareFitterError::
-                               UpdatePushedToNewVolume);
-          return;
-        }
-        result.startVolume = state.navigation.startVolume;
-      }
-
       // Check if we can stop to propagate
       if (result.measurementStates == inputMeasurements->size()) {
         ACTS_INFO("Actor: finish: All measurements have been found.");
