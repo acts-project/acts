@@ -15,7 +15,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -93,11 +93,11 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
 /// @param smoother The smoother
 ///
 /// @return The result of the smoothing
-template <typename track_proxy_t, typename smoother_t = GainMatrixSmoother>
+template <typename track_proxy_t, typename smoother_t = MbfSmoother>
 Result<void> smoothTrack(
     const GeometryContext &geoContext, track_proxy_t &track,
     const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO),
-    smoother_t smoother = GainMatrixSmoother()) {
+    smoother_t smoother = smoother_t()) {
   auto &trackContainer = track.container();
   auto &trackStateContainer = trackContainer.trackStateContainer();
 
