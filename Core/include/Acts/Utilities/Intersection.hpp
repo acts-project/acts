@@ -69,12 +69,16 @@ class Intersection {
   /// Returns whether the intersection was successful or not
   constexpr bool isValid() const { return m_status != Status::missed; }
 
+  /// Returns the position of the interseciton
   constexpr const Position& position() const { return m_position; }
 
+  /// Returns the path length to the interseciton
   constexpr ActsScalar pathLength() const { return m_pathLength; }
 
+  /// Returns the intersection status enum
   constexpr Status status() const { return m_status; }
 
+  /// Static factory to creae an invalid instesection
   constexpr static Intersection invalid() { return Intersection(); }
 
   /// Comparison function for path length order i.e. intersection closest to
@@ -155,27 +159,35 @@ class ObjectIntersection {
   /// Returns whether the intersection was successful or not
   constexpr bool isValid() const { return m_intersection.isValid(); }
 
+  /// Returns the intersection
   constexpr const Intersection3D& intersection() const {
     return m_intersection;
   }
 
+  /// Returns the position of the interseciton
   constexpr const Intersection3D::Position& position() const {
     return m_intersection.position();
   }
 
+  /// Returns the path length to the interseciton
   constexpr ActsScalar pathLength() const {
     return m_intersection.pathLength();
   }
 
+  /// Returns the status of the interseciton
   constexpr Intersection3D::Status status() const {
     return m_intersection.status();
   }
 
+  /// Returns the object that has been intersected
   constexpr const object_t* object() const { return m_object; }
 
   constexpr std::uint8_t index() const { return m_index; }
 
-  constexpr static ObjectIntersection invalid() { return ObjectIntersection(); }
+  constexpr static ObjectIntersection invalid(
+      const object_t* object = nullptr) {
+    return ObjectIntersection(Intersection3D::invalid(), object);
+  }
 
   constexpr static bool pathLengthOrder(
       const ObjectIntersection& aIntersection,
