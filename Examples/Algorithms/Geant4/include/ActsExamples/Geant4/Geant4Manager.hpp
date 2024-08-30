@@ -37,12 +37,11 @@ class Geant4Manager;
 /// and loading the Geant4 library which should reset it to its original state.
 struct Geant4Handle {
   std::mutex mutex;
-  int logLevel{};
   std::unique_ptr<G4RunManager> runManager;
   G4VUserPhysicsList *physicsList;
   std::string physicsListName;
 
-  Geant4Handle(int logLevel, std::unique_ptr<G4RunManager> runManager,
+  Geant4Handle(std::unique_ptr<G4RunManager> runManager,
                std::unique_ptr<G4VUserPhysicsList> physicsList,
                std::string physicsListName);
   Geant4Handle(const Geant4Handle &) = delete;
@@ -66,12 +65,11 @@ class Geant4Manager {
   std::shared_ptr<Geant4Handle> currentHandle() const;
 
   /// This can only be called once due to Geant4 limitations
-  std::shared_ptr<Geant4Handle> createHandle(int logLevel,
-                                             const std::string &physicsList);
+  std::shared_ptr<Geant4Handle> createHandle(const std::string &physicsList);
 
   /// This can only be called once due to Geant4 limitations
   std::shared_ptr<Geant4Handle> createHandle(
-      int logLevel, std::unique_ptr<G4VUserPhysicsList> physicsList,
+      std::unique_ptr<G4VUserPhysicsList> physicsList,
       std::string physicsListName);
 
   /// Registers a named physics list factory to the manager for easy
