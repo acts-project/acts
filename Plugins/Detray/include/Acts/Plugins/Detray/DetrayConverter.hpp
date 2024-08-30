@@ -26,6 +26,16 @@ using namespace Experimental;
 
 class DetrayConverter {
  public:
+  /// Detray conversion options
+  struct Options {
+    /// Option to switch on/off the material conversion
+    bool convertMaterial = true;
+    /// Option to switch on/off the surface grid conversin
+    bool convertSurfaceGrids = true;
+    /// Option to switch on/off the export to json
+    bool writeToJson = false;
+  };
+
   /// Constructor with logger
   DetrayConverter(std::unique_ptr<const Logger> logger =
                       getDefaultLogger("DetrayConverter", Logging::INFO));
@@ -39,10 +49,8 @@ class DetrayConverter {
   ///
   /// @returns a detector of requested return type
   template <typename detector_t = DetrayDetector>
-  detector_t convert(
-      const GeometryContext& gctx, const Detector& detector,
-      vecmem::memory_resource& mr,
-      [[maybe_unused]] const DetrayConversionUtils::Options& options = {}) {
+  detector_t convert(const GeometryContext& gctx, const Detector& detector,
+                     vecmem::memory_resource& mr, const Options& options) {
     // The building cache object
     DetrayConversionUtils::GeometryIdCache geoIdCache;
 
@@ -64,8 +72,8 @@ class DetrayConverter {
             materialPayload =
                 DetrayMaterialConverter::convertSurfaceMaterialGrids(
                     geoIdCache, detector, logger());
-        detray::io::material_map_reader<>::convert<detector_t>(
-            detectorBuilder, names, materialPayload);
+        // detray::io::material_map_reader<>::convert<detector_t>(
+        //     detectorBuilder, names, materialPayload);
       }
     }
 

@@ -11,6 +11,7 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
@@ -148,7 +149,8 @@ Acts::DetrayMaterialConverter::convertSurfaceMaterial(
     } else if (bVal0 == BinningValue::binX && bVal1 == BinningValue::binY) {
       gridIndexType = detray::io::material_id::rectangle2_map;
     } else {
-      std::runtime_error("Unsupported binning for Detray");
+      std::runtime_error(
+          "DetrayMaterialConverter: Unsupported binning for Detray");
     }
 
     detray::io::typed_link_payload<detray::io::material_id> linkPayload{
@@ -177,6 +179,16 @@ Acts::DetrayMaterialConverter::convertSurfaceMaterial(
         materialGrid.bins.push_back(slabBin);
       }
     }
+    return materialGrid;
+  }
+
+  if (dynamic_cast<const Acts::ProtoSurfaceMaterial*>(&material) != nullptr ||
+      dynamic_cast<const Acts::ProtoGridSurfaceMaterial*>(&material) !=
+          nullptr) {
+    ACTS_WARNING(
+        "DetrayMaterialConverter: ProtoSurfaceMaterial and "
+        "ProtoGridSurfaceMaterial are not being translated, consider to switch "
+        "material conversion off.");
     return materialGrid;
   }
 
@@ -218,6 +230,10 @@ Acts::DetrayMaterialConverter::convertSurfaceMaterialGrids(
             geoIdCache.localSurfaceLinks.equal_range(surface->geometryId());
         DetrayMaterialGrid materialGrid =
             convertSurfaceMaterial(*surface->surfaceMaterial(), logger);
+        // Ignore if an empty payload is returned
+        if (materialGrid.axes.empty() && materialGrid.bins.empty()) {
+          continue;
+        }
         // Loop over the equal range and fill one grid each, this is needed
         // as the initial portal could be split into multiple surfaces
         for (auto itr = surfaceIndices.first; itr != surfaceIndices.second;
