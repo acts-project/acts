@@ -73,6 +73,13 @@ try:
 except ImportError:
     pythia8Enabled = False
 
+try:
+    import acts.examples
+
+    hashingSeedingEnabled = hasattr(acts.examples, "hashing")
+except ImportError:
+    hashingSeedingEnabled = False
+
 
 exatrkxEnabled = shutil.which("nvidia-smi") is not None
 if exatrkxEnabled:

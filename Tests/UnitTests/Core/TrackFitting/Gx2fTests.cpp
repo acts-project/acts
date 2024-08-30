@@ -518,7 +518,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
       (track.template component<
           std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
-      5);
+      4);
 
   ACTS_INFO("*** Test: Fit5Iterations -- Finish");
 }
@@ -737,7 +737,7 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
       (track.template component<
           std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
-      5);
+      4);
 
   ACTS_INFO("*** Test: MixedDetector -- Finish");
 }
@@ -834,7 +834,7 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
       (track.template component<
           std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
-      5);
+      4);
 
   ACTS_INFO("*** Test: FitWithBfield -- Finish");
 }
@@ -1253,7 +1253,7 @@ BOOST_AUTO_TEST_CASE(Material) {
 
   const Experimental::Gx2FitterOptions gx2fOptions(
       geoCtx, magCtx, calCtx, extensions,
-      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, true, false,
       FreeToBoundCorrection(false), 5, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
@@ -1284,10 +1284,10 @@ BOOST_AUTO_TEST_CASE(Material) {
   // Parameters
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
-  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
-  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
-  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -1298,7 +1298,7 @@ BOOST_AUTO_TEST_CASE(Material) {
       (track.template component<
           std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
-      5);
+      4);
 
   ACTS_INFO("*** Test: Material -- Finish");
 }
