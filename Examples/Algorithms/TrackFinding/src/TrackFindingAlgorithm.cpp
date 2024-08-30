@@ -368,6 +368,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                    ctx.calibContext, slAccessorDelegate,
                                    extensions, secondPropOptions);
   secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
+  secondOptions.skipPrePropagationUpdate = true;
 
   using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
   using ExtrapolatorOptions =
@@ -542,9 +543,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 ACTS_WARNING("Second track has no reference surface.");
                 continue;
               }
-              if (secondTrack.nMeasurements() <= 1) {
-                continue;
-              }
 
               // TODO a copy of the track should not be necessary but is the
               //      safest way with the current EDM
@@ -559,8 +557,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               secondTrackCopy.reverseTrackStates(true);
 
               firstState.previous() =
-                  (*std::next(secondTrackCopy.trackStatesReversed().begin()))
-                      .index();
+                  secondTrackCopy.outermostTrackState().index();
 
               // finalize the track candidate
 
