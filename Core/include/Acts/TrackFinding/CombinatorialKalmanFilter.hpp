@@ -235,9 +235,9 @@ struct CombinatorialKalmanFilterOptions {
   /// Whether to consider energy loss.
   bool energyLoss = true;
 
-  /// Skip the first surface
+  /// Skip the pre propagation call. This effectively skips the first surface
   /// @note This is useful if the first surface should not be considered in a second reverse pass
-  bool skipFirstSurface = false;
+  bool skipPrePropagationUpdate = false;
 };
 
 template <typename track_container_t>
@@ -528,8 +528,8 @@ class CombinatorialKalmanFilter {
     /// Whether to consider energy loss.
     bool energyLoss = true;
 
-    /// Skip the first surface
-    bool skipFirstSurface = false;
+    /// Skip the pre propagation call. This effectively skips the first surface
+    bool skipPrePropagationUpdate = false;
 
     /// Calibration context for the finding run
     const CalibrationContext* calibrationContextPtr{nullptr};
@@ -554,7 +554,8 @@ class CombinatorialKalmanFilter {
         return;
       }
 
-      if (state.stage == PropagatorStage::prePropagation && skipFirstSurface) {
+      if (state.stage == PropagatorStage::prePropagation &&
+          skipPrePropagationUpdate) {
         ACTS_VERBOSE("Skip first surface");
         return;
       }
@@ -1275,7 +1276,8 @@ class CombinatorialKalmanFilter {
     combKalmanActor.targetReached.surface = tfOptions.targetSurface;
     combKalmanActor.multipleScattering = tfOptions.multipleScattering;
     combKalmanActor.energyLoss = tfOptions.energyLoss;
-    combKalmanActor.skipFirstSurface = tfOptions.skipFirstSurface;
+    combKalmanActor.skipPrePropagationUpdate =
+        tfOptions.skipPrePropagationUpdate;
     combKalmanActor.actorLogger = m_actorLogger.get();
     combKalmanActor.updaterLogger = m_updaterLogger.get();
     combKalmanActor.calibrationContextPtr = &tfOptions.calibrationContext.get();
