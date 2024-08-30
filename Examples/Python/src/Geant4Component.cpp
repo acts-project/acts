@@ -66,6 +66,31 @@ namespace Acts::Python {
 void addGeant4HepMC3(Context& ctx);
 }
 
+struct ExperimentalSensitiveCandidates : public SensitiveCandidatesBase {
+  std::shared_ptr<const Experimental::Detector> detector;
+
+  /// Find the sensitive surfaces for a given position
+  std::vector<const Acts::Surface*> queryPosition(
+      const Acts::GeometryContext& gctx,
+      const Acts::Vector3& position) const override {
+    std::vector<const Acts::Surface*> surfaces;
+    // Here's the detector volume
+    auto volume = detector->findDetectorVolume(gctx, position);
+    if (volume != nullptr) {
+      for (const auto& surface : volume->surfaces()) {
+        if (surface->associatedDetectorElement() != nullptr) {
+          surfaces.push_back(surface);
+        }
+      }
+    }
+    return surfaces;
+  }
+
+  std::vector<const Acts::Surface*> queryAll() const override {
+    throw std::runtime_error("not implemented");
+  }
+};
+
 PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   py::class_<DetectorConstructionFactory,
              std::shared_ptr<DetectorConstructionFactory>>(
@@ -100,6 +125,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
   {
     using Config = SensitiveSurfaceMapper::Config;
+    using State = SensitiveSurfaceMapper::State;
     auto sm =
         py::class_<SensitiveSurfaceMapper,
                    std::shared_ptr<SensitiveSurfaceMapper>>(
@@ -109,6 +135,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                   cfg, getDefaultLogger("SensitiveSurfaceMapper", level));
             }));
 
+    py::class_<State>(sm, "State").def(py::init<>());
+
     auto c = py::class_<Config>(sm, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(materialMappings);
@@ -116,46 +144,44 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(candidateSurfaces);
     ACTS_PYTHON_STRUCT_END();
 
-    sm.def(
-        "create", [](const Config& cfg, Acts::Logging::Level level,
-                     const std::shared_ptr<const TrackingGeometry> tGeometry) {
-          // Set a new surface finder
-          Config ccfg = cfg;
-          ccfg.candidateSurfaces = ActsExamples::SensitiveCandidates{tGeometry};
-          return std::make_shared<SensitiveSurfaceMapper>(
-              ccfg, getDefaultLogger("SensitiveSurfaceMapper", level));
-        });
+    sm.def("create",
+           [](const Config& cfg, Acts::Logging::Level level,
+              const std::shared_ptr<const TrackingGeometry> tGeometry) {
+             // Set a new surface finder
+             Config ccfg = cfg;
+             auto candidateSurfaces =
+                 std::make_shared<ActsExamples::SensitiveCandidates>();
+             candidateSurfaces->trackingGeometry = tGeometry;
+             ccfg.candidateSurfaces = candidateSurfaces;
+             return std::make_shared<SensitiveSurfaceMapper>(
+                 ccfg, getDefaultLogger("SensitiveSurfaceMapper", level));
+           });
 
     sm.def("create",
            [](const Config& cfg, Acts::Logging::Level level,
               const std::shared_ptr<const Experimental::Detector>& detector) {
              // Helper struct to find the sensitive surface candidates
-             struct SensitiveCandidates {
-               std::shared_ptr<const Experimental::Detector> detector;
 
-               /// Find the sensitive surfaces for a given position
-               std::vector<const Acts::Surface*> operator()(
-                   const Acts::GeometryContext& gctx,
-                   const Acts::Vector3& position) const {
-                 std::vector<const Acts::Surface*> surfaces;
-                 // Here's the detector volume
-                 auto volume = detector->findDetectorVolume(gctx, position);
-                 if (volume != nullptr) {
-                   for (const auto& surface : volume->surfaces()) {
-                     if (surface->associatedDetectorElement() != nullptr) {
-                       surfaces.push_back(surface);
-                     }
-                   }
-                 }
-                 return surfaces;
-               }
-             };
              // Set a new surface finder
              Config ccfg = cfg;
-             ccfg.candidateSurfaces = SensitiveCandidates{detector};
+             auto candidateSurfaces =
+                 std::make_shared<ExperimentalSensitiveCandidates>();
+             candidateSurfaces->detector = detector;
+             ccfg.candidateSurfaces = candidateSurfaces;
              return std::make_shared<SensitiveSurfaceMapper>(
                  ccfg, getDefaultLogger("SensitiveSurfaceMapper", level));
            });
+
+    sm.def(
+        "remapSensitiveNames",
+        [](SensitiveSurfaceMapper& self, State& state, GeometryContext& gctx,
+           DetectorConstructionFactory& factory, Transform3& transform) {
+          return self.remapSensitiveNames(
+              state, gctx, factory.factorize()->Construct(), transform);
+        },
+        "state"_a, "gctx"_a, "g4physicalVolume"_a, "motherTransform"_a);
+    sm.def("checkMapping", &SensitiveSurfaceMapper::checkMapping, "state"_a,
+           "gctx"_a, "writeMappedAsObj"_a, "writeMissingAsObj"_a);
   }
 
   {
@@ -178,8 +204,6 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(sensitiveSurfaceMapper);
     ACTS_PYTHON_MEMBER(magneticField);
     ACTS_PYTHON_MEMBER(physicsList);
-    ACTS_PYTHON_MEMBER(volumeMappings);
-    ACTS_PYTHON_MEMBER(materialMappings);
     ACTS_PYTHON_MEMBER(killVolume);
     ACTS_PYTHON_MEMBER(killAfterTime);
     ACTS_PYTHON_MEMBER(killSecondaries);

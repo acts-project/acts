@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -40,6 +41,12 @@ void addContext(Context& ctx) {
       .def(py::init<>());
   py::class_<Acts::CalibrationContext>(m, "CalibrationContext")
       .def(py::init<>());
+}
+
+void addAny(Context& ctx) {
+  auto& m = ctx.get("main");
+
+  py::class_<Acts::AnyBase<512>>(m, "AnyBase512").def(py::init<>());
 }
 
 void addUnits(Context& ctx) {
