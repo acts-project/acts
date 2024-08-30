@@ -533,7 +533,7 @@ class BinningData {
   /// @return a string containing the screen information
   std::string toString(const std::string& indent = "") const {
     std::stringstream sl;
-    sl << indent << "BinngingData object:" << '\n';
+    sl << indent << "BinningData object:" << '\n';
     sl << indent << "  - type       : " << static_cast<std::size_t>(type)
        << '\n';
     sl << indent << "  - option     : " << static_cast<std::size_t>(option)
