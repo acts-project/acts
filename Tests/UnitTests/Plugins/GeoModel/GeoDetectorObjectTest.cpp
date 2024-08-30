@@ -60,7 +60,6 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   for (long unsigned int i = 0; i < trapXVerts.size(); i++) {
     trap->addVertex(trapXVerts[i], trapYVerts[i]);
   }
-  // auto poly = new GeoSimplePolygonBrep(gmPolyZ);
   GeoIntrusivePtr<GeoSimplePolygonBrep> poly(new GeoSimplePolygonBrep(gmPolyZ));
   for (long unsigned int i = 0; i < polyXVerts.size(); i++) {
     poly->addVertex(polyXVerts[i], polyYVerts[i]);

@@ -40,7 +40,6 @@ Acts::detail::GeoPolygonConverter::operator()(
   std::vector<std::vector<double>> vertices;
 
   for (int i = 0; i < nVertices; i++) {
-    // std::vector<double> tmp = {polygon.getXVertex(i), polygon.getYVertex(i)};
     vertices.push_back({polygon.getXVertex(i), polygon.getYVertex(i)});
   }
   // sort based on the y-coordinate
