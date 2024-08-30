@@ -72,21 +72,17 @@ class SurfaceBounds {
   ///
   /// @param os is the outstream in which the string dump is done
   virtual std::ostream& toStream(std::ostream& os) const = 0;
-};
 
-inline bool operator==(const SurfaceBounds& lhs, const SurfaceBounds& rhs) {
-  if (&lhs == &rhs) {
-    return true;
+  friend bool operator==(const SurfaceBounds& lhs, const SurfaceBounds& rhs) {
+    if (&lhs == &rhs) {
+      return true;
+    }
+    return (lhs.type() == rhs.type()) && (lhs.values() == rhs.values());
   }
-  return (lhs.type() == rhs.type()) && (lhs.values() == rhs.values());
-}
 
-inline bool operator!=(const SurfaceBounds& lhs, const SurfaceBounds& rhs) {
-  return !(lhs == rhs);
-}
-
-inline std::ostream& operator<<(std::ostream& os, const SurfaceBounds& sb) {
-  return sb.toStream(os);
-}
+  friend std::ostream& operator<<(std::ostream& os, const SurfaceBounds& sb) {
+    return sb.toStream(os);
+  }
+};
 
 }  // namespace Acts

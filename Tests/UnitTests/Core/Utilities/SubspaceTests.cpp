@@ -164,8 +164,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(VariableSizeSubspace, ScalarAndSubspace,
     BOOST_CHECK_EQUAL(variableSubspace.fullSize(), fixedSubspace.fullSize());
 
     auto fixedProjector = fixedSubspace.template projector<Scalar>();
-    std::uint64_t fixedProjectorBits =
-        matrixToBitset(fixedProjector).to_ullong();
 
     Eigen::Matrix<Scalar, FixedSubspace::fullSize(), FixedSubspace::fullSize()>
         fixedFullProjector;
@@ -173,15 +171,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(VariableSizeSubspace, ScalarAndSubspace,
     fixedFullProjector.template topLeftCorner<FixedSubspace::size(),
                                               FixedSubspace::fullSize()>() =
         fixedProjector;
-    std::uint64_t fixedFullProjectorBits =
-        matrixToBitset(fixedFullProjector).to_ullong();
 
-    std::uint64_t variableProjectorBits = variableSubspace.projectorBits();
-    std::uint64_t variableFullProjectorBits =
-        variableSubspace.fullProjectorBits();
+    auto variableFullProjector =
+        variableSubspace.template fullProjector<Scalar>();
 
-    BOOST_CHECK_EQUAL(variableProjectorBits, fixedProjectorBits);
-    BOOST_CHECK_EQUAL(variableFullProjectorBits, fixedFullProjectorBits);
+    BOOST_CHECK_EQUAL(variableFullProjector, fixedFullProjector);
   } while (std::next_permutation(fullIndices.begin(), fullIndices.end()));
 }
 

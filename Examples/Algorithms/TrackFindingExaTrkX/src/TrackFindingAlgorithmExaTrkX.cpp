@@ -74,7 +74,7 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
                                    dummyInput.data() + dummyInput.size());
   std::vector<int> spacepointIDs;
   std::iota(spacepointIDs.begin(), spacepointIDs.end(), 0);
-  
+
   runPipeline(dummyInputVec, spacepointIDs);
   }
 #endif

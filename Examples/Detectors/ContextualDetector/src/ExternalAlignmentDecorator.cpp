@@ -110,9 +110,15 @@ void ActsExamples::Contextual::ExternalAlignmentDecorator::parseGeometry(
                                        Acts::Transform3::Identity());
 
   auto fillTransforms = [&aStore, &nominalCtx](const auto* surface) -> void {
+    if (surface == nullptr) {
+      throw std::invalid_argument("Surface is nullptr.");
+    }
     auto alignableElement =
         dynamic_cast<const ExternallyAlignedDetectorElement*>(
             surface->associatedDetectorElement());
+    if (alignableElement == nullptr) {
+      throw std::invalid_argument("Surface is not alignable");
+    }
     aStore[alignableElement->identifier()] = surface->transform(nominalCtx);
   };
 

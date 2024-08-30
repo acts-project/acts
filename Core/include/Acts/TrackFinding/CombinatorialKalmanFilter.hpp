@@ -255,9 +255,6 @@ struct CombinatorialKalmanFilterResult {
   /// Indices into `tracks` which mark active branches
   std::vector<TrackProxy> collectedTracks;
 
-  /// This is used internally to store candidate trackstates
-  std::shared_ptr<TrackStateContainerBackend> stateBuffer;
-
   /// Track state candidates buffer
   std::vector<TrackStateProxy> trackStateCandidates;
 
@@ -363,8 +360,6 @@ class CombinatorialKalmanFilter {
                         std::random_access_iterator_tag>) {
         trackStateCandidates.reserve(std::distance(slBegin, slEnd));
       }
-
-      bufferTrajectory.clear();
 
       // Calibrate all the source links on the surface since the selection has
       // to be done based on calibrated measurement
@@ -595,7 +590,9 @@ class CombinatorialKalmanFilter {
           result.pathLimitReached(state, stepper, navigator, logger());
       const bool isTargetReached =
           targetReached(state, stepper, navigator, logger());
-      if (isEndOfWorldReached || isPathLimitReached || isTargetReached) {
+      const bool allBranchesStopped = result.activeBranches.empty();
+      if (isEndOfWorldReached || isPathLimitReached || isTargetReached ||
+          allBranchesStopped) {
         if (isEndOfWorldReached) {
           ACTS_VERBOSE("End of world reached");
         } else if (isPathLimitReached) {
@@ -622,21 +619,25 @@ class CombinatorialKalmanFilter {
           stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
         }
 
-        if (!result.activeBranches.empty()) {
+        if (!allBranchesStopped) {
           // Record the active branch and remove it from the list
           storeLastActiveBranch(result);
           result.activeBranches.pop_back();
+        } else {
+          // This can happen if we stopped all branches in the filter step
+          ACTS_VERBOSE("All branches stopped");
         }
+
         // If no more active branches, done with filtering; Otherwise, reset
         // propagation state to track state at next active branch
-        if (result.activeBranches.empty()) {
-          ACTS_VERBOSE("Kalman filtering finds "
-                       << result.collectedTracks.size() << " tracks");
-          result.finished = true;
-        } else {
+        if (!result.activeBranches.empty()) {
           ACTS_VERBOSE("Propagation jumps to branch with tip = "
                        << result.activeBranches.back().tipIndex());
           reset(state, stepper, navigator, result);
+        } else {
+          ACTS_VERBOSE("Stop Kalman filtering with "
+                       << result.collectedTracks.size() << " found tracks");
+          result.finished = true;
         }
       }
     }
@@ -655,7 +656,8 @@ class CombinatorialKalmanFilter {
               typename navigator_t>
     void reset(propagator_state_t& state, const stepper_t& stepper,
                const navigator_t& navigator, result_type& result) const {
-      auto currentState = result.activeBranches.back().outermostTrackState();
+      auto currentBranch = result.activeBranches.back();
+      auto currentState = currentBranch.outermostTrackState();
 
       // Reset the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
@@ -730,12 +732,11 @@ class CombinatorialKalmanFilter {
         TrackIndexType prevTip = currentBranch.tipIndex();
 
         // Create trackstates for all source links (will be filtered later)
-        // Results are stored in result => no return value
         using TrackStatesResult =
             Acts::Result<CkfTypes::BranchVector<TrackIndexType>>;
         TrackStatesResult tsRes = trackStateCandidateCreator(
             state.geoContext, *calibrationContextPtr, *surface, boundState,
-            slBegin, slEnd, prevTip, *result.stateBuffer,
+            slBegin, slEnd, prevTip, *result.trackStates,
             result.trackStateCandidates, *result.trackStates, logger());
         if (!tsRes.ok()) {
           ACTS_ERROR(
@@ -745,49 +746,9 @@ class CombinatorialKalmanFilter {
         const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList =
             *tsRes;
 
-        Result<std::pair<unsigned int, unsigned int>> procRes =
-            processNewTrackStates(state.geoContext, newTrackStateList, result);
-        if (!procRes.ok()) {
-          ACTS_ERROR("Processing of selected track states failed: "
-                     << procRes.error());
-          return procRes.error();
-        }
-        auto [nNewBranchesOnSurface, nStoppedBranches] = *procRes;
-        nBranchesOnSurface = nNewBranchesOnSurface;
-
-        if (nStoppedBranches >= newTrackStateList.size()) {
-          // All branches on the surface have been stopped. Reset happens at the
-          // end of the function
-          ACTS_VERBOSE("All branches on surface " << surface->geometryId()
-                                                  << " have been stopped");
-        } else if (nBranchesOnSurface > 0) {
-          if (currentBranch.outermostTrackState().typeFlags().test(
-                  TrackStateFlag::OutlierFlag)) {
-            // We don't need to update the stepper given an outlier state
-            ACTS_VERBOSE("Outlier state detected on surface "
-                         << surface->geometryId());
-          } else {
-            // If there are measurement track states on this surface
-            ACTS_VERBOSE("Filtering step successful with " << nBranchesOnSurface
-                                                           << " branches");
-            // Update stepping state using filtered parameters of last track
-            // state on this surface
-            auto ts = result.activeBranches.back().outermostTrackState();
-            stepper.update(state.stepping,
-                           MultiTrajectoryHelpers::freeFiltered(
-                               state.options.geoContext, ts),
-                           ts.filtered(), ts.filteredCovariance(), *surface);
-            ACTS_VERBOSE("Stepping state is updated with filtered parameter:");
-            ACTS_VERBOSE("-> " << ts.filtered().transpose()
-                               << " of track state with tip = " << ts.index());
-          }
-        } else {  // nBranchesOnSurface == 0
+        if (newTrackStateList.empty()) {
           ACTS_VERBOSE("Detected hole after measurement selection on surface "
                        << surface->geometryId());
-
-          // After `processNewTrackStates` `currentBranch` is invalidated
-          currentBranch = result.activeBranches.back();
-          prevTip = currentBranch.tipIndex();
 
           // Setting the number of branches on the surface to 1 as the hole
           // still counts as a branch
@@ -795,14 +756,13 @@ class CombinatorialKalmanFilter {
 
           auto stateMask = PM::Predicted | PM::Jacobian;
 
-          currentBranch.nHoles()++;
-
           // Add a hole track state to the multitrajectory
           TrackIndexType currentTip = addNonSourcelinkState(
               stateMask, boundState, result, true, prevTip);
           auto nonSourcelinkState =
               result.trackStates->getTrackState(currentTip);
           currentBranch.tipIndex() = currentTip;
+          currentBranch.nHoles()++;
 
           BranchStopperResult branchStopperResult =
               m_extensions.branchStopper(currentBranch, nonSourcelinkState);
@@ -818,6 +778,50 @@ class CombinatorialKalmanFilter {
             }
             // Remove the branch from list
             result.activeBranches.pop_back();
+          }
+        } else {
+          Result<unsigned int> procRes = processNewTrackStates(
+              state.geoContext, newTrackStateList, result);
+          if (!procRes.ok()) {
+            ACTS_ERROR("Processing of selected track states failed: "
+                       << procRes.error());
+            return procRes.error();
+          }
+          nBranchesOnSurface = *procRes;
+
+          if (nBranchesOnSurface == 0) {
+            // All branches on the surface have been stopped. Reset happens at
+            // the end of the function
+            ACTS_VERBOSE("All branches on surface " << surface->geometryId()
+                                                    << " have been stopped");
+          } else {
+            // `currentBranch` is invalidated after `processNewTrackStates`
+            currentBranch = result.activeBranches.back();
+            prevTip = currentBranch.tipIndex();
+
+            auto currentState = currentBranch.outermostTrackState();
+
+            if (currentState.typeFlags().test(TrackStateFlag::OutlierFlag)) {
+              // We don't need to update the stepper given an outlier state
+              ACTS_VERBOSE("Outlier state detected on surface "
+                           << surface->geometryId());
+            } else {
+              // If there are measurement track states on this surface
+              ACTS_VERBOSE("Filtering step successful with "
+                           << nBranchesOnSurface << " branches");
+              // Update stepping state using filtered parameters of last track
+              // state on this surface
+              stepper.update(state.stepping,
+                             MultiTrajectoryHelpers::freeFiltered(
+                                 state.options.geoContext, currentState),
+                             currentState.filtered(),
+                             currentState.filteredCovariance(), *surface);
+              ACTS_VERBOSE(
+                  "Stepping state is updated with filtered parameter:");
+              ACTS_VERBOSE("-> " << currentState.filtered().transpose()
+                                 << " of track state with tip = "
+                                 << currentState.index());
+            }
           }
         }
 
@@ -845,11 +849,6 @@ class CombinatorialKalmanFilter {
           // measurement and filtered parameter
           auto stateMask = PM::Predicted | PM::Jacobian;
 
-          if (isSensitive) {
-            // Increment of number of holes
-            currentBranch.nHoles()++;
-          }
-
           // Transport the covariance to a curvilinear surface
           stepper.transportCovarianceToCurvilinear(state.stepping);
 
@@ -873,6 +872,9 @@ class CombinatorialKalmanFilter {
           auto nonSourcelinkState =
               result.trackStates->getTrackState(currentTip);
           currentBranch.tipIndex() = currentTip;
+          if (isSensitive) {
+            currentBranch.nHoles()++;
+          }
 
           BranchStopperResult branchStopperResult =
               m_extensions.branchStopper(currentBranch, nonSourcelinkState);
@@ -927,23 +929,27 @@ class CombinatorialKalmanFilter {
     /// @param gctx The geometry context for this track finding/fitting
     /// @param newTrackStateList index list of new track states
     /// @param result which contains among others the new states, and the list of active branches
-    /// @return the number of newly added branches and number of stopped branches or an error
-    Result<std::pair<unsigned int, unsigned int>> processNewTrackStates(
+    /// @return the number of newly added branches or an error
+    Result<unsigned int> processNewTrackStates(
         const Acts::GeometryContext& gctx,
         const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList,
         result_type& result) const {
       using PM = TrackStatePropMask;
 
       unsigned int nBranchesOnSurface = 0;
-      unsigned int nStoppedBranches = 0;
 
       auto rootBranch = result.activeBranches.back();
 
-      // Build the new branches by forking the root branch
+      // Build the new branches by forking the root branch. Reverse the order to
+      // process the best candidate first
       CkfTypes::BranchVector<TrackProxy> newBranches;
-      for (auto [i, tipIndex] : enumerate(newTrackStateList)) {
-        auto newBranch = (i == 0) ? rootBranch : rootBranch.shallowCopy();
-        newBranch.tipIndex() = tipIndex;
+      for (auto it = newTrackStateList.rbegin(); it != newTrackStateList.rend();
+           ++it) {
+        // Keep the root branch as the first branch, make a copy for the others
+        auto newBranch = (it == newTrackStateList.rbegin())
+                             ? rootBranch
+                             : rootBranch.shallowCopy();
+        newBranch.tipIndex() = *it;
         newBranches.push_back(newBranch);
       }
 
@@ -976,9 +982,10 @@ class CombinatorialKalmanFilter {
           typeFlags.set(TrackStateFlag::MeasurementFlag);
           // Increment number of measurements
           newBranch.nMeasurements()++;
+          newBranch.nDoF() += trackState.calibratedSize();
+          newBranch.chi2() += trackState.chi2();
         } else {
           ACTS_WARNING("Cannot handle this track state flags");
-          nStoppedBranches++;
           continue;
         }
 
@@ -993,7 +1000,6 @@ class CombinatorialKalmanFilter {
           nBranchesOnSurface++;
         } else {
           // Record the number of stopped branches
-          nStoppedBranches++;
           if (branchStopperResult == BranchStopperResult::StopAndKeep) {
             storeLastActiveBranch(result);
           }
@@ -1002,7 +1008,7 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      return std::pair{nBranchesOnSurface, nStoppedBranches};
+      return nBranchesOnSurface;
     }
 
     /// @brief CombinatorialKalmanFilter actor operation: add a hole or material track state
@@ -1231,7 +1237,6 @@ class CombinatorialKalmanFilter {
                   track_container_t& trackContainer) const
       -> Result<std::vector<
           typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
-    using TrackContainer = typename std::decay_t<decltype(trackContainer)>;
     using SourceLinkAccessor =
         SourceLinkAccessorDelegate<source_link_iterator_t>;
 
@@ -1289,7 +1294,6 @@ class CombinatorialKalmanFilter {
             .template get<CombinatorialKalmanFilterResult<track_container_t>>();
     r.tracks = &trackContainer;
     r.trackStates = &trackContainer.trackStateContainer();
-    r.stateBuffer = std::make_shared<TrackStateContainerBackend>();
 
     auto rootBranch = trackContainer.makeTrack();
     r.activeBranches.push_back(rootBranch);
@@ -1326,10 +1330,6 @@ class CombinatorialKalmanFilter {
                  << " with the initial parameters: "
                  << initialParameters.parameters().transpose());
       return error.error();
-    }
-
-    for (const auto& track : combKalmanResult.collectedTracks) {
-      calculateTrackQuantities(track);
     }
 
     return std::move(combKalmanResult.collectedTracks);

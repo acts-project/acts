@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   std::stringstream sstream;
   protoLayerRot.toStream(sstream);
   std::string oString = R"(ProtoLayer with dimensions (min/max)
-Extent in space : 
+Extent in space :
   - value :      binX | range = [-6.66104, 6.66104]
   - value :      binY | range = [-4.85241, 4.85241]
   - value :      binZ | range = [-6, 6]

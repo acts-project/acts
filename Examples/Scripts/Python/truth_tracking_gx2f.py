@@ -93,7 +93,6 @@ def runTruthTrackingGx2f(
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.muon,
         truthSeedRanges=TruthSeedRanges(
-            pt=(1 * u.GeV, None),
             nHits=(7, None),
         ),
     )
@@ -160,7 +159,7 @@ if "__main__" == __name__:
     # ODD
     from acts.examples.odd import getOpenDataDetector
 
-    detector, trackingGeometry, _ = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector()
     digiConfigFile = (
         srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
     )

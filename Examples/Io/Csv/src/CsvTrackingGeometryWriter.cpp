@@ -25,6 +25,7 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <array>
@@ -32,8 +33,6 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
 
@@ -60,9 +59,9 @@ std::string CsvTrackingGeometryWriter::name() const {
 
 namespace {
 
-using SurfaceWriter = dfe::NamedTupleCsvWriter<SurfaceData>;
-using SurfaceGridWriter = dfe::NamedTupleCsvWriter<SurfaceGridData>;
-using LayerVolumeWriter = dfe::NamedTupleCsvWriter<LayerVolumeData>;
+using SurfaceWriter = ActsExamples::NamedTupleCsvWriter<SurfaceData>;
+using SurfaceGridWriter = ActsExamples::NamedTupleCsvWriter<SurfaceGridData>;
+using LayerVolumeWriter = ActsExamples::NamedTupleCsvWriter<LayerVolumeData>;
 using BoundarySurface = Acts::BoundarySurfaceT<Acts::TrackingVolume>;
 
 /// Write a single surface.

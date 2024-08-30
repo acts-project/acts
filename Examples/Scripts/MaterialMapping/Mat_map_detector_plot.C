@@ -17,7 +17,7 @@
 /// Draw and save the histograms.
 
 void plot(std::vector<TH2F*> Map, std::vector<int> detectors, const std::string& name){
-  
+
   std::string sVol = "Detector volumes :";
   for(auto const& det: detectors) {
     sVol += " ";
@@ -98,8 +98,8 @@ void Initialise_hist(std::vector<TH2F*>& detector_hist){
 /// Fill the histograms for the detector.
 
 void Fill(std::vector<TH2F*>& detector_hist, const std::string& input_file, std::vector<int> detectors,  const int& nbprocess){
-  
-  
+
+
   Initialise_hist(detector_hist);
 
   //Get file, tree and set top branch address
@@ -129,7 +129,7 @@ void Fill(std::vector<TH2F*>& detector_hist, const std::string& input_file, std:
   tree->SetBranchAddress("sur_type",&sur_type);
 
   tree->SetBranchAddress("vol_id",&vol_id);
-  
+
   int nentries = tree->GetEntries();
   if(nentries > nbprocess && nbprocess != -1) nentries = nbprocess;
   // Loop over all the material tracks.
@@ -144,7 +144,7 @@ void Fill(std::vector<TH2F*>& detector_hist, const std::string& input_file, std:
     for(int j=0; j<mat_X0->size(); j++ ){
 
       Acts::GeometryIdentifier ID;
-      
+
       if(sur_id->at(j) != 0){
         ID = Acts::GeometryIdentifier(sur_id->at(j));
       }
