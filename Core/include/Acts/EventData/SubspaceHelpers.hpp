@@ -21,7 +21,9 @@
 
 namespace Acts {
 
-/// Check subspace indices for consistency
+/// @brief Check subspace indices for consistency
+///
+/// Indices must be unique and within the full size of the subspace
 ///
 /// @tparam Container type of the container
 ///
