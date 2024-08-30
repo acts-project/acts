@@ -18,7 +18,6 @@
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
 namespace Concepts {
