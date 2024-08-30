@@ -14,7 +14,7 @@
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include "detray/io/frontend/payloads.hpp"
+#include <detray/io/frontend/payloads.hpp>
 
 namespace Acts {
 
