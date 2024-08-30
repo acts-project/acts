@@ -106,11 +106,11 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   using EndOfWorld = EndOfWorldReached;
 
   // Action list and abort list
-  using RefereceActorList =
+  using ReferenceActorList =
       ActorList<MaterialInteractor, SurfaceCollector<>, EndOfWorld>;
 
   // Options definition
-  using Options = typename rpropagator_t::template Options<RefereceActorList>;
+  using Options = typename rpropagator_t::template Options<ReferenceActorList>;
   Options pOptions(tgContext, mfContext);
   if (oversteppingTest) {
     pOptions.stepping.maxStepSize = oversteppingMaxStepSize;

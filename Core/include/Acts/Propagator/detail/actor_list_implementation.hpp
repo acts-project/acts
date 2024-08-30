@@ -23,11 +23,10 @@ struct actor_caller {
             typename navigator_t, typename... Args>
   static void act(const actor_t& actor, propagator_state_t& state,
                   const stepper_t& stepper, const navigator_t& navigator,
-                  Args&&... args) {
-    static_assert(
-        Actor<actor_t, propagator_state_t, stepper_t, navigator_t, Args...>,
-        "The actor does not fulfill the Actor concept");
-
+                  Args&&... args)
+    requires(
+        Actor<actor_t, propagator_state_t, stepper_t, navigator_t, Args...>)
+  {
     if constexpr (ActorHasAct<actor_t, propagator_state_t, stepper_t,
                               navigator_t, Args...>) {
       if constexpr (ActorHasResult<actor_t>) {
@@ -44,11 +43,10 @@ struct actor_caller {
             typename navigator_t, typename... Args>
   static bool check(const actor_t& actor, propagator_state_t& state,
                     const stepper_t& stepper, const navigator_t& navigator,
-                    Args&&... args) {
-    static_assert(
-        Actor<actor_t, propagator_state_t, stepper_t, navigator_t, Args...>,
-        "The actor does not fulfill the Actor concept");
-
+                    Args&&... args)
+    requires(
+        Actor<actor_t, propagator_state_t, stepper_t, navigator_t, Args...>)
+  {
     if constexpr (ActorHasAbort<actor_t, propagator_state_t, stepper_t,
                                 navigator_t, Args...>) {
       if constexpr (ActorHasResult<actor_t>) {
