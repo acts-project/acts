@@ -12,12 +12,12 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
 #include <cstddef>
@@ -121,9 +121,7 @@ class MeasurementSelector {
                        false>::Parameters predicted,
       TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                        false>::Covariance predictedCovariance,
-      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                       false>::Projector projector,
-      unsigned int calibratedSize) const;
+      BoundSubspaceIndices projector, unsigned int calibratedSize) const;
 
   InternalConfig m_config;
 };

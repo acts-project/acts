@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <array>
 #include <limits>

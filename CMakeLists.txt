@@ -58,6 +58,8 @@ option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
+option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
+option(ACTS_BUILD_PLUGIN_HASHING "Build Hashing plugin" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
@@ -69,6 +71,7 @@ option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OF
 option(ACTS_BUILD_EXAMPLES_EXATRKX "Build the Exa.TrkX example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
 option(ACTS_USE_EXAMPLES_TBB "Use Threading Building Blocks library in the examples" ON)
@@ -110,6 +113,7 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_EDM4HEP
   OR ACTS_BUILD_EXAMPLES_GEANT4
   OR ACTS_BUILD_EXAMPLES_HEPMC3
+  OR ACTS_BUILD_EXAMPLES_HASHING
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
   OR ACTS_BUILD_EXAMPLES_EXATRKX
   OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
@@ -163,6 +167,10 @@ set_option_if(
 set_option_if(
   ACTS_BUILD_PLUGIN_JSON
   ACTS_BUILD_PLUGIN_TRACCC
+)
+set_option_if(
+  ACTS_BUILD_PLUGIN_HASHING
+  ACTS_BUILD_EXAMPLES_HASHING
 )
 
 # feature tests
@@ -234,6 +242,7 @@ set(_acts_traccc_version 0.13.0)
 set(_acts_covfie_version 0.10.0)
 set(_acts_vecmem_version 1.4.0)
 set(_acts_algebraplugins_version 0.22.0)
+set(_acts_annoy_version 1.17.3)
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
@@ -463,6 +472,9 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
     else()
         add_subdirectory(thirdparty/traccc)
     endif()
+endif()
+if(ACTS_SETUP_ANNOY OR ACTS_BUILD_PLUGIN_HASHING)
+    add_subdirectory(thirdparty/Annoy)
 endif()
 
 # examples dependencies

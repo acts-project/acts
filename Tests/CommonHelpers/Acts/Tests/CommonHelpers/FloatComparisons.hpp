@@ -11,7 +11,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <algorithm>
 #include <limits>
