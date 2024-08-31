@@ -80,6 +80,9 @@ if(PluginGeoModel IN_LIST Acts_COMPONENTS)
   find_dependency(GeoModelCore @GeoModel_VERSION@ CONFIG EXACT)
   find_dependency(GeoModelIO @GeoModel_VERSION@ CONFIG EXACT)
 endif()
+if (PluginHashing IN_LIST Acts_COMPONENTS)
+  find_dependency(Annoy @ANNOY_VERSION@ CONFIG EXACT)
+endif()
 
 # dependencies that we have built ourselves but cannot be
 # straightforwardly handed to cmake

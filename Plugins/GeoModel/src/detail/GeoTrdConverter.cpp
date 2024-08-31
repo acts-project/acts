@@ -36,8 +36,8 @@ Acts::detail::GeoTrdConverter::operator()(const PVConstLink& geoPV,
   Transform3 transform = Transform3::Identity();
   transform.translation() = unitLength * absTransform.translation();
 
-  // GeoTrd is defined that halfZ needs to map onto surface halfY
-  // Create the surface
+  // GeoTrd coordinates: x is the extrusion direction, y is orthogonal to the
+  // symmetry axis and z is along the symmetry axis
   ActsScalar halfX1 = geoTrd.getXHalfLength1();
   ActsScalar halfX2 = geoTrd.getXHalfLength2();
   ActsScalar halfY1 = geoTrd.getYHalfLength1();
