@@ -54,5 +54,20 @@ void addDetray(Context& ctx) {
           DetrayConverter().convert<>(gctx, detector, memoryRessource, options);
     });
   }
+
+  {
+    auto converter =
+        py::class_<DetrayConverter>(detray, "DetrayConverter");
+
+    auto options =
+        py::class_<DetrayConverter::Options>(converter, "Options").def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(options, DetrayConverter::Options);
+    ACTS_PYTHON_MEMBER(convertMaterial);
+    ACTS_PYTHON_MEMBER(convertSurfaceGrids);
+    ACTS_PYTHON_MEMBER(writeToJson);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
 }
 }  // namespace Acts::Python
