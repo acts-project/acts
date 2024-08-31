@@ -328,16 +328,18 @@ class SurfaceArray {
     /// interface stays the same, since we don't care what happens
     /// here on the callers end
     /// This is the version for DIM>1
-    template <std::size_t D = DIM, std::enable_if_t<D != 1, int> = 0>
-    Vector3 getBinCenterImpl(std::size_t bin) const {
+    Vector3 getBinCenterImpl(std::size_t bin) const
+      requires(DIM != 1)
+    {
       return m_localToGlobal(ActsVector<DIM>(
           m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin)).data()));
     }
 
     /// Internal method, see above.
     /// This is the version for DIM==1
-    template <std::size_t D = DIM, std::enable_if_t<D == 1, int> = 0>
-    Vector3 getBinCenterImpl(std::size_t bin) const {
+    Vector3 getBinCenterImpl(std::size_t bin) const
+      requires(DIM == 1)
+    {
       point_t pos = m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin));
       return m_localToGlobal(pos);
     }

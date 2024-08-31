@@ -1,4 +1,11 @@
-add_library(ActsPluginDetray SHARED src/DetrayConverter.cpp)
+add_library(
+    ActsPluginDetray
+    SHARED
+    src/DetrayConversionUtils.cpp
+    src/DetrayConverter.cpp
+    src/DetrayGeometryConverter.cpp
+    src/DetrayMaterialConverter.cpp
+)
 
 add_dependencies(ActsPluginDetray detray::core covfie::core vecmem::core)
 
