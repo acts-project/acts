@@ -458,7 +458,7 @@ class TrackingVolume : public Volume {
   /// static layers
   std::unique_ptr<const LayerArray> m_confinedLayers = nullptr;
 
-  /// Array of Volumes inside the Volume when actin as container
+  /// Array of Volumes inside the Volume when acting as container
   std::shared_ptr<const TrackingVolumeArray> m_confinedVolumes = nullptr;
 
   /// confined dense
