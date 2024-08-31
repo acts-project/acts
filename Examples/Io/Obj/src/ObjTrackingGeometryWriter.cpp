@@ -14,6 +14,8 @@
 #include <Acts/Visualization/GeometryView3D.hpp>
 #include <Acts/Visualization/ObjVisualization3D.hpp>
 
+#include <filesystem>
+
 ActsExamples::ObjTrackingGeometryWriter::ObjTrackingGeometryWriter(
     const ActsExamples::ObjTrackingGeometryWriter::Config& config,
     Acts::Logging::Level level)
@@ -43,5 +45,5 @@ void ActsExamples::ObjTrackingGeometryWriter::write(
   Acts::GeometryView3D::drawTrackingVolume(
       objVis, tVolume, context.geoContext, m_cfg.containerView,
       m_cfg.volumeView, m_cfg.passiveView, m_cfg.sensitiveView, m_cfg.gridView,
-      true, "", m_cfg.outputDir);
+      true, "", std::filesystem::path(m_cfg.outputDir));
 }
