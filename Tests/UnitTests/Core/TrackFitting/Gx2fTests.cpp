@@ -1265,6 +1265,51 @@ BOOST_AUTO_TEST_CASE(Material) {
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                               startParametersFit, gx2fOptions, tracks);
 
+  // Helper to visualise the detector
+  {
+    std::cout << "\n*** Create .obj of Detector ***\n" << std::endl;
+    // Only need for obj
+    ObjVisualization3D obj;
+
+    bool triangulate = true;
+    ViewConfig viewSensitive = ViewConfig({0, 180, 240});
+    viewSensitive.triangulate = triangulate;
+    ViewConfig viewPassive = ViewConfig({240, 280, 0});
+    viewPassive.triangulate = triangulate;
+    ViewConfig viewVolume = ViewConfig({220, 220, 0});
+    viewVolume.triangulate = triangulate;
+    ViewConfig viewContainer = ViewConfig({220, 220, 0});
+    viewContainer.triangulate = triangulate;
+    ViewConfig viewGrid = ViewConfig({220, 0, 0});
+    viewGrid.nSegments = 8;
+    viewGrid.offset = 3.;
+    viewGrid.triangulate = triangulate;
+
+    std::string tag = "gx2f_toydet";
+
+    const Acts::TrackingVolume& tgVolume =
+        *(detector.geometry->highestTrackingVolume());
+
+    GeometryView3D::drawTrackingVolume(obj, tgVolume, geoCtx, viewContainer,
+                                       viewVolume, viewPassive, viewSensitive,
+                                       viewGrid, true, tag);
+  }
+  // Helper to visualise the measurements
+  {
+    std::cout << "\n*** Create .obj of measurements ***\n" << std::endl;
+    ObjVisualization3D obj;
+
+    double localErrorScale = 10000000.;
+    ViewConfig mcolor({255, 145, 48});
+    mcolor.offset = 2;
+    //  mcolor.visible = true;
+
+    drawMeasurements(obj, measurements, detector.geometry, geoCtx,
+                     localErrorScale, mcolor);
+
+    obj.write("meas");
+  }
+
   BOOST_REQUIRE(res.ok());
 
   const auto& track = *res;
