@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <bitset>
@@ -81,34 +80,31 @@ using TupleFilter = typename TupleFilterImpl<predicate_t, tuple_t,
 ///
 /// Only checks for the existence of the templated `generatePathLimits` method
 template <typename process_t>
-class IsPointLikeProcess {
-  struct MockUniformRandomBitGenerator {
-    using result_type = unsigned int;
-
-    static constexpr result_type min() { return 0u; }
-    static constexpr result_type max() { return 1u << 15u; }
-    constexpr result_type operator()() { return 0u; }
-  };
-
-  METHOD_TRAIT(generatePathLimits_method_t, generatePathLimits);
-
-  using scalar_pair_t = std::pair<Particle::Scalar, Particle::Scalar>;
-
- public:
-  static constexpr bool value = Acts::Concepts::has_method<
-      const process_t, scalar_pair_t, generatePathLimits_method_t,
-      MockUniformRandomBitGenerator&, const Particle&>;
+concept PointLikeProcessConcept = requires(
+    const process_t& p, std::uniform_int_distribution<unsigned int>& rng,
+    const Particle& prt) {
+  {
+    p.generatePathLimits(rng, prt)
+  } -> std::same_as<std::pair<Particle::Scalar, Particle::Scalar>>;
 };
 
 template <typename process_t>
-struct IsContinuousProcess {
-  static constexpr bool value = !IsPointLikeProcess<process_t>::value;
+concept ContinuousProcessConcept = !PointLikeProcessConcept<process_t>;
+
+template <typename process_t>
+struct PointLikeProcessTrait {
+  static constexpr bool value = PointLikeProcessConcept<process_t>;
+};
+
+template <typename process_t>
+struct ContinuousProcessTrait {
+  static constexpr bool value = ContinuousProcessConcept<process_t>;
 };
 
 template <typename processes_t>
-using ContinuousIndices = TupleFilter<IsContinuousProcess, processes_t>;
+using ContinuousIndices = TupleFilter<ContinuousProcessTrait, processes_t>;
 template <typename processes_t>
-using PointLikeIndices = TupleFilter<IsPointLikeProcess, processes_t>;
+using PointLikeIndices = TupleFilter<PointLikeProcessTrait, processes_t>;
 
 }  // namespace detail
 

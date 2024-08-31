@@ -281,6 +281,14 @@ else()
     target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
 endif()
 
+if(ACTS_BUILD_EXAMPLES_HASHING)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginHashing)
+    target_sources(ActsPythonBindings PRIVATE src/Hashing.cpp)
+    list(APPEND py_files examples/hashing.py)
+else()
+    target_sources(ActsPythonBindings PRIVATE src/HashingStub.cpp)
+endif()
+
 configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
 install(FILES ${_python_dir}/setup.sh DESTINATION "python")
 
