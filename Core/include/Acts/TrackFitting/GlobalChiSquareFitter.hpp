@@ -234,10 +234,6 @@ struct Gx2FitterResult {
 
   // Count how many surfaces have been hit
   std::size_t surfaceCount = 0;
-
-  // Monitor which volume we start in. We do not allow to switch the start of a
-  // following iteration in a different volume.
-  const TrackingVolume* startVolume = nullptr;
 };
 
 /// @brief A container to store scattering properties for each material surface
@@ -586,10 +582,6 @@ class Gx2Fitter {
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};
 
-    /// Monitor which volume we start in. We do not allow to switch the start of
-    /// a following iteration in a different volume.
-    const TrackingVolume* startVolume = nullptr;
-
     /// The particle hypothesis is needed for estimating scattering angles
     const parameters_t* parametersWithHypothesis = nullptr;
 
@@ -633,19 +625,6 @@ class Gx2Fitter {
 
         return;
       }
-
-      if (startVolume != nullptr &&
-          startVolume != state.navigation.startVolume) {
-        ACTS_INFO("The update pushed us to a new volume from '"
-                  << startVolume->volumeName() << "' to '"
-                  << state.navigation.startVolume->volumeName()
-                  << "'. Starting to abort.");
-        result.result = Result<void>(
-            Experimental::GlobalChiSquareFitterError::UpdatePushedToNewVolume);
-
-        return;
-      }
-      result.startVolume = state.navigation.startVolume;
 
       // We are only interested in surfaces. If we are not on a surface, we
       // continue the navigation
@@ -1081,10 +1060,6 @@ class Gx2Fitter {
     // want to fit e.g. q/p and adjusts itself later.
     std::size_t ndfSystem = std::numeric_limits<std::size_t>::max();
 
-    // Monitor which volume we start in. We do not allow to switch the start of
-    // a following iteration in a different volume.
-    const TrackingVolume* startVolume = nullptr;
-
     // The scatteringMap stores for each visited surface their scattering
     // properties
     std::unordered_map<GeometryIdentifier, ScatteringProperties> scatteringMap;
@@ -1127,7 +1102,6 @@ class Gx2Fitter {
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
-      gx2fActor.startVolume = startVolume;
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
 
@@ -1407,7 +1381,6 @@ class Gx2Fitter {
       }
 
       oldChi2sum = chi2sum;
-      startVolume = gx2fResult.startVolume;
     }
     ACTS_DEBUG("Finished to iterate");
     ACTS_VERBOSE("final params:\n" << params);
@@ -1444,7 +1417,6 @@ class Gx2Fitter {
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
-      gx2fActor.startVolume = startVolume;
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
 
