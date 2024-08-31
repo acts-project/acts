@@ -324,6 +324,12 @@ class Navigator {
             state.navigation.startVolume->associatedLayer(
                 state.geoContext, stepper.position(state.stepping));
         state.navigation.currentLayer = state.navigation.startLayer;
+        ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
+      } else {
+        ACTS_VERBOSE(volInfo(state)
+                     << "No start volume resolved. Nothing left to do.");
+        // set the navigation break
+        state.navigation.navigationBreak = true;
       }
     }
 
