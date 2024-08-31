@@ -12,31 +12,22 @@
 
 namespace Acts::Experimental {
 
-BoundVector calculateDeltaParams(const BoundMatrix& aMatrix,
-                                 const BoundVector& bVector,
-                                 const std::size_t ndfSystem) {
-  BoundVector deltaParams = BoundVector::Zero();
-  if (ndfSystem == 4) {
-    constexpr std::size_t reducedMatrixSize = 4;
-    deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
-        aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-            .colPivHouseholderQr()
-            .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
-  } else if (ndfSystem == 5) {
-    constexpr std::size_t reducedMatrixSize = 5;
-    deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
-        aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-            .colPivHouseholderQr()
-            .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
-  } else {
-    constexpr std::size_t reducedMatrixSize = 6;
-    deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
-        aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-            .colPivHouseholderQr()
-            .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
+void updateCovariancePredicted(BoundMatrix& fullCovariancePredicted,
+                               Eigen::MatrixXd& aMatrixExtended,
+                               const std::size_t ndfSystem) {
+  // make invertible
+  for (int i = 0; i < aMatrixExtended.rows(); ++i) {
+    if (aMatrixExtended(i, i) == 0.) {
+      aMatrixExtended(i, i) = 1.;
+    }
   }
 
-  return deltaParams;
+  visit_measurement(ndfSystem, [&](auto N) {
+    fullCovariancePredicted.topLeftCorner<N, N>() =
+        aMatrixExtended.inverse().topLeftCorner<N, N>();
+  });
+
+  return;
 }
 
 }  // namespace Acts::Experimental
