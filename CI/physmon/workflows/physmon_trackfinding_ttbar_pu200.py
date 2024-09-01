@@ -67,9 +67,6 @@ with tempfile.TemporaryDirectory() as temp:
         preSelectParticles=ParticleSelectorConfig(
             rho=(0.0, 24 * u.mm),
             absZ=(0.0, 1.0 * u.m),
-            eta=(-3.0, 3.0),
-            pt=(150 * u.MeV, None),
-            removeNeutral=True,
         ),
     )
 
