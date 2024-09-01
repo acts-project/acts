@@ -21,7 +21,9 @@
 
 namespace Acts {
 
-/// Check subspace indices for consistency
+/// @brief Check subspace indices for consistency
+///
+/// Indices must be unique and within the full size of the subspace
 ///
 /// @tparam Container type of the container
 ///
@@ -103,7 +105,6 @@ class SubspaceHelperBase {
  public:
   static constexpr std::size_t kFullSize = FullSize;
 
-  using FullVector = ActsVector<kFullSize>;
   using FullSquareMatrix = ActsSquareMatrix<kFullSize>;
 
   bool empty() const { return self().empty(); }
@@ -114,18 +115,34 @@ class SubspaceHelperBase {
   auto begin() const { return self().begin(); }
   auto end() const { return self().end(); }
 
-  template <typename indices_t>
-  bool contains(indices_t i) const {
-    return std::find(begin(), end(),
-                     static_cast<typename Derived::IndexType>(i)) != end();
+  bool contains(std::uint8_t index) const {
+    return std::find(begin(), end(), index) != end();
+  }
+  std::size_t indexOf(std::uint8_t index) const {
+    auto it = std::find(begin(), end(), index);
+    return it != end() ? std::distance(begin(), it) : kFullSize;
   }
 
-  template <typename indices_t>
-  std::size_t indexOf(indices_t i) const {
-    auto it =
-        std::find(begin(), end(), static_cast<typename Derived::IndexType>(i));
-    assert(it != end());
-    return std::distance(begin(), it);
+  template <typename EigenDerived>
+  ActsVector<kFullSize> expandVector(
+      const Eigen::DenseBase<EigenDerived>& vector) const {
+    ActsVector<kFullSize> result = ActsVector<kFullSize>::Zero();
+    for (auto [i, index] : enumerate(*this)) {
+      result(index) = vector(i);
+    }
+    return result;
+  }
+
+  template <typename EigenDerived>
+  FullSquareMatrix expandMatrix(
+      const Eigen::DenseBase<EigenDerived>& matrix) const {
+    FullSquareMatrix result = FullSquareMatrix::Zero();
+    for (auto [i, indexI] : enumerate(*this)) {
+      for (auto [j, indexJ] : enumerate(*this)) {
+        result(indexI, indexJ) = matrix(i, j);
+      }
+    }
+    return result;
   }
 
   FullSquareMatrix fullProjector() const {
@@ -148,33 +165,6 @@ class SubspaceHelperBase {
     requires(kFullSize <= 8)
   {
     return matrixToBitset(fullProjector()).to_ullong();
-  }
-
-  template <typename EigenDerived>
-  FullVector expandVector(
-      const Eigen::DenseBase<EigenDerived>& subspaceVector) const {
-    assert(static_cast<std::size_t>(subspaceVector.size()) == size() &&
-           "Invalid subspace vector size");
-    FullVector result = FullVector::Zero();
-    for (auto [i, index] : enumerate(*this)) {
-      result(index) = subspaceVector(i);
-    }
-    return result;
-  }
-
-  template <typename EigenDerived>
-  FullSquareMatrix expandMatrix(
-      const Eigen::DenseBase<EigenDerived>& subspaceMatrix) const {
-    assert(static_cast<std::size_t>(subspaceMatrix.rows()) == size() &&
-           static_cast<std::size_t>(subspaceMatrix.cols()) == size() &&
-           "Invalid subspace matrix size");
-    FullSquareMatrix result = FullSquareMatrix::Zero();
-    for (auto [i, indexI] : enumerate(*this)) {
-      for (auto [j, indexJ] : enumerate(*this)) {
-        result(indexI, indexJ) = subspaceMatrix(i, j);
-      }
-    }
-    return result;
   }
 
  private:
@@ -208,13 +198,12 @@ class VariableSubspaceHelper
 
   bool empty() const { return m_indices.empty(); }
   std::size_t size() const { return m_indices.size(); }
+  const Container& indices() const { return m_indices; }
 
   IndexType operator[](std::size_t i) const { return m_indices[i]; }
 
   auto begin() const { return m_indices.begin(); }
   auto end() const { return m_indices.end(); }
-
-  const Container& indices() const { return m_indices; }
 
  private:
   Container m_indices;
@@ -257,13 +246,12 @@ class FixedSubspaceHelper
 
   bool empty() const { return m_indices.empty(); }
   std::size_t size() const { return m_indices.size(); }
+  const Container& indices() const { return m_indices; }
 
   IndexType operator[](std::uint32_t i) const { return m_indices[i]; }
 
   auto begin() const { return m_indices.begin(); }
   auto end() const { return m_indices.end(); }
-
-  const Container& indices() const { return m_indices; }
 
   Projector projector() const {
     Projector result = Projector::Zero();

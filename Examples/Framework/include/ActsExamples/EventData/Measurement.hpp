@@ -191,7 +191,9 @@ class MeasurementProxyBase {
     return self().subspaceHelper().indexOf(i);
   }
 
-  Acts::SourceLink& sourceLink() {
+  Acts::SourceLink& sourceLink()
+    requires(!ReadOnly)
+  {
     return container().m_sourceLinks.at(m_index);
   }
 
