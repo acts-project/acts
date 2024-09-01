@@ -93,9 +93,9 @@ class DetrayPropagator : public PropagatorInterface {
     PropagationSummary summary(startParameters);
     for (const auto& object : objectTracer.object_trace) {
       //const auto& intersection = objectTracer[intr_idx].intersection;
-       auto position = object.pos;
+       const auto& dposition = object.pos;
        Acts::detail::Step step;
-       step.position = Acts::Vector3(position[0], position[1], position[2]);
+       step.position = Acts::Vector3(dposition[0], dposition[1], dposition[2]);
        summary.steps.emplace_back(step);
     }
 
