@@ -14,7 +14,7 @@
 namespace Acts {
 
 class ITkIdentifier {
-  Acts::MultiIndex<std::size_t, 1, 2, 20, 20, 20, 1> m_identifier{};
+  Acts::MultiIndex<std::size_t, 1, 2, 20, 1, 19, 20, 1> m_identifier{};
 
  public:
   ITkIdentifier(int hardware, int barrelEndcap, int layerWheel, int etaModule,
@@ -41,6 +41,8 @@ class ITkIdentifier {
   /// A unique identifier that represents the combination of specifiers
   std::size_t value() const;
 };
+
+std::ostream& operator<<(std::ostream& os, const ITkIdentifier& id);
 
 /// Specialization of the GeoModelDetectorElement for the ITk. This allows
 /// mapping of Acts::GeometryIdentifiers to ITk modules in a straight-forward

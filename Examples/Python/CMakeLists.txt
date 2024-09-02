@@ -88,7 +88,10 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
-    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginGeoModel)
+    target_link_libraries(
+        ActsPythonBindings
+        PUBLIC ActsPluginGeoModel ActsExamplesITkModuleSplitting
+    )
     target_sources(ActsPythonBindings PRIVATE src/GeoModel.cpp)
 else()
     target_sources(ActsPythonBindings PRIVATE src/GeoModelStub.cpp)

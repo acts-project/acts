@@ -14,11 +14,14 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <sstream>
+
+namespace {}
 
 ActsExamples::TGeoITkModuleSplitter::TGeoITkModuleSplitter(
     const ActsExamples::TGeoITkModuleSplitter::Config& cfg,
@@ -88,55 +91,16 @@ ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
     const Acts::GeometryContext& gctx,
     const std::shared_ptr<const Acts::TGeoDetectorElement>& detElement,
     unsigned int nSegments) const {
-  // Retrieve the surface
-  auto identifier = detElement->identifier();
-  const Acts::Surface& surface = detElement->surface();
-  const Acts::SurfaceBounds& bounds = surface.bounds();
-  if (bounds.type() != Acts::SurfaceBounds::eRectangle || nSegments <= 1u) {
-    ACTS_WARNING("Invalid splitting config for barrel node: " +
-                 std::string(detElement->tgeoNode().GetName()) +
-                 "! Node will not be slpit.");
-    return {detElement};
-  }
+  auto name = detElement->tgeoNode().GetName();
 
-  // Output container for the submodules
-  std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> detElements =
-      {};
-  detElements.reserve(nSegments);
+  auto factory = [&](const auto& trafo, const auto& bounds) {
+    return std::make_shared<const Acts::TGeoDetectorElement>(
+        detElement->identifier(), detElement->tgeoNode(), trafo, bounds,
+        detElement->thickness());
+  };
 
-  // Get the geometric information
-  double thickness = detElement->thickness();
-  const Acts::Transform3& transform = surface.transform(gctx);
-  // Determine the new bounds
-  const std::vector<double> boundsValues = bounds.values();
-  double lengthX = (boundsValues[Acts::RectangleBounds::eMaxX] -
-                    boundsValues[Acts::RectangleBounds::eMinX]) /
-                   nSegments;
-  double lengthY = boundsValues[Acts::RectangleBounds::eMaxY] -
-                   boundsValues[Acts::RectangleBounds::eMinY];
-  auto rectBounds =
-      std::make_shared<Acts::RectangleBounds>(0.5 * lengthX, 0.5 * lengthY);
-  // Translation for every subelement
-  auto localTranslation = Acts::Vector2(-0.5 * lengthX * (nSegments - 1), 0.);
-  const auto step = Acts::Vector2(lengthX, 0.);
-  ACTS_DEBUG("Rectangle bounds for new node (half length): " +
-             std::to_string(rectBounds->halfLengthX()) + ", " +
-             std::to_string(rectBounds->halfLengthY()));
-
-  for (std::size_t i = 0; i < nSegments; i++) {
-    Acts::Vector3 globalTranslation =
-        surface.localToGlobal(gctx, localTranslation, {}) -
-        transform.translation();
-    auto elemTransform =
-        Acts::Transform3(transform).pretranslate(globalTranslation);
-    auto element = std::make_shared<const Acts::TGeoDetectorElement>(
-        identifier, detElement->tgeoNode(), elemTransform, rectBounds,
-        thickness);
-    detElements.push_back(std::move(element));
-
-    localTranslation += step;
-  }
-  return detElements;
+  return ITk::splitBarrelModule(gctx, detElement, nSegments, factory, name,
+                                logger());
 }
 
 /// If applicable, returns a split detector element
@@ -146,55 +110,14 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
     const std::shared_ptr<const Acts::TGeoDetectorElement>& detElement,
     const std::vector<ActsExamples::TGeoITkModuleSplitter::SplitRange>&
         splitRanges) const {
-  // Retrieve the surface
-  auto identifier = detElement->identifier();
-  const Acts::Surface& surface = detElement->surface();
-  const Acts::SurfaceBounds& bounds = surface.bounds();
+  auto name = detElement->tgeoNode().GetName();
 
-  // Check annulus bounds origin
-  auto printOrigin = [&](const Acts::Surface& sf) {
-    Acts::Vector3 discOrigin =
-        sf.localToGlobal(gctx, Acts::Vector2(0., 0.), Acts::Vector3::Zero());
-    std::string out =
-        "Disc surface origin at: " + std::to_string(discOrigin[0]) + ", " +
-        std::to_string(discOrigin[1]) + ", " + std::to_string(discOrigin[2]);
-    return out;
+  auto factory = [&](const auto& trafo, const auto& bounds) {
+    return std::make_shared<const Acts::TGeoDetectorElement>(
+        detElement->identifier(), detElement->tgeoNode(), trafo, bounds,
+        detElement->thickness());
   };
-  ACTS_DEBUG(printOrigin(surface));
 
-  if (bounds.type() != Acts::SurfaceBounds::eAnnulus || splitRanges.empty()) {
-    ACTS_WARNING("Invalid splitting config for disk node: " +
-                 std::string(detElement->tgeoNode().GetName()) +
-                 "! Node will not be slpit.");
-    return {detElement};
-  }
-
-  auto nSegments = splitRanges.size();
-
-  // Output container for the submodules
-  std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> detElements =
-      {};
-  detElements.reserve(nSegments);
-
-  // Get the geometric information
-  double thickness = detElement->thickness();
-  const Acts::Transform3& transform = surface.transform(gctx);
-  const std::vector<double> boundsValues = bounds.values();
-  std::array<double, Acts::AnnulusBounds::eSize> values{};
-  std::copy_n(boundsValues.begin(), Acts::AnnulusBounds::eSize, values.begin());
-
-  for (std::size_t i = 0; i < nSegments; i++) {
-    values[Acts::AnnulusBounds::eMinR] = splitRanges[i].first;
-    values[Acts::AnnulusBounds::eMaxR] = splitRanges[i].second;
-    auto annulusBounds = std::make_shared<Acts::AnnulusBounds>(values);
-    ACTS_DEBUG(
-        "New r bounds for node: " + std::to_string(annulusBounds->rMin()) +
-        ", " + std::to_string(annulusBounds->rMax()));
-
-    auto element = std::make_shared<const Acts::TGeoDetectorElement>(
-        identifier, detElement->tgeoNode(), transform, annulusBounds,
-        thickness);
-    detElements.push_back(std::move(element));
-  }
-  return detElements;
+  return ITk::splitDiscModule(gctx, detElement, splitRanges, factory, name,
+                              logger());
 }
