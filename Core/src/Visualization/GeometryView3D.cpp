@@ -42,35 +42,14 @@
 
 namespace {
 
-/// @brief Combines a base directory path with a relative file path to create an
-/// absolute path.
-/// - If the relative file path is already absolute, pathBaseDir will be
-/// ignored.
-/// - If the pathBaseDir is empty (which should not happen), we set it as the
-///   current working directory.
+/// @brief Interprets a given path as the current working directory if it is either "." or empty.
 ///
-/// @param pathBaseDir The base directory path.
-/// @param relativeFilePath The relative file path to be combined with the base directory.
+/// @param testPath The path to interpret.
 ///
-/// @return Absolute path created by combining baseDir and pathFileRelative, if pathFileRelative is not absolute.
-// std::filesystem::path makeAbsPath(
-//     std::filesystem::path pathBaseDir,
-//     const std::filesystem::path& pathFileRelative) {
-//   if (pathFileRelative.is_absolute()) {
-//     return pathFileRelative;
-//   }
-//
-//   if (pathBaseDir.empty()) {
-//     pathBaseDir = std::filesystem::current_path();
-//   }
-//
-//   return pathBaseDir / pathFileRelative;
-// }
-
-// TODO write summary
+/// @return The current working directory if `testPath` is "." or empty; otherwise, returns `testPath` unchanged.
 std::filesystem::path tryToInterpretAsCurrentPath(
     const std::filesystem::path& testPath) {
-  return testPath == std::filesystem::path(".") || testPath.empty()
+  return (testPath.empty() || testPath == std::filesystem::path("."))
              ? std::filesystem::current_path()
              : testPath;
 }
@@ -317,12 +296,9 @@ void Acts::GeometryView3D::drawTrackingVolume(
     }
     if (tVolume.confinedVolumes() == nullptr) {
       vcConfig = vConfig;
-      // TODO FS
       vcConfig.outputName =
           std::filesystem::path(vname + std::string("_boundaries") + tag);
     } else {
-      std::stringstream vs;
-      vs << "Container";
       std::vector<GeometryIdentifier::Value> ids{tVolume.geometryId().volume()};
 
       for (const auto* current = &tVolume; current->motherVolume() != nullptr;
@@ -330,11 +306,12 @@ void Acts::GeometryView3D::drawTrackingVolume(
         ids.push_back(current->motherVolume()->geometryId().volume());
       }
 
-      for (std::size_t i = ids.size() - 1; i < ids.size(); --i) {
-        vs << "_v" << ids[i];
+      std::reverse(ids.begin(), ids.end());
+      vname = "Container";
+      for (const auto& id : ids) {
+        vname += "_v" + std::to_string(id);
       }
-      vname = vs.str();
-      // TODO FS
+
       vcConfig.outputName =
           std::filesystem::path(vname + std::string("_boundaries") + tag);
     }
@@ -356,13 +333,12 @@ void Acts::GeometryView3D::drawTrackingVolume(
     std::size_t il = 0;
     for (const auto& tl : layers) {
       if (writeIt) {
-        // TODO FS
-        lConfig.outputName =
-            vname + std::string("_passives_l") + std::to_string(il) + tag;
-        sConfig.outputName =
-            vname + std::string("_sensitives_l") + std::to_string(il) + tag;
-        gConfig.outputName =
-            vname + std::string("_grids_l") + std::to_string(il) + tag;
+        lConfig.outputName = std::filesystem::path(
+            vname + std::string("_passives_l") + std::to_string(il) + tag);
+        sConfig.outputName = std::filesystem::path(
+            vname + std::string("_sensitives_l") + std::to_string(il) + tag);
+        gConfig.outputName = std::filesystem::path(
+            vname + std::string("_grids_l") + std::to_string(il) + tag);
       }
       drawLayer(helper, *tl, gctx, lConfig, sConfig, gConfig, outputDir);
       ++il;
