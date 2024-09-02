@@ -150,7 +150,7 @@ class MeasurementContainer {
 
   std::vector<MeasurementEntry> m_entries;
 
-  std::vector<Acts::SourceLink> m_sourceLinks;
+  std::vector<std::optional<Acts::SourceLink>> m_sourceLinks;
   std::vector<std::uint8_t> m_subspaceIndices;
   std::vector<double> m_parameters;
   std::vector<double> m_covariances;
@@ -191,14 +191,14 @@ class MeasurementProxyBase {
     return self().subspaceHelper().indexOf(i);
   }
 
-  Acts::SourceLink& sourceLink()
+  void setSourceLink(const Acts::SourceLink& sourceLink)
     requires(!ReadOnly)
   {
-    return container().m_sourceLinks.at(m_index);
+    container().m_sourceLinks.at(m_index) = sourceLink;
   }
 
   const Acts::SourceLink& sourceLink() const {
-    return container().m_sourceLinks.at(m_index);
+    return container().m_sourceLinks.at(m_index).value();
   }
 
   template <typename IndexContainer>
@@ -225,7 +225,7 @@ class MeasurementProxyBase {
     requires(!ReadOnly)
   {
     assert(size() == other.size() && "Size mismatch");
-    sourceLink() = other.sourceLink();
+    setSourceLink(other.sourceLink());
     self().subspaceIndexVector() = other.subspaceIndexVector();
     self().parameters() = other.parameters();
     self().covariance() = other.covariance();

@@ -18,15 +18,16 @@ std::size_t MeasurementContainer::size() const {
 
 void MeasurementContainer::reserve(std::size_t size) {
   m_sourceLinks.reserve(size);
+  m_subspaceIndices.reserve(size * 2);
   m_parameters.reserve(size * 2);
   m_covariances.reserve(size * 2 * 2);
-  m_subspaceIndices.reserve(size * 2);
 }
 
 std::size_t MeasurementContainer::addMeasurement(std::uint8_t size) {
+  m_entries.push_back({m_subspaceIndices.size(), m_parameters.size(),
+                       m_covariances.size(), size});
+  m_sourceLinks.emplace_back();
   m_subspaceIndices.resize(m_subspaceIndices.size() + size);
-  m_entries.push_back({m_parameters.size(), m_covariances.size(),
-                       m_subspaceIndices.size(), size});
   m_parameters.resize(m_parameters.size() + size);
   m_covariances.resize(m_covariances.size() + size * size);
   return m_entries.size() - 1;
