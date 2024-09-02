@@ -69,15 +69,15 @@ void ObjVisualization3D<T>::faces(const std::vector<Vector3>& vtxs,
 }
 
 template <typename T>
-void ObjVisualization3D<T>::write(const std::string& path) const {
+void ObjVisualization3D<T>::write(const std::filesystem::path& path) const {
   std::ofstream os;
-  std::string objectpath = path;
-  if (!IVisualization3D::hasExtension(objectpath)) {
-    objectpath += std::string(".obj");
+  std::filesystem::path objectpath = path;
+  if (!objectpath.has_extension()) {
+    objectpath.replace_extension(std::filesystem::path("obj"));
   }
   os.open(objectpath);
-  std::string mtlpath = objectpath;
-  IVisualization3D::replaceExtension(mtlpath, ".mtl");
+  std::filesystem::path mtlpath = objectpath;
+  mtlpath.replace_extension(std::filesystem::path("mtl"));
   os << "mtllib " << mtlpath << "\n";
   std::ofstream mtlos;
   mtlos.open(mtlpath);

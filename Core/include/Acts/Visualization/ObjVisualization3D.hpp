@@ -61,8 +61,8 @@ class ObjVisualization3D : public IVisualization3D {
              const std::vector<FaceType>& faces,
              ColorRGB color = {0, 0, 0}) final;
 
-  /// @copydoc Acts::IVisualization3D::write(const std::string&) const
-  void write(const std::string& path) const final;
+  /// @copydoc Acts::IVisualization3D::write(const std::filesystem::path&) const
+  void write(const std::filesystem::path& path) const final;
 
   /// @copydoc Acts::IVisualization3D::write(std::ostream&) const
   void write(std::ostream& os) const final;

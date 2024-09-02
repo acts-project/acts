@@ -41,11 +41,11 @@ void PlyVisualization3D<T>::line(const Vector3& a, const Vector3& b,
 }
 
 template <typename T>
-void PlyVisualization3D<T>::write(const std::string& path) const {
+void PlyVisualization3D<T>::write(const std::filesystem::path& path) const {
   std::ofstream os;
-  std::string objectpath = path;
-  if (!IVisualization3D::hasExtension(path)) {
-    objectpath += std::string(".ply");
+  std::filesystem::path objectpath = path;
+  if (!path.has_extension()) {
+    objectpath.replace_extension(std::filesystem::path("ply"));
   }
   os.open(objectpath);
   write(os);

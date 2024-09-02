@@ -9,6 +9,7 @@
 #pragma once
 
 #include <array>
+#include <filesystem>
 #include <string>
 
 namespace Acts {
@@ -42,7 +43,7 @@ struct ViewConfig {
   /// Whether to triangulate or not
   bool triangulate = false;
   /// Write name - non-empty string indicates writing
-  std::string outputName = "";
+  std::filesystem::path outputName = std::filesystem::path("");
 };
 
 }  // namespace Acts
