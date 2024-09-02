@@ -8,8 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-//switching format off to avoid conflicting declaration in GeoModel
-//needed until Acts GeoModel bumps to 6.5
+// switching format off to avoid conflicting declaration in GeoModel
+// needed until Acts GeoModel bumps to 6.5
 //clang-format off
 #include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 //clang-format on
