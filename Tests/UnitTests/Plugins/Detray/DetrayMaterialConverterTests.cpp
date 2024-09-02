@@ -8,18 +8,22 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Plugins/Detray/DetrayMaterialConverter.hpp"
+#include "Acts/Tests/CommonHelpers/CylindricalDetector.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <detray/definitions/grid_axis.hpp>
 #include <detray/io/frontend/payloads.hpp>
+
+auto tContext = Acts::GeometryContext();
 
 BOOST_AUTO_TEST_SUITE(DetrayConversion)
 
@@ -67,6 +71,22 @@ BOOST_AUTO_TEST_CASE(DetrayMaterialSlabConversion) {
                   std::numeric_limits<Acts::ActsScalar>::epsilon());
   CHECK_CLOSE_ABS(payload.mat.params[6u], 0.,
                   std::numeric_limits<Acts::ActsScalar>::epsilon());
+}
+
+BOOST_AUTO_TEST_CASE(DetrayHomogeneousMaterialConversion) {
+  // Convert homogeneous material
+  Acts::HomogeneousSurfaceMaterial homMaterial(materialSlab12345);
+
+  detray::io::grid_payload<detray::io::material_slab_payload,
+                           detray::io::material_id>
+      payload = Acts::DetrayMaterialConverter::convertSurfaceMaterial(
+          homMaterial, *logger);
+
+  // Check the payload
+  // - we fake 2D always for detray to minimize the number of containers,
+  //   even for homogeneous materials (at the moment)
+  BOOST_CHECK_EQUAL(payload.axes.size(), 2u);
+  BOOST_CHECK_EQUAL(payload.bins.size(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionX) {
