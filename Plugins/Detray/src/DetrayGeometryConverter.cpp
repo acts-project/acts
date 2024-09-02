@@ -47,10 +47,9 @@ int findVolume(
 detray::io::transform_payload Acts::DetrayGeometryConverter::convertTransform(
     const Transform3& t) {
   detray::io::transform_payload tfPayload;
-  auto translation = t.translation();
+  Vector3 translation = t.translation();
   tfPayload.tr = {translation.x(), translation.y(), translation.z()};
-
-  const auto rotation = t.rotation().transpose();
+  RotationMatrix3 rotation = t.rotation().transpose();
   tfPayload.rot = {rotation(0, 0), rotation(0, 1), rotation(0, 2),
                    rotation(1, 0), rotation(1, 1), rotation(1, 2),
                    rotation(2, 0), rotation(2, 1), rotation(2, 2)};
