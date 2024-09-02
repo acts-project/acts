@@ -343,7 +343,7 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
     extendedJacobian.block<eBoundSize, 2>(0, deltaPosition) = jacPhiTheta;
   }
 
-  const BoundVector smoothed = trackState.smoothed();
+  const BoundVector predicted = trackState.smoothed();
 
   const ActsVector<kMeasDim> measurement =
       trackState.template calibrated<kMeasDim>();
@@ -353,9 +353,9 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
 
   const Eigen::MatrixXd projJacobian = projector * extendedJacobian;
 
-  const ActsMatrix<kMeasDim, 1> projSmoothed = projector * smoothed;
+  const ActsMatrix<kMeasDim, 1> projPredicted = projector * predicted;
 
-  const ActsVector<kMeasDim> residual = measurement - projSmoothed;
+  const ActsVector<kMeasDim> residual = measurement - projPredicted;
 
   // Finally contribute to chi2sum, aMatrix, and bVector
   chi2sum += (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
@@ -372,7 +372,7 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
   ACTS_VERBOSE(
       "Contributions in addMeasurementToGx2fSums:\n"
       << "kMeasDim: " << kMeasDim << "\n"
-      << "smoothed" << smoothed.transpose() << "\n"
+      << "predicted" << projPredicted.transpose() << "\n"
       << "measurement: " << measurement.transpose() << "\n"
       << "covarianceMeasurement:\n"
       << covarianceMeasurement << "\n"
@@ -380,7 +380,7 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
       << projector.eval() << "\n"
       << "projJacobian:\n"
       << projJacobian.eval() << "\n"
-      << "projSmoothed: " << (projSmoothed.transpose()).eval() << "\n"
+      << "projPredicted: " << (projPredicted.transpose()).eval() << "\n"
       << "residual: " << (residual.transpose()).eval() << "\n"
       << "extendedJacobian:\n"
       << extendedJacobian << "\n"
@@ -497,9 +497,9 @@ void addMaterialToGx2fSums(
 /// @param ndfSystem The number of degrees of freedom, determining the size of meaning full block
 ///
 /// @return deltaParams The calculated delta parameters.
-void updateGx2fCovariance(BoundMatrix& fullCovariance,
-                          Eigen::MatrixXd& aMatrixExtended,
-                          const std::size_t ndfSystem);
+void updateGx2fCovarianceParams(BoundMatrix& fullCovariance,
+                                Eigen::MatrixXd& aMatrixExtended,
+                                const std::size_t ndfSystem);
 
 /// Global Chi Square fitter (GX2F) implementation.
 ///
@@ -1066,7 +1066,7 @@ class Gx2Fitter {
 
     // This will be filled during the updates with the final covariance of the
     // track parameters.
-    BoundMatrix fullCovariance = BoundMatrix::Identity();
+    BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
 
     ACTS_VERBOSE("params:\n" << params);
 
@@ -1334,14 +1334,16 @@ class Gx2Fitter {
         ACTS_INFO("Abort with relChi2changeCutOff after "
                   << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
                   << " iterations.");
-        updateGx2fCovariance(fullCovariance, aMatrixExtended, ndfSystem);
+        updateGx2fCovarianceParams(fullCovariancePredicted, aMatrixExtended,
+                                   ndfSystem);
         break;
       }
 
       if (chi2sum > oldChi2sum + 1e-5) {
         ACTS_DEBUG("chi2 not converging monotonically");
 
-        updateGx2fCovariance(fullCovariance, aMatrixExtended, ndfSystem);
+        updateGx2fCovarianceParams(fullCovariancePredicted, aMatrixExtended,
+                                   ndfSystem);
         break;
       }
 
@@ -1359,7 +1361,8 @@ class Gx2Fitter {
           return Experimental::GlobalChiSquareFitterError::DidNotConverge;
         }
 
-        updateGx2fCovariance(fullCovariance, aMatrixExtended, ndfSystem);
+        updateGx2fCovarianceParams(fullCovariancePredicted, aMatrixExtended,
+                                   ndfSystem);
         break;
       }
 
@@ -1393,7 +1396,7 @@ class Gx2Fitter {
                             << " )");
     }
 
-    ACTS_VERBOSE("final covariance:\n" << fullCovariance);
+    ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
 
     // Propagate again with the final covariance matrix. This is necessary to
     // obtain the propagated covariance for each state.
@@ -1401,7 +1404,7 @@ class Gx2Fitter {
       ACTS_VERBOSE("final deltaParams:\n" << deltaParams);
       ACTS_VERBOSE("Propagate with the final covariance.");
       // update covariance
-      params.covariance() = fullCovariance;
+      params.covariance() = fullCovariancePredicted;
 
       // set up propagator and co
       Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
@@ -1434,7 +1437,7 @@ class Gx2Fitter {
     auto track = trackContainer.makeTrack();
     track.tipIndex() = tipIndex;
     track.parameters() = params.parameters();
-    track.covariance() = fullCovariance;
+    track.covariance() = fullCovariancePredicted;
     track.setReferenceSurface(params.referenceSurface().getSharedPtr());
 
     if (trackContainer.hasColumn(
