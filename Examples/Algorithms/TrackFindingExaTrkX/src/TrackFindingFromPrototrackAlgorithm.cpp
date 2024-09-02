@@ -142,9 +142,7 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
       }
     }
 
-    auto rootBranch = tracks.makeTrack();
-    auto result = (*m_cfg.findTracks)(initialParameters.at(i), options, tracks,
-                                      rootBranch);
+    auto result = (*m_cfg.findTracks)(initialParameters.at(i), options, tracks);
     nSeed++;
 
     if (!result.ok()) {

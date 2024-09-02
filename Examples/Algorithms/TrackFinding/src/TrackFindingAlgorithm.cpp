@@ -421,6 +421,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       }
     });
 
+    Acts::calculateTrackQuantities(track);
+
     if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
       return;
     }
@@ -543,11 +545,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
-              if (!secondTrack.hasReferenceSurface()) {
-                ACTS_WARNING("Second track has no reference surface.");
-                continue;
-              }
-
               // TODO a copy of the track should not be necessary but is the
               //      safest way with the current EDM
               // TODO a lightweight copy without copying all the track state
@@ -565,15 +562,21 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
               // finalize the track candidate
 
+              bool doExtrapolate = true;
+
               if (!m_cfg.reverseSearch) {
                 // these parameters are already extrapolated by the CKF and have
                 // the optimal resolution. note that we did not smooth all the
                 // states.
 
-                trackCandidate.parameters() = secondTrackCopy.parameters();
-                trackCandidate.covariance() = secondTrackCopy.covariance();
-                trackCandidate.setReferenceSurface(
-                    secondTrackCopy.referenceSurface().getSharedPtr());
+                if (trackCandidate.hasReferenceSurface()) {
+                  trackCandidate.parameters() = secondTrackCopy.parameters();
+                  trackCandidate.covariance() = secondTrackCopy.covariance();
+                  trackCandidate.setReferenceSurface(
+                      secondTrackCopy.referenceSurface().getSharedPtr());
+
+                  doExtrapolate = false;
+                }
               } else {
                 // smooth the full track and extrapolate to the reference
 
@@ -589,7 +592,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 }
 
                 trackCandidate.reverseTrackStates(true);
+              }
 
+              if (doExtrapolate) {
                 auto secondExtrapolationResult =
                     Acts::extrapolateTrackToReferenceSurface(
                         trackCandidate, *pSurface, extrapolator,
@@ -605,8 +610,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 }
               }
 
-              Acts::calculateTrackQuantities(trackCandidate);
-
               addTrack(trackCandidate);
 
               ++nSecond;
@@ -615,7 +618,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
             // restore `trackCandidate` to its original state in case we need it
             // again
             firstState.previous() = Acts::kTrackIndexInvalid;
-            Acts::calculateTrackQuantities(trackCandidate);
           }
         }
       }
