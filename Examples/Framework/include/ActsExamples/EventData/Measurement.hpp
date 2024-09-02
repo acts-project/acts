@@ -358,25 +358,27 @@ class VariableMeasurementProxy
   }
 
   SubspaceVectorMap subspaceIndexVector() const {
+    const auto size = static_cast<Eigen::Index>(this->size());
     return SubspaceVectorMap{
         container().m_subspaceIndices.data() +
             container().m_entries.at(index()).subspaceIndexOffset,
-        static_cast<Eigen::Index>(this->size())};
+        size};
   }
 
   ParametersVectorMap parameters() const {
+    const auto size = static_cast<Eigen::Index>(this->size());
     return ParametersVectorMap{
         container().m_parameters.data() +
             container().m_entries.at(index()).parameterOffset,
-        static_cast<Eigen::Index>(this->size())};
+        size};
   }
 
   CovarianceMatrixMap covariance() const {
-    const auto size = this->size();
+    const auto size = static_cast<Eigen::Index>(this->size());
     return CovarianceMatrixMap{
         container().m_covariances.data() +
             container().m_entries.at(index()).covarianceOffset,
-        static_cast<Eigen::Index>(size), static_cast<Eigen::Index>(size)};
+        size, size};
   }
 };
 

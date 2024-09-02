@@ -33,6 +33,7 @@ ActsExamples::VariableBoundMeasurementProxy ActsExamples::createMeasurement(
         auto [indices, par, cov] = measurementConstituents<dim>(dParams);
         FixedBoundMeasurementProxy<dim> measurement =
             container.makeMeasurement<dim>();
+        measurement.setSourceLink(sl);
         measurement.setSubspaceIndices(indices);
         measurement.parameters() = par;
         measurement.covariance() = cov;
