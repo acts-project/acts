@@ -20,6 +20,32 @@
 
 BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
+BOOST_AUTO_TEST_CASE(ITkIdentifierTests) {
+  auto test = [](int hw, int bec, int lw, int em, int pm, int side) {
+    Acts::ITkIdentifier id(hw, bec, lw, em, pm, side);
+    BOOST_CHECK_EQUAL(id.hardware(), hw);
+    BOOST_CHECK_EQUAL(id.barrelEndcap(), bec);
+    BOOST_CHECK_EQUAL(id.layerWheel(), lw);
+    BOOST_CHECK_EQUAL(id.etaModule(), em);
+    BOOST_CHECK_EQUAL(id.phiModule(), pm);
+    BOOST_CHECK_EQUAL(id.side(), side);
+  };
+
+  for (int hw : {0, 1}) {
+    for (int bec : {-2, 0, 2}) {
+      for (int lw : {0, 10}) {
+        for (int em : {-10, 0, 10}) {
+          for (int pm : {10, 0}) {
+            for (int side : {0, 1}) {
+              test(hw, bec, lw, em, pm, side);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
   Acts::GeometryContext gctx{};
 
@@ -38,7 +64,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
 
   auto [itkElement, _] = Acts::GeoModelDetectorElementITk::convertFromGeomodel(
       element, element->surface().getSharedPtr(), gctx, hardware, barrelEndcap,
-      layerWheel, phiModule, etaModule, side);
+      layerWheel, etaModule, phiModule, side);
 
   BOOST_CHECK_EQUAL(element->surface().type(), itkElement->surface().type());
   BOOST_CHECK_EQUAL(element->surface().bounds().type(),
