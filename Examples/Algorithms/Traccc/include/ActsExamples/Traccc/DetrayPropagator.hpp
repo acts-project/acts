@@ -91,14 +91,13 @@ class DetrayPropagator : public PropagatorInterface {
     auto& debugPrinter = inspector.template get<DetrayPrintInspector>();
 
     PropagationSummary summary(startParameters);
+    // Translate the objects into the steps
     for (const auto& object : objectTracer.object_trace) {
-      //const auto& intersection = objectTracer[intr_idx].intersection;
        const auto& dposition = object.pos;
        Acts::detail::Step step;
        step.position = Acts::Vector3(dposition[0], dposition[1], dposition[2]);
        summary.steps.emplace_back(step);
     }
-
 
     RecordedMaterial recordedMaterial;
 

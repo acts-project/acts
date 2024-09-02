@@ -135,6 +135,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     m_x.clear();
     m_y.clear();
     m_z.clear();
+    m_r.clear();
     m_dx.clear();
     m_dy.clear();
     m_dz.clear();
