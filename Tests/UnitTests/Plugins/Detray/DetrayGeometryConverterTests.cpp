@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(DetrayTransformConversion) {
   CHECK_CLOSE_ABS(payload.tr[2u], 3.,
                   std::numeric_limits<Acts::ActsScalar>::epsilon());
   // Rotation is correctly translated
-  const auto rotation = transform.rotation();
+  RotationMatrix3 rotation = transform.rotation().transpose();
   CHECK_CLOSE_ABS(payload.rot[0u], rotation(0, 0),
                   std::numeric_limits<Acts::ActsScalar>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[1u], rotation(0, 1),
