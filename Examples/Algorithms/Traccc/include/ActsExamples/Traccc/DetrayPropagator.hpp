@@ -62,7 +62,8 @@ class DetrayPropagator : public PropagatorInterface {
   ///@param startParameters The start parameters
   ///@return PropagationOutput
   Acts::Result<PropagationOutput> execute(
-      const AlgorithmContext& context, const PropagationAlgorithm::Config& cfg,
+      const AlgorithmContext& context,
+      [[maybe_unused]] const PropagationAlgorithm::Config& cfg,
       const Acts::Logger& logger,
       const Acts::BoundTrackParameters& startParameters) const final {
     const auto& geoContext = context.geoContext;
@@ -89,7 +90,6 @@ class DetrayPropagator : public PropagatorInterface {
     // Retrieve navigation information
     auto& inspector = propagation._navigation.inspector();
     auto& objectTracer = inspector.template get<DetrayObjectTracer>();
-    auto& debugPrinter = inspector.template get<DetrayPrintInspector>();
 
     PropagationSummary summary(startParameters);
     // Translate the objects into the steps
