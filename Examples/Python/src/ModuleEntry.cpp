@@ -84,6 +84,7 @@ void addOnnx(Context& ctx);
 void addOnnxNeuralCalibrator(Context& ctx);
 void addCovfie(Context& ctx);
 void addTraccc(Context& ctx);
+void addHashing(Context& ctx);
 
 }  // namespace Acts::Python
 
@@ -152,4 +153,5 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addOnnxNeuralCalibrator(ctx);
   addCovfie(ctx);
   addTraccc(ctx);
+  addHashing(ctx);
 }
