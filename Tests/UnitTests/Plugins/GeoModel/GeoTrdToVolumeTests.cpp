@@ -8,10 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
+// clang-formal off
+#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+// clang-formal on
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
