@@ -52,10 +52,10 @@ namespace Acts::Experimental {
 namespace Gx2fConstants {
 constexpr std::string_view gx2fnUpdateColumn = "Gx2fnUpdateColumn";
 
-// Mask for the track states. We don't need Smoothed and Filtered
-constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Predicted |
-                                              TrackStatePropMask::Jacobian |
-                                              TrackStatePropMask::Calibrated;
+// Mask for the track states. We don't need Predicted and Filtered
+constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Jacobian |
+                                              TrackStatePropMask::Calibrated |
+                                              TrackStatePropMask::Smoothed;
 
 // A projector used for scattering. By using Jacobian * phiThetaProjector one
 // gets only the derivatives for the variables phi and theta.
@@ -343,7 +343,7 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
     extendedJacobian.block<eBoundSize, 2>(0, deltaPosition) = jacPhiTheta;
   }
 
-  const BoundVector predicted = trackState.predicted();
+  const BoundVector smoothed = trackState.smoothed();
 
   const ActsVector<kMeasDim> measurement =
       trackState.template calibrated<kMeasDim>();
@@ -353,9 +353,9 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
 
   const Eigen::MatrixXd projJacobian = projector * extendedJacobian;
 
-  const ActsMatrix<kMeasDim, 1> projPredicted = projector * predicted;
+  const ActsMatrix<kMeasDim, 1> projSmoothed = projector * smoothed;
 
-  const ActsVector<kMeasDim> residual = measurement - projPredicted;
+  const ActsVector<kMeasDim> residual = measurement - projSmoothed;
 
   // Finally contribute to chi2sum, aMatrix, and bVector
   chi2sum += (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
@@ -372,7 +372,7 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
   ACTS_VERBOSE(
       "Contributions in addMeasurementToGx2fSums:\n"
       << "kMeasDim: " << kMeasDim << "\n"
-      << "predicted" << predicted.transpose() << "\n"
+      << "smoothed" << smoothed.transpose() << "\n"
       << "measurement: " << measurement.transpose() << "\n"
       << "covarianceMeasurement:\n"
       << covarianceMeasurement << "\n"
@@ -380,7 +380,7 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
       << projector.eval() << "\n"
       << "projJacobian:\n"
       << projJacobian.eval() << "\n"
-      << "projPredicted: " << (projPredicted.transpose()).eval() << "\n"
+      << "projSmoothed: " << (projSmoothed.transpose()).eval() << "\n"
       << "residual: " << (residual.transpose()).eval() << "\n"
       << "extendedJacobian:\n"
       << extendedJacobian << "\n"
@@ -431,7 +431,7 @@ void addMaterialToGx2fSums(
         "No scattering angles found for material surface.");
   }
 
-  const ActsScalar sinThetaLoc = std::sin(trackState.predicted()[eBoundTheta]);
+  const ActsScalar sinThetaLoc = std::sin(trackState.smoothed()[eBoundTheta]);
 
   // The position, where we need to insert the values in aMatrix and bVector
   const std::size_t deltaPosition = eBoundSize + 2 * nMaterialsHandled;
@@ -492,14 +492,14 @@ void addMaterialToGx2fSums(
 /// that we only update the covariance for fitted parameters. (In case of
 /// no qop/time fit)
 ///
-/// @param fullCovariancePredicted The covariance matrix to update
+/// @param fullCovariance The covariance matrix to update
 /// @param aMatrixExtended The matrix containing the coefficients of the linear system.
 /// @param ndfSystem The number of degrees of freedom, determining the size of meaning full block
 ///
 /// @return deltaParams The calculated delta parameters.
-void updateCovariancePredicted(BoundMatrix& fullCovariancePredicted,
-                               Eigen::MatrixXd& aMatrixExtended,
-                               const std::size_t ndfSystem);
+void updateGx2fCovariance(BoundMatrix& fullCovariance,
+                          Eigen::MatrixXd& aMatrixExtended,
+                          const std::size_t ndfSystem);
 
 /// Global Chi Square fitter (GX2F) implementation.
 ///
@@ -736,8 +736,8 @@ class Gx2Fitter {
           }
 
           // Fill the track state
-          trackStateProxy.predicted() = boundParams.parameters();
-          trackStateProxy.predictedCovariance() = state.stepping.cov;
+          trackStateProxy.smoothed() = boundParams.parameters();
+          trackStateProxy.smoothedCovariance() = state.stepping.cov;
 
           trackStateProxy.jacobian() = jacobian;
           trackStateProxy.pathLength() = pathLength;
@@ -746,13 +746,13 @@ class Gx2Fitter {
             stepper.update(state.stepping,
                            transformBoundToFreeParameters(
                                trackStateProxy.referenceSurface(),
-                               state.geoContext, trackStateProxy.predicted()),
-                           trackStateProxy.predicted(),
-                           trackStateProxy.predictedCovariance(), *surface);
+                               state.geoContext, trackStateProxy.smoothed()),
+                           trackStateProxy.smoothed(),
+                           trackStateProxy.smoothedCovariance(), *surface);
           }
         }
 
-        // We have predicted parameters, so calibrate the uncalibrated input
+        // We have smoothed parameters, so calibrate the uncalibrated input
         // measurement
         extensions.calibrator(state.geoContext, *calibrationContext,
                               sourcelink_it->second, trackStateProxy);
@@ -837,8 +837,8 @@ class Gx2Fitter {
           ACTS_VERBOSE("    boundParams after the update:\n" << boundParams);
 
           // Fill the track state
-          trackStateProxy.predicted() = boundParams.parameters();
-          trackStateProxy.predictedCovariance() = state.stepping.cov;
+          trackStateProxy.smoothed() = boundParams.parameters();
+          trackStateProxy.smoothedCovariance() = state.stepping.cov;
 
           trackStateProxy.jacobian() = jacobian;
           trackStateProxy.pathLength() = pathLength;
@@ -846,9 +846,9 @@ class Gx2Fitter {
           stepper.update(state.stepping,
                          transformBoundToFreeParameters(
                              trackStateProxy.referenceSurface(),
-                             state.geoContext, trackStateProxy.predicted()),
-                         trackStateProxy.predicted(),
-                         trackStateProxy.predictedCovariance(), *surface);
+                             state.geoContext, trackStateProxy.smoothed()),
+                         trackStateProxy.smoothed(),
+                         trackStateProxy.smoothedCovariance(), *surface);
         }
 
         // Get and set the type flags
@@ -921,8 +921,8 @@ class Gx2Fitter {
           const auto& [boundParams, jacobian, pathLength] = *res;
 
           // Fill the track state
-          trackStateProxy.predicted() = boundParams.parameters();
-          trackStateProxy.predictedCovariance() = state.stepping.cov;
+          trackStateProxy.smoothed() = boundParams.parameters();
+          trackStateProxy.smoothedCovariance() = state.stepping.cov;
 
           trackStateProxy.jacobian() = jacobian;
           trackStateProxy.pathLength() = pathLength;
@@ -1066,7 +1066,7 @@ class Gx2Fitter {
 
     // This will be filled during the updates with the final covariance of the
     // track parameters.
-    BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
+    BoundMatrix fullCovariance = BoundMatrix::Identity();
 
     ACTS_VERBOSE("params:\n" << params);
 
@@ -1334,16 +1334,14 @@ class Gx2Fitter {
         ACTS_INFO("Abort with relChi2changeCutOff after "
                   << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
                   << " iterations.");
-        updateCovariancePredicted(fullCovariancePredicted, aMatrixExtended,
-                                  ndfSystem);
+        updateGx2fCovariance(fullCovariance, aMatrixExtended, ndfSystem);
         break;
       }
 
       if (chi2sum > oldChi2sum + 1e-5) {
         ACTS_DEBUG("chi2 not converging monotonically");
 
-        updateCovariancePredicted(fullCovariancePredicted, aMatrixExtended,
-                                  ndfSystem);
+        updateGx2fCovariance(fullCovariance, aMatrixExtended, ndfSystem);
         break;
       }
 
@@ -1361,8 +1359,7 @@ class Gx2Fitter {
           return Experimental::GlobalChiSquareFitterError::DidNotConverge;
         }
 
-        updateCovariancePredicted(fullCovariancePredicted, aMatrixExtended,
-                                  ndfSystem);
+        updateGx2fCovariance(fullCovariance, aMatrixExtended, ndfSystem);
         break;
       }
 
@@ -1396,7 +1393,7 @@ class Gx2Fitter {
                             << " )");
     }
 
-    ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
+    ACTS_VERBOSE("final covariance:\n" << fullCovariance);
 
     // Propagate again with the final covariance matrix. This is necessary to
     // obtain the propagated covariance for each state.
@@ -1404,7 +1401,7 @@ class Gx2Fitter {
       ACTS_VERBOSE("final deltaParams:\n" << deltaParams);
       ACTS_VERBOSE("Propagate with the final covariance.");
       // update covariance
-      params.covariance() = fullCovariancePredicted;
+      params.covariance() = fullCovariance;
 
       // set up propagator and co
       Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
@@ -1437,7 +1434,7 @@ class Gx2Fitter {
     auto track = trackContainer.makeTrack();
     track.tipIndex() = tipIndex;
     track.parameters() = params.parameters();
-    track.covariance() = fullCovariancePredicted;
+    track.covariance() = fullCovariance;
     track.setReferenceSurface(params.referenceSurface().getSharedPtr());
 
     if (trackContainer.hasColumn(

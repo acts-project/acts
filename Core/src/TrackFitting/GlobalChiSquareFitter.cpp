@@ -10,11 +10,9 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 
-namespace Acts::Experimental {
-
-void updateCovariancePredicted(BoundMatrix& fullCovariancePredicted,
-                               Eigen::MatrixXd& aMatrixExtended,
-                               const std::size_t ndfSystem) {
+void Acts::Experimental::updateGx2fCovariance(BoundMatrix& fullCovariance,
+                                              Eigen::MatrixXd& aMatrixExtended,
+                                              const std::size_t ndfSystem) {
   // make invertible
   for (int i = 0; i < aMatrixExtended.rows(); ++i) {
     if (aMatrixExtended(i, i) == 0.) {
@@ -23,11 +21,9 @@ void updateCovariancePredicted(BoundMatrix& fullCovariancePredicted,
   }
 
   visit_measurement(ndfSystem, [&](auto N) {
-    fullCovariancePredicted.topLeftCorner<N, N>() =
+    fullCovariance.topLeftCorner<N, N>() =
         aMatrixExtended.inverse().topLeftCorner<N, N>();
   });
 
   return;
 }
-
-}  // namespace Acts::Experimental
