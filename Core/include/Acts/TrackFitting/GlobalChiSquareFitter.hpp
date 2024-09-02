@@ -372,7 +372,7 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
   ACTS_VERBOSE(
       "Contributions in addMeasurementToGx2fSums:\n"
       << "kMeasDim: " << kMeasDim << "\n"
-      << "predicted" << projPredicted.transpose() << "\n"
+      << "predicted" << predicted.transpose() << "\n"
       << "measurement: " << measurement.transpose() << "\n"
       << "covarianceMeasurement:\n"
       << covarianceMeasurement << "\n"
@@ -492,12 +492,12 @@ void addMaterialToGx2fSums(
 /// that we only update the covariance for fitted parameters. (In case of
 /// no qop/time fit)
 ///
-/// @param fullCovariance The covariance matrix to update
+/// @param fullCovariancePredicted The covariance matrix to update
 /// @param aMatrixExtended The matrix containing the coefficients of the linear system.
 /// @param ndfSystem The number of degrees of freedom, determining the size of meaning full block
 ///
 /// @return deltaParams The calculated delta parameters.
-void updateGx2fCovarianceParams(BoundMatrix& fullCovariance,
+void updateGx2fCovarianceParams(BoundMatrix& fullCovariancePredicted,
                                 Eigen::MatrixXd& aMatrixExtended,
                                 const std::size_t ndfSystem);
 
