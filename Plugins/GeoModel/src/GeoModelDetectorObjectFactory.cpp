@@ -155,51 +155,37 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
   // get children
   std::vector<GeoChildNodeWithTrf> subvolumes =
       getChildrenWithRef(physVol, false);
-  if (!subvolumes.empty()) {
     // vector containing all subvolumes to be converted to surfaces
-    std::vector<GeoChildNodeWithTrf> surfaces = findAllSubVolumes(physVol);
-    std::vector<GeoModelSensitiveSurface> sensitives;
+  std::vector<GeoChildNodeWithTrf> surfaces = findAllSubVolumes(physVol);
+  std::vector<GeoModelSensitiveSurface> sensitives;
 
-    for (const auto &surface : surfaces) {
-      const Transform3 &transform =
-          fpv->getAbsoluteTransform() * surface.transform;
-      convertSensitive(surface.volume, transform, sensitives);
-    }
-    cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(),
+  for (const auto &surface : surfaces) {
+    const Transform3 &transform =
+        fpv->getAbsoluteTransform() * surface.transform;
+    convertSensitive(surface.volume, transform, sensitives);
+  }
+  cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(),
                                    sensitives.begin(), sensitives.end());
-    if (convertBox(name)) {
-      const GeoLogVol *logVol =
-          physVol->getLogVol();  // get logVol for the shape of the volume
-      const GeoShape *shape = logVol->getShape();  // get shape
-      const Acts::Transform3 &fpvtransform = fpv->getAbsoluteTransform(nullptr);
+  if (convertBox(name)) {
+    const GeoLogVol *logVol =
+        physVol->getLogVol();  // get logVol for the shape of the volume
+    const GeoShape *shape = logVol->getShape();  // get shape
+    const Acts::Transform3 &fpvtransform = fpv->getAbsoluteTransform(nullptr);
 
-      // convert bounding boxes with surfaces inside
-      std::shared_ptr<Experimental::DetectorVolume> box =
-          Acts::GeoModel::convertVolume(gctx, *shape, name, fpvtransform,
+    // convert bounding boxes with surfaces inside
+    std::shared_ptr<Experimental::DetectorVolume> box =
+        Acts::GeoModel::convertVolume(gctx, *shape, name, fpvtransform,
                                         sensitives);
-      cache.boundingBoxes.push_back(box);
-    }
-  } else {
-    if (convertBox(name)) {
-      const GeoLogVol *logVol =
-          physVol->getLogVol();  // get logVol for the shape of the volume
-      const GeoShape *shape = logVol->getShape();  // get shape
-      const Acts::Transform3 &fpvtransform = fpv->getAbsoluteTransform(nullptr);
-
-      // convert bounding boxes with surfaces inside
-      std::shared_ptr<Experimental::DetectorVolume> box =
-          Acts::GeoModel::convertVolume(gctx, *shape, name, fpvtransform,
-                                        std::vector<GeoModelSensitiveSurface>{});
-      cache.boundingBoxes.push_back(box);
-    }
-    else{
-      // convert fpvs to surfaces
-      const Transform3 &transform = fpv->getAbsoluteTransform();
-      convertSensitive(fpv, transform, cache.sensitiveSurfaces);
-    }
+    cache.boundingBoxes.push_back(box);
+  }
+  //If fpv has no subvolumes and should not be converted to volume convert to surface
+  else if (subvolumes.empty()) {
+    // convert fpvs to surfaces
+    const Transform3 &transform = fpv->getAbsoluteTransform();
+    convertSensitive(fpv, transform, cache.sensitiveSurfaces);
   }
 }
-// lambda to determine if object fits query
+//function to determine if object fits query
 bool Acts::GeoModelDetectorObjectFactory::matches(const std::string &name,
                                                   const PVConstLink &physvol) {
   if (m_cfg.nameList.empty() && m_cfg.materialList.empty()) {
