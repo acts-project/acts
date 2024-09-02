@@ -16,6 +16,8 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <stdexcept>
+
 namespace {
 
 struct MaterialSurfaceSelector {
@@ -100,9 +102,22 @@ Acts::DetrayMaterialConverter::convertSurfaceMaterial(
     BinUtility bUtility = binnedMaterial->binUtility();
     // Turn the bin value into a 2D grid
     if (bUtility.dimensions() == 1u) {
-      if (bUtility.binningData()[0u].binvalue == BinningValue::binR) {
+      if (bUtility.binningData()[0u].binvalue == BinningValue::binX) {
+        // Turn to X-Y
+        bUtility += BinUtility(1u, std::numeric_limits<float>::lowest(),
+                               std::numeric_limits<float>::max(),
+                               BinningOption::closed, BinningValue::binY);
+      } else if (bUtility.binningData()[0u].binvalue == BinningValue::binY) {
+        // Turn to X-Y
+        BinUtility nbUtility(1u, std::numeric_limits<float>::lowest(),
+                             std::numeric_limits<float>::max(),
+                             BinningOption::closed, BinningValue::binX);
+        nbUtility += bUtility;
+        bUtility = std::move(nbUtility);
+        swapped = true;
+      } else if (bUtility.binningData()[0u].binvalue == BinningValue::binR) {
         // Turn to R-Phi
-        bUtility += BinUtility(1u, -M_PI, M_PI, closed, BinningValue::binR);
+        bUtility += BinUtility(1u, -M_PI, M_PI, closed, BinningValue::binPhi);
       } else if (bUtility.binningData()[0u].binvalue == BinningValue::binZ) {
         // Turn to Phi-Z - swap needed
         BinUtility nbUtility(1u, -M_PI, M_PI, closed, BinningValue::binPhi);
@@ -110,7 +125,7 @@ Acts::DetrayMaterialConverter::convertSurfaceMaterial(
         bUtility = std::move(nbUtility);
         swapped = true;
       } else {
-        std::runtime_error("Unsupported binning for Detray");
+        std::invalid_argument("Unsupported binning for Detray");
       }
     } else if (bUtility.dimensions() == 2u &&
                bUtility.binningData()[0u].binvalue == BinningValue::binZ &&
