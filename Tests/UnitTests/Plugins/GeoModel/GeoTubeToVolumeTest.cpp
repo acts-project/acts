@@ -8,20 +8,20 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <GeoModelKernel/GeoTube.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoMaterial.h>
 #include <GeoModelKernel/GeoTrap.h>
+#include <GeoModelKernel/GeoTube.h>
 #include <GeoModelKernel/GeoVPhysVol.h>
 
 BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
@@ -37,11 +37,11 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   auto logTube = new GeoLogVol("Tube", tube, material);
   auto physTube = make_intrusive<GeoFullPhysVol>(logTube);
 
-  //add subvolume since converter needs that to convert fpv to volume
+  // add subvolume since converter needs that to convert fpv to volume
   auto sTube = new GeoTube(50, 20, 10);
   auto slogTube = new GeoLogVol("Tube", sTube, material);
   auto sphysTube = make_intrusive<GeoFullPhysVol>(slogTube);
-  
+
   physTube->add(sphysTube);
 
   // create pars for conversion
@@ -54,12 +54,14 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   Acts::GeoModelDetectorObjectFactory factory(gmConfig);
 
   factory.convertFpv("Tube", physTube, gmCache, gContext);
-  std::shared_ptr<Acts::Experimental::DetectorVolume> volumeTube = gmCache.boundingBoxes[0];
- const auto* bounds = dynamic_cast<const Acts::CylinderVolumeBounds*>(&volumeTube->volumeBounds());
- std::vector<Acts::ActsScalar> convDims = bounds->values();
- for (long unsigned int i=0;i<dims.size();i++){
-  BOOST_CHECK(dims[i] == convDims[i]);
- }
+  std::shared_ptr<Acts::Experimental::DetectorVolume> volumeTube =
+      gmCache.boundingBoxes[0];
+  const auto* bounds = dynamic_cast<const Acts::CylinderVolumeBounds*>(
+      &volumeTube->volumeBounds());
+  std::vector<Acts::ActsScalar> convDims = bounds->values();
+  for (long unsigned int i = 0; i < dims.size(); i++) {
+    BOOST_CHECK(dims[i] == convDims[i]);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

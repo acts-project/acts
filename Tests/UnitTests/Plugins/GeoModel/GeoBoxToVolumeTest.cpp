@@ -8,10 +8,10 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -39,11 +39,11 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   auto logBox = new GeoLogVol("Box", box, material);
   auto physBox = make_intrusive<GeoFullPhysVol>(logBox);
 
-  //add subvolume since converter needs that to convert fpv to volume
+  // add subvolume since converter needs that to convert fpv to volume
   auto sBox = new GeoBox(50, 20, 10);
   auto slogBox = new GeoLogVol("Box", sBox, material);
   auto sphysBox = make_intrusive<GeoFullPhysVol>(slogBox);
-  
+
   physBox->add(sphysBox);
 
   // create pars for conversion
@@ -56,12 +56,14 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   Acts::GeoModelDetectorObjectFactory factory(gmConfig);
 
   factory.convertFpv("Box", physBox, gmCache, gContext);
-  std::shared_ptr<Acts::Experimental::DetectorVolume> volumeBox = gmCache.boundingBoxes[0];
- const auto* bounds = dynamic_cast<const Acts::CuboidVolumeBounds*>(&volumeBox->volumeBounds());
- std::vector<Acts::ActsScalar> convHls = bounds->values();
- for (long unsigned int i=0;i<hls.size();i++){
-  BOOST_CHECK(hls[i] == convHls[i]);
- }
+  std::shared_ptr<Acts::Experimental::DetectorVolume> volumeBox =
+      gmCache.boundingBoxes[0];
+  const auto* bounds =
+      dynamic_cast<const Acts::CuboidVolumeBounds*>(&volumeBox->volumeBounds());
+  std::vector<Acts::ActsScalar> convHls = bounds->values();
+  for (long unsigned int i = 0; i < hls.size(); i++) {
+    BOOST_CHECK(hls[i] == convHls[i]);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
