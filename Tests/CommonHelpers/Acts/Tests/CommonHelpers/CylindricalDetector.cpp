@@ -8,26 +8,23 @@
 
 #include "Acts/Tests/CommonHelpers/CylindricalDetector.hpp"
 
-#include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/InternalNavigation.hpp"
-#include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/BinnedSurfaceMaterial.hpp"
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Surfaces/CylinderBounds.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Detector/GeometryIdGenerator.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 
 #include <memory>
 
@@ -39,7 +36,8 @@ using namespace Acts::Experimental;
 
 std::shared_ptr<const Detector> Acts::Test::buildCylindricalDetector(
     const Acts::GeometryContext& tContext) {
-    auto material = std::make_shared<const HomogeneousSurfaceMaterial>(materialSlab);
+  auto material =
+      std::make_shared<const HomogeneousSurfaceMaterial>(materialSlab);
 
   auto beampipe = std::make_shared<
       CylindricalVolumeBuilder<CylinderSurface, CylinderBounds>>(

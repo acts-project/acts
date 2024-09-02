@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 
@@ -23,7 +23,6 @@
 namespace Acts {
 
 class ISurfaceMaterial;
-
 
 using namespace Experimental;
 
@@ -35,11 +34,10 @@ namespace Test {
 template <typename surface_type, typename surface_bounds_type>
 class CylindricalVolumeBuilder : public IDetectorComponentBuilder {
  public:
-  CylindricalVolumeBuilder(const Transform3& transform,
-                           const CylinderVolumeBounds& vBounds,
-                           const surface_bounds_type& sBounds,
-                           const std::string& vName,
-                           std::shared_ptr<const ISurfaceMaterial> material = nullptr)
+  CylindricalVolumeBuilder(
+      const Transform3& transform, const CylinderVolumeBounds& vBounds,
+      const surface_bounds_type& sBounds, const std::string& vName,
+      std::shared_ptr<const ISurfaceMaterial> material = nullptr)
       : IDetectorComponentBuilder(),
         m_transform(transform),
         m_volumeBounds(vBounds),
@@ -89,5 +87,5 @@ class CylindricalVolumeBuilder : public IDetectorComponentBuilder {
 std::shared_ptr<const Detector> buildCylindricalDetector(
     const GeometryContext& tContext);
 
-} // namespace Test
+}  // namespace Test
 }  // namespace Acts

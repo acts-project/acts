@@ -25,17 +25,17 @@ auto logger =
 
 BOOST_AUTO_TEST_SUITE(DetrayConversion)
 
-
 BOOST_AUTO_TEST_CASE(DetrayConversion) {
-
-  // Load the detector from the Test utilities  
+  // Load the detector from the Test utilities
   auto detector = buildCylindricalDetector(tContext);
 
   DetrayConverter::Options options;
-  
+
   vecmem::host_memory_resource memoryResource;
 
-  auto detrayDetector = DetrayConverter(std::move(logger)).convert<>(tContext, *detector, memoryResource, options);
+  auto detrayDetector =
+      DetrayConverter(std::move(logger))
+          .convert<>(tContext, *detector, memoryResource, options);
 
   BOOST_CHECK_EQUAL(detrayDetector.volumes().size(), 6u);
   // Beampipe : original 3 -> split into 5
@@ -46,7 +46,6 @@ BOOST_AUTO_TEST_CASE(DetrayConversion) {
   // Pec:       original 4 -> split into 6
   // + portals to itself, one per volume 6
   BOOST_CHECK_EQUAL(detrayDetector.portals().size(), 35u);
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

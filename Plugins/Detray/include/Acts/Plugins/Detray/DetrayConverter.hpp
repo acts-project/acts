@@ -79,10 +79,10 @@ class DetrayConverter {
       }
     }
 
-    detector_t DetrayHostDetector(detectorBuilder.build(mr));
+    detector_t detrayDetector(detectorBuilder.build(mr));
 
     // Checks and print
-    detray::detail::check_consistency(DetrayHostDetector);
+    detray::detail::check_consistency(detrayDetector);
 
     // If configured, write the detector to json
     if (options.writeToJson) {
@@ -90,10 +90,10 @@ class DetrayConverter {
       detray::io::detector_writer_config writerConfig{};
       writerConfig.m_write_material = options.convertMaterial;
       writerConfig.m_write_grids = options.convertSurfaceGrids;
-      writeToJson(DetrayHostDetector, names, writerConfig);
+      writeToJson(detrayDetector, names, writerConfig);
     }
 
-    return DetrayHostDetector;
+    return detrayDetector;
   }
 
   /// Write the detector to json output
