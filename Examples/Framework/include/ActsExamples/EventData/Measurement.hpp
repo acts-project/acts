@@ -247,9 +247,9 @@ class FixedMeasurementProxy
   using Base =
       MeasurementProxyBase<FixedMeasurementProxy<FullSize, Size, ReadOnly>,
                            FullSize, ReadOnly>;
-  using Index = Base::Index;
-  using Scalar = Base::Scalar;
-  using Container = Base::Container;
+  using Index = typename Base::Index;
+  using Scalar = typename Base::Scalar;
+  using Container = typename Base::Container;
 
   using SubspaceHelper = Acts::FixedSubspaceHelper<FullSize, Size>;
 
@@ -320,9 +320,9 @@ class VariableMeasurementProxy
   using Base =
       MeasurementProxyBase<VariableMeasurementProxy<FullSize, ReadOnly>,
                            FullSize, ReadOnly>;
-  using Index = Base::Index;
-  using Scalar = Base::Scalar;
-  using Container = Base::Container;
+  using Index = typename Base::Index;
+  using Scalar = typename Base::Scalar;
+  using Container = typename Base::Container;
 
   using SubspaceHelper = Acts::VariableSubspaceHelper<FullSize>;
 
