@@ -37,12 +37,6 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   auto logTube = new GeoLogVol("Tube", tube, material);
   auto physTube = make_intrusive<GeoFullPhysVol>(logTube);
 
-  //add subvolume since converter needs that to convert fpv to volume
-  auto sTube = new GeoTube(50, 20, 10);
-  auto slogTube = new GeoLogVol("Tube", sTube, material);
-  auto sphysTube = make_intrusive<GeoFullPhysVol>(slogTube);
-  
-  physTube->add(sphysTube);
 
   // create pars for conversion
   Acts::GeoModelDetectorObjectFactory::Config gmConfig;
