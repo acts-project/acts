@@ -24,13 +24,13 @@ template <typename memory_source_t>
 struct DetrayStore {
   // Constructor from arguments
   DetrayStore(std::shared_ptr<memory_source_t> mSource,
-              Acts::DetrayDetector&& det)
+              Acts::DetrayHostDetector&& det)
       : memoryResource(std::move(mSource)), detector(std::move(det)) {}
 
   // The memory resource
   std::shared_ptr<memory_source_t> memoryResource = nullptr;
   // The detray detector instance
-  Acts::DetrayDetector detector;
+  Acts::DetrayHostDetector detector;
 
   // Create a Detray detector and store it with its memory Source in
   ///
@@ -42,11 +42,11 @@ struct DetrayStore {
       const Acts::Experimental::Detector& detector,
       const Acts::DetrayConverter::Options& options) {
     auto memoryResource = std::make_shared<memory_source_t>();
-    auto detrayDetector = Acts::DetrayConverter().convert<>(
+    auto DetrayHostDetector = Acts::DetrayConverter().convert<>(
         gctx, detector, *memoryResource, options);
 
     return std::make_shared<DetrayStore<memory_source_t>>(
-        memoryResource, std::move(detrayDetector));
+        memoryResource, std::move(DetrayHostDetector));
   }
 };
 

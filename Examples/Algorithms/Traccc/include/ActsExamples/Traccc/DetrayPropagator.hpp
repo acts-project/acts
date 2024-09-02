@@ -21,10 +21,13 @@
 
 namespace ActsExamples {
 
+/// Define the algebra type
+using DetrayAlgebraType = typename Acts::DetrayHostDetector::algebra_type;
+
 /// Type that holds the intersection information
 using DetrayIntersection =
-    detray::intersection2D<typename Acts::DetrayDetector::surface_type,
-                           detray::cmath<detray::scalar>>;
+    detray::intersection2D<typename Acts::DetrayHostDetector::surface_type,
+                           DetrayAlgebraType>;
 
 /// Inspector that records all encountered surfaces
 using DetrayObjectTracer =
@@ -66,8 +69,9 @@ class DetrayPropagator : public PropagatorInterface {
       [[maybe_unused]] const PropagationAlgorithm::Config& cfg,
       const Acts::Logger& logger,
       const Acts::BoundTrackParameters& startParameters) const final {
+    // Get the geometry context form the algorithm context
     const auto& geoContext = context.geoContext;
-    // Get the detector
+    // Get the track information
     const Acts::Vector3 position = startParameters.position(geoContext);
     const Acts::Vector3 direction = startParameters.momentum().normalized();
 
@@ -77,12 +81,12 @@ class DetrayPropagator : public PropagatorInterface {
 
     // Now follow that ray with the same track and check, if we find
     // the same volumes and distances along the way
-    detray::free_track_parameters<detray::cmath<detray::scalar>> track(
+    detray::free_track_parameters<DetrayAlgebraType> track(
         {position.x(), position.y(), position.z()}, 0.f,
-        {direction.x(), direction.y(), direction.z()}, -1.f);
+        {direction.x(), direction.y(), direction.z()},
+        startParameters.charge());
 
-    typename decltype(m_propagator)::state propagation(track,
-                                                       m_detrayStore->detector);
+    typename propagator_t::state propagation(track, m_detrayStore->detector);
 
     // Run the actual propagation
     m_propagator.propagate(propagation);

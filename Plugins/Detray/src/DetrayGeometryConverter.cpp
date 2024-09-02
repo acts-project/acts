@@ -259,7 +259,7 @@ Acts::DetrayGeometryConverter::convertPortal(
       // Write surface with invalid link
       auto portalPayload = convertSurface(gctx, *surfaceAdjusted, true);
       using NavigationLink =
-          typename DetrayDetector::surface_type::navigation_link;
+          typename DetrayHostDetector::surface_type::navigation_link;
       portalPayload.mask.volume_link.link =
           std::numeric_limits<NavigationLink>::max();
 

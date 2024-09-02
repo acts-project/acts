@@ -20,7 +20,7 @@
 
 namespace Acts {
 
-using DetrayDetector = detray::detector<detray::default_metadata>;
+using DetrayHostDetector = detray::detector<detray::default_metadata>;
 
 namespace DetrayConversionUtils {
 

@@ -50,7 +50,7 @@ void addDetray(Context& ctx) {
       options.writeToJson = true;
       options.convertMaterial = false;
       options.convertSurfaceGrids = true;
-      auto detrayDetector =
+      auto DetrayHostDetector =
           DetrayConverter().convert<>(gctx, detector, memoryResource, options);
     });
   }
