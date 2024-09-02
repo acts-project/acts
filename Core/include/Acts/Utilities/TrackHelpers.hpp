@@ -368,8 +368,9 @@ Result<void> extrapolateTracksToReferenceSurface(
 /// @tparam track_proxy_t The track proxy type
 /// @param track A mutable track proxy to operate on
 template <typename track_proxy_t>
-void calculateTrackQuantities(track_proxy_t track) requires(
-    !track_proxy_t::ReadOnly) {
+void calculateTrackQuantities(track_proxy_t track)
+  requires(!track_proxy_t::ReadOnly)
+{
   using ConstTrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
 
   track.chi2() = 0;
@@ -406,7 +407,9 @@ void calculateTrackQuantities(track_proxy_t track) requires(
 /// @param trimMaterial whether to trim pure material states
 template <typename track_proxy_t>
 void trimTrackFront(track_proxy_t track, bool trimHoles, bool trimOutliers,
-                    bool trimMaterial) requires(!track_proxy_t::ReadOnly) {
+                    bool trimMaterial)
+  requires(!track_proxy_t::ReadOnly)
+{
   using TrackStateProxy = typename track_proxy_t::TrackStateProxy;
 
   // TODO specialize if track is forward linked
@@ -442,7 +445,9 @@ void trimTrackFront(track_proxy_t track, bool trimHoles, bool trimOutliers,
 /// @param trimMaterial whether to trim pure material states
 template <typename track_proxy_t>
 void trimTrackBack(track_proxy_t track, bool trimHoles, bool trimOutliers,
-                   bool trimMaterial) requires(!track_proxy_t::ReadOnly) {
+                   bool trimMaterial)
+  requires(!track_proxy_t::ReadOnly)
+{
   using TrackStateProxy = typename track_proxy_t::TrackStateProxy;
 
   std::optional<TrackStateProxy> back;
@@ -478,7 +483,9 @@ void trimTrackBack(track_proxy_t track, bool trimHoles, bool trimOutliers,
 /// @param trimMaterial whether to trim pure material states
 template <typename track_proxy_t>
 void trimTrack(track_proxy_t track, bool trimHoles, bool trimOutliers,
-               bool trimMaterial) requires(!track_proxy_t::ReadOnly) {
+               bool trimMaterial)
+  requires(!track_proxy_t::ReadOnly)
+{
   trimTrackFront(track, trimHoles, trimOutliers, trimMaterial);
   trimTrackBack(track, trimHoles, trimOutliers, trimMaterial);
 }
