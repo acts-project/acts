@@ -95,31 +95,31 @@ BOOST_AUTO_TEST_CASE(VariableBoundAll) {
 BOOST_AUTO_TEST_CASE(VariableBoundReassign) {
   MeasurementContainer container;
 
-  // generate w/ a single parameter
-  auto [par1, cov1] = generateParametersCovariance<ActsScalar, 1u>(rng);
+  // generate w/ two parameter
+  auto [params1, cov1] = generateParametersCovariance<ActsScalar, 2u>(rng);
 
-  VariableBoundMeasurementProxy meas = container.makeMeasurement(1);
+  VariableBoundMeasurementProxy meas = container.makeMeasurement(2);
   meas.setSourceLink(source);
-  meas.setSubspaceIndices(std::array{eBoundTheta});
-  meas.parameters() = par1;
+  meas.setSubspaceIndices(std::array{eBoundPhi, eBoundTheta});
+  meas.parameters() = params1;
   meas.covariance() = cov1;
 
-  BOOST_CHECK_EQUAL(meas.size(), 1);
+  BOOST_CHECK_EQUAL(meas.size(), 2);
   BOOST_CHECK(!meas.contains(eBoundLoc0));
   BOOST_CHECK(!meas.contains(eBoundLoc1));
   BOOST_CHECK(!meas.contains(eBoundTime));
-  BOOST_CHECK(!meas.contains(eBoundPhi));
+  BOOST_CHECK(meas.contains(eBoundPhi));
   BOOST_CHECK(meas.contains(eBoundTheta));
   BOOST_CHECK(!meas.contains(eBoundQOverP));
 
   // reassign w/ all parameters
-  auto [parN, covN] = generateBoundParametersCovariance(rng);
+  auto [paramsN, covN] = generateBoundParametersCovariance(rng);
 
   meas = container.makeMeasurement(eBoundSize);
   meas.setSourceLink(source);
   meas.setSubspaceIndices(std::array{eBoundLoc0, eBoundLoc1, eBoundTime,
                                      eBoundPhi, eBoundTheta, eBoundQOverP});
-  meas.parameters() = parN;
+  meas.parameters() = paramsN;
   meas.covariance() = covN;
 
   BOOST_CHECK_EQUAL(meas.size(), eBoundSize);
