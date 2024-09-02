@@ -7,10 +7,11 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesTraccc
-    INTERFACE ActsCore ActsExamplesFramework ActsExamplesPropagation ActsPluginDetray
+    INTERFACE
+        ActsCore
+        ActsExamplesFramework
+        ActsExamplesPropagation
+        ActsPluginDetray
 )
 
-install(
-    TARGETS ActsExamplesTraccc
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+install(TARGETS ActsExamplesTraccc LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

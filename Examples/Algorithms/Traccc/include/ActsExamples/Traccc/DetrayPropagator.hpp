@@ -8,36 +8,37 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 #include "ActsExamples/Traccc/DetrayStore.hpp"
-#include "ActsExamples/EventData/PropagationSummary.hpp"
 
 #include <detray/navigation/navigator.hpp>
 #include <detray/utils/inspectors.hpp>
 
 namespace ActsExamples {
 
-  /// Type that holds the intersection information
-  using DetrayIntersection =
-      detray::intersection2D<typename Acts::DetrayDetector::surface_type,
-                             detray::cmath<detray::scalar>>;
+/// Type that holds the intersection information
+using DetrayIntersection =
+    detray::intersection2D<typename Acts::DetrayDetector::surface_type,
+                           detray::cmath<detray::scalar>>;
 
-  /// Inspector that records all encountered surfaces
-  using DetrayObjectTracer = detray::navigation::object_tracer<
-      DetrayIntersection, detray::dvector, detray::navigation::status::e_on_module,
-      detray::navigation::status::e_on_portal>;
+/// Inspector that records all encountered surfaces
+using DetrayObjectTracer =
+    detray::navigation::object_tracer<DetrayIntersection, detray::dvector,
+                                      detray::navigation::status::e_on_module,
+                                      detray::navigation::status::e_on_portal>;
 
-  /// Inspector that prints the navigator state from within the navigator's
-  /// method calls (cannot be done with an actor)
-  using DetrayPrintInspector = detray::navigation::print_inspector;
+/// Inspector that prints the navigator state from within the navigator's
+/// method calls (cannot be done with an actor)
+using DetrayPrintInspector = detray::navigation::print_inspector;
 
 template <typename propagator_t, typename detray_store_t>
 class DetrayPropagator : public PropagatorInterface {
  public:
-
   /// Create a DetrayPropagator
   ///
   /// @param propagator The actual detray propagator to wrap
@@ -70,8 +71,8 @@ class DetrayPropagator : public PropagatorInterface {
     const Acts::Vector3 direction = startParameters.momentum().normalized();
 
     ACTS_VERBOSE("Starting propagation at " << position.transpose()
-                                         << " with direction "
-                                         << direction.transpose());
+                                            << " with direction "
+                                            << direction.transpose());
 
     // Now follow that ray with the same track and check, if we find
     // the same volumes and distances along the way
@@ -93,14 +94,21 @@ class DetrayPropagator : public PropagatorInterface {
     PropagationSummary summary(startParameters);
     // Translate the objects into the steps
     for (const auto& object : objectTracer.object_trace) {
-       const auto& dposition = object.pos;
-       Acts::detail::Step step;
-       step.position = Acts::Vector3(dposition[0], dposition[1], dposition[2]);
-       summary.steps.emplace_back(step);
+      // Get the position of the object
+      const auto& dposition = object.pos;
+      const auto& sfDesription = object.intersection.sf_desc;
+      const auto sf =
+          detray::tracking_surface{m_detrayStore->detector, sfDesription};
+      Acts::GeometryIdentifier geoID{sf.source()};
+      // Create a step from the object
+      Acts::detail::Step step;
+      step.position = Acts::Vector3(dposition[0], dposition[1], dposition[2]);
+      step.geoID = geoID;
+      step.navDir = object.intersection.direction ? Acts::Direction::Forward
+                                                  : Acts::Direction::Backward;
+      summary.steps.emplace_back(step);
     }
-
     RecordedMaterial recordedMaterial;
-
     return std::pair{std::move(summary), std::move(recordedMaterial)};
   }
 
@@ -108,7 +116,7 @@ class DetrayPropagator : public PropagatorInterface {
   /// The propagator @todo fix when propagate() method is const in detray
   mutable propagator_t m_propagator;
 
-  /// The detray detector store and memory ressource
+  /// The detray detector store and memory resource
   std::shared_ptr<const detray_store_t> m_detrayStore = nullptr;
 
   /// The logging instance

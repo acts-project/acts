@@ -74,7 +74,8 @@ void addTraccc(Context& ctx) {
       using DetrayNavigator =
           detray::navigator<DetrayDetector, DetrayInspector>;
       // Line stepper
-      using DetrayLineStepper = detray::line_stepper<detray::cmath<detray::scalar>>;
+      using DetrayLineStepper =
+          detray::line_stepper<detray::cmath<detray::scalar>>;
       // Propagator with empty actor chain
       using Propagator = detray::propagator<DetrayLineStepper, DetrayNavigator,
                                             detray::actor_chain<>>;

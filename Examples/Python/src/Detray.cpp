@@ -44,23 +44,22 @@ void addDetray(Context& ctx) {
     // The memory resource and the detector are destroyed after the function
     detray.def("writeToJson", [](const GeometryContext& gctx,
                                  const Experimental::Detector& detector) {
-      auto memoryRessource = vecmem::host_memory_resource();
+      auto memoryResource = vecmem::host_memory_resource();
 
       DetrayConverter::Options options;
       options.writeToJson = true;
       options.convertMaterial = false;
       options.convertSurfaceGrids = true;
       auto detrayDetector =
-          DetrayConverter().convert<>(gctx, detector, memoryRessource, options);
+          DetrayConverter().convert<>(gctx, detector, memoryResource, options);
     });
   }
 
   {
-    auto converter =
-        py::class_<DetrayConverter>(detray, "DetrayConverter");
+    auto converter = py::class_<DetrayConverter>(detray, "DetrayConverter");
 
-    auto options =
-        py::class_<DetrayConverter::Options>(converter, "Options").def(py::init<>());
+    auto options = py::class_<DetrayConverter::Options>(converter, "Options")
+                       .def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(options, DetrayConverter::Options);
     ACTS_PYTHON_MEMBER(convertMaterial);
@@ -68,6 +67,5 @@ void addDetray(Context& ctx) {
     ACTS_PYTHON_MEMBER(writeToJson);
     ACTS_PYTHON_STRUCT_END();
   }
-
 }
 }  // namespace Acts::Python
