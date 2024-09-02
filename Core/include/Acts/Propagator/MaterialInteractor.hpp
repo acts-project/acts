@@ -69,8 +69,7 @@ struct MaterialInteractor {
     }
 
     static_assert(
-        Acts::Concepts::NavigationCompatibilityConcept<propagator_state_t,
-                                                       navigator_t>,
+        Acts::NavigationCompatibleConcept<propagator_state_t, navigator_t>,
         "Navigation does not fulfill geometry compatibility concept");
 
     // Handle surface material

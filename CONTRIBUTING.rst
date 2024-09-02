@@ -220,7 +220,7 @@ bugfix should happen in a different branch. The recommended procedure
 for handling this situation is the following:
 
 #. Get into a clean state of your working directory on your feature
-   branch (either by commiting open changes or by stashing them).
+   branch (either by committing open changes or by stashing them).
 #. Checkout the branch the bugfix should be merged into (either *main*
    or *release/X.Y.Z*) and get the most recent version.
 #. Create a new branch for the bugfix.
@@ -238,7 +238,7 @@ Example: Backporting a feature or bugfix
 
 Suppose you have a bugfix or feature branch that is eventually going to
 be merged in ``main``. You might want to have the feature/bugfix
-avilable in a patch (say ``0.25.1``) tag. To to that, find the
+available in a patch (say ``0.25.1``) tag. To to that, find the
 corresponding release branch, for this example that would be
 ``release/v0.25.X``. You must create a dedicated branch that **only**
 contains the commits that relate to your feature/bugfix, otherwise the

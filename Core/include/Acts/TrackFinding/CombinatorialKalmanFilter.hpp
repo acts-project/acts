@@ -234,6 +234,10 @@ struct CombinatorialKalmanFilterOptions {
 
   /// Whether to consider energy loss.
   bool energyLoss = true;
+
+  /// Skip the pre propagation call. This effectively skips the first surface
+  /// @note This is useful if the first surface should not be considered in a second reverse pass
+  bool skipPrePropagationUpdate = false;
 };
 
 template <typename track_container_t>
@@ -524,6 +528,9 @@ class CombinatorialKalmanFilter {
     /// Whether to consider energy loss.
     bool energyLoss = true;
 
+    /// Skip the pre propagation call. This effectively skips the first surface
+    bool skipPrePropagationUpdate = false;
+
     /// Calibration context for the finding run
     const CalibrationContext* calibrationContextPtr{nullptr};
 
@@ -544,6 +551,12 @@ class CombinatorialKalmanFilter {
       assert(result.trackStates && "No MultiTrajectory set");
 
       if (result.finished) {
+        return;
+      }
+
+      if (state.stage == PropagatorStage::prePropagation &&
+          skipPrePropagationUpdate) {
+        ACTS_VERBOSE("Skip pre-propagation update (first surface)");
         return;
       }
 
@@ -590,7 +603,9 @@ class CombinatorialKalmanFilter {
           result.pathLimitReached(state, stepper, navigator, logger());
       const bool isTargetReached =
           targetReached(state, stepper, navigator, logger());
-      if (isEndOfWorldReached || isPathLimitReached || isTargetReached) {
+      const bool allBranchesStopped = result.activeBranches.empty();
+      if (isEndOfWorldReached || isPathLimitReached || isTargetReached ||
+          allBranchesStopped) {
         if (isEndOfWorldReached) {
           ACTS_VERBOSE("End of world reached");
         } else if (isPathLimitReached) {
@@ -617,20 +632,25 @@ class CombinatorialKalmanFilter {
           stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
         }
 
-        // Record the active branch and remove it from the list
-        storeLastActiveBranch(result);
-        result.activeBranches.pop_back();
+        if (!allBranchesStopped) {
+          // Record the active branch and remove it from the list
+          storeLastActiveBranch(result);
+          result.activeBranches.pop_back();
+        } else {
+          // This can happen if we stopped all branches in the filter step
+          ACTS_VERBOSE("All branches stopped");
+        }
 
         // If no more active branches, done with filtering; Otherwise, reset
         // propagation state to track state at next active branch
-        if (result.activeBranches.empty()) {
-          ACTS_VERBOSE("Kalman filtering finds "
-                       << result.collectedTracks.size() << " tracks");
-          result.finished = true;
-        } else {
+        if (!result.activeBranches.empty()) {
           ACTS_VERBOSE("Propagation jumps to branch with tip = "
                        << result.activeBranches.back().tipIndex());
           reset(state, stepper, navigator, result);
+        } else {
+          ACTS_VERBOSE("Stop Kalman filtering with "
+                       << result.collectedTracks.size() << " found tracks");
+          result.finished = true;
         }
       }
     }
@@ -649,7 +669,8 @@ class CombinatorialKalmanFilter {
               typename navigator_t>
     void reset(propagator_state_t& state, const stepper_t& stepper,
                const navigator_t& navigator, result_type& result) const {
-      auto currentState = result.activeBranches.back().outermostTrackState();
+      auto currentBranch = result.activeBranches.back();
+      auto currentState = currentBranch.outermostTrackState();
 
       // Reset the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
@@ -791,8 +812,9 @@ class CombinatorialKalmanFilter {
             currentBranch = result.activeBranches.back();
             prevTip = currentBranch.tipIndex();
 
-            if (currentBranch.outermostTrackState().typeFlags().test(
-                    TrackStateFlag::OutlierFlag)) {
+            auto currentState = currentBranch.outermostTrackState();
+
+            if (currentState.typeFlags().test(TrackStateFlag::OutlierFlag)) {
               // We don't need to update the stepper given an outlier state
               ACTS_VERBOSE("Outlier state detected on surface "
                            << surface->geometryId());
@@ -802,16 +824,16 @@ class CombinatorialKalmanFilter {
                            << nBranchesOnSurface << " branches");
               // Update stepping state using filtered parameters of last track
               // state on this surface
-              auto ts = result.activeBranches.back().outermostTrackState();
               stepper.update(state.stepping,
                              MultiTrajectoryHelpers::freeFiltered(
-                                 state.options.geoContext, ts),
-                             ts.filtered(), ts.filteredCovariance(), *surface);
+                                 state.options.geoContext, currentState),
+                             currentState.filtered(),
+                             currentState.filteredCovariance(), *surface);
               ACTS_VERBOSE(
                   "Stepping state is updated with filtered parameter:");
-              ACTS_VERBOSE("-> "
-                           << ts.filtered().transpose()
-                           << " of track state with tip = " << ts.index());
+              ACTS_VERBOSE("-> " << currentState.filtered().transpose()
+                                 << " of track state with tip = "
+                                 << currentState.index());
             }
           }
         }
@@ -973,6 +995,8 @@ class CombinatorialKalmanFilter {
           typeFlags.set(TrackStateFlag::MeasurementFlag);
           // Increment number of measurements
           newBranch.nMeasurements()++;
+          newBranch.nDoF() += trackState.calibratedSize();
+          newBranch.chi2() += trackState.chi2();
         } else {
           ACTS_WARNING("Cannot handle this track state flags");
           continue;
@@ -1252,6 +1276,8 @@ class CombinatorialKalmanFilter {
     combKalmanActor.targetReached.surface = tfOptions.targetSurface;
     combKalmanActor.multipleScattering = tfOptions.multipleScattering;
     combKalmanActor.energyLoss = tfOptions.energyLoss;
+    combKalmanActor.skipPrePropagationUpdate =
+        tfOptions.skipPrePropagationUpdate;
     combKalmanActor.actorLogger = m_actorLogger.get();
     combKalmanActor.updaterLogger = m_updaterLogger.get();
     combKalmanActor.calibrationContextPtr = &tfOptions.calibrationContext.get();

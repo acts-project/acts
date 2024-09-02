@@ -59,7 +59,7 @@ class PhotonConversion {
   /// @param [in, out] particle The interacting photon
   /// @param [out] generated List of generated particles
   ///
-  /// @return True if the conversion occured, else false
+  /// @return True if the conversion occurred, else false
   template <typename generator_t>
   bool run(generator_t& generator, Particle& particle,
            std::vector<Particle>& generated) const;

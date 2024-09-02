@@ -72,6 +72,9 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
   m_inputChain->SetBranchStatus("event_id", true);
 
   auto nEntries = static_cast<std::size_t>(m_inputChain->GetEntriesFast());
+  if (nEntries == 0) {
+    throw std::runtime_error("Did not find any entries in input file");
+  }
 
   // Add the first entry
   m_inputChain->GetEntry(0);
