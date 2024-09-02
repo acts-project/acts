@@ -104,12 +104,10 @@ inline std::vector<std::shared_ptr<detector_element_t>> splitDiscModule(
   auto nSegments = splitRanges.size();
 
   // Output container for the submodules
-  std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> detElements =
-      {};
+  std::vector<std::shared_ptr<const detector_element_t>> detElements = {};
   detElements.reserve(nSegments);
 
   // Get the geometric information
-  double thickness = detElement->thickness();
   const Acts::Transform3& transform = surface.transform(gctx);
   const std::vector<double> boundsValues = bounds.values();
   std::array<double, Acts::AnnulusBounds::eSize> values{};
