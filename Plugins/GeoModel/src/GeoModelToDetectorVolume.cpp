@@ -65,7 +65,6 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         portalGenerator, context, name, newTransform, bounds,
         Experimental::tryAllPortalsAndSurfaces());
   } else if (shape.typeID() == GeoBox::getClassTypeID()) {
-    // TODO do the surfaces
     const GeoBox* box = dynamic_cast<const GeoBox*>(&shape);
     std::shared_ptr<CuboidVolumeBounds> bounds =
         std::make_shared<CuboidVolumeBounds>(box->getXHalfLength(),
