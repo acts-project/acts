@@ -64,13 +64,25 @@ class DetrayConverter {
                                                  logger());
     detray::io::geometry_reader::convert<detector_t>(detectorBuilder, names,
                                                      detectorPayload);
-    // (2) material
+
+    // (2a) homogeneous material
+    if constexpr (detray::detail::has_homogeneous_material_v<detector_t>) {
+      if (options.convertMaterial) {
+        detray::io::detector_homogeneous_material_payload materialSlabsPayload =
+            DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
+                geoIdCache, detector, logger());
+        detray::io::homogeneous_material_reader::convert<detector_t>(
+            detectorBuilder, names, std::move(materialSlabsPayload));
+      }
+    }
+
+    // (2b) material grids
     if constexpr (detray::detail::has_material_grids_v<detector_t>) {
       if (options.convertMaterial) {
         detray::io::detector_grids_payload<detray::io::material_slab_payload,
                                            detray::io::material_id>
             materialGridsPayload =
-                DetrayMaterialConverter::convertSurfaceMaterialGrids(
+                DetrayMaterialConverter::convertGridSurfaceMaterial(
                     geoIdCache, detector, logger());
         detray::io::material_map_reader<std::integral_constant<
             std::size_t, 2>>::convert<detector_t>(detectorBuilder, names,

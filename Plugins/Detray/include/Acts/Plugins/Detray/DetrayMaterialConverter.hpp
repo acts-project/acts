@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
@@ -32,16 +33,28 @@ namespace DetrayMaterialConverter {
 detray::io::material_slab_payload convertMaterialSlab(
     const MaterialSlab& materialSlab);
 
-/// Conversion method for surface material objects
+/// Conversion method for homogeneous material
 ///
+/// @param geoIdCache object to have the link association from the geometry building
 /// @param detector the detector object
+/// @param logger the logger object for screen output
+///
+/// @return the volume_payload for portals and volumes by @param volume acts object
+detray::io::detector_homogeneous_material_payload
+convertHomogeneousSurfaceMaterial(
+    const DetrayConversionUtils::GeometryIdCache& geoIdCache,
+    const Experimental::Detector& detector, const Logger& logger);
+
+/// Conversion method for grid based surface material
+///
+/// @param material the material (Binned/Grid)
 /// @param logger the logger object for screen output
 ///
 /// @return a surface material
 detray::io::grid_payload<detray::io::material_slab_payload,
                          detray::io::material_id>
-convertSurfaceMaterial(const ISurfaceMaterial& material,
-                       const Acts::Logger& logger);
+convertGridSurfaceMaterial(const ISurfaceMaterial& material,
+                           const Acts::Logger& logger);
 
 /// Conversion method for material grids
 ///
@@ -52,7 +65,7 @@ convertSurfaceMaterial(const ISurfaceMaterial& material,
 /// @return the volume_payload for portals and volumes by @param volume acts object
 detray::io::detector_grids_payload<detray::io::material_slab_payload,
                                    detray::io::material_id>
-convertSurfaceMaterialGrids(
+convertGridSurfaceMaterial(
     const DetrayConversionUtils::GeometryIdCache& geoIdCache,
     const Experimental::Detector& detector, const Logger& logger);
 
