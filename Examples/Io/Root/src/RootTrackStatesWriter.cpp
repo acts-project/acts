@@ -486,7 +486,8 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         if (ipar == eSmoothed && state.hasSmoothed()) {
           return std::make_pair(state.smoothed(), state.smoothedCovariance());
         }
-        if (ipar == eUnbiased && state.hasSmoothed() && state.hasProjector()) {
+        if (ipar == eUnbiased && state.hasSmoothed() && state.hasProjector() &&
+            state.hasCalibrated()) {
           // calculate the unbiased track parameters (i.e. fitted track
           // parameters with this measurement removed) using Eq.(12a)-Eq.(12c)
           // of NIMA 262, 444 (1987)
