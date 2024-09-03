@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,11 +10,9 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 
-namespace Acts::Experimental {
-
-void updateCovariancePredicted(BoundMatrix& fullCovariancePredicted,
-                               Eigen::MatrixXd& aMatrixExtended,
-                               const std::size_t ndfSystem) {
+void Acts::Experimental::updateGx2fCovarianceParams(
+    BoundMatrix& fullCovariancePredicted, Eigen::MatrixXd& aMatrixExtended,
+    const std::size_t ndfSystem) {
   // make invertible
   for (int i = 0; i < aMatrixExtended.rows(); ++i) {
     if (aMatrixExtended(i, i) == 0.) {
@@ -29,5 +27,3 @@ void updateCovariancePredicted(BoundMatrix& fullCovariancePredicted,
 
   return;
 }
-
-}  // namespace Acts::Experimental
