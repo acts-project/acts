@@ -115,8 +115,8 @@ inline std::vector<std::shared_ptr<detector_element_t>> splitDiscModule(
   std::copy_n(boundsValues.begin(), Acts::AnnulusBounds::eSize, values.begin());
 
   for (std::size_t i = 0; i < nSegments; i++) {
-    if (boundsValues[Acts::AnnulusBounds::eMinR] < splitRanges[i].first ||
-        boundsValues[Acts::AnnulusBounds::eMaxR] > splitRanges[i].second) {
+    if (boundsValues[Acts::AnnulusBounds::eMinR] > splitRanges[i].first ||
+        boundsValues[Acts::AnnulusBounds::eMaxR] < splitRanges[i].second) {
       ACTS_WARNING(
           "Radius pattern not within the original bounds, node will not be "
           "split!");
