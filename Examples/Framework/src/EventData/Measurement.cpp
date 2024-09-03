@@ -48,20 +48,28 @@ MeasurementContainer::VariableProxy MeasurementContainer::makeMeasurement(
   return getMeasurement(addMeasurement(size));
 }
 
-MeasurementContainer::Iterator MeasurementContainer::begin() {
-  return Iterator{*this, 0};
+MeasurementContainer::iterator MeasurementContainer::begin() {
+  return iterator{*this, 0};
 }
 
-MeasurementContainer::Iterator MeasurementContainer::end() {
-  return Iterator{*this, m_entries.size()};
+MeasurementContainer::iterator MeasurementContainer::end() {
+  return iterator{*this, m_entries.size()};
 }
 
-MeasurementContainer::ConstIterator MeasurementContainer::begin() const {
-  return ConstIterator{*this, 0};
+MeasurementContainer::const_iterator MeasurementContainer::begin() const {
+  return const_iterator{*this, 0};
 }
 
-MeasurementContainer::ConstIterator MeasurementContainer::end() const {
-  return ConstIterator{*this, m_entries.size()};
+MeasurementContainer::const_iterator MeasurementContainer::end() const {
+  return const_iterator{*this, m_entries.size()};
+}
+
+MeasurementContainer::const_iterator MeasurementContainer::cbegin() const {
+  return const_iterator{*this, 0};
+}
+
+MeasurementContainer::const_iterator MeasurementContainer::cend() const {
+  return const_iterator{*this, m_entries.size()};
 }
 
 }  // namespace ActsExamples
