@@ -15,6 +15,7 @@
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Propagator/EigenStepperDefaultExtension.hpp"
 #include "Acts/Propagator/EigenStepperExtensionBase.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 
@@ -34,6 +35,9 @@ struct EigenStepperDenseEnvironmentExtension
   using Scalar = Base::Scalar;
   /// @brief Vector3 replacement for the custom scalar type
   using ThisVector3 = Base::ThisVector3;
+
+  /// Fallback extension
+  EigenStepperDefaultExtension defaultExtension;
 
   /// Momentum at a certain point
   Scalar currentMomentum = 0.;
@@ -59,40 +63,6 @@ struct EigenStepperDenseEnvironmentExtension
   /// Energy at each sub-step
   std::array<Scalar, 4> energy{};
 
-  /// @brief Control function if the step evaluation would be valid
-  ///
-  /// @tparam propagator_state_t Type of the state of the propagator
-  /// @tparam stepper_t Type of the stepper
-  /// @tparam navigator_t Type of the navigator
-  ///
-  /// @param [in] state State of the propagator
-  /// @param [in] stepper Stepper of the propagator
-  /// @param [in] navigator Navigator of the propagator
-  ///
-  /// @return Boolean flag if the step would be valid
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  int bid(const propagator_state_t& state, const stepper_t& stepper,
-          const navigator_t& navigator) const {
-    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
-    float absQ = particleHypothesis.absoluteCharge();
-    float mass = particleHypothesis.mass();
-
-    // Check for valid particle properties
-    if (absQ == 0. || mass == 0. ||
-        stepper.absoluteMomentum(state.stepping) <
-            state.options.stepping.dense.momentumCutOff) {
-      return 0;
-    }
-
-    // Check existence of a volume with material
-    if (!navigator.currentVolumeMaterial(state.navigation)) {
-      return 0;
-    }
-
-    return 2;
-  }
-
   /// @brief Evaluater of the k_i's of the RKN4. For the case of i = 0 this
   /// step sets up member parameters, too.
   ///
@@ -117,19 +87,20 @@ struct EigenStepperDenseEnvironmentExtension
          const navigator_t& navigator, ThisVector3& knew, const Vector3& bField,
          std::array<Scalar, 4>& kQoP, const int i = 0, const double h = 0.,
          const ThisVector3& kprev = ThisVector3::Zero()) {
+    const auto* volumeMaterial =
+        navigator.currentVolumeMaterial(state.navigation);
+    if (volumeMaterial == nullptr) {
+      return defaultExtension.k(state, stepper, navigator, knew, bField, kQoP,
+                                i, h, kprev);
+    }
+
     double q = stepper.charge(state.stepping);
     const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
     float mass = particleHypothesis.mass();
 
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
-      // Set up container for energy loss
-      const auto* volumeMaterial =
-          navigator.currentVolumeMaterial(state.navigation);
-      if (volumeMaterial == nullptr) {
-        // This function is very hot, so we prefer to terminate here
-        std::terminate();
-      }
+      // Set up for energy loss
       ThisVector3 position = stepper.position(state.stepping);
       material = volumeMaterial->material(position.template cast<double>());
       initialMomentum = stepper.absoluteMomentum(state.stepping);
@@ -178,7 +149,13 @@ struct EigenStepperDenseEnvironmentExtension
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const navigator_t& /*navigator*/, const double h) const {
+                const navigator_t& navigator, const double h) const {
+    const auto* volumeMaterial =
+        navigator.currentVolumeMaterial(state.navigation);
+    if (volumeMaterial == nullptr) {
+      return defaultExtension.finalize(state, stepper, navigator, h);
+    }
+
     const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
     float mass = particleHypothesis.mass();
 
@@ -231,6 +208,12 @@ struct EigenStepperDenseEnvironmentExtension
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const navigator_t& navigator, const double h,
                 FreeMatrix& D) const {
+    const auto* volumeMaterial =
+        navigator.currentVolumeMaterial(state.navigation);
+    if (volumeMaterial == nullptr) {
+      return defaultExtension.finalize(state, stepper, navigator, h, D);
+    }
+
     return finalize(state, stepper, navigator, h) &&
            transportMatrix(state, stepper, h, D);
   }
