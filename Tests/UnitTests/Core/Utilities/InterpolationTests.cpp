@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <array>
 #include <vector>

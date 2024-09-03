@@ -259,7 +259,7 @@ struct Simulation {
       }
     }
 
-    // the overall function call succeeded, i.e. no fatal errors occured.
+    // the overall function call succeeded, i.e. no fatal errors occurred.
     // yet, there might have been some particle for which the propagation
     // failed. thus, the successful result contains a list of failed particles.
     // sounds a bit weird, but that is the way it is.

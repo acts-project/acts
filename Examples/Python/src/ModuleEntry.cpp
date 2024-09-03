@@ -40,6 +40,7 @@ using namespace Acts::Python;
 
 namespace Acts::Python {
 void addContext(Context& ctx);
+void addAny(Context& ctx);
 void addUnits(Context& ctx);
 void addFramework(Context& ctx);
 void addLogging(Context& ctx);
@@ -81,6 +82,8 @@ void addSvg(Context& ctx);
 void addObj(Context& ctx);
 void addOnnx(Context& ctx);
 void addOnnxNeuralCalibrator(Context& ctx);
+void addCovfie(Context& ctx);
+void addHashing(Context& ctx);
 
 }  // namespace Acts::Python
 
@@ -108,6 +111,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   }
 
   addContext(ctx);
+  addAny(ctx);
   addUnits(ctx);
   addFramework(ctx);
   addLogging(ctx);
@@ -146,4 +150,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addSvg(ctx);
   addOnnx(ctx);
   addOnnxNeuralCalibrator(ctx);
+  addCovfie(ctx);
+  addHashing(ctx);
 }

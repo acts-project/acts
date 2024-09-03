@@ -38,9 +38,6 @@ ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
   }
-  if (m_cfg.inputSourceLinks.empty()) {
-    throw std::invalid_argument("Missing input source links collection");
-  }
   if (m_cfg.inputProtoTracks.empty()) {
     throw std::invalid_argument("Missing input proto tracks collection");
   }
@@ -59,7 +56,6 @@ ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
   }
 
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
-  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
   m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
   m_inputClusters.maybeInitialize(m_cfg.inputClusters);
@@ -70,7 +66,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
-  const auto& sourceLinks = m_inputSourceLinks(ctx);
   const auto& protoTracks = m_inputProtoTracks(ctx);
   const auto& initialParameters = m_inputInitialTrackParameters(ctx);
 
@@ -131,14 +126,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
     // Fill the source links via their indices from the container
     for (auto hitIndex : protoTrack) {
-      if (auto it = sourceLinks.nth(hitIndex); it != sourceLinks.end()) {
-        const IndexSourceLink& sourceLink = *it;
-        trackSourceLinks.push_back(Acts::SourceLink{sourceLink});
-      } else {
-        ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"
-                                  << hitIndex);
-        return ProcessCode::ABORT;
-      }
+      const auto& measurement = measurements.at(hitIndex);
+      trackSourceLinks.push_back(measurement.sourceLink());
     }
 
     ACTS_DEBUG("Invoke direct fitter for track " << itrack);
