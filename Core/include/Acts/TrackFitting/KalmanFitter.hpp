@@ -1303,6 +1303,6 @@ class KalmanFitter {
     // Return the converted Track
     return track;
   }
-};  // namespace Acts
+};
 
 }  // namespace Acts
