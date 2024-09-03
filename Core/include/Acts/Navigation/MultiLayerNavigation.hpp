@@ -16,7 +16,6 @@
 
 #include <array>
 #include <memory>
-#include <ranges>
 
 namespace Acts::Experimental {
 
@@ -118,7 +117,8 @@ class MultiLayerNavigation : public IInternalNavigation {
               });
 
     // Remove the duplicates
-    surfaces.erase(std::ranges::unique(surfaces).begin(), surfaces.end());
+    surfaces.erase(std::unique(surfaces.begin(), surfaces.end()),
+                   surfaces.end());
   }
 
  private:
