@@ -82,11 +82,9 @@ BOOST_AUTO_TEST_CASE(DetrayHomogeneousMaterialConversion) {
       payload = Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
           homMaterial, *logger);
 
-  // Check the payload
-  // - we fake 2D always for detray to minimize the number of containers,
-  //   even for homogeneous materials (at the moment)
-  BOOST_CHECK_EQUAL(payload.axes.size(), 2u);
-  BOOST_CHECK_EQUAL(payload.bins.size(), 1u);
+  // Check the payload - empty, this should run through another converter
+  BOOST_CHECK_EQUAL(payload.axes.empty());
+  BOOST_CHECK_EQUAL(payload.bins.empty());
 }
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionX) {
