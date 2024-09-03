@@ -83,8 +83,8 @@ BOOST_AUTO_TEST_CASE(DetrayHomogeneousMaterialConversion) {
           homMaterial, *logger);
 
   // Check the payload - empty, this should run through another converter
-  BOOST_CHECK_EQUAL(payload.axes.empty());
-  BOOST_CHECK_EQUAL(payload.bins.empty());
+  BOOST_CHECK(payload.axes.empty());
+  BOOST_CHECK(payload.bins.empty());
 }
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionX) {
