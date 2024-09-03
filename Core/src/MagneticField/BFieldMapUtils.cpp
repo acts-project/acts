@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,6 +21,7 @@
 #include <cstdlib>
 #include <initializer_list>
 #include <limits>
+#include <ranges>
 #include <set>
 #include <tuple>
 
@@ -39,11 +40,11 @@ Acts::fieldMapRZ(
     bool firstQuadrant) {
   // [1] Create Grid
   // sort the values
-  std::sort(rPos.begin(), rPos.end());
-  std::sort(zPos.begin(), zPos.end());
+  std::ranges::sort(rPos);
+  std::ranges::sort(zPos);
   // Get unique values
-  rPos.erase(std::unique(rPos.begin(), rPos.end()), rPos.end());
-  zPos.erase(std::unique(zPos.begin(), zPos.end()), zPos.end());
+  rPos.erase(std::ranges::unique(rPos).begin(), rPos.end());
+  zPos.erase(std::ranges::unique(zPos).begin(), zPos.end());
   rPos.shrink_to_fit();
   zPos.shrink_to_fit();
   // get the number of bins
@@ -145,13 +146,13 @@ Acts::fieldMapXYZ(
     double lengthUnit, double BFieldUnit, bool firstOctant) {
   // [1] Create Grid
   // Sort the values
-  std::sort(xPos.begin(), xPos.end());
-  std::sort(yPos.begin(), yPos.end());
-  std::sort(zPos.begin(), zPos.end());
+  std::ranges::sort(xPos);
+  std::ranges::sort(yPos);
+  std::ranges::sort(zPos);
   // Get unique values
-  xPos.erase(std::unique(xPos.begin(), xPos.end()), xPos.end());
-  yPos.erase(std::unique(yPos.begin(), yPos.end()), yPos.end());
-  zPos.erase(std::unique(zPos.begin(), zPos.end()), zPos.end());
+  xPos.erase(std::ranges::unique(xPos).begin(), xPos.end());
+  yPos.erase(std::ranges::unique(yPos).begin(), yPos.end());
+  zPos.erase(std::ranges::unique(zPos).begin(), zPos.end());
   xPos.shrink_to_fit();
   yPos.shrink_to_fit();
   zPos.shrink_to_fit();

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,6 +35,7 @@
 #include <iterator>
 #include <map>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <utility>
 
@@ -104,8 +105,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
                        });
         std::sort(rvalues.begin(), rvalues.end());
         std::vector<std::string> locs;
-        std::transform(rvalues.begin(),
-                       std::unique(rvalues.begin(), rvalues.end()),
+        std::transform(rvalues.begin(), std::ranges::unique(rvalues).begin(),
                        std::back_inserter(locs),
                        [](const auto& v) { return std::to_string(v); });
         ACTS_VERBOSE(
@@ -277,8 +277,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
                        });
         std::sort(zvalues.begin(), zvalues.end());
         std::vector<std::string> locs;
-        std::transform(zvalues.begin(),
-                       std::unique(zvalues.begin(), zvalues.end()),
+        std::transform(zvalues.begin(), std::ranges::unique(zvalues).begin(),
                        std::back_inserter(locs),
                        [](const auto& v) { return std::to_string(v); });
         ACTS_VERBOSE(

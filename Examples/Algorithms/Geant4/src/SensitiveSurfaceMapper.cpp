@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -303,8 +303,7 @@ bool ActsExamples::SensitiveSurfaceMapper::checkMapping(
     found.push_back(surfacePtr);
   }
   std::sort(found.begin(), found.end());
-  auto newEnd = std::unique(found.begin(), found.end());
-  found.erase(newEnd, found.end());
+  found.erase(std::ranges::unique(found), found.end());
 
   std::vector<const Acts::Surface*> missing;
   std::set_difference(allSurfaces.begin(), allSurfaces.end(), found.begin(),

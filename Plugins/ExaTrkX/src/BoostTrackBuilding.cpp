@@ -82,8 +82,8 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
   ACTS_VERBOSE("Number of track labels: " << trackLabels.size());
   ACTS_VERBOSE("Number of unique track labels: " << [&]() {
     std::vector<vertex_t> sorted(trackLabels);
-    std::sort(sorted.begin(), sorted.end());
-    sorted.erase(std::unique(sorted.begin(), sorted.end()), sorted.end());
+    std::ranges::sort(sorted);
+    sorted.erase(std::ranges::unique(sorted).begin(), sorted.end());
     return sorted.size();
   }());
 
