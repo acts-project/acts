@@ -29,6 +29,7 @@
 #include <memory>
 #include <numeric>
 #include <random>
+#include <ranges>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
@@ -441,7 +442,7 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
     indices.push_back(ts.index());
   }
 
-  std::reverse(indices.begin(), indices.end());
+  std::ranges::reverse(indices);
 
   std::vector<IndexType> act;
   for (auto ts : t.trackStates()) {

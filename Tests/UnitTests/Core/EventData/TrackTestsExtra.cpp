@@ -16,6 +16,7 @@
 #include "Acts/Utilities/Zip.hpp"
 
 #include <numeric>
+#include <ranges>
 
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;
@@ -419,8 +420,8 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
   // reverse with jacobians
   t.reverseTrackStates(true);
 
-  std::reverse(exp.begin(), exp.end());
-  std::rotate(exp.rbegin(), std::next(exp.rbegin()), exp.rend());
+  std::ranges::rotate(exp, std::next(exp.begin()));
+  std::ranges::reverse(exp);
 
   for (const auto [e, ts] : zip(exp, t.trackStates())) {
     Acts::BoundMatrix expJac;

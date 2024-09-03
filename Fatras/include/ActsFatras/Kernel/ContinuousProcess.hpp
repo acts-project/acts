@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,6 +10,8 @@
 
 #include "Acts/Material/MaterialSlab.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+
+#include <ranges>
 
 namespace ActsFatras {
 
@@ -70,8 +72,9 @@ struct ContinuousProcess {
     // modify particle according to the physics process
     auto children = physics(generator, slab, particle);
     // move selected child particles to the output container
-    std::copy_if(std::begin(children), std::end(children),
-                 std::back_inserter(generated), selectChildParticle);
+    std::ranges::copy(
+        children | std::ranges::views::filter(selectChildParticle),
+        std::back_inserter(generated));
     // break condition is defined by whether the output particle is still valid
     // or not e.g. because it has fallen below a momentum threshold.
     return !selectOutputParticle(particle);
