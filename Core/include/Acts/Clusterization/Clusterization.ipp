@@ -1,12 +1,13 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <array>
+#include <ranges>
 #include <vector>
 
 #include <boost/pending/disjoint_sets.hpp>
@@ -273,7 +274,7 @@ void labelClusters(CellCollection& cells, Connect connect) {
   internal::DisjointSets ds{};
 
   // Sort cells by position to enable in-order scan
-  std::sort(cells.begin(), cells.end(), internal::Compare<Cell, GridDim>());
+  std::ranges::sort(cells, internal::Compare<Cell, GridDim>());
 
   // First pass: Allocate labels and record equivalences
   for (auto it = cells.begin(); it != cells.end(); ++it) {
