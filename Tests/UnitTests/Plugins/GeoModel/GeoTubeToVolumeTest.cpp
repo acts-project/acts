@@ -8,7 +8,9 @@
 
 #include <boost/test/unit_test.hpp>
 
-// clang-formal off
+// In order to avoid conflicts with declarations in Geomodel that is fixed in
+// v3.5
+//  clang-formal off
 #include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 // clang-formal on
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
