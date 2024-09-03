@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -75,12 +75,15 @@ void ObjVisualization3D<T>::write(const std::filesystem::path& path) const {
   if (!objectpath.has_extension()) {
     objectpath.replace_extension(std::filesystem::path("obj"));
   }
-  os.open(objectpath);
+  os.open(std::filesystem::absolute(objectpath).string());
   std::filesystem::path mtlpath = objectpath;
   mtlpath.replace_extension(std::filesystem::path("mtl"));
-  os << "mtllib " << mtlpath << "\n";
+
+  const std::string mtlpathString = std::filesystem::absolute(mtlpath).string();
+  os << "mtllib " << mtlpathString << "\n";
   std::ofstream mtlos;
-  mtlos.open(mtlpath);
+  mtlos.open(mtlpathString);
+
   write(os, mtlos);
   os.close();
   mtlos.close();
