@@ -13,6 +13,7 @@
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <array>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <map>
