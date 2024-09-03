@@ -53,9 +53,9 @@ namespace Gx2fConstants {
 constexpr std::string_view gx2fnUpdateColumn = "Gx2fnUpdateColumn";
 
 // Mask for the track states. We don't need Predicted and Filtered
-constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Jacobian |
-                                              TrackStatePropMask::Calibrated |
-                                              TrackStatePropMask::Smoothed;
+constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Smoothed |
+                                              TrackStatePropMask::Jacobian |
+                                              TrackStatePropMask::Calibrated;
 
 // A projector used for scattering. By using Jacobian * phiThetaProjector one
 // gets only the derivatives for the variables phi and theta.
