@@ -43,7 +43,7 @@ class CylindricalVolumeBuilder : public IDetectorComponentBuilder {
         m_volumeBounds(vBounds),
         m_surfaceBounds(sBounds),
         m_name(vName),
-        m_material(material) {}
+        m_material(std::move(material)) {}
 
   DetectorComponent construct(
       [[maybe_unused]] const GeometryContext& gctx) const final {
