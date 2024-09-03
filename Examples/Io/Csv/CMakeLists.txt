@@ -36,4 +36,9 @@ target_link_libraries(
         Threads::Threads
 )
 
+if(ACTS_BUILD_PLUGIN_GEOMODEL)
+    target_link_libraries(ActsExamplesIoCsv PRIVATE ActsPluginGeoModel)
+    target_compile_definitions(ActsExamplesIoCsv PRIVATE WITH_GEOMODEL_PLUGIN)
+endif()
+
 install(TARGETS ActsExamplesIoCsv LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

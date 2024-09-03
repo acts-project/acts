@@ -34,6 +34,12 @@
 #include <utility>
 #include <vector>
 
+#ifdef WITH_GEOMODEL_PLUGIN
+#include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#endif
+
 #include "CsvOutputData.hpp"
 
 using namespace ActsExamples;
@@ -112,6 +118,40 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
     data.module_t = surface.associatedDetectorElement()->thickness() /
                     Acts::UnitConstants::mm;
   }
+
+#ifdef WITH_GEOMODEL_PLUGIN
+  auto addVertices = [&](const auto& b) {
+    std::vector<Acts::Vector2> vs = b.vertices(0);
+    data.v0_0 = vs[0].x();
+    data.v0_1 = vs[0].y();
+    data.v1_0 = vs[1].x();
+    data.v1_1 = vs[1].y();
+    data.v2_0 = vs[2].x();
+    data.v2_1 = vs[2].y();
+    data.v3_0 = vs[3].x();
+    data.v3_1 = vs[3].y();
+  };
+
+  if (auto bndPtr = dynamic_cast<const Acts::RectangleBounds*>(&bounds);
+      bndPtr != nullptr) {
+    addVertices(*bndPtr);
+  }
+  if (auto bndPtr = dynamic_cast<const Acts::AnnulusBounds*>(&bounds);
+      bndPtr != nullptr) {
+    addVertices(*bndPtr);
+  }
+
+  if (auto detEl = dynamic_cast<const Acts::GeoModelDetectorElementITk*>(
+          surface.associatedDetectorElement());
+      detEl != nullptr) {
+    data.hardware = detEl->identifier().hardware();
+    data.bec = detEl->identifier().barrelEndcap();
+    data.lw = detEl->identifier().layerWheel();
+    data.em = detEl->identifier().etaModule();
+    data.pm = detEl->identifier().phiModule();
+    data.sd = detEl->identifier().side();
+  }
+#endif
 }
 
 /// Write a single surface.
