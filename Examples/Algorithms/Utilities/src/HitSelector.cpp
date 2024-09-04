@@ -1,14 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Utilities/HitSelector.hpp"
-
-#include <ranges>
 
 ActsExamples::HitSelector::HitSelector(const Config& config,
                                        Acts::Logging::Level level)
@@ -22,10 +20,9 @@ ActsExamples::ProcessCode ActsExamples::HitSelector::execute(
   const auto& hits = m_inputHits(ctx);
   SimHitContainer selectedHits;
 
-  std::ranges::copy(hits | std::ranges::views::filter([&](const auto& hit) {
-                      return hit.time() < m_cfg.maxTime;
-                    }),
-                    std::inserter(selectedHits, selectedHits.begin()));
+  std::copy_if(hits.begin(), hits.end(),
+               std::inserter(selectedHits, selectedHits.begin()),
+               [&](const auto& hit) { return hit.time() < m_cfg.maxTime; });
 
   ACTS_DEBUG("selected " << selectedHits.size() << " from " << hits.size()
                          << " hits");

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,7 +29,6 @@
 #include <cassert>
 #include <iterator>
 #include <memory>
-#include <ranges>
 #include <vector>
 
 namespace ActsFatras {
@@ -289,13 +288,10 @@ struct Simulation {
     // store final particle state at the end of the simulation
     particlesFinal.push_back(result.particle);
     // move generated secondaries that should be simulated to the output
-    std::ranges::copy(
-        result.generatedParticles |
-            std::ranges::views::filter([this](const Particle &particle) {
-              return selectParticle(particle);
-            }),
-        std::back_inserter(particlesInitial));
-
+    std::copy_if(
+        result.generatedParticles.begin(), result.generatedParticles.end(),
+        std::back_inserter(particlesInitial),
+        [this](const Particle &particle) { return selectParticle(particle); });
     std::copy(result.hits.begin(), result.hits.end(), std::back_inserter(hits));
   }
 
