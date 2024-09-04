@@ -16,7 +16,7 @@
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacePointReader.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterReader.hpp"
-#include "ActsExamples/Io/Root/RootAthenaDumpGeoIdCollecter.hpp"
+#include "ActsExamples/Io/Root/RootAthenaDumpGeoIdCollector.hpp"
 #include "ActsExamples/Io/Root/RootAthenaDumpReader.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
@@ -99,10 +99,8 @@ void addInput(Context& ctx) {
       skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap, trackingGeometry);
 
 #ifdef WITH_GEOMODEL_PLUGIN
-  py::class_<GeometryIdMapActsAthena, std::shared_ptr<GeometryIdMapActsAthena>>(
-      mex, "GeometryIdMapActsAthena");
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::RootAthenaDumpGeoIdCollecter, mex,
-                             "RootAthenaDumpGeoIdCollecter", treename,
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::RootAthenaDumpGeoIdCollector, mex,
+                             "RootAthenaDumpGeoIdCollector", treename,
                              inputfile, trackingGeometry, geometryIdMap);
 #endif
 

@@ -333,7 +333,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
       findTracks, tag);
 
   py::class_<GeometryIdMapActsAthena, std::shared_ptr<GeometryIdMapActsAthena>>(
-      mex, "GeometryIdMapActsAthena");
+      mex, "GeometryIdMapActsAthena").def(py::init<>());
 }
 
 }  // namespace Acts::Python

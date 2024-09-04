@@ -26,7 +26,7 @@ namespace ActsExamples {
 /// It is not a real "reader", since it doesn't store any data in the
 /// whiteboard. Rather, it accumulates the map, and assumes that we hold a
 /// shared reference to it outside of the sequencer
-class RootAthenaDumpGeoIdCollecter : public IReader {
+class RootAthenaDumpGeoIdCollector : public IReader {
  public:
   /// @brief The nested configuration struct
   struct Config {
@@ -45,10 +45,10 @@ class RootAthenaDumpGeoIdCollecter : public IReader {
 
   // Constructor
   /// @param config The configuration struct
-  RootAthenaDumpGeoIdCollecter(const Config &config,
+  RootAthenaDumpGeoIdCollector(const Config &config,
                                Acts::Logging::Level level);
 
-  std::string name() const override { return "RootAthenaDumpGeoIdCollecter"; }
+  std::string name() const override { return "RootAthenaDumpGeoIdCollector"; }
 
   /// Return the available events range.
   std::pair<std::size_t, std::size_t> availableEvents() const override {

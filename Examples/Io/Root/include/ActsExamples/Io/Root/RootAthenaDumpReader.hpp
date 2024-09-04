@@ -15,7 +15,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Io/Root/RootAthenaDumpGeoIdCollecter.hpp"
+#include "ActsExamples/Io/Root/RootAthenaDumpGeoIdCollector.hpp"
 #include <ActsExamples/EventData/Cluster.hpp>
 #include <ActsExamples/EventData/SimParticle.hpp>
 #include <ActsExamples/EventData/Track.hpp>
@@ -116,12 +116,12 @@ class RootAthenaDumpReader : public IReader {
 
   /// Helper method to read measurements
   std::tuple<ClusterContainer, MeasurementContainer,
-             IndexMultimap<ActsFatras::Barcode>>
+             IndexMultimap<ActsFatras::Barcode>, std::unordered_map<int, std::size_t>>
   readMeasurements(SimParticleContainer &particles,
                    const Acts::GeometryContext &gctx) const;
 
   /// Helper method to read spacepoints
-  std::pair<SimSpacePointContainer, SimSpacePointContainer> readSpacepoints()
+  std::pair<SimSpacePointContainer, SimSpacePointContainer> readSpacepoints(const std::unordered_map<int, std::size_t> &imIdxMap)
       const;
 
   /// Helper method to reprocess particle ids
