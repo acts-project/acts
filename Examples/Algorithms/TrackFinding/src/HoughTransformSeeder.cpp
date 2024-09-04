@@ -529,7 +529,8 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
         // are transformed to the bound space where we do know their location.
         // if the local parameters are not measured, this results in a
         // zero location, which is a reasonable default fall-back.
-        const auto& measurement = measurements[sourceLink.index()];
+        const ConstVariableBoundMeasurementProxy measurement =
+            measurements.getMeasurement(sourceLink.index());
 
         assert(measurement.contains(Acts::eBoundLoc0) &&
                "Measurement does not contain the required bound loc0");
