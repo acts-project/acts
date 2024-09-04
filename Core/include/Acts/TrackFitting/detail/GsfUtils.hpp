@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,7 +23,6 @@
 #include <map>
 #include <numeric>
 #include <ostream>
-#include <ranges>
 #include <tuple>
 #include <vector>
 
@@ -97,8 +96,9 @@ class ScopedGsfInfoPrinterAndChecker {
 
   void checks(bool onStart) const {
     const auto cmps = m_stepper.constComponentIterable(m_state.stepping);
-    [[maybe_unused]] const bool allFinite = std::ranges::all_of(
-        cmps, [](auto cmp) { return std::isfinite(cmp.weight()); });
+    [[maybe_unused]] const bool allFinite =
+        std::all_of(cmps.begin(), cmps.end(),
+                    [](auto cmp) { return std::isfinite(cmp.weight()); });
     [[maybe_unused]] const bool allNormalized = detail::weightsAreNormalized(
         cmps, [](const auto &cmp) { return cmp.weight(); });
     [[maybe_unused]] const bool zeroComponents =
