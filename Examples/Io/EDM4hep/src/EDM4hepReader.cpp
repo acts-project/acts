@@ -23,7 +23,6 @@
 #include <algorithm>
 #include <iomanip>
 #include <map>
-#include <ranges>
 #include <stdexcept>
 
 #include <edm4hep/MCParticle.h>
@@ -452,9 +451,10 @@ void EDM4hepReader::processChildren(
                            << " daughter(s)");
 
   bool parentDecayed =
-      std::ranges::any_of(inParticle, [](const edm4hep::MCParticle& daughter) {
-        return !daughter.vertexIsNotEndpointOfParent();
-      });
+      std::any_of(inParticle.daughters_begin(), inParticle.daughters_end(),
+                  [](const edm4hep::MCParticle& daughter) {
+                    return !daughter.vertexIsNotEndpointOfParent();
+                  });
   std::size_t secondaryVertex = 0;
   if (parentDecayed) {
     ACTS_VERBOSE(indent(gen) << "    -> parent decays");
