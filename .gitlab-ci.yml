@@ -74,7 +74,7 @@ build_exatrkx_cpu:
     - git checkout $HEAD_SHA
     - cd ..
     - mkdir build
-    # Here we only do a minimal build without examples to save ressources
+    # Here we only do a minimal build without examples to save resources
     - >
       cmake -B build -S src
       --preset=gitlab-ci-exatrkx
