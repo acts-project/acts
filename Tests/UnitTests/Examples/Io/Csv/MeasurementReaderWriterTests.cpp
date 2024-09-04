@@ -23,6 +23,7 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <ranges>
 
 using namespace ActsExamples;
 using namespace Acts::Test;
@@ -152,7 +153,7 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
                std::abs(ca.activation - cb.activation) < 1.e-4;
       };
 
-      BOOST_CHECK(std::any_of(b.channels.begin(), b.channels.end(), match));
+      BOOST_CHECK(std::ranges::any_of(b.channels, match));
     }
   }
 

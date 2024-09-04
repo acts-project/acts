@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,7 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <numeric>
+#include <ranges>
 
 using namespace ActsExamples;
 using namespace Acts::UnitLiterals;
@@ -96,8 +97,8 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
       NodeFeature::eClusterX, NodeFeature::eClusterY,  NodeFeature::eCellCount,
       NodeFeature::eCellSum,  NodeFeature::eCluster1R, NodeFeature::eCluster2R};
 
-  auto wantClFeatures = std::any_of(
-      m_cfg.nodeFeatures.begin(), m_cfg.nodeFeatures.end(), [&](const auto& f) {
+  auto wantClFeatures =
+      std::ranges::any_of(m_cfg.nodeFeatures, [&](const auto& f) {
         return std::find(clFeatures.begin(), clFeatures.end(), f) !=
                clFeatures.end();
       });

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,7 @@
 #include <array>
 #include <cmath>
 #include <iosfwd>
+#include <ranges>
 #include <stdexcept>
 #include <vector>
 
@@ -128,8 +129,7 @@ inline std::vector<double> DiamondBounds::values() const {
 }
 
 inline void DiamondBounds::checkConsistency() noexcept(false) {
-  if (std::any_of(m_values.begin(), m_values.end(),
-                  [](auto v) { return v <= 0.; })) {
+  if (std::ranges::any_of(m_values, [](auto v) { return v <= 0.; })) {
     throw std::invalid_argument("DiamondBounds: negative half length.");
   }
   if (get(eHalfLengthXnegY) > get(eHalfLengthXzeroY) ||
