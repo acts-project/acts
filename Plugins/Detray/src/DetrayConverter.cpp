@@ -16,8 +16,7 @@
 #include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 
-
-#include "Acts/Plugins/Detray/DetrayConversionHelper.hpp"
+#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -450,7 +449,7 @@ std::optional<io::grid_payload<std::size_t, detray::io::accel_id>>  Acts::Detray
           io::grid_payload<std::size_t, io::accel_id> grid_pd;
           auto indexedSurfaces = std::get<SubDelegateType>(castedDelegate->updators);
           grid_pd = convertImpl<SubDelegateType>(indexedSurfaces);
-          grid_pd.grid_link.type = static_cast<io::accel_id>(Acts::DetrayConversionHelper::accelerationLink(indexedSurfaces.casts));
+          grid_pd.grid_link.type = static_cast<io::accel_id>(Acts::DetrayJsonHelper::accelerationLink(indexedSurfaces.casts));
           grid_pd.grid_link.index = std::numeric_limits<std::size_t>::max();
           return grid_pd;
       }

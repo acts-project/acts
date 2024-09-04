@@ -173,14 +173,7 @@ bool convertDetector(
                                     std::integral_constant<std::size_t, 0>,
                                     std::integral_constant<std::size_t, 2>>
                                     ::template convert<detector_t>(detectorBuilder, names, DetrayConverter::convertSurfaceGrids(detector));
-
-  /*using SurfaceGridReader = detray::io::surface_grid_reader<
-    typename detector_t::surface_type,
-    std::integral_constant<std::size_t, 0>,
-    std::integral_constant<std::size_t, 2>>;
-
-  SurfaceGridReader::template convert<detector_t>(detectorBuilder, names, DetrayConverter::convertSurfaceGrids(detector));
-  */
+ 
 
   detector_t detrayDetector(detectorBuilder.build(mr));
 
