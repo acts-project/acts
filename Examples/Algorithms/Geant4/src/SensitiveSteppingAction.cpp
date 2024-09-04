@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,7 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <cstddef>
+#include <ranges>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -256,11 +257,10 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
         buffer.back().momentum4After(),
         eventStore().particleHitCount.at(particleId) - 1);
 
-    assert(std::all_of(buffer.begin(), buffer.end(),
-                       [&](const auto& h) { return h.geometryId() == geoId; }));
-    assert(std::all_of(buffer.begin(), buffer.end(), [&](const auto& h) {
-      return h.particleId() == particleId;
-    }));
+    assert(std::ranges::all_of(
+        buffer, [&](const auto& h) { return h.geometryId() == geoId; }));
+    assert(std::ranges::all_of(
+        buffer, [&](const auto& h) { return h.particleId() == particleId; }));
 
     eventStore().numberGeantSteps += buffer.size();
     eventStore().maxStepsForHit =
