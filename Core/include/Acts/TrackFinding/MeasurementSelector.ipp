@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <ranges>
-
 namespace Acts {
 
 template <typename traj_t>
@@ -61,11 +59,11 @@ MeasurementSelector::select(
     // with compile time size. That way the Eigen math operations are
     // still done with compile time size and no dynamic memory allocation
     // is needed.
-    double chi2 = calculateChi2(
-        trackState.effectiveCalibrated().data(),
-        trackState.effectiveCalibratedCovariance().data(),
-        trackState.predicted(), trackState.predictedCovariance(),
-        trackState.boundSubspaceIndices(), trackState.calibratedSize());
+    double chi2 =
+        calculateChi2(trackState.effectiveCalibrated().data(),
+                      trackState.effectiveCalibratedCovariance().data(),
+                      trackState.predicted(), trackState.predictedCovariance(),
+                      trackState.projector(), trackState.calibratedSize());
     trackState.chi2() = chi2;
 
     if (chi2 < minChi2) {
@@ -110,8 +108,8 @@ MeasurementSelector::select(
                                           candidates.begin() + minIndex + 1));
   }
 
-  std::ranges::sort(
-      candidates | std::views::take(passedCandidates),
+  std::sort(
+      candidates.begin(), candidates.begin() + passedCandidates,
       [](const auto& tsa, const auto& tsb) { return tsa.chi2() < tsb.chi2(); });
 
   ACTS_VERBOSE("Number of selected measurements: "
