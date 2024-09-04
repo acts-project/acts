@@ -309,7 +309,7 @@ ClusterCollection mergeClusters(CellCollection& cells) {
   if constexpr (GridDim > 1) {
     // Sort the cells by their cluster label, only needed if more than
     // one spatial dimension
-    std::sort(cells.begin(), cells.end(), [](Cell& lhs, Cell& rhs) {
+    std::ranges::sort(cells, [](Cell& lhs, Cell& rhs) {
       return getCellLabel(lhs) < getCellLabel(rhs);
     });
   }

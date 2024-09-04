@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <ranges>
+
 namespace Acts {
 
 template <typename traj_t>
@@ -108,8 +110,8 @@ MeasurementSelector::select(
                                           candidates.begin() + minIndex + 1));
   }
 
-  std::sort(
-      candidates.begin(), candidates.begin() + passedCandidates,
+  std::ranges::sort(
+      candidates | std::views::take(passedCandidates),
       [](const auto& tsa, const auto& tsb) { return tsa.chi2() < tsb.chi2(); });
 
   ACTS_VERBOSE("Number of selected measurements: "

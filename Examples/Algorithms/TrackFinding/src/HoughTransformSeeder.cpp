@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,6 +29,7 @@
 #include <cmath>
 #include <iterator>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <variant>
 
@@ -121,10 +122,11 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
     // within the same volume hierarchy only consider layers
     return (ref.layer() == cmp.layer());
   };
+  // sort geometry selection so the unique filtering works
+  std::ranges::sort(m_cfg.geometrySelection,
+                    std::less<Acts::GeometryIdentifier>{});
   auto geoSelBeg = m_cfg.geometrySelection.begin();
   auto geoSelEnd = m_cfg.geometrySelection.end();
-  // sort geometry selection so the unique filtering works
-  std::sort(geoSelBeg, geoSelEnd);
   auto geoSelLastUnique = std::unique(geoSelBeg, geoSelEnd, isDuplicate);
   if (geoSelLastUnique != geoSelEnd) {
     ACTS_WARNING("Removed " << std::distance(geoSelLastUnique, geoSelEnd)
