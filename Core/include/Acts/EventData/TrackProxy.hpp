@@ -710,6 +710,8 @@ class TrackProxy {
       setReferenceSurface(other.referenceSurface().getSharedPtr());
       parameters() = other.parameters();
       covariance() = other.covariance();
+    } else {
+      setReferenceSurface(nullptr);
     }
 
     nMeasurements() = other.nMeasurements();
