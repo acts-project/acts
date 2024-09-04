@@ -54,7 +54,8 @@ void addGeoModel(Context& ctx) {
       gm, "GeoModelDetectorElement")
       .def("logVolName", &Acts::GeoModelDetectorElement::logVolName)
       .def("databaseEntryName",
-           &Acts::GeoModelDetectorElement::databaseEntryName);
+           &Acts::GeoModelDetectorElement::databaseEntryName)
+ 			.def("surface", [](Acts::GeoModelDetectorElement self){ return self.surface().getSharedPtr(); });
 
   // Shape converters
   {
@@ -238,7 +239,10 @@ void addGeoModel(Context& ctx) {
 
   py::class_<Acts::GeoModelDetectorElementITk,
              std::shared_ptr<Acts::GeoModelDetectorElementITk>>(
-      gm, "GeoModelDetectorElementITk");
+      gm, "GeoModelDetectorElementITk")  
+      .def("surface", [](Acts::GeoModelDetectorElementITk &self){
+		      return self.surface().getSharedPtr();
+		      });
   gm.def("convertToItk", &GeoModelDetectorElementITk::convertFromGeomodel);
 }
 }  // namespace Acts::Python
