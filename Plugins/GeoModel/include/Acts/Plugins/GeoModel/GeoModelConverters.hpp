@@ -17,9 +17,9 @@
 #include "Acts/Plugins/GeoModel/detail/GeoIntersectionAnnulusConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoPolygonConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoShiftConverter.hpp"
+#include "Acts/Plugins/GeoModel/detail/GeoSubtractionConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoTrdConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoTubeConverter.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoSubtractionConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoUnionDoubleTrdConverter.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -27,10 +27,10 @@
 #include <tuple>
 #include <unordered_map>
 
-#include <GeoModelKernel/GeoShapeSubtraction.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoShape.h>
+#include <GeoModelKernel/GeoShapeSubtraction.h>
 
 namespace Acts {
 

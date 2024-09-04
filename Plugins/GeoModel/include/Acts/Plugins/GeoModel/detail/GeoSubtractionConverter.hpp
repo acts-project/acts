@@ -32,4 +32,3 @@ struct GeoSubtractionConverter {
       const Transform3& absTransform, bool sensitive) const;
 };
 }  // namespace Acts::detail
-

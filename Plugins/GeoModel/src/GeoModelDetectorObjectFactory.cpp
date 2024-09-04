@@ -91,7 +91,6 @@ void Acts::GeoModelDetectorObjectFactory::convertSensitive(
   const GeoLogVol *logVol = geoPV->getLogVol();
   const GeoShape *shape = logVol->getShape();
   int shapeId = shape->typeID();
-  std::cout << shapeId << std::endl;
   std::string name = logVol->getName();
   std::shared_ptr<const Acts::IGeoShapeConverter> converter =
       Acts::geoShapesConverters(shapeId);
@@ -126,7 +125,6 @@ Acts::GeoModelDetectorObjectFactory::findAllSubVolumes(const PVConstLink &vol) {
   std::vector<GeoChildNodeWithTrf> sensitives;
   for (auto subvolume : subvolumes) {
     if (matches(subvolume.nodeName, subvolume.volume)) {
-      std::cout << subvolume.nodeName << std::endl;
       sensitives.push_back(subvolume);
     }
     std::vector<GeoChildNodeWithTrf> senssubsubvolumes =
@@ -153,7 +151,6 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
     const std::string &name, GeoFullPhysVol *fpv, Cache &cache,
     const GeometryContext &gctx) {
   PVConstLink physVol{fpv};
-  std::cout << name << std::endl;
 
   // get children
   std::vector<GeoChildNodeWithTrf> subvolumes =
