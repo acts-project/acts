@@ -19,6 +19,7 @@
 #include "Acts/Plugins/GeoModel/detail/GeoShiftConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoTrdConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoTubeConverter.hpp"
+#include "Acts/Plugins/GeoModel/detail/GeoSubtractionConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoUnionDoubleTrdConverter.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -26,6 +27,7 @@
 #include <tuple>
 #include <unordered_map>
 
+#include <GeoModelKernel/GeoShapeSubtraction.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoShape.h>
@@ -37,6 +39,10 @@ namespace Acts {
 /// This is a dedicated converter for GeoBox shapes
 using GeoBoxConverter =
     detail::GenericGeoShapeConverter<GeoBox, detail::GeoBoxConverter>;
+
+using GeoSubtractionConverter =
+    detail::GenericGeoShapeConverter<GeoShapeSubtraction,
+                                     detail::GeoSubtractionConverter>;
 
 using GeoPolygonConverter =
     detail::GenericGeoShapeConverter<GeoSimplePolygonBrep,
@@ -89,6 +95,8 @@ inline std::shared_ptr<const IGeoShapeConverter> geoShapesConverters(
           {GeoTube::getClassTypeID(), std::make_shared<GeoTubeConverter>()},
           {GeoSimplePolygonBrep::getClassTypeID(),
            std::make_shared<GeoPolygonConverter>()},
+          {GeoShapeSubtraction::getClassTypeID(),
+           std::make_shared<GeoSubtractionConverter>()},
           {GeoShapeUnion::getClassTypeID(),
            std::make_shared<GeoUnionDoubleTrdConverter>()}};
   auto itr = converters.find(geoShapeId);
