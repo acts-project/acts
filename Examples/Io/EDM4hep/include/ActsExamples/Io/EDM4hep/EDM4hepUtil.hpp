@@ -91,10 +91,10 @@ void writeSimHit(const ActsFatras::Hit& from, edm4hep::MutableSimTrackerHit to,
 /// Known issues:
 /// - cluster channels are read from inappropriate fields
 /// - local 2D coordinates and time are read from position
-Measurement readMeasurement(const edm4hep::TrackerHitPlane& from,
-                            const edm4hep::TrackerHitCollection* fromClusters,
-                            Cluster* toCluster,
-                            const MapGeometryIdFrom& geometryMapper);
+VariableBoundMeasurementProxy readMeasurement(
+    MeasurementContainer& container, const edm4hep::TrackerHitPlane& from,
+    const edm4hep::TrackerHitCollection* fromClusters, Cluster* toCluster,
+    const MapGeometryIdFrom& geometryMapper);
 
 /// Writes a measurement cluster to EDM4hep.
 ///
@@ -106,7 +106,7 @@ Measurement readMeasurement(const edm4hep::TrackerHitPlane& from,
 /// Known issues:
 /// - cluster channels are written to inappropriate fields
 /// - local 2D coordinates and time are written to position
-void writeMeasurement(const Measurement& from,
+void writeMeasurement(const ConstVariableBoundMeasurementProxy& from,
                       edm4hep::MutableTrackerHitPlane to,
                       const Cluster* fromCluster,
                       edm4hep::TrackerHitCollection& toClusters,
