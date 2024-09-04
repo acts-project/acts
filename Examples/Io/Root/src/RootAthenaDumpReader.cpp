@@ -372,7 +372,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
 
     IndexSourceLink sl(Acts::GeometryIdentifier{CLmoduleID[im]}, im);
 
-    measurements.push_back(createMeasurement(digiPars, sl));
+    createMeasurement(measurements, digiPars, sl);
 
     // Create measurement particles map and particles container
     for (const auto& [subevt, bc] : Acts::zip(CLparticleLink_eventIndex->at(im),

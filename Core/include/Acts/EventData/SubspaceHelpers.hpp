@@ -39,7 +39,7 @@ inline static bool checkSubspaceIndices(const Container& container,
   if (subspaceSize > fullSize) {
     return false;
   }
-  if (container.size() != subspaceSize) {
+  if (static_cast<std::size_t>(container.size()) != subspaceSize) {
     return false;
   }
   for (auto it = container.begin(); it != container.end();) {
@@ -115,6 +115,36 @@ class SubspaceHelperBase {
   auto begin() const { return self().begin(); }
   auto end() const { return self().end(); }
 
+  bool contains(std::uint8_t index) const {
+    return std::find(begin(), end(), index) != end();
+  }
+  std::size_t indexOf(std::uint8_t index) const {
+    auto it = std::find(begin(), end(), index);
+    return it != end() ? std::distance(begin(), it) : kFullSize;
+  }
+
+  template <typename EigenDerived>
+  ActsVector<kFullSize> expandVector(
+      const Eigen::DenseBase<EigenDerived>& vector) const {
+    ActsVector<kFullSize> result = ActsVector<kFullSize>::Zero();
+    for (auto [i, index] : enumerate(*this)) {
+      result(index) = vector(i);
+    }
+    return result;
+  }
+
+  template <typename EigenDerived>
+  FullSquareMatrix expandMatrix(
+      const Eigen::DenseBase<EigenDerived>& matrix) const {
+    FullSquareMatrix result = FullSquareMatrix::Zero();
+    for (auto [i, indexI] : enumerate(*this)) {
+      for (auto [j, indexJ] : enumerate(*this)) {
+        result(indexI, indexJ) = matrix(i, j);
+      }
+    }
+    return result;
+  }
+
   FullSquareMatrix fullProjector() const {
     FullSquareMatrix result = FullSquareMatrix::Zero();
     for (auto [i, index] : enumerate(*this)) {
@@ -168,6 +198,7 @@ class VariableSubspaceHelper
 
   bool empty() const { return m_indices.empty(); }
   std::size_t size() const { return m_indices.size(); }
+  const Container& indices() const { return m_indices; }
 
   IndexType operator[](std::size_t i) const { return m_indices[i]; }
 
@@ -215,6 +246,7 @@ class FixedSubspaceHelper
 
   bool empty() const { return m_indices.empty(); }
   std::size_t size() const { return m_indices.size(); }
+  const Container& indices() const { return m_indices; }
 
   IndexType operator[](std::uint32_t i) const { return m_indices[i]; }
 
