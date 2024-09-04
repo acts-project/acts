@@ -420,8 +420,8 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
   // reverse with jacobians
   t.reverseTrackStates(true);
 
-  std::ranges::rotate(exp, std::next(exp.begin()));
   std::ranges::reverse(exp);
+  std::rotate(exp.rbegin(), std::next(exp.rbegin()), exp.rend());
 
   for (const auto [e, ts] : zip(exp, t.trackStates())) {
     Acts::BoundMatrix expJac;
