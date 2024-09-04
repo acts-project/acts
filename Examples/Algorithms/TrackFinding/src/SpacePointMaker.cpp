@@ -126,7 +126,8 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
 
   spOpt.paramCovAccessor = [&measurements](Acts::SourceLink slink) {
     const auto islink = slink.get<IndexSourceLink>();
-    const auto& meas = measurements[islink.index()];
+    const ConstVariableBoundMeasurementProxy meas =
+        measurements.getMeasurement(islink.index());
 
     return std::make_pair(meas.fullParameters(), meas.fullCovariance());
   };
