@@ -105,7 +105,8 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
                        });
         std::ranges::sort(rvalues);
         std::vector<std::string> locs;
-        std::transform(rvalues.begin(), std::ranges::unique(rvalues).begin(),
+        std::transform(rvalues.begin(),
+                       std::unique(rvalues.begin(), rvalues.end()),
                        std::back_inserter(locs),
                        [](const auto& v) { return std::to_string(v); });
         ACTS_VERBOSE(
@@ -277,7 +278,8 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
                        });
         std::ranges::sort(zvalues);
         std::vector<std::string> locs;
-        std::transform(zvalues.begin(), std::ranges::unique(zvalues).begin(),
+        std::transform(zvalues.begin(),
+                       std::unique(zvalues.begin(), zvalues.end()),
                        std::back_inserter(locs),
                        [](const auto& v) { return std::to_string(v); });
         ACTS_VERBOSE(

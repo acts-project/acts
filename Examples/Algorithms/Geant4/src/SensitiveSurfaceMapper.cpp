@@ -303,7 +303,8 @@ bool ActsExamples::SensitiveSurfaceMapper::checkMapping(
     found.push_back(surfacePtr);
   }
   std::ranges::sort(found);
-  found.erase(std::ranges::unique(found).begin(), found.end());
+  auto newEnd = std::unique(found.begin(), found.end());
+  found.erase(newEnd, found.end());
 
   std::vector<const Acts::Surface*> missing;
   std::set_difference(allSurfaces.begin(), allSurfaces.end(), found.begin(),
