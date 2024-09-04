@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,6 +21,7 @@
 #include <cstddef>
 #include <limits>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -151,11 +152,10 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
       continue;
     }
     // Sort the space points
-    std::sort(spacePointsOnTrack.begin(), spacePointsOnTrack.end(),
-              [](const SimSpacePoint* lhs, const SimSpacePoint* rhs) {
-                return std::hypot(lhs->r(), lhs->z()) <
-                       std::hypot(rhs->r(), rhs->z());
-              });
+    std::ranges::sort(spacePointsOnTrack, [](const SimSpacePoint* lhs,
+                                             const SimSpacePoint* rhs) {
+      return std::hypot(lhs->r(), lhs->z()) < std::hypot(rhs->r(), rhs->z());
+    });
 
     // Loop over the found space points to find the seed with maximum deltaR
     // between the bottom and top space point

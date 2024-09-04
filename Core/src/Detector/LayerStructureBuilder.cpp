@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,6 +27,7 @@
 #include <cmath>
 #include <cstddef>
 #include <ostream>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <utility>
@@ -339,10 +340,10 @@ Acts::Experimental::LayerStructureBuilder::construct(
         adaptBinningRange(binnings, m_cfg.extent.value());
       }
       // Sort the binning for conventions
-      std::sort(binnings.begin(), binnings.end(),
-                [](const ProtoBinning& a, const ProtoBinning& b) {
-                  return a.binValue < b.binValue;
-                });
+      std::ranges::sort(binnings,
+                        [](const ProtoBinning& a, const ProtoBinning& b) {
+                          return a.binValue < b.binValue;
+                        });
 
       ACTS_DEBUG("- 2-dimensional surface binning detected.");
       // Capture the binnings

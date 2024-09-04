@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <ranges>
 
 Acts::FsmwMode1dFinder::FsmwMode1dFinder(double firstFraction, double fraction)
     : m_firstFraction(firstFraction), m_fraction(fraction) {}
@@ -28,10 +29,10 @@ Acts::Result<double> Acts::FsmwMode1dFinder::getMode(
 
   // first of all order the vector according to the double value
 
-  std::sort(inputVector.begin(), inputVector.end(),
-            [](std::pair<double, double> a, std::pair<double, double> b) {
-              return a.first < b.first;
-            });
+  std::ranges::sort(inputVector, [](std::pair<double, double> a,
+                                    std::pair<double, double> b) {
+    return a.first < b.first;
+  });
 
   // begin to consider a certain number of elements according to the fraction
   auto begin = inputVector.begin();

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,6 +16,7 @@
 #include <cmath>
 #include <functional>
 #include <numeric>
+#include <ranges>
 #include <type_traits>
 
 namespace Acts {
@@ -311,16 +312,17 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     sorted_tops[i] = i;
   }
 
-  std::sort(
-      sorted_bottoms.begin(), sorted_bottoms.end(),
+  std::ranges::sort(
+      sorted_bottoms,
       [&linCircleBottom](const std::size_t a, const std::size_t b) -> bool {
         return linCircleBottom[a].cotTheta < linCircleBottom[b].cotTheta;
       });
 
-  std::sort(sorted_tops.begin(), sorted_tops.end(),
-            [&linCircleTop](const std::size_t a, const std::size_t b) -> bool {
-              return linCircleTop[a].cotTheta < linCircleTop[b].cotTheta;
-            });
+  std::ranges::sort(
+      sorted_tops,
+      [&linCircleTop](const std::size_t a, const std::size_t b) -> bool {
+        return linCircleTop[a].cotTheta < linCircleTop[b].cotTheta;
+      });
 
   std::vector<float> tanMT;
   tanMT.reserve(top.size());

@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <ranges>
 #include <type_traits>
 
 namespace Acts {
@@ -306,9 +307,9 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
                                 false);
       }
 
-      std::sort(candidates.begin(), candidates.end(),
-                CandidatesForMiddleSp<const InternalSpacePoint<
-                    external_spacepoint_t>>::descendingByQuality);
+      std::ranges::sort(candidates,
+                        CandidatesForMiddleSp<const InternalSpacePoint<
+                            external_spacepoint_t>>::descendingByQuality);
       std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
       m_config.seedFilter->filterSeeds_1SpFixed(spacePointData, candidates,
                                                 numQualitySeeds,

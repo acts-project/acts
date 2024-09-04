@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -32,6 +32,7 @@
 #include <cstdint>
 #include <limits>
 #include <ostream>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -98,7 +99,7 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
                    geoCfg.indices.end());
 
     // Make sure the configured input parameter indices are sorted and unique
-    std::sort(indices.begin(), indices.end());
+    std::ranges::sort(indices);
 
     auto dup = std::adjacent_find(indices.begin(), indices.end());
     if (dup != indices.end()) {

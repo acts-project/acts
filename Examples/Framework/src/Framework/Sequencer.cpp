@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,6 +35,7 @@
 #include <limits>
 #include <numeric>
 #include <ostream>
+#include <ranges>
 #include <ratio>
 #include <regex>
 #include <stdexcept>
@@ -622,7 +623,7 @@ void Sequencer::fpeReport() const {
     std::transform(merged.stackTraces().begin(), merged.stackTraces().end(),
                    std::back_inserter(sorted),
                    [](const auto& f) -> const auto& { return f; });
-    std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) {
+    std::ranges::sort(sorted, [](const auto& a, const auto& b) {
       return a.get().count > b.get().count;
     });
 

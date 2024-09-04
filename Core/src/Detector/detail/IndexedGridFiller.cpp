@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <array>
+#include <ranges>
 #include <set>
 #include <string>
 #include <vector>
@@ -82,12 +83,12 @@ std::vector<std::size_t> Acts::Experimental::detail::binSequence(
             abs(static_cast<int>(bmin) - static_cast<int>(expand));
         fill_linear(nBins - understep, nBins);
       }
-      std::sort(rBins.begin(), rBins.end());
+      std::ranges::sort(rBins);
     } else {
       // Jump over the phi boundary
       fill_linear(bmax - expand, nBins);
       fill_linear(1, bmin + expand);
-      std::sort(rBins.begin(), rBins.end());
+      std::ranges::sort(rBins);
     }
   }
   return rBins;

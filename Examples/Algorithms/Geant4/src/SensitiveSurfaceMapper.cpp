@@ -296,13 +296,13 @@ bool ActsExamples::SensitiveSurfaceMapper::checkMapping(
     const State& state, const Acts::GeometryContext& gctx,
     bool writeMissingG4VolsAsObj, bool writeMissingSurfacesAsObj) const {
   auto allSurfaces = m_cfg.candidateSurfaces->queryAll();
-  std::sort(allSurfaces.begin(), allSurfaces.end());
+  std::ranges::sort(allSurfaces);
 
   std::vector<const Acts::Surface*> found;
   for (const auto [_, surfacePtr] : state.g4VolumeToSurfaces) {
     found.push_back(surfacePtr);
   }
-  std::sort(found.begin(), found.end());
+  std::ranges::sort(found);
   found.erase(std::ranges::unique(found).begin(), found.end());
 
   std::vector<const Acts::Surface*> missing;

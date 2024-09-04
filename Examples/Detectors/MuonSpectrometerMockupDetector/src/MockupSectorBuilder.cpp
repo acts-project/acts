@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -37,6 +37,7 @@
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -167,10 +168,9 @@ ActsExamples::MockupSectorBuilder::buildSector(
 
   // sort the detector volumes by their radial distance (from
   // innermost---->outermost)
-  std::sort(detVolumes.begin(), detVolumes.end(),
-            [](const auto& detVol1, const auto& detVol2) {
-              return detVol1->center().y() < detVol2->center().y();
-            });
+  std::ranges::sort(detVolumes, [](const auto& detVol1, const auto& detVol2) {
+    return detVol1->center().y() < detVol2->center().y();
+  });
 
   auto xA = detVolumes.back()->center().x() +
             detVolumes.back()->volumeBounds().values()[0];

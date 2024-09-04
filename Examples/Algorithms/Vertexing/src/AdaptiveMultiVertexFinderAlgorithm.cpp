@@ -34,6 +34,7 @@
 #include <memory>
 #include <optional>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <system_error>
 #include <unordered_map>
@@ -256,12 +257,11 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
     }
 
     // sort by number of particles
-    std::sort(vertexSeederState.truthVertices.begin(),
-              vertexSeederState.truthVertices.end(),
-              [&vertexParticleCount](const auto& lhs, const auto& rhs) {
-                return vertexParticleCount[lhs.vertexId()] >
-                       vertexParticleCount[rhs.vertexId()];
-              });
+    std::ranges::sort(vertexSeederState.truthVertices,
+                      [&vertexParticleCount](const auto& lhs, const auto& rhs) {
+                        return vertexParticleCount[lhs.vertexId()] >
+                               vertexParticleCount[rhs.vertexId()];
+                      });
 
     ACTS_INFO("Got " << truthVertices.size() << " truth vertices and selected "
                      << vertexSeederState.truthVertices.size() << " in event");

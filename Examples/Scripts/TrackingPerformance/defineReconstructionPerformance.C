@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #include <array>
 #include <iostream>
+#include <ranges>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -189,7 +190,7 @@ void defineReconstructionPerformance(
       for (auto& [id, matchedTracks] : matchedParticles) {
         // Sort all tracks matched to this particle according to majority prob
         // and track quality
-        std::sort(matchedTracks.begin(), matchedTracks.end(),
+        std::ranges::sort(matchedTracks,
                   [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
                     if (lhs.nMajorityHits > rhs.nMajorityHits) {
                       return true;

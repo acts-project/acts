@@ -16,6 +16,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <ranges>
 #include <sstream>
 
 namespace Acts {
@@ -159,11 +160,10 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
   if (direction == Acts::BinningValue::binZ) {
     ACTS_VERBOSE("Sorting by volume z position");
-    std::sort(volumeTuples.begin(), volumeTuples.end(),
-              [](const auto& a, const auto& b) {
-                return a.localTransform.translation()[eZ] <
-                       b.localTransform.translation()[eZ];
-              });
+    std::ranges::sort(volumeTuples, [](const auto& a, const auto& b) {
+      return a.localTransform.translation()[eZ] <
+             b.localTransform.translation()[eZ];
+    });
 
     ACTS_VERBOSE("Checking for overlaps and attaching volumes in z");
     std::vector<VolumeTuple> gapVolumes =
@@ -192,8 +192,9 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     ACTS_VERBOSE("*** Volume configuration after r synchronization:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
 
-    std::sort(volumeTuples.begin(), volumeTuples.end(),
-              [](const auto& a, const auto& b) { return a.midZ() < b.midZ(); });
+    std::ranges::sort(volumeTuples, [](const auto& a, const auto& b) {
+      return a.midZ() < b.midZ();
+    });
 
     m_volumes.clear();
     for (const auto& vt : volumeTuples) {
@@ -222,8 +223,9 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
   } else if (direction == Acts::BinningValue::binR) {
     ACTS_VERBOSE("Sorting by volume r middle point");
-    std::sort(volumeTuples.begin(), volumeTuples.end(),
-              [](const auto& a, const auto& b) { return a.midR() < b.midR(); });
+    std::ranges::sort(volumeTuples, [](const auto& a, const auto& b) {
+      return a.midR() < b.midR();
+    });
 
     ACTS_VERBOSE("Checking for overlaps and attaching volumes in r");
     std::vector<VolumeTuple> gapVolumes =
@@ -250,8 +252,9 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     ACTS_VERBOSE("*** Volume configuration after z synchronization:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
 
-    std::sort(volumeTuples.begin(), volumeTuples.end(),
-              [](const auto& a, const auto& b) { return a.midR() < b.midR(); });
+    std::ranges::sort(volumeTuples, [](const auto& a, const auto& b) {
+      return a.midR() < b.midR();
+    });
 
     m_volumes.clear();
     for (const auto& vt : volumeTuples) {

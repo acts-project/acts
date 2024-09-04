@@ -49,7 +49,7 @@ auto Acts::materialMapperRZ(
   std::ranges::sort(zPos);
   // Get unique values
   rPos.erase(std::unique(rPos.begin(), rPos.end()), rPos.end());
-  rPos.erase(std::unique(zPos.begin(), zPos.end()), zPos.end());
+  zPos.erase(std::unique(zPos.begin(), zPos.end()), zPos.end());
   rPos.shrink_to_fit();
   zPos.shrink_to_fit();
   // get the number of bins
@@ -131,9 +131,9 @@ auto Acts::materialMapperXYZ(
   std::ranges::sort(yPos);
   std::ranges::sort(zPos);
   // Get unique values
-  rPos.erase(std::unique(xPos.begin(), xPos.end()), xPos.end());
-  rPos.erase(std::unique(yPos.begin(), yPos.end()), yPos.end());
-  rPos.erase(std::unique(zPos.begin(), zPos.end()), zPos.end());
+  xPos.erase(std::unique(xPos.begin(), xPos.end()), xPos.end());
+  yPos.erase(std::unique(yPos.begin(), yPos.end()), yPos.end());
+  zPos.erase(std::unique(zPos.begin(), zPos.end()), zPos.end());
   xPos.shrink_to_fit();
   yPos.shrink_to_fit();
   zPos.shrink_to_fit();

@@ -28,7 +28,7 @@ auto cantorize(std::vector<std::int64_t> edgeIndex,
 
   std::ranges::sort(cantorEdgeIndex);
 
-  auto new_end = std::ranges::unique(cantorEdgeIndex);
+  auto new_end = std::unique(cantorEdgeIndex.begin(), cantorEdgeIndex.end());
   if (new_end != cantorEdgeIndex.end()) {
     ACTS_WARNING("Graph not unique ("
                  << std::distance(new_end, cantorEdgeIndex.end())
