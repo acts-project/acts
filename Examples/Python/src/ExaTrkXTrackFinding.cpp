@@ -12,7 +12,6 @@
 #include "Acts/Plugins/ExaTrkX/ModuleMapCpp.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
-#include "Acts/Plugins/ExaTrkX/SeedingTrackBuilder.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
@@ -113,6 +112,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                         }),
                         py::arg("level"));
   }
+  /*
   {
     using Alg = Acts::SeedingTrackBuilder;
     using Config = typename Alg::Config;
@@ -134,6 +134,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(minSeedSize);
     ACTS_PYTHON_STRUCT_END();
   }
+  */
 #endif
 
 #ifdef ACTS_EXATRKX_ONNX_BACKEND
