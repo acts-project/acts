@@ -51,7 +51,4 @@ Acts::detail::GeoSubtractionConverter::operator()(
     throw std::runtime_error("Unexpected error in the conversion of " +
                              shapeA->type());
   }
-
-  // Acts::GeoModelSensitiveSurface sens;
-  // return sens;
 }
