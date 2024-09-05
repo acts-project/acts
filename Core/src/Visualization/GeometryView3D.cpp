@@ -37,7 +37,6 @@
 #include <filesystem>
 #include <memory>
 #include <ostream>
-#include <ranges>
 #include <utility>
 #include <vector>
 
@@ -283,8 +282,9 @@ void Acts::GeometryView3D::drawTrackingVolume(
         ids.push_back(current->motherVolume()->geometryId().volume());
       }
 
+      std::ranges::reverse(ids);
       vname = "Container";
-      for (const auto& id : ids | std::views::reverse) {
+      for (const auto& id : ids) {
         vname += "_v" + std::to_string(id);
       }
 
