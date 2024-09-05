@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -297,7 +297,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
         Acts::MaterialGrid3D grid = bvMaterial3D->getMapper().getGrid();
         for (std::size_t point = 0; point < points; point++) {
           auto mat = Acts::Material(grid.at(point));
-          if (mat) {
+          if (mat.isValid()) {
             x0->SetBinContent(point + 1, mat.X0());
             l0->SetBinContent(point + 1, mat.L0());
             A->SetBinContent(point + 1, mat.Ar());
@@ -311,7 +311,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
         Acts::MaterialGrid2D grid = bvMaterial2D->getMapper().getGrid();
         for (std::size_t point = 0; point < points; point++) {
           auto mat = Acts::Material(grid.at(point));
-          if (mat) {
+          if (mat.isValid()) {
             x0->SetBinContent(point + 1, mat.X0());
             l0->SetBinContent(point + 1, mat.L0());
             A->SetBinContent(point + 1, mat.Ar());

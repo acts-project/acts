@@ -280,7 +280,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   std::vector<Material> matvector;
   double gridX0 = 0., gridL0 = 0., trueX0 = 0., trueL0 = 0.;
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-    matvector.push_back(matGrid.atPosition(stepResult.position[i]));
+    matvector.push_back(
+        Acts::Material{matGrid.atPosition(stepResult.position[i])});
     gridX0 += 1 / matvector[i].X0();
     gridL0 += 1 / matvector[i].L0();
     trueX0 += 1 / stepResult.matTrue[i].X0();

@@ -55,7 +55,8 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
                           << " measurements in this event.");
 
   for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
-    const auto& from = measurements[hitIdx];
+    ConstVariableBoundMeasurementProxy from =
+        measurements.getMeasurement(hitIdx);
     const Cluster* fromCluster = clusters.empty() ? nullptr : &clusters[hitIdx];
 
     auto to = hitsPlane.create();
