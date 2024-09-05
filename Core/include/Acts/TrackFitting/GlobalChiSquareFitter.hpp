@@ -16,6 +16,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -996,13 +997,12 @@ class Gx2Fitter {
   /// @return the output as an output track
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters,
-            typename track_container_t, template <typename> class holder_t>
-  auto fit(source_link_iterator_t it, source_link_iterator_t end,
-           const start_parameters_t& sParameters,
-           const Gx2FitterOptions<traj_t>& gx2fOptions,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const -> Result<typename TrackContainer<track_container_t, traj_t,
-                                              holder_t>::TrackProxy>
+            TrackContainerFrontend track_container_t>
+  Result<typename track_container_t::TrackProxy> fit(
+      source_link_iterator_t it, source_link_iterator_t end,
+      const start_parameters_t& sParameters,
+      const Gx2FitterOptions<traj_t>& gx2fOptions,
+      track_container_t& trackContainer) const
     requires(!isDirectNavigator)
   {
     // Preprocess Measurements (SourceLinks -> map)
@@ -1046,7 +1046,7 @@ class Gx2Fitter {
     // new track and delete it after updating the parameters. However, if we
     // would work on the externally provided track container, it would be
     // difficult to remove the correct track, if it contains more than one.
-    track_container_t trackContainerTempBackend;
+    typename track_container_t::TrackContainerBackend trackContainerTempBackend;
     traj_t trajectoryTempBackend;
     TrackContainer trackContainerTemp{trackContainerTempBackend,
                                       trajectoryTempBackend};
