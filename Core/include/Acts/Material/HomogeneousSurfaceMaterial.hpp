@@ -78,7 +78,8 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   ///
   /// @note the input parameter is ignored
-  const MaterialSlab& materialSlab(const Vector3& gp) const final;
+  const MaterialSlab& materialSlab(const Vector3& gp = Vector3{0., 0.,
+                                                               0.}) const final;
 
   /// The inherited methods - for MaterialSlab access
   using ISurfaceMaterial::materialSlab;
