@@ -20,19 +20,9 @@
 
 namespace Acts {
 
-using DetrayDetector = detray::detector<detray::default_metadata>;
+using DetrayHostDetector = detray::detector<detray::default_metadata>;
 
 namespace DetrayConversionUtils {
-
-/// Detray conversion options
-struct Options {
-  /// Option to switch on/off the material conversion
-  bool convertMaterial = true;
-  /// Option to switch on/off the surface grid conversin
-  bool convertSurfaceGrids = true;
-  /// Option to switch on/off the export to json
-  bool writeToJson = false;
-};
 
 /// Detray conversion cache object
 ///
