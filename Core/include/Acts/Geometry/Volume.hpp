@@ -122,6 +122,8 @@ class Volume : public GeometryObject {
   Transform3 m_transform;
   Transform3 m_itransform;
   Vector3 m_center;
+
+ private:
   std::shared_ptr<VolumeBounds> m_volumeBounds;
 };
 

@@ -150,7 +150,8 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     const auto* cylBounds = dynamic_cast<const CylinderVolumeBounds*>(
         &m_volumes.front()->volumeBounds());
     assert(cylBounds != nullptr && "Volume bounds are not cylinder bounds");
-    m_volumeBounds = std::make_shared<CylinderVolumeBounds>(*cylBounds);
+    Volume::assignVolumeBounds(
+        std::make_shared<CylinderVolumeBounds>(*cylBounds));
     return;
   }
 
@@ -211,8 +212,9 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
     m_transform = m_groupTransform * Translation3{0, 0, midZ};
 
-    m_volumeBounds = std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ);
-    ACTS_DEBUG("Outer bounds are:\n" << *m_volumeBounds);
+    Volume::assignVolumeBounds(
+        std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ));
+    ACTS_DEBUG("Outer bounds are:\n" << volumeBounds());
     ACTS_DEBUG("Outer transform / new group transform is:\n"
                << m_transform.matrix());
 
@@ -269,9 +271,10 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
     m_transform = m_groupTransform * Translation3{0, 0, midZ};
 
-    m_volumeBounds = std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ);
+    Volume::assignVolumeBounds(
+        std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ));
 
-    ACTS_DEBUG("Outer bounds are:\n" << *m_volumeBounds);
+    ACTS_DEBUG("Outer bounds are:\n" << volumeBounds());
     ACTS_DEBUG("Outer transform is:\n" << m_transform.matrix());
 
     // Update group transform to the new center
@@ -933,7 +936,7 @@ void CylinderVolumeStack::update(
   }
 
   m_transform = newVolume.globalTransform;
-  m_volumeBounds = std::move(newBounds);
+  Volume::assignVolumeBounds(std::move(newBounds));
 }
 
 void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
