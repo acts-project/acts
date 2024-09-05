@@ -25,6 +25,7 @@
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
+#include <algorithm>
 #include <ios>
 #include <map>
 #include <numeric>
@@ -189,9 +190,9 @@ struct GsfActor {
     // that currentSurface is nullptr and all components are "on surface" (e.g.,
     // for surfaces excluded from the navigation)
     using Status [[maybe_unused]] = Acts::Intersection3D::Status;
-    assert(std::all_of(
-        stepperComponents.begin(), stepperComponents.end(),
-        [](const auto& cmp) { return cmp.status() == Status::onSurface; }));
+    assert(std::ranges::all_of(stepperComponents, [](const auto& cmp) {
+      return cmp.status() == Status::onSurface;
+    }));
 
     // Early return if we already were on this surface TODO why is this
     // necessary

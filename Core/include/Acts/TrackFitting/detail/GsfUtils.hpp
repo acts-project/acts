@@ -15,6 +15,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
@@ -96,9 +97,8 @@ class ScopedGsfInfoPrinterAndChecker {
 
   void checks(bool onStart) const {
     const auto cmps = m_stepper.constComponentIterable(m_state.stepping);
-    [[maybe_unused]] const bool allFinite =
-        std::all_of(cmps.begin(), cmps.end(),
-                    [](auto cmp) { return std::isfinite(cmp.weight()); });
+    [[maybe_unused]] const bool allFinite = std::ranges::all_of(
+        cmps, [](auto cmp) { return std::isfinite(cmp.weight()); });
     [[maybe_unused]] const bool allNormalized = detail::weightsAreNormalized(
         cmps, [](const auto &cmp) { return cmp.weight(); });
     [[maybe_unused]] const bool zeroComponents =
