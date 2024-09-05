@@ -25,7 +25,6 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
-#include <ranges>
 
 namespace {
 
