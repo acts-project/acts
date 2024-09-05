@@ -21,7 +21,6 @@
 
 #include <algorithm>
 #include <array>
-#include <ranges>
 #include <set>
 #include <string>
 #include <vector>

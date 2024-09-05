@@ -21,7 +21,6 @@
 #include <cstdlib>
 #include <initializer_list>
 #include <limits>
-#include <ranges>
 #include <set>
 #include <tuple>
 

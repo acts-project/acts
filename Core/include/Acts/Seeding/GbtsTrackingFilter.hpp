@@ -16,7 +16,6 @@
 #include <cstring>
 #include <iostream>
 #include <list>
-#include <ranges>
 #include <vector>
 
 template <typename external_spacepoint_t>

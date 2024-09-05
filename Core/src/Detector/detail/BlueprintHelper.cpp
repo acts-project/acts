@@ -12,8 +12,8 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 
+#include <algorithm>
 #include <array>
-#include <ranges>
 
 namespace {
 

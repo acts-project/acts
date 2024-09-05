@@ -14,9 +14,9 @@
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <algorithm>
 #include <array>
 #include <memory>
-#include <ranges>
 
 namespace Acts::Experimental {
 

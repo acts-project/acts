@@ -20,9 +20,9 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <algorithm>
 #include <array>
 #include <memory>
-#include <ranges>
 
 namespace Acts::Experimental {
 

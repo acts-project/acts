@@ -20,7 +20,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-#include <ranges>
+#include <algorithm>
 #include <sstream>
 #include <string>
 

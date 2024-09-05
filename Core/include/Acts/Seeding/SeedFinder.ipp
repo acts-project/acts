@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
-#include <ranges>
 #include <type_traits>
 
 namespace Acts {

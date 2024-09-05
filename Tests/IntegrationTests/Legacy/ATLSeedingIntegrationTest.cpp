@@ -11,7 +11,6 @@
 #include "Acts/Seeding/AtlasSeedFinder.hpp"
 
 #include <algorithm>
-#include <ranges>
 
 // space point structure with the bare minimum and reasonable default
 // covariances. clusterList default is SCT (strip detector)

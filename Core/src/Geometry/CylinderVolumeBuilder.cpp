@@ -29,7 +29,6 @@
 
 #include <algorithm>
 #include <iterator>
-#include <ranges>
 #include <vector>
 
 #include <boost/algorithm/string.hpp>

@@ -22,7 +22,6 @@
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
-#include <ranges>
 
 Acts::Experimental::DetectorComponent::PortalContainer
 Acts::Experimental::detail::CuboidalDetectorHelper::connect(

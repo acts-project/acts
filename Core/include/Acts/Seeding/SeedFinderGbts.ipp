@@ -17,13 +17,13 @@
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <functional>
 #include <iostream>
 #include <list>
 #include <numeric>
-#include <ranges>
 #include <type_traits>
 #include <vector>
 

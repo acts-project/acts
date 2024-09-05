@@ -16,7 +16,6 @@
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 
 #include <algorithm>
-#include <ranges>
 #include <vector>
 
 std::shared_ptr<const Acts::TrackingVolumeArray>

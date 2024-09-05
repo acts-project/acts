@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include <ranges>
 
 Acts::FsmwMode1dFinder::FsmwMode1dFinder(double firstFraction, double fraction)
     : m_firstFraction(firstFraction), m_fraction(fraction) {}

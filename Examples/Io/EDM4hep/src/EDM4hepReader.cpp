@@ -23,7 +23,6 @@
 #include <algorithm>
 #include <iomanip>
 #include <map>
-#include <ranges>
 #include <stdexcept>
 
 #include <edm4hep/MCParticle.h>

@@ -25,7 +25,6 @@
 #include <functional>
 #include <iterator>
 #include <ostream>
-#include <ranges>
 #include <stdexcept>
 #include <utility>
 #include <variant>

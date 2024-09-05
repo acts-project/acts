@@ -23,8 +23,8 @@
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 
 // System include(s).
+#include <algorithm>
 #include <cstring>
-#include <ranges>
 #include <vector>
 
 namespace Acts::Cuda {

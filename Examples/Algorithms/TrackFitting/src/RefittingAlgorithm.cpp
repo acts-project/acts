@@ -24,10 +24,10 @@
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <optional>
 #include <ostream>
-#include <ranges>
 #include <stdexcept>
 #include <system_error>
 #include <utility>

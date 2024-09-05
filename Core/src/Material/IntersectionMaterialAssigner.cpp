@@ -12,7 +12,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-#include <ranges>
+#include <algorithm>
 
 namespace {
 

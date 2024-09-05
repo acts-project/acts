@@ -15,7 +15,6 @@
 #include <iomanip>
 #include <numeric>
 #include <ostream>
-#include <ranges>
 #include <type_traits>
 #include <utility>
 #include <vector>

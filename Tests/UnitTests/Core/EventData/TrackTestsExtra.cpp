@@ -15,8 +15,8 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
+#include <algorithm>
 #include <numeric>
-#include <ranges>
 
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;

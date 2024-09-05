@@ -12,9 +12,9 @@
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
-#include <ranges>
 
 #include <Eigen/Core>
 #include <torch/torch.h>

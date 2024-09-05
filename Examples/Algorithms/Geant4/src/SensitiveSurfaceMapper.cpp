@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <ostream>
-#include <ranges>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>

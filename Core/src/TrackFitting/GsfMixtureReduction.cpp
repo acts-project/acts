@@ -10,7 +10,7 @@
 
 #include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
 
-#include <ranges>
+#include <algorithm>
 
 template <typename proj_t, typename angle_desc_t>
 void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,

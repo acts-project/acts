@@ -29,7 +29,6 @@
 #include <cmath>
 #include <iterator>
 #include <ostream>
-#include <ranges>
 #include <stdexcept>
 #include <variant>
 

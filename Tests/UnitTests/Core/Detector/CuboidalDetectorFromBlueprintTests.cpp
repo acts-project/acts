@@ -26,8 +26,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
+#include <algorithm>
 #include <fstream>
-#include <ranges>
 
 class SurfaceBuilder : public Acts::Experimental::IInternalStructureBuilder {
  public:

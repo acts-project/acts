@@ -8,7 +8,7 @@
 
 #include <array>
 #include <iostream>
-#include <ranges>
+#include <algorithm>
 #include <string>
 #include <tuple>
 #include <vector>

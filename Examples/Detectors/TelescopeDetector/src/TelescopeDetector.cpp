@@ -14,7 +14,6 @@
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <algorithm>
-#include <ranges>
 #include <stdexcept>
 
 auto ActsExamples::Telescope::TelescopeDetector::finalize(

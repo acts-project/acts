@@ -22,7 +22,6 @@
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
 #include <algorithm>
-#include <ranges>
 
 using namespace ActsExamples;
 using namespace Acts::UnitLiterals;

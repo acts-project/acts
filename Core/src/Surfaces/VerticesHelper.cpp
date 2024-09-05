@@ -8,9 +8,9 @@
 
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <ranges>
 
 std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
     ActsScalar phiMin, ActsScalar phiMax,

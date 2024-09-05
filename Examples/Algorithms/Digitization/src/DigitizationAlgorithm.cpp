@@ -32,7 +32,6 @@
 #include <cstdint>
 #include <limits>
 #include <ostream>
-#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <string>

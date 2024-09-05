@@ -10,8 +10,8 @@
 
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 
+#include <algorithm>
 #include <limits>
-#include <ranges>
 #include <vector>
 
 #include "SpacePoint.hpp"

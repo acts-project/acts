@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <algorithm>
-#include <ranges>
 
 template <class identifier_t>
 template <class PointType>

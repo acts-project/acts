@@ -16,7 +16,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/AnnulusBoundsHelper.hpp"
 
-#include <ranges>
+#include <algorithm>
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoGenericTrap.h>

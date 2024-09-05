@@ -8,8 +8,8 @@
 
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <algorithm>
 #include <array>
-#include <ranges>
 #include <string_view>
 
 #include <Eigen/Core>

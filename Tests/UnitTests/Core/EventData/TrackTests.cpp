@@ -24,12 +24,12 @@
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <iterator>
 #include <memory>
 #include <numeric>
 #include <random>
-#include <ranges>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>

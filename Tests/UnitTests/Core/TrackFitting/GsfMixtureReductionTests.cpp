@@ -19,7 +19,6 @@
 #include <cstddef>
 #include <memory>
 #include <numeric>
-#include <ranges>
 #include <tuple>
 #include <utility>
 #include <vector>

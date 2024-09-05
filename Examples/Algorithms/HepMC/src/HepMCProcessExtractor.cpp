@@ -11,7 +11,7 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
 
-#include <ranges>
+#include <algorithm>
 #include <stdexcept>
 
 #include <HepMC3/GenEvent.h>

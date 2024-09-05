@@ -13,10 +13,10 @@
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <functional>
 #include <numeric>
-#include <ranges>
 #include <type_traits>
 
 namespace Acts {

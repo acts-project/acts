@@ -25,7 +25,6 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
-#include <ranges>
 #include <vector>
 
 namespace Acts {

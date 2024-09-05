@@ -12,7 +12,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 
-#include <ranges>
+#include <algorithm>
 #include <vector>
 
 ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(

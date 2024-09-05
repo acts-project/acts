@@ -31,10 +31,10 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <ostream>
-#include <ranges>
 #include <stdexcept>
 #include <system_error>
 #include <unordered_map>

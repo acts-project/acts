@@ -12,7 +12,6 @@
 #include <cassert>
 #include <cstdint>
 #include <limits>
-#include <ranges>
 #include <vector>
 
 namespace Acts {

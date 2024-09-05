@@ -10,7 +10,7 @@
 
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 
-#include <ranges>
+#include <algorithm>
 
 #include <torch/torch.h>
 

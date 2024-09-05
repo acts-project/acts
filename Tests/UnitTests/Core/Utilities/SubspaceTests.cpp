@@ -19,7 +19,6 @@
 #include <cstdint>
 #include <numeric>
 #include <ostream>
-#include <ranges>
 #include <tuple>
 #include <utility>
 #include <vector>

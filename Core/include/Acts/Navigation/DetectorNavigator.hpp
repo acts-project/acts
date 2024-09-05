@@ -22,9 +22,9 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
 #include <iomanip>
 #include <iterator>
-#include <ranges>
 #include <sstream>
 #include <string>
 

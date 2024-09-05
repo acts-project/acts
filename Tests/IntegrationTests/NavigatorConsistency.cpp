@@ -23,7 +23,7 @@
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <ranges>
+#include <algorithm>
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;

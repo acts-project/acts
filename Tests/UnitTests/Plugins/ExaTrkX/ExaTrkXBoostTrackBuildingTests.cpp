@@ -12,7 +12,6 @@
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 
 #include <algorithm>
-#include <ranges>
 
 BOOST_AUTO_TEST_CASE(test_track_building) {
   // Make some spacepoint IDs

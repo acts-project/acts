@@ -35,7 +35,6 @@
 #include <limits>
 #include <numeric>
 #include <ostream>
-#include <ranges>
 #include <ratio>
 #include <regex>
 #include <stdexcept>

@@ -9,7 +9,7 @@
 #include <Acts/Definitions/Units.hpp>
 #include <ActsExamples/TrackFindingExaTrkX/TruthGraphBuilder.hpp>
 
-#include <ranges>
+#include <algorithm>
 
 using namespace Acts::UnitLiterals;
 

@@ -24,10 +24,10 @@
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <ostream>
-#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <utility>

@@ -10,8 +10,8 @@
 
 #include "Acts/Utilities/Zip.hpp"
 
+#include <algorithm>
 #include <map>
-#include <ranges>
 
 #include <boost/beast/core/span.hpp>
 #include <boost/graph/adjacency_list.hpp>

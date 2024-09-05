@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <iostream>
-#include <ranges>
 #include <stdexcept>
 
 #include <TChain.h>
