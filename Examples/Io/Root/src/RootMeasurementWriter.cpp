@@ -13,6 +13,7 @@
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
@@ -152,9 +153,9 @@ struct RootMeasurementWriter::DigitizationTree {
   /// Convenience function to fill bound parameters
   ///
   /// @param m The measurement
-  void fillBoundMeasurement(const Measurement& m) {
+  void fillBoundMeasurement(const ConstVariableBoundMeasurementProxy& m) {
     for (unsigned int i = 0; i < m.size(); ++i) {
-      auto ib = m.subspaceIndices()[i];
+      auto ib = m.subspaceIndexVector()[i];
 
       recBound[ib] = m.parameters()[i];
       varBound[ib] = m.covariance()(i, i);
@@ -266,7 +267,8 @@ ProcessCode RootMeasurementWriter::writeT(
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
-    const auto& meas = measurements[hitIdx];
+    const ConstVariableBoundMeasurementProxy meas =
+        measurements.getMeasurement(hitIdx);
 
     Acts::GeometryIdentifier geoId =
         meas.sourceLink().template get<IndexSourceLink>().geometryId();
