@@ -50,11 +50,11 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
     Acts::Vector2 p = Acts::Vector2::Random();
     Acts::SquareMatrix2 c = Acts::SquareMatrix2::Random();
 
-    BoundVariableMeasurement m(Acts::SourceLink{sl},
-                               std::array{Acts::eBoundLoc0, Acts::eBoundLoc1},
-                               p, c);
-
-    measOriginal.push_back(m);
+    FixedBoundMeasurementProxy<2> m = measOriginal.makeMeasurement<2>();
+    m.setSourceLink(Acts::SourceLink(sl));
+    m.setSubspaceIndices(std::array{Acts::eBoundLoc0, Acts::eBoundLoc1});
+    m.parameters() = p;
+    m.covariance() = c;
 
     ActsExamples::Cluster cl;
 

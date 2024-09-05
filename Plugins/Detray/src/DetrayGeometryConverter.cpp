@@ -47,10 +47,9 @@ int findVolume(
 detray::io::transform_payload Acts::DetrayGeometryConverter::convertTransform(
     const Transform3& t) {
   detray::io::transform_payload tfPayload;
-  auto translation = t.translation();
+  Vector3 translation = t.translation();
   tfPayload.tr = {translation.x(), translation.y(), translation.z()};
-
-  const auto rotation = t.rotation();
+  RotationMatrix3 rotation = t.rotation().transpose();
   tfPayload.rot = {rotation(0, 0), rotation(0, 1), rotation(0, 2),
                    rotation(1, 0), rotation(1, 1), rotation(1, 2),
                    rotation(2, 0), rotation(2, 1), rotation(2, 2)};
@@ -260,7 +259,7 @@ Acts::DetrayGeometryConverter::convertPortal(
       // Write surface with invalid link
       auto portalPayload = convertSurface(gctx, *surfaceAdjusted, true);
       using NavigationLink =
-          typename DetrayDetector::surface_type::navigation_link;
+          typename DetrayHostDetector::surface_type::navigation_link;
       portalPayload.mask.volume_link.link =
           std::numeric_limits<NavigationLink>::max();
 

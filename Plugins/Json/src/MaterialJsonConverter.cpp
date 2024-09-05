@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -283,7 +283,7 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
 }  // namespace
 
 void Acts::to_json(nlohmann::json& j, const Material& t) {
-  if (!t) {
+  if (!t.isValid()) {
     return;
   }
   for (unsigned i = 0; i < t.parameters().size(); ++i) {
