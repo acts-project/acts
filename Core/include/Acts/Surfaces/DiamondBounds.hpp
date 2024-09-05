@@ -19,7 +19,6 @@
 #include <array>
 #include <cmath>
 #include <iosfwd>
-#include <ranges>
 #include <stdexcept>
 #include <vector>
 

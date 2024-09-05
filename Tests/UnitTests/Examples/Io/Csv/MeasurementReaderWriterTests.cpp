@@ -20,10 +20,10 @@
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <random>
-#include <ranges>
 
 using namespace ActsExamples;
 using namespace Acts::Test;

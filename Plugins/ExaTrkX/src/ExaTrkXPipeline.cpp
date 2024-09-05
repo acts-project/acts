@@ -9,7 +9,6 @@
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 
 #include <algorithm>
-#include <ranges>
 
 namespace Acts {
 

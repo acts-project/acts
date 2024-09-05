@@ -19,8 +19,8 @@
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
 
+#include <algorithm>
 #include <iostream>
-#include <ranges>
 #include <typeinfo>
 
 #include <GeoModelKernel/GeoBox.h>

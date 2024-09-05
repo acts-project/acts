@@ -26,7 +26,6 @@
 #include <cstdio>
 #include <functional>
 #include <iostream>
-#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <tuple>

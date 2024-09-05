@@ -15,7 +15,6 @@
 #include <cstddef>
 #include <iomanip>
 #include <limits>
-#include <ranges>
 
 Acts::Extent::Extent(const ExtentEnvelope& envelope)
     : m_constrains(0), m_envelope(envelope) {

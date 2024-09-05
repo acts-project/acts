@@ -18,8 +18,8 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
+#include <algorithm>
 #include <cstddef>
-#include <ranges>
 #include <string>
 #include <unordered_map>
 #include <utility>

@@ -18,8 +18,8 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <algorithm>
 #include <numeric>
-#include <ranges>
 
 using namespace ActsExamples;
 using namespace Acts::UnitLiterals;

@@ -10,7 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <ranges>
+#include <algorithm>
 #include <vector>
 
 #define CHECK_NE_COLLECTIONS(col1, col2)                                 \
