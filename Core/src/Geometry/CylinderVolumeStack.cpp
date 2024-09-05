@@ -625,13 +625,12 @@ std::pair<ActsScalar, ActsScalar> CylinderVolumeStack::synchronizeZBounds(
   return {minZ, maxZ};
 }
 
-void CylinderVolumeStack::update(std::shared_ptr<const VolumeBounds> volbounds,
+void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
                                  std::optional<Transform3> transform) {
   if (volbounds == nullptr) {
     throw std::invalid_argument("New bounds are nullptr");
   }
-  auto cylBounds =
-      std::dynamic_pointer_cast<const CylinderVolumeBounds>(volbounds);
+  auto cylBounds = std::dynamic_pointer_cast<CylinderVolumeBounds>(volbounds);
   if (cylBounds == nullptr) {
     throw std::invalid_argument(
         "CylinderVolumeStack requires CylinderVolumeBounds");
@@ -641,7 +640,7 @@ void CylinderVolumeStack::update(std::shared_ptr<const VolumeBounds> volbounds,
 }
 
 void CylinderVolumeStack::update(
-    std::shared_ptr<const CylinderVolumeBounds> newBounds,
+    std::shared_ptr<CylinderVolumeBounds> newBounds,
     std::optional<Transform3> transform, const Logger& logger) {
   ACTS_DEBUG(
       "Resizing CylinderVolumeStack with strategy: " << m_resizeStrategy);
