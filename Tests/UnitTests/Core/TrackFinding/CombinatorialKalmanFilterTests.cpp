@@ -31,6 +31,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
@@ -307,8 +308,9 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   // this is the default option. set anyway for consistency
   options.propagatorPlainOptions.direction = Acts::Direction::Forward;
   // Construct a plane surface as the target surface
-  auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
+  auto pSurface = Acts::CurvilinearSurface(Acts::Vector3{-3_m, 0., 0.},
+                                           Acts::Vector3{1., 0., 0})
+                      .planeSurface();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
@@ -364,8 +366,9 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   auto options = f.makeCkfOptions();
   options.propagatorPlainOptions.direction = Acts::Direction::Backward;
   // Construct a plane surface as the target surface
-  auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Vector3{3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
+  auto pSurface = Acts::CurvilinearSurface(Acts::Vector3{3_m, 0., 0.},
+                                           Acts::Vector3{1., 0., 0})
+                      .planeSurface();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;

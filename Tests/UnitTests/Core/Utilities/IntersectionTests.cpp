@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -140,16 +141,16 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
 
 /// test of the object intersection class
 BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
-  auto psf6 = Surface::makeShared<PlaneSurface>(Vector3(6., 0., 0.),
-                                                Vector3(1., 0., 0.));
-  auto psf7 = Surface::makeShared<PlaneSurface>(Vector3(7., 0., 0.),
-                                                Vector3(1., 0., 0.));
-  auto psf8 = Surface::makeShared<PlaneSurface>(Vector3(8., 0., 0.),
-                                                Vector3(1., 0., 0.));
-  auto psf9 = Surface::makeShared<PlaneSurface>(Vector3(9., 0., 0.),
-                                                Vector3(1., 0., 0.));
-  auto psf10 = Surface::makeShared<PlaneSurface>(Vector3(10., 0., 0.),
-                                                 Vector3(1., 0., 0.));
+  auto psf6 = CurvilinearSurface(Vector3(6., 0., 0.), Vector3(1., 0., 0.))
+                  .planeSurface();
+  auto psf7 = CurvilinearSurface(Vector3(7., 0., 0.), Vector3(1., 0., 0.))
+                  .planeSurface();
+  auto psf8 = CurvilinearSurface(Vector3(8., 0., 0.), Vector3(1., 0., 0.))
+                  .planeSurface();
+  auto psf9 = CurvilinearSurface(Vector3(9., 0., 0.), Vector3(1., 0., 0.))
+                  .planeSurface();
+  auto psf10 = CurvilinearSurface(Vector3(10., 0., 0.), Vector3(1., 0., 0.))
+                   .planeSurface();
 
   using PlaneIntersection = ObjectIntersection<PlaneSurface>;
 

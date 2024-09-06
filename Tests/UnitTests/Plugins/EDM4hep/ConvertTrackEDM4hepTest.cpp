@@ -19,6 +19,7 @@
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -106,8 +107,9 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
 }
 
 BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
-  auto planeSurface = Surface::makeShared<PlaneSurface>(
-      Vector3{50, 30, 20}, Vector3{1, 1, 0.3}.normalized());
+  auto planeSurface =
+      CurvilinearSurface(Vector3{50, 30, 20}, Vector3{1, 1, 0.3}.normalized())
+          .planeSurface();
 
   BoundVector par;
   par << 1_mm, 5_mm, M_PI / 4., M_PI_2 * 0.9, -1 / 1_GeV, 5_ns;
@@ -204,8 +206,9 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
 }
 
 BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
-  auto refSurface = Surface::makeShared<PlaneSurface>(
-      Vector3{50, 30, 20}, Vector3{1, 1, 0.3}.normalized());
+  auto refSurface =
+      CurvilinearSurface(Vector3{50, 30, 20}, Vector3{1, 1, 0.3}.normalized())
+          .planeSurface();
 
   BoundVector par;
   par << 1_mm, 5_mm, M_PI / 4., M_PI_2, -1 / 1_GeV, 5_ns;

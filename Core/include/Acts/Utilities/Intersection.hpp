@@ -60,13 +60,6 @@ class Intersection {
       : m_position(position), m_pathLength(pathLength), m_status(status) {}
 
   /// Returns whether the intersection was successful or not
-  /// @deprecated
-  [[deprecated("Use isValid() instead")]] constexpr explicit operator bool()
-      const {
-    return isValid();
-  }
-
-  /// Returns whether the intersection was successful or not
   constexpr bool isValid() const { return m_status != Status::missed; }
 
   /// Returns the position of the interseciton
@@ -148,13 +141,6 @@ class ObjectIntersection {
   constexpr ObjectIntersection(const Intersection3D& intersection,
                                const object_t* object, std::uint8_t index = 0)
       : m_intersection(intersection), m_object(object), m_index(index) {}
-
-  /// Returns whether the intersection was successful or not
-  /// @deprecated
-  [[deprecated("Use isValid() instead")]] constexpr explicit operator bool()
-      const {
-    return isValid();
-  }
 
   /// Returns whether the intersection was successful or not
   constexpr bool isValid() const { return m_intersection.isValid(); }
