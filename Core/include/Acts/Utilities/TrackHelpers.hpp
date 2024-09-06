@@ -374,6 +374,8 @@ template <TrackProxyConcept track_proxy_t>
 void calculateTrackQuantities(track_proxy_t track)
   requires(!track_proxy_t::ReadOnly)
 {
+  using ConstTrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
+
   track.chi2() = 0;
   track.nDoF() = 0;
 
@@ -406,7 +408,7 @@ void calculateTrackQuantities(track_proxy_t track)
 /// @param trimHoles whether to trim holes
 /// @param trimOutliers whether to trim outliers
 /// @param trimMaterial whether to trim pure material states
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t>
 void trimTrackFront(track_proxy_t track, bool trimHoles, bool trimOutliers,
                     bool trimMaterial)
   requires(!track_proxy_t::ReadOnly)
@@ -444,7 +446,7 @@ void trimTrackFront(track_proxy_t track, bool trimHoles, bool trimOutliers,
 /// @param trimHoles whether to trim holes
 /// @param trimOutliers whether to trim outliers
 /// @param trimMaterial whether to trim pure material states
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t>
 void trimTrackBack(track_proxy_t track, bool trimHoles, bool trimOutliers,
                    bool trimMaterial)
   requires(!track_proxy_t::ReadOnly)
@@ -482,7 +484,7 @@ void trimTrackBack(track_proxy_t track, bool trimHoles, bool trimOutliers,
 /// @param trimHoles whether to trim holes
 /// @param trimOutliers whether to trim outliers
 /// @param trimMaterial whether to trim pure material states
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t>
 void trimTrack(track_proxy_t track, bool trimHoles, bool trimOutliers,
                bool trimMaterial)
   requires(!track_proxy_t::ReadOnly)
