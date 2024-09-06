@@ -139,8 +139,7 @@ std::vector<std::size_t> ModuleClusters::nonGeoEntries(
   std::vector<std::size_t> retv;
   for (std::size_t i = 0; i < indices.size(); i++) {
     auto idx = indices.at(i);
-    if (std::find(m_geoIndices.begin(), m_geoIndices.end(), idx) ==
-        m_geoIndices.end()) {
+    if (rangeContainsValue(m_geoIndices, idx)) {
       retv.push_back(i);
     }
   }
@@ -245,10 +244,8 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
     ModuleValue& other = values.at(i);
     for (std::size_t j = 0; j < other.paramIndices.size(); j++) {
       auto idx = other.paramIndices.at(j);
-      if (std::find(m_geoIndices.begin(), m_geoIndices.end(), idx) ==
-          m_geoIndices.end()) {
-        if (std::find(mval.paramIndices.begin(), mval.paramIndices.end(),
-                      idx) == mval.paramIndices.end()) {
+      if (rangeContainsValue(m_geoIndices, idx)) {
+        if (rangeContainsValue(mval.paramIndices, idx)) {
           mval.paramIndices.push_back(idx);
         }
         if (mval.paramValues.size() < (j + 1)) {

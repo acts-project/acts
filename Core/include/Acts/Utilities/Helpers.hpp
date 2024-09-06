@@ -198,4 +198,11 @@ constexpr std::underlying_type_t<enum_t> toUnderlying(enum_t value) {
   return static_cast<std::underlying_type_t<enum_t>>(value);
 }
 
+/// This can be abandoned with C++23 to use the std::ranges::contains method
+///
+template <typename R, typename T>
+bool rangeContainsValue(const R& range, const T& value) {
+  return std::ranges::find(range, value) != std::ranges::end(range);
+}
+
 }  // namespace Acts
