@@ -112,7 +112,7 @@ The {class}`Acts::EigenStepper` implements the same functionality as the ATLAS s
 
 The extension encapsulate the relevant equations for different environments. There exists a {struct}`Acts::EigenStepperDefaultExtension` that is suited for propagation in a vacuum, and the {struct}`Acts::EigenStepperDenseEnvironmentExtension`, that contains additional code to handle the propagation inside materials. Which extension is used is decided by the user.
 
-The extension can be configured via the {struct}`Acts::EigenStepper`:
+The extension can be configured via the {class}`Acts::EigenStepper`:
 
 ```c++
 using Stepper = Acts::EigenStepper<Acts::EigenStepperDenseEnvironmentExtension>;
