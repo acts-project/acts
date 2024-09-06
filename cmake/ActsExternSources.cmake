@@ -67,3 +67,10 @@ set(ACTS_PYBIND11_SOURCE
     "Source to take pybind11 from"
 )
 mark_as_advanced(ACTS_PYBIND11_SOURCE)
+
+set(ACTS_ANNOY_SOURCE
+    "GIT_REPOSITORY;https://github.com/spotify/annoy.git;GIT_TAG;v${_acts_annoy_version}"
+    CACHE STRING
+    "Source to take Annoy from"
+)
+mark_as_advanced(ACTS_ANNOY_SOURCE)

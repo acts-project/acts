@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,6 +14,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -1067,8 +1068,7 @@ class KalmanFitter {
   /// @tparam source_link_iterator_t Iterator type used to pass source links
   /// @tparam start_parameters_t Type of the initial parameters
   /// @tparam parameters_t Type of parameters used for local parameters
-  /// @tparam track_container_t Type of the track container backend
-  /// @tparam holder_t Type defining track container backend ownership
+  /// @tparam track_container_t Type of the track container
   ///
   /// @param it Begin iterator for the fittable uncalibrated measurements
   /// @param end End iterator for the fittable uncalibrated measurements
@@ -1082,13 +1082,12 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters,
-            typename track_container_t, template <typename> class holder_t>
-  auto fit(source_link_iterator_t it, source_link_iterator_t end,
-           const start_parameters_t& sParameters,
-           const KalmanFitterOptions<traj_t>& kfOptions,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const -> Result<typename TrackContainer<track_container_t, traj_t,
-                                              holder_t>::TrackProxy>
+            TrackContainerFrontend track_container_t>
+  Result<typename track_container_t::TrackProxy> fit(
+      source_link_iterator_t it, source_link_iterator_t end,
+      const start_parameters_t& sParameters,
+      const KalmanFitterOptions<traj_t>& kfOptions,
+      track_container_t& trackContainer) const
     requires(!isDirectNavigator)
   {
     // To be able to find measurements later, we put them into a map
@@ -1145,8 +1144,8 @@ class KalmanFitter {
     kalmanActor.actorLogger = m_actorLogger.get();
 
     return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
-                    track_container_t, holder_t>(sParameters, propagatorOptions,
-                                                 trackContainer);
+                    track_container_t>(sParameters, propagatorOptions,
+                                       trackContainer);
   }
 
   /// Fit implementation of the forward filter, calls the
@@ -1155,8 +1154,7 @@ class KalmanFitter {
   /// @tparam source_link_iterator_t Iterator type used to pass source links
   /// @tparam start_parameters_t Type of the initial parameters
   /// @tparam parameters_t Type of parameters used for local parameters
-  /// @tparam track_container_t Type of the track container backend
-  /// @tparam holder_t Type defining track container backend ownership
+  /// @tparam track_container_t Type of the track container
   ///
   /// @param it Begin iterator for the fittable uncalibrated measurements
   /// @param end End iterator for the fittable uncalibrated measurements
@@ -1172,14 +1170,13 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters,
-            typename track_container_t, template <typename> class holder_t>
-  auto fit(source_link_iterator_t it, source_link_iterator_t end,
-           const start_parameters_t& sParameters,
-           const KalmanFitterOptions<traj_t>& kfOptions,
-           const std::vector<const Surface*>& sSequence,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const -> Result<typename TrackContainer<track_container_t, traj_t,
-                                              holder_t>::TrackProxy>
+            TrackContainerFrontend track_container_t>
+  Result<typename track_container_t::TrackProxy> fit(
+      source_link_iterator_t it, source_link_iterator_t end,
+      const start_parameters_t& sParameters,
+      const KalmanFitterOptions<traj_t>& kfOptions,
+      const std::vector<const Surface*>& sSequence,
+      track_container_t& trackContainer) const
     requires(isDirectNavigator)
   {
     // To be able to find measurements later, we put them into a map
@@ -1230,8 +1227,8 @@ class KalmanFitter {
     propagatorOptions.navigation.surfaces = sSequence;
 
     return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
-                    track_container_t, holder_t>(sParameters, propagatorOptions,
-                                                 trackContainer);
+                    track_container_t>(sParameters, propagatorOptions,
+                                       trackContainer);
   }
 
  private:
@@ -1241,8 +1238,7 @@ class KalmanFitter {
   /// @tparam actor_list_t Type of the actor list
   /// @tparam aborter_list_t Type of the abort list
   /// @tparam kalman_result_t Type of the KF result
-  /// @tparam track_container_t Type of the track container backend
-  /// @tparam holder_t Type defining track container backend ownership
+  /// @tparam track_container_t Type of the track container
   ///
   /// @param sParameters The initial track parameters
   /// @param propagatorOptions The Propagator Options
@@ -1250,14 +1246,11 @@ class KalmanFitter {
   ///
   /// @return the output as an output track
   template <typename start_parameters_t, typename propagator_options_t,
-            typename kalman_result_t, typename track_container_t,
-            template <typename> class holder_t>
-  auto fit_impl(
-      const start_parameters_t& sParameters,
-      const propagator_options_t& propagatorOptions,
-      TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
-      -> Result<typename TrackContainer<track_container_t, traj_t,
-                                        holder_t>::TrackProxy> {
+            typename kalman_result_t, TrackContainerFrontend track_container_t>
+  auto fit_impl(const start_parameters_t& sParameters,
+                const propagator_options_t& propagatorOptions,
+                track_container_t& trackContainer) const
+      -> Result<typename track_container_t::TrackProxy> {
     auto propagatorState =
         m_propagator.template makeState(sParameters, propagatorOptions);
 
