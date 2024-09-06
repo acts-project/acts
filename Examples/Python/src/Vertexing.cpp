@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
@@ -32,16 +31,18 @@ void addVertexing(Context& ctx) {
   auto& m = ctx.get("main");
 
   py::enum_<Seeder>(m, "VertexSeedFinder")
+      .value("TruthSeeder", Seeder::TruthSeeder)
       .value("GaussianSeeder", Seeder::GaussianSeeder)
       .value("AdaptiveGridSeeder", Seeder::AdaptiveGridSeeder);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AdaptiveMultiVertexFinderAlgorithm, mex,
       "AdaptiveMultiVertexFinderAlgorithm", inputTrackParameters,
-      outputProtoVertices, outputVertices, seedFinder, bField, minWeight,
-      doSmoothing, maxIterations, useTime, tracksMaxZinterval, initialVariances,
-      doFullSplitting, tracksMaxSignificance, maxMergeVertexSignificance,
-      spatialBinExtent, temporalBinExtent);
+      inputTruthParticles, inputTruthVertices, outputProtoVertices,
+      outputVertices, seedFinder, bField, minWeight, doSmoothing, maxIterations,
+      useTime, tracksMaxZinterval, initialVariances, doFullSplitting,
+      tracksMaxSignificance, maxMergeVertexSignificance, spatialBinExtent,
+      temporalBinExtent);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::IterativeVertexFinderAlgorithm,
                                 mex, "IterativeVertexFinderAlgorithm",

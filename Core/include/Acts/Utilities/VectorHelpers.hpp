@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <array>
 #include <limits>
@@ -20,14 +19,6 @@
 #include "Eigen/Dense"
 
 namespace Acts::VectorHelpers {
-
-namespace detail {
-template <class T>
-using phi_method_t = decltype(std::declval<const T>().phi());
-
-template <class T>
-using has_phi_method = Concepts::is_detected<phi_method_t, T>;
-}  // namespace detail
 
 /// Calculate phi (transverse plane angle) from compatible Eigen types
 /// @tparam Derived Eigen derived concrete type
@@ -55,9 +46,12 @@ double phi(const Eigen::MatrixBase<Derived>& v) noexcept {
 /// @tparam T anything that has a phi method
 /// @param v Any type that implements a phi method
 /// @return The phi value
-template <typename T,
-          std::enable_if_t<detail::has_phi_method<T>::value, int> = 0>
-double phi(const T& v) noexcept {
+template <typename T>
+double phi(const T& v) noexcept
+  requires requires {
+    { v.phi() } -> std::floating_point;
+  }
+{
   return v.phi();
 }
 

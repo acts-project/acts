@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -148,8 +149,8 @@ auto circularMean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
 // subtraction object to enable circular behaviour
 template <int D, typename subtract_t = std::minus<ActsVector<D>>>
 auto boundCov(const std::vector<ActsVector<D>> &samples,
-              const ActsVector<D> &mu, const subtract_t &sub = subtract_t{})
-    -> ActsSquareMatrix<D> {
+              const ActsVector<D> &mu,
+              const subtract_t &sub = subtract_t{}) -> ActsSquareMatrix<D> {
   ActsSquareMatrix<D> boundCov = ActsSquareMatrix<D>::Zero();
 
   for (const auto &smpl : samples) {
@@ -314,7 +315,7 @@ BOOST_AUTO_TEST_CASE(test_plane_surface) {
   const auto desc = detail::AngleDescription<Surface::Plane>::Desc{};
 
   const auto surface =
-      Surface::makeShared<PlaneSurface>(Vector3{0, 0, 0}, Vector3{1, 0, 0});
+      CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
 
   const LocPosArray p{{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
 

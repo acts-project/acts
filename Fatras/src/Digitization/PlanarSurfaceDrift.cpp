@@ -25,7 +25,7 @@ ActsFatras::PlanarSurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
   Acts::Vector3 seg3Local = invTransform.linear() * dir;
   // Scale unit direction to the actual segment in the (depletion/drift) zone
   seg3Local *= thickness / std::cos(Acts::VectorHelpers::theta(seg3Local));
-  // Calulate local entry/exit before drift
+  // Calculate local entry/exit before drift
   Acts::Vector2 entry = pos2Local - 0.5 * seg3Local.segment<2>(0);
   Acts::Vector2 exit = pos2Local + 0.5 * seg3Local.segment<2>(0);
   // Actually apply a drift

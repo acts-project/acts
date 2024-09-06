@@ -7,7 +7,7 @@ Howto run the material mapping and validation
    This documentation is for running the material mapping in the Examples framework.
    Documentation on how to use the Core library directly for material mapping is found :ref:`here<material_mapping_howto_core>`.
 
-When performing track reconstruction, the proper amount of material crossed by the particle needs to be accounted for. This material is originally available in the detector simulation with a lot of details, which would make it expensive to directly use. To circumvent this issue, the material is mapped onto different surfaces in the tracking geometry. This process will be performed in 3 steps: 
+When performing track reconstruction, the proper amount of material crossed by the particle needs to be accounted for. This material is originally available in the detector simulation with a lot of details, which would make it expensive to directly use. To circumvent this issue, the material is mapped onto different surfaces in the tracking geometry. This process will be performed in 3 steps:
 
 - first, a JSON geometry file is created, it will be used to configure which surface the material is mapped onto and with which binning.
 - second, a Geant4 simulation is used to collect the material inside the detector from the detailed geometry.
@@ -22,7 +22,7 @@ As a prerequisite you will need to build ACTS with the Examples, Geant4 and the 
 For this particular example the ODD will also be needed. To use it, don't forget to get the corresponding submodule and then recompile the ACTS code if needed.
 
 .. code-block:: console
-  
+
    $ git submodule init
    $ git submodule update
 
@@ -35,7 +35,7 @@ First we need to extract the list of all the surfaces and volumes in our detecto
 
 .. code-block::
 
-   $ python3 <source>/Examples/Scripts/Python/geometry.py 
+   $ python3 <source>/Examples/Scripts/Python/geometry.py
 
 Ideally the following options should be used in the python file:
 
@@ -146,7 +146,7 @@ The next step is to do a geantino scan of our detector. For this we will use the
 
 .. code-block:: console
 
-   $ python3 <source>/Examples/Scripts/Python/material_recording.py 
+   $ python3 <source>/Examples/Scripts/Python/material_recording.py
 
 The result of the geantino scan will be a root file containing material tracks. Those contain the direction and production vertex of the geantino, the total material accumulated and all the interaction points in the detector.
 
@@ -157,7 +157,7 @@ With the surfaces map and the material track we can finally do the material mapp
 
 .. code-block:: console
 
-   $ python3 <source>/Examples/Scripts/Python/material_mapping.py 
+   $ python3 <source>/Examples/Scripts/Python/material_mapping.py
 
 Note that technically when using DD4hep (in particular for the ODD) defining a ``matDeco`` in the main function is not strictly necessary as the DD4hep geometry can hold the information of which surface to map onto with which binning. We will ignore this option, since the goal of this guide is to explain how to make a material map regardless of the detector.
 
@@ -169,7 +169,7 @@ Depending on what you want to do there are three options you can change:
 - ``mappingStep``: determine the step size used in the sampling of the volume in the volume mapping. By default, the material interaction point obtained from G4 is accumulated at the intersection between the track and the volume material. The mapping will be therefore incorrect if the material extends through the bin. To avoid this, additional material points are created every ``mappingStep`` [mm] along the trajectory. The mapping step should be small compared to the bin size.
 - ``readCachedSurfaceInformation`` if added the material-surface association will be taken from the input material track file (doesn't work with geantino file, you need to use the material track file obtained from running the material mapping).
 
-In addition to root and JSON output, one can also output the material map to a Cbor file (Concise Binary Object Representation). Doing so results in a file about 10 time smaller than the JSON one, but that file is no longer human-readable. This should be done once the map has been optimised and you want to export it. 
+In addition to root and JSON output, one can also output the material map to a Cbor file (Concise Binary Object Representation). Doing so results in a file about 10 time smaller than the JSON one, but that file is no longer human-readable. This should be done once the map has been optimised and you want to export it.
 
 .. note::
   You can map onto surfaces and volumes separately (for example if you want to optimise first one then the other). In that case after mapping one of those you will need to use the resulting JSON material map as an input to the ``mat-input-file``.
@@ -186,7 +186,7 @@ By default, the Geantino scan is performed with no spread in :math:`z_0` and :ma
 
 .. code-block:: console
 
-   $ python3 <source>/Examples/Scripts/Python/material_validation.py 
+   $ python3 <source>/Examples/Scripts/Python/material_validation.py
 
 To do the validation, five root macros are available in ``scripts/MaterialMapping``:
 
@@ -232,4 +232,4 @@ Can be use with X,Y,Z is a list of volumes, this will plot the material ratio be
 Using a different detector
 --------------------------
 
-If you want to use a different type of detector, you will first need to ensure that the relevant packages were added during the compilation. After this you can just replace the detector initialisation in the different main function. For reference you can have a look on the ODD for DD4Hep detector and on the ITk for TGeo detector. 
+If you want to use a different type of detector, you will first need to ensure that the relevant packages were added during the compilation. After this you can just replace the detector initialisation in the different main function. For reference you can have a look on the ODD for DD4Hep detector and on the ITk for TGeo detector.

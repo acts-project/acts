@@ -366,13 +366,13 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     } else {
       digiPars.values = {CLloc_direction1[im]};
       digiPars.indices = {Acts::eBoundLoc0};
-      assert(locCov.size() >= 1);
+      assert(!locCov.empty());
       digiPars.variances = {locCov[0]};
     }
 
     IndexSourceLink sl(Acts::GeometryIdentifier{CLmoduleID[im]}, im);
 
-    measurements.push_back(createMeasurement(digiPars, sl));
+    createMeasurement(measurements, digiPars, sl);
 
     // Create measurement particles map and particles container
     for (const auto& [subevt, bc] : Acts::zip(CLparticleLink_eventIndex->at(im),

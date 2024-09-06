@@ -1,6 +1,6 @@
 ACTS Tutorial on Auto-Tuning in CombinatorialKalmanFilter (CKF)
 ===============================================================
-The tracking algorithms require a number of pre-initialized parameters that are often hand-tuned to obtain high performance. Usually, the value of these parameters change as the underlying geometrical or magnetic configuration changes. An automatic tuning of these parameters can be very useful for obtaining highly efficient parameter configuration as well as for studying different detector geometries. This tutorial is based on parameter optimization studies using two different optimization frameworks: Optuna and Orion. Eight parameters of Track Seeding algorithm have been tuned using these frameworks and their performance have been studied on CKF. 
+The tracking algorithms require a number of pre-initialized parameters that are often hand-tuned to obtain high performance. Usually, the value of these parameters change as the underlying geometrical or magnetic configuration changes. An automatic tuning of these parameters can be very useful for obtaining highly efficient parameter configuration as well as for studying different detector geometries. This tutorial is based on parameter optimization studies using two different optimization frameworks: Optuna and Orion. Eight parameters of Track Seeding algorithm have been tuned using these frameworks and their performance have been studied on CKF.
 
 Prerequisites
 -------------
@@ -11,7 +11,7 @@ Since Optuna and Orion are independent frameworks, these need to be installed se
    $ source /cvmfs/sft.cern.ch/lcg/views/LCG_100/x86_64-centos7-gcc10-opt/setup.sh
    $ python3 -m venv PYTHON_VIRTUAL_ENV
    $ source PYTHON_VIRTUAL_ENV/bin/activate
-   $ export PYTHONPATH= 
+   $ export PYTHONPATH=
    $ python -m pip install --upgrade pip
    $ pip install -r acts/Examples/Python/tests/requirements.txt
    $ pip install pytest --upgrade
@@ -21,7 +21,7 @@ Once all the dependencies are installed, Build ACTS with python bindings and Pyt
 
 .. code-block:: console
 
-   $ cmake -DACTS_BUILD_EXAMPLES_PYTHIA8=ON -DACTS_BUILD_PLUGIN_DD4HEP=OFF -DACTS_BUILD_PLUGIN_JSON=ON -DACTS_BUILD_PLUGIN_TGEO=ON -DACTS_BUILD_EXAMPLES=ON -DACTS_BUILD_EXAMPLES_DD4HEP=OFF -DACTS_BUILD_EXAMPLES_GEANT4=ON -DACTS_BUILD_INTEGRATIONTESTS=OFF -DACTS_BUILD_UNITTESTS=OFF -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON -DACTS_BUILD_ODD=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -S . -B build/
+   $ cmake -DACTS_BUILD_EXAMPLES_PYTHIA8=ON -DACTS_BUILD_PLUGIN_DD4HEP=OFF -DACTS_BUILD_PLUGIN_JSON=ON -DACTS_BUILD_PLUGIN_TGEO=ON -DACTS_BUILD_EXAMPLES_DD4HEP=OFF -DACTS_BUILD_EXAMPLES_GEANT4=ON -DACTS_BUILD_INTEGRATIONTESTS=OFF -DACTS_BUILD_UNITTESTS=OFF -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON -DACTS_BUILD_ODD=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -S . -B build/
    $ make
    $ source build/python/setup.sh
 
@@ -31,7 +31,7 @@ Once this setup is ready, at each new login, just do:
 
    $ source /cvmfs/sft.cern.ch/lcg/views/LCG_100/x86_64-centos7-gcc10-opt/setup.sh
    $ source PYTHON_VIRTUAL_ENV/bin/activate
-   $ export PYTHONPATH= 
+   $ export PYTHONPATH=
    $ source build/python/setup.sh
 
 How auto-tuning works
@@ -40,8 +40,8 @@ A list of parameters and their range are provided to optimization framework. The
 
 Score = Efficiency - (fakeRate + DuplicateRate/k_dup + run-time/k_time)
 
-where k_dup and k_time are the weights for duplicate rate and run-time. These weights play a significant role in determining the configuration of best performing parameters from the optimization frameworks. 
- 
+where k_dup and k_time are the weights for duplicate rate and run-time. These weights play a significant role in determining the configuration of best performing parameters from the optimization frameworks.
+
 The list of track seeding parameters that are auto-tuned using these frameworks are as follows:
 * maxPtScattering: upper p_T limit for scattering angle calculations
 * impactMax: maximum value of impact parameter
@@ -59,7 +59,7 @@ Run auto-tuning using Optuna
 The Optuna auto-tuning script can be run directly by invoking:
 `` python Optuna_tuning.py``
 
-This creates a new optuna study for a given number of trials defined within the script. The direction is set to maximize which means that the framework will try to maximize the score. 
+This creates a new optuna study for a given number of trials defined within the script. The direction is set to maximize which means that the framework will try to maximize the score.
 
 .. code-block:: console
 
@@ -90,10 +90,4 @@ A dictionary called space is created by providing a list of parameters and their
 The objective function picks up a value for each parameter, run CKF and construct a score function from CKF output as in Optuna case. The only difference is that it tries to minimize the score unlike optuna. The objective function and number of trials are passed to the orion workon function
 ``experiment.workon(objective, max_trials=100)``.
 
-The best parameter configuration corresponds to the minimum score function value and can be obtained from the experiment. 
-
-
-
-
-
-
+The best parameter configuration corresponds to the minimum score function value and can be obtained from the experiment.

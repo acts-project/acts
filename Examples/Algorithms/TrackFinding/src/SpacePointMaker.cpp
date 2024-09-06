@@ -126,17 +126,10 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
 
   spOpt.paramCovAccessor = [&measurements](Acts::SourceLink slink) {
     const auto islink = slink.get<IndexSourceLink>();
-    const auto& meas = measurements[islink.index()];
+    const ConstVariableBoundMeasurementProxy meas =
+        measurements.getMeasurement(islink.index());
 
-    return std::visit(
-        [](const auto& measurement) {
-          auto expander = measurement.expander();
-          Acts::BoundVector par = expander * measurement.parameters();
-          Acts::BoundSquareMatrix cov =
-              expander * measurement.covariance() * expander.transpose();
-          return std::make_pair(par, cov);
-        },
-        meas);
+    return std::make_pair(meas.fullParameters(), meas.fullCovariance());
   };
 
   SimSpacePointContainer spacePoints;
