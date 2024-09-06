@@ -16,7 +16,6 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/EigenStepperDefaultExtension.hpp"
-#include "Acts/Propagator/EigenStepperExtensionBase.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 
 namespace Acts {
@@ -26,15 +25,10 @@ namespace Acts {
 /// ioninisation, bremsstrahlung, pair production and photonuclear interaction
 /// in the propagation and the jacobian. These effects will only occur if the
 /// propagation is in a TrackingVolume with attached material.
-struct EigenStepperDenseEnvironmentExtension
-    : public EigenStepperExtensionBase<ActsScalar,
-                                       EigenStepperDenseEnvironmentExtension> {
-  using Base = EigenStepperExtensionBase<ActsScalar,
-                                         EigenStepperDenseEnvironmentExtension>;
-
-  using Scalar = Base::Scalar;
+struct EigenStepperDenseEnvironmentExtension {
+  using Scalar = ActsScalar;
   /// @brief Vector3 replacement for the custom scalar type
-  using ThisVector3 = Base::ThisVector3;
+  using ThisVector3 = Eigen::Matrix<Scalar, 3, 1>;
 
   /// Fallback extension
   EigenStepperDefaultExtension defaultExtension;
@@ -66,7 +60,8 @@ struct EigenStepperDenseEnvironmentExtension
   /// @brief Evaluater of the k_i's of the RKN4. For the case of i = 0 this
   /// step sets up member parameters, too.
   ///
-  /// @tparam stepper_state_t Type of the state of the propagator
+  /// @tparam i Index of the k_i, i = [0, 3]
+  /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
   ///
@@ -76,22 +71,23 @@ struct EigenStepperDenseEnvironmentExtension
   /// @param [out] knew Next k_i that is evaluated
   /// @param [out] kQoP k_i elements of the momenta
   /// @param [in] bField B-Field at the evaluation position
-  /// @param [in] i Index of the k_i, i = [0, 3]
   /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
   /// @param [in] kprev Evaluated k_{i - 1}
   ///
   /// @return Boolean flag if the calculation is valid
-  template <typename propagator_state_t, typename stepper_t,
+  template <int i, typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          const navigator_t& navigator, ThisVector3& knew, const Vector3& bField,
-         std::array<Scalar, 4>& kQoP, const int i = 0, const double h = 0.,
-         const ThisVector3& kprev = ThisVector3::Zero()) {
+         std::array<Scalar, 4>& kQoP, const double h = 0.,
+         const ThisVector3& kprev = ThisVector3::Zero())
+    requires(i >= 1 && i <= 4)
+  {
     const auto* volumeMaterial =
         navigator.currentVolumeMaterial(state.navigation);
     if (volumeMaterial == nullptr) {
-      return defaultExtension.k(state, stepper, navigator, knew, bField, kQoP,
-                                i, h, kprev);
+      return defaultExtension.template k<i>(state, stepper, navigator, knew,
+                                            bField, kQoP, h, kprev);
     }
 
     double q = stepper.charge(state.stepping);
@@ -99,7 +95,7 @@ struct EigenStepperDenseEnvironmentExtension
     float mass = particleHypothesis.mass();
 
     // i = 0 is used for setup and evaluation of k
-    if (i == 0) {
+    if constexpr (i == 0) {
       // Set up for energy loss
       ThisVector3 position = stepper.position(state.stepping);
       material = volumeMaterial->material(position.template cast<double>());
