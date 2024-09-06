@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -32,7 +33,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDrift) {
   Acts::Vector3 cNormal = Acts::Vector3(1., 1., 1.).normalized();
 
   auto planeSurface =
-      Acts::Surface::makeShared<Acts::PlaneSurface>(cPosition, cNormal);
+      Acts::CurvilinearSurface(cPosition, cNormal).planeSurface();
 
   double depletion = 0.250;
 

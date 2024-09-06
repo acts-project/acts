@@ -30,6 +30,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -396,9 +397,10 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
   VoidNavigator navigator{};
 
   auto startSurface =
-      Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitX());
-  auto targetSurface = Surface::makeShared<PlaneSurface>(
-      Vector3::UnitX() * 20_mm, Vector3::UnitX());
+      CurvilinearSurface(Vector3::Zero(), Vector3::UnitX()).planeSurface();
+  auto targetSurface =
+      CurvilinearSurface(Vector3::UnitX() * 20_mm, Vector3::UnitX())
+          .planeSurface();
 
   BoundVector startPars;
   startPars << 0, 0, 0, M_PI / 2, 1 / 1_GeV, 0;
