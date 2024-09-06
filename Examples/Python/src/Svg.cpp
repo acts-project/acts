@@ -79,7 +79,8 @@ actsvg::svg::object viewDetectorVolume(const Svg::ProtoVolume& pVolume,
 
   // Helper lambda for material selection
   auto materialSel = [&](const Svg::ProtoSurface& s) -> bool {
-    return (materials && rangeContainsValue(s._decorations, "material"));
+    return (materials &&
+            s._decorations.find("material") != s._decorations.end());
   };
 
   // Helper lambda for view range selection
