@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -72,17 +72,19 @@ std::vector<const T*> unpack_shared_const_vector(
   return rawPtrs;
 }
 
-/// Converts a vector to a fixed-size array, truncating or padding as needed.
+/// @brief Converts a vector to a fixed-size array with truncating or padding.
+///
 /// This function copies elements from the input vector into a fixed-size array.
-/// If the vector contains more than `kDIM` elements, the array is truncated to fit.
-/// If the vector contains fewer elements than `kDIM`, the remaining array elements
-/// are value-initialized (default-initialized, i.e., filled with zero or default values).
+/// If the vector contains more than `kDIM` elements, the array is truncated to
+/// fit. If the vector contains fewer elements than `kDIM`, the remaining array
+/// elements are value-initialized (default-initialized, i.e., filled with zero
+/// or default values).
 ///
 /// @tparam kDIM The size of the resulting array.
 /// @tparam value_type The type of elements in the vector and the array.
 /// @param vecvals The input vector to be converted to an array.
-/// @return A `std::array<value_type, kDIM>` containing the first `kDIM` elements of the vector,
-///         or default-initialized values if the vector is smaller.
+///
+/// @return An array containing the first `kDIM` elements of the vector.
 template <std::size_t kDIM, typename value_type>
 std::array<value_type, kDIM> to_array(const std::vector<value_type>& vecvals) {
   std::array<value_type, kDIM> arr = {};
