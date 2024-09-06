@@ -843,8 +843,7 @@ class CombinatorialKalmanFilter {
                            MaterialUpdateStage::PostUpdate);
       } else if (surface->associatedDetectorElement() != nullptr ||
                  surface->surfaceMaterial() != nullptr) {
-        // No splitting on the surface without source links. Set it to one
-        // first, but could be changed later
+        // No branching on the surface without source links
         nBranchesOnSurface = 1;
 
         auto currentBranch = result.activeBranches.back();
