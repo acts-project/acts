@@ -57,6 +57,6 @@ BOOST_AUTO_TEST_CASE(test_track_building) {
 
   // Check what we have here
   for (const auto &refTrack : refTracks) {
-    BOOST_CHECK(rangeContainsValue(testTracks, refTrack));
+    BOOST_CHECK(Acts::rangeContainsValue(testTracks, refTrack));
   }
 }
