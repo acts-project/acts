@@ -36,7 +36,7 @@ struct GbtsSP {
       m_isPixel = false;
     }
     m_phi = std::atan(SP->x() / SP->y());
-    m_r = std::sqrt((SP->x())^2 + (SP->y())^2 )    
+    m_r = std::sqrt((SP->x()*SP->x())+ (SP->y()*SP->y())) ;   
   };
   bool isPixel() const { return m_isPixel; }
   bool isSCT() const { return !m_isPixel; }
