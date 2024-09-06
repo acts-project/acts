@@ -16,6 +16,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -52,8 +53,8 @@ namespace Acts::Experimental {
 namespace Gx2fConstants {
 constexpr std::string_view gx2fnUpdateColumn = "Gx2fnUpdateColumn";
 
-// Mask for the track states. We don't need Smoothed and Filtered
-constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Predicted |
+// Mask for the track states. We don't need Predicted and Filtered
+constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Smoothed |
                                               TrackStatePropMask::Jacobian |
                                               TrackStatePropMask::Calibrated;
 
@@ -343,7 +344,7 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
     extendedJacobian.block<eBoundSize, 2>(0, deltaPosition) = jacPhiTheta;
   }
 
-  const BoundVector predicted = trackState.predicted();
+  const BoundVector predicted = trackState.smoothed();
 
   const ActsVector<kMeasDim> measurement =
       trackState.template calibrated<kMeasDim>();
@@ -431,7 +432,7 @@ void addMaterialToGx2fSums(
         "No scattering angles found for material surface.");
   }
 
-  const ActsScalar sinThetaLoc = std::sin(trackState.predicted()[eBoundTheta]);
+  const ActsScalar sinThetaLoc = std::sin(trackState.smoothed()[eBoundTheta]);
 
   // The position, where we need to insert the values in aMatrix and bVector
   const std::size_t deltaPosition = eBoundSize + 2 * nMaterialsHandled;
@@ -497,9 +498,9 @@ void addMaterialToGx2fSums(
 /// @param ndfSystem The number of degrees of freedom, determining the size of meaning full block
 ///
 /// @return deltaParams The calculated delta parameters.
-void updateCovariancePredicted(BoundMatrix& fullCovariancePredicted,
-                               Eigen::MatrixXd& aMatrixExtended,
-                               const std::size_t ndfSystem);
+void updateGx2fCovarianceParams(BoundMatrix& fullCovariancePredicted,
+                                Eigen::MatrixXd& aMatrixExtended,
+                                const std::size_t ndfSystem);
 
 /// Global Chi Square fitter (GX2F) implementation.
 ///
@@ -736,8 +737,8 @@ class Gx2Fitter {
           }
 
           // Fill the track state
-          trackStateProxy.predicted() = boundParams.parameters();
-          trackStateProxy.predictedCovariance() = state.stepping.cov;
+          trackStateProxy.smoothed() = boundParams.parameters();
+          trackStateProxy.smoothedCovariance() = state.stepping.cov;
 
           trackStateProxy.jacobian() = jacobian;
           trackStateProxy.pathLength() = pathLength;
@@ -746,13 +747,13 @@ class Gx2Fitter {
             stepper.update(state.stepping,
                            transformBoundToFreeParameters(
                                trackStateProxy.referenceSurface(),
-                               state.geoContext, trackStateProxy.predicted()),
-                           trackStateProxy.predicted(),
-                           trackStateProxy.predictedCovariance(), *surface);
+                               state.geoContext, trackStateProxy.smoothed()),
+                           trackStateProxy.smoothed(),
+                           trackStateProxy.smoothedCovariance(), *surface);
           }
         }
 
-        // We have predicted parameters, so calibrate the uncalibrated input
+        // We have smoothed parameters, so calibrate the uncalibrated input
         // measurement
         extensions.calibrator(state.geoContext, *calibrationContext,
                               sourcelink_it->second, trackStateProxy);
@@ -837,8 +838,8 @@ class Gx2Fitter {
           ACTS_VERBOSE("    boundParams after the update:\n" << boundParams);
 
           // Fill the track state
-          trackStateProxy.predicted() = boundParams.parameters();
-          trackStateProxy.predictedCovariance() = state.stepping.cov;
+          trackStateProxy.smoothed() = boundParams.parameters();
+          trackStateProxy.smoothedCovariance() = state.stepping.cov;
 
           trackStateProxy.jacobian() = jacobian;
           trackStateProxy.pathLength() = pathLength;
@@ -846,9 +847,9 @@ class Gx2Fitter {
           stepper.update(state.stepping,
                          transformBoundToFreeParameters(
                              trackStateProxy.referenceSurface(),
-                             state.geoContext, trackStateProxy.predicted()),
-                         trackStateProxy.predicted(),
-                         trackStateProxy.predictedCovariance(), *surface);
+                             state.geoContext, trackStateProxy.smoothed()),
+                         trackStateProxy.smoothed(),
+                         trackStateProxy.smoothedCovariance(), *surface);
         }
 
         // Get and set the type flags
@@ -921,8 +922,8 @@ class Gx2Fitter {
           const auto& [boundParams, jacobian, pathLength] = *res;
 
           // Fill the track state
-          trackStateProxy.predicted() = boundParams.parameters();
-          trackStateProxy.predictedCovariance() = state.stepping.cov;
+          trackStateProxy.smoothed() = boundParams.parameters();
+          trackStateProxy.smoothedCovariance() = state.stepping.cov;
 
           trackStateProxy.jacobian() = jacobian;
           trackStateProxy.pathLength() = pathLength;
@@ -996,13 +997,12 @@ class Gx2Fitter {
   /// @return the output as an output track
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters,
-            typename track_container_t, template <typename> class holder_t>
-  auto fit(source_link_iterator_t it, source_link_iterator_t end,
-           const start_parameters_t& sParameters,
-           const Gx2FitterOptions<traj_t>& gx2fOptions,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const -> Result<typename TrackContainer<track_container_t, traj_t,
-                                              holder_t>::TrackProxy>
+            TrackContainerFrontend track_container_t>
+  Result<typename track_container_t::TrackProxy> fit(
+      source_link_iterator_t it, source_link_iterator_t end,
+      const start_parameters_t& sParameters,
+      const Gx2FitterOptions<traj_t>& gx2fOptions,
+      track_container_t& trackContainer) const
     requires(!isDirectNavigator)
   {
     // Preprocess Measurements (SourceLinks -> map)
@@ -1046,7 +1046,7 @@ class Gx2Fitter {
     // new track and delete it after updating the parameters. However, if we
     // would work on the externally provided track container, it would be
     // difficult to remove the correct track, if it contains more than one.
-    track_container_t trackContainerTempBackend;
+    typename track_container_t::TrackContainerBackend trackContainerTempBackend;
     traj_t trajectoryTempBackend;
     TrackContainer trackContainerTemp{trackContainerTempBackend,
                                       trajectoryTempBackend};
@@ -1334,16 +1334,16 @@ class Gx2Fitter {
         ACTS_INFO("Abort with relChi2changeCutOff after "
                   << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
                   << " iterations.");
-        updateCovariancePredicted(fullCovariancePredicted, aMatrixExtended,
-                                  ndfSystem);
+        updateGx2fCovarianceParams(fullCovariancePredicted, aMatrixExtended,
+                                   ndfSystem);
         break;
       }
 
       if (chi2sum > oldChi2sum + 1e-5) {
         ACTS_DEBUG("chi2 not converging monotonically");
 
-        updateCovariancePredicted(fullCovariancePredicted, aMatrixExtended,
-                                  ndfSystem);
+        updateGx2fCovarianceParams(fullCovariancePredicted, aMatrixExtended,
+                                   ndfSystem);
         break;
       }
 
@@ -1361,8 +1361,8 @@ class Gx2Fitter {
           return Experimental::GlobalChiSquareFitterError::DidNotConverge;
         }
 
-        updateCovariancePredicted(fullCovariancePredicted, aMatrixExtended,
-                                  ndfSystem);
+        updateGx2fCovarianceParams(fullCovariancePredicted, aMatrixExtended,
+                                   ndfSystem);
         break;
       }
 
