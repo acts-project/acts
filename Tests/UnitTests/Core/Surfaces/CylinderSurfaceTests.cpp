@@ -195,13 +195,13 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
       testContext, offSurface, direction, BoundaryTolerance::Infinite());
   Intersection3D expectedIntersect{Vector3{1, 1, 2}, 99.,
                                    Intersection3D::Status::reachable};
-  BOOST_CHECK(sfIntersection[0]);
+  BOOST_CHECK(sfIntersection[0].isValid());
   CHECK_CLOSE_ABS(sfIntersection[0].position(), expectedIntersect.position(),
                   1e-9);
   CHECK_CLOSE_ABS(sfIntersection[0].pathLength(),
                   expectedIntersect.pathLength(), 1e-9);
   // there is a second solution & and it should be valid
-  BOOST_CHECK(sfIntersection[1]);
+  BOOST_CHECK(sfIntersection[1].isValid());
   // And it's path should be further away then the primary solution
   double pn = sfIntersection[0].pathLength();
   double pa = sfIntersection[1].pathLength();
