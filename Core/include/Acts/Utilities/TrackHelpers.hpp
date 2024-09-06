@@ -17,7 +17,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFitting/MbfSmoother.hpp"
+#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -84,7 +84,7 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
       TrackExtrapolationError::CompatibleTrackStateNotFound);
 }
 
-/// @brief Smooth a track using the gain matrix smoother
+/// @brief Smooth a track using the gain matrix smoother by default
 ///
 /// @tparam track_proxy_t The track proxy type
 /// @tparam smoother_t The smoother type
@@ -96,7 +96,7 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
 ///
 /// @return The result of the smoothing
 template <TrackProxyConcept track_proxy_t,
-          typename smoother_t = MbfSmoother>
+          typename smoother_t = GainMatrixSmoother>
 Result<void> smoothTrack(
     const GeometryContext &geoContext, track_proxy_t &track,
     const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO),
