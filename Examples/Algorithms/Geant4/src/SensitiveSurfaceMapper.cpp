@@ -187,9 +187,9 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
 
   const bool isSensitive = g4SensitiveDetector != nullptr;
   const bool isMappedMaterial =
-      rangeContainsValue(m_cfg.materialMappings, volumeMaterialName);
+      Acts::rangeContainsValue(m_cfg.materialMappings, volumeMaterialName);
   const bool isMappedVolume =
-      rangeContainsValue(m_cfg.volumeMappings, volumeName);
+      Acts::rangeContainsValue(m_cfg.volumeMappings, volumeName);
 
   if (!(isSensitive || isMappedMaterial || isMappedVolume)) {
     ACTS_VERBOSE("Did not try mapping '"
