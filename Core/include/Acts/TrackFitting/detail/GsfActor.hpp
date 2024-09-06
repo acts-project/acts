@@ -23,6 +23,7 @@
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <ios>

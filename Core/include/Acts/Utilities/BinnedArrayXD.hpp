@@ -13,6 +13,7 @@
 #pragma once
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <array>
 #include <iostream>

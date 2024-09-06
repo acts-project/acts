@@ -17,6 +17,7 @@
 #include "Acts/Plugins/GeoModel/detail/GeoModelExtentHelper.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <boost/algorithm/string.hpp>

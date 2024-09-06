@@ -9,6 +9,7 @@
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 

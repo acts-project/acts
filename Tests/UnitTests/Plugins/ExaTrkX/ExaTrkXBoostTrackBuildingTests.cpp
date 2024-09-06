@@ -10,6 +10,7 @@
 
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
 

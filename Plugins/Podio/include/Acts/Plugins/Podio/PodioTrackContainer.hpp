@@ -15,6 +15,7 @@
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/Plugins/Podio/PodioDynamicColumns.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "ActsPodioEdm/Surface.h"
 
 #pragma GCC diagnostic push

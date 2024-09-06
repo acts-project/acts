@@ -8,6 +8,8 @@
 
 #include <TROOT.h>
 
+#include "Acts/Utilities/Helpers.hpp"
+
 #include "materialPlotHelper.cpp"
 
 #include <fstream>
