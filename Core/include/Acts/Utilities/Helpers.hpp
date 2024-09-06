@@ -86,7 +86,7 @@ std::vector<const T*> unpack_shared_const_vector(
 ///
 /// @return An array containing the first `kDIM` elements of the vector.
 template <std::size_t kDIM, typename value_t>
-std::array<value_t, kDIM> to_array(const std::vector<value_t>& vecvals) {
+std::array<value_t, kDIM> toArray(const std::vector<value_t>& vecvals) {
   std::array<value_t, kDIM> arr = {};
   std::copy_n(vecvals.begin(), std::min(vecvals.size(), kDIM), arr.begin());
   return arr;
