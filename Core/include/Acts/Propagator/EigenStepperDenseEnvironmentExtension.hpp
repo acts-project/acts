@@ -95,7 +95,7 @@ struct EigenStepperDenseEnvironmentExtension {
     float mass = particleHypothesis.mass();
 
     // i = 0 is used for setup and evaluation of k
-    if constexpr (i == 0) {
+    if constexpr (i == 1) {
       // Set up for energy loss
       ThisVector3 position = stepper.position(state.stepping);
       material = volumeMaterial->material(position.template cast<double>());

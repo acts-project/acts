@@ -50,7 +50,7 @@ struct EigenStepperDefaultExtension {
   {
     auto qop = stepper.qOverP(state.stepping);
     // First step does not rely on previous data
-    if constexpr (i == 0) {
+    if constexpr (i == 1) {
       knew = qop * stepper.direction(state.stepping).cross(bField);
       kQoP = {0., 0., 0., 0.};
     } else {
