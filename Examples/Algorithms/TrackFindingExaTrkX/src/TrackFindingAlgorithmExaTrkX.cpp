@@ -99,7 +99,7 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 
   auto wantClFeatures = std::any_of(
       m_cfg.nodeFeatures.begin(), m_cfg.nodeFeatures.end(),
-      [&](const auto& f) { return rangeContainsValue(clFeatures, f); });
+      [&](const auto& f) { return Acts::rangeContainsValue(clFeatures, f); });
 
   if (wantClFeatures && !m_inputClusters.isInitialized()) {
     throw std::invalid_argument("Cluster features requested, but not provided");
