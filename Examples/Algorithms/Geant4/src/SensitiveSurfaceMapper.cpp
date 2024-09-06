@@ -185,13 +185,11 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
   std::string volumeName = g4LogicalVolume->GetName();
   std::string volumeMaterialName = g4LogicalVolume->GetMaterial()->GetName();
 
-  bool isSensitive = g4SensitiveDetector != nullptr;
-  bool isMappedMaterial =
-      std::find(m_cfg.materialMappings.begin(), m_cfg.materialMappings.end(),
-                volumeMaterialName) != m_cfg.materialMappings.end();
-  bool isMappedVolume =
-      std::find(m_cfg.volumeMappings.begin(), m_cfg.volumeMappings.end(),
-                volumeName) != m_cfg.volumeMappings.end();
+  const bool isSensitive = g4SensitiveDetector != nullptr;
+  const bool isMappedMaterial =
+      rangeContainsValue(m_cfg.materialMappings, volumeMaterialName);
+  const bool isMappedVolume =
+      rangeContainsValue(m_cfg.volumeMappings, volumeName);
 
   if (!(isSensitive || isMappedMaterial || isMappedVolume)) {
     ACTS_VERBOSE("Did not try mapping '"

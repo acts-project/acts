@@ -161,10 +161,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
   // one truth track)
   for (const auto& particle : particles) {
     bool isReconstructed = false;
-    // Find if the particle has been reconstructed
-    auto it = std::find(reconParticleIds.begin(), reconParticleIds.end(),
-                        particle.particleId());
-    if (it != reconParticleIds.end()) {
+    // Check if the particle has been reconstructed
+    if (rangeContainsValue(reconParticleIds, particle.particleId())) {
       isReconstructed = true;
     }
     // Loop over all the other truth particle and find the distance to the

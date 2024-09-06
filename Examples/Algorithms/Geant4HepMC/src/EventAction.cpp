@@ -32,8 +32,7 @@ bool findAttribute(const HepMC3::ConstGenVertexPtr& vertex,
     const std::vector<std::string> vertexAttributes = vertex->attribute_names();
     for (const auto& att : vertexAttributes) {
       const std::string process = vertex->attribute_as_string(att);
-      if (std::find(processFilter.begin(), processFilter.end(), process) !=
-          processFilter.end()) {
+      if (rangeContainsValue(processFilter, process)) {
         return true;
       }
     }

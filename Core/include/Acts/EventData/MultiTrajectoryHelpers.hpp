@@ -102,8 +102,7 @@ VolumeTrajectoryStateContainer trajectoryState(
     const auto& volume = geoID.volume();
     const auto& layer = geoID.layer();
     // Check if the track info for this sub-detector is requested
-    auto it = std::find(volumeIds.begin(), volumeIds.end(), volume);
-    if (it == volumeIds.end()) {
+    if (!rangeContainsValue(volumeIds, volume)) {
       return true;
     }
     // The trajectory state for this volume

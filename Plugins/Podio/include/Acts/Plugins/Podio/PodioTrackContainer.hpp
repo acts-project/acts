@@ -339,8 +339,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     std::string tracksKey = "tracks" + s;
 
     std::vector<std::string> available = frame.getAvailableCollections();
-    if (std::find(available.begin(), available.end(), tracksKey) ==
-        available.end()) {
+    if (!rangeContainsValue(available, tracksKey)) {
       throw std::runtime_error{"Track collection '" + tracksKey +
                                "' not found in frame"};
     }

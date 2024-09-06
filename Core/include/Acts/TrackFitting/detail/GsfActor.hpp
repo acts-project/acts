@@ -195,9 +195,7 @@ struct GsfActor {
 
     // Early return if we already were on this surface TODO why is this
     // necessary
-    const bool visited =
-        std::find(result.visitedSurfaces.begin(), result.visitedSurfaces.end(),
-                  &surface) != result.visitedSurfaces.end();
+    const bool visited = rangeContainsValue(result.visitedSurfaces, &surface);
 
     if (visited) {
       ACTS_VERBOSE("Already visited surface, return");

@@ -71,19 +71,14 @@ actsvg::svg::object viewDetectorVolume(const Svg::ProtoVolume& pVolume,
   auto [view, selection, viewRange] = viewAndRange;
 
   // Translate selection into booleans
-  bool all =
-      std::find(selection.begin(), selection.end(), "all") != selection.end();
-  bool sensitives = std::find(selection.begin(), selection.end(),
-                              "sensitives") != selection.end();
-  bool portals = std::find(selection.begin(), selection.end(), "portals") !=
-                 selection.end();
-  bool materials = std::find(selection.begin(), selection.end(), "materials") !=
-                   selection.end();
+  const bool all = rangeContainsValue(selection, "all");
+  const bool sensitives = rangeContainsValue(selection, "sensitives");
+  const bool portals = rangeContainsValue(selection, "portals");
+  const bool materials = rangeContainsValue(selection, "materials");
 
   // Helper lambda for material selection
   auto materialSel = [&](const Svg::ProtoSurface& s) -> bool {
-    return (materials &&
-            s._decorations.find("material") != s._decorations.end());
+    return (materials && rangeContainsValue(s._decorations, "material"));
   };
 
   // Helper lambda for view range selection
@@ -138,8 +133,7 @@ actsvg::svg::object viewDetectorVolume(const Svg::ProtoVolume& pVolume,
       gpIDs = pgID->second._id;
     }
 
-    if (std::find(portalCache.begin(), portalCache.end(), gpIDs) !=
-        portalCache.end()) {
+    if (rangeContainsValue(portalCache, gpIDs)) {
       continue;
     }
 

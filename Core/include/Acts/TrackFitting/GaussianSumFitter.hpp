@@ -432,8 +432,8 @@ struct GaussianSumFitter {
 
     for (auto state : fwdGsfResult.fittedStates->reverseTrackStateRange(
              fwdGsfResult.currentTip)) {
-      const bool found = std::find(foundBwd.begin(), foundBwd.end(),
-                                   &state.referenceSurface()) != foundBwd.end();
+      const bool found =
+          rangeContainsValue(foundBwd, &state.referenceSurface());
       if (!found && state.typeFlags().test(MeasurementFlag)) {
         state.typeFlags().set(OutlierFlag);
         state.typeFlags().reset(MeasurementFlag);

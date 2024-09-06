@@ -242,9 +242,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
       // the binning value that are not constrained by the internal surfaces
       for (const auto& bv : allBinningValues()) {
         if (support.volumeExtent.constrains(bv) &&
-            std::find(support.internalConstraints.begin(),
-                      support.internalConstraints.end(),
-                      bv) == support.internalConstraints.end()) {
+            !rangeContainsValue(support.internalConstraints, bv)) {
           ACTS_VERBOSE("  Support surface is constrained by volume extent in "
                        << binningValueName(bv));
           supportExtent.set(bv, support.volumeExtent.min(bv),

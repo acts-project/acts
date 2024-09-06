@@ -193,7 +193,7 @@ struct IndexedGridFiller {
     // Loop over the surfaces to be filled
     for (auto [io, o] : enumerate(iObjects)) {
       // Exclude indices that should be handled differently
-      if (!rangeContainsValue(aToAll, io)) {
+      if (rangeContainsValue(aToAll, io)) {
         continue;
       }
       // Get the reference positions

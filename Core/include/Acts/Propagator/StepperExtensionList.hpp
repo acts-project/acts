@@ -78,8 +78,7 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
 
     validExtensions = state.stepping.auctioneer(std::move(bids));
 
-    return (std::find(validExtensions.begin(), validExtensions.end(), true) !=
-            validExtensions.end());
+    return rangeContainsValue(validExtensions, true);
   }
 
   /// @brief This functions broadcasts the call for evaluating a generic k. It

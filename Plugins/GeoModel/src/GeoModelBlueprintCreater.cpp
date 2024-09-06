@@ -147,8 +147,7 @@ Acts::GeoModelBlueprintCreater::createNode(
       detail::GeoModelExentHelper::readBinningConstraints(entry.binnings);
   // Concatenate the binning constraints
   for (const auto& bc : binningConstraints) {
-    if (std::find(internalConstraints.begin(), internalConstraints.end(), bc) ==
-        internalConstraints.end()) {
+    if (!rangeContainsValue(internalConstraints, bc)) {
       internalConstraints.push_back(bc);
     }
   }
