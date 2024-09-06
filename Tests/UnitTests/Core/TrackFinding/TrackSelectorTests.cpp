@@ -15,6 +15,7 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
@@ -60,7 +61,7 @@ struct MockTrack {
   struct MockTrackState {
     const Surface& referenceSurface() const {
       static const auto srf =
-          Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitZ());
+          CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface();
       return *srf;
     }
 
@@ -613,7 +614,7 @@ BOOST_AUTO_TEST_CASE(TestConstructor) {
 BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
   auto makeSurface = [](GeometryIdentifier id) {
     auto srf =
-        Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitZ());
+        CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface();
 
     srf->assignGeometryId(id);
     return srf;
