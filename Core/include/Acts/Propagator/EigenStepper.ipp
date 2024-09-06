@@ -78,7 +78,7 @@ bool Acts::EigenStepper<E>::prepareCurvilinearState(
     auto fieldRes = getField(prop_state.stepping, pos);
     if (fieldRes.ok()) {
       sd.B_first = *fieldRes;
-      if (prop_state.stepping.extension.template k<1>(
+      if (prop_state.stepping.extension.template k<0>(
               prop_state, *this, navigator, sd.k1, sd.B_first, sd.kQoP)) {
         // dr/ds :
         prop_state.stepping.derivative.template head<3>() =
@@ -165,7 +165,7 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
     return fieldRes.error();
   }
   sd.B_first = *fieldRes;
-  if (!state.stepping.extension.template k<1>(state, *this, navigator, sd.k1,
+  if (!state.stepping.extension.template k<0>(state, *this, navigator, sd.k1,
                                               sd.B_first, sd.kQoP)) {
     return 0.;
   }
@@ -224,14 +224,14 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
     }
     sd.B_middle = *field;
 
-    if (!state.stepping.extension.template k<2>(state, *this, navigator, sd.k2,
+    if (!state.stepping.extension.template k<1>(state, *this, navigator, sd.k2,
                                                 sd.B_middle, sd.kQoP, half_h,
                                                 sd.k1)) {
       return success(false);
     }
 
     // Third Runge-Kutta point
-    if (!state.stepping.extension.template k<3>(state, *this, navigator, sd.k3,
+    if (!state.stepping.extension.template k<2>(state, *this, navigator, sd.k3,
                                                 sd.B_middle, sd.kQoP, half_h,
                                                 sd.k2)) {
       return success(false);
@@ -244,7 +244,7 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
       return failure(field.error());
     }
     sd.B_last = *field;
-    if (!state.stepping.extension.template k<4>(state, *this, navigator, sd.k4,
+    if (!state.stepping.extension.template k<3>(state, *this, navigator, sd.k4,
                                                 sd.B_last, sd.kQoP, h, sd.k3)) {
       return success(false);
     }

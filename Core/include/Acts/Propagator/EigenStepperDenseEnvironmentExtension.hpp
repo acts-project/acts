@@ -81,7 +81,7 @@ struct EigenStepperDenseEnvironmentExtension {
          const navigator_t& navigator, ThisVector3& knew, const Vector3& bField,
          std::array<Scalar, 4>& kQoP, const double h = 0.,
          const ThisVector3& kprev = ThisVector3::Zero())
-    requires(i >= 1 && i <= 4)
+    requires(i >= 0 && i <= 3)
   {
     const auto* volumeMaterial =
         navigator.currentVolumeMaterial(state.navigation);
@@ -95,7 +95,7 @@ struct EigenStepperDenseEnvironmentExtension {
     float mass = particleHypothesis.mass();
 
     // i = 0 is used for setup and evaluation of k
-    if constexpr (i == 1) {
+    if constexpr (i == 0) {
       // Set up for energy loss
       ThisVector3 position = stepper.position(state.stepping);
       material = volumeMaterial->material(position.template cast<double>());

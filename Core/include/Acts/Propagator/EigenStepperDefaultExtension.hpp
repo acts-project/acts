@@ -46,11 +46,11 @@ struct EigenStepperDefaultExtension {
          const navigator_t& /*navigator*/, ThisVector3& knew,
          const Vector3& bField, std::array<Scalar, 4>& kQoP,
          const double h = 0., const ThisVector3& kprev = ThisVector3::Zero())
-    requires(i >= 1 && i <= 4)
+    requires(i >= 0 && i <= 3)
   {
     auto qop = stepper.qOverP(state.stepping);
     // First step does not rely on previous data
-    if constexpr (i == 1) {
+    if constexpr (i == 0) {
       knew = qop * stepper.direction(state.stepping).cross(bField);
       kQoP = {0., 0., 0., 0.};
     } else {
