@@ -127,7 +127,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Compute shared hit information
     bool computeSharedHits = false;
     /// Whether to trim the tracks
-    bool trimTracks = false;
+    bool trimTracks = true;
 
     // Pixel and strip volume ids to be used for maxPixel/StripHoles cuts
     std::set<Acts::GeometryIdentifier::Value> pixelVolumes;
