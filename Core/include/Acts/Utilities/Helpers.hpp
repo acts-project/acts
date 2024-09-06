@@ -81,13 +81,13 @@ std::vector<const T*> unpack_shared_const_vector(
 /// or default values).
 ///
 /// @tparam kDIM The size of the resulting array.
-/// @tparam value_type The type of elements in the vector and the array.
+/// @tparam value_t The type of elements in the vector and the array.
 /// @param vecvals The input vector to be converted to an array.
 ///
 /// @return An array containing the first `kDIM` elements of the vector.
-template <std::size_t kDIM, typename value_type>
-std::array<value_type, kDIM> to_array(const std::vector<value_type>& vecvals) {
-  std::array<value_type, kDIM> arr = {};
+template <std::size_t kDIM, typename value_t>
+std::array<value_t, kDIM> to_array(const std::vector<value_t>& vecvals) {
+  std::array<value_t, kDIM> arr = {};
   std::copy_n(vecvals.begin(), std::min(vecvals.size(), kDIM), arr.begin());
   return arr;
 }
