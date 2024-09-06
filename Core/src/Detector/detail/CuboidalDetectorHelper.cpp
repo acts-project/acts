@@ -190,7 +190,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
 
     for (auto [is, index] : enumerate(portalSets[toUnderlying(mergeValue)])) {
       // Check if you need to skip due to selections
-      if (!selectedOnly.empty() && rangeContainsValue(selectedOnly, index)) {
+      if (!selectedOnly.empty() && !rangeContainsValue(selectedOnly, index)) {
         continue;
       }
 

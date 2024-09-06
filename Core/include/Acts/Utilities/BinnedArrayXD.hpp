@@ -74,7 +74,7 @@ class BinnedArrayXD : public BinnedArray<T> {
         /// fill the data
         m_objectGrid[bins[2]][bins[1]][bins[0]] = tap.first;
         /// fill the unique m_arrayObjects
-        if (rangeContainsValue(m_arrayObjects, tap.first)) {
+        if (!rangeContainsValue(m_arrayObjects, tap.first)) {
           m_arrayObjects.push_back(tap.first);
         }
       }
@@ -102,7 +102,7 @@ class BinnedArrayXD : public BinnedArray<T> {
         for (auto& o0 : o1) {
           if (o0) {
             /// fill the unique m_arrayObjects
-            if (rangeContainsValue(m_arrayObjects, o0)) {
+            if (!rangeContainsValue(m_arrayObjects, o0)) {
               m_arrayObjects.push_back(o0);
             }
           }

@@ -67,7 +67,7 @@ struct MaterialSurfaceSelector {
   /// @param surface is the test surface
   void operator()(const Acts::Surface* surface) {
     if (surface->surfaceMaterial() != nullptr) {
-      if (rangeContainsValue(surfaces, surface)) {
+      if (!rangeContainsValue(surfaces, surface)) {
         surfaces.push_back(surface);
       }
     }
