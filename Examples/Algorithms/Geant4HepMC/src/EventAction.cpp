@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "EventAction.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <stdexcept>
 
@@ -32,7 +33,7 @@ bool findAttribute(const HepMC3::ConstGenVertexPtr& vertex,
     const std::vector<std::string> vertexAttributes = vertex->attribute_names();
     for (const auto& att : vertexAttributes) {
       const std::string process = vertex->attribute_as_string(att);
-      if (rangeContainsValue(processFilter, process)) {
+      if (Acts::rangeContainsValue(processFilter, process)) {
         return true;
       }
     }
