@@ -171,7 +171,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                 continue;
               }
 
-              float r1 = n1->m_spGbts.SP->r();
+              float r1 = n1->m_spGbts.r();
               float x1 = n1->m_spGbts.SP->x();
               float y1 = n1->m_spGbts.SP->y();
               float z1 = n1->m_spGbts.SP->z();
@@ -204,7 +204,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                   continue;
                 }
 
-                float r2 = n2->m_spGbts.SP->r();
+                float r2 = n2->m_spGbts.r();
 
                 float dr = r2 - r1;
 
@@ -551,7 +551,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
     for (unsigned int idx_m = 1; idx_m < vSP.size() - 1; idx_m++) {
       const GbtsSP<external_spacepoint_t>& spM = *vSP.at(idx_m);
-      const double pS_r = spM.SP->r();
+      const double pS_r = spM.r();
       const double pS_x = spM.SP->x();
       const double pS_y = spM.SP->y();
       const double cosA = pS_x / pS_r;

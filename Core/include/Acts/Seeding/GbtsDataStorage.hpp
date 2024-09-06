@@ -36,12 +36,15 @@ struct GbtsSP {
       m_isPixel = false;
     }
     m_phi = std::atan(SP->x() / SP->y());
+    m_r = std::sqrt((SP->x())^2 + (SP->y())^2 )    
   };
   bool isPixel() const { return m_isPixel; }
   bool isSCT() const { return !m_isPixel; }
   float phi() const { return m_phi; }
+  float r() const {return m_r;}
   bool m_isPixel;
   float m_phi;
+  float m_r; 
 };
 
 template <typename space_point_t>
