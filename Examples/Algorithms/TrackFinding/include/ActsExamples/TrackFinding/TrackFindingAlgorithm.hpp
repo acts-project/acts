@@ -67,12 +67,6 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   class TrackFinderFunction {
    public:
     virtual ~TrackFinderFunction() = default;
-    virtual TrackFinderResult operator()(
-        const TrackParameters& initialParameters,
-        const TrackFinderOptions& options, TrackContainer& tracks) const {
-      auto rootBranch = tracks.makeTrack();
-      return (*this)(initialParameters, options, tracks, rootBranch);
-    }
     virtual TrackFinderResult operator()(const TrackParameters&,
                                          const TrackFinderOptions&,
                                          TrackContainer&, TrackProxy) const = 0;

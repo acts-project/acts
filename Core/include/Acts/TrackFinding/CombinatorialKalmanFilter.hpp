@@ -1235,7 +1235,7 @@ class CombinatorialKalmanFilter {
   /// @param initialParameters The initial track parameters
   /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
   ///                  finding
-  /// @param trackContainer Input track container to use
+  /// @param trackContainer Track container in which to store the results
   /// @param rootBranch The track to be used as the root branch
   ///
   /// @note The input measurements are given in the form of @c SourceLinks.
@@ -1361,7 +1361,7 @@ class CombinatorialKalmanFilter {
   /// @param initialParameters The initial track parameters
   /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
   ///                  finding
-  /// @param trackContainer Input track container to use
+  /// @param trackContainer Track container in which to store the results
   /// @note The input measurements are given in the form of @c SourceLinks.
   ///       It's @c calibrator_t's job to turn them into calibrated measurements
   ///       used in the track finding.
