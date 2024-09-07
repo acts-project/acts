@@ -136,10 +136,11 @@ void ModuleClusters::merge() {
 
 // ATTN: returns vector of index into `indices'
 std::vector<std::size_t> ModuleClusters::nonGeoEntries(
-    const std::vector<Acts::BoundIndices>& indices) {
+    std::vector<Acts::BoundIndices>& indices) {
   std::vector<std::size_t> retv;
   for (std::size_t i = 0; i < indices.size(); i++) {
-    if (!rangeContainsValue(m_geoIndices, indices.at(i))) {
+    auto idx = indices.at(i);
+    if (!rangeContainsValue(m_geoIndices, idx)) {
       retv.push_back(i);
     }
   }
@@ -222,14 +223,14 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
   return retv;
 }
 
-ModuleValue ModuleClusters::squash(const std::vector<ModuleValue>& values) {
+ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
   ModuleValue mval;
   Acts::ActsScalar tot = 0;
   Acts::ActsScalar tot2 = 0;
   std::vector<Acts::ActsScalar> weights;
 
   // First, start by computing cell weights
-  for (const ModuleValue& other : values) {
+  for (ModuleValue& other : values) {
     if (std::holds_alternative<Cluster::Cell>(other.value)) {
       weights.push_back(std::get<Cluster::Cell>(other.value).activation);
     } else {
@@ -241,7 +242,7 @@ ModuleValue ModuleClusters::squash(const std::vector<ModuleValue>& values) {
 
   // Now, go over the non-geometric indices
   for (std::size_t i = 0; i < values.size(); i++) {
-    const ModuleValue& other = values.at(i);
+    ModuleValue& other = values.at(i);
     for (std::size_t j = 0; j < other.paramIndices.size(); j++) {
       auto idx = other.paramIndices.at(j);
       if (!rangeContainsValue(m_geoIndices, idx)) {
@@ -274,7 +275,7 @@ ModuleValue ModuleClusters::squash(const std::vector<ModuleValue>& values) {
   std::size_t b1max = 0;
 
   for (std::size_t i = 0; i < values.size(); i++) {
-    const ModuleValue& other = values.at(i);
+    ModuleValue& other = values.at(i);
     if (!std::holds_alternative<Cluster::Cell>(other.value)) {
       continue;
     }
@@ -324,7 +325,7 @@ ModuleValue ModuleClusters::squash(const std::vector<ModuleValue>& values) {
   mval.value = std::move(clus);
 
   // Finally do the hit association
-  for (const ModuleValue& other : values) {
+  for (ModuleValue& other : values) {
     mval.sources.merge(other.sources);
   }
 
