@@ -229,7 +229,7 @@ ModuleValue ModuleClusters::squash(const std::vector<ModuleValue>& values) {
   std::vector<Acts::ActsScalar> weights;
 
   // First, start by computing cell weights
-  for (ModuleValue& other : values) {
+  for (const ModuleValue& other : values) {
     if (std::holds_alternative<Cluster::Cell>(other.value)) {
       weights.push_back(std::get<Cluster::Cell>(other.value).activation);
     } else {
