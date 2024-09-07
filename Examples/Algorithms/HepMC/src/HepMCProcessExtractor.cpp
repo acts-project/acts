@@ -168,10 +168,11 @@ void filterAndSort(
 
   // Sort the particles based on their momentum
   for (auto& interaction : interactions) {
-    std::ranges::sort(interaction.after, [](ActsExamples::SimParticle& a,
-                                            ActsExamples::SimParticle& b) {
-      return a.absoluteMomentum() > b.absoluteMomentum();
-    });
+    std::ranges::sort(interaction.after,
+                      [](const ActsExamples::SimParticle& a,
+                         const ActsExamples::SimParticle& b) {
+                        return a.absoluteMomentum() > b.absoluteMomentum();
+                      });
   }
 }
 }  // namespace
