@@ -63,9 +63,9 @@ class ModuleClusters {
 
   std::vector<ModuleValue> createCellCollection();
   void merge();
-  ModuleValue squash(std::vector<ModuleValue>& values);
+  ModuleValue squash(const std::vector<ModuleValue>& values);
   std::vector<std::size_t> nonGeoEntries(
-      std::vector<Acts::BoundIndices>& indices);
+      const std::vector<Acts::BoundIndices>& indices);
   std::vector<std::vector<ModuleValue>> mergeParameters(
       std::vector<ModuleValue> values);
 };
