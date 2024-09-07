@@ -136,11 +136,10 @@ void ModuleClusters::merge() {
 
 // ATTN: returns vector of index into `indices'
 std::vector<std::size_t> ModuleClusters::nonGeoEntries(
-    std::vector<Acts::BoundIndices>& indices) {
+    const std::vector<Acts::BoundIndices>& indices) {
   std::vector<std::size_t> retv;
   for (std::size_t i = 0; i < indices.size(); i++) {
-    auto idx = indices.at(i);
-    if (!rangeContainsValue(m_geoIndices, idx)) {
+    if (!rangeContainsValue(m_geoIndices, indices.at(i))) {
       retv.push_back(i);
     }
   }
@@ -223,7 +222,7 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
   return retv;
 }
 
-ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
+ModuleValue ModuleClusters::squash(const std::vector<ModuleValue>& values) {
   ModuleValue mval;
   Acts::ActsScalar tot = 0;
   Acts::ActsScalar tot2 = 0;

@@ -69,7 +69,7 @@ actsvg::svg::object viewDetectorVolume(const Svg::ProtoVolume& pVolume,
   svgDet._id = identification;
   svgDet._tag = "g";
 
-  auto [view, selection, viewRange] = viewAndRange;
+  const auto& [view, selection, viewRange] = viewAndRange;
 
   // Translate selection into booleans
   const bool all = rangeContainsValue(selection, "all");
