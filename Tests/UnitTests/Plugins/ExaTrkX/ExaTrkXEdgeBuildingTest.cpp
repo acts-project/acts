@@ -84,8 +84,8 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
     edges_test_cantor.push_back(a < b ? CantorPair(a, b) : CantorPair(b, a));
   }
 
-  std::ranges::sort(edges_ref_cantor);
-  std::ranges::sort(edges_test_cantor);
+  std::ranges::sort(edges_ref_cantor, std::less<CantorPair>{});
+  std::ranges::sort(edges_test_cantor, std::less<CantorPair>{});
 
 #if PRINT
   std::cout << "test size " << edges_test_cantor.size() << std::endl;
