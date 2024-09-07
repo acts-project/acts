@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
 
@@ -116,8 +117,8 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   };
 
   // Assume that the components are on a generic plane surface
-  auto surface = Acts::Surface::makeShared<PlaneSurface>(Vector3{0, 0, 0},
-                                                         Vector3{1, 0, 0});
+  auto surface = Acts::CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0})
+                     .planeSurface();
   const std::size_t NComps = 4;
   std::vector<GsfComponent> cmps;
 
@@ -165,8 +166,8 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
 }
 
 BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
-  auto dummy = Acts::Surface::makeShared<PlaneSurface>(Vector3{0, 0, 0},
-                                                       Vector3{1, 0, 0});
+  auto dummy = Acts::CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0})
+                   .planeSurface();
   std::vector<GsfComponent> cmps;
 
   // weights do not need to be normalized for this test
