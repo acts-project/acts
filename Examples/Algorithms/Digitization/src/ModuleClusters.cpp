@@ -241,7 +241,7 @@ ModuleValue ModuleClusters::squash(const std::vector<ModuleValue>& values) {
 
   // Now, go over the non-geometric indices
   for (std::size_t i = 0; i < values.size(); i++) {
-    ModuleValue& other = values.at(i);
+    const ModuleValue& other = values.at(i);
     for (std::size_t j = 0; j < other.paramIndices.size(); j++) {
       auto idx = other.paramIndices.at(j);
       if (!rangeContainsValue(m_geoIndices, idx)) {
@@ -274,7 +274,7 @@ ModuleValue ModuleClusters::squash(const std::vector<ModuleValue>& values) {
   std::size_t b1max = 0;
 
   for (std::size_t i = 0; i < values.size(); i++) {
-    ModuleValue& other = values.at(i);
+    const ModuleValue& other = values.at(i);
     if (!std::holds_alternative<Cluster::Cell>(other.value)) {
       continue;
     }
@@ -324,7 +324,7 @@ ModuleValue ModuleClusters::squash(const std::vector<ModuleValue>& values) {
   mval.value = std::move(clus);
 
   // Finally do the hit association
-  for (ModuleValue& other : values) {
+  for (const ModuleValue& other : values) {
     mval.sources.merge(other.sources);
   }
 
