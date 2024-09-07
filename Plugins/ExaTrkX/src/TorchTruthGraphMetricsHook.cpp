@@ -26,7 +26,8 @@ auto cantorize(std::vector<std::int64_t> edgeIndex,
     cantorEdgeIndex.emplace_back(*it, *std::next(it));
   }
 
-  std::ranges::sort(cantorEdgeIndex, std::less<CantorEdge<std::int64_t>>{});
+  std::ranges::sort(cantorEdgeIndex,
+                    std::less<Acts::detail::CantorEdge<std::int64_t>>{});
 
   auto new_end = std::unique(cantorEdgeIndex.begin(), cantorEdgeIndex.end());
   if (new_end != cantorEdgeIndex.end()) {
