@@ -22,6 +22,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
@@ -340,7 +341,7 @@ struct FitterTester {
     Acts::Vector3 center(3._m, 0., 0.);
     Acts::Vector3 normal(1., 0., 0.);
     auto targetSurface =
-        Acts::Surface::makeShared<Acts::PlaneSurface>(center, normal);
+        Acts::CurvilinearSurface(center, normal).planeSurface();
 
     options.referenceSurface = targetSurface.get();
 
@@ -561,7 +562,7 @@ struct FitterTester {
     Acts::Vector3 center(-3._m, 0., 0.);
     Acts::Vector3 normal(1., 0., 0.);
     auto targetSurface =
-        Acts::Surface::makeShared<Acts::PlaneSurface>(center, normal);
+        Acts::CurvilinearSurface(center, normal).planeSurface();
 
     options.referenceSurface = targetSurface.get();
 
