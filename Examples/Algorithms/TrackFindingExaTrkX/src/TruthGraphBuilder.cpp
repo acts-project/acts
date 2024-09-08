@@ -85,7 +85,7 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
 
     // Sort by radius (this breaks down if the particle has to low momentum)
     std::ranges::sort(track, {},
-                      [](const auto& t) { return radiusForOrdering(t); });
+                      [&](const auto& t) { return radiusForOrdering(t); });
 
     if (m_cfg.uniqueModules) {
       auto newEnd = std::unique(

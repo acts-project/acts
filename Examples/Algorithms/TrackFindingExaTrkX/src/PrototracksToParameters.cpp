@@ -98,7 +98,7 @@ ProcessCode PrototracksToParameters::execute(
     // case, we want to keep the whole prototrack. Therefore, we operate on a
     // tmpTrack.
     std::ranges::sort(track, {}, [&](const auto &t) {
-      return std::tie(indexToGeoId[t].volume(), indexToGeoId[t].layer());
+      return std::make_tuple(indexToGeoId[t].volume(), indexToGeoId[t].layer());
     });
 
     tmpTrack.clear();

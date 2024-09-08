@@ -264,10 +264,9 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
     }
   }
   // sort the candidate cells descending in content
-  std::ranges::sort(
-      candidates, [&yieldMap](std::size_t bin1, std::size_t bin2) {
-        return std::tie(yieldMap[bin1], bin1) > std::tie(yieldMap[bin2], bin2);
-      });
+  std::ranges::sort(candidates, {}, [&yieldMap](std::size_t c) {
+    return std::make_tuple(yieldMap[c], c);
+  });
 
   // now we build islands from the candidate cells, starting with the most
   // populated one
