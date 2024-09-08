@@ -474,8 +474,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     const Acts::BoundTrackParameters& firstInitialParameters =
         initialParameters.at(iSeed);
 
-    auto firstResult =
-        (*m_cfg.findTracks)(firstInitialParameters, firstOptions, tracksTemp);
+    auto firstRootBranch = tracksTemp.makeTrack();
+    auto firstResult = (*m_cfg.findTracks)(firstInitialParameters, firstOptions,
+                                           tracksTemp, firstRootBranch);
     nSeed++;
 
     if (!firstResult.ok()) {
@@ -533,8 +534,11 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
           Acts::BoundTrackParameters secondInitialParameters =
               trackCandidate.createParametersFromState(firstMeasurement);
 
-          auto secondResult = (*m_cfg.findTracks)(secondInitialParameters,
-                                                  secondOptions, tracksTemp);
+          auto secondRootBranch = tracksTemp.makeTrack();
+          secondRootBranch.copyFrom(trackCandidate, false);
+          auto secondResult =
+              (*m_cfg.findTracks)(secondInitialParameters, secondOptions,
+                                  tracksTemp, secondRootBranch);
 
           if (!secondResult.ok()) {
             ACTS_WARNING("Second track finding failed for seed "
