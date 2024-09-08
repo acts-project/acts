@@ -123,7 +123,7 @@ const auto dataset =
 // helper functions for tests
 template <typename Container>
 void sortByParticleId(Container& container) {
-  std::ranges::sort(container, {},
+  std::ranges::sort(container, std::less{},
                     [](const auto& c) { return c.particleId(); });
 }
 template <typename Container>
