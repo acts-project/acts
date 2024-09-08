@@ -264,7 +264,7 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
     }
   }
   // sort the candidate cells descending in content
-  std::ranges::sort(candidates, std::greater{}, [&yieldMap](const auto c) {
+  std::ranges::sort(candidates, std::greater{}, [&yieldMap](std::size_t c) {
     return std::tie(yieldMap[c], c);
   });
 
