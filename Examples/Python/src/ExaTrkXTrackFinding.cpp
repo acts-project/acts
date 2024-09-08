@@ -216,7 +216,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(zScale);
     ACTS_PYTHON_MEMBER(useGpu);
     ACTS_PYTHON_MEMBER(gpuDevice);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_MEMBER(gpuBlocks);
+	  ACTS_PYTHON_STRUCT_END();
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(

@@ -41,7 +41,7 @@ class GraphCreatorWrapperCpu : public GraphCreatorWrapperBase {
 #ifndef ACTS_EXATRKX_CPUONLY
 class GraphCreatorWrapperCuda : public GraphCreatorWrapperBase {
  public:
-  GraphCreatorWrapperCuda(const std::string &path, int device);
+  GraphCreatorWrapperCuda(const std::string &path, int device, int blocks);
   ~GraphCreatorWrapperCuda();
 
   virtual graph<float> build(TTree_hits<float> &hits) override;

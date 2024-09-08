@@ -32,6 +32,7 @@ class ModuleMapCpp : public GraphConstructionBase {
 
     bool useGpu = false;
     int gpuDevice = 0;
+		int gpuBlocks = 512;
   };
 
  private:

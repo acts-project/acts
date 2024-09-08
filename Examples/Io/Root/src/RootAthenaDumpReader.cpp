@@ -455,7 +455,7 @@ RootAthenaDumpReader::readMeasurements(
 		++idx;
 	}
 
-	if (measurements.size() < nCL) {
+	if (measurements.size() < static_cast<std::size_t>(nCL)) {
 	  ACTS_WARNING("Could not convert " << nCL - measurements.size() << " / " << nCL << " measurements");
   }
 
@@ -528,7 +528,12 @@ RootAthenaDumpReader::readSpacepoints(const std::unordered_map<int, std::size_t>
 			continue;
 	  }
 
-    IndexSourceLink first(*cl1GeoId, imIdxMap.at(cl1Index));
+		if( !imIdxMap.contains(cl1Index) ) {
+		  ACTS_WARNING("Measurement 1 for spacepoint " << isp << " not created");
+			continue;
+	  }
+
+		IndexSourceLink first(*cl1GeoId, imIdxMap.at(cl1Index));
     sLinks.emplace_back(first);
 
     if (type == eStrip) {
@@ -540,7 +545,13 @@ RootAthenaDumpReader::readSpacepoints(const std::unordered_map<int, std::size_t>
       	ACTS_WARNING("Could not find geoId for spacepoint cluster 2");
       	continue;
     	} 
-      IndexSourceLink second(*cl2GeoId, imIdxMap.at(cl2Index));
+    
+			if( !imIdxMap.contains(cl2Index) ) {
+		  	ACTS_WARNING("Measurement 2 for spacepoint " << isp << " not created");
+				continue;
+	  	}
+
+		  IndexSourceLink second(*cl2GeoId, imIdxMap.at(cl2Index));
       sLinks.emplace_back(second);
     }
 
@@ -558,7 +569,11 @@ RootAthenaDumpReader::readSpacepoints(const std::unordered_map<int, std::size_t>
     ACTS_DEBUG("Skipped " << skippedSpacePoints
                           << " because of eta/phi overlaps");
   }
-  ACTS_DEBUG("Created " << spacePoints.size() << " overall space points");
+  if( spacePoints.size() < static_cast<std::size_t>(nSP) ) {
+	  ACTS_WARNING("Could not convert " << nSP - spacePoints.size() << " of " << nSP << " spacepoints");
+	}
+
+	ACTS_DEBUG("Created " << spacePoints.size() << " overall space points");
   ACTS_DEBUG("Created " << pixelSpacePoints.size() << " "
                         << " pixel space points");
 

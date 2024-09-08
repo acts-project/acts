@@ -30,7 +30,7 @@ ModuleMapCpp::ModuleMapCpp(const Config &cfg,
   } else {
 #ifndef ACTS_EXATRKX_CPUONLY
     m_graphCreator = std::make_unique<detail::GraphCreatorWrapperCuda>(
-        m_cfg.moduleMapPath, m_cfg.gpuDevice);
+        m_cfg.moduleMapPath, m_cfg.gpuDevice, m_cfg.gpuBlocks);
 #else
     throw std::runtime_error(
         "Cannot use cuda version of GraphModuleMap (CUDA is not enabled in "

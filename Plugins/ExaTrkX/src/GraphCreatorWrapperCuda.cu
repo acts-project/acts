@@ -15,10 +15,9 @@
 namespace Acts::detail {
 
 GraphCreatorWrapperCuda::GraphCreatorWrapperCuda(const std::string &path,
-                                                 int device) {
-  int cudaBlocks = 512;
+                                                 int device, int blocks) {
   m_graphCreator = std::make_unique<CUDA_graph_creator<float>>(
-      cudaBlocks, device, path, 10,
+      blocks, device, path, 10,
       std::pair<float, float>{0.f, std::numeric_limits<float>::max()});
 }
 
