@@ -108,11 +108,9 @@ class MultiLayerNavigation : public IInternalNavigation {
                          std::vector<const Acts::Surface*>& surfaces) const {
     // sorting the surfaces according to their radial distance
     std::ranges::sort(surfaces, {}, [&gctx](const auto& s) {
-      // copy to prevent problem with uninitialised variables
-      auto centerX = s->center(gctx).x();
-      auto centerY = s->center(gctx).y();
-      auto centerZ = s->center(gctx).z();
-      return std::tie(centerX, centerY, centerZ);
+      assert(surface != nullptr && "Uninitialized surface");
+      const auto& center = s->center(gctx);
+      return std::tie(center.x(), center.y(), center.z());
     });
 
     // Remove the duplicates
