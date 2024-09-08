@@ -41,7 +41,8 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
   bool terminatedNormally = true;
 
   // Pre-Stepping: abort condition check
-  if (!state.options.actorList.check(state, m_stepper, m_navigator, logger())) {
+  if (!state.options.actorList.checkAbort(state, m_stepper, m_navigator,
+                                          logger())) {
     // Stepping loop
     ACTS_VERBOSE("Starting stepping loop.");
 
@@ -73,8 +74,8 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
       state.stage = PropagatorStage::postStep;
       m_navigator.postStep(state, m_stepper);
       state.options.actorList.act(state, m_stepper, m_navigator, logger());
-      if (state.options.actorList.check(state, m_stepper, m_navigator,
-                                        logger())) {
+      if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
+                                             logger())) {
         terminatedNormally = true;
         break;
       }

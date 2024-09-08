@@ -631,9 +631,9 @@ class Gx2Fitter {
 
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t, typename result_t>
-    bool check(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-               const navigator_t& /*navigator*/, const result_t& result,
-               const Logger& /*logger*/) const {
+    bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                    const navigator_t& /*navigator*/, const result_t& result,
+                    const Logger& /*logger*/) const {
       if (!result.result.ok() || result.finished) {
         return true;
       }

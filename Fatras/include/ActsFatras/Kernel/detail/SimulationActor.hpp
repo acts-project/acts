@@ -76,7 +76,8 @@ struct SimulationActor {
       return;
     }
 
-    if (Acts::EndOfWorldReached{}.check(state, stepper, navigator, logger)) {
+    if (Acts::EndOfWorldReached{}.checkAbort(state, stepper, navigator,
+                                             logger)) {
       result.isAlive = false;
       return;
     }
@@ -204,9 +205,9 @@ struct SimulationActor {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool check(propagator_state_t & /*state*/, const stepper_t & /*stepper*/,
-             const navigator_t & /*navigator*/, const result_type &result,
-             const Acts::Logger & /*logger*/) const {
+  bool checkAbort(propagator_state_t & /*state*/, const stepper_t & /*stepper*/,
+                  const navigator_t & /*navigator*/, const result_type &result,
+                  const Acts::Logger & /*logger*/) const {
     // must return true if the propagation should abort
     return !result.isAlive;
   }

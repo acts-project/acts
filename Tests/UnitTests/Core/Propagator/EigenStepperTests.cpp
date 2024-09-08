@@ -129,8 +129,9 @@ struct EndOfWorld {
   /// @return Boolean statement if the particle is still in the detector
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool check(propagator_state_t& state, const stepper_t& stepper,
-             const navigator_t& /*navigator*/, const Logger& /*logger*/) const {
+  bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& /*navigator*/,
+                  const Logger& /*logger*/) const {
     const double tolerance = state.options.surfaceTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
         std::abs(stepper.position(state.stepping).y()) >= 0.5_m ||
@@ -179,9 +180,9 @@ struct StepCollector {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool check(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-             const navigator_t& /*navigator*/, result_type& /*result*/,
-             const Logger& /*logger*/) const {
+  bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                  const navigator_t& /*navigator*/, result_type& /*result*/,
+                  const Logger& /*logger*/) const {
     return false;
   }
 };

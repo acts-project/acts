@@ -39,8 +39,8 @@ struct MultiStepperSurfaceReached : public SurfaceReached {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool check(propagator_state_t& state, const stepper_t& stepper,
-             const navigator_t& navigator, const Logger& logger) const {
+  bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& navigator, const Logger& logger) const {
     if (surface == nullptr) {
       ACTS_VERBOSE(
           "MultiStepperSurfaceReached aborter | "
@@ -82,8 +82,8 @@ struct MultiStepperSurfaceReached : public SurfaceReached {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
 
-      if (!SurfaceReached::check(singleState, singleStepper, navigator,
-                                 logger)) {
+      if (!SurfaceReached::checkAbort(singleState, singleStepper, navigator,
+                                      logger)) {
         reached = false;
       } else {
         cmp.status() = Acts::Intersection3D::Status::onSurface;

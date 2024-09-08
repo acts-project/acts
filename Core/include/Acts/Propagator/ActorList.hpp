@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Propagator/detail/actor_list_implementation.hpp"
-#include "Acts/Utilities/detail/Extendable.hpp"
 #include "Acts/Utilities/detail/MPL/all_of.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
@@ -27,12 +26,20 @@ namespace Acts {
 /// to define a list of different actors_t that are each
 /// executed during the stepping procedure
 template <typename... actors_t>
-struct ActorList : public detail::Extendable<actors_t...> {
+struct ActorList {
  private:
+  static_assert(
+      detail::all_of_v<std::is_default_constructible<actors_t>::value...>,
+      "all actors must be default constructible");
+  static_assert(
+      detail::all_of_v<std::is_copy_constructible<actors_t>::value...>,
+      "all actors must be copy constructible");
+  static_assert(
+      detail::all_of_v<std::is_move_constructible<actors_t>::value...>,
+      "all actors must be move constructible");
+
   static_assert(!detail::has_duplicates_v<actors_t...>,
                 "same action type specified several times");
-
-  using detail::Extendable<actors_t...>::tuple;
 
  public:
   /// @cond
@@ -42,8 +49,6 @@ struct ActorList : public detail::Extendable<actors_t...> {
       detail::type_collector_t<detail::result_type_extractor, actors_t...>,
       hana::template_<R>))::type;
   /// @endcond
-
-  using detail::Extendable<actors_t...>::get;
 
   /// Default constructor
   ActorList() = default;
@@ -72,20 +77,40 @@ struct ActorList : public detail::Extendable<actors_t...> {
   /// Constructor from tuple
   ///
   /// @param actors Source extensions tuple
-  ActorList(const std::tuple<actors_t...>& actors)
-      : detail::Extendable<actors_t...>(actors) {}
+  ActorList(const std::tuple<actors_t...>& actors) : m_actors(actors) {}
 
   /// Constructor from tuple move
   ///
   /// @param actors Source extensions tuple
-  ActorList(std::tuple<actors_t...>&& actors)
-      : detail::Extendable<actors_t...>(std::move(actors)) {}
+  ActorList(std::tuple<actors_t...>&& actors) : m_actors(std::move(actors)) {}
+
+  /// Const retrieval of an actor of a specific type
+  ///
+  /// @tparam actor_t Type of the Actor to be retrieved
+  template <typename actor_t>
+  const actor_t& get() const {
+    return std::get<actor_t>(m_actors);
+  }
+
+  /// Non-const retrieval of an actor of a specific type
+  ///
+  /// @tparam actor_t Type of the Actor to be retrieved
+  template <typename actor_t>
+  actor_t& get() {
+    return std::get<actor_t>(m_actors);
+  }
 
   /// Append new entries and return a new condition
+  ///
+  /// @tparam appendices_t Types of appended entries to the tuple
+  ///
+  /// @param aps The actors to be appended to the new ActorList
+  ///
+  /// @return A new ActorList with the appended actors
   template <typename... appendices_t>
   ActorList<actors_t..., appendices_t...> append(appendices_t... aps) const {
     auto catTuple =
-        std::tuple_cat(tuple(), std::tuple<appendices_t...>(aps...));
+        std::tuple_cat(m_actors, std::tuple<appendices_t...>(aps...));
     return ActorList<actors_t..., appendices_t...>(std::move(catTuple));
   }
 
@@ -104,7 +129,7 @@ struct ActorList : public detail::Extendable<actors_t...> {
   void act(propagator_state_t& state, const stepper_t& stepper,
            const navigator_t& navigator, Args&&... args) const {
     using impl = detail::actor_list_impl<actors_t...>;
-    impl::act(tuple(), state, stepper, navigator, std::forward<Args>(args)...);
+    impl::act(m_actors, state, stepper, navigator, std::forward<Args>(args)...);
   }
 
   /// Check call which broadcasts the call to the tuple() members of the list
@@ -119,12 +144,15 @@ struct ActorList : public detail::Extendable<actors_t...> {
   /// @param [in] args are the arguments to be passed to the aborters
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
-  bool check(propagator_state_t& state, const stepper_t& stepper,
-             const navigator_t& navigator, Args&&... args) const {
+  bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& navigator, Args&&... args) const {
     using impl = detail::actor_list_impl<actors_t...>;
-    return impl::check(tuple(), state, stepper, navigator,
-                       std::forward<Args>(args)...);
+    return impl::checkAbort(m_actors, state, stepper, navigator,
+                            std::forward<Args>(args)...);
   }
+
+ private:
+  std::tuple<actors_t...> m_actors;
 };
 
 }  // namespace Acts

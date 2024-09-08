@@ -584,11 +584,11 @@ class CombinatorialKalmanFilter {
       }
 
       const bool isEndOfWorldReached =
-          endOfWorldReached.check(state, stepper, navigator, logger());
-      const bool isPathLimitReached =
-          result.pathLimitReached.check(state, stepper, navigator, logger());
+          endOfWorldReached.checkAbort(state, stepper, navigator, logger());
+      const bool isPathLimitReached = result.pathLimitReached.checkAbort(
+          state, stepper, navigator, logger());
       const bool isTargetReached =
-          targetReached.check(state, stepper, navigator, logger());
+          targetReached.checkAbort(state, stepper, navigator, logger());
       const bool allBranchesStopped = result.activeBranches.empty();
       if (isEndOfWorldReached || isPathLimitReached || isTargetReached ||
           allBranchesStopped) {
@@ -643,9 +643,9 @@ class CombinatorialKalmanFilter {
 
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    bool check(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-               const navigator_t& /*navigator*/, const result_type& result,
-               const Logger& /*logger*/) const {
+    bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                    const navigator_t& /*navigator*/, const result_type& result,
+                    const Logger& /*logger*/) const {
       return !result.lastError.ok() || result.finished;
     }
 
@@ -1195,9 +1195,9 @@ class CombinatorialKalmanFilter {
 
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    bool check(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-               const navigator_t& /*navigator*/,
-               const Logger& /*logger*/) const {
+    bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                    const navigator_t& /*navigator*/,
+                    const Logger& /*logger*/) const {
       return false;
     }
   };

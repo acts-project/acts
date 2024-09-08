@@ -41,21 +41,22 @@ struct actor_caller {
 
   template <typename actor_t, typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
-  static bool check(const actor_t& actor, propagator_state_t& state,
-                    const stepper_t& stepper, const navigator_t& navigator,
-                    Args&&... args)
+  static bool checkAbort(const actor_t& actor, propagator_state_t& state,
+                         const stepper_t& stepper, const navigator_t& navigator,
+                         Args&&... args)
     requires(
         Actor<actor_t, propagator_state_t, stepper_t, navigator_t, Args...>)
   {
     if constexpr (ActorHasAbort<actor_t, propagator_state_t, stepper_t,
                                 navigator_t, Args...>) {
       if constexpr (ActorHasResult<actor_t>) {
-        return actor.check(state, stepper, navigator,
-                           state.template get<detail::result_type_t<actor_t>>(),
-                           std::forward<Args>(args)...);
+        return actor.checkAbort(
+            state, stepper, navigator,
+            state.template get<detail::result_type_t<actor_t>>(),
+            std::forward<Args>(args)...);
       } else {
-        return actor.check(state, stepper, navigator,
-                           std::forward<Args>(args)...);
+        return actor.checkAbort(state, stepper, navigator,
+                                std::forward<Args>(args)...);
       }
     }
 
@@ -83,13 +84,13 @@ struct actor_list_impl {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
-  static bool check(const std::tuple<actors_t...>& actor_tuple,
-                    propagator_state_t& state, const stepper_t& stepper,
-                    const navigator_t& navigator, Args&&... args) {
+  static bool checkAbort(const std::tuple<actors_t...>& actor_tuple,
+                         propagator_state_t& state, const stepper_t& stepper,
+                         const navigator_t& navigator, Args&&... args) {
     return std::apply(
         [&](const actors_t&... actor) {
-          return (actor_caller::check(actor, state, stepper, navigator,
-                                      std::forward<Args>(args)...) ||
+          return (actor_caller::checkAbort(actor, state, stepper, navigator,
+                                           std::forward<Args>(args)...) ||
                   ...);
         },
         actor_tuple);
