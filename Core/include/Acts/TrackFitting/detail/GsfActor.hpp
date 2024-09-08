@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -331,14 +331,6 @@ struct GsfActor {
       ACTS_VERBOSE("Stop navigation because all measurements are found");
       navigator.navigationBreak(state.navigation, true);
     }
-  }
-
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  bool checkAbort(propagator_state_t& state, const stepper_t& /*stepper*/,
-                  const navigator_t& navigator, result_type& /*result*/,
-                  const Logger& /*logger*/) const {
-    return navigator.navigationBreak(state.navigation);
   }
 
   template <typename propagator_state_t, typename stepper_t,
