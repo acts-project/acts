@@ -8,7 +8,7 @@ set(FRNN_CUDA_FLAGS "")
 list(APPEND FRNN_CUDA_FLAGS --expt-extended-lambda --expt-relaxed-constexpr)
 list(APPEND FRNN_CUDA_FLAGS -Werror=cross-execution-space-call -Wno-deprecated-declarations -Xptxas=--disable-warnings)
 list(APPEND FRNN_CUDA_FLAGS -Xcompiler=-Wall,-Wno-error=sign-compare,-Wno-error=unused-but-set-variable)
-list(APPEND FRNN_CUDA_FLAGS -Xfatbin=-compress-all --ftemplate-depth=2048 -G)
+list(APPEND FRNN_CUDA_FLAGS -Xfatbin=-compress-all --ftemplate-depth=2048)
 
 if (CMAKE_CUDA_LINEINFO)
     list(APPEND FRNN_CUDA_FLAGS -lineinfo)
