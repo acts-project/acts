@@ -160,14 +160,13 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
   // Find duplicates
   std::unordered_set<std::size_t> listGoodTracks;
   for (auto& [particleId, matchedTracks] : matched) {
-    std::ranges::sort(
-        matchedTracks, [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
-          // nMajorityHits are sorted descending, others ascending
-          return std::tie(rhs.first.nMajorityHits, lhs.first.nOutliers,
-                          lhs.first.chi2Sum) < std::tie(lhs.first.nMajorityHits,
-                                                        rhs.first.nOutliers,
-                                                        rhs.first.chi2Sum);
-        });
+    std::ranges::sort(matchedTracks, [](const auto& lhs, const auto& rhs) {
+      const auto& t1 = lhs.first;
+      const auto& t2 = rhs.first;
+      // nMajorityHits are sorted descending, others ascending
+      return std::tie(t2.nMajorityHits, t1.nOutliers, t1.chi2Sum) <
+             std::tie(t1.nMajorityHits, t2.nOutliers, t2.chi2Sum);
+    });
 
     listGoodTracks.insert(matchedTracks.front().first.trackId);
   }

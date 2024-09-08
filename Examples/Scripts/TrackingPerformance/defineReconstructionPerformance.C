@@ -190,8 +190,8 @@ void defineReconstructionPerformance(
       for (auto& [id, matchedTracks] : matchedParticles) {
         // Sort all tracks matched to this particle according to majority prob
         // and track quality
-        std::ranges::sort(matchedTracks, {}, [](const auto& m) {
-            return std::tie(m.nMajorityHits, m.nMeasurements);
+        std::ranges::sort(matchedTracks, std::greater{}, [](const auto& m) {
+            return std::make_tuple(m.nMajorityHits, m.nMeasurements);
           });
         // Fill the duplication rate plots
         for (std::size_t k = 0; k < matchedTracks.size(); ++k) {

@@ -58,7 +58,7 @@ Acts::detail::GeoIntersectionAnnulusConverter::operator()(
         std::vector<Vector2> faceVertices(trapVertices.begin(),
                                           trapVertices.begin() + 4u);
         // to make sure they are in the right order
-        std::ranges::sort(faceVertices, {}, [](const auto& f) {
+        std::ranges::sort(faceVertices, std::greater{}, [](const auto& f) {
           return (VectorHelpers::phi(f));
         });
 

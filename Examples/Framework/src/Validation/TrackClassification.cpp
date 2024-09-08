@@ -40,7 +40,7 @@ inline void increaseHitCount(
 /// Sort hit counts by decreasing values, i.e. majority particle comes first.
 inline void sortHitCount(
     std::vector<ActsExamples::ParticleHitCount>& particleHitCounts) {
-  std::ranges::sort(particleHitCounts, {},
+  std::ranges::sort(particleHitCounts, std::greater{},
                     [](const auto& p) { return p.hitCount; });
 }
 

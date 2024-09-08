@@ -110,7 +110,7 @@ class MultiLayerNavigation : public IInternalNavigation {
     std::ranges::sort(surfaces, {}, [&gctx](const auto& s) {
       assert(s != nullptr && "Uninitialized surface");
       const auto& center = s->center(gctx);
-      return std::tie(center.x(), center.y(), center.z());
+      return std::make_tuple(center.x(), center.y(), center.z());
     });
 
     // Remove the duplicates
