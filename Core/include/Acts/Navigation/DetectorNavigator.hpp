@@ -406,11 +406,8 @@ class DetectorNavigator {
 
     // Sort properly the surface candidates
     auto& nCandidates = nState.surfaceCandidates;
-    std::ranges::sort(nCandidates, [&](const auto& a, const auto& b) {
-      // The two path lengths
-      ActsScalar pathToA = a.objectIntersection.pathLength();
-      ActsScalar pathToB = b.objectIntersection.pathLength();
-      return pathToA < pathToB;
+    std::ranges::sort(nCandidates, {}, [](const auto& c) {
+      return c.objectIntersection.pathLength();
     });
     // Set the surface candidate
     nState.surfaceCandidateIndex = 0;
