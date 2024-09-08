@@ -37,8 +37,7 @@ void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
   }
 
   // Remove all components which are labeled with weight -1
-  std::ranges::sort(cmpCache, {},
-                    [&](const auto &c) { return proj(c).weight; });
+  std::ranges::sort(cmpCache, {}, [](const auto &c) { return proj(c).weight; });
   cmpCache.erase(
       std::remove_if(cmpCache.begin(), cmpCache.end(),
                      [&](const auto &a) { return proj(a).weight == -1.0; }),

@@ -21,8 +21,8 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
-#include <tuple>
 #include <algorithm>
+#include <tuple>
 
 using namespace ActsExamples;
 using namespace Acts::UnitLiterals;
