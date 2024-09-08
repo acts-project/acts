@@ -340,10 +340,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
         adaptBinningRange(binnings, m_cfg.extent.value());
       }
       // Sort the binning for conventions
-      std::ranges::sort(binnings,
-                        [](const ProtoBinning& a, const ProtoBinning& b) {
-                          return a.binValue < b.binValue;
-                        });
+      std::ranges::sort(binnings, {}, [](const auto& b) { return b.binValue; });
 
       ACTS_DEBUG("- 2-dimensional surface binning detected.");
       // Capture the binnings

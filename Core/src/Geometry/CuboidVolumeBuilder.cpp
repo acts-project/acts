@@ -212,10 +212,7 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
 
   // Sort the volumes vectors according to the center location, otherwise the
   // binning boundaries will fail
-  std::ranges::sort(
-      volumes, [](const TrackingVolumePtr& lhs, const TrackingVolumePtr& rhs) {
-        return lhs->center().x() < rhs->center().x();
-      });
+  std::ranges::sort(volumes, {}, [](const auto& v) { return v->center().x(); });
 
   // Glue volumes
   for (unsigned int i = 0; i < volumes.size() - 1; i++) {

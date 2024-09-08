@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <algorithm>
+#include <tuple>
 
 template <class identifier_t>
 template <class PointType>
@@ -263,16 +264,9 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
     }
   }
   // sort the candidate cells descending in content
-  std::ranges::sort(
-      candidates, [&yieldMap](const std::size_t bin1, const std::size_t bin2) {
-        YieldType h1 = yieldMap[bin1];
-        YieldType h2 = yieldMap[bin2];
-
-        if (h1 != h2) {
-          return h1 > h2;
-        }
-        return bin1 > bin2;
-      });
+  std::ranges::sort(candidates, {}, [&yieldMap](const auto c) {
+    return std::tie(yieldMap[c], c);
+  });
 
   // now we build islands from the candidate cells, starting with the most
   // populated one

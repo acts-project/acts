@@ -167,9 +167,8 @@ ActsExamples::MockupSectorBuilder::buildSector(
 
   // sort the detector volumes by their radial distance (from
   // innermost---->outermost)
-  std::ranges::sort(detVolumes, [](const auto& detVol1, const auto& detVol2) {
-    return detVol1->center().y() < detVol2->center().y();
-  });
+  std::ranges::sort(detVolumes, {},
+                    [](const auto& detVol) { return detVol->center().y(); });
 
   auto xA = detVolumes.back()->center().x() +
             detVolumes.back()->volumeBounds().values()[0];

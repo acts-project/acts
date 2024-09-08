@@ -151,9 +151,8 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
       continue;
     }
     // Sort the space points
-    std::ranges::sort(spacePointsOnTrack, [](const SimSpacePoint* lhs,
-                                             const SimSpacePoint* rhs) {
-      return std::hypot(lhs->r(), lhs->z()) < std::hypot(rhs->r(), rhs->z());
+    std::ranges::sort(spacePointsOnTrack, {}, [](const SimSpacePoint* s) {
+      return std::hypot(s->r(), s->z());
     });
 
     // Loop over the found space points to find the seed with maximum deltaR

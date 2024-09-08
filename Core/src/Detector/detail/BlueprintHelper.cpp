@@ -56,15 +56,13 @@ void Acts::Experimental::detail::BlueprintHelper::sort(Blueprint::Node& node,
         bVal == BinningValue::binZ) {
       Vector3 nodeCenter = node.transform.translation();
       Vector3 nodeSortAxis = node.transform.rotation().col(toUnderlying(bVal));
-      std::ranges::sort(node.children, [&](const auto& a, const auto& b) {
-        return (a->transform.translation() - nodeCenter).dot(nodeSortAxis) <
-               (b->transform.translation() - nodeCenter).dot(nodeSortAxis);
+      std::ranges::sort(node.children, {}, [&](const auto& c) {
+        return (c->transform.translation() - nodeCenter).dot(nodeSortAxis);
       });
     } else if (bVal == BinningValue::binR &&
                node.boundsType == VolumeBounds::eCylinder) {
-      std::ranges::sort(node.children, [](const auto& a, const auto& b) {
-        return 0.5 * (a->boundaryValues[0] + a->boundaryValues[1]) <
-               0.5 * (b->boundaryValues[0] + b->boundaryValues[1]);
+      std::ranges::sort(node.children, {}, [](const auto& c) {
+        return c->boundaryValues[0] + c->boundaryValues[1];
       });
     }
   }

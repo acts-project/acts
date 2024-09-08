@@ -45,10 +45,7 @@ Acts::detail::GeoPolygonConverter::operator()(
     vertices.push_back({polygon.getXVertex(i), polygon.getYVertex(i)});
   }
   // sort based on the y-coordinate
-  std::ranges::sort(
-      vertices, [](const std::vector<double>& a, const std::vector<double>& b) {
-        return a[1] < b[1];
-      });
+  std::ranges::sort(vertices, {}, [](const auto& v) { return v[1]; });
   if (nVertices == 4) {
     double hlxnegy = fabs(vertices[0][0] - vertices[1][0]) / 2;
     double hlxposy = fabs(vertices[2][0] - vertices[3][0]) / 2;

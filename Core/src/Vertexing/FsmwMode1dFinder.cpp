@@ -28,10 +28,7 @@ Acts::Result<double> Acts::FsmwMode1dFinder::getMode(
 
   // first of all order the vector according to the double value
 
-  std::ranges::sort(inputVector, [](std::pair<double, double> a,
-                                    std::pair<double, double> b) {
-    return a.first < b.first;
-  });
+  std::ranges::sort(inputVector, {}, [](const auto& i) { return i.first; });
 
   // begin to consider a certain number of elements according to the fraction
   auto begin = inputVector.begin();

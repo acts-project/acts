@@ -622,9 +622,7 @@ void Sequencer::fpeReport() const {
     std::transform(merged.stackTraces().begin(), merged.stackTraces().end(),
                    std::back_inserter(sorted),
                    [](const auto& f) -> const auto& { return f; });
-    std::ranges::sort(sorted, [](const auto& a, const auto& b) {
-      return a.get().count > b.get().count;
-    });
+    std::ranges::sort(sorted, {}, [](const auto& s) { return s.get().count; });
 
     std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
         remaining;

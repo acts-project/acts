@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -159,19 +159,19 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
   // Find duplicates
   std::unordered_set<std::size_t> listGoodTracks;
   for (auto& [particleId, matchedTracks] : matched) {
-    std::ranges::sort(
-        matchedTracks, [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
-          // sort by nMajorityHits
-          if (lhs.first.nMajorityHits != rhs.first.nMajorityHits) {
-            return (lhs.first.nMajorityHits > rhs.first.nMajorityHits);
-          }
-          // sort by nOutliers
-          if (lhs.first.nOutliers != rhs.first.nOutliers) {
-            return (lhs.first.nOutliers < rhs.first.nOutliers);
-          }
-          // sort by chi2
-          return (lhs.first.chi2Sum < rhs.first.chi2Sum);
-        });
+    std::sort(matchedTracks.begin(), matchedTracks.end(),
+              [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
+                // sort by nMajorityHits
+                if (lhs.first.nMajorityHits != rhs.first.nMajorityHits) {
+                  return (lhs.first.nMajorityHits > rhs.first.nMajorityHits);
+                }
+                // sort by nOutliers
+                if (lhs.first.nOutliers != rhs.first.nOutliers) {
+                  return (lhs.first.nOutliers < rhs.first.nOutliers);
+                }
+                // sort by chi2
+                return (lhs.first.chi2Sum < rhs.first.chi2Sum);
+              });
 
     listGoodTracks.insert(matchedTracks.front().first.trackId);
   }

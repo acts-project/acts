@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <tuple>
 
 namespace Acts::Experimental {
 
@@ -106,14 +107,9 @@ class MultiLayerNavigation : public IInternalNavigation {
   void resolveDuplicates(const GeometryContext& gctx,
                          std::vector<const Acts::Surface*>& surfaces) const {
     // sorting the surfaces according to their radial distance
-    std::ranges::sort(surfaces, [&gctx](const auto& surf1, const auto& surf2) {
-      if (surf1->center(gctx).x() != surf2->center(gctx).x()) {
-        return surf1->center(gctx).x() < surf2->center(gctx).x();
-      }
-      if (surf1->center(gctx).y() != surf2->center(gctx).y()) {
-        return surf1->center(gctx).y() < surf2->center(gctx).y();
-      }
-      return surf1->center(gctx).z() < surf2->center(gctx).z();
+    std::ranges::sort(surfaces, {}, [&gctx](const auto& s) {
+      const auto& c = s->center(gctx);
+      return std::tie(c.x(), c.y(), c.z());
     });
 
     // Remove the duplicates

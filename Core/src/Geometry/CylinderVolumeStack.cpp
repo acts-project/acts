@@ -160,9 +160,8 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
   if (direction == Acts::BinningValue::binZ) {
     ACTS_VERBOSE("Sorting by volume z position");
-    std::ranges::sort(volumeTuples, [](const auto& a, const auto& b) {
-      return a.localTransform.translation()[eZ] <
-             b.localTransform.translation()[eZ];
+    std::ranges::sort(volumeTuples, {}, [](const auto& v) {
+      return v.localTransform.translation()[eZ];
     });
 
     ACTS_VERBOSE("Checking for overlaps and attaching volumes in z");
@@ -192,9 +191,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     ACTS_VERBOSE("*** Volume configuration after r synchronization:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
 
-    std::ranges::sort(volumeTuples, [](const auto& a, const auto& b) {
-      return a.midZ() < b.midZ();
-    });
+    std::ranges::sort(volumeTuples, {}, [](const auto& v) { return v.midZ(); });
 
     m_volumes.clear();
     for (const auto& vt : volumeTuples) {
@@ -223,9 +220,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
   } else if (direction == Acts::BinningValue::binR) {
     ACTS_VERBOSE("Sorting by volume r middle point");
-    std::ranges::sort(volumeTuples, [](const auto& a, const auto& b) {
-      return a.midR() < b.midR();
-    });
+    std::ranges::sort(volumeTuples, {}, [](const auto& v) { return v.midR(); });
 
     ACTS_VERBOSE("Checking for overlaps and attaching volumes in r");
     std::vector<VolumeTuple> gapVolumes =
@@ -252,9 +247,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     ACTS_VERBOSE("*** Volume configuration after z synchronization:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
 
-    std::ranges::sort(volumeTuples, [](const auto& a, const auto& b) {
-      return a.midR() < b.midR();
-    });
+    std::ranges::sort(volumeTuples, {}, [](const auto& v) { return v.midR(); });
 
     m_volumes.clear();
     for (const auto& vt : volumeTuples) {

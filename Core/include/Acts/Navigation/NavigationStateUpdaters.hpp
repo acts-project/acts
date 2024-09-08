@@ -66,9 +66,8 @@ inline void intitializeCandidates(const GeometryContext& gctx,
     }
   }
 
-  std::ranges::sort(confirmedCandidates, [&](const auto& a, const auto& b) {
-    return a.objectIntersection.pathLength() <
-           b.objectIntersection.pathLength();
+  std::ranges::sort(confirmedCandidates, {}, [](const auto& c) {
+    return c.objectIntersection.pathLength();
   });
 
   nState.surfaceCandidates = std::move(confirmedCandidates);

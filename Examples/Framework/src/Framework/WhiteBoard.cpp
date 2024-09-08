@@ -68,8 +68,7 @@ std::vector<std::string_view> ActsExamples::WhiteBoard::similarNames(
     }
   }
 
-  std::ranges::sort(
-      names, [&](const auto &a, const auto &b) { return a.first < b.first; });
+  std::ranges::sort(names, {}, [](const auto &n) { return n.first; });
 
   std::vector<std::string_view> selected_names;
   for (std::size_t i = 0; i < std::min(names.size(), maxNumber); ++i) {

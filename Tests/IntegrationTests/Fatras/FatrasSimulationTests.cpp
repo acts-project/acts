@@ -123,9 +123,8 @@ const auto dataset =
 // helper functions for tests
 template <typename Container>
 void sortByParticleId(Container& container) {
-  std::ranges::sort(container, [](const auto& lhs, const auto& rhs) {
-    return lhs.particleId() < rhs.particleId();
-  });
+  std::ranges::sort(container, {},
+                    [](const auto& c) { return c.particleId(); });
 }
 template <typename Container>
 bool areParticleIdsUnique(const Container& sortedByParticleId) {

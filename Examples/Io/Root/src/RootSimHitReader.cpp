@@ -94,9 +94,8 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
   std::get<2>(m_eventMap.back()) = nEntries;
 
   // Sort by event id
-  std::ranges::sort(m_eventMap, [](const auto& a, const auto& b) {
-    return std::get<0>(a) < std::get<0>(b);
-  });
+  std::ranges::sort(m_eventMap, {},
+                    [](const auto& m) { return std::get<0>(m); });
 
   // Re-Enable all branches
   m_inputChain->SetBranchStatus("*", true);

@@ -312,17 +312,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     sorted_tops[i] = i;
   }
 
-  std::ranges::sort(
-      sorted_bottoms,
-      [&linCircleBottom](const std::size_t a, const std::size_t b) -> bool {
-        return linCircleBottom[a].cotTheta < linCircleBottom[b].cotTheta;
-      });
+  std::ranges::sort(sorted_bottoms, {},
+                    [&linCircleBottom](const std::size_t s) {
+                      return linCircleBottom[s].cotTheta;
+                    });
 
-  std::ranges::sort(
-      sorted_tops,
-      [&linCircleTop](const std::size_t a, const std::size_t b) -> bool {
-        return linCircleTop[a].cotTheta < linCircleTop[b].cotTheta;
-      });
+  std::ranges::sort(sorted_tops, {}, [&linCircleTop](const std::size_t s) {
+    return linCircleTop[s].cotTheta;
+  });
 
   std::vector<float> tanMT;
   tanMT.reserve(top.size());

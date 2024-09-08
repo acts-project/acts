@@ -257,10 +257,9 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
     }
 
     // sort by number of particles
-    std::ranges::sort(vertexSeederState.truthVertices,
-                      [&vertexParticleCount](const auto& lhs, const auto& rhs) {
-                        return vertexParticleCount[lhs.vertexId()] >
-                               vertexParticleCount[rhs.vertexId()];
+    std::ranges::sort(vertexSeederState.truthVertices, {},
+                      [&vertexParticleCount](const auto& v) {
+                        return vertexParticleCount[v.vertexId()];
                       });
 
     ACTS_INFO("Got " << truthVertices.size() << " truth vertices and selected "

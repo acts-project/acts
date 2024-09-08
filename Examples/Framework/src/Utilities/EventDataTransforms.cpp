@@ -69,8 +69,7 @@ ActsExamples::SimSeed ActsExamples::prototrackToSeed(
 
   std::transform(track.begin(), track.end(), std::back_inserter(ps),
                  findSpacePoint);
-  std::ranges::sort(
-      ps, [](const auto& a, const auto& b) { return a->r() < b->r(); });
+  std::ranges::sort(ps, {}, [](const auto& p) { return p->r(); });
 
   // Simply use r = m*z + t and solve for r=0 to find z vertex position...
   // Probably not the textbook way to do

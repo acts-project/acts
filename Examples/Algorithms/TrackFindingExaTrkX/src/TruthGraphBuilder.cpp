@@ -84,9 +84,8 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
     };
 
     // Sort by radius (this breaks down if the particle has to low momentum)
-    std::ranges::sort(track, [&](const auto& a, const auto& b) {
-      return radiusForOrdering(a) < radiusForOrdering(b);
-    });
+    std::ranges::sort(track, {},
+                      [](const auto& t) { return radiusForOrdering(t); });
 
     if (m_cfg.uniqueModules) {
       auto newEnd = std::unique(
@@ -150,9 +149,7 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromSimhits(
 
   for (auto& [pid, track] : tracks) {
     // Sort by hit index, so the edges are connected correctly
-    std::ranges::sort(track, [](const auto& a, const auto& b) {
-      return a.hitIndex < b.hitIndex;
-    });
+    std::ranges::sort(track, {}, [](const auto& t) { return t.hitIndex; });
 
     auto found = particles.find(pid);
     if (found == particles.end()) {
