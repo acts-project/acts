@@ -28,6 +28,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -159,19 +160,14 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
   // Find duplicates
   std::unordered_set<std::size_t> listGoodTracks;
   for (auto& [particleId, matchedTracks] : matched) {
-    std::sort(matchedTracks.begin(), matchedTracks.end(),
-              [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
-                // sort by nMajorityHits
-                if (lhs.first.nMajorityHits != rhs.first.nMajorityHits) {
-                  return (lhs.first.nMajorityHits > rhs.first.nMajorityHits);
-                }
-                // sort by nOutliers
-                if (lhs.first.nOutliers != rhs.first.nOutliers) {
-                  return (lhs.first.nOutliers < rhs.first.nOutliers);
-                }
-                // sort by chi2
-                return (lhs.first.chi2Sum < rhs.first.chi2Sum);
-              });
+    std::ranges::sort(
+        matchedTracks, [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
+          // nMajorityHits are sorted descending, others ascending
+          return std::tie(rhs.first.nMajorityHits, lhs.first.nOutliers,
+                          lhs.first.chi2Sum) < std::tie(lhs.first.nMajorityHits,
+                                                        rhs.first.nOutliers,
+                                                        rhs.first.chi2Sum);
+        });
 
     listGoodTracks.insert(matchedTracks.front().first.trackId);
   }
