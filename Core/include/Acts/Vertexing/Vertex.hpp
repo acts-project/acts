@@ -80,15 +80,6 @@ class Vertex {
 
   /// @brief Set position and time
   ///
-  /// @deprecated Use setFullPosition instead
-  ///
-  /// @param position Vertex position
-  /// @param time The time
-  [[deprecated("Use setFullPosition instead")]] void setPosition(
-      const Vector3& position, ActsScalar time);
-
-  /// @brief Set position and time
-  ///
   /// @param fullPosition Vertex position and time
   void setFullPosition(const Vector4& fullPosition);
 

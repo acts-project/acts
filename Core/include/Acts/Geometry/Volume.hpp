@@ -37,8 +37,7 @@ class Volume : public GeometryObject {
   ///
   /// @param transform is the transform to position the volume in 3D space
   /// @param volbounds is the volume boundary definitions
-  Volume(const Transform3& transform,
-         std::shared_ptr<const VolumeBounds> volbounds);
+  Volume(const Transform3& transform, std::shared_ptr<VolumeBounds> volbounds);
 
   /// Copy Constructor - with optional shift
   ///
@@ -65,20 +64,26 @@ class Volume : public GeometryObject {
   /// returns the center of the volume
   const Vector3& center() const;
 
-  /// Returns const reference to the volume bounds
+  /// Returns a const reference to the volume bounds
   const VolumeBounds& volumeBounds() const;
+
+  /// Returns a mutable reference to the volume bounds
+  VolumeBounds& volumeBounds();
 
   /// Returns shared pointer to the volume bounds
   std::shared_ptr<const VolumeBounds> volumeBoundsPtr() const;
 
+  /// Returns shared pointer to the volume bounds
+  std::shared_ptr<VolumeBounds> volumeBoundsPtr();
+
   /// Set volume bounds and update volume bounding boxes implicitly
   /// @param volbounds The volume bounds to be assigned
-  void assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds);
+  void assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds);
 
   /// Set the volume bounds and optionally also update the volume transform
   /// @param volbounds The volume bounds to be assigned
   /// @param transform The transform to be assigned, can be optional
-  virtual void update(std::shared_ptr<const VolumeBounds> volbounds,
+  virtual void update(std::shared_ptr<VolumeBounds> volbounds,
                       std::optional<Transform3> transform = std::nullopt);
 
   /// Construct bounding box for this shape
@@ -117,7 +122,9 @@ class Volume : public GeometryObject {
   Transform3 m_transform;
   Transform3 m_itransform;
   Vector3 m_center;
-  std::shared_ptr<const VolumeBounds> m_volumeBounds;
+
+ private:
+  std::shared_ptr<VolumeBounds> m_volumeBounds;
 };
 
 /**Overload of << operator for std::ostream for debug output*/
