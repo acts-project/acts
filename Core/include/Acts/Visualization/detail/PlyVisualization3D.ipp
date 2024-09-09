@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -41,13 +41,13 @@ void PlyVisualization3D<T>::line(const Vector3& a, const Vector3& b,
 }
 
 template <typename T>
-void PlyVisualization3D<T>::write(const std::string& path) const {
+void PlyVisualization3D<T>::write(const std::filesystem::path& path) const {
   std::ofstream os;
-  std::string objectpath = path;
-  if (!IVisualization3D::hasExtension(path)) {
-    objectpath += std::string(".ply");
+  std::filesystem::path objectpath = path;
+  if (!objectpath.has_extension()) {
+    objectpath.replace_extension(std::filesystem::path("ply"));
   }
-  os.open(objectpath);
+  os.open(std::filesystem::absolute(objectpath).string());
   write(os);
   os.close();
 }
