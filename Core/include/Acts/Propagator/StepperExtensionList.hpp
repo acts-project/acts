@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
 #include "Acts/Utilities/detail/MPL/all_of.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
@@ -79,7 +78,8 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
 
     validExtensions = state.stepping.auctioneer(std::move(bids));
 
-    return rangeContainsValue(validExtensions, true);
+    return (std::find(validExtensions.begin(), validExtensions.end(), true) !=
+            validExtensions.end());
   }
 
   /// @brief This functions broadcasts the call for evaluating a generic k. It
