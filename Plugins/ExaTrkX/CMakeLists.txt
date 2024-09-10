@@ -1,36 +1,37 @@
-set(SOURCES src/buildEdges.cpp src/ExaTrkXPipeline.cpp)
+add_library(ActsPluginExaTrkX SHARED src/buildEdges.cpp src/ExaTrkXPipeline.cpp)
 
 if(ACTS_EXATRKX_ENABLE_MODULEMAP)
-    list(APPEND SOURCES src/ModuleMapCpp.cpp src/GraphCreatorWrapperCpu.cpp)
+    target_sources(
+        ActsPluginExaTrkX
+        PRIVATE src/ModuleMapCpp.cpp src/GraphCreatorWrapperCpu.cpp
+    )
 
     if(ACTS_EXATRKX_ENABLE_CUDA)
-        list(APPEND SOURCES src/GraphCreatorWrapperCuda.cu)
+        target_sources(ActsPluginExaTrkX PRIVATE src/GraphCreatorWrapperCuda.cu)
     endif()
 endif()
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
-    list(
-        APPEND
-        SOURCES
-        src/OnnxEdgeClassifier.cpp
-        src/OnnxMetricLearning.cpp
-        src/CugraphTrackBuilding.cpp
+    target_sources(
+        ActsPluginExaTrkX
+        PRIVATE
+            src/OnnxEdgeClassifier.cpp
+            src/OnnxMetricLearning.cpp
+            src/CugraphTrackBuilding.cpp
     )
 endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)
-    list(
-        APPEND
-        SOURCES
-        src/TorchEdgeClassifier.cpp
-        src/TorchMetricLearning.cpp
-        src/BoostTrackBuilding.cpp
-        src/TorchTruthGraphMetricsHook.cpp
-        src/TorchGraphStoreHook.cpp
+    target_sources(
+        ActsPluginExaTrkX
+        PRIVATE
+            src/TorchEdgeClassifier.cpp
+            src/TorchMetricLearning.cpp
+            src/BoostTrackBuilding.cpp
+            src/TorchTruthGraphMetricsHook.cpp
+            src/TorchGraphStoreHook.cpp
     )
 endif()
-
-add_library(ActsPluginExaTrkX SHARED ${SOURCES})
 
 target_include_directories(
     ActsPluginExaTrkX
@@ -92,6 +93,10 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_MODULEMAP)
+    target_compile_definitions(
+        ActsPluginExaTrkX
+        PUBLIC ACTS_EXATRKX_WITH_MODULEMAP
+    )
     if(ACTS_EXATRKX_ENABLE_CUDA)
         find_package(ModuleMapGraph REQUIRED COMPONENTS CPU GPU)
         target_link_libraries(
