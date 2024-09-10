@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   BOOST_CHECK_EQUAL(boundValues.size(), 24u);
 
   auto bValueArrray =
-      to_array<GenericCuboidVolumeBounds::BoundValues::eSize, ActsScalar>(
+      toArray<GenericCuboidVolumeBounds::BoundValues::eSize, ActsScalar>(
           boundValues);
   GenericCuboidVolumeBounds gcvbCopy(bValueArrray);
   BOOST_CHECK_EQUAL(gcvbCopy.values().size(), 24u);
