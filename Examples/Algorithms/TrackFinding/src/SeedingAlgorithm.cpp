@@ -21,7 +21,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
-#include <chrono>
 #include <cmath>
 #include <csignal>
 #include <cstddef>
@@ -179,6 +178,15 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     }
   }
 
+  if (m_cfg.useExtraCuts) {
+    // This function will be applied to select space points during grid filling
+    m_cfg.seedFinderConfig.spacePointSelector
+        .connect<itkFastTrackingSPselect>();
+
+    // This function will be applied to the doublet compatibility selection
+    m_cfg.seedFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
+  }
+  
   using SpacePointProxy_type = typename Acts::SpacePointContainer<
       ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
       Acts::detail::RefHolder>::SpacePointProxyType;
@@ -218,7 +226,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     }
   }
 
-  auto start_preparation = std::chrono::high_resolution_clock::now();
   // Config
   Acts::SpacePointContainerConfig spConfig;
   spConfig.useDetailedDoubleMeasurementInfo =
@@ -271,25 +278,12 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
   state.spacePointMutableData.resize(spContainer.size());
-  auto stop_preparation = std::chrono::high_resolution_clock::now();
 
-  auto start = std::chrono::high_resolution_clock::now();
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
     m_seedFinder.createSeedsForGroup(m_cfg.seedFinderOptions, state,
                                      spacePointsGrouping.grid(), seeds, bottom,
                                      middle, top, rMiddleSPRange);
   }
-  auto stop = std::chrono::high_resolution_clock::now();
-
-  auto duration_preparation =
-      std::chrono::duration_cast<std::chrono::nanoseconds>(stop_preparation -
-                                                           start_preparation)
-          .count();
-  auto duration =
-      std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start)
-          .count();
-  std::cout << "preparation time=" << duration_preparation << "\n";
-  std::cout << "seeding time=" << duration << "\n";
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
