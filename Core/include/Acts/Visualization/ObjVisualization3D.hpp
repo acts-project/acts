@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,6 +13,7 @@
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <array>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <map>
@@ -61,8 +62,8 @@ class ObjVisualization3D : public IVisualization3D {
              const std::vector<FaceType>& faces,
              ColorRGB color = {0, 0, 0}) final;
 
-  /// @copydoc Acts::IVisualization3D::write(const std::string&) const
-  void write(const std::string& path) const final;
+  /// @copydoc Acts::IVisualization3D::write(const std::filesystem::path&) const
+  void write(const std::filesystem::path& path) const final;
 
   /// @copydoc Acts::IVisualization3D::write(std::ostream&) const
   void write(std::ostream& os) const final;
