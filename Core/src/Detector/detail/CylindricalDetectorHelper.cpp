@@ -88,12 +88,12 @@ Acts::Experimental::PortalReplacement createDiscReplacement(
                                        ? Acts::BinningValue::binR
                                        : Acts::BinningValue::binPhi;
   // Estimate ranges
-  auto [minR, maxR] = Acts::min_max(rBoundaries);
+  auto [minRit, maxRit] = std::ranges::minmax_element(rBoundaries);
   auto [sectorPhi, avgPhi] = Acts::range_medium(phiBoundaries);
 
   // Transform and bounds
-  auto bounds =
-      std::make_unique<Acts::RadialBounds>(minR, maxR, 0.5 * sectorPhi, avgPhi);
+  auto bounds = std::make_unique<Acts::RadialBounds>(*minRit, *maxRit,
+                                                     0.5 * sectorPhi, avgPhi);
   // A new surface on the negative side over the full range
   auto surface = Acts::Surface::makeShared<Acts::DiscSurface>(
       transform, std::move(bounds));

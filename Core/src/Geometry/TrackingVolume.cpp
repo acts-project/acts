@@ -31,8 +31,7 @@ namespace Acts {
 
 // constructor for arguments
 TrackingVolume::TrackingVolume(
-    const Transform3& transform,
-    std::shared_ptr<const VolumeBounds> volumeBounds,
+    const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
@@ -49,14 +48,13 @@ TrackingVolume::TrackingVolume(
   connectDenseBoundarySurfaces(denseVolumeVector);
 }
 
-TrackingVolume::TrackingVolume(const Volume& volume,
-                               const std::string& volumeName)
+TrackingVolume::TrackingVolume(Volume& volume, const std::string& volumeName)
     : TrackingVolume(volume.transform(), volume.volumeBoundsPtr(), nullptr,
                      nullptr, nullptr, MutableTrackingVolumeVector{},
                      volumeName) {}
 
 TrackingVolume::TrackingVolume(const Transform3& transform,
-                               std::shared_ptr<const VolumeBounds> volbounds,
+                               std::shared_ptr<VolumeBounds> volbounds,
                                const std::string& volumeName)
     : TrackingVolume(transform, std::move(volbounds), nullptr, nullptr, nullptr,
                      {}, volumeName) {}
