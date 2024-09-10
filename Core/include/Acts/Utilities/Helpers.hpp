@@ -164,7 +164,7 @@ T clampValue(U value) {
                     static_cast<U>(std::numeric_limits<T>::max()));
 }
 
-/// Return range and medium of a sorted numeric series
+/// Return range and medium of a unsorted numeric series
 ///
 /// @tparam T a numeric series
 ///
