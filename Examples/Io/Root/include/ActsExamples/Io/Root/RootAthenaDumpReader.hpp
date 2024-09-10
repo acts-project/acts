@@ -69,12 +69,25 @@ class RootAthenaDumpReader : public IReader {
     /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.cxx?ref_type=heads#L1363
     bool onlyPassedParticles = false;
 
+    /// Skip spacepoints with phi overlap
     bool skipOverlapSPsPhi = false;
+
+    /// Skip spacepoints with eta overlap
     bool skipOverlapSPsEta = false;
 
+    /// A map that provides a mapping between ACTS and Athena surface
+    /// identifiers
     std::shared_ptr<ActsExamples::GeometryIdMapActsAthena> geometryIdMap =
         nullptr;
+
+    /// Tracking Geometry that contains the surfaces where we project
+    /// the measurements on
     std::shared_ptr<Acts::TrackingGeometry> trackingGeometry = nullptr;
+
+    /// When projecting measurements on ACTS surfaces, which euclidean boundary
+    /// tolerance should be allowed. If a value above zero is needed, this
+    /// indicates that the ACTS surfaces do not 100% include the athena surfaces
+    double absBoundaryTolerance = 0.0;
   };
 
   RootAthenaDumpReader(const RootAthenaDumpReader &) = delete;
@@ -116,13 +129,14 @@ class RootAthenaDumpReader : public IReader {
 
   /// Helper method to read measurements
   std::tuple<ClusterContainer, MeasurementContainer,
-             IndexMultimap<ActsFatras::Barcode>, std::unordered_map<int, std::size_t>>
+             IndexMultimap<ActsFatras::Barcode>,
+             std::unordered_map<int, std::size_t>>
   readMeasurements(SimParticleContainer &particles,
                    const Acts::GeometryContext &gctx) const;
 
   /// Helper method to read spacepoints
-  std::pair<SimSpacePointContainer, SimSpacePointContainer> readSpacepoints(const std::unordered_map<int, std::size_t> &imIdxMap)
-      const;
+  std::pair<SimSpacePointContainer, SimSpacePointContainer> readSpacepoints(
+      const std::unordered_map<int, std::size_t> &imIdxMap) const;
 
   /// Helper method to reprocess particle ids
   std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>

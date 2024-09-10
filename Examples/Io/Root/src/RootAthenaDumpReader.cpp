@@ -240,7 +240,6 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_events = m_inputchain->GetEntries();
 
   ACTS_DEBUG("End of constructor. In total available events=" << m_events);
-
 }  // constructor
 
 SimParticleContainer RootAthenaDumpReader::readParticles() const {
@@ -282,7 +281,8 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
 }
 
 std::tuple<ClusterContainer, MeasurementContainer,
-           IndexMultimap<ActsFatras::Barcode>, std::unordered_map<int, std::size_t>>
+           IndexMultimap<ActsFatras::Barcode>,
+           std::unordered_map<int, std::size_t>>
 RootAthenaDumpReader::readMeasurements(
     SimParticleContainer& particles, const Acts::GeometryContext& gctx) const {
   ClusterContainer clusters(nCL);
@@ -296,11 +296,11 @@ RootAthenaDumpReader::readMeasurements(
   const auto prevParticlesSize = particles.size();
   IndexMultimap<ActsFatras::Barcode> measPartMap;
 
-	// We cannot use im for the index since we might skip measurements
+  // We cannot use im for the index since we might skip measurements
   std::size_t idx = 0;
-	std::unordered_map<int, std::size_t> imIdxMap;
+  std::unordered_map<int, std::size_t> imIdxMap;
 
-	for (int im = 0; im < nCL; im++) {
+  for (int im = 0; im < nCL; im++) {
     if (!(CLhardware->at(im) == "PIXEL" || CLhardware->at(im) == "STRIP")) {
       ACTS_ERROR("hardware is neither 'PIXEL' or 'STRIP', skip particle");
       continue;
@@ -376,43 +376,53 @@ RootAthenaDumpReader::readMeasurements(
     std::optional<IndexSourceLink> sl;
     std::vector<double> localParams;
     if (m_cfg.geometryIdMap && m_cfg.trackingGeometry) {
-      const auto &geoIdMap = m_cfg.geometryIdMap->left;
-			if (geoIdMap.find(CLmoduleID[im]) == geoIdMap.end()) {
-			  ACTS_WARNING("missing geo id for " << CLmoduleID[im] << ", skip hit");
-				continue;
-		  }
+      const auto& geoIdMap = m_cfg.geometryIdMap->left;
+      if (geoIdMap.find(CLmoduleID[im]) == geoIdMap.end()) {
+        ACTS_WARNING("Missing geo id for " << CLmoduleID[im] << ", skip hit");
+        continue;
+      }
 
-			auto geoId = m_cfg.geometryIdMap->left.at(CLmoduleID[im]);
+      auto geoId = m_cfg.geometryIdMap->left.at(CLmoduleID[im]);
       sl = IndexSourceLink(geoId, idx);
 
       auto surface = m_cfg.trackingGeometry->findSurface(geoId);
       if (surface == nullptr) {
-      	ACTS_WARNING("Did not find " << geoId << " in tracking geoemtry, skip hit");
-				continue;
-			}
+        ACTS_WARNING("Did not find " << geoId
+                                     << " in tracking geometry, skip hit");
+        continue;
+      }
 
-			bool inside = surface->isOnSurface(gctx, cluster.globalPosition, {}, 
-																					 Acts::BoundaryTolerance::None{}, std::numeric_limits<double>::max());
+      bool inside =
+          surface->isOnSurface(gctx, cluster.globalPosition, {},
+                               Acts::BoundaryTolerance::AbsoluteEuclidean{
+                                   m_cfg.absBoundaryTolerance},
+                               std::numeric_limits<double>::max());
 
-			if(!inside) {
-				const Acts::Vector3 v = surface->transform(gctx).inverse() * cluster.globalPosition;
-				ACTS_WARNING("Projected position is not in surface bounds for " << surface->geometryId() << ", skip hit");
-				ACTS_WARNING("pos in local coordinates: " << v.transpose());
-				ACTS_WARNING("surface: " << surface->toStream(gctx));
-				continue;
-			}
+      if (!inside) {
+        const Acts::Vector3 v =
+            surface->transform(gctx).inverse() * cluster.globalPosition;
+        ACTS_WARNING("Projected position is not in surface bounds for "
+                     << surface->geometryId() << ", skip hit");
+        ACTS_WARNING("Position in local coordinates: " << v.transpose());
+        ACTS_WARNING("Surface details:\n" << surface->toStream(gctx));
+        continue;
+      }
 
       const double tol = (type == ePixel) ? Acts::s_onSurfaceTolerance : 1.3_mm;
-			auto loc = surface->globalToLocal(gctx, cluster.globalPosition, {}, tol);
-      
-			if (!loc.ok()) {
-				const Acts::Vector3 v = surface->transform(gctx).inverse() * cluster.globalPosition;
-				ACTS_WARNING("Global-to-local fit failed on " << geoId << " (z dist: " << v[2] 
-										 << ", projected on surface: " << std::boolalpha << inside << ") , skip hit");
-				continue;
-			}
+      auto loc = surface->globalToLocal(gctx, cluster.globalPosition, {}, tol);
 
-			// TODO is this in strip coordinates or in polar coordinates for annulus bounds?
+      if (!loc.ok()) {
+        const Acts::Vector3 v =
+            surface->transform(gctx).inverse() * cluster.globalPosition;
+        ACTS_WARNING("Global-to-local fit failed on "
+                     << geoId << " (z dist: " << v[2]
+                     << ", projected on surface: " << std::boolalpha << inside
+                     << ") , skip hit");
+        continue;
+      }
+
+      // TODO is this in strip coordinates or in polar coordinates for annulus
+      // bounds?
       localParams = std::vector<double>(loc->begin(), loc->end());
     } else {
       sl = IndexSourceLink(Acts::GeometryIdentifier(CLmoduleID[im]), idx);
@@ -449,17 +459,18 @@ RootAthenaDumpReader::readMeasurements(
       measPartMap.insert(
           std::pair<Index, ActsFatras::Barcode>{idx, dummyBarcode});
     }
-  	
-		// Finally increment the measurement index
-		imIdxMap.emplace(im, idx);
-		++idx;
-	}
 
-	if (measurements.size() < static_cast<std::size_t>(nCL)) {
-	  ACTS_WARNING("Could not convert " << nCL - measurements.size() << " / " << nCL << " measurements");
+    // Finally increment the measurement index
+    imIdxMap.emplace(im, idx);
+    ++idx;
   }
 
-	if (particles.size() - prevParticlesSize > 0) {
+  if (measurements.size() < static_cast<std::size_t>(nCL)) {
+    ACTS_WARNING("Could not convert " << nCL - measurements.size() << " / "
+                                      << nCL << " measurements");
+  }
+
+  if (particles.size() - prevParticlesSize > 0) {
     ACTS_DEBUG("Created " << particles.size() - prevParticlesSize
                           << " dummy particles");
   }
@@ -473,7 +484,8 @@ RootAthenaDumpReader::readMeasurements(
 }
 
 std::pair<SimSpacePointContainer, SimSpacePointContainer>
-RootAthenaDumpReader::readSpacepoints(const std::unordered_map<int, std::size_t> &imIdxMap) const {
+RootAthenaDumpReader::readSpacepoints(
+    const std::unordered_map<int, std::size_t>& imIdxMap) const {
   // Prepare pixel space points
   SimSpacePointContainer pixelSpacePoints;
   pixelSpacePoints.reserve(nSP);
@@ -512,46 +524,48 @@ RootAthenaDumpReader::readSpacepoints(const std::unordered_map<int, std::size_t>
     const auto cl1Index = SPCL1_index[isp];
     assert(cl1Index >= 0 && cl1Index < nCL);
 
-    auto getGeoId = [&](auto athenaId) -> std::optional<Acts::GeometryIdentifier> {
+    auto getGeoId =
+        [&](auto athenaId) -> std::optional<Acts::GeometryIdentifier> {
       if (m_cfg.geometryIdMap == nullptr) {
         return Acts::GeometryIdentifier{athenaId};
       }
-			if (m_cfg.geometryIdMap->left.find(athenaId) == m_cfg.geometryIdMap->left.end()) {
-			  return std::nullopt;
-			}
+      if (m_cfg.geometryIdMap->left.find(athenaId) ==
+          m_cfg.geometryIdMap->left.end()) {
+        return std::nullopt;
+      }
       return m_cfg.geometryIdMap->left.at(athenaId);
     };
 
-		auto cl1GeoId = getGeoId(CLmoduleID[cl1Index]);
-		if (!cl1GeoId) {
-		  ACTS_WARNING("Could not find geoId for spacepoint cluster 1");
-			continue;
-	  }
+    auto cl1GeoId = getGeoId(CLmoduleID[cl1Index]);
+    if (!cl1GeoId) {
+      ACTS_WARNING("Could not find geoId for spacepoint cluster 1");
+      continue;
+    }
 
-		if( !imIdxMap.contains(cl1Index) ) {
-		  ACTS_WARNING("Measurement 1 for spacepoint " << isp << " not created");
-			continue;
-	  }
+    if (!imIdxMap.contains(cl1Index)) {
+      ACTS_WARNING("Measurement 1 for spacepoint " << isp << " not created");
+      continue;
+    }
 
-		IndexSourceLink first(*cl1GeoId, imIdxMap.at(cl1Index));
+    IndexSourceLink first(*cl1GeoId, imIdxMap.at(cl1Index));
     sLinks.emplace_back(first);
 
     if (type == eStrip) {
       const auto cl2Index = SPCL2_index[isp];
       assert(cl2Index >= 0 && cl2Index < nCL);
-			
-			auto cl2GeoId = getGeoId(CLmoduleID[cl1Index]);
-    	if (!cl2GeoId) {
-      	ACTS_WARNING("Could not find geoId for spacepoint cluster 2");
-      	continue;
-    	} 
-    
-			if( !imIdxMap.contains(cl2Index) ) {
-		  	ACTS_WARNING("Measurement 2 for spacepoint " << isp << " not created");
-				continue;
-	  	}
 
-		  IndexSourceLink second(*cl2GeoId, imIdxMap.at(cl2Index));
+      auto cl2GeoId = getGeoId(CLmoduleID[cl1Index]);
+      if (!cl2GeoId) {
+        ACTS_WARNING("Could not find geoId for spacepoint cluster 2");
+        continue;
+      }
+
+      if (!imIdxMap.contains(cl2Index)) {
+        ACTS_WARNING("Measurement 2 for spacepoint " << isp << " not created");
+        continue;
+      }
+
+      IndexSourceLink second(*cl2GeoId, imIdxMap.at(cl2Index));
       sLinks.emplace_back(second);
     }
 
@@ -569,11 +583,12 @@ RootAthenaDumpReader::readSpacepoints(const std::unordered_map<int, std::size_t>
     ACTS_DEBUG("Skipped " << skippedSpacePoints
                           << " because of eta/phi overlaps");
   }
-  if( spacePoints.size() < static_cast<std::size_t>(nSP) ) {
-	  ACTS_WARNING("Could not convert " << nSP - spacePoints.size() << " of " << nSP << " spacepoints");
-	}
+  if (spacePoints.size() < static_cast<std::size_t>(nSP)) {
+    ACTS_WARNING("Could not convert " << nSP - spacePoints.size() << " of "
+                                      << nSP << " spacepoints");
+  }
 
-	ACTS_DEBUG("Created " << spacePoints.size() << " overall space points");
+  ACTS_DEBUG("Created " << spacePoints.size() << " overall space points");
   ACTS_DEBUG("Created " << pixelSpacePoints.size() << " "
                         << " pixel space points");
 
