@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,12 +20,11 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
-#include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/EigenStepperDefaultExtension.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -64,10 +63,8 @@ using namespace Acts::VectorHelpers;
 const MagneticFieldContext magCtx;
 const GeometryContext geoCtx;
 
-using MultiStepperLoop =
-    MultiEigenStepperLoop<StepperExtensionList<DefaultExtension>,
-                          MaxWeightReducerLoop>;
-using SingleStepper = EigenStepper<StepperExtensionList<DefaultExtension>>;
+using MultiStepperLoop = MultiEigenStepperLoop<EigenStepperDefaultExtension>;
+using SingleStepper = EigenStepper<EigenStepperDefaultExtension>;
 
 const double defaultStepSize = 123.;
 const auto defaultNDir = Direction::Backward;
