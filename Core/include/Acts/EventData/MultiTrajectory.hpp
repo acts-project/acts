@@ -18,11 +18,9 @@
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <bitset>
 #include <cstddef>
@@ -117,12 +115,9 @@ class TrackStateRange {
 
 // implement track state visitor concept
 template <typename T, typename TS>
-using call_operator_t = decltype(std::declval<T>()(std::declval<TS>()));
-
-template <typename T, typename TS>
-constexpr bool VisitorConcept = Concepts ::require<
-    Concepts ::either<Concepts ::identical_to<bool, call_operator_t, T, TS>,
-                      Concepts ::identical_to<void, call_operator_t, T, TS>>>;
+concept VisitorConcept = requires(T& t, TS& ts) {
+  { t(ts) } -> Concepts::same_as_any_of<void, bool>;
+};
 
 }  // namespace detail_lt
 
@@ -227,8 +222,9 @@ class MultiTrajectory {
   /// @note Only available if the MultiTrajectory is not read-only
   /// @param istate The index to access
   /// @return Read-write proxy to the stored track state
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  TrackStateProxy getTrackState(IndexType istate) {
+  TrackStateProxy getTrackState(IndexType istate)
+    requires(!ReadOnly)
+  {
     return {*this, istate};
   }
 
@@ -239,9 +235,10 @@ class MultiTrajectory {
   ///       which to leave invalid
   /// @param iprevious index of the previous state, kInvalid if first
   /// @return Index of the newly added track state
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   IndexType addTrackState(TrackStatePropMask mask = TrackStatePropMask::All,
-                          IndexType iprevious = kInvalid) {
+                          IndexType iprevious = kInvalid)
+    requires(!ReadOnly)
+  {
     return self().addTrackState_impl(mask, iprevious);
   }
 
@@ -249,10 +246,11 @@ class MultiTrajectory {
   /// This effectively calls @c addTrackState and @c getTrackState
   /// @note Only available if the track state container is not read-only
   /// @return a track state proxy to the newly added track state
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   TrackStateProxy makeTrackState(
       TrackStatePropMask mask = TrackStatePropMask::All,
-      IndexType iprevious = kInvalid) {
+      IndexType iprevious = kInvalid)
+    requires(!ReadOnly)
+  {
     return getTrackState(addTrackState(mask, iprevious));
   }
 
@@ -267,7 +265,8 @@ class MultiTrajectory {
   /// @param iendpoint  index of the last state
   /// @param callable   non-modifying functor to be called with each point
   template <typename F>
-  void visitBackwards(IndexType iendpoint, F&& callable) const;
+  void visitBackwards(IndexType iendpoint, F&& callable) const
+    requires detail_lt::VisitorConcept<F, ConstTrackStateProxy>;
 
   /// Apply a function to all previous states starting at a given endpoint.
   ///
@@ -277,11 +276,10 @@ class MultiTrajectory {
   /// @warning If the trajectory contains multiple components with common
   ///          points, this can have an impact on the other components.
   /// @note Only available if the MultiTrajectory is not read-only
-  template <typename F, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void applyBackwards(IndexType iendpoint, F&& callable) {
-    static_assert(detail_lt::VisitorConcept<F, TrackStateProxy>,
-                  "Callable needs to satisfy VisitorConcept");
-
+  template <typename F>
+  void applyBackwards(IndexType iendpoint, F&& callable)
+    requires(!ReadOnly) && detail_lt::VisitorConcept<F, TrackStateProxy>
+  {
     if (iendpoint == MultiTrajectoryTraits::kInvalid) {
       throw std::runtime_error(
           "Cannot apply backwards with kInvalid as endpoint");
@@ -328,8 +326,9 @@ class MultiTrajectory {
   /// @param iendpoint Trajectory entry point to start from
   /// @return Iterator pair to iterate over
   /// @note Mutable version
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto reverseTrackStateRange(IndexType iendpoint) {
+  auto reverseTrackStateRange(IndexType iendpoint)
+    requires(!ReadOnly)
+  {
     using range_t =
         detail_lt::TrackStateRange<true, Derived, MeasurementSizeMax, false>;
     if (iendpoint == kInvalid) {
@@ -361,8 +360,9 @@ class MultiTrajectory {
   /// @param istartpoint Trajectory state index for the innermost track
   ///        state to start from
   /// @return Iterator pair to iterate over
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto forwardTrackStateRange(IndexType istartpoint) {
+  auto forwardTrackStateRange(IndexType istartpoint)
+    requires(!ReadOnly)
+  {
     using range_t =
         detail_lt::TrackStateRange<false, Derived, MeasurementSizeMax, false>;
     if (istartpoint == kInvalid) {
@@ -387,8 +387,10 @@ class MultiTrajectory {
   /// @note This takes a string argument rather than a hashed string to maintain
   ///       compatibility with backends.
   /// @note Only available if the MultiTrajectory is not read-only
-  template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void addColumn(std::string_view key) {
+  template <typename T>
+  void addColumn(std::string_view key)
+    requires(!ReadOnly)
+  {
     self().template addColumn_impl<T>(key);
   }
 
@@ -401,8 +403,9 @@ class MultiTrajectory {
 
   /// Clear the @c MultiTrajectory. Leaves the underlying storage untouched
   /// @note Only available if the MultiTrajectory is not read-only
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void clear() {
+  void clear()
+    requires(!ReadOnly)
+  {
     self().clear_impl();
   }
 
@@ -433,8 +436,9 @@ class MultiTrajectory {
   /// Retrieve a parameter proxy instance for parameters at a given index
   /// @param parIdx Index into the parameter column
   /// @return Mutable proxy
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  typename TrackStateProxy::Parameters parameters(IndexType parIdx) {
+  typename TrackStateProxy::Parameters parameters(IndexType parIdx)
+    requires(!ReadOnly)
+  {
     return self().parameters_impl(parIdx);
   }
 
@@ -448,8 +452,9 @@ class MultiTrajectory {
   /// Retrieve a covariance proxy instance for a covariance at a given index
   /// @param covIdx Index into the covariance column
   /// @return Mutable proxy
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  typename TrackStateProxy::Covariance covariance(IndexType covIdx) {
+  typename TrackStateProxy::Covariance covariance(IndexType covIdx)
+    requires(!ReadOnly)
+  {
     return self().covariance_impl(covIdx);
   }
 
@@ -463,8 +468,9 @@ class MultiTrajectory {
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
   /// @param istate The track state
   /// @return Mutable proxy
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  typename TrackStateProxy::Covariance jacobian(IndexType istate) {
+  typename TrackStateProxy::Covariance jacobian(IndexType istate)
+    requires(!ReadOnly)
+  {
     return self().jacobian_impl(istate);
   }
 
@@ -480,10 +486,11 @@ class MultiTrajectory {
   /// @tparam measdim the measurement dimension
   /// @param istate The track state
   /// @return Mutable proxy
-  template <std::size_t measdim, bool RO = ReadOnly,
-            typename = std::enable_if_t<!RO>>
+  template <std::size_t measdim>
   typename TrackStateProxy::template Calibrated<measdim> calibrated(
-      IndexType istate) {
+      IndexType istate)
+    requires(!ReadOnly)
+  {
     return self().template calibrated_impl<measdim>(istate);
   }
 
@@ -503,16 +510,22 @@ class MultiTrajectory {
   /// @tparam measdim the measurement dimension
   /// @param istate The track state
   /// @return Mutable proxy
-  template <std::size_t measdim, bool RO = ReadOnly,
-            typename = std::enable_if_t<!RO>>
+  template <std::size_t measdim>
   typename TrackStateProxy::template CalibratedCovariance<measdim>
-  calibratedCovariance(IndexType istate) {
+  calibratedCovariance(IndexType istate)
+    requires(!ReadOnly)
+  {
     return self().template calibratedCovariance_impl<measdim>(istate);
   }
 
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  /// Retrieve a calibrated measurement covariance proxy instance for a
+  /// measurement at a given index
+  /// @param istate The track state
+  /// @return Mutable proxy
   typename TrackStateProxy::EffectiveCalibrated effectiveCalibrated(
-      IndexType istate) {
+      IndexType istate)
+    requires(!ReadOnly)
+  {
     // This abuses an incorrectly sized vector / matrix to access the
     // data pointer! This works (don't use the matrix as is!), but be
     // careful!
@@ -520,6 +533,10 @@ class MultiTrajectory {
         calibrated<eBoundSize>(istate).data(), calibratedSize(istate)};
   }
 
+  /// Retrieve a calibrated measurement covariance proxy instance for a
+  /// measurement at a given index
+  /// @param istate The track state
+  /// @return Const proxy
   typename ConstTrackStateProxy::EffectiveCalibrated effectiveCalibrated(
       IndexType istate) const {
     // This abuses an incorrectly sized vector / matrix to access the
@@ -529,9 +546,14 @@ class MultiTrajectory {
         calibrated<eBoundSize>(istate).data(), calibratedSize(istate)};
   }
 
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  /// Retrieve a calibrated measurement covariance proxy instance for a
+  /// measurement at a given index
+  /// @param istate The track state
+  /// @return Mutable proxy
   typename TrackStateProxy::EffectiveCalibratedCovariance
-  effectiveCalibratedCovariance(IndexType istate) {
+  effectiveCalibratedCovariance(IndexType istate)
+    requires(!ReadOnly)
+  {
     // This abuses an incorrectly sized vector / matrix to access the
     // data pointer! This works (don't use the matrix as is!), but be
     // careful!
@@ -540,6 +562,10 @@ class MultiTrajectory {
         calibratedSize(istate)};
   }
 
+  /// Retrieve a calibrated measurement covariance proxy instance for a
+  /// measurement at a given index
+  /// @param istate The track state
+  /// @return Const proxy
   typename ConstTrackStateProxy::EffectiveCalibratedCovariance
   effectiveCalibratedCovariance(IndexType istate) const {
     // This abuses an incorrectly sized vector / matrix to access the
@@ -577,18 +603,19 @@ class MultiTrajectory {
   ///       or projector. See @c TrackStatePropMask.
   /// @note The track states both need to be stored in the
   ///       same @c MultiTrajectory instance
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void shareFrom(IndexType iself, IndexType iother,
-                 TrackStatePropMask shareSource,
-                 TrackStatePropMask shareTarget) {
+                 TrackStatePropMask shareSource, TrackStatePropMask shareTarget)
+    requires(!ReadOnly)
+  {
     self().shareFrom_impl(iself, iother, shareSource, shareTarget);
   }
 
   /// Unset an optional track state component
   /// @param target The component to unset
   /// @param istate The track state index to operate on
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void unset(TrackStatePropMask target, IndexType istate) {
+  void unset(TrackStatePropMask target, IndexType istate)
+    requires(!ReadOnly)
+  {
     self().unset_impl(target, istate);
   }
 
@@ -596,8 +623,9 @@ class MultiTrajectory {
   /// @note Only available if the track state container is not read-only
   /// @param istate The track state index to alter
   /// @param mask The bitmask that instructs which components to allocate
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void addTrackStateComponents(IndexType istate, TrackStatePropMask mask) {
+  void addTrackStateComponents(IndexType istate, TrackStatePropMask mask)
+    requires(!ReadOnly)
+  {
     self().addTrackStateComponents_impl(istate, mask);
   }
 
@@ -606,9 +634,10 @@ class MultiTrajectory {
   /// @tparam key String key for the component to access
   /// @param istate The track state index to operate on
   /// @return Mutable reference to the component given by @p key
-  template <typename T, HashedString key, bool RO = ReadOnly,
-            typename = std::enable_if_t<!RO>>
-  T& component(IndexType istate) {
+  template <typename T, HashedString key>
+  T& component(IndexType istate)
+    requires(!ReadOnly)
+  {
     assert(checkOptional(key, istate));
     return *std::any_cast<T*>(self().component_impl(key, istate));
   }
@@ -618,8 +647,10 @@ class MultiTrajectory {
   /// @param key String key for the component to access
   /// @param istate The track state index to operate on
   /// @return Mutable reference to the component given by @p key
-  template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  T& component(HashedString key, IndexType istate) {
+  template <typename T>
+  T& component(HashedString key, IndexType istate)
+    requires(!ReadOnly)
+  {
     assert(checkOptional(key, istate));
     return *std::any_cast<T*>(self().component_impl(key, istate));
   }
@@ -658,9 +689,13 @@ class MultiTrajectory {
     self().allocateCalibrated_impl(istate, measdim);
   }
 
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setUncalibratedSourceLink(IndexType istate, SourceLink sourceLink) {
-    self().setUncalibratedSourceLink_impl(istate, std::move(sourceLink));
+  // This function will move to an rvalue reference in the next major version
+  template <typename source_link_t>
+  void setUncalibratedSourceLink(IndexType istate, source_link_t&& sourceLink)
+    requires(!ReadOnly)
+  {
+    self().setUncalibratedSourceLink_impl(
+        istate, std::forward<source_link_t>(sourceLink));
   }
 
   SourceLink getUncalibratedSourceLink(IndexType istate) const {
@@ -671,15 +706,18 @@ class MultiTrajectory {
     return self().referenceSurface_impl(istate);
   }
 
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setReferenceSurface(IndexType istate,
-                           std::shared_ptr<const Surface> surface) {
+                           std::shared_ptr<const Surface> surface)
+    requires(!ReadOnly)
+  {
     self().setReferenceSurface_impl(istate, std::move(surface));
   }
 
  private:
-  template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void copyDynamicFrom(IndexType dstIdx, const T& src, IndexType srcIdx) {
+  template <typename T>
+  void copyDynamicFrom(IndexType dstIdx, const T& src, IndexType srcIdx)
+    requires(!ReadOnly)
+  {
     const auto& dynamicKeys = src.self().dynamicKeys_impl();
     for (const auto key : dynamicKeys) {
       std::any srcPtr = src.self().component_impl(key, srcIdx);

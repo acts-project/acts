@@ -30,6 +30,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
@@ -98,9 +99,12 @@ const GSF gsfZero(makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
 std::default_random_engine rng(42);
 
 auto makeDefaultGsfOptions() {
-  return GsfOptions<VectorMultiTrajectory>{tester.geoCtx, tester.magCtx,
-                                           tester.calCtx, getExtensions(),
-                                           PropagatorPlainOptions()};
+  GsfOptions<VectorMultiTrajectory> opts{tester.geoCtx, tester.magCtx,
+                                         tester.calCtx};
+  opts.extensions = getExtensions();
+  opts.propagatorPlainOptions =
+      PropagatorPlainOptions(tester.geoCtx, tester.magCtx);
+  return opts;
 }
 
 // A Helper type to allow us to put the MultiComponentBoundTrackParameters into
@@ -237,8 +241,7 @@ BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
   // create a boundless target surface near the tracker exit
   Acts::Vector3 center(-3._m, 0., 0.);
   Acts::Vector3 normal(1., 0., 0.);
-  auto targetSurface =
-      Acts::Surface::makeShared<Acts::PlaneSurface>(center, normal);
+  auto targetSurface = Acts::CurvilinearSurface(center, normal).planeSurface();
 
   options.referenceSurface = targetSurface.get();
 

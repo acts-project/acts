@@ -19,7 +19,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
@@ -58,15 +57,6 @@ class PlaneSurface : public RegularSurface {
   /// @param transform is the additional transform applied after copying
   PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
                const Transform3& transform);
-
-  /// @deprecated Use `CurvilinearSurface` instead
-  ///
-  /// Dedicated Constructor with normal vector
-  /// This is for curvilinear surfaces which are by definition boundless
-  ///
-  /// @param center is the center position of the surface
-  /// @param normal is thenormal vector of the plane surface
-  PlaneSurface(const Vector3& center, const Vector3& normal);
 
   /// Constructor from DetectorElementBase : Element proxy
   ///
@@ -237,6 +227,7 @@ class PlaneSurface : public RegularSurface {
  private:
 };
 
-ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, PlaneSurface);
+static_assert(RegularSurfaceConcept<PlaneSurface>,
+              "PlaneSurface does not fulfill RegularSurfaceConcept");
 
 }  // namespace Acts

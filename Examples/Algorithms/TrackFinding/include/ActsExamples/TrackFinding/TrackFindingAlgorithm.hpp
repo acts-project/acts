@@ -69,7 +69,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     virtual ~TrackFinderFunction() = default;
     virtual TrackFinderResult operator()(const TrackParameters&,
                                          const TrackFinderOptions&,
-                                         TrackContainer&) const = 0;
+                                         TrackContainer&, TrackProxy) const = 0;
   };
 
   /// Create the track finder function implementation.
@@ -115,6 +115,9 @@ class TrackFindingAlgorithm final : public IAlgorithm {
         Acts::TrackExtrapolationStrategy::firstOrLast;
     /// Run finding in two directions
     bool twoWay = true;
+    /// Whether to run the finding in seed parameter direction or reverse
+    /// direction
+    bool reverseSearch = false;
     /// Whether to use seed deduplication
     /// This is only available if `inputSeeds` is set.
     bool seedDeduplication = false;

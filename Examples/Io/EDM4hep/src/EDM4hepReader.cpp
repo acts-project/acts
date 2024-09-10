@@ -30,7 +30,6 @@
 #include <edm4hep/SimTrackerHitCollection.h>
 #include <podio/Frame.h>
 #include <podio/ObjectID.h>
-#include <podio/ROOTFrameReader.h>
 
 namespace ActsExamples {
 
@@ -82,7 +81,7 @@ EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
   });
 }
 
-podio::ROOTFrameReader& EDM4hepReader::reader() {
+Acts::PodioUtil::ROOTReader& EDM4hepReader::reader() {
   bool exists = false;
   auto& reader = m_reader.local(exists);
   if (!exists) {
@@ -251,8 +250,13 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
   SimParticleContainer particlesFinal;
   SimParticleContainer particlesGenerator;
   for (const auto& inParticle : mcParticleCollection) {
-    const std::size_t index =
-        edm4hepParticleMap.find(inParticle.getObjectID().index)->second;
+    auto particleIt = edm4hepParticleMap.find(inParticle.getObjectID().index);
+    if (particleIt == edm4hepParticleMap.end()) {
+      ACTS_ERROR("Particle " << inParticle.getObjectID().index
+                             << " not found in particle map");
+      continue;
+    }
+    const std::size_t index = particleIt->second;
     const auto& particleInitial = unordered.at(index);
     if (!inParticle.isCreatedInSimulation()) {
       particlesGenerator.insert(particleInitial);
@@ -349,8 +353,14 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
             if (it == m_surfaceMap.end()) {
               ACTS_ERROR("Unable to find surface for detElement "
                          << detElement.name() << " with cellId " << cellId);
+              throw std::runtime_error("Unable to find surface for detElement");
             }
             const auto* surface = it->second;
+            if (surface == nullptr) {
+              ACTS_ERROR("Unable to find surface for detElement "
+                         << detElement.name() << " with cellId " << cellId);
+              throw std::runtime_error("Unable to find surface for detElement");
+            }
             ACTS_VERBOSE("   -> surface: " << surface->geometryId());
             return surface->geometryId();
           });

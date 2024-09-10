@@ -78,7 +78,7 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
-  Acts::PropagatorPlainOptions pOptions;
+  Acts::PropagatorPlainOptions pOptions(ctx.geoContext, ctx.magFieldContext);
   pOptions.maxSteps = 10000;
 
   PassThroughCalibrator pcalibrator;
@@ -142,7 +142,9 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
       }
     }
 
-    auto result = (*m_cfg.findTracks)(initialParameters.at(i), options, tracks);
+    auto rootBranch = tracks.makeTrack();
+    auto result = (*m_cfg.findTracks)(initialParameters.at(i), options, tracks,
+                                      rootBranch);
     nSeed++;
 
     if (!result.ok()) {

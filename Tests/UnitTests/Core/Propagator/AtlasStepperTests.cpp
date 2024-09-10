@@ -27,6 +27,7 @@
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -66,8 +67,10 @@ struct MockPropagatorState {
   Stepper::State stepping;
   /// Propagator options with only the relevant components.
   struct {
-    double stepTolerance = 10_um;
     Direction direction = Direction::Backward;
+    struct {
+      double stepTolerance = 10_um;
+    } stepping;
   } options;
 };
 
@@ -181,7 +184,7 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   auto newAbsMom = 0.9 * absMom;
 
   // example surface and bound parameters at the updated position
-  auto plane = Surface::makeShared<PlaneSurface>(newPos, newUnitDir);
+  auto plane = CurvilinearSurface(newPos, newUnitDir).planeSurface();
   auto params =
       BoundTrackParameters::create(plane, geoCtx, newPos4, newUnitDir,
                                    charge / absMom, cov, particleHypothesis)
@@ -240,7 +243,7 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
                                  particleHypothesis),
       stepSize, tolerance);
   // example surface at the current state position
-  auto plane = Surface::makeShared<PlaneSurface>(pos, unitDir);
+  auto plane = CurvilinearSurface(pos, unitDir).planeSurface();
 
   auto&& [pars, jac, pathLength] = stepper.boundState(state, *plane).value();
   // check parameters
@@ -576,8 +579,8 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       stepSize, tolerance);
 
   auto distance = 10_mm;
-  auto target = Surface::makeShared<PlaneSurface>(
-      pos + navDir * distance * unitDir, unitDir);
+  auto target = CurvilinearSurface(pos + navDir * distance * unitDir, unitDir)
+                    .planeSurface();
 
   stepper.updateSurfaceStatus(state, *target, 0, navDir,
                               BoundaryTolerance::Infinite());

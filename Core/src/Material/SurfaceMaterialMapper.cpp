@@ -244,8 +244,8 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
       ActionList<MaterialSurfaceCollector, MaterialVolumeCollector>;
   using AbortList = AbortList<EndOfWorldReached>;
 
-  PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
-                                                   mState.magFieldContext);
+  StraightLinePropagator::Options<ActionList, AbortList> options(
+      mState.geoContext, mState.magFieldContext);
 
   // Now collect the material layers by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();
@@ -286,8 +286,6 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   // To remember the bins of this event
   using MapBin =
       std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
-  using MaterialBin = std::pair<AccumulatedSurfaceMaterial*,
-                                std::shared_ptr<const ISurfaceMaterial>>;
   std::map<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>
       touchedMapBins;
   std::map<AccumulatedSurfaceMaterial*, std::shared_ptr<const ISurfaceMaterial>>

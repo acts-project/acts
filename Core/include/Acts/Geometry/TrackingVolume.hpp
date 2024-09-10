@@ -23,7 +23,6 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
 
@@ -115,6 +114,8 @@ class TrackingVolume : public Volume {
   ~TrackingVolume() override;
   TrackingVolume(const TrackingVolume&) = delete;
   TrackingVolume& operator=(const TrackingVolume&) = delete;
+  TrackingVolume(TrackingVolume&&) = default;
+  TrackingVolume& operator=(TrackingVolume&&) = default;
 
   /// Constructor for a container Volume
   /// - vacuum filled volume either as a for other tracking volumes
@@ -124,7 +125,7 @@ class TrackingVolume : public Volume {
   /// @param volbounds is the description of the volume boundaries
   /// @param volumeName is a string identifier
   TrackingVolume(const Transform3& transform,
-                 std::shared_ptr<const VolumeBounds> volbounds,
+                 std::shared_ptr<VolumeBounds> volbounds,
                  const std::string& volumeName = "undefined");
 
   /// Constructor for a full equipped Tracking Volume
@@ -139,8 +140,7 @@ class TrackingVolume : public Volume {
   /// @param denseVolumeVector  The contained dense volumes
   /// @param volumeName is a string identifier
   TrackingVolume(
-      const Transform3& transform,
-      std::shared_ptr<const VolumeBounds> volumeBounds,
+      const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       std::unique_ptr<const LayerArray> staticLayerArray = nullptr,
       std::shared_ptr<const TrackingVolumeArray> containedVolumeArray = nullptr,
@@ -150,8 +150,7 @@ class TrackingVolume : public Volume {
   /// Constructor from a regular volume
   /// @param volume is the volume to be converted
   /// @param volumeName is a string identifier
-  TrackingVolume(const Volume& volume,
-                 const std::string& volumeName = "undefined");
+  TrackingVolume(Volume& volume, const std::string& volumeName = "undefined");
 
   // @TODO: This needs to be refactored to include Gen3 volumes
   /// Return the associated sub Volume, returns THIS if no subVolume exists
@@ -174,7 +173,7 @@ class TrackingVolume : public Volume {
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
-  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
     if (!restrictToSensitives) {
       // Visit the boundary surfaces
@@ -225,7 +224,7 @@ class TrackingVolume : public Volume {
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
-  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
     visitSurfaces(std::forward<visitor_t>(visitor), true);
   }
@@ -239,7 +238,7 @@ class TrackingVolume : public Volume {
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
-  template <ACTS_CONCEPT(TrackingVolumeVisitor) visitor_t>
+  template <TrackingVolumeVisitor visitor_t>
   void visitVolumes(visitor_t&& visitor) const {
     visitor(this);
     if (m_confinedVolumes != nullptr) {
@@ -256,6 +255,10 @@ class TrackingVolume : public Volume {
 
   /// Returns the VolumeName - for debug reason, might be depreciated later
   const std::string& volumeName() const;
+
+  /// Set the volume name to @p volumeName
+  /// @param volumeName is the new name of
+  void setVolumeName(const std::string& volumeName);
 
   /// Return the material of the volume
   const IVolumeMaterial* volumeMaterial() const;
@@ -453,7 +456,7 @@ class TrackingVolume : public Volume {
   /// static layers
   std::unique_ptr<const LayerArray> m_confinedLayers = nullptr;
 
-  /// Array of Volumes inside the Volume when actin as container
+  /// Array of Volumes inside the Volume when acting as container
   std::shared_ptr<const TrackingVolumeArray> m_confinedVolumes = nullptr;
 
   /// confined dense

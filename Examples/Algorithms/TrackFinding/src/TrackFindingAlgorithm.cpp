@@ -20,15 +20,14 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -242,8 +241,10 @@ class BranchStopper {
     bool tooManyHoles =
         track.nHoles() > singleConfig->maxHoles || tooManyHolesPS;
     bool tooManyOutliers = track.nOutliers() > singleConfig->maxOutliers;
+    bool tooManyHolesAndOutliers = (track.nHoles() + track.nOutliers()) >
+                                   singleConfig->maxHolesAndOutliers;
 
-    if (tooManyHoles || tooManyOutliers) {
+    if (tooManyHoles || tooManyOutliers || tooManyHolesAndOutliers) {
       ++m_nStoppedBranches;
       return enoughMeasurements ? BranchStopperResult::StopAndKeep
                                 : BranchStopperResult::StopAndDrop;
@@ -346,11 +347,14 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       slAccessorDelegate;
   slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
 
-  Acts::PropagatorPlainOptions firstPropOptions;
+  Acts::PropagatorPlainOptions firstPropOptions(ctx.geoContext,
+                                                ctx.magFieldContext);
   firstPropOptions.maxSteps = m_cfg.maxSteps;
-  firstPropOptions.direction = Acts::Direction::Forward;
+  firstPropOptions.direction = m_cfg.reverseSearch ? Acts::Direction::Backward
+                                                   : Acts::Direction::Forward;
 
-  Acts::PropagatorPlainOptions secondPropOptions;
+  Acts::PropagatorPlainOptions secondPropOptions(ctx.geoContext,
+                                                 ctx.magFieldContext);
   secondPropOptions.maxSteps = m_cfg.maxSteps;
   secondPropOptions.direction = firstPropOptions.direction.invert();
 
@@ -358,21 +362,26 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   TrackFinderOptions firstOptions(ctx.geoContext, ctx.magFieldContext,
                                   ctx.calibContext, slAccessorDelegate,
                                   extensions, firstPropOptions);
+  firstOptions.targetSurface = m_cfg.reverseSearch ? pSurface.get() : nullptr;
 
   TrackFinderOptions secondOptions(ctx.geoContext, ctx.magFieldContext,
                                    ctx.calibContext, slAccessorDelegate,
                                    extensions, secondPropOptions);
-  secondOptions.targetSurface = pSurface.get();
+  secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
+  secondOptions.skipPrePropagationUpdate = true;
 
-  Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
-      Acts::EigenStepper<>(m_cfg.magneticField),
+  using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
+  using ExtrapolatorOptions =
+      Extrapolator::template Options<Acts::ActionList<Acts::MaterialInteractor>,
+                                     Acts::AbortList<Acts::EndOfWorldReached>>;
+
+  Extrapolator extrapolator(
+      Acts::SympyStepper(m_cfg.magneticField),
       Acts::Navigator({m_cfg.trackingGeometry},
                       logger().cloneWithSuffix("Navigator")),
       logger().cloneWithSuffix("Propagator"));
 
-  Acts::PropagatorOptions<Acts::ActionList<Acts::MaterialInteractor>,
-                          Acts::AbortList<Acts::EndOfWorldReached>>
-      extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
+  ExtrapolatorOptions extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
@@ -411,6 +420,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
         it->second = true;
       }
     });
+
+    Acts::calculateTrackQuantities(track);
 
     if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
       return;
@@ -459,8 +470,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     const Acts::BoundTrackParameters& firstInitialParameters =
         initialParameters.at(iSeed);
 
-    auto firstResult =
-        (*m_cfg.findTracks)(firstInitialParameters, firstOptions, tracksTemp);
+    auto firstRootBranch = tracksTemp.makeTrack();
+    auto firstResult = (*m_cfg.findTracks)(firstInitialParameters, firstOptions,
+                                           tracksTemp, firstRootBranch);
     nSeed++;
 
     if (!firstResult.ok()) {
@@ -498,7 +510,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
       if (m_cfg.twoWay) {
         std::optional<Acts::VectorMultiTrajectory::TrackStateProxy>
-            firstMeasurement;
+            firstMeasurementOpt;
         for (auto trackState : trackCandidate.trackStatesReversed()) {
           bool isMeasurement = trackState.typeFlags().test(
               Acts::TrackStateFlag::MeasurementFlag);
@@ -508,36 +520,31 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
           // decrease resolution because only the smoothing corrected the very
           // first prediction as filtering is not possible.
           if (isMeasurement && !isOutlier) {
-            firstMeasurement = trackState;
+            firstMeasurementOpt = trackState;
           }
         }
 
-        if (firstMeasurement.has_value()) {
-          Acts::BoundTrackParameters secondInitialParameters =
-              trackCandidate.createParametersFromState(*firstMeasurement);
+        if (firstMeasurementOpt.has_value()) {
+          auto& firstMeasurement = firstMeasurementOpt.value();
 
-          auto secondResult = (*m_cfg.findTracks)(secondInitialParameters,
-                                                  secondOptions, tracksTemp);
+          Acts::BoundTrackParameters secondInitialParameters =
+              trackCandidate.createParametersFromState(firstMeasurement);
+
+          auto secondRootBranch = tracksTemp.makeTrack();
+          secondRootBranch.copyFrom(trackCandidate, false);
+          auto secondResult =
+              (*m_cfg.findTracks)(secondInitialParameters, secondOptions,
+                                  tracksTemp, secondRootBranch);
 
           if (!secondResult.ok()) {
             ACTS_WARNING("Second track finding failed for seed "
                          << iSeed << " with error" << secondResult.error());
           } else {
-            auto firstState =
-                *std::next(trackCandidate.trackStatesReversed().begin(),
-                           trackCandidate.nTrackStates() - 1);
-            assert(firstState.previous() == Acts::kTrackIndexInvalid);
+            // store the original previous state to restore it later
+            auto originalFirstMeasurementPrevious = firstMeasurement.previous();
 
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
-              if (!secondTrack.hasReferenceSurface()) {
-                ACTS_WARNING("Second track has no reference surface.");
-                continue;
-              }
-              if (secondTrack.nMeasurements() <= 1) {
-                continue;
-              }
-
               // TODO a copy of the track should not be necessary but is the
               //      safest way with the current EDM
               // TODO a lightweight copy without copying all the track state
@@ -550,29 +557,53 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               // processed
               secondTrackCopy.reverseTrackStates(true);
 
-              firstState.previous() =
-                  (*std::next(secondTrackCopy.trackStatesReversed().begin()))
-                      .index();
+              firstMeasurement.previous() =
+                  secondTrackCopy.outermostTrackState().index();
 
-              Acts::calculateTrackQuantities(trackCandidate);
+              trackCandidate.copyFrom(secondTrackCopy, false);
 
-              // TODO This extrapolation should not be necessary
-              // TODO The CKF is targeting this surface and should communicate
-              //      the resulting parameters
-              // TODO Removing this requires changes in the core CKF
-              //      implementation
-              auto secondExtrapolationResult =
-                  Acts::extrapolateTrackToReferenceSurface(
-                      trackCandidate, *pSurface, extrapolator,
-                      extrapolationOptions, m_cfg.extrapolationStrategy,
-                      logger());
-              if (!secondExtrapolationResult.ok()) {
-                m_nFailedExtrapolation++;
-                ACTS_ERROR("Second extrapolation for seed "
-                           << iSeed << " and track " << secondTrack.index()
-                           << " failed with error "
-                           << secondExtrapolationResult.error());
-                continue;
+              // finalize the track candidate
+
+              bool doExtrapolate = true;
+
+              if (!m_cfg.reverseSearch) {
+                // these parameters are already extrapolated by the CKF and have
+                // the optimal resolution. note that we did not smooth all the
+                // states.
+
+                // only extrapolate if we did not do it already
+                doExtrapolate = !trackCandidate.hasReferenceSurface();
+              } else {
+                // smooth the full track and extrapolate to the reference
+
+                auto secondSmoothingResult =
+                    Acts::smoothTrack(ctx.geoContext, trackCandidate, logger());
+                if (!secondSmoothingResult.ok()) {
+                  m_nFailedSmoothing++;
+                  ACTS_ERROR("Second smoothing for seed "
+                             << iSeed << " and track " << secondTrack.index()
+                             << " failed with error "
+                             << secondSmoothingResult.error());
+                  continue;
+                }
+
+                trackCandidate.reverseTrackStates(true);
+              }
+
+              if (doExtrapolate) {
+                auto secondExtrapolationResult =
+                    Acts::extrapolateTrackToReferenceSurface(
+                        trackCandidate, *pSurface, extrapolator,
+                        extrapolationOptions, m_cfg.extrapolationStrategy,
+                        logger());
+                if (!secondExtrapolationResult.ok()) {
+                  m_nFailedExtrapolation++;
+                  ACTS_ERROR("Second extrapolation for seed "
+                             << iSeed << " and track " << secondTrack.index()
+                             << " failed with error "
+                             << secondExtrapolationResult.error());
+                  continue;
+                }
               }
 
               addTrack(trackCandidate);
@@ -580,16 +611,17 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               ++nSecond;
             }
 
-            // restore `trackCandidate` to its original state in case we need it
-            // again
-            firstState.previous() = Acts::kTrackIndexInvalid;
-            Acts::calculateTrackQuantities(trackCandidate);
+            // restore the original previous state
+            firstMeasurement.previous() = originalFirstMeasurementPrevious;
           }
         }
       }
 
       // if no second track was found, we will use only the first track
       if (nSecond == 0) {
+        // restore the track to the original state
+        trackCandidate.copyFrom(firstTrack, false);
+
         auto firstExtrapolationResult =
             Acts::extrapolateTrackToReferenceSurface(
                 trackCandidate, *pSurface, extrapolator, extrapolationOptions,

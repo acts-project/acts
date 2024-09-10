@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -21,7 +22,6 @@
 #include <edm4hep/TrackerHitCollection.h>
 #include <edm4hep/TrackerHitPlane.h>
 #include <edm4hep/TrackerHitPlaneCollection.h>
-#include <podio/Frame.h>
 
 namespace ActsExamples {
 
@@ -66,11 +66,10 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
 
   for (const auto& trackerHitPlane : trackerHitPlaneCollection) {
     Cluster cluster;
-    auto measurement = EDM4hepUtil::readMeasurement(
-        trackerHitPlane, &trackerHitRawCollection, &cluster,
+    EDM4hepUtil::readMeasurement(
+        measurements, trackerHitPlane, &trackerHitRawCollection, &cluster,
         [](std::uint64_t cellId) { return Acts::GeometryIdentifier(cellId); });
 
-    measurements.push_back(std::move(measurement));
     clusters.push_back(std::move(cluster));
   }
 
@@ -85,7 +84,7 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   return ProcessCode::SUCCESS;
 }
 
-podio::ROOTFrameReader& EDM4hepMeasurementReader::reader() {
+Acts::PodioUtil::ROOTReader& EDM4hepMeasurementReader::reader() {
   bool exists = false;
   auto& reader = m_reader.local(exists);
   if (!exists) {

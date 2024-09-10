@@ -44,7 +44,7 @@ def runTruthTrackingGx2f(
         addParticleGun(
             s,
             ParticleConfig(num=1, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
-            EtaConfig(-2.5, 2.5, uniform=True),
+            EtaConfig(-3.0, 3.0, uniform=True),
             MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
             PhiConfig(0.0, 360.0 * u.degree),
             vtxGen=acts.examples.GaussianVertexGenerator(
@@ -93,7 +93,6 @@ def runTruthTrackingGx2f(
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.muon,
         truthSeedRanges=TruthSeedRanges(
-            pt=(1 * u.GeV, None),
             nHits=(7, None),
         ),
     )
@@ -104,6 +103,7 @@ def runTruthTrackingGx2f(
         field,
         nUpdateMax=17,
         relChi2changeCutOff=1e-7,
+        multipleScattering=True,
     )
 
     s.addAlgorithm(
@@ -160,7 +160,7 @@ if "__main__" == __name__:
     # ODD
     from acts.examples.odd import getOpenDataDetector
 
-    detector, trackingGeometry, _ = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector()
     digiConfigFile = (
         srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
     )

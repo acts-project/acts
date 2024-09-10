@@ -164,21 +164,7 @@ T clampValue(U value) {
                     static_cast<U>(std::numeric_limits<T>::max()));
 }
 
-/// Return min/max from a (optionally) sorted series, obsolete with C++20
-/// (ranges)
-///
-/// @tparam T a numeric series
-///
-/// @param tseries is the number series
-///
-/// @return [ min, max ] in an array of length 2
-template <typename T>
-std::array<typename T::value_type, 2u> min_max(const T& tseries) {
-  return {*std::min_element(tseries.begin(), tseries.end()),
-          *std::max_element(tseries.begin(), tseries.end())};
-}
-
-/// Return range and medium of a sorted numeric series
+/// Return range and medium of an unsorted numeric series
 ///
 /// @tparam T a numeric series
 ///
@@ -187,9 +173,9 @@ std::array<typename T::value_type, 2u> min_max(const T& tseries) {
 /// @return [ range, medium ] in an tuple
 template <typename T>
 std::tuple<typename T::value_type, ActsScalar> range_medium(const T& tseries) {
-  auto [min, max] = min_max(tseries);
-  typename T::value_type range = (max - min);
-  ActsScalar medium = static_cast<ActsScalar>((max + min) * 0.5);
+  auto [minIt, maxIt] = std::ranges::minmax_element(tseries);
+  typename T::value_type range = (*maxIt - *minIt);
+  ActsScalar medium = static_cast<ActsScalar>((*maxIt + *minIt) * 0.5);
   return std::tie(range, medium);
 }
 

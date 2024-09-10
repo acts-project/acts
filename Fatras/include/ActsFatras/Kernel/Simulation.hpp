@@ -83,11 +83,12 @@ struct SingleParticleSimulation {
     using Result = typename Actor::result_type;
     using Actions = Acts::ActionList<Actor>;
     using Abort = Acts::AbortList<Aborter, Acts::EndOfWorldReached>;
-    using PropagatorOptions = Acts::PropagatorOptions<Actions, Abort>;
+    using PropagatorOptions =
+        typename propagator_t::template Options<Actions, Abort>;
 
     // Construct per-call options.
     PropagatorOptions options(geoCtx, magCtx);
-    options.maxStepSize = maxStepSize;
+    options.stepping.maxStepSize = maxStepSize;
     options.pathLimit = pathLimit;
     // setup the interactor as part of the propagator options
     auto &actor = options.actionList.template get<Actor>();
@@ -258,7 +259,7 @@ struct Simulation {
       }
     }
 
-    // the overall function call succeeded, i.e. no fatal errors occured.
+    // the overall function call succeeded, i.e. no fatal errors occurred.
     // yet, there might have been some particle for which the propagation
     // failed. thus, the successful result contains a list of failed particles.
     // sounds a bit weird, but that is the way it is.

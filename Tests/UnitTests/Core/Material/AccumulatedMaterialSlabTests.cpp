@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(Nothing) {
   AccumulatedMaterialSlab a;
   auto [average, trackCount] = a.totalAverage();
   // material is vacuum
-  BOOST_CHECK(!(average));
+  BOOST_CHECK(!average.isValid());
   BOOST_CHECK_EQUAL(trackCount, 0u);
 }
 
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(EmptyTracksIgnored) {
   a.trackAverage();
   a.trackAverage();
   auto [average, trackCount] = a.totalAverage();
-  BOOST_CHECK(!(average));
+  BOOST_CHECK(!average.isValid());
   BOOST_CHECK_EQUAL(trackCount, 0u);
 }
 
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(EmptyTracks) {
   a.trackAverage(true);
   a.trackAverage(true);
   auto [average, trackCount] = a.totalAverage();
-  BOOST_CHECK(!(average));
+  BOOST_CHECK(!average.isValid());
   BOOST_CHECK_EQUAL(trackCount, 3u);
 }
 

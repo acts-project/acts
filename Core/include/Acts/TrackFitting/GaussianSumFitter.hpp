@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
@@ -18,6 +17,7 @@
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 
 namespace Acts {
 
@@ -91,29 +91,28 @@ struct GaussianSumFitter {
 
   /// @brief The fit function for the Direct navigator
   template <typename source_link_it_t, typename start_parameters_t,
-            typename track_container_t, template <typename> class holder_t>
+            TrackContainerFrontend track_container_t>
   auto fit(source_link_it_t begin, source_link_it_t end,
            const start_parameters_t& sParameters,
            const GsfOptions<traj_t>& options,
            const std::vector<const Surface*>& sSequence,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const {
+           track_container_t& trackContainer) const {
     // Check if we have the correct navigator
     static_assert(
         std::is_same_v<DirectNavigator, typename propagator_t::Navigator>);
 
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
+      using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<NavigationBreakAborter>;
+      using PropagatorOptions =
+          typename propagator_t::template Options<Actors, Aborters>;
 
-      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
-                                                      opts.magFieldContext);
+      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.actionList.template get<DirectNavigator::Initializer>()
-          .navSurfaces = sSequence;
+      propOptions.navigation.surfaces = sSequence;
       propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
 
@@ -122,20 +121,20 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
+      using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<>;
+      using PropagatorOptions =
+          typename propagator_t::template Options<Actors, Aborters>;
 
       std::vector<const Surface*> backwardSequence(
           std::next(sSequence.rbegin()), sSequence.rend());
       backwardSequence.push_back(opts.referenceSurface);
 
-      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
-                                                      opts.magFieldContext);
+      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.actionList.template get<DirectNavigator::Initializer>()
-          .navSurfaces = std::move(backwardSequence);
+      propOptions.navigation.surfaces = backwardSequence;
       propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
 
@@ -148,12 +147,11 @@ struct GaussianSumFitter {
 
   /// @brief The fit function for the standard navigator
   template <typename source_link_it_t, typename start_parameters_t,
-            typename track_container_t, template <typename> class holder_t>
+            TrackContainerFrontend track_container_t>
   auto fit(source_link_it_t begin, source_link_it_t end,
            const start_parameters_t& sParameters,
            const GsfOptions<traj_t>& options,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const {
+           track_container_t& trackContainer) const {
     // Check if we have the correct navigator
     static_assert(std::is_same_v<Navigator, typename propagator_t::Navigator>);
 
@@ -161,10 +159,13 @@ struct GaussianSumFitter {
     auto fwdPropInitializer = [this](const auto& opts) {
       using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached, NavigationBreakAborter>;
+      using PropagatorOptions =
+          typename propagator_t::template Options<Actors, Aborters>;
 
-      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
-                                                      opts.magFieldContext);
+      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
+
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
+
       propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
 
@@ -175,9 +176,10 @@ struct GaussianSumFitter {
     auto bwdPropInitializer = [this](const auto& opts) {
       using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached>;
+      using PropagatorOptions =
+          typename propagator_t::template Options<Actors, Aborters>;
 
-      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
-                                                      opts.magFieldContext);
+      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
@@ -196,16 +198,13 @@ struct GaussianSumFitter {
   /// first measurementSurface
   template <typename source_link_it_t, typename start_parameters_t,
             typename fwd_prop_initializer_t, typename bwd_prop_initializer_t,
-            typename track_container_t, template <typename> class holder_t>
-  Acts::Result<
-      typename TrackContainer<track_container_t, traj_t, holder_t>::TrackProxy>
-  fit_impl(source_link_it_t begin, source_link_it_t end,
-           const start_parameters_t& sParameters,
-           const GsfOptions<traj_t>& options,
-           const fwd_prop_initializer_t& fwdPropInitializer,
-           const bwd_prop_initializer_t& bwdPropInitializer,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const {
+            TrackContainerFrontend track_container_t>
+  Acts::Result<typename track_container_t::TrackProxy> fit_impl(
+      source_link_it_t begin, source_link_it_t end,
+      const start_parameters_t& sParameters, const GsfOptions<traj_t>& options,
+      const fwd_prop_initializer_t& fwdPropInitializer,
+      const bwd_prop_initializer_t& bwdPropInitializer,
+      track_container_t& trackContainer) const {
     // return or abort utility
     auto return_error_or_abort = [&](auto error) {
       if (options.abortOnError) {
@@ -344,8 +343,6 @@ struct GaussianSumFitter {
       const Surface& target = options.referenceSurface
                                   ? *options.referenceSurface
                                   : sParameters.referenceSurface();
-
-      using PM = TrackStatePropMask;
 
       const auto& params = *fwdGsfResult.lastMeasurementState;
       auto state =

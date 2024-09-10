@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -40,7 +42,7 @@ enum class TrackExtrapolationError {
 
 std::error_code make_error_code(TrackExtrapolationError e);
 
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t>
 Result<typename track_proxy_t::ConstTrackStateProxy> findFirstMeasurementState(
     const track_proxy_t &track) {
   using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
@@ -63,7 +65,7 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findFirstMeasurementState(
   return result;
 }
 
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t>
 Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
     const track_proxy_t &track) {
   using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
@@ -85,18 +87,20 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
 /// @brief Smooth a track using the gain matrix smoother
 ///
 /// @tparam track_proxy_t The track proxy type
+/// @tparam smoother_t The smoother type
 ///
 /// @param geoContext The geometry context
 /// @param track The track to smooth
 /// @param logger The logger
+/// @param smoother The smoother
 ///
 /// @return The result of the smoothing
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t,
+          typename smoother_t = GainMatrixSmoother>
 Result<void> smoothTrack(
     const GeometryContext &geoContext, track_proxy_t &track,
-    const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO)) {
-  Acts::GainMatrixSmoother smoother;
-
+    const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO),
+    smoother_t smoother = GainMatrixSmoother()) {
   auto &trackContainer = track.container();
   auto &trackStateContainer = trackContainer.trackStateContainer();
 
@@ -127,7 +131,7 @@ Result<void> smoothTrack(
 /// @param logger The logger
 ///
 /// @return The result of the smoothing
-template <typename track_container_t>
+template <TrackContainerFrontend track_container_t>
 Result<void> smoothTracks(
     const GeometryContext &geoContext, const track_container_t &trackContainer,
     const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO)) {
@@ -157,7 +161,7 @@ Result<void> smoothTracks(
 ///
 /// @return The result of the search containing the track state
 ///         and the distance to the reference surface
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t>
 Result<std::pair<typename track_proxy_t::ConstTrackStateProxy, double>>
 findTrackStateForExtrapolation(
     const GeometryContext &geoContext, const track_proxy_t &track,
@@ -194,7 +198,7 @@ findTrackStateForExtrapolation(
       }
 
       SurfaceIntersection intersection = intersect(*first);
-      if (!intersection) {
+      if (!intersection.isValid()) {
         ACTS_ERROR("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
             TrackExtrapolationError::ReferenceSurfaceUnreachable);
@@ -214,7 +218,7 @@ findTrackStateForExtrapolation(
       }
 
       SurfaceIntersection intersection = intersect(*last);
-      if (!intersection) {
+      if (!intersection.isValid()) {
         ACTS_ERROR("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
             TrackExtrapolationError::ReferenceSurfaceUnreachable);
@@ -245,13 +249,13 @@ findTrackStateForExtrapolation(
       double absDistanceFirst = std::abs(intersectionFirst.pathLength());
       double absDistanceLast = std::abs(intersectionLast.pathLength());
 
-      if (intersectionFirst && absDistanceFirst <= absDistanceLast) {
+      if (intersectionFirst.isValid() && absDistanceFirst <= absDistanceLast) {
         ACTS_VERBOSE("using first track state with intersection at "
                      << intersectionFirst.pathLength());
         return std::make_pair(*first, intersectionFirst.pathLength());
       }
 
-      if (intersectionLast && absDistanceLast <= absDistanceFirst) {
+      if (intersectionLast.isValid() && absDistanceLast <= absDistanceFirst) {
         ACTS_VERBOSE("using last track state with intersection at "
                      << intersectionLast.pathLength());
         return std::make_pair(*last, intersectionLast.pathLength());
@@ -282,7 +286,7 @@ findTrackStateForExtrapolation(
 /// @param logger The logger
 ///
 /// @return The result of the extrapolation
-template <typename track_proxy_t, typename propagator_t,
+template <TrackProxyConcept track_proxy_t, typename propagator_t,
           typename propagator_options_t>
 Result<void> extrapolateTrackToReferenceSurface(
     track_proxy_t &track, const Surface &referenceSurface,
@@ -339,7 +343,7 @@ Result<void> extrapolateTrackToReferenceSurface(
 /// @param logger The logger
 ///
 /// @return The result of the extrapolation
-template <typename track_container_t, typename propagator_t,
+template <TrackContainerFrontend track_container_t, typename propagator_t,
           typename propagator_options_t>
 Result<void> extrapolateTracksToReferenceSurface(
     const track_container_t &trackContainer, const Surface &referenceSurface,
@@ -360,6 +364,41 @@ Result<void> extrapolateTracksToReferenceSurface(
   }
 
   return result;
+}
+
+/// Helper function to calculate a number of track level quantities and store
+/// them on the track itself
+/// @note The input track needs to be mutable, so @c ReadOnly=false
+/// @tparam track_container_t the track container backend
+/// @tparam track_state_container_t the track state container backend
+/// @tparam holder_t the holder type for the track container backends
+/// @param track A mutable track proxy to operate on
+template <TrackProxyConcept track_proxy_t>
+void calculateTrackQuantities(track_proxy_t track) {
+  track.chi2() = 0;
+  track.nDoF() = 0;
+
+  track.nHoles() = 0;
+  track.nMeasurements() = 0;
+  track.nSharedHits() = 0;
+  track.nOutliers() = 0;
+
+  for (const auto &trackState : track.trackStatesReversed()) {
+    auto typeFlags = trackState.typeFlags();
+
+    if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+      track.nHoles()++;
+    } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
+      track.nOutliers()++;
+    } else if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
+        track.nSharedHits()++;
+      }
+      track.nMeasurements()++;
+      track.chi2() += trackState.chi2();
+      track.nDoF() += trackState.calibratedSize();
+    }
+  }
 }
 
 }  // namespace Acts

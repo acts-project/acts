@@ -15,7 +15,6 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts::detail {
 
@@ -30,7 +29,6 @@ void voidFitterCalibrator(const GeometryContext& /*gctx*/,
 template <typename traj_t>
 Result<void> voidFitterUpdater(const GeometryContext& /*gctx*/,
                                typename traj_t::TrackStateProxy trackState,
-                               Direction /*direction*/,
                                const Logger& /*logger*/) {
   trackState.filtered() = trackState.predicted();
   trackState.filteredCovariance() = trackState.predictedCovariance();

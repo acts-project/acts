@@ -13,9 +13,9 @@
 #include "Acts/EventData/MultiTrajectoryBackendConcept.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -133,7 +133,7 @@ class VectorMultiTrajectoryBase {
         h("meas", isMeas, weight(meas_size));
         h("measCov", isMeas, weight(meas_cov_size));
         h("sourceLinks", isMeas, weight(sizeof(const SourceLink)));
-        h("projectors", isMeas, weight(sizeof(ProjectorBitset)));
+        h("projectors", isMeas, weight(sizeof(SerializedSubspaceIndices)));
       }
 
       if (ts.hasJacobian() &&
@@ -327,7 +327,7 @@ class VectorMultiTrajectoryBase {
 
   std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_jac;
   std::vector<std::optional<SourceLink>> m_sourceLinks;
-  std::vector<ProjectorBitset> m_projectors;
+  std::vector<SerializedSubspaceIndices> m_projectors;
 
   // owning vector of shared pointers to surfaces
   //
@@ -440,9 +440,7 @@ class VectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const {
-    return m_index.size();
-  }
+  IndexType size_impl() const { return m_index.size(); }
 
   void clear_impl();
 
@@ -485,7 +483,8 @@ class VectorMultiTrajectory final
     m_measCov.resize(m_measCov.size() + measdim * measdim);
   }
 
-  void setUncalibratedSourceLink_impl(IndexType istate, SourceLink sourceLink) {
+  void setUncalibratedSourceLink_impl(IndexType istate,
+                                      SourceLink&& sourceLink) {
     m_sourceLinks[m_index[istate].iuncalibrated] = std::move(sourceLink);
   }
 
@@ -500,7 +499,9 @@ class VectorMultiTrajectory final
   // END INTERFACE
 };
 
-ACTS_STATIC_CHECK_CONCEPT(MutableMultiTrajectoryBackend, VectorMultiTrajectory);
+static_assert(
+    MutableMultiTrajectoryBackend<VectorMultiTrajectory>,
+    "VectorMultiTrajectory does not fulfill MutableMultiTrajectoryBackend");
 
 class ConstVectorMultiTrajectory;
 
@@ -567,9 +568,7 @@ class ConstVectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const {
-    return m_index.size();
-  }
+  IndexType size_impl() const { return m_index.size(); }
 
   std::any component_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::component_impl<true>(
@@ -583,7 +582,8 @@ class ConstVectorMultiTrajectory final
   // END INTERFACE
 };
 
-ACTS_STATIC_CHECK_CONCEPT(ConstMultiTrajectoryBackend,
-                          ConstVectorMultiTrajectory);
+static_assert(
+    ConstMultiTrajectoryBackend<ConstVectorMultiTrajectory>,
+    "ConctVectorMultiTrajectory does not fulfill ConstMultiTrajectoryBackend");
 
 }  // namespace Acts

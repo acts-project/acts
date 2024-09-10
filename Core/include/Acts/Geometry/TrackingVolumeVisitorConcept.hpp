@@ -8,8 +8,7 @@
 
 #pragma once
 
-#if defined(__cpp_concepts)
-#include <concepts>
+#include <utility>
 
 namespace Acts {
 
@@ -17,9 +16,7 @@ class TrackingVolume;
 
 template <typename T>
 concept TrackingVolumeVisitor = requires(T v) {
-  {v(std::declval<const TrackingVolume*>())};
+  { v(std::declval<const TrackingVolume*>()) };
 };
 
 }  // namespace Acts
-
-#endif

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,17 +11,18 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <cstddef>
+#include <span>
 
 #include <Eigen/Core>
 
@@ -313,8 +314,9 @@ class TrackStateProxy {
   /// the track sequence
   /// @note Only available if the track state proxy is not read-only
   /// @return The index of the previous track state.
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  IndexType& previous() {
+  IndexType& previous()
+    requires(!ReadOnly)
+  {
     return component<IndexType, hashString("previous")>();
   }
 
@@ -332,16 +334,18 @@ class TrackStateProxy {
   /// Unset an optional track state component
   /// @note Only available if the track state proxy is not read-only
   /// @param target The component to unset
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void unset(TrackStatePropMask target) {
+  void unset(TrackStatePropMask target)
+    requires(!ReadOnly)
+  {
     m_traj->self().unset(target, m_istate);
   }
 
   /// Add additional components to the track state
   /// @note Only available if the track state proxy is not read-only
   /// @param mask The bitmask that instructs which components to allocate
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void addComponents(TrackStatePropMask mask) {
+  void addComponents(TrackStatePropMask mask)
+    requires(!ReadOnly)
+  {
     m_traj->self().addTrackStateComponents_impl(m_istate, mask);
   }
 
@@ -365,8 +369,9 @@ class TrackStateProxy {
   /// Set the reference surface to a given value
   /// @param srf Shared pointer to the surface to set
   /// @note This overload is only present in case @c ReadOnly is false.
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setReferenceSurface(std::shared_ptr<const Surface> srf) {
+  void setReferenceSurface(std::shared_ptr<const Surface> srf)
+    requires(!ReadOnly)
+  {
     m_traj->setReferenceSurface(m_istate, std::move(srf));
   }
   // NOLINTEND(performance-unnecessary-value-param)
@@ -376,8 +381,9 @@ class TrackStateProxy {
   /// value directly into the backing store.
   /// @note this overload is only enabled in case the proxy is not read-only
   /// @return Mutable reference to the chi2 value
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  float& chi2() {
+  float& chi2()
+    requires(!ReadOnly)
+  {
     return component<float, hashString("chi2")>();
   }
 
@@ -391,8 +397,9 @@ class TrackStateProxy {
   /// This overloaded is only enabled if not read-only, and returns a mutable
   /// reference.
   /// @return Mutable reference to the pathlength.
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  double& pathLength() {
+  double& pathLength()
+    requires(!ReadOnly)
+  {
     return component<double, hashString("pathLength")>();
   }
 
@@ -406,8 +413,9 @@ class TrackStateProxy {
   /// This overloaded is only enabled if not read-only, and returns a mutable
   /// reference.
   /// @return reference to the type flags.
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  TrackStateType typeFlags() {
+  TrackStateType typeFlags()
+    requires(!ReadOnly)
+  {
     return TrackStateType{
         component<TrackStateType::raw_type, hashString("typeFlags")>()};
   }
@@ -446,8 +454,9 @@ class TrackStateProxy {
         component<IndexType, hashString("predicted")>());
   }
 
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  Parameters predicted() {
+  Parameters predicted()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("predicted")>());
     return m_traj->self().parameters(
         component<IndexType, hashString("predicted")>());
@@ -461,8 +470,9 @@ class TrackStateProxy {
         component<IndexType, hashString("predicted")>());
   }
 
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  Covariance predictedCovariance() {
+  Covariance predictedCovariance()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("predicted")>());
     return m_traj->self().covariance(
         component<IndexType, hashString("predicted")>());
@@ -484,8 +494,9 @@ class TrackStateProxy {
   /// Filtered track parameters vector
   /// @return The filtered parameters
   /// @note Mutable version
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  Parameters filtered() {
+  Parameters filtered()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("filtered")>());
     return m_traj->self().parameters(
         component<IndexType, hashString("filtered")>());
@@ -503,8 +514,9 @@ class TrackStateProxy {
   /// Filtered track parameters covariance matrix
   /// @return The filtered parameters covariance
   /// @note Mutable version
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  Covariance filteredCovariance() {
+  Covariance filteredCovariance()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("filtered")>());
     return m_traj->self().covariance(
         component<IndexType, hashString("filtered")>());
@@ -526,8 +538,9 @@ class TrackStateProxy {
   /// Smoothed track parameters vector
   /// @return The smoothed parameters
   /// @note Mutable version
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  Parameters smoothed() {
+  Parameters smoothed()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("smoothed")>());
     return m_traj->self().parameters(
         component<IndexType, hashString("smoothed")>());
@@ -545,8 +558,9 @@ class TrackStateProxy {
   /// Smoothed track parameters covariance matrix
   /// @return the parameter covariance matrix
   /// @note Mutable version
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  Covariance smoothedCovariance() {
+  Covariance smoothedCovariance()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("smoothed")>());
     return m_traj->self().covariance(
         component<IndexType, hashString("smoothed")>());
@@ -567,8 +581,9 @@ class TrackStateProxy {
   /// Returns the jacobian from the previous trackstate to this one
   /// @return The jacobian matrix
   /// @note Mutable version
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  Covariance jacobian() {
+  Covariance jacobian()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("jacobian")>());
     return m_traj->self().jacobian(m_istate);
   }
@@ -634,9 +649,11 @@ class TrackStateProxy {
   /// and store it.
   /// @param projector The projector in the form of a dense matrix
   /// @note @p projector is assumed to only have 0s or 1s as components.
-  template <typename Derived, bool RO = ReadOnly,
-            typename = std::enable_if_t<!RO>>
-  void setProjector(const Eigen::MatrixBase<Derived>& projector) {
+  template <typename Derived>
+  [[deprecated("use setProjector(span) instead")]] void setProjector(
+      const Eigen::MatrixBase<Derived>& projector)
+    requires(!ReadOnly)
+  {
     constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
     constexpr int cols = Eigen::MatrixBase<Derived>::ColsAtCompileTime;
 
@@ -657,9 +674,8 @@ class TrackStateProxy {
     fullProjector.template topLeftCorner<rows, cols>() = projector;
 
     // convert to bitset before storing
-    auto projectorBitset = matrixToBitset(fullProjector);
-    component<ProjectorBitset, hashString("projector")>() =
-        projectorBitset.to_ullong();
+    ProjectorBitset projectorBitset = matrixToBitset(fullProjector).to_ulong();
+    setProjectorBitset(projectorBitset);
   }
 
   /// Directly get the projector bitset, a compressed form of a projection
@@ -668,9 +684,9 @@ class TrackStateProxy {
   ///       to another. Use the `projector` or `effectiveProjector` method if
   ///       you want to access the matrix.
   /// @return The projector bitset
-  ProjectorBitset projectorBitset() const {
-    assert(has<hashString("projector")>());
-    return component<ProjectorBitset, hashString("projector")>();
+  [[deprecated("use projector() instead")]] ProjectorBitset projectorBitset()
+      const {
+    return variableBoundSubspaceHelper().projectorBitset();
   }
 
   /// Set the projector bitset, a compressed form of a projection matrix
@@ -679,21 +695,97 @@ class TrackStateProxy {
   /// @note This is mainly to copy explicitly a projector from one state
   ///       to another. If you have a projection matrix, set it with
   ///       `setProjector`.
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setProjectorBitset(ProjectorBitset proj) {
+  [[deprecated("use setProjector(span) instead")]] void setProjectorBitset(
+      ProjectorBitset proj)
+    requires(!ReadOnly)
+  {
+    BoundMatrix projMatrix = bitsetToMatrix<BoundMatrix>(proj);
+    BoundSubspaceIndices boundSubspace =
+        projectorToSubspaceIndices<eBoundSize>(projMatrix);
+    setBoundSubspaceIndices(boundSubspace);
+  }
+
+  BoundSubspaceIndices boundSubspaceIndices() const {
     assert(has<hashString("projector")>());
-    component<ProjectorBitset, hashString("projector")>() = proj;
+    return deserializeSubspaceIndices<eBoundSize>(
+        component<SerializedSubspaceIndices, hashString("projector")>());
+  }
+
+  template <std::size_t measdim>
+  SubspaceIndices<measdim> subspaceIndices() const {
+    BoundSubspaceIndices boundSubspace = BoundSubspaceIndices();
+    SubspaceIndices<measdim> subspace;
+    std::copy(boundSubspace.begin(), boundSubspace.begin() + measdim,
+              subspace.begin());
+    return subspace;
+  }
+
+  void setBoundSubspaceIndices(BoundSubspaceIndices boundSubspace)
+    requires(!ReadOnly)
+  {
+    assert(has<hashString("projector")>());
+    component<SerializedSubspaceIndices, hashString("projector")>() =
+        serializeSubspaceIndices(boundSubspace);
+  }
+
+  template <std::size_t measdim>
+  void setSubspaceIndices(SubspaceIndices<measdim> subspace)
+    requires(!ReadOnly && measdim <= eBoundSize)
+  {
+    assert(has<hashString("projector")>());
+    BoundSubspaceIndices boundSubspace{};
+    std::copy(subspace.begin(), subspace.end(), boundSubspace.begin());
+    setBoundSubspaceIndices(boundSubspace);
+  }
+
+  template <std::size_t measdim, typename index_t>
+  void setSubspaceIndices(std::array<index_t, measdim> subspaceIndices)
+    requires(!ReadOnly && measdim <= eBoundSize)
+  {
+    assert(has<hashString("projector")>());
+    BoundSubspaceIndices boundSubspace{};
+    std::transform(subspaceIndices.begin(), subspaceIndices.end(),
+                   boundSubspace.begin(),
+                   [](index_t i) { return static_cast<std::uint8_t>(i); });
+    setBoundSubspaceIndices(boundSubspace);
+  }
+
+  VariableBoundSubspaceHelper variableBoundSubspaceHelper() const {
+    BoundSubspaceIndices boundSubspace = boundSubspaceIndices();
+    std::span<std::uint8_t> validSubspaceIndices(
+        boundSubspace.begin(), boundSubspace.begin() + calibratedSize());
+    return VariableBoundSubspaceHelper(validSubspaceIndices);
+  }
+
+  template <std::size_t measdim>
+  FixedBoundSubspaceHelper<measdim> fixedBoundSubspaceHelper() const {
+    SubspaceIndices<measdim> subspace = subspaceIndices<measdim>();
+    return FixedBoundSubspaceHelper<measdim>(subspace);
   }
 
   /// Uncalibrated measurement in the form of a source link. Const version
   /// @return The uncalibrated measurement source link
   SourceLink getUncalibratedSourceLink() const;
 
+  // This function will move to an rvalue reference in the next major version
   /// Set an uncalibrated source link
   /// @param sourceLink The uncalibrated source link to set
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setUncalibratedSourceLink(SourceLink sourceLink) {
-    m_traj->setUncalibratedSourceLink(m_istate, std::move(sourceLink));
+  template <typename source_link_t>
+  void setUncalibratedSourceLink(source_link_t&& sourceLink)
+    requires(!ReadOnly)
+  {
+    m_traj->setUncalibratedSourceLink(m_istate,
+                                      std::forward<source_link_t>(sourceLink));
+  }
+
+  /// Set an uncalibrated source link
+  /// @param sourceLink The uncalibrated source link to set
+  /// @note Use the overload with an rvalue reference, this
+  ///       overload will be removed ith the next major version
+  void setUncalibratedSourceLink(const SourceLink& sourceLink)
+    requires(!ReadOnly)
+  {
+    m_traj->setUncalibratedSourceLink(m_istate, SourceLink{sourceLink});
   }
 
   /// Check if the point has an associated uncalibrated measurement.
@@ -720,9 +812,10 @@ class TrackStateProxy {
   /// dimensions.
   /// @return The measurement vector
   /// @note Mutable version
-  template <std::size_t measdim, bool RO = ReadOnly,
-            typename = std::enable_if_t<!RO>>
-  Calibrated<measdim> calibrated() {
+  template <std::size_t measdim>
+  Calibrated<measdim> calibrated()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("calibrated")>());
     return m_traj->self().template calibrated<measdim>(m_istate);
   }
@@ -739,9 +832,10 @@ class TrackStateProxy {
   /// Mutable full calibrated measurement covariance matrix. The effective
   /// covariance is located in the top left corner, everything else is zeroed.
   /// @return The measurement covariance matrix
-  template <std::size_t measdim, bool RO = ReadOnly,
-            typename = std::enable_if_t<!RO>>
-  CalibratedCovariance<measdim> calibratedCovariance() {
+  template <std::size_t measdim>
+  CalibratedCovariance<measdim> calibratedCovariance()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("calibratedCov")>());
     return m_traj->self().template calibratedCovariance<measdim>(m_istate);
   }
@@ -749,8 +843,9 @@ class TrackStateProxy {
   /// Mutable dynamic measurement vector with only the valid dimensions.
   /// @warning The dynamic vector has a runtime overhead!
   /// @return The effective calibrated measurement vector
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  EffectiveCalibrated effectiveCalibrated() {
+  EffectiveCalibrated effectiveCalibrated()
+    requires(!ReadOnly)
+  {
     assert(has<hashString("calibrated")>());
     return m_traj->self().effectiveCalibrated(m_istate);
   }
@@ -815,9 +910,9 @@ class TrackStateProxy {
   /// @param shareSource Which component to share from
   /// @param shareTarget Which component to share as. This should be different from
   ///                    as @p shareSource, e.g. predicted can be shared as filtered.
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void shareFrom(TrackStatePropMask shareSource,
-                 TrackStatePropMask shareTarget) {
+  void shareFrom(TrackStatePropMask shareSource, TrackStatePropMask shareTarget)
+    requires(!ReadOnly)
+  {
     shareFrom(*this, shareSource, shareTarget);
   }
 
@@ -826,10 +921,11 @@ class TrackStateProxy {
   /// @param component Which component to share.
   /// @note The track states both need to be stored in the
   ///       same @c MultiTrajectory instance
-  template <bool RO = ReadOnly, bool ReadOnlyOther,
-            typename = std::enable_if_t<!RO>>
+  template <bool ReadOnlyOther>
   void shareFrom(const TrackStateProxy<Trajectory, M, ReadOnlyOther>& other,
-                 TrackStatePropMask component) {
+                 TrackStatePropMask component)
+    requires(!ReadOnly)
+  {
     shareFrom(other, component, component);
   }
 
@@ -840,11 +936,11 @@ class TrackStateProxy {
   ///                    as @p shareSource, e.g. predicted can be shared as filtered.
   /// @note Shareable components are predicted, filtered, smoothed, calibrated, jacobian,
   ///       or projector. See @c TrackStatePropMask.
-  template <bool RO = ReadOnly, bool ReadOnlyOther,
-            typename = std::enable_if_t<!RO>>
+  template <bool ReadOnlyOther>
   void shareFrom(const TrackStateProxy<Trajectory, M, ReadOnlyOther>& other,
-                 TrackStatePropMask shareSource,
-                 TrackStatePropMask shareTarget) {
+                 TrackStatePropMask shareSource, TrackStatePropMask shareTarget)
+    requires(!ReadOnly)
+  {
     assert(m_traj == other.m_traj &&
            "Cannot share components across MultiTrajectories");
 
@@ -864,11 +960,12 @@ class TrackStateProxy {
   ///       an exception is thrown.
   /// @note The mask parameter will not cause a copy of components that are
   ///       not allocated in the source track state proxy.
-  template <ACTS_CONCEPT(TrackStateProxyConcept) track_state_proxy_t,
-            bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  template <TrackStateProxyConcept track_state_proxy_t>
   void copyFrom(const track_state_proxy_t& other,
                 TrackStatePropMask mask = TrackStatePropMask::All,
-                bool onlyAllocated = true) {
+                bool onlyAllocated = true)
+    requires(!ReadOnly)
+  {
     using PM = TrackStatePropMask;
 
     if (onlyAllocated) {
@@ -928,7 +1025,7 @@ class TrackStateProxy {
               other.template calibratedCovariance<measdim>();
         });
 
-        setProjectorBitset(other.projectorBitset());
+        setBoundSubspaceIndices(other.boundSubspaceIndices());
       }
     } else {
       if (ACTS_CHECK_BIT(mask, PM::Predicted) &&
@@ -975,7 +1072,7 @@ class TrackStateProxy {
               other.template calibratedCovariance<measdim>();
         });
 
-        setProjectorBitset(other.projectorBitset());
+        setBoundSubspaceIndices(other.boundSubspaceIndices());
       }
     }
 
@@ -1023,9 +1120,10 @@ class TrackStateProxy {
   /// @tparam T The type of the component to access
   /// @tparam key String key for the component to access
   /// @return Mutable reference to the component given by @p key
-  template <typename T, HashedString key, bool RO = ReadOnly,
-            typename = std::enable_if_t<!RO>>
-  constexpr T& component() {
+  template <typename T, HashedString key>
+  constexpr T& component()
+    requires(!ReadOnly)
+  {
     return m_traj->template component<T, key>(m_istate);
   }
 
@@ -1033,8 +1131,10 @@ class TrackStateProxy {
   /// @tparam T The type of the component to access
   /// @param key String key for the component to access
   /// @return Mutable reference to the component given by @p key
-  template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  constexpr T& component(HashedString key) {
+  template <typename T>
+  constexpr T& component(HashedString key)
+    requires(!ReadOnly)
+  {
     return m_traj->template component<T>(key, m_istate);
   }
 
@@ -1043,8 +1143,10 @@ class TrackStateProxy {
   /// @param key String key for the component to access
   /// @note This might hash the @p key at runtime instead of compile-time
   /// @return Mutable reference to the component given by @p key
-  template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  constexpr T& component(std::string_view key) {
+  template <typename T>
+  constexpr T& component(std::string_view key)
+    requires(!ReadOnly)
+  {
     return m_traj->template component<T>(hashString(key), m_istate);
   }
 
@@ -1080,8 +1182,9 @@ class TrackStateProxy {
 
   /// Return a mutable reference to the underlying backend container
   /// @return A reference to the backend container
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  MultiTrajectory<Trajectory>& trajectory() {
+  MultiTrajectory<Trajectory>& trajectory()
+    requires(!ReadOnly)
+  {
     return *m_traj;
   }
 
@@ -1091,8 +1194,9 @@ class TrackStateProxy {
 
   /// Get a mutable reference to the track state container backend
   /// @return a mutable reference to the backend
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto& container() {
+  auto& container()
+    requires(!ReadOnly)
+  {
     return *m_traj;
   }
 

@@ -14,7 +14,6 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -466,42 +465,37 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
                                 act.end());
 }
 
-BOOST_AUTO_TEST_CASE(CalculateQuantities) {
+BOOST_AUTO_TEST_CASE(ShallowCopy) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto t = tc.makeTrack();
 
-  auto ts = t.appendTrackState();
-  ts.typeFlags().set(MeasurementFlag);
+  auto ts1 = t.appendTrackState();
+  ts1.predicted().setRandom();
+  auto ts2 = t.appendTrackState();
+  ts2.predicted().setRandom();
+  auto ts3 = t.appendTrackState();
+  ts3.predicted().setRandom();
 
-  ts = t.appendTrackState();
-  ts.typeFlags().set(OutlierFlag);
+  auto t2 = t.shallowCopy();
 
-  ts = t.appendTrackState();
-  ts.typeFlags().set(MeasurementFlag);
-  ts.typeFlags().set(SharedHitFlag);
+  BOOST_CHECK_NE(t.index(), t2.index());
+  BOOST_CHECK_EQUAL(t.nTrackStates(), t2.nTrackStates());
 
-  ts = t.appendTrackState();
-  ts.typeFlags().set(HoleFlag);
+  std::vector<decltype(tc)::TrackStateProxy> trackStates;
+  for (const auto& ts : t.trackStatesReversed()) {
+    trackStates.insert(trackStates.begin(), ts);
+  }
 
-  ts = t.appendTrackState();
-  ts.typeFlags().set(OutlierFlag);
+  auto t2_ts1 = trackStates.at(0);
+  auto t2_ts2 = trackStates.at(1);
+  auto t2_ts3 = trackStates.at(2);
 
-  ts = t.appendTrackState();
-  ts.typeFlags().set(HoleFlag);
-
-  ts = t.appendTrackState();
-  ts.typeFlags().set(MeasurementFlag);
-  ts.typeFlags().set(SharedHitFlag);
-
-  ts = t.appendTrackState();
-  ts.typeFlags().set(OutlierFlag);
-
-  calculateTrackQuantities(t);
-
-  BOOST_CHECK_EQUAL(t.nHoles(), 2);
-  BOOST_CHECK_EQUAL(t.nMeasurements(), 3);
-  BOOST_CHECK_EQUAL(t.nOutliers(), 3);
-  BOOST_CHECK_EQUAL(t.nSharedHits(), 2);
+  BOOST_CHECK_EQUAL(t2_ts1.predicted(), ts1.predicted());
+  BOOST_CHECK_EQUAL(t2_ts1.index(), ts1.index());
+  BOOST_CHECK_EQUAL(t2_ts2.predicted(), ts2.predicted());
+  BOOST_CHECK_EQUAL(t2_ts2.index(), ts2.index());
+  BOOST_CHECK_EQUAL(t2_ts3.predicted(), ts3.predicted());
+  BOOST_CHECK_EQUAL(t2_ts3.index(), ts3.index());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

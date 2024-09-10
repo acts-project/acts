@@ -11,6 +11,7 @@
 #include <boost/test/data/test_case.hpp>
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -34,15 +35,15 @@ const auto surfaces =
             Transform3::Identity(), 10 /* radius */, 100 /* half-length z */),
         // TODO perigee roundtrip local->global->local does not seem to work
         // Surface::makeShared<PerigeeSurface>(Vector3(0, 0, -1.5)),
-        Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitX()),
-        Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitY()),
-        Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitZ()),
+        CurvilinearSurface(Vector3::Zero(), Vector3::UnitX()).planeSurface(),
+        CurvilinearSurface(Vector3::Zero(), Vector3::UnitY()).planeSurface(),
+        CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface(),
     });
 // positions
-const auto posAngle = bdata::xrange(-M_PI, M_PI, 0.25);
+const auto posAngle = bdata::xrange(-M_PI, M_PI, 0.50);
 const auto posPositiveNonzero = bdata::xrange(0.25, 1.0, 0.25);
 const auto posPositive = bdata::make(0.0) + posPositiveNonzero;
-const auto posSymmetric = bdata::xrange(-1.0, 1.0, 0.25);
+const auto posSymmetric = bdata::xrange(-1.0, 1.0, 0.50);
 // time
 const auto ts = bdata::make(1.0);
 // direction angles

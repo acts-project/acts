@@ -18,6 +18,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <algorithm>
@@ -28,8 +29,6 @@
 #include <list>
 #include <stdexcept>
 #include <vector>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
 
@@ -108,7 +107,7 @@ inline std::vector<Data> readEverything(
     const std::string& inputDir, const std::string& filename,
     const std::vector<std::string>& optionalColumns, std::size_t event) {
   std::string path = ActsExamples::perEventFilepath(inputDir, filename, event);
-  dfe::NamedTupleCsvReader<Data> reader(path, optionalColumns);
+  ActsExamples::NamedTupleCsvReader<Data> reader(path, optionalColumns);
 
   std::vector<Data> everything;
   Data one;
@@ -194,11 +193,14 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
       readMeasurementsByGeometryId(m_cfg.inputDir, ctx.eventNumber);
 
   // Prepare containers for the hit data using the framework event data types
-  GeometryIdMultimap<Measurement> orderedMeasurements;
+  MeasurementContainer tmpMeasurements;
+  GeometryIdMultimap<ConstVariableBoundMeasurementProxy> orderedMeasurements;
   IndexMultimap<Index> measurementSimHitsMap;
   IndexSourceLinkContainer sourceLinks;
   // need list here for stable addresses
   std::list<IndexSourceLink> sourceLinkStorage;
+
+  tmpMeasurements.reserve(measurementData.size());
   orderedMeasurements.reserve(measurementData.size());
   // Safe long as we have single particle to sim hit association
   measurementSimHitsMap.reserve(measurementData.size());
@@ -252,14 +254,15 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
     // the measurement will be stored is known before adding it.
     const Index index = orderedMeasurements.size();
     IndexSourceLink& sourceLink = sourceLinkStorage.emplace_back(geoId, index);
-    auto measurement = createMeasurement(dParameters, sourceLink);
+    auto measurement =
+        createMeasurement(tmpMeasurements, dParameters, sourceLink);
 
     // Due to the previous sorting of the raw hit data by geometry id, new
     // measurements should always end up at the end of the container. previous
     // elements were not touched; cluster indices remain stable and can
     // be used to identify the m.
-    auto inserted = orderedMeasurements.emplace_hint(
-        orderedMeasurements.end(), geoId, std::move(measurement));
+    auto inserted = orderedMeasurements.emplace_hint(orderedMeasurements.end(),
+                                                     geoId, measurement);
     if (std::next(inserted) != orderedMeasurements.end()) {
       ACTS_FATAL("Something went horribly wrong with the hit sorting");
       return ProcessCode::ABORT;
@@ -270,7 +273,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
   MeasurementContainer measurements;
   for (auto& [_, meas] : orderedMeasurements) {
-    measurements.emplace_back(std::move(meas));
+    auto measurement = measurements.makeMeasurement(meas.size());
+    measurement.copyFrom(meas);
   }
 
   // Generate measurement-particles-map

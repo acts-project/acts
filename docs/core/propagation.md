@@ -80,7 +80,7 @@ if( res.ok() ) {
 
 ACTS comes with a couple of different navigator implementations:
 - The standard navigator {class}`Acts::Navigator` which performs the full navigation in the volume/layer/surface hierarchy
-- The {class}`Acts::DirectNavigator` which takes a sequence of surfaces and just navigates to one after the other. This sequence must be initialized with a special actor, the {struct}`Acts::DirectNavigator::Initializer`.
+- The {class}`Acts::DirectNavigator` which takes a sequence of surfaces and just navigates to one after the other.
 - The {class}`Acts::TryAllNavigator` which, as the name suggests, tries to intersect all available surfaces without acceleration structure and special assumptions. This navigator is meant for validation rather than production.
 - The {class}`Acts::TryAllOverstepNavigator` which is similar to the {class}`Acts::TryAllNavigator`, but deliberately oversteps and then intersects surfaces which might have been missed by that step and targets them. This navigator is meant for validation rather than production.
 - The {class}`Acts::Experimental::DetectorNavigator` which performs the full navigation in the gen2 geometry. Note that this is still experimental and should not be included in production code as it might be unstable and break with minor version updates of ACTS.
@@ -108,22 +108,17 @@ The {class}`Acts::StraightLineStepper` is a very stripped down stepper that just
 
 ### EigenStepper
 
-The {class}`Acts::EigenStepper` implements the same functionality as the ATLAS stepper, however, the stepping code is rewritten by using `Eigen` primitives. Thus, it also uses a 4th-order Runge-Kutta algorithm for the integration of the EOM. Additionally, the {class}`Acts::EigenStepper` allows to customize the concrete integration step via **extensions**.
+The {class}`Acts::EigenStepper` implements the same functionality as the ATLAS stepper, however, the stepping code is rewritten by using `Eigen` primitives. Thus, it also uses a 4th-order Runge-Kutta algorithm for the integration of the EOM. Additionally, the {class}`Acts::EigenStepper` allows to customize the concrete integration step via **extension**.
 
-The extensions encapsulate the relevant equations for different environments. There exists a {struct}`Acts::DefaultExtension` that is suited for propagation in a vacuum, and the {struct}`Acts::DenseEnvironmentExtension`, that contains additional code to handle the propagation inside materials. Which extension is used is selected by a bidding-system.
+The extension encapsulate the relevant equations for different environments. There exists a {struct}`Acts::EigenStepperDefaultExtension` that is suited for propagation in a vacuum, and the {struct}`Acts::EigenStepperDenseEnvironmentExtension`, that contains additional code to handle the propagation inside materials. Which extension is used is decided by the user.
 
-The extension can be configured via the {struct}`Acts::StepperExtensionList`:
+The extension can be configured via the {class}`Acts::EigenStepper`:
 
-```cpp
-using Stepper = Acts::EigenStepper<
-                  Acts::StepperExtensionList<
-                    Acts::DefaultExtension,
-                    Acts::DenseEnvironmentExtension
-                  >
-                >;
+```c++
+using Stepper = Acts::EigenStepper<Acts::EigenStepperDenseEnvironmentExtension>;
 ```
 
-By default, the {class}`Acts::EigenStepper` only uses the {struct}`Acts::DefaultExtension`.
+By default, the {class}`Acts::EigenStepper` only uses the {struct}`Acts::EigenStepperDenseEnvironmentExtension`.
 
 ### MultiEigenStepperLoop
 

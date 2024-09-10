@@ -269,7 +269,7 @@ class BinningData {
       return (eta(position));
     }
     if (toUnderlying(binvalue) < 3) {
-      return position[toUnderlying(binvalue)];
+      return static_cast<float>(position[toUnderlying(binvalue)]);
     }
     // phi gauging
     return phi(position);
@@ -531,9 +531,9 @@ class BinningData {
   /// String screen output method
   /// @param indent the current indentation
   /// @return a string containing the screen information
-  std::string toString(const std::string& indent) const {
+  std::string toString(const std::string& indent = "") const {
     std::stringstream sl;
-    sl << indent << "BinngingData object:" << '\n';
+    sl << indent << "BinningData object:" << '\n';
     sl << indent << "  - type       : " << static_cast<std::size_t>(type)
        << '\n';
     sl << indent << "  - option     : " << static_cast<std::size_t>(option)
