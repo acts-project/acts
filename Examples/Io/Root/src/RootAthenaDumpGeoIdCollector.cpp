@@ -54,6 +54,9 @@ RootAthenaDumpGeoIdCollector::RootAthenaDumpGeoIdCollector(
   ACTS_DEBUG("Adding file " << m_cfg.inputfile << " to tree" << m_cfg.treename);
 
   m_events = m_inputchain->GetEntries();
+  ACTS_DEBUG("Found " << m_events << " to read");
+
+  m_inputchain->GetEntry(0);
 
   m_cfg.trackingGeometry->visitSurfaces([&](const Acts::Surface* surface) {
     auto detEl = dynamic_cast<const Acts::GeoModelDetectorElementITk*>(

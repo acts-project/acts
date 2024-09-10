@@ -17,6 +17,8 @@
 #include <map>
 #include <module_map_triplet>
 
+#include <chrono>
+
 using namespace torch::indexing;
 
 namespace Acts {
@@ -72,6 +74,8 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   */
   const auto numFeatures = inputValues.size() / numNodes;
 
+
+	const auto t0 = std::chrono::high_resolution_clock::now();
   hits<float> hitsCollection(false, false);
 
   ACTS_DEBUG("Start collecting hits...");
@@ -107,10 +111,12 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
 
   ACTS_DEBUG("Hits tree has " << hitsTree.size()
                               << " hits, now build graph...");
-  auto graph = m_graphCreator->build(hitsTree);
-  const auto numEdges =
+	const auto t1 = std::chrono::high_resolution_clock::now();
+	auto graph = m_graphCreator->build(hitsTree);
+	const auto t2 = std::chrono::high_resolution_clock::now();
+  const auto numEdges = boost::num_edges(graph.graph_impl());
 
-      if (numEdges == 0) {
+  if (numEdges == 0) {
     throw std::runtime_error("no edges");
   }
 
@@ -177,6 +183,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     }
   }
 
+	const auto t3 = std::chrono::high_resolution_clock::now();
   // Build final tensors
   ACTS_DEBUG("Construct final tensors...");
   assert(inputValues.size() % numFeatures == 0);
@@ -202,7 +209,13 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   ACTS_VERBOSE("Edge index slice:\n"
                << edgeIndex.index({Slice(0, 2), Slice(0, 9)}));
 
-  return std::make_tuple(std::move(nodeFeatures), std::move(edgeIndex),
+	const auto t4 = std::chrono::high_resolution_clock::now();
+  ACTS_INFO("Preparation: " << std::chrono::duration<double>(t1 - t0).count());
+  ACTS_INFO("Build MM: " << std::chrono::duration<double>(t2 - t1).count());
+  ACTS_INFO("Edge features: " << std::chrono::duration<double>(t3 - t2).count());
+  ACTS_INFO("Tensors: " << std::chrono::duration<double>(t4 - t3).count());
+
+	return std::make_tuple(std::move(nodeFeatures), std::move(edgeIndex),
                          std::move(edgeFeatures));
 }
 
