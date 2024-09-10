@@ -240,7 +240,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
       spContainer(spConfig, spOptions, container);
 
-  std::cout << "nsp: " << spContainer.size() << std::endl;
 
   using value_type = typename decltype(spContainer)::SpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;
