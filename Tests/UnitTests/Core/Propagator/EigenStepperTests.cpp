@@ -35,7 +35,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperDefaultExtension.hpp"
-#include "Acts/Propagator/EigenStepperDenseEnvironmentExtension.hpp"
+#include "Acts/Propagator/EigenStepperDenseExtension.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -537,7 +537,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 }
 
 /// @brief This function tests the EigenStepper with the EigenStepperDefaultExtension and
-/// the EigenStepperDenseEnvironmentExtension. The focus of this tests lies in
+/// the EigenStepperDenseExtension. The focus of this tests lies in
 /// the choosing of the right extension for the individual use case. This is
 /// performed with three different detectors:
 /// a) Pure vacuum -> DefaultExtension needs to act
@@ -577,7 +577,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_e / 1_GeV,
                                         cov, ParticleHypothesis::pion());
 
-  using Stepper = EigenStepper<EigenStepperDenseEnvironmentExtension>;
+  using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Propagator<Stepper, Navigator>;
   using PropagatorOptions =
       Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
@@ -609,7 +609,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
     CHECK_CLOSE_ABS(mom, startMom, 1_keV);
   }
 
-  using DefStepper = EigenStepper<EigenStepperDenseEnvironmentExtension>;
+  using DefStepper = EigenStepper<EigenStepperDenseExtension>;
   using DefPropagator = Acts::Propagator<DefStepper, Navigator>;
   using DefPropagatorOptions =
       DefPropagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
@@ -672,7 +672,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_e / 5_GeV,
                                         cov, ParticleHypothesis::pion());
 
-  using Stepper = EigenStepper<EigenStepperDenseEnvironmentExtension>;
+  using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Propagator<Stepper, Navigator>;
   using PropagatorOptions =
       Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
@@ -713,7 +713,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
     }
   }
 
-  using DenseStepper = EigenStepper<EigenStepperDenseEnvironmentExtension>;
+  using DenseStepper = EigenStepper<EigenStepperDenseExtension>;
   using DensePropagator = Acts::Propagator<DenseStepper, Navigator>;
   using DensePropagatorOptions =
       DensePropagator::Options<ActionList<StepCollector>,
@@ -818,7 +818,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
                                   1_e / 5_GeV, Covariance::Identity(),
                                   ParticleHypothesis::pion());
 
-  using Stepper = EigenStepper<EigenStepperDenseEnvironmentExtension>;
+  using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
   using PropagatorOptions =
       Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
@@ -872,7 +872,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Build launcher through vacuum
   // Set options for propagator
 
-  using DefStepper = EigenStepper<EigenStepperDenseEnvironmentExtension>;
+  using DefStepper = EigenStepper<EigenStepperDenseExtension>;
   using DefPropagator = Acts::Propagator<DefStepper, Navigator>;
   using DefPropagatorOptions =
       DefPropagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
@@ -922,7 +922,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set initial parameters for the particle track by using the result of the
   // first volume
 
-  using DenseStepper = EigenStepper<EigenStepperDenseEnvironmentExtension>;
+  using DenseStepper = EigenStepper<EigenStepperDenseExtension>;
   using DensePropagator = Acts::Propagator<DenseStepper, Navigator>;
   using DensePropagatorOptions =
       DensePropagator::Options<ActionList<StepCollector>,
@@ -1052,7 +1052,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
                                   1_e / 1_GeV, Covariance::Identity(),
                                   ParticleHypothesis::pion());
 
-  using Stepper = EigenStepper<EigenStepperDenseEnvironmentExtension>;
+  using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
   using PropagatorOptions =
       Propagator::Options<ActionList<StepCollector, MaterialInteractor>,
