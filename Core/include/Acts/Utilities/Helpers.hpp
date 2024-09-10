@@ -187,4 +187,21 @@ constexpr std::underlying_type_t<enum_t> toUnderlying(enum_t value) {
   return static_cast<std::underlying_type_t<enum_t>>(value);
 }
 
+/// This can be replaced with C++23 to use the std::ranges::contains method
+///
+/// This function searches through the given range for a specified value
+/// and returns `true` if the value is found, or `false` otherwise.
+///
+/// @tparam R The type of the range (e.g., vector, list, array).
+/// @tparam T The type of the value to search for within the range.
+///
+/// @param range The range to search within. This can be any range-compatible container.
+/// @param value The value to search for in the range.
+///
+/// @return `true` if the value is found within the range, `false` otherwise.
+template <typename R, typename T>
+bool rangeContainsValue(const R& range, const T& value) {
+  return std::ranges::find(range, value) != std::ranges::end(range);
+}
+
 }  // namespace Acts

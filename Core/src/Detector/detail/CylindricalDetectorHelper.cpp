@@ -325,9 +325,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   rBoundaries.push_back(refValues[CylinderVolumeBounds::BoundValues::eMaxR]);
 
   // Connect in R ? (2u is the index of the outer cylinder)
-  bool connectR = selectedOnly.empty() ||
-                  std::find(selectedOnly.begin(), selectedOnly.end(), 2u) !=
-                      selectedOnly.end();
+  bool connectR = selectedOnly.empty() || rangeContainsValue(selectedOnly, 2u);
 
   // Get phi sector and average phi
   ActsScalar phiSector =
@@ -376,9 +374,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   std::vector<Acts::Direction> discDirs = {Acts::Direction::Forward,
                                            Acts::Direction::Backward};
   for (const auto [iu, idir] : enumerate(discDirs)) {
-    if (selectedOnly.empty() ||
-        std::find(selectedOnly.begin(), selectedOnly.end(), iu) !=
-            selectedOnly.end()) {
+    if (selectedOnly.empty() || rangeContainsValue(selectedOnly, iu)) {
       const Surface& refSurface = volumes[0u]->portals()[iu]->surface();
       const Transform3& refTransform = refSurface.transform(gctx);
       pReplacements.push_back(createDiscReplacement(
@@ -397,9 +393,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     for (const auto [iu, idir] : enumerate(sectorDirs)) {
       // (iu + 4u) corresponds to the indices of the phi-low and phi-high sector
       // planes.
-      if (selectedOnly.empty() ||
-          std::find(selectedOnly.begin(), selectedOnly.end(), iu + 4u) !=
-              selectedOnly.end()) {
+      if (selectedOnly.empty() || rangeContainsValue(selectedOnly, iu + 4u)) {
         // As it is r-wrapping, the inner tube is guaranteed
         const Surface& refSurface =
             volumes[volumes.size() - 1u]->portals()[iu + 4u]->surface();
@@ -471,9 +465,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   // Connect in Z ?
   // - 1u corresponds to the index of the high-z disc portal for the reference
   // volume.
-  bool connectZ = selectedOnly.empty() ||
-                  std::find(selectedOnly.begin(), selectedOnly.end(), 1u) !=
-                      selectedOnly.end();
+  const bool connectZ =
+      selectedOnly.empty() || rangeContainsValue(selectedOnly, 1u);
   // Reference z axis
   const auto rotation = volumes[0u]->transform(gctx).rotation();
 
@@ -586,9 +579,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   unsigned int iSecOffset = innerPresent ? 4u : 3u;
   // Prepare the cylinder replacements
   for (const auto [iu, idir] : enumerate(cylinderDirs)) {
-    if (selectedOnly.empty() ||
-        std::find(selectedOnly.begin(), selectedOnly.end(), iu + 2u) !=
-            selectedOnly.end()) {
+    if (selectedOnly.empty() || rangeContainsValue(selectedOnly, iu + 2u)) {
       pReplacements.push_back(createCylinderReplacement(
           combinedTransform, cylinderR[iu], zBoundaries,
           {avgPhi - phiSector, avgPhi + phiSector}, iu + 2u, idir));
@@ -603,9 +594,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
                                                Acts::Direction::Backward};
     for (const auto [iu, idir] : enumerate(sectorDirs)) {
       // Access with 3u or 4u but always write 4u (to be caught later)
-      if (selectedOnly.empty() ||
-          std::find(selectedOnly.begin(), selectedOnly.end(), iu + 4u) !=
-              selectedOnly.end()) {
+      if (selectedOnly.empty() || rangeContainsValue(selectedOnly, iu + 4u)) {
         const Surface& refSurface =
             volumes[0u]->portals()[iu + iSecOffset]->surface();
         pReplacements.push_back(createSectorReplacement(

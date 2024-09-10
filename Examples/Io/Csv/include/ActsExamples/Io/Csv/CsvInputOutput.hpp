@@ -36,6 +36,7 @@
 // SOFTWARE.
 
 #include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <array>
 #include <cassert>
@@ -590,13 +591,11 @@ inline void NamedTupleDsvReader<Delimiter, NamedTuple>::parse_header(
   // check that all non-optional columns are available
   for (const auto& name : names) {
     // no need to for availability if the column is optional
-    auto o = std::find(optional_columns.begin(), optional_columns.end(), name);
-    if (o != optional_columns.end()) {
+    if (Acts::rangeContainsValue(optional_columns, name)) {
       continue;
     }
     // missing, non-optional column mean we can not continue
-    auto c = std::find(m_columns.begin(), m_columns.end(), name);
-    if (c == m_columns.end()) {
+    if (!Acts::rangeContainsValue(m_columns, name)) {
       throw std::runtime_error("Missing header column '" + name + "'");
     }
   }
