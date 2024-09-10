@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,6 +13,7 @@
 
 #include <array>
 #include <cstddef>
+#include <filesystem>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -67,28 +68,11 @@ class IVisualization3D {
 
   /// Write the content of the helper to an outstream.
   /// @param path is the file system path for writing the file
-  /// @note will change to std::filesystem::path once gcc9 is standard
-  virtual void write(const std::string& path) const = 0;
+  virtual void write(const std::filesystem::path& path) const = 0;
 
   /// Remove all contents of this helper
   ///
   virtual void clear() = 0;
-
- protected:
-  /// Helper: check for extension
-  ///
-  /// @note this is a placeholder for std::filesystem::has_extension
-  /// which needs special linking until gcc9
-  /// @param path the path to be checked
-  bool hasExtension(const std::string& path) const;
-
-  /// Helper: replace the extension
-  ///
-  /// @note this is a placeholder for std::filesystem::replace_extension
-  /// which needs special linking until gcc9
-  /// @param path [in,out] the path to be changed
-  /// @param suffix the extension to be added
-  void replaceExtension(std::string& path, const std::string& suffix) const;
 };
 
 /// Overload of the << operator to facilitate writing to streams.
