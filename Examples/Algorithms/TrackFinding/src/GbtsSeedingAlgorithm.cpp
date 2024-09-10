@@ -95,8 +95,8 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
 
   for (auto sp : GbtsSpacePoints) {
     ACTS_DEBUG("Gbts space points: " << " Gbts_id: " << sp.gbtsID << " z: "
-	                              << sp.SP->z() << " r: " << sp.SP->r()
-	                              << " ACTS volume:  "
+                                     << sp.SP->z() << " r: " << sp.SP->r()
+                                     << " ACTS volume:  "
                                      << sp.SP->sourceLinks()
                                             .front()
                                             .get<IndexSourceLink>()
