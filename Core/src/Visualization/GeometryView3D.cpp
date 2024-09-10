@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -34,35 +34,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <memory>
 #include <ostream>
 #include <utility>
 #include <vector>
-
-#include <limits.h>
-#include <unistd.h>
-
-namespace {
-
-std::string joinPaths(const std::string& a, const std::string& b) {
-  if (b.substr(0, 1) == "/" || a.empty()) {
-    return b;
-  }
-
-  if (a.substr(a.size() - 1) == "/") {
-    return a.substr(a.size() - 1) + "/" + b;
-  }
-
-  return a + "/" + b;
-}
-
-std::string getWorkingDirectory() {
-  char buffer[PATH_MAX];
-  return (getcwd(buffer, sizeof(buffer)) != nullptr ? std::string(buffer)
-                                                    : std::string(""));
-}
-
-}  // namespace
 
 namespace Acts::Experimental {
 ViewConfig s_viewSensitive = ViewConfig({0, 180, 240});
@@ -102,9 +78,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
     IVisualization3D& helper, const SurfaceArray& surfaceArray,
     const GeometryContext& gctx, const Transform3& transform,
     const ViewConfig& sensitiveConfig, const ViewConfig& passiveConfig,
-    const ViewConfig& gridConfig, const std::string& _outputDir) {
-  std::string outputDir =
-      _outputDir == "." ? getWorkingDirectory() : _outputDir;
+    const ViewConfig& gridConfig, const std::filesystem::path& outputDir) {
   // Draw all the surfaces
   Extent arrayExtent;
   for (const auto& sf : surfaceArray.surfaces()) {
@@ -117,7 +91,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
   }
 
   if (!sensitiveConfig.outputName.empty()) {
-    helper.write(joinPaths(outputDir, sensitiveConfig.outputName));
+    helper.write(outputDir / sensitiveConfig.outputName);
     helper.clear();
   }
 
@@ -181,7 +155,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
   }
 
   if (!gridConfig.outputName.empty()) {
-    helper.write(joinPaths(outputDir, gridConfig.outputName));
+    helper.write(outputDir / gridConfig.outputName);
     helper.clear();
   }
 }
@@ -239,10 +213,7 @@ void Acts::GeometryView3D::drawDetectorVolume(
 void Acts::GeometryView3D::drawLayer(
     IVisualization3D& helper, const Layer& layer, const GeometryContext& gctx,
     const ViewConfig& layerConfig, const ViewConfig& sensitiveConfig,
-    const ViewConfig& gridConfig, const std::string& _outputDir) {
-  std::string outputDir =
-      _outputDir == "." ? getWorkingDirectory() : _outputDir;
-
+    const ViewConfig& gridConfig, const std::filesystem::path& outputDir) {
   if (layerConfig.visible) {
     auto layerVolume = layer.representingVolume();
     if (layerVolume != nullptr) {
@@ -254,7 +225,7 @@ void Acts::GeometryView3D::drawLayer(
                   layerConfig);
     }
     if (!layerConfig.outputName.empty()) {
-      helper.write(joinPaths(outputDir, layerConfig.outputName));
+      helper.write(outputDir / layerConfig.outputName);
       helper.clear();
     }
   }
@@ -273,9 +244,7 @@ void Acts::GeometryView3D::drawTrackingVolume(
     const GeometryContext& gctx, const ViewConfig& containerView,
     const ViewConfig& volumeView, const ViewConfig& layerView,
     const ViewConfig& sensitiveView, const ViewConfig& gridView, bool writeIt,
-    const std::string& tag, const std::string& _outputDir) {
-  std::string outputDir =
-      _outputDir == "." ? getWorkingDirectory() : _outputDir;
+    const std::string& tag, const std::filesystem::path& outputDir) {
   if (tVolume.confinedVolumes() != nullptr) {
     const auto& subVolumes = tVolume.confinedVolumes()->arrayObjects();
     for (const auto& tv : subVolumes) {
@@ -303,10 +272,9 @@ void Acts::GeometryView3D::drawTrackingVolume(
     }
     if (tVolume.confinedVolumes() == nullptr) {
       vcConfig = vConfig;
-      vcConfig.outputName = vname + std::string("_boundaries") + tag;
+      vcConfig.outputName =
+          std::filesystem::path(vname + std::string("_boundaries") + tag);
     } else {
-      std::stringstream vs;
-      vs << "Container";
       std::vector<GeometryIdentifier::Value> ids{tVolume.geometryId().volume()};
 
       for (const auto* current = &tVolume; current->motherVolume() != nullptr;
@@ -314,11 +282,14 @@ void Acts::GeometryView3D::drawTrackingVolume(
         ids.push_back(current->motherVolume()->geometryId().volume());
       }
 
-      for (std::size_t i = ids.size() - 1; i < ids.size(); --i) {
-        vs << "_v" << ids[i];
+      std::ranges::reverse(ids);
+      vname = "Container";
+      for (const auto& id : ids) {
+        vname += "_v" + std::to_string(id);
       }
-      vname = vs.str();
-      vcConfig.outputName = vname + std::string("_boundaries") + tag;
+
+      vcConfig.outputName =
+          std::filesystem::path(vname + std::string("_boundaries") + tag);
     }
   }
 
@@ -328,7 +299,7 @@ void Acts::GeometryView3D::drawTrackingVolume(
                 Transform3::Identity(), vcConfig);
   }
   if (writeIt) {
-    std::string outputName = joinPaths(outputDir, vcConfig.outputName);
+    const std::filesystem::path outputName = outputDir / vcConfig.outputName;
     helper.write(outputName);
     helper.clear();
   }
@@ -338,12 +309,12 @@ void Acts::GeometryView3D::drawTrackingVolume(
     std::size_t il = 0;
     for (const auto& tl : layers) {
       if (writeIt) {
-        lConfig.outputName =
-            vname + std::string("_passives_l") + std::to_string(il) + tag;
-        sConfig.outputName =
-            vname + std::string("_sensitives_l") + std::to_string(il) + tag;
-        gConfig.outputName =
-            vname + std::string("_grids_l") + std::to_string(il) + tag;
+        lConfig.outputName = std::filesystem::path(
+            vname + std::string("_passives_l") + std::to_string(il) + tag);
+        sConfig.outputName = std::filesystem::path(
+            vname + std::string("_sensitives_l") + std::to_string(il) + tag);
+        gConfig.outputName = std::filesystem::path(
+            vname + std::string("_grids_l") + std::to_string(il) + tag);
       }
       drawLayer(helper, *tl, gctx, lConfig, sConfig, gConfig, outputDir);
       ++il;

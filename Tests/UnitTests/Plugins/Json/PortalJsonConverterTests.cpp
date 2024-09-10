@@ -14,6 +14,7 @@
 #include "Acts/Detector/detail/PortalHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Json/PortalJsonConverter.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -33,8 +34,9 @@ BOOST_AUTO_TEST_SUITE(PortalJsonConverter)
 BOOST_AUTO_TEST_CASE(PortalUnconnected) {
   std::ofstream out;
 
-  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Vector3(0., 0., 0.), Acts::Vector3(0., 1., 0.));
+  auto surface = Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
+                                          Acts::Vector3(0., 1., 0.))
+                     .planeSurface();
 
   auto portal =
       std::make_shared<Acts::Experimental::Portal>(std::move(surface));
@@ -66,8 +68,9 @@ BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
   auto forwardVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
   auto backwardVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
 
-  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Vector3(0., 0., 0.), Acts::Vector3(0., 1., 0.));
+  auto surface = Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
+                                          Acts::Vector3(0., 1., 0.))
+                     .planeSurface();
 
   auto portal =
       std::make_shared<Acts::Experimental::Portal>(std::move(surface));
@@ -112,8 +115,9 @@ BOOST_AUTO_TEST_CASE(PortalMultiConnected) {
 
   auto backwardVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
 
-  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Vector3(0., 0., 0.), Acts::Vector3(0., 1., 0.));
+  auto surface = Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
+                                          Acts::Vector3(0., 1., 0.))
+                     .planeSurface();
 
   auto portal =
       std::make_shared<Acts::Experimental::Portal>(std::move(surface));
