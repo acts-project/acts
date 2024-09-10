@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,6 +15,7 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
@@ -25,6 +26,11 @@ using namespace Acts;
 namespace bdata = boost::unit_test::data;
 
 struct MockTrack {
+  static constexpr bool ReadOnly = true;
+  using Container = VectorTrackContainer;
+  using Trajectory = VectorMultiTrajectory;
+  using IndexType = TrackIndexType;
+
   double m_theta;
   double m_phi;
   double m_pt;
@@ -55,7 +61,7 @@ struct MockTrack {
   struct MockTrackState {
     const Surface& referenceSurface() const {
       static const auto srf =
-          Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitZ());
+          CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface();
       return *srf;
     }
 
@@ -608,7 +614,7 @@ BOOST_AUTO_TEST_CASE(TestConstructor) {
 BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
   auto makeSurface = [](GeometryIdentifier id) {
     auto srf =
-        Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitZ());
+        CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface();
 
     srf->assignGeometryId(id);
     return srf;

@@ -125,7 +125,7 @@ class TrackingVolume : public Volume {
   /// @param volbounds is the description of the volume boundaries
   /// @param volumeName is a string identifier
   TrackingVolume(const Transform3& transform,
-                 std::shared_ptr<const VolumeBounds> volbounds,
+                 std::shared_ptr<VolumeBounds> volbounds,
                  const std::string& volumeName = "undefined");
 
   /// Constructor for a full equipped Tracking Volume
@@ -140,8 +140,7 @@ class TrackingVolume : public Volume {
   /// @param denseVolumeVector  The contained dense volumes
   /// @param volumeName is a string identifier
   TrackingVolume(
-      const Transform3& transform,
-      std::shared_ptr<const VolumeBounds> volumeBounds,
+      const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       std::unique_ptr<const LayerArray> staticLayerArray = nullptr,
       std::shared_ptr<const TrackingVolumeArray> containedVolumeArray = nullptr,
@@ -151,8 +150,7 @@ class TrackingVolume : public Volume {
   /// Constructor from a regular volume
   /// @param volume is the volume to be converted
   /// @param volumeName is a string identifier
-  TrackingVolume(const Volume& volume,
-                 const std::string& volumeName = "undefined");
+  TrackingVolume(Volume& volume, const std::string& volumeName = "undefined");
 
   // @TODO: This needs to be refactored to include Gen3 volumes
   /// Return the associated sub Volume, returns THIS if no subVolume exists
