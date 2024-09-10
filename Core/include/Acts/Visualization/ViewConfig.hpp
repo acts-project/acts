@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,7 @@
 #pragma once
 
 #include <array>
+#include <filesystem>
 #include <string>
 
 namespace Acts {
@@ -42,7 +43,7 @@ struct ViewConfig {
   /// Whether to triangulate or not
   bool triangulate = false;
   /// Write name - non-empty string indicates writing
-  std::string outputName = "";
+  std::filesystem::path outputName = std::filesystem::path("");
 };
 
 }  // namespace Acts

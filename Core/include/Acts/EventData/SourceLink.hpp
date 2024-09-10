@@ -11,7 +11,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
 #include <concepts>

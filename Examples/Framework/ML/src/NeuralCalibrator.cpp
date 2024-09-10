@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -106,21 +106,21 @@ void ActsExamples::NeuralCalibrator::calibrate(
   const Acts::Surface& referenceSurface = trackState.referenceSurface();
   auto trackParameters = trackState.parameters();
 
-  const auto& measurement = measurements[idxSourceLink.index()];
+  const ConstVariableBoundMeasurementProxy measurement =
+      measurements.getMeasurement(idxSourceLink.index());
 
   assert(measurement.contains(Acts::eBoundLoc0) &&
          "Measurement does not contain the required bound loc0");
   assert(measurement.contains(Acts::eBoundLoc1) &&
          "Measurement does not contain the required bound loc1");
 
-  auto boundLoc0 = measurement.subspace().indexOf(Acts::eBoundLoc0);
-  auto boundLoc1 = measurement.subspace().indexOf(Acts::eBoundLoc1);
+  auto boundLoc0 = measurement.indexOf(Acts::eBoundLoc0);
+  auto boundLoc1 = measurement.indexOf(Acts::eBoundLoc1);
 
-  Acts::Vector2 localPosition{measurement.effectiveParameters()[boundLoc0],
-                              measurement.effectiveParameters()[boundLoc1]};
-  Acts::Vector2 localCovariance{
-      measurement.effectiveCovariance()(boundLoc0, boundLoc0),
-      measurement.effectiveCovariance()(boundLoc1, boundLoc1)};
+  Acts::Vector2 localPosition{measurement.parameters()[boundLoc0],
+                              measurement.parameters()[boundLoc1]};
+  Acts::Vector2 localCovariance{measurement.covariance()(boundLoc0, boundLoc0),
+                                measurement.covariance()(boundLoc1, boundLoc1)};
 
   Acts::Vector3 dir = Acts::makeDirectionFromPhiTheta(
       trackParameters[Acts::eBoundPhi], trackParameters[Acts::eBoundTheta]);
@@ -172,21 +172,24 @@ void ActsExamples::NeuralCalibrator::calibrate(
   std::size_t iLoc0 = m_nComponents + iMax * 2;
   std::size_t iVar0 = 3 * m_nComponents + iMax * 2;
 
-  Measurement measurementCopy = measurement;
-  measurementCopy.effectiveParameters()[boundLoc0] = output[iLoc0];
-  measurementCopy.effectiveParameters()[boundLoc1] = output[iLoc0 + 1];
-  measurementCopy.effectiveCovariance()(boundLoc0, boundLoc0) = output[iVar0];
-  measurementCopy.effectiveCovariance()(boundLoc1, boundLoc1) =
-      output[iVar0 + 1];
-
   Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
+    const ConstFixedBoundMeasurementProxy<kMeasurementSize> fixedMeasurement =
+        measurement;
+
+    Acts::ActsVector<kMeasurementSize> calibratedParameters =
+        fixedMeasurement.parameters();
+    Acts::ActsSquareMatrix<kMeasurementSize> calibratedCovariance =
+        fixedMeasurement.covariance();
+
+    calibratedParameters[boundLoc0] = output[iLoc0];
+    calibratedParameters[boundLoc1] = output[iLoc0 + 1];
+    calibratedCovariance(boundLoc0, boundLoc0) = output[iVar0];
+    calibratedCovariance(boundLoc1, boundLoc1) = output[iVar0 + 1];
 
     trackState.allocateCalibrated(kMeasurementSize);
-    trackState.calibrated<kMeasurementSize>() =
-        measurementCopy.parameters<kMeasurementSize>();
-    trackState.calibratedCovariance<kMeasurementSize>() =
-        measurementCopy.covariance<kMeasurementSize>();
-    trackState.setProjector(measurementCopy.subspace().fullProjector<double>());
+    trackState.calibrated<kMeasurementSize>() = calibratedParameters;
+    trackState.calibratedCovariance<kMeasurementSize>() = calibratedCovariance;
+    trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }
