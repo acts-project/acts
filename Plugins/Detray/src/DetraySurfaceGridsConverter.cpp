@@ -22,36 +22,6 @@
 #include <stdexcept>
 
 namespace Acts {
-/*
-    #include "Acts/Plugins/Detray/DetrayConverter.hpp"
-
-    #include "Acts/Detector/Detector.hpp"
-    #include "Acts/Detector/DetectorVolume.hpp"
-    #include "Acts/Detector/Portal.hpp"
-    #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
-
-    #include "Acts/Navigation/PortalNavigation.hpp"
-    #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-
-    #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
-
-    #include "Acts/Surfaces/CylinderBounds.hpp"
-    #include "Acts/Surfaces/CylinderSurface.hpp"
-    #include "Acts/Surfaces/DiscSurface.hpp"
-    #include "Acts/Surfaces/RadialBounds.hpp"
-    #include "Acts/Surfaces/RegularSurface.hpp"
-    #include "Acts/Surfaces/Surface.hpp"
-    #include "Acts/Surfaces/SurfaceBounds.hpp"
-
-    #include "detray/io/frontend/detector_writer.hpp"
-
-    #include "Acts/Utilities/Logger.hpp"
-    #include "Acts/Utilities/TypeList.hpp"
-    #include "Acts/Utilities/GridAxisGenerators.hpp"
-    #include "Acts/Utilities/IAxis.hpp"
-    */
-
-
 
 
     //convert surface grids to detray format
