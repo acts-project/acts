@@ -144,14 +144,14 @@ ProcessCode RootPropagationSummaryWriter::writeT(
 
     // Loop over the steps & count for the statistics
     std::ranges::for_each(summary.steps, [&](const auto& step) {
-        // Check if the step is a sensitive step
-        if (step.geoID.sensitive() > 0) {
-          m_nSensitives++;
-        }
-        // Check if the step is a portal step
-        if (step.geoID.boundary() > 0) {
-          m_nPortals++;
-        }
+      // Check if the step is a sensitive step
+      if (step.geoID.sensitive() > 0) {
+        m_nSensitives++;
+      }
+      // Check if the step is a portal step
+      if (step.geoID.boundary() > 0) {
+        m_nPortals++;
+      }
 
       if (step.surface != nullptr) {
         // Check if the step is a material step

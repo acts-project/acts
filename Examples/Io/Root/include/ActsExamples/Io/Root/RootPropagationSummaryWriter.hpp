@@ -107,7 +107,7 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
 
   /// Propagation summary statstics
   int m_nSensitives = 0;
-  int m_nMaterials = 0; 
+  int m_nMaterials = 0;
   int m_nPortals = 0;
 
   // steper statistics
