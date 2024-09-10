@@ -111,8 +111,8 @@ class SeedingAlgorithm final : public IAlgorithm {
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
-    float RMin = 50.;
-    float CotThetaMax = 1.5;
+    static float RMin = 50.;
+    static float CotThetaMax = 1.5;
 
     if (bottomRadius < RMin &&
         (cotTheta > CotThetaMax || cotTheta < -CotThetaMax)) {
@@ -121,9 +121,9 @@ class SeedingAlgorithm final : public IAlgorithm {
     return true;
   }
 
-  static inline bool itkFastTrackingSPselect(const SimSpacePoint& sp) {
+  static inline bool itkFastTrackingSPselect(const SpacePointProxy_t& sp) {
     // At small r we remove points beyond |z| > 200.
-    float r = sp.r();
+    float r = sp.radius();
     float zabs = std::abs(sp.z());
     if (zabs > 200. && r < 50.) {
       return false;
