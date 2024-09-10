@@ -150,7 +150,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     const auto* cylBounds = dynamic_cast<const CylinderVolumeBounds*>(
         &m_volumes.front()->volumeBounds());
     assert(cylBounds != nullptr && "Volume bounds are not cylinder bounds");
-    m_volumeBounds = std::make_shared<CylinderVolumeBounds>(*cylBounds);
+    Volume::update(std::make_shared<CylinderVolumeBounds>(*cylBounds));
     return;
   }
 
@@ -211,8 +211,8 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
     m_transform = m_groupTransform * Translation3{0, 0, midZ};
 
-    m_volumeBounds = std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ);
-    ACTS_DEBUG("Outer bounds are:\n" << *m_volumeBounds);
+    Volume::update(std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ));
+    ACTS_DEBUG("Outer bounds are:\n" << volumeBounds());
     ACTS_DEBUG("Outer transform / new group transform is:\n"
                << m_transform.matrix());
 
@@ -269,9 +269,9 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
     m_transform = m_groupTransform * Translation3{0, 0, midZ};
 
-    m_volumeBounds = std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ);
+    Volume::update(std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ));
 
-    ACTS_DEBUG("Outer bounds are:\n" << *m_volumeBounds);
+    ACTS_DEBUG("Outer bounds are:\n" << volumeBounds());
     ACTS_DEBUG("Outer transform is:\n" << m_transform.matrix());
 
     // Update group transform to the new center
@@ -625,13 +625,12 @@ std::pair<ActsScalar, ActsScalar> CylinderVolumeStack::synchronizeZBounds(
   return {minZ, maxZ};
 }
 
-void CylinderVolumeStack::update(std::shared_ptr<const VolumeBounds> volbounds,
+void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
                                  std::optional<Transform3> transform) {
   if (volbounds == nullptr) {
     throw std::invalid_argument("New bounds are nullptr");
   }
-  auto cylBounds =
-      std::dynamic_pointer_cast<const CylinderVolumeBounds>(volbounds);
+  auto cylBounds = std::dynamic_pointer_cast<CylinderVolumeBounds>(volbounds);
   if (cylBounds == nullptr) {
     throw std::invalid_argument(
         "CylinderVolumeStack requires CylinderVolumeBounds");
@@ -641,7 +640,7 @@ void CylinderVolumeStack::update(std::shared_ptr<const VolumeBounds> volbounds,
 }
 
 void CylinderVolumeStack::update(
-    std::shared_ptr<const CylinderVolumeBounds> newBounds,
+    std::shared_ptr<CylinderVolumeBounds> newBounds,
     std::optional<Transform3> transform, const Logger& logger) {
   ACTS_DEBUG(
       "Resizing CylinderVolumeStack with strategy: " << m_resizeStrategy);
@@ -934,7 +933,7 @@ void CylinderVolumeStack::update(
   }
 
   m_transform = newVolume.globalTransform;
-  m_volumeBounds = std::move(newBounds);
+  Volume::update(std::move(newBounds));
 }
 
 void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,

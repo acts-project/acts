@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,8 +15,8 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
-#include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/EigenStepperDenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/RiddersPropagator.hpp"
@@ -34,8 +34,7 @@ namespace ds = ActsTests::PropagationDatasets;
 using namespace Acts::UnitLiterals;
 
 using MagneticField = Acts::ConstantBField;
-using Stepper = Acts::EigenStepper<
-    Acts::StepperExtensionList<Acts::DenseEnvironmentExtension>>;
+using Stepper = Acts::EigenStepper<Acts::EigenStepperDenseEnvironmentExtension>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 using RiddersPropagator = Acts::RiddersPropagator<Propagator>;
 

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,13 +22,13 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/EigenStepperDenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
-#include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -389,9 +389,10 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
   VoidNavigator navigator{};
 
   auto startSurface =
-      Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitX());
-  auto targetSurface = Surface::makeShared<PlaneSurface>(
-      Vector3::UnitX() * 20_mm, Vector3::UnitX());
+      CurvilinearSurface(Vector3::Zero(), Vector3::UnitX()).planeSurface();
+  auto targetSurface =
+      CurvilinearSurface(Vector3::UnitX() * 20_mm, Vector3::UnitX())
+          .planeSurface();
 
   BoundVector startPars;
   startPars << 0, 0, 0, M_PI / 2, 1 / 1_GeV, 0;
@@ -468,8 +469,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
     BOOST_CHECK(resultCurv.ok());
   }
 
-  EigenStepper<StepperExtensionList<DenseEnvironmentExtension>>
-      denseEigenStepper{field};
+  EigenStepper<EigenStepperDenseEnvironmentExtension> denseEigenStepper{field};
 
   {
     Propagator propagator{denseEigenStepper, navigator};

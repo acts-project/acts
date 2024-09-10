@@ -23,10 +23,6 @@
 #include <string>
 #include <unordered_map>
 
-namespace Acts {
-class Surface;
-}
-
 namespace ActsExamples {
 
 class PropagatorInterface;

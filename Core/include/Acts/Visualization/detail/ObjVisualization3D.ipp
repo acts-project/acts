@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -69,18 +69,21 @@ void ObjVisualization3D<T>::faces(const std::vector<Vector3>& vtxs,
 }
 
 template <typename T>
-void ObjVisualization3D<T>::write(const std::string& path) const {
+void ObjVisualization3D<T>::write(const std::filesystem::path& path) const {
   std::ofstream os;
-  std::string objectpath = path;
-  if (!IVisualization3D::hasExtension(objectpath)) {
-    objectpath += std::string(".obj");
+  std::filesystem::path objectpath = path;
+  if (!objectpath.has_extension()) {
+    objectpath.replace_extension(std::filesystem::path("obj"));
   }
-  os.open(objectpath);
-  std::string mtlpath = objectpath;
-  IVisualization3D::replaceExtension(mtlpath, ".mtl");
-  os << "mtllib " << mtlpath << "\n";
+  os.open(std::filesystem::absolute(objectpath).string());
+  std::filesystem::path mtlpath = objectpath;
+  mtlpath.replace_extension(std::filesystem::path("mtl"));
+
+  const std::string mtlpathString = std::filesystem::absolute(mtlpath).string();
+  os << "mtllib " << mtlpathString << "\n";
   std::ofstream mtlos;
-  mtlos.open(mtlpath);
+  mtlos.open(mtlpathString);
+
   write(os, mtlos);
   os.close();
   mtlos.close();
