@@ -9,12 +9,12 @@
 #include "ActsExamples/TrackFinding/SeedingAlgorithmHashing.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
 #include "Acts/Plugins/Hashing/HashingTraining.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
-#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Surfaces/Surface.hpp"
