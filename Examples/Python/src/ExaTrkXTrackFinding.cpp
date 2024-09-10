@@ -194,6 +194,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
   }
 #endif
 
+#ifdef ACTS_EXATRKX_WITH_MODULEMAP
   {
     using Alg = Acts::ModuleMapCpp;
     using Config = Alg::Config;
@@ -217,8 +218,9 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(useGpu);
     ACTS_PYTHON_MEMBER(gpuDevice);
     ACTS_PYTHON_MEMBER(gpuBlocks);
-	  ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT_END();
   }
+#endif
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthGraphBuilder, mex, "TruthGraphBuilder",
@@ -334,7 +336,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
       findTracks, tag);
 
   py::class_<GeometryIdMapActsAthena, std::shared_ptr<GeometryIdMapActsAthena>>(
-      mex, "GeometryIdMapActsAthena").def(py::init<>());
+      mex, "GeometryIdMapActsAthena")
+      .def(py::init<>());
 }
 
 }  // namespace Acts::Python

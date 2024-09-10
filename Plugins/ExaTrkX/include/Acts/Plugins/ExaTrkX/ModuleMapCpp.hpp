@@ -32,14 +32,14 @@ class ModuleMapCpp : public GraphConstructionBase {
 
     bool useGpu = false;
     int gpuDevice = 0;
-		int gpuBlocks = 512;
+    int gpuBlocks = 512;
   };
 
  private:
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
   std::unique_ptr<detail::GraphCreatorWrapperBase> m_graphCreator;
-  std::vector<uint64_t> m_uniqueDoupletModuleIds;
+  std::vector<std::uint64_t> m_uniqueDoupletModuleIds;
 
   const auto &logger() const { return *m_logger; }
 
@@ -51,7 +51,7 @@ class ModuleMapCpp : public GraphConstructionBase {
 
   std::tuple<std::any, std::any, std::any> operator()(
       std::vector<float> &inputValues, std::size_t numNodes,
-      const std::vector<uint64_t> &moduleIds,
+      const std::vector<std::uint64_t> &moduleIds,
       torch::Device device = torch::Device(torch::kCPU)) override;
 
   // TODO this returns nothing useful

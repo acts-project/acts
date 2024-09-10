@@ -43,7 +43,7 @@ ModuleMapCpp::~ModuleMapCpp() {}
 
 std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     std::vector<float> &inputValues, std::size_t numNodes,
-    const std::vector<uint64_t> &moduleIds, torch::Device /*device*/) {
+    const std::vector<std::uint64_t> &moduleIds, torch::Device /*device*/) {
   if (numNodes != moduleIds.size()) {
     throw std::invalid_argument(
         "Module Ids do not match number of graph nodes");
@@ -57,7 +57,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
       uniqueModuleIds.erase(end, uniqueModuleIds.end());
       ACTS_DEBUG("There are " << uniqueModuleIds.size() << " modules");
 
-      std::vector<uint64_t> moduleIdIntersection;
+      std::vector<std::uint64_t> moduleIdIntersection;
       moduleIdIntersection.reserve(
           std::max(uniqueModuleIds.size(), m_uniqueDoupletModuleIds.size()));
 
@@ -90,12 +90,12 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     float x = r * std::cos(phi);
     float y = r * std::sin(phi);
 
-    uint64_t particleId = 0;  // We do not know
-    uint64_t moduleId = moduleIds[i];
-    std::string hardware = "";  // now hardware
-    int barrelEndcap = 0;       // unclear, is this a flag???
-    uint64_t particleID1 = 0;   // unclear
-    uint64_t particleID2 = 0;   // unclear
+    std::uint64_t particleId = 0;  // We do not know
+    std::uint64_t moduleId = moduleIds[i];
+    std::string hardware = "";      // now hardware
+    int barrelEndcap = 0;           // unclear, is this a flag???
+    std::uint64_t particleID1 = 0;  // unclear
+    std::uint64_t particleID2 = 0;  // unclear
 
     hit<float> hit(hitId, x, y, z, particleId, moduleId, hardware, barrelEndcap,
                    particleID1, particleID2);
@@ -108,14 +108,14 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   ACTS_DEBUG("Hits tree has " << hitsTree.size()
                               << " hits, now build graph...");
   auto graph = m_graphCreator->build(hitsTree);
-  const auto numEdges = boost::num_edges(graph.graph_impl());
+  const auto numEdges =
 
-  if (numEdges == 0) {
+      if (numEdges == 0) {
     throw std::runtime_error("no edges");
   }
 
   ACTS_DEBUG("Got " << numEdges << " edges, put them in a vector...");
-  std::vector<int64_t> edgeIndexVector;
+  std::vector<std::int64_t> edgeIndexVector;
   edgeIndexVector.reserve(2 * numEdges);
 
   constexpr std::size_t numEdgeFeatures = 6;
