@@ -186,7 +186,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     // This function will be applied to the doublet compatibility selection
     m_cfg.seedFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
-  
+
   using SpacePointProxy_type = typename Acts::SpacePointContainer<
       ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
       Acts::detail::RefHolder>::SpacePointProxyType;
