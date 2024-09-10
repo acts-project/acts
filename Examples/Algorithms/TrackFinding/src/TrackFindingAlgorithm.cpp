@@ -508,13 +508,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       // has already been updated
       seedNumber(trackCandidate) = nSeed - 1;
 
-      auto firstState = *std::next(trackCandidate.trackStatesReversed().begin(),
-                                   trackCandidate.nTrackStates() - 1);
-      assert(firstState.previous() == Acts::kTrackIndexInvalid);
-
       if (m_cfg.twoWay) {
         std::optional<Acts::VectorMultiTrajectory::TrackStateProxy>
-            firstMeasurement;
+            firstMeasurementOpt;
         for (auto trackState : trackCandidate.trackStatesReversed()) {
           bool isMeasurement = trackState.typeFlags().test(
               Acts::TrackStateFlag::MeasurementFlag);
@@ -524,13 +520,15 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
           // decrease resolution because only the smoothing corrected the very
           // first prediction as filtering is not possible.
           if (isMeasurement && !isOutlier) {
-            firstMeasurement = trackState;
+            firstMeasurementOpt = trackState;
           }
         }
 
-        if (firstMeasurement.has_value()) {
+        if (firstMeasurementOpt.has_value()) {
+          auto& firstMeasurement = firstMeasurementOpt.value();
+
           Acts::BoundTrackParameters secondInitialParameters =
-              trackCandidate.createParametersFromState(*firstMeasurement);
+              trackCandidate.createParametersFromState(firstMeasurement);
 
           auto secondRootBranch = tracksTemp.makeTrack();
           secondRootBranch.copyFrom(trackCandidate, false);
@@ -542,6 +540,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
             ACTS_WARNING("Second track finding failed for seed "
                          << iSeed << " with error" << secondResult.error());
           } else {
+            // store the original previous state to restore it later
+            auto originalFirstMeasurementPrevious = firstMeasurement.previous();
+
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
               // TODO a copy of the track should not be necessary but is the
@@ -556,7 +557,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               // processed
               secondTrackCopy.reverseTrackStates(true);
 
-              firstState.previous() =
+              firstMeasurement.previous() =
                   secondTrackCopy.outermostTrackState().index();
 
               trackCandidate.copyFrom(secondTrackCopy, false);
@@ -609,6 +610,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
               ++nSecond;
             }
+
+            // restore the original previous state
+            firstMeasurement.previous() = originalFirstMeasurementPrevious;
           }
         }
       }
@@ -617,7 +621,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       if (nSecond == 0) {
         // restore the track to the original state
         trackCandidate.copyFrom(firstTrack, false);
-        firstState.previous() = Acts::kTrackIndexInvalid;
 
         auto firstExtrapolationResult =
             Acts::extrapolateTrackToReferenceSurface(

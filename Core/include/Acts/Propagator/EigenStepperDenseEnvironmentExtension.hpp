@@ -12,16 +12,11 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Propagator/EigenStepperDefaultExtension.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
-
-#include <array>
-#include <cmath>
 
 namespace Acts {
 
@@ -30,10 +25,13 @@ namespace Acts {
 /// ioninisation, bremsstrahlung, pair production and photonuclear interaction
 /// in the propagation and the jacobian. These effects will only occur if the
 /// propagation is in a TrackingVolume with attached material.
-struct DenseEnvironmentExtension {
+struct EigenStepperDenseEnvironmentExtension {
   using Scalar = ActsScalar;
   /// @brief Vector3 replacement for the custom scalar type
   using ThisVector3 = Eigen::Matrix<Scalar, 3, 1>;
+
+  /// Fallback extension
+  EigenStepperDefaultExtension defaultExtension;
 
   /// Momentum at a certain point
   Scalar currentMomentum = 0.;
@@ -59,44 +57,11 @@ struct DenseEnvironmentExtension {
   /// Energy at each sub-step
   std::array<Scalar, 4> energy{};
 
-  /// @brief Control function if the step evaluation would be valid
-  ///
-  /// @tparam propagator_state_t Type of the state of the propagator
-  /// @tparam stepper_t Type of the stepper
-  /// @tparam navigator_t Type of the navigator
-  ///
-  /// @param [in] state State of the propagator
-  /// @param [in] stepper Stepper of the propagator
-  /// @param [in] navigator Navigator of the propagator
-  ///
-  /// @return Boolean flag if the step would be valid
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  int bid(const propagator_state_t& state, const stepper_t& stepper,
-          const navigator_t& navigator) const {
-    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
-    float absQ = particleHypothesis.absoluteCharge();
-    float mass = particleHypothesis.mass();
-
-    // Check for valid particle properties
-    if (absQ == 0. || mass == 0. ||
-        stepper.absoluteMomentum(state.stepping) <
-            state.options.stepping.dense.momentumCutOff) {
-      return 0;
-    }
-
-    // Check existence of a volume with material
-    if (!navigator.currentVolumeMaterial(state.navigation)) {
-      return 0;
-    }
-
-    return 2;
-  }
-
   /// @brief Evaluater of the k_i's of the RKN4. For the case of i = 0 this
   /// step sets up member parameters, too.
   ///
-  /// @tparam stepper_state_t Type of the state of the propagator
+  /// @tparam i Index of the k_i, i = [0, 3]
+  /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
   ///
@@ -106,30 +71,32 @@ struct DenseEnvironmentExtension {
   /// @param [out] knew Next k_i that is evaluated
   /// @param [out] kQoP k_i elements of the momenta
   /// @param [in] bField B-Field at the evaluation position
-  /// @param [in] i Index of the k_i, i = [0, 3]
   /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
   /// @param [in] kprev Evaluated k_{i - 1}
   ///
   /// @return Boolean flag if the calculation is valid
-  template <typename propagator_state_t, typename stepper_t,
+  template <int i, typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          const navigator_t& navigator, ThisVector3& knew, const Vector3& bField,
-         std::array<Scalar, 4>& kQoP, const int i = 0, const double h = 0.,
-         const ThisVector3& kprev = ThisVector3::Zero()) {
+         std::array<Scalar, 4>& kQoP, const double h = 0.,
+         const ThisVector3& kprev = ThisVector3::Zero())
+    requires(i >= 0 && i <= 3)
+  {
+    const auto* volumeMaterial =
+        navigator.currentVolumeMaterial(state.navigation);
+    if (volumeMaterial == nullptr) {
+      return defaultExtension.template k<i>(state, stepper, navigator, knew,
+                                            bField, kQoP, h, kprev);
+    }
+
     double q = stepper.charge(state.stepping);
     const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
     float mass = particleHypothesis.mass();
 
     // i = 0 is used for setup and evaluation of k
-    if (i == 0) {
-      // Set up container for energy loss
-      const auto* volumeMaterial =
-          navigator.currentVolumeMaterial(state.navigation);
-      if (volumeMaterial == nullptr) {
-        // This function is very hot, so we prefer to terminate here
-        std::terminate();
-      }
+    if constexpr (i == 0) {
+      // Set up for energy loss
       ThisVector3 position = stepper.position(state.stepping);
       material = volumeMaterial->material(position.template cast<double>());
       initialMomentum = stepper.absoluteMomentum(state.stepping);
@@ -172,13 +139,20 @@ struct DenseEnvironmentExtension {
   ///
   /// @param [in] state State of the propagator
   /// @param [in] stepper Stepper of the propagator
+  /// @param [in] navigator Navigator of the propagator
   /// @param [in] h Step size
   ///
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const navigator_t& /*navigator*/, const double h) const {
+                const navigator_t& navigator, const double h) const {
+    const auto* volumeMaterial =
+        navigator.currentVolumeMaterial(state.navigation);
+    if (volumeMaterial == nullptr) {
+      return defaultExtension.finalize(state, stepper, navigator, h);
+    }
+
     const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
     float mass = particleHypothesis.mass();
 
@@ -231,6 +205,12 @@ struct DenseEnvironmentExtension {
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const navigator_t& navigator, const double h,
                 FreeMatrix& D) const {
+    const auto* volumeMaterial =
+        navigator.currentVolumeMaterial(state.navigation);
+    if (volumeMaterial == nullptr) {
+      return defaultExtension.finalize(state, stepper, navigator, h, D);
+    }
+
     return finalize(state, stepper, navigator, h) &&
            transportMatrix(state, stepper, h, D);
   }
@@ -398,7 +378,7 @@ struct DenseEnvironmentExtension {
 
     energy[0] = std::hypot(initialMomentum, mass);
     // use unit length as thickness to compute the energy loss per unit length
-    Acts::MaterialSlab slab(material, 1);
+    MaterialSlab slab(material, 1);
     // Use the same energy loss throughout the step.
     if (state.options.stepping.dense.meanEnergyLoss) {
       g = -computeEnergyLossMean(slab, absPdg, mass, static_cast<float>(qop[0]),

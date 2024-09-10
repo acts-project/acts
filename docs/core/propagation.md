@@ -108,22 +108,17 @@ The {class}`Acts::StraightLineStepper` is a very stripped down stepper that just
 
 ### EigenStepper
 
-The {class}`Acts::EigenStepper` implements the same functionality as the ATLAS stepper, however, the stepping code is rewritten by using `Eigen` primitives. Thus, it also uses a 4th-order Runge-Kutta algorithm for the integration of the EOM. Additionally, the {class}`Acts::EigenStepper` allows to customize the concrete integration step via **extensions**.
+The {class}`Acts::EigenStepper` implements the same functionality as the ATLAS stepper, however, the stepping code is rewritten by using `Eigen` primitives. Thus, it also uses a 4th-order Runge-Kutta algorithm for the integration of the EOM. Additionally, the {class}`Acts::EigenStepper` allows to customize the concrete integration step via **extension**.
 
-The extensions encapsulate the relevant equations for different environments. There exists a {struct}`Acts::DefaultExtension` that is suited for propagation in a vacuum, and the {struct}`Acts::DenseEnvironmentExtension`, that contains additional code to handle the propagation inside materials. Which extension is used is selected by a bidding-system.
+The extension encapsulate the relevant equations for different environments. There exists a {struct}`Acts::EigenStepperDefaultExtension` that is suited for propagation in a vacuum, and the {struct}`Acts::EigenStepperDenseEnvironmentExtension`, that contains additional code to handle the propagation inside materials. Which extension is used is decided by the user.
 
-The extension can be configured via the {struct}`Acts::StepperExtensionList`:
+The extension can be configured via the {class}`Acts::EigenStepper`:
 
-```cpp
-using Stepper = Acts::EigenStepper<
-                  Acts::StepperExtensionList<
-                    Acts::DefaultExtension,
-                    Acts::DenseEnvironmentExtension
-                  >
-                >;
+```c++
+using Stepper = Acts::EigenStepper<Acts::EigenStepperDenseEnvironmentExtension>;
 ```
 
-By default, the {class}`Acts::EigenStepper` only uses the {struct}`Acts::DefaultExtension`.
+By default, the {class}`Acts::EigenStepper` only uses the {struct}`Acts::EigenStepperDenseEnvironmentExtension`.
 
 ### MultiEigenStepperLoop
 
