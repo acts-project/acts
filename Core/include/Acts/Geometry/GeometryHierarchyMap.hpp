@@ -194,7 +194,7 @@ class GeometryHierarchyMap {
   ///
   /// This assumes that the elements are ordered and unique with respect to
   /// their identifiers.
-  void fill(std::vector<InputElement>& elements);
+  void fill(const std::vector<InputElement>& elements);
 };
 
 // implementations
@@ -232,7 +232,7 @@ inline void GeometryHierarchyMap<value_t>::sortAndCheckDuplicates(
 
 template <typename value_t>
 inline void GeometryHierarchyMap<value_t>::fill(
-    std::vector<InputElement>& elements) {
+    const std::vector<InputElement>& elements) {
   m_ids.clear();
   m_masks.clear();
   m_values.clear();
