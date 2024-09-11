@@ -35,6 +35,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "ActsExamples/Geometry/VolumeAssociationTest.hpp"
 
@@ -66,11 +67,9 @@ struct MaterialSurfaceSelector {
 
   /// @param surface is the test surface
   void operator()(const Acts::Surface* surface) {
-    if (surface->surfaceMaterial() != nullptr) {
-      if (std::find(surfaces.begin(), surfaces.end(), surface) ==
-          surfaces.end()) {
-        surfaces.push_back(surface);
-      }
+    if (surface->surfaceMaterial() != nullptr &&
+        !rangeContainsValue(surfaces, surface)) {
+      surfaces.push_back(surface);
     }
   }
 };
@@ -189,11 +188,8 @@ void addGeometry(Context& ctx) {
 
     py::class_<Acts::TrackingVolume, Acts::Volume,
                std::shared_ptr<Acts::TrackingVolume>>(m, "TrackingVolume")
-        .def(py::init([](std::shared_ptr<const Acts::VolumeBounds> bounds,
-                         std::string name) {
-          return std::make_shared<Acts::TrackingVolume>(Transform3::Identity(),
-                                                        bounds, name);
-        }));
+        .def(py::init<const Transform3&, std::shared_ptr<Acts::VolumeBounds>,
+                      std::string>());
   }
 
   {

@@ -12,6 +12,7 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
@@ -84,8 +85,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
   assert((idxSourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
-  if (std::find(m_volumeIds.begin(), m_volumeIds.end(),
-                idxSourceLink.geometryId().volume()) == m_volumeIds.end()) {
+  if (!rangeContainsValue(m_volumeIds, idxSourceLink.geometryId())) {
     m_fallback.calibrate(measurements, clusters, gctx, cctx, sourceLink,
                          trackState);
     return;

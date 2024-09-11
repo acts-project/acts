@@ -297,9 +297,12 @@ void addAlgebra(Acts::Python::Context& ctx) {
             Acts::Vector3(translation[0], translation[1], translation[2]));
         return t;
       }))
-      .def("getTranslation", [](const Acts::Transform3& self) {
-        return Vector3(self.translation());
-      });
+      .def("getTranslation",
+           [](const Acts::Transform3& self) {
+             return Vector3(self.translation());
+           })
+      .def_static("Identity", &Acts::Transform3::Identity);
+  ;
 }
 
 void addBinning(Context& ctx) {

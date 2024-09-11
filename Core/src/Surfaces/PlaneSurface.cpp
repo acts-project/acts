@@ -37,12 +37,6 @@ Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
       RegularSurface(gctx, other, transform),
       m_bounds(other.m_bounds) {}
 
-Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
-    : RegularSurface(), m_bounds(nullptr) {
-  m_transform = std::make_unique<Transform3>(
-      CurvilinearSurface(center, normal).transform());
-}
-
 Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
                                  const Acts::DetectorElementBase& detelement)
     : RegularSurface(detelement), m_bounds(std::move(pbounds)) {
