@@ -145,8 +145,8 @@ ProcessCode PrototracksToParameters::execute(
     const auto s = tmpSps.size();
 
     SimSeed seed = m_cfg.buildTightSeeds
-        ? SimSeed(*tmpSps[0], *tmpSps[1], *tmpSps[2]),
-            : SimSeed(*tmpSps[0], *tmpSps[s / 2], *tmpSps[s - 1]);
+                       ? SimSeed(*tmpSps[0], *tmpSps[1], *tmpSps[2])
+                       : SimSeed(*tmpSps[0], *tmpSps[s / 2], *tmpSps[s - 1]);
     seed.setZvertex(z_vertex);
 
     // Compute parameters
