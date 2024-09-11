@@ -27,15 +27,18 @@ struct actor_caller {
     requires(
         Actor<actor_t, propagator_state_t, stepper_t, navigator_t, Args...>)
   {
-    if constexpr (ActorHasAct<actor_t, propagator_state_t, stepper_t,
-                              navigator_t, Args...>) {
-      if constexpr (ActorHasResult<actor_t>) {
-        actor.act(state, stepper, navigator,
-                  state.template get<detail::result_type_t<actor_t>>(),
-                  std::forward<Args>(args)...);
-      } else {
-        actor.act(state, stepper, navigator, std::forward<Args>(args)...);
-      }
+    if constexpr (ActorHasActWithoutResult<actor_t, propagator_state_t,
+                                           stepper_t, navigator_t, Args...>) {
+      actor.act(state, stepper, navigator, std::forward<Args>(args)...);
+      return;
+    }
+
+    if constexpr (ActorHasActWithResult<actor_t, propagator_state_t, stepper_t,
+                                        navigator_t, Args...>) {
+      actor.act(state, stepper, navigator,
+                state.template get<detail::result_type_t<actor_t>>(),
+                std::forward<Args>(args)...);
+      return;
     }
   }
 
@@ -47,17 +50,18 @@ struct actor_caller {
     requires(
         Actor<actor_t, propagator_state_t, stepper_t, navigator_t, Args...>)
   {
-    if constexpr (ActorHasAbort<actor_t, propagator_state_t, stepper_t,
-                                navigator_t, Args...>) {
-      if constexpr (ActorHasResult<actor_t>) {
-        return actor.checkAbort(
-            state, stepper, navigator,
-            state.template get<detail::result_type_t<actor_t>>(),
-            std::forward<Args>(args)...);
-      } else {
-        return actor.checkAbort(state, stepper, navigator,
-                                std::forward<Args>(args)...);
-      }
+    if constexpr (ActorHasAbortWithoutResult<actor_t, propagator_state_t,
+                                             stepper_t, navigator_t, Args...>) {
+      return actor.checkAbort(state, stepper, navigator,
+                              std::forward<Args>(args)...);
+    }
+
+    if constexpr (ActorHasAbortWithResult<actor_t, propagator_state_t,
+                                          stepper_t, navigator_t, Args...>) {
+      return actor.checkAbort(
+          state, stepper, navigator,
+          state.template get<detail::result_type_t<actor_t>>(),
+          std::forward<Args>(args)...);
     }
 
     return false;
