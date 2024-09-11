@@ -137,7 +137,6 @@ std::shared_ptr<Experimental::DetectorVolume> convertDetectorVolume(
                  });
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
   Volume vol = convertVolume(transform, shape);
-  // TODO change the casting //
   return Experimental::DetectorVolumeFactory::construct(
       portalGenerator, context, name, vol.transform(), vol.volumeBoundsPtr(),
       sensSurfaces,
