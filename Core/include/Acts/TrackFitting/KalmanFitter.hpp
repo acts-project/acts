@@ -506,10 +506,7 @@ class KalmanFitter {
     bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_type& result,
                     const Logger& /*logger*/) const {
-      if (!result.result.ok() || result.finished) {
-        return true;
-      }
-      return false;
+      return (!result.result.ok() || result.finished);
     }
 
     /// @brief Kalman actor operation: reverse direction

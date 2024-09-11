@@ -26,22 +26,12 @@ namespace Acts {
 /// to define a list of different actors_t that are each
 /// executed during the stepping procedure
 template <typename... actors_t>
+  requires(
+      detail::all_of_v<std::is_default_constructible<actors_t>::value...> &&
+      detail::all_of_v<std::is_copy_constructible<actors_t>::value...> &&
+      detail::all_of_v<std::is_move_constructible<actors_t>::value...> &&
+      !detail::has_duplicates_v<actors_t...>)
 struct ActorList {
- private:
-  static_assert(
-      detail::all_of_v<std::is_default_constructible<actors_t>::value...>,
-      "all actors must be default constructible");
-  static_assert(
-      detail::all_of_v<std::is_copy_constructible<actors_t>::value...>,
-      "all actors must be copy constructible");
-  static_assert(
-      detail::all_of_v<std::is_move_constructible<actors_t>::value...>,
-      "all actors must be move constructible");
-
-  static_assert(!detail::has_duplicates_v<actors_t...>,
-                "same action type specified several times");
-
- public:
   /// @cond
   // This uses the type collector and unpacks using the `R` meta function
   template <template <typename...> class R>
