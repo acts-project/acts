@@ -10,6 +10,7 @@
 
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
 
@@ -56,7 +57,6 @@ BOOST_AUTO_TEST_CASE(test_track_building) {
 
   // Check what we have here
   for (const auto &refTrack : refTracks) {
-    auto found = std::find(testTracks.begin(), testTracks.end(), refTrack);
-    BOOST_CHECK(found != testTracks.end());
+    BOOST_CHECK(Acts::rangeContainsValue(testTracks, refTrack));
   }
 }

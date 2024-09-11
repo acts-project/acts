@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchGraphStoreHook.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -97,10 +98,8 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
       NodeFeature::eCellSum,  NodeFeature::eCluster1R, NodeFeature::eCluster2R};
 
   auto wantClFeatures = std::any_of(
-      m_cfg.nodeFeatures.begin(), m_cfg.nodeFeatures.end(), [&](const auto& f) {
-        return std::find(clFeatures.begin(), clFeatures.end(), f) !=
-               clFeatures.end();
-      });
+      m_cfg.nodeFeatures.begin(), m_cfg.nodeFeatures.end(),
+      [&](const auto& f) { return Acts::rangeContainsValue(clFeatures, f); });
 
   if (wantClFeatures && !m_inputClusters.isInitialized()) {
     throw std::invalid_argument("Cluster features requested, but not provided");
