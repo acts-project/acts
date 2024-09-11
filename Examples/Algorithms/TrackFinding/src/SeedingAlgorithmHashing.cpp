@@ -317,7 +317,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
       toAdd.setZvertex(seed.z());
       toAdd.setQuality(seed.seedQuality());
 
-      seedsSet.insert(std::move(toAdd));
+      seedsSet.insert(toAdd);
     }
   }
 

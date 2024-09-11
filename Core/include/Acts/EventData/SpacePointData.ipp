@@ -84,7 +84,7 @@ inline void SpacePointData::setVarianceR(const std::size_t idx,
 }
 
 inline bool SpacePointData::hasDynamicVariable() const {
-  return not m_topStripVector.empty();
+  return !m_topStripVector.empty();
 }
 
 inline const Acts::Vector3& SpacePointData::topStripVector(
