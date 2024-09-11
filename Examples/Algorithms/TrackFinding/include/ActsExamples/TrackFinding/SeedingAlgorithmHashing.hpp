@@ -146,10 +146,10 @@ class SeedingAlgorithmHashing final : public IAlgorithm {
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
   WriteDataHandle<std::vector<SimSpacePointContainer>> m_outputBuckets{
       this, "OutputBuckets"};
-  Acts::HashingAlgorithm<const SpacePointProxy_t*,
-                         std::vector<const SpacePointProxy_t*>>
+  Acts::HashingAlgorithm<const SimSpacePoint*,
+                         std::vector<const SimSpacePoint*>>
       m_hashing;
-  Acts::HashingTrainingAlgorithm<std::vector<const SpacePointProxy_t*>>
+  Acts::HashingTrainingAlgorithm<std::vector<const SimSpacePoint*>>
       m_hashingTraining;
 
   static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {

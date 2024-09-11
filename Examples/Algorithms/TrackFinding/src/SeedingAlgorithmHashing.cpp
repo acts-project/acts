@@ -187,11 +187,11 @@ ActsExamples::SeedingAlgorithmHashing::SeedingAlgorithmHashing(
       Acts::SeedFinder<SpacePointProxy_type,
                        Acts::CylindricalSpacePointGrid<SpacePointProxy_type>>(
           m_cfg.seedFinderConfig);
-  m_hashing = Acts::HashingAlgorithm<const SpacePointProxy_type*,
-                                     std::vector<const SpacePointProxy_type*>>(
+  m_hashing = Acts::HashingAlgorithm<const SimSpacePoint*,
+                                     std::vector<const SimSpacePoint*>>(
       m_cfg.hashingConfig);
   m_hashingTraining =
-      Acts::HashingTrainingAlgorithm<std::vector<const SpacePointProxy_type*>>(
+      Acts::HashingTrainingAlgorithm<std::vector<const SimSpacePoint*>>(
           m_cfg.hashingTrainingConfig);
 }
 
@@ -227,52 +227,47 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
   Acts::SpacePointContainerOptions spOptions;
   spOptions.beamPos = {0., 0.};
 
-  // Prepare interface SpacePoint backend-ACTS
-  ActsExamples::SpacePointContainer container(spacePointPtrs);
-  // Prepare Acts API
-  Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
-      spContainer(spConfig, spOptions, container);
-
-  using value_type = typename Acts::SpacePointContainer<
-      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-      Acts::detail::RefHolder>::SpacePointProxyType;
-  using seed_type = Acts::Seed<value_type>;
-
-  std::vector<const value_type*> spacePointProxyPtr;
-  for (const value_type& proxy : spContainer) {
-    spacePointProxyPtr.push_back(&proxy);
-  }
-
   // Hashing Training
-  Acts::AnnoyModel annoyModel = m_hashingTraining.execute(spacePointProxyPtr);
+  Acts::AnnoyModel annoyModel = m_hashingTraining.execute(spacePointPtrs);
   // Hashing
-  static thread_local std::vector<std::vector<const value_type*>> bucketsPtrs;
+  static thread_local std::vector<SpacePointPtrVector> bucketsPtrs;
   bucketsPtrs.clear();
-  m_hashing.execute(spacePointProxyPtr, &annoyModel, bucketsPtrs);
+  m_hashing.execute(spacePointPtrs, &annoyModel, bucketsPtrs);
 
   // pre-compute the maximum size required so we only need to allocate once
   // doesn't combine the input containers of space point pointers
   std::size_t maxNSpacePoints = 0;
   std::size_t inSpacePoints = 0;
-  for (const std::vector<const value_type*>& bucket : bucketsPtrs) {
+  for (const SpacePointPtrVector& bucket : bucketsPtrs) {
     inSpacePoints = bucket.size();
     if (inSpacePoints > maxNSpacePoints) {
       maxNSpacePoints = inSpacePoints;
     }
   }
 
+  using value_type = typename Acts::SpacePointContainer<
+      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+      Acts::detail::RefHolder>::SpacePointProxyType;
+  using seed_type = Acts::Seed<value_type>;
+
   // Create the set with custom comparison function
-  static thread_local std::set<seed_type, SeedComparison<value_type>> seedsSet;
+  static thread_local std::set<ActsExamples::SimSeed,
+                               SeedComparison<SimSpacePoint>>
+      seedsSet;
   seedsSet.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
-  state.spacePointMutableData.resize(spContainer.size());
+  state.spacePointMutableData.resize(maxNSpacePoints);
 
-  for (const std::vector<const value_type*>& bucket : bucketsPtrs) {
-    std::vector<value_type> buck;
-    buck.reserve(bucket.size());
-    for (const value_type* val : bucket) {
-      buck.push_back(*val);
-    }
+  for (SpacePointPtrVector& bucket : bucketsPtrs) {
+    std::set<seed_type, SeedComparison<value_type>> seedsSetForBucket;
+    state.spacePointMutableData.clear();
+    state.spacePointMutableData.resize(maxNSpacePoints);
+
+    // Prepare interface SpacePoint backend-ACTS
+    ActsExamples::SpacePointContainer<SpacePointPtrVector> container(bucket);
+    // Prepare Acts API
+    Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
+        spContainer(spConfig, spOptions, container);
 
     // extent used to store r range for middle spacepoint
     Acts::Extent rRangeSPExtent;
@@ -281,8 +276,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
         Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(
             m_cfg.gridConfig, m_cfg.gridOptions);
     Acts::CylindricalSpacePointGridCreator::fillGrid(
-        m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid, buck.begin(),
-        buck.end(), rRangeSPExtent);
+        m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid,
+        spContainer.begin(), spContainer.end(), rRangeSPExtent);
 
     std::array<std::vector<std::size_t>, 2ul> navigation;
     navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
@@ -302,26 +297,35 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
             m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
         up - m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
 
+    // this creates seeds of proxy, we need to convert it to seed of space
+    // points
     for (const auto [bottom, middle, top] : spacePointsGrouping) {
-      m_seedFinder.createSeedsForGroup(m_cfg.seedFinderOptions, state,
-                                       spacePointsGrouping.grid(), seedsSet,
-                                       bottom, middle, top, rMiddleSPRange);
+      m_seedFinder.createSeedsForGroup(
+          m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
+          seedsSetForBucket, bottom, middle, top, rMiddleSPRange);
+    }
+
+    // proxies die when the Acts::SpacePointContainer dies, so we need to
+    // convert the seeds of space points proxies to seeds of space points
+    for (const seed_type& seed : seedsSetForBucket) {
+      const std::array<const value_type*, 3>& sps = seed.sp();
+      const SimSpacePoint* bottom = sps[0]->externalSpacePoint();
+      const SimSpacePoint* middle = sps[1]->externalSpacePoint();
+      const SimSpacePoint* top = sps[2]->externalSpacePoint();
+
+      ActsExamples::SimSeed toAdd(*bottom, *middle, *top);
+      toAdd.setZvertex(seed.z());
+      toAdd.setQuality(seed.seedQuality());
+
+      seedsSet.insert(std::move(toAdd));
     }
   }
-  /*
-  // convert seed of proxies to seed of simseeds
-  ActsExamples::SimSeedContainer seeds;
-  seeds.clear();
-  seeds.reserve(seedsSet.size());
-  for (const seed_type& seed : seedsSet) {
-    const std::array<const value_type*, 3>& sps = seed.sp();
-    const SimSpacePoint* bottom = sps[0]->externalSpacePoint();
-    const SimSpacePoint* middle = sps[1]->externalSpacePoint();
-    const SimSpacePoint* top = sps[2]->externalSpacePoint();
 
-    seeds.emplace_back(*bottom, *middle, *top);
-    seeds.back().setZvertex(seed.z());
-    seeds.back().setQuality(seed.seedQuality());
+  // convert the set to a simseed collection
+  ActsExamples::SimSeedContainer seeds;
+  seeds.reserve(seedsSet.size());
+  for (const ActsExamples::SimSeed& seed : seedsSet) {
+    seeds.push_back(seed);
   }
 
   ACTS_INFO("Created " << seeds.size() << " track seeds from "
@@ -329,15 +333,15 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
 
   m_outputSeeds(ctx, SimSeedContainer{seeds});
   std::vector<SimSpacePointContainer> buckets;
-  for (const std::vector<value_type>& bucket : bucketsPtrs) {
+  for (const SpacePointPtrVector& bucket : bucketsPtrs) {
     SimSpacePointContainer bucketSP;
-    for (const value_type& spacePoint : bucket) {
-      bucketSP.push_back(*spacePoint.externalSpacePoint());
+    for (const SimSpacePoint* spacePoint : bucket) {
+      bucketSP.push_back(*spacePoint);
     }
     buckets.push_back(bucketSP);
   }
   m_outputBuckets(ctx, std::vector<SimSpacePointContainer>{buckets});
-  */
+
   ACTS_DEBUG("End of SeedingAlgorithmHashing execute");
   return ActsExamples::ProcessCode::SUCCESS;
 }
