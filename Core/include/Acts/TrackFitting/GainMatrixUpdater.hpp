@@ -80,7 +80,7 @@ class GainMatrixUpdater {
             // shape later
             trackState.effectiveCalibrated().data(),
             trackState.effectiveCalibratedCovariance().data(),
-            trackState.boundSubspaceIndices(),
+            trackState.projectorSubspaceIndices(),
             trackState.predicted(),
             trackState.predictedCovariance(),
             trackState.filtered(),

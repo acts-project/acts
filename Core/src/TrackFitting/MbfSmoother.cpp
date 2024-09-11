@@ -37,6 +37,9 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
 
   visit_measurement(measurement.calibratedSize, [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
+    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
+        std::span{measurement.projector.begin(),
+                  measurement.projector.begin() + kMeasurementSize});
 
     typename TrackStateTraits<kMeasurementSize, true>::Calibrated calibrated{
         measurement.calibrated};
@@ -44,9 +47,7 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
         calibratedCovariance{measurement.calibratedCovariance};
 
     // Measurement matrix
-    const auto H = measurement.projector
-                       .template topLeftCorner<kMeasurementSize, eBoundSize>()
-                       .eval();
+    const auto H = subspaceHelper.projector();
 
     // Residual covariance
     const auto S =

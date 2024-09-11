@@ -62,11 +62,6 @@ inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const
 }
 
 template <typename D, std::size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::projector() const -> Projector {
-  return variableBoundSubspaceHelper().fullProjector();
-}
-
-template <typename D, std::size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::getUncalibratedSourceLink() const
     -> SourceLink {
   assert(has<hashString("uncalibratedSourceLink")>());

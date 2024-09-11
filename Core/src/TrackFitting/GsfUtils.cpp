@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,10 @@
 
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
+#include "Acts/EventData/Types.hpp"
 
 #include <cstddef>
 
@@ -20,16 +23,17 @@ using TrackStateTraits =
 ActsScalar calculateDeterminant(
     const double* fullCalibratedCovariance,
     TrackStateTraits::Covariance predictedCovariance,
-    TrackStateTraits::Projector projector, unsigned int calibratedSize) {
+    BoundSubspaceIndices projector, unsigned int calibratedSize) {
   return visit_measurement(calibratedSize, [&](auto N) {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
+    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
+        std::span{projector.begin(), projector.begin() + kMeasurementSize});
 
     typename Acts::TrackStateTraits<
         kMeasurementSize, true>::CalibratedCovariance calibratedCovariance{
         fullCalibratedCovariance};
 
-    const auto H =
-        projector.template topLeftCorner<kMeasurementSize, eBoundSize>().eval();
+    const auto H = subspaceHelper.projector();
 
     return (H * predictedCovariance * H.transpose() + calibratedCovariance)
         .determinant();

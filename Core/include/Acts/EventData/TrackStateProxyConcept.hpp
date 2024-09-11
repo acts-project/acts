@@ -111,12 +111,6 @@ concept TrackStateProxyConcept =
       { cv.hasProjector() } -> std::same_as<bool>;
       { v.hasProjector() } -> std::same_as<bool>;
 
-      { cv.effectiveProjector() } -> std::same_as<detail::EffectiveProjector>;
-      { v.effectiveProjector() } -> std::same_as<detail::EffectiveProjector>;
-
-      { cv.projectorBitset() } -> std::same_as<ProjectorBitset>;
-      { v.projectorBitset() } -> std::same_as<ProjectorBitset>;
-
       { cv.getUncalibratedSourceLink() } -> std::same_as<SourceLink>;
       { v.getUncalibratedSourceLink() } -> std::same_as<SourceLink>;
 
