@@ -24,7 +24,7 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/EigenStepperDenseEnvironmentExtension.hpp"
+#include "Acts/Propagator/EigenStepperDenseExtension.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
     BOOST_CHECK(resultCurv.ok());
   }
 
-  EigenStepper<EigenStepperDenseEnvironmentExtension> denseEigenStepper{field};
+  EigenStepper<EigenStepperDenseExtension> denseEigenStepper{field};
 
   {
     Propagator propagator{denseEigenStepper, navigator};
