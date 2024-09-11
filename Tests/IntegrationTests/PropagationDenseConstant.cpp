@@ -16,7 +16,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/EigenStepperDenseEnvironmentExtension.hpp"
+#include "Acts/Propagator/EigenStepperDenseExtension.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/RiddersPropagator.hpp"
@@ -34,7 +34,7 @@ namespace ds = ActsTests::PropagationDatasets;
 using namespace Acts::UnitLiterals;
 
 using MagneticField = Acts::ConstantBField;
-using Stepper = Acts::EigenStepper<Acts::EigenStepperDenseEnvironmentExtension>;
+using Stepper = Acts::EigenStepper<Acts::EigenStepperDenseExtension>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 using RiddersPropagator = Acts::RiddersPropagator<Propagator>;
 

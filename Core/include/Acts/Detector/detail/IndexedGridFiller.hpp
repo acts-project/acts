@@ -17,6 +17,7 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -193,7 +194,7 @@ struct IndexedGridFiller {
     // Loop over the surfaces to be filled
     for (auto [io, o] : enumerate(iObjects)) {
       // Exclude indices that should be handled differently
-      if (std::find(aToAll.begin(), aToAll.end(), io) != aToAll.end()) {
+      if (rangeContainsValue(aToAll, io)) {
         continue;
       }
       // Get the reference positions
@@ -216,7 +217,7 @@ struct IndexedGridFiller {
       // Now fill the surface indices
       for (const auto& li : lIndices) {
         auto& bContent = iGrid.grid.atLocalBins(li);
-        if (std::find(bContent.begin(), bContent.end(), io) == bContent.end()) {
+        if (!rangeContainsValue(bContent, io)) {
           bContent.push_back(io);
         }
       }
@@ -238,7 +239,7 @@ struct IndexedGridFiller {
     for (std::size_t gi = 0; gi < iGrid.grid.size(true); ++gi) {
       auto& bContent = iGrid.grid.at(gi);
       for (const auto& io : idcs) {
-        if (std::find(bContent.begin(), bContent.end(), io) == bContent.end()) {
+        if (!rangeContainsValue(bContent, io)) {
           bContent.push_back(io);
         }
       }
