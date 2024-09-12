@@ -74,7 +74,7 @@ convert(const Experimental::InternalNavigationDelegate& delegate,
 template <typename... Args>
 std::vector<detray::io::grid_payload<std::size_t, detray::io::accel_id>>
 unrollConvert(const Acts::Experimental::InternalNavigationDelegate& delegate,
-              Acts::TypeList<Args...>);
+              Acts::TypeList<Args...> /*unused*/);
 
 /// Conversion method for instance objects to detray::grid payloads
 ///

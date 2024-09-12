@@ -158,7 +158,7 @@ template <typename... Args>
 std::vector<detray::io::grid_payload<std::size_t, detray::io::accel_id>>
 Acts::DetraySurfaceGridsConverter::unrollConvert(
     const Acts::Experimental::InternalNavigationDelegate& delegate,
-    Acts::TypeList<Args...>) {
+    Acts::TypeList<Args...> /*unused*/) {
   std::vector<detray::io::grid_payload<std::size_t, detray::io::accel_id>>
       grid_pds;
 
