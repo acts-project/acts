@@ -73,7 +73,7 @@ args = p.parse_args()
 
 try:
 
-    assert (len(args.input) == len(args.label) == len(args.marker))
+    assert len(args.input) == len(args.label) == len(args.marker)
     
     fig, ax = plt.subplots(1, 1, figsize=(11, 10))
 
