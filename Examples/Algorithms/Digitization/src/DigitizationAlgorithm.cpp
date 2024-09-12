@@ -98,7 +98,7 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
                    geoCfg.indices.end());
 
     // Make sure the configured input parameter indices are sorted and unique
-    std::sort(indices.begin(), indices.end());
+    std::ranges::sort(indices);
 
     auto dup = std::adjacent_find(indices.begin(), indices.end());
     if (dup != indices.end()) {

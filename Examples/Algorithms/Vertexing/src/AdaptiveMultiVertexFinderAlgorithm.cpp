@@ -31,6 +31,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <ostream>
@@ -256,12 +257,10 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
     }
 
     // sort by number of particles
-    std::sort(vertexSeederState.truthVertices.begin(),
-              vertexSeederState.truthVertices.end(),
-              [&vertexParticleCount](const auto& lhs, const auto& rhs) {
-                return vertexParticleCount[lhs.vertexId()] >
-                       vertexParticleCount[rhs.vertexId()];
-              });
+    std::ranges::sort(vertexSeederState.truthVertices, {},
+                      [&vertexParticleCount](const auto& v) {
+                        return vertexParticleCount[v.vertexId()];
+                      });
 
     ACTS_INFO("Got " << truthVertices.size() << " truth vertices and selected "
                      << vertexSeederState.truthVertices.size() << " in event");
