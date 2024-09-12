@@ -58,15 +58,6 @@ class PlaneSurface : public RegularSurface {
   PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
                const Transform3& transform);
 
-  /// @deprecated Use `CurvilinearSurface` instead
-  ///
-  /// Dedicated Constructor with normal vector
-  /// This is for curvilinear surfaces which are by definition boundless
-  ///
-  /// @param center is the center position of the surface
-  /// @param normal is thenormal vector of the plane surface
-  PlaneSurface(const Vector3& center, const Vector3& normal);
-
   /// Constructor from DetectorElementBase : Element proxy
   ///
   /// @param pbounds are the provided planar bounds

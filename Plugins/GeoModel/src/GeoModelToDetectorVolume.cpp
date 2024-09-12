@@ -29,8 +29,8 @@
 #include <GeoModelKernel/GeoTubs.h>
 
 namespace Acts::GeoModel {
-Volume package(const Transform3& trf, const GeoShape& shape) {
-  std::shared_ptr<const VolumeBounds> bounds;
+Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
+  std::shared_ptr<VolumeBounds> bounds;
   GeoTrf::Transform3D newTrf = trf;
   if (shape.typeID() == GeoTube::getClassTypeID()) {
     const GeoTube* tube = dynamic_cast<const GeoTube*>(&shape);
@@ -44,7 +44,7 @@ Volume package(const Transform3& trf, const GeoShape& shape) {
     newTrf = trf * GeoTrf::RotateZ3D(tubs->getSPhi() + 0.5 * tubs->getDPhi());
   } else if (shape.typeID() == GeoBox::getClassTypeID()) {
     const GeoBox* box = dynamic_cast<const GeoBox*>(&shape);
-    bounds = std::make_shared<const CuboidVolumeBounds>(
+    bounds = std::make_shared<CuboidVolumeBounds>(
         box->getXHalfLength(), box->getYHalfLength(), box->getZHalfLength());
   } else if (shape.typeID() == GeoTrd::getClassTypeID()) {
     const GeoTrd* trd = dynamic_cast<const GeoTrd*>(&shape);
@@ -97,14 +97,14 @@ Volume package(const Transform3& trf, const GeoShape& shape) {
     const GeoShapeSubtraction* subtractionShape =
         dynamic_cast<const GeoShapeSubtraction*>(&shape);
     const GeoShape* shapeA = subtractionShape->getOpA();
-    return package(trf, *shapeA);
+    return convertVolume(trf, *shapeA);
   } else if (shape.typeID() == GeoShapeSubtraction::getClassTypeID()) {
     // Go down the left side (opA) of the subtraction until we reach a normal
     // shape
     const GeoShapeSubtraction* subtractionShape =
         dynamic_cast<const GeoShapeSubtraction*>(&shape);
     const GeoShape* shapeA = subtractionShape->getOpA();
-    return package(trf, *shapeA);
+    return convertVolume(trf, *shapeA);
   } else if (shape.typeID() == GeoPcon::getClassTypeID()) {
     // Will change in future, get bounding box for now
     double xmin{0}, xmax{0}, ymin{0}, ymax{0}, zmin{0}, zmax{0};
@@ -117,16 +117,14 @@ Volume package(const Transform3& trf, const GeoShape& shape) {
         dynamic_cast<const GeoShapeShift*>(&shape);
     const GeoShape* shapeOp = shiftShape->getOp();
     newTrf = trf * shiftShape->getX();
-    return package(trf, *shapeOp);
+    return convertVolume(trf, *shapeOp);
   } else {
     throw std::runtime_error("FATAL: Unsupported GeoModel shape");
   }
-
-  Volume vol = Volume(newTrf, bounds);
-  return vol;
+  return Volume(newTrf, bounds);
 }
 
-std::shared_ptr<Experimental::DetectorVolume> convertVolume(
+std::shared_ptr<Experimental::DetectorVolume> convertDetectorVolume(
     const GeometryContext& context, const GeoShape& shape,
     const std::string& name, const GeoTrf::Transform3D& transform,
     const std::vector<GeoModelSensitiveSurface>& sensitives) {
@@ -138,10 +136,9 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
                    return std::get<1>(t);
                  });
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
-  Volume vol = package(transform, shape);
+  Volume vol = convertVolume(transform, shape);
   return Experimental::DetectorVolumeFactory::construct(
-      portalGenerator, context, name, vol.transform(),
-      std::const_pointer_cast<VolumeBounds>(vol.volumeBoundsPtr()),
+      portalGenerator, context, name, vol.transform(), vol.volumeBoundsPtr(),
       sensSurfaces,
       std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>{},
       Experimental::tryNoVolumes(), Experimental::tryAllPortalsAndSurfaces());

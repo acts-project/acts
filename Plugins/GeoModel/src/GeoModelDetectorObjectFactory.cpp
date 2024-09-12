@@ -174,8 +174,8 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
 
     // convert bounding boxes with surfaces inside
     std::shared_ptr<Experimental::DetectorVolume> box =
-        Acts::GeoModel::convertVolume(gctx, *shape, name, fpvtransform,
-                                      sensitives);
+        Acts::GeoModel::convertDetectorVolume(gctx, *shape, name, fpvtransform,
+                                              sensitives);
     cache.boundingBoxes.push_back(box);
   }
   // If fpv has no subs and should not be converted to volume convert to surface

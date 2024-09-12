@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -40,7 +42,7 @@ enum class TrackExtrapolationError {
 
 std::error_code make_error_code(TrackExtrapolationError e);
 
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t>
 Result<typename track_proxy_t::ConstTrackStateProxy> findFirstMeasurementState(
     const track_proxy_t &track) {
   using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
@@ -63,7 +65,7 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findFirstMeasurementState(
   return result;
 }
 
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t>
 Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
     const track_proxy_t &track) {
   using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
@@ -93,7 +95,8 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
 /// @param smoother The smoother
 ///
 /// @return The result of the smoothing
-template <typename track_proxy_t, typename smoother_t = GainMatrixSmoother>
+template <TrackProxyConcept track_proxy_t,
+          typename smoother_t = GainMatrixSmoother>
 Result<void> smoothTrack(
     const GeometryContext &geoContext, track_proxy_t &track,
     const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO),
@@ -128,7 +131,7 @@ Result<void> smoothTrack(
 /// @param logger The logger
 ///
 /// @return The result of the smoothing
-template <typename track_container_t>
+template <TrackContainerFrontend track_container_t>
 Result<void> smoothTracks(
     const GeometryContext &geoContext, const track_container_t &trackContainer,
     const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO)) {
@@ -158,7 +161,7 @@ Result<void> smoothTracks(
 ///
 /// @return The result of the search containing the track state
 ///         and the distance to the reference surface
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t>
 Result<std::pair<typename track_proxy_t::ConstTrackStateProxy, double>>
 findTrackStateForExtrapolation(
     const GeometryContext &geoContext, const track_proxy_t &track,
@@ -283,7 +286,7 @@ findTrackStateForExtrapolation(
 /// @param logger The logger
 ///
 /// @return The result of the extrapolation
-template <typename track_proxy_t, typename propagator_t,
+template <TrackProxyConcept track_proxy_t, typename propagator_t,
           typename propagator_options_t>
 Result<void> extrapolateTrackToReferenceSurface(
     track_proxy_t &track, const Surface &referenceSurface,
@@ -340,7 +343,7 @@ Result<void> extrapolateTrackToReferenceSurface(
 /// @param logger The logger
 ///
 /// @return The result of the extrapolation
-template <typename track_container_t, typename propagator_t,
+template <TrackContainerFrontend track_container_t, typename propagator_t,
           typename propagator_options_t>
 Result<void> extrapolateTracksToReferenceSurface(
     const track_container_t &trackContainer, const Surface &referenceSurface,
@@ -370,12 +373,8 @@ Result<void> extrapolateTracksToReferenceSurface(
 /// @tparam track_state_container_t the track state container backend
 /// @tparam holder_t the holder type for the track container backends
 /// @param track A mutable track proxy to operate on
-template <typename track_container_t, typename track_state_container_t,
-          template <typename> class holder_t>
-void calculateTrackQuantities(
-    Acts::TrackProxy<track_container_t, track_state_container_t, holder_t,
-                     false>
-        track) {
+template <TrackProxyConcept track_proxy_t>
+void calculateTrackQuantities(track_proxy_t track) {
   track.chi2() = 0;
   track.nDoF() = 0;
 
