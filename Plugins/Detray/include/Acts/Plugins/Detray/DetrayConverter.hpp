@@ -21,6 +21,7 @@
 #include <detray/io/common/material_map_reader.hpp>
 #include <detray/io/common/surface_grid_reader.hpp>
 #include <detray/io/frontend/detector_writer_config.hpp>
+#include <detray/utils/consistency_checker.hpp>
 
 namespace Acts {
 
@@ -98,6 +99,7 @@ class DetrayConverter {
           surfaceGridsPayload =
               DetraySurfaceGridsConverter::convertSurfaceGrids(detector);
 
+      // Capacity 0 (dynamic bin size) and dimension 2 (2D grids)
       detray::io::surface_grid_reader<typename detector_t::surface_type,
                                       std::integral_constant<std::size_t, 0>,
                                       std::integral_constant<std::size_t, 2>>::

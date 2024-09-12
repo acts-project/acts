@@ -51,7 +51,6 @@ Acts::DetraySurfaceGridsConverter::convertGrid(const grid_type& grid,
 
   auto axes = grid.axes();
   if (swapAxis && grid_type::DIM == 2u) {
-    // std::cout<<"swap axes"<<std::endl;
     std::swap(axes[0u], axes[1u]);
   }
 

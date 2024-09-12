@@ -8,21 +8,13 @@
 
 #pragma once
 
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeList.hpp"
 
-#include <detray/builders/detector_builder.hpp>
-#include <detray/core/detector.hpp>
-#include <detray/definitions/geometry.hpp>
-#include <detray/io/common/geometry_reader.hpp>
-#include <detray/io/common/surface_grid_reader.hpp>
-#include <detray/io/frontend/detector_writer.hpp>
 #include <detray/io/frontend/payloads.hpp>
-#include <detray/utils/consistency_checker.hpp>
 
 namespace Acts {
 
