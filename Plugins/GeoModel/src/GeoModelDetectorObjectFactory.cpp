@@ -167,6 +167,7 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
     }
     cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(),
                                    sensitives.begin(), sensitives.end());
+    // TODO maybe put that down after an surface conversions
     if (convertBox(name)) {
       const GeoLogVol *logVol =
           physVol->getLogVol();  // get logVol for the shape of the volume
@@ -175,8 +176,8 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
 
       // convert bounding boxes with surfaces inside
       std::shared_ptr<Experimental::DetectorVolume> box =
-          Acts::GeoModel::convertVolume(gctx, *shape, name, fpvtransform,
-                                        sensitives);
+          Acts::GeoModel::convertDetectorVolume(gctx, *shape, name,
+                                                fpvtransform, sensitives);
       cache.boundingBoxes.push_back(box);
     }
   } else {
