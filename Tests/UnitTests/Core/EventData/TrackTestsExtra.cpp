@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
+#include <algorithm>
 #include <numeric>
 
 using namespace Acts;
@@ -421,7 +422,7 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
   // reverse with jacobians
   t.reverseTrackStates(true);
 
-  std::reverse(exp.begin(), exp.end());
+  std::ranges::reverse(exp);
   std::rotate(exp.rbegin(), std::next(exp.rbegin()), exp.rend());
 
   for (const auto [e, ts] : zip(exp, t.trackStates())) {

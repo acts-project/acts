@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -51,8 +51,7 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   std::vector<Intersection3D> tsfpIntersections = {tIp, sIp, fIp};
 
   // let's sort the tsf intersection, it should give fst
-  std::sort(tsfpIntersections.begin(), tsfpIntersections.end(),
-            Intersection3D::pathLengthOrder);
+  std::ranges::sort(tsfpIntersections, Intersection3D::pathLengthOrder);
   BOOST_CHECK_EQUAL(fstpIntersections[0].pathLength(),
                     tsfpIntersections[0].pathLength());
   BOOST_CHECK_EQUAL(fstpIntersections[1].pathLength(),
@@ -66,8 +65,7 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   std::vector<Intersection3D> tfnsnpIntersections = {tIp, fIp, nIp, sIp, nIp};
 
   // shuffle the intersections
-  std::sort(ntfspIntersections.begin(), ntfspIntersections.end(),
-            Intersection3D::pathLengthOrder);
+  std::ranges::sort(ntfspIntersections, Intersection3D::pathLengthOrder);
   BOOST_CHECK_EQUAL(fstpIntersections[0].pathLength(),
                     ntfspIntersections[0].pathLength());
   BOOST_CHECK_EQUAL(fstpIntersections[1].pathLength(),
@@ -75,8 +73,7 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   BOOST_CHECK_EQUAL(fstpIntersections[2].pathLength(),
                     ntfspIntersections[2].pathLength());
 
-  std::sort(tfnsnpIntersections.begin(), tfnsnpIntersections.end(),
-            Intersection3D::pathLengthOrder);
+  std::ranges::sort(tfnsnpIntersections, Intersection3D::pathLengthOrder);
   BOOST_CHECK_EQUAL(fstpIntersections[0].pathLength(),
                     tfnsnpIntersections[0].pathLength());
   BOOST_CHECK_EQUAL(fstpIntersections[1].pathLength(),
@@ -96,8 +93,7 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   std::vector<Intersection3D> fstnIntersections = {fIn, sIn, tIn};
 
   // this time around, sort the f-s-t-n to match the t-s-f-n
-  std::sort(fstnIntersections.begin(), fstnIntersections.end(),
-            Intersection3D::pathLengthOrder);
+  std::ranges::sort(fstnIntersections, Intersection3D::pathLengthOrder);
   BOOST_CHECK_EQUAL(fstnIntersections[0].pathLength(),
                     tsfnIntersections[0].pathLength());
   BOOST_CHECK_EQUAL(fstnIntersections[1].pathLength(),
@@ -107,8 +103,7 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
 
   // shuffle negative and positive solutions
   std::vector<Intersection3D> pnsolutions = {tIp, sIn, sIp, fIn, tIn, fIp};
-  std::sort(pnsolutions.begin(), pnsolutions.end(),
-            Intersection3D::pathLengthOrder);
+  std::ranges::sort(pnsolutions, Intersection3D::pathLengthOrder);
 
   BOOST_CHECK_EQUAL(pnsolutions[0].pathLength(), -3.);
   BOOST_CHECK_EQUAL(pnsolutions[1].pathLength(), -2.);
@@ -121,8 +116,7 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   Intersection3D zI(Vector3(0., 0., 0.), 0., Intersection3D::Status::onSurface);
   std::vector<Intersection3D> tszfpIntersections = {tIp, sIp, zI, fIp};
 
-  std::sort(tszfpIntersections.begin(), tszfpIntersections.end(),
-            Intersection3D::pathLengthOrder);
+  std::ranges::sort(tszfpIntersections, Intersection3D::pathLengthOrder);
   BOOST_CHECK_EQUAL(tszfpIntersections[0].pathLength(), 0.);
   BOOST_CHECK_EQUAL(tszfpIntersections[1].pathLength(), 1.);
   BOOST_CHECK_EQUAL(tszfpIntersections[2].pathLength(), 2.);
@@ -131,8 +125,7 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   std::vector<Intersection3D> tfsznIntersections = {tIn, fIn, sIn, zI};
   std::vector<Intersection3D> ztfsnIntersections = {zI, tIn, fIn, sIn};
 
-  std::sort(tfsznIntersections.begin(), tfsznIntersections.end(),
-            Intersection3D::pathLengthOrder);
+  std::ranges::sort(tfsznIntersections, Intersection3D::pathLengthOrder);
   BOOST_CHECK_EQUAL(tfsznIntersections[0].pathLength(), -3.);
   BOOST_CHECK_EQUAL(tfsznIntersections[1].pathLength(), -2.);
   BOOST_CHECK_EQUAL(tfsznIntersections[2].pathLength(), -1.);

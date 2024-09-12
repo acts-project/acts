@@ -1,12 +1,13 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <algorithm>
+#include <tuple>
 
 template <class identifier_t>
 template <class PointType>
@@ -263,16 +264,9 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
     }
   }
   // sort the candidate cells descending in content
-  std::sort(candidates.begin(), candidates.end(),
-            [&yieldMap](const std::size_t bin1, const std::size_t bin2) {
-              YieldType h1 = yieldMap[bin1];
-              YieldType h2 = yieldMap[bin2];
-
-              if (h1 != h2) {
-                return h1 > h2;
-              }
-              return bin1 > bin2;
-            });
+  std::ranges::sort(candidates, std::greater{}, [&yieldMap](std::size_t c) {
+    return std::make_tuple(yieldMap[c], c);
+  });
 
   // now we build islands from the candidate cells, starting with the most
   // populated one

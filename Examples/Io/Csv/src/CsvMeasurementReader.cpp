@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -124,7 +124,7 @@ std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
   auto measurements = readEverything<ActsExamples::MeasurementData>(
       inputDir, "measurements.csv", {"geometry_id", "t"}, event);
   // sort same way they will be sorted in the output container
-  std::sort(measurements.begin(), measurements.end(), CompareGeometryId{});
+  std::ranges::sort(measurements, CompareGeometryId{});
   return measurements;
 }
 
