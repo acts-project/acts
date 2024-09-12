@@ -119,6 +119,6 @@ Acts::detail::GeoPolygonConverter::operator()(
   } else {
     throw std::runtime_error("GeoSimplePolygonBrep with " +
                              std::to_string(nVertices) +
-                             " can not be converted");
+                             " vertices can not be converted");
   }
 }

@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Clusterization/Clusterization.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
 #include <array>
@@ -133,7 +134,7 @@ void genclusterw(int x, int y, int x0, int y0, int x1, int y1,
   auto maybe_add = [&](int x_, int y_) {
     Cell2D c(x_, y_);
     if (std::uniform_real_distribution<double>()(rng) < startp &&
-        std::find(cells.begin(), cells.end(), c) == cells.end()) {
+        !rangeContainsValue(cells, c)) {
       cells.push_back(c);
       add.push_back(c);
     }

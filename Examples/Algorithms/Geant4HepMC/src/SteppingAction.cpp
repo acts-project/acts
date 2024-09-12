@@ -8,6 +8,8 @@
 
 #include "SteppingAction.hpp"
 
+#include "Acts/Utilities/Helpers.hpp"
+
 #include <stdexcept>
 
 #include <G4RunManager.hh>
@@ -43,10 +45,10 @@ SteppingAction::~SteppingAction() {
 
 void SteppingAction::UserSteppingAction(const G4Step* step) {
   // Test if the event should be aborted
-  if (std::find(m_eventRejectionProcess.begin(), m_eventRejectionProcess.end(),
-                step->GetPostStepPoint()
-                    ->GetProcessDefinedStep()
-                    ->GetProcessName()) != m_eventRejectionProcess.end()) {
+  if (Acts::rangeContainsValue(m_eventRejectionProcess,
+                               step->GetPostStepPoint()
+                                   ->GetProcessDefinedStep()
+                                   ->GetProcessName())) {
     m_eventAborted = true;
     G4RunManager::GetRunManager()->AbortEvent();
     return;
