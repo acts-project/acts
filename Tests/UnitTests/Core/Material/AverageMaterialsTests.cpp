@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabs) {
   BOOST_CHECK_EQUAL(slabMat0.thicknessInL0(), 0.5);
   BOOST_CHECK(slabMat1.isValid());
   BOOST_CHECK(slabMat1.material().isValid());
-  BOOST_CHECK_EQUAL(slabMat1.thickness(), 1.0);
+  BOOST_CHECK_EQUAL(slabMat1.thickness(), 1.);
   BOOST_CHECK_EQUAL(slabMat1.thicknessInX0(), 0.5);
   BOOST_CHECK_EQUAL(slabMat1.thicknessInL0(), 0.5);
   // check combined slabs
@@ -252,8 +252,8 @@ BOOST_AUTO_TEST_CASE(CombineSlabs) {
     BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.thickness(), 1.5);
-    BOOST_CHECK_EQUAL(slab.thicknessInX0(), 1.0);
-    BOOST_CHECK_EQUAL(slab.thicknessInL0(), 1.0);
+    BOOST_CHECK_EQUAL(slab.thicknessInX0(), 1.);
+    BOOST_CHECK_EQUAL(slab.thicknessInL0(), 1.);
     BOOST_CHECK_EQUAL(slab.material().X0(), 1.5f);
     BOOST_CHECK_EQUAL(slab.material().L0(), 1.5f);
     BOOST_CHECK_EQUAL(slab.material().Ar(), 3.0f);
@@ -268,8 +268,8 @@ BOOST_AUTO_TEST_CASE(CombineSlabs) {
     BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.thickness(), 1.5);
-    BOOST_CHECK_EQUAL(slab.thicknessInX0(), 1.0);
-    BOOST_CHECK_EQUAL(slab.thicknessInL0(), 1.0);
+    BOOST_CHECK_EQUAL(slab.thicknessInX0(), 1.);
+    BOOST_CHECK_EQUAL(slab.thicknessInL0(), 1.);
     BOOST_CHECK_EQUAL(slab.material().X0(), 1.5f);
     BOOST_CHECK_EQUAL(slab.material().L0(), 1.5f);
     BOOST_CHECK_EQUAL(slab.material().Ar(), 3.0f);
