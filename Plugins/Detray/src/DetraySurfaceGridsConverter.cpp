@@ -9,12 +9,9 @@
 #include "Acts/Plugins/Detray/DetraySurfaceGridsConverter.hpp"
 
 #include "Acts/Detector/Detector.hpp"
-#include "Acts/Material/BinnedSurfaceMaterial.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
@@ -166,13 +163,13 @@ Acts::DetraySurfaceGridsConverter::unrollConvert(
   std::vector<detray::io::grid_payload<std::size_t, detray::io::accel_id>>
       grid_pds;
 
-  ((void)(([&]() {
-            auto grid_pd = convert(delegate, Args{});
-            if (grid_pd.has_value()) {
-              grid_pds.push_back(*grid_pd);
-            }
-          })(),
-          ...));
+  (([&]() {
+     auto grid_pd = convert(delegate, Args{});
+     if (grid_pd.has_value()) {
+       grid_pds.push_back(*grid_pd);
+     }
+   }),
+   ...);
 
   return grid_pds;
 }
