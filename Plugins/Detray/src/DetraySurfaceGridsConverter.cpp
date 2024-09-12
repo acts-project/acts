@@ -24,14 +24,11 @@
 namespace Acts {
 
 
-    //convert surface grids to detray format
-
-
+    ///DetraySurfaceGridsConverter converts surface grids from acts to detray format
 
     //convertAxis
     detray::io::axis_payload  Acts::DetraySurfaceGridsConverter::convertAxis(
         const Acts::IAxis& ia) {
-        ///home/exochell/docker_dir/ACTS_ODD_D/acts/Plugins/Json/src/GridJsonConverter.cpp: nlohmann::json Acts::AxisJsonConverter::toJsonDetray
         detray::io::axis_payload axis_pd;
         axis_pd.bounds =  
             ia.getBoundaryType() == Acts::AxisBoundaryType::Bound ? detray::axis::bounds::e_closed : detray::axis::bounds::e_circular;
@@ -60,7 +57,6 @@ namespace Acts {
                 std::swap(axes[0u], axes[1u]);
             }
             
-
             // Fill the axes in the order they are
             for (unsigned int ia = 0u; ia < grid_type::DIM; ++ia) {            
                 detray::io::axis_payload axis_pd = convertAxis(*axes[ia]);
@@ -110,7 +106,6 @@ namespace Acts {
             return grid_pd;
         }
 
-    //convertImpl -> probs avoidable
     template <typename index_grid>
     detray::io::grid_payload<std::size_t, detray::io::accel_id>  Acts::DetraySurfaceGridsConverter::convertImpl(
         const index_grid& indexGrid) {
@@ -162,7 +157,6 @@ namespace Acts {
         const Acts::Experimental::InternalNavigationDelegate& delegate,
                     Acts::TypeList<Args...> ) {
 
-        //std::cout<<"call convert"<<std::endl;
         std::vector<detray::io::grid_payload<std::size_t, detray::io::accel_id>> grid_pds;
 
         ((void)(([&]() {
@@ -183,9 +177,6 @@ namespace Acts {
 
         for (const auto [iv, volume] : Acts::enumerate(volumes)) {
 
-            //Call an equivalent of IndexedSurfacesJsonConverter::toJson
-                //check if it is null
-            //std::cout<<"call unroll"<<std::endl;
             std::vector<detray::io::grid_payload<std::size_t, detray::io::accel_id>> grid_pd = 
                 unrollConvert(volume->internalNavigation(), Acts::GridAxisGenerators::PossibleAxes{});
             
@@ -195,7 +186,6 @@ namespace Acts {
                 grid.owner_link = lnk;
                 grids_pd.grids[iv].push_back(grid);
             }
-            
         }
         return grids_pd;
     }
