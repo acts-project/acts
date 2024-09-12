@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 
+#include <algorithm>
 #include <vector>
 
 ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(
@@ -68,8 +69,7 @@ ActsExamples::SimSeed ActsExamples::prototrackToSeed(
 
   std::transform(track.begin(), track.end(), std::back_inserter(ps),
                  findSpacePoint);
-  std::sort(ps.begin(), ps.end(),
-            [](const auto& a, const auto& b) { return a->r() < b->r(); });
+  std::ranges::sort(ps, {}, [](const auto& p) { return p->r(); });
 
   // Simply use r = m*z + t and solve for r=0 to find z vertex position...
   // Probably not the textbook way to do

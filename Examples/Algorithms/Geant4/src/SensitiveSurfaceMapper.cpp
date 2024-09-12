@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -295,13 +295,13 @@ bool ActsExamples::SensitiveSurfaceMapper::checkMapping(
     const State& state, const Acts::GeometryContext& gctx,
     bool writeMissingG4VolsAsObj, bool writeMissingSurfacesAsObj) const {
   auto allSurfaces = m_cfg.candidateSurfaces->queryAll();
-  std::sort(allSurfaces.begin(), allSurfaces.end());
+  std::ranges::sort(allSurfaces);
 
   std::vector<const Acts::Surface*> found;
   for (const auto [_, surfacePtr] : state.g4VolumeToSurfaces) {
     found.push_back(surfacePtr);
   }
-  std::sort(found.begin(), found.end());
+  std::ranges::sort(found);
   auto newEnd = std::unique(found.begin(), found.end());
   found.erase(newEnd, found.end());
 

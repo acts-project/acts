@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -69,11 +69,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
   if (topSpVec.size() > 2) {
     // sort indexes based on comparing values in invHelixDiameterVec
-    std::sort(
-        topSPIndexVec.begin(), topSPIndexVec.end(),
-        [&invHelixDiameterVec](const std::size_t i1, const std::size_t i2) {
-          return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
-        });
+    std::ranges::sort(topSPIndexVec, {},
+                      [&invHelixDiameterVec](const std::size_t t) {
+                        return invHelixDiameterVec[t];
+                      });
   }
 
   // vector containing the radius of all compatible seeds

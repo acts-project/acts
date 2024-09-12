@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,6 +11,7 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 #include <HepMC3/GenEvent.h>
@@ -167,10 +168,8 @@ void filterAndSort(
 
   // Sort the particles based on their momentum
   for (auto& interaction : interactions) {
-    std::sort(interaction.after.begin(), interaction.after.end(),
-              [](ActsExamples::SimParticle& a, ActsExamples::SimParticle& b) {
-                return a.absoluteMomentum() > b.absoluteMomentum();
-              });
+    std::ranges::sort(interaction.after, std::greater{},
+                      [](const auto& a) { return a.absoluteMomentum(); });
   }
 }
 }  // namespace
