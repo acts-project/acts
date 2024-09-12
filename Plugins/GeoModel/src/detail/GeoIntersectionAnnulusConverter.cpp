@@ -16,6 +16,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/AnnulusBoundsHelper.hpp"
 
+#include <algorithm>
+
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoGenericTrap.h>
 #include <GeoModelKernel/GeoLogVol.h>
@@ -56,10 +58,9 @@ Acts::detail::GeoIntersectionAnnulusConverter::operator()(
         std::vector<Vector2> faceVertices(trapVertices.begin(),
                                           trapVertices.begin() + 4u);
         // to make sure they are in the right order
-        std::sort(faceVertices.begin(), faceVertices.end(),
-                  [](const auto& a, const auto& b) {
-                    return (VectorHelpers::phi(a) > VectorHelpers::phi(b));
-                  });
+        std::ranges::sort(faceVertices, std::greater{}, [](const auto& f) {
+          return (VectorHelpers::phi(f));
+        });
 
         // Turn them into global
         std::vector<Vector3> faceVertices3D;

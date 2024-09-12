@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -146,9 +146,8 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
 
   BOOST_CHECK_EQUAL(cmps.size(), 2);
 
-  std::sort(cmps.begin(), cmps.end(), [](const auto &a, const auto &b) {
-    return a.boundPars[eBoundQOverP] < b.boundPars[eBoundQOverP];
-  });
+  std::ranges::sort(cmps, {},
+                    [](const auto &c) { return c.boundPars[eBoundQOverP]; });
   BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 1.0_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(cmps[1].boundPars[eBoundQOverP], 4.0_GeV, 1.e-8);
 
@@ -182,8 +181,7 @@ BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
   Acts::reduceMixtureLargestWeights(cmps, 2, *dummy);
 
   BOOST_CHECK_EQUAL(cmps.size(), 2);
-  std::sort(cmps.begin(), cmps.end(),
-            [](const auto &a, const auto &b) { return a.weight < b.weight; });
+  std::ranges::sort(cmps, {}, [](const auto &c) { return c.weight; });
 
   BOOST_CHECK_EQUAL(cmps[0].weight, 3.0);
   BOOST_CHECK_EQUAL(cmps[1].weight, 4.0);

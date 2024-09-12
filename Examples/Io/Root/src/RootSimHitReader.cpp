@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -94,10 +94,8 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
   std::get<2>(m_eventMap.back()) = nEntries;
 
   // Sort by event id
-  std::sort(m_eventMap.begin(), m_eventMap.end(),
-            [](const auto& a, const auto& b) {
-              return std::get<0>(a) < std::get<0>(b);
-            });
+  std::ranges::sort(m_eventMap, {},
+                    [](const auto& m) { return std::get<0>(m); });
 
   // Re-Enable all branches
   m_inputChain->SetBranchStatus("*", true);

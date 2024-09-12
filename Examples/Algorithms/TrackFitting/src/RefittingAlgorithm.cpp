@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -24,6 +24,7 @@
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <optional>
 #include <ostream>
@@ -96,12 +97,12 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
       trackSourceLinks.push_back(Acts::SourceLink{sl});
     }
 
-    std::reverse(surfSequence.begin(), surfSequence.end());
-
     if (surfSequence.empty()) {
       ACTS_WARNING("Empty track " << itrack << " found.");
       continue;
     }
+
+    std::ranges::reverse(surfSequence);
 
     ACTS_VERBOSE("Initial parameters: "
                  << initialParams.fourPosition(ctx.geoContext).transpose()
