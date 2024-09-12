@@ -79,7 +79,7 @@ try:
     eta_centers = 0.5 * (eta_bins[:-1] + eta_bins[1:])
     eta_width = 8.0 / 100
 
-    for ir, irfile in enumerate(args.input):
+    for irfile, label, marker in zip(args.input, args.label, args.marker):
         # load the tree
         tree = uproot.open(args.input[ir] + ":" + "propagation_summary")
         # get the numpy arrays
