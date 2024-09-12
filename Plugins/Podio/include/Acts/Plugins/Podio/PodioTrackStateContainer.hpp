@@ -224,20 +224,17 @@ class ConstPodioTrackStateContainer final
     std::string paramsKey = "trackStateParameters" + s;
     std::string jacsKey = "trackStateJacobians" + s;
 
-    if (std::find(available.begin(), available.end(), trackStatesKey) ==
-        available.end()) {
+    if (!rangeContainsValue(available, trackStatesKey)) {
       throw std::runtime_error{"Track state collection '" + trackStatesKey +
                                "' not found in frame"};
     }
 
-    if (std::find(available.begin(), available.end(), paramsKey) ==
-        available.end()) {
+    if (!rangeContainsValue(available, paramsKey)) {
       throw std::runtime_error{"Track state parameters collection '" +
                                paramsKey + "' not found in frame"};
     }
 
-    if (std::find(available.begin(), available.end(), jacsKey) ==
-        available.end()) {
+    if (!rangeContainsValue(available, jacsKey)) {
       throw std::runtime_error{"Track state jacobian collection '" + jacsKey +
                                "' not found in frame"};
     }

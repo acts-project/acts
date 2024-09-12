@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <stdexcept>
 
@@ -26,11 +27,9 @@ struct MaterialSurfaceSelector {
 
   /// @param surface is the test surface
   void operator()(const Acts::Surface* surface) {
-    if (surface->surfaceMaterial() != nullptr) {
-      if (std::find(surfaces.begin(), surfaces.end(), surface) ==
-          surfaces.end()) {
-        surfaces.push_back(surface);
-      }
+    if (surface->surfaceMaterial() != nullptr &&
+        !rangeContainsValue(surfaces, surface)) {
+      surfaces.push_back(surface);
     }
   }
 };

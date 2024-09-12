@@ -13,6 +13,7 @@
 #pragma once
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <array>
 #include <iostream>
@@ -74,8 +75,7 @@ class BinnedArrayXD : public BinnedArray<T> {
         /// fill the data
         m_objectGrid[bins[2]][bins[1]][bins[0]] = tap.first;
         /// fill the unique m_arrayObjects
-        if (std::find(m_arrayObjects.begin(), m_arrayObjects.end(),
-                      tap.first) == m_arrayObjects.end()) {
+        if (!rangeContainsValue(m_arrayObjects, tap.first)) {
           m_arrayObjects.push_back(tap.first);
         }
       }
@@ -103,8 +103,7 @@ class BinnedArrayXD : public BinnedArray<T> {
         for (auto& o0 : o1) {
           if (o0) {
             /// fill the unique m_arrayObjects
-            if (std::find(m_arrayObjects.begin(), m_arrayObjects.end(), o0) ==
-                m_arrayObjects.end()) {
+            if (!rangeContainsValue(m_arrayObjects, o0)) {
               m_arrayObjects.push_back(o0);
             }
           }
