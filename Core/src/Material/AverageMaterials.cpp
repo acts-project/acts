@@ -104,7 +104,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   const double thicknessWeight1 = thickness1 / thickness;
   const double thicknessWeight2 = thickness2 / thickness;
   float z = 0.f;
-  if (z1 > 0. && z2 > 0.) {
+  if (z1 > 0. && z2 > 0. && thicknessWeight1 > 0. && thicknessWeight2 > 0.) {
     z = static_cast<float>(std::exp(thicknessWeight1 * std::log(z1) +
                                     thicknessWeight2 * std::log(z2)));
   } else {
