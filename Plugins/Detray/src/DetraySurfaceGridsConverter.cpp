@@ -163,13 +163,15 @@ Acts::DetraySurfaceGridsConverter::unrollConvert(
   std::vector<detray::io::grid_payload<std::size_t, detray::io::accel_id>>
       grid_pds;
 
-  (([&]() {
-     auto grid_pd = convert(delegate, Args{});
-     if (grid_pd.has_value()) {
-       grid_pds.push_back(*grid_pd);
-     }
-   }),
-   ...);
+  const auto convertAndPush = [&grid_pds](const auto& delegate,
+                                          const auto& args) -> void {
+    auto grid_pd = convert(delegate, args);
+    if (grid_pd.has_value()) {
+      grid_pds.push_back(*grid_pd);
+    }
+  };
+
+  (convertAndPush(delegate, Args{}), ...);
 
   return grid_pds;
 }
