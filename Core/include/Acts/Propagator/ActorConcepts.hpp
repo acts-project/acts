@@ -23,7 +23,7 @@ concept ActorHasActWithoutResult = requires(
     const actor_t& a, propagator_state_t& state, const stepper_t& stepper,
     const navigator_t& navigator, Args&&... args) {
   {
-    a.act(state, stepper, navigator, std::forward<Args>(args)...)
+    a.act(state, stepper, navigator, std::move<Args>(args)...)
   } -> std::same_as<void>;
 };
 
@@ -35,7 +35,7 @@ concept ActorHasActWithResult =
              const stepper_t& stepper, const navigator_t& navigator,
              typename actor_t::result_type& result, Args&&... args) {
       {
-        a.act(state, stepper, navigator, result, std::forward<Args>(args)...)
+        a.act(state, stepper, navigator, result, std::move<Args>(args)...)
       } -> std::same_as<void>;
     };
 
@@ -53,7 +53,7 @@ concept ActorHasAbortWithoutResult = requires(
     const actor_t& a, propagator_state_t& state, const stepper_t& stepper,
     const navigator_t& navigator, Args&&... args) {
   {
-    a.checkAbort(state, stepper, navigator, std::forward<Args>(args)...)
+    a.checkAbort(state, stepper, navigator, std::move<Args>(args)...)
   } -> std::same_as<bool>;
 };
 
@@ -66,7 +66,7 @@ concept ActorHasAbortWithResult =
              typename actor_t::result_type& result, Args&&... args) {
       {
         a.checkAbort(state, stepper, navigator, result,
-                     std::forward<Args>(args)...)
+                     std::move<Args>(args)...)
       } -> std::same_as<bool>;
     };
 
