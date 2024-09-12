@@ -28,11 +28,11 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   // In the case of the atomic number, the averaging is based on the log
   // to properly account for the energy loss in multiple material.
 
-  const double thickness1 = slab1.thickness();
-  const double thickness2 = slab2.thickness();
+  const ActsScalar thickness1 = slab1.thickness();
+  const ActsScalar thickness2 = slab2.thickness();
 
   // the thickness properties are purely additive
-  const double thickness = thickness1 + thickness2;
+  const ActsScalar thickness = thickness1 + thickness2;
 
   // if the two materials are the same there is no need for additional
   // computation
@@ -41,13 +41,13 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   }
 
   // molar amount-of-substance assuming a unit area, i.e. volume = thickness*1*1
-  // use double for (intermediate) computations to avoid precision loss
-  const double molarDensity1 = static_cast<double>(mat1.molarDensity());
-  const double molarDensity2 = static_cast<double>(mat2.molarDensity());
+  // use ActsScalar for (intermediate) computations to avoid precision loss
+  const ActsScalar molarDensity1 = static_cast<ActsScalar>(mat1.molarDensity());
+  const ActsScalar molarDensity2 = static_cast<ActsScalar>(mat2.molarDensity());
 
-  const double molarAmount1 = molarDensity1 * thickness1;
-  const double molarAmount2 = molarDensity2 * thickness2;
-  const double molarAmount = molarAmount1 + molarAmount2;
+  const ActsScalar molarAmount1 = molarDensity1 * thickness1;
+  const ActsScalar molarAmount2 = molarDensity2 * thickness2;
+  const ActsScalar molarAmount = molarAmount1 + molarAmount2;
 
   // handle vacuum specially
   if (!(0.0 < molarAmount)) {
@@ -55,8 +55,10 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   }
 
   // radiation/interaction length follows from consistency argument
-  const double thicknessInX0 = slab1.thicknessInX0() + slab2.thicknessInX0();
-  const double thicknessInL0 = slab1.thicknessInL0() + slab2.thicknessInL0();
+  const ActsScalar thicknessInX0 =
+      slab1.thicknessInX0() + slab2.thicknessInX0();
+  const ActsScalar thicknessInL0 =
+      slab1.thicknessInL0() + slab2.thicknessInL0();
 
   const float x0 = static_cast<float>(thickness / thicknessInX0);
   const float l0 = static_cast<float>(thickness / thicknessInL0);
@@ -78,11 +80,11 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   //        = (Vi*rhoi) / (V1*rho1 + V2*rho2)
   //
   // which can be computed from the molar amount-of-substance above.
-  const double ar1 = static_cast<double>(mat1.Ar());
-  const double ar2 = static_cast<double>(mat2.Ar());
+  const ActsScalar ar1 = static_cast<ActsScalar>(mat1.Ar());
+  const ActsScalar ar2 = static_cast<ActsScalar>(mat2.Ar());
 
-  const double molarWeight1 = molarAmount1 / molarAmount;
-  const double molarWeight2 = molarAmount2 / molarAmount;
+  const ActsScalar molarWeight1 = molarAmount1 / molarAmount;
+  const ActsScalar molarWeight2 = molarAmount2 / molarAmount;
   const float ar = static_cast<float>(molarWeight1 * ar1 + molarWeight2 * ar2);
 
   // In the case of the atomic number, its main use is the computation
@@ -98,11 +100,11 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   // To respect this the average atomic number thus need to be defined as :
   //     ln(Z)*t = ln(Z1)*t1 + ln(Z2)*t2
   //           Z = Exp( ln(Z1)*t1/t + ln(Z2)*t2/t )
-  const double z1 = static_cast<double>(mat1.Z());
-  const double z2 = static_cast<double>(mat2.Z());
+  const ActsScalar z1 = static_cast<ActsScalar>(mat1.Z());
+  const ActsScalar z2 = static_cast<ActsScalar>(mat2.Z());
 
-  const double thicknessWeight1 = thickness1 / thickness;
-  const double thicknessWeight2 = thickness2 / thickness;
+  const ActsScalar thicknessWeight1 = thickness1 / thickness;
+  const ActsScalar thicknessWeight2 = thickness2 / thickness;
   float z = 0.f;
   if (z1 > 0. && z2 > 0. && thicknessWeight1 > 0. && thicknessWeight2 > 0.) {
     z = static_cast<float>(std::exp(thicknessWeight1 * std::log(z1) +

@@ -26,7 +26,7 @@ using Acts::Test::makeSilicon;
 using Acts::Test::makeUnitSlab;
 
 constexpr auto epsF = std::numeric_limits<float>::epsilon();
-constexpr auto epsD = std::numeric_limits<double>::epsilon();
+constexpr auto eps = std::numeric_limits<Acts::ActsScalar>::epsilon();
 
 }  // namespace
 
@@ -192,10 +192,10 @@ BOOST_AUTO_TEST_CASE(MultipleDifferentTracks) {
     // average atomic number proportional to the thickness
     CHECK_CLOSE_REL(average.material().Z(), 0.5f * unit.material().Z(), epsF);
     // thickness in x0/l0 depends on density and thus halved as well
-    CHECK_CLOSE_REL(average.thicknessInX0(), 1 * unit.thicknessInX0(), epsD);
-    CHECK_CLOSE_REL(average.thicknessInL0(), 1 * unit.thicknessInL0(), epsD);
+    CHECK_CLOSE_REL(average.thicknessInX0(), 1 * unit.thicknessInX0(), eps);
+    CHECK_CLOSE_REL(average.thicknessInL0(), 1 * unit.thicknessInL0(), eps);
     // average real thickness stays the same
-    CHECK_CLOSE_REL(average.thickness(), 2 * unit.thickness(), epsD);
+    CHECK_CLOSE_REL(average.thickness(), 2 * unit.thickness(), eps);
   }
 }
 

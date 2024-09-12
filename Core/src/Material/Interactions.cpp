@@ -101,7 +101,8 @@ inline float logDeriveWMax(float mass, float qOverP,
 ///
 /// where (Z/A)*rho is the electron density in the material and x is the
 /// traversed length (thickness) of the material.
-inline float computeEpsilon(float molarElectronDensity, double thickness_,
+inline float computeEpsilon(float molarElectronDensity,
+                            Acts::ActsScalar thickness_,
                             const RelativisticQuantities& rq) {
   const float thickness = static_cast<float>(thickness_);
   return 0.5f * K * molarElectronDensity * thickness * rq.q2OverBeta2;
@@ -160,7 +161,7 @@ inline float computeEnergyLossLandauFwhm(const Acts::MaterialSlab& slab,
   }
 
   const float Ne = slab.material().molarElectronDensity();
-  const double thickness = slab.thickness();
+  const Acts::ActsScalar thickness = slab.thickness();
   // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
   return 4 * computeEpsilon(Ne, thickness, rq);
 }
@@ -179,7 +180,7 @@ float Acts::computeEnergyLossBethe(const MaterialSlab& slab, float m,
   const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
-  const double thickness = slab.thickness();
+  const ActsScalar thickness = slab.thickness();
   const float eps = computeEpsilon(Ne, thickness, rq);
   const float dhalf = computeDeltaHalf(I, Ne, rq);
   const float u = computeMassTerm(Me, rq);
@@ -204,7 +205,7 @@ float Acts::deriveEnergyLossBetheQOverP(const MaterialSlab& slab, float m,
   const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
-  const double thickness = slab.thickness();
+  const ActsScalar thickness = slab.thickness();
   const float eps = computeEpsilon(Ne, thickness, rq);
   const float dhalf = computeDeltaHalf(I, Ne, rq);
   const float u = computeMassTerm(Me, rq);
@@ -241,7 +242,7 @@ float Acts::computeEnergyLossLandau(const MaterialSlab& slab, float m,
   const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
-  const double thickness = slab.thickness();
+  const ActsScalar thickness = slab.thickness();
   const float eps = computeEpsilon(Ne, thickness, rq);
   const float dhalf = computeDeltaHalf(I, Ne, rq);
   const float u = computeMassTerm(Me, rq);
@@ -261,7 +262,7 @@ float Acts::deriveEnergyLossLandauQOverP(const MaterialSlab& slab, float m,
   const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
-  const double thickness = slab.thickness();
+  const ActsScalar thickness = slab.thickness();
   const float eps = computeEpsilon(Ne, thickness, rq);
   const float dhalf = computeDeltaHalf(I, Ne, rq);
   const float t = computeMassTerm(Me, rq);
@@ -295,7 +296,7 @@ float Acts::computeEnergyLossLandauSigma(const MaterialSlab& slab, float m,
 
   const RelativisticQuantities rq{m, qOverP, absQ};
   const float Ne = slab.material().molarElectronDensity();
-  const double thickness = slab.thickness();
+  const ActsScalar thickness = slab.thickness();
   // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
   const float fwhm = 4 * computeEpsilon(Ne, thickness, rq);
   return convertLandauFwhmToGaussianSigma(fwhm);

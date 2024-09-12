@@ -45,12 +45,12 @@ class MaterialSlab {
   /// Construct vacuum without thickness.
   MaterialSlab() = default;
   /// Construct vacuum with thickness.
-  explicit MaterialSlab(double thickness);
+  explicit MaterialSlab(ActsScalar thickness);
   /// Construct from material description.
   ///
   /// @param material  is the material description
   /// @param thickness is the thickness of the material
-  MaterialSlab(const Material& material, double thickness);
+  MaterialSlab(const Material& material, ActsScalar thickness);
   ~MaterialSlab() = default;
 
   MaterialSlab(MaterialSlab&&) = default;
@@ -59,10 +59,7 @@ class MaterialSlab {
   MaterialSlab& operator=(const MaterialSlab&) = default;
 
   /// Scale the material thickness by the given factor.
-  void scaleThickness(double scale);
-
-  //  template <class T>
-  //  void scaleThickness(T) = delete; // C++11
+  void scaleThickness(ActsScalar scale);
 
   /// Check if the material is valid, i.e. it is finite and not vacuum.
   bool isValid() const { return m_material.isValid() && (0. < m_thickness); }
@@ -70,17 +67,17 @@ class MaterialSlab {
   /// Access the (average) material parameters.
   constexpr const Material& material() const { return m_material; }
   /// Return the thickness.
-  constexpr double thickness() const { return m_thickness; }
+  constexpr ActsScalar thickness() const { return m_thickness; }
   /// Return the radiation length fraction.
-  constexpr double thicknessInX0() const { return m_thicknessInX0; }
+  constexpr ActsScalar thicknessInX0() const { return m_thicknessInX0; }
   /// Return the nuclear interaction length fraction.
-  constexpr double thicknessInL0() const { return m_thicknessInL0; }
+  constexpr ActsScalar thicknessInL0() const { return m_thicknessInL0; }
 
  private:
   Material m_material;
-  double m_thickness = 0.;
-  double m_thicknessInX0 = 0.;
-  double m_thicknessInL0 = 0.;
+  ActsScalar m_thickness = 0.;
+  ActsScalar m_thicknessInX0 = 0.;
+  ActsScalar m_thicknessInL0 = 0.;
 
   friend constexpr bool operator==(const MaterialSlab& lhs,
                                    const MaterialSlab& rhs) {
