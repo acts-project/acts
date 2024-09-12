@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,17 +18,18 @@
 namespace Acts {
 
 namespace {
-static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
+static constexpr auto eps = 2 * std::numeric_limits<double>::epsilon();
 }
 
-MaterialSlab::MaterialSlab(float thickness) : m_thickness(thickness) {}
+MaterialSlab::MaterialSlab(double thickness) : m_thickness(thickness) {}
 
-MaterialSlab::MaterialSlab(const Material& material, float thickness)
+MaterialSlab::MaterialSlab(const Material& material, double thickness)
     : m_material(material),
       m_thickness(thickness),
-      m_thicknessInX0((eps < material.X0()) ? (thickness / material.X0()) : 0),
-      m_thicknessInL0((eps < material.L0()) ? (thickness / material.L0()) : 0) {
-  if (thickness < 0) {
+      m_thicknessInX0((eps < material.X0()) ? (thickness / material.X0()) : 0.),
+      m_thicknessInL0((eps < material.L0()) ? (thickness / material.L0())
+                                            : 0.) {
+  if (thickness < 0.) {
     throw std::runtime_error("thickness < 0");
   }
 }
@@ -55,8 +56,8 @@ MaterialSlab MaterialSlab::averageLayers(
   return result;
 }
 
-void MaterialSlab::scaleThickness(float scale) {
-  if (scale < 0) {
+void MaterialSlab::scaleThickness(double scale) {
+  if (scale < 0.) {
     throw std::runtime_error("scale < 0");
   }
 
