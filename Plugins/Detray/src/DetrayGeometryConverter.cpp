@@ -126,6 +126,8 @@ Acts::DetrayGeometryConverter::convertPortal(
           instance);
 
   auto [surfaceAdjusted, insidePointer] = orientedSurfaces[ip];
+  // Assign the geometry id to the surface
+  surfaceAdjusted->assignGeometryId(surface.geometryId());
 
   // Single link detected - just write it out, we use the oriented surface
   // in order to make sure the size is adjusted
@@ -225,6 +227,7 @@ Acts::DetrayGeometryConverter::convertPortal(
                     subBoundValues[CylinderBounds::BoundValues::eHalfLengthZ]));
             auto subSurface =
                 Surface::makeShared<CylinderSurface>(subTransform, subBounds);
+            subSurface->assignGeometryId(surface.geometryId());
 
             auto portalPayload = convertSurface(gctx, *subSurface, true);
             portalPayload.mask.volume_link.link = clippedIndices[ib - 1u];
@@ -246,7 +249,7 @@ Acts::DetrayGeometryConverter::convertPortal(
             auto subBounds = std::make_shared<RadialBounds>(subBoundValues);
             auto subSurface = Surface::makeShared<DiscSurface>(
                 portal.surface().transform(gctx), subBounds);
-
+            subSurface->assignGeometryId(surface.geometryId());
             auto portalPayload = convertSurface(gctx, *subSurface, true);
             portalPayload.mask.volume_link.link = clippedIndices[ib - 1u];
             portals.push_back(portalPayload);
