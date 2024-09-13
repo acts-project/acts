@@ -354,8 +354,8 @@ class TryAllNavigator : public TryAllNavigatorBase {
       }
     }
 
-    std::sort(intersectionCandidates.begin(), intersectionCandidates.end(),
-              detail::IntersectionCandidate::forwardOrder);
+    std::ranges::sort(intersectionCandidates,
+                      detail::IntersectionCandidate::forwardOrder);
 
     ACTS_VERBOSE(volInfo(state) << "found " << intersectionCandidates.size()
                                 << " intersections");
@@ -766,9 +766,8 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
         }
       }
 
-      std::sort(state.navigation.activeCandidates.begin(),
-                state.navigation.activeCandidates.end(),
-                detail::IntersectionCandidate::forwardOrder);
+      std::ranges::sort(state.navigation.activeCandidates,
+                        detail::IntersectionCandidate::forwardOrder);
 
       state.navigation.activeCandidateIndex = 0;
 

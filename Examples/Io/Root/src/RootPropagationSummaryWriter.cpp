@@ -73,6 +73,10 @@ RootPropagationSummaryWriter::RootPropagationSummaryWriter(
   m_outputTree->Branch("pt", &m_pt);
   m_outputTree->Branch("p", &m_p);
 
+  m_outputTree->Branch("nSensitives", &m_nSensitives);
+  m_outputTree->Branch("nMaterials", &m_nMaterials);
+  m_outputTree->Branch("nPortals", &m_nPortals);
+
   m_outputTree->Branch("nSteps", &m_nSteps);
   m_outputTree->Branch("nStepTrials", &m_nStepTrials);
   m_outputTree->Branch("pathLength", &m_pathLength);
@@ -134,6 +138,28 @@ ProcessCode RootPropagationSummaryWriter::writeT(
     m_nStepTrials = static_cast<int>(summary.nStepTrials);
     m_pathLength = static_cast<int>(summary.pathLength);
 
+    m_nMaterials = 0;
+    m_nSensitives = 0;
+    m_nPortals = 0;
+
+    // Loop over the steps & count for the statistics
+    std::ranges::for_each(summary.steps, [&](const auto& step) {
+      // Check if the step is a sensitive step
+      if (step.geoID.sensitive() > 0) {
+        m_nSensitives++;
+      }
+      // Check if the step is a portal step
+      if (step.geoID.boundary() > 0) {
+        m_nPortals++;
+      }
+
+      if (step.surface != nullptr) {
+        // Check if the step is a material step
+        if (step.surface->surfaceMaterial() != nullptr) {
+          m_nMaterials++;
+        }
+      }
+    });
     m_outputTree->Fill();
   }
 

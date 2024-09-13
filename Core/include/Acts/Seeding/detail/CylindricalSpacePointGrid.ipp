@@ -227,8 +227,6 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
   /// sort SPs in R for each filled bin
   for (std::size_t binIndex : rBinsIndex) {
     auto& rbin = grid.atPosition(binIndex);
-    std::sort(rbin.begin(), rbin.end(),
-              [](const external_spacepoint_t* a, const external_spacepoint_t* b)
-                  -> bool { return a->radius() < b->radius(); });
+    std::ranges::sort(rbin, {}, [](const auto& rb) { return rb->radius(); });
   }
 }

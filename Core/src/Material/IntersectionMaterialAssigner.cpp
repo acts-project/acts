@@ -12,6 +12,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
+#include <algorithm>
+
 namespace {
 
 std::vector<Acts::SurfaceIntersection> forwardOrderedIntersections(
@@ -35,8 +37,8 @@ std::vector<Acts::SurfaceIntersection> forwardOrderedIntersections(
     }
   }
   // Sort the intersection along the pathlength
-  std::sort(sIntersections.begin(), sIntersections.end(),
-            &Acts::SurfaceIntersection::pathLengthOrder);
+  std::ranges::sort(sIntersections,
+                    &Acts::SurfaceIntersection::pathLengthOrder);
   return sIntersections;
 }
 
