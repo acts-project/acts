@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from pathlib import Path
+
 import acts
 
 mm = acts.UnitConstants.mm
@@ -90,4 +92,4 @@ volume = root.build(level=acts.logging.VERBOSE)
 gctx = acts.GeometryContext()
 root.visualize(vis, gctx)
 
-vis.write("blueprint.obj")
+vis.write(Path("blueprint.obj"))
