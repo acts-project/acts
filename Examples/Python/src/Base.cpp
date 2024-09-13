@@ -357,7 +357,6 @@ void addAlgebra(Acts::Python::Context& ctx) {
 
 void addBinning(Context& ctx) {
   auto& m = ctx.get("main");
-  // auto binning = m.def_submodule("Binning", "");
 
   auto binningValue = py::enum_<Acts::BinningValue>(m, "BinningValue")
                           .value("binX", Acts::BinningValue::binX)
@@ -365,18 +364,15 @@ void addBinning(Context& ctx) {
                           .value("binZ", Acts::BinningValue::binZ)
                           .value("binR", Acts::BinningValue::binR)
                           .value("binPhi", Acts::BinningValue::binPhi);
-  // .export_values();
 
   auto boundaryType = py::enum_<Acts::AxisBoundaryType>(m, "AxisBoundaryType")
                           .value("bound", Acts::AxisBoundaryType::Bound)
                           .value("closed", Acts::AxisBoundaryType::Closed)
-                          .value("open", Acts::AxisBoundaryType::Open)
-                          .export_values();
+                          .value("open", Acts::AxisBoundaryType::Open);
 
   auto axisType = py::enum_<Acts::AxisType>(m, "AxisType")
                       .value("equidistant", Acts::AxisType::Equidistant)
-                      .value("variable", Acts::AxisType::Variable)
-                      .export_values();
+                      .value("variable", Acts::AxisType::Variable);
 }
 
 }  // namespace Acts::Python
