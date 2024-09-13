@@ -63,7 +63,7 @@ Volume& CylinderContainerBlueprintNode::build(const Logger& logger) {
 
 CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
     const GeometryContext& gctx, TrackingVolume& parent, const Logger& logger) {
-  ACTS_DEBUG(prefix() << "cylinder container connect");
+  ACTS_DEBUG(prefix() << "Cylinder container connect");
   if (!m_stack.has_value()) {
     ACTS_ERROR(prefix() << "Volume is not built");
     throw std::runtime_error("Volume is not built");
@@ -77,22 +77,28 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
   // `build()` has completed. For the stack shell, we need TrackingVolumes in
   // the right order.
 
+  ACTS_VERBOSE(prefix() << "Have " << m_childVolumes.size()
+                        << " child volumes");
   for (Volume* volume : m_childVolumes) {
     if (isGapVolume(*volume)) {
       // We need to create a TrackingVolume from the gap and put it in the shell
       auto gapPtr = std::make_unique<TrackingVolume>(*volume);
+      ACTS_VERBOSE(prefix() << " - have gap volume: " << gapPtr);
       TrackingVolume& gap = *gapPtr;
-      auto& p = m_gapVolumes.emplace_back(std::move(gapPtr),
-                                          SingleCylinderPortalShell{gap});
+      auto& p = m_gapVolumes.emplace_back(
+          std::move(gapPtr), std::make_unique<SingleCylinderPortalShell>(gap));
 
-      shells.push_back(&p.second);
+      shells.push_back(p.second.get());
     } else {
+      ACTS_VERBOSE(prefix() << "Associate child volume with child node");
       // Figure out which child we got this volume from
       auto it = m_volumeToNode.find(volume);
       if (it == m_volumeToNode.end()) {
         throw std::runtime_error("Volume not found in child volumes");
       }
       BlueprintNode& child = *it->second;
+
+      ACTS_VERBOSE(prefix() << " ~> found child node " << child.name());
 
       CylinderPortalShell* shell = dynamic_cast<CylinderPortalShell*>(
           &child.connect(gctx, parent, logger));
@@ -175,7 +181,7 @@ CylinderContainerBlueprintNode::setResizeStrategy(
 void CylinderContainerBlueprintNode::addToGraphviz(std::ostream& os) const {
   GraphViz::Node node{.id = name(),
                       .label = "<b>" + name() + "</b><br/>Cylinder",
-                      .shape = GraphViz::Shape::Folder};
+                      .shape = GraphViz::Shape::DoubleOctagon};
   os << node << std::endl;
   for (const auto& child : children()) {
     os << indent() << GraphViz::Edge{{.id = name()}, {.id = child.name()}}

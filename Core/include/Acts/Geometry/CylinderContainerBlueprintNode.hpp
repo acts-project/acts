@@ -70,8 +70,8 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
   std::optional<CylinderVolumeStack> m_stack{std::nullopt};
   std::map<const Volume*, BlueprintNode*> m_volumeToNode;
 
-  std::vector<
-      std::pair<std::unique_ptr<TrackingVolume>, SingleCylinderPortalShell>>
+  std::vector<std::pair<std::unique_ptr<TrackingVolume>,
+                        std::unique_ptr<SingleCylinderPortalShell>>>
       m_gapVolumes;
 
   std::optional<CylinderStackPortalShell> m_shell{std::nullopt};
