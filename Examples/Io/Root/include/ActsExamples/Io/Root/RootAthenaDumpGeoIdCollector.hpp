@@ -64,11 +64,6 @@ class RootAthenaDumpGeoIdCollector : public IReader {
   const Config &config() const { return m_cfg; }
 
  private:
-  /// Particles with barcodes larger then this value are considered to be
-  /// secondary particles
-  /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.h?ref_type=heads#L101
-  constexpr static int s_maxBarcodeForPrimary = 200000;
-
   /// Private access to the logging instance
   const Acts::Logger &logger() const { return *m_logger; }
 
@@ -92,7 +87,7 @@ class RootAthenaDumpGeoIdCollector : public IReader {
   // Clusters
   static constexpr unsigned int maxCL = 1500000;
   int nCL = 0;
-  std::vector<std::string> *CLhardware;
+  std::vector<std::string> *CLhardware = nullptr;
   Int_t CLbarrel_endcap[maxCL] = {};  //[nCL]
   Int_t CLlayer_disk[maxCL] = {};     //[nCL]
   Int_t CLeta_module[maxCL] = {};     //[nCL]

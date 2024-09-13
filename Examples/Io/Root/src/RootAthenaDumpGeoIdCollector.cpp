@@ -6,8 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
 #include "ActsExamples/Io/Root/RootAthenaDumpGeoIdCollector.hpp"
+
+#include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
 
 #include <ranges>
 
@@ -49,7 +50,6 @@ RootAthenaDumpGeoIdCollector::RootAthenaDumpGeoIdCollector(
   setBranchAddress("CLphi_module", CLphi_module);
   setBranchAddress("CLside", CLside);
   setBranchAddress("CLmoduleID", CLmoduleID);
-
   m_inputchain->Add(m_cfg.inputfile.c_str());
   ACTS_DEBUG("Adding file " << m_cfg.inputfile << " to tree" << m_cfg.treename);
 
@@ -69,7 +69,9 @@ RootAthenaDumpGeoIdCollector::RootAthenaDumpGeoIdCollector(
     m_detectorElementMap.emplace(detEl->identifier().value(), detEl);
   });
 
-	ACTS_INFO("Collected " << m_detectorElementMap.size() << " detector elements for mapping");
+  ACTS_INFO("Collected " << m_detectorElementMap.size()
+                         << " detector elements for mapping");
+  // throw std::runtime_error("stop here");
 }
 
 ProcessCode RootAthenaDumpGeoIdCollector::read(const AlgorithmContext& ctx) {
@@ -81,16 +83,15 @@ ProcessCode RootAthenaDumpGeoIdCollector::read(const AlgorithmContext& ctx) {
   }
 
   std::lock_guard<std::mutex> lock(m_read_mutex);
-	m_inputchain->GetEntry(entry);
+  m_inputchain->GetEntry(entry);
 
   auto& athenaToActsGeoId = m_cfg.geometryIdMap->left;
 
-	const auto prev = athenaToActsGeoId.size();
-	ACTS_DEBUG("Read data from " << nCL << " measurements");
+  const auto prev = athenaToActsGeoId.size();
+  ACTS_DEBUG("Read data from " << nCL << " measurements");
 
-
-	std::vector<const Acts::GeoModelDetectorElementITk *> matched;
-	std::vector<Acts::ITkIdentifier> missed;
+  std::vector<const Acts::GeoModelDetectorElementITk*> matched;
+  std::vector<Acts::ITkIdentifier> missed;
 
   for (int im = 0; im < nCL; im++) {
     const auto athenaRepresentation = CLmoduleID[im];
@@ -105,12 +106,13 @@ ProcessCode RootAthenaDumpGeoIdCollector::read(const AlgorithmContext& ctx) {
                                 CLeta_module[im], CLphi_module[im], CLside[im]);
 
       if (!m_detectorElementMap.contains(itkId.value())) {
-        ACTS_WARNING("Missing sensitive surface for " << itkId << ", cannot map geometry ids");
+        ACTS_WARNING("Missing sensitive surface for "
+                     << itkId << ", cannot map geometry ids");
         missed.push_back(itkId);
-				continue;
+        continue;
       }
 
-			matched.push_back(m_detectorElementMap.at(itkId.value()));
+      matched.push_back(m_detectorElementMap.at(itkId.value()));
       const auto gid =
           m_detectorElementMap.at(itkId.value())->surface().geometryId();
 
@@ -119,37 +121,37 @@ ProcessCode RootAthenaDumpGeoIdCollector::read(const AlgorithmContext& ctx) {
     }
   }
 
-	{
-		std::ranges::sort(matched);
-  	auto ret = std::ranges::unique(matched);
-		matched.erase(ret.begin(), ret.end());
-	}
+  {
+    std::ranges::sort(matched);
+    auto ret = std::ranges::unique(matched);
+    matched.erase(ret.begin(), ret.end());
+  }
 
-	{
-  	std::ranges::sort(missed, {}, &Acts::ITkIdentifier::value);
-		auto ret = std::ranges::unique(missed, {}, &Acts::ITkIdentifier::value);
-		missed.erase(ret.begin(), ret.end());
-	}
+  {
+    std::ranges::sort(missed, {}, &Acts::ITkIdentifier::value);
+    auto ret = std::ranges::unique(missed, {}, &Acts::ITkIdentifier::value);
+    missed.erase(ret.begin(), ret.end());
+  }
 
-	std::ofstream missedFile("missed_surfaces.csv");
-	missedFile << "hardware,bec,lw,em,pm,side\n";
-	for(const auto &m : missed) {
-	  missedFile << m.hardware() << "," << m.barrelEndcap() << "," 
-							 << m.layerWheel() << "," << m.etaModule() << "," 
-							 << m.phiModule() << "," << m.side() << "\n";
-	}
+  std::ofstream missedFile("missed_surfaces.csv");
+  missedFile << "hardware,bec,lw,em,pm,side\n";
+  for (const auto& m : missed) {
+    missedFile << m.hardware() << "," << m.barrelEndcap() << ","
+               << m.layerWheel() << "," << m.etaModule() << "," << m.phiModule()
+               << "," << m.side() << "\n";
+  }
 
-	std::ofstream matchedFile("matched_surfaces.csv");
-	matchedFile << "acts_geoid,hardware,bec,lw,em,pm,side\n";
-	for(auto d : matched) {
-		const auto &m = d->identifier();
-		matchedFile << d->surface().geometryId().value() << ",";
-	  matchedFile << m.hardware() << "," << m.barrelEndcap() << "," 
-							 << m.layerWheel() << "," << m.etaModule() << "," 
-							 << m.phiModule() << "," << m.side() << "\n";
-	}
+  std::ofstream matchedFile("matched_surfaces.csv");
+  matchedFile << "acts_geoid,hardware,bec,lw,em,pm,side\n";
+  for (auto d : matched) {
+    const auto& m = d->identifier();
+    matchedFile << d->surface().geometryId().value() << ",";
+    matchedFile << m.hardware() << "," << m.barrelEndcap() << ","
+                << m.layerWheel() << "," << m.etaModule() << ","
+                << m.phiModule() << "," << m.side() << "\n";
+  }
 
-	ACTS_DEBUG("Added " << athenaToActsGeoId.size() - prev << " entries");
+  ACTS_DEBUG("Added " << athenaToActsGeoId.size() - prev << " entries");
 
   return ProcessCode::SUCCESS;
 }
