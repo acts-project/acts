@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -123,10 +123,8 @@ const auto dataset =
 // helper functions for tests
 template <typename Container>
 void sortByParticleId(Container& container) {
-  std::sort(container.begin(), container.end(),
-            [](const auto& lhs, const auto& rhs) {
-              return lhs.particleId() < rhs.particleId();
-            });
+  std::ranges::sort(container, std::less{},
+                    [](const auto& c) { return c.particleId(); });
 }
 template <typename Container>
 bool areParticleIdsUnique(const Container& sortedByParticleId) {

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -105,8 +105,8 @@ class GbtsEtaBin {
   }
 
   void sortByPhi() {
-    std::sort(m_vn.begin(), m_vn.end(),
-              typename Acts::GbtsNode<space_point_t>::CompareByPhi());
+    std::ranges::sort(m_vn,
+                      typename Acts::GbtsNode<space_point_t>::CompareByPhi());
   }
 
   bool empty() const { return m_vn.empty(); }

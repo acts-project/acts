@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_) {
 
   // sorting required for set_difference call. sorting assumes space points
   // inside seed are already sorted.
-  std::sort(refVec.begin(), refVec.end(), seedComparator());
-  std::sort(seedVec.begin(), seedVec.end(), seedComparator());
+  std::ranges::sort(refVec, seedComparator());
+  std::ranges::sort(seedVec, seedComparator());
 
   // difference between reference and result shows if results exactly the same
   // (i.e. difference is 0)

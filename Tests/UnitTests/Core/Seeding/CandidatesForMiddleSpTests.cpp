@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 
+#include <algorithm>
 #include <limits>
 #include <vector>
 
@@ -145,16 +146,16 @@ BOOST_AUTO_TEST_CASE(CandidatesForMiddleSpObject) {
     BOOST_CHECK(storagedValues[i].weight >= storagedValues[i + 1].weight);
   }
 
-  std::sort(
-      storagedValues.begin(), storagedValues.end(),
+  std::ranges::sort(
+      storagedValues,
       Acts::CandidatesForMiddleSp<UnitTestSpacePoint>::ascendingByQuality);
   // check values are sorted properly
   for (std::size_t i(0); i < storagedValues.size() - 1; ++i) {
     BOOST_CHECK(storagedValues[i].weight <= storagedValues[i + 1].weight);
   }
 
-  std::sort(
-      storagedValues.begin(), storagedValues.end(),
+  std::ranges::sort(
+      storagedValues,
       Acts::CandidatesForMiddleSp<UnitTestSpacePoint>::descendingByQuality);
   // check values are sorted properly
   for (std::size_t i(0); i < storagedValues.size() - 1; ++i) {
