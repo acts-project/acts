@@ -34,7 +34,7 @@ void addBlueprint(Context& ctx) {
     std::optional<std::string> name;
 
     std::shared_ptr<CylinderContainerBlueprintNode> operator()(
-        py::function callback) {
+        const py::function& callback) {
       auto cylinder = std::make_shared<CylinderContainerBlueprintNode>(
           name.value_or(callback.attr("__name__").cast<std::string>()),
           direction);
@@ -53,7 +53,8 @@ void addBlueprint(Context& ctx) {
       return cylinder;
     }
 
-    void exit(py::object, py::object, py::object) {}
+    void exit(const py::object& /*unused*/, const py::object& /*unused*/,
+              const py::object& /*unused*/) {}
   };
 
   py::class_<AddCylinderContainerHelper>(m, "_AddCylinderContainerHelper")
@@ -64,7 +65,7 @@ void addBlueprint(Context& ctx) {
   struct AddMaterialDesignatorHelper {
     BlueprintNode& parent;
 
-    std::shared_ptr<BlueprintNode> operator()(py::function callback) {
+    std::shared_ptr<BlueprintNode> operator()(const py::function& callback) {
       auto material = std::make_shared<MaterialDesignatorBlueprintNode>();
       parent.addChild(material);
       callback(material);
@@ -77,7 +78,8 @@ void addBlueprint(Context& ctx) {
       return material;
     }
 
-    void exit(py::object, py::object, py::object) {}
+    void exit(const py::object& /*unused*/, const py::object& /*unused*/,
+              const py::object& /*unused*/) {}
   };
 
   py::class_<AddMaterialDesignatorHelper>(m, "_AddMaterialDesignatorHelper")
@@ -88,10 +90,11 @@ void addBlueprint(Context& ctx) {
   struct AddStaticVolumeHelper {
     BlueprintNode& parent;
     Transform3 transform;
-    std::shared_ptr<const VolumeBounds> bounds;
+    std::shared_ptr<VolumeBounds> bounds;
     std::optional<std::string> name;
 
-    std::shared_ptr<StaticBlueprintNode> operator()(py::function callback) {
+    std::shared_ptr<StaticBlueprintNode> operator()(
+        const py::function& callback) {
       std::string callbackName = callback.attr("__name__").cast<std::string>();
       auto node = std::make_shared<Acts::StaticBlueprintNode>(
           std::make_unique<Acts::TrackingVolume>(transform, bounds,
@@ -133,7 +136,7 @@ void addBlueprint(Context& ctx) {
           .def(
               "addStaticVolume",
               [](BlueprintNode& self, const Transform3& transform,
-                 const std::shared_ptr<const VolumeBounds>& bounds,
+                 const std::shared_ptr<VolumeBounds>& bounds,
                  const std::string& name) {
                 auto node = std::make_shared<Acts::StaticBlueprintNode>(
                     std::make_unique<Acts::TrackingVolume>(transform, bounds,
@@ -147,7 +150,7 @@ void addBlueprint(Context& ctx) {
           .def(
               "StaticVolume",
               [](BlueprintNode& self, const Transform3& transform,
-                 std::shared_ptr<const VolumeBounds> bounds,
+                 std::shared_ptr<VolumeBounds> bounds,
                  const std::optional<std::string>& name = std::nullopt) {
                 return AddStaticVolumeHelper{self, transform, std::move(bounds),
                                              name.value_or("undefined")};
@@ -225,7 +228,7 @@ void addBlueprint(Context& ctx) {
              std::shared_ptr<Acts::StaticBlueprintNode>>(m,
                                                          "StaticBlueprintNode")
       .def(py::init([](const Transform3& transform,
-                       std::shared_ptr<const VolumeBounds> bounds,
+                       const std::shared_ptr<VolumeBounds>& bounds,
                        const std::string& name) {
              return std::make_shared<Acts::StaticBlueprintNode>(
                  std::make_unique<Acts::TrackingVolume>(transform, bounds,
