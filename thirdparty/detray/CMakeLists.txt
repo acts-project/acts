@@ -12,8 +12,6 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building Detray as part of the Acts project")
 
-string(REPLACE "-Wnull-dereference" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-
 set(DETRAY_VERSION "v${_acts_detray_version}")
 
 # Declare where to get Detray from.
@@ -97,5 +95,3 @@ set(DETRAY_SVG_DISPLAY OFF CACHE BOOL "No not build the ActSVG display module")
 
 #Now set up its build.
 FetchContent_MakeAvailable(Detray)
-
-string(APPEND CMAKE_CXX_FLAGS " -Wnull-dereference")
