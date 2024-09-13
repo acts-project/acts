@@ -5,12 +5,6 @@
 #  322 |             b_values[boundary::e_min_r] = axis_spans[0UL].at(0UL);
 #
 #
-message(STATUS "Before ... CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-
-string(REPLACE "-Wnull-dereference" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-string(REPLACE "-Werror=null-dereference" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-
-message(STATUS "While ... CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
 add_library(
     ActsPluginDetray
@@ -51,8 +45,3 @@ install(
 )
 
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-# Add the compiler flag back on
-string(APPEND CMAKE_CXX_FLAGS " -Wnull-dereference")
-string(APPEND CMAKE_CXX_FLAGS " -Werror=null-dereference")
-message(STATUS "After ... CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
