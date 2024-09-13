@@ -17,6 +17,7 @@
 
 #include <vector>
 
+#include <detray/builders/grid_factory.hpp>
 #include <detray/builders/detector_builder.hpp>
 #include <detray/definitions/geometry.hpp>
 #include <detray/io/frontend/detector_writer.hpp>
