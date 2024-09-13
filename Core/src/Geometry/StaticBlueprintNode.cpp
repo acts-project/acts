@@ -33,13 +33,13 @@ Volume& StaticBlueprintNode::build(const Logger& logger) {
 PortalShellBase& StaticBlueprintNode::connect(const GeometryContext& gctx,
                                               TrackingVolume& parent,
                                               const Logger& logger) {
-  ACTS_DEBUG(prefix() << "static connect");
+  ACTS_DEBUG(prefix() << "Static connect");
   if (m_volume == nullptr) {
     throw std::runtime_error("Volume is not built");
   }
 
-  ACTS_VERBOSE("Connecting parent volume ("
-               << name() << ") with " << children().size() << " children");
+  ACTS_VERBOSE(prefix() << "Connecting parent volume (" << name() << ") with "
+                        << children().size() << " children");
 
   for (auto& child : children()) {
     auto& shell = child.connect(gctx, parent, logger);
@@ -58,6 +58,7 @@ PortalShellBase& StaticBlueprintNode::connect(const GeometryContext& gctx,
     throw std::logic_error("Volume type is not supported");
   }
 
+  assert(m_shell != nullptr);
   return *m_shell;
 }
 
