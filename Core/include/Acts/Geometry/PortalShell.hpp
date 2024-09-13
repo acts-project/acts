@@ -57,6 +57,8 @@ class CylinderPortalShell : public PortalShellBase {
   void connectOuter(TrackingVolume& volume) override;
 };
 
+std::ostream& operator<<(std::ostream& os, CylinderPortalShell::Face face);
+
 class SingleCylinderPortalShell : public CylinderPortalShell {
  public:
   explicit SingleCylinderPortalShell(TrackingVolume& volume);

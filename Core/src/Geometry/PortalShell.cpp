@@ -104,11 +104,6 @@ CylinderStackPortalShell::CylinderStackPortalShell(
     : m_direction{direction}, m_shells{std::move(shells)} {
   ACTS_VERBOSE("Making cylinder stack shell in " << m_direction
                                                  << " direction");
-  if (m_shells.size() < 2) {
-    ACTS_ERROR("Invalid number of shells: " << m_shells.size());
-    throw std::invalid_argument("Invalid number of shells");
-  }
-
   if (std::ranges::any_of(m_shells,
                           [](const auto* shell) { return shell == nullptr; })) {
     ACTS_ERROR("Invalid shell pointer");
@@ -207,7 +202,9 @@ const std::shared_ptr<Portal>& CylinderStackPortalShell::portalPtr(Face face) {
       case InnerCylinder:
         return m_shells.front()->portalPtr(InnerCylinder);
       default:
-        throw std::invalid_argument("Invalid face");
+        std::stringstream ss;
+        ss << "Invalid face: " << face;
+        throw std::invalid_argument(ss.str());
     }
 
   } else {
@@ -221,7 +218,9 @@ const std::shared_ptr<Portal>& CylinderStackPortalShell::portalPtr(Face face) {
       case InnerCylinder:
         return m_shells.front()->portalPtr(face);
       default:
-        throw std::invalid_argument("Invalid face");
+        std::stringstream ss;
+        ss << "Invalid face: " << face;
+        throw std::invalid_argument(ss.str());
     }
   }
 }
@@ -243,8 +242,11 @@ void CylinderStackPortalShell::setPortal(std::shared_ptr<Portal> portal,
           throw std::invalid_argument("Inner cylinder not available");
         }
         m_shells.front()->setPortal(std::move(portal), InnerCylinder);
+        break;
       default:
-        throw std::invalid_argument("Invalid face");
+        std::stringstream ss;
+        ss << "Invalid face: " << face;
+        throw std::invalid_argument(ss.str());
     }
 
   } else {
@@ -266,8 +268,30 @@ void CylinderStackPortalShell::setPortal(std::shared_ptr<Portal> portal,
         }
         break;
       default:
-        throw std::invalid_argument("Invalid face");
+        std::stringstream ss;
+        ss << "Invalid face: " << face;
+        throw std::invalid_argument(ss.str());
     }
+  }
+}
+
+std::ostream& operator<<(std::ostream& os, CylinderPortalShell::Face face) {
+  switch (face) {
+    using enum CylinderPortalShell::Face;
+    case PositiveDisc:
+      return os << "PositiveDisc";
+    case NegativeDisc:
+      return os << "NegativeDisc";
+    case OuterCylinder:
+      return os << "OuterCylinder";
+    case InnerCylinder:
+      return os << "InnerCylinder";
+    case NegativePhiPlane:
+      return os << "NegativePhiPlane";
+    case PositivePhiPlane:
+      return os << "PositivePhiPlane";
+    default:
+      return os << "Invalid face";
   }
 }
 

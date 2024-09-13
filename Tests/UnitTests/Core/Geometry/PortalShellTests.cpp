@@ -382,10 +382,6 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
     shell2 = SingleCylinderPortalShell{vol2};
 
     BOOST_CHECK_THROW(
-        CylinderStackPortalShell(gctx, {&shell1}, BinningValue::binZ),
-        std::invalid_argument);
-
-    BOOST_CHECK_THROW(
         CylinderStackPortalShell(gctx, {&shell1, &shell2}, BinningValue::binR),
         SurfaceMergingException);
   }
@@ -426,10 +422,6 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
 
     shell1 = SingleCylinderPortalShell{vol1};
     shell2 = SingleCylinderPortalShell{vol2};
-
-    BOOST_CHECK_THROW(
-        CylinderStackPortalShell(gctx, {&shell1}, BinningValue::binZ),
-        std::invalid_argument);
 
     BOOST_CHECK_THROW(
         CylinderStackPortalShell(gctx, {&shell1, &shell2}, BinningValue::binR),
@@ -478,10 +470,6 @@ BOOST_AUTO_TEST_CASE(RDirection) {
     shell2 = SingleCylinderPortalShell{vol2};
 
     BOOST_CHECK_THROW(
-        CylinderStackPortalShell(gctx, {&shell1}, BinningValue::binR),
-        std::invalid_argument);
-
-    BOOST_CHECK_THROW(
         CylinderStackPortalShell(gctx, {&shell1, &shell2}, BinningValue::binZ),
         SurfaceMergingException);
   }
@@ -523,10 +511,6 @@ BOOST_AUTO_TEST_CASE(RDirection) {
 
     shell1 = SingleCylinderPortalShell{vol1};
     shell2 = SingleCylinderPortalShell{vol2};
-
-    BOOST_CHECK_THROW(
-        CylinderStackPortalShell(gctx, {&shell1}, BinningValue::binR),
-        std::invalid_argument);
 
     BOOST_CHECK_THROW(
         CylinderStackPortalShell(gctx, {&shell1, &shell2}, BinningValue::binZ),
