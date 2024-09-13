@@ -26,6 +26,7 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
         ActsPluginExaTrkX
         PRIVATE
             src/TorchEdgeClassifier.cpp
+            src/TorchEdgeClassifierAOT.cpp
             src/TorchMetricLearning.cpp
             src/BoostTrackBuilding.cpp
             src/TorchTruthGraphMetricsHook.cpp
