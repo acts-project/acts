@@ -13,7 +13,7 @@
 
 #include <memory>
 
-#include <torch/csrc/inductor/aoti_runner/model_container_runner_cuda.h>
+#include <torch/torch.h>
 
 namespace torch::inductor {
 class AOTIModelContainerRunnerCuda;

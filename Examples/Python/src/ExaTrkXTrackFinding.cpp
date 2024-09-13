@@ -102,6 +102,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(useEdgeFeatures);
     ACTS_PYTHON_STRUCT_END();
   }
+#ifdef ACTS_EXATRKX_WITH_TORCH_AOT
   {
     using Alg = Acts::TorchEdgeClassifierAOT;
     using Config = Alg::Config;
@@ -127,6 +128,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(useEdgeFeatures);
     ACTS_PYTHON_STRUCT_END();
   }
+#endif
   {
     using Alg = Acts::BoostTrackBuilding;
 

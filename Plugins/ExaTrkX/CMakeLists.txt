@@ -26,11 +26,18 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
         ActsPluginExaTrkX
         PRIVATE
             src/TorchEdgeClassifier.cpp
-            src/TorchEdgeClassifierAOT.cpp
             src/TorchMetricLearning.cpp
             src/BoostTrackBuilding.cpp
             src/TorchTruthGraphMetricsHook.cpp
             src/TorchGraphStoreHook.cpp
+    )
+endif()
+
+if(ACTS_EXATRKX_ENABLE_TORCH_AOT)
+    target_sources(ActsPluginExaTrkX PRIVATE src/TorchEdgeClassifierAOT.cpp)
+    target_compile_definitions(
+        ActsPluginExaTrkX
+        PUBLIC ACTS_EXATRKX_WITH_TORCH_AOT
     )
 endif()
 
