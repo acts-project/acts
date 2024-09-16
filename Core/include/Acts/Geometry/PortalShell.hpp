@@ -29,7 +29,10 @@ class PortalShellBase {
 
   virtual void connectOuter(TrackingVolume& volume) = 0;
 
- private:
+  virtual std::size_t size() const = 0;
+
+  // @TODO: Revisit, I'm not super happy with this interface.
+  virtual void applyToVolume() = 0;
 };
 
 class CylinderPortalShell : public PortalShellBase {
@@ -47,10 +50,8 @@ class CylinderPortalShell : public PortalShellBase {
 
   using enum Face;
 
-  virtual std::size_t size() const = 0;
-
   virtual Portal* portal(Face face) = 0;
-  virtual const std::shared_ptr<Portal>& portalPtr(Face face) = 0;
+  virtual std::shared_ptr<Portal> portalPtr(Face face) = 0;
 
   virtual void setPortal(std::shared_ptr<Portal> portal, Face face) = 0;
 
@@ -66,11 +67,15 @@ class SingleCylinderPortalShell : public CylinderPortalShell {
   std::size_t size() const final;
 
   Portal* portal(Face face) final;
-  const std::shared_ptr<Portal>& portalPtr(Face face) final;
+  std::shared_ptr<Portal> portalPtr(Face face) final;
   void setPortal(std::shared_ptr<Portal> portal, Face face) final;
+
+  void applyToVolume() override;
 
  private:
   std::array<std::shared_ptr<Portal>, 6> m_portals{};
+
+  TrackingVolume* m_volume;
 };
 
 class CylinderStackPortalShell : public CylinderPortalShell {
@@ -83,8 +88,11 @@ class CylinderStackPortalShell : public CylinderPortalShell {
 
   std::size_t size() const final;
   Portal* portal(Face face) final;
-  const std::shared_ptr<Portal>& portalPtr(Face face) final;
+  std::shared_ptr<Portal> portalPtr(Face face) final;
   void setPortal(std::shared_ptr<Portal> portal, Face face) final;
+
+  // No-op, because it's a composite portal shell
+  void applyToVolume() override {}
 
  private:
   BinningValue m_direction;

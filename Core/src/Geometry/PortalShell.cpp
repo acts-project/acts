@@ -22,28 +22,30 @@ namespace Acts {
 void CylinderPortalShell::connectOuter(TrackingVolume& volume) {
   for (Face face : {PositiveDisc, NegativeDisc, OuterCylinder, InnerCylinder,
                     NegativePhiPlane, PositivePhiPlane}) {
-    auto* portalAtFace = portal(face);
+    const auto& portalAtFace = portalPtr(face);
     if (portalAtFace != nullptr) {
       portalAtFace->fill(volume);
+      volume.addPortal(portalAtFace);
     }
   }
 }
 
-SingleCylinderPortalShell::SingleCylinderPortalShell(TrackingVolume& volume) {
-  if (volume.volumeBounds().type() != VolumeBounds::BoundsType::eCylinder) {
+SingleCylinderPortalShell::SingleCylinderPortalShell(TrackingVolume& volume)
+    : m_volume{&volume} {
+  if (m_volume->volumeBounds().type() != VolumeBounds::BoundsType::eCylinder) {
     throw std::invalid_argument("Invalid volume bounds type");
   }
 
   const auto& bounds =
-      dynamic_cast<const CylinderVolumeBounds&>(volume.volumeBounds());
+      dynamic_cast<const CylinderVolumeBounds&>(m_volume->volumeBounds());
 
   std::vector<OrientedSurface> orientedSurfaces =
-      bounds.orientedSurfaces(volume.transform());
+      bounds.orientedSurfaces(m_volume->transform());
 
   auto handle = [&](Face face, std::size_t from) {
     const auto& source = orientedSurfaces.at(from);
     m_portals.at(toUnderlying(face)) =
-        std::make_shared<Portal>(source.direction, source.surface, volume);
+        std::make_shared<Portal>(source.direction, source.surface, *m_volume);
   };
 
   if (orientedSurfaces.size() == 6) {
@@ -82,7 +84,7 @@ Portal* SingleCylinderPortalShell::portal(Face face) {
   return portalPtr(face).get();
 }
 
-const std::shared_ptr<Portal>& SingleCylinderPortalShell::portalPtr(Face face) {
+std::shared_ptr<Portal> SingleCylinderPortalShell::portalPtr(Face face) {
   return m_portals.at(toUnderlying(face));
 }
 
@@ -96,6 +98,14 @@ std::size_t SingleCylinderPortalShell::size() const {
   std::ranges::for_each(
       m_portals, [&count](const auto& portal) { count += portal ? 1 : 0; });
   return count;
+}
+
+void SingleCylinderPortalShell::applyToVolume() {
+  for (const auto& portal : m_portals) {
+    if (portal != nullptr) {
+      m_volume->addPortal(portal);
+    }
+  }
 }
 
 CylinderStackPortalShell::CylinderStackPortalShell(
@@ -187,39 +197,10 @@ std::size_t CylinderStackPortalShell::size() const {
 }
 
 Portal* CylinderStackPortalShell::portal(Face face) {
-  // This is separate from `portalPtr`, because it returns nullptr for unused
-  // cylinder faces
-  if (m_direction == BinningValue::binR) {
-    switch (face) {
-      case NegativeDisc:
-        return m_shells.front()->portal(NegativeDisc);
-      case PositiveDisc:
-        return m_shells.front()->portal(PositiveDisc);
-      case OuterCylinder:
-        return m_shells.back()->portal(OuterCylinder);
-      case InnerCylinder:
-        return m_shells.front()->portal(InnerCylinder);
-      default:
-        return nullptr;
-    }
-
-  } else {
-    switch (face) {
-      case NegativeDisc:
-        return m_shells.front()->portal(NegativeDisc);
-      case PositiveDisc:
-        return m_shells.back()->portal(PositiveDisc);
-      case OuterCylinder:
-        [[fallthrough]];
-      case InnerCylinder:
-        return m_shells.front()->portal(face);
-      default:
-        return nullptr;
-    }
-  }
+  return portalPtr(face).get();
 }
 
-const std::shared_ptr<Portal>& CylinderStackPortalShell::portalPtr(Face face) {
+std::shared_ptr<Portal> CylinderStackPortalShell::portalPtr(Face face) {
   if (m_direction == BinningValue::binR) {
     switch (face) {
       case NegativeDisc:
@@ -230,6 +211,9 @@ const std::shared_ptr<Portal>& CylinderStackPortalShell::portalPtr(Face face) {
         return m_shells.back()->portalPtr(OuterCylinder);
       case InnerCylinder:
         return m_shells.front()->portalPtr(InnerCylinder);
+      case NegativePhiPlane:
+      case PositivePhiPlane:
+        return nullptr;
       default:
         std::stringstream ss;
         ss << "Invalid face: " << face;
@@ -246,6 +230,9 @@ const std::shared_ptr<Portal>& CylinderStackPortalShell::portalPtr(Face face) {
         [[fallthrough]];
       case InnerCylinder:
         return m_shells.front()->portalPtr(face);
+      case NegativePhiPlane:
+      case PositivePhiPlane:
+        return nullptr;
       default:
         std::stringstream ss;
         ss << "Invalid face: " << face;
