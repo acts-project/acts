@@ -37,15 +37,15 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
                               const std::string& tag) {
   std::stringstream cStream;
 
-  ViewConfig viewSensitive = ViewConfig({0, 180, 240});
+  ViewConfig viewSensitive = {.color = {0, 180, 240}};
   viewSensitive.triangulate = triangulate;
-  ViewConfig viewPassive = ViewConfig({240, 280, 0});
+  ViewConfig viewPassive = {.color = {240, 280, 0}};
   viewPassive.triangulate = triangulate;
-  ViewConfig viewVolume = ViewConfig({220, 220, 0});
+  ViewConfig viewVolume = {.color = {220, 220, 0}};
   viewVolume.triangulate = triangulate;
-  ViewConfig viewContainer = ViewConfig({220, 220, 0});
+  ViewConfig viewContainer = {.color = {220, 220, 0}};
   viewContainer.triangulate = triangulate;
-  ViewConfig viewGrid = ViewConfig({220, 0, 0});
+  ViewConfig viewGrid = {.color = {220, 0, 0}};
   viewGrid.nSegments = 8;
   viewGrid.offset = 3.;
   viewGrid.triangulate = triangulate;
