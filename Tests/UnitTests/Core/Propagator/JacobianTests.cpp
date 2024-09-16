@@ -18,6 +18,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -209,7 +210,7 @@ BOOST_AUTO_TEST_CASE(JacobianPlaneToGlobalTest) {
   Vector3 sNormal = Vector3(1.2, -0.3, 0.05).normalized();
 
   // Create a surface & parameters with covariance on the surface
-  auto pSurface = Surface::makeShared<PlaneSurface>(sPosition, sNormal);
+  auto pSurface = CurvilinearSurface(sPosition, sNormal).planeSurface();
 
   Covariance cov;
   cov << 10_mm, 0, 0, 0, 0, 0, 0, 10_mm, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0,

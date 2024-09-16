@@ -496,17 +496,13 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
 
   if constexpr (detailedMeasurement ==
                 Acts::DetectorMeasurementInfo::eDefault) {
-    std::sort(sorted_bottoms.begin(), sorted_bottoms.end(),
-              [&state](const std::size_t a, const std::size_t b) -> bool {
-                return state.linCircleBottom[a].cotTheta <
-                       state.linCircleBottom[b].cotTheta;
-              });
+    std::ranges::sort(sorted_bottoms, {}, [&state](const std::size_t s) {
+      return state.linCircleBottom[s].cotTheta;
+    });
 
-    std::sort(sorted_tops.begin(), sorted_tops.end(),
-              [&state](const std::size_t a, const std::size_t b) -> bool {
-                return state.linCircleTop[a].cotTheta <
-                       state.linCircleTop[b].cotTheta;
-              });
+    std::ranges::sort(sorted_tops, {}, [&state](const std::size_t s) {
+      return state.linCircleTop[s].cotTheta;
+    });
   }
 
   // Reserve enough space, in case current capacity is too little
