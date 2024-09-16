@@ -84,9 +84,11 @@ void Acts::Experimental::detail::BlueprintDrawer::dotStream(
 
   // Shape
   Options::Node shape = node.isLeaf() ? options.shape : options.virtualShape;
+  std::stringstream bts;
+  bts << node.boundsType;
   ss << node.name + "_shape " << shapeStr(shape) << '\n';
   ss << node.name + "_shape "
-     << labelStr(shape, VolumeBounds::s_boundsTypeNames[node.boundsType],
+     << labelStr(shape, bts.str(),
                  {"t = " + toString(node.transform.translation(), 1),
                   "b = " + toString(node.boundaryValues, 1)})
      << '\n';
