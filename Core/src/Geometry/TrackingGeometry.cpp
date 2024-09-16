@@ -49,11 +49,6 @@ const Acts::TrackingVolume* Acts::TrackingGeometry::highestTrackingVolume()
   return m_world.get();
 }
 
-const std::shared_ptr<const Acts::TrackingVolume>&
-Acts::TrackingGeometry::highestTrackingVolumeShared() const {
-  return m_world;
-}
-
 const Acts::Layer* Acts::TrackingGeometry::associatedLayer(
     const GeometryContext& gctx, const Acts::Vector3& gp) const {
   const TrackingVolume* lowestVol = lowestTrackingVolume(gctx, gp);
