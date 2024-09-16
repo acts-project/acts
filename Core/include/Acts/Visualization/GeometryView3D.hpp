@@ -98,12 +98,13 @@ struct GeometryView3D {
   /// @param transform An option additional transform
   /// @param connected The config for connected portals
   /// @param disconnected The config for disconnected portals
-  static void drawPortal(
-      IVisualization3D& helper, const Experimental::Portal& portal,
-      const GeometryContext& gctx,
-      const Transform3& transform = Transform3::Identity(),
-      const ViewConfig& connected = {.color = {0, 255, 0}},
-      const ViewConfig& disconnected = {.color = {255, 0, 0}});
+  static void drawPortal(IVisualization3D& helper,
+                         const Experimental::Portal& portal,
+                         const GeometryContext& gctx,
+                         const Transform3& transform = Transform3::Identity(),
+                         const ViewConfig& connected = {.color = {0, 255, 0}},
+                         const ViewConfig& disconnected = {
+                             .color = {255, 0, 0}});
 
   /// Helper method to draw DetectorVolume objects
   ///
