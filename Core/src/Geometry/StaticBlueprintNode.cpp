@@ -68,7 +68,7 @@ void StaticBlueprintNode::visualize(IVisualization3D& vis,
     throw std::runtime_error("Volume is not built");
   }
 
-  ViewConfig viewConfig{{100, 100, 100}};
+  ViewConfig viewConfig{.color = {100, 100, 100}};
 
   GeometryView3D::drawVolume(vis, *m_volume, gctx, Transform3::Identity(),
                              viewConfig);

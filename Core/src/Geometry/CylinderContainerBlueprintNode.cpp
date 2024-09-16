@@ -139,7 +139,7 @@ void CylinderContainerBlueprintNode::visualize(
     throw std::runtime_error("Cylinder Stack Volume is not built");
   }
 
-  ViewConfig viewConfig{{255, 0, 0}};
+  ViewConfig viewConfig{.color = {255, 0, 0}};
 
   for (const auto& gap : m_stack->gaps()) {
     GeometryView3D::drawVolume(vis, *gap, gctx, Transform3::Identity(),
