@@ -67,14 +67,12 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
 
   // Is only initialized during `build`
   std::vector<Volume*> m_childVolumes;
-  std::optional<CylinderVolumeStack> m_stack{std::nullopt};
+  std::unique_ptr<CylinderVolumeStack> m_stack{nullptr};
   std::map<const Volume*, BlueprintNode*> m_volumeToNode;
 
-  std::vector<std::pair<std::unique_ptr<TrackingVolume>,
-                        std::unique_ptr<SingleCylinderPortalShell>>>
-      m_gapVolumes;
+  std::vector<std::unique_ptr<SingleCylinderPortalShell>> m_gapShells;
 
-  std::optional<CylinderStackPortalShell> m_shell{std::nullopt};
+  std::unique_ptr<CylinderStackPortalShell> m_shell{nullptr};
 };
 
 }  // namespace Acts

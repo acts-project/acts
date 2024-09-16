@@ -26,6 +26,12 @@ Volume& StaticBlueprintNode::build(const Logger& logger) {
     throw std::runtime_error("Volume is not built");
   }
 
+  ACTS_DEBUG(prefix() << "Building volume (" << name() << ") with "
+                      << children().size() << " children");
+  for (auto& child : children()) {
+    child.build(logger);
+  }
+
   ACTS_DEBUG(prefix() << "-> returning volume " << *m_volume);
   return *m_volume;
 }
@@ -35,11 +41,11 @@ PortalShellBase& StaticBlueprintNode::connect(const GeometryContext& gctx,
                                               const Logger& logger) {
   ACTS_DEBUG(prefix() << "Static connect");
   if (m_volume == nullptr) {
-    throw std::runtime_error("Volume is not built");
+    throw std::runtime_error("Volume is not present");
   }
 
-  ACTS_VERBOSE(prefix() << "Connecting parent volume (" << name() << ") with "
-                        << children().size() << " children");
+  ACTS_DEBUG(prefix() << "Connecting parent volume (" << name() << ") with "
+                      << children().size() << " children");
 
   for (auto& child : children()) {
     auto& shell = child.connect(gctx, parent, logger);
@@ -57,6 +63,10 @@ PortalShellBase& StaticBlueprintNode::connect(const GeometryContext& gctx,
   } else {
     throw std::logic_error("Volume type is not supported");
   }
+
+  ACTS_DEBUG(prefix() << " Adding volume (" << m_volume->volumeName()
+                      << ") to parent volume (" << parent.volumeName() << ")");
+  parent.addVolume(std::move(m_volume));
 
   assert(m_shell != nullptr);
   return *m_shell;

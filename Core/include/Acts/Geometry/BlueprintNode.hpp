@@ -44,9 +44,6 @@ class BlueprintNode {
       const GeometryContext& gctx, TrackingVolume& parent,
       const Logger& logger = Acts::getDummyLogger()) = 0;
 
-  // virtual void finalize(TrackingVolume& parent,
-  //                       const Logger& logger = Acts::getDummyLogger()) = 0;
-
   virtual void visualize(IVisualization3D& vis,
                          const GeometryContext& gctx) const;
 

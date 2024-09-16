@@ -44,6 +44,7 @@ target_sources(
         PortalError.cpp
         PortalShell.cpp
         BlueprintNode.cpp
+        RootBlueprintNode.cpp
         CylinderContainerBlueprintNode.cpp
         StaticBlueprintNode.cpp
         Blueprint.cpp

@@ -9,6 +9,7 @@
 #include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
 
 #include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -36,7 +37,7 @@ const std::string& CylinderContainerBlueprintNode::name() const {
 Volume& CylinderContainerBlueprintNode::build(const Logger& logger) {
   ACTS_DEBUG(prefix() << "cylinder container build");
 
-  if (m_stack.has_value()) {
+  if (m_stack != nullptr) {
     ACTS_ERROR(prefix() << "Volume is already built");
     throw std::runtime_error("Volume is already built");
   }
@@ -52,45 +53,47 @@ Volume& CylinderContainerBlueprintNode::build(const Logger& logger) {
                         << " child volumes");
 
   ACTS_VERBOSE(prefix() << "-> Building the stack");
-  m_stack.emplace(m_childVolumes, m_direction, m_attachmentStrategy,
-                  m_resizeStrategy, logger);
+  m_stack = std::make_unique<CylinderVolumeStack>(m_childVolumes, m_direction,
+                                                  m_attachmentStrategy,
+                                                  m_resizeStrategy, logger);
   ACTS_DEBUG(prefix() << "-> Stack bounds are: " << m_stack->volumeBounds());
 
   ACTS_DEBUG(prefix() << " *** build complete ***");
 
-  return m_stack.value();
+  return *m_stack;
 }
 
 CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
     const GeometryContext& gctx, TrackingVolume& parent, const Logger& logger) {
   ACTS_DEBUG(prefix() << "Cylinder container connect");
-  if (!m_stack.has_value()) {
+  if (m_stack == nullptr) {
     ACTS_ERROR(prefix() << "Volume is not built");
     throw std::runtime_error("Volume is not built");
   }
 
   std::vector<CylinderPortalShell*> shells;
-  ACTS_VERBOSE(prefix() << "Collecting child shells from " << children().size()
-                        << " children");
+  ACTS_DEBUG(prefix() << "Collecting child shells from " << children().size()
+                      << " children");
 
   // We have child volumes and gaps as bare Volumes in `m_childVolumes` after
   // `build()` has completed. For the stack shell, we need TrackingVolumes in
   // the right order.
 
-  ACTS_VERBOSE(prefix() << "Have " << m_childVolumes.size()
-                        << " child volumes");
+  ACTS_DEBUG(prefix() << "Have " << m_childVolumes.size() << " child volumes");
   for (Volume* volume : m_childVolumes) {
     if (isGapVolume(*volume)) {
       // We need to create a TrackingVolume from the gap and put it in the shell
-      auto gapPtr = std::make_unique<TrackingVolume>(*volume);
-      ACTS_VERBOSE(prefix() << " - have gap volume: " << gapPtr);
-      TrackingVolume& gap = *gapPtr;
-      auto& p = m_gapVolumes.emplace_back(
-          std::move(gapPtr), std::make_unique<SingleCylinderPortalShell>(gap));
+      auto gap = std::make_unique<TrackingVolume>(*volume);
+      gap->setVolumeName(name() + "::Gap" +
+                         std::to_string(m_gapShells.size() + 1));
+      ACTS_DEBUG(prefix() << " ~> Gap volume (" << gap->volumeName()
+                          << "): " << gap->volumeBounds());
+      m_gapShells.push_back(std::make_unique<SingleCylinderPortalShell>(*gap));
+      shells.push_back(m_gapShells.back().get());
 
-      shells.push_back(p.second.get());
+      parent.addVolume(std::move(gap));
+
     } else {
-      ACTS_VERBOSE(prefix() << "Associate child volume with child node");
       // Figure out which child we got this volume from
       auto it = m_volumeToNode.find(volume);
       if (it == m_volumeToNode.end()) {
@@ -98,7 +101,8 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
       }
       BlueprintNode& child = *it->second;
 
-      ACTS_VERBOSE(prefix() << " ~> found child node " << child.name());
+      ACTS_DEBUG(prefix() << " ~> Child (" << child.name()
+                          << ") volume: " << volume->volumeBounds());
 
       CylinderPortalShell* shell = dynamic_cast<CylinderPortalShell*>(
           &child.connect(gctx, parent, logger));
@@ -121,21 +125,23 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
                    shells, [](const auto* shell) { return shell == nullptr; }),
                "Invalid shell pointer");
 
-  ACTS_VERBOSE(prefix() << "Producing merged cylinder stack shell in "
-                        << m_direction << " direction");
-  m_shell.emplace(gctx, std::move(shells), m_direction, logger);
+  ACTS_DEBUG(prefix() << "Producing merged cylinder stack shell in "
+                      << m_direction << " direction");
+  m_shell = std::make_unique<CylinderStackPortalShell>(gctx, std::move(shells),
+                                                       m_direction, logger);
 
-  return m_shell.value();
+  return *m_shell;
 }
 
 bool CylinderContainerBlueprintNode::isGapVolume(const Volume& volume) const {
+  assert(m_stack != nullptr);
   return std::ranges::any_of(
       m_stack->gaps(), [&](const auto& gap) { return gap.get() == &volume; });
 }
 
 void CylinderContainerBlueprintNode::visualize(
     IVisualization3D& vis, const GeometryContext& gctx) const {
-  if (!m_stack.has_value()) {
+  if (m_stack == nullptr) {
     throw std::runtime_error("Cylinder Stack Volume is not built");
   }
 
@@ -151,7 +157,7 @@ void CylinderContainerBlueprintNode::visualize(
 
 CylinderContainerBlueprintNode& CylinderContainerBlueprintNode::setDirection(
     BinningValue direction) {
-  if (m_stack.has_value()) {
+  if (m_stack != nullptr) {
     throw std::runtime_error("Cannot change direction after build");
   }
   m_direction = direction;
@@ -161,7 +167,7 @@ CylinderContainerBlueprintNode& CylinderContainerBlueprintNode::setDirection(
 CylinderContainerBlueprintNode&
 CylinderContainerBlueprintNode::setAttachmentStrategy(
     CylinderVolumeStack::AttachmentStrategy attachmentStrategy) {
-  if (m_stack.has_value()) {
+  if (m_stack != nullptr) {
     throw std::runtime_error("Cannot change direction after build");
   }
   m_attachmentStrategy = attachmentStrategy;
@@ -171,7 +177,7 @@ CylinderContainerBlueprintNode::setAttachmentStrategy(
 CylinderContainerBlueprintNode&
 CylinderContainerBlueprintNode::setResizeStrategy(
     CylinderVolumeStack::ResizeStrategy resizeStrategy) {
-  if (m_stack.has_value()) {
+  if (m_stack != nullptr) {
     throw std::runtime_error("Cannot change direction after build");
   }
   m_resizeStrategy = resizeStrategy;

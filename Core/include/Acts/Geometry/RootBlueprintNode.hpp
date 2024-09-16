@@ -11,31 +11,40 @@
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
 namespace Acts {
 
-class StaticBlueprintNode : public BlueprintNode {
+class RootBlueprintNode : public BlueprintNode {
  public:
-  StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume);
+  struct Config {
+    ExtentEnvelope envelope = ExtentEnvelope::Zero();
+    GeometryIdentifierHook geometryIdentifierHook = {};
+  };
+
+  RootBlueprintNode(const Config& cfg);
 
   const std::string& name() const override;
 
+  void visualize(IVisualization3D& vis,
+                 const GeometryContext& gctx) const override;
+
+  std::unique_ptr<TrackingGeometry> construct(
+      const GeometryContext& gctx,
+      const Logger& logger = Acts::getDummyLogger());
+
+ protected:
   Volume& build(const Logger& logger = Acts::getDummyLogger()) override;
 
   PortalShellBase& connect(
       const GeometryContext& gctx, TrackingVolume& parent,
       const Logger& logger = Acts::getDummyLogger()) override;
 
-  void visualize(IVisualization3D& vis,
-                 const GeometryContext& gctx) const override;
-
- protected:
   void addToGraphviz(std::ostream& os) const override;
 
-  std::unique_ptr<TrackingVolume> m_volume;
-
-  std::unique_ptr<PortalShellBase> m_shell;
+ private:
+  Config m_cfg;
 };
 
 }  // namespace Acts

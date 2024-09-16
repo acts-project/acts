@@ -17,6 +17,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/RootBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -27,7 +28,7 @@ using namespace Acts::UnitLiterals;
 
 namespace Acts::Test {
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::DEBUG);
 
 GeometryContext gctx;
 
@@ -36,6 +37,10 @@ BOOST_AUTO_TEST_SUITE(Geometry);
 BOOST_AUTO_TEST_SUITE(BlueprintNodeTest);
 
 BOOST_AUTO_TEST_CASE(StaticBlueprintNodeConstruction) {
+  RootBlueprintNode::Config cfg;
+  cfg.envelope[BinningValue::binZ] = {20_mm, 2_mm};
+  RootBlueprintNode root{cfg};
+
   ActsScalar hlZ = 30_mm;
   auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
   auto cyl = std::make_unique<TrackingVolume>(Transform3::Identity(), cylBounds,
@@ -43,11 +48,11 @@ BOOST_AUTO_TEST_CASE(StaticBlueprintNodeConstruction) {
 
   const auto* cylPtr = cyl.get();
 
-  StaticBlueprintNode node(std::move(cyl));
+  auto node = std::make_unique<StaticBlueprintNode>(std::move(cyl));
 
-  BOOST_CHECK_EQUAL(node.name(), "root");
+  BOOST_CHECK_EQUAL(node->name(), "root");
 
-  BOOST_CHECK_EQUAL(&node.build(), cylPtr);
+  BOOST_CHECK_EQUAL(&node->build(), cylPtr);
 
   ObjVisualization3D vis;
   // Add some children
@@ -60,20 +65,21 @@ BOOST_AUTO_TEST_CASE(StaticBlueprintNodeConstruction) {
 
     GeometryView3D::drawVolume(vis, *childCyl, gctx);
 
-    node.addChild(std::make_unique<StaticBlueprintNode>(std::move(childCyl)));
+    node->addChild(std::make_unique<StaticBlueprintNode>(std::move(childCyl)));
   }
 
-  BOOST_CHECK_EQUAL(node.children().size(), 10);
+  BOOST_CHECK_EQUAL(node->children().size(), 10);
+
+  root.addChild(std::move(node));
 
   std::ofstream ofs{"static.obj"};
   vis.write(ofs);
 
-  node.build();
-  // node.connect();
+  auto world = root.construct(gctx, *logger);
 
-  auto world = node.releaseVolume();
+  BOOST_REQUIRE(world);
 
-  BOOST_CHECK_EQUAL(world->volumes().size(), 10);
+  BOOST_CHECK_EQUAL(world->highestTrackingVolume()->volumes().size(), 10);
 }
 
 BOOST_AUTO_TEST_CASE(CylinderContainerNode) {
@@ -114,9 +120,13 @@ BOOST_AUTO_TEST_CASE(CylinderContainerNode) {
 BOOST_AUTO_TEST_CASE(NodeApiTest) {
   Transform3 base{AngleAxis3{30_degree, Vector3{1, 0, 0}}};
 
-  auto root = std::make_unique<CylinderContainerBlueprintNode>(
-      "root", BinningValue::binZ, CylinderVolumeStack::AttachmentStrategy::Gap,
-      CylinderVolumeStack::ResizeStrategy::Gap);
+  // auto root = std::make_unique<CylinderContainerBlueprintNode>(
+  //     "root", BinningValue::binZ,
+  //     CylinderVolumeStack::AttachmentStrategy::Gap,
+  //     CylinderVolumeStack::ResizeStrategy::Gap);
+
+  RootBlueprintNode::Config cfg;
+  auto root = std::make_unique<RootBlueprintNode>(cfg);
 
   root->addMaterial([&](auto& mat) {
     mat.addCylinderContainer("Pixel", BinningValue::binZ, [&](auto& cyl) {
@@ -191,17 +201,13 @@ BOOST_AUTO_TEST_CASE(NodeApiTest) {
     });
   });
 
-  auto world = root->build(*logger);
-  ObjVisualization3D vis;
-  root->visualize(vis, gctx);
-  vis.write("api_test.obj");
-
   std::ofstream dot{"api_test.dot"};
   root->graphViz(dot);
 
-  auto worldTv = std::make_unique<TrackingVolume>(world);
-
-  root->connect(gctx, *worldTv, *logger);
+  auto trackingGeometry = root->construct(gctx, *logger);
+  // ObjVisualization3D vis;
+  // root->visualize(vis, gctx);
+  // vis.write("api_test.obj");
 }
 
 BOOST_AUTO_TEST_SUITE_END();
