@@ -57,8 +57,8 @@ Acts::fieldMapRZ(
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
     std::vector<double> rPos, std::vector<double> zPos,
-    std::vector<Acts::Vector2> bField, double lengthUnit, double BFieldUnit,
-    bool firstQuadrant) {
+    const std::vector<Acts::Vector2>& bField, double lengthUnit,
+    double BFieldUnit, bool firstQuadrant) {
   // [1] Create Grid
   const auto [rMin, rMax, rBinCount] = getMinMaxAndBinCount(rPos);
   auto [zMin, zMax, zBinCount] = getMinMaxAndBinCount(zPos);
@@ -137,7 +137,7 @@ Acts::fieldMapXYZ(
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
     std::vector<double> xPos, std::vector<double> yPos,
-    std::vector<double> zPos, std::vector<Acts::Vector3> bField,
+    std::vector<double> zPos, const std::vector<Acts::Vector3>& bField,
     double lengthUnit, double BFieldUnit, bool firstOctant) {
   // [1] Create Grid
   auto [xMin, xMax, xBinCount] = getMinMaxAndBinCount(xPos);
@@ -210,9 +210,9 @@ Acts::fieldMapXYZ(
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
                Acts::Axis<Acts::AxisType::Equidistant>>>
-Acts::solenoidFieldMap(std::pair<double, double> rLim,
-                       std::pair<double, double> zLim,
-                       std::pair<std::size_t, std::size_t> nBins,
+Acts::solenoidFieldMap(const std::pair<double, double>& rLim,
+                       const std::pair<double, double>& zLim,
+                       const std::pair<std::size_t, std::size_t>& nBins,
                        const SolenoidBField& field) {
   auto [rMin, rMax] = rLim;
   auto [zMin, zMax] = zLim;
