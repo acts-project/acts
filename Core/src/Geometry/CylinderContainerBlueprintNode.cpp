@@ -18,6 +18,7 @@
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <algorithm>
+#include <utility>
 
 namespace Acts {
 
@@ -64,7 +65,7 @@ Volume& CylinderContainerBlueprintNode::build(const Logger& logger) {
 }
 
 CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
-    const GeometryContext& gctx, TrackingVolume& parent, const Logger& logger) {
+    const GeometryContext& gctx, const Logger& logger) {
   ACTS_DEBUG(prefix() << "Cylinder container connect");
   if (m_stack == nullptr) {
     ACTS_ERROR(prefix() << "Volume is not built");
@@ -84,14 +85,13 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
     if (isGapVolume(*volume)) {
       // We need to create a TrackingVolume from the gap and put it in the shell
       auto gap = std::make_unique<TrackingVolume>(*volume);
-      gap->setVolumeName(name() + "::Gap" +
-                         std::to_string(m_gapShells.size() + 1));
+      gap->setVolumeName(name() + "::Gap" + std::to_string(m_gaps.size() + 1));
       ACTS_DEBUG(prefix() << " ~> Gap volume (" << gap->volumeName()
                           << "): " << gap->volumeBounds());
-      m_gapShells.push_back(std::make_unique<SingleCylinderPortalShell>(*gap));
-      shells.push_back(m_gapShells.back().get());
+      auto shell = std::make_unique<SingleCylinderPortalShell>(*gap);
+      shells.push_back(shell.get());
 
-      parent.addVolume(std::move(gap));
+      m_gaps.emplace_back(std::move(shell), std::move(gap));
 
     } else {
       // Figure out which child we got this volume from
@@ -104,8 +104,8 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
       ACTS_DEBUG(prefix() << " ~> Child (" << child.name()
                           << ") volume: " << volume->volumeBounds());
 
-      CylinderPortalShell* shell = dynamic_cast<CylinderPortalShell*>(
-          &child.connect(gctx, parent, logger));
+      CylinderPortalShell* shell =
+          dynamic_cast<CylinderPortalShell*>(&child.connect(gctx, logger));
       if (shell == nullptr) {
         ACTS_ERROR(prefix()
                    << "Child volume of cylinder stack is not a cylinder");
@@ -133,26 +133,34 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
   return *m_shell;
 }
 
+void CylinderContainerBlueprintNode::finalize(TrackingVolume& parent,
+                                              const Logger& logger) {
+  ACTS_DEBUG(prefix() << "Finalizing cylinder container");
+
+  if (m_stack == nullptr) {
+    ACTS_ERROR(prefix() << "Volume is not built");
+    throw std::runtime_error("Volume is not built");
+  }
+
+  if (m_shell == nullptr) {
+    ACTS_ERROR(prefix() << "Volume is not connected");
+    throw std::runtime_error("Volume is not connected");
+  }
+
+  ACTS_DEBUG("Registering " << m_gaps.size() << " gap volumes with parent");
+  for (auto& [shell, gap] : m_gaps) {
+    parent.addVolume(std::move(gap));
+    shell->applyToVolume();
+  }
+  for (auto& child : children()) {
+    child.finalize(parent, logger);
+  }
+}
+
 bool CylinderContainerBlueprintNode::isGapVolume(const Volume& volume) const {
   assert(m_stack != nullptr);
   return std::ranges::any_of(
       m_stack->gaps(), [&](const auto& gap) { return gap.get() == &volume; });
-}
-
-void CylinderContainerBlueprintNode::visualize(
-    IVisualization3D& vis, const GeometryContext& gctx) const {
-  if (m_stack == nullptr) {
-    throw std::runtime_error("Cylinder Stack Volume is not built");
-  }
-
-  ViewConfig viewConfig{.color = {255, 0, 0}};
-
-  for (const auto& gap : m_stack->gaps()) {
-    GeometryView3D::drawVolume(vis, *gap, gctx, Transform3::Identity(),
-                               viewConfig);
-  }
-
-  BlueprintNode::visualize(vis, gctx);
 }
 
 CylinderContainerBlueprintNode& CylinderContainerBlueprintNode::setDirection(
@@ -185,9 +193,12 @@ CylinderContainerBlueprintNode::setResizeStrategy(
 }
 
 void CylinderContainerBlueprintNode::addToGraphviz(std::ostream& os) const {
-  GraphViz::Node node{.id = name(),
-                      .label = "<b>" + name() + "</b><br/>Cylinder",
-                      .shape = GraphViz::Shape::DoubleOctagon};
+  std::stringstream ss;
+  ss << "<b>" + name() + "</b>";
+  ss << "<br/>CylinderContainer";
+  ss << "<br/>dir: " << m_direction;
+  GraphViz::Node node{
+      .id = name(), .label = ss.str(), .shape = GraphViz::Shape::DoubleOctagon};
   os << node << std::endl;
   for (const auto& child : children()) {
     os << indent() << GraphViz::Edge{{.id = name()}, {.id = child.name()}}

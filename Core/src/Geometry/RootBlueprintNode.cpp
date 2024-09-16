@@ -29,9 +29,13 @@ Volume &RootBlueprintNode::build(const Logger & /*logger*/) {
 }
 
 PortalShellBase &RootBlueprintNode::connect(const GeometryContext & /*gctx*/,
-                                            TrackingVolume & /*parent*/,
                                             const Logger & /*logger*/) {
   throw std::logic_error("Root node cannot be connected");
+}
+
+void RootBlueprintNode::finalize(TrackingVolume & /*parent*/,
+                                 const Logger & /*logger*/) {
+  throw std::logic_error("Root node cannot be finalized");
 }
 
 void RootBlueprintNode::addToGraphviz(std::ostream &os) const {
@@ -40,13 +44,6 @@ void RootBlueprintNode::addToGraphviz(std::ostream &os) const {
 
   os << node;
   BlueprintNode::addToGraphviz(os);
-}
-
-void RootBlueprintNode::visualize(IVisualization3D &vis,
-                                  const GeometryContext &gctx) const {
-  for (const auto &child : children()) {
-    child.visualize(vis, gctx);
-  }
 }
 
 std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
@@ -112,9 +109,11 @@ std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
   auto world = std::make_unique<TrackingVolume>(
       topVolume.transform(), std::move(worldBounds), "World");
 
-  auto &shell = child.connect(gctx, *world, logger);
+  auto &shell = child.connect(gctx, logger);
 
   shell.connectOuter(*world);
+
+  child.finalize(*world, logger);
 
   // @TODO: Handle material decorator, geo id hook
 

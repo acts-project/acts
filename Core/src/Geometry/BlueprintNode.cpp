@@ -46,13 +46,6 @@ std::string BlueprintNode::prefix() const {
   return indent() + "[" + name() + "]: ";
 }
 
-void BlueprintNode::visualize(IVisualization3D& vis,
-                              const GeometryContext& gctx) const {
-  for (const auto& child : children()) {
-    child.visualize(vis, gctx);
-  }
-}
-
 StaticBlueprintNode& BlueprintNode::addStaticVolume(
     std::unique_ptr<TrackingVolume> volume,
     const std::function<void(StaticBlueprintNode& cylinder)>& callback) {
@@ -67,6 +60,15 @@ StaticBlueprintNode& BlueprintNode::addStaticVolume(
     callback(*child);
   }
   return *child;
+}
+
+StaticBlueprintNode& BlueprintNode::addStaticVolume(
+    const Transform3& transform, std::shared_ptr<VolumeBounds> volbounds,
+    const std::string& volumeName,
+    const std::function<void(StaticBlueprintNode& cylinder)>& callback) {
+  return addStaticVolume(std::make_unique<TrackingVolume>(
+                             transform, std::move(volbounds), volumeName),
+                         callback);
 }
 
 CylinderContainerBlueprintNode& BlueprintNode::addCylinderContainer(

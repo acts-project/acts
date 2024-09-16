@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -22,8 +23,8 @@ namespace Acts {
 
 class Volume;
 class TrackingVolume;
+class VolumeBounds;
 class PortalShellBase;
-class IVisualization3D;
 class CylinderContainerBlueprintNode;
 class MaterialDesignatorBlueprintNode;
 class StaticBlueprintNode;
@@ -41,14 +42,19 @@ class BlueprintNode {
   virtual Volume& build(const Logger& logger = Acts::getDummyLogger()) = 0;
 
   virtual PortalShellBase& connect(
-      const GeometryContext& gctx, TrackingVolume& parent,
+      const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) = 0;
 
-  virtual void visualize(IVisualization3D& vis,
-                         const GeometryContext& gctx) const;
+  virtual void finalize(TrackingVolume& parent,
+                        const Logger& logger = Acts::getDummyLogger()) = 0;
 
   StaticBlueprintNode& addStaticVolume(
       std::unique_ptr<TrackingVolume> volume,
+      const std::function<void(StaticBlueprintNode& cylinder)>& callback = {});
+
+  StaticBlueprintNode& addStaticVolume(
+      const Transform3& transform, std::shared_ptr<VolumeBounds> volbounds,
+      const std::string& volumeName = "undefined",
       const std::function<void(StaticBlueprintNode& cylinder)>& callback = {});
 
   CylinderContainerBlueprintNode& addCylinderContainer(

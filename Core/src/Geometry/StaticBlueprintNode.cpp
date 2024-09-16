@@ -37,7 +37,6 @@ Volume& StaticBlueprintNode::build(const Logger& logger) {
 }
 
 PortalShellBase& StaticBlueprintNode::connect(const GeometryContext& gctx,
-                                              TrackingVolume& parent,
                                               const Logger& logger) {
   ACTS_DEBUG(prefix() << "Static connect");
   if (m_volume == nullptr) {
@@ -48,7 +47,7 @@ PortalShellBase& StaticBlueprintNode::connect(const GeometryContext& gctx,
                       << children().size() << " children");
 
   for (auto& child : children()) {
-    auto& shell = child.connect(gctx, parent, logger);
+    auto& shell = child.connect(gctx, logger);
     // Register ourselves on the outside of the shell
     shell.connectOuter(*m_volume);
   }
@@ -64,25 +63,35 @@ PortalShellBase& StaticBlueprintNode::connect(const GeometryContext& gctx,
     throw std::logic_error("Volume type is not supported");
   }
 
-  ACTS_DEBUG(prefix() << " Adding volume (" << m_volume->volumeName()
-                      << ") to parent volume (" << parent.volumeName() << ")");
-  parent.addVolume(std::move(m_volume));
-
   assert(m_shell != nullptr);
   return *m_shell;
 }
 
-void StaticBlueprintNode::visualize(IVisualization3D& vis,
-                                    const GeometryContext& gctx) const {
+void StaticBlueprintNode::finalize(TrackingVolume& parent,
+                                   const Logger& logger) {
+  ACTS_DEBUG(prefix() << "Finalizing static volume");
+
   if (!m_volume) {
+    ACTS_ERROR(prefix() << "Volume is not built");
     throw std::runtime_error("Volume is not built");
   }
 
-  ViewConfig viewConfig{.color = {100, 100, 100}};
+  if (!m_shell) {
+    ACTS_ERROR(prefix() << "Shell is not built");
+    throw std::runtime_error("Shell is not built");
+  }
 
-  GeometryView3D::drawVolume(vis, *m_volume, gctx, Transform3::Identity(),
-                             viewConfig);
-  BlueprintNode::visualize(vis, gctx);
+  for (auto& child : children()) {
+    child.finalize(*m_volume, logger);
+  }
+
+  ACTS_DEBUG(prefix() << "Registering " << m_shell->size()
+                      << " portals into volume " << m_volume->volumeName());
+  m_shell->applyToVolume();
+
+  ACTS_DEBUG(prefix() << " Adding volume (" << m_volume->volumeName()
+                      << ") to parent volume (" << parent.volumeName() << ")");
+  parent.addVolume(std::move(m_volume));
 }
 
 const std::string& StaticBlueprintNode::name() const {

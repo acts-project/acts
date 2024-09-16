@@ -34,11 +34,10 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
   Volume& build(const Logger& logger = Acts::getDummyLogger()) override;
 
   CylinderStackPortalShell& connect(
-      const GeometryContext& gctx, TrackingVolume& parent,
+      const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
-  void visualize(IVisualization3D& vis,
-                 const GeometryContext& gctx) const override;
+  void finalize(TrackingVolume& parent, const Logger& logger) override;
 
   CylinderContainerBlueprintNode& setDirection(BinningValue direction);
   CylinderContainerBlueprintNode& setAttachmentStrategy(
@@ -70,7 +69,9 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
   std::unique_ptr<CylinderVolumeStack> m_stack{nullptr};
   std::map<const Volume*, BlueprintNode*> m_volumeToNode;
 
-  std::vector<std::unique_ptr<SingleCylinderPortalShell>> m_gapShells;
+  std::vector<std::pair<std::unique_ptr<SingleCylinderPortalShell>,
+                        std::unique_ptr<TrackingVolume>>>
+      m_gaps;
 
   std::unique_ptr<CylinderStackPortalShell> m_shell{nullptr};
 };
