@@ -100,9 +100,9 @@ void FpeMonitor::Result::add(FpeType type, void *stackPtr,
 
 bool FpeMonitor::Result::contains(
     FpeType type, const boost::stacktrace::stacktrace &st) const {
-  return std::ranges::find_if(m_stracktraces, [&](const FpeInfo &el) {
-           return areFpesEquivalent({el.type, *el.st}, {type, st});
-         }) != m_stracktraces.end();
+  return std::ranges::any_of(m_stracktraces, [&](const FpeInfo &el) {
+    return areFpesEquivalent({el.type, *el.st}, {type, st});
+  });
 }
 
 FpeMonitor::Result &FpeMonitor::result() {

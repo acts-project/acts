@@ -95,10 +95,9 @@ Acts::Svg::SurfaceArrayConverter::convert(
     auto sameBounds = [&](const SurfaceBounds* test) {
       return ((*test) == sBounds);
     };
-    // Check if you have this template object already
-    auto tBounds = std::ranges::find_if(templateBounds, sameBounds);
-    // New reference bounds and new reference object
-    if (tBounds == templateBounds.end()) {
+    // Check if you have this template object already before creating new
+    // reference bounds and new reference object
+    if (std::ranges::none_of(templateBounds, sameBounds)) {
       // Let's get the right style
       SurfaceConverter::Options sOptions;
       sOptions.templateSurface = true;
@@ -108,7 +107,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
         sOptions.style = *sfStyle;
       }
 
-      // Create a referese surface and reference object from it
+      // Create a reference surface and reference object from it
       auto referenceSurface = SurfaceConverter::convert(gctx, *sf, sOptions);
       auto referenceObject =
           View::xy(referenceSurface,

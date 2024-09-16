@@ -97,8 +97,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
     auto sameId = [tVolume](const auto& pair) {
       return (tVolume->geometryId() == pair.first);
     };
-    if (std::ranges::find_if(m_volumeMaterialMap, sameId) !=
-        m_volumeMaterialMap.end()) {
+    if (std::ranges::any_of(m_volumeMaterialMap, sameId)) {
       // this volume was already visited
       return;
     }

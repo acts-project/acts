@@ -484,10 +484,9 @@ class KalmanFitter {
             result.fittedStates->applyBackwards(
                 result.lastMeasurementIndex, [&](auto trackState) {
                   auto fSurface = &trackState.referenceSurface();
-                  auto surface_it = std::ranges::find_if(
-                      result.passedAgainSurfaces,
-                      [=](const Surface* s) { return s == fSurface; });
-                  if (surface_it == result.passedAgainSurfaces.end()) {
+                  if (std::ranges::none_of(
+                          result.passedAgainSurfaces,
+                          [=](const Surface* s) { return s == fSurface; })) {
                     // If reversed filtering missed this surface, then there is
                     // no smoothed parameter
                     trackState.unset(TrackStatePropMask::Smoothed);
