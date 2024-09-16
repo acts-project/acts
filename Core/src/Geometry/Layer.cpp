@@ -126,10 +126,9 @@ Acts::Layer::compatibleSurfaces(
   double farLimit = options.farLimit;
 
   auto isUnique = [&](const SurfaceIntersection& b) {
-    auto find_it = std::find_if(
-        sIntersections.begin(), sIntersections.end(), [&b](const auto& a) {
-          return a.object() == b.object() && a.index() == b.index();
-        });
+    auto find_it = std::ranges::find_if(sIntersections, [&b](const auto& a) {
+      return a.object() == b.object() && a.index() == b.index();
+    });
     return find_it == sIntersections.end();
   };
 

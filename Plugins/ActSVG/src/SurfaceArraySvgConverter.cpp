@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+
+#include <algorithm>
 
 std::tuple<std::vector<Acts::Svg::ProtoSurfaces>, Acts::Svg::ProtoGrid,
            std::vector<Acts::Svg::ProtoAssociations> >
@@ -94,8 +96,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
       return ((*test) == sBounds);
     };
     // Check if you have this template object already
-    auto tBounds =
-        std::find_if(templateBounds.begin(), templateBounds.end(), sameBounds);
+    auto tBounds = std::ranges::find_if(templateBounds, sameBounds);
     // New reference bounds and new reference object
     if (tBounds == templateBounds.end()) {
       // Let's get the right style
@@ -148,8 +149,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
         return ((*test) == sBounds);
       };
       // Check if you have this template object already
-      auto tBounds = std::find_if(templateBounds.begin(), templateBounds.end(),
-                                  sameBounds);
+      auto tBounds = std::ranges::find_if(templateBounds, sameBounds);
       // New reference bounds and new reference object
       if (tBounds != templateBounds.end()) {
         std::size_t tObject = std::distance(templateBounds.begin(), tBounds);
@@ -196,7 +196,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
       auto bSurfaces = surfaceArray.neighbors(bCenter);
       std::vector<std::size_t> binnAssoc;
       for (const auto& bs : bSurfaces) {
-        auto candidate = std::find(surfaces.begin(), surfaces.end(), bs);
+        auto candidate = std::ranges::find(surfaces, bs);
         if (candidate != surfaces.end()) {
           binnAssoc.push_back(std::distance(surfaces.begin(), candidate));
         }

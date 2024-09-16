@@ -32,8 +32,7 @@ const std::vector<BinningValue>& allBinningValues() {
 }
 
 BinningValue binningValueFromName(const std::string& name) {
-  auto it =
-      std::find(s_binningValueNames.begin(), s_binningValueNames.end(), name);
+  auto it = std::ranges::find(s_binningValueNames, name);
   if (it == s_binningValueNames.end()) {
     throw std::invalid_argument("Unknown binning value name: " + name);
   }

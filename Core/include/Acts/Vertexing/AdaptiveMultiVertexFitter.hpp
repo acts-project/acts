@@ -22,6 +22,7 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
+#include <algorithm>
 #include <functional>
 
 namespace Acts {
@@ -81,8 +82,7 @@ class AdaptiveMultiVertexFitter {
 
     Result<void> removeVertexFromCollection(Vertex& vtxToRemove,
                                             const Logger& logger) {
-      auto it = std::find(vertexCollection.begin(), vertexCollection.end(),
-                          &vtxToRemove);
+      auto it = std::ranges::find(vertexCollection, &vtxToRemove);
       // Check if the value was found before erasing
       if (it == vertexCollection.end()) {
         ACTS_ERROR("vtxToRemove is not part of vertexCollection.");

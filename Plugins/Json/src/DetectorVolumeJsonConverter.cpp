@@ -21,6 +21,7 @@
 #include "Acts/Plugins/Json/VolumeBoundsJsonConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <algorithm>
 #include <ctime>
 
 nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
@@ -59,7 +60,7 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
   nlohmann::json jPortals;
   if (!portals.empty()) {
     for (const auto* p : volume.portals()) {
-      auto it = std::find(portals.begin(), portals.end(), p);
+      auto it = std::ranges::find(portals, p);
       if (it != portals.end()) {
         jPortals.push_back(std::distance(portals.begin(), it));
       } else {

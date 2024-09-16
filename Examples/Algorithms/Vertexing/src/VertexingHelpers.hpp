@@ -15,6 +15,7 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -55,8 +56,7 @@ inline ProtoVertexContainer makeProtoVertices(
     protoVertex.reserve(vertex.tracks().size());
 
     for (const auto& track : vertex.tracks()) {
-      auto it = std::find(inputTracks.begin(), inputTracks.end(),
-                          track.originalParams);
+      auto it = std::ranges::find(inputTracks, track.originalParams);
       if (it != inputTracks.end()) {
         protoVertex.push_back(std::distance(inputTracks.begin(), it));
       } else {

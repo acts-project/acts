@@ -154,11 +154,10 @@ Pythia8Generator::operator()(RandomEngine& rng) {
 
       // check if an existing vertex is close enough
       auto it =
-          std::find_if(vertices.begin(), vertices.end(),
-                       [&pos4, this](const SimVertex& other) {
-                         return (pos4.head<3>() - other.position()).norm() <
-                                m_cfg.spatialVertexThreshold;
-                       });
+          std::ranges::find_if(vertices, [&pos4, this](const SimVertex& v) {
+            return (pos4.head<3>() - v.position()).norm() <
+                   m_cfg.spatialVertexThreshold;
+          });
 
       if (it != vertices.end()) {
         particleId.setVertexSecondary(std::distance(vertices.begin(), it));

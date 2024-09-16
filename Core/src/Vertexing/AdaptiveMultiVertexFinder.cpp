@@ -12,6 +12,8 @@
 #include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
+#include <algorithm>
+
 namespace Acts {
 
 Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::find(
@@ -364,9 +366,8 @@ std::pair<int, bool> AdaptiveMultiVertexFinder::checkVertexAndCompatibleTracks(
          !m_cfg.useFastCompatibility)) {
       // TODO: Understand why looking for compatible tracks only in seed tracks
       // and not also in all tracks
-      auto foundIter =
-          std::find_if(seedTracks.begin(), seedTracks.end(),
-                       [&trk](auto seedTrk) { return trk == seedTrk; });
+      auto foundIter = std::ranges::find_if(
+          seedTracks, [&trk](auto seedTrk) { return trk == seedTrk; });
       if (foundIter != seedTracks.end()) {
         nCompatibleTracks++;
         ACTS_DEBUG("Compatible track found.");
@@ -399,9 +400,8 @@ auto AdaptiveMultiVertexFinder::removeCompatibleTracksFromSeedTracks(
          trkAtVtx.chi2Track < m_cfg.maxVertexChi2 &&
          !m_cfg.useFastCompatibility)) {
       // Find and remove track from seedTracks
-      auto foundSeedIter =
-          std::find_if(seedTracks.begin(), seedTracks.end(),
-                       [&trk](auto seedTrk) { return trk == seedTrk; });
+      auto foundSeedIter = std::ranges::find_if(
+          seedTracks, [&trk](auto seedTrk) { return trk == seedTrk; });
       if (foundSeedIter != seedTracks.end()) {
         seedTracks.erase(foundSeedIter);
         removedSeedTracks.push_back(trk);
@@ -425,9 +425,8 @@ bool AdaptiveMultiVertexFinder::removeTrackIfIncompatible(
     double compatibility = trkAtVtx.vertexCompatibility;
     if (compatibility > maxCompatibility) {
       // Try to find track in seed tracks
-      auto foundSeedIter =
-          std::find_if(seedTracks.begin(), seedTracks.end(),
-                       [&trk](auto seedTrk) { return trk == seedTrk; });
+      auto foundSeedIter = std::ranges::find_if(
+          seedTracks, [&trk](auto seedTrk) { return trk == seedTrk; });
       if (foundSeedIter != seedTracks.end()) {
         maxCompatibility = compatibility;
         maxCompSeedIt = foundSeedIter;

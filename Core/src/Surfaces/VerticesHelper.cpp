@@ -35,10 +35,9 @@ std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
   if (!phiRefs.empty()) {
     for (const auto& phiRef : phiRefs) {
       // Trying to find the right patch
-      auto match = std::find_if(
-          phiSegments.begin(), phiSegments.end(), [&](ActsScalar phiSeg) {
-            return std::abs(phiSeg - phiRef) < phiTolerance;
-          });
+      auto match = std::ranges::find_if(phiSegments, [&](ActsScalar phiSeg) {
+        return std::abs(phiSeg - phiRef) < phiTolerance;
+      });
       if (match == phiSegments.end()) {
         phiSegments.push_back(phiRef);
       }

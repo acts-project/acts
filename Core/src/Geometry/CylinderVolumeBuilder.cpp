@@ -274,19 +274,17 @@ Acts::CylinderVolumeBuilder::trackingVolume(
           double tolerance = m_cfg.ringTolerance;
           // Search for the rmin value  - and insert if necessary
           double rMin = discBounds->rMin();
-          auto innerSearch = std::find_if(
-              innerRadii.begin(), innerRadii.end(), [&](double reference) {
-                return std::abs(rMin - reference) < tolerance;
-              });
+          auto innerSearch = std::ranges::find_if(innerRadii, [&](double r) {
+            return std::abs(rMin - r) < tolerance;
+          });
           if (innerSearch == innerRadii.end()) {
             innerRadii.push_back(rMin);
           }
           // Search for the rmax value - and insert if necessary
           double rMax = discBounds->rMax();
-          auto outerSearch = std::find_if(
-              outerRadii.begin(), outerRadii.end(), [&](double reference) {
-                return std::abs(rMax - reference) < tolerance;
-              });
+          auto outerSearch = std::ranges::find_if(outerRadii, [&](double r) {
+            return std::abs(rMax - r) < tolerance;
+          });
           if (outerSearch == outerRadii.end()) {
             outerRadii.push_back(rMax);
           }
@@ -356,10 +354,9 @@ Acts::CylinderVolumeBuilder::trackingVolume(
             double test = elay->surfaceRepresentation().binningPositionValue(
                 gctx, BinningValue::binR);
             // Find the right bin
-            auto ringVolume = std::find_if(
-                volumeRminRmax.begin(), volumeRminRmax.end(),
-                [&](const auto& reference) {
-                  return (test > reference.first && test < reference.second);
+            auto ringVolume =
+                std::ranges::find_if(volumeRminRmax, [&](const auto& vrr) {
+                  return (test > vrr.first && test < vrr.second);
                 });
             if (ringVolume != volumeRminRmax.end()) {
               unsigned int ringBin =

@@ -340,8 +340,7 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
       [tVolume](
           const std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>&
               pair) { return (tVolume->geometryId() == pair.first); };
-  if (std::find_if(volumeHierarchy.begin(), volumeHierarchy.end(), sameId) !=
-      volumeHierarchy.end()) {
+  if (std::ranges::find_if(volumeHierarchy, sameId) != volumeHierarchy.end()) {
     // this volume was already visited
     return;
   }
