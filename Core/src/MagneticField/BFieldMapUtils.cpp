@@ -33,8 +33,8 @@ auto getMinMaxAndBinCount(std::vector<double>& xPos) {
   std::ranges::sort(xPos);
 
   // get the number of bins over unique values
-  const std::size_t xBinCount =
-      std::distance(xPos.begin(), std::ranges::unique(xPos).end());
+  auto it = std::unique(xPos.begin(), xPos.end());
+  const std::size_t xBinCount = std::distance(xPos.begin(), it);
 
   // get the minimum and maximum
   auto [xMin, xMax] = std::ranges::minmax(xPos);
