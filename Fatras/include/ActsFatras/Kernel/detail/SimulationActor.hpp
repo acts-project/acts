@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -87,7 +87,7 @@ struct SimulationActor {
   void operator()(propagator_state_t &state, stepper_t &stepper,
                   navigator_t &navigator, result_type &result,
                   const Acts::Logger &logger) const {
-    assert(generator and "The generator pointer must be valid");
+    assert(generator && "The generator pointer must be valid");
 
     // actors are called once more after the propagation terminated
     if (!result.isAlive) {
@@ -183,7 +183,7 @@ struct SimulationActor {
         Acts::MaterialSlab slab =
             surface.surfaceMaterial()->materialSlab(local);
         // again: interact only if there is valid material to interact with
-        if (slab) {
+        if (slab.isValid()) {
           // adapt material for non-zero incidence
           auto normal = surface.normal(state.geoContext, before.position(),
                                        before.direction());
@@ -262,8 +262,8 @@ struct SimulationActor {
 
   /// Run the interaction simulation for the given material.
   ///
-  /// Simulate all continous processes and at most one point-like process within
-  /// the material.
+  /// Simulate all continuous processes and at most one point-like process
+  /// within the material.
   void interact(const Acts::MaterialSlab &slab, result_type &result) const {
     // run the continuous processes over a fraction of the material. returns
     // true on break condition (same as the underlying physics lists).
@@ -283,7 +283,7 @@ struct SimulationActor {
       // the SimulationActor is in charge of keeping track of the material.
       // since the accumulated material is stored in the particle it could (but
       // should not) be modified by a physics process. to avoid issues, the
-      // material is updated only after process simulation has occured. this
+      // material is updated only after process simulation has occurred. this
       // intentionally overwrites any material updates made by the process.
       result.particle.setMaterialPassed(x0, l0);
       return retval;
@@ -306,7 +306,7 @@ struct SimulationActor {
     //
     // fraction < 0:
     //   this is an error case where the point-like interaction should have
-    //   occured before reaching the material. not sure how this could happen,
+    //   occurred before reaching the material. not sure how this could happen,
     //   but in such a case the point-like interaction happens immediately.
     // 1 < fraction:
     //   the next point-like interaction does not occur within the current

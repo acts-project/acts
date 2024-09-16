@@ -250,8 +250,13 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
   SimParticleContainer particlesFinal;
   SimParticleContainer particlesGenerator;
   for (const auto& inParticle : mcParticleCollection) {
-    const std::size_t index =
-        edm4hepParticleMap.find(inParticle.getObjectID().index)->second;
+    auto particleIt = edm4hepParticleMap.find(inParticle.getObjectID().index);
+    if (particleIt == edm4hepParticleMap.end()) {
+      ACTS_ERROR("Particle " << inParticle.getObjectID().index
+                             << " not found in particle map");
+      continue;
+    }
+    const std::size_t index = particleIt->second;
     const auto& particleInitial = unordered.at(index);
     if (!inParticle.isCreatedInSimulation()) {
       particlesGenerator.insert(particleInitial);
@@ -348,8 +353,14 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
             if (it == m_surfaceMap.end()) {
               ACTS_ERROR("Unable to find surface for detElement "
                          << detElement.name() << " with cellId " << cellId);
+              throw std::runtime_error("Unable to find surface for detElement");
             }
             const auto* surface = it->second;
+            if (surface == nullptr) {
+              ACTS_ERROR("Unable to find surface for detElement "
+                         << detElement.name() << " with cellId " << cellId);
+              throw std::runtime_error("Unable to find surface for detElement");
+            }
             ACTS_VERBOSE("   -> surface: " << surface->geometryId());
             return surface->geometryId();
           });
@@ -385,10 +396,9 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
         }
       }
 
-      std::sort(hitIndices.begin(), hitIndices.end(),
-                [&](std::size_t a, std::size_t b) {
-                  return simHits.nth(a)->time() < simHits.nth(b)->time();
-                });
+      std::ranges::sort(hitIndices, {}, [&simHits](std::size_t h) {
+        return simHits.nth(h)->time();
+      });
 
       for (std::size_t i = 0; i < hitIndices.size(); ++i) {
         auto& hit = *simHits.nth(hitIndices[i]);

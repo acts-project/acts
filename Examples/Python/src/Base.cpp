@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -40,6 +41,12 @@ void addContext(Context& ctx) {
       .def(py::init<>());
   py::class_<Acts::CalibrationContext>(m, "CalibrationContext")
       .def(py::init<>());
+}
+
+void addAny(Context& ctx) {
+  auto& m = ctx.get("main");
+
+  py::class_<Acts::AnyBase<512>>(m, "AnyBase512").def(py::init<>());
 }
 
 void addUnits(Context& ctx) {
@@ -290,9 +297,12 @@ void addAlgebra(Acts::Python::Context& ctx) {
             Acts::Vector3(translation[0], translation[1], translation[2]));
         return t;
       }))
-      .def("getTranslation", [](const Acts::Transform3& self) {
-        return Vector3(self.translation());
-      });
+      .def("getTranslation",
+           [](const Acts::Transform3& self) {
+             return Vector3(self.translation());
+           })
+      .def_static("Identity", &Acts::Transform3::Identity);
+  ;
 }
 
 void addBinning(Context& ctx) {

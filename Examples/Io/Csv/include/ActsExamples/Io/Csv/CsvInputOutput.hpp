@@ -35,6 +35,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+
 #include <array>
 #include <cassert>
 #include <fstream>
@@ -210,12 +213,10 @@ class DsvWriter {
   std::ofstream m_file;
   std::size_t m_num_columns;
 
-  // enable_if to prevent this overload to be used for std::vector<T> as well
   template <typename T>
-  static std::enable_if_t<std::is_arithmetic<std::decay_t<T>>::value ||
-                              std::is_convertible<T, std::string>::value,
-                          unsigned>
-  write(T&& x, std::ostream& os);
+  unsigned write(T&& x, std::ostream& os)
+    requires(Acts::Concepts::arithmetic<std::decay_t<T>> ||
+             std::convertible_to<T, std::string>);
   template <typename T, typename Allocator>
   static unsigned write(const std::vector<T, Allocator>& xs, std::ostream& os);
 };
@@ -445,10 +446,10 @@ inline void DsvWriter<Delimiter>::append(Arg0&& arg0, Args&&... args) {
 
 template <char Delimiter>
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<std::decay_t<T>>::value ||
-                            std::is_convertible<T, std::string>::value,
-                        unsigned>
-DsvWriter<Delimiter>::write(T&& x, std::ostream& os) {
+inline unsigned DsvWriter<Delimiter>::write(T&& x, std::ostream& os)
+  requires(Acts::Concepts::arithmetic<std::decay_t<T>> ||
+           std::convertible_to<T, std::string>)
+{
   os << x;
   return 1u;
 }
@@ -590,13 +591,11 @@ inline void NamedTupleDsvReader<Delimiter, NamedTuple>::parse_header(
   // check that all non-optional columns are available
   for (const auto& name : names) {
     // no need to for availability if the column is optional
-    auto o = std::find(optional_columns.begin(), optional_columns.end(), name);
-    if (o != optional_columns.end()) {
+    if (Acts::rangeContainsValue(optional_columns, name)) {
       continue;
     }
     // missing, non-optional column mean we can not continue
-    auto c = std::find(m_columns.begin(), m_columns.end(), name);
-    if (c == m_columns.end()) {
+    if (!Acts::rangeContainsValue(m_columns, name)) {
       throw std::runtime_error("Missing header column '" + name + "'");
     }
   }

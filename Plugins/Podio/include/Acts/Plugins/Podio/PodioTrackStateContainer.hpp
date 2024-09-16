@@ -19,10 +19,14 @@
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 #include "ActsPodioEdm/BoundParametersCollection.h"
 #include "ActsPodioEdm/JacobianCollection.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
 #include "ActsPodioEdm/TrackStateInfo.h"
+#pragma GCC diagnostic pop
 
 #include <any>
 #include <memory>
@@ -32,8 +36,6 @@
 
 #include <podio/CollectionBase.h>
 #include <podio/Frame.h>
-
-#include "podio/UserDataCollection.h"
 
 namespace Acts {
 
@@ -222,20 +224,17 @@ class ConstPodioTrackStateContainer final
     std::string paramsKey = "trackStateParameters" + s;
     std::string jacsKey = "trackStateJacobians" + s;
 
-    if (std::find(available.begin(), available.end(), trackStatesKey) ==
-        available.end()) {
+    if (!rangeContainsValue(available, trackStatesKey)) {
       throw std::runtime_error{"Track state collection '" + trackStatesKey +
                                "' not found in frame"};
     }
 
-    if (std::find(available.begin(), available.end(), paramsKey) ==
-        available.end()) {
+    if (!rangeContainsValue(available, paramsKey)) {
       throw std::runtime_error{"Track state parameters collection '" +
                                paramsKey + "' not found in frame"};
     }
 
-    if (std::find(available.begin(), available.end(), jacsKey) ==
-        available.end()) {
+    if (!rangeContainsValue(available, jacsKey)) {
       throw std::runtime_error{"Track state jacobian collection '" + jacsKey +
                                "' not found in frame"};
     }

@@ -36,12 +36,30 @@ using namespace pybind11::literals;
 
 namespace Acts::Python {
 
+/// @brief Get the value of a field, throwing an exception if the result is
+/// invalid.
+Acts::Vector3 getField(Acts::MagneticFieldProvider& self,
+                       const Acts::Vector3& position,
+                       Acts::MagneticFieldProvider::Cache& cache) {
+  if (Result<Vector3> res = self.getField(position, cache); !res.ok()) {
+    std::stringstream ss;
+
+    ss << "Field lookup failure with error: \"" << res.error() << "\"";
+
+    throw std::runtime_error{ss.str()};
+  } else {
+    return *res;
+  }
+}
+
 void addMagneticField(Context& ctx) {
   auto [m, mex, prop] = ctx.get("main", "examples", "propagation");
 
   py::class_<Acts::MagneticFieldProvider,
              std::shared_ptr<Acts::MagneticFieldProvider>>(
-      m, "MagneticFieldProvider");
+      m, "MagneticFieldProvider")
+      .def("getField", &getField)
+      .def("makeCache", &Acts::MagneticFieldProvider::makeCache);
 
   py::class_<Acts::InterpolatedMagneticField,
              std::shared_ptr<Acts::InterpolatedMagneticField>>(

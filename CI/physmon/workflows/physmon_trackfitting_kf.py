@@ -28,7 +28,6 @@ with tempfile.TemporaryDirectory() as temp:
     )
 
     s.run()
-    del s
 
     perf_file = tp / "performance_kf.root"
     assert perf_file.exists(), "Performance file not found"

@@ -31,8 +31,7 @@ namespace Acts {
 
 // constructor for arguments
 TrackingVolume::TrackingVolume(
-    const Transform3& transform,
-    std::shared_ptr<const VolumeBounds> volumeBounds,
+    const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
@@ -49,14 +48,13 @@ TrackingVolume::TrackingVolume(
   connectDenseBoundarySurfaces(denseVolumeVector);
 }
 
-TrackingVolume::TrackingVolume(const Volume& volume,
-                               const std::string& volumeName)
+TrackingVolume::TrackingVolume(Volume& volume, const std::string& volumeName)
     : TrackingVolume(volume.transform(), volume.volumeBoundsPtr(), nullptr,
                      nullptr, nullptr, MutableTrackingVolumeVector{},
                      volumeName) {}
 
 TrackingVolume::TrackingVolume(const Transform3& transform,
-                               std::shared_ptr<const VolumeBounds> volbounds,
+                               std::shared_ptr<VolumeBounds> volbounds,
                                const std::string& volumeName)
     : TrackingVolume(transform, std::move(volbounds), nullptr, nullptr, nullptr,
                      {}, volumeName) {}
@@ -64,11 +62,18 @@ TrackingVolume::TrackingVolume(const Transform3& transform,
 TrackingVolume::~TrackingVolume() = default;
 
 const TrackingVolume* TrackingVolume::lowestTrackingVolume(
-    const GeometryContext& /*gctx*/, const Vector3& position,
+    const GeometryContext& gctx, const Vector3& position,
     const double tol) const {
+  if (!inside(position, tol)) {
+    return nullptr;
+  }
+
   // confined static volumes - highest hierarchy
   if (m_confinedVolumes) {
-    return (m_confinedVolumes->object(position).get());
+    const TrackingVolume* volume = m_confinedVolumes->object(position).get();
+    if (volume != nullptr) {
+      return volume->lowestTrackingVolume(gctx, position, tol);
+    }
   }
 
   // search for dense volumes
@@ -445,24 +450,6 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
         continue;
       }
 
-      if (options.forceIntersectBoundaries) {
-        const bool coCriterion =
-            std::abs(intersection.pathLength()) < std::abs(nearLimit);
-        ACTS_VERBOSE("Forcing intersection with surface "
-                     << boundary->surfaceRepresentation().geometryId());
-        if (coCriterion) {
-          ACTS_VERBOSE("Intersection forced successfully ");
-          ACTS_VERBOSE("- intersection path length "
-                       << std::abs(intersection.pathLength())
-                       << " < overstep limit " << std::abs(nearLimit));
-          return BoundaryIntersection(intersection, boundary);
-        }
-        ACTS_VERBOSE("Can't force intersection: ");
-        ACTS_VERBOSE("- intersection path length "
-                     << std::abs(intersection.pathLength())
-                     << " > overstep limit " << std::abs(nearLimit));
-      }
-
       ACTS_VERBOSE("Check intersection with surface "
                    << boundary->surfaceRepresentation().geometryId());
       if (detail::checkPathLength(intersection.pathLength(), nearLimit,
@@ -579,6 +566,10 @@ TrackingVolume::compatibleLayers(
 
 const std::string& TrackingVolume::volumeName() const {
   return m_name;
+}
+
+void TrackingVolume::setVolumeName(const std::string& volumeName) {
+  m_name = volumeName;
 }
 
 const IVolumeMaterial* TrackingVolume::volumeMaterial() const {

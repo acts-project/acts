@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
@@ -30,8 +31,9 @@ struct Helper {
   ActsFatras::Channelizer channelizer;
 
   Helper() {
-    surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-        Acts::Vector3::Zero(), Acts::Vector3{0.0, 0.0, 1.0});
+    surface = Acts::CurvilinearSurface(Acts::Vector3::Zero(),
+                                       Acts::Vector3{0.0, 0.0, 1.0})
+                  .planeSurface();
 
     float pitchSize = 50_um;
     float min = -200_um;

@@ -9,6 +9,7 @@
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -159,8 +160,8 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::addVtxToFit(
             }
           }
         }  // End for loop over range of associated vertices
-      }    // End loop over trackLinks
-    }      // End loop over lastIterAddedVertices
+      }  // End loop over trackLinks
+    }  // End loop over lastIterAddedVertices
 
     lastIterAddedVertices = currentIterAddedVertices;
     currentIterAddedVertices.clear();
@@ -189,7 +190,7 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::addVtxToFit(
 
 bool Acts::AdaptiveMultiVertexFitter::isAlreadyInList(
     Vertex* vtx, const std::vector<Vertex*>& vertices) const {
-  return std::find(vertices.begin(), vertices.end(), vtx) != vertices.end();
+  return rangeContainsValue(vertices, vtx);
 }
 
 Acts::Result<void> Acts::AdaptiveMultiVertexFitter::prepareVertexForFit(

@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 
@@ -91,13 +92,12 @@ struct GaussianSumFitter {
 
   /// @brief The fit function for the Direct navigator
   template <typename source_link_it_t, typename start_parameters_t,
-            typename track_container_t, template <typename> class holder_t>
+            TrackContainerFrontend track_container_t>
   auto fit(source_link_it_t begin, source_link_it_t end,
            const start_parameters_t& sParameters,
            const GsfOptions<traj_t>& options,
            const std::vector<const Surface*>& sSequence,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const {
+           track_container_t& trackContainer) const {
     // Check if we have the correct navigator
     static_assert(
         std::is_same_v<DirectNavigator, typename propagator_t::Navigator>);
@@ -148,12 +148,11 @@ struct GaussianSumFitter {
 
   /// @brief The fit function for the standard navigator
   template <typename source_link_it_t, typename start_parameters_t,
-            typename track_container_t, template <typename> class holder_t>
+            TrackContainerFrontend track_container_t>
   auto fit(source_link_it_t begin, source_link_it_t end,
            const start_parameters_t& sParameters,
            const GsfOptions<traj_t>& options,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const {
+           track_container_t& trackContainer) const {
     // Check if we have the correct navigator
     static_assert(std::is_same_v<Navigator, typename propagator_t::Navigator>);
 
@@ -200,16 +199,13 @@ struct GaussianSumFitter {
   /// first measurementSurface
   template <typename source_link_it_t, typename start_parameters_t,
             typename fwd_prop_initializer_t, typename bwd_prop_initializer_t,
-            typename track_container_t, template <typename> class holder_t>
-  Acts::Result<
-      typename TrackContainer<track_container_t, traj_t, holder_t>::TrackProxy>
-  fit_impl(source_link_it_t begin, source_link_it_t end,
-           const start_parameters_t& sParameters,
-           const GsfOptions<traj_t>& options,
-           const fwd_prop_initializer_t& fwdPropInitializer,
-           const bwd_prop_initializer_t& bwdPropInitializer,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const {
+            TrackContainerFrontend track_container_t>
+  Acts::Result<typename track_container_t::TrackProxy> fit_impl(
+      source_link_it_t begin, source_link_it_t end,
+      const start_parameters_t& sParameters, const GsfOptions<traj_t>& options,
+      const fwd_prop_initializer_t& fwdPropInitializer,
+      const bwd_prop_initializer_t& bwdPropInitializer,
+      track_container_t& trackContainer) const {
     // return or abort utility
     auto return_error_or_abort = [&](auto error) {
       if (options.abortOnError) {
@@ -349,8 +345,6 @@ struct GaussianSumFitter {
                                   ? *options.referenceSurface
                                   : sParameters.referenceSurface();
 
-      using PM = TrackStatePropMask;
-
       const auto& params = *fwdGsfResult.lastMeasurementState;
       auto state =
           m_propagator.template makeState<MultiComponentBoundTrackParameters,
@@ -439,8 +433,8 @@ struct GaussianSumFitter {
 
     for (auto state : fwdGsfResult.fittedStates->reverseTrackStateRange(
              fwdGsfResult.currentTip)) {
-      const bool found = std::find(foundBwd.begin(), foundBwd.end(),
-                                   &state.referenceSurface()) != foundBwd.end();
+      const bool found =
+          rangeContainsValue(foundBwd, &state.referenceSurface());
       if (!found && state.typeFlags().test(MeasurementFlag)) {
         state.typeFlags().set(OutlierFlag);
         state.typeFlags().reset(MeasurementFlag);
