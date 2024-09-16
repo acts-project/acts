@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
         line.intersect(tgContext, {0., 0., 0.}, direction.normalized(),
                        BoundaryTolerance::Infinite())
             .closest();
-    BOOST_CHECK(sfIntersection);
+    BOOST_CHECK(sfIntersection.isValid());
     Vector3 expectedIntersection(0, 1., 2.);
     CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersection,
                     1e-6);  // need more tests..
@@ -357,4 +357,5 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace Acts::Test

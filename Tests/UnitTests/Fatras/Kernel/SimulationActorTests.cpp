@@ -16,6 +16,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -203,8 +204,9 @@ struct Fixture {
 
 // make a surface without material.
 std::shared_ptr<Acts::Surface> makeEmptySurface() {
-  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Vector3(1, 2, 3), Acts::Vector3(1, 0, 0));
+  auto surface =
+      Acts::CurvilinearSurface(Acts::Vector3(1, 2, 3), Acts::Vector3(1, 0, 0))
+          .planeSurface();
   return surface;
 }
 

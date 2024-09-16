@@ -129,16 +129,16 @@ def main():
     # Read the geometry model from the database
     gmTree = acts.geomodel.readFromDb(args.input)
 
-    gmFactoryConfig = gm.GeoModelDetectorSurfaceFactory.Config()
+    gmFactoryConfig = gm.GeoModelDetectorObjectFactory.Config()
     gmFactoryConfig.materialList = args.material_list
     gmFactoryConfig.nameList = args.name_list
     gmFactoryConfig.convertSubVolumes = args.convert_subvols
-    gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logLevel)
+    gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
     # The options
-    gmFactoryOptions = gm.GeoModelDetectorSurfaceFactory.Options()
+    gmFactoryOptions = gm.GeoModelDetectorObjectFactory.Options()
     gmFactoryOptions.queries = args.queries
     # The Cache & construct call
-    gmFactoryCache = gm.GeoModelDetectorSurfaceFactory.Cache()
+    gmFactoryCache = gm.GeoModelDetectorObjectFactory.Cache()
     gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
 
     # All surfaces from GeoModel
@@ -236,7 +236,7 @@ def main():
                 [[ivol, volumeOptions] for ivol in range(detector.numberVolumes())],
                 [
                     ["xy", ["sensitives", "portals"], xyRange],
-                    ["zr", ["", "", "materials"], zrRange],
+                    ["zr", ["sensitives", "portals", "materials"], zrRange],
                 ],
                 args.output + "_detector",
             )

@@ -24,6 +24,7 @@
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <iterator>
 #include <memory>
@@ -441,7 +442,7 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
     indices.push_back(ts.index());
   }
 
-  std::reverse(indices.begin(), indices.end());
+  std::ranges::reverse(indices);
 
   std::vector<IndexType> act;
   for (auto ts : t.trackStates()) {

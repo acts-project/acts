@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -126,7 +127,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
     // Fill the source links via their indices from the container
     for (auto hitIndex : protoTrack) {
-      const auto& measurement = measurements.at(hitIndex);
+      ConstVariableBoundMeasurementProxy measurement =
+          measurements.getMeasurement(hitIndex);
       trackSourceLinks.push_back(measurement.sourceLink());
     }
 

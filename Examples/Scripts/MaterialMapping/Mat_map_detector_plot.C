@@ -8,6 +8,8 @@
 
 #include <TROOT.h>
 
+#include "Acts/Utilities/Helpers.hpp"
+
 #include "materialPlotHelper.cpp"
 
 #include <fstream>
@@ -153,7 +155,7 @@ void Fill(std::vector<TH2F*>& detector_hist, const std::string& input_file, std:
       }
 
       // Check if the volume/surface is part of the selected ones
-      if(std::find(detectors.begin(), detectors.end(), ID.volume()) != detectors.end()) {
+      if(rangeContainsValue(detectors, ID.volume())) {
         matX0 += mat_step_length->at(j) / mat_X0->at(j);
         matL0 += mat_step_length->at(j) / mat_L0->at(j);
       }

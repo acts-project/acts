@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -37,7 +38,7 @@ class TrackSelector {
 
     boost::container::small_vector<CounterElement, 4> counters;
 
-    template <typename track_proxy_t>
+    template <TrackProxyConcept track_proxy_t>
     bool isValidTrack(const track_proxy_t& track) const;
 
     void addCounter(const std::vector<GeometryIdentifier>& identifiers,
@@ -227,7 +228,7 @@ class TrackSelector {
   /// @tparam track_proxy_t is the type of the track proxy
   /// @param track is the track proxy
   /// @return true if the track is valid
-  template <typename track_proxy_t>
+  template <TrackProxyConcept track_proxy_t>
   bool isValidTrack(const track_proxy_t& track) const;
 
   /// Get readonly access to the config parameters
@@ -389,7 +390,7 @@ void TrackSelector::selectTracks(const input_tracks_t& inputTracks,
   }
 }
 
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t>
 bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
   auto checkMin = [](auto x, auto min) { return min <= x; };
   auto checkMax = [](auto x, auto max) { return x <= max; };
@@ -478,7 +479,7 @@ inline TrackSelector::TrackSelector(
 inline TrackSelector::TrackSelector(const Config& config)
     : TrackSelector{EtaBinnedConfig{config}} {}
 
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t>
 bool TrackSelector::MeasurementCounter::isValidTrack(
     const track_proxy_t& track) const {
   // No hit cuts, accept everything

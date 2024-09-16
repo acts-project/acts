@@ -20,6 +20,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
+#include <algorithm>
 #include <sstream>
 #include <string>
 
@@ -889,11 +890,10 @@ class Navigator {
               state.geoContext, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
               navOpts, logger());
-      std::sort(state.navigation.navBoundaries.begin(),
-                state.navigation.navBoundaries.end(),
-                [](const auto& a, const auto& b) {
-                  return SurfaceIntersection::pathLengthOrder(a.first, b.first);
-                });
+      std::ranges::sort(
+          state.navigation.navBoundaries, [](const auto& a, const auto& b) {
+            return SurfaceIntersection::pathLengthOrder(a.first, b.first);
+          });
 
       // Print boundary information
       if (logger().doPrint(Logging::VERBOSE)) {
@@ -1011,9 +1011,8 @@ class Navigator {
     state.navigation.navSurfaces = currentLayer->compatibleSurfaces(
         state.geoContext, stepper.position(state.stepping),
         state.options.direction * stepper.direction(state.stepping), navOpts);
-    std::sort(state.navigation.navSurfaces.begin(),
-              state.navigation.navSurfaces.end(),
-              SurfaceIntersection::pathLengthOrder);
+    std::ranges::sort(state.navigation.navSurfaces,
+                      SurfaceIntersection::pathLengthOrder);
 
     // Print surface information
     if (logger().doPrint(Logging::VERBOSE)) {
@@ -1079,11 +1078,10 @@ class Navigator {
             state.geoContext, stepper.position(state.stepping),
             state.options.direction * stepper.direction(state.stepping),
             navOpts);
-    std::sort(state.navigation.navLayers.begin(),
-              state.navigation.navLayers.end(),
-              [](const auto& a, const auto& b) {
-                return SurfaceIntersection::pathLengthOrder(a.first, b.first);
-              });
+    std::ranges::sort(
+        state.navigation.navLayers, [](const auto& a, const auto& b) {
+          return SurfaceIntersection::pathLengthOrder(a.first, b.first);
+        });
 
     // Print layer information
     if (logger().doPrint(Logging::VERBOSE)) {

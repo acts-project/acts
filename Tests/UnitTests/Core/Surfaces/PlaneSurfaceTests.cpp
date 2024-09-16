@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
                             .closest();
   Intersection3D expectedIntersect{Vector3{0, 1, 2}, 4.,
                                    Intersection3D::Status::reachable};
-  BOOST_CHECK(sfIntersection);
+  BOOST_CHECK(sfIntersection.isValid());
   BOOST_CHECK_EQUAL(sfIntersection.position(), expectedIntersect.position());
   BOOST_CHECK_EQUAL(sfIntersection.pathLength(),
                     expectedIntersect.pathLength());
