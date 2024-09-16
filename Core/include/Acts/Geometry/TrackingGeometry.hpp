@@ -87,19 +87,6 @@ class TrackingGeometry {
   const Layer* associatedLayer(const GeometryContext& gctx,
                                const Vector3& gp) const;
 
-  /// Register the beam tube
-  ///
-  /// @param beam is the beam line surface
-  void registerBeamTube(std::shared_ptr<const PerigeeSurface> beam);
-
-  /// @brief surface representing the beam pipe
-  ///
-  /// @note The ownership is not passed, e.g. do not delete the pointer
-  ///
-  /// @return raw pointer to surface representing the beam pipe
-  ///         (could be a null pointer)
-  const Surface* getBeamline() const;
-
   /// @brief Visit all reachable surfaces
   ///
   /// @tparam visitor_t Type of the callable visitor
@@ -166,8 +153,6 @@ class TrackingGeometry {
  private:
   // the known world
   TrackingVolumePtr m_world;
-  // beam line
-  std::shared_ptr<const PerigeeSurface> m_beam;
   // lookup containers
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById;
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById;
