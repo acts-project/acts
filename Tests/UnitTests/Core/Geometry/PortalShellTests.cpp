@@ -21,6 +21,8 @@
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 
+#include <stdexcept>
+
 using namespace Acts::UnitLiterals;
 
 namespace Acts::Test {
@@ -375,6 +377,12 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
     BOOST_CHECK_EQUAL(stack.portal(PositiveDisc), shell2.portal(PositiveDisc));
     BOOST_CHECK_EQUAL(stack.portal(NegativeDisc), shell1.portal(NegativeDisc));
 
+    BOOST_CHECK_EQUAL(stack.portal(NegativePhiPlane), nullptr);
+    BOOST_CHECK_THROW(stack.portalPtr(NegativePhiPlane), std::invalid_argument);
+
+    BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
+    BOOST_CHECK_THROW(stack.portalPtr(PositivePhiPlane), std::invalid_argument);
+
     // Disc portals have been fused
     BOOST_CHECK_EQUAL(shell1.portal(PositiveDisc), shell2.portal(NegativeDisc));
 
@@ -419,6 +427,12 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
 
     BOOST_CHECK_EQUAL(stack.portal(PositiveDisc), shell2.portal(PositiveDisc));
     BOOST_CHECK_EQUAL(stack.portal(NegativeDisc), shell1.portal(NegativeDisc));
+
+    BOOST_CHECK_EQUAL(stack.portal(NegativePhiPlane), nullptr);
+    BOOST_CHECK_THROW(stack.portalPtr(NegativePhiPlane), std::invalid_argument);
+
+    BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
+    BOOST_CHECK_THROW(stack.portalPtr(PositivePhiPlane), std::invalid_argument);
 
     shell1 = SingleCylinderPortalShell{vol1};
     shell2 = SingleCylinderPortalShell{vol2};
@@ -466,6 +480,12 @@ BOOST_AUTO_TEST_CASE(RDirection) {
     BOOST_CHECK_EQUAL(stack.portal(OuterCylinder),
                       shell2.portal(OuterCylinder));
 
+    BOOST_CHECK_EQUAL(stack.portal(NegativePhiPlane), nullptr);
+    BOOST_CHECK_THROW(stack.portalPtr(NegativePhiPlane), std::invalid_argument);
+
+    BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
+    BOOST_CHECK_THROW(stack.portalPtr(PositivePhiPlane), std::invalid_argument);
+
     shell1 = SingleCylinderPortalShell{vol1};
     shell2 = SingleCylinderPortalShell{vol2};
 
@@ -508,6 +528,12 @@ BOOST_AUTO_TEST_CASE(RDirection) {
     BOOST_CHECK_EQUAL(stack.portal(InnerCylinder), nullptr);
     BOOST_CHECK_EQUAL(stack.portal(OuterCylinder),
                       shell2.portal(OuterCylinder));
+
+    BOOST_CHECK_EQUAL(stack.portal(NegativePhiPlane), nullptr);
+    BOOST_CHECK_THROW(stack.portalPtr(NegativePhiPlane), std::invalid_argument);
+
+    BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
+    BOOST_CHECK_THROW(stack.portalPtr(PositivePhiPlane), std::invalid_argument);
 
     shell1 = SingleCylinderPortalShell{vol1};
     shell2 = SingleCylinderPortalShell{vol2};

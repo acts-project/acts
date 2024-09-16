@@ -187,7 +187,36 @@ std::size_t CylinderStackPortalShell::size() const {
 }
 
 Portal* CylinderStackPortalShell::portal(Face face) {
-  return portalPtr(face).get();
+  // This is separate from `portalPtr`, because it returns nullptr for unused
+  // cylinder faces
+  if (m_direction == BinningValue::binR) {
+    switch (face) {
+      case NegativeDisc:
+        return m_shells.front()->portal(NegativeDisc);
+      case PositiveDisc:
+        return m_shells.front()->portal(PositiveDisc);
+      case OuterCylinder:
+        return m_shells.back()->portal(OuterCylinder);
+      case InnerCylinder:
+        return m_shells.front()->portal(InnerCylinder);
+      default:
+        return nullptr;
+    }
+
+  } else {
+    switch (face) {
+      case NegativeDisc:
+        return m_shells.front()->portal(NegativeDisc);
+      case PositiveDisc:
+        return m_shells.back()->portal(PositiveDisc);
+      case OuterCylinder:
+        [[fallthrough]];
+      case InnerCylinder:
+        return m_shells.front()->portal(face);
+      default:
+        return nullptr;
+    }
+  }
 }
 
 const std::shared_ptr<Portal>& CylinderStackPortalShell::portalPtr(Face face) {
