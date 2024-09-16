@@ -39,7 +39,7 @@ auto getMinMaxAndBinCount(std::vector<double>& xPos) {
 
   // calculate maxima (add one last bin, because bin value always corresponds to
   // left boundary)
-  const double stepX = (xMax - xMin) / (nBinsX - 1);
+  const double stepX = (xMax - xMin) / static_cast<double>(nBinsX - 1);
   xMax += stepX;
 
   // Return all values as a tuple
