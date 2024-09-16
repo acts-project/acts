@@ -102,8 +102,8 @@ struct GeometryView3D {
       IVisualization3D& helper, const Experimental::Portal& portal,
       const GeometryContext& gctx,
       const Transform3& transform = Transform3::Identity(),
-      const ViewConfig& connected = ViewConfig{.color = {0, 255, 0}},
-      const ViewConfig& disconnected = ViewConfig{.color = {255, 0, 0}});
+      const ViewConfig& connected = {.color = {0, 255, 0}},
+      const ViewConfig& disconnected = {.color = {255, 0, 0}});
 
   /// Helper method to draw DetectorVolume objects
   ///
@@ -119,8 +119,8 @@ struct GeometryView3D {
       const Acts::Experimental::DetectorVolume& volume,
       const GeometryContext& gctx,
       const Transform3& transform = Transform3::Identity(),
-      const ViewConfig& connected = ViewConfig{.color = {0, 255, 0}},
-      const ViewConfig& unconnected = ViewConfig{.color = {255, 0, 0}},
+      const ViewConfig& connected = {.color = {0, 255, 0}},
+      const ViewConfig& unconnected = {.color = {255, 0, 0}},
       const ViewConfig& viewConfig = s_viewSensitive);
 
   /// Helper method to draw Layer objects
