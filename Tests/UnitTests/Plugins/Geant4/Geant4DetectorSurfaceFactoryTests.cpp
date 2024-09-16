@@ -161,17 +161,14 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
   Acts::ObjVisualization3D obj;
   Acts::Vector3 origin(0, 0, 0);
   Acts::GeometryView3D::drawArrowForward(obj, origin, Acts::Vector3(100, 0, 0),
-                                         1000, 10,
-                                         Acts::ViewConfig({255, 0, 0}));
+                                         1000, 10, {.color = {255, 0, 0}});
   Acts::GeometryView3D::drawArrowForward(obj, origin, Acts::Vector3(0, 100, 0),
-                                         1000, 10,
-                                         Acts::ViewConfig({0, 255, 0}));
+                                         1000, 10, {.color = {0, 255, 0}});
   Acts::GeometryView3D::drawArrowForward(obj, origin, Acts::Vector3(0, 0, 100),
-                                         1000, 10,
-                                         Acts::ViewConfig({0, 0, 255}));
-  Acts::GeometryView3D::drawArrowForward(
-      obj, surface->center(gctx), surface->center(gctx) + 100 * normal, 1000,
-      10, Acts::ViewConfig({0, 255, 0}));
+                                         1000, 10, {.color = {0, 0, 255}});
+  Acts::GeometryView3D::drawArrowForward(obj, surface->center(gctx),
+                                         surface->center(gctx) + 100 * normal,
+                                         1000, 10, {.color = {0, 255, 0}});
   auto surfaces = cache.sensitiveSurfaces;
   for (const auto& [k, val] : Acts::enumerate(cache.sensitiveSurfaces)) {
     const auto& [el, surf] = val;
