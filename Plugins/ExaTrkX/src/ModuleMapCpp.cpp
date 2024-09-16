@@ -13,11 +13,10 @@
 #include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
 
 #include <TTree_hits>
+#include <chrono>
 #include <graph_creator>
 #include <map>
 #include <module_map_triplet>
-
-#include <chrono>
 
 using namespace torch::indexing;
 
@@ -74,8 +73,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   */
   const auto numFeatures = inputValues.size() / numNodes;
 
-
-	const auto t0 = std::chrono::high_resolution_clock::now();
+  const auto t0 = std::chrono::high_resolution_clock::now();
   hits<float> hitsCollection(false, false);
 
   ACTS_DEBUG("Start collecting hits...");
@@ -111,9 +109,10 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
 
   ACTS_DEBUG("Hits tree has " << hitsTree.size()
                               << " hits, now build graph...");
-	const auto t1 = std::chrono::high_resolution_clock::now();
-	auto graph = m_graphCreator->build(hitsTree);
-	const auto t2 = std::chrono::high_resolution_clock::now();
+  const auto t1 = std::chrono::high_resolution_clock::now();
+  auto graph =
+      m_graphCreator->build(hitsTree, logger().level() <= Acts::Logging::DEBUG);
+  const auto t2 = std::chrono::high_resolution_clock::now();
   const auto numEdges = boost::num_edges(graph.graph_impl());
 
   if (numEdges == 0) {
@@ -183,7 +182,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     }
   }
 
-	const auto t3 = std::chrono::high_resolution_clock::now();
+  const auto t3 = std::chrono::high_resolution_clock::now();
   // Build final tensors
   ACTS_DEBUG("Construct final tensors...");
   assert(inputValues.size() % numFeatures == 0);
@@ -209,13 +208,16 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   ACTS_VERBOSE("Edge index slice:\n"
                << edgeIndex.index({Slice(0, 2), Slice(0, 9)}));
 
-	const auto t4 = std::chrono::high_resolution_clock::now();
-  ACTS_INFO("Preparation: " << std::chrono::duration<double>(t1 - t0).count());
-  ACTS_INFO("Build MM: " << std::chrono::duration<double>(t2 - t1).count());
-  ACTS_INFO("Edge features: " << std::chrono::duration<double>(t3 - t2).count());
-  ACTS_INFO("Tensors: " << std::chrono::duration<double>(t4 - t3).count());
+  const auto t4 = std::chrono::high_resolution_clock::now();
+  auto count_ms = [](auto t0, auto t1) {
+    return std::chrono::duration<double, std::milli>(t1 - t0).count();
+  };
+  ACTS_DEBUG("Preparation: " << count_ms(t0, t1) << " ms");
+  ACTS_DEBUG("Build MM: " << count_ms(t1, t2) << " ms");
+  ACTS_DEBUG("Edge features: " << count_ms(t2, t3) << " ms");
+  ACTS_DEBUG("Tensors: " << count_ms(t3, t4) << " ms");
 
-	return std::make_tuple(std::move(nodeFeatures), std::move(edgeIndex),
+  return std::make_tuple(std::move(nodeFeatures), std::move(edgeIndex),
                          std::move(edgeFeatures));
 }
 

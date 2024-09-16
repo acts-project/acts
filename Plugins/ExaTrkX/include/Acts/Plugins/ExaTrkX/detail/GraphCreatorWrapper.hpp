@@ -24,7 +24,7 @@ namespace Acts::detail {
 class GraphCreatorWrapperBase {
  public:
   virtual ~GraphCreatorWrapperBase() {}
-  virtual graph<float> build(TTree_hits<float> &hits) = 0;
+  virtual graph<float> build(TTree_hits<float> &hits, bool print = false) = 0;
 };
 
 class GraphCreatorWrapperCpu : public GraphCreatorWrapperBase {
@@ -32,7 +32,8 @@ class GraphCreatorWrapperCpu : public GraphCreatorWrapperBase {
   GraphCreatorWrapperCpu(const std::string &path);
   ~GraphCreatorWrapperCpu();
 
-  virtual graph<float> build(TTree_hits<float> &hits) override;
+  virtual graph<float> build(TTree_hits<float> &hits,
+                             bool print = false) override;
 
  private:
   std::unique_ptr<graph_creator<float>> m_graphCreator;
@@ -44,7 +45,8 @@ class GraphCreatorWrapperCuda : public GraphCreatorWrapperBase {
   GraphCreatorWrapperCuda(const std::string &path, int device, int blocks);
   ~GraphCreatorWrapperCuda();
 
-  virtual graph<float> build(TTree_hits<float> &hits) override;
+  virtual graph<float> build(TTree_hits<float> &hits,
+                             bool print = false) override;
 
  private:
   std::unique_ptr<CUDA_graph_creator<float>> m_graphCreator;

@@ -22,11 +22,12 @@ GraphCreatorWrapperCpu::GraphCreatorWrapperCpu(const std::string &path) {
 
 GraphCreatorWrapperCpu::~GraphCreatorWrapperCpu() {}
 
-graph<float> GraphCreatorWrapperCpu::build(TTree_hits<float> &hits) {
+graph<float> GraphCreatorWrapperCpu::build(TTree_hits<float> &hits,
+                                           bool print) {
   TTree_particles<float> particles;
   std::string eventId = "no-id";
 
-  auto [graph, _] = m_graphCreator->build_impl(hits, particles, eventId, false);
+  auto [graph, _] = m_graphCreator->build_impl(hits, particles, eventId, print);
 
   return graph;
 }

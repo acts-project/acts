@@ -57,6 +57,14 @@ target_link_libraries(
         std::filesystem
 )
 
+add_library(TorchGnnAot SHARED IMPORTED)
+set_target_properties(
+    TorchGnnAot
+    PROPERTIES
+        IMPORTED_LOCATION "/root/reproduce_gnn_results/rel24/data/gnn.test.so"
+)
+target_link_libraries(ActsPluginExaTrkX PUBLIC TorchGnnAot)
+
 if(ACTS_EXATRKX_ENABLE_CUDA)
     target_link_libraries(ActsPluginExaTrkX PRIVATE frnn)
     set_target_properties(

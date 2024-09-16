@@ -23,9 +23,10 @@ GraphCreatorWrapperCuda::GraphCreatorWrapperCuda(const std::string &path,
 
 GraphCreatorWrapperCuda::~GraphCreatorWrapperCuda() {}
 
-graph<float> GraphCreatorWrapperCuda::build(TTree_hits<float> &hits) {
+graph<float> GraphCreatorWrapperCuda::build(TTree_hits<float> &hits,
+                                            bool print) {
   CUDA_graph_creator<float>::graph_building_stats stats;
-  return m_graphCreator->build_impl(hits, stats, false);
+  return m_graphCreator->build_impl(hits, stats, print);
 }
 
 }  // namespace Acts::detail
