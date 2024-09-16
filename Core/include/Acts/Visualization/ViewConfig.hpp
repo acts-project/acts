@@ -22,12 +22,6 @@ using ColorRGB = std::array<int, 3>;
 /// @brief Struct to concentrate all visualization configurations
 /// in order to harmonize visualization interfaces
 struct ViewConfig {
-  /// Constructor to switch visibility off
-  ViewConfig(bool vis = true) : visible(vis) {}
-
-  /// Constructor for color settings only
-  ViewConfig(const ColorRGB& rgb) : color(rgb) {}
-
   /// Visible flag
   bool visible = true;
   /// The RGB color for this object
