@@ -181,8 +181,8 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     vtxPos /= Acts::UnitConstants::mm;
 
     // linear search for vector
-    auto it = std::ranges::find_if(primaryVertices, [&vtxPos](const auto& vtx) {
-      return vtx.first == vtxPos;
+    auto it = std::ranges::find_if(primaryVertices, [&vtxPos](const auto& v) {
+      return v.first == vtxPos;
     });
 
     if (it == primaryVertices.end()) {
