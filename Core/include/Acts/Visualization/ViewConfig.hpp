@@ -85,7 +85,6 @@ struct Color {
   /// @param rhs The second color
   /// @return True if the colors are equal
   friend bool operator==(const Color& lhs, const Color& rhs) = default;
-
   /// Output stream operator
   /// @param os The output stream
   /// @param color The color to be printed

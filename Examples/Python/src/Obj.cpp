@@ -31,6 +31,25 @@ void addObj(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   {
+    py::class_<ViewConfig>(m, "ViewConfig")
+        .def_readwrite("visible", &ViewConfig::visible)
+        .def_readwrite("color", &ViewConfig::color)
+        .def_readwrite("offset", &ViewConfig::offset)
+        .def_readwrite("lineThickness", &ViewConfig::lineThickness)
+        .def_readwrite("surfaceThickness", &ViewConfig::surfaceThickness)
+        .def_readwrite("nSegments", &ViewConfig::nSegments)
+        .def_readwrite("triangulate", &ViewConfig::triangulate)
+        .def_readwrite("outputName", &ViewConfig::outputName);
+
+    py::class_<Color>(m, "Color")
+        .def(py::init<>())
+        .def(py::init<int, int, int>())
+        .def(py::init<double, double, double>())
+        .def(py::init<std::string>())
+        .def_readonly("rgb", &Color::rgb);
+  }
+
+  {
     /// Write a collection of surfaces to an '.obj' file
     ///
     /// @param surfaces is the collection of surfaces
