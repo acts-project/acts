@@ -28,7 +28,8 @@
 
 Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoSubtractionConverter::operator()(
-    const PVConstLink& geoPV, const GeoShapeSubtraction& sub,
+    const PVConstLink& geoPV,
+    const GeoShapeSubtraction& sub,
     const Transform3& absTransform, bool sensitive) const {
   const GeoShape* shapeA = sub.getOpA();
   int shapeId = shapeA->typeID();
