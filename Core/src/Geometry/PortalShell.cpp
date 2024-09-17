@@ -102,12 +102,16 @@ CylinderStackPortalShell::CylinderStackPortalShell(
     const GeometryContext& gctx, std::vector<CylinderPortalShell*> shells,
     BinningValue direction, const Logger& logger)
     : m_direction{direction}, m_shells{std::move(shells)} {
+  ACTS_VERBOSE("Making cylinder stack shell in " << m_direction
+                                                 << " direction");
   if (m_shells.size() < 2) {
+    ACTS_ERROR("Invalid number of shells: " << m_shells.size());
     throw std::invalid_argument("Invalid number of shells");
   }
 
   if (std::ranges::any_of(m_shells,
-                          [](const auto& shell) { return shell == nullptr; })) {
+                          [](const auto* shell) { return shell == nullptr; })) {
+    ACTS_ERROR("Invalid shell pointer");
     throw std::invalid_argument("Invalid shell pointer");
   }
 
@@ -146,9 +150,11 @@ CylinderStackPortalShell::CylinderStackPortalShell(
   };
 
   if (direction == BinningValue::binR) {
+    ACTS_VERBOSE("Merging portals at positive and negative discs");
     merge(PositiveDisc);
     merge(NegativeDisc);
 
+    ACTS_VERBOSE("Fusing portals at outer and inner cylinders");
     fuse(OuterCylinder, InnerCylinder);
 
   } else if (direction == BinningValue::binZ) {
@@ -159,17 +165,21 @@ CylinderStackPortalShell::CylinderStackPortalShell(
         m_shells, [](const auto* shell) { return shell->size() == 3; });
 
     if (!allHaveInnerCylinders && !noneHaveInnerCylinders) {
+      ACTS_ERROR("Invalid inner cylinder configuration");
       throw std::invalid_argument("Invalid inner cylinder configuration");
     }
 
     m_hasInnerCylinder = allHaveInnerCylinders;
 
+    ACTS_VERBOSE("Merging portals at outer cylinders");
     merge(OuterCylinder);
 
     if (m_hasInnerCylinder) {
+      ACTS_VERBOSE("Merging portals at inner cylinders");
       merge(InnerCylinder);
     }
 
+    ACTS_VERBOSE("Fusing portals at positive and negative discs");
     fuse(PositiveDisc, NegativeDisc);
 
   } else {
