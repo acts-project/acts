@@ -10,6 +10,7 @@
 
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -95,4 +96,15 @@ Acts::Extent Acts::Polyhedron::extent(const Transform3& transform) const {
     }
   }
   return extent;
+}
+
+void Acts::Polyhedron::visualize(IVisualization3D& helper,
+                                 const ViewConfig& viewConfig) const {
+  if (viewConfig.visible) {
+    if (!viewConfig.triangulate) {
+      helper.faces(vertices, faces, viewConfig.color);
+    } else {
+      helper.faces(vertices, triangularMesh, viewConfig.color);
+    }
+  }
 }
