@@ -48,7 +48,7 @@ jobs:
       - name: Check
         run: >
           sudo apt-get install -y git
-          && CI/check_license.py . --exclude "*thirdparty/*"
+          && CI/check_license.py . --exclude "*thirdparty/*" --check-year
   include_guards:
     runs-on: ubuntu-latest
     steps:

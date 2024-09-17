@@ -57,9 +57,9 @@ def check_git_dates(src):
     add = commits[-1]
 
     madd = re.match(r".*\d{2}:\d{2}:\d{2} (\d{4})", add[1])
-    assert madd != None, "Regex did not match git log output"
+    assert madd is not None, "Regex did not match git log output"
     mmod = re.match(r".*\d{2}:\d{2}:\d{2} (\d{4})", mod[1])
-    assert mmod != None, "Regex did not match git log output"
+    assert mmod is not None, "Regex did not match git log output"
 
     addcommit = CommitInfo()
     addcommit.date = add[1]
@@ -127,22 +127,22 @@ def main():
 
     year = int(datetime.now().strftime("%Y"))
 
-    raw = """// This file is part of the ACTS project.
+    raw = """// This file is part of the Acts project.
 //
-// Copyright (C) {year} CERN for the benefit of the ACTS project
+// Copyright (C) {year} CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at https://mozilla.org/MPL/2.0/."""
+// file, You can obtain one at http://mozilla.org/MPL/2.0/."""
 
     reg = (
-        r"\A// This file is part of the ACTS project.\n"
+        r"\A// This file is part of the Acts project.\n"
         + r"//\n"
-        + r"// Copyright \(C\) (?P<year>.*) CERN for the benefit of the ACTS project\n"
+        + r"// Copyright \(C\) (?P<year>.*) CERN for the benefit of the Acts project\n"
         + r"//\n"
         + r"// This Source Code Form is subject to the terms of the Mozilla Public\n"
         + r"// License, v\. 2\.0\. If a copy of the MPL was not distributed with this\n"
-        + r"// file, You can obtain one at https://mozilla.org/MPL/2.0/.\Z"
+        + r"// file, You can obtain one at http://mozilla.org/MPL/2.0/.\Z"
     )
 
     ref = re.compile(reg, re.M)
@@ -157,21 +157,14 @@ def main():
         return [clean(l) + "\n" for l in s.split("\n")]
 
     def validate_years(year1, year2):
-        first_year = 2016
-        current_year = int(datetime.now().strftime("%Y"))
-
         if year1 and year2:
             year1 = int(year1)
             year2 = int(year2)
-            if year1 >= year2:
-                return False
-            if year1 < first_year:
-                return False
-            if year2 != current_year:
+            if not year1 < year2 <= year:
                 return False
         else:
             theyear = int(year1 if year1 else year2)
-            if theyear != year:
+            if theyear > year:
                 return False
         return True
 
@@ -208,7 +201,7 @@ def main():
 
         with open(src, "r+") as f:
             license = ""
-            for x in range(len(raw)):
+            for _ in range(len(raw)):
                 line = f.readline()
                 if not line.startswith("//"):
                     break
@@ -216,7 +209,7 @@ def main():
             license = ("".join(license)).strip()
             m = ref.search(license)
 
-            if m == None:
+            if m is None:
                 eprint("Invalid / missing license in " + src + "")
 
                 exp = [l + "\n" for l in raw.format(year="XXXX").split("\n")]
@@ -239,10 +232,6 @@ def main():
             else:
                 # we have a match, need to verify year string is right
 
-                if args.check_years:
-                    git_add_commit, git_mod_commit = check_git_dates(src)
-                    git_add_year = git_add_commit.year
-                    git_mod_year = git_mod_commit.year
                 year_act = m.group("year")
                 ym = year_re.match(year_act)
                 valid = True
@@ -271,12 +260,14 @@ def main():
                         valid = False
 
                     if args.check_years:
+                        git_add_commit, git_mod_commit = check_git_dates(src)
+                        git_add_year = git_add_commit.year
+                        git_mod_year = git_mod_commit.year
+
                         if git_add_year != git_mod_year:
                             # need year range in licence
                             if not (year1 and year2):
                                 year_print("File: {}".format(src))
-                                # year_print("o File was modified in a different year ({}) than it was added ({})."
-                                # .format(git_mod_year, git_add_year))
                                 year_print(
                                     "- File was added in {}".format(git_add_year)
                                 )
