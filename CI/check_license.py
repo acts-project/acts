@@ -98,7 +98,7 @@ def main():
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at httpss://mozilla.org/MPL/2.0/."""
+// file, You can obtain one at https://mozilla.org/MPL/2.0/."""
 
     reg = (
         r"\A// This file is part of the ACTS project.\n"
@@ -107,7 +107,7 @@ def main():
         + r"//\n"
         + r"// This Source Code Form is subject to the terms of the Mozilla Public\n"
         + r"// License, v\. 2\.0\. If a copy of the MPL was not distributed with this\n"
-        + r"// file, You can obtain one at httpss://mozilla.org/MPL/2.0/.\Z"
+        + r"// file, You can obtain one at https://mozilla.org/MPL/2.0/.\Z"
     )
 
     ref = re.compile(reg, re.M)
