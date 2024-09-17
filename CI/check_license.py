@@ -125,7 +125,8 @@ def main():
     else:
         srcs = args.input
 
-    year = int(datetime.now().strftime("%Y"))
+    current_year = int(datetime.now().strftime("%Y"))
+    year = current_year
 
     raw = """// This file is part of the Acts project.
 //
@@ -262,9 +263,8 @@ def main():
                     if args.check_years:
                         git_add_commit, git_mod_commit = check_git_dates(src)
                         git_add_year = git_add_commit.year
-                        git_mod_year = git_mod_commit.year
 
-                        if git_add_year != git_mod_year:
+                        if git_add_year != current_year:
                             # need year range in licence
                             if not (year1 and year2):
                                 year_print("File: {}".format(src))
@@ -272,15 +272,8 @@ def main():
                                     "- File was added in {}".format(git_add_year)
                                 )
                                 year_print(
-                                    "- File was modified on {} by {}:\n{}".format(
-                                        git_mod_commit.date,
-                                        git_mod_commit.author,
-                                        git_mod_commit.subject + git_mod_commit.body,
-                                    )
-                                )
-                                year_print(
                                     "=> License should say {}-{}".format(
-                                        git_add_year, git_mod_year
+                                        git_add_year, current_year
                                     )
                                 )
 
@@ -299,29 +292,20 @@ def main():
                                 valid = False
                             else:
                                 if (
-                                    int(year1) != git_add_year
-                                    or int(year2) != git_mod_year
+                                    int(year1) != git_add_year or int(year2) != current_year
                                 ):
                                     year_print("File: {}".format(src))
                                     year_print(
                                         "Year range {}-{} does not match range from git {}-{}".format(
-                                            year1, year2, git_add_year, git_mod_year
+                                            year1, year2, git_add_year, current_year
                                         )
                                     )
                                     year_print(
                                         "- File was added in {}".format(git_add_year)
                                     )
                                     year_print(
-                                        "- File was modified on {} by {}:\n{}".format(
-                                            git_mod_commit.date,
-                                            git_mod_commit.author,
-                                            git_mod_commit.subject
-                                            + git_mod_commit.body,
-                                        )
-                                    )
-                                    year_print(
                                         "=> License should say {}-{}".format(
-                                            git_add_year, git_mod_year
+                                            git_add_year, current_year
                                         )
                                     )
                                     year_print(
@@ -339,22 +323,17 @@ def main():
                                     valid = False
 
                         else:
-                            if int(year1) < git_mod_year:
+                            if int(year1) < current_year:
                                 year_print("File: {}".format(src))
                                 year_print(
-                                    "- Year {} does not match git modification year {}".format(
-                                        year1, git_mod_year
+                                    "- Year {} does not match current year {}".format(
+                                        year1, current_year
                                     )
                                 )
                                 year_print(
-                                    "- File was modified on {} by {}:\n{}".format(
-                                        git_mod_commit.date,
-                                        git_mod_commit.author,
-                                        git_mod_commit.subject + git_mod_commit.body,
+                                    "=> License should say {}-{}".format(
+                                        git_add_year, current_year
                                     )
-                                )
-                                year_print(
-                                    "=> License should say {}".format(git_mod_year)
                                 )
                                 year_print(
                                     err("{} But says: {}".format(CROSS_SYMBOL, year1))
@@ -368,12 +347,12 @@ def main():
 
                 if args.fix and not valid:
                     eprint("-> fixing file (patch year)")
-                    year_str = "2016-{}".format(year)
+                    year_str = "2016-{}".format(current_year)
                     if args.check_years:
-                        if git_add_year == git_mod_year:
+                        if git_add_year == current_year:
                             year_str = "{}".format(git_add_year)
                         else:
-                            year_str = "{}-{}".format(git_add_year, git_mod_year)
+                            year_str = "{}-{}".format(git_add_year, current_year)
                     new_license = raw.format(year=year_str)
 
                     # preserve rest of file as is
