@@ -28,8 +28,8 @@ struct GeoSubtractionConverter {
   ///
   /// @return The detector element and surface
   Result<GeoModelSensitiveSurface> operator()(
-      const PVConstLink& geoPV,
-      const GeoShapeSubtraction& geoPolygon,
-      const Transform3& absTransform, bool sensitive) const;
+      [[maybe_unused]] const PVConstLink& geoPV,
+      const GeoShapeSubtraction& geoPolygon, const Transform3& absTransform,
+      [[maybe_unused]] bool sensitive) const;
 };
 }  // namespace Acts::detail
