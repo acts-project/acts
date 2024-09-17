@@ -57,15 +57,18 @@ class VolumeBounds {
   // @enum BoundsType
   /// This is nested to the VolumeBounds, as also SurfaceBounds will have
   /// Bounds Type.
-  enum BoundsType : int {
-    eCone = 0,
-    eCuboid = 1,
-    eCutoutCylinder = 2,
-    eCylinder = 3,
-    eGenericCuboid = 4,
-    eTrapezoid = 5,
-    eOther = 6
+  enum class BoundsType {
+    eCone,
+    eCuboid,
+    eCutoutCylinder,
+    eCylinder,
+    eGenericCuboid,
+    eTrapezoid,
+    eOther,
+
   };
+
+  using enum BoundsType;
 
   /// Static member to get the name of the BoundsType
   static const std::vector<std::string> s_boundsTypeNames;
@@ -167,5 +170,7 @@ inline bool operator==(const VolumeBounds& lhs, const VolumeBounds& rhs) {
   }
   return (lhs.type() == rhs.type()) && (lhs.values() == rhs.values());
 }
+
+std::ostream& operator<<(std::ostream& sl, const VolumeBounds::BoundsType& bt);
 
 }  // namespace Acts
