@@ -92,22 +92,22 @@ def main():
     current_year = int(datetime.now().strftime("%Y"))
     year = current_year
 
-    raw = """// This file is part of the Acts project.
+    raw = """// This file is part of the ACTS project.
 //
-// Copyright (C) {year} CERN for the benefit of the Acts project
+// Copyright (C) {year} CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/."""
+// file, You can obtain one at httpss://mozilla.org/MPL/2.0/."""
 
     reg = (
-        r"\A// This file is part of the Acts project.\n"
+        r"\A// This file is part of the ACTS project.\n"
         + r"//\n"
-        + r"// Copyright \(C\) (?P<year>.*) CERN for the benefit of the Acts project\n"
+        + r"// Copyright \(C\) (?P<year>.*) CERN for the benefit of the ACTS project\n"
         + r"//\n"
         + r"// This Source Code Form is subject to the terms of the Mozilla Public\n"
         + r"// License, v\. 2\.0\. If a copy of the MPL was not distributed with this\n"
-        + r"// file, You can obtain one at http://mozilla.org/MPL/2.0/.\Z"
+        + r"// file, You can obtain one at httpss://mozilla.org/MPL/2.0/.\Z"
     )
 
     ref = re.compile(reg, re.M)
@@ -172,7 +172,7 @@ def main():
 
                 diff = difflib.unified_diff(exp, act)
                 eprint("".join(diff))
-                eprint()
+                eprint("")
 
                 if args.fix:
                     eprint("-> fixing file (prepend)")
