@@ -6,15 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-template <typename T>
-void ObjVisualization3D<T>::vertex(const Vector3& vtx, Color color) {
+#include "Acts/Visualization/ObjVisualization3D.hpp"
+
+namespace Acts {
+
+void ObjVisualization3D::vertex(const Vector3& vtx, Color color) {
   m_vertexColors[m_vertices.size()] = color;
   m_vertices.push_back(vtx.template cast<ValueType>());
 }
 
-template <typename T>
-void ObjVisualization3D<T>::line(const Vector3& a, const Vector3& b,
-                                 Color color) {
+void ObjVisualization3D::line(const Vector3& a, const Vector3& b, Color color) {
   if (color != Color{0, 0, 0}) {
     m_lineColors[m_lines.size()] = color;
   }
@@ -24,9 +25,7 @@ void ObjVisualization3D<T>::line(const Vector3& a, const Vector3& b,
   m_lines.push_back({m_vertices.size() - 2, m_vertices.size() - 1});
 }
 
-template <typename T>
-void ObjVisualization3D<T>::face(const std::vector<Vector3>& vtxs,
-                                 Color color) {
+void ObjVisualization3D::face(const std::vector<Vector3>& vtxs, Color color) {
   if (color != Color{0, 0, 0}) {
     m_faceColors[m_faces.size()] = color;
   }
@@ -39,10 +38,9 @@ void ObjVisualization3D<T>::face(const std::vector<Vector3>& vtxs,
   m_faces.push_back(std::move(idxs));
 }
 
-template <typename T>
-void ObjVisualization3D<T>::faces(const std::vector<Vector3>& vtxs,
-                                  const std::vector<FaceType>& faces,
-                                  Color color) {
+void ObjVisualization3D::faces(const std::vector<Vector3>& vtxs,
+                               const std::vector<FaceType>& faces,
+                               Color color) {
   // No faces given - call the face() method
   if (faces.empty()) {
     face(vtxs, color);
@@ -68,8 +66,7 @@ void ObjVisualization3D<T>::faces(const std::vector<Vector3>& vtxs,
   }
 }
 
-template <typename T>
-void ObjVisualization3D<T>::write(const std::filesystem::path& path) const {
+void ObjVisualization3D::write(const std::filesystem::path& path) const {
   std::ofstream os;
   std::filesystem::path objectpath = path;
   if (!objectpath.has_extension()) {
@@ -89,14 +86,12 @@ void ObjVisualization3D<T>::write(const std::filesystem::path& path) const {
   mtlos.close();
 }
 
-template <typename T>
-void ObjVisualization3D<T>::write(std::ostream& os) const {
+void ObjVisualization3D::write(std::ostream& os) const {
   std::stringstream sterile;
   write(os, sterile);
 }
 
-template <typename T>
-void ObjVisualization3D<T>::write(std::ostream& os, std::ostream& mos) const {
+void ObjVisualization3D::write(std::ostream& os, std::ostream& mos) const {
   std::map<std::string, bool> materials;
 
   auto mixColor = [&](const Color& color) -> std::string {
@@ -168,8 +163,7 @@ void ObjVisualization3D<T>::write(std::ostream& os, std::ostream& mos) const {
   }
 }
 
-template <typename T>
-void ObjVisualization3D<T>::clear() {
+void ObjVisualization3D::clear() {
   m_vertices.clear();
   m_faces.clear();
   m_lines.clear();
@@ -177,3 +171,5 @@ void ObjVisualization3D<T>::clear() {
   m_vertexColors.clear();
   m_faceColors.clear();
 }
+
+}  // namespace Acts

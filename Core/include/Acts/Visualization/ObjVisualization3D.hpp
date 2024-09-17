@@ -26,14 +26,10 @@ namespace Acts {
 /// This helper produces output in the OBJ format. Note that colors are not
 /// supported in this implementation.
 ///
-template <typename T = double>
 class ObjVisualization3D : public IVisualization3D {
  public:
-  static_assert(std::is_same_v<T, double> || std::is_same_v<T, float>,
-                "Use either double or float");
-
   /// Stored value type, should be double or float
-  using ValueType = T;
+  using ValueType = double;
 
   /// Type of a vertex based on the value type
   using VertexType = Eigen::Matrix<ValueType, 3, 1>;
@@ -90,9 +86,5 @@ class ObjVisualization3D : public IVisualization3D {
   std::map<std::size_t, Color> m_vertexColors;
   std::map<std::size_t, Color> m_faceColors;
 };
-
-#ifndef DOXYGEN
-#include "detail/ObjVisualization3D.ipp"
-#endif
 
 }  // namespace Acts
