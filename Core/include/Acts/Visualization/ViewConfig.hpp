@@ -32,11 +32,11 @@ struct Color {
 
   /// Constructor from array of integer rgb values [0, 255]
   /// @param values The rgb values
-  Color(std::array<int, 3> values) : rgb(values) {}
+  explicit Color(std::array<int, 3> values) : rgb(values) {}
 
   /// Constructor from array of double rgb values [0, 1]
   /// @param values The rgb values
-  Color(std::array<double, 3> values) {
+  explicit Color(std::array<double, 3> values) {
     rgb[0] = static_cast<int>(values[0] * 255);
     rgb[1] = static_cast<int>(values[1] * 255);
     rgb[2] = static_cast<int>(values[2] * 255);
@@ -50,8 +50,8 @@ struct Color {
 
   /// Constructor from hex string. The expected format is `#RRGGBB`
   /// @param hex The hex string
-  Color(const std::string& hex) {
-    auto hexToInt = [](const std::string& hexStr) -> int {
+  explicit Color(std::string_view hex) {
+    auto hexToInt = [](std::string_view hexStr) -> int {
       int value;
       std::stringstream ss;
       ss << std::hex << hexStr;
@@ -73,6 +73,11 @@ struct Color {
   /// @param i The index of the component
   /// @return The color component
   int operator[](unsigned int i) const { return rgb.at(i); }
+
+  /// Operator to access the color components
+  /// @param i The index of the component
+  /// @return The color component
+  int& operator[](unsigned int i) { return rgb.at(i); }
 
   /// Operator to compare two colors
   /// @param lhs The first color

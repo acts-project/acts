@@ -174,11 +174,11 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
     const auto& [el, surf] = val;
     Acts::ViewConfig vCfg;
     if (k == 0) {
-      vCfg.color = Acts::ColorRGB({0, 255, 0});
+      vCfg.color = {0, 255, 0};
     } else if (k == 1) {
-      vCfg.color = Acts::ColorRGB({255, 0, 0});
+      vCfg.color = {255, 0, 0};
     } else if (k == 2) {
-      vCfg.color = Acts::ColorRGB({0, 255, 255});
+      vCfg.color = {0, 255, 255};
     }
     Acts::GeometryView3D::drawSurface(obj, *surf, gctx,
                                       Acts::Transform3::Identity(), vCfg);

@@ -30,6 +30,25 @@ void addObj(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   {
+    py::class_<ViewConfig>(m, "ViewConfig")
+        .def_readwrite("visible", &ViewConfig::visible)
+        .def_readwrite("color", &ViewConfig::color)
+        .def_readwrite("offset", &ViewConfig::offset)
+        .def_readwrite("lineThickness", &ViewConfig::lineThickness)
+        .def_readwrite("surfaceThickness", &ViewConfig::surfaceThickness)
+        .def_readwrite("nSegments", &ViewConfig::nSegments)
+        .def_readwrite("triangulate", &ViewConfig::triangulate)
+        .def_readwrite("outputName", &ViewConfig::outputName);
+
+    py::class_<Color>(m, "Color")
+        .def(py::init<>())
+        .def(py::init<int, int, int>())
+        .def(py::init<double, double, double>())
+        .def(py::init<std::string>())
+        .def_readonly("rgb", &Color::rgb);
+  }
+
+  {
     /// Write a collection of surfaces to an '.obj' file
     ///
     /// @param surfaces is the collection of surfaces
@@ -40,35 +59,29 @@ void addObj(Context& ctx) {
     ///
     mex.def("writeSurfacesObj",
             [](const std::vector<std::shared_ptr<Surface>>& surfaces,
-               const GeometryContext& viewContext,
-               const std::array<int, 3>& viewRgb, unsigned int viewSegements,
+               const GeometryContext& viewContext, const ViewConfig& viewConfig,
                const std::string& fileName) {
-              Acts::ViewConfig sConfig = Acts::ViewConfig{.color = viewRgb};
-              sConfig.nSegments = viewSegements;
               Acts::GeometryView3D view3D;
               Acts::ObjVisualization3D obj;
 
               for (const auto& surface : surfaces) {
                 view3D.drawSurface(obj, *surface, viewContext,
-                                   Acts::Transform3::Identity(), sConfig);
+                                   Acts::Transform3::Identity(), viewConfig);
               }
               obj.write(fileName);
             });
     mex.def("writeVolumesObj",
             [](const std::vector<std::shared_ptr<Experimental::DetectorVolume>>&
                    Volumes,
-               const GeometryContext& viewContext,
-               const std::array<int, 3>& viewRgb, unsigned int viewSegements,
+               const GeometryContext& viewContext, const ViewConfig& viewConfig,
                const std::string& fileName) {
-              Acts::ViewConfig sConfig = Acts::ViewConfig{.color = viewRgb};
-              sConfig.nSegments = viewSegements;
               Acts::GeometryView3D view3D;
               Acts::ObjVisualization3D obj;
 
               for (const auto& volume : Volumes) {
                 view3D.drawDetectorVolume(obj, *volume, viewContext,
                                           Acts::Transform3::Identity(),
-                                          sConfig);
+                                          viewConfig);
               }
               obj.write(fileName);
             });
@@ -76,22 +89,19 @@ void addObj(Context& ctx) {
             [](const std::vector<std::shared_ptr<Surface>>& surfaces,
                const std::vector<std::shared_ptr<Experimental::DetectorVolume>>&
                    Volumes,
-               const GeometryContext& viewContext,
-               const std::array<int, 3>& viewRgb, unsigned int viewSegements,
+               const GeometryContext& viewContext, const ViewConfig& viewConfig,
                const std::string& fileName) {
-              Acts::ViewConfig sConfig = Acts::ViewConfig{.color = viewRgb};
-              sConfig.nSegments = viewSegements;
               Acts::GeometryView3D view3D;
               Acts::ObjVisualization3D obj;
 
               for (const auto& volume : Volumes) {
                 view3D.drawDetectorVolume(obj, *volume, viewContext,
                                           Acts::Transform3::Identity(),
-                                          sConfig);
+                                          viewConfig);
               }
               for (const auto& surface : surfaces) {
                 view3D.drawSurface(obj, *surface, viewContext,
-                                   Acts::Transform3::Identity(), sConfig);
+                                   Acts::Transform3::Identity(), viewConfig);
               }
               obj.write(fileName);
             });
