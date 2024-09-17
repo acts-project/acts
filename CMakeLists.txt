@@ -49,6 +49,7 @@ option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
+option(ACTS_TRACCC_ENABLE_CUDA "Enable CUDA for the traccc plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_ONNX "Build the Onnx backend for the exatrkx plugin" OFF)
@@ -439,6 +440,9 @@ if(ACTS_BUILD_PLUGIN_GEANT4)
 endif()
 
 if(ACTS_BUILD_PLUGIN_TRACCC)
+    # TODO: Algebra-plugins should set this up itself!
+    add_definitions(-DALGEBRA_PLUGINS_INCLUDE_ARRAY)
+
     if(ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
         find_package(algebra-plugins ${_acts_algebraplugins_version} REQUIRED)
     else()
@@ -446,7 +450,9 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
     endif()
 
     if(ACTS_USE_SYSTEM_DETRAY)
-        find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
+        # TODO: Version requirement temporarily removed while detray sorts out
+        # their versioning.
+        find_package(detray REQUIRED CONFIG)
     else()
         add_subdirectory(thirdparty/detray)
     endif()
