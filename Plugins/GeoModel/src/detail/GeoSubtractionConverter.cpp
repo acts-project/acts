@@ -28,9 +28,10 @@
 
 Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoSubtractionConverter::operator()(
-    [[maybe_unused]] const PVConstLink& geoPV, const GeoShapeSubtraction& sub,
-    const Transform3& absTransform, [[maybe_unused]] bool sensitive) const {
-  const GeoShape* shapeA = sub.getOpA();
+    [[maybe_unused]] const PVConstLink& geoPV,
+    const GeoShapeSubtraction& geoSub, const Transform3& absTransform,
+    [[maybe_unused]] bool sensitive) const {
+  const GeoShape* shapeA = geoSub.getOpA();
   int shapeId = shapeA->typeID();
   std::shared_ptr<const Acts::IGeoShapeConverter> converter =
       Acts::geoShapesConverters(shapeId);
