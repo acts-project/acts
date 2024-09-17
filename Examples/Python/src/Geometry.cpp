@@ -165,7 +165,7 @@ void addGeometry(Context& ctx) {
                self.visitSurfaces(selector, false);
                return selector.surfaces;
              })
-        .def_property_readonly("highestTrackinhVolume",
+        .def_property_readonly("highestTrackingVolume",
                                &Acts::TrackingGeometry::highestTrackingVolume);
   }
 
