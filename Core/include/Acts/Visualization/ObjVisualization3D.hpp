@@ -73,18 +73,32 @@ class ObjVisualization3D : public IVisualization3D {
   ///  @copydoc Acts::IVisualization3D::clear()
   void clear() final;
 
+  /// Start a new object context with a name
+  /// @param name The name of the object
+  void object(const std::string& name) final;
+
  private:
+  struct Object {
+    std::string name;
+    std::vector<VertexType> vertices{};
+    std::vector<FaceType> faces{};
+    std::vector<LineType> lines{};
+
+    /// The object data to be written
+    /// Map of colors to be written at given index position
+    std::map<std::size_t, Color> lineColors;
+    std::map<std::size_t, Color> vertexColors;
+    std::map<std::size_t, Color> faceColors;
+  };
+
+  Object& object();
+  const Object& object() const;
+
   /// The output parameters
   unsigned int m_outputPrecision = 4;
   double m_outputScalor = 1.;
-  /// The object data to be written
-  std::vector<VertexType> m_vertices;
-  std::vector<FaceType> m_faces;
-  std::vector<LineType> m_lines;
-  /// Map of colors to be written at given index position
-  std::map<std::size_t, Color> m_lineColors;
-  std::map<std::size_t, Color> m_vertexColors;
-  std::map<std::size_t, Color> m_faceColors;
+
+  std::vector<Object> m_objects;
 };
 
 }  // namespace Acts
