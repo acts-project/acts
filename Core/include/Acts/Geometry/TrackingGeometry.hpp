@@ -62,7 +62,7 @@ class TrackingGeometry {
 
   /// Access to the world volume
   /// @return shared pointer to the world volume
-  const std::shared_ptr<const TrackingVolume>& highestTrackingVolumePtr() const;
+  std::shared_ptr<const TrackingVolume> highestTrackingVolumePtr() const;
 
   /// return the lowest tracking Volume
   ///

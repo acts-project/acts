@@ -49,7 +49,7 @@ const Acts::TrackingVolume* Acts::TrackingGeometry::highestTrackingVolume()
   return m_world.get();
 }
 
-const std::shared_ptr<const Acts::TrackingVolume>&
+std::shared_ptr<const Acts::TrackingVolume>
 Acts::TrackingGeometry::highestTrackingVolumePtr() const {
   return m_world;
 }
