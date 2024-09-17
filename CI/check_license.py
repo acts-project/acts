@@ -157,16 +157,21 @@ def main():
         return [clean(l) + "\n" for l in s.split("\n")]
 
     def validate_years(year1, year2):
+        first_year = 2016
+        current_year = int(datetime.now().strftime("%Y"))
+
         if year1 and year2:
             year1 = int(year1)
             year2 = int(year2)
             if year1 >= year2:
                 return False
-            if year1 > year or year2 > year:
+            if year1 < first_year:
+                return False
+            if year2 != current_year:
                 return False
         else:
             theyear = int(year1 if year1 else year2)
-            if theyear > year:
+            if theyear != year:
                 return False
         return True
 
