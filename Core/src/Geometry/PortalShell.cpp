@@ -212,6 +212,7 @@ std::shared_ptr<Portal> CylinderStackPortalShell::portalPtr(Face face) {
       case InnerCylinder:
         return m_shells.front()->portalPtr(InnerCylinder);
       case NegativePhiPlane:
+        [[fallthrough]];
       case PositivePhiPlane:
         return nullptr;
       default:
@@ -231,6 +232,7 @@ std::shared_ptr<Portal> CylinderStackPortalShell::portalPtr(Face face) {
       case InnerCylinder:
         return m_shells.front()->portalPtr(face);
       case NegativePhiPlane:
+        [[fallthrough]];
       case PositivePhiPlane:
         return nullptr;
       default:
