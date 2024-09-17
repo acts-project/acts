@@ -41,11 +41,11 @@
 #include <vector>
 
 namespace Acts::Experimental {
-ViewConfig s_viewSensitive = ViewConfig({0, 180, 240});
-ViewConfig s_viewPassive = ViewConfig({240, 280, 0});
-ViewConfig s_viewVolume = ViewConfig({220, 220, 0});
-ViewConfig s_viewGrid = ViewConfig({220, 0, 0});
-ViewConfig s_viewLine = ViewConfig({0, 0, 220});
+ViewConfig s_viewSensitive = {.color = {0, 180, 240}};
+ViewConfig s_viewPassive = {.color = {240, 280, 0}};
+ViewConfig s_viewVolume = {.color = {220, 220, 0}};
+ViewConfig s_viewGrid = {.color = {220, 0, 0}};
+ViewConfig s_viewLine = {.color = {0, 0, 220}};
 }  // namespace Acts::Experimental
 
 void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
