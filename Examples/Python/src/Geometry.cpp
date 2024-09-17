@@ -252,7 +252,8 @@ void addExperimentalGeometry(Context& ctx) {
       });
 
   // Portal definition
-  py::class_<Portal, std::shared_ptr<Portal>>(m, "Portal");
+  py::class_<Experimental::Portal, std::shared_ptr<Experimental::Portal>>(
+      m, "Portal");
 
   {
     // The surface hierarchy map
