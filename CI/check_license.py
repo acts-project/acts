@@ -32,50 +32,24 @@ def err(string):
         return string
 
 
-class CommitInfo:
-    date = None
-    year = None
-    author = None
-    subject = None
-    body = None
-
-
-def check_git_dates(src):
+def get_git_add_year(src):
+    # Retrieve the first commit where the file was added
     output = (
-        check_output(["git", "log", "--format={{{%an|%ad|%s|%b}}}", "--", src])
+        check_output(
+            ["git", "log", "--follow", "--diff-filter=A", "--format=%ad", "--", src]
+        )
         .decode("utf-8")
         .strip()
     )
 
-    # find single outputs
-    commits = re.findall(r"{{{((?:.|\n)*?)}}}", output)
-    commits = [c for c in commits if "[ignore-license]" not in c]
-    commits = [c.split("|") for c in commits]
+    # If no output, file was not added or found
+    assert output, f"File {src} was not found in the repository or was not added."
 
-    # print(output)
-    mod = commits[0]
-    add = commits[-1]
+    # Extract the year from the full commit date
+    match = re.search(r"\b(\d{4})\b", output)
+    assert match, "Date format is not as expected or could not extract year."
 
-    madd = re.match(r".*\d{2}:\d{2}:\d{2} (\d{4})", add[1])
-    assert madd is not None, "Regex did not match git log output"
-    mmod = re.match(r".*\d{2}:\d{2}:\d{2} (\d{4})", mod[1])
-    assert mmod is not None, "Regex did not match git log output"
-
-    addcommit = CommitInfo()
-    addcommit.date = add[1]
-    addcommit.year = int(madd.group(1))
-    addcommit.author = add[0]
-    addcommit.subject = add[2]
-    addcommit.body = add[3]
-
-    modcommit = CommitInfo()
-    modcommit.date = mod[1]
-    modcommit.year = int(mmod.group(1))
-    modcommit.author = mod[0]
-    modcommit.subject = mod[2]
-    modcommit.body = mod[3]
-
-    return addcommit, modcommit
+    return int(match.group(1))
 
 
 def main():
@@ -83,16 +57,6 @@ def main():
     p.add_argument("input", nargs="+")
     p.add_argument(
         "--fix", action="store_true", help="Attempt to fix any license issues found."
-    )
-    p.add_argument(
-        "--check-years",
-        action="store_true",
-        help="Check the license year info using git info for each file.",
-    )
-    p.add_argument(
-        "--fail-year-mismatch",
-        action="store_true",
-        help="Fail if year in license statement is not valid.",
     )
     p.add_argument("--exclude", "-e", action="append", default=EXCLUDE)
 
@@ -161,29 +125,19 @@ def main():
         if year1 and year2:
             year1 = int(year1)
             year2 = int(year2)
-            if not year1 < year2 <= year:
+            if not year1 < year2 <= current_year:
                 return False
         else:
             theyear = int(year1 if year1 else year2)
-            if theyear > year:
+            if theyear > current_year:
                 return False
         return True
 
     error_summary = ""
-    info_summary = ""
 
-    def eprint(*args):
+    def eprint(string):
         nonlocal error_summary
-        error_summary += " ".join(map(str, args)) + "\n"
-
-    def year_print(*pargs):
-        nonlocal error_summary
-        nonlocal info_summary
-        string = " ".join(map(str, pargs)) + "\n"
-        if args.fail_year_mismatch:
-            error_summary += string
-        else:
-            info_summary += string
+        error_summary += string + "\n"
 
     exit = 0
     srcs = list(srcs)
@@ -194,7 +148,7 @@ def main():
             continue
 
         if nsrcs > 1 and i % step == 0:
-            string = "{}/{} -> {:.2f}%".format(i, nsrcs, i / float(nsrcs) * 100.0)
+            string = f"{i}/{nsrcs} -> {i / float(nsrcs) * 100.0:.2f}%"
             if sys.stdout.isatty():
                 sys.stdout.write(string + "\r")
             else:
@@ -213,7 +167,7 @@ def main():
             if m is None:
                 eprint("Invalid / missing license in " + src + "")
 
-                exp = [l + "\n" for l in raw.format(year="XXXX").split("\n")]
+                exp = [l + "\n" for l in raw.format(year="YYYY").split("\n")]
                 act = get_clean_lines(license)
 
                 diff = difflib.unified_diff(exp, act)
@@ -225,153 +179,80 @@ def main():
                     f.seek(0)
                     file_content = f.read()
                     f.seek(0)
-                    stmnt = raw.format(year=year)
+                    stmnt = raw.format(year=current_year)
                     f.write(stmnt + "\n\n")
                     f.write(file_content)
 
                 exit = 1
+                continue
+
+            # we have a match, need to verify year string is right
+
+            year_act = m.group("year")
+            ym = year_re.match(year_act)
+            valid = True
+            if not ym:
+                eprint(f"Year string does not match format in {src}")
+                eprint("Expected: YYYY or YYYY-YYYY (year or year range)")
+
+                exit = 1
+                valid = False
+
             else:
-                # we have a match, need to verify year string is right
+                extract = extract_re.search(year_act)
+                year1, year2 = extract.groups(default=None)
 
-                year_act = m.group("year")
-                ym = year_re.match(year_act)
-                valid = True
-                if not ym:
-                    eprint("Year string does not match format in {}".format(src))
-                    eprint("Expected: YYYY or YYYY-YYYY (year or year range)")
-                    eprint("Actual:   {}\n".format(year_act))
-
-                    if args.fix:
-                        extract = extract_re.search(year_act)
-                        year1 = extract.group(1)
-                        year2 = extract.group(2)
-
-                    exit = 1
+                if not validate_years(year1, year2):
+                    eprint(f"Year string is not valid in {src}")
+                    eprint("Year string is: " + year_act + "\n")
                     valid = False
 
-                else:
-                    extract = extract_re.search(year_act)
-                    year1 = extract.group(1)
-                    year2 = extract.group(2)
+                git_add_year = get_git_add_year(src)
+                assert (
+                    git_add_year <= current_year
+                ), f"File {src} is created in the future."
 
-                    if not validate_years(year1, year2):
-                        eprint("Year string is not valid in {}".format(src))
-                        eprint("Year string is: " + year_act + "\n")
-                        exit = 1
+                if git_add_year != current_year:
+                    # need year range in licence
+                    if not (year1 and year2):
+                        valid = False
+                    elif int(year1) != git_add_year or int(year2) != current_year:
                         valid = False
 
-                    if args.check_years:
-                        git_add_commit, git_mod_commit = check_git_dates(src)
-                        git_add_year = git_add_commit.year
+                # File added this year
+                elif int(year1 if year1 else year2) < current_year:
+                    valid = False
 
-                        if git_add_year != current_year:
-                            # need year range in licence
-                            if not (year1 and year2):
-                                year_print("File: {}".format(src))
-                                year_print(
-                                    "- File was added in {}".format(git_add_year)
-                                )
-                                year_print(
-                                    "=> License should say {}-{}".format(
-                                        git_add_year, current_year
-                                    )
-                                )
+            if not valid:
+                exit = 1
+                if git_add_year == current_year:
+                    year_str = f"{git_add_year}"
+                else:
+                    year_str = f"{git_add_year}-{current_year}"
 
-                                act_year = year1 if year1 else year2
-                                year_print(
-                                    err(
-                                        "{} But says: {}".format(CROSS_SYMBOL, act_year)
-                                    )
-                                )
+                eprint(f"File: {src}")
+                eprint(f"- File was added in {git_add_year}")
+                eprint(f"=> License should say {year_str}")
+                eprint(err(f"{CROSS_SYMBOL} But says: {year_act}"))
 
-                                if args.fail_year_mismatch:
-                                    exit = 1
-                                    year_print("\n")
-                                else:
-                                    year_print("This is not treated as an error\n")
-                                valid = False
-                            else:
-                                if (
-                                    int(year1) != git_add_year or int(year2) != current_year
-                                ):
-                                    year_print("File: {}".format(src))
-                                    year_print(
-                                        "Year range {}-{} does not match range from git {}-{}".format(
-                                            year1, year2, git_add_year, current_year
-                                        )
-                                    )
-                                    year_print(
-                                        "- File was added in {}".format(git_add_year)
-                                    )
-                                    year_print(
-                                        "=> License should say {}-{}".format(
-                                            git_add_year, current_year
-                                        )
-                                    )
-                                    year_print(
-                                        err(
-                                            "{} But says: {}-{}".format(
-                                                CROSS_SYMBOL, year1, year2
-                                            )
-                                        )
-                                    )
-                                    if args.fail_year_mismatch:
-                                        exit = 1
-                                        year_print("\n")
-                                    else:
-                                        year_print("This is not treated as an error\n")
-                                    valid = False
-
-                        else:
-                            if int(year1) < current_year:
-                                year_print("File: {}".format(src))
-                                year_print(
-                                    "- Year {} does not match current year {}".format(
-                                        year1, current_year
-                                    )
-                                )
-                                year_print(
-                                    "=> License should say {}-{}".format(
-                                        git_add_year, current_year
-                                    )
-                                )
-                                year_print(
-                                    err("{} But says: {}".format(CROSS_SYMBOL, year1))
-                                )
-                                if args.fail_year_mismatch:
-                                    exit = 1
-                                    year_print("\n")
-                                else:
-                                    year_print("This is not treated as an error\n")
-                                valid = False
-
-                if args.fix and not valid:
+                if args.fix:
                     eprint("-> fixing file (patch year)")
-                    year_str = "2016-{}".format(current_year)
-                    if args.check_years:
-                        if git_add_year == current_year:
-                            year_str = "{}".format(git_add_year)
-                        else:
-                            year_str = "{}-{}".format(git_add_year, current_year)
+
                     new_license = raw.format(year=year_str)
 
                     # preserve rest of file as is
-                    if args.check_years:
-                        old_license_len = len(license)
-                        f.seek(old_license_len)
-                        file_body = f.read()
-                        f.seek(0)
-                        f.truncate()
+                    old_license_len = len(license)
+                    f.seek(old_license_len)
+                    file_body = f.read()
+                    f.seek(0)
+                    f.truncate()
 
                     f.seek(0)
                     f.write(new_license)
+                    f.write(file_body)
 
-                    if args.check_years:
-                        f.write(file_body)
+                eprint("")
 
-    print("\n--- INFO ---\n")
-    print(info_summary)
-    print("\n--- ERROR ---\n")
     print(error_summary)
 
     if exit != 0 and not args.fix:
