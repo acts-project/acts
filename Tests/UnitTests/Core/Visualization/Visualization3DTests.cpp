@@ -316,6 +316,20 @@ f 1 2 3
   BOOST_CHECK(output.is_equal(exp));
 }
 
+BOOST_AUTO_TEST_CASE(ColorConversion) {
+  Color red{"#ff0000"};
+  BOOST_CHECK_EQUAL(red, Color(255, 0, 0));
+
+  Color green{"#00ff00"};
+  BOOST_CHECK_EQUAL(green, Color(0, 255, 0));
+
+  Color blue{"#0000ff"};
+  BOOST_CHECK_EQUAL(blue, Color(0, 0, 255));
+
+  Color grey{"#808080"};
+  BOOST_CHECK_EQUAL(grey, Color(128, 128, 128));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test
