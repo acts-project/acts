@@ -100,7 +100,7 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
     const double covDeterminant = (perigeeCov.block<2, 2>(0, 0)).determinant();
 
     // Do track selection based on track cov matrix and m_cfg.d0SignificanceCut
-    if ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut) ||
+    if ((covDD <= 0) || //(d0 * d0 / covDD > m_cfg.d0SignificanceCut) ||
         (covZZ <= 0) || (covDeterminant <= 0)) {
       continue;
     }
@@ -116,9 +116,6 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
     double discriminant =
         linearTerm * linearTerm -
         4. * quadraticTerm * (constantTerm + 2. * m_cfg.z0SignificanceCut);
-    if (discriminant < 0) {
-      continue;
-    }
 
     // Add the track to the current maps in the state
     discriminant = std::sqrt(discriminant);
@@ -161,14 +158,12 @@ double Acts::GaussianTrackDensity::stepSize(double y, double dy,
 void Acts::GaussianTrackDensity::GaussianTrackDensityStore::addTrackToDensity(
     const TrackEntry& entry) {
   // Take track only if it's within bounds
-  if (entry.lowerBound < m_z && m_z < entry.upperBound) {
     double delta = std::exp(entry.c0 + m_z * (entry.c1 + m_z * entry.c2));
     double qPrime = entry.c1 + 2. * m_z * entry.c2;
     double deltaPrime = delta * qPrime;
     m_density += delta;
     m_firstDerivative += deltaPrime;
     m_secondDerivative += 2. * entry.c2 * delta + qPrime * deltaPrime;
-  }
 }
 
 }  // namespace Acts

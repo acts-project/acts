@@ -53,7 +53,7 @@ class HelicalTrackLinearizer {
 
     /// Tolerance determining how close we need to get to the Perigee surface to
     /// reach it during propagation
-    ActsScalar targetTolerance = 1e-12;
+    ActsScalar targetTolerance = 1e-4;
   };
 
   /// @brief Constructor

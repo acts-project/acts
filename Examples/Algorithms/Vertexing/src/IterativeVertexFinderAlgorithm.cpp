@@ -100,8 +100,19 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   Finder::Config finderCfg(std::move(vertexFitter), seeder, ipEst);
   finderCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
-  finderCfg.maxVertices = 1;
-  finderCfg.reassignTracksAfterFirstFit = false;
+
+  finderCfg.significanceCutSeeding = m_cfg.significanceCutSeeding;
+  finderCfg.maximumChi2cutForSeeding = m_cfg.maximumChi2cutForSeeding;
+  finderCfg.maxVertices = m_cfg.maxVertices;
+  finderCfg.createSplitVertices = m_cfg.createSplitVertices;
+  finderCfg.splitVerticesTrkInvFraction = m_cfg.splitVerticesTrkInvFraction;
+  finderCfg.reassignTracksAfterFirstFit = m_cfg.reassignTracksAfterFirstFit;
+  finderCfg.doMaxTracksCut = m_cfg.doMaxTracksCut;
+  finderCfg.maxTracks = m_cfg.maxTracks;
+  finderCfg.cutOffTrackWeight = m_cfg.cutOffTrackWeight;
+  finderCfg.cutOffTrackWeightReassign = m_cfg.cutOffTrackWeightReassign;
+  finderCfg.rejectedFraction = m_cfg.rejectedFraction;
+
   finderCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
   finderCfg.field = m_cfg.bField;
   Finder finder(std::move(finderCfg), logger().clone());

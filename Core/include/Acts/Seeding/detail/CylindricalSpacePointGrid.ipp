@@ -26,10 +26,11 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
   using AxisScalar = Acts::Vector3::Scalar;
   using namespace Acts::UnitLiterals;
 
-  int phiBins = 0;
+  int phiBins = 1;
+  /*
   // for no magnetic field, create 100 phi-bins
   if (options.bFieldInZ == 0) {
-    phiBins = 100;
+    phiBins = 1;
   } else {
     // calculate circle intersections of helix and max detector radius
     float minHelixRadius =
@@ -98,7 +99,7 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
       phiBins = config.maxPhiBins;
     }
   }
-
+  */
   Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
       config.phiMin, config.phiMax, phiBins);
 

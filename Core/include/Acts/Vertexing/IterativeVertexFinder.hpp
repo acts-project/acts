@@ -107,6 +107,7 @@ class IterativeVertexFinder final : public IVertexFinder {
     /// If `reassignTracksAfterFirstFit` is set this threshold will be used to
     /// decide if a track should be checked for reassignment to other vertices
     double cutOffTrackWeightReassign = 1;
+    double rejectedFraction = 0.;
 
     /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
@@ -215,6 +216,8 @@ class IterativeVertexFinder final : public IVertexFinder {
   /// @param state The state object
   Result<void> removeUsedCompatibleTracks(
       Vertex& vertex, std::vector<InputTrack>& tracksToFit,
+      std::vector<InputTrack>& compatibleTracks,
+      float rejectWorse,
       std::vector<InputTrack>& seedTracks,
       const VertexingOptions& vertexingOptions, State& state) const;
 
@@ -230,7 +233,7 @@ class IterativeVertexFinder final : public IVertexFinder {
       const std::vector<InputTrack>& seedTracks, const Vertex& seedVertex,
       std::vector<InputTrack>& tracksToFitOut,
       std::vector<InputTrack>& tracksToFitSplitVertexOut,
-      const VertexingOptions& vertexingOptions, State& state) const;
+      const VertexingOptions& vertexingOptions, State& state, float significanceCut) const;
 
   /// @brief Function that reassigns tracks from other vertices
   ///        to the current vertex if they are more compatible

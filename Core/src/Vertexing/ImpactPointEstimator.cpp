@@ -309,6 +309,52 @@ Result<double> ImpactPointEstimator::calculateDistance(
   return res.value().first.template head<3>().norm();
 }
 
+Result<double> ImpactPointEstimator::calculateDistancez0(
+    const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+    const Vector3& vtxPos, State& state) const {
+  auto res = getDistanceAndMomentumImpl(gctx, trkParams, vtxPos, m_cfg, state,
+                                        *m_logger);
+
+  if (!res.ok()) {
+    return res.error();
+  }
+
+  // Return distance (we get a 4D vector in all cases, but we only need the
+  // position norm)
+  //return res.value().first.template head<2>().norm();
+  return res.value().first[2];
+}
+
+Result<double> ImpactPointEstimator::calculateDistanced0(
+    const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+    const Vector3& vtxPos, State& state) const {
+  auto res = getDistanceAndMomentumImpl(gctx, trkParams, vtxPos, m_cfg, state,
+                                        *m_logger);
+
+  if (!res.ok()) {
+    return res.error();
+  }
+
+  // Return distance (we get a 4D vector in all cases, but we only need the
+  // position norm)
+  return res.value().first.template head<2>().norm();
+}
+
+Result<std::pair<Vector4, Vector3>> ImpactPointEstimator::calculateDistanceMod(
+    const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+    const Vector3& vtxPos, State& state) const {
+  auto res = getDistanceAndMomentumImpl(gctx, trkParams, vtxPos, m_cfg, state,
+                                        *m_logger);
+
+  if (!res.ok()) {
+    return res.error();
+  }
+
+  // Return distance (we get a 4D vector in all cases, but we only need the
+  // position norm)
+  return res.value();
+}
+
 Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const BoundTrackParameters& trkParams, const Vector3& vtxPos,

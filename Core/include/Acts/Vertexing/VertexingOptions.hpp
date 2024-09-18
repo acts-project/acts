@@ -61,6 +61,7 @@ struct VertexingOptions {
   /// the vertex fit if useConstraintInFit is set to false, it is always used
   /// during vertex finding.
   Vertex constraint;
+
   /// Boolean indicating whether we use the constraint information during
   /// the vertex fit. If set to true, the covariance matrix of constraint must
   /// be invertible.

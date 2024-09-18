@@ -49,7 +49,7 @@ class MagneticFieldProvider;
 namespace ActsExamples {
 struct AlgorithmContext;
 
-class IterativeVertexFinderAlgorithm final : public IAlgorithm {
+class SecondaryVertexFinderAlgorithm final : public IAlgorithm {
  public:
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
   using Linearizer = Acts::HelicalTrackLinearizer;
@@ -61,37 +61,25 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
   using VertexCollection = std::vector<Acts::Vertex>;
 
   struct Config {
+
+    /// The tracking geometry that should be used.
+    //std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Optional. Input track parameters collection
     std::string inputTrackParameters;
     /// Output proto vertex collection
     std::string outputProtoVertices;
     /// Output vertex collection
-    std::string outputVertices = "vertices";
+    std::string outputVertices = "sec-vertices";
+    /// Output vertex collection
+    std::string outputMasses = "masses";
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
+    // Function to extract parameters from InputTrack
+    Acts::InputTrack::Extractor extractParameters;
 
-    double significanceCutSeeding = 10;
-    double maximumChi2cutForSeeding = 36.;
-    int maxVertices = 1;
-
-    /// Assign a certain fraction of compatible tracks to a different (so-called
-    /// split) vertex if boolean is set to true.
-    bool createSplitVertices = false;
-    /// Inverse of the fraction of tracks that will be assigned to the split
-    /// vertex. E.g., if splitVerticesTrkInvFraction = 2, about 50% of
-    /// compatible tracks will be assigned to the split vertex.
-    int splitVerticesTrkInvFraction = 2;
-    bool reassignTracksAfterFirstFit = false;
-    bool doMaxTracksCut = false;
-    int maxTracks = 5000;
-    double cutOffTrackWeight = 0.01;
-    /// If `reassignTracksAfterFirstFit` is set this threshold will be used to
-    /// decide if a track should be checked for reassignment to other vertices
-    double cutOffTrackWeightReassign = 1;
-    double rejectedFraction = 0.;
   };
-
-  IterativeVertexFinderAlgorithm(const Config& config,
+  
+  SecondaryVertexFinderAlgorithm(const Config& config,
                                  Acts::Logging::Level level);
 
   /// Find vertices using iterative vertex finder algorithm.
@@ -110,9 +98,12 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
       this, "InputTrackParameters"};
 
   WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
-      this, "OutputProtoVertices"};
+      this, "OutputProtoVerticesSec"};
 
-  WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputVertices"};
+  WriteDataHandle<std::vector<float>> m_outputMasses{
+      this, "Masses"};
+
+  WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputSecondaryVertices"};
 
 };
 

@@ -28,10 +28,14 @@ struct AlgorithmContext;
 class MergeContainersAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    /// Optional. Input track parameters collection
+    /// Input track parameters collection
     std::vector<std::string>  inputTrackParameters;
-    /// Optional. Input track parameters collection
+    /// Input track parameters collection
     std::string outputTrackParameters;
+    /// Input track parameters collection
+    std::vector<std::string>  inputTracks;
+    /// Input track parameters collection
+    std::string outputTracks;
   };
 
   /// Construct the ambiguity resolution algorithm.
@@ -48,12 +52,16 @@ class MergeContainersAlgorithm final : public IAlgorithm {
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }
+  
 
  private:
   Config m_cfg;
 
   std::vector<std::unique_ptr<ReadDataHandle<TrackParametersContainer>>> m_inputTrackParameters{};
   WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{this, "OutputTrackParameters"};
+
+  std::vector<std::unique_ptr<ReadDataHandle<ConstTrackContainer>>> m_inputTracks{};
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 
 };
 

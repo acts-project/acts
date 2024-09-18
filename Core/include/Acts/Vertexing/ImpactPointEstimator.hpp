@@ -108,6 +108,15 @@ class ImpactPointEstimator {
   Result<double> calculateDistance(const GeometryContext& gctx,
                                    const BoundTrackParameters& trkParams,
                                    const Vector3& vtxPos, State& state) const;
+  Result<double> calculateDistanced0(const GeometryContext& gctx,
+                                   const BoundTrackParameters& trkParams,
+                                   const Vector3& vtxPos, State& state) const;
+  Result<double> calculateDistancez0(const GeometryContext& gctx,
+                                   const BoundTrackParameters& trkParams,
+                                   const Vector3& vtxPos, State& state) const;
+  Result<std::pair<Vector4, Vector3>> calculateDistanceMod(const GeometryContext& gctx,
+                                   const BoundTrackParameters& trkParams,
+                                   const Vector3& vtxPos, State& state) const;
 
   /// @brief Estimates the track parameters at the 3D PCA (i.e., a point of
   /// minimal 3D distance) to a vertex. The track parameters are defined wrt a

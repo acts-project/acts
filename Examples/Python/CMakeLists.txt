@@ -30,6 +30,7 @@ pybind11_add_module(ActsPythonBindings
   src/EventData.cpp
   src/FilterMeasurements.cpp
   src/MergeContainers.cpp
+  #src/Matching.cpp
 )
 install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
 
@@ -62,6 +63,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesAmbiguityResolution
   ActsExamplesFilterMeasurements
   ActsExamplesMergeContainers
+  ActsExamplesMatching
 )
 
 set(py_files

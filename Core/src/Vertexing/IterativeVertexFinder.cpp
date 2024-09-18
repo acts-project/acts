@@ -10,6 +10,8 @@
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
+#include <cmath>
+#include <map>
 
 Acts::IterativeVertexFinder::IterativeVertexFinder(
     Config cfg, std::unique_ptr<const Logger> logger)
@@ -78,7 +80,8 @@ auto Acts::IterativeVertexFinder::find(
 
     // Fill vector with tracks to fit, only compatible with seed:
     auto res = fillTracksToFit(seedTracks, seedVertex, tracksToFit,
-                               tracksToFitSplitVertex, vertexingOptions, state);
+                               tracksToFitSplitVertex, vertexingOptions, state
+                               ,m_cfg.significanceCutSeeding);
 
     if (!res.ok()) {
       return res.error();
@@ -87,9 +90,77 @@ auto Acts::IterativeVertexFinder::find(
     ACTS_DEBUG("Number of tracks used for fit: " << tracksToFit.size());
 
     /// Begin vertex fit
+    /*
+    Vertex currentVertex1st;
+    Vertex currentSplitVertex1st;
+
+    if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
+      auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
+                                              state.fieldCache);
+      if (fitResult.ok()) {
+        currentVertex1st = std::move(*fitResult);
+      } else {
+        return fitResult.error();
+      }
+    } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
+      auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
+                                              state.fieldCache);
+      if (fitResult.ok()) {
+        currentVertex1st = std::move(*fitResult);
+      } else {
+        return fitResult.error();
+      }
+    }
+    if (m_cfg.createSplitVertices && tracksToFitSplitVertex.size() > 1) {
+      auto fitResult = m_cfg.vertexFitter.fit(
+          tracksToFitSplitVertex, vertexingOptions, state.fieldCache);
+      if (fitResult.ok()) {
+        currentSplitVertex1st = std::move(*fitResult);
+      } else {
+        return fitResult.error();
+      }
+    }
+    // 2second step
+    auto v3 = currentVertex1st.position();
+    std::cout<<"vtx:"<<std::endl;
+    std::cout<<"x: "<<v3[0]<<" y: "<<v3[1]<<" z: "<<v3[2]<<std::endl;
+    v3[2] += -0.02;
+    currentVertex1st.setPosition(v3, 0);
+    auto v32 = currentVertex1st.position();
+    std::cout<<"x: "<<v32[0]<<" y: "<<v32[1]<<" z: "<<v32[2]<<std::endl;
+    // Fill vector with tracks to fit, only compatible with seed:
+    res = fillTracksToFit(seedTracks, currentVertex1st, tracksToFit,
+                               tracksToFitSplitVertex, vertexingOptions, state,0.2);
+
+
+    if (!res.ok()) {
+      return res.error();
+    }
+    */
     Vertex currentVertex;
     Vertex currentSplitVertex;
+    /*
+    auto v32 = seedVertex.position();
+    auto zPVId = v32[2]; //shift in the distribution
+    if(zPVId >-7.5)
+      zPVId = -0.75;
+    else if(zPVId > -21)
+      zPVId = -14.25;
+    else if(zPVId > -34.5)
+      zPVId = -27.75;
+    else if(zPVId > -48)
+      zPVId = -41.25;
+    else
+      zPVId = -54.75;
 
+    Acts::SquareMatrix3 cov = Acts::SquareMatrix3::Zero();
+    cov << 0.5, 0, 0, 0,
+        0.5, 0, 0, 0,
+        1.2/sqrt(12);
+
+    vertexingOptions.constraint.setPosition(Vector3(0,0,zPVId));
+    vertexingOptions.constraint.setCovariance(cov);
+    */
     if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
       auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
                                               state.fieldCache);
@@ -151,9 +222,38 @@ auto Acts::IterativeVertexFinder::find(
       }  // end reassignTracksAfterFirstFit case
          // still good vertex? might have changed in the meanwhile
       if (isGoodVertex) {
-        removeUsedCompatibleTracks(currentVertex, tracksToFit, seedTracks,
+        
+        std::vector<InputTrack> compatibleTracksToFit;
+        removeUsedCompatibleTracks(currentVertex, tracksToFit, compatibleTracksToFit, m_cfg.rejectedFraction, seedTracks,
                                    vertexingOptions, state);
 
+
+        if (vertexingOptions.useConstraintInFit && !compatibleTracksToFit.empty()) {
+          auto fitResult = m_cfg.vertexFitter.fit(compatibleTracksToFit, vertexingOptions,
+                                                  state.fieldCache);
+          if (fitResult.ok()) {
+            currentVertex = std::move(*fitResult);
+          } else {
+            return fitResult.error();
+          }
+          std::cout<<"REFIT!!!"<<std::endl;
+        } else if (!vertexingOptions.useConstraintInFit && compatibleTracksToFit.size() > 1) {
+          auto fitResult = m_cfg.vertexFitter.fit(compatibleTracksToFit, vertexingOptions,
+                                                  state.fieldCache);
+          auto vold = currentVertex.position();
+          std::cout<<"vtx:"<<std::endl;
+          std::cout<<"x: "<<vold[0]<<" y: "<<vold[1]<<" z: "<<vold[2]<<std::endl;
+          if (fitResult.ok()) {
+            currentVertex = std::move(*fitResult);
+          } else {
+            return fitResult.error();
+          }
+
+          auto vnew = currentVertex.position();
+          std::cout<<"vtx:"<<std::endl;
+          std::cout<<"x: "<<vnew[0]<<" y: "<<vnew[1]<<" z: "<<vnew[2]<<std::endl;
+          std::cout<<"REFIT!!!"<<std::endl;
+        }
         ACTS_DEBUG(
             "Number of seed tracks after removal of compatible tracks "
             "and outliers: "
@@ -169,12 +269,19 @@ auto Acts::IterativeVertexFinder::find(
       if (!isGoodSplitVertex) {
         removeTracks(tracksToFitSplitVertex, seedTracks);
       } else {
+
+        std::vector<InputTrack> compatibleTracksToFit;
         removeUsedCompatibleTracks(currentSplitVertex, tracksToFitSplitVertex,
+                                    compatibleTracksToFit, 0,
                                    seedTracks, vertexingOptions, state);
       }
     }
     // Now fill vertex collection with vertex
     if (isGoodVertex) {
+
+      //auto v32 = seedVertex.position();
+      //auto zPVId = v32[2]; //shift in the distribution
+      //currentVertex.setPosition(v32);
       vertexCollection.push_back(currentVertex);
     }
     if (isGoodSplitVertex && m_cfg.createSplitVertices) {
@@ -270,12 +377,23 @@ Acts::Result<double> Acts::IterativeVertexFinder::getCompatibility(
   return compatibility;
 }
 
+//std::vector<InputTrack>
 Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
     Vertex& vertex, std::vector<InputTrack>& tracksToFit,
+    std::vector<InputTrack>& compatibleTracks,
+    const float rejectWorse,
     std::vector<InputTrack>& seedTracks,
     const VertexingOptions& vertexingOptions, State& state) const {
-  std::vector<TrackAtVertex> tracksAtVertex = vertex.tracks();
 
+  std::vector<TrackAtVertex> tracksAtVertex = vertex.tracks();
+  float maxDist = 0;
+  std::map<InputTrack, float> distanceMap;
+  uint nTracksToReject = static_cast<int>(tracksAtVertex.size()*rejectWorse);
+  std::cout<<"to be reject: "<<nTracksToReject<<std::endl;
+  std::vector<float> largestDistances;
+  if(nTracksToReject!=0)
+    largestDistances.reserve(nTracksToReject);
+      
   for (const auto& trackAtVtx : tracksAtVertex) {
     // Check compatibility
     if (trackAtVtx.trackWeight < m_cfg.cutOffTrackWeight) {
@@ -300,12 +418,47 @@ Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
                      [&trackAtVtx](const auto& fitTrk) {
                        return trackAtVtx.originalParams == fitTrk;
                      });
+    
     if (foundFitIter != tracksToFit.end()) {
+      const BoundTrackParameters& sTrackParams = m_cfg.extractParameters(*foundFitIter);
+      auto distanceRes = m_cfg.ipEst.calculateDistance(vertexingOptions.geoContext, sTrackParams, vertex.position(), state.ipState);
+
+      if(nTracksToReject!=0){
+        if(largestDistances.size() < nTracksToReject){
+          largestDistances.push_back(*distanceRes);
+        }
+        else{
+          auto min = std::min_element(largestDistances.begin(), largestDistances.end());
+          if(*distanceRes > *min){
+            auto it = std::find(largestDistances.begin(), largestDistances.end(), *min);
+            int index = std::distance(largestDistances.begin(), it);
+            largestDistances[index] = *distanceRes;
+          }
+        }
+        distanceMap[*foundFitIter] = *distanceRes;
+      }
+      else
+        compatibleTracks.emplace_back(*foundFitIter);
       tracksToFit.erase(foundFitIter);
     } else {
       ACTS_WARNING("Track trackAtVtx not found in tracksToFit!");
     }
   }  // end iteration over tracksAtVertex
+
+  
+  if(nTracksToReject!=0){
+    if(nTracksToReject>=1 && maxDist < *std::min_element(largestDistances.begin(), largestDistances.end()))
+      maxDist = *std::min_element(largestDistances.begin(), largestDistances.end());
+
+    for (const auto& [key, value] : distanceMap) {
+      if(value < maxDist){
+        std::cout<<"accepted: value "<<value<<" below "<<maxDist<<std::endl;
+        compatibleTracks.emplace_back(key);
+        }
+      else
+        std::cout<<"rejected: value "<<value<<" above "<<maxDist<<std::endl;
+    }
+  }
 
   ACTS_DEBUG("After removal of tracks belonging to vertex, "
              << seedTracks.size() << " seed tracks left.");
@@ -365,7 +518,7 @@ Acts::Result<void> Acts::IterativeVertexFinder::fillTracksToFit(
     const std::vector<InputTrack>& seedTracks, const Vertex& seedVertex,
     std::vector<InputTrack>& tracksToFitOut,
     std::vector<InputTrack>& tracksToFitSplitVertexOut,
-    const VertexingOptions& vertexingOptions, State& state) const {
+    const VertexingOptions& vertexingOptions, State& state, float significanceCut) const {
   int numberOfTracks = seedTracks.size();
 
   // Count how many tracks are used for fit
@@ -398,6 +551,12 @@ Acts::Result<void> Acts::IterativeVertexFinder::fillTracksToFit(
       auto distanceRes = m_cfg.ipEst.calculateDistance(
           vertexingOptions.geoContext, sTrackParams, seedVertex.position(),
           state.ipState);
+      auto distanceResd0 = m_cfg.ipEst.calculateDistanced0(
+          vertexingOptions.geoContext, sTrackParams, seedVertex.position(),
+          state.ipState);
+      auto distanceResz0 = m_cfg.ipEst.calculateDistancez0(
+          vertexingOptions.geoContext, sTrackParams, seedVertex.position(),
+          state.ipState);
       if (!distanceRes.ok()) {
         return distanceRes.error();
       }
@@ -410,7 +569,10 @@ Acts::Result<void> Acts::IterativeVertexFinder::fillTracksToFit(
       double hypotVariance =
           sqrt((*(sTrackParams.covariance()))(eBoundLoc0, eBoundLoc0) +
                (*(sTrackParams.covariance()))(eBoundLoc1, eBoundLoc1));
-
+      
+      double hypotVariancez0 =
+          sqrt((*(sTrackParams.covariance()))(eBoundLoc1, eBoundLoc1));
+      
       if (hypotVariance == 0.) {
         ACTS_WARNING(
             "Track impact parameter covariances are zero. Track was not "
@@ -418,7 +580,8 @@ Acts::Result<void> Acts::IterativeVertexFinder::fillTracksToFit(
         continue;
       }
 
-      if (*distanceRes / hypotVariance < m_cfg.significanceCutSeeding) {
+      //if (*distanceRes / hypotVariance < significanceCut) {
+      if ((*distanceResz0 / hypotVariancez0 < significanceCut) && (*distanceResd0 < 100000000)) {
         if (!m_cfg.createSplitVertices ||
             count % m_cfg.splitVerticesTrkInvFraction != 0) {
           tracksToFitOut.push_back(sTrack);

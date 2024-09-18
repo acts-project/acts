@@ -44,7 +44,7 @@ class SeedingPerformanceWriter final : public WriterT<SimSeedContainer> {
     std::string filePath = "performance_track_seeding.root";
     /// Output file mode
     std::string fileMode = "RECREATE";
-    bool verbose=false;
+    bool verbose=true;
     /// Plot tool configurations.
     EffPlotTool::Config effPlotToolConfig;
     DuplicationPlotTool::Config duplicationPlotToolConfig;

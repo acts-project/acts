@@ -224,6 +224,10 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
                   ACTS_VERBOSE("Skip hit because inside the hole");
                   continue;
                 }
+                if(abs(pos[0])<110 && abs(pos[1])<110 && pos[3]<3200 && pos[3]>2800){
+                  ACTS_VERBOSE("Skip hit because inside the hole");
+                  continue;
+                }
               }
               
               if (m_cfg.applyEndcapShort){

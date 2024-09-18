@@ -60,8 +60,8 @@ struct SeedFinderConfig {
   /// The range can be defined manually with (rMinMiddle, rMaxMiddle). If
   /// useVariableMiddleSPRange is set to false and the vector rRangeMiddleSP is
   /// empty, we use (rMinMiddle, rMaxMiddle) to cut the middle space-points
-  float rMinMiddle = 60.f * Acts::UnitConstants::mm;
-  float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
+  float rMinMiddle = 3500.f * Acts::UnitConstants::mm;
+  float rMaxMiddle = 4000.f * Acts::UnitConstants::mm;
   /// If useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can
   /// be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}
   bool useVariableMiddleSPRange = false;
@@ -132,7 +132,7 @@ struct SeedFinderConfig {
   float impactMax = 20. * Acts::UnitConstants::mm;
   /// Parameter which can loosen the tolerance of the track seed to form a
   /// helix. This is useful for e.g. misaligned seeding.
-  float helixCutTolerance = 1.;
+  float helixCutTolerance = 1000.;
 
   /// Seeding parameters used for quality seed confirmation
 

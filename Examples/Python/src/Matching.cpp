@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "ActsExamples/MergeContainers/MergeContainersAlgorithm.hpp"
 #include "ActsExamples/Matching/MatchingAlgorithm.hpp"
 
 #include <memory>
@@ -22,28 +21,15 @@ using namespace ActsExamples;
 
 namespace Acts::Python {
 
-void addMergeContainers(Context& ctx) {
+void addMatching(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::MergeContainersAlgorithm, mex,
-      "MergeContainersAlgorithm", inputTrackParameters, outputTrackParameters, inputTracks, outputTracks);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::MatchingAlgorithm, mex, "MatchingAlgorithm",
-      inputTrackParametersMS,
-      inputTrackParametersVT,
-      inputTrackContainerMS,
-      inputTrackContainerVT,
-      outputTrackParameters,
-      outputTracks,
-      outputMatchedTracks,
-      inputParticles,
-      inputMeasurementParticlesMapVT,
-      inputMeasurementParticlesMapMS,
-      useRecVtx, px, py, pz, chi2max, fit,
+      inputTrackParametersMS, inputTrackParametersVT, inputTrackContainerMS,
+      inputTrackContainerVT, outputTrackParameters, outputTracks,
+      useRecVtx, px, py, pz, chi2max, //fit,
       trackingGeometry, magneticField);
-
 }
 
 }  // namespace Acts::Python

@@ -161,6 +161,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const auto& seed = seeds[iseed];
     // Get the bottom space point and its reference surface
     const auto bottomSP = seed.sp().front();
+    const auto middleSP = seed.sp()[1];
     if (bottomSP->sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in the space point");
       continue;
@@ -181,7 +182,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
     // Get the magnetic field at the bottom space point
     auto fieldRes = m_cfg.magneticField->getField(
-        {bottomSP->x(), bottomSP->z(), -bottomSP->y()}, bCache);
+        {middleSP->x(), middleSP->z(), -middleSP->y()}, bCache);
     if (!fieldRes.ok()) {
       ACTS_ERROR("Field lookup error: " << fieldRes.error());
       return ProcessCode::ABORT;

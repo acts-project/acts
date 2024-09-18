@@ -153,16 +153,16 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       }
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTopR - otherTopR;
-      if (m_cfg.verbose)
+      if(m_cfg.verbose)
         std::cout << "NA60+_SeedFilter_2SP_deltaR_in2SpFixed,min: " << deltaR
                   << " " << m_cfg.deltaRMin << std::endl;
       if (std::abs(deltaR) < m_cfg.deltaRMin) {
-        if (m_cfg.verbose)
+        if(m_cfg.verbose)
           std::cout << "NA60+_std::abs(deltaR) < m_cfg.deltaRMin  "
                 << std::endl;
         continue;
       }
-      if (m_cfg.verbose)
+      if(m_cfg.verbose)
         std::cout << "NA60+_seed_filter_afterdeltaR " << std::endl;
       bool newCompSeed = true;
       for (const float previousDiameter : compatibleSeedR) {
@@ -178,7 +178,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       if (newCompSeed) {
         compatibleSeedR.push_back(otherTopR);
         weight += m_cfg.compatSeedWeight;
-        if (m_cfg.verbose)
+        if(m_cfg.verbose)
           std::cout << "NA60+_updated weight= m_cfg.compatSeedWeight= "
                     << weight
                     << " m_cfg.compatSeedWeight= " << m_cfg.compatSeedWeight
