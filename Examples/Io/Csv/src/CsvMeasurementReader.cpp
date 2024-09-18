@@ -273,8 +273,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
   MeasurementContainer measurements;
   for (auto& [_, meas] : orderedMeasurements) {
-    auto measurement = measurements.makeMeasurement(meas.size());
-    measurement.copyFrom(meas);
+    measurements.emplaceMeasurement(meas.size(), meas);
   }
 
   // Generate measurement-particles-map
