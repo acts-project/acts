@@ -43,7 +43,7 @@ void addObj(Context& ctx) {
                const GeometryContext& viewContext,
                const std::array<int, 3>& viewRgb, unsigned int viewSegements,
                const std::string& fileName) {
-              Acts::ViewConfig sConfig = Acts::ViewConfig{viewRgb};
+              Acts::ViewConfig sConfig = Acts::ViewConfig{.color = viewRgb};
               sConfig.nSegments = viewSegements;
               Acts::GeometryView3D view3D;
               Acts::ObjVisualization3D obj;
@@ -60,7 +60,7 @@ void addObj(Context& ctx) {
                const GeometryContext& viewContext,
                const std::array<int, 3>& viewRgb, unsigned int viewSegements,
                const std::string& fileName) {
-              Acts::ViewConfig sConfig = Acts::ViewConfig{viewRgb};
+              Acts::ViewConfig sConfig = Acts::ViewConfig{.color = viewRgb};
               sConfig.nSegments = viewSegements;
               Acts::GeometryView3D view3D;
               Acts::ObjVisualization3D obj;
@@ -79,7 +79,7 @@ void addObj(Context& ctx) {
                const GeometryContext& viewContext,
                const std::array<int, 3>& viewRgb, unsigned int viewSegements,
                const std::string& fileName) {
-              Acts::ViewConfig sConfig = Acts::ViewConfig{viewRgb};
+              Acts::ViewConfig sConfig = Acts::ViewConfig{.color = viewRgb};
               sConfig.nSegments = viewSegements;
               Acts::GeometryView3D view3D;
               Acts::ObjVisualization3D obj;

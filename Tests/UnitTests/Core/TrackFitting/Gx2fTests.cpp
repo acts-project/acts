@@ -1158,15 +1158,15 @@ BOOST_AUTO_TEST_CASE(Material) {
     ObjVisualization3D obj;
 
     bool triangulate = true;
-    ViewConfig viewSensitive = ViewConfig({0, 180, 240});
+    ViewConfig viewSensitive = {.color = {0, 180, 240}};
     viewSensitive.triangulate = triangulate;
-    ViewConfig viewPassive = ViewConfig({240, 280, 0});
+    ViewConfig viewPassive = {.color = {240, 280, 0}};
     viewPassive.triangulate = triangulate;
-    ViewConfig viewVolume = ViewConfig({220, 220, 0});
+    ViewConfig viewVolume = {.color = {220, 220, 0}};
     viewVolume.triangulate = triangulate;
-    ViewConfig viewContainer = ViewConfig({220, 220, 0});
+    ViewConfig viewContainer = {.color = {220, 220, 0}};
     viewContainer.triangulate = triangulate;
-    ViewConfig viewGrid = ViewConfig({220, 0, 0});
+    ViewConfig viewGrid = {.color = {220, 0, 0}};
     viewGrid.nSegments = 8;
     viewGrid.offset = 3.;
     viewGrid.triangulate = triangulate;
@@ -1186,7 +1186,7 @@ BOOST_AUTO_TEST_CASE(Material) {
     ObjVisualization3D obj;
 
     double localErrorScale = 10000000.;
-    ViewConfig mcolor({255, 145, 48});
+    ViewConfig mcolor{.color = {255, 145, 48}};
     mcolor.offset = 2;
     //  mcolor.visible = true;
 
