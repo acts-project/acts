@@ -172,10 +172,6 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
   elementTypeCapitalized[0] = std::toupper(elementTypeCapitalized[0]);
   ACTS_INFO("Add " << elementType << " '" << element->name() << "'");
 
-  if (!m_cfg.runDataFlowChecks) {
-    return;
-  }
-
   auto symbol = [&](const char* in) {
     std::string s = demangleAndShorten(in);
     std::size_t pos = 0;
@@ -203,10 +199,8 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
         ACTS_ERROR("Adding "
                    << elementType << " " << element->name() << ":"
                    << "\n-> white board will contain key '" << handle->key()
-                   << "'"
-                   << "\nat this point in the sequence (source: "
-                   << source.fullName() << "),"
-                   << "\nbut the type will be\n"
+                   << "'" << "\nat this point in the sequence (source: "
+                   << source.fullName() << ")," << "\nbut the type will be\n"
                    << "'" << demangleAndShorten(source.typeInfo().name()) << "'"
                    << "\nand not\n"
                    << "'" << demangleAndShorten(handle->typeInfo().name())
@@ -215,8 +209,8 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
       }
     } else {
       ACTS_ERROR("Adding " << elementType << " " << element->name() << ":"
-                           << "\n-> white board will not contain key"
-                           << " '" << handle->key()
+                           << "\n-> white board will not contain key" << " '"
+                           << handle->key()
                            << "' at this point in the sequence."
                            << "\n   Needed for read data handle '"
                            << handle->name() << "'");
