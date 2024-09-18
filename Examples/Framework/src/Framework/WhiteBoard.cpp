@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <algorithm>
 #include <array>
 #include <string_view>
 
@@ -67,8 +68,7 @@ std::vector<std::string_view> ActsExamples::WhiteBoard::similarNames(
     }
   }
 
-  std::sort(names.begin(), names.end(),
-            [&](const auto &a, const auto &b) { return a.first < b.first; });
+  std::ranges::sort(names, {}, [](const auto &n) { return n.first; });
 
   std::vector<std::string_view> selected_names;
   for (std::size_t i = 0; i < std::min(names.size(), maxNumber); ++i) {

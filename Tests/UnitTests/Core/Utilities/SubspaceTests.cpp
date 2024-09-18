@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -78,7 +78,7 @@ std::array<std::size_t, kSize> selectFixedIndices(
   for (auto i = 0u; i < kSize; ++i) {
     indices[i] = fullIndices[i];
   }
-  std::sort(indices.begin(), indices.end());
+  std::ranges::sort(indices);
   return indices;
 }
 

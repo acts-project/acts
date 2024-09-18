@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
@@ -185,13 +186,11 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
   std::string volumeName = g4LogicalVolume->GetName();
   std::string volumeMaterialName = g4LogicalVolume->GetMaterial()->GetName();
 
-  bool isSensitive = g4SensitiveDetector != nullptr;
-  bool isMappedMaterial =
-      std::find(m_cfg.materialMappings.begin(), m_cfg.materialMappings.end(),
-                volumeMaterialName) != m_cfg.materialMappings.end();
-  bool isMappedVolume =
-      std::find(m_cfg.volumeMappings.begin(), m_cfg.volumeMappings.end(),
-                volumeName) != m_cfg.volumeMappings.end();
+  const bool isSensitive = g4SensitiveDetector != nullptr;
+  const bool isMappedMaterial =
+      Acts::rangeContainsValue(m_cfg.materialMappings, volumeMaterialName);
+  const bool isMappedVolume =
+      Acts::rangeContainsValue(m_cfg.volumeMappings, volumeName);
 
   if (!(isSensitive || isMappedMaterial || isMappedVolume)) {
     ACTS_VERBOSE("Did not try mapping '"
@@ -296,13 +295,13 @@ bool ActsExamples::SensitiveSurfaceMapper::checkMapping(
     const State& state, const Acts::GeometryContext& gctx,
     bool writeMissingG4VolsAsObj, bool writeMissingSurfacesAsObj) const {
   auto allSurfaces = m_cfg.candidateSurfaces->queryAll();
-  std::sort(allSurfaces.begin(), allSurfaces.end());
+  std::ranges::sort(allSurfaces);
 
   std::vector<const Acts::Surface*> found;
   for (const auto [_, surfacePtr] : state.g4VolumeToSurfaces) {
     found.push_back(surfacePtr);
   }
-  std::sort(found.begin(), found.end());
+  std::ranges::sort(found);
   auto newEnd = std::unique(found.begin(), found.end());
   found.erase(newEnd, found.end());
 

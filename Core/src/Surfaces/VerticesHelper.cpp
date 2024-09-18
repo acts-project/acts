@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 
@@ -42,7 +43,7 @@ std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
         phiSegments.push_back(phiRef);
       }
     }
-    std::sort(phiSegments.begin(), phiSegments.end());
+    std::ranges::sort(phiSegments);
   }
   return phiSegments;
 }

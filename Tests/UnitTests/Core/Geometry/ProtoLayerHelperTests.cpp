@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
                             layerSurfaces.end());
   }
 
-  ViewConfig unsorted({252, 160, 0});
+  ViewConfig unsorted{.color = {252, 160, 0}};
   for (auto& sf : cylinderSurfaces) {
     GeometryView3D::drawSurface(objVis, *sf, tgContext, Transform3::Identity(),
                                 unsorted);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   std::size_t il = 0;
   for (auto& layer : radialLayers) {
     for (auto& sf : layer.surfaces()) {
-      ViewConfig sorted(sortedColors[il]);
+      ViewConfig sorted{.color = sortedColors[il]};
       GeometryView3D::drawSurface(objVis, *sf, tgContext,
                                   Transform3::Identity(), sorted);
     }
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   il = 0;
   for (auto& layer : discLayersZ) {
     for (auto& sf : layer.surfaces()) {
-      ViewConfig ViewConfig(sortedColors[il]);
+      ViewConfig ViewConfig{.color = sortedColors[il]};
       GeometryView3D::drawSurface(objVis, *sf, tgContext,
                                   Transform3::Identity(), ViewConfig);
     }

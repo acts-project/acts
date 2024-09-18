@@ -15,6 +15,7 @@
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/Plugins/Podio/PodioDynamicColumns.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "ActsPodioEdm/Surface.h"
 
 #pragma GCC diagnostic push
@@ -339,8 +340,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     std::string tracksKey = "tracks" + s;
 
     std::vector<std::string> available = frame.getAvailableCollections();
-    if (std::find(available.begin(), available.end(), tracksKey) ==
-        available.end()) {
+    if (!rangeContainsValue(available, tracksKey)) {
       throw std::runtime_error{"Track collection '" + tracksKey +
                                "' not found in frame"};
     }
