@@ -45,38 +45,10 @@ ScoreBasedAmbiguityResolution::computeInitialState(
     std::vector<TrackFeatures> trackFeaturesVector(numberOfDetectors);
 
     for (const auto& ts : track.trackStatesReversed()) {
-      auto typeFlags(ts.typeFlags());
-
       if (!ts.hasReferenceSurface()) {
         ACTS_DEBUG("Track state has no reference surface");
         continue;
       }
-
-      if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-        ACTS_VERBOSE("Track state type is MeasurementFlag");
-      } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
-        ACTS_VERBOSE("Track state type is OutlierFlag");
-      } else if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-        ACTS_VERBOSE("Track state type is HoleFlag");
-      } else if (typeFlags.test(Acts::TrackStateFlag::MaterialFlag)) {
-        ACTS_VERBOSE("Track state type is MaterialFlag");
-        continue;
-      } else if (typeFlags.test(Acts::TrackStateFlag::ParameterFlag)) {
-        ACTS_VERBOSE("Track state type is ParameterFlag");
-        continue;
-      } else if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
-        ACTS_VERBOSE("Track state type is SharedHitFlag");
-      } else if (typeFlags.test(Acts::TrackStateFlag::NumTrackStateFlags)) {
-        ACTS_VERBOSE("Track state type is NumTrackStateFlags");
-        continue;
-      } else {
-        ACTS_DEBUG(
-            "Track state type is neither NumTrackStateFlags, MeasurementFlag, "
-            << "OutlierFlag, HoleFlag, MaterialFlag, SharedHitFlag nor "
-               "ParameterFlag");
-        ACTS_VERBOSE("Track state type is " << typeFlags);
-      }
-
       auto iVolume = ts.referenceSurface().geometryId().volume();
       auto volume_it = m_cfg.volumeMap.find(iVolume);
       if (volume_it == m_cfg.volumeMap.end()) {
@@ -102,9 +74,9 @@ ScoreBasedAmbiguityResolution::computeInitialState(
         measurements.push_back({emplace.first->second, detectorId, isOutliner});
       } else if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
-        ACTS_VERBOSE("Track state type is MeasurementFlag");
+        ACTS_DEBUG("Track state type is MeasurementFlag");
 
-        if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
+        if (ts.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
           trackFeaturesVector[detectorId].nSharedHits++;
         }
         trackFeaturesVector[detectorId].nHits++;
@@ -122,8 +94,6 @@ ScoreBasedAmbiguityResolution::computeInitialState(
     trackFeaturesVectors.push_back(std::move(trackFeaturesVector));
   }
 
-  ACTS_DEBUG("Number of measurements: " << measurementsPerTrack.size());
-  ACTS_DEBUG("Number of trackFeatures: " << trackFeaturesVectors.size());
   return measurementsPerTrack;
 }
 
@@ -471,7 +441,6 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
   } else {
     trackScore = simpleScore(tracks, trackFeaturesVectors, optionalCuts);
   }
-
 
   std::vector<bool> cleanTracks = getCleanedOutTracks(
       trackScore, trackFeaturesVectors, measurementsPerTrack);
