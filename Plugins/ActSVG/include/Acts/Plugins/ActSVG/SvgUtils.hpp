@@ -57,7 +57,7 @@ struct Style {
     str._hl_width = highlightStrokeWidth;
     str._dasharray = strokeDasharray;
 
-    return std::tie(fll, str);
+    return {fll, str};
   }
 };
 
