@@ -13,6 +13,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/Portal.hpp"
@@ -38,8 +39,10 @@ auto makeVolume(auto&&... pars) {
                      std::make_shared<CylinderVolumeBounds>(
                          std::forward<decltype(pars)>(pars)...));
   vol.setVolumeName("cyl" + std::to_string(getVolumeIndex()));
-  return std::move(vol);
+  return vol;
 };
+
+auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 BOOST_AUTO_TEST_SUITE(PortalShellTests)
 
@@ -542,6 +545,179 @@ BOOST_AUTO_TEST_CASE(RDirection) {
         CylinderStackPortalShell(gctx, {&shell1, &shell2}, BinningValue::binZ),
         std::invalid_argument);
   }
+}
+
+BOOST_AUTO_TEST_CASE(NestedStacks) {
+  //   ^
+  // r |    +---------------------------------+---------+
+  //   |    |                                 |         |
+  //   |    |                                 |         |
+  //   |    |              vol2               |         |
+  //   |    |                                 |         |
+  //   |    |                                 |         |
+  //   |    +---------------------------------+         |
+  //   |    |                                 |         |
+  //   |    |                                 |         |
+  //   |    |               gap               |  vol3   |
+  //   |    |                                 |         |
+  //   |    |                                 |         |
+  //   |    +---------------------------------+         |
+  //   |    |                                 |         |
+  //   |    |                                 |         |
+  //   |    |              vol1               |         |
+  //   |    |                                 |         |
+  //   |    |                                 |         |
+  //   |    +---------------------------------+---------+
+  //   |
+  //   +-------------------------------------------------->
+  //                                                      z
+
+  Transform3 base = Transform3::Identity();
+
+  TrackingVolume vol1(
+      base, std::make_shared<CylinderVolumeBounds>(23_mm, 48_mm, 200_mm),
+      "PixelLayer0");
+
+  TrackingVolume gap(
+      base, std::make_shared<CylinderVolumeBounds>(48_mm, 250_mm, 200_mm),
+      "Gap");
+
+  TrackingVolume vol2(
+      base, std::make_shared<CylinderVolumeBounds>(250_mm, 400_mm, 200_mm),
+      "PixelLayer3");
+
+  TrackingVolume vol3(
+      base * Translation3{Vector3::UnitZ() * 300_mm},
+      std::make_shared<CylinderVolumeBounds>(23_mm, 400_mm, 100_mm),
+      "PixelEcPos");
+
+  SingleCylinderPortalShell shell1{vol1};
+  BOOST_CHECK(shell1.isValid());
+  SingleCylinderPortalShell gapShell{gap};
+  BOOST_CHECK(gapShell.isValid());
+  SingleCylinderPortalShell shell2{vol2};
+  BOOST_CHECK(shell2.isValid());
+
+  CylinderStackPortalShell stack{
+      gctx, {&shell1, &gapShell, &shell2}, BinningValue::binR};
+
+  BOOST_CHECK(stack.isValid());
+
+  SingleCylinderPortalShell shell3{vol3};
+  BOOST_CHECK(shell3.isValid());
+
+  CylinderStackPortalShell stack2{
+      gctx, {&stack, &shell3}, BinningValue::binZ, *logger};
+  BOOST_CHECK(stack2.isValid());
+
+  using enum CylinderPortalShell::Face;
+
+  auto lookup = [](auto& shell, CylinderPortalShell::Face face,
+                   Vector3 position,
+                   Vector3 direction) -> const TrackingVolume* {
+    const auto* portal = shell.portal(face);
+    BOOST_REQUIRE_NE(portal, nullptr);
+    return portal->resolveVolume(gctx, position, direction).value();
+  };
+
+  // Interconnection in the r direction
+
+  BOOST_CHECK_EQUAL(lookup(shell1, InnerCylinder, 23_mm * Vector3::UnitX(),
+                           -Vector3::UnitX()),
+                    nullptr);
+  BOOST_CHECK_EQUAL(
+      lookup(shell1, InnerCylinder, 23_mm * Vector3::UnitX(), Vector3::UnitX()),
+      &vol1);
+
+  BOOST_CHECK_EQUAL(
+      lookup(shell1, OuterCylinder, 48_mm * Vector3::UnitX(), Vector3::UnitX()),
+      &gap);
+
+  BOOST_CHECK_EQUAL(lookup(gapShell, InnerCylinder, 48_mm * Vector3::UnitX(),
+                           -Vector3::UnitX()),
+                    &vol1);
+
+  BOOST_CHECK_EQUAL(lookup(gapShell, OuterCylinder, 250_mm * Vector3::UnitX(),
+                           Vector3::UnitX()),
+                    &vol2);
+
+  BOOST_CHECK_EQUAL(lookup(shell2, InnerCylinder, 250_mm * Vector3::UnitX(),
+                           -Vector3::UnitX()),
+                    &gap);
+
+  BOOST_CHECK_EQUAL(lookup(shell2, OuterCylinder, 400_mm * Vector3::UnitX(),
+                           Vector3::UnitX()),
+                    nullptr);
+
+  BOOST_CHECK_EQUAL(lookup(shell2, OuterCylinder, 400_mm * Vector3::UnitX(),
+                           -Vector3::UnitX()),
+                    &vol2);
+
+  BOOST_CHECK_EQUAL(lookup(shell2, OuterCylinder, 400_mm * Vector3::UnitX(),
+                           -Vector3::UnitX()),
+                    &vol2);
+
+  // Left connection
+
+  BOOST_CHECK_EQUAL(lookup(shell1, NegativeDisc, Vector3(30_mm, 0, -200_mm),
+                           -Vector3::UnitZ()),
+                    nullptr);
+
+  BOOST_CHECK_EQUAL(lookup(shell1, NegativeDisc, Vector3(30_mm, 0, -200_mm),
+                           Vector3::UnitZ()),
+                    &vol1);
+
+  BOOST_CHECK_EQUAL(lookup(gapShell, NegativeDisc, Vector3(60_mm, 0, -200_mm),
+                           -Vector3::UnitZ()),
+                    nullptr);
+
+  BOOST_CHECK_EQUAL(lookup(gapShell, NegativeDisc, Vector3(60_mm, 0, -200_mm),
+                           Vector3::UnitZ()),
+                    &gap);
+
+  BOOST_CHECK_EQUAL(lookup(shell2, NegativeDisc, Vector3(300_mm, 0, -200_mm),
+                           -Vector3::UnitZ()),
+                    nullptr);
+
+  BOOST_CHECK_EQUAL(lookup(shell2, NegativeDisc, Vector3(300_mm, 0, -200_mm),
+                           Vector3::UnitZ()),
+                    &vol2);
+
+  // Right connection
+
+  BOOST_CHECK_EQUAL(lookup(shell1, PositiveDisc, Vector3(30_mm, 0, 200_mm),
+                           -Vector3::UnitZ()),
+                    &vol1);
+
+  BOOST_CHECK_EQUAL(
+      lookup(shell1, PositiveDisc, Vector3(30_mm, 0, 200_mm), Vector3::UnitZ()),
+      &vol3);
+
+  BOOST_CHECK_EQUAL(lookup(gapShell, PositiveDisc, Vector3(60_mm, 0, 200_mm),
+                           -Vector3::UnitZ()),
+                    &gap);
+
+  BOOST_CHECK_EQUAL(lookup(gapShell, PositiveDisc, Vector3(60_mm, 0, 200_mm),
+                           Vector3::UnitZ()),
+                    &vol3);
+
+  BOOST_CHECK_EQUAL(lookup(shell2, PositiveDisc, Vector3(300_mm, 0, 200_mm),
+                           -Vector3::UnitZ()),
+                    &vol2);
+
+  BOOST_CHECK_EQUAL(lookup(shell2, PositiveDisc, Vector3(300_mm, 0, 200_mm),
+                           Vector3::UnitZ()),
+                    &vol3);
+
+  // Right outer connection
+
+  BOOST_CHECK_EQUAL(lookup(shell3, PositiveDisc, Vector3(300_mm, 0, 400_mm),
+                           -Vector3::UnitZ()),
+                    &vol3);
+
+  BOOST_CHECK_EQUAL(lookup(shell3, PositiveDisc, Vector3(300_mm, 0, 400_mm),
+                           Vector3::UnitZ()),
+                    nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(ConnectOuter) {

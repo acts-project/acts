@@ -33,6 +33,10 @@ class PortalShellBase {
 
   // @TODO: Revisit, I'm not super happy with this interface.
   virtual void applyToVolume() = 0;
+
+  virtual bool isValid() const = 0;
+
+  virtual std::string label() const = 0;
 };
 
 class CylinderPortalShell : public PortalShellBase {
@@ -72,6 +76,10 @@ class SingleCylinderPortalShell : public CylinderPortalShell {
 
   void applyToVolume() override;
 
+  bool isValid() const override;
+
+  std::string label() const override;
+
  private:
   std::array<std::shared_ptr<Portal>, 6> m_portals{};
 
@@ -93,6 +101,10 @@ class CylinderStackPortalShell : public CylinderPortalShell {
 
   // No-op, because it's a composite portal shell
   void applyToVolume() override {}
+
+  bool isValid() const override;
+
+  std::string label() const override;
 
  private:
   BinningValue m_direction;
