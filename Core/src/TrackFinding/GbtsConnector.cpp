@@ -13,7 +13,6 @@
 #include <fstream>
 #include <iostream>
 #include <list>
-#include <ranges>
 #include <set>
 #include <unordered_map>
 
@@ -139,8 +138,9 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
   // the doublet making is done using "outside-in" approach hence the reverse
   // iterations
 
-  for (const auto &[_, vConn] : std::ranges::reverse_view(newConnMap)) {
-    currentStage++;
+  for (auto it = newConnMap.rbegin(); it != newConnMap.rend();
+       it++, currentStage++) {
+    const auto &[_, vConn] = *it;
 
     // loop over links, extract all connections for the stage, group sources by
     // L1 (dst) index
