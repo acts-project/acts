@@ -34,6 +34,7 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
   assert(ts.measurement.has_value());
 
   const InternalTrackState::Measurement& measurement = ts.measurement.value();
+  const InternalTrackState::Jacobian F = ts.jacobian;
 
   visit_measurement(measurement.calibratedSize, [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
@@ -72,8 +73,6 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
     const Eigen::Matrix<ActsScalar, eBoundSize, 1> small_lambda_tilde =
         (-H.transpose() * S_inv * y + C_hat.transpose() * small_lambda_hat)
             .eval();
-
-    const InternalTrackState::Jacobian& F = ts.jacobian;
 
     big_lambda_hat = F.transpose() * big_lambda_tilde * F;
     small_lambda_hat = F.transpose() * small_lambda_tilde;
