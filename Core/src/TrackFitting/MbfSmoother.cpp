@@ -22,7 +22,7 @@ void MbfSmoother::calculateSmoothed(InternalTrackState& ts,
 void MbfSmoother::visitNonMeasurement(const InternalTrackState& ts,
                                       BoundMatrix& bigLambdaHat,
                                       BoundVector& smallLambdaHat) const {
-  const Acts::BoundMatrix& F = ts.jacobian;
+  const Acts::BoundMatrix F = ts.jacobian;
 
   bigLambdaHat = F.transpose() * bigLambdaHat * F;
   smallLambdaHat = F.transpose() * smallLambdaHat;
@@ -34,7 +34,7 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
   assert(ts.measurement.has_value());
 
   const InternalTrackState::Measurement& measurement = ts.measurement.value();
-  const Acts::BoundMatrix& F = ts.jacobian;
+  const Acts::BoundMatrix F = ts.jacobian;
 
   visit_measurement(measurement.calibratedSize, [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
