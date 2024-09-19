@@ -176,44 +176,44 @@ BOOST_AUTO_TEST_CASE(DiscLayerTrapezoidSvg) {
   }
 }
 
-// BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
-//  Planar style
-Acts::Svg::Style cylinderLayerStyle;
-cylinderLayerStyle.fillColor = {51, 153, 255};
-cylinderLayerStyle.fillOpacity = 0.75;
-cylinderLayerStyle.highlightColor = {255, 153, 51};
-cylinderLayerStyle.highlights = {"mouseover", "mouseout"};
-cylinderLayerStyle.strokeColor = {25, 25, 25};
-cylinderLayerStyle.strokeWidth = 0.5;
-cylinderLayerStyle.nSegments = 72u;
+BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
+  //  Planar style
+  Acts::Svg::Style cylinderLayerStyle;
+  cylinderLayerStyle.fillColor = {51, 153, 255};
+  cylinderLayerStyle.fillOpacity = 0.75;
+  cylinderLayerStyle.highlightColor = {255, 153, 51};
+  cylinderLayerStyle.highlights = {"mouseover", "mouseout"};
+  cylinderLayerStyle.strokeColor = {25, 25, 25};
+  cylinderLayerStyle.strokeWidth = 0.5;
+  cylinderLayerStyle.nSegments = 72u;
 
-Acts::GeometryIdentifier geoID{0};
+  Acts::GeometryIdentifier geoID{0};
 
-Acts::Test::CylindricalTrackingGeometry cGeometry(tgContext);
-auto tGeometry = cGeometry();
-auto pixelVolume =
-    tGeometry->lowestTrackingVolume(tgContext, Acts::Vector3(50., 0., 0.));
-if (pixelVolume != nullptr && pixelVolume->confinedLayers() != nullptr) {
-  auto layers = pixelVolume->confinedLayers()->arrayObjects();
-  std::size_t il = 0;
-  for (const auto& layer : layers) {
-    if (layer->surfaceArray() != nullptr) {
-      continue;
-    }
+  Acts::Test::CylindricalTrackingGeometry cGeometry(tgContext);
+  auto tGeometry = cGeometry();
+  auto pixelVolume =
+      tGeometry->lowestTrackingVolume(tgContext, Acts::Vector3(50., 0., 0.));
+  if (pixelVolume != nullptr && pixelVolume->confinedLayers() != nullptr) {
+    auto layers = pixelVolume->confinedLayers()->arrayObjects();
+    std::size_t il = 0;
+    for (const auto& layer : layers) {
+      if (layer->surfaceArray() != nullptr) {
+        continue;
+      }
 
-    Acts::Svg::LayerConverter::Options lOptions;
-    lOptions.name = "cylinder_layer_" + std::to_string(il++);
-    lOptions.surfaceStyles = Acts::GeometryHierarchyMap<Acts::Svg::Style>(
-        {{geoID, cylinderLayerStyle}});
+      Acts::Svg::LayerConverter::Options lOptions;
+      lOptions.name = "cylinder_layer_" + std::to_string(il++);
+      lOptions.surfaceStyles = Acts::GeometryHierarchyMap<Acts::Svg::Style>(
+          {{geoID, cylinderLayerStyle}});
 
-    // Get the layer sheets
-    auto layerSheets =
-        Acts::Svg::LayerConverter::convert(tgContext, *layer, lOptions);
-    for (const auto& s : layerSheets) {
-      Acts::Svg::toFile({s}, s._id + ".svg");
+      // Get the layer sheets
+      auto layerSheets =
+          Acts::Svg::LayerConverter::convert(tgContext, *layer, lOptions);
+      for (const auto& s : layerSheets) {
+        Acts::Svg::toFile({s}, s._id + ".svg");
+      }
     }
   }
-}
 }
 
 BOOST_AUTO_TEST_CASE(PlaeyLayerSvg) {}
