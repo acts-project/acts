@@ -54,31 +54,26 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
     // Measurement matrix
     const MeasurementMatrix H =
         measurement.projector
-            .template topLeftCorner<kMeasurementSize, eBoundSize>()
-            .eval();
+            .template topLeftCorner<kMeasurementSize, eBoundSize>();
 
     // Residual covariance
     const CovarianceMatrix S =
-        (H * ts.predictedCovariance * H.transpose() + calibratedCovariance)
-            .eval();
+        (H * ts.predictedCovariance * H.transpose() + calibratedCovariance);
     // TODO Sinv could be cached by the filter step
-    const CovarianceMatrix SInv = S.inverse().eval();
+    const CovarianceMatrix SInv = S.inverse();
 
     // Kalman gain
     // TODO K could be cached by the filter step
-    const KalmanGainMatrix K =
-        (ts.predictedCovariance * H.transpose() * SInv).eval();
+    const KalmanGainMatrix K = (ts.predictedCovariance * H.transpose() * SInv);
 
-    const Acts::BoundMatrix CHat =
-        (Acts::BoundMatrix::Identity() - K * H).eval();
+    const Acts::BoundMatrix CHat = (Acts::BoundMatrix::Identity() - K * H);
     const Eigen::Matrix<ActsScalar, kMeasurementSize, 1> y =
-        (calibrated - H * ts.predicted).eval();
+        (calibrated - H * ts.predicted);
 
     const Acts::BoundMatrix bigLambdaTilde =
-        (H.transpose() * SInv * H + CHat.transpose() * bigLambdaHat * CHat)
-            .eval();
+        (H.transpose() * SInv * H + CHat.transpose() * bigLambdaHat * CHat);
     const Eigen::Matrix<ActsScalar, eBoundSize, 1> smallLambdaTilde =
-        (-H.transpose() * SInv * y + CHat.transpose() * smallLambdaHat).eval();
+        (-H.transpose() * SInv * y + CHat.transpose() * smallLambdaHat);
 
     bigLambdaHat = F.transpose() * bigLambdaTilde * F;
     smallLambdaHat = F.transpose() * smallLambdaTilde;
