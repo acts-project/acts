@@ -35,11 +35,11 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
 
     detectorConfig.sharedHitsFlag = value["sharedHitsFlag"];
 
-    std::vector<double> goodHits = value["goodHits"];
-    std::vector<double> goodHoles = value["goodHoles"];
+    const std::vector<double>& goodHits = value["goodHits"];
+    const std::vector<double>& goodHoles = value["goodHoles"];
 
     const std::vector<double>& fakeHits = value["fakeHits"];
-    const std::vector<double>&fakeHoles = value["fakeHoles"];
+    const std::vector<double>& fakeHoles = value["fakeHoles"];
 
     if (goodHits.size() != fakeHits.size()) {
       throw std::invalid_argument("goodHits and FakeHits size mismatch");
