@@ -22,7 +22,7 @@ void MbfSmoother::calculateSmoothed(InternalTrackState& ts,
 void MbfSmoother::visitNonMeasurement(const InternalTrackState& ts,
                                       BoundMatrix& big_lambda_hat,
                                       BoundVector& small_lambda_hat) const {
-  const InternalTrackState::Jacobian& F = ts.jacobian;
+  const InternalTrackState::Jacobian F = ts.jacobian;
 
   big_lambda_hat = F.transpose() * big_lambda_hat * F;
   small_lambda_hat = F.transpose() * small_lambda_hat;
