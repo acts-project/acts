@@ -212,6 +212,10 @@ class Portal {
   /// @return The portal surface
   const RegularSurface& surface() const;
 
+  /// Access the portal surface that is shared between the two links
+  /// @return The portal surface
+  RegularSurface& surface();
+
  private:
   /// Helper to check surface equivalence without checking material status. This
   /// is needed because we allow fusing portals with surfaces that are
