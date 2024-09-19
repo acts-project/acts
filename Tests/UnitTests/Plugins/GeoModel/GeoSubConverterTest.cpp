@@ -8,9 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
+//clang-format off
+#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+//clang-format on
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
