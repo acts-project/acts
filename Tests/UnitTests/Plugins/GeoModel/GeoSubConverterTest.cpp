@@ -8,19 +8,19 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <GeoModelKernel/GeoShapeSubtraction.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoMaterial.h>
+#include <GeoModelKernel/GeoShapeSubtraction.h>
 #include <GeoModelKernel/GeoTrap.h>
 #include <GeoModelKernel/GeoTrd.h>
 #include <GeoModelKernel/GeoVPhysVol.h>
@@ -32,7 +32,7 @@ Acts::Transform3 idTransform = Acts::Transform3::Identity();
 BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
 // GeoBox conversion test case
-BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion){
+BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion) {
   auto material = new GeoMaterial("Material", 1.0);
 
   // (BOX object)
@@ -41,8 +41,7 @@ BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion){
   // (Trapezoid object)
   auto shapeB = new GeoTrd(2, 2, 50, 80, 60);
 
-
-  //create subtraction
+  // create subtraction
   GeoIntrusivePtr<GeoShapeSubtraction> geoSub(
       new GeoShapeSubtraction(shapeA, shapeB));
   auto logSub = new GeoLogVol("LogVolume", geoSub, material);
@@ -59,8 +58,7 @@ BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion){
   // convert GeoFullPhysVol (to surfaces)
   factory.convertFpv("Sub", fphysSub, subCache, gContext);
 
-  Acts::GeoModelSensitiveSurface subSensSurface =
-      subCache.sensitiveSurfaces[0];
+  Acts::GeoModelSensitiveSurface subSensSurface = subCache.sensitiveSurfaces[0];
   std::shared_ptr<Acts::Surface> subSurface = std::get<1>(subSensSurface);
   const auto* subBounds =
       dynamic_cast<const Acts::RectangleBounds*>(&subSurface->bounds());
@@ -68,4 +66,3 @@ BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion){
   BOOST_CHECK(subBounds->halfLengthY() == hlY);
 }
 BOOST_AUTO_TEST_SUITE_END()
-
