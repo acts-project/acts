@@ -19,7 +19,7 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     const {
   std::vector<bool> cleanTracks(measurementsPerTrack.size(), false);
 
-ACTS_INFO("Cleaning tracks");
+  ACTS_INFO("Cleaning tracks");
 
   if (trackScore.size() != measurementsPerTrack.size()) {
     throw std::invalid_argument(
