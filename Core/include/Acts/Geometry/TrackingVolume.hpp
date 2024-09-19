@@ -264,7 +264,7 @@ class TrackingVolume : public Volume {
   const IVolumeMaterial* volumeMaterial() const;
 
   /// Return the material of the volume as shared pointer
-  const std::shared_ptr<const IVolumeMaterial>& volumeMaterialSharedPtr() const;
+  const std::shared_ptr<const IVolumeMaterial>& volumeMaterialPtr() const;
 
   /// Set the volume material description
   ///
