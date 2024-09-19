@@ -594,10 +594,10 @@ Result<void> AdaptiveMultiVertexFinder::deleteLastVertex(
     return removeResult.error();
   }
 
-  for (auto& entry : fitterState.tracksAtVerticesMap) {
+  for (auto& [key, value] : fitterState.tracksAtVerticesMap) {
     // Delete all linearized tracks for current (bad) vertex
-    if (entry.first.second == &vtx) {
-      entry.second.isLinearized = false;
+    if (key.second == &vtx) {
+      value.isLinearized = false;
     }
   }
 

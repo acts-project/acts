@@ -54,8 +54,9 @@ void ActsExamples::identifyContributingParticles(
 
   for (auto hitIndex : protoTrack) {
     // register all particles that generated this hit
-    for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
-      increaseHitCount(particleHitCounts, hitParticle.second);
+    for (const auto& [_, value] :
+         makeRange(hitParticlesMap.equal_range(hitIndex))) {
+      increaseHitCount(particleHitCounts, value);
     }
   }
   sortHitCount(particleHitCounts);
@@ -80,8 +81,9 @@ void ActsExamples::identifyContributingParticles(
     IndexSourceLink sl =
         state.getUncalibratedSourceLink().template get<IndexSourceLink>();
     auto hitIndex = sl.index();
-    for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
-      increaseHitCount(particleHitCounts, hitParticle.second);
+    for (const auto& [_, value] :
+         makeRange(hitParticlesMap.equal_range(hitIndex))) {
+      increaseHitCount(particleHitCounts, value);
     }
     return true;
   });
@@ -103,8 +105,9 @@ void ActsExamples::identifyContributingParticles(
     IndexSourceLink sl =
         state.getUncalibratedSourceLink().template get<IndexSourceLink>();
     auto hitIndex = sl.index();
-    for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
-      increaseHitCount(particleHitCounts, hitParticle.second);
+    for (const auto& [_, value] :
+         makeRange(hitParticlesMap.equal_range(hitIndex))) {
+      increaseHitCount(particleHitCounts, value);
     }
   }
   sortHitCount(particleHitCounts);
