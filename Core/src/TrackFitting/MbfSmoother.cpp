@@ -22,7 +22,7 @@ void MbfSmoother::calculateSmoothed(InternalTrackState& ts,
 void MbfSmoother::visitNonMeasurement(const InternalTrackState& ts,
                                       BoundMatrix& big_lambda_hat,
                                       BoundVector& small_lambda_hat) const {
-  const InternalTrackState::Jacobian F = ts.jacobian;
+  const Acts::BoundMatrix& F = ts.jacobian;
 
   big_lambda_hat = F.transpose() * big_lambda_hat * F;
   small_lambda_hat = F.transpose() * small_lambda_hat;
@@ -34,10 +34,17 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
   assert(ts.measurement.has_value());
 
   const InternalTrackState::Measurement& measurement = ts.measurement.value();
-  const InternalTrackState::Jacobian F = ts.jacobian;
+  const Acts::BoundMatrix& F = ts.jacobian;
 
   visit_measurement(measurement.calibratedSize, [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
+
+    using MeasurementMatrix =
+        Eigen::Matrix<ActsScalar, kMeasurementSize, eBoundSize>;
+    using CovarianceMatrix =
+        Eigen::Matrix<ActsScalar, kMeasurementSize, kMeasurementSize>;
+    using KalmanGainMatrix =
+        Eigen::Matrix<ActsScalar, eBoundSize, kMeasurementSize>;
 
     typename TrackStateTraits<kMeasurementSize, true>::Calibrated calibrated{
         measurement.calibrated};
@@ -45,29 +52,29 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
         calibratedCovariance{measurement.calibratedCovariance};
 
     // Measurement matrix
-    const typename TrackStateTraits<kMeasurementSize, true>::Projector H =
+    const MeasurementMatrix H =
         measurement.projector
             .template topLeftCorner<kMeasurementSize, eBoundSize>()
             .eval();
 
     // Residual covariance
-    const Eigen::Matrix<ActsScalar, kMeasurementSize, kMeasurementSize> S =
+    const CovarianceMatrix S =
         (H * ts.predictedCovariance * H.transpose() + calibratedCovariance)
             .eval();
     // TODO Sinv could be cached by the filter step
-    const Eigen::Matrix<ActsScalar, kMeasurementSize, kMeasurementSize> S_inv =
-        S.inverse().eval();
+    const CovarianceMatrix S_inv = S.inverse().eval();
 
     // Kalman gain
     // TODO K could be cached by the filter step
-    const Eigen::Matrix<ActsScalar, eBoundSize, kMeasurementSize> K =
+    const KalmanGainMatrix K =
         (ts.predictedCovariance * H.transpose() * S_inv).eval();
 
-    const BoundMatrix C_hat = (BoundMatrix::Identity() - K * H).eval();
+    const Acts::BoundMatrix C_hat =
+        (Acts::BoundMatrix::Identity() - K * H).eval();
     const Eigen::Matrix<ActsScalar, kMeasurementSize, 1> y =
         (calibrated - H * ts.predicted).eval();
 
-    const Eigen::Matrix<ActsScalar, eBoundSize, eBoundSize> big_lambda_tilde =
+    const Acts::BoundMatrix big_lambda_tilde =
         (H.transpose() * S_inv * H + C_hat.transpose() * big_lambda_hat * C_hat)
             .eval();
     const Eigen::Matrix<ActsScalar, eBoundSize, 1> small_lambda_tilde =
