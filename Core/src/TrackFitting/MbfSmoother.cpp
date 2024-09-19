@@ -22,7 +22,7 @@ void MbfSmoother::calculateSmoothed(InternalTrackState& ts,
 void MbfSmoother::visitNonMeasurement(const InternalTrackState& ts,
                                       BoundMatrix& big_lambda_hat,
                                       BoundVector& small_lambda_hat) const {
-  const auto F = ts.jacobian;
+  const InternalTrackState::Jacobian& F = ts.jacobian;
 
   big_lambda_hat = F.transpose() * big_lambda_hat * F;
   small_lambda_hat = F.transpose() * small_lambda_hat;
@@ -33,7 +33,7 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
                                    BoundVector& small_lambda_hat) const {
   assert(ts.measurement.has_value());
 
-  const auto& measurement = ts.measurement.value();
+  const InternalTrackState::Measurement& measurement = ts.measurement.value();
 
   visit_measurement(measurement.calibratedSize, [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
@@ -44,32 +44,36 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
         calibratedCovariance{measurement.calibratedCovariance};
 
     // Measurement matrix
-    const auto H = measurement.projector
-                       .template topLeftCorner<kMeasurementSize, eBoundSize>()
-                       .eval();
+    const typename TrackStateTraits<kMeasurementSize, true>::Projector H =
+        measurement.projector
+            .template topLeftCorner<kMeasurementSize, eBoundSize>()
+            .eval();
 
     // Residual covariance
-    const auto S =
+    const Eigen::Matrix<ActsScalar, kMeasurementSize, kMeasurementSize> S =
         (H * ts.predictedCovariance * H.transpose() + calibratedCovariance)
             .eval();
     // TODO Sinv could be cached by the filter step
-    const auto S_inv = S.inverse().eval();
+    const Eigen::Matrix<ActsScalar, kMeasurementSize, kMeasurementSize> S_inv =
+        S.inverse().eval();
 
     // Kalman gain
     // TODO K could be cached by the filter step
-    const auto K = (ts.predictedCovariance * H.transpose() * S_inv).eval();
+    const Eigen::Matrix<ActsScalar, eBoundSize, kMeasurementSize> K =
+        (ts.predictedCovariance * H.transpose() * S_inv).eval();
 
-    const auto C_hat = (BoundMatrix::Identity() - K * H).eval();
-    const auto y = (calibrated - H * ts.predicted).eval();
+    const BoundMatrix C_hat = (BoundMatrix::Identity() - K * H).eval();
+    const Eigen::Matrix<ActsScalar, kMeasurementSize, 1> y =
+        (calibrated - H * ts.predicted).eval();
 
-    const auto big_lambda_tilde =
+    const Eigen::Matrix<ActsScalar, eBoundSize, eBoundSize> big_lambda_tilde =
         (H.transpose() * S_inv * H + C_hat.transpose() * big_lambda_hat * C_hat)
             .eval();
-    const auto small_lambda_tilde =
+    const Eigen::Matrix<ActsScalar, eBoundSize, 1> small_lambda_tilde =
         (-H.transpose() * S_inv * y + C_hat.transpose() * small_lambda_hat)
             .eval();
 
-    const auto F = ts.jacobian;
+    const InternalTrackState::Jacobian& F = ts.jacobian;
 
     big_lambda_hat = F.transpose() * big_lambda_tilde * F;
     small_lambda_hat = F.transpose() * small_lambda_tilde;
