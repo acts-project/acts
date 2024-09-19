@@ -64,18 +64,11 @@ TrackingVolume::TrackingVolume(const Transform3& transform,
 TrackingVolume::~TrackingVolume() = default;
 
 const TrackingVolume* TrackingVolume::lowestTrackingVolume(
-    const GeometryContext& gctx, const Vector3& position,
+    const GeometryContext& /*gctx*/, const Vector3& position,
     const double tol) const {
-  if (!inside(position, tol)) {
-    return nullptr;
-  }
-
   // confined static volumes - highest hierarchy
   if (m_confinedVolumes) {
-    const TrackingVolume* volume = m_confinedVolumes->object(position).get();
-    if (volume != nullptr) {
-      return volume->lowestTrackingVolume(gctx, position, tol);
-    }
+    return (m_confinedVolumes->object(position).get());
   }
 
   // search for dense volumes

@@ -226,16 +226,13 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   std::unique_ptr<const TrackingGeometry> detector =
       tgb.trackingGeometry(tgContext);
   BOOST_CHECK_EQUAL(
-      detector->lowestTrackingVolume(tgContext, Vector3(1_mm, 0_mm, 0_mm))
+      detector->lowestTrackingVolume(tgContext, Vector3(1., 0., 0.))
           ->volumeName(),
       volumeConfig.name);
   BOOST_CHECK_EQUAL(
-      detector->lowestTrackingVolume(tgContext, Vector3(-1_mm, 0_mm, 0_mm))
+      detector->lowestTrackingVolume(tgContext, Vector3(-1., 0., 0.))
           ->volumeName(),
       volumeConfig2.name);
-  BOOST_CHECK_EQUAL(
-      detector->lowestTrackingVolume(tgContext, Vector3(1000_m, 0_m, 0_m)),
-      nullptr);
 }
 
 }  // namespace Acts::Test
