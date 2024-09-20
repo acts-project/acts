@@ -72,6 +72,8 @@ class IVisualization3D {
   /// Remove all contents of this helper
   ///
   virtual void clear() = 0;
+
+  virtual ~IVisualization3D() = default;
 };
 
 /// Overload of the << operator to facilitate writing to streams.
