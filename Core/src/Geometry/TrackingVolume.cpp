@@ -684,4 +684,16 @@ void TrackingVolume::addSurface(std::shared_ptr<Surface> surface) {
   m_surfaces.push_back(std::move(surface));
 }
 
+void TrackingVolume::visualize(IVisualization3D& helper,
+                               const GeometryContext& gctx,
+                               const ViewConfig& viewConfig,
+                               const ViewConfig& portalViewConfig) const {
+  helper.object(volumeName());
+  Volume::visualize(helper, gctx, viewConfig);
+
+  for (const auto& child : volumes()) {
+    child.visualize(helper, gctx, viewConfig, portalViewConfig);
+  }
+}
+
 }  // namespace Acts

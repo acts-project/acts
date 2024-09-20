@@ -145,6 +145,15 @@ class TrackingGeometry {
   const std::unordered_map<GeometryIdentifier, const Surface*>&
   geoIdSurfaceMap() const;
 
+  /// Visualize a tracking geometry including substructure
+  /// @param helper The visualization helper that implement the output
+  /// @param gctx The geometry context
+  /// @param viewConfig Global view config
+  /// @param portalViewConfig View config for portals
+  void visualize(IVisualization3D& helper, const GeometryContext& gctx,
+                 const ViewConfig& viewConfig = {},
+                 const ViewConfig& portalViewConfig = {}) const;
+
  private:
   // the known world
   std::shared_ptr<TrackingVolume> m_world;

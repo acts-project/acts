@@ -473,6 +473,15 @@ class TrackingVolume : public Volume {
   ///  - positiveFaceXY
   GlueVolumesDescriptor& glueVolumesDescriptor();
 
+  /// Produces a 3D visualization of this tracking volume
+  /// @param helper The visualization helper describing the output format
+  /// @param gctx The geometry context
+  /// @param viewConfig The view configuration
+  void visualize(IVisualization3D& helper, const GeometryContext& gctx,
+                 const ViewConfig& viewConfig = {},
+                 const ViewConfig& portalViewConfig = {
+                     .color{"#308c48"}}) const;
+
  private:
   void connectDenseBoundarySurfaces(
       MutableTrackingVolumeVector& confinedDenseVolumes);
