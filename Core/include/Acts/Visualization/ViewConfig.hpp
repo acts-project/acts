@@ -52,7 +52,7 @@ struct Color {
   /// @param hex The hex string
   explicit Color(std::string_view hex) {
     auto hexToInt = [](std::string_view hexStr) -> int {
-      int value;
+      int value = 0;
       std::stringstream ss;
       ss << std::hex << hexStr;
       ss >> value;
