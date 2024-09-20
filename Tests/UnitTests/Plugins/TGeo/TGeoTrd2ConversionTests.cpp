@@ -40,9 +40,9 @@ namespace Acts::Test {
 
 GeometryContext tgContext = GeometryContext();
 
-ViewConfig red({200, 0, 0});
-ViewConfig green({0, 200, 0});
-ViewConfig blue({0, 0, 200});
+ViewConfig red{.color = {200, 0, 0}};
+ViewConfig green{.color = {0, 200, 0}};
+ViewConfig blue{.color = {0, 0, 200}};
 
 /// @brief Unit test to convert a TGeoTrd2 into a Plane
 ///

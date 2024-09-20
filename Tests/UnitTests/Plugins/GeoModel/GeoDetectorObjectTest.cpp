@@ -38,7 +38,6 @@ struct GeoDims {
   std::vector<std::vector<double>> trapVerts;
   std::vector<double> trapHls;
   std::vector<std::vector<double>> polyVerts;
-  // double poly_z;
 };
 void test(const Acts::GeoModelDetectorObjectFactory::Cache& cache,
           GeoModelDetObj::GeoDims geoDims) {
@@ -101,7 +100,6 @@ GeoGeometry constructGeoModel() {
   geoDims.polyVerts = {{-60, -50}, {60, -50},  {153, 0},
                        {123, 50},  {-123, 50}, {-153, 0}};
   geoDims.tube = {5, 6, 100};
-  // geoDims.poly_z = 2;
   geoDims.trapHls = {
       fabs(geoDims.trapVerts[0][0] - geoDims.trapVerts[1][0]) / 2,
       fabs(geoDims.trapVerts[2][0] - geoDims.trapVerts[3][0]) / 2,
