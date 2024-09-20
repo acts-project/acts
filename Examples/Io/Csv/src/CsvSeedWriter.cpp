@@ -22,6 +22,7 @@
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
+#include <fstream>
 #include <ios>
 #include <iostream>
 #include <stdexcept>
@@ -163,13 +164,8 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
     infoMap[toAdd.seedID] = toAdd;
   }
 
-  mos << "seed_id,particleId,"
-      << "pT,eta,phi,"
-      << "bX,bY,bZ,"
-      << "mX,mY,mZ,"
-      << "tX,tY,tZ,"
-      << "good/duplicate/fake,"
-      << "vertexZ,quality,"
+  mos << "seed_id,particleId," << "pT,eta,phi," << "bX,bY,bZ," << "mX,mY,mZ,"
+      << "tX,tY,tZ," << "good/duplicate/fake," << "vertexZ,quality,"
       << "Hits_ID" << '\n';
 
   for (auto& [id, info] : infoMap) {
