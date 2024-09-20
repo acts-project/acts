@@ -46,7 +46,8 @@ BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion) {
   // create subtraction
   GeoIntrusivePtr<GeoShapeSubtraction> geoSub(
       new GeoShapeSubtraction(shapeA, shapeB));
-  GeoIntrusivePtr<GeoLogVol> logSub(new GeoLogVol("LogVolume", geoSub, material));
+  GeoIntrusivePtr<GeoLogVol> logSub(
+      new GeoLogVol("LogVolume", geoSub, material));
   auto fphysSub = make_intrusive<GeoFullPhysVol>(logSub);
 
   // create pars for conversion
