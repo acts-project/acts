@@ -735,4 +735,19 @@ void TrackingVolume::visualize(IVisualization3D& helper,
   }
 }
 
+void TrackingVolume::setNavigationDelegate(
+    std::unique_ptr<INavigationDelegate> delegate) {
+  if (delegate == nullptr) {
+    throw std::invalid_argument("Navigation delegate is nullptr");
+  }
+
+  m_navigationDelegateInstance = std::move(delegate);
+  m_navigationDelegateInstance->connect(m_navigationDelegate);
+}
+
+void TrackingVolume::updateNavigationState(
+    Experimental::Gen3Geometry::NavigationState& state) const {
+  m_navigationDelegate(state);
+}
+
 }  // namespace Acts

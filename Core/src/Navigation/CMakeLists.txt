@@ -1,1 +1,1 @@
-target_sources(ActsCore PRIVATE NavigationStream.cpp)
+target_sources(ActsCore PRIVATE NavigationStream.cpp NavigationDelegate.cpp)

@@ -19,11 +19,13 @@
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -498,6 +500,11 @@ class TrackingVolume : public Volume {
                  const ViewConfig& portalViewConfig,
                  const ViewConfig& sensitiveViewConfig) const;
 
+  void setNavigationDelegate(std::unique_ptr<INavigationDelegate> delegate);
+
+  void updateNavigationState(
+      Experimental::Gen3Geometry::NavigationState& state) const;
+
  private:
   void connectDenseBoundarySurfaces(
       MutableTrackingVolumeVector& confinedDenseVolumes);
@@ -561,6 +568,10 @@ class TrackingVolume : public Volume {
   std::vector<std::unique_ptr<TrackingVolume>> m_volumes;
   std::vector<std::shared_ptr<Portal>> m_portals;
   std::vector<std::shared_ptr<Surface>> m_surfaces;
+
+  std::unique_ptr<INavigationDelegate> m_navigationDelegateInstance;
+  INavigationDelegate::DelegateType m_navigationDelegate{
+      DelegateFuncTag<&INavigationDelegate::noopUpdate>{}};
 };
 
 }  // namespace Acts
