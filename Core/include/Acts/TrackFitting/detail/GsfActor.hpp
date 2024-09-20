@@ -634,6 +634,8 @@ struct GsfActor {
                                    bool doCovTransport) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
 
+    const bool precedingMeasurementExists = result.processedStates > 0;
+
     // Initialize as true, so that any component can flip it. However, all
     // components should behave the same
     bool is_hole = true;
@@ -647,7 +649,8 @@ struct GsfActor {
       // now until we measure this is significant
       auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
           singleState, singleStepper, surface, tmpStates.traj,
-          MultiTrajectoryTraits::kInvalid, doCovTransport, logger());
+          MultiTrajectoryTraits::kInvalid, doCovTransport, logger(),
+          precedingMeasurementExists);
 
       if (!trackStateProxyRes.ok()) {
         return trackStateProxyRes.error();
