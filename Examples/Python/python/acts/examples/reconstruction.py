@@ -516,7 +516,7 @@ def addSeeding(
                 logLevel,
                 suffix,
                 det_suffix,
-                False
+                noGuessing
             )
 
         if outputDirCsv is not None:
@@ -1389,7 +1389,7 @@ def addSeedPerformanceWriters(
             treeName="estimatedparams",
         )
     )
-    if False: #not noGuessing:
+    if not noGuessing:
         sequence.addWriter(
             acts.examples.TrackletVertexingPerformanceWriter(
                 level=logLevel,
@@ -1627,7 +1627,6 @@ def addCKFTracks(
     outputPrimaryVertex: str="OutputRecPrimaryVertex",
     suffixOut = "",
     suffixIn = "",
-    suffix = "",
     det_suffix = ""
 ) -> None:
     """This function steers the seeding

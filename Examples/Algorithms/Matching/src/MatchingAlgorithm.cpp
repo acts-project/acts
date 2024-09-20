@@ -125,11 +125,12 @@ ActsExamples::ProcessCode ActsExamples::MatchingAlgorithm::execute(
   // const auto& paramsMSinput = m_inputTrackParametersMS(ctx);
   // const auto& trackContainterVT = m_inputTrackContainerVT(ctx);
   // const auto& trackContainterMS = m_inputTrackContainerMS(ctx);
-  const auto& particles = m_inputParticles(ctx);
   const auto& hitParticlesMapMS = m_inputMeasurementParticlesMapMS(ctx);
   const auto& hitParticlesMapVT = m_inputMeasurementParticlesMapVT(ctx);
 
   // Construct a perigee surface as the target surface
+
+  std::cout<<"px: "<<m_cfg.px<<" py: "<<m_cfg.py<<" pz: "<<m_cfg.pz<<std::endl;
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{m_cfg.px, m_cfg.py, m_cfg.pz});
 
@@ -241,6 +242,24 @@ ActsExamples::ProcessCode ActsExamples::MatchingAlgorithm::execute(
       Acts::ActsScalar phiMS = paramsMS(Acts::BoundIndices::eBoundPhi);
       Acts::ActsScalar thetaMS = paramsMS(Acts::BoundIndices::eBoundTheta);
       Acts::ActsScalar qOvPMS = paramsMS(Acts::BoundIndices::eBoundQOverP);
+    /*
+  /// Phi direction.
+  Scalar phi() const { return m_params[eBoundPhi]; }
+  /// Theta direction.
+  Scalar theta() const { return m_params[eBoundTheta]; }
+  /// Charge over momentum.
+  Scalar qOverP() const { return m_params[eBoundQOverP]; }*/
+      Acts::ActsScalar loc0MS_pre = params1.localPosition()[0];
+      Acts::ActsScalar loc1MS_pre = params1.localPosition()[1];
+      Acts::ActsScalar phiMS_pre = params1.phi();
+      Acts::ActsScalar thetaMS_pre = params1.theta();
+      Acts::ActsScalar qOvPMS_pre = params1.qOverP();
+
+      std::cout<<"loc0: "<<loc0MS<<" "<<loc0MS_pre<<std::endl;
+      std::cout<<"loc1: "<<loc1MS<<" "<<loc1MS_pre<<std::endl;
+      std::cout<<"phiM: "<<phiMS<<" "<<phiMS_pre<<std::endl;
+      std::cout<<"thet: "<<thetaMS<<" "<<thetaMS_pre<<std::endl;
+      std::cout<<"qOvP: "<<qOvPMS<<" "<<qOvPMS_pre<<std::endl;
 
       Acts::ActsScalar loc0VTmatch = 0;
       Acts::ActsScalar loc1VTmatch = 0;

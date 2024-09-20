@@ -66,7 +66,6 @@ class TrackletVertexingAlgorithm final : public IAlgorithm {
     bool noGuessing = false;
     bool useFit = true;
     int nbins = 60;
-    bool addDeltas = true;
     bool projective = false;
     double zPerigee = 0.;
   };

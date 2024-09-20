@@ -262,6 +262,42 @@ def addParticleReader(
     return s
 
 
+def addSimHitsReader(
+    s: acts.examples.Sequencer,
+    inputDir: Optional[Union[Path, str]] = None,
+    outputSimHits: Optional[Union[Path, str]] = None,
+) -> None:
+    """This function read
+    Parameters
+    ----------
+    s: Sequencer
+        the sequencer module to which we add the particle gun steps (returned from addParticleGun)
+    inputDirCsv : Path|str, path, None
+        the input folder for the Csv input, None triggers no output
+    outputDirCsv : Path|str, path, None
+        the output folder for the Csv output, None triggers no output
+    outputDirRoot : Path|str, path, None
+        the output folder for the Root output, None triggers no output
+    printParticles : bool, False
+        print generated particles
+    """
+
+
+    hitReader = acts.examples.CsvSimHitReader(
+            acts.logging.WARNING,
+            inputDir=str(inputDir),
+            inputStem="hits",
+            outputSimHits=outputSimHits
+        )
+    
+    s.addReader(hitReader)
+
+    #s.addWhiteboardAlias("particles"+det_suffix, evReader.config.outputParticles)
+
+
+    return s
+
+
 
 def addPythia8(
     s: acts.examples.Sequencer,
@@ -497,6 +533,7 @@ def addFatras(
     outputParticlesInitial: str = "particles_initial",
     outputParticlesFinal: str = "particles_final",
     outputSimHits: str = "simhits",
+    inputSimHits: Optional[str] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -557,6 +594,7 @@ def addFatras(
             emEnergyLossRadiation=enableInteractions,
             emPhotonConversion=enableInteractions,
             pMin=pMin,
+            inputSimHits=inputSimHits
         )
     )
 

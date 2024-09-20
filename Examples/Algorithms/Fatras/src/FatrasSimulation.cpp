@@ -217,6 +217,10 @@ ActsExamples::FatrasSimulation::FatrasSimulation(Config cfg,
   m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
   m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
   m_outputSimHits.initialize(m_cfg.outputSimHits);
+
+  if (!m_cfg.inputSimHits.empty()) {
+    m_inputSimHits.initialize(m_cfg.inputSimHits);
+  }
 }
 
 // explicit destructor needed for the PIMPL implementation to work
@@ -233,6 +237,7 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
   SimParticleContainer::sequence_type particlesInitialUnordered;
   SimParticleContainer::sequence_type particlesFinalUnordered;
   SimHitContainer::sequence_type simHitsUnordered;
+  
   // reserve appropriate resources
   particlesInitialUnordered.reserve(inputParticles.size());
   particlesFinalUnordered.reserve(inputParticles.size());
@@ -282,7 +287,7 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
 
   particlesInitial.reserve(particlesInitialUnordered.size());
   particlesFinal.reserve(particlesFinalUnordered.size());
-  simHits.reserve(simHitsUnordered.size());
+  simHits.reserve(simHitsUnordered.size()*2);
 
   for (const auto &p : particlesInitialUnordered) {
     particlesInitial.insert(p);
@@ -295,6 +300,12 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
   }
 #endif
 
+  if (!m_cfg.inputSimHits.empty()) {
+    const auto &inputSimHits = m_inputSimHits(ctx);
+    for (const auto &h : inputSimHits) {
+      simHits.insert(h);
+    }
+  }
   // store ordered output containers
   m_outputParticlesInitial(ctx, std::move(particlesInitial));
   m_outputParticlesFinal(ctx, std::move(particlesFinal));

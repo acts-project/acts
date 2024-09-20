@@ -452,11 +452,11 @@ Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
 
     for (const auto& [key, value] : distanceMap) {
       if(value < maxDist){
-        std::cout<<"accepted: value "<<value<<" below "<<maxDist<<std::endl;
+        //std::cout<<"accepted: value "<<value<<" below "<<maxDist<<std::endl;
         compatibleTracks.emplace_back(key);
         }
-      else
-        std::cout<<"rejected: value "<<value<<" above "<<maxDist<<std::endl;
+      //else
+        //std::cout<<"rejected: value "<<value<<" above "<<maxDist<<std::endl;
     }
   }
 
