@@ -30,15 +30,30 @@ set(DETRAY_CUSTOM_SCALARTYPE
     "Scalar type to use in the Detray code"
 )
 
-set(DETRAY_BUILD_TESTING
+set(DETRAY_BUILD_TEST_UTILS
+    ON
+    CACHE BOOL
+    "Turn on the build of the Detray test utilities"
+)
+set(DETRAY_BUILD_UNITTESTS
     OFF
     CACHE BOOL
     "Turn off the build of the Detray unit tests"
+)
+set(DETRAY_BUILD_INTEGRATIONTESTS
+    OFF
+    CACHE BOOL
+    "Turn off the build of the Detray integration tests"
 )
 set(DETRAY_BUILD_TUTORIALS
     OFF
     CACHE BOOL
     "Turn off the build of the Detray tutorials"
+)
+set(DETRAY_BUILD_BENCHMARKS
+    OFF
+    CACHE BOOL
+    "Turn off the build of the Detray benchmarks"
 )
 set(DETRAY_EIGEN_PLUGIN
     ON
