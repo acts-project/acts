@@ -109,13 +109,12 @@ void addGeometry(Context& ctx) {
 
   {
     py::class_<Acts::Surface, std::shared_ptr<Acts::Surface>>(m, "Surface")
+        // Can't bind directly because GeometryObject is virtual base of Surface
         .def("geometryId",
-             [](Acts::Surface& self) { return self.geometryId(); })
-        .def("center",
-             [](Acts::Surface& self) {
-               return self.center(Acts::GeometryContext{});
-             })
-        .def("type", [](Acts::Surface& self) { return self.type(); });
+             [](const Surface& self) { return self.geometryId(); })
+        .def("center", &Surface::center)
+        .def("type", &Surface::type)
+        .def("visualize", &Surface::visualize);
   }
 
   {
@@ -287,7 +286,7 @@ void addExperimentalGeometry(Context& ctx) {
       for (const auto& surface : smap) {
         auto gid = surface->geometryId();
         // Exclusion criteria
-        if (sensitiveOnly and gid.sensitive() == 0) {
+        if (sensitiveOnly && gid.sensitive() == 0) {
           continue;
         };
         surfaceVolumeLayerMap[gid.volume()][gid.layer()].push_back(surface);
