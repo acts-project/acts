@@ -194,7 +194,6 @@ void addBlueprint(Context& ctx) {
                  self.graphViz(ss);
                  fh.attr("write")(ss.str());
                })
-          .def("visualize", &BlueprintNode::visualize)
           .def(
               "build",
               [](BlueprintNode& self, Logging::Level level) {
