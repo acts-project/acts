@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Detector/DetectorVolume.hpp>
 #include <Acts/Geometry/GeometryContext.hpp>
@@ -107,5 +108,15 @@ void addObj(Context& ctx) {
               obj.write(fileName);
             });
   }
+
+  py::class_<IVisualization3D>(m, "IVisualization3D")
+      .def("write", py::overload_cast<const std::string&>(
+                        &IVisualization3D::write, py::const_));
+
+  py::class_<ObjVisualization3D<double>, IVisualization3D>(m,
+                                                           "ObjVisualization3D")
+      .def(py::init<>())
+      .def("write", py::overload_cast<const std::string&>(
+                        &ObjVisualization3D<double>::write, py::const_));
 }
 }  // namespace Acts::Python
