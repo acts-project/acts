@@ -104,7 +104,7 @@ std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
     throw std::logic_error{"Unsupported volume bounds type"};
   }
 
-  ACTS_DEBUG("New bounds are: " << *worldBounds);
+  ACTS_DEBUG(prefix() << "New root volume bounds are: " << *worldBounds);
 
   auto world = std::make_unique<TrackingVolume>(
       topVolume.transform(), std::move(worldBounds), "World");

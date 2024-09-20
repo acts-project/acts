@@ -89,6 +89,7 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
       ACTS_DEBUG(prefix() << " ~> Gap volume (" << gap->volumeName()
                           << "): " << gap->volumeBounds());
       auto shell = std::make_unique<SingleCylinderPortalShell>(*gap);
+      assert(shell->isValid());
       shells.push_back(shell.get());
 
       m_gaps.emplace_back(std::move(shell), std::move(gap));
@@ -112,6 +113,7 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
         throw std::runtime_error(
             "Child volume of cylinder stack is not a cylinder");
       }
+      assert(shell->isValid());
 
       shells.push_back(shell);
     }
@@ -125,11 +127,18 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
                    shells, [](const auto* shell) { return shell == nullptr; }),
                "Invalid shell pointer");
 
+  throw_assert(std::ranges::all_of(
+                   shells, [](const auto* shell) { return shell->isValid(); }),
+               "Invalid shell");
+
   ACTS_DEBUG(prefix() << "Producing merged cylinder stack shell in "
-                      << m_direction << " direction");
+                      << m_direction << " direction from " << shells.size()
+                      << " shells");
   m_shell = std::make_unique<CylinderStackPortalShell>(gctx, std::move(shells),
                                                        m_direction, logger);
 
+  assert(m_shell != nullptr && "No shell was built at the end of connect");
+  assert(m_shell->isValid() && "Shell is not valid at the end of connect");
   return *m_shell;
 }
 
@@ -147,11 +156,16 @@ void CylinderContainerBlueprintNode::finalize(TrackingVolume& parent,
     throw std::runtime_error("Volume is not connected");
   }
 
-  ACTS_DEBUG("Registering " << m_gaps.size() << " gap volumes with parent");
+  ACTS_DEBUG(prefix() << "Registering " << m_gaps.size()
+                      << " gap volumes with parent");
   for (auto& [shell, gap] : m_gaps) {
+    std::cout << "~> " << gap->volumeName() << std::endl;
     parent.addVolume(std::move(gap));
     shell->applyToVolume();
   }
+
+  ACTS_DEBUG(prefix() << "Finalizing " << children().size() << " children");
+
   for (auto& child : children()) {
     child.finalize(parent, logger);
   }
