@@ -28,15 +28,15 @@ struct Color {
   /// @param r The red component
   /// @param g The green component
   /// @param b The blue component
-  Color(int r, int g, int b) : rgb{r, g, b} {}
+  constexpr Color(int r, int g, int b) : rgb{r, g, b} {}
 
   /// Constructor from array of integer rgb values [0, 255]
   /// @param values The rgb values
-  explicit Color(std::array<int, 3> values) : rgb(values) {}
+  constexpr explicit Color(std::array<int, 3> values) : rgb(values) {}
 
   /// Constructor from array of double rgb values [0, 1]
   /// @param values The rgb values
-  explicit Color(std::array<double, 3> values) {
+  constexpr explicit Color(std::array<double, 3> values) {
     rgb[0] = static_cast<int>(values[0] * 255);
     rgb[1] = static_cast<int>(values[1] * 255);
     rgb[2] = static_cast<int>(values[2] * 255);
@@ -46,12 +46,13 @@ struct Color {
   /// @param r The red component
   /// @param g The green component
   /// @param b The blue component
-  Color(double r, double g, double b) : Color{std::array<double, 3>{r, g, b}} {}
+  constexpr Color(double r, double g, double b)
+      : Color{std::array<double, 3>{r, g, b}} {}
 
   /// Constructor from hex string. The expected format is `#RRGGBB`
   /// @param hex The hex string
-  explicit Color(std::string_view hex) {
-    auto hexToInt = [](std::string_view hexStr) -> int {
+  constexpr explicit Color(std::string_view hex) {
+    auto hexToInt = [](std::string_view hexStr) {
       int value = 0;
       std::stringstream ss;
       ss << std::hex << hexStr;
@@ -83,9 +84,7 @@ struct Color {
   /// @param lhs The first color
   /// @param rhs The second color
   /// @return True if the colors are equal
-  friend bool operator==(const Color& lhs, const Color& rhs) {
-    return lhs.rgb == rhs.rgb;
-  }
+  friend bool operator==(const Color& lhs, const Color& rhs) = default;
 
   /// Output stream operator
   /// @param os The output stream

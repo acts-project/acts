@@ -48,17 +48,20 @@ class ObjVisualization3D : public IVisualization3D {
       : m_outputPrecision(prec), m_outputScalor(scale) {}
 
   /// @copydoc Acts::IVisualization3D::vertex()
-  void vertex(const Vector3& vtx, Color color = {0, 0, 0}) final;
+  void vertex(const Vector3& vtx, Color color = s_defaultColor) final;
 
   /// @copydoc Acts::IVisualization3D::line()
-  void line(const Vector3& a, const Vector3& b, Color color = {0, 0, 0}) final;
+  void line(const Vector3& a, const Vector3& b,
+            Color color = s_defaultColor) final;
 
   /// @copydoc Acts::IVisualization3D::face()
-  void face(const std::vector<Vector3>& vtxs, Color color = {0, 0, 0}) final;
+  void face(const std::vector<Vector3>& vtxs,
+            Color color = s_defaultColor) final;
 
   /// @copydoc Acts::IVisualization3D::faces()
   void faces(const std::vector<Vector3>& vtxs,
-             const std::vector<FaceType>& faces, Color color = {0, 0, 0}) final;
+             const std::vector<FaceType>& faces,
+             Color color = s_defaultColor) final;
 
   /// @copydoc Acts::IVisualization3D::write(const std::filesystem::path&) const
   void write(const std::filesystem::path& path) const final;

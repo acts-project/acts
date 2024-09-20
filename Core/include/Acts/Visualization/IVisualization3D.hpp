@@ -24,11 +24,13 @@ class IVisualization3D {
  public:
   using FaceType = std::vector<std::size_t>;
 
+  static constexpr Color s_defaultColor = {120, 120, 120};
+
   /// Draw a vertex at a given location and a color.
   /// @param vtx The vertex position
   /// @param color The color
   ///
-  virtual void vertex(const Vector3& vtx, Color color = {120, 120, 120}) = 0;
+  virtual void vertex(const Vector3& vtx, Color color = s_defaultColor) = 0;
 
   /// Draw a face that connects a list of vertices.
   /// @note Depending on the helper implementation, out of plane vertices might
@@ -37,7 +39,7 @@ class IVisualization3D {
   /// @param color The color of the face
   ///
   virtual void face(const std::vector<Vector3>& vtxs,
-                    Color color = {120, 120, 120}) = 0;
+                    Color color = s_defaultColor) = 0;
 
   /// Draw a faces that connects a list of vertices - expert only
   ///
@@ -49,7 +51,7 @@ class IVisualization3D {
   ///
   virtual void faces(const std::vector<Vector3>& vtxs,
                      const std::vector<FaceType>& faces,
-                     Color color = {120, 120, 120}) = 0;
+                     Color color = s_defaultColor) = 0;
 
   /// Draw a line from a vertex to another
   /// @param a The start vertex
@@ -57,7 +59,7 @@ class IVisualization3D {
   /// @param color The color of the line
   ///
   virtual void line(const Vector3& a, const Vector3& b,
-                    Color color = {120, 120, 120}) = 0;
+                    Color color = s_defaultColor) = 0;
 
   /// Write the content of the helper to an outstream.
   /// @param os The output stream for file
