@@ -69,6 +69,8 @@ void addDigitization(Context& ctx) {
     ACTS_PYTHON_MEMBER(outputMeasurementSimHitsMap);
     ACTS_PYTHON_MEMBER(surfaceByIdentifier);
     ACTS_PYTHON_MEMBER(randomNumbers);
+    ACTS_PYTHON_MEMBER(doOutputCells);
+    ACTS_PYTHON_MEMBER(doClusterization);
     ACTS_PYTHON_MEMBER(doMerge);
     ACTS_PYTHON_MEMBER(minEnergyDeposit);
     ACTS_PYTHON_MEMBER(digitizationConfigs);
