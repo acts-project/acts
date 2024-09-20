@@ -582,9 +582,14 @@ class KalmanFitter {
     Result<void> filter(const Surface* surface, propagator_state_t& state,
                         const stepper_t& stepper, const navigator_t& navigator,
                         result_type& result) const {
+      const bool precedingMeasurementExists = (result.measurementStates > 0);
+      const bool surfaceIsSensitive =
+          (surface->associatedDetectorElement() != nullptr);
+      const bool surfaceHasMaterial = (surface->surfaceMaterial() != nullptr);
+      const auto sourcelink_it = inputMeasurements->find(surface->geometryId());
+
       // Try to find the surface in the measurement surfaces
-      if (auto sourcelink_it = inputMeasurements->find(surface->geometryId());
-          sourcelink_it != inputMeasurements->end()) {
+      if (sourcelink_it != inputMeasurements->end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
@@ -638,12 +643,7 @@ class KalmanFitter {
         // the lastTrackIndex.
         result.lastMeasurementIndex = result.lastTrackIndex;
 
-      } else if (const bool precedingMeasurementExists =
-                     (result.measurementStates > 0),
-                 surfaceIsSensitive =
-                     (surface->associatedDetectorElement() != nullptr),
-                 surfaceHasMaterial = (surface->surfaceMaterial() != nullptr);
-                 (precedingMeasurementExists && surfaceIsSensitive) ||
+      } else if ((precedingMeasurementExists && surfaceIsSensitive) ||
                  surfaceHasMaterial) {
         // We only create track states here if there is already measurement
         // detected or if the surface has material (no holes before the first
