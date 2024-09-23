@@ -41,37 +41,25 @@
 #include <vector>
 
 namespace Acts::Experimental {
-ViewConfig s_viewSensitive = ViewConfig({0, 180, 240});
-ViewConfig s_viewPassive = ViewConfig({240, 280, 0});
-ViewConfig s_viewVolume = ViewConfig({220, 220, 0});
-ViewConfig s_viewGrid = ViewConfig({220, 0, 0});
-ViewConfig s_viewLine = ViewConfig({0, 0, 220});
+ViewConfig s_viewSensitive = {.color = {0, 180, 240}};
+ViewConfig s_viewPassive = {.color = {240, 280, 0}};
+ViewConfig s_viewVolume = {.color = {220, 220, 0}};
+ViewConfig s_viewGrid = {.color = {220, 0, 0}};
+ViewConfig s_viewLine = {.color = {0, 0, 220}};
 }  // namespace Acts::Experimental
 
 void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
                                           const Polyhedron& polyhedron,
                                           const ViewConfig& viewConfig) {
-  if (viewConfig.visible) {
-    if (!viewConfig.triangulate) {
-      helper.faces(polyhedron.vertices, polyhedron.faces, viewConfig.color);
-    } else {
-      helper.faces(polyhedron.vertices, polyhedron.triangularMesh,
-                   viewConfig.color);
-    }
-  }
+  polyhedron.visualize(helper, viewConfig);
 }
 
 void Acts::GeometryView3D::drawSurface(IVisualization3D& helper,
                                        const Surface& surface,
                                        const GeometryContext& gctx,
-                                       const Transform3& transform,
+                                       const Transform3& /*transform*/,
                                        const ViewConfig& viewConfig) {
-  Polyhedron surfaceHedron =
-      surface.polyhedronRepresentation(gctx, viewConfig.nSegments);
-  if (!transform.isApprox(Transform3::Identity())) {
-    surfaceHedron.move(transform);
-  }
-  drawPolyhedron(helper, surfaceHedron, viewConfig);
+  surface.visualize(helper, gctx, viewConfig);
 }
 
 void Acts::GeometryView3D::drawSurfaceArray(
@@ -163,12 +151,9 @@ void Acts::GeometryView3D::drawSurfaceArray(
 void Acts::GeometryView3D::drawVolume(IVisualization3D& helper,
                                       const Volume& volume,
                                       const GeometryContext& gctx,
-                                      const Transform3& transform,
+                                      const Transform3& /*transform*/,
                                       const ViewConfig& viewConfig) {
-  auto bSurfaces = volume.volumeBounds().orientedSurfaces(volume.transform());
-  for (const auto& bs : bSurfaces) {
-    drawSurface(helper, *bs.surface, gctx, transform, viewConfig);
-  }
+  volume.visualize(helper, gctx, viewConfig);
 }
 
 void Acts::GeometryView3D::drawPortal(IVisualization3D& helper,

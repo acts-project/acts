@@ -887,7 +887,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
                 min + i * step, min + j * step, min + k * step);
             Box bb(&o, pos, size);
 
-            std::array<int, 3> color = {255, 0, 0};
+            Color color = {255, 0, 0};
 
             if (bb.intersect(fr)) {
               color = {0, 255, 0};
@@ -1150,7 +1150,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
                 min + i * step, min + j * step, min + k * step);
             Box bb(&o, pos, size);
 
-            std::array<int, 3> color = {255, 0, 0};
+            Color color = {255, 0, 0};
 
             if (bb.intersect(fr)) {
               color = {0, 255, 0};

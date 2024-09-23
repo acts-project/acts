@@ -190,6 +190,7 @@ void addFramework(Context& ctx) {
   ACTS_PYTHON_MEMBER(fpeMasks);
   ACTS_PYTHON_MEMBER(failOnFirstFpe);
   ACTS_PYTHON_MEMBER(fpeStackTraceLength);
+  ACTS_PYTHON_MEMBER(runDataFlowChecks);
   ACTS_PYTHON_STRUCT_END();
 
   auto fpem =
