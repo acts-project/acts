@@ -80,7 +80,7 @@ def check_git_dates(src):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("input")
+    p.add_argument("input", nargs="+")
     p.add_argument(
         "--fix", action="store_true", help="Attempt to fix any license issues found."
     )
@@ -99,13 +99,13 @@ def main():
     args = p.parse_args()
     print(args.exclude)
 
-    if os.path.isdir(args.input):
+    if len(args.input) == 1 and os.path.isdir(args.input[0]):
         srcs = (
             str(
                 check_output(
                     [
                         "find",
-                        args.input,
+                        args.input[0],
                         "-iname",
                         "*.cpp",
                         "-or",
@@ -123,7 +123,7 @@ def main():
         )
         srcs = filter(lambda p: not p.startswith("./build"), srcs)
     else:
-        srcs = [args.input]
+        srcs = args.input
 
     year = int(datetime.now().strftime("%Y"))
 
@@ -189,7 +189,7 @@ def main():
     exit = 0
     srcs = list(srcs)
     nsrcs = len(srcs)
-    step = int(nsrcs / 20)
+    step = max(int(nsrcs / 20), 1)
     for i, src in enumerate(srcs):
         if any([fnmatch(src, e) for e in args.exclude]):
             continue

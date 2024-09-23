@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -140,7 +140,7 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
   // Register the last step if successful
   if (!cSteps.empty()) {
     cSteps.push_back(ChannelStep({0, 0}, end, start));
-    std::sort(cSteps.begin(), cSteps.end());
+    std::ranges::sort(cSteps, std::less<ChannelStep>{});
   }
 
   std::vector<ChannelSegment> cSegments;

@@ -40,7 +40,7 @@ GeometryContext gctx = GeometryContext();
 static inline std::string run(IVisualization3D& helper) {
   std::stringstream ss;
 
-  ViewConfig lineView({0, 0, 255});
+  ViewConfig lineView{.color = {0, 0, 255}};
   lineView.lineThickness = 0.1;
 
   // Line visualization ------------------------------------------------
@@ -71,7 +71,7 @@ static inline std::string run(IVisualization3D& helper) {
   // Error visualization: local ---------------------------------------------
   Acts::GeometryView3D::drawSurface(helper, *plane, gctx);
 
-  ViewConfig errorVis({250, 0, 0});
+  ViewConfig errorVis{.color = {250, 0, 0}};
   errorVis.lineThickness = 0.025;
 
   SquareMatrix2 cov = SquareMatrix2::Identity();

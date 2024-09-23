@@ -100,4 +100,6 @@ using AngleAxis3 = Eigen::AngleAxis<ActsScalar>;
 using Transform2 = Eigen::Transform<ActsScalar, 2, Eigen::AffineCompact>;
 using Transform3 = Eigen::Transform<ActsScalar, 3, Eigen::Affine>;
 
+constexpr ActsScalar s_transformEquivalentTolerance = 1e-9;
+
 }  // namespace Acts

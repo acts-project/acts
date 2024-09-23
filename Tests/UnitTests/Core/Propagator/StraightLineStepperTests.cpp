@@ -22,6 +22,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -319,7 +320,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(slsStateCopy.tolerance, ps.stepping.tolerance);
 
   /// Repeat with surface related methods
-  auto plane = Surface::makeShared<PlaneSurface>(pos, dir);
+  auto plane = CurvilinearSurface(pos, dir).planeSurface();
   auto bp = BoundTrackParameters::create(
                 plane, tgContext, makeVector4(pos, time), dir, charge / absMom,
                 cov, ParticleHypothesis::pion())
@@ -329,7 +330,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   // Test the intersection in the context of a surface
   auto targetSurface =
-      Surface::makeShared<PlaneSurface>(pos + navDir * 2. * dir, dir);
+      CurvilinearSurface(pos + navDir * 2. * dir, dir).planeSurface();
   sls.updateSurfaceStatus(slsState, *targetSurface, 0, navDir,
                           BoundaryTolerance::Infinite());
   CHECK_CLOSE_ABS(slsState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
