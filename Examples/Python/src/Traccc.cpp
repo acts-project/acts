@@ -25,7 +25,6 @@
 #include <detray/propagator/actor_chain.hpp>
 #include <detray/propagator/line_stepper.hpp>
 #include <detray/propagator/propagator.hpp>
-#include <detray/utils/inspectors.hpp>
 #include <pybind11/pybind11.h>
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
@@ -72,7 +71,9 @@ void addTraccc(Context& ctx) {
 
       // Navigation with inspection
       using DetrayNavigator =
-          detray::navigator<DetrayHostDetector, DetrayInspector>;
+          detray::navigator<DetrayHostDetector,
+                            detray::navigation::default_cache_size,
+                            DetrayInspector>;
       // Line stepper
       using DetrayLineStepper =
           detray::line_stepper<typename DetrayHostDetector::algebra_type>;
