@@ -96,8 +96,8 @@ void StaticBlueprintNode::finalize(TrackingVolume& parent,
                       << ") to parent volume (" << parent.volumeName() << ")");
 
   // @TODO: This needs to become configurable
-  m_volume->setNavigationDelegate(
-      std::make_unique<TryAllPortalNavigationDelegate>(*m_volume));
+  m_volume->setNavigationPolicy(
+      std::make_unique<TryAllPortalNavigationPolicy>(*m_volume));
 
   parent.addVolume(std::move(m_volume));
 }

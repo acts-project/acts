@@ -161,8 +161,8 @@ void CylinderContainerBlueprintNode::finalize(TrackingVolume& parent,
   for (auto& [shell, gap] : m_gaps) {
     std::cout << "~> " << gap->volumeName() << std::endl;
     // @TODO: This needs to become configurable
-    gap->setNavigationDelegate(
-        std::make_unique<TryAllPortalNavigationDelegate>(*gap));
+    gap->setNavigationPolicy(
+        std::make_unique<TryAllPortalNavigationPolicy>(*gap));
     parent.addVolume(std::move(gap));
     shell->applyToVolume();
   }

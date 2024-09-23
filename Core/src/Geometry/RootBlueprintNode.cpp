@@ -110,8 +110,8 @@ std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
       topVolume.transform(), std::move(worldBounds), "World");
 
   // @TODO: This needs to become configurable
-  world->setNavigationDelegate(
-      std::make_unique<TryAllPortalNavigationDelegate>(*world));
+  world->setNavigationPolicy(
+      std::make_unique<TryAllPortalNavigationPolicy>(*world));
 
   // Need one-sided portal shell that connects outwards to nullptr
   SingleCylinderPortalShell worldShell{*world};
