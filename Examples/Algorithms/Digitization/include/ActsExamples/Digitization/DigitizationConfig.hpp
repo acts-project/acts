@@ -139,6 +139,8 @@ class DigitizationConfig {
   std::string outputSourceLinks = "sourcelinks";
   /// Output measurements collection.
   std::string outputMeasurements = "measurements";
+  /// Output cells map (geoID -> collection of cells).
+  std::string outputCells = "cells";
   /// Output cluster collection.
   std::string outputClusters = "clusters";
   /// Output collection to map measured hits to contributing particles.
@@ -150,6 +152,12 @@ class DigitizationConfig {
       surfaceByIdentifier;
   /// Random numbers tool.
   std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
+  /// Flag to determine whether cell data should be written to the
+  /// `outputCells` collection; if true, writes (rather voluminous) cell data.
+  bool doOutputCells = false;
+  /// Flag to determine whether or not to run the clusterization; if true,
+  /// clusters, measurements, and sim-hit-maps are output.
+  bool doClusterization = true;
   /// Do we merge hits or not
   bool doMerge;
   /// How close do parameters have to be to consider merged
