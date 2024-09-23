@@ -96,7 +96,7 @@ def test_pythia8(tmp_path, seq, assert_root_hash):
 
     fp = tmp_path / "pythia8_particles.root"
     assert fp.exists()
-    assert fp.stat().st_size > 2**10
+    assert fp.stat().st_size > 2**10 * 50
     assert_entries(fp, "particles", events)
     assert_root_hash(fp.name, fp)
 
