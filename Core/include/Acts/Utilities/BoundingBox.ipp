@@ -353,8 +353,7 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::transformed(
 
 template <typename entity_t, typename value_t, std::size_t DIM>
 void Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::draw(
-    IVisualization3D& helper, std::array<int, 3> color,
-    const transform_type& trf) const
+    IVisualization3D& helper, Color color, const transform_type& trf) const
   requires(DIM == 3)
 {
   static_assert(DIM == 3, "PLY output only supported in 3D");
