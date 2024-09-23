@@ -238,7 +238,6 @@ class TrackSelector {
  private:
   EtaBinnedConfig m_cfg;
   bool m_isUnbinned;
-  bool m_noEtaCuts;
 };
 
 inline TrackSelector::Config& TrackSelector::Config::loc0(double min,
@@ -428,8 +427,8 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
 
   return track.hasReferenceSurface() &&
          within(track.transverseMomentum(), cuts.ptMin, cuts.ptMax) &&
-         (m_noEtaCuts || (within(absEta(), cuts.absEtaMin, cuts.absEtaMax) &&
-                          within(_eta, cuts.etaMin, cuts.etaMax))) &&
+         (!m_isUnbinned || (within(absEta(), cuts.absEtaMin, cuts.absEtaMax) &&
+                            within(_eta, cuts.etaMin, cuts.etaMax))) &&
          within(track.phi(), cuts.phiMin, cuts.phiMax) &&
          within(track.loc0(), cuts.loc0Min, cuts.loc0Max) &&
          within(track.loc1(), cuts.loc1Min, cuts.loc1Max) &&
@@ -455,23 +454,16 @@ inline TrackSelector::TrackSelector(
   m_isUnbinned = false;
   if (m_cfg.nEtaBins() == 1) {
     static const std::vector<double> infVec = {0, inf};
-    bool limitEta = m_cfg.absEtaEdges != infVec;
-    m_isUnbinned = !limitEta;  // single bin, no eta edges given
-
-    const Config& cuts = m_cfg.cutSets[0];
-
-    if (limitEta && (cuts.etaMin != -inf || cuts.etaMax != inf ||
-                     cuts.absEtaMin != 0.0 || cuts.absEtaMax != inf)) {
-      throw std::invalid_argument{
-          "Explicit eta cuts are only valid for single eta bin"};
-    }
+    m_isUnbinned = m_cfg.absEtaEdges == infVec;  // single bin, no eta edges given
   }
 
-  m_noEtaCuts = m_isUnbinned;
-  for (const auto& cuts : m_cfg.cutSets) {
-    if (cuts.etaMin != -inf || cuts.etaMax != inf || cuts.absEtaMin != 0.0 ||
-        cuts.absEtaMax != inf) {
-      m_noEtaCuts = false;
+  if (!m_isUnbinned) {
+    for (const auto& cuts : m_cfg.cutSets) {
+      if (cuts.etaMin != -inf || cuts.etaMax != inf || cuts.absEtaMin != 0.0 ||
+          cuts.absEtaMax != inf) {
+        throw std::invalid_argument{
+            "Explicit eta cuts are only valid for single eta bin"};
+      }
     }
   }
 }
