@@ -21,7 +21,7 @@ find_path(
     OnnxRuntime_INCLUDE_DIR
     NAMES onnxruntime_cxx_api.h
     PATHS ${onnxruntime_DIR}
-    PATH_SUFFIXES include include/onnxruntime include/onnxruntime/core/session
+    PATH_SUFFIXES include include/onnxruntime include/onnxruntime/core/session include/core/session
     DOC "The ONNXRuntime include directory"
 )
 

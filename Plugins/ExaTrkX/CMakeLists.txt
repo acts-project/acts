@@ -16,8 +16,8 @@ if(ACTS_EXATRKX_ENABLE_ONNX)
         ActsPluginExaTrkX
         PRIVATE
             src/OnnxEdgeClassifier.cpp
-            src/OnnxMetricLearning.cpp
-            src/CugraphTrackBuilding.cpp
+            #src/OnnxMetricLearning.cpp
+            #src/CugraphTrackBuilding.cpp
     )
 endif()
 
@@ -91,7 +91,7 @@ if(ACTS_EXATRKX_ENABLE_ONNX)
 
     target_link_libraries(
         ActsPluginExaTrkX
-        PRIVATE OnnxRuntime cugraph::cugraph
+        PRIVATE OnnxRuntime #cugraph::cugraph
     )
 endif()
 

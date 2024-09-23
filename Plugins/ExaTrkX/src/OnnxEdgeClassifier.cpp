@@ -45,21 +45,15 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
 
 OnnxEdgeClassifier::~OnnxEdgeClassifier() {}
 
-<<<<<<< HEAD
-std::tuple<std::any, std::any, std::any, std::any>
-OnnxEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
-                               std::any inEdgeFeatures, int deviceHint) {
-=======
-std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
-    std::any inputNodes, std::any inputEdges, torch::Device) {
->>>>>>> main
+std::tuple<std::any, std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
+    std::any inputNodes, std::any inputEdges, std::any inEdgeFeatures, torch::Device) {
   Ort::AllocatorWithDefaultOptions allocator;
   auto memoryInfo = Ort::MemoryInfo::CreateCpu(
       OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
 
   auto eInputTensor =
-      std::any_cast<std::shared_ptr<Ort::Value>>(inNodeFeatures);
-  auto edgeList = std::any_cast<std::vector<std::int64_t>>(inEdgeIndex);
+      std::any_cast<std::shared_ptr<Ort::Value>>(inputNodes);
+  auto edgeList = std::any_cast<std::vector<std::int64_t>>(inputEdges);
   const int numEdges = edgeList.size() / 2;
 
   std::vector<const char *> fInputNames{m_inputNameNodes.c_str(),
