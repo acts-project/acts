@@ -63,7 +63,10 @@ PortalShellBase& StaticBlueprintNode::connect(const GeometryContext& gctx,
     throw std::logic_error("Volume type is not supported");
   }
 
-  assert(m_shell != nullptr);
+  assert(m_shell != nullptr &&
+         "No shell was built at the end of StaticBlueprintNode::connect");
+  assert(m_shell->isValid() &&
+         "Shell is not valid at the end of StaticBlueprintNode::connect");
   return *m_shell;
 }
 
@@ -91,6 +94,11 @@ void StaticBlueprintNode::finalize(TrackingVolume& parent,
 
   ACTS_DEBUG(prefix() << " Adding volume (" << m_volume->volumeName()
                       << ") to parent volume (" << parent.volumeName() << ")");
+
+  // @TODO: This needs to become configurable
+  m_volume->setNavigationDelegate(
+      std::make_unique<TryAllPortalNavigationDelegate>(*m_volume));
+
   parent.addVolume(std::move(m_volume));
 }
 

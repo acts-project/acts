@@ -20,9 +20,12 @@
 #include "Acts/Geometry/RootBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+
+#include <random>
 
 using namespace Acts::UnitLiterals;
 
@@ -75,11 +78,16 @@ BOOST_AUTO_TEST_CASE(StaticBlueprintNodeConstruction) {
   std::ofstream ofs{"static.obj"};
   vis.write(ofs);
 
-  auto world = root.construct(gctx, *logger);
+  auto tGeometry = root.construct(gctx, *logger);
 
-  BOOST_REQUIRE(world);
+  BOOST_REQUIRE(tGeometry);
 
-  BOOST_CHECK_EQUAL(world->highestTrackingVolume()->volumes().size(), 10);
+  BOOST_CHECK_EQUAL(tGeometry->highestTrackingVolume()->volumes().size(), 1);
+  std::size_t nVolumes = 0;
+  tGeometry->visitVolumes(
+      [&](const TrackingVolume* /*volume*/) { nVolumes++; });
+
+  BOOST_CHECK_EQUAL(nVolumes, 12);
 }
 
 BOOST_AUTO_TEST_CASE(CylinderContainerNode) {
@@ -87,7 +95,11 @@ BOOST_AUTO_TEST_CASE(CylinderContainerNode) {
   auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
 
   RootBlueprintNode::Config cfg;
+  cfg.envelope[BinningValue::binZ] = {20_mm, 20_mm};
+  cfg.envelope[BinningValue::binR] = {0_mm, 20_mm};
   auto root = std::make_unique<RootBlueprintNode>(cfg);
+
+  auto& cyl = root->addCylinderContainer("Container", BinningValue::binZ);
 
   ActsScalar z0 = -200_mm;
   for (std::size_t i = 0; i < 10; i++) {
@@ -95,19 +107,157 @@ BOOST_AUTO_TEST_CASE(CylinderContainerNode) {
         Transform3::Identity() *
             Translation3{Vector3{0, 0, z0 + i * 2 * hlZ * 1.2}},
         cylBounds, "child" + std::to_string(i));
-    root->addStaticVolume(std::move(childCyl));
+    cyl.addStaticVolume(std::move(childCyl));
   }
-
-  // BOOST_CHECK_THROW(root->connect(gctx), std::runtime_error);
-
-  TrackingVolume dummy{Transform3::Identity(), cylBounds};
-  // BOOST_CHECK_THROW(root->finalize(gctx, dummy), std::runtime_error);
 
   root->construct(gctx, *logger);
 }
 
+void pseudoNavigation(const TrackingGeometry& trackingGeometry,
+                      Vector3 position, const Vector3& direction,
+                      std::ostream& csv, std::size_t run,
+                      std::size_t substepsPerCm = 1) {
+  std::mt19937 rng{static_cast<unsigned int>(run)};
+  std::uniform_real_distribution<> dist{0.01, 0.99};
+
+  const auto* volume = trackingGeometry.lowestTrackingVolume(gctx, position);
+  BOOST_REQUIRE_NE(volume, nullptr);
+  std::cout << volume->volumeName() << std::endl;
+
+  Experimental::Gen3Geometry::NavigationState state;
+  state.currentVolume = volume;
+
+  csv << run << "," << position[0] << "," << position[1] << "," << position[2];
+  csv << "," << volume->geometryId().volume();
+  csv << "," << volume->geometryId().boundary();
+  csv << std::endl;
+
+  std::cout << "start pseudo navigation" << std::endl;
+
+  for (std::size_t i = 0; i < 100; i++) {
+    state.main = NavigationStream{};
+
+    state.currentVolume->updateNavigationState(state);
+
+    std::cout << state.main.candidates().size() << " candidates" << std::endl;
+
+    for (const auto& candidate : state.main.candidates()) {
+      std::cout << " -> " << candidate.surface().geometryId() << std::endl;
+      std::cout << "    " << candidate.surface().toStream(gctx) << std::endl;
+    }
+
+    std::cout << "initializing candidates" << std::endl;
+    state.main.initialize(gctx, {position, direction},
+                          BoundaryTolerance::None());
+
+    std::cout << state.main.candidates().size() << " candidates remaining"
+              << std::endl;
+
+    for (const auto& candidate : state.main.candidates()) {
+      std::cout << " -> " << candidate.surface().geometryId() << std::endl;
+      std::cout << "    " << candidate.surface().toStream(gctx) << std::endl;
+    }
+
+    if (state.main.currentCandidate().surface().isOnSurface(gctx, position,
+                                                            direction)) {
+      std::cout << "Already on portal at initialization, skipping candidate"
+                << std::endl;
+
+      auto id = state.main.currentCandidate().surface().geometryId();
+      csv << run << "," << position[0] << "," << position[1] << ","
+          << position[2];
+      csv << "," << id.volume();
+      csv << "," << id.boundary();
+      csv << std::endl;
+      if (!state.main.switchToNextCandidate()) {
+        std::cout << "candidates exhausted unexpectedly" << std::endl;
+        break;
+      }
+    }
+
+    const auto& candidate = state.main.currentCandidate();
+    std::cout << candidate.portal << std::endl;
+    std::cout << candidate.intersection.position().transpose() << std::endl;
+
+    BOOST_REQUIRE_NE(candidate.portal, nullptr);
+
+    std::cout << "on portal: " << candidate.portal->surface().geometryId()
+              << std::endl;
+
+    std::cout << "moving to position: " << position.transpose()
+              << " (r=" << VectorHelpers::perp(position) << ")\n";
+    Vector3 delta = candidate.intersection.position() - position;
+
+    std::size_t substeps =
+        std::max(1l, std::lround(delta.norm() / 10_cm * substepsPerCm));
+
+    for (std::size_t j = 0; j < substeps; j++) {
+      // position += delta / (substeps + 1);
+      Vector3 subpos = position + dist(rng) * delta;
+      csv << run << "," << subpos[0] << "," << subpos[1] << "," << subpos[2];
+      csv << "," << state.currentVolume->geometryId().volume();
+      csv << "," << state.currentVolume->geometryId().boundary();
+      csv << std::endl;
+    }
+
+    position = candidate.intersection.position();
+
+    std::cout << "                 -> " << position.transpose()
+              << " (r=" << VectorHelpers::perp(position) << ")" << std::endl;
+
+    state.currentVolume =
+        candidate.portal->resolveVolume(gctx, position, direction).value();
+
+    if (state.currentVolume == nullptr) {
+      std::cout << "switched to nullptr" << std::endl;
+      break;
+    }
+
+    std::cout << "switched to " << state.currentVolume->volumeName()
+              << std::endl;
+
+    std::cout << "-----" << std::endl;
+  }
+}
+
+void portalSamples(const TrackingGeometry& trackingGeometry, Vector3 position,
+                   const Vector3& direction, std::ostream& csv,
+                   std::size_t run) {
+  std::set<const Surface*> visitedSurfaces;
+
+  trackingGeometry.visitVolumes([&](const TrackingVolume* volume) {
+    for (const auto& portal : volume->portals()) {
+      if (visitedSurfaces.contains(&portal.surface())) {
+        continue;
+      }
+      visitedSurfaces.insert(&portal.surface());
+
+      auto multiIntersection = portal.surface().intersect(
+          gctx, position, direction, BoundaryTolerance::None());
+
+      for (const auto& intersection : multiIntersection.split()) {
+        if (intersection.isValid()) {
+          Vector3 newPosition = intersection.position();
+          csv << run << "," << position[0] << "," << position[1] << ","
+              << position[2];
+          csv << "," << volume->geometryId().volume();
+          csv << "," << volume->geometryId().boundary();
+          csv << std::endl;
+          csv << run << "," << newPosition[0] << "," << newPosition[1] << ","
+              << newPosition[2];
+          csv << "," << portal.surface().geometryId().volume();
+          csv << "," << portal.surface().geometryId().boundary();
+          csv << std::endl;
+          position = newPosition;
+        }
+      }
+    }
+  });
+}
+
 BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
-  Transform3 base{AngleAxis3{30_degree, Vector3{1, 0, 0}}};
+  // Transform3 base{AngleAxis3{30_degree, Vector3{1, 0, 0}}};
+  Transform3 base{Transform3::Identity()};
 
   RootBlueprintNode::Config cfg;
   cfg.envelope[BinningValue::binZ] = {20_mm, 20_mm};
@@ -119,21 +269,6 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
       det.addCylinderContainer("Pixel", BinningValue::binZ, [&](auto& cyl) {
         cyl.setAttachmentStrategy(CylinderVolumeStack::AttachmentStrategy::Gap)
             .setResizeStrategy(CylinderVolumeStack::ResizeStrategy::Gap);
-
-        // cyl->addStaticVolume(std::make_unique<TrackingVolume>(
-        // base * Translation3{Vector3{0, 0, -600_mm}},
-        // std::make_shared<CylinderVolumeBounds>(200_mm, 400_mm, 200_mm),
-        // "PixelNegativeEndcap"));
-
-        // cyl->addStaticVolume(std::make_unique<TrackingVolume>(
-        // base * Translation3{Vector3{0, 0, 600_mm}},
-        // std::make_shared<CylinderVolumeBounds>(200_mm, 400_mm, 200_mm),
-        // "PixelPositiveEndcap"));
-
-        // cyl->addStaticVolume(std::make_unique<TrackingVolume>(
-        // base * Translation3{Vector3{0, 0, 0_mm}},
-        // std::make_shared<CylinderVolumeBounds>(100_mm, 600_mm, 200_mm),
-        // "PixelBarrel"));
 
         cyl.addCylinderContainer(
             "PixelNegativeEndcap", BinningValue::binZ, [&](auto& ec) {
@@ -194,24 +329,65 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
     });
   });
 
-  std::ofstream dot{"api_test.dot"};
+  std::ofstream dot{"api_test_container.dot"};
   root->graphViz(dot);
 
   auto trackingGeometry = root->construct(gctx, *logger);
 
-  trackingGeometry->visitVolumes([](const TrackingVolume* volume) {
+  trackingGeometry->visitVolumes([&](const TrackingVolume* volume) {
     std::cout << volume->volumeName() << std::endl;
     std::cout << " -> id: " << volume->geometryId() << std::endl;
     std::cout << " -> " << volume->portals().size() << " portals" << std::endl;
   });
 
-  // ObjVisualization3D vis;
-  // root->visualize(vis, gctx);
-  // vis.write("api_test.obj");
+  ObjVisualization3D vis;
+
+  trackingGeometry->visualize(vis, gctx, {}, {});
+
+  vis.write("api_test_container.obj");
+
+  Vector3 position = Vector3::Zero();
+  std::ofstream csv{"api_test_container.csv"};
+  csv << "x,y,z,volume,boundary" << std::endl;
+
+  std::mt19937 rnd{42};
+
+  std::uniform_real_distribution<> dist{-1, 1};
+
+  double etaWidth = 5.0;
+  double thetaMin = 2 * std::atan(std::exp(-etaWidth));
+  double thetaMax = 2 * std::atan(std::exp(etaWidth));
+  std::uniform_real_distribution<> thetaDist{thetaMin, thetaMax};
+
+  using namespace Acts::UnitLiterals;
+
+  for (std::size_t i = 0; i < 5000; i++) {
+    // double eta = 1.0;
+    // double theta = 2 * std::atan(std::exp(-eta));
+
+    double theta = thetaDist(rnd);
+    double phi = 2 * M_PI * dist(rnd);
+
+    Vector3 direction;
+    direction[0] = std::sin(theta) * std::cos(phi);
+    direction[1] = std::sin(theta) * std::sin(phi);
+    direction[2] = std::cos(theta);
+
+    std::cout << "start navigation " << i << std::endl;
+    std::cout << "dir: " << direction.transpose() << std::endl;
+    std::cout << direction.norm() << std::endl;
+
+    pseudoNavigation(*trackingGeometry, position, direction, csv, i, 2);
+
+    // portalSamples(*trackingGeometry, position, direction, csv, i);
+
+    // break;
+  }
 }
 
 BOOST_AUTO_TEST_CASE(NodeApiTestConfined) {
-  Transform3 base{AngleAxis3{30_degree, Vector3{1, 0, 0}}};
+  // Transform3 base{AngleAxis3{30_degree, Vector3{1, 0, 0}}};
+  Transform3 base{Transform3::Identity()};
 
   RootBlueprintNode::Config cfg;
   cfg.envelope[BinningValue::binZ] = {20_mm, 20_mm};
@@ -257,16 +433,15 @@ BOOST_AUTO_TEST_CASE(NodeApiTestConfined) {
 
   auto trackingGeometry = root->construct(gctx, *logger);
 
-  ObjVisualization3D vis;
-
   trackingGeometry->visitVolumes([&](const TrackingVolume* volume) {
     std::cout << volume->volumeName() << std::endl;
     std::cout << " -> id: " << volume->geometryId() << std::endl;
     std::cout << " -> " << volume->portals().size() << " portals" << std::endl;
-
-    GeometryView3D::drawVolume(vis, *volume, gctx, Transform3::Identity(),
-                               {.color = {123, 123, 123}});
   });
+
+  ObjVisualization3D vis;
+
+  trackingGeometry->visualize(vis, gctx, {}, {});
 
   vis.write("api_test_confined.obj");
 
