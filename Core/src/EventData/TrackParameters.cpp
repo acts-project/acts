@@ -14,22 +14,17 @@ namespace Acts {
 
 // ensure concrete classes satisfy the concepts
 
+static_assert(BoundTrackParametersConcept<SinglyChargedBoundTrackParameters>);
 static_assert(
-    Concepts::BoundTrackParametersConcept<SinglyChargedBoundTrackParameters>);
-static_assert(Concepts::BoundTrackParametersConcept<
-              SinglyChargedCurvilinearTrackParameters>);
-static_assert(
-    Concepts::FreeTrackParametersConcept<SinglyChargedFreeTrackParameters>);
+    BoundTrackParametersConcept<SinglyChargedCurvilinearTrackParameters>);
+static_assert(FreeTrackParametersConcept<SinglyChargedFreeTrackParameters>);
 
-static_assert(
-    Concepts::BoundTrackParametersConcept<NeutralBoundTrackParameters>);
-static_assert(
-    Concepts::BoundTrackParametersConcept<NeutralCurvilinearTrackParameters>);
-static_assert(Concepts::FreeTrackParametersConcept<NeutralFreeTrackParameters>);
+static_assert(BoundTrackParametersConcept<NeutralBoundTrackParameters>);
+static_assert(BoundTrackParametersConcept<NeutralCurvilinearTrackParameters>);
+static_assert(FreeTrackParametersConcept<NeutralFreeTrackParameters>);
 
-static_assert(Concepts::BoundTrackParametersConcept<BoundTrackParameters>);
-static_assert(
-    Concepts::BoundTrackParametersConcept<CurvilinearTrackParameters>);
-static_assert(Concepts::FreeTrackParametersConcept<FreeTrackParameters>);
+static_assert(BoundTrackParametersConcept<BoundTrackParameters>);
+static_assert(BoundTrackParametersConcept<CurvilinearTrackParameters>);
+static_assert(FreeTrackParametersConcept<FreeTrackParameters>);
 
 }  // namespace Acts

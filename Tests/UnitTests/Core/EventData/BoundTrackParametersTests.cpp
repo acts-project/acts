@@ -252,9 +252,9 @@ const auto perigees = bdata::make({
     Surface::makeShared<PerigeeSurface>(Vector3(0, 0, -1.5)),
 });
 const auto planes = bdata::make({
-    Surface::makeShared<PlaneSurface>(Vector3(1, 2, 3), Vector3::UnitX()),
-    Surface::makeShared<PlaneSurface>(Vector3(-2, -3, -4), Vector3::UnitY()),
-    Surface::makeShared<PlaneSurface>(Vector3(3, -4, 5), Vector3::UnitZ()),
+    CurvilinearSurface(Vector3(1, 2, 3), Vector3::UnitX()).planeSurface(),
+    CurvilinearSurface(Vector3(-2, -3, -4), Vector3::UnitY()).planeSurface(),
+    CurvilinearSurface(Vector3(3, -4, 5), Vector3::UnitZ()).planeSurface(),
 });
 const auto straws = bdata::make({
     Surface::makeShared<StrawSurface>(Transform3::Identity(), 2.0 /* radius */,

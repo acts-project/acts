@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -539,7 +539,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
       previous = perp((*surface)->binningPosition(gctx, BinningValue::binR));
     }
   }
-  std::sort(bValues.begin(), bValues.end());
+  std::ranges::sort(bValues);
   ACTS_VERBOSE("Create variable binning Axis for binned SurfaceArray");
   ACTS_VERBOSE("	BinningValue: " << bValue);
   ACTS_VERBOSE("	Number of bins: " << (bValues.size() - 1));

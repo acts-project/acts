@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 
 #include <iomanip>
 #include <utility>
@@ -45,12 +46,13 @@ Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
 
 Acts::Surface::~Surface() = default;
 
-bool Acts::Surface::isOnSurface(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction,
-    const BoundaryTolerance& boundaryTolerance) const {
+bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
+                                const Vector3& position,
+                                const Vector3& direction,
+                                const BoundaryTolerance& boundaryTolerance,
+                                double tolerance) const {
   // global to local transformation
-  auto lpResult = globalToLocal(gctx, position, direction);
+  auto lpResult = globalToLocal(gctx, position, direction, tolerance);
   if (!lpResult.ok()) {
     return false;
   }
@@ -356,4 +358,11 @@ void Acts::Surface::assignSurfaceMaterial(
 
 void Acts::Surface::associateLayer(const Acts::Layer& lay) {
   m_associatedLayer = (&lay);
+}
+
+void Acts::Surface::visualize(IVisualization3D& helper,
+                              const GeometryContext& gctx,
+                              const ViewConfig& viewConfig) const {
+  Polyhedron polyhedron = polyhedronRepresentation(gctx, viewConfig.nSegments);
+  polyhedron.visualize(helper, viewConfig);
 }

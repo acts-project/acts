@@ -26,5 +26,6 @@ using SubspaceIndices = std::array<std::uint8_t, measdim>;
 using BoundSubspaceIndices = SubspaceIndices<eBoundSize>;
 static constexpr BoundSubspaceIndices kBoundSubspaceIndicesInvalid = {
     eBoundSize, eBoundSize, eBoundSize, eBoundSize, eBoundSize, eBoundSize};
+using SerializedSubspaceIndices = std::uint64_t;
 
 }  // namespace Acts

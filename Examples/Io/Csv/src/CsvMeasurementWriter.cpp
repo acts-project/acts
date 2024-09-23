@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -92,7 +93,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
                           << " measurements in this event.");
 
   for (Index measIdx = 0u; measIdx < measurements.size(); ++measIdx) {
-    const auto& measurement = measurements[measIdx];
+    const ConstVariableBoundMeasurementProxy measurement =
+        measurements.getMeasurement(measIdx);
 
     auto simHitIndices = makeRange(measurementSimHitsMap.equal_range(measIdx));
     for (auto [_, simHitIdx] : simHitIndices) {
