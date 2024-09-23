@@ -454,7 +454,8 @@ inline TrackSelector::TrackSelector(
   m_isUnbinned = false;
   if (m_cfg.nEtaBins() == 1) {
     static const std::vector<double> infVec = {0, inf};
-    m_isUnbinned = m_cfg.absEtaEdges == infVec;  // single bin, no eta edges given
+    m_isUnbinned =
+        m_cfg.absEtaEdges == infVec;  // single bin, no eta edges given
   }
 
   if (!m_isUnbinned) {
