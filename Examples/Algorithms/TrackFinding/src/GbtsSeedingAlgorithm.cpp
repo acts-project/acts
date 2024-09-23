@@ -223,7 +223,7 @@ ActsExamples::GbtsSeedingAlgorithm::MakeGbtsSpacePoints(
       int combined_id = Gbts_id * 1000 + eta_mod;
 
       // fill Gbts vector with current sapce point and ID
-      gbtsSpacePoints.emplace_back(&spacePoint, Gbts_id, combined_id);
+      gbtsSpacePoints.emplace_back(&spacePoint, Gbts_id, combined_id); //make new GbtsSP here ! 
     }
   }
   ACTS_VERBOSE("Space points successfully assigned Gbts ID");
