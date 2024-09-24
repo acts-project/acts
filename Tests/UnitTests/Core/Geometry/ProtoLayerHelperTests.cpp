@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
                             layerSurfaces.end());
   }
 
-  ViewConfig unsorted({252, 160, 0});
+  ViewConfig unsorted{.color = {252, 160, 0}};
   for (auto& sf : cylinderSurfaces) {
     GeometryView3D::drawSurface(objVis, *sf, tgContext, Transform3::Identity(),
                                 unsorted);
@@ -78,16 +78,16 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 
   BOOST_CHECK_EQUAL(radialLayers.size(), 4);
 
-  std::vector<ColorRGB> sortedColors = {{102, 204, 255},
-                                        {102, 255, 153},
-                                        {255, 204, 102},
-                                        {204, 102, 0},
-                                        {278, 123, 55}};
+  std::vector<Color> sortedColors = {{102, 204, 255},
+                                     {102, 255, 153},
+                                     {255, 204, 102},
+                                     {204, 102, 0},
+                                     {278, 123, 55}};
 
   std::size_t il = 0;
   for (auto& layer : radialLayers) {
     for (auto& sf : layer.surfaces()) {
-      ViewConfig sorted(sortedColors[il]);
+      ViewConfig sorted{.color = sortedColors[il]};
       GeometryView3D::drawSurface(objVis, *sf, tgContext,
                                   Transform3::Identity(), sorted);
     }
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   il = 0;
   for (auto& layer : discLayersZ) {
     for (auto& sf : layer.surfaces()) {
-      ViewConfig ViewConfig(sortedColors[il]);
+      ViewConfig ViewConfig{.color = sortedColors[il]};
       GeometryView3D::drawSurface(objVis, *sf, tgContext,
                                   Transform3::Identity(), ViewConfig);
     }
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
       ProtoLayerHelper::SortingConfig(BinningValue::binR, 1.));
   BOOST_CHECK_EQUAL(rSorted.size(), 3);
 
-  ColorRGB dColor = {0, 0, 0};
+  Color dColor = {0, 0, 0};
 
   int ir = 0;
   for (auto& rBatch : rSorted) {

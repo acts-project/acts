@@ -22,8 +22,6 @@
 
 namespace Acts {
 
-using namespace Experimental;
-
 class DetrayConverter {
  public:
   /// Detray conversion options
@@ -49,7 +47,8 @@ class DetrayConverter {
   ///
   /// @returns a detector of requested return type
   template <typename detector_t = DetrayHostDetector>
-  detector_t convert(const GeometryContext& gctx, const Detector& detector,
+  detector_t convert(const GeometryContext& gctx,
+                     const Experimental::Detector& detector,
                      vecmem::memory_resource& mr, const Options& options) {
     // The building cache object
     DetrayConversionUtils::GeometryIdCache geoIdCache;

@@ -48,19 +48,20 @@ class ObjVisualization3D : public IVisualization3D {
       : m_outputPrecision(prec), m_outputScalor(scale) {}
 
   /// @copydoc Acts::IVisualization3D::vertex()
-  void vertex(const Vector3& vtx, ColorRGB color = {0, 0, 0}) final;
+  void vertex(const Vector3& vtx, Color color = s_defaultColor) final;
 
   /// @copydoc Acts::IVisualization3D::line()
   void line(const Vector3& a, const Vector3& b,
-            ColorRGB color = {0, 0, 0}) final;
+            Color color = s_defaultColor) final;
 
   /// @copydoc Acts::IVisualization3D::face()
-  void face(const std::vector<Vector3>& vtxs, ColorRGB color = {0, 0, 0}) final;
+  void face(const std::vector<Vector3>& vtxs,
+            Color color = s_defaultColor) final;
 
   /// @copydoc Acts::IVisualization3D::faces()
   void faces(const std::vector<Vector3>& vtxs,
              const std::vector<FaceType>& faces,
-             ColorRGB color = {0, 0, 0}) final;
+             Color color = s_defaultColor) final;
 
   /// @copydoc Acts::IVisualization3D::write(const std::filesystem::path&) const
   void write(const std::filesystem::path& path) const final;
@@ -85,9 +86,9 @@ class ObjVisualization3D : public IVisualization3D {
   std::vector<FaceType> m_faces;
   std::vector<LineType> m_lines;
   /// Map of colors to be written at given index position
-  std::map<std::size_t, ColorRGB> m_lineColors;
-  std::map<std::size_t, ColorRGB> m_vertexColors;
-  std::map<std::size_t, ColorRGB> m_faceColors;
+  std::map<std::size_t, Color> m_lineColors;
+  std::map<std::size_t, Color> m_vertexColors;
+  std::map<std::size_t, Color> m_faceColors;
 };
 
 #ifndef DOXYGEN
