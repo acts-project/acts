@@ -337,6 +337,11 @@ class OwningDelegate;
 /// Alias for an owning delegate
 template <typename R, typename H, typename... Args>
 class OwningDelegate<R(Args...), H>
-    : public Delegate<R(Args...), H, DelegateType::Owning> {};
+    : public Delegate<R(Args...), H, DelegateType::Owning> {
+ public:
+  OwningDelegate() = default;
+  OwningDelegate(Delegate<R(Args...), H, DelegateType::Owning> &&delegate)
+      : Delegate<R(Args...), H, DelegateType::Owning>(std::move(delegate)) {}
+};
 
 }  // namespace Acts

@@ -30,12 +30,13 @@ BOOST_AUTO_TEST_CASE(DelegateChainAdd) {
   AddTo a1{1}, a2{2}, a3{3};
   int x = 0;
 
-  auto chain = DelegateChainFactory<void(int &)>{}
-                   .add<&AddTo::add>(&a1)
-                   .add<&addFive>()
-                   .add<&AddTo::add>(&a2)
-                   .add<&AddTo::add>(&a3)
-                   .build();
+  // Delegate<void(int &), void, DelegateType::Owning> chain =
+  OwningDelegate<void(int &)> chain = DelegateChainFactory<void(int &)>{}
+                                          .add<&AddTo::add>(&a1)
+                                          .add<&addFive>()
+                                          .add<&AddTo::add>(&a2)
+                                          .add<&AddTo::add>(&a3)
+                                          .build();
 
   chain(x);
   BOOST_CHECK_EQUAL(x, 11);
@@ -54,16 +55,28 @@ int getSix() {
 BOOST_AUTO_TEST_CASE(DelegateChainReturn) {
   GetInt g1{1}, g2{2}, g3{3};
 
-  auto chain = DelegateChainFactory<int()>{}
-                   .add<&GetInt::get>(&g1)
-                   .add<&getSix>()
-                   .add<&GetInt::get>(&g2)
-                   .add<&GetInt::get>(&g3)
-                   .build();
+  Delegate<std::array<int, 4>(), void, DelegateType::Owning> chain =
+      DelegateChainFactory<int()>{}
+          .add<&GetInt::get>(&g1)
+          .add<&getSix>()
+          .add<&GetInt::get>(&g2)
+          .add<&GetInt::get>(&g3)
+          .build();
 
   auto results = chain();
-  std::array<int, 4> expected = {1, 6, 2, 3};
+  std::vector<int> expected = {1, 6, 2, 3};
   BOOST_CHECK_EQUAL_COLLECTIONS(results.begin(), results.end(),
+                                expected.begin(), expected.end());
+
+  Delegate<std::array<int, 3>(), void, DelegateType::Owning> delegate;
+  DelegateChainFactory<int()>{}
+      .add<&GetInt::get>(&g1)
+      .add<&getSix>()
+      .add<&GetInt::get>(&g3)
+      .store(delegate);
+  auto results2 = delegate();
+  expected = {1, 6, 3};
+  BOOST_CHECK_EQUAL_COLLECTIONS(results2.begin(), results2.end(),
                                 expected.begin(), expected.end());
 }
 
