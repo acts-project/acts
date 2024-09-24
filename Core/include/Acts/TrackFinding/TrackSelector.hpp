@@ -237,7 +237,7 @@ class TrackSelector {
 
  private:
   EtaBinnedConfig m_cfg;
-  bool m_isUnbinned;
+  bool m_isUnbinned = false;
 };
 
 inline TrackSelector::Config& TrackSelector::Config::loc0(double min,
@@ -451,7 +451,6 @@ inline TrackSelector::TrackSelector(
         "TrackSelector cut / eta bin configuration is inconsistent"};
   }
 
-  m_isUnbinned = false;
   if (m_cfg.nEtaBins() == 1) {
     static const std::vector<double> infVec = {0, inf};
     m_isUnbinned =
