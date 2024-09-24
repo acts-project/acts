@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,6 +20,7 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <algorithm>
 #include <array>
 #include <memory>
 
@@ -65,11 +66,9 @@ inline void intitializeCandidates(const GeometryContext& gctx,
     }
   }
 
-  std::sort(confirmedCandidates.begin(), confirmedCandidates.end(),
-            [&](const auto& a, const auto& b) {
-              return a.objectIntersection.pathLength() <
-                     b.objectIntersection.pathLength();
-            });
+  std::ranges::sort(confirmedCandidates, {}, [](const auto& c) {
+    return c.objectIntersection.pathLength();
+  });
 
   nState.surfaceCandidates = std::move(confirmedCandidates);
   nState.surfaceCandidateIndex = 0;

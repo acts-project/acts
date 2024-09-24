@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -28,10 +28,7 @@ Acts::Result<double> Acts::FsmwMode1dFinder::getMode(
 
   // first of all order the vector according to the double value
 
-  std::sort(inputVector.begin(), inputVector.end(),
-            [](std::pair<double, double> a, std::pair<double, double> b) {
-              return a.first < b.first;
-            });
+  std::ranges::sort(inputVector, {}, [](const auto& i) { return i.first; });
 
   // begin to consider a certain number of elements according to the fraction
   auto begin = inputVector.begin();

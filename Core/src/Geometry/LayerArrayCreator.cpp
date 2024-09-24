@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -42,7 +42,7 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
 
   // sort it accordingly to the binning value
   GeometryObjectSorterT<std::shared_ptr<const Layer>> layerSorter(gctx, bValue);
-  std::sort(layers.begin(), layers.end(), layerSorter);
+  std::ranges::sort(layers, layerSorter);
   // useful typedef
   using LayerOrderPosition = std::pair<std::shared_ptr<const Layer>, Vector3>;
   // needed for all cases

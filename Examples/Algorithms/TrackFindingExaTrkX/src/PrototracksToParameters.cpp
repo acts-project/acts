@@ -22,6 +22,7 @@
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
 #include <algorithm>
+#include <tuple>
 
 using namespace ActsExamples;
 using namespace Acts::UnitLiterals;
@@ -96,11 +97,8 @@ ProcessCode PrototracksToParameters::execute(
     // layer-volume spacepoints has 3 or more hits. However, if this is the
     // case, we want to keep the whole prototrack. Therefore, we operate on a
     // tmpTrack.
-    std::sort(track.begin(), track.end(), [&](auto a, auto b) {
-      if (indexToGeoId[a].volume() != indexToGeoId[b].volume()) {
-        return indexToGeoId[a].volume() < indexToGeoId[b].volume();
-      }
-      return indexToGeoId[a].layer() < indexToGeoId[b].layer();
+    std::ranges::sort(track, {}, [&](const auto &t) {
+      return std::make_tuple(indexToGeoId[t].volume(), indexToGeoId[t].layer());
     });
 
     tmpTrack.clear();
@@ -134,8 +132,7 @@ ProcessCode PrototracksToParameters::execute(
       continue;
     }
 
-    std::sort(tmpSps.begin(), tmpSps.end(),
-              [](const auto &a, const auto &b) { return a->r() < b->r(); });
+    std::ranges::sort(tmpSps, {}, [](const auto &t) { return t->r(); });
 
     // Simply use r = m*z + t and solve for r=0 to find z vertex position...
     // Probably not the textbook way to do

@@ -8,11 +8,38 @@
 
 #include "Acts/Geometry/VolumeBounds.hpp"
 
-const std::vector<std::string> Acts::VolumeBounds::s_boundsTypeNames = {
-    "Cone",          "Cuboid",    "CutoutCylinder", "Cylinder",
-    "GenericCuboid", "Trapezoid", "Other"};
+namespace Acts {
 
-/**Overload of << operator for std::ostream for debug output*/
-std::ostream& Acts::operator<<(std::ostream& sl, const Acts::VolumeBounds& vb) {
+std::ostream& operator<<(std::ostream& sl, const Acts::VolumeBounds& vb) {
   return vb.toStream(sl);
 }
+
+std::ostream& operator<<(std::ostream& sl, const VolumeBounds::BoundsType& bt) {
+  switch (bt) {
+    using enum VolumeBounds::BoundsType;
+    case eCone:
+      sl << "Cone";
+      break;
+    case eCuboid:
+      sl << "Cuboid";
+      break;
+    case eCutoutCylinder:
+      sl << "CutoutCylinder";
+      break;
+    case eCylinder:
+      sl << "Cylinder";
+      break;
+    case eGenericCuboid:
+      sl << "GenericCuboid";
+      break;
+    case eTrapezoid:
+      sl << "Trapezoid";
+      break;
+    case eOther:
+      sl << "Other";
+      break;
+  }
+  return sl;
+}
+
+}  // namespace Acts

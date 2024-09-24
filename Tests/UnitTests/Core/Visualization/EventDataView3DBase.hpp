@@ -165,8 +165,8 @@ void createDetector(GeometryContext& tgContext,
 static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
   std::stringstream ss;
 
-  ViewConfig pcolor({20, 120, 20});
-  ViewConfig scolor({235, 198, 52});
+  ViewConfig pcolor{.color = {20, 120, 20}};
+  ViewConfig scolor{.color = {235, 198, 52}};
 
   auto gctx = GeometryContext();
   auto identity = Transform3::Identity();
@@ -245,7 +245,7 @@ static inline std::string testMeasurement(IVisualization3D& helper,
         eBoundLoc0, eBoundLoc1, loc, cov2D, surface->geometryId()});
   }
 
-  ViewConfig mcolor({255, 145, 48});
+  ViewConfig mcolor{.color = {255, 145, 48}};
   mcolor.offset = 0.01;
 
   // Draw the measurements
@@ -378,14 +378,14 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   double localErrorScale = 100.;
   double directionErrorScale = 100000;
 
-  ViewConfig scolor({214, 214, 214});
-  ViewConfig mcolor({255, 145, 48});
+  ViewConfig scolor{.color = {214, 214, 214}};
+  ViewConfig mcolor{.color = {255, 145, 48}};
   mcolor.offset = -0.01;
-  ViewConfig ppcolor({51, 204, 51});
+  ViewConfig ppcolor{.color = {51, 204, 51}};
   ppcolor.offset = -0.02;
-  ViewConfig fpcolor({255, 255, 0});
+  ViewConfig fpcolor{.color = {255, 255, 0}};
   fpcolor.offset = -0.03;
-  ViewConfig spcolor({0, 125, 255});
+  ViewConfig spcolor{.color = {0, 125, 255}};
   spcolor.offset = -0.04;
 
   EventDataView3D::drawMultiTrajectory(
