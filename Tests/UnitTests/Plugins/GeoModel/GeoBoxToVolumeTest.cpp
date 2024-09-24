@@ -43,13 +43,6 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   auto logBox = new GeoLogVol("Box", box, material);
   auto physBox = make_intrusive<GeoFullPhysVol>(logBox);
 
-  // add subvolume since converter needs that to convert fpv to volume
-  auto sBox = new GeoBox(50, 20, 10);
-  auto slogBox = new GeoLogVol("Box", sBox, material);
-  auto sphysBox = make_intrusive<GeoFullPhysVol>(slogBox);
-
-  physBox->add(sphysBox);
-
   // create pars for conversion
   Acts::GeoModelDetectorObjectFactory::Config gmConfig;
   gmConfig.convertBox = {"Box"};

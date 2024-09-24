@@ -23,6 +23,8 @@
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <algorithm>
+
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::perp;
@@ -128,7 +130,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
   // forward-backward compatibility test
   {
-    std::reverse(bwdSurfaces.begin(), bwdSurfaces.end());
+    std::ranges::reverse(bwdSurfaces);
     BOOST_CHECK_EQUAL_COLLECTIONS(bwdSurfaces.begin(), bwdSurfaces.end(),
                                   fwdSurfaces.begin(), fwdSurfaces.end());
   }
@@ -233,7 +235,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
   // TODO backward-backward step compatibility test
 
-  std::reverse(bwdStepSurfaces.begin(), bwdStepSurfaces.end());
+  std::ranges::reverse(bwdStepSurfaces);
   BOOST_CHECK_EQUAL_COLLECTIONS(bwdStepSurfaces.begin(), bwdStepSurfaces.end(),
                                 fwdStepSurfaces.begin(), fwdStepSurfaces.end());
 }

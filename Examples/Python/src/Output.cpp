@@ -125,6 +125,13 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
 
     patchKwargsConstructor(c);
+
+    py::class_<Color>(m, "Color")
+        .def(py::init<>())
+        .def(py::init<int, int, int>())
+        .def(py::init<double, double, double>())
+        .def(py::init<std::string>())
+        .def_readonly("rgb", &Color::rgb);
   }
 
   {

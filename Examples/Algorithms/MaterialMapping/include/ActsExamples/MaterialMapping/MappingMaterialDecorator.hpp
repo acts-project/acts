@@ -106,7 +106,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
     }
     if (tVolume->volumeMaterial() != nullptr) {
       m_volumeMaterialMap.insert(
-          {tVolume->geometryId(), tVolume->volumeMaterialSharedPtr()});
+          {tVolume->geometryId(), tVolume->volumeMaterialPtr()});
     }
     // there are confined volumes
     if (tVolume->confinedVolumes() != nullptr) {

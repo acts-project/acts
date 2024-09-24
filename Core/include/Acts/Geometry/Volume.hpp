@@ -118,6 +118,13 @@ class Volume : public GeometryObject {
   bool operator==(const Volume& other) const;
   bool operator!=(const Volume& other) const;
 
+  /// Produces a 3D visualization of this volume
+  /// @param helper The visualization helper describing the output format
+  /// @param gctx The geometry context
+  /// @param viewConfig The view configuration
+  void visualize(IVisualization3D& helper, const GeometryContext& gctx,
+                 const ViewConfig& viewConfig = {}) const;
+
  protected:
   Transform3 m_transform;
   Transform3 m_itransform;

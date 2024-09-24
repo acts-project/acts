@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -102,7 +102,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
                        std::back_inserter(rvalues), [&](const auto& surface) {
                          return VectorHelpers::perp(surface->center(gctx));
                        });
-        std::sort(rvalues.begin(), rvalues.end());
+        std::ranges::sort(rvalues);
         std::vector<std::string> locs;
         std::transform(rvalues.begin(),
                        std::unique(rvalues.begin(), rvalues.end()),
@@ -275,7 +275,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
                        std::back_inserter(zvalues), [&](const auto& surface) {
                          return surface->center(gctx)[eZ];
                        });
-        std::sort(zvalues.begin(), zvalues.end());
+        std::ranges::sort(zvalues);
         std::vector<std::string> locs;
         std::transform(zvalues.begin(),
                        std::unique(zvalues.begin(), zvalues.end()),

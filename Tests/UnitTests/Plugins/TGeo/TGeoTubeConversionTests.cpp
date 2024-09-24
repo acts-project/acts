@@ -40,9 +40,9 @@ namespace Acts::Test {
 
 GeometryContext tgContext = GeometryContext();
 
-ViewConfig red({200, 0, 0});
-ViewConfig green({0, 200, 0});
-ViewConfig blue({0, 0, 200});
+ViewConfig red{.color = {200, 0, 0}};
+ViewConfig green{.color = {0, 200, 0}};
+ViewConfig blue{.color = {0, 0, 200}};
 
 std::vector<std::string> allowedAxes = {"XY*", "Xy*", "xy*", "xY*",
                                         "YX*", "yx*", "yX*", "Yx*"};

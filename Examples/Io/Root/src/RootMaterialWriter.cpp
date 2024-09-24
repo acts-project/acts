@@ -351,8 +351,8 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
     const Acts::TrackingVolume& tVolume,
     Acts::DetectorMaterialMaps& detMatMap) {
   // If the volume has volume material, write that
-  if (tVolume.volumeMaterialSharedPtr() != nullptr && m_cfg.processVolumes) {
-    detMatMap.second[tVolume.geometryId()] = tVolume.volumeMaterialSharedPtr();
+  if (tVolume.volumeMaterialPtr() != nullptr && m_cfg.processVolumes) {
+    detMatMap.second[tVolume.geometryId()] = tVolume.volumeMaterialPtr();
   }
 
   // If confined layers exist, loop over them and collect the layer material
