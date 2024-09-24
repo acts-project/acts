@@ -169,6 +169,10 @@ set_option_if(
   ACTS_BUILD_PLUGIN_TRACCC
 )
 set_option_if(
+  ACTS_BUILD_PLUGIN_ACTSVG
+  ACTS_BUILD_PLUGIN_TRACCC
+)
+set_option_if(
   ACTS_BUILD_PLUGIN_HASHING
   ACTS_BUILD_EXAMPLES_HASHING
 )
@@ -237,8 +241,8 @@ set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.309)
 set(_acts_pybind11_version 2.13.1)
-set(_acts_detray_version 0.72.1)
-set(_acts_traccc_version 0.15.0)
+set(_acts_detray_version 0.75.2)
+set(_acts_traccc_version 0.16.0)
 set(_acts_covfie_version 0.10.0)
 set(_acts_vecmem_version 1.4.0)
 set(_acts_algebraplugins_version 0.22.0)

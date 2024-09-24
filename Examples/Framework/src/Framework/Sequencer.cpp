@@ -172,10 +172,6 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
   elementTypeCapitalized[0] = std::toupper(elementTypeCapitalized[0]);
   ACTS_INFO("Add " << elementType << " '" << element->name() << "'");
 
-  if (!m_cfg.runDataFlowChecks) {
-    return;
-  }
-
   auto symbol = [&](const char* in) {
     std::string s = demangleAndShorten(in);
     std::size_t pos = 0;
