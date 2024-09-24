@@ -28,7 +28,7 @@ jobs:
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.aceeb5f.tar.zst
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v3.tar.zst
 
     steps:
       - uses: actions/checkout@v4
@@ -114,7 +114,7 @@ jobs:
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.aceeb5f.tar.zst
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v3.tar.zst
 
     steps:
       - uses: actions/checkout@v4
@@ -152,7 +152,7 @@ jobs:
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.aceeb5f.tar.zst
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v3.tar.zst
 
     steps:
       - uses: actions/checkout@v4
@@ -246,7 +246,7 @@ jobs:
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.v2.tar.zst
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.v3.tar.zst
     steps:
       - uses: actions/checkout@v4
         with:
@@ -320,7 +320,7 @@ jobs:
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/macos-14/deps.v2.tar.zst
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/macos-14/deps.v3.tar.zst
     steps:
       - uses: actions/checkout@v4
         with:
