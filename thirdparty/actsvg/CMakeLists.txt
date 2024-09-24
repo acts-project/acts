@@ -14,5 +14,11 @@ message(STATUS "Building actsvg as part of the ACTS project")
 
 FetchContent_Declare(actsvg ${ACTS_ACTSVG_SOURCE})
 
+set(ACTSVG_BUILD_PYTHON_BINDINGS
+    OFF
+    CACHE BOOL
+    "Do not build the Python bindings for actsvg"
+)
+
 # Now set up its build.
 FetchContent_MakeAvailable(actsvg)

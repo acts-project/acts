@@ -55,7 +55,7 @@ namespace View {
 static inline actsvg::svg::object xy(const ProtoSurface& pSurface,
                                      const std::string& identification) {
   actsvg::views::x_y xyView;
-  return actsvg::display::surface(identification, pSurface, xyView, true);
+  return actsvg::display::surface(identification, pSurface, xyView);
 }
 
 /// Convert into an acts::svg::object with an z-r view
@@ -67,7 +67,7 @@ static inline actsvg::svg::object xy(const ProtoSurface& pSurface,
 static inline actsvg::svg::object zr(const ProtoSurface& pSurface,
                                      const std::string& identification) {
   actsvg::views::z_r zrView;
-  return actsvg::display::surface(identification, pSurface, zrView, true);
+  return actsvg::display::surface(identification, pSurface, zrView);
 }
 
 /// Convert into an acts::svg::object with an z-phi view
@@ -79,7 +79,7 @@ static inline actsvg::svg::object zr(const ProtoSurface& pSurface,
 static inline actsvg::svg::object zphi(const ProtoSurface& pSurface,
                                        const std::string& identification) {
   actsvg::views::z_phi zphiView;
-  return actsvg::display::surface(identification, pSurface, zphiView, true);
+  return actsvg::display::surface(identification, pSurface, zphiView);
 }
 
 /// Convert into an acts::svg::object with an z-rphi view
@@ -94,7 +94,7 @@ static inline actsvg::svg::object zrphi(const ProtoSurface& pSurface,
                                         const std::string& identification) {
   actsvg::views::z_rphi zrphiView;
   zrphiView._fixed_r = pSurface._radii[0u];
-  return actsvg::display::surface(identification, pSurface, zrphiView, true);
+  return actsvg::display::surface(identification, pSurface, zrphiView);
 }
 
 }  // namespace View
