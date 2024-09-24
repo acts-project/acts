@@ -7,11 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <boost/hana/filter.hpp>
 #include <boost/hana/set.hpp>
 #include <boost/hana/type.hpp>
 
 namespace Acts::detail {
+
 namespace hana = boost::hana;
 
 /**
@@ -102,4 +104,5 @@ constexpr bool has_action_type_v =
  */
 template <typename T>
 using action_type_t = typename action_type_extractor::extractor_impl<T>;
+
 }  // namespace Acts::detail

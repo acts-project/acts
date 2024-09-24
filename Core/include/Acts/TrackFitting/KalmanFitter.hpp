@@ -19,8 +19,7 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -351,9 +350,9 @@ class KalmanFitter {
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    void operator()(propagator_state_t& state, const stepper_t& stepper,
-                    const navigator_t& navigator, result_type& result,
-                    const Logger& /*logger*/) const {
+    void act(propagator_state_t& state, const stepper_t& stepper,
+             const navigator_t& navigator, result_type& result,
+             const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
       if (result.finished) {
@@ -464,7 +463,8 @@ class KalmanFitter {
             // Remember the track fitting is done
             result.finished = true;
           }
-        } else if (targetReached(state, stepper, navigator, logger())) {
+        } else if (targetReached.checkAbort(state, stepper, navigator,
+                                            logger())) {
           ACTS_VERBOSE("Completing with fitted track parameter");
           // Transport & bind the parameter to the final surface
           auto res = stepper.boundState(state.stepping, *targetReached.surface,
@@ -499,6 +499,14 @@ class KalmanFitter {
           result.finished = true;
         }
       }
+    }
+
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                    const navigator_t& /*navigator*/, const result_type& result,
+                    const Logger& /*logger*/) const {
+      return (!result.result.ok() || result.finished);
     }
 
     /// @brief Kalman actor operation: reverse direction
@@ -1042,25 +1050,6 @@ class KalmanFitter {
     }
   };
 
-  template <typename parameters_t>
-  class Aborter {
-   public:
-    /// Broadcast the action type
-    using action_type = Actor<parameters_t>;
-
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t>
-    bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/,
-                    const typename action_type::result_type& result,
-                    const Logger& /*logger*/) const {
-      if (!result.result.ok() || result.finished) {
-        return true;
-      }
-      return false;
-    }
-  };
-
  public:
   /// Fit implementation of the forward filter, calls the
   /// the filter and smoother/reversed filter
@@ -1104,15 +1093,12 @@ class KalmanFitter {
       inputMeasurements.emplace(geoId, std::move(sl));
     }
 
-    // Create the ActionList and AbortList
-    using KalmanAborter = Aborter<parameters_t>;
+    // Create the ActorList
     using KalmanActor = Actor<parameters_t>;
 
     using KalmanResult = typename KalmanActor::result_type;
-    using Actors = ActionList<KalmanActor>;
-    using Aborters = AbortList<KalmanAborter>;
-    using PropagatorOptions =
-        typename propagator_t::template Options<Actors, Aborters>;
+    using Actors = ActorList<KalmanActor>;
+    using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
     // Create relevant options for the propagation options
     PropagatorOptions propagatorOptions(kfOptions.geoContext,
@@ -1128,8 +1114,7 @@ class KalmanFitter {
     }
 
     // Catch the actor and set the measurements
-    auto& kalmanActor =
-        propagatorOptions.actionList.template get<KalmanActor>();
+    auto& kalmanActor = propagatorOptions.actorList.template get<KalmanActor>();
     kalmanActor.inputMeasurements = &inputMeasurements;
     kalmanActor.targetReached.surface = kfOptions.referenceSurface;
     kalmanActor.targetSurfaceStrategy = kfOptions.referenceSurfaceStrategy;
@@ -1192,15 +1177,12 @@ class KalmanFitter {
       inputMeasurements.emplace(geoId, std::move(sl));
     }
 
-    // Create the ActionList and AbortList
-    using KalmanAborter = Aborter<parameters_t>;
+    // Create the ActorList
     using KalmanActor = Actor<parameters_t>;
 
     using KalmanResult = typename KalmanActor::result_type;
-    using Actors = ActionList<KalmanActor>;
-    using Aborters = AbortList<KalmanAborter>;
-    using PropagatorOptions =
-        typename propagator_t::template Options<Actors, Aborters>;
+    using Actors = ActorList<KalmanActor>;
+    using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
     // Create relevant options for the propagation options
     PropagatorOptions propagatorOptions(kfOptions.geoContext,
@@ -1210,8 +1192,7 @@ class KalmanFitter {
     propagatorOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
 
     // Catch the actor and set the measurements
-    auto& kalmanActor =
-        propagatorOptions.actionList.template get<KalmanActor>();
+    auto& kalmanActor = propagatorOptions.actorList.template get<KalmanActor>();
     kalmanActor.inputMeasurements = &inputMeasurements;
     kalmanActor.targetReached.surface = kfOptions.referenceSurface;
     kalmanActor.targetSurfaceStrategy = kfOptions.referenceSurfaceStrategy;
