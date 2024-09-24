@@ -32,11 +32,11 @@
 namespace Acts {
 class IVisualization3D;
 
-static ViewConfig s_viewParameter = ViewConfig({0, 0, 255});
-static ViewConfig s_viewMeasurement = ViewConfig({255, 102, 0});
-static ViewConfig s_viewPredicted = ViewConfig({51, 204, 51});
-static ViewConfig s_viewFiltered = ViewConfig({255, 255, 0});
-static ViewConfig s_viewSmoothed = ViewConfig({0, 102, 255});
+static ViewConfig s_viewParameter = {.color = {0, 0, 255}};
+static ViewConfig s_viewMeasurement = {.color = {255, 102, 0}};
+static ViewConfig s_viewPredicted = {.color = {51, 204, 51}};
+static ViewConfig s_viewFiltered = {.color = {255, 255, 0}};
+static ViewConfig s_viewSmoothed = {.color = {0, 102, 25}};
 
 struct EventDataView3D {
   /// Helper to find the eigen values and corr angle
@@ -277,7 +277,7 @@ struct EventDataView3D {
                                  state.predicted(), state.predictedCovariance(),
                                  particleHypothesis),
             gctx, momentumScale, locErrorScale, angularErrorScale,
-            predictedConfig, predictedConfig, ViewConfig(false));
+            predictedConfig, predictedConfig, {.visible = false});
       }
       // (b) filtered track parameters
       if (filteredConfig.visible && state.hasFiltered()) {
@@ -287,7 +287,7 @@ struct EventDataView3D {
                                  state.filtered(), state.filteredCovariance(),
                                  particleHypothesis),
             gctx, momentumScale, locErrorScale, angularErrorScale,
-            filteredConfig, filteredConfig, ViewConfig(false));
+            filteredConfig, filteredConfig, {.visible = false});
       }
       // (c) smoothed track parameters
       if (smoothedConfig.visible && state.hasSmoothed()) {
@@ -297,7 +297,7 @@ struct EventDataView3D {
                                  state.smoothed(), state.smoothedCovariance(),
                                  particleHypothesis),
             gctx, momentumScale, locErrorScale, angularErrorScale,
-            smoothedConfig, smoothedConfig, ViewConfig(false));
+            smoothedConfig, smoothedConfig, {.visible = false});
       }
       return true;
     });

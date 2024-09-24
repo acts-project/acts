@@ -25,7 +25,7 @@ namespace Acts {
 /// ioninisation, bremsstrahlung, pair production and photonuclear interaction
 /// in the propagation and the jacobian. These effects will only occur if the
 /// propagation is in a TrackingVolume with attached material.
-struct EigenStepperDenseEnvironmentExtension {
+struct EigenStepperDenseExtension {
   using Scalar = ActsScalar;
   /// @brief Vector3 replacement for the custom scalar type
   using ThisVector3 = Eigen::Matrix<Scalar, 3, 1>;

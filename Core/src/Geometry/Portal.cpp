@@ -175,7 +175,7 @@ const RegularSurface& Portal::surface() const {
 Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
                      Portal& bPortal, BinningValue direction,
                      const Logger& logger) {
-  ACTS_DEBUG("Merging to portals along " << direction);
+  ACTS_VERBOSE("Merging two portals along " << direction);
 
   if (&aPortal == &bPortal) {
     ACTS_ERROR("Cannot merge a portal with itself");
@@ -238,7 +238,7 @@ Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
 
 Portal Portal::fuse(const GeometryContext& gctx, Portal& aPortal,
                     Portal& bPortal, const Logger& logger) {
-  ACTS_DEBUG("Fusing two portals");
+  ACTS_VERBOSE("Fusing two portals");
   if (&aPortal == &bPortal) {
     ACTS_ERROR("Cannot merge a portal with itself");
     throw PortalMergingException{};
