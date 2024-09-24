@@ -41,4 +41,30 @@ BOOST_AUTO_TEST_CASE(DelegateChainAdd) {
   BOOST_CHECK_EQUAL(x, 11);
 }
 
+struct GetInt {
+  int value;
+
+  int get() const { return value; }
+};
+
+int getSix() {
+  return 6;
+}
+
+BOOST_AUTO_TEST_CASE(DelegateChainReturn) {
+  GetInt g1{1}, g2{2}, g3{3};
+
+  auto chain = DelegateChainFactory<int()>{}
+                   .add<&GetInt::get>(&g1)
+                   .add<&getSix>()
+                   .add<&GetInt::get>(&g2)
+                   .add<&GetInt::get>(&g3)
+                   .build();
+
+  auto results = chain();
+  std::array<int, 4> expected = {1, 6, 2, 3};
+  BOOST_CHECK_EQUAL_COLLECTIONS(results.begin(), results.end(),
+                                expected.begin(), expected.end());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
