@@ -62,7 +62,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
             "object. It needs at least 5 parameters, while " +
             std::to_string(boundValues.size()) + " where given");
       }
-      auto bArray = to_array<ConeVolumeBounds::BoundValues::eSize, ActsScalar>(
+      auto bArray = toArray<ConeVolumeBounds::BoundValues::eSize, ActsScalar>(
           boundValues);
       volumeBounds = std::make_unique<ConeVolumeBounds>(bArray);
     } break;
@@ -94,7 +94,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
             std::to_string(boundValues.size()) + " where given");
       }
       auto bArray =
-          to_array<CuboidVolumeBounds::BoundValues::eSize>(boundValues);
+          toArray<CuboidVolumeBounds::BoundValues::eSize>(boundValues);
       volumeBounds = std::make_unique<CuboidVolumeBounds>(bArray);
     } break;
     case VolumeBounds::BoundsType::eCutoutCylinder: {
@@ -108,7 +108,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
             std::to_string(boundValues.size()) + " where given");
       }
       auto bArray =
-          to_array<CutoutCylinderVolumeBounds::BoundValues::eSize>(boundValues);
+          toArray<CutoutCylinderVolumeBounds::BoundValues::eSize>(boundValues);
       volumeBounds = std::make_unique<CutoutCylinderVolumeBounds>(bArray);
     } break;
     case VolumeBounds::BoundsType::eCylinder: {
@@ -150,7 +150,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
                    << boundValues[2] << ", " << boundValues[3] << ", "
                    << boundValues[4]);
       auto bArray =
-          to_array<CylinderVolumeBounds::BoundValues::eSize>(boundValues);
+          toArray<CylinderVolumeBounds::BoundValues::eSize>(boundValues);
       volumeBounds = std::make_unique<CylinderVolumeBounds>(bArray);
     } break;
     case VolumeBounds::BoundsType::eGenericCuboid: {
@@ -164,7 +164,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
             std::to_string(boundValues.size()) + " where given");
       }
       auto bArray =
-          to_array<GenericCuboidVolumeBounds::BoundValues::eSize>(boundValues);
+          toArray<GenericCuboidVolumeBounds::BoundValues::eSize>(boundValues);
       volumeBounds = std::make_unique<GenericCuboidVolumeBounds>(bArray);
     } break;
     case VolumeBounds::BoundsType::eTrapezoid: {
@@ -178,7 +178,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
             std::to_string(boundValues.size()) + " where given");
       }
       auto bArray =
-          to_array<TrapezoidVolumeBounds::BoundValues::eSize>(boundValues);
+          toArray<TrapezoidVolumeBounds::BoundValues::eSize>(boundValues);
       volumeBounds = std::make_unique<TrapezoidVolumeBounds>(bArray);
     } break;
     default:

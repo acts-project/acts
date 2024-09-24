@@ -44,7 +44,7 @@ nlohmann::json Acts::DetectorJsonConverter::toJson(
   for (const auto* volume : detector.volumes()) {
     nSurfaces += volume->surfaces().size();
     for (const auto& portal : volume->portals()) {
-      if (std::find(portals.begin(), portals.end(), portal) == portals.end()) {
+      if (!rangeContainsValue(portals, portal)) {
         portals.push_back(portal);
       }
     }

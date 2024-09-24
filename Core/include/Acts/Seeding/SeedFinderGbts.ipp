@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,6 +17,7 @@
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <functional>
@@ -352,8 +353,8 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
       out_sort[outIdx].first = pS->m_p[0];
     }
 
-    std::sort(in_sort.begin(), in_sort.end());
-    std::sort(out_sort.begin(), out_sort.end());
+    std::ranges::sort(in_sort);
+    std::ranges::sort(out_sort);
 
     unsigned int last_out = 0;
 
@@ -495,8 +496,8 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
   m_triplets.clear();
 
-  std::sort(vSeeds.begin(), vSeeds.end(),
-            typename Acts::GbtsEdge<external_spacepoint_t>::CompareLevel());
+  std::ranges::sort(
+      vSeeds, typename Acts::GbtsEdge<external_spacepoint_t>::CompareLevel());
 
   if (vSeeds.empty()) {
     return;

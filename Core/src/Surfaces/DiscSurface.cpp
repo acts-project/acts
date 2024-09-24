@@ -385,7 +385,7 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
                               const Logger& logger) const {
   using namespace Acts::UnitLiterals;
 
-  ACTS_DEBUG("Merging disc surfaces in " << direction << " direction");
+  ACTS_VERBOSE("Merging disc surfaces in " << direction << " direction");
 
   if (m_associatedDetElement != nullptr ||
       other.m_associatedDetElement != nullptr) {
