@@ -15,7 +15,11 @@ message(STATUS "Building Detray as part of the Acts project")
 set(DETRAY_VERSION "v${_acts_detray_version}")
 
 # Declare where to get Detray from.
-FetchContent_Declare(Detray ${ACTS_DETRAY_SOURCE})
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.25.0)
+    FetchContent_Declare(Detray ${ACTS_DETRAY_SOURCE} SYSTEM)
+else()
+    FetchContent_Declare(Detray ${ACTS_DETRAY_SOURCE})
+endif()
 
 # Options used in the build of Detray.
 if(ACTS_CUSTOM_SCALARTYPE)
