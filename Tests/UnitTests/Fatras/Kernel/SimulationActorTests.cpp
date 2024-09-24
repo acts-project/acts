@@ -235,7 +235,8 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
   BOOST_CHECK_EQUAL(f.actor.initialParticle.energy(), f.e);
 
   // call.actor: surface selection -> one hit, no material -> no secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
@@ -260,7 +261,8 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
   BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // call.actor again: one more hit, still no secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
@@ -306,7 +308,8 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
   BOOST_CHECK_EQUAL(f.actor.initialParticle.energy(), f.e);
 
   // call.actor: surface selection -> one hit, material -> one secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 125_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 1u);
@@ -333,7 +336,8 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
                   tol);
 
   // call.actor again: one more hit, one more secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 250_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 2u);
@@ -379,7 +383,8 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
   BOOST_CHECK_EQUAL(f.actor.initialParticle.energy(), f.e);
 
   // call.actor: no surface sel. -> no hit, no material -> no secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
@@ -404,7 +409,8 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
   BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // call.actor again: no hit, still no secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
@@ -440,7 +446,8 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
   Fixture<NoSurface> f(125_MeV, makeMaterialSurface());
 
   // call.actor: no surface sel. -> no hit, material -> one secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 125_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 1u);
@@ -466,7 +473,8 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
                   tol);
 
   // call.actor again: still no hit, one more secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 250_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 2u);
@@ -506,7 +514,8 @@ BOOST_AUTO_TEST_CASE(Decay) {
   const auto gammaInv = f.m / f.e;
 
   // first step w/ defaults leaves particle alive
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
   BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
@@ -518,7 +527,8 @@ BOOST_AUTO_TEST_CASE(Decay) {
 
   // second step w/ defaults increases proper time
   f.state.stepping.time += 1_ns;
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
   BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
@@ -531,7 +541,8 @@ BOOST_AUTO_TEST_CASE(Decay) {
   // third step w/ proper time limit decays the particle
   f.state.stepping.time += 1_ns;
   f.result.properTimeLimit = f.result.particle.properTime() + gammaInv * 0.5_ns;
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(!f.result.isAlive);
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
   BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
