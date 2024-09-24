@@ -10,6 +10,7 @@
 #include <boost/test/unit_test_suite.hpp>
 
 #include "Acts/Utilities/DelegateChain.hpp"
+#include "Acts/Utilities/TypeList.hpp"
 
 using namespace Acts;
 
@@ -19,19 +20,25 @@ struct AddTo {
   void add(int &x) const { x += value; }
 };
 
+void addFive(int &x) {
+  x += 5;
+}
+
 BOOST_AUTO_TEST_SUITE(DelegateChainTests)
 
 BOOST_AUTO_TEST_CASE(DelegateChainAdd) {
-  DelegateChain<void(int &)> chain;
   AddTo a1{1}, a2{2}, a3{3};
-
-  chain.connect_back<&AddTo::add>(&a1);
-  chain.connect_back<&AddTo::add>(&a2);
-  chain.connect_back<&AddTo::add>(&a3);
-
   int x = 0;
+
+  auto chain = DelegateChainFactory<void(int &)>{}
+                   .add<&AddTo::add>(&a1)
+                   .add<&addFive>()
+                   .add<&AddTo::add>(&a2)
+                   .add<&AddTo::add>(&a3)
+                   .build();
+
   chain(x);
-  BOOST_CHECK_EQUAL(x, 6);
+  BOOST_CHECK_EQUAL(x, 11);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

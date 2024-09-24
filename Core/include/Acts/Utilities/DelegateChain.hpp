@@ -9,62 +9,127 @@
 #pragma once
 
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/TypeList.hpp"
+
+#include <tuple>
+#include <utility>
 
 namespace Acts {
 
-template <typename, typename H = void, DelegateType = DelegateType::NonOwning>
+template <typename, typename payload_types = TypeList<>>
 class DelegateChain;
 
 /// This class is a thin wrapper around a vector of delegates that are supposed
 /// to be called in order.
-template <typename R, typename H, DelegateType O, typename... Args>
+template <typename R, typename... payload_types, typename... Args>
   requires(std::is_same_v<R, void>)  // Currently does not support return values
-class DelegateChain<R(Args...), H, O> {
-  using return_type = R;
-  using holder_type = H;
-
+class DelegateChain<R(Args...), TypeList<payload_types...>> {
  public:
-  static constexpr DelegateType kOwnership = O;
+  using return_type = R;
+  using tuple_type = std::tuple<payload_types...>;
+  using delegate_type = Delegate<R(Args...)>;
 
-  using DelegateType = Delegate<R(Args...), H, kOwnership>;
+  DelegateChain(std::unique_ptr<tuple_type> payloads)
+      : m_payloads(std::move(payloads)) {}
 
-  /// Insert a delegate at the end of the chain
-  /// @param delegate The delegate to append
-  void push_back(DelegateType&& delegate) {
-    assert(delegate.connected() && "Delegate is not connected");
-    m_delegates.push_back(delegate);
-  }
-
-  /// Creates a new delegate at the end of the chain and immediately connects it
-  /// with the given arguments.
-  /// @tparam Callable The callable to connect
-  /// @tparam Ts The argument types
-  /// @param args The arguments to connect the delegate with
-  template <auto Callable, typename... Ts>
-  void connect_back(Ts&&... args) {
-    auto& delegate = m_delegates.emplace_back();
-    delegate.template connect<Callable>(std::forward<Ts>(args)...);
-  }
-
-  /// The number of delegates in the chain
-  /// @return The number of delegates
-  std::size_t size() const { return m_delegates.size(); }
-
-  /// Check if the chain is empty
-  /// @return True if the chain is empty, else false
-  bool empty() const { return m_delegates.empty(); }
+  delegate_type& delegate() { return m_delegate; }
 
   /// The call operator that exposes the functionality of the @c DelegateChain type.
   /// @param args The arguments to call the contained functions with
   template <typename... Ts>
   void operator()(Ts&&... args) const {
-    for (const auto& delegate : m_delegates) {
-      delegate(std::forward<Ts>(args)...);
-    }
+    m_delegate(std::forward<Ts>(args)...);
   }
 
  private:
-  std::vector<DelegateType> m_delegates;
+  delegate_type m_delegate;
+  std::unique_ptr<tuple_type> m_payloads{};
+};
+
+template <typename, typename payload_types = TypeList<>, auto... Callables>
+class DelegateChainFactory;
+
+struct DelegateNoPayloadTag {};
+
+template <typename R, typename... payload_types, auto... callables,
+          typename... callable_args>
+  requires(std::is_same_v<R, void>)  // Currently does not support return values
+class DelegateChainFactory<R(callable_args...), TypeList<payload_types...>,
+                           callables...> {
+  using return_type = R;
+  using chain_type =
+      DelegateChain<R(callable_args...), TypeList<payload_types...>>;
+  using tuple_type = typename chain_type::tuple_type;
+
+ public:
+  DelegateChainFactory() = default;
+  DelegateChainFactory(std::tuple<payload_types...> payloads)
+      : m_payloads(payloads) {}
+
+  template <auto Callable, typename payload_type>
+  auto add(payload_type&& payload) {
+    std::tuple<payload_types..., payload_type> payloads =
+        std::tuple_cat(m_payloads, std::make_tuple(payload));
+
+    return DelegateChainFactory<R(callable_args...),
+                                TypeList<payload_types..., payload_type>,
+                                callables..., Callable>{payloads};
+  }
+
+  template <auto Callable>
+  auto add() {
+    std::tuple<payload_types..., DelegateNoPayloadTag> payloads =
+        std::tuple_cat(m_payloads, std::make_tuple(DelegateNoPayloadTag{}));
+
+    return DelegateChainFactory<
+        R(callable_args...), TypeList<payload_types..., DelegateNoPayloadTag>,
+        callables..., Callable>{payloads};
+  }
+
+  template <std::size_t I, std::size_t J, auto head, auto... tail>
+  static constexpr auto findCallable() {
+    if constexpr (I == J) {
+      return head;
+    } else {
+      return findCallable<I, J + 1, tail...>();
+    }
+  }
+
+  template <std::size_t I = 0>
+  static constexpr auto invoke(const tuple_type* payloads,
+                               callable_args... args) {
+    const auto& callable = findCallable<I, 0, callables...>();
+
+    if constexpr (!std::is_same_v<std::tuple_element_t<I, tuple_type>,
+                                  DelegateNoPayloadTag>) {
+      auto payload = std::get<I>(*payloads);
+      std::invoke(callable, payload, std::forward<callable_args>(args)...);
+    } else {
+      std::invoke(callable, std::forward<callable_args>(args)...);
+    }
+
+    if constexpr (I < sizeof...(payload_types) - 1) {
+      invoke<I + 1>(payloads, std::forward<callable_args>(args)...);
+    }
+  }
+
+  chain_type build() {
+    auto payloads = std::make_unique<tuple_type>(m_payloads);
+    const tuple_type* payloadsPtr = payloads.get();
+    chain_type chain{std::move(payloads)};
+
+    typename chain_type::delegate_type::function_type function =
+        [](const void* payloadPack, callable_args... args) {
+          const auto* tuplePtr = static_cast<const tuple_type*>(payloadPack);
+          invoke(tuplePtr, std::forward<callable_args>(args)...);
+        };
+
+    chain.delegate().connect(function, payloadsPtr);
+    return chain;
+  }
+
+ private:
+  tuple_type m_payloads{};
 };
 
 }  // namespace Acts

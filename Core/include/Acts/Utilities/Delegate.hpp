@@ -44,18 +44,19 @@ class Delegate;
 ///
 template <typename R, typename H, DelegateType O, typename... Args>
 class Delegate<R(Args...), H, O> {
-  static constexpr DelegateType kOwnership = O;
-
+ public:
   /// Alias of the return type
   using return_type = R;
   using holder_type = H;
   /// Alias to the function pointer type this class will store
   using function_type = return_type (*)(const holder_type *, Args...);
-
   using function_ptr_type = return_type (*)(Args...);
 
   using deleter_type = void (*)(const holder_type *);
 
+  static constexpr DelegateType kOwnership = O;
+
+ private:
   template <typename T, typename C>
   using isSignatureCompatible =
       decltype(std::declval<T &>() = std::declval<C>());
@@ -199,6 +200,14 @@ class Delegate<R(Args...), H, O> {
     if constexpr (kOwnership == DelegateType::NonOwning) {
       m_payload.payload = nullptr;
     }
+    m_function = callable;
+  }
+
+  template <typename Type>
+  void connect(function_type callable, const Type *instance)
+    requires(kOwnership == DelegateType::NonOwning)
+  {
+    m_payload.payload = instance;
     m_function = callable;
   }
 
