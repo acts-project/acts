@@ -168,8 +168,7 @@ class TrackSelector {
 
     /// Auto-converting constructor from a single cut configuration.
     /// Results in a single absolute eta bin from 0 to infinity.
-    EtaBinnedConfig(Config cutSet)
-        : cutSets{std::move(cutSet)} {}
+    EtaBinnedConfig(Config cutSet) : cutSets{std::move(cutSet)} {}
 
     /// Add a new eta bin with the given upper bound.
     /// @param etaMax Upper bound of the new eta bin
@@ -368,7 +367,7 @@ inline std::size_t TrackSelector::EtaBinnedConfig::binIndexNoCheck(
       std::upper_bound(absEtaEdges.begin(), absEtaEdges.end(), std::abs(eta));
   std::size_t index = std::distance(absEtaEdges.begin(), binIt);
   if (index == 0)
-    index = absEtaEdges.size() + 1; // positive value to check for underflow
+    index = absEtaEdges.size() + 1;  // positive value to check for underflow
   return index - 1;
 }
 
