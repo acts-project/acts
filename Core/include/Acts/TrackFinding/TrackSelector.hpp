@@ -138,11 +138,13 @@ class TrackSelector {
   /// Main config object for the track selector. Combines a set of cut
   /// configurations and corresponding eta bins
   struct EtaBinnedConfig {
+    static const std::vector<double> absEtaEdgesDefault = {{0, inf}};
+
     /// Cut sets for each eta bin
     std::vector<Config> cutSets = {};
 
     /// Eta bin edges for varying cuts by eta
-    std::vector<double> absEtaEdges = {};
+    std::vector<double> absEtaEdges = absEtaEdgesDefault;
 
     /// Get the number of eta bins
     /// @return Number of eta bins
@@ -150,7 +152,7 @@ class TrackSelector {
 
     /// Construct an empty (accepts everything) configuration.
     /// Results in a single cut set and one abs eta bin from 0 to infinity.
-    EtaBinnedConfig() : cutSets{{}}, absEtaEdges{{0, inf}} {};
+    EtaBinnedConfig() : cutSets{{}}, absEtaEdges{absEtaEdgesDefault} {};
 
     /// Constructor to create a config object that is not upper-bounded.
     /// This is useful to use the "fluent" API to populate the configuration.
@@ -169,7 +171,7 @@ class TrackSelector {
     /// Auto-converting constructor from a single cut configuration.
     /// Results in a single absolute eta bin from 0 to infinity.
     EtaBinnedConfig(Config cutSet)
-        : cutSets{std::move(cutSet)}, absEtaEdges{{0, inf}} {}
+        : cutSets{std::move(cutSet)}, absEtaEdges{absEtaEdgesDefault} {}
 
     /// Add a new eta bin with the given upper bound.
     /// @param etaMax Upper bound of the new eta bin
@@ -195,10 +197,16 @@ class TrackSelector {
     /// @return True if the configuration has a bin for the given eta
     bool hasCuts(double eta) const;
 
-    /// Get the index of the eta bin for a given eta
+    /// Get the index of the eta bin for a given eta.
+    /// throws an exception if Eta is outside the abs eta bin edges.
     /// @param eta Eta value
     /// @return Index of the eta bin
     std::size_t binIndex(double eta) const;
+
+    /// Get the index of the eta bin for a given eta
+    /// @param eta Eta value
+    /// @return Index of the eta bin, or >= absEtaEdges.size()-1 if Eta is outside the abs eta bin edges.
+    std::size_t binIndexNoCheck(double eta) const;
 
     /// Get the cuts for a given eta
     /// @param eta Eta value
@@ -349,14 +357,19 @@ inline bool TrackSelector::EtaBinnedConfig::hasCuts(double eta) const {
 }
 
 inline std::size_t TrackSelector::EtaBinnedConfig::binIndex(double eta) const {
-  if (!hasCuts(eta)) {
+  std::size_t index = binIndexNoCheck(eta);
+  if (!(index + 1 < absEtaEdges.size())) {
     throw std::invalid_argument{"Eta is outside the abs eta bin edges"};
   }
+  return index;
+}
 
+inline std::size_t TrackSelector::EtaBinnedConfig::binIndexNoCheck(double eta) const {
   auto binIt =
       std::upper_bound(absEtaEdges.begin(), absEtaEdges.end(), std::abs(eta));
-  std::size_t index = std::distance(absEtaEdges.begin(), binIt) - 1;
-  return index;
+  std::size_t index = std::distance(absEtaEdges.begin(), binIt);
+  if (index == 0) index = absEtaEdges.size() + 1; // positive value to check for underflow
+  return index - 1;
 }
 
 inline const TrackSelector::Config& TrackSelector::EtaBinnedConfig::getCuts(
@@ -452,9 +465,8 @@ inline TrackSelector::TrackSelector(
   }
 
   if (m_cfg.nEtaBins() == 1) {
-    static const std::vector<double> infVec = {0, inf};
     m_isUnbinned =
-        m_cfg.absEtaEdges == infVec;  // single bin, no eta edges given
+        m_cfg.absEtaEdges == absEtaEdgesDefault;  // single bin, no eta edges given
   }
 
   if (!m_isUnbinned) {
