@@ -17,6 +17,11 @@ namespace Acts {
 template <typename actor_t>
 concept ActorHasResult = requires { typename actor_t::result_type; };
 
+template <typename actor_t>
+struct ActorHasResultStruct {
+  static constexpr bool value = ActorHasResult<actor_t>;
+};
+
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
 concept ActorHasActWithoutResult = requires(

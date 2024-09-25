@@ -689,8 +689,8 @@ class Gx2Fitter {
       }
 
       // Here we handle all measurements
-      if (auto sourcelink_it = inputMeasurements->find(geoId);
-          sourcelink_it != inputMeasurements->end()) {
+      if (auto sourceLinkIt = inputMeasurements->find(geoId);
+          sourceLinkIt != inputMeasurements->end()) {
         ACTS_DEBUG("    The surface contains a measurement.");
 
         // Transport the covariance to the surface
@@ -755,7 +755,7 @@ class Gx2Fitter {
         // We have smoothed parameters, so calibrate the uncalibrated input
         // measurement
         extensions.calibrator(state.geoContext, *calibrationContext,
-                              sourcelink_it->second, trackStateProxy);
+                              sourceLinkIt->second, trackStateProxy);
 
         // Get and set the type flags
         auto typeFlags = trackStateProxy.typeFlags();
