@@ -26,8 +26,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -60,9 +59,9 @@ struct MaterialCollector {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, result_type& result,
-                  const Logger& /*logger*/) const {
+  void act(propagator_state_t& state, const stepper_t& stepper,
+           const navigator_t& navigator, result_type& result,
+           const Logger& /*logger*/) const {
     if (navigator.currentVolume(state.navigation) != nullptr) {
       auto position = stepper.position(state.stepping);
       result.matTrue.push_back(
@@ -267,7 +266,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   MagneticFieldContext mc;
   // Launch propagation and gather result
   using PropagatorOptions = Propagator<StraightLineStepper, Navigator>::Options<
-      ActionList<MaterialCollector>, AbortList<EndOfWorldReached>>;
+      ActorList<MaterialCollector, EndOfWorldReached>>;
   PropagatorOptions po(gc, mc);
   po.stepping.maxStepSize = 1._mm;
   po.maxSteps = 1e6;

@@ -40,35 +40,29 @@ void addObj(Context& ctx) {
     ///
     mex.def("writeSurfacesObj",
             [](const std::vector<std::shared_ptr<Surface>>& surfaces,
-               const GeometryContext& viewContext,
-               const std::array<int, 3>& viewRgb, unsigned int viewSegements,
+               const GeometryContext& viewContext, const ViewConfig& viewConfig,
                const std::string& fileName) {
-              Acts::ViewConfig sConfig = Acts::ViewConfig{.color = viewRgb};
-              sConfig.nSegments = viewSegements;
               Acts::GeometryView3D view3D;
               Acts::ObjVisualization3D obj;
 
               for (const auto& surface : surfaces) {
                 view3D.drawSurface(obj, *surface, viewContext,
-                                   Acts::Transform3::Identity(), sConfig);
+                                   Acts::Transform3::Identity(), viewConfig);
               }
               obj.write(fileName);
             });
     mex.def("writeVolumesObj",
             [](const std::vector<std::shared_ptr<Experimental::DetectorVolume>>&
                    Volumes,
-               const GeometryContext& viewContext,
-               const std::array<int, 3>& viewRgb, unsigned int viewSegements,
+               const GeometryContext& viewContext, const ViewConfig& viewConfig,
                const std::string& fileName) {
-              Acts::ViewConfig sConfig = Acts::ViewConfig{.color = viewRgb};
-              sConfig.nSegments = viewSegements;
               Acts::GeometryView3D view3D;
               Acts::ObjVisualization3D obj;
 
               for (const auto& volume : Volumes) {
                 view3D.drawDetectorVolume(obj, *volume, viewContext,
                                           Acts::Transform3::Identity(),
-                                          sConfig);
+                                          viewConfig);
               }
               obj.write(fileName);
             });
@@ -76,22 +70,19 @@ void addObj(Context& ctx) {
             [](const std::vector<std::shared_ptr<Surface>>& surfaces,
                const std::vector<std::shared_ptr<Experimental::DetectorVolume>>&
                    Volumes,
-               const GeometryContext& viewContext,
-               const std::array<int, 3>& viewRgb, unsigned int viewSegements,
+               const GeometryContext& viewContext, const ViewConfig& viewConfig,
                const std::string& fileName) {
-              Acts::ViewConfig sConfig = Acts::ViewConfig{.color = viewRgb};
-              sConfig.nSegments = viewSegements;
               Acts::GeometryView3D view3D;
               Acts::ObjVisualization3D obj;
 
               for (const auto& volume : Volumes) {
                 view3D.drawDetectorVolume(obj, *volume, viewContext,
                                           Acts::Transform3::Identity(),
-                                          sConfig);
+                                          viewConfig);
               }
               for (const auto& surface : surfaces) {
                 view3D.drawSurface(obj, *surface, viewContext,
-                                   Acts::Transform3::Identity(), sConfig);
+                                   Acts::Transform3::Identity(), viewConfig);
               }
               obj.write(fileName);
             });

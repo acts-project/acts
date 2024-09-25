@@ -218,8 +218,7 @@ class AxisAlignedBoundingBox {
   /// @param helper The visualization helper to write to
   /// @param color The color to use for drawing
   /// @param trf An optional transform to apply first.
-  void draw(IVisualization3D& helper,
-            std::array<int, 3> color = {120, 120, 120},
+  void draw(IVisualization3D& helper, Color color = {120, 120, 120},
             const transform_type& trf = transform_type::Identity()) const
     requires(DIM == 3);
 
