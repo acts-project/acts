@@ -206,13 +206,13 @@ struct GsfActor {
     result.visitedSurfaces.push_back(&surface);
 
     // Check what we have on this surface
-    const auto found_source_link =
+    const auto foundSourceLink =
         m_cfg.inputMeasurements->find(surface.geometryId());
     const bool haveMaterial =
         navigator.currentSurface(state.navigation)->surfaceMaterial() &&
         !m_cfg.disableAllMaterialHandling;
     const bool haveMeasurement =
-        found_source_link != m_cfg.inputMeasurements->end();
+        foundSourceLink != m_cfg.inputMeasurements->end();
 
     ACTS_VERBOSE(std::boolalpha << "haveMaterial " << haveMaterial
                                 << ", haveMeasurement: " << haveMeasurement);
@@ -263,7 +263,7 @@ struct GsfActor {
       TemporaryStates tmpStates;
 
       auto res = kalmanUpdate(state, stepper, navigator, result, tmpStates,
-                              found_source_link->second);
+                              foundSourceLink->second);
 
       if (!res.ok()) {
         setErrorOrAbort(res.error());
@@ -281,7 +281,7 @@ struct GsfActor {
 
       if (haveMeasurement) {
         res = kalmanUpdate(state, stepper, navigator, result, tmpStates,
-                           found_source_link->second);
+                           foundSourceLink->second);
       } else {
         res = noMeasurementUpdate(state, stepper, navigator, result, tmpStates,
                                   false);
@@ -547,7 +547,7 @@ struct GsfActor {
   Result<void> kalmanUpdate(propagator_state_t& state, const stepper_t& stepper,
                             const navigator_t& navigator, result_type& result,
                             TemporaryStates& tmpStates,
-                            const SourceLink& source_link) const {
+                            const SourceLink& sourceLink) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
 
     // Boolean flag, to distinguish measurement and outlier states. This flag
@@ -563,7 +563,7 @@ struct GsfActor {
 
       auto trackStateProxyRes = detail::kalmanHandleMeasurement(
           *m_cfg.calibrationContext, singleState, singleStepper,
-          m_cfg.extensions, surface, source_link, tmpStates.traj,
+          m_cfg.extensions, surface, sourceLink, tmpStates.traj,
           MultiTrajectoryTraits::kInvalid, false, logger());
 
       if (!trackStateProxyRes.ok()) {
