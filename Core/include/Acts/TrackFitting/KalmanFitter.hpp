@@ -591,8 +591,8 @@ class KalmanFitter {
                         const stepper_t& stepper, const navigator_t& navigator,
                         result_type& result) const {
       // Try to find the surface in the measurement surfaces
-      auto sourcelink_it = inputMeasurements->find(surface->geometryId());
-      if (sourcelink_it != inputMeasurements->end()) {
+      auto sourceLinkIt = inputMeasurements->find(surface->geometryId());
+      if (sourceLinkIt != inputMeasurements->end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
@@ -608,7 +608,7 @@ class KalmanFitter {
         // point in performing globalToLocal correction)
         auto trackStateProxyRes = detail::kalmanHandleMeasurement(
             *calibrationContext, state, stepper, extensions, *surface,
-            sourcelink_it->second, *result.fittedStates, result.lastTrackIndex,
+            sourceLinkIt->second, *result.fittedStates, result.lastTrackIndex,
             false, logger());
 
         if (!trackStateProxyRes.ok()) {
@@ -699,8 +699,8 @@ class KalmanFitter {
                                 const navigator_t& navigator,
                                 result_type& result) const {
       // Try to find the surface in the measurement surfaces
-      auto sourcelink_it = inputMeasurements->find(surface->geometryId());
-      if (sourcelink_it != inputMeasurements->end()) {
+      auto sourceLinkIt = inputMeasurements->find(surface->geometryId());
+      if (sourceLinkIt != inputMeasurements->end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface "
                      << surface->geometryId()
@@ -761,7 +761,7 @@ class KalmanFitter {
         // We have predicted parameters, so calibrate the uncalibrated input
         // measurement
         extensions.calibrator(state.geoContext, *calibrationContext,
-                              sourcelink_it->second, trackStateProxy);
+                              sourceLinkIt->second, trackStateProxy);
 
         // If the update is successful, set covariance and
         auto updateRes =
@@ -1084,7 +1084,7 @@ class KalmanFitter {
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
     std::map<GeometryIdentifier, SourceLink> inputMeasurements;
-    // for (const auto& sl : sourcelinks) {
+    // for (const auto& sl : sourceLinks) {
     for (; it != end; ++it) {
       SourceLink sl = *it;
       const Surface* surface = kfOptions.extensions.surfaceAccessor(sl);
