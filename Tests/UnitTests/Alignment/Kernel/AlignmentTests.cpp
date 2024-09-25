@@ -239,7 +239,7 @@ const MeasurementResolutionMap resolutions = {
 
 struct KalmanFitterInputTrajectory {
   // The source links
-  std::vector<TestSourceLink> sourcelinks;
+  std::vector<TestSourceLink> sourceLinks;
   // The start parameters
   std::optional<CurvilinearTrackParameters> startParameters;
 };
@@ -264,7 +264,7 @@ std::vector<KalmanFitterInputTrajectory> createTrajectories(
     // Extract measurements from result of propagation.
     KalmanFitterInputTrajectory traj;
     traj.startParameters = start;
-    traj.sourcelinks = measurements.sourceLinks;
+    traj.sourceLinks = measurements.sourceLinks;
 
     trajectories.push_back(std::move(traj));
   }
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   kfOptions.referenceSurface = &(*inputTraj.startParameters).referenceSurface();
 
   auto evaluateRes = alignZero.evaluateTrackAlignmentState(
-      kfOptions.geoContext, inputTraj.sourcelinks, *inputTraj.startParameters,
+      kfOptions.geoContext, inputTraj.sourceLinks, *inputTraj.startParameters,
       kfOptions, idxedAlignSurfaces, AlignmentMask::All);
   BOOST_CHECK(evaluateRes.ok());
 
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   std::vector<CurvilinearTrackParameters> sParametersCollection;
   sParametersCollection.reserve(10);
   for (const auto& traj : trajectories) {
-    trajCollection.push_back(traj.sourcelinks);
+    trajCollection.push_back(traj.sourceLinks);
     sParametersCollection.push_back(*traj.startParameters);
   }
   auto alignRes =
