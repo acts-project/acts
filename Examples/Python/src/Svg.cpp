@@ -306,10 +306,10 @@ void addSvg(Context& ctx) {
         "drawEtaLines",
         [](const std::string& id, actsvg ::scalar z, actsvg::scalar r,
            const std::vector<actsvg::scalar>& etaMain,
-           actsvg::scalar strokeWidthMain, actsvg::scalar sizeMain,
+           actsvg::scalar strokeWidthMain, unsigned int sizeMain,
            bool labelMain, const std::vector<actsvg::scalar>& etaSub,
            actsvg::scalar strokeWidthSub, const std::vector<int> strokeDashSub,
-           actsvg::scalar sizeSub, bool labelSub) {
+           unsigned int sizeSub, bool labelSub) {
           // The main eta lines
           actsvg::style::stroke strokeMain;
           strokeMain._width = strokeWidthMain;
