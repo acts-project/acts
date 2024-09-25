@@ -197,19 +197,18 @@ ActsExamples::GbtsSeedingAlgorithm::MakeGbtsSpacePoints(
 
       // Gbts space point vector
       // loop over space points, call on map
-      const auto &source_link = spacePoint.sourceLinks();
-      const auto &index_source_link =
-          source_link.front().get<IndexSourceLink>();
+      const auto &sourceLink = spacePoint.sourceLinks();
+      const auto &indexSourceLink = sourceLink.front().get<IndexSourceLink>();
 
       // warning if source link empty
-      if (source_link.empty()) {
+      if (sourceLink.empty()) {
         // warning in officaial acts format
         ACTS_WARNING("warning source link vector is empty");
         continue;
       }
-      int ACTS_vol_id = index_source_link.geometryId().volume();
-      int ACTS_lay_id = index_source_link.geometryId().layer();
-      int ACTS_mod_id = index_source_link.geometryId().sensitive();
+      int ACTS_vol_id = indexSourceLink.geometryId().volume();
+      int ACTS_lay_id = indexSourceLink.geometryId().layer();
+      int ACTS_mod_id = indexSourceLink.geometryId().sensitive();
 
       // dont want strips or HGTD
       if (ACTS_vol_id == 2 || ACTS_vol_id == 22 || ACTS_vol_id == 23 ||
