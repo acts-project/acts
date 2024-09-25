@@ -165,7 +165,7 @@ struct CombinatorialKalmanFilterOptions {
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
-        sourcelinkAccessor(std::move(accessor_)),
+        sourceLinkAccessor(std::move(accessor_)),
         extensions(extensions_),
         propagatorPlainOptions(pOptions),
         multipleScattering(mScattering),
@@ -182,7 +182,7 @@ struct CombinatorialKalmanFilterOptions {
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
   /// The source link accessor
-  SourceLinkAccessor sourcelinkAccessor;
+  SourceLinkAccessor sourceLinkAccessor;
 
   /// The filter extensions
   CombinatorialKalmanFilterExtensions<track_container_t> extensions;
@@ -199,7 +199,7 @@ struct CombinatorialKalmanFilterOptions {
 
   /// Delegate definition to create track states for selected measurements
   ///
-  /// @note expected to iterator over the given sourcelink range,
+  /// @note expected to iterator over the given sourceLink range,
   ///       select measurements, and create track states for
   ///       which new tips are to be created, more over the outlier
   ///       flag should be set for states that are outlier.
@@ -208,8 +208,8 @@ struct CombinatorialKalmanFilterOptions {
   /// @param calibrationContext pointer to the current calibration context
   /// @param surface the surface at which new track states are to be created
   /// @param boundState the current bound state of the trajectory
-  /// @param slBegin Begin iterator for sourcelinks
-  /// @param slEnd End iterator for sourcelinks
+  /// @param slBegin Begin iterator for sourceLinks
+  /// @param slEnd End iterator for sourceLinks
   /// @param prevTip Index pointing at previous trajectory state (i.e. tip)
   /// @param bufferTrajectory a temporary trajectory which can be used to create temporary track states
   /// @param trackStateCandidates a temporary buffer that can be used to collect track states
@@ -332,8 +332,8 @@ class CombinatorialKalmanFilter {
     /// @param calibrationContext pointer to the current calibration context
     /// @param surface the surface the sourceLinks are associated to
     /// @param boundState Bound state from the propagation on this surface
-    /// @param slBegin Begin iterator for sourcelinks
-    /// @param slEnd End iterator for sourcelinks
+    /// @param slBegin Begin iterator for sourceLinks
+    /// @param slEnd End iterator for sourceLinks
     /// @param prevTip Index pointing at previous trajectory state (i.e. tip)
     /// @param bufferTrajectory a buffer for temporary candidate track states
     /// @param trackStateCandidates a buffer for temporary track state proxies for candidates
@@ -725,7 +725,7 @@ class CombinatorialKalmanFilter {
 
       std::size_t nBranchesOnSurface = 0;
 
-      if (auto [slBegin, slEnd] = m_sourcelinkAccessor(*surface);
+      if (auto [slBegin, slEnd] = m_sourceLinkAccessor(*surface);
           slBegin != slEnd) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
@@ -1175,17 +1175,16 @@ class CombinatorialKalmanFilter {
     CombinatorialKalmanFilterExtensions<track_container_t> m_extensions;
 
     /// The source link accessor
-    source_link_accessor_t m_sourcelinkAccessor;
+    source_link_accessor_t m_sourceLinkAccessor;
 
-    using source_link_iterator_t =
-        decltype(std::declval<decltype(m_sourcelinkAccessor(
+    using SourceLinkIterator =
+        decltype(std::declval<decltype(m_sourceLinkAccessor(
                      *static_cast<const Surface*>(nullptr)))>()
                      .first);
 
     using TrackStateCandidateCreator =
         typename CombinatorialKalmanFilterOptions<
-            source_link_iterator_t,
-            track_container_t>::TrackStateCandidateCreator;
+            SourceLinkIterator, track_container_t>::TrackStateCandidateCreator;
 
     /// the stateCandidator to be used
     /// @note will be set to a default trackStateCandidateCreator or the one
@@ -1274,7 +1273,7 @@ class CombinatorialKalmanFilter {
     combKalmanActor.calibrationContextPtr = &tfOptions.calibrationContext.get();
 
     // copy source link accessor, calibrator and measurement selector
-    combKalmanActor.m_sourcelinkAccessor = tfOptions.sourcelinkAccessor;
+    combKalmanActor.m_sourceLinkAccessor = tfOptions.sourceLinkAccessor;
     combKalmanActor.m_extensions = tfOptions.extensions;
     combKalmanActor.trackStateCandidateCreator =
         tfOptions.trackStateCandidateCreator;

@@ -154,7 +154,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
  private:
   template <typename source_link_accessor_container_t>
-  void computeSharedHits(const source_link_accessor_container_t& sourcelinks,
+  void computeSharedHits(const source_link_accessor_container_t& sourceLinks,
                          TrackContainer& tracks) const;
 
   ActsExamples::ProcessCode finalize() override;

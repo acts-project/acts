@@ -597,6 +597,7 @@ class KalmanFitter {
       const auto sourceLinkIt = inputMeasurements->find(surface->geometryId());
 
       // Try to find the surface in the measurement surfaces
+      auto sourceLinkIt = inputMeasurements->find(surface->geometryId());
       if (sourceLinkIt != inputMeasurements->end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()

@@ -231,8 +231,8 @@ static inline std::string testMeasurement(IVisualization3D& helper,
   // Create measurements (assuming they are for a linear track parallel to
   // global x-axis)
   std::cout << "Creating measurements:" << std::endl;
-  std::vector<detail::Test::TestSourceLink> sourcelinks;
-  sourcelinks.reserve(nSurfaces);
+  std::vector<detail::Test::TestSourceLink> sourceLinks;
+  sourceLinks.reserve(nSurfaces);
   Vector2 lPosCenter{5_mm, 5_mm};
   Vector2 resolution{200_um, 150_um};
   SquareMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
@@ -241,7 +241,7 @@ static inline std::string testMeasurement(IVisualization3D& helper,
     Vector2 loc = lPosCenter;
     loc[0] += resolution[0] * gauss(generator);
     loc[1] += resolution[1] * gauss(generator);
-    sourcelinks.emplace_back(detail::Test::TestSourceLink{
+    sourceLinks.emplace_back(detail::Test::TestSourceLink{
         eBoundLoc0, eBoundLoc1, loc, cov2D, surface->geometryId()});
   }
 
@@ -250,8 +250,8 @@ static inline std::string testMeasurement(IVisualization3D& helper,
 
   // Draw the measurements
   std::cout << "Draw the measurements" << std::endl;
-  //  auto singleMeasurement = sourcelinks[0];
-  for (auto& singleMeasurement : sourcelinks) {
+  //  auto singleMeasurement = sourceLinks[0];
+  for (auto& singleMeasurement : sourceLinks) {
     auto cov = singleMeasurement.covariance;
     auto lposition = singleMeasurement.parameters;
 
@@ -291,8 +291,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   // Create measurements (assuming they are for a linear track parallel to
   // global x-axis)
   std::cout << "Creating measurements:" << std::endl;
-  std::vector<Acts::SourceLink> sourcelinks;
-  sourcelinks.reserve(nSurfaces);
+  std::vector<Acts::SourceLink> sourceLinks;
+  sourceLinks.reserve(nSurfaces);
   Vector2 lPosCenter{5_mm, 5_mm};
   Vector2 resolution{200_um, 150_um};
   SquareMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
@@ -301,7 +301,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     Vector2 loc = lPosCenter;
     loc[0] += resolution[0] * gauss(generator);
     loc[1] += resolution[1] * gauss(generator);
-    sourcelinks.emplace_back(detail::Test::TestSourceLink{
+    sourceLinks.emplace_back(detail::Test::TestSourceLink{
         eBoundLoc0, eBoundLoc1, loc, cov2D, surface->geometryId()});
   }
 
@@ -364,7 +364,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto fitRes = kFitter.fit(sourcelinks.begin(), sourcelinks.end(), rStart,
+  auto fitRes = kFitter.fit(sourceLinks.begin(), sourceLinks.end(), rStart,
                             kfOptions, tracks);
   if (!fitRes.ok()) {
     std::cout << "Fit failed" << std::endl;
