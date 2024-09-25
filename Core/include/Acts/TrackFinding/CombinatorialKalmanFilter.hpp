@@ -1154,7 +1154,8 @@ class CombinatorialKalmanFilter {
 
       std::optional<TrackStateProxy> lastMeasurement;
       for (const auto& trackState : currentBranch.trackStatesReversed()) {
-        if (trackState.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+        if (trackState.typeFlags().test(TrackStateFlag::MeasurementFlag) &&
+            !trackState.typeFlags().test(TrackStateFlag::OutlierFlag)) {
           lastMeasurement = trackState;
           break;
         }
