@@ -155,7 +155,6 @@ inline void SpacePointData::resize(const std::size_t n, bool resizeDynamic) {
 }
 
 inline void SpacePointData::clear() {
-  //
   m_x.clear();
   m_y.clear();
   m_z.clear();
@@ -163,7 +162,7 @@ inline void SpacePointData::clear() {
   m_phi.clear();
   m_varianceZ.clear();
   m_varianceR.clear();
-  // dynamicvariables
+  // dynamic variables
   m_topStripVector.clear();
   m_bottomStripVector.clear();
   m_stripCenterDistance.clear();

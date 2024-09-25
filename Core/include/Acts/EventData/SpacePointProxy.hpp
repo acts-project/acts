@@ -25,7 +25,6 @@ class SpacePointProxy {
   using ContainerType = container_t;
   using ValueType = typename ContainerType::ValueType;
 
- public:
   // Never take the ownership of the container
   SpacePointProxy(container_t&& container, std::size_t index) = delete;
   // Only get the reference
@@ -50,7 +49,6 @@ class SpacePointProxy {
  private:
   const container_t& container() const;
 
- private:
   const container_t* m_container{nullptr};
   std::size_t m_index{0ul};
 };

@@ -111,11 +111,11 @@ class SeedingAlgorithm final : public IAlgorithm {
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
-    static float RMin = 50.;
-    static float CotThetaMax = 1.5;
+    static float rMin = 50.;
+    static float cotThetaMax = 1.5;
 
-    if (bottomRadius < RMin &&
-        (cotTheta > CotThetaMax || cotTheta < -CotThetaMax)) {
+    if (bottomRadius < rMin &&
+        (cotTheta > cotThetaMax || cotTheta < -cotThetaMax)) {
       return false;
     }
     return true;

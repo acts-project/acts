@@ -86,9 +86,6 @@ inline std::size_t SpacePointContainer<collection_t>::size_impl() const {
   return storage().size();
 }
 
-// TO-DO
-// Be smart here... collection_t can container values or pointers ...
-
 template <typename collection_t>
 inline float SpacePointContainer<collection_t>::x_impl(std::size_t idx) const {
   return storage()[idx]->x();

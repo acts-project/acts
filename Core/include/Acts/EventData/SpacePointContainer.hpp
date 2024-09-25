@@ -22,6 +22,7 @@
 #include <math.h>
 
 namespace Acts {
+  
 struct SpacePointContainerConfig {
   bool useDetailedDoubleMeasurementInfo = false;
   bool isInInternalUnits = false;
@@ -62,10 +63,6 @@ struct SpacePointContainerOptions {
 };
 
 template <typename container_t, template <typename> class holder_t>
-// requires (Acts::detail::is_same_template<
-//                 H, Acts::detail::RefHolder>::value ||
-// 	  Acts::detail::is_same_template<
-//                 H, Acts::detail::ValueHolder>::value)
 class SpacePointContainer {
  public:
   friend class Acts::SpacePointProxy<
@@ -133,7 +130,6 @@ class SpacePointContainer {
   const ProxyType& proxy(const std::size_t n) const;
   const std::vector<ProxyType>& proxies() const;
 
- private:
   float x(const std::size_t n) const;
   float y(const std::size_t n) const;
   float z(const std::size_t n) const;
@@ -147,7 +143,6 @@ class SpacePointContainer {
   const Acts::Vector3& stripCenterDistance(const std::size_t n) const;
   const Acts::Vector3& topStripCenterPosition(const std::size_t n) const;
 
- private:
   Acts::SpacePointContainerConfig m_config;
   Acts::SpacePointContainerOptions m_options;
   Acts::SpacePointData m_data;

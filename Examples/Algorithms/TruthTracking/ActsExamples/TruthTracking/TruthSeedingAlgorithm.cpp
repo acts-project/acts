@@ -184,7 +184,7 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
       SimSeed seed{*spacePointsOnTrack[bestSPIndices[0]],
                    *spacePointsOnTrack[bestSPIndices[1]],
                    *spacePointsOnTrack[bestSPIndices[2]]};
-      seed.setZvertex(
+      seed.setVertexZ(
           static_cast<float>(spacePointsOnTrack[bestSPIndices[1]]->z()));
 
       seededParticles.insert(particle);

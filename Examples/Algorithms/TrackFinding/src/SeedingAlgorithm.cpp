@@ -295,7 +295,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     SeedContainerForStorage.emplace_back(*sps[0]->externalSpacePoint(),
                                          *sps[1]->externalSpacePoint(),
                                          *sps[2]->externalSpacePoint());
-    SeedContainerForStorage.back().setZvertex(seed.z());
+    SeedContainerForStorage.back().setVertexZ(seed.z());
     SeedContainerForStorage.back().setQuality(seed.seedQuality());
   }
 

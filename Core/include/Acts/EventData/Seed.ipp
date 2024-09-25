@@ -8,35 +8,35 @@
 
 namespace Acts {
 
-template <typename external_spacePoint_t>
-Seed<external_spacePoint_t>::Seed(const external_spacePoint_t& b,
-                                  const external_spacePoint_t& m,
-                                  const external_spacePoint_t& u)
+template <typename external_spacepoint_t>
+Seed<external_spacepoint_t>::Seed(const external_spacepoint_t& b,
+                                  const external_spacepoint_t& m,
+                                  const external_spacepoint_t& u)
     : m_spacepoints({&b, &m, &u}) {}
 
-template <typename external_spacePoint_t>
-void Seed<external_spacePoint_t>::setZvertex(float vertex) {
-  m_zvertex = vertex;
+template <typename external_spacepoint_t>
+void Seed<external_spacepoint_t>::setVertexZ(float vertex) {
+  m_vertexZ = vertex;
 }
 
-template <typename external_spacePoint_t>
-void Seed<external_spacePoint_t>::setQuality(float seedQuality) {
+template <typename external_spacepoint_t>
+void Seed<external_spacepoint_t>::setQuality(float seedQuality) {
   m_seedQuality = seedQuality;
 }
 
-template <typename external_spacePoint_t>
-const std::array<const external_spacePoint_t*, 3>&
-Seed<external_spacePoint_t>::sp() const {
+template <typename external_spacepoint_t>
+const std::array<const external_spacepoint_t*, 3>&
+Seed<external_spacepoint_t>::sp() const {
   return m_spacepoints;
 }
 
-template <typename external_spacePoint_t>
-float Seed<external_spacePoint_t>::z() const {
-  return m_zvertex;
+template <typename external_spacepoint_t>
+float Seed<external_spacepoint_t>::z() const {
+  return m_vertexZ;
 }
 
-template <typename external_spacePoint_t>
-float Seed<external_spacePoint_t>::seedQuality() const {
+template <typename external_spacepoint_t>
+float Seed<external_spacepoint_t>::seedQuality() const {
   return m_seedQuality;
 }
 

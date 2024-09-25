@@ -65,10 +65,6 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
 
   m_inputClusters.initialize(m_cfg.inputClusters);
 
-  // m_cfg.seedFinderConfig.seedFilter =
-  //     std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
-  //         Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));
-
   // map
   m_cfg.ActsGbtsMap = makeActsGbtsMap();
   // input trig vector

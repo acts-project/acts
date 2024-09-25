@@ -292,7 +292,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     mutableData.setQuality(top->index(), bestSeedQuality);
 
     Acts::Seed<external_spacepoint_t> seed{*bottom, *medium, *top};
-    seed.setZvertex(zOrigin);
+    seed.setVertexZ(zOrigin);
     seed.setQuality(bestSeedQuality);
 
     Acts::detail::pushBackOrInsertAtEnd(outputCollection, std::move(seed));

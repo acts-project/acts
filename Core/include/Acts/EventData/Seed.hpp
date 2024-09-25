@@ -13,22 +13,22 @@
 
 namespace Acts {
 
-template <typename external_spacePoint_t>
+template <typename external_spacepoint_t>
 class Seed {
  public:
-  Seed(const external_spacePoint_t& b, const external_spacePoint_t& m,
-       const external_spacePoint_t& u);
+  Seed(const external_spacepoint_t& b, const external_spacepoint_t& m,
+       const external_spacepoint_t& u);
 
-  void setZvertex(float vertex);
+  void setVertexZ(float vertex);
   void setQuality(float seedQuality);
 
-  const std::array<const external_spacePoint_t*, 3>& sp() const;
+  const std::array<const external_spacepoint_t*, 3>& sp() const;
   float z() const;
   float seedQuality() const;
 
  private:
-  std::array<const external_spacePoint_t*, 3> m_spacepoints;
-  float m_zvertex{0.f};
+  std::array<const external_spacepoint_t*, 3> m_spacepoints;
+  float m_vertexZ{0.f};
   float m_seedQuality{-std::numeric_limits<float>::infinity()};
 };
 

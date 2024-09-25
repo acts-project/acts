@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
 
   Acts::SeedFinderOptions options;
   options.beamPos = spOptions.beamPos;
-  options.bFieldInZ = 1.99724_T;
+  options.bFieldInZ = 2_T;
 
   int numPhiNeighbors = 1;
 

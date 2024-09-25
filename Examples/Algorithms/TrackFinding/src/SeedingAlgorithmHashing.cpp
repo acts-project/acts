@@ -314,7 +314,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
       const SimSpacePoint* top = sps[2]->externalSpacePoint();
 
       ActsExamples::SimSeed toAdd(*bottom, *middle, *top);
-      toAdd.setZvertex(seed.z());
+      toAdd.setVertexZ(seed.z());
       toAdd.setQuality(seed.seedQuality());
 
       seedsSet.insert(toAdd);
