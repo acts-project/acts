@@ -21,7 +21,7 @@ void RefittingCalibrator::calibrate(const Acts::GeometryContext& /*gctx*/,
                                     Proxy trackState) const {
   const auto sl = sourceLink.get<RefittingSourceLink>();
 
-  // Reset the original uncalibrated sourcelink on this track state
+  // Reset the original uncalibrated source link on this track state
   trackState.setUncalibratedSourceLink(sl.state.getUncalibratedSourceLink());
 
   // Here we construct a measurement by extracting the information available
