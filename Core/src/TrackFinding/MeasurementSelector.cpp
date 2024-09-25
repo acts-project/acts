@@ -9,7 +9,10 @@
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <algorithm>
@@ -75,9 +78,7 @@ double MeasurementSelector::calculateChi2(
                      false>::Parameters predicted,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Covariance predictedCovariance,
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Projector projector,
-    unsigned int calibratedSize) const {
+    BoundSubspaceIndices projector, unsigned int calibratedSize) const {
   return visit_measurement(
       calibratedSize,
       [&fullCalibrated, &fullCalibratedCovariance, &predicted,
@@ -92,17 +93,19 @@ double MeasurementSelector::calculateChi2(
 
         using ParametersVector = ActsVector<kMeasurementSize>;
 
-        // Take the projector (measurement mapping function)
-        const auto H =
-            projector.template topLeftCorner<kMeasurementSize, eBoundSize>()
-                .eval();
+        std::span<std::uint8_t, kMeasurementSize> validSubspaceIndices(
+            projector.begin(), projector.begin() + kMeasurementSize);
+        FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
+            validSubspaceIndices);
 
         // Get the residuals
-        ParametersVector res = calibrated - H * predicted;
+        ParametersVector res =
+            calibrated - subspaceHelper.projectVector(predicted);
 
         // Get the chi2
         return (res.transpose() *
-                (calibratedCovariance + H * predictedCovariance * H.transpose())
+                (calibratedCovariance +
+                 subspaceHelper.projectMatrix(predictedCovariance))
                     .inverse() *
                 res)
             .eval()(0, 0);

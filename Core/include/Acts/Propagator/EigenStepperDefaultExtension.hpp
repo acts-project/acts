@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,28 +18,15 @@ namespace Acts {
 
 /// @brief Default evaluater of the k_i's and elements of the transport matrix
 /// D of the RKN4 stepping. This is a pure implementation by textbook.
-struct DefaultExtension {
+struct EigenStepperDefaultExtension {
   using Scalar = ActsScalar;
   /// @brief Vector3 replacement for the custom scalar type
   using ThisVector3 = Eigen::Matrix<Scalar, 3, 1>;
 
-  /// @brief Control function if the step evaluation would be valid
-  ///
-  /// @tparam propagator_state_t Type of the state of the propagator
-  /// @tparam stepper_t Type of the stepper
-  /// @tparam navigator_t Type of the navigator
-  ///
-  /// @return Boolean flag if the step would be valid
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  int bid(const propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-          const navigator_t& /*navigator*/) const {
-    return 1;
-  }
-
   /// @brief Evaluater of the k_i's of the RKN4. For the case of i = 0 this
   /// step sets up qop, too.
   ///
+  /// @tparam i Index of the k_i, i = [0, 3]
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
@@ -49,20 +36,21 @@ struct DefaultExtension {
   /// @param [out] knew Next k_i that is evaluated
   /// @param [in] bField B-Field at the evaluation position
   /// @param [out] kQoP k_i elements of the momenta
-  /// @param [in] i Index of the k_i, i = [0, 3]
   /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
   /// @param [in] kprev Evaluated k_{i - 1}
   ///
   /// @return Boolean flag if the calculation is valid
-  template <typename propagator_state_t, typename stepper_t,
+  template <int i, typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          const navigator_t& /*navigator*/, ThisVector3& knew,
-         const Vector3& bField, std::array<Scalar, 4>& kQoP, const int i = 0,
-         const double h = 0., const ThisVector3& kprev = ThisVector3::Zero()) {
+         const Vector3& bField, std::array<Scalar, 4>& kQoP,
+         const double h = 0., const ThisVector3& kprev = ThisVector3::Zero())
+    requires(i >= 0 && i <= 3)
+  {
     auto qop = stepper.qOverP(state.stepping);
     // First step does not rely on previous data
-    if (i == 0) {
+    if constexpr (i == 0) {
       knew = qop * stepper.direction(state.stepping).cross(bField);
       kQoP = {0., 0., 0., 0.};
     } else {

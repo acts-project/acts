@@ -41,7 +41,7 @@ struct PathLimitReached {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+  bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
     (void)navigator;
 
@@ -77,7 +77,7 @@ struct SurfaceReached {
   double nearLimit = -100 * UnitConstants::um;
 
   SurfaceReached() = default;
-  SurfaceReached(double nLimit) : nearLimit(nLimit) {}
+  explicit SurfaceReached(double nLimit) : nearLimit(nLimit) {}
 
   /// boolean operator for abort condition without using the result
   ///
@@ -91,7 +91,7 @@ struct SurfaceReached {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+  bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
     if (surface == nullptr) {
       ACTS_VERBOSE("SurfaceReached aborter | Target surface not set.");
@@ -174,15 +174,11 @@ struct EndOfWorldReached {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
-                  const navigator_t& navigator, const Logger& logger) const {
-    if (navigator.endOfWorldReached(state.navigation)) {
-      ACTS_VERBOSE(
-          "EndOfWorldReached aborter | End of world reached by navigator.");
-      return true;
-    }
-
-    return false;
+  bool checkAbort(propagator_state_t& state, const stepper_t& /*stepper*/,
+                  const navigator_t& navigator,
+                  const Logger& /*logger*/) const {
+    bool endOfWorld = navigator.endOfWorldReached(state.navigation);
+    return endOfWorld;
   }
 };
 
@@ -199,7 +195,7 @@ struct VolumeConstraintAborter {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
+  bool checkAbort(propagator_state_t& state, const stepper_t& /*stepper*/,
                   const navigator_t& navigator, const Logger& logger) const {
     const auto& constrainToVolumeIds = state.options.constrainToVolumeIds;
     const auto& endOfWorldVolumeIds = state.options.endOfWorldVolumeIds;
@@ -241,7 +237,7 @@ struct VolumeConstraintAborter {
 struct AnySurfaceReached {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+  bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
     (void)stepper;
     (void)logger;

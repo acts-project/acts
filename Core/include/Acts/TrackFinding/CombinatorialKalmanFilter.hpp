@@ -24,8 +24,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -234,6 +233,10 @@ struct CombinatorialKalmanFilterOptions {
 
   /// Whether to consider energy loss.
   bool energyLoss = true;
+
+  /// Skip the pre propagation call. This effectively skips the first surface
+  /// @note This is useful if the first surface should not be considered in a second reverse pass
+  bool skipPrePropagationUpdate = false;
 };
 
 template <typename track_container_t>
@@ -524,6 +527,9 @@ class CombinatorialKalmanFilter {
     /// Whether to consider energy loss.
     bool energyLoss = true;
 
+    /// Skip the pre propagation call. This effectively skips the first surface
+    bool skipPrePropagationUpdate = false;
+
     /// Calibration context for the finding run
     const CalibrationContext* calibrationContextPtr{nullptr};
 
@@ -538,12 +544,18 @@ class CombinatorialKalmanFilter {
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    void operator()(propagator_state_t& state, const stepper_t& stepper,
-                    const navigator_t& navigator, result_type& result,
-                    const Logger& /*logger*/) const {
+    void act(propagator_state_t& state, const stepper_t& stepper,
+             const navigator_t& navigator, result_type& result,
+             const Logger& /*logger*/) const {
       assert(result.trackStates && "No MultiTrajectory set");
 
       if (result.finished) {
+        return;
+      }
+
+      if (state.stage == PropagatorStage::prePropagation &&
+          skipPrePropagationUpdate) {
+        ACTS_VERBOSE("Skip pre-propagation update (first surface)");
         return;
       }
 
@@ -585,13 +597,13 @@ class CombinatorialKalmanFilter {
       }
 
       const bool isEndOfWorldReached =
-          endOfWorldReached(state, stepper, navigator, logger());
-      const bool isVolumeConstraintReached =
-          volumeConstraintAborter(state, stepper, navigator, logger());
-      const bool isPathLimitReached =
-          result.pathLimitReached(state, stepper, navigator, logger());
+          endOfWorldReached.checkAbort(state, stepper, navigator, logger());
+      const bool isVolumeConstraintReached = volumeConstraintAborter.checkAbort(
+          state, stepper, navigator, logger());
+      const bool isPathLimitReached = result.pathLimitReached.checkAbort(
+          state, stepper, navigator, logger());
       const bool isTargetReached =
-          targetReached(state, stepper, navigator, logger());
+          targetReached.checkAbort(state, stepper, navigator, logger());
       const bool allBranchesStopped = result.activeBranches.empty();
       if (isEndOfWorldReached || isPathLimitReached || isTargetReached ||
           allBranchesStopped || isVolumeConstraintReached) {
@@ -644,6 +656,14 @@ class CombinatorialKalmanFilter {
           result.finished = true;
         }
       }
+    }
+
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                    const navigator_t& /*navigator*/, const result_type& result,
+                    const Logger& /*logger*/) const {
+      return !result.lastError.ok() || result.finished;
     }
 
     /// @brief CombinatorialKalmanFilter actor operation: reset propagation
@@ -1190,21 +1210,6 @@ class CombinatorialKalmanFilter {
     const Logger& logger() const { return *actorLogger; }
   };
 
-  template <typename source_link_accessor_t, typename parameters_t>
-  class Aborter {
-   public:
-    /// Broadcast the action type
-    using action_type = Actor<source_link_accessor_t, parameters_t>;
-
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t, typename result_t>
-    bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/, const result_t& result,
-                    const Logger& /*logger*/) const {
-      return !result.lastError.ok() || result.finished;
-    }
-  };
-
   /// Void path limit reached aborter to replace the default since the path
   /// limit is handled in the CKF actor internally.
   struct StubPathLimitReached {
@@ -1212,7 +1217,7 @@ class CombinatorialKalmanFilter {
 
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+    bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/,
                     const Logger& /*logger*/) const {
       return false;
@@ -1229,7 +1234,9 @@ class CombinatorialKalmanFilter {
   /// @param initialParameters The initial track parameters
   /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
   ///                  finding
-  /// @param trackContainer Input track container to use
+  /// @param trackContainer Track container in which to store the results
+  /// @param rootBranch The track to be used as the root branch
+  ///
   /// @note The input measurements are given in the form of @c SourceLinks.
   ///       It's @c calibrator_t's job to turn them into calibrated measurements
   ///       used in the track finding.
@@ -1241,23 +1248,20 @@ class CombinatorialKalmanFilter {
   auto findTracks(const start_parameters_t& initialParameters,
                   const CombinatorialKalmanFilterOptions<
                       source_link_iterator_t, track_container_t>& tfOptions,
-                  track_container_t& trackContainer) const
+                  track_container_t& trackContainer,
+                  typename track_container_t::TrackProxy rootBranch) const
       -> Result<std::vector<
           typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
     using SourceLinkAccessor =
         SourceLinkAccessorDelegate<source_link_iterator_t>;
 
-    // Create the ActionList and AbortList
-    using CombinatorialKalmanFilterAborter =
-        Aborter<SourceLinkAccessor, parameters_t>;
+    // Create the ActorList
     using CombinatorialKalmanFilterActor =
         Actor<SourceLinkAccessor, parameters_t>;
-    using Actors = ActionList<CombinatorialKalmanFilterActor>;
-    using Aborters = AbortList<CombinatorialKalmanFilterAborter>;
+    using Actors = ActorList<CombinatorialKalmanFilterActor>;
 
     // Create relevant options for the propagation options
-    using PropagatorOptions =
-        typename propagator_t::template Options<Actors, Aborters>;
+    using PropagatorOptions = typename propagator_t::template Options<Actors>;
     PropagatorOptions propOptions(tfOptions.geoContext,
                                   tfOptions.magFieldContext);
 
@@ -1266,10 +1270,12 @@ class CombinatorialKalmanFilter {
 
     // Catch the actor
     auto& combKalmanActor =
-        propOptions.actionList.template get<CombinatorialKalmanFilterActor>();
+        propOptions.actorList.template get<CombinatorialKalmanFilterActor>();
     combKalmanActor.targetReached.surface = tfOptions.targetSurface;
     combKalmanActor.multipleScattering = tfOptions.multipleScattering;
     combKalmanActor.energyLoss = tfOptions.energyLoss;
+    combKalmanActor.skipPrePropagationUpdate =
+        tfOptions.skipPrePropagationUpdate;
     combKalmanActor.actorLogger = m_actorLogger.get();
     combKalmanActor.updaterLogger = m_updaterLogger.get();
     combKalmanActor.calibrationContextPtr = &tfOptions.calibrationContext.get();
@@ -1302,7 +1308,6 @@ class CombinatorialKalmanFilter {
     r.tracks = &trackContainer;
     r.trackStates = &trackContainer.trackStateContainer();
 
-    auto rootBranch = trackContainer.makeTrack();
     r.activeBranches.push_back(rootBranch);
 
     auto propagationResult = m_propagator.propagate(propState);
@@ -1340,6 +1345,34 @@ class CombinatorialKalmanFilter {
     }
 
     return std::move(combKalmanResult.collectedTracks);
+  }
+
+  /// Combinatorial Kalman Filter implementation, calls the Kalman filter
+  ///
+  /// @tparam source_link_iterator_t Type of the source link iterator
+  /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam parameters_t Type of parameters used for local parameters
+  ///
+  /// @param initialParameters The initial track parameters
+  /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
+  ///                  finding
+  /// @param trackContainer Track container in which to store the results
+  /// @note The input measurements are given in the form of @c SourceLinks.
+  ///       It's @c calibrator_t's job to turn them into calibrated measurements
+  ///       used in the track finding.
+  ///
+  /// @return a container of track finding result for all the initial track
+  /// parameters
+  template <typename source_link_iterator_t, typename start_parameters_t,
+            typename parameters_t = BoundTrackParameters>
+  auto findTracks(const start_parameters_t& initialParameters,
+                  const CombinatorialKalmanFilterOptions<
+                      source_link_iterator_t, track_container_t>& tfOptions,
+                  track_container_t& trackContainer) const
+      -> Result<std::vector<
+          typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
+    auto rootBranch = trackContainer.makeTrack();
+    return findTracks(initialParameters, tfOptions, trackContainer, rootBranch);
   }
 };
 

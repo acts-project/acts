@@ -69,7 +69,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     virtual ~TrackFinderFunction() = default;
     virtual TrackFinderResult operator()(const TrackParameters&,
                                          const TrackFinderOptions&,
-                                         TrackContainer&) const = 0;
+                                         TrackContainer&, TrackProxy) const = 0;
   };
 
   /// Create the track finder function implementation.

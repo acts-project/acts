@@ -14,6 +14,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
@@ -159,9 +160,7 @@ Acts::Layer::compatibleSurfaces(
       return;
     }
     BoundaryTolerance boundaryTolerance = options.boundaryTolerance;
-    if (std::find(options.externalSurfaces.begin(),
-                  options.externalSurfaces.end(),
-                  sf.geometryId()) != options.externalSurfaces.end()) {
+    if (rangeContainsValue(options.externalSurfaces, sf.geometryId())) {
       boundaryTolerance = BoundaryTolerance::Infinite();
     }
     // the surface intersection

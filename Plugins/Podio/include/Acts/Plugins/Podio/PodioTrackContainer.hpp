@@ -15,6 +15,8 @@
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/Plugins/Podio/PodioDynamicColumns.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "ActsPodioEdm/Surface.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -207,9 +209,15 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   void setReferenceSurface_impl(IndexType itrack,
                                 std::shared_ptr<const Surface> surface) {
     auto track = m_collection->at(itrack);
-    track.setReferenceSurface(
-        PodioUtil::convertSurfaceToPodio(m_helper, *surface));
-    m_surfaces.at(itrack) = std::move(surface);
+    if (surface == nullptr) {
+      track.setReferenceSurface({.surfaceType = PodioUtil::kNoSurface,
+                                 .identifier = PodioUtil::kNoIdentifier});
+      m_surfaces.at(itrack) = nullptr;
+    } else {
+      track.setReferenceSurface(
+          PodioUtil::convertSurfaceToPodio(m_helper, *surface));
+      m_surfaces.at(itrack) = std::move(surface);
+    }
   }
 
  public:
@@ -332,8 +340,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     std::string tracksKey = "tracks" + s;
 
     std::vector<std::string> available = frame.getAvailableCollections();
-    if (std::find(available.begin(), available.end(), tracksKey) ==
-        available.end()) {
+    if (!rangeContainsValue(available, tracksKey)) {
       throw std::runtime_error{"Track collection '" + tracksKey +
                                "' not found in frame"};
     }
