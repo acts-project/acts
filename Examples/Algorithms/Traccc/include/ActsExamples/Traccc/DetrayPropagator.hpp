@@ -17,7 +17,7 @@
 #include "ActsExamples/Traccc/DetrayStore.hpp"
 
 #include <detray/navigation/navigator.hpp>
-#include <detray/utils/inspectors.hpp>
+#include <detray/test/utils/inspectors.hpp>
 
 namespace ActsExamples {
 
