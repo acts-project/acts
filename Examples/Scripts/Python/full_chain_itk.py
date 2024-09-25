@@ -25,7 +25,7 @@ from acts.examples.reconstruction import (
 
 ttbar_pu200 = False
 u = acts.UnitConstants
-geo_dir = pathlib.Path("acts-itk")
+geo_dir = pathlib.Path("../../acts-itk")
 outputDir = pathlib.Path.cwd() / "itk_output"
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
 
@@ -126,8 +126,8 @@ addCKFTracks(
         seedDeduplication=True,
         stayOnSeed=True,
         # ITk volumes from Noemi's plot
-        pixelVolumes={8, 9, 10, 13, 14, 15, 16, 18, 19, 20},
-        stripVolumes={22, 23, 24},
+        pixelVolumes=[8, 9, 10, 13, 14, 15, 16, 18, 19, 20],
+        stripVolumes=[22, 23, 24],
         maxPixelHoles=1,
         maxStripHoles=2,
     ),
