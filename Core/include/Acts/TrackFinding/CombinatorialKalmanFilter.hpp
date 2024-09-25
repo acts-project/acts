@@ -1177,15 +1177,14 @@ class CombinatorialKalmanFilter {
     /// The source link accessor
     source_link_accessor_t m_sourceLinkAccessor;
 
-    using source_link_iterator_t =
+    using SourceLinkIterator =
         decltype(std::declval<decltype(m_sourceLinkAccessor(
                      *static_cast<const Surface*>(nullptr)))>()
                      .first);
 
     using TrackStateCandidateCreator =
         typename CombinatorialKalmanFilterOptions<
-            source_link_iterator_t,
-            track_container_t>::TrackStateCandidateCreator;
+            SourceLinkIterator, track_container_t>::TrackStateCandidateCreator;
 
     /// the stateCandidator to be used
     /// @note will be set to a default trackStateCandidateCreator or the one
