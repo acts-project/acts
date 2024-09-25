@@ -22,7 +22,7 @@
 #include <math.h>
 
 namespace Acts {
-  
+
 struct SpacePointContainerConfig {
   bool useDetailedDoubleMeasurementInfo = false;
   bool isInInternalUnits = false;
