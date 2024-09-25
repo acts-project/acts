@@ -594,7 +594,6 @@ class KalmanFitter {
       const bool surfaceIsSensitive =
           (surface->associatedDetectorElement() != nullptr);
       const bool surfaceHasMaterial = (surface->surfaceMaterial() != nullptr);
-      const auto sourceLinkIt = inputMeasurements->find(surface->geometryId());
 
       // Try to find the surface in the measurement surfaces
       auto sourceLinkIt = inputMeasurements->find(surface->geometryId());
