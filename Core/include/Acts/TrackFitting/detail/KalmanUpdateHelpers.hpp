@@ -27,7 +27,7 @@ namespace Acts::detail {
 /// @param stepper The stepper
 /// @param extensions The extension used for the update
 /// @param surface The current surface
-/// @param source_link The source-link used for the update
+/// @param sourceLink The source link used for the update
 /// @param fittedStates The Multitrajectory to that we add the state
 /// @param lastTrackIndex The parent index for the new state in the MT
 /// @param doCovTransport Whether to perform a covariance transport when
@@ -38,7 +38,7 @@ template <typename propagator_state_t, typename stepper_t,
 auto kalmanHandleMeasurement(
     const CalibrationContext &calibrationContext, propagator_state_t &state,
     const stepper_t &stepper, const extensions_t &extensions,
-    const Surface &surface, const SourceLink &source_link, traj_t &fittedStates,
+    const Surface &surface, const SourceLink &sourceLink, traj_t &fittedStates,
     const std::size_t lastTrackIndex, bool doCovTransport, const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename traj_t::TrackStateProxy> {
@@ -75,7 +75,7 @@ auto kalmanHandleMeasurement(
 
   // We have predicted parameters, so calibrate the uncalibrated input
   // measurement
-  extensions.calibrator(state.geoContext, calibrationContext, source_link,
+  extensions.calibrator(state.geoContext, calibrationContext, sourceLink,
                         trackStateProxy);
 
   // Get and set the type flags
