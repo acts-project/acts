@@ -12,13 +12,16 @@
 #include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Plugins/Detray/DetrayGeometryConverter.hpp"
 #include "Acts/Plugins/Detray/DetrayMaterialConverter.hpp"
+#include "Acts/Plugins/Detray/DetraySurfaceGridsConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 
 #include <detray/io/common/geometry_reader.hpp>
 #include <detray/io/common/material_map_reader.hpp>
+#include <detray/io/common/surface_grid_reader.hpp>
 #include <detray/io/frontend/detector_writer_config.hpp>
+#include <detray/utils/consistency_checker.hpp>
 
 namespace Acts {
 
@@ -88,6 +91,20 @@ class DetrayConverter {
                                                   std::move(
                                                       materialGridsPayload));
       }
+    }
+
+    // (3) surface grids
+    if (options.convertSurfaceGrids) {
+      detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>
+          surfaceGridsPayload =
+              DetraySurfaceGridsConverter::convertSurfaceGrids(detector);
+
+      // Capacity 0 (dynamic bin size) and dimension 2 (2D grids)
+      detray::io::surface_grid_reader<typename detector_t::surface_type,
+                                      std::integral_constant<std::size_t, 0>,
+                                      std::integral_constant<std::size_t, 2>>::
+          template convert<detector_t>(detectorBuilder, names,
+                                       std::move(surfaceGridsPayload));
     }
 
     detector_t detrayDetector(detectorBuilder.build(mr));
