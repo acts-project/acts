@@ -10,9 +10,10 @@
 
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/TypeList.hpp"
+#include "Acts/Utilities/TypeTag.hpp"
 
-#include <concepts>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 namespace Acts {
@@ -33,12 +34,18 @@ class DelegateChainFactory<R(callable_args...), TypeList<payload_types...>,
   using tuple_type = std::tuple<payload_types...>;
 
  public:
+  template <typename, typename Ps, auto... Cs>
+  friend class DelegateChainFactory;
+
   DelegateChainFactory() = default;
-  DelegateChainFactory(std::tuple<payload_types...> payloads)
-      : m_payloads(payloads) {}
+
+  template <typename D>
+  DelegateChainFactory(TypeTag<D> /*unused*/) {}
 
   template <auto Callable, typename payload_type>
-  auto add(payload_type&& payload) {
+  constexpr auto add(payload_type payload)
+    requires(std::is_pointer_v<payload_type>)
+  {
     std::tuple<payload_types..., payload_type> payloads =
         std::tuple_cat(m_payloads, std::make_tuple(payload));
 
@@ -48,7 +55,7 @@ class DelegateChainFactory<R(callable_args...), TypeList<payload_types...>,
   }
 
   template <auto Callable>
-  auto add() {
+  constexpr auto add() {
     std::tuple<payload_types..., std::nullptr_t> payloads =
         std::tuple_cat(m_payloads, std::make_tuple(std::nullptr_t{}));
 
@@ -56,6 +63,37 @@ class DelegateChainFactory<R(callable_args...), TypeList<payload_types...>,
                                 TypeList<payload_types..., std::nullptr_t>,
                                 callables..., Callable>{payloads};
   }
+
+  delegate_type build()
+    requires(sizeof...(callables) > 0)
+  {
+    auto block = std::make_unique<const DispatchBlock>(m_payloads);
+    delegate_type delegate;
+    delegate.template connect<&DispatchBlock::dispatch>(std::move(block));
+    return delegate;
+  }
+
+  void store(delegate_type& delegate)
+    requires(sizeof...(callables) > 0)
+  {
+    auto block = std::make_unique<const DispatchBlock>(m_payloads);
+    delegate.template connect<&DispatchBlock::dispatch>(std::move(block));
+  }
+
+  void store(Delegate<R(callable_args...)>& delegate)
+    requires(sizeof...(callables) == 1)
+  {
+    constexpr auto callable =
+        DispatchBlock::template findCallable<0, 0, callables...>();
+    delegate.template connect<callable>(std::get<0>(m_payloads));
+
+    // auto block = std::make_unique<const DispatchBlock>(m_payloads);
+    // delegate.template connect<&DispatchBlock::dispatch>(std::move(block));
+  }
+
+ private:
+  DelegateChainFactory(std::tuple<payload_types...> payloads)
+      : m_payloads(payloads) {}
 
   struct DispatchBlock {
     template <std::size_t I, std::size_t J, auto head, auto... tail>
@@ -112,20 +150,12 @@ class DelegateChainFactory<R(callable_args...), TypeList<payload_types...>,
     }
   };
 
-  delegate_type build() {
-    auto block = std::make_unique<const DispatchBlock>(m_payloads);
-    delegate_type delegate;
-    delegate.template connect<&DispatchBlock::dispatch>(std::move(block));
-    return delegate;
-  }
-
-  void store(delegate_type& delegate) {
-    auto block = std::make_unique<const DispatchBlock>(m_payloads);
-    delegate.template connect<&DispatchBlock::dispatch>(std::move(block));
-  }
-
  private:
   tuple_type m_payloads{};
 };
+
+template <typename D>
+DelegateChainFactory(TypeTag<D> /*unused*/)
+    -> DelegateChainFactory<typename D::signature_type>;
 
 }  // namespace Acts

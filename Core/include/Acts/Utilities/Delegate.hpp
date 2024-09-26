@@ -51,6 +51,7 @@ class Delegate<R(Args...), H, O> {
   /// Alias to the function pointer type this class will store
   using function_type = return_type (*)(const holder_type *, Args...);
   using function_ptr_type = return_type (*)(Args...);
+  using signature_type = R(Args...);
 
   using deleter_type = void (*)(const holder_type *);
 
@@ -158,7 +159,10 @@ class Delegate<R(Args...), H, O> {
   /// @note The function pointer must be ``constexpr`` for @c Delegate to accept it
   /// @tparam Callable The compile-time free function pointer
   template <auto Callable>
-  void connect() {
+  void connect()
+    requires(
+        Concepts::invocable_and_returns<Callable, return_type, Args && ...>)
+  {
     m_payload.payload = nullptr;
 
     static_assert(
@@ -219,13 +223,11 @@ class Delegate<R(Args...), H, O> {
   ///       it's lifetime is longer than that of @c Delegate.
   template <auto Callable, typename Type>
   void connect(const Type *instance)
-    requires(kOwnership == DelegateType::NonOwning)
-  {
-    static_assert(Concepts::invocable_and_returns<Callable, return_type, Type,
-                                                  Args &&...>,
-                  "Callable given does not correspond exactly to required call "
-                  "signature");
+    requires(kOwnership == DelegateType::NonOwning &&
+             Concepts::invocable_and_returns<Callable, return_type, Type,
+                                             Args && ...>)
 
+  {
     m_payload.payload = instance;
 
     m_function = [](const holder_type *payload, Args... args) -> return_type {
@@ -243,13 +245,10 @@ class Delegate<R(Args...), H, O> {
   /// @note @c Delegate assumes owner ship over @p instance.
   template <auto Callable, typename Type>
   void connect(std::unique_ptr<const Type> instance)
-    requires(kOwnership == DelegateType::Owning)
+    requires(kOwnership == DelegateType::Owning &&
+             Concepts::invocable_and_returns<Callable, return_type, Type,
+                                             Args && ...>)
   {
-    static_assert(Concepts::invocable_and_returns<Callable, return_type, Type,
-                                                  Args &&...>,
-                  "Callable given does not correspond exactly to required call "
-                  "signature");
-
     m_payload.payload = std::unique_ptr<const holder_type, deleter_type>(
         instance.release(), [](const holder_type *payload) {
           const auto *concretePayload = static_cast<const Type *>(payload);
@@ -268,7 +267,9 @@ class Delegate<R(Args...), H, O> {
   /// @param args The arguments to call the contained function with
   /// @return Return value of the contained function
   template <typename... Ts>
-  return_type operator()(Ts &&...args) const {
+  return_type operator()(Ts &&...args) const
+    requires(std::is_invocable_v<function_type, const holder_type *, Ts...>)
+  {
     assert(connected() && "Delegate is not connected");
     return std::invoke(m_function, m_payload.ptr(), std::forward<Ts>(args)...);
   }

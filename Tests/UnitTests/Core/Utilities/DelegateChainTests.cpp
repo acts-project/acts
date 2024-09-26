@@ -11,6 +11,7 @@
 
 #include "Acts/Utilities/DelegateChain.hpp"
 #include "Acts/Utilities/TypeList.hpp"
+#include "Acts/Utilities/TypeTag.hpp"
 
 using namespace Acts;
 
@@ -30,16 +31,63 @@ BOOST_AUTO_TEST_CASE(DelegateChainAdd) {
   AddTo a1{1}, a2{2}, a3{3};
   int x = 0;
 
-  // Delegate<void(int &), void, DelegateType::Owning> chain =
+  // Basic building
   OwningDelegate<void(int &)> chain = DelegateChainFactory<void(int &)>{}
                                           .add<&AddTo::add>(&a1)
                                           .add<&addFive>()
                                           .add<&AddTo::add>(&a2)
                                           .add<&AddTo::add>(&a3)
                                           .build();
-
   chain(x);
   BOOST_CHECK_EQUAL(x, 11);
+
+  chain.disconnect();
+
+  // In case of no return types, we can rebind the owning delegate with a chain
+  // of different size
+  chain = DelegateChainFactory<void(int &)>{}
+              .add<&AddTo::add>(&a1)
+              .add<&addFive>()
+              .add<&AddTo::add>(&a3)
+              .build();
+
+  x = 0;
+
+  chain(x);
+  BOOST_CHECK_EQUAL(x, 9);
+
+  // CTAD helper from delegate type
+  chain = DelegateChainFactory{Type<decltype(chain)>}
+              .add<&AddTo::add>(&a1)
+              .add<&addFive>()
+              .add<&AddTo::add>(&a3)
+              .build();
+
+  x = 0;
+
+  chain(x);
+  BOOST_CHECK_EQUAL(x, 9);
+
+  // CTAD helper from delegate type
+  chain = DelegateChainFactory{TypeTag{chain}}
+              .add<&AddTo::add>(&a1)
+              .add<&addFive>()
+              .add<&AddTo::add>(&a3)
+              .build();
+
+  x = 0;
+
+  chain(x);
+  BOOST_CHECK_EQUAL(x, 9);
+
+  Delegate<void(int &)> nonOwning;
+
+  // In case of a single callable, we can store it in a non-owning delegate
+  DelegateChainFactory<void(int &)>{}.add<&AddTo::add>(&a1).store(nonOwning);
+
+  x = 0;
+  nonOwning(x);
+  BOOST_CHECK_EQUAL(x, 1);
 }
 
 struct GetInt {
@@ -74,6 +122,7 @@ BOOST_AUTO_TEST_CASE(DelegateChainReturn) {
       .add<&getSix>()
       .add<&GetInt::get>(&g3)
       .store(delegate);
+
   auto results2 = delegate();
   expected = {1, 6, 3};
   BOOST_CHECK_EQUAL_COLLECTIONS(results2.begin(), results2.end(),
