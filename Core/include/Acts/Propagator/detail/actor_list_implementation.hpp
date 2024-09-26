@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Propagator/ActorConcepts.hpp"
-#include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
 #include <tuple>
 #include <utility>
@@ -36,7 +35,7 @@ struct actor_caller {
     if constexpr (ActorHasActWithResult<actor_t, propagator_state_t, stepper_t,
                                         navigator_t, Args...>) {
       actor.act(state, stepper, navigator,
-                state.template get<detail::result_type_t<actor_t>>(),
+                state.template get<typename actor_t::result_type>(),
                 std::forward<Args>(args)...);
       return;
     }
@@ -60,7 +59,7 @@ struct actor_caller {
                                           stepper_t, navigator_t, Args...>) {
       return actor.checkAbort(
           state, stepper, navigator,
-          state.template get<detail::result_type_t<actor_t>>(),
+          state.template get<typename actor_t::result_type>(),
           std::forward<Args>(args)...);
     }
 
