@@ -13,6 +13,7 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Navigation/NavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 
 namespace Acts {

@@ -20,6 +20,7 @@
 #include "Acts/Geometry/RootBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
@@ -123,8 +124,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   BOOST_REQUIRE_NE(volume, nullptr);
   std::cout << volume->volumeName() << std::endl;
 
-  Experimental::Gen3Geometry::NavigationState state;
-  state.currentVolume = volume;
+  NavigationStream main;
+  const TrackingVolume* currentVolume = volume;
 
   csv << run << "," << position[0] << "," << position[1] << "," << position[2];
   csv << "," << volume->geometryId().volume();
@@ -134,47 +135,47 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   std::cout << "start pseudo navigation" << std::endl;
 
   for (std::size_t i = 0; i < 100; i++) {
-    state.main = NavigationStream{};
+    main = NavigationStream{};
 
-    state.currentVolume->updateNavigationState(state);
+    currentVolume->updateNavigationState(
+        {.main = main, .position = position, .direction = direction});
 
-    std::cout << state.main.candidates().size() << " candidates" << std::endl;
+    std::cout << main.candidates().size() << " candidates" << std::endl;
 
-    for (const auto& candidate : state.main.candidates()) {
+    for (const auto& candidate : main.candidates()) {
       std::cout << " -> " << candidate.surface().geometryId() << std::endl;
       std::cout << "    " << candidate.surface().toStream(gctx) << std::endl;
     }
 
     std::cout << "initializing candidates" << std::endl;
-    state.main.initialize(gctx, {position, direction},
-                          BoundaryTolerance::None());
+    main.initialize(gctx, {position, direction}, BoundaryTolerance::None());
 
-    std::cout << state.main.candidates().size() << " candidates remaining"
+    std::cout << main.candidates().size() << " candidates remaining"
               << std::endl;
 
-    for (const auto& candidate : state.main.candidates()) {
+    for (const auto& candidate : main.candidates()) {
       std::cout << " -> " << candidate.surface().geometryId() << std::endl;
       std::cout << "    " << candidate.surface().toStream(gctx) << std::endl;
     }
 
-    if (state.main.currentCandidate().surface().isOnSurface(gctx, position,
-                                                            direction)) {
+    if (main.currentCandidate().surface().isOnSurface(gctx, position,
+                                                      direction)) {
       std::cout << "Already on portal at initialization, skipping candidate"
                 << std::endl;
 
-      auto id = state.main.currentCandidate().surface().geometryId();
+      auto id = main.currentCandidate().surface().geometryId();
       csv << run << "," << position[0] << "," << position[1] << ","
           << position[2];
       csv << "," << id.volume();
       csv << "," << id.boundary();
       csv << std::endl;
-      if (!state.main.switchToNextCandidate()) {
+      if (!main.switchToNextCandidate()) {
         std::cout << "candidates exhausted unexpectedly" << std::endl;
         break;
       }
     }
 
-    const auto& candidate = state.main.currentCandidate();
+    const auto& candidate = main.currentCandidate();
     std::cout << candidate.portal << std::endl;
     std::cout << candidate.intersection.position().transpose() << std::endl;
 
@@ -194,8 +195,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
       // position += delta / (substeps + 1);
       Vector3 subpos = position + dist(rng) * delta;
       csv << run << "," << subpos[0] << "," << subpos[1] << "," << subpos[2];
-      csv << "," << state.currentVolume->geometryId().volume();
-      csv << "," << state.currentVolume->geometryId().boundary();
+      csv << "," << currentVolume->geometryId().volume();
+      csv << "," << currentVolume->geometryId().boundary();
       csv << std::endl;
     }
 
@@ -204,16 +205,15 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
     std::cout << "                 -> " << position.transpose()
               << " (r=" << VectorHelpers::perp(position) << ")" << std::endl;
 
-    state.currentVolume =
+    currentVolume =
         candidate.portal->resolveVolume(gctx, position, direction).value();
 
-    if (state.currentVolume == nullptr) {
+    if (currentVolume == nullptr) {
       std::cout << "switched to nullptr" << std::endl;
       break;
     }
 
-    std::cout << "switched to " << state.currentVolume->volumeName()
-              << std::endl;
+    std::cout << "switched to " << currentVolume->volumeName() << std::endl;
 
     std::cout << "-----" << std::endl;
   }

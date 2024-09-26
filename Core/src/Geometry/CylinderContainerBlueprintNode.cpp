@@ -13,9 +13,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/NavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
-#include "Acts/Visualization/ViewConfig.hpp"
 
 #include <algorithm>
 #include <utility>
