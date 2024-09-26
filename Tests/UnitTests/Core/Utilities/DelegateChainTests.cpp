@@ -10,8 +10,6 @@
 #include <boost/test/unit_test_suite.hpp>
 
 #include "Acts/Utilities/DelegateChain.hpp"
-#include "Acts/Utilities/TypeList.hpp"
-#include "Acts/Utilities/TypeTag.hpp"
 
 using namespace Acts;
 
@@ -57,19 +55,7 @@ BOOST_AUTO_TEST_CASE(DelegateChainAdd) {
   BOOST_CHECK_EQUAL(x, 9);
 
   // CTAD helper from delegate type
-  chain = DelegateChainFactory{Type<decltype(chain)>}
-              .add<&AddTo::add>(&a1)
-              .add<&addFive>()
-              .add<&AddTo::add>(&a3)
-              .build();
-
-  x = 0;
-
-  chain(x);
-  BOOST_CHECK_EQUAL(x, 9);
-
-  // CTAD helper from delegate type
-  chain = DelegateChainFactory{TypeTag{chain}}
+  chain = DelegateChainFactory{chain}
               .add<&AddTo::add>(&a1)
               .add<&addFive>()
               .add<&AddTo::add>(&a3)

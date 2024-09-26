@@ -40,7 +40,7 @@ class DelegateChainFactory<R(callable_args...), TypeList<payload_types...>,
   DelegateChainFactory() = default;
 
   template <typename D>
-  DelegateChainFactory(TypeTag<D> /*unused*/) {}
+  DelegateChainFactory(const D& /*unused*/) {}
 
   template <auto Callable, typename payload_type>
   constexpr auto add(payload_type payload)
@@ -155,7 +155,7 @@ class DelegateChainFactory<R(callable_args...), TypeList<payload_types...>,
 };
 
 template <typename D>
-DelegateChainFactory(TypeTag<D> /*unused*/)
+DelegateChainFactory(const D& /*unused*/)
     -> DelegateChainFactory<typename D::signature_type>;
 
 }  // namespace Acts
