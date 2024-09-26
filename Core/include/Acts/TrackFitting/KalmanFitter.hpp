@@ -675,11 +675,9 @@ class KalmanFitter {
 
         ++result.processedStates;
 
-        if (surfaceHasMaterial) {
-          // Update state and stepper with material effects
-          materialInteractor(surface, state, stepper, navigator,
-                             MaterialUpdateStage::FullUpdate);
-        }
+        // Update state and stepper with (possible) material effects
+        materialInteractor(surface, state, stepper, navigator,
+                           MaterialUpdateStage::FullUpdate);
       }
       return Result<void>::success();
     }
