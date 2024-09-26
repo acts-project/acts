@@ -9,16 +9,14 @@
 #pragma once
 
 #include "Acts/Propagator/detail/actor_list_implementation.hpp"
-#include "Acts/Utilities/detail/MPL/all_of.hpp"
-#include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
-#include "Acts/Utilities/detail/MPL/type_collector.hpp"
-
-#include <boost/hana/type.hpp>
-#include <boost/hana/unpack.hpp>
-
-namespace hana = boost::hana;
+#include "Acts/Utilities/TypeList.hpp"
 
 namespace Acts {
+/// @brief Extract the result type of an actor
+template <typename T>
+struct ActorResultTypeExtractor {
+  using type = typename T::result_type;
+};
 
 /// @brief ActorList implementation to be used with the propagator
 ///
@@ -26,18 +24,20 @@ namespace Acts {
 /// to define a list of different actors_t that are each
 /// executed during the stepping procedure
 template <typename... actors_t>
-  requires(
-      detail::all_of_v<std::is_default_constructible<actors_t>::value...> &&
-      detail::all_of_v<std::is_copy_constructible<actors_t>::value...> &&
-      detail::all_of_v<std::is_move_constructible<actors_t>::value...> &&
-      !detail::has_duplicates_v<actors_t...>)
+  requires((std::is_default_constructible_v<actors_t> && ...) &&
+           (std::is_copy_constructible_v<actors_t> && ...) &&
+           (std::is_move_constructible_v<actors_t> && ...) &&
+           ((Types::count<actors_t, TypeList<actors_t...>>::value == 1) && ...))
 struct ActorList {
   /// @cond
   // This uses the type collector and unpacks using the `R` meta function
+  // template <template <typename...> class R>
   template <template <typename...> class R>
-  using result_type = typename decltype(hana::unpack(
-      detail::type_collector_t<detail::result_type_extractor, actors_t...>,
-      hana::template_<R>))::type;
+  using result_type = typename Types::apply<
+      R, typename Types::map<ActorResultTypeExtractor,
+                             typename Types::filter<ActorHasResultStruct,
+                                                    actors_t...>::type>::type>::
+      type;
   /// @endcond
 
   /// Default constructor
