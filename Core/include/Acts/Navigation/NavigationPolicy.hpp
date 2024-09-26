@@ -24,7 +24,7 @@ struct NavigationState {
 
 }  // namespace Experimental::Gen3Geometry
 
-class INavigationDelegate {
+class INavigationPolicy {
  public:
   // @NOTE: This interface is PRELIMINARY! It is subject to change!
 
@@ -34,18 +34,18 @@ class INavigationDelegate {
   static void noopUpdate(
       Experimental::Gen3Geometry::NavigationState& /*state*/) {}
 
-  virtual ~INavigationDelegate() = default;
+  virtual ~INavigationPolicy() = default;
 
   virtual void connect(DelegateType& delegate) const = 0;
 };
 
-class TryAllPortalNavigationDelegate final : public INavigationDelegate {
+class TryAllPortalNavigationPolicy final : public INavigationPolicy {
  public:
   void connect(DelegateType& delegate) const override {
-    delegate.connect<&TryAllPortalNavigationDelegate::updateState>(this);
+    delegate.connect<&TryAllPortalNavigationPolicy::updateState>(this);
   }
 
-  TryAllPortalNavigationDelegate(const TrackingVolume& volume)
+  TryAllPortalNavigationPolicy(const TrackingVolume& volume)
       : m_volume(&volume) {}
 
  private:

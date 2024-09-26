@@ -735,14 +735,14 @@ void TrackingVolume::visualize(IVisualization3D& helper,
   }
 }
 
-void TrackingVolume::setNavigationDelegate(
-    std::unique_ptr<INavigationDelegate> delegate) {
-  if (delegate == nullptr) {
-    throw std::invalid_argument("Navigation delegate is nullptr");
+void TrackingVolume::setNavigationPolicy(
+    std::unique_ptr<INavigationPolicy> policy) {
+  if (policy == nullptr) {
+    throw std::invalid_argument("Navigation policy is nullptr");
   }
 
-  m_navigationDelegateInstance = std::move(delegate);
-  m_navigationDelegateInstance->connect(m_navigationDelegate);
+  m_navigationPolicy = std::move(policy);
+  m_navigationPolicy->connect(m_navigationDelegate);
 }
 
 void TrackingVolume::updateNavigationState(

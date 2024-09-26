@@ -19,7 +19,7 @@
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Navigation/NavigationDelegate.hpp"
+#include "Acts/Navigation/NavigationPolicy.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -500,7 +500,7 @@ class TrackingVolume : public Volume {
                  const ViewConfig& portalViewConfig,
                  const ViewConfig& sensitiveViewConfig) const;
 
-  void setNavigationDelegate(std::unique_ptr<INavigationDelegate> delegate);
+  void setNavigationPolicy(std::unique_ptr<INavigationPolicy> policy);
 
   void updateNavigationState(
       Experimental::Gen3Geometry::NavigationState& state) const;
@@ -569,9 +569,9 @@ class TrackingVolume : public Volume {
   std::vector<std::shared_ptr<Portal>> m_portals;
   std::vector<std::shared_ptr<Surface>> m_surfaces;
 
-  std::unique_ptr<INavigationDelegate> m_navigationDelegateInstance;
-  INavigationDelegate::DelegateType m_navigationDelegate{
-      DelegateFuncTag<&INavigationDelegate::noopUpdate>{}};
+  std::unique_ptr<INavigationPolicy> m_navigationPolicy;
+  INavigationPolicy::DelegateType m_navigationDelegate{
+      DelegateFuncTag<&INavigationPolicy::noopUpdate>{}};
 };
 
 }  // namespace Acts
