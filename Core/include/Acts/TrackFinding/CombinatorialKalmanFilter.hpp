@@ -723,6 +723,9 @@ class CombinatorialKalmanFilter {
                         result_type& result) const {
       using PM = TrackStatePropMask;
 
+      bool isSensitive = surface->associatedDetectorElement() != nullptr;
+      bool isMaterial = surface->surfaceMaterial() != nullptr;
+
       std::size_t nBranchesOnSurface = 0;
 
       if (auto [slBegin, slEnd] = m_sourceLinkAccessor(*surface);
@@ -848,8 +851,11 @@ class CombinatorialKalmanFilter {
         // Update state and stepper with post material effects
         materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PostUpdate);
-      } else if (surface->associatedDetectorElement() != nullptr ||
-                 surface->surfaceMaterial() != nullptr) {
+      } else if (isSensitive || isMaterial) {
+        ACTS_VERBOSE("Handle " << (isSensitive ? "sensitive" : "passive")
+                               << " surface: " << surface->geometryId()
+                               << " without measurements");
+
         // No splitting on the surface without source links. Set it to one
         // first, but could be changed later
         nBranchesOnSurface = 1;
@@ -857,13 +863,12 @@ class CombinatorialKalmanFilter {
         auto currentBranch = result.activeBranches.back();
         TrackIndexType prevTip = currentBranch.tipIndex();
 
-        // The surface could be either sensitive or passive
-        bool isSensitive = (surface->associatedDetectorElement() != nullptr);
-        bool isMaterial = (surface->surfaceMaterial() != nullptr);
-        ACTS_VERBOSE("Detected " << (isSensitive ? "sensitive" : "passive")
-                                 << " surface: " << surface->geometryId());
-        // Add state if there is already measurement detected on this branch
-        if (currentBranch.nMeasurements() > 0 || isMaterial) {
+        // Add a state only if there already is measurement on this branch
+        if (currentBranch.nMeasurements() > 0) {
+          ACTS_VERBOSE(
+              "Record hole or passive material state on surface since we "
+              "already have measurements on the branch");
+
           // No source links on surface, add either hole or passive material
           // TrackState. No storage allocation for uncalibrated/calibrated
           // measurement and filtered parameter
@@ -886,7 +891,7 @@ class CombinatorialKalmanFilter {
           auto& [boundParams, jacobian, pathLength] = boundState;
           boundParams.covariance() = state.stepping.cov;
 
-          // Add a hole or material track state to the multitrajectory
+          // Add a hole or material track state
           TrackIndexType currentTip = addNonSourcelinkState(
               stateMask, boundState, result, isSensitive, prevTip);
           auto nonSourcelinkState =
@@ -915,6 +920,21 @@ class CombinatorialKalmanFilter {
           // Update state and stepper with post material effects
           materialInteractor(surface, state, stepper, navigator,
                              MaterialUpdateStage::PostUpdate);
+        } else if (isMaterial) {
+          // Since we did not find a measurement yet we don't create a track
+          // state but still need to do the material update
+          ACTS_VERBOSE("Handle material without creating a track state");
+
+          // Transport the covariance to a curvilinear surface
+          stepper.transportCovarianceToCurvilinear(state.stepping);
+
+          // Update state and stepper with full material effects
+          materialInteractor(surface, state, stepper, navigator,
+                             MaterialUpdateStage::FullUpdate);
+        } else {
+          ACTS_VERBOSE(
+              "Skipping surface as there are no measurements on the branch yet "
+              "and it does not have material");
         }
       } else {
         // Neither measurement nor material on surface, this branch is still
