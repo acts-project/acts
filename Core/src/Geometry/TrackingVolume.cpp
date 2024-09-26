@@ -16,6 +16,7 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
+#include "Acts/Navigation/NavigationPolicy.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -27,6 +28,8 @@
 #include <ostream>
 #include <string>
 #include <utility>
+
+#include <boost/container/small_vector.hpp>
 
 namespace Acts {
 
@@ -47,6 +50,10 @@ TrackingVolume::TrackingVolume(
   createBoundarySurfaces();
   interlinkLayers();
   connectDenseBoundarySurfaces(denseVolumeVector);
+
+  DelegateChainBuilder{m_navigationDelegate}
+      .add<&INavigationPolicy::noopUpdate>()
+      .store(m_navigationDelegate);
 }
 
 TrackingVolume::TrackingVolume(Volume& volume, const std::string& volumeName)
@@ -61,6 +68,8 @@ TrackingVolume::TrackingVolume(const Transform3& transform,
                      {}, volumeName) {}
 
 TrackingVolume::~TrackingVolume() = default;
+TrackingVolume::TrackingVolume(TrackingVolume&&) = default;
+TrackingVolume& TrackingVolume::operator=(TrackingVolume&&) = default;
 
 const TrackingVolume* TrackingVolume::lowestTrackingVolume(
     const GeometryContext& gctx, const Vector3& position,
@@ -746,8 +755,8 @@ void TrackingVolume::setNavigationPolicy(
 }
 
 void TrackingVolume::updateNavigationState(
-    Experimental::Gen3Geometry::NavigationState& state) const {
-  m_navigationDelegate(state);
+    const NavigationArguments& args) const {
+  m_navigationDelegate(args);
 }
 
 }  // namespace Acts

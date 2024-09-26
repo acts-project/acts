@@ -9,16 +9,16 @@
 #include "Acts/Navigation/NavigationPolicy.hpp"
 
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/NavigationStream.hpp"
 
 namespace Acts {
 
 void TryAllPortalNavigationPolicy::updateState(
-    Experimental::Gen3Geometry::NavigationState& state) const {
+    const NavigationArguments& args) const {
   assert(m_volume != nullptr);
-  assert(state.currentVolume == m_volume);
 
-  for (const auto& portal : state.currentVolume->portals()) {
-    state.main.addPortalCandidate(portal);
+  for (const auto& portal : m_volume->portals()) {
+    args.main.addPortalCandidate(portal);
   };
 }
 }  // namespace Acts
