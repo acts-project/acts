@@ -172,20 +172,24 @@ auto kalmanHandleNoMeasurement(
   }
 
   // Set the track state flags
+  const bool surfaceHasMaterial = surface->surfaceMaterial() != nullptr;
+  const bool surfaceIsSensitive =
+      surface.associatedDetectorElement() != nullptr;
   auto typeFlags = trackStateProxy.typeFlags();
   typeFlags.set(TrackStateFlag::ParameterFlag);
-  if (surface.surfaceMaterial() != nullptr) {
+
+  if (surfaceHasMaterial) {
     typeFlags.set(TrackStateFlag::MaterialFlag);
   }
-  if (surface.associatedDetectorElement() != nullptr &&
-      precedingMeasurementExists) {
+
+  if (surfaceIsSensitive && precedingMeasurementExists) {
     ACTS_VERBOSE("Detected hole on " << surface.geometryId());
     // If the surface is sensitive, set the hole type flag
     typeFlags.set(TrackStateFlag::HoleFlag);
-  } else if (surface.associatedDetectorElement() != nullptr) {
+  } else if (surfaceIsSensitive) {
     ACTS_VERBOSE("Skip hole (no preceding measurements) on surface "
                  << surface.geometryId());
-  } else if (surface.surfaceMaterial() != nullptr) {
+  } else if (surfaceHasMaterial) {
     ACTS_VERBOSE("Detected in-sensitive surface " << surface.geometryId());
   }
 

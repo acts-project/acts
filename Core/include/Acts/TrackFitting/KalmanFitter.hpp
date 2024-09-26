@@ -590,10 +590,10 @@ class KalmanFitter {
     Result<void> filter(const Surface* surface, propagator_state_t& state,
                         const stepper_t& stepper, const navigator_t& navigator,
                         result_type& result) const {
-      const bool precedingMeasurementExists = (result.measurementStates > 0);
+      const bool precedingMeasurementExists = result.measurementStates > 0;
       const bool surfaceIsSensitive =
-          (surface->associatedDetectorElement() != nullptr);
-      const bool surfaceHasMaterial = (surface->surfaceMaterial() != nullptr);
+          surface->associatedDetectorElement() != nullptr;
+      const bool surfaceHasMaterial = surface->surfaceMaterial() != nullptr;
 
       // Try to find the surface in the measurement surfaces
       auto sourceLinkIt = inputMeasurements->find(surface->geometryId());
