@@ -638,7 +638,7 @@ struct GsfActor {
 
     // Initialize as true, so that any component can flip it. However, all
     // components should behave the same
-    bool is_hole = true;
+    bool isHole = true;
 
     auto cmps = stepper.componentIterable(state.stepping);
     for (auto cmp : cmps) {
@@ -659,7 +659,7 @@ struct GsfActor {
       const auto& trackStateProxy = *trackStateProxyRes;
 
       if (!trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
-        is_hole = false;
+        isHole = false;
       }
 
       tmpStates.tips.push_back(trackStateProxy.index());
@@ -667,7 +667,7 @@ struct GsfActor {
     }
 
     // These things should only be done once for all components
-    if (is_hole) {
+    if (isHole) {
       ++result.measurementHoles;
     }
 
