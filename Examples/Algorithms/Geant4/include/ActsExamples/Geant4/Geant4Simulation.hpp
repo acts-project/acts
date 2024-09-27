@@ -138,6 +138,8 @@ class Geant4Simulation final : public Geant4SimulationBase {
     double killAfterTime = std::numeric_limits<double>::infinity();
     bool killSecondaries = false;
 
+    bool recordHitsOfNeutrals = false;
+
     bool recordHitsOfSecondaries = true;
 
     bool keepParticlesWithoutHits = true;

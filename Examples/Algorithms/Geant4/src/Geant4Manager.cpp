@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
 
+#include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
 #include "ActsExamples/Geant4/PhysicsListFactory.hpp"
 
 #include <memory>
@@ -80,6 +81,12 @@ std::shared_ptr<Geant4Handle> Geant4Manager::currentHandle() const {
 
 std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(
     const std::string& physicsList) {
+  if (physicsList == "MaterialPhysicsList") {
+    return createHandle(
+        std::make_unique<MaterialPhysicsList>(
+            Acts::getDefaultLogger("MaterialPhysicsList", Acts::Logging::INFO)),
+        physicsList);
+  }
   return createHandle(createPhysicsList(physicsList), physicsList);
 }
 

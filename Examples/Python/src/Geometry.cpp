@@ -245,11 +245,26 @@ void addExperimentalGeometry(Context& ctx) {
              self.visitSurfaces(selector);
              return selector.surfaces;
            })
-      .def("geoIdSurfaceMap", [](Detector& self) {
-        IdentifierSurfacesCollector collector;
-        self.visitSurfaces(collector);
-        return collector.surfaces;
-      });
+      .def("geoIdSurfaceMap",
+           [](Detector& self) {
+             IdentifierSurfacesCollector collector;
+             self.visitSurfaces(collector);
+             return collector.surfaces;
+           })
+      .def("cylindricalVolumeRepresentation",
+           [](Detector& self, Acts::GeometryContext& gctx) {
+             // Loop over the volumes and gather the extent
+             Extent extent;
+             for (const auto& volume : self.volumes()) {
+               extent.extend(volume->extent(gctx));
+             }
+             auto bounds = std::make_shared<Acts::CylinderVolumeBounds>(
+                 0., extent.max(Acts::BinningValue::binR),
+                 extent.max(Acts::BinningValue::binZ));
+
+             return std::make_shared<Acts::Volume>(Transform3::Identity(),
+                                                   std::move(bounds));
+           });
 
   // Portal definition
   py::class_<Experimental::Portal, std::shared_ptr<Experimental::Portal>>(

@@ -234,7 +234,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     SensitiveSteppingAction::Config stepCfg;
     stepCfg.eventStore = m_eventStore;
     stepCfg.charged = true;
-    stepCfg.neutral = false;
+    stepCfg.neutral = cfg.recordHitsOfNeutrals;
     stepCfg.primary = true;
     stepCfg.secondary = cfg.recordHitsOfSecondaries;
 
