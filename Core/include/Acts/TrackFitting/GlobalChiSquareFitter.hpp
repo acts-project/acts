@@ -609,10 +609,10 @@ class Gx2Fitter {
 
       // Check if we can stop to propagate
       if (result.measurementStates == inputMeasurements->size()) {
-        ACTS_INFO("Actor: finish: All measurements have been found.");
+        ACTS_DEBUG("Actor: finish: All measurements have been found.");
         result.finished = true;
       } else if (state.navigation.navigationBreak) {
-        ACTS_INFO("Actor: finish: navigationBreak.");
+        ACTS_DEBUG("Actor: finish: navigationBreak.");
         result.finished = true;
       }
 
@@ -1217,7 +1217,7 @@ class Gx2Fitter {
 
         // We only consider states with a measurement (and/or material)
         if (!stateHasMeasurement && !doMaterial) {
-          ACTS_INFO("    Skip state.");
+          ACTS_DEBUG("    Skip state.");
           continue;
         }
 
@@ -1415,7 +1415,7 @@ class Gx2Fitter {
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trackContainer.trackStateContainer();
 
-      m_propagator.template propagate(propagatorState);
+      auto propagationResult = m_propagator.template propagate(propagatorState);
 
       // Run the fitter
       auto result = m_propagator.template makeResult(std::move(propagatorState),
@@ -1439,7 +1439,11 @@ class Gx2Fitter {
         return gx2fResult.result.error();
       }
 
-      tipIndex = gx2fResult.lastMeasurementIndex;
+      if (tipIndex != gx2fResult.lastMeasurementIndex) {
+        ACTS_INFO("Final fit used unreachable measurements.");
+        return Experimental::GlobalChiSquareFitterError::
+            UsedUnreachableMeasurements;
+      }
     }
 
     if (!trackContainer.hasColumn(
