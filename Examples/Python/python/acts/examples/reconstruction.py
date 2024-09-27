@@ -2048,11 +2048,11 @@ def addAmbiguityResolutionML(
 
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
-        inputTracks="ambiTracksMLGreedy",
+        inputTracks=algGreedy.config.outputTracks,
         inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
-        outputTrackParticleMatching="ambi_track_particle_matching",
-        outputParticleTrackMatching="ambi_particle_track_matching",
+        outputTrackParticleMatching="ambiML_track_particle_matching",
+        outputParticleTrackMatching="ambiML_particle_track_matching",
         doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)
