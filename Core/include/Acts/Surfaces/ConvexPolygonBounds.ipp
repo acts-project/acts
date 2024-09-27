@@ -15,7 +15,7 @@
 template <typename coll_t>
 void Acts::ConvexPolygonBoundsBase::convex_impl(
     const coll_t& vertices) noexcept(false) {
-  static_assert(std::is_same<typename coll_t::value_type, Vector2>::value,
+  static_assert(std::is_same_v<typename coll_t::value_type, Vector2>,
                 "Must be collection of Vector2");
 
   const std::size_t N = vertices.size();

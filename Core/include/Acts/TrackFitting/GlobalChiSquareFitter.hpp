@@ -513,7 +513,7 @@ class Gx2Fitter {
 
   /// The navigator has DirectNavigator type or not
   static constexpr bool isDirectNavigator =
-      std::is_same<Gx2fNavigator, DirectNavigator>::value;
+      std::is_same_v<Gx2fNavigator, DirectNavigator>;
 
  public:
   Gx2Fitter(propagator_t pPropagator,
