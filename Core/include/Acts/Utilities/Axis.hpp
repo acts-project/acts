@@ -66,8 +66,6 @@ class NeighborHoodIndices {
       return (m_current == it.m_current) && (m_wrapped == it.m_wrapped);
     }
 
-    bool operator!=(const iterator& it) const { return !(*this == it); }
-
    private:
     std::size_t m_current = 0, m_end1 = 0, m_begin2 = 0;
     bool m_wrapped = false;

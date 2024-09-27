@@ -63,12 +63,11 @@ class SimVertexBarcode {
   friend constexpr bool operator<(SimVertexBarcode lhs, SimVertexBarcode rhs) {
     return lhs.m_id < rhs.m_id;
   }
+
   friend constexpr bool operator==(SimVertexBarcode lhs, SimVertexBarcode rhs) {
     return lhs.m_id == rhs.m_id;
   }
-  friend constexpr bool operator!=(SimVertexBarcode lhs, SimVertexBarcode rhs) {
-    return lhs.m_id != rhs.m_id;
-  }
+
   friend inline std::ostream& operator<<(std::ostream& os,
                                          SimVertexBarcode idx) {
     return os << idx.m_id;

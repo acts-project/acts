@@ -44,9 +44,6 @@ class LandauDistribution {
     friend bool operator==(const param_type &lhs, const param_type &rhs) {
       return (lhs.location == rhs.location) && (lhs.scale == rhs.scale);
     }
-    friend bool operator!=(const param_type &lhs, const param_type &rhs) {
-      return !(lhs == rhs);
-    }
   };
   /// The type of the generated values.
   using result_type = double;
@@ -90,10 +87,6 @@ class LandauDistribution {
   friend bool operator==(const LandauDistribution &lhs,
                          const LandauDistribution &rhs) {
     return lhs.m_cfg == rhs.m_cfg;
-  }
-  friend bool operator!=(const LandauDistribution &lhs,
-                         const LandauDistribution &rhs) {
-    return !(lhs == rhs);
   }
 
  private:

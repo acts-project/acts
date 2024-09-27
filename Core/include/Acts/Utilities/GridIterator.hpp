@@ -73,24 +73,20 @@ class GridGlobalIterator {
   /// @param [in] other The other GridGlobalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator==(const GridGlobalIterator<T, Axes...>& other) const;
-  /// @brief (In-)Equality operator
-  /// @param [in] other The other GridGlobalIterator to be compared against this one
-  /// @return The result of the comparison
-  bool operator!=(const GridGlobalIterator<T, Axes...>& other) const;
 
-  /// @brief Comparison (<) opetator
+  /// @brief Comparison (<) operator
   /// @param [in] other The other GridGlobalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator<(const GridGlobalIterator<T, Axes...>& other) const;
-  /// @brief Comparison (>) opetator
+  /// @brief Comparison (>) operator
   /// @param [in] other The other GridGlobalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator>(const GridGlobalIterator<T, Axes...>& other) const;
-  /// @brief Comparison (<=) opetator
+  /// @brief Comparison (<=) operator
   /// @param [in] other The other GridGlobalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator<=(const GridGlobalIterator<T, Axes...>& other) const;
-  /// @brief Comparison (>=) opetator
+  /// @brief Comparison (>=) operator
   /// @param [in] other The other GridGlobalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator>=(const GridGlobalIterator<T, Axes...>& other) const;
@@ -238,10 +234,6 @@ class GridLocalIterator {
   /// @param [in] other The other GridLocalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator==(const Acts::GridLocalIterator<T, Axes...>& other) const;
-  /// @brief (In-)Equality operator
-  /// @param [in] other The other GridLocalIterator to be compared against this one
-  /// @return The result of the comparison
-  bool operator!=(const Acts::GridLocalIterator<T, Axes...>& other) const;
 
   /// @brief Return stored value at given local position
   /// @return The stored value in the grid from that given local position

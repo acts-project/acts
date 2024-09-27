@@ -37,12 +37,6 @@ bool GridGlobalIterator<T, Axes...>::operator==(
 }
 
 template <typename T, class... Axes>
-bool GridGlobalIterator<T, Axes...>::operator!=(
-    const GridGlobalIterator<T, Axes...>& other) const {
-  return !(*this == other);
-}
-
-template <typename T, class... Axes>
 bool GridGlobalIterator<T, Axes...>::operator<(
     const GridGlobalIterator<T, Axes...>& other) const {
   // This operator only makes sense if the two iterators we are comparing
@@ -220,12 +214,6 @@ bool Acts::GridLocalIterator<T, Axes...>::operator==(
   }
 
   return true;
-}
-
-template <typename T, class... Axes>
-bool Acts::GridLocalIterator<T, Axes...>::operator!=(
-    const Acts::GridLocalIterator<T, Axes...>& other) const {
-  return !(*this == other);
 }
 
 template <typename T, class... Axes>
