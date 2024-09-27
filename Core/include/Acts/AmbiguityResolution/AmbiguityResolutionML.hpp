@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/AmbiguityResolution/AmbiguityNetworkConcept.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -24,12 +25,12 @@ namespace Acts {
 
 /// Generic implementation of the machine learning ambiguity resolution
 /// Contains method for data preparations
-template <typename AmbiguityNetwork>
+template <AmbiguityNetworkConcept AmbiguityNetwork>
 class AmbiguityResolutionML {
  public:
   struct Config {
     /// Path to the ONNX model for the duplicate neural network
-    std::string inputDuplicateNN;
+    std::string inputDuplicateNN = "";
     /// Minimum number of measurement to form a track.
     std::size_t nMeasurementsMin = 7;
   };
@@ -50,14 +51,12 @@ class AmbiguityResolutionML {
   /// @param sourceLinkHash is the hash function for the source link, will be used to associate to tracks
   /// @param sourceLinkEquality is the equality function for the source link used used to associated hits to tracks
   /// @return an ordered list containing pairs of track ID and associated measurement ID
-  template <typename track_container_t, typename traj_t,
-            template <typename> class holder_t, typename source_link_hash_t,
-            typename source_link_equality_t>
+  template <TrackContainerFrontend track_container_t,
+            typename source_link_hash_t, typename source_link_equality_t>
   std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>
-  mapTrackHits(
-      const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      source_link_hash_t&& sourceLinkHash,
-      source_link_equality_t&& sourceLinkEquality) const {
+  mapTrackHits(const track_container_t& tracks,
+               source_link_hash_t&& sourceLinkHash,
+               source_link_equality_t&& sourceLinkEquality) const {
     auto measurementIndexMap =
         std::unordered_map<SourceLink, std::size_t, source_link_hash_t,
                            source_link_equality_t>(0, sourceLinkHash,
@@ -94,12 +93,10 @@ class AmbiguityResolutionML {
   /// @param clusters is a map of clusters, each cluster correspond to a vector of track ID
   /// @param tracks is the input track container
   /// @return a vector of trackID corresponding tho the good tracks
-  template <typename track_container_t, typename traj_t,
-            template <typename> class holder_t>
+  template <TrackContainerFrontend track_container_t>
   std::vector<std::size_t> solveAmbiguity(
       std::unordered_map<std::size_t, std::vector<std::size_t>>& clusters,
-      const Acts::TrackContainer<track_container_t, traj_t, holder_t>& tracks)
-      const {
+      const track_container_t& tracks) const {
     std::vector<std::vector<float>> outputTensor =
         m_duplicateClassifier.inferScores(clusters, tracks);
     std::vector<std::size_t> goodTracks =
@@ -112,15 +109,15 @@ class AmbiguityResolutionML {
   // Configuration
   Config m_cfg;
 
-  // The neural network for duplicate classification, the network implementation
-  // is chosen with the AmbiguityNetwork template parameter
+  // The neural network for duplicate classification, the network
+  // implementation is chosen with the AmbiguityNetwork template parameter
   AmbiguityNetwork m_duplicateClassifier;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger = nullptr;
 
   /// Private access to logging instance
-  const Logger& logger() const;
+  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts

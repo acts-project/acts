@@ -31,8 +31,7 @@ namespace Acts {
 
 // constructor for arguments
 TrackingVolume::TrackingVolume(
-    const Transform3& transform,
-    std::shared_ptr<const VolumeBounds> volumeBounds,
+    const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
@@ -49,14 +48,13 @@ TrackingVolume::TrackingVolume(
   connectDenseBoundarySurfaces(denseVolumeVector);
 }
 
-TrackingVolume::TrackingVolume(const Volume& volume,
-                               const std::string& volumeName)
+TrackingVolume::TrackingVolume(Volume& volume, const std::string& volumeName)
     : TrackingVolume(volume.transform(), volume.volumeBoundsPtr(), nullptr,
                      nullptr, nullptr, MutableTrackingVolumeVector{},
                      volumeName) {}
 
 TrackingVolume::TrackingVolume(const Transform3& transform,
-                               std::shared_ptr<const VolumeBounds> volbounds,
+                               std::shared_ptr<VolumeBounds> volbounds,
                                const std::string& volumeName)
     : TrackingVolume(transform, std::move(volbounds), nullptr, nullptr, nullptr,
                      {}, volumeName) {}
@@ -64,11 +62,18 @@ TrackingVolume::TrackingVolume(const Transform3& transform,
 TrackingVolume::~TrackingVolume() = default;
 
 const TrackingVolume* TrackingVolume::lowestTrackingVolume(
-    const GeometryContext& /*gctx*/, const Vector3& position,
+    const GeometryContext& gctx, const Vector3& position,
     const double tol) const {
+  if (!inside(position, tol)) {
+    return nullptr;
+  }
+
   // confined static volumes - highest hierarchy
   if (m_confinedVolumes) {
-    return (m_confinedVolumes->object(position).get());
+    const TrackingVolume* volume = m_confinedVolumes->object(position).get();
+    if (volume != nullptr) {
+      return volume->lowestTrackingVolume(gctx, position, tol);
+    }
   }
 
   // search for dense volumes
@@ -361,7 +366,7 @@ void TrackingVolume::closeGeometry(
         thisVolume->motherVolume()->volumeMaterial());
     if (protoMaterial == nullptr) {
       thisVolume->assignVolumeMaterial(
-          thisVolume->motherVolume()->volumeMaterialSharedPtr());
+          thisVolume->motherVolume()->volumeMaterialPtr());
     }
   }
 
@@ -572,7 +577,7 @@ const IVolumeMaterial* TrackingVolume::volumeMaterial() const {
 }
 
 const std::shared_ptr<const IVolumeMaterial>&
-TrackingVolume::volumeMaterialSharedPtr() const {
+TrackingVolume::volumeMaterialPtr() const {
   return m_volumeMaterial;
 }
 

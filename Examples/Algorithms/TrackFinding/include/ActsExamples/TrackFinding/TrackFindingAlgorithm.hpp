@@ -69,7 +69,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     virtual ~TrackFinderFunction() = default;
     virtual TrackFinderResult operator()(const TrackParameters&,
                                          const TrackFinderOptions&,
-                                         TrackContainer&) const = 0;
+                                         TrackContainer&, TrackProxy) const = 0;
   };
 
   /// Create the track finder function implementation.
@@ -154,7 +154,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
  private:
   template <typename source_link_accessor_container_t>
-  void computeSharedHits(const source_link_accessor_container_t& sourcelinks,
+  void computeSharedHits(const source_link_accessor_container_t& sourceLinks,
                          TrackContainer& tracks) const;
 
   ActsExamples::ProcessCode finalize() override;

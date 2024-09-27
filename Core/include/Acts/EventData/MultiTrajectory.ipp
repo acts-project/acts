@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/AlgebraHelpers.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <bitset>
 #include <cstdint>
@@ -20,11 +19,9 @@ namespace Acts {
 
 template <typename D>
 template <typename F>
-void MultiTrajectory<D>::visitBackwards(IndexType iendpoint,
-                                        F&& callable) const {
-  static_assert(detail_lt::VisitorConcept<F, ConstTrackStateProxy>,
-                "Callable needs to satisfy VisitorConcept");
-
+void MultiTrajectory<D>::visitBackwards(IndexType iendpoint, F&& callable) const
+  requires detail_lt::VisitorConcept<F, ConstTrackStateProxy>
+{
   if (iendpoint == MultiTrajectoryTraits::kInvalid) {
     throw std::runtime_error(
         "Cannot visit backwards with kInvalid as endpoint");

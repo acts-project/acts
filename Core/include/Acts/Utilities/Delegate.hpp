@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/TypeTraits.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 
 #include <cassert>
 #include <functional>
@@ -161,8 +161,7 @@ class Delegate<R(Args...), H, O> {
     m_payload.payload = nullptr;
 
     static_assert(
-        Concepts::is_detected<isSignatureCompatible, function_ptr_type,
-                              decltype(Callable)>::value,
+        Concepts::invocable_and_returns<Callable, return_type, Args &&...>,
         "Callable given does not correspond exactly to required call "
         "signature");
 
@@ -213,10 +212,8 @@ class Delegate<R(Args...), H, O> {
   void connect(const Type *instance)
     requires(kOwnership == DelegateType::NonOwning)
   {
-    using member_ptr_type = return_type (Type::*)(Args...) const;
-
-    static_assert(Concepts::is_detected<isSignatureCompatible, member_ptr_type,
-                                        decltype(Callable)>::value,
+    static_assert(Concepts::invocable_and_returns<Callable, return_type, Type,
+                                                  Args &&...>,
                   "Callable given does not correspond exactly to required call "
                   "signature");
 
@@ -239,9 +236,8 @@ class Delegate<R(Args...), H, O> {
   void connect(std::unique_ptr<const Type> instance)
     requires(kOwnership == DelegateType::Owning)
   {
-    using member_ptr_type = return_type (Type::*)(Args &&...) const;
-    static_assert(Concepts::is_detected<isSignatureCompatible, member_ptr_type,
-                                        decltype(Callable)>::value,
+    static_assert(Concepts::invocable_and_returns<Callable, return_type, Type,
+                                                  Args &&...>,
                   "Callable given does not correspond exactly to required call "
                   "signature");
 

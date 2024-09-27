@@ -20,6 +20,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
+#include <algorithm>
 #include <sstream>
 #include <string>
 
@@ -168,10 +169,6 @@ class Navigator {
     const Layer* currentLayer = nullptr;
     /// Navigation state - external state: the current surface
     const Surface* currentSurface = nullptr;
-    /// Navigation state: the target volume
-    const TrackingVolume* targetVolume = nullptr;
-    /// Navigation state: the target layer
-    const Layer* targetLayer = nullptr;
     /// Navigation state: the target surface
     const Surface* targetSurface = nullptr;
 
@@ -280,10 +277,86 @@ class Navigator {
           m_cfg.trackingGeometry->highestTrackingVolume();
     }
 
-    // We set the current surface to the start surface
-    // for eventual post-update action, e.g. material integration
-    // or collection when leaving a surface at the start of
-    // an extrapolation process
+    // Fast Navigation initialization for start condition:
+    // - short-cut through object association, saves navigation in the
+    // - geometry and volume tree search for the lowest volume
+    if (state.navigation.startSurface != nullptr &&
+        state.navigation.startSurface->associatedLayer() != nullptr) {
+      ACTS_VERBOSE(
+          volInfo(state)
+          << "Fast start initialization through association from Surface.");
+
+      // assign the current layer and volume by association
+      state.navigation.startLayer =
+          state.navigation.startSurface->associatedLayer();
+      state.navigation.currentLayer = state.navigation.startLayer;
+
+      state.navigation.startVolume =
+          state.navigation.startLayer->trackingVolume();
+      state.navigation.currentVolume = state.navigation.startVolume;
+    } else if (state.navigation.startVolume != nullptr) {
+      ACTS_VERBOSE(
+          volInfo(state)
+          << "Fast start initialization through association from Volume.");
+
+      state.navigation.currentVolume = state.navigation.startVolume;
+
+      state.navigation.startLayer =
+          state.navigation.startVolume->associatedLayer(
+              state.geoContext, stepper.position(state.stepping));
+      state.navigation.currentLayer = state.navigation.startLayer;
+    } else {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Slow start initialization through search.");
+      // current volume and layer search through global search
+      ACTS_VERBOSE(volInfo(state)
+                   << "Starting from position "
+                   << toString(stepper.position(state.stepping))
+                   << " and direction "
+                   << toString(stepper.direction(state.stepping)));
+
+      state.navigation.startVolume =
+          m_cfg.trackingGeometry->lowestTrackingVolume(
+              state.geoContext, stepper.position(state.stepping));
+      state.navigation.currentVolume = state.navigation.startVolume;
+
+      if (state.navigation.startVolume != nullptr) {
+        state.navigation.startLayer =
+            state.navigation.startVolume->associatedLayer(
+                state.geoContext, stepper.position(state.stepping));
+        state.navigation.currentLayer = state.navigation.startLayer;
+        ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
+      } else {
+        ACTS_VERBOSE(volInfo(state)
+                     << "No start volume resolved. Nothing left to do.");
+        // set the navigation break
+        state.navigation.navigationBreak = true;
+      }
+    }
+
+    if (state.navigation.startVolume != nullptr) {
+      ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
+      assert(state.navigation.startVolume->inside(
+                 stepper.position(state.stepping),
+                 state.options.surfaceTolerance) &&
+             "We did not end up inside the volume.");
+    }
+
+    if (state.navigation.startLayer != nullptr) {
+      ACTS_VERBOSE(volInfo(state) << "Start layer resolved "
+                                  << state.navigation.startLayer->geometryId());
+      // We provide the layer to the resolve surface method in this case
+      resolveSurfaces(state, stepper);
+    }
+
+    // Set the start volume as current volume
+    state.navigation.currentVolume = state.navigation.startVolume;
+    // Set the start layer as current layer
+    state.navigation.currentLayer = state.navigation.startLayer;
+
+    // We set the current surface to the start surface for eventual post-update
+    // action, e.g. material integration or collection when leaving a surface at
+    // the start of an extrapolation process
     state.navigation.currentSurface = state.navigation.startSurface;
     if (state.navigation.currentSurface != nullptr) {
       ACTS_VERBOSE(volInfo(state)
@@ -296,68 +369,6 @@ class Navigator {
                  BoundaryTolerance::Infinite(),
                  state.options.surfaceTolerance) &&
              "Stepper not on surface");
-    }
-
-    // Fast Navigation initialization for start condition:
-    // - short-cut through object association, saves navigation in the
-    // - geometry and volume tree search for the lowest volume
-    if (state.navigation.startSurface != nullptr &&
-        state.navigation.startSurface->associatedLayer() != nullptr) {
-      ACTS_VERBOSE(
-          volInfo(state)
-          << "Fast start initialization through association from Surface.");
-      // assign the current layer and volume by association
-      state.navigation.startLayer =
-          state.navigation.startSurface->associatedLayer();
-      state.navigation.startVolume =
-          state.navigation.startLayer->trackingVolume();
-    } else if (state.navigation.startVolume != nullptr) {
-      ACTS_VERBOSE(
-          volInfo(state)
-          << "Fast start initialization through association from Volume.");
-      state.navigation.startLayer =
-          state.navigation.startVolume->associatedLayer(
-              state.geoContext, stepper.position(state.stepping));
-    } else {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Slow start initialization through search.");
-      // current volume and layer search through global search
-      ACTS_VERBOSE(volInfo(state)
-                   << "Starting from position "
-                   << toString(stepper.position(state.stepping))
-                   << " and direction "
-                   << toString(stepper.direction(state.stepping)));
-      state.navigation.startVolume =
-          m_cfg.trackingGeometry->lowestTrackingVolume(
-              state.geoContext, stepper.position(state.stepping));
-      state.navigation.startLayer =
-          state.navigation.startVolume != nullptr
-              ? state.navigation.startVolume->associatedLayer(
-                    state.geoContext, stepper.position(state.stepping))
-              : nullptr;
-      if (state.navigation.startVolume != nullptr) {
-        ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
-      }
-    }
-
-    // Set the start volume as current volume
-    state.navigation.currentVolume = state.navigation.startVolume;
-    // Set the start layer as current layer
-    state.navigation.currentLayer = state.navigation.startLayer;
-
-    if (state.navigation.startLayer != nullptr) {
-      ACTS_VERBOSE(volInfo(state) << "Start layer to be resolved.");
-      // We provide the layer to the resolve surface method in this case
-      bool startResolved = resolveSurfaces(state, stepper);
-      if (!startResolved &&
-          state.navigation.startLayer == state.navigation.targetLayer) {
-        ACTS_VERBOSE(volInfo(state)
-                     << "Start is target layer and we have no surface "
-                        "candidates. Nothing left to do.");
-        // set the navigation break
-        state.navigation.navigationBreak = true;
-        stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
-      }
     }
   }
 
@@ -385,13 +396,6 @@ class Navigator {
 
     // Navigator pre step always resets the current surface
     state.navigation.currentSurface = nullptr;
-
-    // Initialize the target and target volume
-    if (state.navigation.targetSurface != nullptr &&
-        state.navigation.targetVolume == nullptr) {
-      // Find out about the target as much as you can
-      initializeTarget(state, stepper);
-    }
 
     auto tryTargetNextSurface = [&]() {
       // Try targeting the surfaces - then layers - then boundaries
@@ -566,6 +570,10 @@ class Navigator {
           return;
         } else {
           ACTS_VERBOSE(volInfo(state) << "Volume updated.");
+          assert(state.navigation.currentVolume->inside(
+                     stepper.position(state.stepping),
+                     state.options.surfaceTolerance) &&
+                 "We did not end up inside the volume.");
           // Forget the boundary information
           state.navigation.navBoundaries.clear();
           state.navigation.navBoundaryIndex =
@@ -576,19 +584,6 @@ class Navigator {
         state.navigation.navigationStage = Stage::boundaryTarget;
         ACTS_VERBOSE(volInfo(state) << "Staying focussed on boundary.");
       }
-    } else if (state.navigation.currentVolume ==
-               state.navigation.targetVolume) {
-      if (state.navigation.targetSurface == nullptr) {
-        ACTS_WARNING(volInfo(state)
-                     << "No further navigation action, proceed to "
-                        "target. This is very likely an error");
-      } else {
-        ACTS_VERBOSE(volInfo(state)
-                     << "No further navigation action, proceed to target.");
-      }
-      // Set navigation break and release the navigation step size
-      state.navigation.navigationBreak = true;
-      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
     } else {
       ACTS_VERBOSE(volInfo(state)
                    << "Status could not be determined - good luck.");
@@ -752,12 +747,6 @@ class Navigator {
       } else {
         ACTS_VERBOSE(volInfo(state)
                      << "Last surface on layer reached, and no layer.");
-        if (state.navigation.currentVolume == state.navigation.targetVolume) {
-          ACTS_VERBOSE(volInfo(state)
-                       << "This is the target volume, stop navigation.");
-          state.navigation.navigationBreak = true;
-          stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
-        }
       }
     }
 
@@ -835,30 +824,8 @@ class Navigator {
       ++state.navigation.navLayerIndex;
     }
 
-    // Re-initialize target at last layer, only in case it is the target volume
-    // This avoids a wrong target volume estimation
-    if (state.navigation.currentVolume == state.navigation.targetVolume) {
-      initializeTarget(state, stepper);
-    }
-    // Screen output
-    if (logger().doPrint(Logging::VERBOSE)) {
-      std::ostringstream os;
-      os << "Last layer";
-      if (state.navigation.currentVolume == state.navigation.targetVolume) {
-        os << " (final volume) done, proceed to target.";
-      } else {
-        os << " done, target volume boundary.";
-      }
-      logger().log(Logging::VERBOSE, os.str());
-    }
+    ACTS_VERBOSE(volInfo(state) << "Last layer done, target volume boundary.");
 
-    // Set the navigation break if necessary
-    if (state.navigation.currentVolume == state.navigation.targetVolume) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "This is the target volume, stop navigation.");
-      state.navigation.navigationBreak = true;
-      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
-    }
     return false;
   }
 
@@ -900,18 +867,7 @@ class Navigator {
                       "stopping navigation.");
       stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       return false;
-    } else if (state.navigation.currentVolume ==
-               state.navigation.targetVolume) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "In target volume: no need to resolve boundary, "
-                      "stopping navigation.");
-      state.navigation.navigationBreak = true;
-      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
-      return true;
     }
-
-    // Re-initialize target at volume boundary
-    initializeTarget(state, stepper);
 
     // Helper function to find boundaries
     auto findBoundaries = [&]() -> bool {
@@ -934,11 +890,10 @@ class Navigator {
               state.geoContext, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
               navOpts, logger());
-      std::sort(state.navigation.navBoundaries.begin(),
-                state.navigation.navBoundaries.end(),
-                [](const auto& a, const auto& b) {
-                  return SurfaceIntersection::pathLengthOrder(a.first, b.first);
-                });
+      std::ranges::sort(
+          state.navigation.navBoundaries, [](const auto& a, const auto& b) {
+            return SurfaceIntersection::pathLengthOrder(a.first, b.first);
+          });
 
       // Print boundary information
       if (logger().doPrint(Logging::VERBOSE)) {
@@ -1005,85 +960,6 @@ class Navigator {
     return false;
   }
 
-  /// @brief Navigation (re-)initialisation for the target
-  ///
-  /// @note This is only called a few times every propagation/extrapolation
-  ///
-  /// As a straight line estimate can lead you to the wrong destination
-  /// Volume, this will be called at:
-  /// - initialization
-  /// - attempted volume switch
-  /// Target finding by association will not be done again
-  ///
-  /// @tparam propagator_state_t The state type of the propagator
-  /// @tparam stepper_t The type of stepper used for the propagation
-  ///
-  /// @param [in,out] state is the propagation state object
-  /// @param [in] stepper Stepper in use
-  ///
-  /// boolean return triggers exit to stepper
-  template <typename propagator_state_t, typename stepper_t>
-  void initializeTarget(propagator_state_t& state,
-                        const stepper_t& stepper) const {
-    if (state.navigation.targetVolume != nullptr &&
-        state.stepping.pathAccumulated == 0.) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Re-initialzing cancelled as it is the first step.");
-      return;
-    }
-    // Fast Navigation initialization for target:
-    if (state.navigation.targetSurface != nullptr &&
-        state.navigation.targetSurface->associatedLayer() &&
-        state.navigation.targetVolume == nullptr) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Fast target initialization through association.");
-      ACTS_VERBOSE(volInfo(state)
-                   << "Target surface set to "
-                   << state.navigation.targetSurface->geometryId());
-      state.navigation.targetLayer =
-          state.navigation.targetSurface->associatedLayer();
-      state.navigation.targetVolume =
-          state.navigation.targetLayer->trackingVolume();
-    } else if (state.navigation.targetSurface != nullptr) {
-      // screen output that you do a re-initialization
-      if (state.navigation.targetVolume != nullptr) {
-        ACTS_VERBOSE(volInfo(state)
-                     << "Re-initialization of target volume triggered.");
-      }
-      // Slow navigation initialization for target:
-      // target volume and layer search through global search
-      auto targetIntersection =
-          state.navigation.targetSurface
-              ->intersect(
-                  state.geoContext, stepper.position(state.stepping),
-                  state.options.direction * stepper.direction(state.stepping),
-                  BoundaryTolerance::Infinite(), state.options.surfaceTolerance)
-              .closest();
-      if (targetIntersection.isValid()) {
-        ACTS_VERBOSE(volInfo(state)
-                     << "Target estimate position ("
-                     << targetIntersection.position().x() << ", "
-                     << targetIntersection.position().y() << ", "
-                     << targetIntersection.position().z() << ")");
-        /// get the target volume from the intersection
-        auto tPosition = targetIntersection.position();
-        state.navigation.targetVolume =
-            m_cfg.trackingGeometry->lowestTrackingVolume(state.geoContext,
-                                                         tPosition);
-        state.navigation.targetLayer =
-            state.navigation.targetVolume != nullptr
-                ? state.navigation.targetVolume->associatedLayer(
-                      state.geoContext, tPosition)
-                : nullptr;
-        if (state.navigation.targetVolume != nullptr) {
-          ACTS_VERBOSE(volInfo(state)
-                       << "Target volume estimated : "
-                       << state.navigation.targetVolume->volumeName());
-        }
-      }
-    }
-  }
-
   /// @brief Resolve the surfaces of this layer
   ///
   /// @tparam propagator_state_t The state type of the propagator
@@ -1135,9 +1011,8 @@ class Navigator {
     state.navigation.navSurfaces = currentLayer->compatibleSurfaces(
         state.geoContext, stepper.position(state.stepping),
         state.options.direction * stepper.direction(state.stepping), navOpts);
-    std::sort(state.navigation.navSurfaces.begin(),
-              state.navigation.navSurfaces.end(),
-              SurfaceIntersection::pathLengthOrder);
+    std::ranges::sort(state.navigation.navSurfaces,
+                      SurfaceIntersection::pathLengthOrder);
 
     // Print surface information
     if (logger().doPrint(Logging::VERBOSE)) {
@@ -1203,11 +1078,10 @@ class Navigator {
             state.geoContext, stepper.position(state.stepping),
             state.options.direction * stepper.direction(state.stepping),
             navOpts);
-    std::sort(state.navigation.navLayers.begin(),
-              state.navigation.navLayers.end(),
-              [](const auto& a, const auto& b) {
-                return SurfaceIntersection::pathLengthOrder(a.first, b.first);
-              });
+    std::ranges::sort(
+        state.navigation.navLayers, [](const auto& a, const auto& b) {
+          return SurfaceIntersection::pathLengthOrder(a.first, b.first);
+        });
 
     // Print layer information
     if (logger().doPrint(Logging::VERBOSE)) {

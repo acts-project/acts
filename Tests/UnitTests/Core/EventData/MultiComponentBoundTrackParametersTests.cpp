@@ -14,6 +14,7 @@
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include <Acts/EventData/Charge.hpp>
 #include <Acts/EventData/MultiComponentTrackParameters.hpp>
@@ -38,8 +39,9 @@ BOOST_AUTO_TEST_CASE(test_constructors) {
       b;
   b.push_back({1.0, BoundVector::Ones(), BoundSquareMatrix::Identity()});
 
-  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Vector3::Ones(), Vector3::Ones().normalized());
+  auto surface =
+      CurvilinearSurface(Vector3::Ones(), Vector3::Ones().normalized())
+          .planeSurface();
 
   const auto ap =
       MultiComponentBoundTrackParameters(surface, a, particleHypothesis);
@@ -62,8 +64,9 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
   using cov_t = std::optional<BoundSquareMatrix>;
   for (const auto &cov : {cov_t{}, cov_t{BoundSquareMatrix::Identity()},
                           cov_t{BoundSquareMatrix::Identity()}}) {
-    auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-        Vector3::Ones(), Vector3::Ones().normalized());
+    auto surface =
+        CurvilinearSurface(Vector3::Ones(), Vector3::Ones().normalized())
+            .planeSurface();
 
     const BoundTrackParameters single_pars(surface, BoundVector::Ones(), cov,
                                            particleHypothesis);

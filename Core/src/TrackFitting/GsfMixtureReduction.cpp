@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,8 @@
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 
 #include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
+
+#include <algorithm>
 
 template <typename proj_t, typename angle_desc_t>
 void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
@@ -35,10 +37,8 @@ void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
   }
 
   // Remove all components which are labeled with weight -1
-  std::sort(cmpCache.begin(), cmpCache.end(),
-            [&](const auto &a, const auto &b) {
-              return proj(a).weight < proj(b).weight;
-            });
+  std::ranges::sort(cmpCache, {},
+                    [&](const auto &c) { return proj(c).weight; });
   cmpCache.erase(
       std::remove_if(cmpCache.begin(), cmpCache.end(),
                      [&](const auto &a) { return proj(a).weight == -1.0; }),

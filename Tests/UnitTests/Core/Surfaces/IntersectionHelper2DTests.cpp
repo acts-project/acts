@@ -117,13 +117,13 @@ BOOST_AUTO_TEST_CASE(EllipseIntersection) {
       radiusX, radiusY, start, direction);
 
   // Numerically checked / per hand calculated
-  BOOST_CHECK(solution[0]);
+  BOOST_CHECK(solution[0].isValid());
 
   CHECK_CLOSE_ABS(solution[0].position().x(), -283.68, 0.01);
   CHECK_CLOSE_ABS(solution[0].position().y(), -213.47, 0.01);
   BOOST_CHECK_GT(solution[0].pathLength(), 0.);
 
-  BOOST_CHECK(solution[1]);
+  BOOST_CHECK(solution[1].isValid());
 
   CHECK_CLOSE_ABS(solution[1].position().x(), 433.65, 0.01);
   CHECK_CLOSE_ABS(solution[1].position().y(), 73.46, 0.01);
@@ -147,13 +147,13 @@ BOOST_AUTO_TEST_CASE(CircleIntersection) {
       detail::IntersectionHelper2D::intersectCircle(radius, start, direction);
 
   // Numerically checked / per hand calculated
-  BOOST_CHECK(solution[0]);
+  BOOST_CHECK(solution[0].isValid());
 
   CHECK_CLOSE_ABS(solution[0].position().x(), -266.771, 0.001);
   CHECK_CLOSE_ABS(solution[0].position().y(), -66.771, 0.001);
   BOOST_CHECK_GT(solution[0].pathLength(), 0.);
 
-  BOOST_CHECK(solution[1]);
+  BOOST_CHECK(solution[1].isValid());
 
   CHECK_CLOSE_ABS(solution[1].position().x(), 66.771, 0.001);
   CHECK_CLOSE_ABS(solution[1].position().y(), 266.771, 0.001);
@@ -165,12 +165,12 @@ BOOST_AUTO_TEST_CASE(CircleIntersection) {
   solution =
       detail::IntersectionHelper2D::intersectCircle(radius, start, direction);
 
-  BOOST_CHECK(solution[0]);
+  BOOST_CHECK(solution[0].isValid());
   CHECK_CLOSE_ABS(solution[0].position().x(), 66.771, 0.001);
   CHECK_CLOSE_ABS(solution[0].position().y(), 266.771, 0.001);
   BOOST_CHECK_LT(solution[0].pathLength(), 0.);
 
-  BOOST_CHECK(solution[1]);
+  BOOST_CHECK(solution[1].isValid());
   CHECK_CLOSE_ABS(solution[1].position().x(), -266.771, 0.001);
   CHECK_CLOSE_ABS(solution[1].position().y(), -66.771, 0.001);
   BOOST_CHECK_LT(solution[1].pathLength(), 0.);
@@ -180,12 +180,12 @@ BOOST_AUTO_TEST_CASE(CircleIntersection) {
   solution =
       detail::IntersectionHelper2D::intersectCircle(radius, start, direction);
 
-  BOOST_CHECK(solution[0]);
+  BOOST_CHECK(solution[0].isValid());
   CHECK_CLOSE_ABS(solution[0].position().x(), 66.771, 0.001);
   CHECK_CLOSE_ABS(solution[0].position().y(), 266.771, 0.001);
   BOOST_CHECK_GT(solution[0].pathLength(), 0.);
 
-  BOOST_CHECK(solution[1]);
+  BOOST_CHECK(solution[1].isValid());
   CHECK_CLOSE_ABS(solution[1].position().x(), -266.771, 0.001);
   CHECK_CLOSE_ABS(solution[1].position().y(), -66.771, 0.001);
   BOOST_CHECK_GT(solution[1].pathLength(), 0.);

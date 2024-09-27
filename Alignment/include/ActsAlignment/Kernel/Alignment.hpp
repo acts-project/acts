@@ -149,7 +149,7 @@ struct Alignment {
   /// @tparam fit_options_t The fit options type
   ///
   /// @param gctx The current geometry context object
-  /// @param sourcelinks The fittable uncalibrated measurements
+  /// @param sourceLinks The fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
   /// @param fitOptions The fit Options steering the fit
   /// @param idxedAlignSurfaces The idxed surfaces to be aligned
@@ -161,7 +161,7 @@ struct Alignment {
             typename fit_options_t>
   Acts::Result<detail::TrackAlignmentState> evaluateTrackAlignmentState(
       const Acts::GeometryContext& gctx,
-      const std::vector<source_link_t>& sourcelinks,
+      const std::vector<source_link_t>& sourceLinks,
       const start_parameters_t& sParameters, const fit_options_t& fitOptions,
       const std::unordered_map<const Acts::Surface*, std::size_t>&
           idxedAlignSurfaces,

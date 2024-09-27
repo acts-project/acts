@@ -21,7 +21,6 @@
 #include <detray/definitions/geometry.hpp>
 #include <detray/io/frontend/detector_writer.hpp>
 #include <detray/io/frontend/payloads.hpp>
-#include <detray/utils/consistency_checker.hpp>
 
 namespace Acts {
 
@@ -62,6 +61,7 @@ detray::io::mask_payload convertMask(const SurfaceBounds& bounds,
 detray::io::surface_payload convertSurface(const GeometryContext& gctx,
                                            const Surface& surface,
                                            bool portal = false);
+
 /// Conversion method for Portal object to detray::portal payloads
 ///
 /// @param gctx the geometry context

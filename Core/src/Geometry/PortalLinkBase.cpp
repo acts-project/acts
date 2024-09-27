@@ -64,7 +64,7 @@ void PortalLinkBase::checkMergePreconditions(const PortalLinkBase& a,
 std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
     std::unique_ptr<PortalLinkBase> a, std::unique_ptr<PortalLinkBase> b,
     BinningValue direction, const Logger& logger) {
-  ACTS_DEBUG("Merging two arbitrary portals");
+  ACTS_VERBOSE("Merging two arbitrary portals");
 
   ACTS_VERBOSE(" - a: " << *a);
   ACTS_VERBOSE(" - b: " << *b);

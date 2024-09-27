@@ -11,7 +11,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
 #include <concepts>
@@ -35,7 +34,7 @@ class SourceLink final {
   SourceLink& operator=(const SourceLink& other) = default;
   SourceLink& operator=(SourceLink&& other) = default;
 
-  /// Constructor from concrete sourcelink
+  /// Constructor from concrete source link
   /// @tparam T The source link type
   /// @param upstream The upstream source link to store
   template <typename T>

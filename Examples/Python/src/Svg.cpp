@@ -20,6 +20,7 @@
 #include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -68,17 +69,13 @@ actsvg::svg::object viewDetectorVolume(const Svg::ProtoVolume& pVolume,
   svgDet._id = identification;
   svgDet._tag = "g";
 
-  auto [view, selection, viewRange] = viewAndRange;
+  const auto& [view, selection, viewRange] = viewAndRange;
 
   // Translate selection into booleans
-  bool all =
-      std::find(selection.begin(), selection.end(), "all") != selection.end();
-  bool sensitives = std::find(selection.begin(), selection.end(),
-                              "sensitives") != selection.end();
-  bool portals = std::find(selection.begin(), selection.end(), "portals") !=
-                 selection.end();
-  bool materials = std::find(selection.begin(), selection.end(), "materials") !=
-                   selection.end();
+  const bool all = rangeContainsValue(selection, "all");
+  const bool sensitives = rangeContainsValue(selection, "sensitives");
+  const bool portals = rangeContainsValue(selection, "portals");
+  const bool materials = rangeContainsValue(selection, "materials");
 
   // Helper lambda for material selection
   auto materialSel = [&](const Svg::ProtoSurface& s) -> bool {
@@ -138,8 +135,7 @@ actsvg::svg::object viewDetectorVolume(const Svg::ProtoVolume& pVolume,
       gpIDs = pgID->second._id;
     }
 
-    if (std::find(portalCache.begin(), portalCache.end(), gpIDs) !=
-        portalCache.end()) {
+    if (rangeContainsValue(portalCache, gpIDs)) {
       continue;
     }
 

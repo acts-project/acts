@@ -66,11 +66,10 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
 
   for (const auto& trackerHitPlane : trackerHitPlaneCollection) {
     Cluster cluster;
-    auto measurement = EDM4hepUtil::readMeasurement(
-        trackerHitPlane, &trackerHitRawCollection, &cluster,
+    EDM4hepUtil::readMeasurement(
+        measurements, trackerHitPlane, &trackerHitRawCollection, &cluster,
         [](std::uint64_t cellId) { return Acts::GeometryIdentifier(cellId); });
 
-    measurements.push_back(std::move(measurement));
     clusters.push_back(std::move(cluster));
   }
 
