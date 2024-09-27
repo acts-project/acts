@@ -68,24 +68,8 @@ class TrackProxyIterator {
     return m_container == other.m_container && m_itrack == other.m_itrack;
   }
 
-  bool operator!=(const TrackProxyIterator& other) const {
-    return !(*this == other);
-  }
-
-  bool operator<(const TrackProxyIterator& other) const {
-    return m_itrack < other.m_itrack;
-  }
-
-  bool operator>(const TrackProxyIterator& other) const {
-    return m_itrack > other.m_itrack;
-  }
-
-  bool operator<=(const TrackProxyIterator& other) const {
-    return m_itrack <= other.m_itrack;
-  }
-
-  bool operator>=(const TrackProxyIterator& other) const {
-    return m_itrack >= other.m_itrack;
+  auto operator<=>(const TrackProxyIterator& other) const {
+    return m_itrack <=> other.m_itrack;
   }
 
   ProxyType operator*() const { return m_container->getTrack(m_itrack); }

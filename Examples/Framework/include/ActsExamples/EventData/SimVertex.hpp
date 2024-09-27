@@ -74,7 +74,7 @@ class SimVertexBarcode {
   }
 };
 
-/// A simultated vertex e.g. from a physics process.
+/// A simulated vertex e.g. from a physics process.
 struct SimVertex {
   using Scalar = Acts::ActsScalar;
   using Vector4 = Acts::ActsVector<4>;
