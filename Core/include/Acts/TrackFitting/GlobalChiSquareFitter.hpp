@@ -1427,8 +1427,6 @@ class Gx2Fitter {
         return result.error();
       }
 
-      // TODO Improve Propagator + Actor [allocate before loop], rewrite
-      // makeMeasurements
       auto& propRes = *result;
       GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
 
