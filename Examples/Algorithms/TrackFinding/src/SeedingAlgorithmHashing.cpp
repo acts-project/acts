@@ -9,13 +9,12 @@
 #include "ActsExamples/TrackFinding/SeedingAlgorithmHashing.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
 #include "Acts/Plugins/Hashing/HashingTraining.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
-#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -39,11 +38,16 @@ ActsExamples::SeedingAlgorithmHashing::SeedingAlgorithmHashing(
     ActsExamples::SeedingAlgorithmHashing::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("SeedingAlgorithmHashing", lvl),
       m_cfg(std::move(cfg)) {
+  using SpacePointProxy_type = typename Acts::SpacePointContainer<
+      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+      Acts::detail::RefHolder>::SpacePointProxyType;
+
   // Seed Finder config requires Seed Filter object before conversion to
   // internal units
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
+      std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
+          m_cfg.seedFilterConfig);
 
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
@@ -162,38 +166,6 @@ ActsExamples::SeedingAlgorithmHashing::SeedingAlgorithmHashing(
     throw std::invalid_argument("Inconsistent config zBinNeighborsBottom");
   }
 
-  if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
-    m_cfg.seedFinderConfig.getTopHalfStripLength.connect(
-        [](const void*, const SimSpacePoint& sp) -> float {
-          return sp.topHalfStripLength();
-        });
-
-    m_cfg.seedFinderConfig.getBottomHalfStripLength.connect(
-        [](const void*, const SimSpacePoint& sp) -> float {
-          return sp.bottomHalfStripLength();
-        });
-
-    m_cfg.seedFinderConfig.getTopStripDirection.connect(
-        [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
-          return sp.topStripDirection();
-        });
-
-    m_cfg.seedFinderConfig.getBottomStripDirection.connect(
-        [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
-          return sp.bottomStripDirection();
-        });
-
-    m_cfg.seedFinderConfig.getStripCenterDistance.connect(
-        [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
-          return sp.stripCenterDistance();
-        });
-
-    m_cfg.seedFinderConfig.getTopStripCenterPosition.connect(
-        [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
-          return sp.topStripCenterPosition();
-        });
-  }
-
   if (m_cfg.useExtraCuts) {
     // This function will be applied to select space points during grid filling
     m_cfg.seedFinderConfig.spacePointSelector
@@ -209,10 +181,11 @@ ActsExamples::SeedingAlgorithmHashing::SeedingAlgorithmHashing(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop);
 
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
+      std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
+          m_cfg.seedFilterConfig);
   m_seedFinder =
-      Acts::SeedFinder<SimSpacePoint,
-                       Acts::CylindricalSpacePointGrid<SimSpacePoint>>(
+      Acts::SeedFinder<SpacePointProxy_type,
+                       Acts::CylindricalSpacePointGrid<SpacePointProxy_type>>(
           m_cfg.seedFinderConfig);
   m_hashing = Acts::HashingAlgorithm<const SimSpacePoint*,
                                      std::vector<const SimSpacePoint*>>(
@@ -246,14 +219,13 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
     }
   }
 
-  // construct the seeding tools
-  // covariance tool, extracts covariances per spacepoint as required
-  auto extractGlobalQuantities = [=](const SimSpacePoint& sp, float, float,
-                                     float) {
-    Acts::Vector3 position{sp.x(), sp.y(), sp.z()};
-    Acts::Vector2 covariance{sp.varianceR(), sp.varianceZ()};
-    return std::make_tuple(position, covariance, sp.t());
-  };
+  // Config
+  Acts::SpacePointContainerConfig spConfig;
+  spConfig.useDetailedDoubleMeasurementInfo =
+      m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo;
+  // Options
+  Acts::SpacePointContainerOptions spOptions;
+  spOptions.beamPos = {0., 0.};
 
   // Hashing Training
   Acts::AnnoyModel annoyModel = m_hashingTraining.execute(spacePointPtrs);
@@ -273,31 +245,45 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
     }
   }
 
+  using value_type = typename Acts::SpacePointContainer<
+      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+      Acts::detail::RefHolder>::SpacePointProxyType;
+  using seed_type = Acts::Seed<value_type>;
+
   // Create the set with custom comparison function
-  static thread_local std::set<ActsExamples::SimSeed, SeedComparison> seedsSet;
+  static thread_local std::set<ActsExamples::SimSeed,
+                               SeedComparison<SimSpacePoint>>
+      seedsSet;
   seedsSet.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
-  state.spacePointData.resize(
-      maxNSpacePoints, m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo);
+  state.spacePointMutableData.resize(maxNSpacePoints);
 
-  for (const SpacePointPtrVector& bucket : bucketsPtrs) {
+  for (SpacePointPtrVector& bucket : bucketsPtrs) {
+    std::set<seed_type, SeedComparison<value_type>> seedsSetForBucket;
+    state.spacePointMutableData.clear();
+    state.spacePointMutableData.resize(maxNSpacePoints);
+
+    // Prepare interface SpacePoint backend-ACTS
+    ActsExamples::SpacePointContainer<SpacePointPtrVector> container(bucket);
+    // Prepare Acts API
+    Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
+        spContainer(spConfig, spOptions, container);
+
     // extent used to store r range for middle spacepoint
     Acts::Extent rRangeSPExtent;
     // construct the seeding tools
-    Acts::CylindricalSpacePointGrid<SimSpacePoint> grid =
-        Acts::CylindricalSpacePointGridCreator::createGrid<SimSpacePoint>(
+    Acts::CylindricalSpacePointGrid<value_type> grid =
+        Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(
             m_cfg.gridConfig, m_cfg.gridOptions);
     Acts::CylindricalSpacePointGridCreator::fillGrid(
-        m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid, bucket.begin(),
-        bucket.end(), extractGlobalQuantities, rRangeSPExtent);
+        m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid,
+        spContainer.begin(), spContainer.end(), rRangeSPExtent);
 
     std::array<std::vector<std::size_t>, 2ul> navigation;
     navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
 
-    state.spacePointData.clear();
-
     // groups spacepoints
-    auto spacePointsGrouping = Acts::CylindricalBinnedGroup<SimSpacePoint>(
+    auto spacePointsGrouping = Acts::CylindricalBinnedGroup<value_type>(
         std::move(grid), *m_bottomBinFinder, *m_topBinFinder,
         std::move(navigation));
 
@@ -311,44 +297,32 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
             m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
         up - m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
 
-    if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
-      for (std::size_t grid_glob_bin(0);
-           grid_glob_bin < spacePointsGrouping.grid().size(); ++grid_glob_bin) {
-        const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
-        for (const auto& sp : collection) {
-          std::size_t index = sp->index();
-
-          const float topHalfStripLength =
-              m_cfg.seedFinderConfig.getTopHalfStripLength(sp->sp());
-          const float bottomHalfStripLength =
-              m_cfg.seedFinderConfig.getBottomHalfStripLength(sp->sp());
-          const Acts::Vector3 topStripDirection =
-              m_cfg.seedFinderConfig.getTopStripDirection(sp->sp());
-          const Acts::Vector3 bottomStripDirection =
-              m_cfg.seedFinderConfig.getBottomStripDirection(sp->sp());
-
-          state.spacePointData.setTopStripVector(
-              index, topHalfStripLength * topStripDirection);
-          state.spacePointData.setBottomStripVector(
-              index, bottomHalfStripLength * bottomStripDirection);
-          state.spacePointData.setStripCenterDistance(
-              index, m_cfg.seedFinderConfig.getStripCenterDistance(sp->sp()));
-          state.spacePointData.setTopStripCenterPosition(
-              index,
-              m_cfg.seedFinderConfig.getTopStripCenterPosition(sp->sp()));
-        }
-      }
+    // this creates seeds of proxy, we need to convert it to seed of space
+    // points
+    for (const auto [bottom, middle, top] : spacePointsGrouping) {
+      m_seedFinder.createSeedsForGroup(
+          m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
+          seedsSetForBucket, bottom, middle, top, rMiddleSPRange);
     }
 
-    for (const auto [bottom, middle, top] : spacePointsGrouping) {
-      m_seedFinder.createSeedsForGroup(m_cfg.seedFinderOptions, state,
-                                       spacePointsGrouping.grid(), seedsSet,
-                                       bottom, middle, top, rMiddleSPRange);
+    // proxies die when the Acts::SpacePointContainer dies, so we need to
+    // convert the seeds of space points proxies to seeds of space points
+    for (const seed_type& seed : seedsSetForBucket) {
+      const std::array<const value_type*, 3>& sps = seed.sp();
+      const SimSpacePoint* bottom = sps[0]->externalSpacePoint();
+      const SimSpacePoint* middle = sps[1]->externalSpacePoint();
+      const SimSpacePoint* top = sps[2]->externalSpacePoint();
+
+      ActsExamples::SimSeed toAdd(*bottom, *middle, *top);
+      toAdd.setVertexZ(seed.z());
+      toAdd.setQuality(seed.seedQuality());
+
+      seedsSet.insert(toAdd);
     }
   }
 
-  SimSeedContainer seeds;
-  seeds.clear();
+  // convert the set to a simseed collection
+  ActsExamples::SimSeedContainer seeds;
   seeds.reserve(seedsSet.size());
   for (const ActsExamples::SimSeed& seed : seedsSet) {
     seeds.push_back(seed);
