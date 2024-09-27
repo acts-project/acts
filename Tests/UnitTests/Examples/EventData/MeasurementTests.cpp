@@ -70,6 +70,24 @@ BOOST_DATA_TEST_CASE(VariableBoundOne, bd::make(boundIndices), index) {
                     sourceOrig);
 }
 
+BOOST_DATA_TEST_CASE(VariableBoundOneEmplace, bd::make(boundIndices), index) {
+  MeasurementContainer container;
+
+  auto [params, cov] = generateParametersCovariance<ActsScalar, 1u>(rng);
+
+  FixedBoundMeasurementProxy<1> meas =
+      container.emplaceMeasurement<1>(source, std::array{index}, params, cov);
+
+  BOOST_CHECK_EQUAL(meas.size(), 1);
+  for (auto i : boundIndices) {
+    BOOST_CHECK_EQUAL(meas.contains(i), i == index);
+  }
+  BOOST_CHECK_EQUAL(meas.parameters(), params);
+  BOOST_CHECK_EQUAL(meas.covariance(), cov);
+  BOOST_CHECK_EQUAL(meas.sourceLink().template get<TestSourceLink>(),
+                    sourceOrig);
+}
+
 BOOST_AUTO_TEST_CASE(VariableBoundAll) {
   MeasurementContainer container;
 
@@ -82,6 +100,27 @@ BOOST_AUTO_TEST_CASE(VariableBoundAll) {
                                      eBoundPhi, eBoundTheta, eBoundQOverP});
   meas.parameters() = params;
   meas.covariance() = cov;
+
+  BOOST_CHECK_EQUAL(meas.size(), eBoundSize);
+  for (auto i : boundIndices) {
+    BOOST_CHECK(meas.contains(i));
+  }
+  BOOST_CHECK_EQUAL(meas.parameters(), params);
+  BOOST_CHECK_EQUAL(meas.covariance(), cov);
+  BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
+}
+
+BOOST_AUTO_TEST_CASE(VariableBoundAllEmplace) {
+  MeasurementContainer container;
+
+  auto [params, cov] = generateBoundParametersCovariance(rng);
+
+  FixedBoundMeasurementProxy<eBoundSize> meas =
+      container.emplaceMeasurement<eBoundSize>(
+          source,
+          std::array{eBoundLoc0, eBoundLoc1, eBoundTime, eBoundPhi, eBoundTheta,
+                     eBoundQOverP},
+          params, cov);
 
   BOOST_CHECK_EQUAL(meas.size(), eBoundSize);
   for (auto i : boundIndices) {

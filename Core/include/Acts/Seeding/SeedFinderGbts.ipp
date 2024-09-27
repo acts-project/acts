@@ -701,7 +701,9 @@ void SeedFinderGbts<external_spacepoint_t>::createSeeds(
     float Vertex = 0;
     float Quality = triplet.Q();
     // make a new seed, add to vector of seeds
-    out_cont.emplace_back(*S1, *S2, *S3, Vertex, Quality);
+    out_cont.emplace_back(*S1, *S2, *S3);
+    out_cont.back().setVertexZ(Vertex);
+    out_cont.back().setQuality(Quality);
   }
 }
 
