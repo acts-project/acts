@@ -135,7 +135,7 @@ template <typename propagator_state_t, typename stepper_t, typename traj_t>
 auto kalmanHandleNoMeasurement(
     propagator_state_t &state, const stepper_t &stepper, const Surface &surface,
     traj_t &fittedStates, const std::size_t lastTrackIndex, bool doCovTransport,
-    const Logger &logger,
+    const Logger &logger, const bool precedingMeasurementExists,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename traj_t::TrackStateProxy> {
   // Add a <mask> TrackState entry multi trajectory. This allocates storage for
@@ -172,16 +172,24 @@ auto kalmanHandleNoMeasurement(
   }
 
   // Set the track state flags
+  const bool surfaceHasMaterial = surface.surfaceMaterial() != nullptr;
+  const bool surfaceIsSensitive =
+      surface.associatedDetectorElement() != nullptr;
   auto typeFlags = trackStateProxy.typeFlags();
   typeFlags.set(TrackStateFlag::ParameterFlag);
-  if (surface.surfaceMaterial() != nullptr) {
+
+  if (surfaceHasMaterial) {
     typeFlags.set(TrackStateFlag::MaterialFlag);
   }
-  if (surface.associatedDetectorElement() != nullptr) {
+
+  if (surfaceIsSensitive && precedingMeasurementExists) {
     ACTS_VERBOSE("Detected hole on " << surface.geometryId());
     // If the surface is sensitive, set the hole type flag
     typeFlags.set(TrackStateFlag::HoleFlag);
-  } else if (surface.surfaceMaterial() != nullptr) {
+  } else if (surfaceIsSensitive) {
+    ACTS_VERBOSE("Skip hole (no preceding measurements) on surface "
+                 << surface.geometryId());
+  } else if (surfaceHasMaterial) {
     ACTS_VERBOSE("Detected in-sensitive surface " << surface.geometryId());
   }
 
