@@ -28,6 +28,11 @@ set(VECMEM_BUILD_BENCHMARKING
     CACHE BOOL
     "Turn off the build of VecMem benchmarking"
 )
+set(VECMEM_BUILD_CUDA_LIBRARY
+    OFF
+    CACHE BOOL
+    "Turn on/off the vecmem CUDA build"
+)
 
 # Now set up its build.
 FetchContent_MakeAvailable(VecMem)
