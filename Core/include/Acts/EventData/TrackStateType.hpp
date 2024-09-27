@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <limits>
 #include <ostream>
+#include <type_traits>
 
 namespace Acts {
 

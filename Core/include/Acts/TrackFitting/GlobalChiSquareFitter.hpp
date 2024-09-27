@@ -45,6 +45,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <type_traits>
 #include <unordered_map>
 
 namespace Acts::Experimental {

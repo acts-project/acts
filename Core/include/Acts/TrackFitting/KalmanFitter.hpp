@@ -37,6 +37,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <type_traits>
 
 namespace Acts {
 
