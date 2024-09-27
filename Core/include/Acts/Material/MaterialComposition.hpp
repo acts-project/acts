@@ -82,8 +82,8 @@ class ElementFraction {
            (lhs.m_element == rhs.m_element);
   }
   /// Sort by fraction for fastest access to the most probable element.
-  friend constexpr bool operator<(ElementFraction lhs, ElementFraction rhs) {
-    return lhs.m_fraction < rhs.m_fraction;
+  friend constexpr auto operator<=>(ElementFraction lhs, ElementFraction rhs) {
+    return lhs.m_fraction <=> rhs.m_fraction;
   }
   friend class MaterialComposition;
 };

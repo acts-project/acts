@@ -77,13 +77,9 @@ class GeometryIdentifier {
     return (m_value & mask) >> extractShift(mask);
   }
 
-  friend constexpr bool operator==(GeometryIdentifier lhs,
-                                   GeometryIdentifier rhs) {
-    return lhs.m_value == rhs.m_value;
-  }
-  friend constexpr bool operator<(GeometryIdentifier lhs,
+  friend constexpr bool operator<=>(GeometryIdentifier lhs,
                                   GeometryIdentifier rhs) {
-    return lhs.m_value < rhs.m_value;
+    return lhs.m_value <=> rhs.m_value;
   }
 };
 
