@@ -17,8 +17,10 @@
 #include "Acts/EventData/detail/CalculateResiduals.hpp"
 #include "Acts/EventData/detail/ParameterTraits.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
+#include "ActsExamples/EventData/MeasurementConcept.hpp"
 
 #include <array>
+#include <concepts>
 #include <cstddef>
 #include <iosfwd>
 #include <type_traits>
@@ -116,6 +118,12 @@ class MeasurementContainer {
   FixedProxy<Size> makeMeasurement() {
     return getMeasurement<Size>(addMeasurement(Size));
   }
+
+  template <typename... Args>
+  VariableProxy emplaceMeasurement(std::uint8_t size, Args&&... args);
+
+  template <std::size_t Size, typename... Args>
+  FixedProxy<Size> emplaceMeasurement(Args&&... args);
 
   template <bool Const>
   class IteratorImpl {
@@ -263,7 +271,7 @@ class MeasurementProxyBase {
   void setSubspaceIndices(const IndexContainer& indices)
     requires(!ReadOnly)
   {
-    assert(checkSubspaceIndices(indices, FullSize, size()) &&
+    assert(Acts::checkSubspaceIndices(indices, FullSize, size()) &&
            "Invalid indices");
     std::transform(indices.begin(), indices.end(),
                    self().subspaceIndexVector().begin(),
@@ -282,19 +290,45 @@ class MeasurementProxyBase {
     return self().subspaceHelper().expandMatrix(self().covariance());
   }
 
+  /// @brief Construct the measurement from a sourcelink, subspace vector,
+  /// parameters, and covariance.
+  ///
+  template <typename Subspace, typename ParameterDerived,
+            typename CovarianceDerived>
+  void fill(const Acts::SourceLink& source_link, Subspace&& subspace,
+            const Eigen::DenseBase<ParameterDerived>& parameters,
+            const Eigen::DenseBase<CovarianceDerived>& covariance)
+    requires(!ReadOnly)
+  {
+    setSourceLink(source_link);
+    self().setSubspaceIndices(std::forward<Subspace>(subspace));
+    self().parameters() = parameters;
+    self().covariance() = covariance;
+  }
+
+  /// @brief Construct the measurement from a sourcelink, subspace vector,
+  /// parameters, and covariance.
+  ///
+  template <MeasurementConcept OtherDerived>
+  void fill(const OtherDerived& other)
+    requires(!ReadOnly)
+  {
+    assert(size() == other.size() && "Size mismatch");
+    fill(other.sourceLink(), other.subspaceIndexVector(), other.parameters(),
+         other.covariance());
+  }
+
   /// @brief Copy the data from another measurement
   /// @tparam OtherDerived The derived measurement proxy class of the other
   ///         measurement
   /// @param other The other measurement proxy
   template <typename OtherDerived>
   void copyFrom(const OtherDerived& other)
-    requires(!ReadOnly)
+    requires(!ReadOnly) && requires {
+      { this->fill(other) };
+    }
   {
-    assert(size() == other.size() && "Size mismatch");
-    setSourceLink(other.sourceLink());
-    self().subspaceIndexVector() = other.subspaceIndexVector();
-    self().parameters() = other.parameters();
-    self().covariance() = other.covariance();
+    fill(other);
   }
 
  protected:
@@ -484,5 +518,25 @@ class VariableMeasurementProxy
         size, size};
   }
 };
+
+template <typename... Args>
+MeasurementContainer::VariableProxy MeasurementContainer::emplaceMeasurement(
+    std::uint8_t size, Args&&... args) {
+  VariableProxy meas = makeMeasurement(size);
+
+  meas.fill(std::forward<Args>(args)...);
+
+  return meas;
+}
+
+template <std::size_t Size, typename... Args>
+MeasurementContainer::FixedProxy<Size> MeasurementContainer::emplaceMeasurement(
+    Args&&... args) {
+  FixedProxy<Size> meas = makeMeasurement<Size>();
+
+  meas.fill(std::forward<Args>(args)...);
+
+  return meas;
+}
 
 }  // namespace ActsExamples
