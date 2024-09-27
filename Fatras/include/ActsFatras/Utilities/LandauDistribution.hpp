@@ -33,7 +33,7 @@ class LandauDistribution {
     /// Construct from parameters.
     param_type(double location_, double scale_)
         : location(location_), scale(scale_) {}
-    // Explicitlely defaulted construction and assignment
+    // Explicitly defaulted construction and assignment
     param_type() = default;
     param_type(const param_type &) = default;
     param_type(param_type &&) = default;

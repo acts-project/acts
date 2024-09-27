@@ -37,33 +37,12 @@ bool GridGlobalIterator<T, Axes...>::operator==(
 }
 
 template <typename T, class... Axes>
-bool GridGlobalIterator<T, Axes...>::operator<(
+auto GridGlobalIterator<T, Axes...>::operator<=>(
     const GridGlobalIterator<T, Axes...>& other) const {
   // This operator only makes sense if the two iterators we are comparing
   // are using the same grid
   assert(m_grid.ptr == other.m_grid.ptr);
-  return m_idx < other.m_idx;
-}
-
-template <typename T, class... Axes>
-bool GridGlobalIterator<T, Axes...>::operator>(
-    const GridGlobalIterator<T, Axes...>& other) const {
-  // This operator only makes sense if the two iterators we are comparing
-  // are using the same grid
-  assert(m_grid.ptr == other.m_grid.ptr);
-  return m_idx > other.m_idx;
-}
-
-template <typename T, class... Axes>
-bool GridGlobalIterator<T, Axes...>::operator<=(
-    const GridGlobalIterator<T, Axes...>& other) const {
-  return !(*this > other);
-}
-
-template <typename T, class... Axes>
-bool GridGlobalIterator<T, Axes...>::operator>=(
-    const GridGlobalIterator<T, Axes...>& other) const {
-  return !(*this < other);
+  return m_idx <=> other.m_idx;
 }
 
 template <typename T, class... Axes>
