@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -32,6 +32,8 @@ class GlobalChiSquareFitterErrorCategory : public std::error_category {
         return "Gx2f: Not enough measurements.";
       case GlobalChiSquareFitterError::UpdatePushedToNewVolume:
         return "Gx2f: Update pushed the parameters to a new volume.";
+      case GlobalChiSquareFitterError::UsedUnreachableMeasurements:
+        return "Gx2f: Final fit used unreachable measurements.";
       default:
         return "unknown";
     }
