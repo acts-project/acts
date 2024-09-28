@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
@@ -130,9 +131,19 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
     }
   }
 
+  std::vector<AxisScalar> rValues;
+  rValues.reserve(std::max(2ul, config.rBinEdges.size()));
+  if (config.rBinEdges.empty()) {
+    rValues = {config.rMin, config.rMax};
+  } else {
+    rValues.insert(rValues.end(), config.rBinEdges.begin(),
+                   config.rBinEdges.end());
+  }
+
   Axis<AxisType::Variable, AxisBoundaryType::Bound> zAxis(std::move(zValues));
+  Axis<AxisType::Variable, AxisBoundaryType::Bound> rAxis(std::move(rValues));
   return Acts::CylindricalSpacePointGrid<external_spacepoint_t>(
-      std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+      std::make_tuple(std::move(phiAxis), std::move(zAxis), std::move(rAxis)));
 }
 
 template <typename external_spacepoint_t,
@@ -205,16 +216,16 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
 
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
-    std::size_t rIndex =
-        static_cast<std::size_t>(sp.radius() / config.binSizeR);
-    // if index out of bounds, the SP is outside the region of interest
-    if (rIndex >= numRBins) {
-      continue;
-    }
+    // std::size_t rIndex =
+    //     static_cast<std::size_t>(sp.radius() / config.binSizeR);
+    // // if index out of bounds, the SP is outside the region of interest
+    // if (rIndex >= numRBins) {
+    //   continue;
+    // }
 
     // fill rbins into grid
     std::size_t globIndex =
-        grid.globalBinFromPosition(Acts::Vector2{sp.phi(), sp.z()});
+        grid.globalBinFromPosition(Acts::Vector3{sp.phi(), sp.z(), sp.radius()});
     auto& rbin = grid.at(globIndex);
     rbin.push_back(&sp);
 

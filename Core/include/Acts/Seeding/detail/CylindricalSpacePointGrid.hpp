@@ -23,6 +23,7 @@ template <typename external_spacepoint_t>
 using CylindricalSpacePointGrid = Acts::Grid<
     std::vector<const external_spacepoint_t*>,
     Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>,
+    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>,
     Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>>;
 
 /// Cylindrical Binned Group
@@ -40,6 +41,9 @@ struct CylindricalSpacePointGridConfig {
   // maximum extension of sensitive detector layer relevant for seeding as
   // distance from x=y=0 (i.e. in r)
   float rMax = 0;
+  // maximum extension of sensitive detector layer relevant for seeding as
+  // distance from x=y=0 (i.e. in r)
+  float rMin = 0;
   // maximum extension of sensitive detector layer relevant for seeding in
   // positive direction in z
   float zMax = 0;
@@ -66,7 +70,8 @@ struct CylindricalSpacePointGridConfig {
   // maximum number of phi bins
   int maxPhiBins = 10000;
   // enable non equidistant binning in z
-  std::vector<float> zBinEdges;
+  std::vector<float> zBinEdges{};
+  std::vector<float> rBinEdges{};
   bool isInInternalUnits = false;
   CylindricalSpacePointGridConfig toInternalUnits() const {
     if (isInInternalUnits) {
@@ -78,6 +83,7 @@ struct CylindricalSpacePointGridConfig {
     CylindricalSpacePointGridConfig config = *this;
     config.isInInternalUnits = true;
     config.minPt /= 1_MeV;
+    config.rMin /= 1_mm;
     config.rMax /= 1_mm;
     config.zMax /= 1_mm;
     config.zMin /= 1_mm;

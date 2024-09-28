@@ -191,10 +191,10 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
       ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
       Acts::detail::RefHolder>::SpacePointProxyType;
 
-  m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
-      m_cfg.numPhiNeighbors, cfg.zBinNeighborsBottom);
-  m_topBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
-      m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop);
+  m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<3ul>>(
+								       m_cfg.numPhiNeighbors, cfg.zBinNeighborsBottom, 0);
+  m_topBinFinder = std::make_unique<const Acts::GridBinFinder<3ul>>(
+								    m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop, 0);
 
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
@@ -254,7 +254,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid,
       spContainer.begin(), spContainer.end(), rRangeSPExtent);
 
-  std::array<std::vector<std::size_t>, 2ul> navigation;
+  std::array<std::vector<std::size_t>, 3ul> navigation;
   navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
 
   auto spacePointsGrouping = Acts::CylindricalBinnedGroup<value_type>(
