@@ -100,8 +100,8 @@ class SeedingAlgorithm final : public IAlgorithm {
   Acts::SeedFinder<SpacePointProxy_t,
                    Acts::CylindricalSpacePointGrid<SpacePointProxy_t>>
       m_seedFinder;
-  std::unique_ptr<const Acts::GridBinFinder<2ul>> m_bottomBinFinder;
-  std::unique_ptr<const Acts::GridBinFinder<2ul>> m_topBinFinder;
+  std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};
+  std::unique_ptr<const Acts::GridBinFinder<3ul>> m_topBinFinder{nullptr};
 
   Config m_cfg;
 
