@@ -75,4 +75,6 @@ if [ -n "${GITHUB_ACTIONS:-}" ]; then
     echo "ROOT_INCLUDE_PATH=${destination}/include" >> $GITHUB_ENV
     # Geant4 puts CLHEP in a subdirectory
     echo "ROOT_INCLUDE_PATH=${destination}/include/Geant4" >> $GITHUB_ENV
+    # Pythia8 looks for settings in this directory
+    export PYTHIA8DATA=${destination}/share/Pythia8/xmldoc
 fi
