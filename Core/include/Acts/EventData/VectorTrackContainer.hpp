@@ -144,11 +144,7 @@ class VectorTrackContainerBase {
 
  public:
   constexpr bool hasColumn_impl(HashedString key) const {
-    using namespace Acts::HashedStringLiteral;
-    switch (key) {
-      default:
-        return m_dynamic.find(key) != m_dynamic.end();
-    }
+    return m_dynamic.contains(key);
   }
 
   const Surface* referenceSurface_impl(IndexType itrack) const {
