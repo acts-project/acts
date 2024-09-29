@@ -117,9 +117,6 @@ class Material {
            (lhs.m_ar == rhs.m_ar) && (lhs.m_z == rhs.m_z) &&
            (lhs.m_molarRho == rhs.m_molarRho);
   }
-  friend constexpr bool operator!=(const Material& lhs, const Material& rhs) {
-    return !(lhs == rhs);
-  }
 };
 
 std::ostream& operator<<(std::ostream& os, const Material& material);

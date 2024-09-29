@@ -38,6 +38,8 @@ struct InputTrack {
     return m_ptr == other;
   }
 
+  bool operator<(const InputTrack& other) const { return m_ptr < other.m_ptr; }
+
   template <typename T>
   const T* as() const {
     using ptr_t = const T*;
@@ -50,10 +52,6 @@ struct InputTrack {
   friend std::ostream& operator<<(std::ostream& os, const InputTrack& track) {
     os << track.m_ptr;
     return os;
-  }
-
-  friend bool operator<(const InputTrack& lhs, const InputTrack& rhs) {
-    return lhs.m_ptr < rhs.m_ptr;
   }
 
   friend struct std::hash<Acts::InputTrack>;

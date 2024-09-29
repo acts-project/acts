@@ -36,11 +36,7 @@ class SpacePointProxyIterator {
   SpacePointProxyIterator operator--(int);
 
   bool operator==(const SpacePointProxyIterator& other) const;
-  bool operator!=(const SpacePointProxyIterator& other) const;
-  bool operator<(const SpacePointProxyIterator& other) const;
-  bool operator>(const SpacePointProxyIterator& other) const;
-  bool operator<=(const SpacePointProxyIterator& other) const;
-  bool operator>=(const SpacePointProxyIterator& other) const;
+  auto operator<=>(const SpacePointProxyIterator& other) const;
 
   SpacePointProxyIterator& operator+=(const std::size_t offset);
   SpacePointProxyIterator& operator-=(const std::size_t offset);
