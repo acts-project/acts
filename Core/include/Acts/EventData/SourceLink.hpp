@@ -86,10 +86,6 @@ struct SourceLinkAdapterIterator {
     return m_iterator == other.m_iterator;
   }
 
-  bool operator!=(const SourceLinkAdapterIterator& other) const {
-    return !(*this == other);
-  }
-
   Acts::SourceLink operator*() const { return Acts::SourceLink{*m_iterator}; }
 
   auto operator-(const SourceLinkAdapterIterator& other) const {

@@ -63,19 +63,18 @@ class SimVertexBarcode {
   friend constexpr bool operator<(SimVertexBarcode lhs, SimVertexBarcode rhs) {
     return lhs.m_id < rhs.m_id;
   }
+
   friend constexpr bool operator==(SimVertexBarcode lhs, SimVertexBarcode rhs) {
     return lhs.m_id == rhs.m_id;
   }
-  friend constexpr bool operator!=(SimVertexBarcode lhs, SimVertexBarcode rhs) {
-    return lhs.m_id != rhs.m_id;
-  }
+
   friend inline std::ostream& operator<<(std::ostream& os,
                                          SimVertexBarcode idx) {
     return os << idx.m_id;
   }
 };
 
-/// A simultated vertex e.g. from a physics process.
+/// A simulated vertex e.g. from a physics process.
 struct SimVertex {
   using Scalar = Acts::ActsScalar;
   using Vector4 = Acts::ActsVector<4>;

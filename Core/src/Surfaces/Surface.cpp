@@ -235,10 +235,6 @@ std::string Acts::Surface::toString(const GeometryContext& gctx) const {
   return ss.str();
 }
 
-bool Acts::Surface::operator!=(const Acts::Surface& sf) const {
-  return !(operator==(sf));
-}
-
 Acts::Vector3 Acts::Surface::center(const GeometryContext& gctx) const {
   // fast access via transform matrix (and not translation())
   auto tMatrix = transform(gctx).matrix();
