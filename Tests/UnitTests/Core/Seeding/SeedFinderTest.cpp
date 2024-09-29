@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
   Acts::SeedFinderConfig<value_type> config;
   // silicon detector max
   config.rMax = 160._mm;
-  config.rMin = 1._mm;
+  config.rMin = 0._mm;
   config.deltaRMin = 5._mm;
   config.deltaRMax = 160._mm;
   config.deltaRMinTopSP = config.deltaRMin;
@@ -183,8 +183,10 @@ int main(int argc, char** argv) {
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
-  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<3ul>>(numPhiNeighbors, zBinNeighborsBottom, 0);
-  auto topBinFinder = std::make_unique<Acts::GridBinFinder<3ul>>(numPhiNeighbors, zBinNeighborsTop, 0);
+  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<3ul>>(
+      numPhiNeighbors, zBinNeighborsBottom, 0);
+  auto topBinFinder = std::make_unique<Acts::GridBinFinder<3ul>>(
+      numPhiNeighbors, zBinNeighborsTop, 0);
   Acts::SeedFilterConfig sfconf;
 
   Acts::ATLASCuts<value_type> atlasCuts = Acts::ATLASCuts<value_type>();

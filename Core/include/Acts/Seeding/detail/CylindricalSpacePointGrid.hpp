@@ -37,25 +37,25 @@ using CylindricalBinnedGroupIterator = Acts::BinnedGroupIterator<
 
 struct CylindricalSpacePointGridConfig {
   // minimum pT to be found by seedFinder
-  float minPt = 0;
+  float minPt = 0 * Acts::UnitConstants::MeV;
   // maximum extension of sensitive detector layer relevant for seeding as
   // distance from x=y=0 (i.e. in r)
-  float rMax = 0;
+  float rMax = 320 * Acts::UnitConstants::mm;
   // maximum extension of sensitive detector layer relevant for seeding as
   // distance from x=y=0 (i.e. in r)
-  float rMin = 0;
+  float rMin = 0 * Acts::UnitConstants::mm;
   // maximum extension of sensitive detector layer relevant for seeding in
   // positive direction in z
-  float zMax = 0;
+  float zMax = 0 * Acts::UnitConstants::mm;
   // maximum extension of sensitive detector layer relevant for seeding in
   // negative direction in z
-  float zMin = 0;
+  float zMin = 0 * Acts::UnitConstants::mm;
   // maximum distance in r from middle space point to bottom or top spacepoint
-  float deltaRMax = 0;
+  float deltaRMax = 0 * Acts::UnitConstants::mm;
   // maximum forward direction expressed as cot(theta)
   float cotThetaMax = 0;
   // maximum impact parameter in mm
-  float impactMax = 0;
+  float impactMax = 0 * Acts::UnitConstants::mm;
   // minimum phi value for phiAxis construction
   float phiMin = -M_PI;
   // maximum phi value for phiAxis construction
