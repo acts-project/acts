@@ -113,20 +113,20 @@ struct DummyPropState {
 // with normal {1,0,0}. Optionally some external fixed bound parameters can be
 // supplied
 auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
-                          std::optional<BoundVector> ext_pars = std::nullopt) {
+                          std::optional<BoundVector> extPars = std::nullopt) {
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps;
   using Opt = std::optional<BoundSquareMatrix>;
 
-  auto make_random_sym_matrix = []() {
+  auto makeRandomSymMatrix = []() {
     auto c = BoundSquareMatrix::Random().eval();
     c *= c.transpose();
     return c;
   };
 
   for (auto i = 0ul; i < n; ++i) {
-    cmps.push_back({1. / n, ext_pars ? *ext_pars : BoundVector::Random(),
-                    cov ? Opt{make_random_sym_matrix()} : Opt{}});
+    cmps.push_back({1. / n, extPars.value_or(BoundVector::Random()),
+                    cov ? Opt{makeRandomSymMatrix()} : Opt{}});
   }
 
   auto surface = Acts::CurvilinearSurface(Vector3::Zero(), Vector3{1., 0., 0.})
