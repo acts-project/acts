@@ -254,6 +254,17 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid,
       spContainer.begin(), spContainer.end(), rRangeSPExtent);
 
+  std::size_t nSpacePointsSaved = 0ul;
+  auto gridStart = grid.begin();
+  auto gridStop = grid.end();
+  for (; gridStart != gridStop; ++gridStart) {
+    const std::vector<const value_type*>& coll = *gridStart;
+    nSpacePointsSaved += coll.size();
+  }
+   
+  std::cout << "Saved space points: " << nSpacePointsSaved << std::endl;
+  
+  
   std::array<std::vector<std::size_t>, 3ul> navigation;
   navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
 

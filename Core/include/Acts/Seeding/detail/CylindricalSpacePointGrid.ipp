@@ -218,6 +218,7 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     //     static_cast<std::size_t>(sp.radius() / config.binSizeR);
     // // if index out of bounds, the SP is outside the region of interest
     // if (rIndex >= numRBins) {
+    //   std::cout << "rejecting sp with radius: " << sp.radius() << std::endl;
     //   continue;
     // }
 
