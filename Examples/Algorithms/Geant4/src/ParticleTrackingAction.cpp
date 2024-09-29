@@ -148,7 +148,7 @@ ActsExamples::ParticleTrackingAction::makeParticleId(G4int trackId,
     return std::nullopt;
   }
 
-  if (!eventStore().trackIdMapping.find(parentId)) {
+  if (!eventStore().trackIdMapping.contains(parentId)) {
     ACTS_DEBUG("Parent particle " << parentId
                                   << " not registered, cannot build barcode");
     eventStore().parentIdNotFound++;
