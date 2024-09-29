@@ -43,7 +43,6 @@ struct VersionInfo {
   static VersionInfo fromLibrary();
 
   bool operator==(const VersionInfo& other) const;
-  bool operator!=(const VersionInfo& other) const { return !(*this == other); }
 
   friend std::ostream& operator<<(std::ostream& os, const VersionInfo& vi);
 

@@ -126,7 +126,7 @@ class GeometryIdentifier {
   /// Set the masked bits to id in the encoded value.
   constexpr GeometryIdentifier& setBits(Value mask, Value id) {
     m_value = (m_value & ~mask) | ((id << extractShift(mask)) & mask);
-    // return *this here so we need to write less lines in the set... methods
+    // return *this here that we need to write fewer lines in the setXXX methods
     return *this;
   }
 
@@ -134,10 +134,7 @@ class GeometryIdentifier {
                                    GeometryIdentifier rhs) {
     return lhs.m_value == rhs.m_value;
   }
-  friend constexpr bool operator!=(GeometryIdentifier lhs,
-                                   GeometryIdentifier rhs) {
-    return lhs.m_value != rhs.m_value;
-  }
+
   friend constexpr bool operator<(GeometryIdentifier lhs,
                                   GeometryIdentifier rhs) {
     return lhs.m_value < rhs.m_value;

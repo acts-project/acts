@@ -341,6 +341,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(stripVolumes);
     ACTS_PYTHON_MEMBER(maxPixelHoles);
     ACTS_PYTHON_MEMBER(maxStripHoles);
+    ACTS_PYTHON_MEMBER(trimTracks);
     ACTS_PYTHON_STRUCT_END();
   }
 

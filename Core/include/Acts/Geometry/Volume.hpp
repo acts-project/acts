@@ -116,7 +116,6 @@ class Volume : public GeometryObject {
                           BinningValue bValue) const override;
 
   bool operator==(const Volume& other) const;
-  bool operator!=(const Volume& other) const;
 
   /// Produces a 3D visualization of this volume
   /// @param helper The visualization helper describing the output format

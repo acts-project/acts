@@ -100,10 +100,6 @@ class Direction final {
     return m_value == other.m_value;
   }
 
-  constexpr bool operator!=(Direction other) const {
-    return m_value != other.m_value;
-  }
-
  private:
   Value m_value = Value::Positive;
 };
