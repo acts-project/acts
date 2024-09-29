@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <memory>
+#include <optional>
 #include <type_traits>
 #include <utility>
 
@@ -145,7 +146,7 @@ class MultiComponentBoundTrackParameters {
   /// Optional covariance matrix.
   std::optional<CovarianceMatrix> covariance() const {
     const auto ret = reduce([](const Parameters& p) {
-      return p.covariance() ? *p.covariance() : CovarianceMatrix::Zero();
+      return p.covariance().value_or(CovarianceMatrix::Zero());
     });
 
     if (ret == CovarianceMatrix::Zero()) {

@@ -20,6 +20,8 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 
+#include <optional>
+
 namespace Acts {
 
 namespace detail {
@@ -334,9 +336,8 @@ struct GaussianSumFitter {
 
       bwdPropOptions.direction = gsfBackward;
 
-      const Surface& target = options.referenceSurface
-                                  ? *options.referenceSurface
-                                  : sParameters.referenceSurface();
+      const Surface& target =
+          options.referenceSurface.value_or(sParameters.referenceSurface());
 
       const auto& params = *fwdGsfResult.lastMeasurementState;
       auto state =
