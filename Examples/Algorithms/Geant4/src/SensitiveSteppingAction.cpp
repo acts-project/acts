@@ -182,8 +182,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   }
 
   // This is not the case if we have a particle-ID collision
-  if (eventStore().trackIdMapping.find(track->GetTrackID()) ==
-      eventStore().trackIdMapping.end()) {
+  if (!eventStore().trackIdMapping.contains(track->GetTrackID())) {
     return;
   }
 
@@ -192,8 +191,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   ACTS_VERBOSE("Step of " << particleId << " in sensitive volume " << geoId);
 
   // Set particle hit count to zero, so we have this entry in the map later
-  if (eventStore().particleHitCount.find(particleId) ==
-      eventStore().particleHitCount.end()) {
+  if (!eventStore().particleHitCount.contains(particleId)) {
     eventStore().particleHitCount[particleId] = 0;
   }
 

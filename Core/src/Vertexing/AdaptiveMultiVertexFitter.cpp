@@ -224,7 +224,7 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
     auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
     // Recover from cases where linearization point != 0 but
     // more tracks were added later on
-    if (vtxInfo.impactParams3D.find(trk) == vtxInfo.impactParams3D.end()) {
+    if (!vtxInfo.impactParams3D.contains(trk)) {
       auto res = m_cfg.ipEst.estimate3DImpactParameters(
           vertexingOptions.geoContext, vertexingOptions.magFieldContext,
           m_cfg.extractParameters(trk),

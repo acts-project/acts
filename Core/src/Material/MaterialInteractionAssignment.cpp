@@ -110,8 +110,7 @@ Acts::MaterialInteractionAssignment::assign(
   // (empty bin correction can use this information)
   std::vector<IAssignmentFinder::SurfaceAssignment> surfacesWithoutAssignments;
   for (const auto& intersectedSurface : intersectedSurfaces) {
-    if (assignedSurfaces.find(intersectedSurface.surface) ==
-        assignedSurfaces.end()) {
+    if (!assignedSurfaces.contains(intersectedSurface.surface)) {
       surfacesWithoutAssignments.push_back(intersectedSurface);
     }
   }
