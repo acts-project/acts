@@ -160,10 +160,6 @@ class MeasurementContainer {
       return m_index == other.m_index;
     }
 
-    bool operator!=(const IteratorImpl& other) const {
-      return !(*this == other);
-    }
-
    private:
     Container& m_container;
     Index m_index;

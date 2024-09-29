@@ -95,8 +95,6 @@ class GlobalNeighborHoodIndices {
       return *this;
     }
 
-    bool operator!=(const iterator& it) { return !(*this == it); }
-
     bool isEqual(const iterator& b) const {
       if (b.m_parent == nullptr) {
         return m_localIndicesIter[0] == m_parent->m_localIndices[0].end();

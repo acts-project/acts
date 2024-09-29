@@ -127,10 +127,6 @@ bool Volume::operator==(const Volume& other) const {
          (*m_volumeBounds == *other.m_volumeBounds);
 }
 
-bool Volume::operator!=(const Volume& other) const {
-  return !(*this == other);
-}
-
 void Volume::visualize(IVisualization3D& helper, const GeometryContext& gctx,
                        const ViewConfig& viewConfig) const {
   auto bSurfaces = volumeBounds().orientedSurfaces(transform());
