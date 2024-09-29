@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <array>
 #include <iterator>
+#include <optional>
 #include <ostream>
 #include <set>
 #include <utility>
@@ -55,8 +56,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
     std::size_t binsZ, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
-  ProtoLayer protoLayer =
-      _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
+  ProtoLayer protoLayer = _protoLayer.value_or(ProtoLayer(gctx, surfaces));
 
   // Remaining layer parameters - they include the envelopes
   double layerR = protoLayer.medium(BinningValue::binR);
@@ -128,8 +128,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
-  ProtoLayer protoLayer =
-      _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
+  ProtoLayer protoLayer = _protoLayer.value_or(ProtoLayer(gctx, surfaces));
 
   // remaining layer parameters
   double layerR = protoLayer.medium(BinningValue::binR);
@@ -202,8 +201,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
     std::size_t binsPhi, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
-  ProtoLayer protoLayer =
-      _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
+  ProtoLayer protoLayer = _protoLayer.value_or(ProtoLayer(gctx, surfaces));
 
   double layerZ = protoLayer.medium(BinningValue::binZ);
   double layerThickness = protoLayer.range(BinningValue::binZ);
@@ -267,8 +265,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
-  ProtoLayer protoLayer =
-      _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
+  ProtoLayer protoLayer = _protoLayer.value_or(ProtoLayer(gctx, surfaces));
 
   double layerZ = protoLayer.medium(BinningValue::binZ);
   double layerThickness = protoLayer.range(BinningValue::binZ);
@@ -330,8 +327,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
     std::size_t bins2, BinningValue bValue,
     std::optional<ProtoLayer> _protoLayer, const Transform3& transform,
     std::unique_ptr<ApproachDescriptor> ad) const {
-  ProtoLayer protoLayer =
-      _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
+  ProtoLayer protoLayer = _protoLayer.value_or(ProtoLayer(gctx, surfaces));
 
   // remaining layer parameters
   double layerHalf1 = 0, layerHalf2 = 0, layerThickness = 0;

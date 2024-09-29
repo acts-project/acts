@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 #include <stdexcept>
 
 using Acts::VectorHelpers::perp;
@@ -34,8 +35,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // Check if we have proto layer, else build it
-  ProtoLayer protoLayer =
-      protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
+  ProtoLayer protoLayer = protoLayerOpt.value_or(ProtoLayer(gctx, surfacesRaw));
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
@@ -81,8 +81,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer =
-      protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
+  ProtoLayer protoLayer = protoLayerOpt.value_or(ProtoLayer(gctx, surfacesRaw));
 
   double R = protoLayer.medium(BinningValue::binR, true);
 
@@ -147,8 +146,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer =
-      protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
+  ProtoLayer protoLayer = protoLayerOpt.value_or(ProtoLayer(gctx, surfacesRaw));
 
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
 
@@ -200,8 +198,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer =
-      protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
+  ProtoLayer protoLayer = protoLayerOpt.value_or(ProtoLayer(gctx, surfacesRaw));
 
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
 
@@ -310,8 +307,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer =
-      protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
+  ProtoLayer protoLayer = protoLayerOpt.value_or(ProtoLayer(gctx, surfacesRaw));
 
   ACTS_VERBOSE("Creating a SurfaceArray on a plance");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
