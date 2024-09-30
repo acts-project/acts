@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
 
+#include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
 #include "ActsExamples/Geant4/PhysicsListFactory.hpp"
 
 #include <memory>
@@ -137,6 +138,10 @@ Geant4Manager::Geant4Manager() {
   registerPhysicsListFactory(
       "FTFP_BERT_ATL", std::make_shared<PhysicsListFactoryFunction>(
                            []() { return std::make_unique<FTFP_BERT_ATL>(); }));
+  registerPhysicsListFactory("MaterialPhysicsList",
+                             std::make_shared<PhysicsListFactoryFunction>([]() {
+                               return std::make_unique<MaterialPhysicsList>();
+                             }));
 }
 
 Geant4Manager::~Geant4Manager() = default;
