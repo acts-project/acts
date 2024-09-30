@@ -81,12 +81,6 @@ std::shared_ptr<Geant4Handle> Geant4Manager::currentHandle() const {
 
 std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(
     const std::string& physicsList) {
-  if (physicsList == "MaterialPhysicsList") {
-    return createHandle(
-        std::make_unique<MaterialPhysicsList>(
-            Acts::getDefaultLogger("MaterialPhysicsList", Acts::Logging::INFO)),
-        physicsList);
-  }
   return createHandle(createPhysicsList(physicsList), physicsList);
 }
 
@@ -144,6 +138,10 @@ Geant4Manager::Geant4Manager() {
   registerPhysicsListFactory(
       "FTFP_BERT_ATL", std::make_shared<PhysicsListFactoryFunction>(
                            []() { return std::make_unique<FTFP_BERT_ATL>(); }));
+  registerPhysicsListFactory("MaterialPhysicsList",
+                             std::make_shared<PhysicsListFactoryFunction>([]() {
+                               return std::make_unique<MaterialPhysicsList>();
+                             }));
 }
 
 Geant4Manager::~Geant4Manager() = default;
