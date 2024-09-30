@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 namespace Acts {
@@ -19,6 +20,8 @@ struct NavigationArguments {
   NavigationStream& main;
   Vector3 position;
   Vector3 direction;
+
+  BoundaryTolerance tolerance = BoundaryTolerance::None();
 };
 
 using NavigationDelegate = OwningDelegate<void(const NavigationArguments&)>;

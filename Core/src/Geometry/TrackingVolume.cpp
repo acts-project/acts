@@ -16,7 +16,7 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
-#include "Acts/Navigation/NavigationPolicy.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
