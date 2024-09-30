@@ -66,7 +66,7 @@ std::vector<Acts::ActsScalar> ActsExamples::GeometricConfig::variances(
   std::vector<Acts::ActsScalar> rVariances;
   for (const auto& bIndex : indices) {
     Acts::ActsScalar var = 0.;
-    if (varianceMap.find(bIndex) != varianceMap.end()) {
+    if (varianceMap.contains(bIndex)) {
       // Try to find the variance for this cluster size
       std::size_t lsize =
           std::min(csizes[bIndex], varianceMap.at(bIndex).size());

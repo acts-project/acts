@@ -36,7 +36,7 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
 /// Initialise the information on each surface.
 
 void Initialise_info(sinfo& surface_info,
-                     const std::map<std::string, std::string>& surface_name,
+                     const std::map<std::string, std::string>& surfaceName,
                      const std::uint64_t& id, const int& type, const float& pos,
                      const float& range_min, const float& range_max) {
   Acts::GeometryIdentifier ID(id);
@@ -67,10 +67,11 @@ void Initialise_info(sinfo& surface_info,
                         Ids[3] + "_s" + Ids[4];
   surface_info.type = type;
 
-  if (surface_name.find(surface_id) != surface_name.end()) {
-    surface_info.name = surface_name.at(surface_id);
-  } else
+  if (surfaceName.contains(surface_id)) {
+    surface_info.name = surfaceName.at(surface_id);
+  } else {
     surface_info.name = "";
+  }
 
   surface_info.id = surface_id;
   surface_info.pos = pos;
