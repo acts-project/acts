@@ -34,7 +34,7 @@ class SourceLink final {
   SourceLink& operator=(const SourceLink& other) = default;
   SourceLink& operator=(SourceLink&& other) = default;
 
-  /// Constructor from concrete sourcelink
+  /// Constructor from concrete source link
   /// @tparam T The source link type
   /// @param upstream The upstream source link to store
   template <typename T>
@@ -84,10 +84,6 @@ struct SourceLinkAdapterIterator {
 
   bool operator==(const SourceLinkAdapterIterator& other) const {
     return m_iterator == other.m_iterator;
-  }
-
-  bool operator!=(const SourceLinkAdapterIterator& other) const {
-    return !(*this == other);
   }
 
   Acts::SourceLink operator*() const { return Acts::SourceLink{*m_iterator}; }

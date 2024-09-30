@@ -37,18 +37,10 @@ BOOST_AUTO_TEST_CASE(GeoTrdToVolumeConversion) {
   auto logTrd = new GeoLogVol("Trd", trd, material);
   auto physTrd = make_intrusive<GeoFullPhysVol>(logTrd);
 
-  // add subvolume since converter needs that to convert fpv to volume
-  auto strd = new GeoTrd(1, 1, 25, 40, 30);
-  auto slogTrd = new GeoLogVol("Trd", strd, material);
-  auto sphysTrd = make_intrusive<GeoFullPhysVol>(slogTrd);
-
   // this should produce an error while converting
   auto errTrd = new GeoTrd(2, 3, 25, 40, 30);
   auto errLogTrd = new GeoLogVol("Trd", errTrd, material);
   auto errPhysTrd = make_intrusive<GeoFullPhysVol>(errLogTrd);
-
-  physTrd->add(sphysTrd);
-  errPhysTrd->add(sphysTrd);
 
   // create pars for conversion
   Acts::GeoModelDetectorObjectFactory::Config gmConfig;

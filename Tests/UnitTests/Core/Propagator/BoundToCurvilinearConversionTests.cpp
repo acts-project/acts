@@ -91,7 +91,7 @@ FreeToPathMatrix computeFreeToPathDerivatives(
   return path_length_deriv;
 }
 template <typename T, std::size_t Rows, std::size_t Cols>
-inline constexpr Eigen::Matrix<T, Rows, Cols> makeMatrix(
+constexpr Eigen::Matrix<T, Rows, Cols> makeMatrix(
     std::initializer_list<double> elements) {
   // static_assert( elements.size() == Rows*Cols )
   if (!(elements.size() == Rows * Cols)) {
@@ -110,7 +110,7 @@ inline constexpr Eigen::Matrix<T, Rows, Cols> makeMatrix(
   return matrix;
 }
 template <typename T, std::size_t Rows>
-inline constexpr Eigen::Matrix<T, Rows, 1> makeVector(
+constexpr Eigen::Matrix<T, Rows, 1> makeVector(
     std::initializer_list<double> elements) {
   return makeMatrix<T, Rows, 1>(elements);
 }

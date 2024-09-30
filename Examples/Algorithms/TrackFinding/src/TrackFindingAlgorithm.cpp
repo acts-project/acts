@@ -19,7 +19,6 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -371,9 +370,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   secondOptions.skipPrePropagationUpdate = true;
 
   using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
-  using ExtrapolatorOptions =
-      Extrapolator::template Options<Acts::ActionList<Acts::MaterialInteractor>,
-                                     Acts::AbortList<Acts::EndOfWorldReached>>;
+  using ExtrapolatorOptions = Extrapolator::template Options<
+      Acts::ActorList<Acts::MaterialInteractor, Acts::EndOfWorldReached>>;
 
   Extrapolator extrapolator(
       Acts::SympyStepper(m_cfg.magneticField),
@@ -421,6 +419,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       }
     });
 
+    // trim the track if requested
+    if (m_cfg.trimTracks) {
+      Acts::trimTrack(track, true, true, true);
+    }
     Acts::calculateTrackQuantities(track);
 
     if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {

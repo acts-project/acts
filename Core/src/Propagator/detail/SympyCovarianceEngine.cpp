@@ -9,6 +9,7 @@
 #include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
+#include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
 
 #include "codegen/sympy_cov_math.hpp"
 
@@ -97,9 +98,9 @@ void sympy::transportCovarianceToBound(
     const FreeToBoundCorrection& freeToBoundCorrection) {
   // Calculate the full jacobian from local parameters at the start surface to
   // current bound parameters
-  boundToBoundTransportJacobian(geoContext, surface, freeParameters,
-                                boundToFreeJacobian, freeTransportJacobian,
-                                freeToPathDerivatives, fullTransportJacobian);
+  sympy::boundToBoundTransportJacobian(
+      geoContext, surface, freeParameters, boundToFreeJacobian,
+      freeTransportJacobian, freeToPathDerivatives, fullTransportJacobian);
 
   bool correction = false;
   if (freeToBoundCorrection) {
@@ -153,7 +154,7 @@ void sympy::transportCovarianceToCurvilinear(
     BoundToFreeMatrix& boundToFreeJacobian, const Vector3& direction) {
   // Calculate the full jacobian from local parameters at the start surface to
   // current curvilinear parameters
-  boundToCurvilinearTransportJacobian(
+  sympy::boundToCurvilinearTransportJacobian(
       direction, boundToFreeJacobian, freeTransportJacobian,
       freeToPathDerivatives, fullTransportJacobian);
 

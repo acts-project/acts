@@ -33,7 +33,7 @@ class LandauDistribution {
     /// Construct from parameters.
     param_type(double location_, double scale_)
         : location(location_), scale(scale_) {}
-    // Explicitlely defaulted construction and assignment
+    // Explicitly defaulted construction and assignment
     param_type() = default;
     param_type(const param_type &) = default;
     param_type(param_type &&) = default;
@@ -43,9 +43,6 @@ class LandauDistribution {
     /// Parameters should be EqualityComparable
     friend bool operator==(const param_type &lhs, const param_type &rhs) {
       return (lhs.location == rhs.location) && (lhs.scale == rhs.scale);
-    }
-    friend bool operator!=(const param_type &lhs, const param_type &rhs) {
-      return !(lhs == rhs);
     }
   };
   /// The type of the generated values.
@@ -90,10 +87,6 @@ class LandauDistribution {
   friend bool operator==(const LandauDistribution &lhs,
                          const LandauDistribution &rhs) {
     return lhs.m_cfg == rhs.m_cfg;
-  }
-  friend bool operator!=(const LandauDistribution &lhs,
-                         const LandauDistribution &rhs) {
-    return !(lhs == rhs);
   }
 
  private:

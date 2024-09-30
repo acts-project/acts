@@ -157,8 +157,8 @@ class VectorMultiTrajectoryBase {
     double pathLength = 0;
     TrackStateType::raw_type typeFlags{};
 
-    IndexType iuncalibrated = kInvalid;
-    IndexType icalibratedsourcelink = kInvalid;
+    IndexType iUncalibrated = kInvalid;
+    IndexType iCalibratedSourceLink = kInvalid;
     IndexType measdim = kInvalid;
 
     TrackStatePropMask allocMask = TrackStatePropMask::None;
@@ -209,7 +209,7 @@ class VectorMultiTrajectoryBase {
       case "projector"_hash:
         return instance.m_index[istate].iprojector != kInvalid;
       case "uncalibratedSourceLink"_hash:
-        return instance.m_sourceLinks[instance.m_index[istate].iuncalibrated]
+        return instance.m_sourceLinks[instance.m_index[istate].iUncalibrated]
             .has_value();
       case "previous"_hash:
       case "next"_hash:
@@ -304,7 +304,7 @@ class VectorMultiTrajectoryBase {
   }
 
   SourceLink getUncalibratedSourceLink_impl(IndexType istate) const {
-    return m_sourceLinks[m_index[istate].iuncalibrated].value();
+    return m_sourceLinks[m_index[istate].iUncalibrated].value();
   }
 
   const Surface* referenceSurface_impl(IndexType istate) const {
@@ -485,7 +485,7 @@ class VectorMultiTrajectory final
 
   void setUncalibratedSourceLink_impl(IndexType istate,
                                       SourceLink&& sourceLink) {
-    m_sourceLinks[m_index[istate].iuncalibrated] = std::move(sourceLink);
+    m_sourceLinks[m_index[istate].iUncalibrated] = std::move(sourceLink);
   }
 
   void setReferenceSurface_impl(IndexType istate,

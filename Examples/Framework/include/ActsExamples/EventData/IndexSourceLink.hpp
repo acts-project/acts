@@ -60,10 +60,6 @@ class IndexSourceLink final {
     return (lhs.geometryId() == rhs.geometryId()) &&
            (lhs.m_index == rhs.m_index);
   }
-  friend bool operator!=(const IndexSourceLink& lhs,
-                         const IndexSourceLink& rhs) {
-    return !(lhs == rhs);
-  }
 };
 
 struct IndexSourceLinkSurfaceAccessor {

@@ -51,12 +51,12 @@ static inline auto findByPdg(std::int32_t pdg, const ColumnContainer& column)
   return column[*index];
 }
 
-static constexpr inline float extractCharge(float value) {
+static constexpr float extractCharge(float value) {
   // convert three charge to regular charge in native units
   return (value / 3.0f) * Acts::UnitConstants::e;
 }
 
-static constexpr inline float extractMass(float value) {
+static constexpr float extractMass(float value) {
   return value * Acts::UnitConstants::MeV;
 }
 
