@@ -21,7 +21,8 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
@@ -172,7 +173,8 @@ void Acts::SurfaceMaterialMapper::collectMaterialVolumes(
                                    << "' for material surfaces.");
   ACTS_VERBOSE("- Insert Volume ...");
   if (tVolume.volumeMaterial() != nullptr) {
-    mState.volumeMaterial[tVolume.geometryId()] = tVolume.volumeMaterialPtr();
+    mState.volumeMaterial[tVolume.geometryId()] =
+        tVolume.volumeMaterialSharedPtr();
   }
 
   // Step down into the sub volume
@@ -238,11 +240,12 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   // Prepare Action list and abort list
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
   using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
-  using ActorList = ActorList<MaterialSurfaceCollector, MaterialVolumeCollector,
-                              EndOfWorldReached>;
+  using ActionList =
+      ActionList<MaterialSurfaceCollector, MaterialVolumeCollector>;
+  using AbortList = AbortList<EndOfWorldReached>;
 
-  StraightLinePropagator::Options<ActorList> options(mState.geoContext,
-                                                     mState.magFieldContext);
+  StraightLinePropagator::Options<ActionList, AbortList> options(
+      mState.geoContext, mState.magFieldContext);
 
   // Now collect the material layers by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();

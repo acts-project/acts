@@ -12,7 +12,8 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 
@@ -66,15 +67,20 @@ struct PropagatorPlainOptions : public detail::PurePropagatorPlainOptions {
 
 /// @brief Options for propagate() call
 ///
-/// @tparam actor_list_t List of action types called after each
+/// @tparam action_list_t List of action types called after each
 ///    propagation step with the current propagation and stepper state
 ///
+/// @tparam aborter_list_t List of abort conditions tested after each
+///    propagation step using the current propagation and stepper state
+///
 template <typename stepper_options_t, typename navigator_options_t,
-          typename actor_list_t = ActorList<>>
+          typename action_list_t = ActionList<>,
+          typename aborter_list_t = AbortList<>>
 struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
   using stepper_options_type = stepper_options_t;
   using navigator_options_type = navigator_options_t;
-  using actor_list_type = actor_list_t;
+  using action_list_type = action_list_t;
+  using aborter_list_type = aborter_list_t;
 
   /// PropagatorOptions with context
   PropagatorOptions(const GeometryContext& gctx,
@@ -98,17 +104,17 @@ struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
     return pOptions;
   }
 
-  /// @brief Expand the options with extended actors
+  /// @brief Expand the Options with extended aborters
   ///
-  /// @tparam extended_actor_list_t Type of the new actor list
+  /// @tparam extended_aborter_list_t Type of the new aborter list
   ///
-  /// @param extendedActorList The new actor list to be used (internally)
-  template <typename extended_actor_list_t>
-  PropagatorOptions<stepper_options_t, navigator_options_t,
-                    extended_actor_list_t>
-  extend(extended_actor_list_t extendedActorList) const {
-    PropagatorOptions<stepper_options_t, navigator_options_t,
-                      extended_actor_list_t>
+  /// @param aborters The new aborter list to be used (internally)
+  template <typename extended_aborter_list_t>
+  PropagatorOptions<stepper_options_t, navigator_options_t, action_list_t,
+                    extended_aborter_list_t>
+  extend(extended_aborter_list_t aborters) const {
+    PropagatorOptions<stepper_options_t, navigator_options_t, action_list_t,
+                      extended_aborter_list_t>
         eoptions(geoContext, magFieldContext);
 
     // Copy the base options
@@ -120,7 +126,8 @@ struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
     eoptions.navigation = navigation;
 
     // Action / Abort list
-    eoptions.actorList = extendedActorList;
+    eoptions.actionList = actionList;
+    eoptions.abortList = aborters;
 
     // And return the options
     return eoptions;
@@ -150,7 +157,10 @@ struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
   navigator_options_t navigation;
 
   /// List of actions
-  actor_list_t actorList;
+  action_list_t actionList;
+
+  /// List of abort conditions
+  aborter_list_t abortList;
 };
 
 }  // namespace Acts

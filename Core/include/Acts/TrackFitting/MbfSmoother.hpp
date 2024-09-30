@@ -51,21 +51,21 @@ class MbfSmoother {
 
     using TrackStateProxy = typename traj_t::TrackStateProxy;
 
-    TrackStateProxy startTs = trajectory.getTrackState(entryIndex);
+    TrackStateProxy start_ts = trajectory.getTrackState(entryIndex);
 
     // Notation consistent with the Wikipedia article
     // https://en.wikipedia.org/wiki/Kalman_filter
-    BoundMatrix bigLambdaHat = BoundMatrix::Zero();
-    BoundVector smallLambdaHat = BoundVector::Zero();
+    BoundMatrix big_lambda_hat = BoundMatrix::Zero();
+    BoundVector small_lambda_hat = BoundVector::Zero();
 
-    trajectory.applyBackwards(startTs.index(), [&](TrackStateProxy ts) {
+    trajectory.applyBackwards(start_ts.index(), [&](TrackStateProxy ts) {
       // ensure the track state has a smoothed component
       ts.addComponents(TrackStatePropMask::Smoothed);
 
       InternalTrackState internalTrackState(ts);
 
       // Smoothe the current state
-      calculateSmoothed(internalTrackState, bigLambdaHat, smallLambdaHat);
+      calculateSmoothed(internalTrackState, big_lambda_hat, small_lambda_hat);
 
       // We smoothed the last state - no need to update the lambdas
       if (!ts.hasPrevious()) {
@@ -74,9 +74,10 @@ class MbfSmoother {
 
       // Update the lambdas depending on the type of track state
       if (ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
-        visitMeasurement(internalTrackState, bigLambdaHat, smallLambdaHat);
+        visitMeasurement(internalTrackState, big_lambda_hat, small_lambda_hat);
       } else {
-        visitNonMeasurement(internalTrackState, bigLambdaHat, smallLambdaHat);
+        visitNonMeasurement(internalTrackState, big_lambda_hat,
+                            small_lambda_hat);
       }
     });
 
@@ -142,17 +143,18 @@ class MbfSmoother {
 
   /// Calculate the smoothed parameters and covariance.
   void calculateSmoothed(InternalTrackState& ts,
-                         const BoundMatrix& bigLambdaHat,
-                         const BoundVector& smallLambdaHat) const;
+                         const BoundMatrix& big_lambda_hat,
+                         const BoundVector& small_lambda_hat) const;
 
   /// Visit a non-measurement track state and update the lambdas.
   void visitNonMeasurement(const InternalTrackState& ts,
-                           BoundMatrix& bigLambdaHat,
-                           BoundVector& smallLambdaHat) const;
+                           BoundMatrix& big_lambda_hat,
+                           BoundVector& small_lambda_hat) const;
 
   /// Visit a measurement track state and update the lambdas.
-  void visitMeasurement(const InternalTrackState& ts, BoundMatrix& bigLambdaHat,
-                        BoundVector& smallLambdaHat) const;
+  void visitMeasurement(const InternalTrackState& ts,
+                        BoundMatrix& big_lambda_hat,
+                        BoundVector& small_lambda_hat) const;
 };
 
 }  // namespace Acts

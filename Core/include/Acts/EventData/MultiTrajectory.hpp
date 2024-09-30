@@ -87,12 +87,6 @@ class TrackStateRange {
       }
     }
 
-    Iterator operator++(int) {
-      Iterator tmp(*this);
-      operator++();
-      return tmp;
-    }
-
     bool operator==(const Iterator& other) const {
       if (!proxy && !other.proxy) {
         return true;
@@ -103,6 +97,8 @@ class TrackStateRange {
       return false;
     }
 
+    bool operator!=(const Iterator& other) const { return !(*this == other); }
+
     ProxyType operator*() const { return *proxy; }
     ProxyType operator*() { return *proxy; }
   };
@@ -112,9 +108,6 @@ class TrackStateRange {
 
   Iterator begin() { return m_begin; }
   Iterator end() { return Iterator{std::nullopt}; }
-
-  Iterator cbegin() const { return m_begin; }
-  Iterator cend() const { return Iterator{std::nullopt}; }
 
  private:
   Iterator m_begin;
@@ -696,10 +689,13 @@ class MultiTrajectory {
     self().allocateCalibrated_impl(istate, measdim);
   }
 
-  void setUncalibratedSourceLink(IndexType istate, SourceLink&& sourceLink)
+  // This function will move to an rvalue reference in the next major version
+  template <typename source_link_t>
+  void setUncalibratedSourceLink(IndexType istate, source_link_t&& sourceLink)
     requires(!ReadOnly)
   {
-    self().setUncalibratedSourceLink_impl(istate, std::move(sourceLink));
+    self().setUncalibratedSourceLink_impl(
+        istate, std::forward<source_link_t>(sourceLink));
   }
 
   SourceLink getUncalibratedSourceLink(IndexType istate) const {

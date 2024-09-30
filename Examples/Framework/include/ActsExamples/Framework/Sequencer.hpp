@@ -82,6 +82,9 @@ class Sequencer {
     /// Callback that is invoked in the event loop.
     /// @warning This function can be called from multiple threads and should therefore be thread-safe
     IterationCallback iterationCallback = []() {};
+    /// Run data flow consistency checks
+    /// Defaults to false right now until all components are migrated
+    bool runDataFlowChecks = true;
 
     bool trackFpes = true;
     std::vector<FpeMask> fpeMasks{};

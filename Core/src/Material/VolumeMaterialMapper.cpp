@@ -24,7 +24,8 @@
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
-#include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -373,11 +374,11 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   // Prepare Action list and abort list
   using BoundSurfaceCollector = SurfaceCollector<BoundSurfaceSelector>;
   using MaterialVolumeCollector = VolumeCollector<MaterialVolumeSelector>;
-  using ActionList = ActorList<BoundSurfaceCollector, MaterialVolumeCollector,
-                               EndOfWorldReached>;
+  using ActionList = ActionList<BoundSurfaceCollector, MaterialVolumeCollector>;
+  using AbortList = AbortList<EndOfWorldReached>;
 
-  StraightLinePropagator::Options<ActionList> options(mState.geoContext,
-                                                      mState.magFieldContext);
+  StraightLinePropagator::Options<ActionList, AbortList> options(
+      mState.geoContext, mState.magFieldContext);
 
   // Now collect the material volume by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();

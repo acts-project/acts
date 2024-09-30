@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
 #include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
 #include "Acts/Plugins/Hashing/HashingTraining.hpp"
@@ -23,7 +22,6 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -37,10 +35,9 @@
 #include <vector>
 
 // Custom seed comparison function
-template <typename external_spacepoint_t>
 struct SeedComparison {
-  bool operator()(const Acts::Seed<external_spacepoint_t>& seed1,
-                  const Acts::Seed<external_spacepoint_t>& seed2) const {
+  bool operator()(const ActsExamples::SimSeed& seed1,
+                  const ActsExamples::SimSeed& seed2) const {
     const auto& sp1 = seed1.sp();
     const auto& sp2 = seed2.sp();
 
@@ -86,11 +83,7 @@ class SeedingAlgorithmHashing final : public IAlgorithm {
     std::string outputBuckets;
 
     Acts::SeedFilterConfig seedFilterConfig;
-    Acts::SeedFinderConfig<typename Acts::SpacePointContainer<
-        ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-        Acts::detail::RefHolder>::SpacePointProxyType>
-        seedFinderConfig;
-
+    Acts::SeedFinderConfig<SimSpacePoint> seedFinderConfig;
     Acts::CylindricalSpacePointGridConfig gridConfig;
     Acts::CylindricalSpacePointGridOptions gridOptions;
     Acts::SeedFinderOptions seedFinderOptions;
@@ -128,12 +121,8 @@ class SeedingAlgorithmHashing final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  using SpacePointProxy_t = typename Acts::SpacePointContainer<
-      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-      Acts::detail::RefHolder>::SpacePointProxyType;
-
-  Acts::SeedFinder<SpacePointProxy_t,
-                   Acts::CylindricalSpacePointGrid<SpacePointProxy_t>>
+  Acts::SeedFinder<SimSpacePoint,
+                   Acts::CylindricalSpacePointGrid<SimSpacePoint>>
       m_seedFinder;
   std::unique_ptr<const Acts::GridBinFinder<2ul>> m_bottomBinFinder;
   std::unique_ptr<const Acts::GridBinFinder<2ul>> m_topBinFinder;
@@ -153,8 +142,8 @@ class SeedingAlgorithmHashing final : public IAlgorithm {
       m_hashingTraining;
 
   static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
-    static float rMin = 50.;
-    static float cotThetaMax = 1.5;
+    float rMin = 50.;
+    float cotThetaMax = 1.5;
 
     if (bottomRadius < rMin &&
         (cotTheta > cotThetaMax || cotTheta < -cotThetaMax)) {
@@ -163,9 +152,9 @@ class SeedingAlgorithmHashing final : public IAlgorithm {
     return true;
   }
 
-  static inline bool itkFastTrackingSPselect(const SpacePointProxy_t& sp) {
+  static inline bool itkFastTrackingSPselect(const SimSpacePoint& sp) {
     // At small r we remove points beyond |z| > 200.
-    float r = sp.radius();
+    float r = sp.r();
     float zabs = std::abs(sp.z());
     if (zabs > 200. && r < 50.) {
       return false;

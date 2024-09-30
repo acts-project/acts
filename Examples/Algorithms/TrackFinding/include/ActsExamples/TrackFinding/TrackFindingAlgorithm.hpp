@@ -126,8 +126,6 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     bool stayOnSeed = false;
     /// Compute shared hit information
     bool computeSharedHits = false;
-    /// Whether to trim the tracks
-    bool trimTracks = true;
 
     // Pixel and strip volume ids to be used for maxPixel/StripHoles cuts
     std::set<Acts::GeometryIdentifier::Value> pixelVolumes;
@@ -156,7 +154,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
  private:
   template <typename source_link_accessor_container_t>
-  void computeSharedHits(const source_link_accessor_container_t& sourceLinks,
+  void computeSharedHits(const source_link_accessor_container_t& sourcelinks,
                          TrackContainer& tracks) const;
 
   ActsExamples::ProcessCode finalize() override;

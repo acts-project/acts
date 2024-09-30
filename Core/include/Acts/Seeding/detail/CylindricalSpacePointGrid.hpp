@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
+#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
@@ -21,7 +22,8 @@ namespace Acts {
 /// It stores a vector of internal space points to external space points
 template <typename external_spacepoint_t>
 using CylindricalSpacePointGrid = Acts::Grid<
-    std::vector<const external_spacepoint_t*>,
+    std::vector<
+        std::unique_ptr<Acts::InternalSpacePoint<external_spacepoint_t>>>,
     Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>,
     Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>>;
 
@@ -115,13 +117,14 @@ class CylindricalSpacePointGridCreator {
       const Acts::CylindricalSpacePointGridOptions& _options);
 
   template <typename external_spacepoint_t,
-            typename external_spacepoint_iterator_t>
+            typename external_spacepoint_iterator_t, typename callable_t>
   static void fillGrid(
       const Acts::SeedFinderConfig<external_spacepoint_t>& config,
       const Acts::SeedFinderOptions& options,
       Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
       external_spacepoint_iterator_t spBegin,
-      external_spacepoint_iterator_t spEnd, Acts::Extent& rRangeSPExtent);
+      external_spacepoint_iterator_t spEnd, callable_t&& toGlobal,
+      Acts::Extent& rRangeSPExtent);
 };
 
 }  // namespace Acts

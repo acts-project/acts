@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
@@ -18,7 +17,6 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
@@ -87,9 +85,7 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using Config = Acts::SeedFinderConfig<typename Acts::SpacePointContainer<
-        ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-        Acts::detail::RefHolder>::SpacePointProxyType>;
+    using Config = Acts::SeedFinderConfig<SimSpacePoint>;
     auto c = py::class_<Config>(m, "SeedFinderConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(minPt);
@@ -148,11 +144,7 @@ void addTrackFinding(Context& ctx) {
     patchKwargsConstructor(c);
   }
   {
-    using Config =
-        Acts::SeedFinderOrthogonalConfig<typename Acts::SpacePointContainer<
-            ActsExamples::SpacePointContainer<
-                std::vector<const SimSpacePoint*>>,
-            Acts::detail::RefHolder>::SpacePointProxyType>;
+    using Config = Acts::SeedFinderOrthogonalConfig<SimSpacePoint>;
     auto c =
         py::class_<Config>(m, "SeedFinderOrthogonalConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
@@ -341,7 +333,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(stripVolumes);
     ACTS_PYTHON_MEMBER(maxPixelHoles);
     ACTS_PYTHON_MEMBER(maxStripHoles);
-    ACTS_PYTHON_MEMBER(trimTracks);
     ACTS_PYTHON_STRUCT_END();
   }
 

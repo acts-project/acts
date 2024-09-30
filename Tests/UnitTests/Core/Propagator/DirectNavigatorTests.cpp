@@ -16,7 +16,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
@@ -106,18 +107,19 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   using EndOfWorld = EndOfWorldReached;
 
   // Action list and abort list
-  using ReferenceActorList =
-      ActorList<MaterialInteractor, SurfaceCollector<>, EndOfWorld>;
+  using RefereceActionList = ActionList<MaterialInteractor, SurfaceCollector<>>;
+  using ReferenceAbortList = AbortList<EndOfWorld>;
 
   // Options definition
-  using Options = typename rpropagator_t::template Options<ReferenceActorList>;
+  using Options = typename rpropagator_t::template Options<RefereceActionList,
+                                                           ReferenceAbortList>;
   Options pOptions(tgContext, mfContext);
   if (oversteppingTest) {
     pOptions.stepping.maxStepSize = oversteppingMaxStepSize;
   }
 
   // Surface collector configuration
-  auto& sCollector = pOptions.actorList.template get<SurfaceCollector<>>();
+  auto& sCollector = pOptions.actionList.template get<SurfaceCollector<>>();
   sCollector.selector.selectSensitive = true;
   sCollector.selector.selectMaterial = true;
 
@@ -139,16 +141,16 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     }
 
     // Action list for direct navigator with its initializer
-    using DirectActorList = ActorList<MaterialInteractor, SurfaceCollector<>>;
+    using DirectActionList = ActionList<MaterialInteractor, SurfaceCollector<>>;
 
     // Direct options definition
     using DirectOptions =
-        typename dpropagator_t::template Options<DirectActorList>;
+        typename dpropagator_t::template Options<DirectActionList, AbortList<>>;
     DirectOptions dOptions(tgContext, mfContext);
     // Set the surface sequence
     dOptions.navigation.surfaces = surfaceSequence;
     // Surface collector configuration
-    auto& dCollector = dOptions.actorList.template get<SurfaceCollector<>>();
+    auto& dCollector = dOptions.actionList.template get<SurfaceCollector<>>();
     dCollector.selector.selectSensitive = true;
     dCollector.selector.selectMaterial = true;
 

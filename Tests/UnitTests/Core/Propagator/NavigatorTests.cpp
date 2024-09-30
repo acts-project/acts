@@ -26,7 +26,6 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -393,9 +392,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr));
     ACTS_INFO("        iii) Because the target surface is reached");
-
-    auto beamline = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
-    const Surface* startSurf = beamline.get();
+    const Surface* startSurf = tGeometry->getBeamline();
     state.stepping.pos4.segment<3>(Acts::ePos0) =
         startSurf->center(state.geoContext);
     const Surface* targetSurf = startSurf;

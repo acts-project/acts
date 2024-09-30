@@ -17,6 +17,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <utility>
 
@@ -27,6 +28,9 @@ class Surface;
 class PerigeeSurface;
 class IMaterialDecorator;
 class TrackingVolume;
+
+using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
+using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 
 ///  @class TrackingGeometry
 ///
@@ -48,7 +52,7 @@ class TrackingGeometry {
   ///        surface or volume based material to the TrackingVolume
   /// @param hook Identifier hook to be applied to surfaces
   /// @param logger instance of a logger (defaulting to the "silent" one)
-  TrackingGeometry(const std::shared_ptr<TrackingVolume>& highestVolume,
+  TrackingGeometry(const MutableTrackingVolumePtr& highestVolume,
                    const IMaterialDecorator* materialDecorator = nullptr,
                    const GeometryIdentifierHook& hook = {},
                    const Logger& logger = getDummyLogger());
@@ -62,7 +66,8 @@ class TrackingGeometry {
 
   /// Access to the world volume
   /// @return shared pointer to the world volume
-  std::shared_ptr<const TrackingVolume> highestTrackingVolumePtr() const;
+  const std::shared_ptr<const TrackingVolume>& highestTrackingVolumeShared()
+      const;
 
   /// return the lowest tracking Volume
   ///
@@ -82,6 +87,19 @@ class TrackingGeometry {
   const Layer* associatedLayer(const GeometryContext& gctx,
                                const Vector3& gp) const;
 
+  /// Register the beam tube
+  ///
+  /// @param beam is the beam line surface
+  void registerBeamTube(std::shared_ptr<const PerigeeSurface> beam);
+
+  /// @brief surface representing the beam pipe
+  ///
+  /// @note The ownership is not passed, e.g. do not delete the pointer
+  ///
+  /// @return raw pointer to surface representing the beam pipe
+  ///         (could be a null pointer)
+  const Surface* getBeamline() const;
+
   /// @brief Visit all reachable surfaces
   ///
   /// @tparam visitor_t Type of the callable visitor
@@ -90,7 +108,7 @@ class TrackingGeometry {
   /// that is found, a selection of the surfaces can be done in the visitor
   /// @param restrictToSensitives If true, only sensitive surfaces are visited
   ///
-  /// @note If a context is needed for the visit, the visitor has to provide
+  /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
@@ -105,7 +123,7 @@ class TrackingGeometry {
   /// @param visitor The callable. Will be called for each sensitive surface
   /// that is found, a selection of the surfaces can be done in the visitor
   ///
-  /// @note If a context is needed for the visit, the visitor has to provide
+  /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
@@ -119,7 +137,7 @@ class TrackingGeometry {
   /// @param visitor The callable. Will be called for each reachable volume
   /// that is found, a selection of the volumes can be done in the visitor
   ///
-  /// @note If a context is needed for the visit, the visitor has to provide
+  /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
   template <TrackingVolumeVisitor visitor_t>
   void visitVolumes(visitor_t&& visitor) const {
@@ -147,7 +165,9 @@ class TrackingGeometry {
 
  private:
   // the known world
-  std::shared_ptr<TrackingVolume> m_world;
+  TrackingVolumePtr m_world;
+  // beam line
+  std::shared_ptr<const PerigeeSurface> m_beam;
   // lookup containers
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById;
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById;

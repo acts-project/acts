@@ -127,12 +127,7 @@ bool Volume::operator==(const Volume& other) const {
          (*m_volumeBounds == *other.m_volumeBounds);
 }
 
-void Volume::visualize(IVisualization3D& helper, const GeometryContext& gctx,
-                       const ViewConfig& viewConfig) const {
-  auto bSurfaces = volumeBounds().orientedSurfaces(transform());
-  for (const auto& bs : bSurfaces) {
-    bs.surface->visualize(helper, gctx, viewConfig);
-  }
+bool Volume::operator!=(const Volume& other) const {
+  return !(*this == other);
 }
-
 }  // namespace Acts

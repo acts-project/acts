@@ -18,7 +18,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -102,7 +103,7 @@ struct Options {
   int debugPfxWidth = 30;
 
   /// Contains: target aborters
-  ActorList<PathLimitReached> abortList;
+  AbortList<PathLimitReached> abortList;
 
   const Acts::Logger& logger = Acts::getDummyLogger();
 };
@@ -197,7 +198,7 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta, q / p,
                                    std::nullopt, ParticleHypothesis::pion());
 
-  using PropagatorOptions = EigenPropagator::Options<ActorList<>>;
+  using PropagatorOptions = EigenPropagator::Options<ActionList<>, AbortList<>>;
   PropagatorOptions options(tgContext, mfContext);
   options.maxSteps = 1e6;
   const auto& result = epropagator.propagate(start, options).value();

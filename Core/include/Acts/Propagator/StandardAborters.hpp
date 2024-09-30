@@ -41,7 +41,7 @@ struct PathLimitReached {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
     (void)navigator;
 
@@ -77,7 +77,7 @@ struct SurfaceReached {
   double nearLimit = -100 * UnitConstants::um;
 
   SurfaceReached() = default;
-  explicit SurfaceReached(double nLimit) : nearLimit(nLimit) {}
+  SurfaceReached(double nLimit) : nearLimit(nLimit) {}
 
   /// boolean operator for abort condition without using the result
   ///
@@ -91,7 +91,7 @@ struct SurfaceReached {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
     if (surface == nullptr) {
       ACTS_VERBOSE("SurfaceReached aborter | Target surface not set.");
@@ -164,6 +164,8 @@ struct ForcedSurfaceReached : SurfaceReached {
 /// This is the condition that the end of World has been reached
 /// it then triggers an propagation abort
 struct EndOfWorldReached {
+  EndOfWorldReached() = default;
+
   /// boolean operator for abort condition without using the result
   ///
   /// @tparam propagator_state_t Type of the propagator state
@@ -173,7 +175,7 @@ struct EndOfWorldReached {
   /// @param [in] navigator The navigator object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool checkAbort(propagator_state_t& state, const stepper_t& /*stepper*/,
+  bool operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
                   const navigator_t& navigator,
                   const Logger& /*logger*/) const {
     bool endOfWorld = navigator.endOfWorldReached(state.navigation);
@@ -185,7 +187,7 @@ struct EndOfWorldReached {
 struct AnySurfaceReached {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
     (void)stepper;
     (void)logger;

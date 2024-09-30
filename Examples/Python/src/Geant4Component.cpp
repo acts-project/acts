@@ -14,7 +14,6 @@
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
@@ -88,13 +87,7 @@ struct ExperimentalSensitiveCandidates : public SensitiveCandidatesBase {
   }
 
   std::vector<const Acts::Surface*> queryAll() const override {
-    std::vector<const Acts::Surface*> surfaces;
-    detector->visitSurfaces([&](const Acts::Surface* surface) {
-      if (surface->associatedDetectorElement() != nullptr) {
-        surfaces.push_back(surface);
-      }
-    });
-    return surfaces;
+    throw std::runtime_error("not implemented");
   }
 };
 

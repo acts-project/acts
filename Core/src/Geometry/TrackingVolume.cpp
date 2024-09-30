@@ -366,7 +366,7 @@ void TrackingVolume::closeGeometry(
         thisVolume->motherVolume()->volumeMaterial());
     if (protoMaterial == nullptr) {
       thisVolume->assignVolumeMaterial(
-          thisVolume->motherVolume()->volumeMaterialPtr());
+          thisVolume->motherVolume()->volumeMaterialSharedPtr());
     }
   }
 
@@ -577,7 +577,7 @@ const IVolumeMaterial* TrackingVolume::volumeMaterial() const {
 }
 
 const std::shared_ptr<const IVolumeMaterial>&
-TrackingVolume::volumeMaterialPtr() const {
+TrackingVolume::volumeMaterialSharedPtr() const {
   return m_volumeMaterial;
 }
 

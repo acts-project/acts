@@ -22,7 +22,8 @@ Acts::TrackingGeometry::TrackingGeometry(
     const MutableTrackingVolumePtr& highestVolume,
     const IMaterialDecorator* materialDecorator,
     const GeometryIdentifierHook& hook, const Logger& logger)
-    : m_world(highestVolume) {
+    : m_world(highestVolume),
+      m_beam(Surface::makeShared<PerigeeSurface>(Vector3::Zero())) {
   // Close the geometry: assign geometryID and successively the material
   std::size_t volumeID = 0;
   highestVolume->closeGeometry(materialDecorator, m_volumesById, volumeID, hook,
@@ -49,8 +50,8 @@ const Acts::TrackingVolume* Acts::TrackingGeometry::highestTrackingVolume()
   return m_world.get();
 }
 
-std::shared_ptr<const Acts::TrackingVolume>
-Acts::TrackingGeometry::highestTrackingVolumePtr() const {
+const std::shared_ptr<const Acts::TrackingVolume>&
+Acts::TrackingGeometry::highestTrackingVolumeShared() const {
   return m_world;
 }
 
@@ -61,6 +62,15 @@ const Acts::Layer* Acts::TrackingGeometry::associatedLayer(
     return nullptr;
   }
   return lowestVol->associatedLayer(gctx, gp);
+}
+
+void Acts::TrackingGeometry::registerBeamTube(
+    std::shared_ptr<const PerigeeSurface> beam) {
+  m_beam = std::move(beam);
+}
+
+const Acts::Surface* Acts::TrackingGeometry::getBeamline() const {
+  return m_beam.get();
 }
 
 const Acts::TrackingVolume* Acts::TrackingGeometry::findVolume(

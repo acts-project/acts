@@ -43,6 +43,10 @@ class BenchmarkSourceLink final {
     return (lhs.geometryId() == rhs.geometryId()) &&
            (lhs.m_index == rhs.m_index);
   }
+  friend bool operator!=(const BenchmarkSourceLink& lhs,
+                         const BenchmarkSourceLink& rhs) {
+    return !(lhs == rhs);
+  }
 };
 
 int main(int /*argc*/, char** /*argv[]*/) {
@@ -62,13 +66,13 @@ int main(int /*argc*/, char** /*argv[]*/) {
   BenchmarkSourceLink bsl{gid, 1234};
 
   std::cout << "Creating source link" << std::endl;
-  auto sourceLinkConstruction = Acts::Test::microBenchmark(
+  auto source_link_construction = Acts::Test::microBenchmark(
       [&]() {
         SourceLink sl{bsl};
         return sl;
       },
       n);
-  std::cout << "  " << sourceLinkConstruction << std::endl;
+  std::cout << "  " << source_link_construction << std::endl;
 
   std::vector<SourceLink> inputs;
   inputs.reserve(n);
@@ -77,23 +81,23 @@ int main(int /*argc*/, char** /*argv[]*/) {
   }
 
   std::cout << "Copy construct source link" << std::endl;
-  auto copyConstructSourceLink = Acts::Test::microBenchmark(
+  auto copy_construct_source_link = Acts::Test::microBenchmark(
       [&](const SourceLink& input) {
         SourceLink copy{input};
         return copy;
       },
       inputs);
-  std::cout << copyConstructSourceLink << std::endl;
+  std::cout << copy_construct_source_link << std::endl;
 
   std::cout << "Copy then move construct source link" << std::endl;
-  auto copyMoveConstructSourceLink = Acts::Test::microBenchmark(
+  auto copy_move_construct_source_link = Acts::Test::microBenchmark(
       [&](const SourceLink& input) {
         SourceLink copy{input};
         SourceLink mv{std::move(copy)};
         return mv;
       },
       inputs);
-  std::cout << copyMoveConstructSourceLink << std::endl;
+  std::cout << copy_move_construct_source_link << std::endl;
 
   std::cout << "Optional assignment" << std::endl;
   auto opt_assignment = Acts::Test::microBenchmark(
@@ -118,7 +122,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   std::cout << create_track_state << std::endl;
 
   std::cout << "Assign source link to track state" << std::endl;
-  auto assignSourceLink = Acts::Test::microBenchmark(
+  auto assign_source_link = Acts::Test::microBenchmark(
       [&]() {
         SourceLink sl{bsl};
         auto ts = mtj.makeTrackState(TrackStatePropMask::None);
@@ -126,7 +130,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
         return ts;
       },
       n / 10);
-  std::cout << assignSourceLink << std::endl;
+  std::cout << assign_source_link << std::endl;
 
   return 0;
 }

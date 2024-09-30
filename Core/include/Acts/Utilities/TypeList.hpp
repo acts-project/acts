@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <concepts>
 #include <cstddef>
 #include <type_traits>
 
@@ -31,7 +30,7 @@ struct getSize<TypeList<Ts...>>
     : std::integral_constant<std::size_t, sizeof...(Ts)> {};
 
 template <typename L>
-constexpr std::size_t size{getSize<L>()};
+constexpr inline std::size_t size{getSize<L>()};
 /// @}
 
 /// Access the first type
@@ -92,66 +91,6 @@ struct doPushFront<N, TypeList<Ts...>> {
 
 template <typename L, typename N>
 using push_front = typename doPushFront<N, L>::type;
-/// @}
-
-/// Filter a list of types
-/// @{
-template <template <typename> typename Pred, typename... Ts>
-struct filter {};
-
-template <template <typename> typename Pred>
-struct filter<Pred> {
-  using type = TypeList<>;
-};
-
-template <typename T, typename... Ts, template <typename> typename Pred>
-struct filter<Pred, T, Ts...> {
-  using _next_type = typename filter<Pred, Ts...>::type;
-  using type =
-      std::conditional_t<Pred<T>::value, push_front<_next_type, T>, _next_type>;
-};
-/// @}
-
-/// Apply a typelist to a type function
-/// @{
-template <template <typename...> typename F, typename T>
-struct apply {};
-
-template <template <typename...> typename F, typename... Ts>
-struct apply<F, TypeList<Ts...>> {
-  using type = F<Ts...>;
-};
-/// @}
-
-/// Apply a mapping function to a type list
-/// @{
-template <template <typename> typename F, typename T>
-struct map {};
-
-template <template <typename> typename F, typename... Ts>
-struct map<F, TypeList<Ts...>> {
-  using type = TypeList<typename F<Ts>::type...>;
-};
-/// @}
-
-/// Count the number of times a type occurs in a type list
-/// @{
-template <typename T, typename L>
-struct count {};
-
-template <typename T>
-struct count<T, TypeList<>> {
-  static constexpr std::size_t value = 0;
-};
-
-template <typename T, typename U, typename... Us>
-struct count<T, TypeList<U, Us...>> {
-  static constexpr std::size_t value =
-      std::conditional_t<std::is_same_v<T, U>,
-                         std::integral_constant<std::size_t, 1>,
-                         std::integral_constant<std::size_t, 0>>::value +
-      count<T, TypeList<Us...>>::value;
-};
 /// @}
 
 }  // namespace Types

@@ -133,6 +133,11 @@ class GenericParticleHypothesis {
     return (lhs.m_absPdg == rhs.m_absPdg) && (lhs.m_mass == rhs.m_mass) &&
            (lhs.m_chargeType == rhs.m_chargeType);
   }
+  friend bool operator!=(const GenericParticleHypothesis<ChargeType>& lhs,
+                         const GenericParticleHypothesis<ChargeType>& rhs) {
+    return (lhs.m_absPdg != rhs.m_absPdg) || (lhs.m_mass != rhs.m_mass) ||
+           (lhs.m_chargeType != rhs.m_chargeType);
+  }
 };
 
 }  // namespace Acts

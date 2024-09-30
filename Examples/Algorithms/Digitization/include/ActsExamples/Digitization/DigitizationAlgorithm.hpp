@@ -96,9 +96,6 @@ class DigitizationAlgorithm final : public IAlgorithm {
   /// Geometric digtizer
   ActsFatras::Channelizer m_channelizer;
 
-  using CellsMap =
-      std::map<Acts::GeometryIdentifier, std::vector<Cluster::Cell>>;
-
   ReadDataHandle<SimHitContainer> m_simContainerReadHandle{this,
                                                            "SimHitContainer"};
 
@@ -106,7 +103,6 @@ class DigitizationAlgorithm final : public IAlgorithm {
       this, "SourceLinks"};
   WriteDataHandle<MeasurementContainer> m_measurementWriteHandle{
       this, "Measurements"};
-  WriteDataHandle<CellsMap> m_cellsWriteHandle{this, "Cells"};
   WriteDataHandle<ClusterContainer> m_clusterWriteHandle{this, "Clusters"};
   WriteDataHandle<IndexMultimap<ActsFatras::Barcode>>
       m_measurementParticlesMapWriteHandle{this, "MeasurementParticlesMap"};

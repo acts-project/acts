@@ -166,8 +166,8 @@ void addGeometry(Context& ctx) {
                return selector.surfaces;
              })
         .def_property_readonly(
-            "highestTrackingVolume",
-            &Acts::TrackingGeometry::highestTrackingVolumePtr);
+            "worldVolume",
+            &Acts::TrackingGeometry::highestTrackingVolumeShared);
   }
 
   {
@@ -252,8 +252,7 @@ void addExperimentalGeometry(Context& ctx) {
       });
 
   // Portal definition
-  py::class_<Experimental::Portal, std::shared_ptr<Experimental::Portal>>(
-      m, "Portal");
+  py::class_<Portal, std::shared_ptr<Portal>>(m, "Portal");
 
   {
     // The surface hierarchy map

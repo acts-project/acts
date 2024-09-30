@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/detail/MPL/all_of.hpp"
+
 #include <tuple>
 #include <type_traits>
 
@@ -24,11 +26,11 @@ namespace Acts::detail {
 template <typename... extensions_t>
 struct Extendable {
   // clang-format off
-    static_assert((std::is_default_constructible_v<extensions_t> && ...),
+    static_assert(detail::all_of_v<std::is_default_constructible<extensions_t>::value...>,
                   "all extensions must be default constructible");
-    static_assert((std::is_copy_constructible_v<extensions_t> && ...),
+    static_assert(detail::all_of_v<std::is_copy_constructible<extensions_t>::value...>,
                   "all extensions must be copy constructible");
-    static_assert((std::is_move_constructible_v<extensions_t> && ...),
+    static_assert(detail::all_of_v<std::is_move_constructible<extensions_t>::value...>,
                   "all extensions must be move constructible");
   // clang-format on
 

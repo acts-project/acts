@@ -12,7 +12,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
-#include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -61,9 +62,9 @@ struct InteractionVolumeCollector {
   /// @param [in,out] result is the mutable result object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& /*logger*/) const {
+  void operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& navigator, result_type& result,
+                  const Logger& /*logger*/) const {
     // Retrieve the current volume
     auto currentVolume = navigator.currentVolume(state.navigation);
 
@@ -130,10 +131,11 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
     // Prepare Action list and abort list
     using MaterialSurfaceCollector =
         SurfaceCollector<MaterialSurfaceIdentifier>;
-    using ActorList = ActorList<MaterialSurfaceCollector,
-                                InteractionVolumeCollector, EndOfWorldReached>;
+    using ActionList =
+        ActionList<MaterialSurfaceCollector, InteractionVolumeCollector>;
+    using AbortList = AbortList<EndOfWorldReached>;
     using PropagatorOptions =
-        typename propagator_t::template Options<ActorList>;
+        typename propagator_t::template Options<ActionList, AbortList>;
 
     PropagatorOptions options(gctx, mctx);
 

@@ -26,7 +26,6 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <cstddef>
-#include <fstream>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>

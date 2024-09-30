@@ -428,6 +428,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
 
       // clang-format off
       auto& operator++() { ++it; return *this; }
+      auto operator!=(const Iterator& other) const { return it != other.it; }
       auto operator==(const Iterator& other) const { return it == other.it; }
       auto operator*() const { return ComponentProxy(*it, s); }
       // clang-format on
@@ -462,6 +463,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
 
       // clang-format off
       auto& operator++() { ++it; return *this; }
+      auto operator!=(const ConstIterator& other) const { return it != other.it; }
       auto operator==(const ConstIterator& other) const { return it == other.it; }
       auto operator*() const { return ConstComponentProxy{*it}; }
       // clang-format on

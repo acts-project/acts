@@ -51,15 +51,27 @@ ViewConfig s_viewLine = {.color = {0, 0, 220}};
 void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
                                           const Polyhedron& polyhedron,
                                           const ViewConfig& viewConfig) {
-  polyhedron.visualize(helper, viewConfig);
+  if (viewConfig.visible) {
+    if (!viewConfig.triangulate) {
+      helper.faces(polyhedron.vertices, polyhedron.faces, viewConfig.color);
+    } else {
+      helper.faces(polyhedron.vertices, polyhedron.triangularMesh,
+                   viewConfig.color);
+    }
+  }
 }
 
 void Acts::GeometryView3D::drawSurface(IVisualization3D& helper,
                                        const Surface& surface,
                                        const GeometryContext& gctx,
-                                       const Transform3& /*transform*/,
+                                       const Transform3& transform,
                                        const ViewConfig& viewConfig) {
-  surface.visualize(helper, gctx, viewConfig);
+  Polyhedron surfaceHedron =
+      surface.polyhedronRepresentation(gctx, viewConfig.nSegments);
+  if (!transform.isApprox(Transform3::Identity())) {
+    surfaceHedron.move(transform);
+  }
+  drawPolyhedron(helper, surfaceHedron, viewConfig);
 }
 
 void Acts::GeometryView3D::drawSurfaceArray(
@@ -151,9 +163,12 @@ void Acts::GeometryView3D::drawSurfaceArray(
 void Acts::GeometryView3D::drawVolume(IVisualization3D& helper,
                                       const Volume& volume,
                                       const GeometryContext& gctx,
-                                      const Transform3& /*transform*/,
+                                      const Transform3& transform,
                                       const ViewConfig& viewConfig) {
-  volume.visualize(helper, gctx, viewConfig);
+  auto bSurfaces = volume.volumeBounds().orientedSurfaces(volume.transform());
+  for (const auto& bs : bSurfaces) {
+    drawSurface(helper, *bs.surface, gctx, transform, viewConfig);
+  }
 }
 
 void Acts::GeometryView3D::drawPortal(IVisualization3D& helper,

@@ -8,10 +8,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Seed.hpp"
-#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
+#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
@@ -35,7 +34,6 @@
 
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"
-#include "SpacePointContainer.hpp"
 
 using namespace Acts::UnitLiterals;
 
@@ -125,25 +123,10 @@ int main(int argc, char** argv) {
   auto end_read = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_read = end_read - start_read;
 
-  // Config
-  Acts::SpacePointContainerConfig spConfig;
-  // Options
-  Acts::SpacePointContainerOptions spOptions;
-  spOptions.beamPos = {-.5_mm, -.5_mm};
+  std::cout << "read " << spVec.size() << " SP from file " << file << " in "
+            << elapsed_read.count() << "s" << std::endl;
 
-  // Prepare interface SpacePoint backend-ACTS
-  ActsExamples::SpacePointContainer container(spVec);
-  // Prepare Acts API
-  Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
-      spContainer(spConfig, spOptions, container);
-
-  std::cout << "read " << spContainer.size() << " SP from file " << file
-            << " in " << elapsed_read.count() << "s" << std::endl;
-
-  using value_type = typename decltype(spContainer)::SpacePointProxyType;
-  using seed_type = Acts::Seed<value_type>;
-
-  Acts::SeedFinderConfig<value_type> config;
+  Acts::SeedFinderConfig<SpacePoint> config;
   // silicon detector max
   config.rMax = 160._mm;
   config.deltaRMin = 5._mm;
@@ -168,7 +151,7 @@ int main(int argc, char** argv) {
   config.useVariableMiddleSPRange = false;
 
   Acts::SeedFinderOptions options;
-  options.beamPos = spOptions.beamPos;
+  options.beamPos = {-.5_mm, -.5_mm};
   options.bFieldInZ = 2_T;
 
   int numPhiNeighbors = 1;
@@ -187,14 +170,20 @@ int main(int argc, char** argv) {
   auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   Acts::SeedFilterConfig sfconf;
-
-  Acts::ATLASCuts<value_type> atlasCuts = Acts::ATLASCuts<value_type>();
-  config.seedFilter = std::make_unique<Acts::SeedFilter<value_type>>(
-      Acts::SeedFilter<value_type>(sfconf, &atlasCuts));
-  Acts::SeedFinder<value_type, Acts::CylindricalSpacePointGrid<value_type>>
+  Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
+  config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
+      Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
+  Acts::SeedFinder<SpacePoint, Acts::CylindricalSpacePointGrid<SpacePoint>>
       a;  // test creation of unconfigured finder
-  a = Acts::SeedFinder<value_type, Acts::CylindricalSpacePointGrid<value_type>>(
+  a = Acts::SeedFinder<SpacePoint, Acts::CylindricalSpacePointGrid<SpacePoint>>(
       config);
+
+  // covariance tool, sets covariances per spacepoint as required
+  auto ct = [=](const SpacePoint& sp, float, float, float) {
+    Acts::Vector3 position(sp.x(), sp.y(), sp.z());
+    Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
+    return std::make_tuple(position, covariance, sp.t());
+  };
 
   // setup spacepoint grid config
   Acts::CylindricalSpacePointGridConfig gridConf;
@@ -209,17 +198,15 @@ int main(int argc, char** argv) {
   gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
 
-  Acts::CylindricalSpacePointGrid<value_type> grid =
-      Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(gridConf,
+  Acts::CylindricalSpacePointGrid<SpacePoint> grid =
+      Acts::CylindricalSpacePointGridCreator::createGrid<SpacePoint>(gridConf,
                                                                      gridOpts);
   Acts::CylindricalSpacePointGridCreator::fillGrid(
-      config, options, grid, spContainer.begin(), spContainer.end(),
-      rRangeSPExtent);
-
-  auto spGroup = Acts::CylindricalBinnedGroup<value_type>(
+      config, options, grid, spVec.begin(), spVec.end(), ct, rRangeSPExtent);
+  auto spGroup = Acts::CylindricalBinnedGroup<SpacePoint>(
       std::move(grid), *bottomBinFinder, *topBinFinder);
 
-  std::vector<std::vector<seed_type>> seedVector;
+  std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   decltype(a)::SeedingState state;
   auto start = std::chrono::system_clock::now();
   for (auto [bottom, middle, top] : spGroup) {
@@ -239,20 +226,19 @@ int main(int argc, char** argv) {
   if (!quiet) {
     for (auto& regionVec : seedVector) {
       for (std::size_t i = 0; i < regionVec.size(); i++) {
-        const seed_type* seed = &regionVec[i];
-        const value_type* sp = seed->sp()[0];
+        const Acts::Seed<SpacePoint>* seed = &regionVec[i];
+        const SpacePoint* sp = seed->sp()[0];
         std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
                   << ") ";
         sp = seed->sp()[1];
-        std::cout << sp->externalSpacePoint()->layer << " (" << sp->x() << ", "
-                  << sp->y() << ", " << sp->z() << ") ";
+        std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
+                  << sp->z() << ") ";
         sp = seed->sp()[2];
-        std::cout << sp->externalSpacePoint()->layer << " (" << sp->x() << ", "
-                  << sp->y() << ", " << sp->z() << ") ";
+        std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
+                  << sp->z() << ") ";
         std::cout << std::endl;
       }
     }
   }
-
   return 0;
 }

@@ -17,9 +17,7 @@
 #include "ActsExamples/Traccc/DetrayStore.hpp"
 
 #include <detray/navigation/navigator.hpp>
-#include <detray/propagator/actor_chain.hpp>
-#include <detray/propagator/propagator.hpp>
-#include <detray/test/utils/inspectors.hpp>
+#include <detray/utils/inspectors.hpp>
 
 namespace ActsExamples {
 
@@ -37,26 +35,27 @@ using DetrayObjectTracer =
                                       detray::navigation::status::e_on_module,
                                       detray::navigation::status::e_on_portal>;
 
-template <typename stepper_t, typename detray_store_t>
+/// Inspector that prints the navigator state from within the navigator's
+/// method calls (cannot be done with an actor)
+using DetrayPrintInspector = detray::navigation::print_inspector;
+
+template <typename propagator_t, typename detray_store_t>
 class DetrayPropagator : public PropagatorInterface {
  public:
-  /// Configuration struct
-  struct Config {
-    /// The detray store
-    std::shared_ptr<const detray_store_t> detrayStore = nullptr;
-    /// Switch to sterile
-    bool sterile = false;
-  };
-
   /// Create a DetrayPropagator
   ///
-  /// @param cfg configuration struct
+  /// @param propagator The actual detray propagator to wrap
+  /// @param detrayStore The detray store to access the detector
   /// @param logger The logger instance
-  DetrayPropagator(const Config& cfg,
+  DetrayPropagator(propagator_t&& propagator,
+                   std::shared_ptr<const detray_store_t> detrayStore,
                    std::unique_ptr<const Acts::Logger> logger =
                        Acts::getDefaultLogger("DetrayPropagator",
                                               Acts::Logging::INFO))
-      : PropagatorInterface(), m_cfg(cfg), m_logger(std::move(logger)) {}
+      : PropagatorInterface(),
+        m_propagator(std::move(propagator)),
+        m_detrayStore(std::move(detrayStore)),
+        m_logger(std::move(logger)) {}
 
   ///@brief  Execute a propagation for charged particle parameters
   ///
@@ -87,76 +86,42 @@ class DetrayPropagator : public PropagatorInterface {
         {direction.x(), direction.y(), direction.z()},
         startParameters.charge());
 
-    // Return material
-    RecordedMaterial recordedMaterial;
+    typename propagator_t::state propagation(track, m_detrayStore->detector);
+
+    // Run the actual propagation
+    m_propagator.propagate(propagation);
+
+    // Retrieve navigation information
+    auto& inspector = propagation._navigation.inspector();
+    auto& objectTracer = inspector.template get<DetrayObjectTracer>();
+
     PropagationSummary summary(startParameters);
-
-    if (!m_cfg.sterile) {
-      /// Aggregation of multiple inspectors
-      using DetrayInspector = detray::aggregate_inspector<DetrayObjectTracer>;
-
-      // Navigation with inspection
-      using DetrayNavigator =
-          detray::navigator<Acts::DetrayHostDetector,
-                            detray::navigation::default_cache_size,
-                            DetrayInspector>;
-
-      // Propagator with empty actor chain (for the moment)
-      using Propagator =
-          detray::propagator<stepper_t, DetrayNavigator, detray::actor_chain<>>;
-
-      typename Propagator::state propagation(track,
-                                             m_cfg.detrayStore->detector);
-
-      Propagator propagator;
-
-      // Run the actual propagation
-      propagator.propagate(propagation);
-
-      // Retrieve navigation information
-      auto& inspector = propagation._navigation.inspector();
-      auto& objectTracer = inspector.template get<DetrayObjectTracer>();
-
-      // Translate the objects into the steps
-      for (const auto& object : objectTracer.object_trace) {
-        // Get the position of the object
-        const auto& dposition = object.pos;
-        const auto& sfDesription = object.intersection.sf_desc;
-        const auto sf =
-            detray::tracking_surface{m_cfg.detrayStore->detector, sfDesription};
-        Acts::GeometryIdentifier geoID{sf.source()};
-        // Create a step from the object
-        Acts::detail::Step step;
-        step.position = Acts::Vector3(dposition[0], dposition[1], dposition[2]);
-        step.geoID = geoID;
-        step.navDir = object.intersection.direction ? Acts::Direction::Forward
-                                                    : Acts::Direction::Backward;
-        summary.steps.emplace_back(step);
-      }
-    } else {
-      // Navigation with inspection
-      using DetrayNavigator =
-          detray::navigator<Acts::DetrayHostDetector,
-                            detray::navigation::default_cache_size>;
-
-      // Propagator with empty actor chain (for the moment)
-      using Propagator =
-          detray::propagator<stepper_t, DetrayNavigator, detray::actor_chain<>>;
-
-      typename Propagator::state propagation(track,
-                                             m_cfg.detrayStore->detector);
-
-      Propagator propagator;
-      // Run the actual propagation
-      propagator.propagate(propagation);
+    // Translate the objects into the steps
+    for (const auto& object : objectTracer.object_trace) {
+      // Get the position of the object
+      const auto& dposition = object.pos;
+      const auto& sfDesription = object.intersection.sf_desc;
+      const auto sf =
+          detray::tracking_surface{m_detrayStore->detector, sfDesription};
+      Acts::GeometryIdentifier geoID{sf.source()};
+      // Create a step from the object
+      Acts::detail::Step step;
+      step.position = Acts::Vector3(dposition[0], dposition[1], dposition[2]);
+      step.geoID = geoID;
+      step.navDir = object.intersection.direction ? Acts::Direction::Forward
+                                                  : Acts::Direction::Backward;
+      summary.steps.emplace_back(step);
     }
-
+    RecordedMaterial recordedMaterial;
     return std::pair{std::move(summary), std::move(recordedMaterial)};
   }
 
  private:
+  /// The propagator @todo fix when propagate() method is const in detray
+  mutable propagator_t m_propagator;
+
   /// The detray detector store and memory resource
-  Config m_cfg;
+  std::shared_ptr<const detray_store_t> m_detrayStore = nullptr;
 
   /// The logging instance
   std::unique_ptr<const Acts::Logger> m_logger = nullptr;

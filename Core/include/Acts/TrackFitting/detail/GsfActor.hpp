@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -146,9 +146,9 @@ struct GsfActor {
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& /*logger*/) const {
+  void operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& navigator, result_type& result,
+                  const Logger& /*logger*/) const {
     assert(result.fittedStates && "No MultiTrajectory set");
 
     // Return is we found an error earlier
@@ -206,13 +206,13 @@ struct GsfActor {
     result.visitedSurfaces.push_back(&surface);
 
     // Check what we have on this surface
-    const auto foundSourceLink =
+    const auto found_source_link =
         m_cfg.inputMeasurements->find(surface.geometryId());
     const bool haveMaterial =
         navigator.currentSurface(state.navigation)->surfaceMaterial() &&
         !m_cfg.disableAllMaterialHandling;
     const bool haveMeasurement =
-        foundSourceLink != m_cfg.inputMeasurements->end();
+        found_source_link != m_cfg.inputMeasurements->end();
 
     ACTS_VERBOSE(std::boolalpha << "haveMaterial " << haveMaterial
                                 << ", haveMeasurement: " << haveMeasurement);
@@ -263,7 +263,7 @@ struct GsfActor {
       TemporaryStates tmpStates;
 
       auto res = kalmanUpdate(state, stepper, navigator, result, tmpStates,
-                              foundSourceLink->second);
+                              found_source_link->second);
 
       if (!res.ok()) {
         setErrorOrAbort(res.error());
@@ -281,7 +281,7 @@ struct GsfActor {
 
       if (haveMeasurement) {
         res = kalmanUpdate(state, stepper, navigator, result, tmpStates,
-                           foundSourceLink->second);
+                           found_source_link->second);
       } else {
         res = noMeasurementUpdate(state, stepper, navigator, result, tmpStates,
                                   false);
@@ -547,7 +547,7 @@ struct GsfActor {
   Result<void> kalmanUpdate(propagator_state_t& state, const stepper_t& stepper,
                             const navigator_t& navigator, result_type& result,
                             TemporaryStates& tmpStates,
-                            const SourceLink& sourceLink) const {
+                            const SourceLink& source_link) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
 
     // Boolean flag, to distinguish measurement and outlier states. This flag
@@ -563,7 +563,7 @@ struct GsfActor {
 
       auto trackStateProxyRes = detail::kalmanHandleMeasurement(
           *m_cfg.calibrationContext, singleState, singleStepper,
-          m_cfg.extensions, surface, sourceLink, tmpStates.traj,
+          m_cfg.extensions, surface, source_link, tmpStates.traj,
           MultiTrajectoryTraits::kInvalid, false, logger());
 
       if (!trackStateProxyRes.ok()) {
@@ -634,11 +634,9 @@ struct GsfActor {
                                    bool doCovTransport) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
 
-    const bool precedingMeasurementExists = result.processedStates > 0;
-
     // Initialize as true, so that any component can flip it. However, all
     // components should behave the same
-    bool isHole = true;
+    bool is_hole = true;
 
     auto cmps = stepper.componentIterable(state.stepping);
     for (auto cmp : cmps) {
@@ -649,8 +647,7 @@ struct GsfActor {
       // now until we measure this is significant
       auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
           singleState, singleStepper, surface, tmpStates.traj,
-          MultiTrajectoryTraits::kInvalid, doCovTransport, logger(),
-          precedingMeasurementExists);
+          MultiTrajectoryTraits::kInvalid, doCovTransport, logger());
 
       if (!trackStateProxyRes.ok()) {
         return trackStateProxyRes.error();
@@ -659,7 +656,7 @@ struct GsfActor {
       const auto& trackStateProxy = *trackStateProxyRes;
 
       if (!trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
-        isHole = false;
+        is_hole = false;
       }
 
       tmpStates.tips.push_back(trackStateProxy.index());
@@ -667,7 +664,7 @@ struct GsfActor {
     }
 
     // These things should only be done once for all components
-    if (isHole) {
+    if (is_hole) {
       ++result.measurementHoles;
     }
 

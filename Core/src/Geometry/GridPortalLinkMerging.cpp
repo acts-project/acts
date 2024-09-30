@@ -213,11 +213,11 @@ std::unique_ptr<GridPortalLink> colinearMerge(
     auto mergedPortalLink = mergeVariableLocal();
     return mergedPortalLink;
   } else if (aType == AxisType::Equidistant && bType == AxisType::Variable) {
-    ACTS_VERBOSE("===> mixed merged");
+    ACTS_WARNING("===> mixed merged");
     auto mergedPortalLink = mergeVariableLocal();
     return mergedPortalLink;
   } else {
-    ACTS_VERBOSE("===> mixed merged");
+    ACTS_WARNING("===> mixed merged");
     auto mergedPortalLink = mergeVariableLocal();
     return mergedPortalLink;
   }

@@ -10,14 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Visualization/ViewConfig.hpp"
 
 #include <cstddef>
 #include <vector>
 
 namespace Acts {
-
-class IVisualization3D;
 
 /// @class Polyhedron
 ///
@@ -82,8 +79,5 @@ struct Polyhedron {
   ///
   /// @return ranges that describe the space taken by this surface
   Extent extent(const Transform3& transform = Transform3::Identity()) const;
-
-  void visualize(IVisualization3D& helper,
-                 const ViewConfig& viewConfig = {}) const;
 };
 }  // namespace Acts

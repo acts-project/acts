@@ -44,6 +44,10 @@ class DynamicKeyIterator {
     return m_it == other.m_it;
   }
 
+  bool operator!=(const DynamicKeyIterator& other) const {
+    return m_it != other.m_it;
+  }
+
   value_type operator*() const { return m_it->first; }
 
  private:

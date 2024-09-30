@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -18,7 +17,6 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -52,14 +50,9 @@ class SeedingAlgorithm final : public IAlgorithm {
     std::string outputSeeds;
 
     Acts::SeedFilterConfig seedFilterConfig;
-
-    Acts::SeedFinderConfig<typename Acts::SpacePointContainer<
-        ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-        Acts::detail::RefHolder>::SpacePointProxyType>
-        seedFinderConfig;
+    Acts::SeedFinderConfig<SimSpacePoint> seedFinderConfig;
     Acts::CylindricalSpacePointGridConfig gridConfig;
     Acts::CylindricalSpacePointGridOptions gridOptions;
-
     Acts::SeedFinderOptions seedFinderOptions;
 
     // allow for different values of rMax in gridConfig and seedFinderConfig
@@ -93,12 +86,8 @@ class SeedingAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  using SpacePointProxy_t = typename Acts::SpacePointContainer<
-      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-      Acts::detail::RefHolder>::SpacePointProxyType;
-
-  Acts::SeedFinder<SpacePointProxy_t,
-                   Acts::CylindricalSpacePointGrid<SpacePointProxy_t>>
+  Acts::SeedFinder<SimSpacePoint,
+                   Acts::CylindricalSpacePointGrid<SimSpacePoint>>
       m_seedFinder;
   std::unique_ptr<const Acts::GridBinFinder<2ul>> m_bottomBinFinder;
   std::unique_ptr<const Acts::GridBinFinder<2ul>> m_topBinFinder;
@@ -111,19 +100,19 @@ class SeedingAlgorithm final : public IAlgorithm {
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
-    static float rMin = 50.;
-    static float cotThetaMax = 1.5;
+    float RMin = 50.;
+    float CotThetaMax = 1.5;
 
-    if (bottomRadius < rMin &&
-        (cotTheta > cotThetaMax || cotTheta < -cotThetaMax)) {
+    if (bottomRadius < RMin &&
+        (cotTheta > CotThetaMax || cotTheta < -CotThetaMax)) {
       return false;
     }
     return true;
   }
 
-  static inline bool itkFastTrackingSPselect(const SpacePointProxy_t& sp) {
+  static inline bool itkFastTrackingSPselect(const SimSpacePoint& sp) {
     // At small r we remove points beyond |z| > 200.
-    float r = sp.radius();
+    float r = sp.r();
     float zabs = std::abs(sp.z());
     if (zabs > 200. && r < 50.) {
       return false;

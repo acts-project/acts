@@ -21,7 +21,11 @@
 #include "ActsExamples/Traccc/DetrayPropagator.hpp"
 #include "ActsExamples/Traccc/DetrayStore.hpp"
 
+#include <detray/navigation/navigator.hpp>
+#include <detray/propagator/actor_chain.hpp>
 #include <detray/propagator/line_stepper.hpp>
+#include <detray/propagator/propagator.hpp>
+#include <detray/utils/inspectors.hpp>
 #include <pybind11/pybind11.h>
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
@@ -58,22 +62,31 @@ void addTraccc(Context& ctx) {
 
   /// Define the DetrayPropagator
   {
-    traccc.def(
-        "createSlPropagatorHost",
-        [](std::shared_ptr<const DetrayHostStore> detrayStore,
-           bool sterile = false) {
-          std::shared_ptr<PropagatorInterface> detrayProagator = nullptr;
+    traccc.def("createPropagatorHost", [](std::shared_ptr<const DetrayHostStore>
+                                              detrayStore) {
+      std::shared_ptr<PropagatorInterface> detrayProagator = nullptr;
 
-          using DetrayLineStepper =
-              detray::line_stepper<typename DetrayHostDetector::algebra_type>;
+      /// Aggregation of multiple inspectors
+      using DetrayInspector =
+          detray::aggregate_inspector<DetrayObjectTracer, DetrayPrintInspector>;
 
-          using DetrayPropagator =
-              DetrayPropagator<DetrayLineStepper, DetrayHostStore>;
+      // Navigation with inspection
+      using DetrayNavigator =
+          detray::navigator<DetrayHostDetector, DetrayInspector>;
+      // Line stepper
+      using DetrayLineStepper =
+          detray::line_stepper<typename DetrayHostDetector::algebra_type>;
 
-          DetrayPropagator::Config cfg{detrayStore, sterile};
-          detrayProagator = std::make_shared<DetrayPropagator>(cfg);
-          return detrayProagator;
-        });
+      // Propagator with empty actor chain
+      using Propagator = detray::propagator<DetrayLineStepper, DetrayNavigator,
+                                            detray::actor_chain<>>;
+
+      Propagator propagator;
+      detrayProagator =
+          std::make_shared<DetrayPropagator<Propagator, DetrayHostStore>>(
+              std::move(propagator), detrayStore);
+      return detrayProagator;
+    });
   }
 }
 }  // namespace Acts::Python
