@@ -11,39 +11,43 @@
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 
 namespace {
-    /// Helper method to cancatenate the steps and push them onto the surface
-    ///
-    /// @param gctx is the geometry context
-    /// @param steps is the vector of steps to concatenate
-    /// @param surface is the surface to push the steps onto
-    ///
-    /// @return the concatenated step
-    Acts::detail::Step concatenateSteps(const Acts::GeometryContext gctx, const std::vector<Acts::detail::Step>& steps, const Acts::Surface& surface) {
-        // Average the position and direction
-        Acts::detail::Step concatStep;
-        if (steps.size() > 1){
-        for (const Acts::detail::Step& step : steps) {
-            concatStep.position += step.position;
-            concatStep.momentum += step.momentum;
-        }
-        concatStep.position /= steps.size();
-        concatStep.momentum /= steps.size();
-        } else {
-            concatStep = steps.front();
-        }
-        // Re-evaulate the position with a surface intersection
-        auto intersection = surface.intersect(gctx, concatStep.position, concatStep.momentum);
-        for (const auto& rsIntersection : intersection.split()){
-            if (rsIntersection.isValid()) {
-                concatStep.position = rsIntersection.position();
-                break;
-            }
-        }
-        // Set the surface identifier
-        concatStep.geoID = surface.geometryId();
-        return concatStep;
+/// Helper method to cancatenate the steps and push them onto the surface
+///
+/// @param gctx is the geometry context
+/// @param steps is the vector of steps to concatenate
+/// @param surface is the surface to push the steps onto
+///
+/// @return the concatenated step
+Acts::detail::Step concatenateSteps(
+    const Acts::GeometryContext gctx,
+    const std::vector<Acts::detail::Step>& steps,
+    const Acts::Surface& surface) {
+  // Average the position and direction
+  Acts::detail::Step concatStep;
+  if (steps.size() > 1) {
+    for (const Acts::detail::Step& step : steps) {
+      concatStep.position += step.position;
+      concatStep.momentum += step.momentum;
     }
+    concatStep.position /= steps.size();
+    concatStep.momentum /= steps.size();
+  } else {
+    concatStep = steps.front();
+  }
+  // Re-evaulate the position with a surface intersection
+  auto intersection =
+      surface.intersect(gctx, concatStep.position, concatStep.momentum);
+  for (const auto& rsIntersection : intersection.split()) {
+    if (rsIntersection.isValid()) {
+      concatStep.position = rsIntersection.position();
+      break;
+    }
+  }
+  // Set the surface identifier
+  concatStep.geoID = surface.geometryId();
+  return concatStep;
 }
+}  // namespace
 
 ActsExamples::SimHitToSummaryConversion::SimHitToSummaryConversion(
     const Config& config, Acts::Logging::Level level)
@@ -70,7 +74,8 @@ ActsExamples::ProcessCode ActsExamples::SimHitToSummaryConversion::execute(
   propagationSummaries.reserve(particles.size());
 
   // Prepare and sort
-  std::unordered_map<unsigned int, std::vector<std::vector<Acts::detail::Step>>> trackSteps;
+  std::unordered_map<unsigned int, std::vector<std::vector<Acts::detail::Step>>>
+      trackSteps;
   for (const auto& simHitsGroup : groupByModule(simHits)) {
     // Manual pair unpacking instead of using
     //   auto [moduleGeoId, moduleSimHits] : ...
@@ -80,23 +85,23 @@ ActsExamples::ProcessCode ActsExamples::SimHitToSummaryConversion::execute(
     const auto& moduleSimHits = simHitsGroup.second;
     std::unordered_map<unsigned int, std::vector<Acts::detail::Step>>
         moduleSteps;
-      for (const auto& simHit : moduleSimHits) {
-        unsigned int paritcleId = simHit.particleId().value();
-        if (moduleSteps.find(paritcleId) == moduleSteps.end()) {
-          moduleSteps[paritcleId] = std::vector<Acts::detail::Step>();
-        }
-        Acts::ActsScalar hx = simHit.fourPosition().x() / Acts::UnitConstants::mm;
-        Acts::ActsScalar hy = simHit.fourPosition().y() / Acts::UnitConstants::mm;
-        Acts::ActsScalar hz = simHit.fourPosition().z() / Acts::UnitConstants::mm;
-        Acts::detail::Step step;
-        step.position = Acts::Vector3(hx, hy, hz);
-        step.momentum = simHit.direction();
-        step.geoID = moduleGeoId;
-        step.navDir = Acts::Direction::Forward;
-        moduleSteps[paritcleId].push_back(step);
+    for (const auto& simHit : moduleSimHits) {
+      unsigned int paritcleId = simHit.particleId().value();
+      if (moduleSteps.find(paritcleId) == moduleSteps.end()) {
+        moduleSteps[paritcleId] = std::vector<Acts::detail::Step>();
       }
+      Acts::ActsScalar hx = simHit.fourPosition().x() / Acts::UnitConstants::mm;
+      Acts::ActsScalar hy = simHit.fourPosition().y() / Acts::UnitConstants::mm;
+      Acts::ActsScalar hz = simHit.fourPosition().z() / Acts::UnitConstants::mm;
+      Acts::detail::Step step;
+      step.position = Acts::Vector3(hx, hy, hz);
+      step.momentum = simHit.direction();
+      step.geoID = moduleGeoId;
+      step.navDir = Acts::Direction::Forward;
+      moduleSteps[paritcleId].push_back(step);
+    }
     // Loop over and fill into the trackSteps
-    for (auto [ particleId, steps ] : moduleSteps) {
+    for (auto [particleId, steps] : moduleSteps) {
       if (trackSteps.find(particleId) == trackSteps.end()) {
         trackSteps[particleId] = std::vector<std::vector<Acts::detail::Step>>();
       }
@@ -104,38 +109,36 @@ ActsExamples::ProcessCode ActsExamples::SimHitToSummaryConversion::execute(
     }
   }
 
-    // Loop over the particles and create the propagation summaries
-    for (const auto& particle : particles) {
-        // Create the propagation summary
-        Acts::CurvilinearTrackParameters start(particle.fourPosition(),
-                                        particle.direction(),
-                                        particle.charge()/particle.momentum().norm(),
-                                        std::nullopt,
-                                        particle.hypothesis());
-        PropagationSummary propagationSummary(start);
-        // Find the associated steps
-        auto steps = trackSteps.find(particle.particleId().value());
-        if (steps != trackSteps.end()) {
-            for (const std::vector<Acts::detail::Step>& moduleSteps : steps->second) {
-                // Get the GeometryIdentifier of the surface
-                Acts::GeometryIdentifier surface = moduleSteps.front().geoID;
-                // Find the surface
-                auto surfaceIt = m_cfg.surfaceByIdentifier.find(surface);
-                if (surfaceIt == m_cfg.surfaceByIdentifier.end()) {
-                    throw std::invalid_argument("Surface not found, shoud not happen");
-                }
-                Acts::detail::Step concatStep = concatenateSteps(context.geoContext, moduleSteps, *surfaceIt->second);
-                propagationSummary.steps.push_back(concatStep);
-            }
-        } else {
-            ACTS_WARNING("No steps found for particle " << particle.particleId().value());
+  // Loop over the particles and create the propagation summaries
+  for (const auto& particle : particles) {
+    // Create the propagation summary
+    Acts::CurvilinearTrackParameters start(
+        particle.fourPosition(), particle.direction(),
+        particle.charge() / particle.momentum().norm(), std::nullopt,
+        particle.hypothesis());
+    PropagationSummary propagationSummary(start);
+    // Find the associated steps
+    auto steps = trackSteps.find(particle.particleId().value());
+    if (steps != trackSteps.end()) {
+      for (const std::vector<Acts::detail::Step>& moduleSteps : steps->second) {
+        // Get the GeometryIdentifier of the surface
+        Acts::GeometryIdentifier surface = moduleSteps.front().geoID;
+        // Find the surface
+        auto surfaceIt = m_cfg.surfaceByIdentifier.find(surface);
+        if (surfaceIt == m_cfg.surfaceByIdentifier.end()) {
+          throw std::invalid_argument("Surface not found, should not happen");
         }
-
-        propagationSummaries.push_back(std::move(propagationSummary));
-
-
+        Acts::detail::Step concatStep = concatenateSteps(
+            context.geoContext, moduleSteps, *surfaceIt->second);
+        propagationSummary.steps.push_back(concatStep);
+      }
+    } else {
+      ACTS_WARNING("No steps found for particle "
+                   << particle.particleId().value());
     }
 
+    propagationSummaries.push_back(std::move(propagationSummary));
+  }
 
   // Write the propagation step data to the event store
   m_outputSummary(context, std::move(propagationSummaries));

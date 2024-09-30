@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -27,7 +27,7 @@ struct AlgorithmContext;
 /// and converts them into a PropagationSummary object.
 ///
 /// This allows for simulation and propagation to be compared at
-/// the smae output format.
+/// the same output format.
 class SimHitToSummaryConversion : public IAlgorithm {
  public:
   struct Config {
@@ -41,7 +41,7 @@ class SimHitToSummaryConversion : public IAlgorithm {
     std::string outputSummaryCollection = "PropagationSummary";
 
     /// Map of surface by identifier to allow local - to global
-    std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface *>
+    std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
         surfaceByIdentifier;
   };
 
