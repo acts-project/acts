@@ -341,7 +341,7 @@ class Navigator {
                       state.options.surfaceTolerance)) {
         ACTS_WARNING("We did not end up inside of the volume:");
         ACTS_WARNING("-> starting volume:" << *state.navigation.startVolume);
-        ACTS_WARNING("-> stating position: " << *stepper.position(state.stepping))
+        ACTS_WARNING("-> stating position: " << *stepper.position(state.stepping));
 
       }
       assert(state.navigation.startVolume->inside(
