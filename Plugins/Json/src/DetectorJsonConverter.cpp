@@ -27,6 +27,7 @@
 #include <map>
 #include <memory>
 #include <set>
+#include <string>
 
 nlohmann::json Acts::DetectorJsonConverter::toJson(
     const GeometryContext& gctx, const Experimental::Detector& detector,
@@ -81,7 +82,9 @@ nlohmann::json Acts::DetectorJsonConverter::toJson(
   nlohmann::json jHeader;
   jHeader["detector"] = detector.name();
   jHeader["type"] = "acts";
-  jHeader["date"] = std::asctime(ti);
+  char buffer[100];
+  strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", ti);
+  jHeader["date"] = std::string(buffer);
   jHeader["surface_count"] = nSurfaces;
   jHeader["portal_count"] = portals.size();
   jHeader["volume_count"] = detector.volumes().size();
@@ -102,7 +105,9 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
 
   nlohmann::json jCommonHeader;
   jCommonHeader["detector"] = detector.name();
-  jCommonHeader["date"] = std::asctime(ti);
+  char buffer[100];
+  strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", ti);
+  jCommonHeader["date"] = std::string(buffer);
   jCommonHeader["version"] = "detray - 0.44.0";
   jCommonHeader["tag"] = "geometry";
 

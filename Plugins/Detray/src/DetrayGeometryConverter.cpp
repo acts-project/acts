@@ -21,7 +21,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
-#include "detray/io/frontend/detector_writer.hpp"
+#include <detray/io/frontend/detector_writer.hpp>
 
 using namespace detray;
 

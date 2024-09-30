@@ -46,7 +46,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
 
     for (const auto& ts : track.trackStatesReversed()) {
       if (!ts.hasReferenceSurface()) {
-        ACTS_ERROR("Track state has no reference surface");
+        ACTS_DEBUG("Track state has no reference surface");
         continue;
       }
       auto iVolume = ts.referenceSurface().geometryId().volume();

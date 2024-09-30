@@ -134,8 +134,6 @@ struct TestContainerAccessor {
       return m_iterator == other.m_iterator;
     }
 
-    bool operator!=(const Iterator& other) const { return !(*this == other); }
-
     Acts::SourceLink operator*() const {
       const auto& sl = m_iterator->second;
       return Acts::SourceLink{sl};
@@ -314,7 +312,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
-  options.sourcelinkAccessor.connect<&Fixture::TestSourceLinkAccessor::range>(
+  options.sourceLinkAccessor.connect<&Fixture::TestSourceLinkAccessor::range>(
       &slAccessor);
 
   TrackContainer tc{Acts::VectorTrackContainer{},
@@ -372,7 +370,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
-  options.sourcelinkAccessor.connect<&Fixture::TestSourceLinkAccessor::range>(
+  options.sourceLinkAccessor.connect<&Fixture::TestSourceLinkAccessor::range>(
       &slAccessor);
 
   TrackContainer tc{Acts::VectorTrackContainer{},

@@ -36,7 +36,7 @@ enum PdgParticle : std::int32_t {
 };
 
 /// Convert an anti-particle to its particle and leave particles as-is.
-static constexpr inline PdgParticle makeAbsolutePdgParticle(PdgParticle pdg) {
+static constexpr PdgParticle makeAbsolutePdgParticle(PdgParticle pdg) {
   const auto value = static_cast<std::int32_t>(pdg);
   return static_cast<PdgParticle>((0 <= value) ? value : -value);
 }

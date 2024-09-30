@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,8 +8,8 @@
 
 #include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -22,6 +22,7 @@
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
+#include <fstream>
 #include <ios>
 #include <iostream>
 #include <stdexcept>
@@ -163,13 +164,8 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
     infoMap[toAdd.seedID] = toAdd;
   }
 
-  mos << "seed_id,particleId,"
-      << "pT,eta,phi,"
-      << "bX,bY,bZ,"
-      << "mX,mY,mZ,"
-      << "tX,tY,tZ,"
-      << "good/duplicate/fake,"
-      << "vertexZ,quality,"
+  mos << "seed_id,particleId," << "pT,eta,phi," << "bX,bY,bZ," << "mX,mY,mZ,"
+      << "tX,tY,tZ," << "good/duplicate/fake," << "vertexZ,quality,"
       << "Hits_ID" << '\n';
 
   for (auto& [id, info] : infoMap) {

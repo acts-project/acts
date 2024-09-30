@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 
 #include <iomanip>
 #include <utility>
@@ -234,10 +235,6 @@ std::string Acts::Surface::toString(const GeometryContext& gctx) const {
   return ss.str();
 }
 
-bool Acts::Surface::operator!=(const Acts::Surface& sf) const {
-  return !(operator==(sf));
-}
-
 Acts::Vector3 Acts::Surface::center(const GeometryContext& gctx) const {
   // fast access via transform matrix (and not translation())
   auto tMatrix = transform(gctx).matrix();
@@ -357,4 +354,11 @@ void Acts::Surface::assignSurfaceMaterial(
 
 void Acts::Surface::associateLayer(const Acts::Layer& lay) {
   m_associatedLayer = (&lay);
+}
+
+void Acts::Surface::visualize(IVisualization3D& helper,
+                              const GeometryContext& gctx,
+                              const ViewConfig& viewConfig) const {
+  Polyhedron polyhedron = polyhedronRepresentation(gctx, viewConfig.nSegments);
+  polyhedron.visualize(helper, viewConfig);
 }

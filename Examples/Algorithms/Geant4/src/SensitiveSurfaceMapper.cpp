@@ -66,7 +66,7 @@ namespace {
 void writeG4Polyhedron(
     Acts::IVisualization3D& visualizer, const G4Polyhedron& polyhedron,
     const Acts::Transform3& trafo = Acts::Transform3::Identity(),
-    Acts::ColorRGB color = {0, 0, 0}) {
+    Acts::Color color = {0, 0, 0}) {
   constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
 
   for (int i = 1; i <= polyhedron.GetNoFacets(); ++i) {

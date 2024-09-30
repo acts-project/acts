@@ -374,8 +374,8 @@ Acts::CylinderSurface::mergedWith(const CylinderSurface& other,
                                   const Logger& logger) const {
   using namespace Acts::UnitLiterals;
 
-  ACTS_DEBUG("Merging cylinder surfaces in " << binningValueName(direction)
-                                             << " direction");
+  ACTS_VERBOSE("Merging cylinder surfaces in " << binningValueName(direction)
+                                               << " direction");
 
   if (m_associatedDetElement != nullptr ||
       other.m_associatedDetElement != nullptr) {

@@ -176,8 +176,8 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
 Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
     const Acts::TrackingVolume* volume) {
   Acts::BinUtility bUtility;
-  if (volume->volumeMaterialSharedPtr() != nullptr) {
-    return {volume, volume->volumeMaterialSharedPtr()};
+  if (volume->volumeMaterialPtr() != nullptr) {
+    return {volume, volume->volumeMaterialPtr()};
   }
   // Check which type of bound is associated to the volume
   auto cyBounds = dynamic_cast<const Acts::CylinderVolumeBounds*>(

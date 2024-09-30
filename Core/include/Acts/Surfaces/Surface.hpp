@@ -25,6 +25,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 
 #include <array>
 #include <cstddef>
@@ -163,11 +164,6 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param other source surface for the comparison
   virtual bool operator==(const Surface& other) const;
-
-  /// Comparison (non-equality) operator
-  ///
-  /// @param sf Source surface for the comparison
-  virtual bool operator!=(const Surface& sf) const;
 
  public:
   /// Return method for the Surface type to avoid dynamic casts
@@ -483,6 +479,9 @@ class Surface : public virtual GeometryObject,
   /// cartesian coordinates
   virtual ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const = 0;
+
+  void visualize(IVisualization3D& helper, const GeometryContext& gctx,
+                 const ViewConfig& viewConfig = {}) const;
 
  protected:
   /// Output Method for std::ostream, to be overloaded by child classes

@@ -41,16 +41,8 @@ class CantorEdge {
   }
 
   T value() const { return m_value; }
+
+  auto operator<=>(const CantorEdge<T>& other) const = default;
 };
-
-template <typename T>
-bool operator==(const CantorEdge<T> &a, const CantorEdge<T> &b) {
-  return a.value() == b.value();
-}
-
-template <typename T>
-bool operator<(const CantorEdge<T> &a, const CantorEdge<T> &b) {
-  return a.value() < b.value();
-}
 
 }  // namespace Acts::detail

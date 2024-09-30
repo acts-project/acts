@@ -13,11 +13,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include <actsvg/core.hpp>
 
-namespace Acts {
-
-namespace Svg {
-
-namespace EventDataConverter {
+namespace Acts::Svg::EventDataConverter {
 
 /// Write/create a 3D point in XY view
 ///
@@ -62,8 +58,4 @@ actsvg::svg::object point(const Vector3& pos, ActsScalar size,
   return circle;
 }
 
-}  // namespace EventDataConverter
-
-}  // namespace Svg
-
-}  // namespace Acts
+}  // namespace Acts::Svg::EventDataConverter

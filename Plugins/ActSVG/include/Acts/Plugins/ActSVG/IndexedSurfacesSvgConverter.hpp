@@ -27,9 +27,7 @@
 #include <tuple>
 #include <vector>
 
-namespace Acts {
-
-namespace Svg {
+namespace Acts::Svg {
 
 using ProtoSurface = actsvg::proto::surface<std::vector<Vector3>>;
 using ProtoGrid = actsvg::proto::grid;
@@ -340,5 +338,4 @@ static inline actsvg::svg::object zphi(
 }
 
 }  // namespace View
-}  // namespace Svg
-}  // namespace Acts
+}  // namespace Acts::Svg

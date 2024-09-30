@@ -282,11 +282,7 @@ class GenericBoundTrackParameters {
            (lhs.m_surface == rhs.m_surface) &&
            (lhs.m_particleHypothesis == rhs.m_particleHypothesis);
   }
-  /// Compare two bound track parameters for bitwise in-equality.
-  friend bool operator!=(const GenericBoundTrackParameters& lhs,
-                         const GenericBoundTrackParameters& rhs) {
-    return !(lhs == rhs);
-  }
+
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
                                   const GenericBoundTrackParameters& tp) {
