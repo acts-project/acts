@@ -1,10 +1,10 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2024 CERN for the benefit of the ACTS project
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -264,7 +264,7 @@ class TrackingVolume : public Volume {
   const IVolumeMaterial* volumeMaterial() const;
 
   /// Return the material of the volume as shared pointer
-  const std::shared_ptr<const IVolumeMaterial>& volumeMaterialSharedPtr() const;
+  const std::shared_ptr<const IVolumeMaterial>& volumeMaterialPtr() const;
 
   /// Set the volume material description
   ///

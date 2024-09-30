@@ -1,10 +1,10 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2024 CERN for the benefit of the ACTS project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/TrackingVolume.hpp"
 
@@ -366,7 +366,7 @@ void TrackingVolume::closeGeometry(
         thisVolume->motherVolume()->volumeMaterial());
     if (protoMaterial == nullptr) {
       thisVolume->assignVolumeMaterial(
-          thisVolume->motherVolume()->volumeMaterialSharedPtr());
+          thisVolume->motherVolume()->volumeMaterialPtr());
     }
   }
 
@@ -577,7 +577,7 @@ const IVolumeMaterial* TrackingVolume::volumeMaterial() const {
 }
 
 const std::shared_ptr<const IVolumeMaterial>&
-TrackingVolume::volumeMaterialSharedPtr() const {
+TrackingVolume::volumeMaterialPtr() const {
   return m_volumeMaterial;
 }
 

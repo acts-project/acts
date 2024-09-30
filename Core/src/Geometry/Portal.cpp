@@ -1,10 +1,10 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2024 CERN for the benefit of the ACTS project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/Portal.hpp"
 
@@ -175,7 +175,7 @@ const RegularSurface& Portal::surface() const {
 Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
                      Portal& bPortal, BinningValue direction,
                      const Logger& logger) {
-  ACTS_DEBUG("Merging to portals along " << direction);
+  ACTS_VERBOSE("Merging two portals along " << direction);
 
   if (&aPortal == &bPortal) {
     ACTS_ERROR("Cannot merge a portal with itself");
@@ -238,7 +238,7 @@ Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
 
 Portal Portal::fuse(const GeometryContext& gctx, Portal& aPortal,
                     Portal& bPortal, const Logger& logger) {
-  ACTS_DEBUG("Fusing two portals");
+  ACTS_VERBOSE("Fusing two portals");
   if (&aPortal == &bPortal) {
     ACTS_ERROR("Cannot merge a portal with itself");
     throw PortalMergingException{};

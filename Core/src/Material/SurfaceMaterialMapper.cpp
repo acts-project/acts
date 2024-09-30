@@ -1,10 +1,10 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2024 CERN for the benefit of the ACTS project
+// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 
@@ -21,8 +21,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
@@ -173,8 +172,7 @@ void Acts::SurfaceMaterialMapper::collectMaterialVolumes(
                                    << "' for material surfaces.");
   ACTS_VERBOSE("- Insert Volume ...");
   if (tVolume.volumeMaterial() != nullptr) {
-    mState.volumeMaterial[tVolume.geometryId()] =
-        tVolume.volumeMaterialSharedPtr();
+    mState.volumeMaterial[tVolume.geometryId()] = tVolume.volumeMaterialPtr();
   }
 
   // Step down into the sub volume
@@ -240,12 +238,11 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   // Prepare Action list and abort list
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
   using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
-  using ActionList =
-      ActionList<MaterialSurfaceCollector, MaterialVolumeCollector>;
-  using AbortList = AbortList<EndOfWorldReached>;
+  using ActorList = ActorList<MaterialSurfaceCollector, MaterialVolumeCollector,
+                              EndOfWorldReached>;
 
-  StraightLinePropagator::Options<ActionList, AbortList> options(
-      mState.geoContext, mState.magFieldContext);
+  StraightLinePropagator::Options<ActorList> options(mState.geoContext,
+                                                     mState.magFieldContext);
 
   // Now collect the material layers by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();
