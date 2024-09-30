@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,9 +23,6 @@
 
 class TFile;
 class TTree;
-namespace ActsFatras {
-class Barcode;
-}  // namespace ActsFatras
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -98,7 +95,12 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
-  int m_eventNr{0};              ///< the event number of
+
+  int m_eventNr{0};  ///< the event number of
+
+  int m_volumeId{0};   ///< volume ID
+  int m_layerId{0};    ///< layer ID
+  int m_surfaceId{0};  ///< surface ID
 
   float m_loc0{NaNfloat};   ///< loc0
   float m_loc1{NaNfloat};   ///< loc1
@@ -106,18 +108,48 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
   float m_theta{NaNfloat};  ///< theta
   float m_qop{NaNfloat};    ///< q/p
   float m_time{NaNfloat};   ///< time
-  float m_p{NaNfloat};      ///< p
-  float m_pt{NaNfloat};     ///< pt
-  float m_eta{NaNfloat};    ///< eta
 
-  int m_t_charge{0};            ///< Truth particle charge
-  float m_t_loc0{NaNfloat};     ///< Truth parameter loc0
-  float m_t_loc1{NaNfloat};     ///< Truth parameter loc1
-  float m_t_phi{NaNfloat};      ///< Truth parameter phi
-  float m_t_theta{NaNfloat};    ///< Truth parameter theta
-  float m_t_qop{NaNfloat};      ///< Truth parameter qop
-  float m_t_time{NaNfloat};     ///< Truth parameter time
-  bool m_truthMatched = false;  ///< Whether the seed is matched with truth
+  float m_err_loc0{NaNfloat};   ///< loc0 error
+  float m_err_loc1{NaNfloat};   ///< loc1 error
+  float m_err_phi{NaNfloat};    ///< phi error
+  float m_err_theta{NaNfloat};  ///< theta error
+  float m_err_qop{NaNfloat};    ///< q/p error
+  float m_err_time{NaNfloat};   ///< time error
+
+  int m_charge{0};        ///< charge
+  float m_p{NaNfloat};    ///< p
+  float m_pt{NaNfloat};   ///< pt
+  float m_eta{NaNfloat};  ///< eta
+
+  bool m_t_matched{false};          ///< Whether the seed is matched with truth
+  std::uint64_t m_t_particleId{0};  ///< Truth particle Id
+  unsigned int m_nMajorityHits{0};  ///< Number of hits from majority particle
+
+  float m_t_loc0{NaNfloat};   ///< Truth parameter loc0
+  float m_t_loc1{NaNfloat};   ///< Truth parameter loc1
+  float m_t_phi{NaNfloat};    ///< Truth parameter phi
+  float m_t_theta{NaNfloat};  ///< Truth parameter theta
+  float m_t_qop{NaNfloat};    ///< Truth parameter qop
+  float m_t_time{NaNfloat};   ///< Truth parameter time
+
+  int m_t_charge{0};        ///< Truth particle charge
+  float m_t_p{NaNfloat};    ///< Truth parameter p
+  float m_t_pt{NaNfloat};   ///< Truth parameter pt
+  float m_t_eta{NaNfloat};  ///< Truth parameter eta
+
+  float m_res_loc0{NaNfloat};   ///< Residual loc0
+  float m_res_loc1{NaNfloat};   ///< Residual loc1
+  float m_res_phi{NaNfloat};    ///< Residual phi
+  float m_res_theta{NaNfloat};  ///< Residual theta
+  float m_res_qop{NaNfloat};    ///< Residual qop
+  float m_res_time{NaNfloat};   ///< Residual time
+
+  float m_pull_loc0{NaNfloat};   ///< Pull loc0
+  float m_pull_loc1{NaNfloat};   ///< Pull loc1
+  float m_pull_phi{NaNfloat};    ///< Pull phi
+  float m_pull_theta{NaNfloat};  ///< Pull theta
+  float m_pull_qop{NaNfloat};    ///< Pull qop
+  float m_pull_time{NaNfloat};   ///< Pull time
 };
 
 }  // namespace ActsExamples
