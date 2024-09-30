@@ -158,13 +158,15 @@ void CylinderContainerBlueprintNode::finalize(const Options& options,
     throw std::runtime_error("Volume is not connected");
   }
 
+  // @TODO: Add ability to override this
+  const auto* policyFactory = options.defaultNavigationPolicyFactory.get();
+
   ACTS_DEBUG(prefix() << "Registering " << m_gaps.size()
                       << " gap volumes with parent");
   for (auto& [shell, gap] : m_gaps) {
     std::cout << "~> " << gap->volumeName() << std::endl;
-    // @TODO: This needs to become configurable
-    gap->setNavigationPolicy(
-        std::make_unique<TryAllPortalNavigationPolicy>(*gap));
+    gap->setNavigationPolicy(policyFactory->build(*gap));
+
     parent.addVolume(std::move(gap));
     shell->applyToVolume();
   }

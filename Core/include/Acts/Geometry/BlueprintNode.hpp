@@ -33,7 +33,14 @@ class StaticBlueprintNode;
 class BlueprintNode {
  public:
   struct Options {
+    std::unique_ptr<NavigationPolicyFactory> defaultNavigationPolicyFactory{
+        makeDefaultNavigationPolicyFactory()};
+
     void validate() const;
+
+   private:
+    static std::unique_ptr<NavigationPolicyFactory>
+    makeDefaultNavigationPolicyFactory();
   };
 
   BlueprintNode() = default;

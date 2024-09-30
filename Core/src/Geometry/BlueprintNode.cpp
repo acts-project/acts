@@ -11,6 +11,8 @@
 #include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
+#include "Acts/Navigation/TryAllNavigationPolicies.hpp"
 
 #include <ostream>
 
@@ -46,7 +48,18 @@ std::string BlueprintNode::prefix() const {
   return indent() + "[" + name() + "]: ";
 }
 
-void BlueprintNode::Options::validate() const {}
+void BlueprintNode::Options::validate() const {
+  if (!defaultNavigationPolicyFactory) {
+    throw std::invalid_argument("Navigation policy factory is nullptr");
+  }
+}
+
+std::unique_ptr<NavigationPolicyFactory>
+BlueprintNode::Options::makeDefaultNavigationPolicyFactory() {
+  return NavigationPolicyFactory::make()
+      .add<TryAllPortalNavigationPolicy>()
+      .asUniquePtr();
+}
 
 StaticBlueprintNode& BlueprintNode::addStaticVolume(
     std::unique_ptr<TrackingVolume> volume,

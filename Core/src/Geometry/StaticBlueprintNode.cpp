@@ -11,7 +11,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Navigation/NavigationPolicy.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 
@@ -100,7 +100,7 @@ void StaticBlueprintNode::finalize(const Options& options,
 
   // @TODO: This needs to become configurable
   m_volume->setNavigationPolicy(
-      std::make_unique<TryAllPortalNavigationPolicy>(*m_volume));
+      options.defaultNavigationPolicyFactory->build(*m_volume));
 
   parent.addVolume(std::move(m_volume));
 }

@@ -13,7 +13,7 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Navigation/NavigationPolicy.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 
 namespace Acts {
@@ -117,7 +117,7 @@ std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
 
   // @TODO: This needs to become configurable
   world->setNavigationPolicy(
-      std::make_unique<TryAllPortalNavigationPolicy>(*world));
+      options.defaultNavigationPolicyFactory->build(*world));
 
   // Need one-sided portal shell that connects outwards to nullptr
   SingleCylinderPortalShell worldShell{*world};
