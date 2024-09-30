@@ -663,7 +663,25 @@ TrackingVolume::MutablePortalRange TrackingVolume::portals() {
 }
 
 void TrackingVolume::addPortal(std::shared_ptr<Portal> portal) {
+  if (portal == nullptr) {
+    throw std::invalid_argument("Portal is nullptr");
+  }
   m_portals.push_back(std::move(portal));
+}
+
+TrackingVolume::SurfaceRange TrackingVolume::surfaces() const {
+  return SurfaceRange{m_surfaces};
+}
+
+TrackingVolume::MutableSurfaceRange TrackingVolume::surfaces() {
+  return MutableSurfaceRange{m_surfaces};
+}
+
+void TrackingVolume::addSurface(std::shared_ptr<Surface> surface) {
+  if (surface == nullptr) {
+    throw std::invalid_argument("Surface is nullptr");
+  }
+  m_surfaces.push_back(std::move(surface));
 }
 
 }  // namespace Acts
