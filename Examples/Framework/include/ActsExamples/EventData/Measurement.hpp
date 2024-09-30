@@ -23,6 +23,7 @@
 #include <concepts>
 #include <cstddef>
 #include <iosfwd>
+#include <iterator>
 #include <type_traits>
 #include <variant>
 #include <vector>
@@ -138,12 +139,28 @@ class MeasurementContainer {
     using Container = std::conditional_t<Const, const MeasurementContainer,
                                          MeasurementContainer>;
 
-    IteratorImpl(Container& container, std::size_t index)
-        : m_container(container), m_index(index) {}
+    IteratorImpl() : m_container(nullptr), m_index(0) {}
 
-    reference operator*() const { return m_container.getMeasurement(m_index); }
+    IteratorImpl(Container& container, std::size_t index)
+        : m_container(&container), m_index(index) {}
+
+    template <bool OtherConst>
+    IteratorImpl(const IteratorImpl<OtherConst>& o)
+        : m_container(o.m_container), m_index(o.m_index) {}
+
+    reference operator*() const {
+      assert(m_container != nullptr);
+      return m_container->getMeasurement(m_index);
+    }
 
     pointer operator->() const { return &operator*(); }
+
+    template <bool OtherConst>
+    IteratorImpl& operator=(const IteratorImpl<OtherConst>& o) {
+      m_container = o.m_container;
+      m_index = o.m_index;
+      return *this;
+    }
 
     IteratorImpl& operator++() {
       ++m_index;
@@ -161,7 +178,7 @@ class MeasurementContainer {
     }
 
    private:
-    Container& m_container;
+    Container* m_container;
     Index m_index;
   };
 
