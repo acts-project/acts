@@ -222,12 +222,11 @@ class BranchStopper {
       // count both holes and outliers as holes for pixel/strip counts
       if (trackState.typeFlags().test(Acts::TrackStateFlag::HoleFlag) ||
           trackState.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
-        if (m_cfg.pixelVolumes.count(
-                trackState.referenceSurface().geometryId().volume()) >= 1) {
+        if (m_cfg.pixelVolumes.contains(
+                trackState.referenceSurface().geometryId().volume())) {
           ++branchState.nPixelHoles;
-        } else if (m_cfg.stripVolumes.count(
-                       trackState.referenceSurface().geometryId().volume()) >=
-                   1) {
+        } else if (m_cfg.stripVolumes.contains(
+                       trackState.referenceSurface().geometryId().volume())) {
           ++branchState.nStripHoles;
         }
       }

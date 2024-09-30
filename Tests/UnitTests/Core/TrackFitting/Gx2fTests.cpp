@@ -149,7 +149,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
         RectangleBounds(halfSizeSurface, halfSizeSurface));
 
     // Add material only for selected surfaces
-    if (surfaceIndexWithMaterial.count(surfPos) != 0) {
+    if (surfaceIndexWithMaterial.contains(surfPos)) {
       // Material of the surfaces
       MaterialSlab matProp(makeSilicon(), 5_mm);
       cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
