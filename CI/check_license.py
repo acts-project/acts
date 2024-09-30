@@ -32,26 +32,6 @@ def err(string):
         return string
 
 
-def get_git_add_year(src):
-    # Retrieve the first commit where the file was added
-    output = (
-        check_output(
-            ["git", "log", "--follow", "--diff-filter=A", "--format=%ad", "--", src]
-        )
-        .decode("utf-8")
-        .strip()
-    )
-
-    # If no output, file was not added or found
-    assert output, f"File {src} was not found in the repository or was not added."
-
-    # Extract the year from the full commit date
-    match = re.search(r"\b(\d{4})\b", output)
-    assert match, "Date format is not as expected or could not extract year."
-
-    return int(match.group(1))
-
-
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("input", nargs="+")
@@ -63,23 +43,18 @@ def main():
     args = p.parse_args()
     print(args.exclude)
 
+    extensions = ["cpp", "hpp", "ipp", "cuh", "cu", "C", "h"]
+
     if len(args.input) == 1 and os.path.isdir(args.input[0]):
+        find_command = ["find", args.input[0]]
+        for ext in extensions:
+            find_command.extend(["-iname", f"*.{ext}", "-or"])
+        # Remove the last "-or" for a valid command
+        find_command = find_command[:-1]
+
         srcs = (
             str(
-                check_output(
-                    [
-                        "find",
-                        args.input[0],
-                        "-iname",
-                        "*.cpp",
-                        "-or",
-                        "-iname",
-                        "*.hpp",
-                        "-or",
-                        "-iname",
-                        "*.ipp",
-                    ]
-                ),
+                check_output(find_command),
                 "utf-8",
             )
             .strip()
@@ -89,8 +64,10 @@ def main():
     else:
         srcs = args.input
 
+    founding_year = 2016
     current_year = int(datetime.now().strftime("%Y"))
-    year = current_year
+    year_str = f"{founding_year}-{current_year}"
+    year = year_str
 
     raw = """// This file is part of the ACTS project.
 //
@@ -112,26 +89,12 @@ def main():
 
     ref = re.compile(reg, re.M)
     clean_re = re.compile(r"(\(C\)) (.*) (CERN)", re.M)
-    year_re = re.compile(r"^(?P<year1>20\d{2}|(?P<year2>20\d{2})-(?P<year3>20\d{2}))$")
-    extract_re = re.compile(r"(20\d{2})-?(20\d{2})?")
 
     def clean(s):
         return clean_re.sub(r"\1 XXXX \3", s)
 
     def get_clean_lines(s):
         return [clean(l) + "\n" for l in s.split("\n")]
-
-    def validate_years(year1, year2):
-        if year1 and year2:
-            year1 = int(year1)
-            year2 = int(year2)
-            if not year1 < year2 <= current_year:
-                return False
-        else:
-            theyear = int(year1 if year1 else year2)
-            if theyear > current_year:
-                return False
-        return True
 
     error_summary = ""
 
@@ -143,10 +106,12 @@ def main():
     srcs = list(srcs)
     nsrcs = len(srcs)
     step = max(int(nsrcs / 20), 1)
+    # Iterate over all files
     for i, src in enumerate(srcs):
         if any([fnmatch(src, e) for e in args.exclude]):
             continue
 
+        # Print progress
         if nsrcs > 1 and i % step == 0:
             string = f"{i}/{nsrcs} -> {i / float(nsrcs) * 100.0:.2f}%"
             if sys.stdout.isatty():
@@ -154,6 +119,7 @@ def main():
             else:
                 print(string)
 
+        # Read the header
         with open(src, "r+") as f:
             license = ""
             for _ in range(len(raw)):
@@ -164,10 +130,11 @@ def main():
             license = ("".join(license)).strip()
             m = ref.search(license)
 
+            # License could not be found in header
             if m is None:
                 eprint("Invalid / missing license in " + src + "")
 
-                exp = [l + "\n" for l in raw.format(year="YYYY").split("\n")]
+                exp = [l + "\n" for l in raw.format(year=year_str).split("\n")]
                 act = get_clean_lines(license)
 
                 diff = difflib.unified_diff(exp, act)
@@ -179,59 +146,19 @@ def main():
                     f.seek(0)
                     file_content = f.read()
                     f.seek(0)
-                    stmnt = raw.format(year=current_year)
+                    stmnt = raw.format(year=year_str)
                     f.write(stmnt + "\n\n")
                     f.write(file_content)
 
                 exit = 1
                 continue
 
-            # we have a match, need to verify year string is right
-
+            # We have a match, need to verify year string is right
             year_act = m.group("year")
-            ym = year_re.match(year_act)
-            valid = True
-            if not ym:
-                eprint(f"Year string does not match format in {src}")
-                eprint("Expected: YYYY or YYYY-YYYY (year or year range)")
-
+            if year_act != year_str:
                 exit = 1
-                valid = False
-
-            else:
-                extract = extract_re.search(year_act)
-                year1, year2 = extract.groups(default=None)
-
-                if not validate_years(year1, year2):
-                    eprint(f"Year string is not valid in {src}")
-                    eprint("Year string is: " + year_act + "\n")
-                    valid = False
-
-                git_add_year = get_git_add_year(src)
-                assert (
-                    git_add_year <= current_year
-                ), f"File {src} is created in the future."
-
-                if git_add_year != current_year:
-                    # need year range in licence
-                    if not (year1 and year2):
-                        valid = False
-                    elif int(year1) != git_add_year or int(year2) != current_year:
-                        valid = False
-
-                # File added this year
-                elif int(year1 if year1 else year2) < current_year:
-                    valid = False
-
-            if not valid:
-                exit = 1
-                if git_add_year == current_year:
-                    year_str = f"{git_add_year}"
-                else:
-                    year_str = f"{git_add_year}-{current_year}"
 
                 eprint(f"File: {src}")
-                eprint(f"- File was added in {git_add_year}")
                 eprint(f"=> License should say {year_str}")
                 eprint(err(f"{CROSS_SYMBOL} But says: {year_act}"))
 
