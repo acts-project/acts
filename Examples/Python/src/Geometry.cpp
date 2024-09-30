@@ -238,21 +238,21 @@ void addExperimentalGeometry(Context& ctx) {
       .def("volumes", &Detector::volumes)
       .def("volumePtrs", &Detector::volumePtrs)
       .def("numberVolumes",
-           [](Detector& self) { return self.volumes().size(); })
+           [](const Detector& self) { return self.volumes().size(); })
       .def("extractMaterialSurfaces",
-           [](Detector& self) {
+           [](const Detector& self) {
              MaterialSurfaceSelector selector;
              self.visitSurfaces(selector);
              return selector.surfaces;
            })
       .def("geoIdSurfaceMap",
-           [](Detector& self) {
+           [](const Detector& self) {
              IdentifierSurfacesCollector collector;
              self.visitSurfaces(collector);
              return collector.surfaces;
            })
       .def("cylindricalVolumeRepresentation",
-           [](Detector& self, Acts::GeometryContext& gctx) {
+           [](const Detector& self, const Acts::GeometryContext& gctx) {
              // Loop over the volumes and gather the extent
              Extent extent;
              for (const auto& volume : self.volumes()) {

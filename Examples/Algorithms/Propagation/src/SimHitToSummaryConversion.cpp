@@ -19,7 +19,7 @@ namespace {
 ///
 /// @return the concatenated step
 Acts::detail::Step concatenateSteps(
-    const Acts::GeometryContext gctx,
+    const Acts::GeometryContext& gctx,
     const std::vector<Acts::detail::Step>& steps,
     const Acts::Surface& surface) {
   // Average the position and direction
@@ -29,8 +29,9 @@ Acts::detail::Step concatenateSteps(
       concatStep.position += step.position;
       concatStep.momentum += step.momentum;
     }
-    concatStep.position /= steps.size();
-    concatStep.momentum /= steps.size();
+    Acts::ActsScalar weight = 1.0 / static_cast<Acts::ActsScalar>(steps.size());
+    concatStep.position *= weight;
+    concatStep.momentum *= weight;
   } else {
     concatStep = steps.front();
   }
@@ -74,7 +75,8 @@ ActsExamples::ProcessCode ActsExamples::SimHitToSummaryConversion::execute(
   propagationSummaries.reserve(particles.size());
 
   // Prepare and sort
-  std::unordered_map<unsigned int, std::vector<std::vector<Acts::detail::Step>>>
+  std::unordered_map<unsigned long,
+                     std::vector<std::vector<Acts::detail::Step>>>
       trackSteps;
   for (const auto& simHitsGroup : groupByModule(simHits)) {
     // Manual pair unpacking instead of using
@@ -83,11 +85,11 @@ ActsExamples::ProcessCode ActsExamples::SimHitToSummaryConversion::execute(
     // binding in the lambda used for visiting the smearer below.
     Acts::GeometryIdentifier moduleGeoId = simHitsGroup.first;
     const auto& moduleSimHits = simHitsGroup.second;
-    std::unordered_map<unsigned int, std::vector<Acts::detail::Step>>
+    std::unordered_map<unsigned long, std::vector<Acts::detail::Step>>
         moduleSteps;
     for (const auto& simHit : moduleSimHits) {
-      unsigned int paritcleId = simHit.particleId().value();
-      if (moduleSteps.find(paritcleId) == moduleSteps.end()) {
+      unsigned long paritcleId = simHit.particleId().value();
+      if (!moduleSteps.contains(paritcleId)) {
         moduleSteps[paritcleId] = std::vector<Acts::detail::Step>();
       }
       Acts::ActsScalar hx = simHit.fourPosition().x() / Acts::UnitConstants::mm;
@@ -101,8 +103,8 @@ ActsExamples::ProcessCode ActsExamples::SimHitToSummaryConversion::execute(
       moduleSteps[paritcleId].push_back(step);
     }
     // Loop over and fill into the trackSteps
-    for (auto [particleId, steps] : moduleSteps) {
-      if (trackSteps.find(particleId) == trackSteps.end()) {
+    for (const auto& [particleId, steps] : moduleSteps) {
+      if (!trackSteps.contains(particleId)) {
         trackSteps[particleId] = std::vector<std::vector<Acts::detail::Step>>();
       }
       trackSteps[particleId].push_back(steps);
