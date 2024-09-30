@@ -419,6 +419,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       }
     });
 
+    // trim the track if requested
+    if (m_cfg.trimTracks) {
+      Acts::trimTrack(track, true, true, true);
+    }
     Acts::calculateTrackQuantities(track);
 
     if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {

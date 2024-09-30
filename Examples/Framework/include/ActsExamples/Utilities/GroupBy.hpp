@@ -92,10 +92,6 @@ class GroupBy {
                                      const GroupEndIterator& rhs) {
       return lhs.m_groupBegin == rhs;
     }
-    friend constexpr bool operator!=(const GroupIterator& lhs,
-                                     const GroupEndIterator& rhs) {
-      return !(lhs == rhs);
-    }
   };
 
   /// Construct the group-by proxy for an iterator range.
@@ -119,7 +115,7 @@ class GroupBy {
   /// complexity in the group size. It does not assume any ordering of the
   /// underlying container and is a cache-friendly access pattern.
   constexpr Iterator findEndOfGroup(Iterator start) const {
-    // check for end so we can safely dereference the start iterator.
+    // check for end that we can safely dereference the start iterator.
     if (start == m_end) {
       return start;
     }

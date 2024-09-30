@@ -103,8 +103,6 @@ class TrackStateRange {
       return false;
     }
 
-    bool operator!=(const Iterator& other) const { return !(*this == other); }
-
     ProxyType operator*() const { return *proxy; }
     ProxyType operator*() { return *proxy; }
   };

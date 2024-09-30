@@ -31,12 +31,6 @@ bool Acts::BinnedGroupIterator<grid_t>::operator==(
 }
 
 template <typename grid_t>
-bool Acts::BinnedGroupIterator<grid_t>::operator!=(
-    const Acts::BinnedGroupIterator<grid_t>& other) const {
-  return !(*this == other);
-}
-
-template <typename grid_t>
 Acts::BinnedGroupIterator<grid_t>&
 Acts::BinnedGroupIterator<grid_t>::operator++() {
   ++m_gridItr;

@@ -43,10 +43,6 @@ class BenchmarkSourceLink final {
     return (lhs.geometryId() == rhs.geometryId()) &&
            (lhs.m_index == rhs.m_index);
   }
-  friend bool operator!=(const BenchmarkSourceLink& lhs,
-                         const BenchmarkSourceLink& rhs) {
-    return !(lhs == rhs);
-  }
 };
 
 int main(int /*argc*/, char** /*argv[]*/) {

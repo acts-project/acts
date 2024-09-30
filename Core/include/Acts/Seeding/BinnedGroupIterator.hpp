@@ -83,10 +83,6 @@ class BinnedGroupIterator {
   /// @param [in] other The BinnedGroupIterator we are comparing against this one
   /// @return The result of the comparison
   bool operator==(const BinnedGroupIterator<grid_t>& other) const;
-  /// @brief (In-)Equality operator
-  /// @param [in] other The BinnedGroupIterator we are comparing against this one
-  /// @return The result of the comparison
-  bool operator!=(const BinnedGroupIterator<grid_t>& other) const;
 
   /// @brief Increment the iterator by one (pre)
   /// @return The incremented iterator
