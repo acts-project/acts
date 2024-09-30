@@ -1,10 +1,10 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the ACTS project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/CuboidalContainerBuilder.hpp"
@@ -166,8 +166,8 @@ void addGeometry(Context& ctx) {
                return selector.surfaces;
              })
         .def_property_readonly(
-            "worldVolume",
-            &Acts::TrackingGeometry::highestTrackingVolumeShared);
+            "highestTrackingVolume",
+            &Acts::TrackingGeometry::highestTrackingVolumePtr);
   }
 
   {
@@ -252,7 +252,8 @@ void addExperimentalGeometry(Context& ctx) {
       });
 
   // Portal definition
-  py::class_<Portal, std::shared_ptr<Portal>>(m, "Portal");
+  py::class_<Experimental::Portal, std::shared_ptr<Experimental::Portal>>(
+      m, "Portal");
 
   {
     // The surface hierarchy map
