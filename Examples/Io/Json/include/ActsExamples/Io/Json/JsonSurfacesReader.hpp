@@ -36,4 +36,12 @@ struct Options {
 Acts::GeometryHierarchyMap<std::shared_ptr<Acts::Surface>> read(
     const Options& options);
 
+/// @brief Read the sflat surfaces urfaces from the input file
+///
+/// @param inputFile is the input file to read from
+///
+/// @return  a vector of surfaces
+std::vector<std::shared_ptr<Acts::Surface>> readSurfaces(
+    const Options& options);
+
 }  // namespace ActsExamples::JsonSurfacesReader
