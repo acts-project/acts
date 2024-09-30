@@ -110,7 +110,7 @@ std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(
 
 void Geant4Manager::registerPhysicsListFactory(
     std::string name, std::shared_ptr<PhysicsListFactory> physicsListFactory) {
-  if (m_physicsListFactories.find(name) != m_physicsListFactories.end()) {
+  if (m_physicsListFactories.contains(name)) {
     throw std::invalid_argument("name already mapped");
   }
   m_physicsListFactories.emplace(std::move(name),

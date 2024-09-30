@@ -115,7 +115,7 @@ void VectorTrackContainer::copyDynamicFrom_impl(IndexType dstIdx,
 void VectorTrackContainer::ensureDynamicColumns_impl(
     const detail_vtc::VectorTrackContainerBase& other) {
   for (auto& [key, value] : other.m_dynamic) {
-    if (m_dynamic.find(key) == m_dynamic.end()) {
+    if (!m_dynamic.contains(key)) {
       m_dynamic[key] = value->clone(true);
     }
   }
