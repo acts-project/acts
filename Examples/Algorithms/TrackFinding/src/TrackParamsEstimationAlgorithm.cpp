@@ -56,7 +56,7 @@ Acts::BoundSquareMatrix makeInitialCovariance(
 
       // theta contribution
       variance +=
-          varianceTheta * std::pow(params[Acts::eBoundQOverP] *
+          varianceTheta * std::pow(params[Acts::eBoundQOverP] /
                                        std::tan(params[Acts::eBoundTheta]),
                                    2);
     }
