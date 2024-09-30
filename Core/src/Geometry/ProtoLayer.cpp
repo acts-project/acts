@@ -13,26 +13,23 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <algorithm>
-#include <array>
-#include <string>
-#include <utility>
-
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
 namespace Acts {
 
 ProtoLayer::ProtoLayer(const GeometryContext& gctx,
-                       const std::vector<const Surface*>& surfaces)
-    : m_surfaces(surfaces) {
+                       const std::vector<const Surface*>& surfaces,
+                       const Transform3& transform)
+    : transform(transform), m_surfaces(surfaces) {
   measure(gctx, surfaces);
 }
 
 ProtoLayer::ProtoLayer(
     const GeometryContext& gctx,
-    const std::vector<std::shared_ptr<const Surface>>& surfaces)
-    : m_surfaces(unpack_shared_vector(surfaces)) {
+    const std::vector<std::shared_ptr<const Surface>>& surfaces,
+    const Transform3& transform)
+    : transform(transform), m_surfaces(unpack_shared_vector(surfaces)) {
   measure(gctx, m_surfaces);
 }
 
@@ -80,13 +77,12 @@ void ProtoLayer::measure(const GeometryContext& gctx,
       Vector3 sfNormal = regSurface->normal(gctx, sf->center(gctx));
       std::vector<double> deltaT = {-0.5 * thickness, 0.5 * thickness};
       for (const auto& dT : deltaT) {
-        Transform3 dtransform = Transform3::Identity();
-        dtransform.pretranslate(dT * sfNormal);
+        Transform3 dtransform = transform * Translation3{dT * sfNormal};
         extent.extend(sfPolyhedron.extent(dtransform));
       }
       continue;
     }
-    extent.extend(sfPolyhedron.extent());
+    extent.extend(sfPolyhedron.extent(transform));
   }
 }
 
