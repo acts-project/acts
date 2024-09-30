@@ -13,7 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Navigation/NavigationPolicy.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 
@@ -35,7 +35,8 @@ const std::string& CylinderContainerBlueprintNode::name() const {
   return m_name;
 }
 
-Volume& CylinderContainerBlueprintNode::build(const Logger& logger) {
+Volume& CylinderContainerBlueprintNode::build(const Options& options,
+                                              const Logger& logger) {
   ACTS_DEBUG(prefix() << "cylinder container build");
 
   if (m_stack != nullptr) {
@@ -44,7 +45,7 @@ Volume& CylinderContainerBlueprintNode::build(const Logger& logger) {
   }
 
   for (auto& child : children()) {
-    Volume& volume = child.build(logger);
+    Volume& volume = child.build(options, logger);
     m_childVolumes.push_back(&volume);
     // We need to remember which volume we got from which child, so we can
     // assemble a correct portal shell later
@@ -65,7 +66,7 @@ Volume& CylinderContainerBlueprintNode::build(const Logger& logger) {
 }
 
 CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
-    const GeometryContext& gctx, const Logger& logger) {
+    const Options& options, const GeometryContext& gctx, const Logger& logger) {
   ACTS_DEBUG(prefix() << "Cylinder container connect");
   if (m_stack == nullptr) {
     ACTS_ERROR(prefix() << "Volume is not built");
@@ -105,8 +106,8 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
       ACTS_DEBUG(prefix() << " ~> Child (" << child.name()
                           << ") volume: " << volume->volumeBounds());
 
-      CylinderPortalShell* shell =
-          dynamic_cast<CylinderPortalShell*>(&child.connect(gctx, logger));
+      CylinderPortalShell* shell = dynamic_cast<CylinderPortalShell*>(
+          &child.connect(options, gctx, logger));
       if (shell == nullptr) {
         ACTS_ERROR(prefix()
                    << "Child volume of cylinder stack is not a cylinder");
@@ -142,7 +143,8 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
   return *m_shell;
 }
 
-void CylinderContainerBlueprintNode::finalize(TrackingVolume& parent,
+void CylinderContainerBlueprintNode::finalize(const Options& options,
+                                              TrackingVolume& parent,
                                               const Logger& logger) {
   ACTS_DEBUG(prefix() << "Finalizing cylinder container");
 
@@ -170,7 +172,7 @@ void CylinderContainerBlueprintNode::finalize(TrackingVolume& parent,
   ACTS_DEBUG(prefix() << "Finalizing " << children().size() << " children");
 
   for (auto& child : children()) {
-    child.finalize(parent, logger);
+    child.finalize(options, parent, logger);
   }
 }
 

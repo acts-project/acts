@@ -25,16 +25,19 @@ const std::string &RootBlueprintNode::name() const {
   return root;
 }
 
-Volume &RootBlueprintNode::build(const Logger & /*logger*/) {
+Volume &RootBlueprintNode::build(const Options & /*options*/,
+                                 const Logger & /*logger*/) {
   throw std::logic_error("Root node cannot be built");
 }
 
-PortalShellBase &RootBlueprintNode::connect(const GeometryContext & /*gctx*/,
+PortalShellBase &RootBlueprintNode::connect(const Options & /*options*/,
+                                            const GeometryContext & /*gctx*/,
                                             const Logger & /*logger*/) {
   throw std::logic_error("Root node cannot be connected");
 }
 
-void RootBlueprintNode::finalize(TrackingVolume & /*parent*/,
+void RootBlueprintNode::finalize(const Options & /*options*/,
+                                 TrackingVolume & /*parent*/,
                                  const Logger & /*logger*/) {
   throw std::logic_error("Root node cannot be finalized");
 }
@@ -48,10 +51,12 @@ void RootBlueprintNode::addToGraphviz(std::ostream &os) const {
 }
 
 std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
-    const GeometryContext &gctx, const Logger &logger) {
+    const Options &options, const GeometryContext &gctx, const Logger &logger) {
   using enum BinningValue;
 
   ACTS_INFO(prefix() << "Building tracking geometry from blueprint tree");
+
+  options.validate();
 
   if (m_cfg.envelope == ExtentEnvelope::Zero()) {
     ACTS_WARNING(prefix() << "Root node is configured with zero envelope. This "
@@ -66,7 +71,7 @@ std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
   auto &child = children().at(0);
 
   ACTS_DEBUG(prefix() << "Executing building on tree");
-  Volume &topVolume = child.build(logger);
+  Volume &topVolume = child.build(options, logger);
   const auto &bounds = topVolume.volumeBounds();
 
   std::stringstream ss;
@@ -118,11 +123,11 @@ std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
   SingleCylinderPortalShell worldShell{*world};
   worldShell.applyToVolume();
 
-  auto &shell = child.connect(gctx, logger);
+  auto &shell = child.connect(options, gctx, logger);
 
   shell.connectOuter(*world);
 
-  child.finalize(*world, logger);
+  child.finalize(options, *world, logger);
 
   // @TODO: Handle material decorator, geo id hook
 

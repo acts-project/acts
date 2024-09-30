@@ -20,6 +20,7 @@
 #include "Acts/Geometry/RootBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
@@ -55,7 +56,7 @@ BOOST_AUTO_TEST_CASE(StaticBlueprintNodeConstruction) {
 
   BOOST_CHECK_EQUAL(node->name(), "root");
 
-  BOOST_CHECK_EQUAL(&node->build(), cylPtr);
+  BOOST_CHECK_EQUAL(&node->build({}), cylPtr);
 
   ObjVisualization3D vis;
   // Add some children
@@ -78,7 +79,7 @@ BOOST_AUTO_TEST_CASE(StaticBlueprintNodeConstruction) {
   std::ofstream ofs{"static.obj"};
   vis.write(ofs);
 
-  auto tGeometry = root.construct(gctx, *logger);
+  auto tGeometry = root.construct({}, gctx, *logger);
 
   BOOST_REQUIRE(tGeometry);
 
@@ -110,7 +111,7 @@ BOOST_AUTO_TEST_CASE(CylinderContainerNode) {
     cyl.addStaticVolume(std::move(childCyl));
   }
 
-  root->construct(gctx, *logger);
+  root->construct({}, gctx, *logger);
 }
 
 void pseudoNavigation(const TrackingGeometry& trackingGeometry,
@@ -331,7 +332,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
   std::ofstream dot{"api_test_container.dot"};
   root->graphViz(dot);
 
-  auto trackingGeometry = root->construct(gctx, *logger);
+  auto trackingGeometry = root->construct({}, gctx, *logger);
 
   trackingGeometry->visitVolumes([&](const TrackingVolume* volume) {
     std::cout << volume->volumeName() << std::endl;
@@ -430,7 +431,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestConfined) {
   std::ofstream dot{"api_test_confined.dot"};
   root->graphViz(dot);
 
-  auto trackingGeometry = root->construct(gctx, *logger);
+  auto trackingGeometry = root->construct({}, gctx, *logger);
 
   trackingGeometry->visitVolumes([&](const TrackingVolume* volume) {
     std::cout << volume->volumeName() << std::endl;

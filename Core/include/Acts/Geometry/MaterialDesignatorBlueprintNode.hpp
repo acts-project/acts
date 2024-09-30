@@ -11,6 +11,7 @@
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
+
 namespace Acts {
 
 class MaterialDesignatorBlueprintNode final : public BlueprintNode {
@@ -24,30 +25,32 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
     os << "MaterialDesignatorBlueprintNode(" << name() << ")";
   }
 
-  Volume& build(const Logger& logger = Acts::getDummyLogger()) override {
+  Volume& build(const Options& options,
+                const Logger& logger = Acts::getDummyLogger()) override {
     if (children().size() != 1) {
       throw std::runtime_error(
           "MaterialDesignatorBlueprintNode must have exactly one child");
     }
-    return children().at(0).build(logger);
+    return children().at(0).build(options, logger);
   }
 
   PortalShellBase& connect(
-      const GeometryContext& gctx,
+      const Options& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override {
     if (children().size() != 1) {
       throw std::runtime_error(
           "MaterialDesignatorBlueprintNode must have exactly one child");
     }
-    return children().at(0).connect(gctx, logger);
+    return children().at(0).connect(options, gctx, logger);
   }
 
-  void finalize(TrackingVolume& parent, const Logger& logger) override {
+  void finalize(const Options& options, TrackingVolume& parent,
+                const Logger& logger) override {
     if (children().size() != 1) {
       throw std::runtime_error(
           "MaterialDesignatorBlueprintNode must have exactly one child");
     }
-    return children().at(0).finalize(parent, logger);
+    return children().at(0).finalize(options, parent, logger);
   }
 
   void addToGraphviz(std::ostream& os) const override {

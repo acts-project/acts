@@ -31,13 +31,15 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
 
   void setName(const std::string& name) { m_name = name; }
 
-  Volume& build(const Logger& logger = Acts::getDummyLogger()) override;
+  Volume& build(const Options& options,
+                const Logger& logger = Acts::getDummyLogger()) override;
 
   CylinderStackPortalShell& connect(
-      const GeometryContext& gctx,
+      const Options& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
-  void finalize(TrackingVolume& parent, const Logger& logger) override;
+  void finalize(const Options& options, TrackingVolume& parent,
+                const Logger& logger) override;
 
   CylinderContainerBlueprintNode& setDirection(BinningValue direction);
   CylinderContainerBlueprintNode& setAttachmentStrategy(

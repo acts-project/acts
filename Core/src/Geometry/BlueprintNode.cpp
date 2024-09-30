@@ -46,6 +46,8 @@ std::string BlueprintNode::prefix() const {
   return indent() + "[" + name() + "]: ";
 }
 
+void BlueprintNode::Options::validate() const {}
+
 StaticBlueprintNode& BlueprintNode::addStaticVolume(
     std::unique_ptr<TrackingVolume> volume,
     const std::function<void(StaticBlueprintNode& cylinder)>& callback) {

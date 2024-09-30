@@ -20,7 +20,8 @@ namespace Acts {
 StaticBlueprintNode::StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume)
     : m_volume(std::move(volume)) {}
 
-Volume& StaticBlueprintNode::build(const Logger& logger) {
+Volume& StaticBlueprintNode::build(const Options& options,
+                                   const Logger& logger) {
   ACTS_DEBUG(prefix() << "static build");
   if (!m_volume) {
     throw std::runtime_error("Volume is not built");
@@ -29,14 +30,15 @@ Volume& StaticBlueprintNode::build(const Logger& logger) {
   ACTS_DEBUG(prefix() << "Building volume (" << name() << ") with "
                       << children().size() << " children");
   for (auto& child : children()) {
-    child.build(logger);
+    child.build(options, logger);
   }
 
   ACTS_DEBUG(prefix() << "-> returning volume " << *m_volume);
   return *m_volume;
 }
 
-PortalShellBase& StaticBlueprintNode::connect(const GeometryContext& gctx,
+PortalShellBase& StaticBlueprintNode::connect(const Options& options,
+                                              const GeometryContext& gctx,
                                               const Logger& logger) {
   ACTS_DEBUG(prefix() << "Static connect");
   if (m_volume == nullptr) {
@@ -47,7 +49,7 @@ PortalShellBase& StaticBlueprintNode::connect(const GeometryContext& gctx,
                       << children().size() << " children");
 
   for (auto& child : children()) {
-    auto& shell = child.connect(gctx, logger);
+    auto& shell = child.connect(options, gctx, logger);
     // Register ourselves on the outside of the shell
     shell.connectOuter(*m_volume);
   }
@@ -70,7 +72,8 @@ PortalShellBase& StaticBlueprintNode::connect(const GeometryContext& gctx,
   return *m_shell;
 }
 
-void StaticBlueprintNode::finalize(TrackingVolume& parent,
+void StaticBlueprintNode::finalize(const Options& options,
+                                   TrackingVolume& parent,
                                    const Logger& logger) {
   ACTS_DEBUG(prefix() << "Finalizing static volume");
 
@@ -85,7 +88,7 @@ void StaticBlueprintNode::finalize(TrackingVolume& parent,
   }
 
   for (auto& child : children()) {
-    child.finalize(*m_volume, logger);
+    child.finalize(options, *m_volume, logger);
   }
 
   ACTS_DEBUG(prefix() << "Registering " << m_shell->size()

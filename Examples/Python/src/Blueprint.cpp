@@ -197,7 +197,8 @@ void addBlueprint(Context& ctx) {
           .def(
               "build",
               [](BlueprintNode& self, Logging::Level level) {
-                return self.build(*getDefaultLogger("Blueprint", level));
+                // @TODO: Make options configurable
+                return self.build({}, *getDefaultLogger("Blueprint", level));
               },
               py::arg("level") = Logging::INFO);
 

@@ -28,17 +28,18 @@ class RootBlueprintNode : public BlueprintNode {
   const std::string& name() const override;
 
   std::unique_ptr<TrackingGeometry> construct(
-      const GeometryContext& gctx,
+      const Options& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger());
 
  protected:
-  Volume& build(const Logger& logger = Acts::getDummyLogger()) override;
+  Volume& build(const Options& options,
+                const Logger& logger = Acts::getDummyLogger()) override;
 
   PortalShellBase& connect(
-      const GeometryContext& gctx,
+      const Options& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
-  void finalize(TrackingVolume& parent,
+  void finalize(const Options& options, TrackingVolume& parent,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
   void addToGraphviz(std::ostream& os) const override;

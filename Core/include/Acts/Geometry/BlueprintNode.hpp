@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
@@ -31,6 +32,10 @@ class StaticBlueprintNode;
 
 class BlueprintNode {
  public:
+  struct Options {
+    void validate() const;
+  };
+
   BlueprintNode() = default;
 
   virtual ~BlueprintNode() = default;
@@ -39,13 +44,14 @@ class BlueprintNode {
 
   virtual void toStream(std::ostream& os) const;
 
-  virtual Volume& build(const Logger& logger = Acts::getDummyLogger()) = 0;
+  virtual Volume& build(const Options& options,
+                        const Logger& logger = Acts::getDummyLogger()) = 0;
 
   virtual PortalShellBase& connect(
-      const GeometryContext& gctx,
+      const Options& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) = 0;
 
-  virtual void finalize(TrackingVolume& parent,
+  virtual void finalize(const Options& options, TrackingVolume& parent,
                         const Logger& logger = Acts::getDummyLogger()) = 0;
 
   StaticBlueprintNode& addStaticVolume(
