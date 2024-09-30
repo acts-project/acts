@@ -164,10 +164,10 @@ void addJson(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
 
     mex.def("readSurfaceHierarchyMapFromJson",
-            ActsExamples::JsonSurfacesReader::read);
+            ActsExamples::JsonSurfacesReader::readHierarchyMap);
 
-    mex.def("readSurfacesFromJson",
-            ActsExamples::JsonSurfacesReader::readSurfaces);
+    mex.def("readSurfaceVectorFromJson",
+            ActsExamples::JsonSurfacesReader::readVector);
   }
 
   {

@@ -20,7 +20,8 @@
 namespace ActsExamples {
 
 Acts::GeometryHierarchyMap<std::shared_ptr<Acts::Surface>>
-JsonSurfacesReader::read(const JsonSurfacesReader::Options& options) {
+JsonSurfacesReader::readHierarchyMap(
+    const JsonSurfacesReader::Options& options) {
   // Read the json file into a json object
   nlohmann::json j;
   std::ifstream in(options.inputFile);
@@ -50,7 +51,7 @@ JsonSurfacesReader::read(const JsonSurfacesReader::Options& options) {
   return SurfaceHierachyMap(std::move(surfaceElements));
 }
 
-std::vector<std::shared_ptr<Acts::Surface>> JsonSurfacesReader::readSurfaces(
+std::vector<std::shared_ptr<Acts::Surface>> JsonSurfacesReader::readVector(
     const Options& options) {
   // Read the json file into a json object
   nlohmann::json j;
