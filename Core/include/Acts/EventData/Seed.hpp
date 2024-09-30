@@ -14,9 +14,8 @@
 namespace Acts {
 
 template <typename external_spacepoint_t, std::size_t N = 3ul>
+  requires(N >= 3)
 class Seed {
-  static_assert(N >= 3ul, "A seed needs at least 3 space points");
-
  public:
   using value_type = external_spacepoint_t;
   static constexpr std::size_t DIM = N;
@@ -24,7 +23,7 @@ class Seed {
   template <typename... args_t>
     requires(sizeof...(args_t) == N) &&
             (std::same_as<external_spacepoint_t, args_t> && ...)
-  Seed(const args_t&... points);
+  explicit Seed(const args_t&... points);
 
   void setVertexZ(float vertex);
   void setQuality(float seedQuality);
