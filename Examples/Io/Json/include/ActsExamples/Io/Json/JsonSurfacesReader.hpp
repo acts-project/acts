@@ -36,7 +36,7 @@ struct Options {
 Acts::GeometryHierarchyMap<std::shared_ptr<Acts::Surface>> read(
     const Options& options);
 
-/// @brief Read the sflat surfaces urfaces from the input file
+/// @brief Read the flat surfaces from the input file
 ///
 /// @param inputFile is the input file to read from
 ///
