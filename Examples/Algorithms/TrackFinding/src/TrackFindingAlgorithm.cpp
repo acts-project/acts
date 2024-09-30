@@ -530,6 +530,14 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
           Acts::BoundTrackParameters secondInitialParameters =
               trackCandidate.createParametersFromState(firstMeasurement);
 
+          if (!secondInitialParameters.referenceSurface().insideBounds(
+                  secondInitialParameters.localPosition())) {
+            ACTS_WARNING(
+                "Smoothing of first pass fit produced out-of-bounds parameters "
+                "relative to the surface. Skipping second pass.");
+            continue;
+          }
+
           auto secondRootBranch = tracksTemp.makeTrack();
           secondRootBranch.copyFrom(trackCandidate, false);
           auto secondResult =
