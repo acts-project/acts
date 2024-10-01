@@ -196,11 +196,13 @@ void addBlueprint(Context& ctx) {
                })
           .def(
               "build",
-              [](BlueprintNode& self, Logging::Level level) {
+              [](BlueprintNode& self, const GeometryContext& gctx,
+                 Logging::Level level) {
                 // @TODO: Make options configurable
-                return self.build({}, *getDefaultLogger("Blueprint", level));
+                return self.build({}, gctx,
+                                  *getDefaultLogger("Blueprint", level));
               },
-              py::arg("level") = Logging::INFO);
+              py::arg("gctx"), py::arg("level") = Logging::INFO);
 
   py::class_<BlueprintNode::MutableChildRange>(blueprintNode,
                                                "MutableChildRange")
