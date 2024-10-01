@@ -134,8 +134,6 @@ struct TestContainerAccessor {
       return m_iterator == other.m_iterator;
     }
 
-    bool operator!=(const Iterator& other) const { return !(*this == other); }
-
     Acts::SourceLink operator*() const {
       const auto& sl = m_iterator->second;
       return Acts::SourceLink{sl};

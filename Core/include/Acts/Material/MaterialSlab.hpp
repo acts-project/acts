@@ -85,10 +85,6 @@ class MaterialSlab {
     return (lhs.m_material == rhs.m_material) &&
            (lhs.m_thickness == rhs.m_thickness);
   }
-  friend constexpr bool operator!=(const MaterialSlab& lhs,
-                                   const MaterialSlab& rhs) {
-    return !(lhs == rhs);
-  }
 };
 
 std::ostream& operator<<(std::ostream& os, const MaterialSlab& materialSlab);

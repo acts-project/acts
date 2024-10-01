@@ -72,12 +72,13 @@ struct TestSourceLink final {
   TestSourceLink(TestSourceLink&&) = default;
   TestSourceLink& operator=(const TestSourceLink&) = default;
   TestSourceLink& operator=(TestSourceLink&&) = default;
+
   bool operator==(const TestSourceLink& rhs) const {
     return (m_geometryId == rhs.m_geometryId) && (sourceId == rhs.sourceId) &&
            (indices == rhs.indices) && (parameters == rhs.parameters) &&
            (covariance == rhs.covariance);
   }
-  bool operator!=(const TestSourceLink& rhs) const { return !(*this == rhs); }
+
   std::ostream& print(std::ostream& os) const {
     os << "TestsSourceLink(geometryId=" << m_geometryId
        << ",sourceId=" << sourceId;
