@@ -726,7 +726,7 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
     nlohmann::json jGridLink;
     jGridLink["type"] = gridIndexType;
     std::size_t gridIndex = 0;
-    if (gridLink.find(gridIndexType) != gridLink.end()) {
+    if (gridLink.contains(gridIndexType)) {
       std::size_t& fGridIndex = gridLink[gridIndex];
       gridIndex = fGridIndex;
       fGridIndex++;
