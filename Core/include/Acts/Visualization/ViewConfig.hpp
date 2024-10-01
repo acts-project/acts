@@ -119,4 +119,12 @@ struct ViewConfig {
   std::filesystem::path outputName = std::filesystem::path("");
 };
 
+static const ViewConfig s_viewSurface = {.color{170, 170, 170}};
+static const ViewConfig s_viewPortal = {.color{"#308c48"}};
+static const ViewConfig s_viewSensitive = {.color = {0, 180, 240}};
+static const ViewConfig s_viewPassive = {.color = {240, 280, 0}};
+static const ViewConfig s_viewVolume = {.color = {220, 220, 0}};
+static const ViewConfig s_viewGrid = {.color = {220, 0, 0}};
+static const ViewConfig s_viewLine = {.color = {0, 0, 220}};
+
 }  // namespace Acts
