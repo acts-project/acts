@@ -9,12 +9,16 @@
 #pragma once
 
 #include "Acts/Clusterization/Clusterization.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 
 namespace Acts::Ccl {
 
-  template <typename Cell, std::size_t N>
-  struct TimedClusterization {
-    
-  };
+template <typename Cell>
+concept HasRetrievableTimeInfo = requires(Cell cell) {
+  { getCellTime(cell) } -> std::same_as<Acts::ActsScalar>;
+};
 
-}
+template <Acts::Ccl::HasRetrievableTimeInfo Cell, std::size_t N>
+struct TimedClusterization {};
+
+}  // namespace Acts::Ccl
