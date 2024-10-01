@@ -11,6 +11,7 @@
 #include <array>
 #include <filesystem>
 #include <string>
+#include <type_traits>
 
 namespace Acts {
 
@@ -52,11 +53,23 @@ struct Color {
   /// Constructor from hex string. The expected format is `#RRGGBB`
   /// @param hex The hex string
   constexpr explicit Color(std::string_view hex) {
-    auto hexToInt = [](std::string_view hexStr) {
+    constexpr auto hexToInt = [](std::string_view hex) -> int {
+      constexpr auto hexCharToInt = [](char c) -> int {
+        if (c >= '0' && c <= '9') {
+          return c - '0';
+        } else if (c >= 'a' && c <= 'f') {
+          return c - 'a' + 10;
+        } else if (c >= 'A' && c <= 'F') {
+          return c - 'A' + 10;
+        } else {
+          throw std::invalid_argument("Invalid hex character");
+        }
+      };
+
       int value = 0;
-      std::stringstream ss;
-      ss << std::hex << hexStr;
-      ss >> value;
+      for (char c : hex) {
+        value = (value << 4) + hexCharToInt(c);
+      }
       return value;
     };
 
@@ -97,6 +110,10 @@ struct Color {
 
   std::array<int, 3> rgb{};
 };
+
+constexpr Color s_defaultSurfaceColor{"#0000aa"};
+constexpr Color s_defaultPortalColor{"#308c48"};
+constexpr Color s_defaultVolumColor{"#ffaa00"};
 
 /// @brief Struct to concentrate all visualization configurations
 /// in order to harmonize visualization interfaces
