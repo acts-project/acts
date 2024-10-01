@@ -13,7 +13,8 @@
 namespace Acts::Ccl {
 
   template <typename Cell, std::size_t N>
-  class TimedClusterization {
+  struct TimedClusterization {
+    
   };
 
 }
