@@ -33,6 +33,17 @@ ProtoLayer::ProtoLayer(
   measure(gctx, m_surfaces);
 }
 
+ProtoLayer::ProtoLayer(const GeometryContext& gctx,
+                       const std::vector<std::shared_ptr<Surface>>& surfaces,
+                       const Transform3& transform)
+    : transform(transform) {
+  m_surfaces.reserve(surfaces.size());
+  for (const auto& sf : surfaces) {
+    m_surfaces.push_back(sf.get());
+  }
+  measure(gctx, m_surfaces);
+}
+
 double ProtoLayer::min(BinningValue bval, bool addenv) const {
   if (addenv) {
     return extent.min(bval) - envelope[bval][0u];

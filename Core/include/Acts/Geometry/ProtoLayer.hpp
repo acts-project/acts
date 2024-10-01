@@ -62,6 +62,19 @@ struct ProtoLayer {
              const std::vector<std::shared_ptr<const Surface>>& surfaces,
              const Transform3& transform = Transform3::Identity());
 
+  /// Constructor
+  ///
+  /// Loops over a provided vector of surface and calculates the various
+  /// min/max values in one go. Also takes into account the thickness
+  /// of an associated DetectorElement, if it exists.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param surfaces The vector of surfaces to consider
+  /// @param transform The local transform to evaluate the sizing in
+  ProtoLayer(const GeometryContext& gctx,
+             const std::vector<std::shared_ptr<Surface>>& surfaces,
+             const Transform3& transform = Transform3::Identity());
+
   ProtoLayer() = default;
 
   /// Get the parameters : min
