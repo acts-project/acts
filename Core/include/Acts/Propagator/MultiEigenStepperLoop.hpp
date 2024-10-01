@@ -45,104 +45,6 @@ namespace Acts {
 
 using namespace Acts::UnitLiterals;
 
-/// @brief Reducer struct for the Loop MultiEigenStepper which reduces the
-/// multicomponent state to simply by summing the weighted values
-///
-/// @note Usage is not encouraged, since it can lead to navigation failures
-/// as the global position might not be on surface, even if all components
-/// are on surface
-struct WeightedComponentReducerLoop {
-  template <typename component_range_t>
-  static Vector3 toVector3(const component_range_t& comps,
-                           const FreeIndices i) {
-    return std::accumulate(
-        comps.begin(), comps.end(), Vector3{Vector3::Zero()},
-        [i](const auto& sum, const auto& cmp) -> Vector3 {
-          return sum + cmp.weight * cmp.state.pars.template segment<3>(i);
-        });
-  }
-
-  template <typename stepper_state_t>
-  static Vector3 position(const stepper_state_t& s) {
-    return toVector3(s.components, eFreePos0);
-  }
-
-  template <typename stepper_state_t>
-  static Vector3 direction(const stepper_state_t& s) {
-    return toVector3(s.components, eFreeDir0).normalized();
-  }
-
-  // TODO: Maybe we can cache this value and only update it when the parameters
-  // change
-  template <typename stepper_state_t>
-  static ActsScalar qOverP(const stepper_state_t& s) {
-    return std::accumulate(
-        s.components.begin(), s.components.end(), ActsScalar{0.},
-        [](const auto& sum, const auto& cmp) -> ActsScalar {
-          return sum + cmp.weight * cmp.state.pars[eFreeQOverP];
-        });
-  }
-
-  template <typename stepper_state_t>
-  static ActsScalar absoluteMomentum(const stepper_state_t& s) {
-    return std::accumulate(
-        s.components.begin(), s.components.end(), ActsScalar{0.},
-        [&s](const auto& sum, const auto& cmp) -> ActsScalar {
-          return sum + cmp.weight * s.particleHypothesis.extractMomentum(
-                                        cmp.state.pars[eFreeQOverP]);
-        });
-  }
-
-  template <typename stepper_state_t>
-  static Vector3 momentum(const stepper_state_t& s) {
-    return std::accumulate(
-        s.components.begin(), s.components.end(), Vector3::Zero().eval(),
-        [&s](const auto& sum, const auto& cmp) -> Vector3 {
-          return sum + cmp.weight *
-                           s.particleHypothesis.extractMomentum(
-                               cmp.state.pars[eFreeQOverP]) *
-                           cmp.state.pars.template segment<3>(eFreeDir0);
-        });
-  }
-
-  template <typename stepper_state_t>
-  static ActsScalar charge(const stepper_state_t& s) {
-    return std::accumulate(
-        s.components.begin(), s.components.end(), ActsScalar{0.},
-        [&s](const auto& sum, const auto& cmp) -> ActsScalar {
-          return sum + cmp.weight * s.particleHypothesis.extractCharge(
-                                        cmp.state.pars[eFreeQOverP]);
-        });
-  }
-
-  template <typename stepper_state_t>
-  static ActsScalar time(const stepper_state_t& s) {
-    return std::accumulate(
-        s.components.begin(), s.components.end(), ActsScalar{0.},
-        [](const auto& sum, const auto& cmp) -> ActsScalar {
-          return sum + cmp.weight * cmp.state.pars[eFreeTime];
-        });
-  }
-
-  template <typename stepper_state_t>
-  static FreeVector pars(const stepper_state_t& s) {
-    return std::accumulate(s.components.begin(), s.components.end(),
-                           FreeVector{FreeVector::Zero()},
-                           [](const auto& sum, const auto& cmp) -> FreeVector {
-                             return sum + cmp.weight * cmp.state.pars;
-                           });
-  }
-
-  template <typename stepper_state_t>
-  static FreeVector cov(const stepper_state_t& s) {
-    return std::accumulate(s.components.begin(), s.components.end(),
-                           FreeMatrix{FreeMatrix::Zero()},
-                           [](const auto& sum, const auto& cmp) -> FreeMatrix {
-                             return sum + cmp.weight * cmp.state.cov;
-                           });
-  }
-};
-
 namespace detail {
 
 struct MaxMomentumComponent {
@@ -240,7 +142,7 @@ using MaxWeightReducerLoop =
 /// @tparam small_vector_size A size-hint how much memory should be allocated
 /// by the small vector
 template <typename extension_t = EigenStepperDefaultExtension,
-          typename component_reducer_t = WeightedComponentReducerLoop>
+          typename component_reducer_t = MaxWeightReducerLoop>
 class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// Limits the number of steps after at least one component reached the
   /// surface
