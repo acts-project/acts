@@ -17,11 +17,11 @@
 
 #include <algorithm>
 #include <array>
+#include <concepts>
 #include <cstddef>
 #include <set>
 #include <string>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -1308,10 +1308,10 @@ BOOST_AUTO_TEST_CASE(grid_type_conversion) {
   Grid g2(Type<double>, std::move(a), std::move(b));
   decltype(g2) g2Copy(g2.axesTuple());
 
-  static_assert(std::is_same<decltype(g2), decltype(g2Copy)>::value);
+  static_assert(std::same_as<decltype(g2), decltype(g2Copy)>);
 
   auto g2ConvertedInt = g2Copy.convertType<int>();
-  static_assert(std::is_same<decltype(g2ConvertedInt), Grid2Int>::value);
+  static_assert(std::same_as<decltype(g2ConvertedInt), Grid2Int>);
 }
 
 BOOST_AUTO_TEST_CASE(grid_full_conversion) {

@@ -46,14 +46,14 @@ struct can_interpolate {
   static std::false_type point_type_test(...);
 
   static const bool value =
-      std::is_same<std::true_type,
-                   decltype(value_type_test<Value>(nullptr))>::value &&
-      std::is_same<std::true_type,
-                   decltype(point_type_test<Point1>(nullptr))>::value &&
-      std::is_same<std::true_type,
-                   decltype(point_type_test<Point2>(nullptr))>::value &&
-      std::is_same<std::true_type,
-                   decltype(point_type_test<Point3>(nullptr))>::value;
+      std::is_same_v<std::true_type,
+                     decltype(value_type_test<Value>(nullptr))> &&
+      std::is_same_v<std::true_type,
+                     decltype(point_type_test<Point1>(nullptr))> &&
+      std::is_same_v<std::true_type,
+                     decltype(point_type_test<Point2>(nullptr))> &&
+      std::is_same_v<std::true_type,
+                     decltype(point_type_test<Point3>(nullptr))>;
 };
 
 /// @brief concept equivalent to `can_interpolate`
