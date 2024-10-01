@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(CylinderContainerNode) {
 void pseudoNavigation(const TrackingGeometry& trackingGeometry,
                       Vector3 position, const Vector3& direction,
                       std::ostream& csv, std::size_t run,
-                      std::size_t substepsPerCm = 1) {
+                      std::size_t substepsPerCm, const Logger& logger) {
   std::mt19937 rng{static_cast<unsigned int>(run)};
   std::uniform_real_distribution<> dist{0.01, 0.99};
 
@@ -136,7 +136,7 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   csv << "," << volume->geometryId().boundary();
   csv << std::endl;
 
-  std::cout << "start pseudo navigation" << std::endl;
+  ACTS_VERBOSE("start pseudo navigation");
 
   for (std::size_t i = 0; i < 100; i++) {
     main = NavigationStream{};
@@ -144,28 +144,26 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
     currentVolume->updateNavigationState(
         {.main = main, .position = position, .direction = direction});
 
-    std::cout << main.candidates().size() << " candidates" << std::endl;
+    ACTS_VERBOSE(main.candidates().size() << " candidates");
 
     for (const auto& candidate : main.candidates()) {
-      std::cout << " -> " << candidate.surface().geometryId() << std::endl;
-      std::cout << "    " << candidate.surface().toStream(gctx) << std::endl;
+      ACTS_VERBOSE(" -> " << candidate.surface().geometryId());
+      ACTS_VERBOSE("    " << candidate.surface().toStream(gctx));
     }
 
-    std::cout << "initializing candidates" << std::endl;
+    ACTS_VERBOSE("initializing candidates");
     main.initialize(gctx, {position, direction}, BoundaryTolerance::None());
 
-    std::cout << main.candidates().size() << " candidates remaining"
-              << std::endl;
+    ACTS_VERBOSE(main.candidates().size() << " candidates remaining");
 
     for (const auto& candidate : main.candidates()) {
-      std::cout << " -> " << candidate.surface().geometryId() << std::endl;
-      std::cout << "    " << candidate.surface().toStream(gctx) << std::endl;
+      ACTS_VERBOSE(" -> " << candidate.surface().geometryId());
+      ACTS_VERBOSE("    " << candidate.surface().toStream(gctx));
     }
 
     if (main.currentCandidate().surface().isOnSurface(gctx, position,
                                                       direction)) {
-      std::cout << "Already on portal at initialization, skipping candidate"
-                << std::endl;
+      ACTS_VERBOSE("Already on portal at initialization, skipping candidate");
 
       auto id = main.currentCandidate().surface().geometryId();
       csv << run << "," << position[0] << "," << position[1] << ","
@@ -174,22 +172,22 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
       csv << "," << id.boundary();
       csv << std::endl;
       if (!main.switchToNextCandidate()) {
-        std::cout << "candidates exhausted unexpectedly" << std::endl;
+        ACTS_WARNING("candidates exhausted unexpectedly");
         break;
       }
     }
 
     const auto& candidate = main.currentCandidate();
-    std::cout << candidate.portal << std::endl;
-    std::cout << candidate.intersection.position().transpose() << std::endl;
+    ACTS_VERBOSE(candidate.portal);
+    ACTS_VERBOSE(candidate.intersection.position().transpose());
 
     BOOST_REQUIRE_NE(candidate.portal, nullptr);
 
-    std::cout << "on portal: " << candidate.portal->surface().geometryId()
-              << std::endl;
+    ACTS_VERBOSE("on portal: " << candidate.portal->surface().geometryId());
 
-    std::cout << "moving to position: " << position.transpose()
-              << " (r=" << VectorHelpers::perp(position) << ")\n";
+    ACTS_VERBOSE("moving to position: " << position.transpose() << " (r="
+                                        << VectorHelpers::perp(position)
+                                        << ")");
     Vector3 delta = candidate.intersection.position() - position;
 
     std::size_t substeps =
@@ -206,20 +204,21 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
 
     position = candidate.intersection.position();
 
-    std::cout << "                 -> " << position.transpose()
-              << " (r=" << VectorHelpers::perp(position) << ")" << std::endl;
+    ACTS_VERBOSE("                 -> "
+                 << position.transpose()
+                 << " (r=" << VectorHelpers::perp(position) << ")");
 
     currentVolume =
         candidate.portal->resolveVolume(gctx, position, direction).value();
 
     if (currentVolume == nullptr) {
-      std::cout << "switched to nullptr" << std::endl;
+      ACTS_VERBOSE("switched to nullptr");
       break;
     }
 
-    std::cout << "switched to " << currentVolume->volumeName() << std::endl;
+    ACTS_VERBOSE("switched to " << currentVolume->volumeName());
 
-    std::cout << "-----" << std::endl;
+    ACTS_VERBOSE("-----");
   }
 }
 
@@ -365,9 +364,6 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
   using namespace Acts::UnitLiterals;
 
   for (std::size_t i = 0; i < 5000; i++) {
-    // double eta = 1.0;
-    // double theta = 2 * std::atan(std::exp(-eta));
-
     double theta = thetaDist(rnd);
     double phi = 2 * M_PI * dist(rnd);
 
@@ -380,11 +376,10 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
     std::cout << "dir: " << direction.transpose() << std::endl;
     std::cout << direction.norm() << std::endl;
 
-    pseudoNavigation(*trackingGeometry, position, direction, csv, i, 2);
+    pseudoNavigation(*trackingGeometry, position, direction, csv, i, 2,
+                     *logger->clone(std::nullopt, Logging::DEBUG));
 
     // portalSamples(*trackingGeometry, position, direction, csv, i);
-
-    // break;
   }
 }
 
