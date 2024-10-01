@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -424,6 +425,18 @@ void TrackingVolume::closeGeometry(
                                         logger);
     }
   }
+
+  GeometryIdentifier::Value iportal = 0;
+  for (auto& portal : portals()) {
+    auto portalId = GeometryIdentifier(volumeID).setBoundary(++iportal);
+    assert(portal.isValid() && "Invalid portal encountered during closing");
+
+    portal.surface().assignGeometryId(portalId);
+  }
+
+  for (auto& volume : volumes()) {
+    volume.closeGeometry(materialDecorator, volumeMap, vol, hook, logger);
+  }
 }
 
 // Returns the boundary surfaces ordered in probability to hit them based on
@@ -639,6 +652,18 @@ TrackingVolume& TrackingVolume::addVolume(
   volume->setMotherVolume(this);
   m_volumes.push_back(std::move(volume));
   return *m_volumes.back();
+}
+
+TrackingVolume::PortalRange TrackingVolume::portals() const {
+  return PortalRange{m_portals};
+}
+
+TrackingVolume::MutablePortalRange TrackingVolume::portals() {
+  return MutablePortalRange{m_portals};
+}
+
+void TrackingVolume::addPortal(std::shared_ptr<Portal> portal) {
+  m_portals.push_back(std::move(portal));
 }
 
 }  // namespace Acts

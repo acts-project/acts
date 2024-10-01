@@ -172,6 +172,11 @@ const RegularSurface& Portal::surface() const {
   return *m_surface;
 }
 
+RegularSurface& Portal::surface() {
+  assert(m_surface != nullptr);
+  return *m_surface;
+}
+
 Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
                      Portal& bPortal, BinningValue direction,
                      const Logger& logger) {
