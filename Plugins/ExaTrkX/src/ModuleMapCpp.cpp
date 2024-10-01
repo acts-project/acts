@@ -209,8 +209,8 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
                << edgeIndex.index({Slice(0, 2), Slice(0, 9)}));
 
   const auto t4 = std::chrono::high_resolution_clock::now();
-  auto count_ms = [](auto t0, auto t1) {
-    return std::chrono::duration<double, std::milli>(t1 - t0).count();
+  auto count_ms = [](auto ta, auto tb) {
+    return std::chrono::duration<double, std::milli>(tb - ta).count();
   };
   ACTS_DEBUG("Preparation: " << count_ms(t0, t1) << " ms");
   ACTS_DEBUG("Build MM: " << count_ms(t1, t2) << " ms");
