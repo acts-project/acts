@@ -44,9 +44,6 @@ class TrackFindingFromPrototrackAlgorithm final : public IAlgorithm {
     /// Input measurements
     std::string inputMeasurements;
 
-    /// Input source links
-    std::string inputSourceLinks;
-
     /// Input track parameters
     std::string inputInitialTrackParameters;
 

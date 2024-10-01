@@ -58,20 +58,25 @@ TrackFindingFromPrototrackAlgorithm::TrackFindingFromPrototrackAlgorithm(
   m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
-  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
 ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   const auto& measurements = m_inputMeasurements(ctx);
-  const auto& sourceLinks = m_inputSourceLinks(ctx);
   const auto& protoTracks = m_inputProtoTracks(ctx);
   const auto& initialParameters = m_inputInitialTrackParameters(ctx);
 
   if (initialParameters.size() != protoTracks.size()) {
     ACTS_FATAL("Inconsistent number of parameters and prototracks");
     return ProcessCode::ABORT;
+  }
+
+  IndexSourceLinkContainer sourceLinks;
+  sourceLinks.reserve(measurements.size());
+  for (const auto& meas : measurements) {
+    const auto& isl = meas.sourceLink().get<IndexSourceLink>();
+    sourceLinks.insert(isl);
   }
 
   // Construct a perigee surface as the target surface
@@ -133,13 +138,8 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
 
     // Fill the source links via their indices from the container
     for (const auto hitIndex : protoTracks.at(i)) {
-      if (auto it = sourceLinks.nth(hitIndex); it != sourceLinks.end()) {
-        sourceLinkAccessor.protoTrackSourceLinks.insert(*it);
-      } else {
-        ACTS_FATAL("Proto track " << i << " contains invalid hit index"
-                                  << hitIndex);
-        return ProcessCode::ABORT;
-      }
+      sourceLinkAccessor.protoTrackSourceLinks.insert(
+          measurements.at(hitIndex).sourceLink().get<IndexSourceLink>());
     }
 
     auto result = (*m_cfg.findTracks)(initialParameters.at(i), options, tracks);
