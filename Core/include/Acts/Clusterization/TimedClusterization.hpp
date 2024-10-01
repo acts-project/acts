@@ -25,7 +25,14 @@ struct TimedConnect : public Acts::Ccl::DefaultConnect<Cell, N> {
   Acts::ActsScalar timeTollerance{std::numeric_limits<Acts::ActsScalar>::max()};
 
   TimedConnect() = default;
-  TimedConnect(Acts::ActsScalar time) : timeTollerance(time) {}
+  TimedConnect(Acts::ActsScalar time)
+    requires(N == 1);
+  TimedConnect(Acts::ActsScalar time, bool conn = true)
+    requires(N == 2);
+
+  virtual ConnectResult operator()(const Cell& ref, const Cell& iter) const;
 };
 
 }  // namespace Acts::Ccl
+
+#include "Acts/Clusterization/TimedClusterization.ipp"
