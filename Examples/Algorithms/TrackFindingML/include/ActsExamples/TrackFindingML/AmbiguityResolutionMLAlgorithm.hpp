@@ -8,10 +8,11 @@
 
 #pragma once
 
+#include "Acts/AmbiguityResolution/AmbiguityResolutionML.hpp"
 #include "Acts/Plugins/Onnx/AmbiguityTrackClassifier.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/TrackFindingML/AmbiguityResolutionML.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
 
@@ -23,7 +24,10 @@ namespace ActsExamples {
 ///  1) Cluster together nearby tracks using shared hits
 ///  2) For each track use a neural network to compute a score
 ///  3) In each cluster keep the track with the highest score
-class AmbiguityResolutionMLAlgorithm final : public AmbiguityResolutionML {
+class AmbiguityResolutionMLAlgorithm final : public IAlgorithm {
+  using AmbiguityResolution =
+      Acts::AmbiguityResolutionML<Acts::AmbiguityTrackClassifier>;
+
  public:
   struct Config {
     /// Input track collection.
@@ -33,7 +37,11 @@ class AmbiguityResolutionMLAlgorithm final : public AmbiguityResolutionML {
     /// Output track collection.
     std::string outputTracks;
     /// Minimum number of measurement to form a track.
-    int nMeasurementsMin = 7;
+    std::size_t nMeasurementsMin = 7;
+    /// Construct the ML ambiguity resolution configuration.
+    AmbiguityResolution::Config toAmbiguityResolutionMLConfig() const {
+      return {inputDuplicateNN, nMeasurementsMin};
+    }
   };
 
   /// Construct the ambiguity resolution algorithm.
@@ -53,8 +61,7 @@ class AmbiguityResolutionMLAlgorithm final : public AmbiguityResolutionML {
 
  private:
   Config m_cfg;
-  // ONNX model for track selection
-  Acts::AmbiguityTrackClassifier m_duplicateClassifier;
+  AmbiguityResolution m_ambiML;
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
