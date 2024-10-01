@@ -88,7 +88,8 @@ Acts::TrackingGeometry::geoIdSurfaceMap() const {
 
 void Acts::TrackingGeometry::visualize(
     IVisualization3D& helper, const GeometryContext& gctx,
-    const ViewConfig& viewConfig, const ViewConfig& portalViewConfig) const {
-  highestTrackingVolume()->visualize(helper, gctx, viewConfig,
-                                     portalViewConfig);
+    const ViewConfig& viewConfig, const ViewConfig& portalViewConfig,
+    const ViewConfig& sensitiveViewConfig) const {
+  highestTrackingVolume()->visualize(helper, gctx, viewConfig, portalViewConfig,
+                                     sensitiveViewConfig);
 }

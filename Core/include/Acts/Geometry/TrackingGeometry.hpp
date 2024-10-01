@@ -150,9 +150,11 @@ class TrackingGeometry {
   /// @param gctx The geometry context
   /// @param viewConfig Global view config
   /// @param portalViewConfig View config for portals
+  /// @param sensitiveViewConfig View configuration for sensitive surfaces
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
-                 const ViewConfig& viewConfig = {},
-                 const ViewConfig& portalViewConfig = {}) const;
+                 const ViewConfig& viewConfig = s_viewVolume,
+                 const ViewConfig& portalViewConfig = s_viewPortal,
+                 const ViewConfig& sensitiveViewConfig = s_viewSensitive) const;
 
  private:
   // the known world

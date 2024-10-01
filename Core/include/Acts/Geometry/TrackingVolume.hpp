@@ -25,6 +25,7 @@
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -477,10 +478,12 @@ class TrackingVolume : public Volume {
   /// @param helper The visualization helper describing the output format
   /// @param gctx The geometry context
   /// @param viewConfig The view configuration
+  /// @param portalViewConfig View configuration for portals
+  /// @param sensitiveViewConfig View configuration for sensitive surfaces
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
-                 const ViewConfig& viewConfig = {},
-                 const ViewConfig& portalViewConfig = {
-                     .color{"#308c48"}}) const;
+                 const ViewConfig& viewConfig = s_viewVolume,
+                 const ViewConfig& portalViewConfig = s_viewPortal,
+                 const ViewConfig& sensitiveViewConfig = s_viewSensitive) const;
 
  private:
   void connectDenseBoundarySurfaces(
