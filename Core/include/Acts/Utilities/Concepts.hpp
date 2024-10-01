@@ -20,8 +20,7 @@ concept same_as_any_of = (std::same_as<T, Ts> || ...);
 /// @brief Concept that is equivalent to `is_nothrow_move_constructible`.
 /// @todo Convert this to a "real" concept.
 template <typename T>
-concept nothrow_move_constructible =
-    std::is_nothrow_move_constructible<T>::value;
+concept nothrow_move_constructible = std::is_nothrow_move_constructible_v<T>;
 
 /// @brief Concept that is true if T is an arithmetic type.
 template <typename T>

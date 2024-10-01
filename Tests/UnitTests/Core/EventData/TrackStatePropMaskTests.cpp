@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(BitmaskOperators) {
   BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Filtered));
 
   auto cnv = [](auto a) -> std::bitset<8> {
-    return static_cast<std::underlying_type<PM>::type>(a);
+    return static_cast<std::underlying_type_t<PM>>(a);
   };
 
   BOOST_CHECK(cnv(PM::All).all());    // all ones

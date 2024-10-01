@@ -119,8 +119,7 @@ class FiniteStateMachine {
   /// Default constructor. The default state is taken to be the first in the
   /// `States` template arguments
   FiniteStateMachine()
-      : m_state(typename std::tuple_element<0, std::tuple<States...>>::type{}) {
-  }
+      : m_state(typename std::tuple_element_t<0, std::tuple<States...>>{}) {}
 
   /// Constructor from an explicit state. The FSM is initialized to this state.
   /// @param state Initial state for the FSM.

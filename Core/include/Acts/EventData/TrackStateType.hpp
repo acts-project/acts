@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <limits>
 #include <ostream>
+#include <type_traits>
 
 namespace Acts {
 
@@ -38,7 +39,7 @@ class TrackStateType {
  public:
   using raw_type = std::uint64_t;
   static constexpr std::size_t kRawBits =
-      std::numeric_limits<std::make_unsigned<raw_type>::type>::digits;
+      std::numeric_limits<std::make_unsigned_t<raw_type>>::digits;
 
   // Delete default constructor
   TrackStateType() = delete;
@@ -106,7 +107,7 @@ class ConstTrackStateType {
  public:
   using raw_type = std::uint64_t;
   static constexpr std::size_t kRawBits =
-      std::numeric_limits<std::make_unsigned<raw_type>::type>::digits;
+      std::numeric_limits<std::make_unsigned_t<raw_type>>::digits;
 
   // Delete default constructor
   ConstTrackStateType() = delete;

@@ -14,12 +14,10 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
-#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -193,117 +191,6 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
                    2 * halfSizeSurface};
   config.position = {volumeConfig.length.x() / 2, 0., 0.};
   config.volumeCfg = {volumeConfig};
-
-  cvb.setConfig(config);
-
-  TrackingGeometryBuilder::Config tgbCfg;
-
-  tgbCfg.trackingVolumeBuilders.push_back(
-      [=](const auto& context, const auto& inner, const auto&) {
-        return cvb.trackingVolume(context, inner, nullptr);
-      });
-
-  TrackingGeometryBuilder tgb(tgbCfg);
-
-  std::unique_ptr<const TrackingGeometry> detector =
-      tgb.trackingGeometry(geoCtx);
-  return detector;
-}
-
-/// @brief Create a simple telescope detector in the Y direction.
-///
-/// We cannot reuse the previous detector, since the cuboid volume builder only
-/// allows merging of YZ-faces.
-///
-/// @param geoCtx
-/// @param nSurfaces Number of surfaces
-std::shared_ptr<const TrackingGeometry> makeToyDetectorYdirection(
-    const Acts::GeometryContext& geoCtx, const std::size_t nSurfaces = 5) {
-  if (nSurfaces < 1) {
-    throw std::invalid_argument("At least 1 surfaces needs to be created.");
-  }
-
-  // Define the dimensions of the square surfaces
-  const double halfSizeSurface = 1_m;
-
-  // Rotation of the surfaces around the x-axis
-  const double rotationAngle = M_PI * 0.5;
-  const Vector3 xPos(1., 0., 0.);
-  const Vector3 yPos(0., cos(rotationAngle), sin(rotationAngle));
-  const Vector3 zPos(0., -sin(rotationAngle), cos(rotationAngle));
-
-  // Construct builder
-  CuboidVolumeBuilder cvb;
-
-  // Create configurations for surfaces
-  std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;
-  for (std::size_t surfPos = 1; surfPos <= nSurfaces; surfPos++) {
-    // Position of the surfaces
-    CuboidVolumeBuilder::SurfaceConfig cfg;
-    cfg.position = {0., surfPos * UnitConstants::m, 0.};
-
-    // Rotation of the surfaces
-    cfg.rotation.col(0) = xPos;
-    cfg.rotation.col(1) = yPos;
-    cfg.rotation.col(2) = zPos;
-
-    // Boundaries of the surfaces (shape)
-    cfg.rBounds = std::make_shared<const RectangleBounds>(
-        RectangleBounds(halfSizeSurface, halfSizeSurface));
-
-    // Thickness of the detector element
-    cfg.thickness = 1_um;
-
-    cfg.detElementConstructor =
-        [](const Transform3& trans,
-           const std::shared_ptr<const RectangleBounds>& bounds,
-           double thickness) {
-          return new DetectorElementStub(trans, bounds, thickness);
-        };
-    surfaceConfig.push_back(cfg);
-  }
-
-  // Build layer configurations
-  std::vector<CuboidVolumeBuilder::LayerConfig> layerConfig;
-  for (auto& sCfg : surfaceConfig) {
-    CuboidVolumeBuilder::LayerConfig cfg;
-    cfg.surfaceCfg = {sCfg};
-    cfg.active = true;
-    cfg.envelopeX = {-0.1_mm, 0.1_mm};
-    cfg.envelopeY = {-0.1_mm, 0.1_mm};
-    cfg.envelopeZ = {-0.1_mm, 0.1_mm};
-    cfg.binningDimension = Acts::BinningValue::binY;
-    layerConfig.push_back(cfg);
-  }
-
-  // Inner Volume - Build volume configuration
-  CuboidVolumeBuilder::VolumeConfig volumeConfig;
-  volumeConfig.length = {2 * halfSizeSurface, (nSurfaces + 1) * 1_m,
-                         2 * halfSizeSurface};
-  volumeConfig.position = {0., volumeConfig.length.y() / 2, 0.};
-  volumeConfig.layerCfg = layerConfig;
-  volumeConfig.name = "TestVolume";
-  volumeConfig.binningDimension = Acts::BinningValue::binY;
-
-  // This basically adds an empty volume in y-direction
-  // Second inner Volume - Build volume configuration
-  CuboidVolumeBuilder::VolumeConfig volumeConfig2;
-  //    volumeConfig2.length = volumeConfig.length;
-  volumeConfig2.length = {2 * halfSizeSurface, (nSurfaces + 1) * 1_m,
-                          2 * halfSizeSurface};
-  ;
-  volumeConfig2.position = {volumeConfig2.length.x(),
-                            volumeConfig2.length.y() / 2, 0.};
-  volumeConfig2.name = "AdditionalVolume";
-  volumeConfig2.binningDimension = Acts::BinningValue::binY;
-
-  // Outer volume - Build TrackingGeometry configuration and fill
-  CuboidVolumeBuilder::Config config;
-  config.length = {4 * halfSizeSurface, (nSurfaces + 1) * 1_m,
-                   2 * halfSizeSurface};
-  config.position = {volumeConfig.length.x() / 2, volumeConfig.length.y() / 2,
-                     0.};
-  config.volumeCfg = {volumeConfig, volumeConfig2};
 
   cvb.setConfig(config);
 
