@@ -11,6 +11,8 @@
 #include "Acts/Clusterization/Clusterization.hpp"
 #include "Acts/Definitions/Algebra.hpp"
 
+#include <limits>
+
 namespace Acts::Ccl {
 
 template <typename Cell>
@@ -19,6 +21,11 @@ concept HasRetrievableTimeInfo = requires(Cell cell) {
 };
 
 template <Acts::Ccl::HasRetrievableTimeInfo Cell, std::size_t N>
-struct TimedConnect {};
+struct TimedConnect : public Acts::Ccl::DefaultConnect<Cell, N> {
+  Acts::ActsScalar timeTollerance{std::numeric_limits<Acts::ActsScalar>::max()};
+
+  TimedConnect() = default;
+  TimedConnect(Acts::ActsScalar time) : timeTollerance(time) {}
+};
 
 }  // namespace Acts::Ccl
