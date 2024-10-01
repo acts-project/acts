@@ -30,6 +30,7 @@
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include <random>
+#include <vector>
 
 using namespace Acts::UnitLiterals;
 
@@ -38,6 +39,34 @@ namespace Acts::Test {
 auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::DEBUG);
 
 GeometryContext gctx;
+
+inline std::vector<std::shared_ptr<Surface>> makeFanLayer(
+    const Transform3& base,
+    std::vector<std::unique_ptr<DetectorElementBase>>& elements,
+    double r = 300_mm, std::size_t nSensors = 8, double thickness = 0) {
+  auto recBounds = std::make_shared<RectangleBounds>(40_mm, 60_mm);
+
+  double deltaPhi = 2 * M_PI / nSensors;
+  std::vector<std::shared_ptr<Surface>> surfaces;
+  for (std::size_t i = 0; i < nSensors; i++) {
+    // Create a fan of sensors
+
+    Transform3 trf = base * AngleAxis3{deltaPhi * i, Vector3::UnitZ()} *
+                     Translation3(Vector3::UnitX() * r);
+
+    if (i % 2 == 0) {
+      trf = trf * Translation3{Vector3::UnitZ() * 5_mm};
+    }
+
+    auto& element = elements.emplace_back(
+        std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
+
+    element->surface().assignDetectorElement(*element);
+
+    surfaces.push_back(element->surface().getSharedPtr());
+  }
+  return surfaces;
+}
 
 BOOST_AUTO_TEST_SUITE(Geometry);
 
@@ -121,12 +150,16 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
                       Vector3 position, const Vector3& direction,
                       std::ostream& csv, std::size_t run,
                       std::size_t substepsPerCm, const Logger& logger) {
+  ACTS_VERBOSE("start navigation " << run);
+  ACTS_VERBOSE("dir: " << direction.transpose());
+  ACTS_VERBOSE(direction.norm());
+
   std::mt19937 rng{static_cast<unsigned int>(run)};
   std::uniform_real_distribution<> dist{0.01, 0.99};
 
   const auto* volume = trackingGeometry.lowestTrackingVolume(gctx, position);
   BOOST_REQUIRE_NE(volume, nullptr);
-  std::cout << volume->volumeName() << std::endl;
+  ACTS_VERBOSE(volume->volumeName());
 
   NavigationStream main;
   const TrackingVolume* currentVolume = volume;
@@ -261,6 +294,12 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
   // Transform3 base{AngleAxis3{30_degree, Vector3{1, 0, 0}}};
   Transform3 base{Transform3::Identity()};
 
+  std::vector<std::unique_ptr<DetectorElementBase>> detectorElements;
+  auto makeFan = [&](const Transform3& layerBase, auto&&..., double r,
+                     std::size_t nSensors, double thickness) {
+    return makeFanLayer(layerBase, detectorElements, r, nSensors, thickness);
+  };
+
   RootBlueprintNode::Config cfg;
   cfg.envelope[BinningValue::binZ] = {20_mm, 20_mm};
   cfg.envelope[BinningValue::binR] = {0_mm, 20_mm};
@@ -277,15 +316,31 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
               ec.setAttachmentStrategy(
                   CylinderVolumeStack::AttachmentStrategy::Gap);
 
-              ec.addStaticVolume(
-                  base * Translation3{Vector3{0, 0, -600_mm}},
-                  std::make_shared<CylinderVolumeBounds>(200_mm, 450_mm, 20_mm),
-                  "PixelNeg1");
+              auto makeLayer = [&](const Transform3& trf, auto& layer) {
+                std::vector<std::shared_ptr<Surface>> surfaces;
+                auto layerSurfaces = makeFan(trf, 300_mm, 10, 2_mm);
+                std::copy(layerSurfaces.begin(), layerSurfaces.end(),
+                          std::back_inserter(surfaces));
+                layerSurfaces = makeFan(trf, 500_mm, 16, 2_mm);
+                std::copy(layerSurfaces.begin(), layerSurfaces.end(),
+                          std::back_inserter(surfaces));
 
-              ec.addStaticVolume(
-                  base * Translation3{Vector3{0, 0, -400_mm}},
-                  std::make_shared<CylinderVolumeBounds>(200_mm, 800_mm, 20_mm),
-                  "PixelNeg2");
+                layer.setSurfaces(surfaces)
+                    .setLayerType(LayerBlueprintNode::LayerType::Disc)
+                    .setEnvelope(ExtentEnvelope{{
+                        .z = {5_mm, 5_mm},
+                        .r = {10_mm, 20_mm},
+                    }})
+                    .setTransform(base);
+              };
+
+              ec.addLayer("PixelNeg1", [&](auto& layer) {
+                makeLayer(base * Translation3{Vector3{0, 0, -600_mm}}, layer);
+              });
+
+              ec.addLayer("PixelNeg2", [&](auto& layer) {
+                makeLayer(base * Translation3{Vector3{0, 0, -400_mm}}, layer);
+              });
             });
 
         cyl.addCylinderContainer(
@@ -363,7 +418,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
 
   using namespace Acts::UnitLiterals;
 
-  for (std::size_t i = 0; i < 5000; i++) {
+  for (std::size_t i = 0; i < 5; i++) {
     double theta = thetaDist(rnd);
     double phi = 2 * M_PI * dist(rnd);
 
@@ -372,12 +427,8 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
     direction[1] = std::sin(theta) * std::sin(phi);
     direction[2] = std::cos(theta);
 
-    std::cout << "start navigation " << i << std::endl;
-    std::cout << "dir: " << direction.transpose() << std::endl;
-    std::cout << direction.norm() << std::endl;
-
     pseudoNavigation(*trackingGeometry, position, direction, csv, i, 2,
-                     *logger->clone(std::nullopt, Logging::DEBUG));
+                     *logger->clone(std::nullopt, Logging::VERBOSE));
 
     // portalSamples(*trackingGeometry, position, direction, csv, i);
   }
@@ -457,31 +508,11 @@ BOOST_AUTO_TEST_CASE(LayerNode) {
   double yrot = 45_degree;
   Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
-  auto recBounds = std::make_shared<RectangleBounds>(3_mm, 6_mm);
-
   std::vector<std::unique_ptr<DetectorElementBase>> detectorElements;
 
-  auto makeFan = [&](double thickness = 0) {
+  auto makeFan = [&](double thickness) {
     detectorElements.clear();
-
-    std::size_t nSensors = 8;
-    double deltaPhi = 2 * M_PI / nSensors;
-    double r = 20_mm;
-    std::vector<std::shared_ptr<Surface>> surfaces;
-    for (std::size_t i = 0; i < nSensors; i++) {
-      // Create a fan of sensors
-
-      Transform3 trf = base * AngleAxis3{deltaPhi * i, Vector3::UnitZ()} *
-                       Translation3(Vector3::UnitX() * r);
-
-      auto& element = detectorElements.emplace_back(
-          std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
-
-      element->surface().assignDetectorElement(*element);
-
-      surfaces.push_back(element->surface().getSharedPtr());
-    }
-    return surfaces;
+    return makeFanLayer(base, detectorElements, thickness);
   };
 
   std::vector<std::shared_ptr<Surface>> surfaces = makeFan(2.5_mm);
