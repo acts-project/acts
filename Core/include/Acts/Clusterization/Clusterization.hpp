@@ -29,8 +29,8 @@ enum class ConnectResult {
 // Default connection type for 2-D grids: 4- or 8-cell connectivity
 template <typename Cell>
 struct Connect2D {
-  bool conn8;
-  Connect2D() : conn8{true} {}
+  bool conn8{true};
+  Connect2D() = default;
   explicit Connect2D(bool commonCorner) : conn8{commonCorner} {}
   ConnectResult operator()(const Cell& ref, const Cell& iter) const;
 };
