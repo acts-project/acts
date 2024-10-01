@@ -9,6 +9,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/MergeContainers/MergeContainersAlgorithm.hpp"
 #include "ActsExamples/Matching/MatchingAlgorithm.hpp"
+#include "ActsExamples/TransportParticles/TransportParticlesAlgorithm.hpp"
 
 #include <memory>
 
@@ -42,6 +43,15 @@ void addMergeContainers(Context& ctx) {
       inputMeasurementParticlesMapVT,
       inputMeasurementParticlesMapMS,
       useRecVtx, px, py, pz, chi2max, fit,
+      trackingGeometry, magneticField);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TransportParticles, mex, "TransportParticlesAlgorithm",
+      inputTrackParameters,
+      inputTrackContainer,
+      outputTracks,
+      inputVertices,
+      useRecVtx, px, py, pz,
       trackingGeometry, magneticField);
 
 }

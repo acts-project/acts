@@ -303,7 +303,6 @@ def addSeeding(
     noGuessing = False,
     suffix = "",
     trkVtxOnly = False,
-    addDeltas = True,
     projective = False,
     zPerigee = 0,
     det_suffix = "",
@@ -409,7 +408,6 @@ def addSeeding(
                 verbose=verbose,
                 useFit=True,
                 nbins=60,
-                addDeltas=addDeltas,
                 projective=projective,
                 zPerigee=zPerigee
             )
@@ -578,7 +576,6 @@ def addNewSeeding(
     doTrkVtx=True,
     noGuessing = False,
     trkVtxOnly=False,
-    addDeltas=True,
     projective=False,
     zPerigee = 0,
     suffix = "",
@@ -616,7 +613,6 @@ def addNewSeeding(
         addTrackletVertexing(
             s,
             noGuessing=noGuessing,
-            addDeltas=addDeltas,
             projective=projective,
             zPerigee = zPerigee,
             inputSpacePoints=spacePoints,#+det_suffix,
@@ -2737,7 +2733,7 @@ def addTrackletVertexing(
     outputGenPrimaryVertex: str="OutputGenPrimaryVertex",
     zmax: float=170,
     zmin: float=0,
-    deltaPhi: float=0.1,
+    deltaPhi: float=0.08,
     deltaThetaMax: float=0.04,
     deltaThetaMin: float=-0.15,
     verbose: bool=False,
@@ -2745,7 +2741,6 @@ def addTrackletVertexing(
     noGuessing: bool=False,
     useFit: bool=True,
     nbins: int=60,
-    addDeltas: bool=False,
     projective: bool=False,
     zPerigee: float=0,
     logLevel: Optional[acts.logging.Level] = None,
@@ -2773,7 +2768,6 @@ def addTrackletVertexing(
         noGuessing=noGuessing,
         useFit=useFit,
         nbins=nbins,
-        addDeltas=addDeltas,
         projective=projective,
         zPerigee=zPerigee,
         outputFitFunction="OutputFitFuncVtx",
@@ -2806,4 +2800,81 @@ def addContainerMerger(
     )
 
     s.addAlgorithm(selAlg)
+    return s
+
+
+
+def addPropagation(
+    s: acts.examples.Sequencer,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
+    inputTrackParameters=["tracks"],
+    inputTrackContainers=["tracks"],
+    inputVertices="vertices",
+    outputTracks="mergetracks",
+    useRecVtx: Optional[bool] = False,
+    px: Optional[float]=0,
+    py: Optional[float]=0,
+    pz: Optional[float]=0,
+    outputDirCsv: Optional[Union[Path, str]] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    writeTrajectories: bool = True,
+    writeCovMat=False,
+    suffixOut = "merged",
+    det_suffix = "_vt",
+    logLevel: Optional[acts.logging.Level] = None,
+
+    ) -> None:
+
+    logLevel = acts.examples.defaultLogging(s, logLevel)()
+
+    selAlg = acts.examples.TransportParticlesAlgorithm(
+        level=logLevel,
+        inputTrackParameters=inputTrackParameters,
+        inputTrackContainer=inputTrackContainers,
+        outputTracks=outputTracks,
+        inputVertices=inputVertices,
+        useRecVtx=useRecVtx,
+        px=px,
+        py=py,
+        pz=pz,
+        trackingGeometry = trackingGeometry,
+        magneticField = field
+    )
+
+    s.addAlgorithm(selAlg)
+
+    
+    matcher = acts.examples.TrackTruthMatcher(
+        level=logLevel,
+        inputTracks=outputTracks,
+        inputParticles="particles_selected"+det_suffix,
+        inputMeasurementParticlesMap="measurement_particles_map"+det_suffix,
+        outputTrackParticleMatching=suffixOut+"ckf_track_particle",
+        outputParticleTrackMatching=suffixOut+"ckf_particle_track",
+    )
+    s.addAlgorithm(matcher)
+
+    s.addWhiteboardAlias(
+        suffixOut+"track_particle", matcher.config.outputTrackParticleMatching
+    )
+    s.addWhiteboardAlias(
+        suffixOut+"particle_track", matcher.config.outputParticleTrackMatching
+    )
+
+    addTrackWriters(
+        s,
+        name=suffixOut,
+        tracks=outputTracks,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        writeStates=writeTrajectories,
+        writeSummary=writeTrajectories,
+        writeCKFperformance=True,
+        logLevel=logLevel,
+        writeCovMat=writeCovMat,
+        suffix=suffixOut,
+        det_suffix=det_suffix
+    )
+
     return s

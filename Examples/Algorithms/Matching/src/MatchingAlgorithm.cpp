@@ -144,11 +144,6 @@ ActsExamples::ProcessCode ActsExamples::MatchingAlgorithm::execute(
   // Set up EigenStepper
   Acts::EigenStepper<> stepper(m_cfg.magneticField);
 
-  // Set up propagator with void navigator
-  // auto propagator = std::make_shared<Acts::Propagator<Acts::EigenStepper<>,
-  // Acts::VoidNavigator>>(
-  //    stepper, Acts::VoidNavigator{}, logger().cloneWithSuffix("Propagator"));
-
   Acts::PropagatorOptions<Acts::ActionList<Acts::MaterialInteractor>,
                           Acts::AbortList<Acts::EndOfWorldReached>>
       extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
@@ -157,10 +152,6 @@ ActsExamples::ProcessCode ActsExamples::MatchingAlgorithm::execute(
   Acts::FullBilloirVertexFitter::Config vertexFitterCfg;
   vertexFitterCfg.extractParameters
       .connect<&Acts::InputTrack::extractParameters>();
-
-  // using TrackProxyType =
-  // Acts::TrackContainer<Acts::ConstVectorTrackContainer,
-  // Acts::ConstVectorMultiTrajectory, std::shared_ptr>::ConstTrackProxy;
 
   //////////////
   // MATCHING
@@ -302,8 +293,6 @@ ActsExamples::ProcessCode ActsExamples::MatchingAlgorithm::execute(
           identifyContributingParticles(hitParticlesMapVT,
                                         trackContainterVT.getTrack(indexVT),
                                         particleHitCountsVT);
-          // std::cout<<"VT aft index: "<<indexVT<<" tipIdx:
-          // "<<trackContainterVT.getTrack(indexVT).tipIndex()<<std::endl;
 
           if (particleHitCountsVT.empty()) {
             ACTS_DEBUG(
@@ -320,12 +309,6 @@ ActsExamples::ProcessCode ActsExamples::MatchingAlgorithm::execute(
           std::cout << "particle: " << particleHitCountsVT.front().particleId
                     << std::endl;
 
-          // Acts::calculateTrackQuantities(trackVT);
-          /*
-          const auto resVT = Acts::extrapolateTrackToReferenceSurface(
-              trackVT, *pSurface, extrapolator, extrapolationOptions,
-              m_cfg.extrapolationStrategy, logger());
-              */
           if (!resVT.ok()) {
             continue;
           }

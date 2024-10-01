@@ -64,6 +64,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesFilterMeasurements
   ActsExamplesMergeContainers
   ActsExamplesMatching
+  ActsExamplesTransportParticles
 )
 
 set(py_files
