@@ -172,7 +172,7 @@ class SingleCylinderPortalShell : public CylinderPortalShell {
 ///   |  |             |<--+
 ///   |  |             |
 ///   |  +-------------+       InnerCylinder
-///  -+----->      ^            (if rMin>0)
+///   +----->      ^            (if rMin>0)
 ///          z     |                 |
 ///                ------------------+
 ///
