@@ -65,8 +65,7 @@ def main():
         srcs = args.input
 
     founding_year = 2016
-    current_year = int(datetime.now().strftime("%Y"))
-    year_str = f"{founding_year}-{current_year}"
+    year_str = f"{founding_year}"
     year = year_str
 
     raw = """// This file is part of the ACTS project.
