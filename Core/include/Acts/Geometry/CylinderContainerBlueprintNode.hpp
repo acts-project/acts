@@ -31,7 +31,7 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
 
   void setName(const std::string& name) { m_name = name; }
 
-  Volume& build(const Options& options,
+  Volume& build(const Options& options, const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
   CylinderStackPortalShell& connect(

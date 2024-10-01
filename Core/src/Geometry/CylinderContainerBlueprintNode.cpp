@@ -36,6 +36,7 @@ const std::string& CylinderContainerBlueprintNode::name() const {
 }
 
 Volume& CylinderContainerBlueprintNode::build(const Options& options,
+                                              const GeometryContext& gctx,
                                               const Logger& logger) {
   ACTS_DEBUG(prefix() << "cylinder container build");
 
@@ -45,7 +46,7 @@ Volume& CylinderContainerBlueprintNode::build(const Options& options,
   }
 
   for (auto& child : children()) {
-    Volume& volume = child.build(options, logger);
+    Volume& volume = child.build(options, gctx, logger);
     m_childVolumes.push_back(&volume);
     // We need to remember which volume we got from which child, so we can
     // assemble a correct portal shell later

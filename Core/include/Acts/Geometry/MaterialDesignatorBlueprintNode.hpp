@@ -25,13 +25,13 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
     os << "MaterialDesignatorBlueprintNode(" << name() << ")";
   }
 
-  Volume& build(const Options& options,
+  Volume& build(const Options& options, const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override {
     if (children().size() != 1) {
       throw std::runtime_error(
           "MaterialDesignatorBlueprintNode must have exactly one child");
     }
-    return children().at(0).build(options, logger);
+    return children().at(0).build(options, gctx, logger);
   }
 
   PortalShellBase& connect(

@@ -21,7 +21,8 @@ class StaticBlueprintNode : public BlueprintNode {
 
   const std::string& name() const override;
 
-  Volume& build(const Options& options,
+  Volume& build(const Options& options, const GeometryContext& gctx,
+
                 const Logger& logger = Acts::getDummyLogger()) override;
 
   PortalShellBase& connect(

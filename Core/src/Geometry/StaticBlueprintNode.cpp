@@ -21,6 +21,7 @@ StaticBlueprintNode::StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume)
     : m_volume(std::move(volume)) {}
 
 Volume& StaticBlueprintNode::build(const Options& options,
+                                   const GeometryContext& gctx,
                                    const Logger& logger) {
   ACTS_DEBUG(prefix() << "static build");
   if (!m_volume) {
@@ -30,7 +31,7 @@ Volume& StaticBlueprintNode::build(const Options& options,
   ACTS_DEBUG(prefix() << "Building volume (" << name() << ") with "
                       << children().size() << " children");
   for (auto& child : children()) {
-    child.build(options, logger);
+    child.build(options, gctx, logger);
   }
 
   ACTS_DEBUG(prefix() << "-> returning volume " << *m_volume);

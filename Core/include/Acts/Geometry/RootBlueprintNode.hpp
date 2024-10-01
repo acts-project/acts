@@ -9,12 +9,13 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintNode.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
 namespace Acts {
+
+class GeometryContext;
 
 class RootBlueprintNode : public BlueprintNode {
  public:
@@ -32,7 +33,7 @@ class RootBlueprintNode : public BlueprintNode {
       const Logger& logger = Acts::getDummyLogger());
 
  protected:
-  Volume& build(const Options& options,
+  Volume& build(const Options& options, const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
   PortalShellBase& connect(

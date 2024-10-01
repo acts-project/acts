@@ -26,6 +26,7 @@ const std::string &RootBlueprintNode::name() const {
 }
 
 Volume &RootBlueprintNode::build(const Options & /*options*/,
+                                 const GeometryContext & /*gctx*/,
                                  const Logger & /*logger*/) {
   throw std::logic_error("Root node cannot be built");
 }
@@ -71,7 +72,7 @@ std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
   auto &child = children().at(0);
 
   ACTS_DEBUG(prefix() << "Executing building on tree");
-  Volume &topVolume = child.build(options, logger);
+  Volume &topVolume = child.build(options, gctx, logger);
   const auto &bounds = topVolume.volumeBounds();
 
   std::stringstream ss;

@@ -51,7 +51,7 @@ class BlueprintNode {
 
   virtual void toStream(std::ostream& os) const;
 
-  virtual Volume& build(const Options& options,
+  virtual Volume& build(const Options& options, const GeometryContext& gctx,
                         const Logger& logger = Acts::getDummyLogger()) = 0;
 
   virtual PortalShellBase& connect(

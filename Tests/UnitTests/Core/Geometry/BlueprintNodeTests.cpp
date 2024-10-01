@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(StaticBlueprintNodeConstruction) {
 
   BOOST_CHECK_EQUAL(node->name(), "root");
 
-  BOOST_CHECK_EQUAL(&node->build({}), cylPtr);
+  BOOST_CHECK_EQUAL(&node->build({}, gctx), cylPtr);
 
   ObjVisualization3D vis;
   // Add some children
