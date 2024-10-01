@@ -194,7 +194,7 @@ class CylinderStackPortalShell : public CylinderPortalShell {
                            BinningValue direction,
                            const Logger& logger = getDummyLogger());
 
-  /// @copydoc PortalShellBase::connectOuter
+  /// @copydoc PortalShellBase::size
   std::size_t size() const final;
 
   /// @copydoc CylinderPortalShell::portal
