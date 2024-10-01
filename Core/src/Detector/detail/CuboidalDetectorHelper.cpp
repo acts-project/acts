@@ -270,12 +270,12 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
     auto& formerContainer = containers[ic - 1];
     auto& currentContainer = containers[ic];
     // Check and throw exception
-    if (formerContainer.find(startIndex) == formerContainer.end()) {
+    if (!formerContainer.contains(startIndex)) {
       throw std::invalid_argument(
           "CuboidalDetectorHelper: proto container has no fuse portal at index "
           "of former container.");
     }
-    if (currentContainer.find(endIndex) == currentContainer.end()) {
+    if (!currentContainer.contains(endIndex)) {
       throw std::invalid_argument(
           "CuboidalDetectorHelper: proto container has no fuse portal at index "
           "of current container.");
@@ -343,11 +343,8 @@ Acts::Experimental::detail::CuboidalDetectorHelper::xyzBoundaries(
   auto fillMap = [&](std::map<ActsScalar, std::size_t>& map,
                      const std::array<ActsScalar, 2u>& values) {
     for (auto v : values) {
-      if (map.find(v) != map.end()) {
-        ++map[v];
-      } else {
-        map[v] = 1u;
-      }
+      // This will insert v with a value of 0 if it doesn't exist
+      ++map[v];
     }
   };
 

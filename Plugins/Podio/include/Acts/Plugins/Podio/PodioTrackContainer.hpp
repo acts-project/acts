@@ -189,7 +189,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   }
 
   bool hasColumn_impl(HashedString key) const {
-    return m_dynamic.find(key) != m_dynamic.end();
+    return m_dynamic.contains(key);
   }
 
   std::size_t size_impl() const { return m_collection->size(); }
@@ -365,7 +365,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
   }
 
   bool hasColumn_impl(HashedString key) const {
-    return m_dynamic.find(key) != m_dynamic.end();
+    return m_dynamic.contains(key);
   }
 
   std::size_t size_impl() const { return m_collection->size(); }

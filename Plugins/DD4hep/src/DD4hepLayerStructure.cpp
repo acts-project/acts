@@ -26,7 +26,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
     DD4hepDetectorElement::Store& dd4hepStore, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const Options& options) const {
   // Check for misconfiguration with double naming
-  if (dd4hepStore.find(options.name) != dd4hepStore.end()) {
+  if (dd4hepStore.contains(options.name)) {
     std::string reMessage = "DD4hepLayerStructure: structure with name '";
     reMessage += options.name;
     reMessage += "' already registered in DetectorElementStore";

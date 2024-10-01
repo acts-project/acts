@@ -97,7 +97,7 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
   G4Track* g4Track = step->GetTrack();
   std::size_t trackID = g4Track->GetTrackID();
   auto& materialTracks = eventStore().materialTracks;
-  if (materialTracks.find(trackID - 1) == materialTracks.end()) {
+  if (!materialTracks.contains(trackID - 1)) {
     Acts::RecordedMaterialTrack rmTrack;
     const auto& g4Vertex = g4Track->GetVertexPosition();
     Acts::Vector3 vertex(g4Vertex[0], g4Vertex[1], g4Vertex[2]);

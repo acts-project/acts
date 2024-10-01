@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
     variables_map vm;
     store(command_line_parser(argc, argv).options(description).run(), vm);
 
-    if (vm.count("help") != 0u) {
+    if (vm.contains("help")) {
       std::cout << description;
       return 1;
     }

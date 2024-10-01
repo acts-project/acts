@@ -302,7 +302,7 @@ static inline actsvg::svg::object xy(const ProtoIndexedSurfaceGrid& pIndexGrid,
     for (const auto [is, sis] : enumerate(pIndices[ig])) {
       const auto& ps = pSurfaces[sis];
       std::string oInfo = std::string("- object: ") + std::to_string(sis);
-      if (ps._aux_info.find("center") != ps._aux_info.end()) {
+      if (ps._aux_info.contains("center")) {
         for (const auto& ci : ps._aux_info.at("center")) {
           oInfo += ci;
         }

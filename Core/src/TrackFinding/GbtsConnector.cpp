@@ -126,8 +126,7 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
     std::list<const GbtsConnection *>::iterator cIt = lConns.begin();
 
     while (cIt != lConns.end()) {
-      if (zeroLayers.find((*cIt)->m_dst) !=
-          zeroLayers.end()) {  // check if contains
+      if (zeroLayers.contains((*cIt)->m_dst)) {
         theStage.push_back(*cIt);
         cIt = lConns.erase(cIt);
         continue;

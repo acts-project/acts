@@ -286,7 +286,7 @@ Result<double> AdaptiveGridTrackDensity::estimateSeedWidth(
   bool binFilled = true;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
-    if (densityMap.count({rhmBin + 1, tMaxBin}) == 0) {
+    if (!densityMap.contains({rhmBin + 1, tMaxBin})) {
       binFilled = false;
       break;
     }
@@ -308,7 +308,7 @@ Result<double> AdaptiveGridTrackDensity::estimateSeedWidth(
   binFilled = true;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
-    if (densityMap.count({lhmBin - 1, tMaxBin}) == 0) {
+    if (!densityMap.contains({lhmBin - 1, tMaxBin})) {
       binFilled = false;
       break;
     }

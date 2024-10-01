@@ -65,7 +65,7 @@ std::vector<std::vector<int>> CugraphTrackBuilding::operator()(
     int spacepointID = spacepointIDs[idx];
 
     int trkId;
-    if (trackLableToIds.find(trackLabel) != trackLableToIds.end()) {
+    if (trackLableToIds.contains(trackLabel)) {
       trkId = trackLableToIds[trackLabel];
       trackCandidates[trkId].push_back(spacepointID);
     } else {

@@ -104,7 +104,7 @@ ProcessCode TruthVertexFinder::execute(const AlgorithmContext& ctx) const {
           particleHitCounts.front().particleId;
       std::size_t nMajorityHits = particleHitCounts.front().hitCount;
 
-      if (particles.find(majorityParticleId) == particles.end()) {
+      if (!particles.contains(majorityParticleId)) {
         ACTS_DEBUG(
             "The majority particle is not in the input particle collection, "
             "majorityParticleId = "

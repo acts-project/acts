@@ -177,7 +177,7 @@ void addLogging(Acts::Python::Context& ctx) {
   logging.def(
       "getLogger",
       [](const std::string& name) {
-        if (pythonLoggers.find(name) == pythonLoggers.end()) {
+        if (!pythonLoggers.contains(name)) {
           pythonLoggers[name] =
               std::make_shared<PythonLogger>(name, Acts::Logging::INFO);
         }

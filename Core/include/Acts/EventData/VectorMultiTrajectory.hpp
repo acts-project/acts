@@ -220,7 +220,7 @@ class VectorMultiTrajectoryBase {
       case "typeFlags"_hash:
         return true;
       default:
-        return instance.m_dynamic.find(key) != instance.m_dynamic.end();
+        return instance.m_dynamic.contains(key);
     }
   }
 
@@ -287,7 +287,7 @@ class VectorMultiTrajectoryBase {
       case "typeFlags"_hash:
         return true;
       default:
-        return instance.m_dynamic.find(key) != instance.m_dynamic.end();
+        return instance.m_dynamic.contains(key);
     }
   }
 

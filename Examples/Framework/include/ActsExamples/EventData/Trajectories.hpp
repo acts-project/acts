@@ -79,7 +79,7 @@ struct Trajectories final {
   /// @return Whether having fitted track parameters or not
   bool hasTrackParameters(
       Acts::MultiTrajectoryTraits::IndexType entryIndex) const {
-    return (0 < m_trackParameters.count(entryIndex));
+    return m_trackParameters.contains(entryIndex);
   }
 
   /// Access the fitted track parameters for the given index.

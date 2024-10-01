@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     store(command_line_parser(argc, argv).options(description).run(), vm);
     notify(vm);
 
-    if (vm.count("help") != 0u) {
+    if (vm.contains("help")) {
       std::cout << description;
     }
 
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
     // Subdetector configurations
     std::vector<Region> dRegion = {};
 
-    if (vm.count("config") > 0) {
+    if (vm.contains("config")) {
       std::filesystem::path config = vm["config"].as<std::string>();
       std::cout << "Reading region configuration from JSON: " << config
                 << std::endl;

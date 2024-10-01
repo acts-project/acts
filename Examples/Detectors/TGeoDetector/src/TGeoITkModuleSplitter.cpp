@@ -33,11 +33,9 @@ void ActsExamples::TGeoITkModuleSplitter::initSplitCategories() {
        m_cfg.splitPatterns) {
     // mark pattern for disc or barrel module splits:
     bool is_disk = false;
-    if (m_cfg.discMap.find(pattern_split_category.second) !=
-        m_cfg.discMap.end()) {
+    if (m_cfg.discMap.contains(pattern_split_category.second)) {
       is_disk = true;
-    } else if (m_cfg.barrelMap.find(pattern_split_category.second) ==
-               m_cfg.barrelMap.end()) {
+    } else if (!m_cfg.barrelMap.contains(pattern_split_category.second)) {
       ACTS_ERROR(
           pattern_split_category.second +
           " is neither a category name for barrel or disk module splits.");

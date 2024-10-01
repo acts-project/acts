@@ -62,9 +62,9 @@ BOOST_AUTO_TEST_CASE(pushBackOrInsertAtEnd_set) {
   Acts::detail::pushBackOrInsertAtEnd(coll, val);
   BOOST_CHECK(coll.size() == 3ul);
 
-  BOOST_CHECK(coll.find(2ul) != coll.end());
-  BOOST_CHECK(coll.find(5ul) != coll.end());
-  BOOST_CHECK(coll.find(1ul) != coll.end());
+  BOOST_CHECK(coll.contains(2ul));
+  BOOST_CHECK(coll.contains(5ul));
+  BOOST_CHECK(coll.contains(1ul));
 }
 
 BOOST_AUTO_TEST_CASE(pushBackOrInsertAtEnd_unordered_set) {
@@ -77,9 +77,9 @@ BOOST_AUTO_TEST_CASE(pushBackOrInsertAtEnd_unordered_set) {
   Acts::detail::pushBackOrInsertAtEnd(coll, val);
   BOOST_CHECK(coll.size() == 3ul);
 
-  BOOST_CHECK(coll.find(2ul) != coll.end());
-  BOOST_CHECK(coll.find(5ul) != coll.end());
-  BOOST_CHECK(coll.find(1ul) != coll.end());
+  BOOST_CHECK(coll.contains(2ul));
+  BOOST_CHECK(coll.contains(5ul));
+  BOOST_CHECK(coll.contains(1ul));
 }
 
 }  // namespace Acts::Test
