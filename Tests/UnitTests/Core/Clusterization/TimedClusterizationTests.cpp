@@ -31,13 +31,9 @@ namespace Acts::Test {
 
   using CellCollection = std::vector<Acts::Test::Cell>;
   using ClusterCollection = std::vector<Acts::Test::Cluster>;
-
-  static inline double getCellTime(const Cell& cell) {
-    return cell.time;
-  }
-  
+    
   BOOST_AUTO_TEST_CASE(TimedGrid_2D_notime) {
-    Acts::Ccl::TimedConnect<Cell, 2> a;
+  
   }
 
 }
