@@ -69,8 +69,7 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
     const G4Track* aTrack) {
   // The initial particle maybe was not registered because a particle ID
   // collision
-  if (eventStore().trackIdMapping.find(aTrack->GetTrackID()) ==
-      eventStore().trackIdMapping.end()) {
+  if (!eventStore().trackIdMapping.contains(aTrack->GetTrackID())) {
     ACTS_WARNING("Particle ID for track ID " << aTrack->GetTrackID()
                                              << " not registered. Skip");
     return;
@@ -78,8 +77,7 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
 
   const auto barcode = eventStore().trackIdMapping.at(aTrack->GetTrackID());
 
-  auto hasHits = eventStore().particleHitCount.find(barcode) !=
-                     eventStore().particleHitCount.end() &&
+  auto hasHits = eventStore().particleHitCount.contains(barcode) &&
                  eventStore().particleHitCount.at(barcode) > 0;
 
   if (!m_cfg.keepParticlesWithoutHits && !hasHits) {
@@ -146,13 +144,11 @@ ActsExamples::ParticleTrackingAction::makeParticleId(G4int trackId,
                                                      G4int parentId) const {
   // We already have this particle registered (it is one of the input particles
   // or we are making a final particle state)
-  if (eventStore().trackIdMapping.find(trackId) !=
-      eventStore().trackIdMapping.end()) {
+  if (eventStore().trackIdMapping.contains(trackId)) {
     return std::nullopt;
   }
 
-  if (eventStore().trackIdMapping.find(parentId) ==
-      eventStore().trackIdMapping.end()) {
+  if (!eventStore().trackIdMapping.contains(parentId)) {
     ACTS_DEBUG("Parent particle " << parentId
                                   << " not registered, cannot build barcode");
     eventStore().parentIdNotFound++;

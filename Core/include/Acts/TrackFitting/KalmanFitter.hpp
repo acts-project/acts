@@ -37,6 +37,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <type_traits>
 
 namespace Acts {
 
@@ -264,7 +265,7 @@ class KalmanFitter {
 
   /// The navigator has DirectNavigator type or not
   static constexpr bool isDirectNavigator =
-      std::is_same<KalmanNavigator, DirectNavigator>::value;
+      std::is_same_v<KalmanNavigator, DirectNavigator>;
 
  public:
   KalmanFitter(propagator_t pPropagator,

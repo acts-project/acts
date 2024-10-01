@@ -64,7 +64,7 @@ Acts::Experimental::Detector::Detector(
     v->closePortals();
     // Store the name
     const std::string vName = v->name();
-    if (m_volumeNameIndex.find(vName) != m_volumeNameIndex.end()) {
+    if (m_volumeNameIndex.contains(vName)) {
       throw std::invalid_argument("Detector: duplicate volume name " + vName +
                                   " detected.");
     }
@@ -79,7 +79,7 @@ Acts::Experimental::Detector::Detector(
                                   "' with undefined geometry id detected" +
                                   ". Make sure a GeometryIdGenerator is used.");
     }
-    if (volumeGeoIdMap.find(vgeoID) != volumeGeoIdMap.end()) {
+    if (volumeGeoIdMap.contains(vgeoID)) {
       std::stringstream ss;
       ss << vgeoID;
       throw std::invalid_argument("Detector: duplicate volume geometry id '" +
@@ -104,7 +104,7 @@ Acts::Experimental::Detector::Detector(
       }
       // ---------------------------------------------------------------
 
-      if (surfaceGeoIdMap.find(sgeoID) != surfaceGeoIdMap.end()) {
+      if (surfaceGeoIdMap.contains(sgeoID)) {
         std::stringstream ss;
         ss << sgeoID;
         throw std::invalid_argument(

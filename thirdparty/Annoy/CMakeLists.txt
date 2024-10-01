@@ -20,11 +20,7 @@ FetchContent_Declare(
     Annoy
     ${ACTS_ANNOY_SOURCE}
     PATCH_COMMAND
-        "${CMAKE_COMMAND}" -E chdir <SOURCE_DIR> ${GIT_EXECUTABLE} config
-        user.name "CI" && "${CMAKE_COMMAND}" -E chdir <SOURCE_DIR>
-        ${GIT_EXECUTABLE} config user.email "<>" && "${CMAKE_COMMAND}" -E chdir
-        <SOURCE_DIR> ${GIT_EXECUTABLE} am
-        ${CMAKE_CURRENT_SOURCE_DIR}/0001-Modify-annoy.patch
+        patch -p1 < ${CMAKE_CURRENT_SOURCE_DIR}/0001-Modify-annoy.patch
 )
 
 # Make the fetched content available.
