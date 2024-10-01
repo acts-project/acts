@@ -156,7 +156,7 @@ class SingleCylinderPortalShell : public CylinderPortalShell {
 /// are merged or fused. Subsequently, portal access respects shared portals
 /// between shells. Below is an illustration of a stack in the r direction:
 ///
-///  Fused         ------------------+
+///  Fused         +-----------------+
 /// portals ----+  |                 |
 ///   |         |  v           OuterCylinder
 ///   |  +------+------+
@@ -174,7 +174,7 @@ class SingleCylinderPortalShell : public CylinderPortalShell {
 ///   |  +-------------+       InnerCylinder
 ///   +----->      ^            (if rMin>0)
 ///          z     |                 |
-///                ------------------+
+///                +-----------------+
 ///
 /// @note The shells must be ordered in the given direction
 /// Depending on the stack direction, the portal lookup will return different
