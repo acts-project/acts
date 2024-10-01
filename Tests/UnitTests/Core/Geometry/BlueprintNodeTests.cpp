@@ -16,12 +16,15 @@
 #include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/RootBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
@@ -453,6 +456,77 @@ BOOST_AUTO_TEST_CASE(NodeApiTestConfined) {
 
   BOOST_CHECK_EQUAL(wrapper->portals().size(), 20);
   BOOST_CHECK_EQUAL(wrapper->volumes().size(), 4);
+}
+
+BOOST_AUTO_TEST_CASE(LayerNode) {
+  double yrot = 45_degree;
+  Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
+
+  auto recBounds = std::make_shared<RectangleBounds>(3_mm, 6_mm);
+
+  std::vector<std::unique_ptr<DetectorElementBase>> detectorElements;
+
+  auto makeFan = [&](double thickness = 0) {
+    detectorElements.clear();
+
+    std::size_t nSensors = 8;
+    double deltaPhi = 2 * M_PI / nSensors;
+    double r = 20_mm;
+    std::vector<std::shared_ptr<Surface>> surfaces;
+    for (std::size_t i = 0; i < nSensors; i++) {
+      // Create a fan of sensors
+
+      Transform3 trf = base * AngleAxis3{deltaPhi * i, Vector3::UnitZ()} *
+                       Translation3(Vector3::UnitX() * r);
+
+      auto& element = detectorElements.emplace_back(
+          std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
+
+      element->surface().assignDetectorElement(*element);
+
+      surfaces.push_back(element->surface().getSharedPtr());
+    }
+    return surfaces;
+  };
+
+  std::vector<std::shared_ptr<Surface>> surfaces = makeFan(2.5_mm);
+
+  RootBlueprintNode root{{.envelope{{
+      .z = {2_mm, 2_mm},
+      .r = {3_mm, 5_mm},
+  }}}};
+
+  root.addLayer("Layer0", [&](auto& layer) {
+    layer.setSurfaces(surfaces)
+        .setLayerType(LayerBlueprintNode::LayerType::Disc)
+        .setEnvelope(ExtentEnvelope{{
+            .z = {0.1_mm, 0.1_mm},
+            .r = {1_mm, 1_mm},
+        }})
+        .setTransform(base);
+  });
+
+  std::ofstream dot{"layer_node.dot"};
+  root.graphViz(dot);
+
+  auto trackingGeometry =
+      root.construct({}, gctx, *logger->clone(std::nullopt, Logging::VERBOSE));
+
+  ObjVisualization3D vis;
+
+  trackingGeometry->visualize(vis, gctx, {}, {});
+
+  vis.write("layer_node.obj");
+
+  std::size_t nSurfaces = 0;
+
+  trackingGeometry->visitSurfaces([&](const Surface* surface) {
+    if (surface->associatedDetectorElement() != nullptr) {
+      nSurfaces++;
+    }
+  });
+
+  BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
 }
 
 BOOST_AUTO_TEST_SUITE_END();

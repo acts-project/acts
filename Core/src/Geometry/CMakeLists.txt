@@ -47,5 +47,6 @@ target_sources(
         RootBlueprintNode.cpp
         CylinderContainerBlueprintNode.cpp
         StaticBlueprintNode.cpp
+        LayerBlueprintNode.cpp
         Blueprint.cpp
 )

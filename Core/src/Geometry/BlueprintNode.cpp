@@ -9,6 +9,7 @@
 #include "Acts/Geometry/BlueprintNode.hpp"
 
 #include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
+#include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
@@ -108,6 +109,17 @@ MaterialDesignatorBlueprintNode& BlueprintNode::addMaterial(
     callback(*material);
   }
   return *material;
+}
+
+LayerBlueprintNode& BlueprintNode::addLayer(
+    const std::string& name,
+    const std::function<void(LayerBlueprintNode& layer)>& callback) {
+  auto layer = std::make_shared<LayerBlueprintNode>(name);
+  addChild(layer);
+  if (callback) {
+    callback(*layer);
+  }
+  return *layer;
 }
 
 void BlueprintNode::graphViz(std::ostream& os) const {

@@ -29,6 +29,7 @@ class PortalShellBase;
 class CylinderContainerBlueprintNode;
 class MaterialDesignatorBlueprintNode;
 class StaticBlueprintNode;
+class LayerBlueprintNode;
 
 class BlueprintNode {
  public:
@@ -78,6 +79,10 @@ class BlueprintNode {
   MaterialDesignatorBlueprintNode& addMaterial(
       const std::function<void(MaterialDesignatorBlueprintNode& material)>&
           callback = {});
+
+  LayerBlueprintNode& addLayer(
+      const std::string& name,
+      const std::function<void(LayerBlueprintNode& layer)>& callback = {});
 
   BlueprintNode& addChild(std::shared_ptr<BlueprintNode> child);
 
