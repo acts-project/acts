@@ -16,6 +16,7 @@
 
 #include <array>
 #include <cmath>
+#include <concepts>
 #include <cstddef>
 #include <exception>
 #include <iosfwd>
@@ -54,6 +55,7 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
   /// @param vertices A collection of vertices.
   /// throws a logic error if this is not the case
   template <typename coll_t>
+    requires std::same_as<typename coll_t::value_type, Acts::Vector2>
   static void convex_impl(const coll_t& vertices) noexcept(false);
 };
 
