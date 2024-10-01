@@ -434,6 +434,16 @@ void TrackingVolume::closeGeometry(
     portal.surface().assignGeometryId(portalId);
   }
 
+  GeometryIdentifier::Value isensitive = 0;
+
+  for (auto& surface : surfaces()) {
+    if (surface.associatedDetectorElement() == nullptr) {
+      continue;
+    }
+    auto sensitiveId = GeometryIdentifier(volumeID).setSensitive(++isensitive);
+    surface.assignGeometryId(sensitiveId);
+  }
+
   for (auto& volume : volumes()) {
     volume.closeGeometry(materialDecorator, volumeMap, vol, hook, logger);
   }
