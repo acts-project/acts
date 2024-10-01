@@ -11,8 +11,33 @@
 #include "Acts/Clusterization/TimedClusterization.hpp"
 
 namespace Acts::Test {
+  
+  // Define objects
+  using Identifier = std::size_t;
+  struct Cell {
+    Cell(Identifier identifier, int c, int r, double t)
+      : id(identifier), column(c), row(r), time(t) {}
+    
+    Identifier id{};
+    int column{0};
+    int row{0};
+    int label{-1};
+    double time{0.};
+  };
+  
+  struct Cluster {
+    std::vector<Identifier> ids{};
+  };
 
-BOOST_AUTO_TEST_CASE(TimedGrid_2D_notime) {
-}
+  using CellCollection = std::vector<Acts::Test::Cell>;
+  using ClusterCollection = std::vector<Acts::Test::Cluster>;
+
+  static inline double getCellTime(const Cell& cell) {
+    return cell.time;
+  }
+  
+  BOOST_AUTO_TEST_CASE(TimedGrid_2D_notime) {
+    Acts::Ccl::TimedConnect<Cell, 2> a;
+  }
 
 }

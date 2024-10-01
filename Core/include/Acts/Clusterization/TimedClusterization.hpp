@@ -19,6 +19,6 @@ concept HasRetrievableTimeInfo = requires(Cell cell) {
 };
 
 template <Acts::Ccl::HasRetrievableTimeInfo Cell, std::size_t N>
-struct TimedClusterization {};
+struct TimedConnect {};
 
 }  // namespace Acts::Ccl
