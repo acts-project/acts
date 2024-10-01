@@ -182,7 +182,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       ACTS_DEBUG("---> Number of outliers: " << trackFeatures.nOutliers);
 
       if ((trackFeatures.nHits < detector.minHits) ||
-          (trackFeatures.nHits > detector.maxHits) ||
           (trackFeatures.nHoles > detector.maxHoles) ||
           (trackFeatures.nOutliers > detector.maxOutliers)) {
         score = 0;
@@ -333,7 +332,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       ACTS_DEBUG("---> Number of outliers: " << trackFeatures.nOutliers);
 
       if ((trackFeatures.nHits < detector.minHits) ||
-          (trackFeatures.nHits > detector.maxHits) ||
           (trackFeatures.nHoles > detector.maxHoles) ||
           (trackFeatures.nOutliers > detector.maxOutliers)) {
         score = 0;
