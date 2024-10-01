@@ -185,7 +185,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
 
   // good/duplicate/fake = 0/1/2
   for (auto& [id, trajState] : infoMap) {
-    if (listGoodTracks.find(id) != listGoodTracks.end()) {
+    if (listGoodTracks.contains(id)) {
       trajState.trackType = "good";
     } else if (trajState.trackType != "fake") {
       trajState.trackType = "duplicate";

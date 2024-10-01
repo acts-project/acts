@@ -130,7 +130,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
       truthDistance = sqrt(dPhi * dPhi + dEta * dEta);
       // If the seed is truth matched, check if it is the closest one for the
       // contributing particle
-      if (goodSeed.find(majorityParticleId) != goodSeed.end()) {
+      if (goodSeed.contains(majorityParticleId)) {
         if (goodSeed[majorityParticleId].second > truthDistance) {
           goodSeed[majorityParticleId] = std::make_pair(iparams, truthDistance);
         }

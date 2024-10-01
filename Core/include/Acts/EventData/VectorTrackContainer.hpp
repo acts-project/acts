@@ -147,7 +147,7 @@ class VectorTrackContainerBase {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
       default:
-        return m_dynamic.find(key) != m_dynamic.end();
+        return m_dynamic.contains(key);
     }
   }
 
