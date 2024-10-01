@@ -208,19 +208,18 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
   ProtoLayer protoLayer(tgContext, surfaces);
 
   BOOST_CHECK_EQUAL(protoLayer.surfaces().size(), 8);
-  BOOST_CHECK_CLOSE(protoLayer.range(binX), 46_mm, 1e-8);
   BOOST_CHECK_CLOSE(protoLayer.min(binX), -23_mm, 1e-8);
   BOOST_CHECK_CLOSE(protoLayer.max(binX), 23_mm, 1e-8);
-  BOOST_CHECK_CLOSE(protoLayer.range(binY), 46_mm, 1e-8);
   BOOST_CHECK_CLOSE(protoLayer.min(binY), -23_mm, 1e-8);
   BOOST_CHECK_CLOSE(protoLayer.max(binY), 23_mm, 1e-8);
-  BOOST_CHECK_CLOSE(protoLayer.range(binZ), 0_mm, 1e-8);
   BOOST_CHECK_CLOSE(protoLayer.min(binZ), 0_mm, 1e-8);
   BOOST_CHECK_CLOSE(protoLayer.max(binZ), 0_mm, 1e-8);
+  BOOST_CHECK_CLOSE(protoLayer.min(binR), 17_mm, 1e-8);
+  BOOST_CHECK_CLOSE(protoLayer.max(binR), 23.769728648_mm, 1e-8);
 
   std::cout << protoLayer << std::endl;
 
-  surfaces = makeFan(90_degree);
+  surfaces = makeFan(45_degree);
 
   // Do NOT provide rotation matrix: sizing will be affected
   protoLayer = {tgContext, surfaces};
@@ -228,19 +227,15 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
   std::cout << protoLayer << std::endl;
 
   BOOST_CHECK_EQUAL(protoLayer.surfaces().size(), 8);
-  CHECK_SMALL(protoLayer.range(binX), 1e-14);
-  CHECK_SMALL(protoLayer.min(binX), 1e-14);
-  CHECK_SMALL(protoLayer.max(binX), 1e-14);
-  BOOST_CHECK_CLOSE(protoLayer.range(binY), 46_mm, 1e-8);
+  BOOST_CHECK_CLOSE(protoLayer.min(binX), -16.26345596_mm, 1e-4);
+  BOOST_CHECK_CLOSE(protoLayer.max(binX), 16.26345596_mm, 1e-4);
   BOOST_CHECK_CLOSE(protoLayer.min(binY), -23_mm, 1e-8);
   BOOST_CHECK_CLOSE(protoLayer.max(binY), 23_mm, 1e-8);
-  BOOST_CHECK_CLOSE(protoLayer.range(binZ), 46_mm, 1e-8);
-  BOOST_CHECK_CLOSE(protoLayer.min(binZ), -23_mm, 1e-8);
-  BOOST_CHECK_CLOSE(protoLayer.max(binZ), 23_mm, 1e-8);
+  BOOST_CHECK_CLOSE(protoLayer.min(binZ), -16.26345596_mm, 1e-4);
+  BOOST_CHECK_CLOSE(protoLayer.max(binZ), 16.26345596_mm, 1e-4);
 
-  // Do NOT provide rotation matrix: sizing will be affected
   protoLayer = {tgContext, surfaces,
-                Transform3{AngleAxis3{90_degree, Vector3::UnitY()}}};
+                Transform3{AngleAxis3{45_degree, Vector3::UnitY()}}.inverse()};
 
   std::cout << protoLayer << std::endl;
 
@@ -257,7 +252,6 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
 
   draw(protoLayer, "OrientedLayer.obj");
 
-  // @TODO: Test thickness
   surfaces = makeFan(0_degree, 10_mm);
 
   protoLayer = {tgContext, surfaces};
@@ -275,10 +269,10 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
 
   std::cout << protoLayer << std::endl;
 
-  surfaces = makeFan(90_degree, 10_mm);
+  surfaces = makeFan(45_degree, 10_mm);
 
   protoLayer = {tgContext, surfaces,
-                Transform3{AngleAxis3{90_degree, Vector3::UnitY()}}};
+                Transform3{AngleAxis3{45_degree, Vector3::UnitY()}}.inverse()};
 
   BOOST_CHECK_EQUAL(protoLayer.surfaces().size(), 8);
   BOOST_CHECK_CLOSE(protoLayer.range(binX), 46_mm, 1e-8);

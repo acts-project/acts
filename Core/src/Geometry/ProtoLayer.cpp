@@ -86,8 +86,7 @@ void ProtoLayer::measure(const GeometryContext& gctx,
       double thickness = element->thickness();
       // We need a translation along and opposite half thickness
       Vector3 sfNormal = regSurface->normal(gctx, sf->center(gctx));
-      std::vector<double> deltaT = {-0.5 * thickness, 0.5 * thickness};
-      for (const auto& dT : deltaT) {
+      for (const auto& dT : {-0.5 * thickness, 0.5 * thickness}) {
         Transform3 dtransform = transform * Translation3{dT * sfNormal};
         extent.extend(sfPolyhedron.extent(dtransform));
       }
