@@ -54,7 +54,7 @@ struct BenchmarkStepper {
       po::store(po::parse_command_line(argc, argv, desc), vm);
       po::notify(vm);
 
-      if (vm.count("help") != 0u) {
+      if (vm.contains("help")) {
         std::cout << desc << std::endl;
         return 0;
       }
