@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <concepts>
+
 template <typename external_spacepoint_t>
 Acts::CylindricalSpacePointGrid<external_spacepoint_t>
 Acts::CylindricalSpacePointGridCreator::createGrid(
@@ -142,12 +144,12 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     external_spacepoint_iterator_t spBegin,
     external_spacepoint_iterator_t spEnd, Acts::Extent& rRangeSPExtent) {
   using iterated_value_t =
-      typename std::iterator_traits<external_spacepoint_iterator_t>::value_type;
-  using iterated_t = typename std::remove_const<
-      typename std::remove_pointer<iterated_value_t>::type>::type;
-  static_assert(!std::is_pointer<iterated_value_t>::value,
+      typename std::iter_value_t<external_spacepoint_iterator_t>;
+  using iterated_t = typename std::remove_const_t<
+      typename std::remove_pointer_t<iterated_value_t>>;
+  static_assert(!std::is_pointer_v<iterated_value_t>,
                 "Iterator must contain pointers to space points");
-  static_assert(std::is_same<iterated_t, external_spacepoint_t>::value,
+  static_assert(std::same_as<iterated_t, external_spacepoint_t>,
                 "Iterator does not contain type this class was templated with");
 
   if (!config.isInInternalUnits) {
