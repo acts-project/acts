@@ -148,8 +148,7 @@ struct TransformRange {
 template <typename Callable, typename iterator_t, bool force_const>
 struct TransformRangeIterator {
  private:
-  using internal_value_type =
-      typename std::iterator_traits<iterator_t>::value_type;
+  using internal_value_type = typename std::iter_value_t<iterator_t>;
 
   using raw_value_type = std::remove_reference_t<decltype(Callable::apply(
       std::declval<internal_value_type>()))>;
@@ -162,8 +161,7 @@ struct TransformRangeIterator {
       std::conditional_t<force_const, std::add_const_t<raw_value_type>,
                          raw_value_type>;
 
-  using difference_type =
-      typename std::iterator_traits<iterator_t>::difference_type;
+  using difference_type = typename std::iter_difference_t<iterator_t>;
   using pointer = std::remove_reference_t<value_type>*;
   using reference = value_type&;
   using iterator_category = std::forward_iterator_tag;
