@@ -10,8 +10,7 @@
 
 #include <array>
 #include <filesystem>
-#include <string>
-#include <type_traits>
+#include <string_view>
 
 namespace Acts {
 
@@ -50,29 +49,31 @@ struct Color {
   constexpr Color(double r, double g, double b)
       : Color{std::array<double, 3>{r, g, b}} {}
 
-  /// Constructor from hex string. The expected format is `#RRGGBB`
-  /// @param hex The hex string
-  constexpr explicit Color(std::string_view hex) {
-    constexpr auto hexToInt = [](std::string_view hex) -> int {
-      constexpr auto hexCharToInt = [](char c) -> int {
-        if (c >= '0' && c <= '9') {
-          return c - '0';
-        } else if (c >= 'a' && c <= 'f') {
-          return c - 'a' + 10;
-        } else if (c >= 'A' && c <= 'F') {
-          return c - 'A' + 10;
-        } else {
-          throw std::invalid_argument("Invalid hex character");
-        }
-      };
-
-      int value = 0;
-      for (char c : hex) {
-        value = (value << 4) + hexCharToInt(c);
+ private:
+  constexpr int hexToInt(std::string_view hex) {
+    constexpr auto hexCharToInt = [](char c) -> int {
+      if (c >= '0' && c <= '9') {
+        return c - '0';
+      } else if (c >= 'a' && c <= 'f') {
+        return c - 'a' + 10;
+      } else if (c >= 'A' && c <= 'F') {
+        return c - 'A' + 10;
+      } else {
+        throw std::invalid_argument("Invalid hex character");
       }
-      return value;
     };
 
+    int value = 0;
+    for (char c : hex) {
+      value = (value << 4) + hexCharToInt(c);
+    }
+    return value;
+  };
+
+ public:
+  /// Constructor from hex string. The expected format is `#RRGGBB`
+  /// @param hex The hex string
+  constexpr Color(std::string_view hex) {
     if (hex[0] == '#' && hex.size() == 7) {
       rgb[0] = hexToInt(hex.substr(1, 2));  // Extract R component
       rgb[1] = hexToInt(hex.substr(3, 2));  // Extract G component
@@ -136,8 +137,8 @@ struct ViewConfig {
   std::filesystem::path outputName = std::filesystem::path("");
 };
 
-static const ViewConfig s_viewSurface = {.color{170, 170, 170}};
-static const ViewConfig s_viewPortal = {.color{"#308c48"}};
+static const ViewConfig s_viewSurface = {.color = {170, 170, 170}};
+static const ViewConfig s_viewPortal = {.color = {"#308c48"}};
 static const ViewConfig s_viewSensitive = {.color = {0, 180, 240}};
 static const ViewConfig s_viewPassive = {.color = {240, 280, 0}};
 static const ViewConfig s_viewVolume = {.color = {220, 220, 0}};
