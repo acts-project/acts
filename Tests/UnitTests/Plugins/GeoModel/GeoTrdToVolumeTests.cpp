@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -37,18 +37,10 @@ BOOST_AUTO_TEST_CASE(GeoTrdToVolumeConversion) {
   auto logTrd = new GeoLogVol("Trd", trd, material);
   auto physTrd = make_intrusive<GeoFullPhysVol>(logTrd);
 
-  // add subvolume since converter needs that to convert fpv to volume
-  auto strd = new GeoTrd(1, 1, 25, 40, 30);
-  auto slogTrd = new GeoLogVol("Trd", strd, material);
-  auto sphysTrd = make_intrusive<GeoFullPhysVol>(slogTrd);
-
   // this should produce an error while converting
   auto errTrd = new GeoTrd(2, 3, 25, 40, 30);
   auto errLogTrd = new GeoLogVol("Trd", errTrd, material);
   auto errPhysTrd = make_intrusive<GeoFullPhysVol>(errLogTrd);
-
-  physTrd->add(sphysTrd);
-  errPhysTrd->add(sphysTrd);
 
   // create pars for conversion
   Acts::GeoModelDetectorObjectFactory::Config gmConfig;

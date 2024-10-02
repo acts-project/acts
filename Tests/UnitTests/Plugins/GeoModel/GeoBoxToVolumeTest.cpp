@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -42,13 +42,6 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   auto box = new GeoBox(hls[0], hls[1], hls[2]);
   auto logBox = new GeoLogVol("Box", box, material);
   auto physBox = make_intrusive<GeoFullPhysVol>(logBox);
-
-  // add subvolume since converter needs that to convert fpv to volume
-  auto sBox = new GeoBox(50, 20, 10);
-  auto slogBox = new GeoLogVol("Box", sBox, material);
-  auto sphysBox = make_intrusive<GeoFullPhysVol>(slogBox);
-
-  physBox->add(sphysBox);
 
   // create pars for conversion
   Acts::GeoModelDetectorObjectFactory::Config gmConfig;

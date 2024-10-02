@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
@@ -66,7 +66,7 @@ namespace {
 void writeG4Polyhedron(
     Acts::IVisualization3D& visualizer, const G4Polyhedron& polyhedron,
     const Acts::Transform3& trafo = Acts::Transform3::Identity(),
-    Acts::ColorRGB color = {0, 0, 0}) {
+    Acts::Color color = {0, 0, 0}) {
   constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
 
   for (int i = 1; i <= polyhedron.GetNoFacets(); ++i) {
@@ -295,13 +295,13 @@ bool ActsExamples::SensitiveSurfaceMapper::checkMapping(
     const State& state, const Acts::GeometryContext& gctx,
     bool writeMissingG4VolsAsObj, bool writeMissingSurfacesAsObj) const {
   auto allSurfaces = m_cfg.candidateSurfaces->queryAll();
-  std::sort(allSurfaces.begin(), allSurfaces.end());
+  std::ranges::sort(allSurfaces);
 
   std::vector<const Acts::Surface*> found;
   for (const auto [_, surfacePtr] : state.g4VolumeToSurfaces) {
     found.push_back(surfacePtr);
   }
-  std::sort(found.begin(), found.end());
+  std::ranges::sort(found);
   auto newEnd = std::unique(found.begin(), found.end());
   found.erase(newEnd, found.end());
 

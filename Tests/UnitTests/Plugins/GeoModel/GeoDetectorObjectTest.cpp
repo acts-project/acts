@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -38,7 +38,6 @@ struct GeoDims {
   std::vector<std::vector<double>> trapVerts;
   std::vector<double> trapHls;
   std::vector<std::vector<double>> polyVerts;
-  // double poly_z;
 };
 void test(const Acts::GeoModelDetectorObjectFactory::Cache& cache,
           GeoModelDetObj::GeoDims geoDims) {
@@ -101,7 +100,6 @@ GeoGeometry constructGeoModel() {
   geoDims.polyVerts = {{-60, -50}, {60, -50},  {153, 0},
                        {123, 50},  {-123, 50}, {-153, 0}};
   geoDims.tube = {5, 6, 100};
-  // geoDims.poly_z = 2;
   geoDims.trapHls = {
       fabs(geoDims.trapVerts[0][0] - geoDims.trapVerts[1][0]) / 2,
       fabs(geoDims.trapVerts[2][0] - geoDims.trapVerts[3][0]) / 2,
