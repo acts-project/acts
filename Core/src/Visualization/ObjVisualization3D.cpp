@@ -8,6 +8,7 @@
 
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <stdexcept>
 
@@ -64,9 +65,10 @@ void ObjVisualization3D::faces(const std::vector<Vector3>& vtxs,
       if (face.size() == 2) {
         o.lines.push_back({face[0] + vtxoffs, face[2] + vtxoffs});
       } else {
-        FaceType rawFace = face;
-        std::transform(rawFace.begin(), rawFace.end(), rawFace.begin(),
-                       [&](std::size_t& iv) { return (iv + vtxoffs); });
+        FaceType rawFace;
+        std::ranges::transform(
+            face, std::back_inserter(rawFace),
+            [&](unsigned long iv) { return (iv + vtxoffs); });
         o.faces.push_back(rawFace);
       }
     }
@@ -99,23 +101,22 @@ void ObjVisualization3D::write(std::ostream& os) const {
 }
 
 void ObjVisualization3D::write(std::ostream& os, std::ostream& mos) const {
-  std::map<std::string, bool> materials;
+  std::map<std::string, bool, std::less<>> materials;
 
-  auto mixColor = [&](const Color& color) -> std::string {
+  auto mixColor = [&](const Color& color) {
     std::string materialName;
     materialName = "material_";
     materialName += std::to_string(color[0]) + std::string("_");
     materialName += std::to_string(color[1]) + std::string("_");
     materialName += std::to_string(color[2]);
 
-    if (materials.find(materialName) == materials.end()) {
+    if (!materials.contains(materialName)) {
       mos << "newmtl " << materialName << "\n";
       std::vector<std::string> shadings = {"Ka", "Kd", "Ks"};
       for (const auto& shd : shadings) {
         mos << shd << " " << std::to_string(color[0] / 256.) << " ";
         mos << std::to_string(color[1] / 256.) << " ";
-        mos << std::to_string(color[2] / 256.) << " "
-            << "\n";
+        mos << std::to_string(color[2] / 256.) << " " << "\n";
       }
       mos << "\n";
     }
@@ -131,7 +132,7 @@ void ObjVisualization3D::write(std::ostream& os, std::ostream& mos) const {
     std::size_t iv = 0;
     Color lastVertexColor = {0, 0, 0};
     for (const VertexType& vtx : o.vertices) {
-      if (o.vertexColors.find(iv) != o.vertexColors.end()) {
+      if (o.vertexColors.contains(iv)) {
         auto color = o.vertexColors.find(iv)->second;
         if (color != lastVertexColor) {
           os << mixColor(color) << "\n";
@@ -146,22 +147,22 @@ void ObjVisualization3D::write(std::ostream& os, std::ostream& mos) const {
     }
     std::size_t il = 0;
     Color lastLineColor = {0, 0, 0};
-    for (const LineType& ln : o.lines) {
-      if (o.lineColors.find(il) != o.lineColors.end()) {
+    for (const auto& [start, end] : o.lines) {
+      if (o.lineColors.contains(il)) {
         auto color = o.lineColors.find(il)->second;
         if (color != lastLineColor) {
           os << mixColor(color) << "\n";
           lastLineColor = color;
         }
       }
-      os << "l " << vertexOffset + ln.first + 1 << " "
-         << vertexOffset + ln.second + 1 << "\n";
+      os << "l " << vertexOffset + start + 1 << " " << vertexOffset + end + 1
+         << "\n";
       ++il;
     }
     std::size_t is = 0;
     Color lastFaceColor = {0, 0, 0};
     for (const FaceType& fc : o.faces) {
-      if (o.faceColors.find(is) != o.faceColors.end()) {
+      if (o.faceColors.contains(is)) {
         auto color = o.faceColors.find(is)->second;
         if (color != lastFaceColor) {
           os << mixColor(color) << "\n";
@@ -169,8 +170,8 @@ void ObjVisualization3D::write(std::ostream& os, std::ostream& mos) const {
         }
       }
       os << "f";
-      for (std::size_t i = 0; i < fc.size(); i++) {
-        os << " " << vertexOffset + fc[i] + 1;
+      for (std::size_t fi : fc) {
+        os << " " << vertexOffset + fi + 1;
       }
       os << "\n";
       ++is;

@@ -700,7 +700,8 @@ void TrackingVolume::visualize(IVisualization3D& helper,
   }
 
   for (const auto& child : volumes()) {
-    child.visualize(helper, gctx, viewConfig, portalViewConfig);
+    child.visualize(helper, gctx, viewConfig, portalViewConfig,
+                    sensitiveViewConfig);
   }
 }
 
