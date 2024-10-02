@@ -68,6 +68,37 @@ inline std::vector<std::shared_ptr<Surface>> makeFanLayer(
   return surfaces;
 }
 
+inline std::vector<std::shared_ptr<Surface>> makeBarrelLayer(
+    const Transform3& base,
+    std::vector<std::unique_ptr<DetectorElementBase>>& elements,
+    double r = 300_mm, std::size_t nStaves = 10, int nSensorsPerStave = 8,
+    double thickness = 0, double hlPhi = 40_mm, double hlZ = 60_mm) {
+  auto recBounds = std::make_shared<RectangleBounds>(hlPhi, hlZ);
+
+  double deltaPhi = 2 * M_PI / nStaves;
+  std::vector<std::shared_ptr<Surface>> surfaces;
+
+  for (std::size_t istave = 0; istave < nStaves; istave++) {
+    for (int isensor = -nSensorsPerStave; isensor <= nSensorsPerStave;
+         isensor++) {
+      double z = isensor * (2 * hlZ + 5_mm);
+
+      Transform3 trf = base * Translation3(Vector3::UnitZ() * z) *
+                       AngleAxis3{deltaPhi * istave, Vector3::UnitZ()} *
+                       Translation3(Vector3::UnitX() * r) *
+                       AngleAxis3{10_degree, Vector3::UnitZ()} *
+                       AngleAxis3{90_degree, Vector3::UnitY()} *
+                       AngleAxis3{90_degree, Vector3::UnitZ()};
+      auto& element = elements.emplace_back(
+          std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
+      element->surface().assignDetectorElement(*element);
+      surfaces.push_back(element->surface().getSharedPtr());
+    }
+  }
+
+  return surfaces;
+}
+
 BOOST_AUTO_TEST_SUITE(Geometry);
 
 BOOST_AUTO_TEST_SUITE(BlueprintNodeTest);
@@ -167,6 +198,7 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   csv << run << "," << position[0] << "," << position[1] << "," << position[2];
   csv << "," << volume->geometryId().volume();
   csv << "," << volume->geometryId().boundary();
+  csv << "," << volume->geometryId().sensitive();
   csv << std::endl;
 
   ACTS_VERBOSE("start pseudo navigation");
@@ -196,13 +228,14 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
 
     if (main.currentCandidate().surface().isOnSurface(gctx, position,
                                                       direction)) {
-      ACTS_VERBOSE("Already on portal at initialization, skipping candidate");
+      ACTS_VERBOSE("Already on surface at initialization, skipping candidate");
 
       auto id = main.currentCandidate().surface().geometryId();
       csv << run << "," << position[0] << "," << position[1] << ","
           << position[2];
       csv << "," << id.volume();
       csv << "," << id.boundary();
+      csv << "," << id.sensitive();
       csv << std::endl;
       if (!main.switchToNextCandidate()) {
         ACTS_WARNING("candidates exhausted unexpectedly");
@@ -210,42 +243,69 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
       }
     }
 
-    const auto& candidate = main.currentCandidate();
-    ACTS_VERBOSE(candidate.portal);
-    ACTS_VERBOSE(candidate.intersection.position().transpose());
-
-    BOOST_REQUIRE_NE(candidate.portal, nullptr);
-
-    ACTS_VERBOSE("on portal: " << candidate.portal->surface().geometryId());
-
-    ACTS_VERBOSE("moving to position: " << position.transpose() << " (r="
-                                        << VectorHelpers::perp(position)
-                                        << ")");
-    Vector3 delta = candidate.intersection.position() - position;
-
-    std::size_t substeps =
-        std::max(1l, std::lround(delta.norm() / 10_cm * substepsPerCm));
-
-    for (std::size_t j = 0; j < substeps; j++) {
-      // position += delta / (substeps + 1);
-      Vector3 subpos = position + dist(rng) * delta;
-      csv << run << "," << subpos[0] << "," << subpos[1] << "," << subpos[2];
-      csv << "," << currentVolume->geometryId().volume();
-      csv << "," << currentVolume->geometryId().boundary();
+    auto writeIntersection = [&](const Vector3& position,
+                                 const Surface& surface) {
+      csv << run << "," << position[0] << "," << position[1] << ","
+          << position[2];
+      csv << "," << surface.geometryId().volume();
+      csv << "," << surface.geometryId().boundary();
+      csv << "," << surface.geometryId().sensitive();
       csv << std::endl;
+    };
+
+    bool terminated = false;
+    while (main.remainingCandidates() > 0) {
+      const auto& candidate = main.currentCandidate();
+
+      ACTS_VERBOSE(candidate.portal);
+      ACTS_VERBOSE(candidate.intersection.position().transpose());
+
+      ACTS_VERBOSE("moving to position: " << position.transpose() << " (r="
+                                          << VectorHelpers::perp(position)
+                                          << ")");
+
+      Vector3 delta = candidate.intersection.position() - position;
+
+      std::size_t substeps =
+          std::max(1l, std::lround(delta.norm() / 10_cm * substepsPerCm));
+
+      for (std::size_t j = 0; j < substeps; j++) {
+        // position += delta / (substeps + 1);
+        Vector3 subpos = position + dist(rng) * delta;
+        csv << run << "," << subpos[0] << "," << subpos[1] << "," << subpos[2];
+        csv << "," << currentVolume->geometryId().volume();
+        csv << ",0,0";  // zero boundary and sensitive ids
+        csv << std::endl;
+      }
+
+      position = candidate.intersection.position();
+      ACTS_VERBOSE("                 -> "
+                   << position.transpose()
+                   << " (r=" << VectorHelpers::perp(position) << ")");
+
+      writeIntersection(position, candidate.surface());
+
+      if (candidate.portal != nullptr) {
+        ACTS_VERBOSE(
+            "On portal: " << candidate.portal->surface().toStream(gctx));
+        currentVolume =
+            candidate.portal->resolveVolume(gctx, position, direction).value();
+
+        if (currentVolume == nullptr) {
+          ACTS_VERBOSE("switched to nullptr -> we're done");
+          terminated = true;
+        }
+        break;
+
+      } else {
+        ACTS_VERBOSE("Not on portal");
+      }
+
+      main.switchToNextCandidate();
     }
 
-    position = candidate.intersection.position();
-
-    ACTS_VERBOSE("                 -> "
-                 << position.transpose()
-                 << " (r=" << VectorHelpers::perp(position) << ")");
-
-    currentVolume =
-        candidate.portal->resolveVolume(gctx, position, direction).value();
-
-    if (currentVolume == nullptr) {
-      ACTS_VERBOSE("switched to nullptr");
+    if (terminated) {
+      ACTS_VERBOSE("Terminate pseudo navigation");
       break;
     }
 
@@ -335,11 +395,11 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
               };
 
               ec.addLayer("PixelNeg1", [&](auto& layer) {
-                makeLayer(base * Translation3{Vector3{0, 0, -600_mm}}, layer);
+                makeLayer(base * Translation3{Vector3{0, 0, -700_mm}}, layer);
               });
 
               ec.addLayer("PixelNeg2", [&](auto& layer) {
-                makeLayer(base * Translation3{Vector3{0, 0, -400_mm}}, layer);
+                makeLayer(base * Translation3{Vector3{0, 0, -500_mm}}, layer);
               });
             });
 
@@ -347,28 +407,35 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
             "PixelBarrel", BinningValue::binR, [&](auto& brl) {
               brl.setAttachmentStrategy(
                      CylinderVolumeStack::AttachmentStrategy::Gap)
-                  .setResizeStrategy(
-                      CylinderVolumeStack::ResizeStrategy::Expand);
+                  .setResizeStrategy(CylinderVolumeStack::ResizeStrategy::Gap);
 
-              brl.addStaticVolume(
-                  base,
-                  std::make_shared<CylinderVolumeBounds>(23_mm, 48_mm, 200_mm),
-                  "PixelLayer0");
+              auto makeLayer = [&](const std::string& name, double r,
+                                   std::size_t nStaves, int nSensorsPerStave) {
+                brl.addLayer(name, [&](auto& layer) {
+                  std::vector<std::shared_ptr<Surface>> surfaces =
+                      makeBarrelLayer(base, detectorElements, r, nStaves,
+                                      nSensorsPerStave, 2.5_mm, 10_mm, 20_mm);
 
-              brl.addStaticVolume(
-                  base,
-                  std::make_shared<CylinderVolumeBounds>(87_mm, 103_mm, 250_mm),
-                  "PixelLayer1");
+                  layer.setSurfaces(surfaces)
+                      .setLayerType(LayerBlueprintNode::LayerType::Cylinder)
+                      .setEnvelope(ExtentEnvelope{{
+                          .z = {5_mm, 5_mm},
+                          .r = {1_mm, 1_mm},
+                      }})
+                      .setTransform(base);
+                });
+              };
+
+              makeLayer("PixelLayer0", 30_mm, 18, 5);
+              makeLayer("PixelLayer1", 90_mm, 30, 6);
 
               brl.addStaticVolume(base,
                                   std::make_shared<CylinderVolumeBounds>(
-                                      150_mm, 180_mm, 310_mm),
-                                  "PixelLayer2");
+                                      100_mm, 110_mm, 250_mm),
+                                  "PixelSupport");
 
-              brl.addStaticVolume(base,
-                                  std::make_shared<CylinderVolumeBounds>(
-                                      250_mm, 400_mm, 310_mm),
-                                  "PixelLayer3");
+              makeLayer("PixelLayer2", 150_mm, 40, 7);
+              makeLayer("PixelLayer3", 250_mm, 70, 8);
             });
 
         auto& ec =
@@ -405,20 +472,20 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
 
   Vector3 position = Vector3::Zero();
   std::ofstream csv{"api_test_container.csv"};
-  csv << "x,y,z,volume,boundary" << std::endl;
+  csv << "x,y,z,volume,boundary,sensitive" << std::endl;
 
   std::mt19937 rnd{42};
 
   std::uniform_real_distribution<> dist{-1, 1};
 
-  double etaWidth = 5.0;
+  double etaWidth = 3;
   double thetaMin = 2 * std::atan(std::exp(-etaWidth));
   double thetaMax = 2 * std::atan(std::exp(etaWidth));
   std::uniform_real_distribution<> thetaDist{thetaMin, thetaMax};
 
   using namespace Acts::UnitLiterals;
 
-  for (std::size_t i = 0; i < 5; i++) {
+  for (std::size_t i = 0; i < 5000; i++) {
     double theta = thetaDist(rnd);
     double phi = 2 * M_PI * dist(rnd);
 
@@ -428,7 +495,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
     direction[2] = std::cos(theta);
 
     pseudoNavigation(*trackingGeometry, position, direction, csv, i, 2,
-                     *logger->clone(std::nullopt, Logging::VERBOSE));
+                     *logger->clone(std::nullopt, Logging::DEBUG));
 
     // portalSamples(*trackingGeometry, position, direction, csv, i);
   }
@@ -504,7 +571,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestConfined) {
   BOOST_CHECK_EQUAL(wrapper->volumes().size(), 4);
 }
 
-BOOST_AUTO_TEST_CASE(LayerNode) {
+BOOST_AUTO_TEST_CASE(LayerNodeDisk) {
   double yrot = 45_degree;
   Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
@@ -512,7 +579,7 @@ BOOST_AUTO_TEST_CASE(LayerNode) {
 
   auto makeFan = [&](double thickness) {
     detectorElements.clear();
-    return makeFanLayer(base, detectorElements, thickness);
+    return makeFanLayer(base, detectorElements, 200_mm, 10, thickness);
   };
 
   std::vector<std::shared_ptr<Surface>> surfaces = makeFan(2.5_mm);
@@ -532,7 +599,7 @@ BOOST_AUTO_TEST_CASE(LayerNode) {
         .setTransform(base);
   });
 
-  std::ofstream dot{"layer_node.dot"};
+  std::ofstream dot{"layer_node_disk.dot"};
   root.graphViz(dot);
 
   auto trackingGeometry =
@@ -542,7 +609,54 @@ BOOST_AUTO_TEST_CASE(LayerNode) {
 
   trackingGeometry->visualize(vis, gctx, {}, {});
 
-  vis.write("layer_node.obj");
+  vis.write("layer_node_disk.obj");
+
+  std::size_t nSurfaces = 0;
+
+  trackingGeometry->visitSurfaces([&](const Surface* surface) {
+    if (surface->associatedDetectorElement() != nullptr) {
+      nSurfaces++;
+    }
+  });
+
+  BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
+}
+
+BOOST_AUTO_TEST_CASE(LayerNodeCylinder) {
+  double yrot = 0_degree;
+  Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
+
+  std::vector<std::unique_ptr<DetectorElementBase>> detectorElements;
+
+  std::vector<std::shared_ptr<Surface>> surfaces =
+      makeBarrelLayer(base, detectorElements, 300_mm, 24, 8, 2.5_mm);
+
+  RootBlueprintNode root{{.envelope{{
+      .z = {2_mm, 2_mm},
+      .r = {3_mm, 5_mm},
+  }}}};
+
+  root.addLayer("Layer0", [&](auto& layer) {
+    layer.setSurfaces(surfaces)
+        .setLayerType(LayerBlueprintNode::LayerType::Cylinder)
+        .setEnvelope(ExtentEnvelope{{
+            .z = {10_mm, 10_mm},
+            .r = {20_mm, 10_mm},
+        }})
+        .setTransform(base);
+  });
+
+  std::ofstream dot{"layer_node_cyl.dot"};
+  root.graphViz(dot);
+
+  auto trackingGeometry =
+      root.construct({}, gctx, *logger->clone(std::nullopt, Logging::VERBOSE));
+
+  ObjVisualization3D vis;
+
+  trackingGeometry->visualize(vis, gctx, {}, {});
+
+  vis.write("layer_node_cyl.obj");
 
   std::size_t nSurfaces = 0;
 
