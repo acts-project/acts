@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -48,6 +48,7 @@ class IVolumeMaterial;
 class Surface;
 class TrackingVolume;
 struct GeometryIdentifierHook;
+class Portal;
 
 /// Interface types of the Gen1 geometry model
 /// @note This interface is being replaced, and is subject to removal
@@ -301,6 +302,45 @@ class TrackingVolume : public Volume {
   /// @return the range of volumes
   MutableVolumeRange volumes();
 
+  using MutablePortalRange =
+      detail::TransformRange<detail::Dereference,
+                             std::vector<std::shared_ptr<Portal>>>;
+
+  using PortalRange =
+      detail::TransformRange<detail::ConstDereference,
+                             const std::vector<std::shared_ptr<Portal>>>;
+
+  /// Return all portals registered under this tracking volume
+  /// @return the range of portals
+  PortalRange portals() const;
+
+  /// Return mutable view of the registered portals under this tracking volume
+  /// @return the range of portals
+  MutablePortalRange portals();
+
+  /// Add a portal to this tracking volume
+  /// @param portal The portal to add
+  void addPortal(std::shared_ptr<Portal> portal);
+
+  using MutableSurfaceRange =
+      detail::TransformRange<detail::Dereference,
+                             std::vector<std::shared_ptr<Surface>>>;
+  using SurfaceRange =
+      detail::TransformRange<detail::ConstDereference,
+                             const std::vector<std::shared_ptr<Surface>>>;
+
+  /// Return all surfaces registered under this tracking volume
+  /// @return the range of surfaces
+  SurfaceRange surfaces() const;
+
+  /// Return mutable view of the registered surfaces under this tracking volume
+  /// @return the range of surfaces
+  MutableSurfaceRange surfaces();
+
+  /// Add a surface to this tracking volume
+  /// @param surface The surface to add
+  void addSurface(std::shared_ptr<Surface> surface);
+
   /// Add a child volume to this tracking volume
   /// @param volume The volume to add
   /// @note The @p volume will have its mother volume assigned to @p this.
@@ -494,6 +534,8 @@ class TrackingVolume : public Volume {
   std::string m_name;
 
   std::vector<std::unique_ptr<TrackingVolume>> m_volumes;
+  std::vector<std::shared_ptr<Portal>> m_portals;
+  std::vector<std::shared_ptr<Surface>> m_surfaces;
 };
 
 }  // namespace Acts

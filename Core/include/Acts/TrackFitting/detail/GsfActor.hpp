@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -634,9 +634,11 @@ struct GsfActor {
                                    bool doCovTransport) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
 
+    const bool precedingMeasurementExists = result.processedStates > 0;
+
     // Initialize as true, so that any component can flip it. However, all
     // components should behave the same
-    bool is_hole = true;
+    bool isHole = true;
 
     auto cmps = stepper.componentIterable(state.stepping);
     for (auto cmp : cmps) {
@@ -647,7 +649,8 @@ struct GsfActor {
       // now until we measure this is significant
       auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
           singleState, singleStepper, surface, tmpStates.traj,
-          MultiTrajectoryTraits::kInvalid, doCovTransport, logger());
+          MultiTrajectoryTraits::kInvalid, doCovTransport, logger(),
+          precedingMeasurementExists);
 
       if (!trackStateProxyRes.ok()) {
         return trackStateProxyRes.error();
@@ -656,7 +659,7 @@ struct GsfActor {
       const auto& trackStateProxy = *trackStateProxyRes;
 
       if (!trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
-        is_hole = false;
+        isHole = false;
       }
 
       tmpStates.tips.push_back(trackStateProxy.index());
@@ -664,7 +667,7 @@ struct GsfActor {
     }
 
     // These things should only be done once for all components
-    if (is_hole) {
+    if (isHole) {
       ++result.measurementHoles;
     }
 

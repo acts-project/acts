@@ -146,10 +146,11 @@ CkfConfig = namedtuple(
         "stripVolumes",
         "maxPixelHoles",
         "maxStripHoles",
+        "trimTracks",
         "constrainToVolumes",
         "endOfWorldVolumes",
     ],
-    defaults=[15.0, 25.0, 10, None, None, None, None, None, None, None, None, None],
+    defaults=[15.0, 25.0, 10, None, None, None, None, None, None, None, None, None, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -1536,6 +1537,7 @@ def addCKFTracks(
             stripVolumeIds=ckfConfig.stripVolumes,
             maxPixelHoles=ckfConfig.maxPixelHoles,
             maxStripHoles=ckfConfig.maxStripHoles,
+            trimTracks=ckfConfig.trimTracks,
             constrainToVolumeIds=ckfConfig.constrainToVolumes,
             endOfWorldVolumeIds=ckfConfig.endOfWorldVolumes,
         ),

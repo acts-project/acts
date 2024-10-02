@@ -1,15 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -130,7 +130,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
       truthDistance = sqrt(dPhi * dPhi + dEta * dEta);
       // If the seed is truth matched, check if it is the closest one for the
       // contributing particle
-      if (goodSeed.find(majorityParticleId) != goodSeed.end()) {
+      if (goodSeed.contains(majorityParticleId)) {
         if (goodSeed[majorityParticleId].second > truthDistance) {
           goodSeed[majorityParticleId] = std::make_pair(iparams, truthDistance);
         }

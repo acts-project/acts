@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -37,6 +37,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <type_traits>
 
 namespace Acts {
 
@@ -264,7 +265,7 @@ class KalmanFitter {
 
   /// The navigator has DirectNavigator type or not
   static constexpr bool isDirectNavigator =
-      std::is_same<KalmanNavigator, DirectNavigator>::value;
+      std::is_same_v<KalmanNavigator, DirectNavigator>;
 
  public:
   KalmanFitter(propagator_t pPropagator,
@@ -590,6 +591,11 @@ class KalmanFitter {
     Result<void> filter(const Surface* surface, propagator_state_t& state,
                         const stepper_t& stepper, const navigator_t& navigator,
                         result_type& result) const {
+      const bool precedingMeasurementExists = result.measurementStates > 0;
+      const bool surfaceIsSensitive =
+          surface->associatedDetectorElement() != nullptr;
+      const bool surfaceHasMaterial = surface->surfaceMaterial() != nullptr;
+
       // Try to find the surface in the measurement surfaces
       auto sourceLinkIt = inputMeasurements->find(surface->geometryId());
       if (sourceLinkIt != inputMeasurements->end()) {
@@ -646,36 +652,33 @@ class KalmanFitter {
         // the lastTrackIndex.
         result.lastMeasurementIndex = result.lastTrackIndex;
 
-      } else if (surface->associatedDetectorElement() != nullptr ||
-                 surface->surfaceMaterial() != nullptr) {
+      } else if ((precedingMeasurementExists && surfaceIsSensitive) ||
+                 surfaceHasMaterial) {
         // We only create track states here if there is already measurement
         // detected or if the surface has material (no holes before the first
         // measurement)
-        if (result.measurementStates > 0 ||
-            surface->surfaceMaterial() != nullptr) {
-          auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
-              state, stepper, *surface, *result.fittedStates,
-              result.lastTrackIndex, true, logger(), freeToBoundCorrection);
+        auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
+            state, stepper, *surface, *result.fittedStates,
+            result.lastTrackIndex, true, logger(), precedingMeasurementExists,
+            freeToBoundCorrection);
 
-          if (!trackStateProxyRes.ok()) {
-            return trackStateProxyRes.error();
-          }
-
-          const auto& trackStateProxy = *trackStateProxyRes;
-          result.lastTrackIndex = trackStateProxy.index();
-
-          if (trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
-            // Count the missed surface
-            result.missedActiveSurfaces.push_back(surface);
-          }
-
-          ++result.processedStates;
+        if (!trackStateProxyRes.ok()) {
+          return trackStateProxyRes.error();
         }
-        if (surface->surfaceMaterial() != nullptr) {
-          // Update state and stepper with material effects
-          materialInteractor(surface, state, stepper, navigator,
-                             MaterialUpdateStage::FullUpdate);
+
+        const auto& trackStateProxy = *trackStateProxyRes;
+        result.lastTrackIndex = trackStateProxy.index();
+
+        if (trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
+          // Count the missed surface
+          result.missedActiveSurfaces.push_back(surface);
         }
+
+        ++result.processedStates;
+
+        // Update state and stepper with (possible) material effects
+        materialInteractor(surface, state, stepper, navigator,
+                           MaterialUpdateStage::FullUpdate);
       }
       return Result<void>::success();
     }
