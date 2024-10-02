@@ -150,7 +150,21 @@ CkfConfig = namedtuple(
         "constrainToVolumes",
         "endOfWorldVolumes",
     ],
-    defaults=[15.0, 25.0, 10, None, None, None, None, None, None, None, None, None, None],
+    defaults=[
+        15.0,
+        25.0,
+        10,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ],
 )
 
 AmbiguityResolutionConfig = namedtuple(
