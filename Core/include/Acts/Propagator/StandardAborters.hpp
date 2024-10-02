@@ -182,7 +182,7 @@ struct EndOfWorldReached {
 };
 
 /// This is the condition that the end of world has been reached
-/// it then triggers an propagation abort
+/// it then triggers a propagation abort
 struct VolumeConstraintAborter {
   /// boolean operator for abort condition without using the result
   ///
