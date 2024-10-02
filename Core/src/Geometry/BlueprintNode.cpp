@@ -59,6 +59,7 @@ std::unique_ptr<NavigationPolicyFactory>
 BlueprintNode::Options::makeDefaultNavigationPolicyFactory() {
   return NavigationPolicyFactory::make()
       .add<TryAllPortalNavigationPolicy>()
+      .add<TryAllSurfaceNavigationPolicy>()
       .asUniquePtr();
 }
 
