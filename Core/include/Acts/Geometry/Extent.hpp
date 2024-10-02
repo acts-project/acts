@@ -52,12 +52,6 @@ struct ExtentEnvelope {
     }
   }
 
-  /// Constructor from an array of envelopes
-  /// @param values the array of envelopes
-  constexpr explicit ExtentEnvelope(
-      const std::array<Envelope, numBinningValues()>& values)
-      : m_values(values) {}
-
   /// Static factory for a zero envelope
   /// @return the zero envelope
   constexpr static ExtentEnvelope Zero() {
