@@ -206,8 +206,9 @@ class CylinderStackPortalShell : public CylinderPortalShell {
   /// @copydoc CylinderPortalShell::setPortal
   void setPortal(std::shared_ptr<Portal> portal, Face face) final;
 
-  /// No-op, because it's a composite portal shell
-  void applyToVolume() override {}
+  void applyToVolume() override {
+    // No-op, because it's a composite portal shell
+  }
 
   /// @copydoc PortalShellBase::isValid
   bool isValid() const override;

@@ -152,10 +152,11 @@ CylinderStackPortalShell::CylinderStackPortalShell(
     throw std::invalid_argument("Invalid shell");
   }
 
-  auto merge = [&gctx, direction, &shells = m_shells, &logger](Face face) {
+  auto merge = [&](Face face) {
     std::vector<std::shared_ptr<Portal>> portals;
-    std::transform(shells.begin(), shells.end(), std::back_inserter(portals),
-                   [face](auto* shell) { return shell->portalPtr(face); });
+    std::ranges::transform(
+        m_shells, std::back_inserter(portals),
+        [face](auto* shell) { return shell->portalPtr(face); });
 
     auto merged = std::accumulate(
         std::next(portals.begin()), portals.end(), portals.front(),
@@ -172,15 +173,15 @@ CylinderStackPortalShell::CylinderStackPortalShell(
     assert(merged->isValid());
 
     // reset merged portal on all shells
-    for (auto& shell : shells) {
+    for (auto& shell : m_shells) {
       shell->setPortal(merged, face);
     }
   };
 
-  auto fuse = [&gctx, &shells = m_shells, &logger](Face faceA, Face faceB) {
-    for (std::size_t i = 1; i < shells.size(); i++) {
-      auto& shellA = shells.at(i - 1);
-      auto& shellB = shells.at(i);
+  auto fuse = [&](Face faceA, Face faceB) {
+    for (std::size_t i = 1; i < m_shells.size(); i++) {
+      auto& shellA = m_shells.at(i - 1);
+      auto& shellB = m_shells.at(i);
       ACTS_VERBOSE("Fusing " << shellA->label() << " and " << shellB->label());
 
       auto fused = std::make_shared<Portal>(Portal::fuse(
