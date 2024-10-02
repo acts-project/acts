@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -59,9 +59,6 @@ struct DD4hepDetector {
   /// @brief The DD4hep geometry service
   std::shared_ptr<DD4hepGeometryService> geometryService = nullptr;
 
-  // @brief the compact file names
-  std::vector<std::string> compactFiles = {};
-
   /// @brief Build the tracking geometry from the DD4hep geometry
   ///
   /// @param config is the configuration of the geometry service
@@ -86,6 +83,8 @@ struct DD4hepDetector {
   finalize(
       const Acts::GeometryContext& gctx,
       const Acts::Experimental::DD4hepDetectorStructure::Options& options = {});
+
+  void drop();
 
   /// @brief Access to the DD4hep field
   /// @return a shared pointer to the DD4hep field

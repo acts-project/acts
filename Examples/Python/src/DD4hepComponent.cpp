@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
@@ -36,11 +36,12 @@ using namespace Acts::Python;
 
 PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   {
-    using Config = ActsExamples::DD4hep::DD4hepGeometryService::Config;
+    using Config = DD4hep::DD4hepGeometryService::Config;
     auto s = py::class_<DD4hep::DD4hepGeometryService,
                         std::shared_ptr<DD4hep::DD4hepGeometryService>>(
                  m, "DD4hepGeometryService")
-                 .def(py::init<const Config&>());
+                 .def(py::init<const Config&>())
+                 .def("drop", &DD4hep::DD4hepGeometryService::drop);
 
     auto c = py::class_<Config>(s, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
@@ -88,7 +89,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
                 const auto* dd4hepDetElement =
                     dynamic_cast<const Acts::DD4hepDetectorElement*>(dde);
                 // Check if it is valid
-                if (dd4hepDetElement) {
+                if (dd4hepDetElement != nullptr) {
                   dd4hep::DDSegmentation::VolumeID dd4hepID =
                       dd4hepDetElement->sourceElement().volumeID();
                   auto geoID = surface->geometryId();
@@ -167,6 +168,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
                  const Acts::GeometryContext&,
                  const Acts::Experimental::DD4hepDetectorStructure::Options&>(
                  &DD4hep::DD4hepDetector::finalize))
+        .def("drop", &DD4hep::DD4hepDetector::drop)
         .def_property_readonly("field", &DD4hep::DD4hepDetector::field);
   }
 }

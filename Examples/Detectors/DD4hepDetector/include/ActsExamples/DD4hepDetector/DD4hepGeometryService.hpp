@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -56,7 +56,7 @@ class DD4hepGeometryService {
     /// XML-file with the detector description
     std::vector<std::string> xmlFileNames;
     /// The name of the service
-    std::string name;
+    std::string name = "default";
     /// Binningtype in phi
     Acts::BinningType bTypePhi = Acts::equidistant;
     /// Binningtype in r
@@ -88,7 +88,11 @@ class DD4hepGeometryService {
   };
 
   DD4hepGeometryService(const Config& cfg);
+  DD4hepGeometryService(const DD4hepGeometryService&) = delete;
+  DD4hepGeometryService(DD4hepGeometryService&&) = delete;
   ~DD4hepGeometryService();
+  DD4hepGeometryService& operator=(const DD4hepGeometryService&) = delete;
+  DD4hepGeometryService& operator=(DD4hepGeometryService&&) = delete;
 
   /// Interface method to access to the DD4hep geometry
   dd4hep::Detector& detector();
@@ -106,6 +110,8 @@ class DD4hepGeometryService {
   /// @param gctx is the geometry context object
   std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry(
       const Acts::GeometryContext& gctx);
+
+  void drop();
 
  private:
   /// Private method to initiate building of the DD4hep geometry

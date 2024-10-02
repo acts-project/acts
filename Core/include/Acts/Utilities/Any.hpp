@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -124,8 +124,9 @@ class AnyBase : public AnyBaseAll {
     if constexpr (!heapAllocated<U>()) {
       // construct into local buffer
       /*U* ptr =*/new (m_data.data()) U(std::forward<Args>(args)...);
-      _ACTS_ANY_VERBOSE(
-          "Construct local (this=" << this << ") at: " << (void*)m_data.data());
+      _ACTS_ANY_VERBOSE("Construct local (this="
+                        << this
+                        << ") at: " << static_cast<void*>(m_data.data()));
     } else {
       // too large, heap allocate
       U* heap = new U(std::forward<Args>(args)...);
@@ -136,16 +137,14 @@ class AnyBase : public AnyBaseAll {
   }
 
 #if defined(_ACTS_ANY_ENABLE_VERBOSE)
-  AnyBase() {
-    _ACTS_ANY_VERBOSE("Default construct this=" << this);
-  };
+  AnyBase() { _ACTS_ANY_VERBOSE("Default construct this=" << this); };
 #else
   AnyBase() = default;
 #endif
 
-  template <typename T, typename = std::enable_if_t<
-                            !std::is_same_v<std::decay_t<T>, AnyBase<SIZE>>>>
+  template <typename T>
   explicit AnyBase(T&& value)
+    requires(!std::same_as<std::decay_t<T>, AnyBase<SIZE>>)
       : AnyBase{std::in_place_type<T>, std::forward<T>(value)} {}
 
   template <typename T>
@@ -175,9 +174,7 @@ class AnyBase : public AnyBaseAll {
     return *reinterpret_cast<const T*>(dataPtr());
   }
 
-  ~AnyBase() {
-    destroy();
-  }
+  ~AnyBase() { destroy(); }
 
   AnyBase(const AnyBase& other) {
     if (m_handler == nullptr && other.m_handler == nullptr) {
@@ -185,16 +182,16 @@ class AnyBase : public AnyBaseAll {
       return;
     }
 
-    _ACTS_ANY_VERBOSE(
-        "Copy construct (this=" << this << ") at: " << (void*)m_data.data());
+    _ACTS_ANY_VERBOSE("Copy construct (this="
+                      << this << ") at: " << static_cast<void*>(m_data.data()));
 
     m_handler = other.m_handler;
     copyConstruct(other);
   }
 
   AnyBase& operator=(const AnyBase& other) {
-    _ACTS_ANY_VERBOSE("Copy assign (this=" << this
-                                           << ") at: " << (void*)m_data.data());
+    _ACTS_ANY_VERBOSE("Copy assign (this="
+                      << this << ") at: " << static_cast<void*>(m_data.data()));
 
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
@@ -217,8 +214,8 @@ class AnyBase : public AnyBaseAll {
   }
 
   AnyBase(AnyBase&& other) {
-    _ACTS_ANY_VERBOSE(
-        "Move construct (this=" << this << ") at: " << (void*)m_data.data());
+    _ACTS_ANY_VERBOSE("Move construct (this="
+                      << this << ") at: " << static_cast<void*>(m_data.data()));
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return;
@@ -229,8 +226,8 @@ class AnyBase : public AnyBaseAll {
   }
 
   AnyBase& operator=(AnyBase&& other) {
-    _ACTS_ANY_VERBOSE("Move assign (this=" << this
-                                           << ") at: " << (void*)m_data.data());
+    _ACTS_ANY_VERBOSE("Move assign (this="
+                      << this << ") at: " << static_cast<void*>(m_data.data()));
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return *this;
@@ -252,9 +249,7 @@ class AnyBase : public AnyBaseAll {
     return *this;
   }
 
-  operator bool() const {
-    return m_handler != nullptr;
-  }
+  operator bool() const { return m_handler != nullptr; }
 
  private:
   void* dataPtr() {
@@ -265,9 +260,7 @@ class AnyBase : public AnyBaseAll {
     }
   }
 
-  void setDataPtr(void* ptr) {
-    *reinterpret_cast<void**>(m_data.data()) = ptr;
-  }
+  void setDataPtr(void* ptr) { *reinterpret_cast<void**>(m_data.data()) = ptr; }
 
   const void* dataPtr() const {
     if (m_handler->heapAllocated) {

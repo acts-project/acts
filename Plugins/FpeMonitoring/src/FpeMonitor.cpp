@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 
@@ -133,8 +133,8 @@ unsigned int FpeMonitor::Result::numStackTraces() const {
   return m_stracktraces.size();
 }
 
-const std::vector<FpeMonitor::Result::FpeInfo>
-    &FpeMonitor::Result::stackTraces() const {
+const std::vector<FpeMonitor::Result::FpeInfo> &
+FpeMonitor::Result::stackTraces() const {
   return m_stracktraces;
 }
 
@@ -167,11 +167,11 @@ void FpeMonitor::Result::deduplicate() {
   m_stracktraces.clear();
 
   for (auto &info : copy) {
-    auto it = std::find_if(
-        m_stracktraces.begin(), m_stracktraces.end(),
-        [&info](const FpeInfo &el) {
-          return areFpesEquivalent({el.type, *el.st}, {info.type, *info.st});
-        });
+    auto it = std::find_if(m_stracktraces.begin(), m_stracktraces.end(),
+                           [&info](const FpeInfo &el) {
+                             return areFpesEquivalent({el.type, *el.st},
+                                                      {info.type, *info.st});
+                           });
     if (it != m_stracktraces.end()) {
       it->count += info.count;
       continue;

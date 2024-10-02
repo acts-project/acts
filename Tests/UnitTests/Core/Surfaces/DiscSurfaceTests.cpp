@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
@@ -124,9 +124,15 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   BOOST_CHECK(!discSurfaceObject->isOnSurface(
       tgContext, point3DNotInSector, ignoredMomentum,
       BoundaryTolerance::None()));  // passes
+  BOOST_CHECK(
+      !discSurfaceObject->isOnSurface(tgContext, point3DNotInSector,
+                                      BoundaryTolerance::None()));  // passes
   BOOST_CHECK(discSurfaceObject->isOnSurface(
       tgContext, point3DOnSurface, ignoredMomentum,
       BoundaryTolerance::None()));  // passes
+  BOOST_CHECK(
+      discSurfaceObject->isOnSurface(tgContext, point3DOnSurface,
+                                     BoundaryTolerance::None()));  // passes
   //
   /// Test localToGlobal
   Vector3 returnedPosition{10.9, 8.7, 6.5};

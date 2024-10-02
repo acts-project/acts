@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -50,11 +50,11 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
     Acts::Vector2 p = Acts::Vector2::Random();
     Acts::SquareMatrix2 c = Acts::SquareMatrix2::Random();
 
-    BoundVariableMeasurement m(Acts::SourceLink{sl},
-                               std::array{Acts::eBoundLoc0, Acts::eBoundLoc1},
-                               p, c);
-
-    measOriginal.push_back(m);
+    FixedBoundMeasurementProxy<2> m = measOriginal.makeMeasurement<2>();
+    m.setSourceLink(Acts::SourceLink(sl));
+    m.setSubspaceIndices(std::array{Acts::eBoundLoc0, Acts::eBoundLoc1});
+    m.parameters() = p;
+    m.covariance() = c;
 
     ActsExamples::Cluster cl;
 
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
   BOOST_REQUIRE(measRead.size() == measOriginal.size());
   for (const auto &[a, b] : Acts::zip(measRead, measOriginal)) {
     if (a.size() == b.size()) {
-      CHECK_CLOSE_REL(a.effectiveParameters(), b.effectiveParameters(), 1e-4);
+      CHECK_CLOSE_REL(a.parameters(), b.parameters(), 1e-4);
     }
   }
 
