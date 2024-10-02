@@ -37,6 +37,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -47,6 +48,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include <boost/algorithm/string/join.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -231,23 +233,58 @@ void addGeometry(Context& ctx) {
         }));
   }
 
-  {
-    py::class_<Acts::Extent>(m, "Extent")
-        .def(py::init(
-            [](const std::vector<std::tuple<Acts::BinningValue,
-                                            std::array<Acts::ActsScalar, 2u>>>&
-                   franges) {
-              Acts::Extent extent;
-              for (const auto& [bval, frange] : franges) {
-                extent.set(bval, frange[0], frange[1]);
-              }
-              return extent;
-            }))
-        .def("range", [](const Acts::Extent& self, Acts::BinningValue bval) {
-          return std::array<Acts::ActsScalar, 2u>{self.min(bval),
-                                                  self.max(bval)};
-        });
-  }
+  py::class_<ExtentEnvelope>(m, "ExtentEnvelope")
+      .def(py::init<>())
+      .def(py::init<const Envelope&>())
+      .def(py::init([](Envelope x, Envelope y, Envelope z, Envelope r,
+                       Envelope phi, Envelope rPhi, Envelope h, Envelope eta,
+                       Envelope mag) {
+             return ExtentEnvelope({.x = x,
+                                    .y = y,
+                                    .z = z,
+                                    .r = r,
+                                    .phi = phi,
+                                    .rPhi = rPhi,
+                                    .h = h,
+                                    .eta = eta,
+                                    .mag = mag});
+           }),
+           py::arg("x") = zeroEnvelope, py::arg("y") = zeroEnvelope,
+           py::arg("z") = zeroEnvelope, py::arg("r") = zeroEnvelope,
+           py::arg("phi") = zeroEnvelope, py::arg("rPhi") = zeroEnvelope,
+           py::arg("h") = zeroEnvelope, py::arg("eta") = zeroEnvelope,
+           py::arg("mag") = zeroEnvelope)
+      .def_static("Zero", &ExtentEnvelope::Zero)
+      .def("__getitem__", [](ExtentEnvelope& self,
+                             BinningValue bValue) { return self[bValue]; })
+      .def("__setitem__", [](ExtentEnvelope& self, BinningValue bValue,
+                             const Envelope& value) { self[bValue] = value; })
+      .def("__str__", [](const ExtentEnvelope& self) {
+        std::array<std::string, numBinningValues()> values;
+
+        std::stringstream ss;
+        for (BinningValue val : allBinningValues()) {
+          ss << val << "=(" << self[val][0] << ", " << self[val][1] << ")";
+          values.at(toUnderlying(val)) = ss.str();
+          ss.str("");
+        }
+
+        ss.str("");
+        ss << "ExtentEnvelope(";
+        ss << boost::algorithm::join(values, ", ");
+        ss << ")";
+        return ss.str();
+      });
+
+  py::class_<Extent>(m, "Extent")
+      .def(py::init<const ExtentEnvelope&>(),
+           py::arg("envelope") = ExtentEnvelope::Zero())
+      .def("range",
+           [](const Acts::Extent& self,
+              Acts::BinningValue bval) -> std::array<ActsScalar, 2> {
+             return {self.min(bval), self.max(bval)};
+           })
+      .def("__str__", &Extent::toString);
 
   {
     auto cylStack = py::class_<CylinderVolumeStack>(m, "CylinderVolumeStack");
