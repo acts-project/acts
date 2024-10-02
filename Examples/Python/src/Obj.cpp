@@ -90,13 +90,7 @@ void addObj(Context& ctx) {
             });
   }
 
-  py::class_<IVisualization3D>(m, "IVisualization3D")
-      .def("write", py::overload_cast<const std::filesystem::path&>(
-                        &IVisualization3D::write, py::const_));
-
   py::class_<ObjVisualization3D, IVisualization3D>(m, "ObjVisualization3D")
-      .def(py::init<>())
-      .def("write", py::overload_cast<const std::filesystem::path&>(
-                        &ObjVisualization3D::write, py::const_));
+      .def(py::init<>());
 }
 }  // namespace Acts::Python

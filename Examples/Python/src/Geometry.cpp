@@ -37,6 +37,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Geometry/VolumeAssociationTest.hpp"
 
 #include <array>
@@ -166,7 +167,11 @@ void addGeometry(Context& ctx) {
              })
         .def_property_readonly(
             "highestTrackingVolume",
-            &Acts::TrackingGeometry::highestTrackingVolumePtr);
+            &Acts::TrackingGeometry::highestTrackingVolumePtr)
+        .def("visualize", &Acts::TrackingGeometry::visualize, py::arg("helper"),
+             py::arg("gctx"), py::arg("viewConfig") = s_viewVolume,
+             py::arg("portalViewConfig") = s_viewPortal,
+             py::arg("sensitiveViewConfig") = s_viewSensitive);
   }
 
   {

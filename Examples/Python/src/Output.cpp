@@ -10,6 +10,7 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -133,6 +134,13 @@ void addOutput(Context& ctx) {
         .def(py::init<std::string_view>())
         .def_readonly("rgb", &Color::rgb);
   }
+
+  py::class_<IVisualization3D>(m, "IVisualization3D")
+      .def("write", [](const IVisualization3D& self, const py::object& arg) {
+        std::stringstream ss;
+        self.write(ss);
+        arg.attr("write")(ss.str());
+      });
 
   {
     using Writer = ActsExamples::ObjTrackingGeometryWriter;
