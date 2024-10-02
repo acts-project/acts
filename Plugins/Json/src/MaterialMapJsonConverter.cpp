@@ -336,12 +336,10 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
         std::pair<GeometryIdentifier, Acts::SurfaceAndMaterialWithContext>>&
         surfaceHierarchy,
     const Acts::TrackingVolume* tVolume) {
-  auto sameId =
-      [tVolume](
-          const std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>&
-              pair) { return (tVolume->geometryId() == pair.first); };
-  if (std::find_if(volumeHierarchy.begin(), volumeHierarchy.end(), sameId) !=
-      volumeHierarchy.end()) {
+  auto sameId = [tVolume](const auto& pair) {
+    return (tVolume->geometryId() == pair.first);
+  };
+  if (std::ranges::any_of(volumeHierarchy, sameId)) {
     // this volume was already visited
     return;
   }

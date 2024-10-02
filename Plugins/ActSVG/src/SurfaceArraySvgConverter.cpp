@@ -13,6 +13,8 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
+#include <algorithm>
+
 std::tuple<std::vector<Acts::Svg::ProtoSurfaces>, Acts::Svg::ProtoGrid,
            std::vector<Acts::Svg::ProtoAssociations> >
 Acts::Svg::SurfaceArrayConverter::convert(
@@ -93,11 +95,9 @@ Acts::Svg::SurfaceArrayConverter::convert(
     auto sameBounds = [&](const SurfaceBounds* test) {
       return ((*test) == sBounds);
     };
-    // Check if you have this template object already
-    auto tBounds =
-        std::find_if(templateBounds.begin(), templateBounds.end(), sameBounds);
-    // New reference bounds and new reference object
-    if (tBounds == templateBounds.end()) {
+    // Check if you have this template object already before creating new
+    // reference bounds and new reference object
+    if (std::ranges::none_of(templateBounds, sameBounds)) {
       // Let's get the right style
       SurfaceConverter::Options sOptions;
       sOptions.templateSurface = true;
@@ -107,7 +107,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
         sOptions.style = *sfStyle;
       }
 
-      // Create a referese surface and reference object from it
+      // Create a reference surface and reference object from it
       auto referenceSurface = SurfaceConverter::convert(gctx, *sf, sOptions);
       auto referenceObject =
           View::xy(referenceSurface,
@@ -148,8 +148,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
         return ((*test) == sBounds);
       };
       // Check if you have this template object already
-      auto tBounds = std::find_if(templateBounds.begin(), templateBounds.end(),
-                                  sameBounds);
+      auto tBounds = std::ranges::find_if(templateBounds, sameBounds);
       // New reference bounds and new reference object
       if (tBounds != templateBounds.end()) {
         std::size_t tObject = std::distance(templateBounds.begin(), tBounds);
@@ -196,7 +195,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
       auto bSurfaces = surfaceArray.neighbors(bCenter);
       std::vector<std::size_t> binnAssoc;
       for (const auto& bs : bSurfaces) {
-        auto candidate = std::find(surfaces.begin(), surfaces.end(), bs);
+        auto candidate = std::ranges::find(surfaces, bs);
         if (candidate != surfaces.end()) {
           binnAssoc.push_back(std::distance(surfaces.begin(), candidate));
         }
