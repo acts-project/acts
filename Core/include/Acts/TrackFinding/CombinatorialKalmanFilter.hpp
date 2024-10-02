@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -44,6 +44,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <ranges>
 #include <string_view>
 #include <type_traits>
 #include <unordered_map>
@@ -357,10 +358,7 @@ class CombinatorialKalmanFilter {
       const auto& [boundParams, jacobian, pathLength] = boundState;
 
       trackStateCandidates.clear();
-      if constexpr (std::is_same_v<
-                        typename std::iterator_traits<
-                            source_link_iterator_t>::iterator_category,
-                        std::random_access_iterator_tag>) {
+      if constexpr (std::ranges::random_access_range<source_link_iterator_t>) {
         trackStateCandidates.reserve(std::distance(slBegin, slEnd));
       }
 
