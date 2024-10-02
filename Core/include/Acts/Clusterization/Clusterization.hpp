@@ -55,12 +55,14 @@ struct Connect2D {
   Connect2D() = default;
   explicit Connect2D(bool commonCorner) : conn8{commonCorner} {}
   virtual ConnectResult operator()(const Cell& ref, const Cell& iter) const;
+  virtual ~Connect2D() = default;
 };
 
 // Default connection type for 1-D grids: 2-cell connectivity
 template <Acts::Ccl::HasRetrievableColumnInfo Cell>
 struct Connect1D {
   virtual ConnectResult operator()(const Cell& ref, const Cell& iter) const;
+  virtual ~Connect1D() = default;
 };
 
 // Default connection type based on GridDim
@@ -71,12 +73,15 @@ struct DefaultConnect {
 };
 
 template <typename Cell>
-struct DefaultConnect<Cell, 1> : public Connect1D<Cell> {};
+struct DefaultConnect<Cell, 1> : public Connect1D<Cell> {
+  virtual ~DefaultConnect() = default;
+};
 
 template <typename Cell>
 struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
   explicit DefaultConnect(bool commonCorner) : Connect2D<Cell>(commonCorner) {}
   DefaultConnect() = default;
+  virtual ~DefaultConnect() = default;
 };
 
 /// @brief labelClusters
