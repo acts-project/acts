@@ -131,6 +131,7 @@ std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
   child.finalize(options, *world, logger);
 
   // @TODO: Handle material decorator, geo id hook
+  // @TODO: Maybe add a name uniqueness check
 
   return std::make_unique<TrackingGeometry>(
       std::move(world), nullptr, m_cfg.geometryIdentifierHook, logger);
