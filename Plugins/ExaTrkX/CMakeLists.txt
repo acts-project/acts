@@ -39,6 +39,15 @@ if(ACTS_EXATRKX_ENABLE_TORCH_AOT)
         ActsPluginExaTrkX
         PUBLIC ACTS_EXATRKX_WITH_TORCH_AOT
     )
+
+
+    add_library(TorchGnnAot SHARED IMPORTED)
+    set_target_properties(
+        TorchGnnAot
+        PROPERTIES
+            IMPORTED_LOCATION "/root/reproduce_gnn_results/rel24/data/gnn.test.so"
+    )
+    target_link_libraries(ActsPluginExaTrkX PUBLIC TorchGnnAot)
 endif()
 
 target_include_directories(
@@ -57,13 +66,6 @@ target_link_libraries(
         std::filesystem
 )
 
-add_library(TorchGnnAot SHARED IMPORTED)
-set_target_properties(
-    TorchGnnAot
-    PROPERTIES
-        IMPORTED_LOCATION "/root/reproduce_gnn_results/rel24/data/gnn.test.so"
-)
-target_link_libraries(ActsPluginExaTrkX PUBLIC TorchGnnAot)
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
     target_link_libraries(ActsPluginExaTrkX PRIVATE frnn)
