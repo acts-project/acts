@@ -53,6 +53,51 @@ static void clusterAddCell(Cluster& cl, const Cell& cell) {
   cl.ids.push_back(cell.id);
 }
 
+BOOST_AUTO_TEST_CASE(TimedGrid_1D_withtime) {
+  // 1x10 matrix
+  /*
+    X X X Y O X Y Y X X
+  */
+  // 6 + 3 cells -> 3 + 2 clusters in total
+
+  std::vector<Cell> cells;
+  // X
+  cells.emplace_back(0ul, 0, -1, 0);
+  cells.emplace_back(1ul, 1, -1, 0);
+  cells.emplace_back(2ul, 2, -1, 0);
+  cells.emplace_back(3ul, 5, -1, 0);
+  cells.emplace_back(4ul, 8, -1, 0);
+  cells.emplace_back(5ul, 9, -1, 0);
+  // Y
+  cells.emplace_back(6ul, 3, 0, 1);
+  cells.emplace_back(7ul, 6, 1, 1);
+  cells.emplace_back(8ul, 7, 1, 1);
+
+  std::vector<std::vector<Identifier>> expectedResults;
+  expectedResults.push_back({0ul, 1ul, 2ul});
+  expectedResults.push_back({6ul});
+  expectedResults.push_back({3ul});
+  expectedResults.push_back({7ul, 8ul});
+  expectedResults.push_back({4ul, 5ul});
+
+  ClusterCollection clusters =
+      Acts::Ccl::createClusters<CellCollection, ClusterCollection, 1>(
+          cells, Acts::Ccl::TimedConnect<Cell, 1>(0.5));
+
+  BOOST_CHECK_EQUAL(5ul, clusters.size());
+
+  for (std::size_t i(0); i < clusters.size(); ++i) {
+    std::vector<Identifier>& timedIds = clusters[i].ids;
+    const std::vector<Identifier>& expected = expectedResults[i];
+    std::sort(timedIds.begin(), timedIds.end());
+    BOOST_CHECK_EQUAL(timedIds.size(), expected.size());
+
+    for (std::size_t j(0); j < timedIds.size(); ++j) {
+      BOOST_CHECK_EQUAL(timedIds[j], expected[j]);
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE(TimedGrid_2D_notime) {
   // 4x4 matrix
   /*
