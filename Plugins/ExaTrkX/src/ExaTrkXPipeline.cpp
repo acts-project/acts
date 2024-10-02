@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 
@@ -35,7 +35,7 @@ ExaTrkXPipeline::ExaTrkXPipeline(
 }
 
 std::vector<std::vector<int>> ExaTrkXPipeline::run(
-    std::vector<float> &features, const std::vector<uint64_t> &moduleIds,
+    std::vector<float> &features, const std::vector<std::uint64_t> &moduleIds,
     std::vector<int> &spacepointIDs, const ExaTrkXHook &hook,
     ExaTrkXTiming *timing) const {
   auto t0 = std::chrono::high_resolution_clock::now();

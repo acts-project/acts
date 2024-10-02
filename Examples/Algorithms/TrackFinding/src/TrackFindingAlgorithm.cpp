@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
@@ -19,7 +19,6 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -223,12 +222,11 @@ class BranchStopper {
       // count both holes and outliers as holes for pixel/strip counts
       if (trackState.typeFlags().test(Acts::TrackStateFlag::HoleFlag) ||
           trackState.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
-        if (m_cfg.pixelVolumes.count(
-                trackState.referenceSurface().geometryId().volume()) >= 1) {
+        if (m_cfg.pixelVolumes.contains(
+                trackState.referenceSurface().geometryId().volume())) {
           ++branchState.nPixelHoles;
-        } else if (m_cfg.stripVolumes.count(
-                       trackState.referenceSurface().geometryId().volume()) >=
-                   1) {
+        } else if (m_cfg.stripVolumes.contains(
+                       trackState.referenceSurface().geometryId().volume())) {
           ++branchState.nStripHoles;
         }
       }
@@ -371,9 +369,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   secondOptions.skipPrePropagationUpdate = true;
 
   using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
-  using ExtrapolatorOptions =
-      Extrapolator::template Options<Acts::ActionList<Acts::MaterialInteractor>,
-                                     Acts::AbortList<Acts::EndOfWorldReached>>;
+  using ExtrapolatorOptions = Extrapolator::template Options<
+      Acts::ActorList<Acts::MaterialInteractor, Acts::EndOfWorldReached>>;
 
   Extrapolator extrapolator(
       Acts::SympyStepper(m_cfg.magneticField),
@@ -421,6 +418,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       }
     });
 
+    // trim the track if requested
+    if (m_cfg.trimTracks) {
+      Acts::trimTrack(track, true, true, true);
+    }
     Acts::calculateTrackQuantities(track);
 
     if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
@@ -470,8 +471,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     const Acts::BoundTrackParameters& firstInitialParameters =
         initialParameters.at(iSeed);
 
-    auto firstResult =
-        (*m_cfg.findTracks)(firstInitialParameters, firstOptions, tracksTemp);
+    auto firstRootBranch = tracksTemp.makeTrack();
+    auto firstResult = (*m_cfg.findTracks)(firstInitialParameters, firstOptions,
+                                           tracksTemp, firstRootBranch);
     nSeed++;
 
     if (!firstResult.ok()) {
@@ -507,13 +509,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       // has already been updated
       seedNumber(trackCandidate) = nSeed - 1;
 
-      auto firstState = *std::next(trackCandidate.trackStatesReversed().begin(),
-                                   trackCandidate.nTrackStates() - 1);
-      assert(firstState.previous() == Acts::kTrackIndexInvalid);
-
       if (m_cfg.twoWay) {
         std::optional<Acts::VectorMultiTrajectory::TrackStateProxy>
-            firstMeasurement;
+            firstMeasurementOpt;
         for (auto trackState : trackCandidate.trackStatesReversed()) {
           bool isMeasurement = trackState.typeFlags().test(
               Acts::TrackStateFlag::MeasurementFlag);
@@ -523,21 +521,29 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
           // decrease resolution because only the smoothing corrected the very
           // first prediction as filtering is not possible.
           if (isMeasurement && !isOutlier) {
-            firstMeasurement = trackState;
+            firstMeasurementOpt = trackState;
           }
         }
 
-        if (firstMeasurement.has_value()) {
-          Acts::BoundTrackParameters secondInitialParameters =
-              trackCandidate.createParametersFromState(*firstMeasurement);
+        if (firstMeasurementOpt.has_value()) {
+          auto& firstMeasurement = firstMeasurementOpt.value();
 
-          auto secondResult = (*m_cfg.findTracks)(secondInitialParameters,
-                                                  secondOptions, tracksTemp);
+          Acts::BoundTrackParameters secondInitialParameters =
+              trackCandidate.createParametersFromState(firstMeasurement);
+
+          auto secondRootBranch = tracksTemp.makeTrack();
+          secondRootBranch.copyFrom(trackCandidate, false);
+          auto secondResult =
+              (*m_cfg.findTracks)(secondInitialParameters, secondOptions,
+                                  tracksTemp, secondRootBranch);
 
           if (!secondResult.ok()) {
             ACTS_WARNING("Second track finding failed for seed "
                          << iSeed << " with error" << secondResult.error());
           } else {
+            // store the original previous state to restore it later
+            auto originalFirstMeasurementPrevious = firstMeasurement.previous();
+
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
               // TODO a copy of the track should not be necessary but is the
@@ -552,7 +558,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               // processed
               secondTrackCopy.reverseTrackStates(true);
 
-              firstState.previous() =
+              firstMeasurement.previous() =
                   secondTrackCopy.outermostTrackState().index();
 
               trackCandidate.copyFrom(secondTrackCopy, false);
@@ -605,6 +611,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
               ++nSecond;
             }
+
+            // restore the original previous state
+            firstMeasurement.previous() = originalFirstMeasurementPrevious;
           }
         }
       }
@@ -613,7 +622,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       if (nSecond == 0) {
         // restore the track to the original state
         trackCandidate.copyFrom(firstTrack, false);
-        firstState.previous() = Acts::kTrackIndexInvalid;
 
         auto firstExtrapolationResult =
             Acts::extrapolateTrackToReferenceSurface(

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
 
@@ -67,7 +67,7 @@ TorchMetricLearning::~TorchMetricLearning() {}
 
 std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
     std::vector<float> &inputValues, std::size_t numNodes,
-    const std::vector<uint64_t> & /*moduleIds*/, torch::Device device) {
+    const std::vector<std::uint64_t> & /*moduleIds*/, torch::Device device) {
   ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
 

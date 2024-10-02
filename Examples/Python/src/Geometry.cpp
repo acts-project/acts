@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/CuboidalContainerBuilder.hpp"
@@ -35,6 +35,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "ActsExamples/Geometry/VolumeAssociationTest.hpp"
 
@@ -66,11 +67,9 @@ struct MaterialSurfaceSelector {
 
   /// @param surface is the test surface
   void operator()(const Acts::Surface* surface) {
-    if (surface->surfaceMaterial() != nullptr) {
-      if (std::find(surfaces.begin(), surfaces.end(), surface) ==
-          surfaces.end()) {
-        surfaces.push_back(surface);
-      }
+    if (surface->surfaceMaterial() != nullptr &&
+        !rangeContainsValue(surfaces, surface)) {
+      surfaces.push_back(surface);
     }
   }
 };
@@ -167,8 +166,8 @@ void addGeometry(Context& ctx) {
                return selector.surfaces;
              })
         .def_property_readonly(
-            "worldVolume",
-            &Acts::TrackingGeometry::highestTrackingVolumeShared);
+            "highestTrackingVolume",
+            &Acts::TrackingGeometry::highestTrackingVolumePtr);
   }
 
   {
@@ -189,11 +188,8 @@ void addGeometry(Context& ctx) {
 
     py::class_<Acts::TrackingVolume, Acts::Volume,
                std::shared_ptr<Acts::TrackingVolume>>(m, "TrackingVolume")
-        .def(py::init([](std::shared_ptr<const Acts::VolumeBounds> bounds,
-                         std::string name) {
-          return std::make_shared<Acts::TrackingVolume>(Transform3::Identity(),
-                                                        bounds, name);
-        }));
+        .def(py::init<const Transform3&, std::shared_ptr<Acts::VolumeBounds>,
+                      std::string>());
   }
 
   {
@@ -242,21 +238,37 @@ void addExperimentalGeometry(Context& ctx) {
       .def("volumes", &Detector::volumes)
       .def("volumePtrs", &Detector::volumePtrs)
       .def("numberVolumes",
-           [](Detector& self) { return self.volumes().size(); })
+           [](const Detector& self) { return self.volumes().size(); })
       .def("extractMaterialSurfaces",
-           [](Detector& self) {
+           [](const Detector& self) {
              MaterialSurfaceSelector selector;
              self.visitSurfaces(selector);
              return selector.surfaces;
            })
-      .def("geoIdSurfaceMap", [](Detector& self) {
-        IdentifierSurfacesCollector collector;
-        self.visitSurfaces(collector);
-        return collector.surfaces;
-      });
+      .def("geoIdSurfaceMap",
+           [](const Detector& self) {
+             IdentifierSurfacesCollector collector;
+             self.visitSurfaces(collector);
+             return collector.surfaces;
+           })
+      .def("cylindricalVolumeRepresentation",
+           [](const Detector& self, const Acts::GeometryContext& gctx) {
+             // Loop over the volumes and gather the extent
+             Extent extent;
+             for (const auto& volume : self.volumes()) {
+               extent.extend(volume->extent(gctx));
+             }
+             auto bounds = std::make_shared<Acts::CylinderVolumeBounds>(
+                 0., extent.max(Acts::BinningValue::binR),
+                 extent.max(Acts::BinningValue::binZ));
+
+             return std::make_shared<Acts::Volume>(Transform3::Identity(),
+                                                   std::move(bounds));
+           });
 
   // Portal definition
-  py::class_<Portal, std::shared_ptr<Portal>>(m, "Portal");
+  py::class_<Experimental::Portal, std::shared_ptr<Experimental::Portal>>(
+      m, "Portal");
 
   {
     // The surface hierarchy map

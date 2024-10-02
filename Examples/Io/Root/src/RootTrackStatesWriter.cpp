@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
 
@@ -504,39 +504,6 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
               state.smoothedCovariance() - K * H * state.smoothedCovariance();
           return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
         }
-        if (ipar == eUnbiased && !state.hasSmoothed() && state.hasFiltered() &&
-            state.hasProjector() && state.hasCalibrated()) {
-          // Same calculation as above but using the filtered states.
-          auto m = state.effectiveCalibrated();
-          auto H = state.effectiveProjector();
-          auto V = state.effectiveCalibratedCovariance();
-          auto K =
-              (state.filteredCovariance() * H.transpose() *
-               (H * state.filteredCovariance() * H.transpose() - V).inverse())
-                  .eval();
-          auto unbiasedParamsVec =
-              state.filtered() + K * (m - H * state.filtered());
-          auto unbiasedParamsCov =
-              state.filteredCovariance() - K * H * state.filteredCovariance();
-          return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
-        }
-        if (ipar == eUnbiased && !state.hasSmoothed() && !state.hasFiltered() &&
-            state.hasPredicted() && state.hasProjector() &&
-            state.hasCalibrated()) {
-          // Same calculation as above but using the predicted states.
-          auto m = state.effectiveCalibrated();
-          auto H = state.effectiveProjector();
-          auto V = state.effectiveCalibratedCovariance();
-          auto K =
-              (state.predictedCovariance() * H.transpose() *
-               (H * state.predictedCovariance() * H.transpose() - V).inverse())
-                  .eval();
-          auto unbiasedParamsVec =
-              state.predicted() + K * (m - H * state.predicted());
-          auto unbiasedParamsCov =
-              state.predictedCovariance() - K * H * state.predictedCovariance();
-          return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
-        }
         return std::nullopt;
       };
 
@@ -547,7 +514,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         // fill the track parameters status
         m_hasParams[ipar].push_back(trackParamsOpt.has_value());
 
-        if (!trackParamsOpt) {
+        if (!trackParamsOpt.has_value()) {
           if (ipar == ePredicted) {
             // push default values if no track parameters
             m_res_x_hit.push_back(nan);

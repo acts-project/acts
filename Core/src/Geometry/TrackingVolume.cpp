@@ -1,16 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/TrackingVolume.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -31,8 +32,7 @@ namespace Acts {
 
 // constructor for arguments
 TrackingVolume::TrackingVolume(
-    const Transform3& transform,
-    std::shared_ptr<const VolumeBounds> volumeBounds,
+    const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
@@ -49,14 +49,13 @@ TrackingVolume::TrackingVolume(
   connectDenseBoundarySurfaces(denseVolumeVector);
 }
 
-TrackingVolume::TrackingVolume(const Volume& volume,
-                               const std::string& volumeName)
+TrackingVolume::TrackingVolume(Volume& volume, const std::string& volumeName)
     : TrackingVolume(volume.transform(), volume.volumeBoundsPtr(), nullptr,
                      nullptr, nullptr, MutableTrackingVolumeVector{},
                      volumeName) {}
 
 TrackingVolume::TrackingVolume(const Transform3& transform,
-                               std::shared_ptr<const VolumeBounds> volbounds,
+                               std::shared_ptr<VolumeBounds> volbounds,
                                const std::string& volumeName)
     : TrackingVolume(transform, std::move(volbounds), nullptr, nullptr, nullptr,
                      {}, volumeName) {}
@@ -368,7 +367,7 @@ void TrackingVolume::closeGeometry(
         thisVolume->motherVolume()->volumeMaterial());
     if (protoMaterial == nullptr) {
       thisVolume->assignVolumeMaterial(
-          thisVolume->motherVolume()->volumeMaterialSharedPtr());
+          thisVolume->motherVolume()->volumeMaterialPtr());
     }
   }
 
@@ -425,6 +424,18 @@ void TrackingVolume::closeGeometry(
       mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol, hook,
                                         logger);
     }
+  }
+
+  GeometryIdentifier::Value iportal = 0;
+  for (auto& portal : portals()) {
+    auto portalId = GeometryIdentifier(volumeID).setBoundary(++iportal);
+    assert(portal.isValid() && "Invalid portal encountered during closing");
+
+    portal.surface().assignGeometryId(portalId);
+  }
+
+  for (auto& volume : volumes()) {
+    volume.closeGeometry(materialDecorator, volumeMap, vol, hook, logger);
   }
 }
 
@@ -579,7 +590,7 @@ const IVolumeMaterial* TrackingVolume::volumeMaterial() const {
 }
 
 const std::shared_ptr<const IVolumeMaterial>&
-TrackingVolume::volumeMaterialSharedPtr() const {
+TrackingVolume::volumeMaterialPtr() const {
   return m_volumeMaterial;
 }
 
@@ -641,6 +652,18 @@ TrackingVolume& TrackingVolume::addVolume(
   volume->setMotherVolume(this);
   m_volumes.push_back(std::move(volume));
   return *m_volumes.back();
+}
+
+TrackingVolume::PortalRange TrackingVolume::portals() const {
+  return PortalRange{m_portals};
+}
+
+TrackingVolume::MutablePortalRange TrackingVolume::portals() {
+  return MutablePortalRange{m_portals};
+}
+
+void TrackingVolume::addPortal(std::shared_ptr<Portal> portal) {
+  m_portals.push_back(std::move(portal));
 }
 
 }  // namespace Acts

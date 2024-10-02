@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -43,7 +43,7 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
 
   std::tuple<std::any, std::any, std::any> operator()(
       std::vector<float> &inputValues, std::size_t numNodes,
-      const std::vector<uint64_t> &moduleIds,
+      const std::vector<std::uint64_t> &moduleIds,
       torch::Device device = torch::Device(torch::kCPU)) override;
 
   Config config() const { return m_cfg; }

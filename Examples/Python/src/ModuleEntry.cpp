@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/ActsVersion.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -83,6 +83,7 @@ void addObj(Context& ctx);
 void addOnnx(Context& ctx);
 void addOnnxNeuralCalibrator(Context& ctx);
 void addCovfie(Context& ctx);
+void addTraccc(Context& ctx);
 void addHashing(Context& ctx);
 
 }  // namespace Acts::Python
@@ -151,5 +152,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addOnnx(ctx);
   addOnnxNeuralCalibrator(ctx);
   addCovfie(ctx);
+  addTraccc(ctx);
   addHashing(ctx);
 }

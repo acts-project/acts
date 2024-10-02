@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 
@@ -45,14 +45,14 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
 
 OnnxEdgeClassifier::~OnnxEdgeClassifier() {}
 
-std::tuple<std::any, std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
-    std::any inputNodes, std::any inputEdges, std::any inEdgeFeatures, torch::Device) {
+std::tuple<std::any, std::any, std::any, std::any>
+OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
+                               std::any inEdgeFeatures, torch::Device) {
   Ort::AllocatorWithDefaultOptions allocator;
   auto memoryInfo = Ort::MemoryInfo::CreateCpu(
       OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
 
-  auto eInputTensor =
-      std::any_cast<std::shared_ptr<Ort::Value>>(inputNodes);
+  auto eInputTensor = std::any_cast<std::shared_ptr<Ort::Value>>(inputNodes);
   auto edgeList = std::any_cast<std::vector<std::int64_t>>(inputEdges);
   const int numEdges = edgeList.size() / 2;
 
