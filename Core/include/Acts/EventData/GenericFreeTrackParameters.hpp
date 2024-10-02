@@ -175,6 +175,17 @@ class GenericFreeTrackParameters {
     return m_particleHypothesis;
   }
 
+  /// Reflect the parameters in place.
+  void reflectInplace() { m_params = reflectFreeParameters(m_params); }
+
+  /// Reflect the parameters.
+  /// @return Reflected parameters.
+  GenericFreeTrackParameters<ParticleHypothesis> reflect() const {
+    GenericFreeTrackParameters<ParticleHypothesis> reflected = *this;
+    reflected.reflectInplace();
+    return reflected;
+  }
+
  private:
   FreeVector m_params;
   std::optional<FreeSquareMatrix> m_cov;

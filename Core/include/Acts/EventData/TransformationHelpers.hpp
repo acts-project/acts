@@ -18,6 +18,18 @@ namespace Acts {
 
 class Surface;
 
+/// Reflect bound track parameters.
+///
+/// @param boundParams Bound track parameters vector
+/// @return Reflected bound track parameters vector
+BoundVector reflectBoundParameters(const BoundVector& boundParams);
+
+/// Reflect free track parameters.
+///
+/// @param freeParams Free track parameters vector
+/// @return Reflected free track parameters vector
+FreeVector reflectFreeParameters(const FreeVector& freeParams);
+
 /// Transform bound track parameters into equivalent free track parameters.
 ///
 /// @param surface Surface onto which the input parameters are bound
