@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
@@ -19,7 +19,6 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -223,12 +222,11 @@ class BranchStopper {
       // count both holes and outliers as holes for pixel/strip counts
       if (trackState.typeFlags().test(Acts::TrackStateFlag::HoleFlag) ||
           trackState.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
-        if (m_cfg.pixelVolumes.count(
-                trackState.referenceSurface().geometryId().volume()) >= 1) {
+        if (m_cfg.pixelVolumes.contains(
+                trackState.referenceSurface().geometryId().volume())) {
           ++branchState.nPixelHoles;
-        } else if (m_cfg.stripVolumes.count(
-                       trackState.referenceSurface().geometryId().volume()) >=
-                   1) {
+        } else if (m_cfg.stripVolumes.contains(
+                       trackState.referenceSurface().geometryId().volume())) {
           ++branchState.nStripHoles;
         }
       }
@@ -371,9 +369,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   secondOptions.skipPrePropagationUpdate = true;
 
   using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
-  using ExtrapolatorOptions =
-      Extrapolator::template Options<Acts::ActionList<Acts::MaterialInteractor>,
-                                     Acts::AbortList<Acts::EndOfWorldReached>>;
+  using ExtrapolatorOptions = Extrapolator::template Options<
+      Acts::ActorList<Acts::MaterialInteractor, Acts::EndOfWorldReached>>;
 
   Extrapolator extrapolator(
       Acts::SympyStepper(m_cfg.magneticField),
@@ -421,6 +418,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       }
     });
 
+    // trim the track if requested
+    if (m_cfg.trimTracks) {
+      Acts::trimTrack(track, true, true, true);
+    }
     Acts::calculateTrackQuantities(track);
 
     if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
