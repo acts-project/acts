@@ -13,6 +13,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 namespace Acts {
 
@@ -22,13 +23,28 @@ class Surface;
 ///
 /// @param boundParams Bound track parameters vector
 /// @return Reflected bound track parameters vector
-BoundVector reflectBoundParameters(const BoundVector& boundParams);
+inline BoundVector reflectBoundParameters(const BoundVector& boundParams) {
+  BoundVector reflected = boundParams;
+  auto [phi, theta] = detail::normalizePhiTheta(
+      boundParams[eBoundPhi] - M_PI, M_PI - boundParams[eBoundTheta]);
+  reflected[eBoundPhi] = phi;
+  reflected[eBoundTheta] = theta;
+  reflected[eBoundQOverP] = -boundParams[eBoundQOverP];
+  return reflected;
+}
 
 /// Reflect free track parameters.
 ///
 /// @param freeParams Free track parameters vector
 /// @return Reflected free track parameters vector
-FreeVector reflectFreeParameters(const FreeVector& freeParams);
+inline FreeVector reflectFreeParameters(const FreeVector& freeParams) {
+  FreeVector reflected = freeParams;
+  reflected[eFreeDir0] = -freeParams[eFreeDir0];
+  reflected[eFreeDir1] = -freeParams[eFreeDir1];
+  reflected[eFreeDir2] = -freeParams[eFreeDir2];
+  reflected[eFreeQOverP] = -freeParams[eFreeQOverP];
+  return reflected;
+}
 
 /// Transform bound track parameters into equivalent free track parameters.
 ///

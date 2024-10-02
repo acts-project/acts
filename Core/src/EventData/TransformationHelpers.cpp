@@ -17,27 +17,6 @@
 
 #include <algorithm>
 
-Acts::BoundVector Acts::reflectBoundParameters(
-    const Acts::BoundVector& boundParams) {
-  BoundVector reflected = boundParams;
-  auto [phi, theta] = Acts::detail::normalizePhiTheta(
-      boundParams[eBoundPhi] - M_PI, M_PI - boundParams[eBoundTheta]);
-  reflected[eBoundPhi] = phi;
-  reflected[eBoundTheta] = theta;
-  reflected[eBoundQOverP] = -boundParams[eBoundQOverP];
-  return reflected;
-}
-
-Acts::FreeVector Acts::reflectFreeParameters(
-    const Acts::FreeVector& freeParams) {
-  FreeVector reflected = freeParams;
-  reflected[eFreeDir0] = -freeParams[eFreeDir0];
-  reflected[eFreeDir1] = -freeParams[eFreeDir1];
-  reflected[eFreeDir2] = -freeParams[eFreeDir2];
-  reflected[eFreeQOverP] = -freeParams[eFreeQOverP];
-  return reflected;
-}
-
 Acts::FreeVector Acts::transformBoundToFreeParameters(
     const Acts::Surface& surface, const GeometryContext& geoCtx,
     const Acts::BoundVector& boundParams) {
