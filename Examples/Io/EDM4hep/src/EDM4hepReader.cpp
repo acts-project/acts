@@ -181,11 +181,9 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     vtxPos /= Acts::UnitConstants::mm;
 
     // linear search for vector
-    auto it = std::find_if(
-        primaryVertices.begin(), primaryVertices.end(),
-        [&vtxPos](
-            const std::pair<Acts::Vector3, std::vector<edm4hep::MCParticle>>&
-                pair) { return pair.first == vtxPos; });
+    auto it = std::ranges::find_if(primaryVertices, [&vtxPos](const auto& v) {
+      return v.first == vtxPos;
+    });
 
     if (it == primaryVertices.end()) {
       ACTS_DEBUG("Found primary vertex at " << vtx.x << ", " << vtx.y << ", "
