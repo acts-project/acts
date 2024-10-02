@@ -40,7 +40,7 @@ constexpr Label NO_LABEL = 0;
 // always loops backward, starting from the reference cell. Since
 // the cells are globally sorted column-wise, the connection function
 // can therefore tell when the search should be stopped.
-enum class ConnectResult : std::uint8_t {
+enum class ConnectResult {
   eNoConn,      // No connections, keep looking
   eNoConnStop,  // No connections, stop looking
   eConn         // Found connection
