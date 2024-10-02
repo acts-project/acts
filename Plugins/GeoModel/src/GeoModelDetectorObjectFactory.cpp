@@ -184,6 +184,12 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
     const Transform3 &transform = fpv->getAbsoluteTransform();
     convertSensitive(fpv, transform, cache.sensitiveSurfaces);
   }
+
+  // Set the corresponding database entry name to all sensitive surfaces
+  for (auto i = prevSize; i < cache.sensitiveSurfaces.size(); ++i) {
+    auto &[detEl, _] = cache.sensitiveSurfaces[i];
+    detEl->setDatabaseEntryName(name);
+  }
 }
 // function to determine if object fits query
 bool Acts::GeoModelDetectorObjectFactory::matches(const std::string &name,
