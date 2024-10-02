@@ -610,10 +610,10 @@ class Gx2Fitter {
 
       // Check if we can stop to propagate
       if (result.measurementStates == inputMeasurements->size()) {
-        ACTS_INFO("Actor: finish: All measurements have been found.");
+        ACTS_DEBUG("Actor: finish: All measurements have been found.");
         result.finished = true;
       } else if (state.navigation.navigationBreak) {
-        ACTS_INFO("Actor: finish: navigationBreak.");
+        ACTS_DEBUG("Actor: finish: navigationBreak.");
         result.finished = true;
       }
 
@@ -1218,7 +1218,7 @@ class Gx2Fitter {
 
         // We only consider states with a measurement (and/or material)
         if (!stateHasMeasurement && !doMaterial) {
-          ACTS_INFO("    Skip state.");
+          ACTS_DEBUG("    Skip state.");
           continue;
         }
 
@@ -1388,6 +1388,9 @@ class Gx2Fitter {
 
     // Propagate again with the final covariance matrix. This is necessary to
     // obtain the propagated covariance for each state.
+    // We also need to recheck the result and find the tipIndex, because at this
+    // step, we will not ignore the boundary checks for measurement surfaces. We
+    // want to create trackstates only on surfaces, that we actually hit.
     if (gx2fOptions.nUpdateMax > 0) {
       ACTS_VERBOSE("final deltaParams:\n" << deltaParams);
       ACTS_VERBOSE("Propagate with the final covariance.");
@@ -1413,7 +1416,33 @@ class Gx2Fitter {
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trackContainer.trackStateContainer();
 
-      m_propagator.template propagate(propagatorState);
+      auto propagationResult = m_propagator.template propagate(propagatorState);
+
+      // Run the fitter
+      auto result = m_propagator.template makeResult(std::move(propagatorState),
+                                                     propagationResult,
+                                                     propagatorOptions, false);
+
+      if (!result.ok()) {
+        ACTS_ERROR("Propagation failed: " << result.error());
+        return result.error();
+      }
+
+      auto& propRes = *result;
+      GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
+
+      if (!gx2fResult.result.ok()) {
+        ACTS_INFO("GlobalChiSquareFitter failed in actor: "
+                  << gx2fResult.result.error() << ", "
+                  << gx2fResult.result.error().message());
+        return gx2fResult.result.error();
+      }
+
+      if (tipIndex != gx2fResult.lastMeasurementIndex) {
+        ACTS_INFO("Final fit used unreachable measurements.");
+        return Experimental::GlobalChiSquareFitterError::
+            UsedUnreachableMeasurements;
+      }
     }
 
     if (!trackContainer.hasColumn(
