@@ -11,7 +11,6 @@ namespace Acts::Ccl {
 
 template <Acts::Ccl::HasRetrievableTimeInfo Cell, std::size_t N>
 TimedConnect<Cell, N>::TimedConnect(Acts::ActsScalar time)
-  requires(N == 1)
     : timeTollerance(time) {}
 
 template <Acts::Ccl::HasRetrievableTimeInfo Cell, std::size_t N>

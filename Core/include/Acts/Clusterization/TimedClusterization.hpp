@@ -25,12 +25,12 @@ struct TimedConnect : public Acts::Ccl::DefaultConnect<Cell, N> {
   Acts::ActsScalar timeTollerance{std::numeric_limits<Acts::ActsScalar>::max()};
 
   TimedConnect() = default;
-  TimedConnect(Acts::ActsScalar time)
-    requires(N == 1);
-  TimedConnect(Acts::ActsScalar time, bool conn = true)
+  TimedConnect(Acts::ActsScalar time);
+  TimedConnect(Acts::ActsScalar time, bool conn)
     requires(N == 2);
 
-  virtual ConnectResult operator()(const Cell& ref, const Cell& iter) const;
+  virtual ConnectResult operator()(const Cell& ref,
+                                   const Cell& iter) const override;
 };
 
 }  // namespace Acts::Ccl
