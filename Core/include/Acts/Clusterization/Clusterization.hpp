@@ -74,14 +74,14 @@ struct DefaultConnect {
 
 template <typename Cell>
 struct DefaultConnect<Cell, 1> : public Connect1D<Cell> {
-  virtual ~DefaultConnect() = default;
+  ~DefaultConnect() override = default;
 };
 
 template <typename Cell>
 struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
   explicit DefaultConnect(bool commonCorner) : Connect2D<Cell>(commonCorner) {}
   DefaultConnect() = default;
-  virtual ~DefaultConnect() = default;
+  ~DefaultConnect() override = default;
 };
 
 /// @brief labelClusters

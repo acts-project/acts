@@ -28,10 +28,9 @@ struct TimedConnect : public Acts::Ccl::DefaultConnect<Cell, N> {
   TimedConnect(Acts::ActsScalar time);
   TimedConnect(Acts::ActsScalar time, bool conn)
     requires(N == 2);
-  virtual ~TimedConnect() = default;
+  ~TimedConnect() override = default;
 
-  virtual ConnectResult operator()(const Cell& ref,
-                                   const Cell& iter) const override;
+  ConnectResult operator()(const Cell& ref, const Cell& iter) const override;
 };
 
 }  // namespace Acts::Ccl
