@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -274,9 +274,8 @@ class NamedTupleDsvWriter {
 
   /// Append a record to the file.
   void append(const NamedTuple& record) {
-    append_impl(record,
-                std::make_index_sequence<
-                    std::tuple_size<typename NamedTuple::Tuple>::value>{});
+    append_impl(record, std::make_index_sequence<
+                            std::tuple_size_v<typename NamedTuple::Tuple>>{});
   }
 
  private:
@@ -549,8 +548,7 @@ inline bool NamedTupleDsvReader<Delimiter, NamedTuple>::read(
                              std::to_string(m_reader.num_lines()));
   }
   // convert to tuple
-  parse_record(record,
-               std::make_index_sequence<std::tuple_size<Tuple>::value>{});
+  parse_record(record, std::make_index_sequence<std::tuple_size_v<Tuple>>{});
   return true;
 }
 
@@ -573,7 +571,7 @@ inline bool NamedTupleDsvReader<Delimiter, NamedTuple>::read(
 template <char Delimiter, typename NamedTuple>
 inline void NamedTupleDsvReader<Delimiter, NamedTuple>::use_default_columns() {
   // assume row content is identical in content and order to the tuple
-  m_num_columns = std::tuple_size<Tuple>::value;
+  m_num_columns = std::tuple_size_v<Tuple>;
   for (std::size_t i = 0; i < m_tuple_column_map.size(); ++i) {
     m_tuple_column_map[i] = i;
   }
