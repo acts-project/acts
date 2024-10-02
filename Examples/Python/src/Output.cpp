@@ -130,7 +130,7 @@ void addOutput(Context& ctx) {
         .def(py::init<>())
         .def(py::init<int, int, int>())
         .def(py::init<double, double, double>())
-        .def(py::init<std::string>())
+        .def(py::init<std::string_view>())
         .def_readonly("rgb", &Color::rgb);
   }
 
