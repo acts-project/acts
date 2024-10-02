@@ -379,7 +379,8 @@ void TrackingVolume::closeGeometry(
     // get the intersection solution
     auto& bSurface = bSurfIter->surfaceRepresentation();
     // create the boundary surface id
-    auto boundaryID = GeometryIdentifier(volumeID).setBoundary(++iboundary);
+    iboundary++;
+    auto boundaryID = GeometryIdentifier(volumeID).setBoundary(iboundary);
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<RegularSurface*>(&bSurface));
     mutableBSurface.assignGeometryId(boundaryID);
@@ -397,7 +398,8 @@ void TrackingVolume::closeGeometry(
       // loop over the layers
       for (auto& layerPtr : m_confinedLayers->arrayObjects()) {
         // create the layer identification
-        auto layerID = GeometryIdentifier(volumeID).setLayer(++ilayer);
+        ilayer++;
+        auto layerID = GeometryIdentifier(volumeID).setLayer(ilayer);
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
         mutableLayerPtr->closeGeometry(materialDecorator, layerID, hook,
@@ -428,7 +430,8 @@ void TrackingVolume::closeGeometry(
 
   GeometryIdentifier::Value iportal = 0;
   for (auto& portal : portals()) {
-    auto portalId = GeometryIdentifier(volumeID).setBoundary(++iportal);
+    iportal++;
+    auto portalId = GeometryIdentifier(volumeID).setBoundary(iportal);
     assert(portal.isValid() && "Invalid portal encountered during closing");
 
     portal.surface().assignGeometryId(portalId);
@@ -440,7 +443,8 @@ void TrackingVolume::closeGeometry(
     if (surface.associatedDetectorElement() == nullptr) {
       continue;
     }
-    auto sensitiveId = GeometryIdentifier(volumeID).setSensitive(++isensitive);
+    isensitive++;
+    auto sensitiveId = GeometryIdentifier(volumeID).setSensitive(isensitive);
     surface.assignGeometryId(sensitiveId);
   }
 
