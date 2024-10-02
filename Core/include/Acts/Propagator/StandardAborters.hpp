@@ -199,6 +199,9 @@ struct VolumeConstraintAborter {
     const auto& constrainToVolumeIds = state.options.constrainToVolumeIds;
     const auto& endOfWorldVolumeIds = state.options.endOfWorldVolumeIds;
 
+    if (constrainToVolumeIds.empty() && endOfWorldVolumeIds.empty()) {
+      return false;
+    }
     const auto* currentVolume = navigator.currentVolume(state.navigation);
 
     // We need a volume to check its ID
