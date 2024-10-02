@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/EventData/NeuralCalibrator.hpp"
 
@@ -12,6 +12,7 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
@@ -84,8 +85,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
   assert((idxSourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
-  if (std::find(m_volumeIds.begin(), m_volumeIds.end(),
-                idxSourceLink.geometryId().volume()) == m_volumeIds.end()) {
+  if (!rangeContainsValue(m_volumeIds, idxSourceLink.geometryId())) {
     m_fallback.calibrate(measurements, clusters, gctx, cctx, sourceLink,
                          trackState);
     return;

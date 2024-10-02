@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Detray/DetrayGeometryConverter.hpp"
 
@@ -21,7 +21,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
-#include "detray/io/frontend/detector_writer.hpp"
+#include <detray/io/frontend/detector_writer.hpp>
 
 using namespace detray;
 
@@ -126,6 +126,8 @@ Acts::DetrayGeometryConverter::convertPortal(
           instance);
 
   auto [surfaceAdjusted, insidePointer] = orientedSurfaces[ip];
+  // Assign the geometry id to the surface
+  surfaceAdjusted->assignGeometryId(surface.geometryId());
 
   // Single link detected - just write it out, we use the oriented surface
   // in order to make sure the size is adjusted
@@ -225,6 +227,7 @@ Acts::DetrayGeometryConverter::convertPortal(
                     subBoundValues[CylinderBounds::BoundValues::eHalfLengthZ]));
             auto subSurface =
                 Surface::makeShared<CylinderSurface>(subTransform, subBounds);
+            subSurface->assignGeometryId(surface.geometryId());
 
             auto portalPayload = convertSurface(gctx, *subSurface, true);
             portalPayload.mask.volume_link.link = clippedIndices[ib - 1u];
@@ -246,7 +249,7 @@ Acts::DetrayGeometryConverter::convertPortal(
             auto subBounds = std::make_shared<RadialBounds>(subBoundValues);
             auto subSurface = Surface::makeShared<DiscSurface>(
                 portal.surface().transform(gctx), subBounds);
-
+            subSurface->assignGeometryId(surface.geometryId());
             auto portalPayload = convertSurface(gctx, *subSurface, true);
             portalPayload.mask.volume_link.link = clippedIndices[ib - 1u];
             portals.push_back(portalPayload);

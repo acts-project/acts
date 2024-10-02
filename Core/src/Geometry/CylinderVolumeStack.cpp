@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 
@@ -15,6 +15,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <sstream>
 
@@ -159,11 +160,9 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
   if (direction == Acts::BinningValue::binZ) {
     ACTS_VERBOSE("Sorting by volume z position");
-    std::sort(volumeTuples.begin(), volumeTuples.end(),
-              [](const auto& a, const auto& b) {
-                return a.localTransform.translation()[eZ] <
-                       b.localTransform.translation()[eZ];
-              });
+    std::ranges::sort(volumeTuples, {}, [](const auto& v) {
+      return v.localTransform.translation()[eZ];
+    });
 
     ACTS_VERBOSE("Checking for overlaps and attaching volumes in z");
     std::vector<VolumeTuple> gapVolumes =
@@ -192,8 +191,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     ACTS_VERBOSE("*** Volume configuration after r synchronization:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
 
-    std::sort(volumeTuples.begin(), volumeTuples.end(),
-              [](const auto& a, const auto& b) { return a.midZ() < b.midZ(); });
+    std::ranges::sort(volumeTuples, {}, [](const auto& v) { return v.midZ(); });
 
     m_volumes.clear();
     for (const auto& vt : volumeTuples) {
@@ -222,8 +220,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
   } else if (direction == Acts::BinningValue::binR) {
     ACTS_VERBOSE("Sorting by volume r middle point");
-    std::sort(volumeTuples.begin(), volumeTuples.end(),
-              [](const auto& a, const auto& b) { return a.midR() < b.midR(); });
+    std::ranges::sort(volumeTuples, {}, [](const auto& v) { return v.midR(); });
 
     ACTS_VERBOSE("Checking for overlaps and attaching volumes in r");
     std::vector<VolumeTuple> gapVolumes =
@@ -250,8 +247,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     ACTS_VERBOSE("*** Volume configuration after z synchronization:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
 
-    std::sort(volumeTuples.begin(), volumeTuples.end(),
-              [](const auto& a, const auto& b) { return a.midR() < b.midR(); });
+    std::ranges::sort(volumeTuples, {}, [](const auto& v) { return v.midR(); });
 
     m_volumes.clear();
     for (const auto& vt : volumeTuples) {
