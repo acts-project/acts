@@ -33,13 +33,22 @@ struct PurePropagatorPlainOptions {
   /// Absolute maximum path length
   double pathLimit = std::numeric_limits<double>::max();
 
-  /// Required tolerance to reach surface
-  double surfaceTolerance = s_onSurfaceTolerance;
-
   /// Loop protection step, it adapts the pathLimit
   bool loopProtection = true;
   /// Allowed loop fraction, 1 is a full loop
   double loopFraction = 0.5;
+
+  /// Required tolerance to reach surface
+  double surfaceTolerance = s_onSurfaceTolerance;
+
+  /// Constrain the propagation to selected volumes
+  /// @note ignored if empty
+  /// @note requires `VolumeConstraintAborter` aborter
+  std::vector<std::uint32_t> constrainToVolumeIds;
+  /// Additional volumes to be considered as end of world
+  /// @note ignored if empty
+  /// @note requires `VolumeConstraintAborter` aborter
+  std::vector<std::uint32_t> endOfWorldVolumeIds;
 };
 
 }  // namespace detail

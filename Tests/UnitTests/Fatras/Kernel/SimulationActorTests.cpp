@@ -12,6 +12,7 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -148,6 +149,11 @@ struct MockNavigator {
     return state.currentSurface;
   }
 
+  const Acts::TrackingVolume *currentVolume(
+      const MockNavigatorState & /*state*/) const {
+    return nullptr;
+  }
+
   bool endOfWorldReached(const MockNavigatorState & /*state*/) const {
     return false;
   }
@@ -158,6 +164,10 @@ struct MockPropagatorState {
   MockStepperState stepping;
   Acts::GeometryContext geoContext;
   Acts::PropagatorStage stage = Acts::PropagatorStage::invalid;
+
+  struct {
+    std::vector<std::uint32_t> constrainToVolumeIds;
+  } options;
 };
 
 template <typename SurfaceSelector>
