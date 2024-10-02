@@ -10,11 +10,15 @@
 
 #include <any>
 #include <cstdint>
+#include <exception>
 #include <vector>
 
 #include <torch/torch.h>
 
 namespace Acts {
+
+/// Error that is thrown if no edges are found
+struct NoEdgesError : std::exception {};
 
 // TODO maybe replace std::any with some kind of variant<unique_ptr<torch>,
 // unique_ptr<onnx>>?
