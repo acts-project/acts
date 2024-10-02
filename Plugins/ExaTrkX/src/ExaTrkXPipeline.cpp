@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
+
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
