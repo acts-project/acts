@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -218,8 +218,7 @@ class AxisAlignedBoundingBox {
   /// @param helper The visualization helper to write to
   /// @param color The color to use for drawing
   /// @param trf An optional transform to apply first.
-  void draw(IVisualization3D& helper,
-            std::array<int, 3> color = {120, 120, 120},
+  void draw(IVisualization3D& helper, Color color = {120, 120, 120},
             const transform_type& trf = transform_type::Identity()) const
     requires(DIM == 3);
 
