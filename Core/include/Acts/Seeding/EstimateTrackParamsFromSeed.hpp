@@ -289,4 +289,48 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   return params;
 }
 
+struct EstimateTrackParamCovarianceConfig {
+  BoundVector initialSigmas = {1. * UnitConstants::mm,
+                               1. * UnitConstants::mm,
+                               1. * UnitConstants::degree,
+                               1. * UnitConstants::degree,
+                               1. * UnitConstants::e / UnitConstants::GeV,
+                               1. * UnitConstants::ns};
+
+  double initialSigmaPtRel = 0.1;
+
+  BoundVector initialVarInflation = {1., 1., 1., 1., 1., 1.};
+};
+
+BoundMatrix estimateTrackParamCovariance(
+    const BoundVector& params,
+    const EstimateTrackParamCovarianceConfig& config) {
+  BoundSquareMatrix result = BoundSquareMatrix::Zero();
+
+  for (std::size_t i = eBoundLoc0; i < eBoundSize; ++i) {
+    double sigma = config.initialSigmas[i];
+    double variance = sigma * sigma;
+
+    if (i == eBoundQOverP) {
+      // note that we rely on the fact that sigma theta is already computed
+      double varianceTheta = result(eBoundTheta, eBoundTheta);
+
+      // transverse momentum contribution
+      variance += std::pow(config.initialSigmaPtRel * params[eBoundQOverP], 2);
+
+      // theta contribution
+      variance +=
+          varianceTheta *
+          std::pow(params[eBoundQOverP] / std::tan(params[eBoundTheta]), 2);
+    }
+
+    // Inflate the initial covariance
+    variance *= config.initialVarInflation[i];
+
+    result(i, i) = variance;
+  }
+
+  return result;
+}
+
 }  // namespace Acts
