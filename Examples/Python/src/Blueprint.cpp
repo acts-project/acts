@@ -10,6 +10,7 @@
 #include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/RootBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -188,21 +189,16 @@ void addBlueprint(Context& ctx) {
           .def_property_readonly("children",
                                  py::overload_cast<>(&BlueprintNode::children))
           .def_property_readonly("name", &BlueprintNode::name)
-          .def("graphViz",
-               [](BlueprintNode& self, const py::object& fh) {
-                 std::stringstream ss;
-                 self.graphViz(ss);
-                 fh.attr("write")(ss.str());
-               })
-          .def(
-              "build",
-              [](BlueprintNode& self, const GeometryContext& gctx,
-                 Logging::Level level) {
-                // @TODO: Make options configurable
-                return self.build({}, gctx,
-                                  *getDefaultLogger("Blueprint", level));
-              },
-              py::arg("gctx"), py::arg("level") = Logging::INFO);
+          .def("graphViz", [](BlueprintNode& self, const py::object& fh) {
+            std::stringstream ss;
+            self.graphViz(ss);
+            fh.attr("write")(ss.str());
+          });
+
+  // @TODO: Add ability to provide policy factories
+  //        This needs a way to produce them in python!
+  py::class_<BlueprintNode::Options>(blueprintNode, "Options")
+      .def(py::init<>());
 
   py::class_<BlueprintNode::MutableChildRange>(blueprintNode,
                                                "MutableChildRange")
@@ -225,6 +221,34 @@ void addBlueprint(Context& ctx) {
       .def("__len__", [](const BlueprintNode::MutableChildRange& self) {
         return self.size();
       });
+
+  {
+    auto n =
+        py::class_<RootBlueprintNode, BlueprintNode,
+                   std::shared_ptr<RootBlueprintNode>>(m, "RootBlueprintNode");
+
+    n.def(py::init<const RootBlueprintNode::Config&>())
+        .def_property_readonly("name", &RootBlueprintNode::name)
+        // Return value needs to be shared pointer because python otherwise
+        // can't manage the lifetime
+        .def(
+            "construct",
+            [](RootBlueprintNode& self,
+               const RootBlueprintNode::Options& options,
+               const GeometryContext& gctx,
+               Logging::Level level) -> std::shared_ptr<TrackingGeometry> {
+              return self.construct(
+                  options, gctx, *getDefaultLogger("RootBlueprintNode", level));
+            },
+            py::arg("options"), py::arg("gctx"),
+            py::arg("level") = Logging::INFO);
+
+    auto c = py::class_<RootBlueprintNode::Config>(n, "Config").def(py::init());
+    ACTS_PYTHON_STRUCT_BEGIN(c, RootBlueprintNode::Config);
+    ACTS_PYTHON_MEMBER(envelope);
+    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
+    ACTS_PYTHON_STRUCT_END();
+  }
 
   py::class_<Acts::StaticBlueprintNode, Acts::BlueprintNode,
              std::shared_ptr<Acts::StaticBlueprintNode>>(m,

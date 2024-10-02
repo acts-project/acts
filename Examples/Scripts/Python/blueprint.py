@@ -7,7 +7,8 @@ import acts
 mm = acts.UnitConstants.mm
 degree = acts.UnitConstants.degree
 
-root = acts.CylinderContainerBlueprintNode("root", acts.BinningValue.binR)
+root = acts.RootBlueprintNode(envelope=acts.ExtentEnvelope(r=[10 * mm, 10 * mm]))
+
 
 pixel = root.addCylinderContainer(direction=acts.BinningValue.binZ, name="Pixel")
 print(repr(pixel))
@@ -85,11 +86,14 @@ if True:
 with open("blueprint.dot", "w") as fh:
     root.graphViz(fh)
 
-vis = acts.ObjVisualization3D()
-
-volume = root.build(level=acts.logging.VERBOSE)
 
 gctx = acts.GeometryContext()
-root.visualize(vis, gctx)
+trackingGeometry = root.construct(
+    options=acts.BlueprintNode.Options(), gctx=gctx, level=acts.logging.VERBOSE
+)
 
-vis.write(Path("blueprint.obj"))
+vis = acts.ObjVisualization3D()
+trackingGeometry.visualize(vis, gctx)
+with Path("blueprint.obj").open("w") as fh:
+    vis.write(fh)
+# print("DONE")
