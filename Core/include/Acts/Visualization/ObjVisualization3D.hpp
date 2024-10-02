@@ -82,9 +82,9 @@ class ObjVisualization3D : public IVisualization3D {
 
     /// The object data to be written
     /// Map of colors to be written at given index position
-    std::map<std::size_t, Color> lineColors;
-    std::map<std::size_t, Color> vertexColors;
-    std::map<std::size_t, Color> faceColors;
+    std::map<std::size_t, Color> lineColors{};
+    std::map<std::size_t, Color> vertexColors{};
+    std::map<std::size_t, Color> faceColors{};
   };
 
   Object& object();
