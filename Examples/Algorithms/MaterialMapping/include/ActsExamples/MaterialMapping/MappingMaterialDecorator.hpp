@@ -20,6 +20,7 @@
 #include <Acts/Surfaces/SurfaceBounds.hpp>
 #include <Acts/Surfaces/TrapezoidBounds.hpp>
 
+#include <algorithm>
 #include <fstream>
 #include <map>
 #include <mutex>
@@ -93,14 +94,10 @@ class MappingMaterialDecorator : public IMaterialDecorator {
   ///
   /// @param volume to be looped onto
   void volumeLoop(const Acts::TrackingVolume* tVolume) {
-    auto sameId =
-        [tVolume](
-            const std::pair<Acts::GeometryIdentifier,
-                            std::shared_ptr<const IVolumeMaterial>>& pair) {
-          return (tVolume->geometryId() == pair.first);
-        };
-    if (std::find_if(m_volumeMaterialMap.begin(), m_volumeMaterialMap.end(),
-                     sameId) != m_volumeMaterialMap.end()) {
+    auto sameId = [tVolume](const auto& pair) {
+      return (tVolume->geometryId() == pair.first);
+    };
+    if (std::ranges::any_of(m_volumeMaterialMap, sameId)) {
       // this volume was already visited
       return;
     }
