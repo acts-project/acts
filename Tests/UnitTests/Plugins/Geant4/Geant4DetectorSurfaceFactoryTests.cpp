@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -174,11 +174,11 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
     const auto& [el, surf] = val;
     Acts::ViewConfig vCfg;
     if (k == 0) {
-      vCfg.color = Acts::ColorRGB({0, 255, 0});
+      vCfg.color = {0, 255, 0};
     } else if (k == 1) {
-      vCfg.color = Acts::ColorRGB({255, 0, 0});
+      vCfg.color = {255, 0, 0};
     } else if (k == 2) {
-      vCfg.color = Acts::ColorRGB({0, 255, 255});
+      vCfg.color = {0, 255, 255};
     }
     Acts::GeometryView3D::drawSurface(obj, *surf, gctx,
                                       Acts::Transform3::Identity(), vCfg);

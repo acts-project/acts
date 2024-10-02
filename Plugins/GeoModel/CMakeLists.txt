@@ -14,6 +14,7 @@ add_library(
     src/detail/GeoTrdConverter.cpp
     src/detail/GeoTubeConverter.cpp
     src/detail/GeoPolygonConverter.cpp
+    src/detail/GeoSubtractionConverter.cpp
     src/detail/GeoShiftConverter.cpp
     src/detail/GeoIntersectionAnnulusConverter.cpp
     src/detail/GeoModelBinningHelper.cpp
