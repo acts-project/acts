@@ -37,7 +37,7 @@ const ActsExamples::SimSpacePoint* ActsExamples::findSpacePointForIndex(
     });
   };
 
-  auto found = std::find_if(spacepoints.begin(), spacepoints.end(), match);
+  auto found = std::ranges::find_if(spacepoints, match);
 
   if (found == spacepoints.end()) {
     return nullptr;
