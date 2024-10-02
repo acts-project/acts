@@ -692,6 +692,9 @@ void TrackingVolume::visualize(IVisualization3D& helper,
   helper.object(volumeName());
   Volume::visualize(helper, gctx, viewConfig);
 
+  if (!surfaces().empty()) {
+    helper.object(volumeName() + "_sensitives");
+  }
   for (const auto& surface : surfaces()) {
     surface.visualize(helper, gctx, sensitiveViewConfig);
   }
