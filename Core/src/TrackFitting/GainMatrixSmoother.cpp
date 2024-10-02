@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/CovarianceHelper.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
 #include <ostream>
@@ -58,6 +59,9 @@ Result<void> GainMatrixSmoother::calculate(
 
   // Calculate the smoothed parameters
   smoothed(ts) = filtered(ts) + G * (smoothed(prev_ts) - predicted(prev_ts));
+  // Normalize phi and theta
+  detail::normalizePhiThetaInplace(smoothed(ts)[eBoundPhi],
+                                   smoothed(ts)[eBoundTheta]);
 
   ACTS_VERBOSE("Smoothed parameters are: " << smoothed(ts).transpose());
   ACTS_VERBOSE("Calculate smoothed covariance:");

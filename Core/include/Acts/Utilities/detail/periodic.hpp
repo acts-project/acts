@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cmath>
+#include <tuple>
 
 namespace Acts::detail {
 
@@ -88,6 +89,17 @@ inline std::pair<T, T> normalizePhiTheta(T phi, T theta) {
     theta = 2 * M_PI - theta;
   }
   return {radian_sym(phi), theta};
+}
+
+/// Ensure both phi and theta direction angles are within the allowed range.
+///
+/// See `normalizePhiTheta` for details.
+///
+/// @param[in,out] phi Transverse direction angle
+/// @param[in,out] theta Longitudinal direction angle
+template <typename T>
+inline void normalizePhiThetaInplace(T& phi, T& theta) {
+  std::tie(phi, theta) = normalizePhiTheta(phi, theta);
 }
 
 }  // namespace Acts::detail
