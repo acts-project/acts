@@ -12,12 +12,8 @@
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
-#include <array>
 #include <filesystem>
-#include <fstream>
-#include <iomanip>
 #include <map>
-#include <sstream>
 #include <string>
 #include <vector>
 

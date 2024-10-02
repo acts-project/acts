@@ -8,6 +8,7 @@
 
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
+#include <fstream>
 #include <stdexcept>
 
 namespace Acts {
