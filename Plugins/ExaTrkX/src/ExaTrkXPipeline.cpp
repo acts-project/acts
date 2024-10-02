@@ -28,8 +28,7 @@ ExaTrkXPipeline::ExaTrkXPipeline(
     throw std::invalid_argument("Missing track building module");
   }
   if (m_edgeClassifiers.empty() ||
-      std::ranges::any_of(m_edgeClassifiers,
-                          [](const auto &a) { return a == nullptr; })) {
+      rangeContainsValue(m_edgeClassifiers, nullptr)) {
     throw std::invalid_argument("Missing graph construction module");
   }
 }
