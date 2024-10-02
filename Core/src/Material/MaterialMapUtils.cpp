@@ -32,18 +32,18 @@ auto getMinMaxAndBinCount(std::vector<double>& xPos) {
 
   // get the number of bins over unique values
   auto it = std::unique(xPos.begin(), xPos.end());
-  const std::size_t nBinsX = std::distance(xPos.begin(), it);
+  const std::size_t xBinCount = std::distance(xPos.begin(), it);
 
   // get the minimum and maximum
   auto [xMin, xMax] = std::ranges::minmax(xPos);
 
   // calculate maxima (add one last bin, because bin value always corresponds to
   // left boundary)
-  const double stepX = (xMax - xMin) / static_cast<double>(nBinsX - 1);
+  const double stepX = (xMax - xMin) / static_cast<double>(xBinCount - 1);
   xMax += stepX;
 
   // Return all values as a tuple
-  return std::make_tuple(xMin, xMax, nBinsX);
+  return std::make_tuple(xMin, xMax, xBinCount);
 }
 }  // anonymous namespace
 
