@@ -374,10 +374,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   Extrapolator extrapolator(
       Acts::SympyStepper(m_cfg.magneticField),
-      Acts::Navigator(
-          {m_cfg.trackingGeometry},
-          logger().cloneWithSuffix("Navigator", Acts::Logging::VERBOSE)),
-      logger().cloneWithSuffix("Propagator"));
+      Acts::Navigator({m_cfg.trackingGeometry},
+                      logger().clone("Navigator", Acts::Logging::VERBOSE)),
+      logger().clone("Propagator", Acts::Logging::VERBOSE));
 
   ExtrapolatorOptions extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
 
@@ -471,10 +470,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     const Acts::BoundTrackParameters& firstInitialParameters =
         initialParameters.at(iSeed);
-
-    ACTS_INFO("Initial parameters: " << firstInitialParameters);
-    ACTS_INFO(
-        " -> global: " << firstInitialParameters.position(ctx.geoContext));
 
     auto firstRootBranch = tracksTemp.makeTrack();
     auto firstResult = (*m_cfg.findTracks)(firstInitialParameters, firstOptions,
