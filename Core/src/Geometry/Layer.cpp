@@ -138,7 +138,7 @@ Acts::Layer::compatibleSurfaces(
     if (sensitive && options.resolveSensitive) {
       return true;
     }
-    // next option: it's a material surface and you want to have it
+    // next option: it's a material surface, and you want to have it
     if (options.resolveMaterial && sf.surfaceMaterial() != nullptr) {
       return true;
     }

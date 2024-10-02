@@ -23,7 +23,7 @@
 
 #include <algorithm>
 
-#include "detray/io/frontend/detector_writer.hpp"
+#include <detray/io/frontend/detector_writer.hpp>
 
 using namespace detray;
 

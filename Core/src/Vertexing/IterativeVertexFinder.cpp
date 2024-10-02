@@ -283,9 +283,7 @@ Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
     }
     // Find and remove track from seedTracks
     auto foundSeedIter =
-        std::ranges::find_if(seedTracks, [&trackAtVtx](const auto& seedTrk) {
-          return trackAtVtx.originalParams == seedTrk;
-        });
+        std::ranges::find(seedTracks, trackAtVtx.originalParams);
     if (foundSeedIter != seedTracks.end()) {
       seedTracks.erase(foundSeedIter);
     } else {
@@ -294,9 +292,7 @@ Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
 
     // Find and remove track from tracksToFit
     auto foundFitIter =
-        std::ranges::find_if(tracksToFit, [&trackAtVtx](const auto& fitTrk) {
-          return trackAtVtx.originalParams == fitTrk;
-        });
+        std::ranges::find(tracksToFit, trackAtVtx.originalParams);
     if (foundFitIter != tracksToFit.end()) {
       tracksToFit.erase(foundFitIter);
     } else {
@@ -331,8 +327,7 @@ Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
     // check if sufficiently compatible with last fitted vertex
     // (quite loose constraint)
     if (chi2 < m_cfg.maximumChi2cutForSeeding) {
-      auto foundIter = std::ranges::find_if(
-          seedTracks, [&trk](const auto& seedTrk) { return trk == seedTrk; });
+      auto foundIter = std::ranges::find(seedTracks, trk);
       if (foundIter != seedTracks.end()) {
         // Remove track from seed tracks
         seedTracks.erase(foundIter);
