@@ -418,20 +418,21 @@ class Surface : public virtual GeometryObject,
   /// Return properly formatted class name
   virtual std::string name() const = 0;
 
-  /// Return a Polyhedron for this object
+  /// Return a Polyhedron for surface objects
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lseg Number of segments along curved lines, if the lseg
-  /// is set to one, only the corners and the extrema are given,
-  /// otherwise it represents the number of segments for a full 2*M_PI
-  /// circle and is scaled to the relevant sector
+  /// @param quarterSegments The number of segemtns to approximate a 0.5*pi sector,
+  /// which represents a quarter of the full circle
+  ///
+  /// @note In order to symmetrize the code between sectoral and closed cylinders
+  /// in case of closed cylinders, both (-pi, pi) are given as separate vertices
   ///
   /// @note An internal surface transform can invalidate the extrema
   /// in the transformed space
   ///
   /// @return A list of vertices and a face/facett description of it
-  virtual Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                              std::size_t lseg) const = 0;
+  virtual Polyhedron polyhedronRepresentation(
+      const GeometryContext& gctx, unsigned int quarterSegments = 2u) const = 0;
 
   /// The derivative of bound track parameters w.r.t. alignment
   /// parameters of its reference surface (i.e. local frame origin in

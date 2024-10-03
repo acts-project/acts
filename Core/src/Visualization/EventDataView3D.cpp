@@ -27,12 +27,13 @@ void Acts::EventDataView3D::drawCovarianceCartesian(
 
   std::vector<Vector3> ellipse = createEllipse(
       lambda0 * locErrorScale, lambda1 * locErrorScale, theta,
-      viewConfig.nSegments, viewConfig.offset, lposition, transform);
+      viewConfig.quarterSegments, viewConfig.offset, lposition, transform);
 
   ellipse.push_back(transform *
                     Vector3(lposition.x(), lposition.y(), viewConfig.offset));
-  auto faces = detail::FacesHelper::convexFaceMesh(ellipse, true);
-  Polyhedron ellipseHedron(ellipse, faces.first, faces.second);
+  auto [faces, triangularMesh] =
+      detail::FacesHelper::convexFaceMesh(ellipse, true);
+  Polyhedron ellipseHedron(ellipse, faces, triangularMesh);
   Acts::GeometryView3D::drawPolyhedron(helper, ellipseHedron, viewConfig);
 }
 
@@ -56,12 +57,13 @@ void Acts::EventDataView3D::drawCovarianceAngular(
   std::vector<Vector3> ellipse =
       createEllipse(angularErrorScale * directionScale * lambda0 * sin(dtheta),
                     angularErrorScale * directionScale * lambda1, theta,
-                    viewConfig.nSegments, 0., {0., 0.}, eplane);
+                    viewConfig.quarterSegments, 0., {0., 0.}, eplane);
 
   std::vector<Vector3> coneTop = ellipse;
   coneTop.push_back(anker);
-  auto coneTopFaces = detail::FacesHelper::convexFaceMesh(coneTop, true);
-  Polyhedron coneTopHedron(coneTop, coneTopFaces.first, coneTopFaces.second);
+  auto [faces, triangularMesh] =
+      detail::FacesHelper::convexFaceMesh(coneTop, true);
+  Polyhedron coneTopHedron(coneTop, faces, triangularMesh);
   GeometryView3D::drawPolyhedron(helper, coneTopHedron, viewConfig);
 
   std::vector<Vector3> cone = ellipse;
@@ -69,7 +71,8 @@ void Acts::EventDataView3D::drawCovarianceAngular(
   // Force triangular
   ViewConfig coneViewConfig = viewConfig;
   coneViewConfig.triangulate = true;
-  auto coneFaces = detail::FacesHelper::convexFaceMesh(cone, true);
-  Polyhedron coneHedron(cone, coneFaces.first, coneFaces.second);
+  auto [facesCone, triangularMeshCone] =
+      detail::FacesHelper::convexFaceMesh(cone, true);
+  Polyhedron coneHedron(cone, facesCone, triangularMeshCone);
   GeometryView3D::drawPolyhedron(helper, coneHedron, coneViewConfig);
 }
