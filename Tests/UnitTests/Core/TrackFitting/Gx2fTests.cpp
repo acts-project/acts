@@ -1054,7 +1054,7 @@ BOOST_AUTO_TEST_CASE(Material) {
     ViewConfig viewContainer = {.color = {220, 220, 0}};
     viewContainer.triangulate = triangulate;
     ViewConfig viewGrid = {.color = {220, 0, 0}};
-    viewGrid.nSegments = 8;
+    viewGrid.quarterSegments = 8;
     viewGrid.offset = 3.;
     viewGrid.triangulate = triangulate;
 
