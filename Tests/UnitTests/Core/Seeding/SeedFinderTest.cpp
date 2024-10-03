@@ -209,6 +209,9 @@ int main(int argc, char** argv) {
   gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
 
+  // std::size_t dim = spContainer.end() - spContainer.begin();
+  // std::cout << "n elements: " << std::distance(spContainer.begin(), spContainer.end()) << std::endl;
+  
   Acts::CylindricalSpacePointGrid<value_type> grid =
       Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(gridConf,
                                                                      gridOpts);
