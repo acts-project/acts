@@ -101,13 +101,18 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       params[Acts::eBoundLoc0] = sigmaD0 * stdNormal(rng);
       params[Acts::eBoundLoc1] = sigmaZ0 * stdNormal(rng);
       params[Acts::eBoundTime] = time + sigmaT0 * stdNormal(rng);
-      // smear direction angles phi,theta ensuring correct bounds
-      const auto [newPhi, newTheta] = Acts::detail::normalizePhiTheta(
-          phi + sigmaPhi * stdNormal(rng), theta + sigmaTheta * stdNormal(rng));
-      params[Acts::eBoundPhi] = newPhi;
-      params[Acts::eBoundTheta] = newTheta;
-      if (std::abs(newTheta) < 1e-6) {
-        throw std::runtime_error("Theta is too close to zero.");
+      // smear direction angles phi, theta ensuring correct bounds
+      while (true) {
+        const auto [newPhi, newTheta] = Acts::detail::normalizePhiTheta(
+            phi + sigmaPhi * stdNormal(rng),
+            theta + sigmaTheta * stdNormal(rng));
+
+        // We don't want to have theta-values parallel to the beam axis.
+        if (std::abs(newTheta) > 1e-6) {
+          params[Acts::eBoundPhi] = newPhi;
+          params[Acts::eBoundTheta] = newTheta;
+          break;
+        }
       }
       // compute smeared q/p
       params[Acts::eBoundQOverP] = qOverP + sigmaQOverP * stdNormal(rng);
