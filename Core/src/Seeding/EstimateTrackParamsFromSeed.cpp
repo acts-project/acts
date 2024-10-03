@@ -8,9 +8,11 @@
 
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+
 Acts::BoundMatrix Acts::estimateTrackParamCovariance(
-    const BoundVector& params,
-    const EstimateTrackParamCovarianceConfig& config) {
+    const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
+    bool hasTime) {
   BoundSquareMatrix result = BoundSquareMatrix::Zero();
 
   for (std::size_t i = eBoundLoc0; i < eBoundSize; ++i) {
@@ -28,6 +30,11 @@ Acts::BoundMatrix Acts::estimateTrackParamCovariance(
       variance +=
           varianceTheta *
           std::pow(params[eBoundQOverP] / std::tan(params[eBoundTheta]), 2);
+    }
+
+    if (i == eBoundTime && !hasTime) {
+      // Inflate the time uncertainty if no time measurement is available
+      variance *= config.noTimeVarInflation;
     }
 
     // Inflate the initial covariance

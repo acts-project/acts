@@ -130,15 +130,15 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       if (m_cfg.initialSigmas) {
         // use the initial sigmas if set
 
-        cov = Acts::estimateTrackParamCovariance(
-            params,
-            Acts::EstimateTrackParamCovarianceConfig{
-                .initialSigmas =
-                    Eigen::Map<const Acts::BoundVector>{
-                        m_cfg.initialSigmas->data()},
-                .initialSigmaPtRel = m_cfg.initialSigmaPtRel,
-                .initialVarInflation = Eigen::Map<const Acts::BoundVector>{
-                    m_cfg.initialVarInflation.data()}});
+        Acts::EstimateTrackParamCovarianceConfig config{
+            .initialSigmas =
+                Eigen::Map<const Acts::BoundVector>{
+                    m_cfg.initialSigmas->data()},
+            .initialSigmaPtRel = m_cfg.initialSigmaPtRel,
+            .initialVarInflation = Eigen::Map<const Acts::BoundVector>{
+                m_cfg.initialVarInflation.data()}};
+
+        cov = Acts::estimateTrackParamCovariance(config, params, false);
       } else {
         // otherwise use the smearing sigmas
 

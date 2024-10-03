@@ -300,10 +300,11 @@ struct EstimateTrackParamCovarianceConfig {
   double initialSigmaPtRel = 0.1;
 
   BoundVector initialVarInflation = {1., 1., 1., 1., 1., 1.};
+  double noTimeVarInflation = 100.;
 };
 
 BoundMatrix estimateTrackParamCovariance(
-    const BoundVector& params,
-    const EstimateTrackParamCovarianceConfig& config);
+    const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
+    bool hasTime);
 
 }  // namespace Acts

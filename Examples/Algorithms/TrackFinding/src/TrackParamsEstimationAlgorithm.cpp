@@ -129,19 +129,15 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
     const auto& params = optParams.value();
 
-    Acts::BoundSquareMatrix cov = Acts::estimateTrackParamCovariance(
-        params,
-        Acts::EstimateTrackParamCovarianceConfig{
-            .initialSigmas =
-                Eigen::Map<const Acts::BoundVector>{m_cfg.initialSigmas.data()},
-            .initialSigmaPtRel = m_cfg.initialSigmaPtRel,
-            .initialVarInflation = Eigen::Map<const Acts::BoundVector>{
-                m_cfg.initialVarInflation.data()}});
+    Acts::EstimateTrackParamCovarianceConfig config{
+        .initialSigmas =
+            Eigen::Map<const Acts::BoundVector>{m_cfg.initialSigmas.data()},
+        .initialSigmaPtRel = m_cfg.initialSigmaPtRel,
+        .initialVarInflation = Eigen::Map<const Acts::BoundVector>{
+            m_cfg.initialVarInflation.data()}};
 
-    // Inflate the time uncertainty if no time measurement is available
-    if (!bottomSP->t().has_value()) {
-      cov(Acts::eBoundTime, Acts::eBoundTime) *= m_cfg.noTimeVarInflation;
-    }
+    Acts::BoundSquareMatrix cov = Acts::estimateTrackParamCovariance(
+        config, params, bottomSP->t().has_value());
 
     trackParameters.emplace_back(surface->getSharedPtr(), params, cov,
                                  m_cfg.particleHypothesis);
