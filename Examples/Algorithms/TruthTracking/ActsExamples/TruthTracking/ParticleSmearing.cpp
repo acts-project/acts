@@ -143,7 +143,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
 
             // theta contribution
             variance += varianceTheta *
-                        std::pow(params[Acts::eBoundQOverP] *
+                        std::pow(params[Acts::eBoundQOverP] /
                                      std::tan(params[Acts::eBoundTheta]),
                                  2);
           }
