@@ -354,7 +354,7 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
       // Loop over surfaces and create an internal extent
       for (auto& sf : surfaces) {
         auto sfExtent =
-            sf->polyhedronRepresentation(gctx, m_cfg.nSegments).extent();
+            sf->polyhedronRepresentation(gctx, m_cfg.quarterSegments).extent();
         internalExtent.extend(sfExtent, internalConstraints);
       }
       ACTS_VERBOSE("Found " << surfaces.size() << " surfaces in range "

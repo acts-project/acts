@@ -123,13 +123,11 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// This method returns the xy coordinates of the four corners of the
   /// bounds in module coorindates (in xy)
   ///
-  /// @param lseg the number of segments used to approximate
-  /// and eventually curved line
-  ///
-  /// @note that the number of segments are ignored for this surface
+  /// @param ignoredSegments is an ignored parameter only used for
+  /// curved bound segments
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg) const final;
+  std::vector<Vector2> vertices(unsigned int ignoredSegments = 0u) const final;
 
  private:
   std::array<double, eSize> m_values;
