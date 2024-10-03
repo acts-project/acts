@@ -22,6 +22,8 @@ class ContainerIndexIterator {
   using container_type =
       std::conditional_t<Const, const _Container, _Container>;
   using difference_type = std::ptrdiff_t;
+  using pointer = void;
+  using reference = void;
 
   ContainerIndexIterator() : m_container(nullptr), m_index(0) {}
 
