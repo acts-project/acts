@@ -106,6 +106,9 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
           phi + sigmaPhi * stdNormal(rng), theta + sigmaTheta * stdNormal(rng));
       params[Acts::eBoundPhi] = newPhi;
       params[Acts::eBoundTheta] = newTheta;
+      if (std::abs(newTheta) < 1e-6) {
+        throw std::runtime_error("Theta is too close to zero.");
+      }
       // compute smeared q/p
       params[Acts::eBoundQOverP] = qOverP + sigmaQOverP * stdNormal(rng);
 
