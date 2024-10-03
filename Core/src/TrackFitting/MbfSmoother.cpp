@@ -9,6 +9,7 @@
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 namespace Acts {
@@ -21,8 +22,7 @@ void MbfSmoother::calculateSmoothed(InternalTrackState& ts,
                                                       ts.filteredCovariance;
   ts.smoothed = ts.filtered - ts.filteredCovariance * smallLambdaHat;
   // Normalize phi and theta
-  detail::normalizePhiThetaInplace(ts.smoothed[eBoundPhi],
-                                   ts.smoothed[eBoundTheta]);
+  ts.smoothed = normalizeBoundParameters(ts.smoothed);
 }
 
 void MbfSmoother::visitNonMeasurement(const InternalTrackState& ts,

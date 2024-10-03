@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -63,8 +64,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
   trackState.filtered =
       trackState.predicted + K * (calibrated - H * trackState.predicted);
   // Normalize phi and theta
-  detail::normalizePhiThetaInplace(trackState.filtered[eBoundPhi],
-                                   trackState.filtered[eBoundTheta]);
+  trackState.filtered = normalizeBoundParameters(trackState.filtered);
   trackState.filteredCovariance =
       (BoundSquareMatrix::Identity() - K * H) * trackState.predictedCovariance;
   ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());

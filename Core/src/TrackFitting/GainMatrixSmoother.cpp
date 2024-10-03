@@ -9,6 +9,7 @@
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/detail/CovarianceHelper.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -57,17 +58,11 @@ Result<void> GainMatrixSmoother::calculate(
   ACTS_VERBOSE(
       "Prev. predicted parameters: " << predicted(prev_ts).transpose());
 
-  BoundVector smoothedMinusPredicted = smoothed(prev_ts) - predicted(prev_ts);
-  smoothedMinusPredicted[eBoundPhi] = detail::difference_periodic(
-      smoothed(prev_ts)[eBoundPhi], predicted(prev_ts)[eBoundPhi], 2 * M_PI);
-  smoothedMinusPredicted[eBoundTheta] = detail::difference_periodic(
-      smoothed(prev_ts)[eBoundTheta], predicted(prev_ts)[eBoundTheta], M_PI);
-
   // Calculate the smoothed parameters
-  smoothed(ts) = filtered(ts) + G * smoothedMinusPredicted;
+  smoothed(ts) = filtered(ts) + G * subtractBoundParameters(smoothed(prev_ts),
+                                                            predicted(prev_ts));
   // Normalize phi and theta
-  detail::normalizePhiThetaInplace(smoothed(ts)[eBoundPhi],
-                                   smoothed(ts)[eBoundTheta]);
+  smoothed(ts) = normalizeBoundParameters(smoothed(ts));
 
   ACTS_VERBOSE("Smoothed parameters are: " << smoothed(ts).transpose());
   ACTS_VERBOSE("Calculate smoothed covariance:");
