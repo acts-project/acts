@@ -14,10 +14,9 @@ endif()
 if(ACTS_EXATRKX_ENABLE_ONNX)
     target_sources(
         ActsPluginExaTrkX
-        PRIVATE
-            src/OnnxEdgeClassifier.cpp
-            #src/OnnxMetricLearning.cpp
-            #src/CugraphTrackBuilding.cpp
+        PRIVATE src/OnnxEdgeClassifier.cpp
+        #src/OnnxMetricLearning.cpp
+        #src/CugraphTrackBuilding.cpp
     )
 endif()
 
@@ -40,12 +39,12 @@ if(ACTS_EXATRKX_ENABLE_TORCH_AOT)
         PUBLIC ACTS_EXATRKX_WITH_TORCH_AOT
     )
 
-
     add_library(TorchGnnAot SHARED IMPORTED)
     set_target_properties(
         TorchGnnAot
         PROPERTIES
-            IMPORTED_LOCATION "/root/reproduce_gnn_results/rel24/data/gnn.test.so"
+            IMPORTED_LOCATION
+                "/root/reproduce_gnn_results/rel24/data/gnn.test.so"
     )
     target_link_libraries(ActsPluginExaTrkX PUBLIC TorchGnnAot)
 endif()
@@ -65,7 +64,6 @@ target_link_libraries(
         ${TORCH_LIBRARIES} # TODO try to make this private again (torch::Device is leaking)
         std::filesystem
 )
-
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
     target_link_libraries(ActsPluginExaTrkX PRIVATE frnn)
@@ -93,7 +91,8 @@ if(ACTS_EXATRKX_ENABLE_ONNX)
 
     target_link_libraries(
         ActsPluginExaTrkX
-        PRIVATE OnnxRuntime #cugraph::cugraph
+        PRIVATE
+            OnnxRuntime #cugraph::cugraph
     )
 endif()
 
