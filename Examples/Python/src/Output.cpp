@@ -58,6 +58,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace Acts {
 class TrackingGeometry;
@@ -136,11 +137,8 @@ void addOutput(Context& ctx) {
   }
 
   py::class_<IVisualization3D>(m, "IVisualization3D")
-      .def("write", [](const IVisualization3D& self, const py::object& arg) {
-        std::stringstream ss;
-        self.write(ss);
-        arg.attr("write")(ss.str());
-      });
+      .def("write", py::overload_cast<const std::filesystem::path&>(
+                        &IVisualization3D::write, py::const_));
 
   {
     using Writer = ActsExamples::ObjTrackingGeometryWriter;
