@@ -14,42 +14,61 @@
 
 std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
     ActsScalar phiMin, ActsScalar phiMax,
-    const std::vector<ActsScalar>& phiRefs, ActsScalar phiTolerance) {
-  // This is to ensure that the extrema are built regardless of number
-  // of segments
-  std::vector<ActsScalar> phiSegments;
-  std::vector<ActsScalar> quarters = {-M_PI, -0.5 * M_PI, 0., 0.5 * M_PI, M_PI};
-  // It does not cover the full azimuth
-  if (phiMin != -M_PI || phiMax != M_PI) {
-    phiSegments.push_back(phiMin);
-    for (unsigned int iq = 1; iq < 4; ++iq) {
-      if (phiMin < quarters[iq] && phiMax > quarters[iq]) {
-        phiSegments.push_back(quarters[iq]);
-      }
-    }
-    phiSegments.push_back(phiMax);
-  } else {
-    phiSegments = quarters;
+    const std::vector<ActsScalar>& phiRefs, unsigned int quarterSegments) {
+  // Check that the phi range is valid
+  if (phiMin > phiMax) {
+    throw std::invalid_argument(
+        "VerticesHelper::phiSegments ... Minimum phi must be smaller than "
+        "maximum phi");
   }
-  // Insert the reference phis if
-  if (!phiRefs.empty()) {
-    for (const auto& phiRef : phiRefs) {
-      // Trying to find the right patch
-      if (std::ranges::none_of(phiSegments, [&](ActsScalar phiSeg) {
-            return std::abs(phiSeg - phiRef) < phiTolerance;
+
+  // First check that no reference phi is outside the range
+  for (ActsScalar phiRef : phiRefs) {
+    if (phiRef < phiMin || phiRef > phiMax) {
+      throw std::invalid_argument(
+          "VerticesHelper::phiSegments ... Reference phi is outside the range "
+          "of the segment");
+    }
+  }
+  if (quarterSegments == 0u) {
+    throw std::invalid_argument(
+        "VerticesHelper::phiSegments ... Number of segments must be larger "
+        "than 0.");
+  }
+  std::vector<ActsScalar> phiSegments = {phiMin, phiMax};
+  // Minimum approximation for a circle need
+  // - if the circle is closed the last point is given twice
+  for (unsigned int i = 0; i < 4 * quarterSegments + 1; ++i) {
+    ActsScalar phiExt = -M_PI + i * 2 * M_PI / (4 * quarterSegments);
+    if (phiExt > phiMin && phiExt < phiMax &&
+        std::ranges::none_of(phiSegments, [&phiExt](ActsScalar phi) {
+          return std::abs(phi - phiExt) <
+                 std::numeric_limits<ActsScalar>::epsilon();
+        })) {
+      phiSegments.push_back(phiExt);
+    }
+  }
+  // Add the reference phis
+  for (const auto& phiRef : phiRefs) {
+    if (phiRef > phiMin && phiRef < phiMax) {
+      if (std::ranges::none_of(phiSegments, [&phiRef](ActsScalar phi) {
+            return std::abs(phi - phiRef) <
+                   std::numeric_limits<ActsScalar>::epsilon();
           })) {
         phiSegments.push_back(phiRef);
       }
     }
-    std::ranges::sort(phiSegments);
   }
+
+  // Sort the phis
+  std::ranges::sort(phiSegments);
   return phiSegments;
 }
 
 std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
     ActsScalar innerRx, ActsScalar innerRy, ActsScalar outerRx,
     ActsScalar outerRy, ActsScalar avgPhi, ActsScalar halfPhi,
-    unsigned int lseg) {
+    unsigned int quarterSegments) {
   // List of vertices counter-clockwise starting at smallest phi w.r.t center,
   // for both inner/outer ring/segment
   std::vector<Vector2> rvertices;  // return vertices
@@ -59,22 +78,20 @@ std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
   bool innerExists = (innerRx > 0. && innerRy > 0.);
   bool closed = std::abs(halfPhi - M_PI) < s_onSurfaceTolerance;
 
-  // Get the phi segments from the helper method
-  auto phiSegs = detail::VerticesHelper::phiSegments(
-      avgPhi - halfPhi, avgPhi + halfPhi, {avgPhi});
+  std::vector<ActsScalar> refPhi = {};
+  if (avgPhi != 0.) {
+    refPhi.push_back(avgPhi);
+  }
 
   // The inner (if exists) and outer bow
-  for (unsigned int iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
-    int addon = (iseg == phiSegs.size() - 2 && !closed) ? 1 : 0;
-    if (innerExists) {
-      createSegment<Vector2, Transform2>(ivertices, {innerRx, innerRy},
-                                         phiSegs[iseg], phiSegs[iseg + 1], lseg,
-                                         addon);
-    }
-    createSegment<Vector2, Transform2>(overtices, {outerRx, outerRy},
-                                       phiSegs[iseg], phiSegs[iseg + 1], lseg,
-                                       addon);
+  if (innerExists) {
+    ivertices = segmentVertices<Vector2, Transform2>(
+        {innerRx, innerRy}, avgPhi - halfPhi, avgPhi + halfPhi, refPhi,
+        quarterSegments);
   }
+  overtices = segmentVertices<Vector2, Transform2>(
+      {outerRx, outerRy}, avgPhi - halfPhi, avgPhi + halfPhi, refPhi,
+      quarterSegments);
 
   // We want to keep the same counter-clockwise orientation for displaying
   if (!innerExists) {
@@ -95,9 +112,9 @@ std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
 
 std::vector<Acts::Vector2> Acts::detail::VerticesHelper::circularVertices(
     ActsScalar innerR, ActsScalar outerR, ActsScalar avgPhi, ActsScalar halfPhi,
-    unsigned int lseg) {
+    unsigned int quarterSegments) {
   return ellipsoidVertices(innerR, innerR, outerR, outerR, avgPhi, halfPhi,
-                           lseg);
+                           quarterSegments);
 }
 
 bool Acts::detail::VerticesHelper::onHyperPlane(
