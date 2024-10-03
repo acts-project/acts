@@ -282,8 +282,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
     double minRange = std::numeric_limits<double>::max();
     double maxRange = std::numeric_limits<double>::lowest();
     for (const auto& coll : grid) {
-      if (coll.empty())
+      if (coll.empty()) {
         continue;
+      }
       const auto* firstEl = coll.front();
       const auto* lastEl = coll.back();
       if (firstEl->radius() < minRange) {
