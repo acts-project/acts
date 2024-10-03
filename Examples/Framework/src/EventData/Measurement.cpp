@@ -33,6 +33,16 @@ std::size_t MeasurementContainer::addMeasurement(std::uint8_t size) {
   return m_entries.size() - 1;
 }
 
+MeasurementContainer::VariableProxy MeasurementContainer::at(
+    std::size_t index) {
+  return VariableProxy{*this, index};
+}
+
+MeasurementContainer::ConstVariableProxy MeasurementContainer::at(
+    std::size_t index) const {
+  return ConstVariableProxy{*this, index};
+}
+
 MeasurementContainer::VariableProxy MeasurementContainer::getMeasurement(
     std::size_t index) {
   return VariableProxy{*this, index};
