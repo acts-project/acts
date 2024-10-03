@@ -71,8 +71,8 @@ void Acts::EventDataView3D::drawCovarianceAngular(
   // Force triangular
   ViewConfig coneViewConfig = viewConfig;
   coneViewConfig.triangulate = true;
-  auto [faces, triangularMesh] =
+  auto [facesCone, triangularMeshCone] =
       detail::FacesHelper::convexFaceMesh(cone, true);
-  Polyhedron coneHedron(cone, faces, triangularMesh);
+  Polyhedron coneHedron(cone, facesCone, triangularMeshCone);
   GeometryView3D::drawPolyhedron(helper, coneHedron, coneViewConfig);
 }
