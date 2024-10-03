@@ -13,6 +13,9 @@
 Acts::BoundMatrix Acts::estimateTrackParamCovariance(
     const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
     bool hasTime) {
+  assert((params[eBoundTheta] > 0 && params[eBoundTheta] < M_PI) &&
+         "Theta must be in the range (0, pi)");
+
   BoundSquareMatrix result = BoundSquareMatrix::Zero();
 
   for (std::size_t i = eBoundLoc0; i < eBoundSize; ++i) {
