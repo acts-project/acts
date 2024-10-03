@@ -18,6 +18,7 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <string>
 #include <unordered_map>
@@ -254,11 +255,10 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
         buffer.back().momentum4After(),
         eventStore().particleHitCount.at(particleId) - 1);
 
-    assert(std::all_of(buffer.begin(), buffer.end(),
-                       [&](const auto& h) { return h.geometryId() == geoId; }));
-    assert(std::all_of(buffer.begin(), buffer.end(), [&](const auto& h) {
-      return h.particleId() == particleId;
-    }));
+    assert(std::ranges::all_of(
+        buffer, [&](const auto& h) { return h.geometryId() == geoId; }));
+    assert(std::ranges::all_of(
+        buffer, [&](const auto& h) { return h.particleId() == particleId; }));
 
     eventStore().numberGeantSteps += buffer.size();
     eventStore().maxStepsForHit =
