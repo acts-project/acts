@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -81,6 +81,8 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     std::array<ActsScalar, 2u> envelopeZ{0, 0};
     // An optional rotation for this
     std::optional<RotationMatrix3> rotation{std::nullopt};
+    // Dimension for the binning
+    Acts::BinningValue binningDimension = Acts::BinningValue::binX;
   };
 
   /// @brief This struct stores the data for the construction of a cuboid
@@ -102,6 +104,8 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     std::string name = "Volume";
     // Material
     std::shared_ptr<const IVolumeMaterial> volumeMaterial = nullptr;
+    // Dimension for the binning
+    Acts::BinningValue binningDimension = Acts::BinningValue::binX;
   };
 
   /// @brief This struct stores the configuration of the tracking geometry

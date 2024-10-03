@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -53,25 +53,21 @@ BOOST_AUTO_TEST_CASE(alignment_helper_test) {
 
   // Calculate the expected derivative of local x axis to its rotation
   RotationMatrix3 expRotToXAxis = RotationMatrix3::Zero();
-  expRotToXAxis.col(0) = Vector3(0, 0, 0);
-  expRotToXAxis.col(1) = Vector3(-cz * sy, -sz * sy, -cy);
-  expRotToXAxis.col(2) = Vector3(-sz * cy, cz * cy, 0);
+  expRotToXAxis.col(0) = expRot * Vector3(0, 0, 0);
+  expRotToXAxis.col(1) = expRot * Vector3(0, 0, -1);
+  expRotToXAxis.col(2) = expRot * Vector3(0, 1, 0);
 
   // Calculate the expected derivative of local y axis to its rotation
   RotationMatrix3 expRotToYAxis = RotationMatrix3::Zero();
-  expRotToYAxis.col(0) =
-      Vector3(cz * sy * cx + sz * sx, sz * sy * cx - cz * sx, cy * cx);
-  expRotToYAxis.col(1) = Vector3(cz * cy * sx, sz * cy * sx, -sy * sx);
-  expRotToYAxis.col(2) =
-      Vector3(-sz * sy * sx - cz * cx, cz * sy * sx - sz * cx, 0);
+  expRotToYAxis.col(0) = expRot * Vector3(0, 0, 1);
+  expRotToYAxis.col(1) = expRot * Vector3(0, 0, 0);
+  expRotToYAxis.col(2) = expRot * Vector3(-1, 0, 0);
 
   // Calculate the expected derivative of local z axis to its rotation
   RotationMatrix3 expRotToZAxis = RotationMatrix3::Zero();
-  expRotToZAxis.col(0) =
-      Vector3(sz * cx - cz * sy * sx, -sz * sy * sx - cz * cx, -cy * sx);
-  expRotToZAxis.col(1) = Vector3(cz * cy * cx, sz * cy * cx, -sy * cx);
-  expRotToZAxis.col(2) =
-      Vector3(cz * sx - sz * sy * cx, cz * sy * cx + sz * sx, 0);
+  expRotToZAxis.col(0) = expRot * Vector3(0, -1, 0);
+  expRotToZAxis.col(1) = expRot * Vector3(1, 0, 0);
+  expRotToZAxis.col(2) = expRot * Vector3(0, 0, 0);
 
   // Construct a transform
   Translation3 translation(Vector3(0., 0., 0.));

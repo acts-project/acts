@@ -25,7 +25,6 @@ add_unittest(Intersection IntersectionTests.cpp)
 add_unittest(KDTree KDTreeTests.cpp)
 add_unittest(Logger LoggerTests.cpp)
 add_unittest(MaterialMapUtils MaterialMapUtilsTests.cpp)
-add_unittest(MPL MPLTests.cpp)
 add_unittest(MultiIndex MultiIndexTests.cpp)
 add_unittest(Periodic PeriodicTests.cpp)
 add_unittest(Range1D Range1DTests.cpp)
@@ -33,20 +32,24 @@ add_unittest(RangeXD RangeXDTests.cpp)
 add_unittest(Ray RayTest.cpp)
 add_unittest(RealQuadraticEquation RealQuadraticEquationTests.cpp)
 add_unittest(Result ResultTests.cpp)
-add_unittest(Subspace SubspaceTests.cpp)
 add_unittest(TypeList TypeListTests.cpp)
-add_unittest(TypeTraits TypeTraitsTest.cpp)
 add_unittest(UnitVectors UnitVectorsTests.cpp)
 add_unittest(Delegate DelegateTests.cpp)
 add_unittest(HashedString HashedStringTests.cpp)
-if (ACTS_BUILD_CUDA_FEATURES)
-  add_unittest(Cuda CudaTests.cu)
-  add_unittest(CudaMostSimplified CudaMostSimplifiedTests.cu)
+if(ACTS_BUILD_CUDA_FEATURES)
+    add_unittest(Cuda CudaTests.cu)
+    add_unittest(CudaMostSimplified CudaMostSimplifiedTests.cu)
 endif()
 
 add_unittest(Any AnyTests.cpp)
 add_unittest(AnyDebug AnyTests.cpp)
-target_compile_definitions(ActsUnitTestAnyDebug PRIVATE _ACTS_ANY_ENABLE_VERBOSE _ACTS_ANY_ENABLE_DEBUG _ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
+target_compile_definitions(
+    ActsUnitTestAnyDebug
+    PRIVATE
+        _ACTS_ANY_ENABLE_VERBOSE
+        _ACTS_ANY_ENABLE_DEBUG
+        _ACTS_ANY_ENABLE_TRACK_ALLOCATIONS
+)
 
 add_unittest(ParticleData ParticleDataTests.cpp)
 add_unittest(Zip ZipTests.cpp)
@@ -54,3 +57,4 @@ add_unittest(TransformRange TransformRangeTests.cpp)
 add_unittest(QuickMath QuickMathTests.cpp)
 
 add_unittest(TrackHelpers TrackHelpersTests.cpp)
+add_unittest(GraphViz GraphVizTests.cpp)

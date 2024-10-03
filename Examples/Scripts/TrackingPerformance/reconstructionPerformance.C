@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <array>
 #include <string>
@@ -18,11 +18,11 @@
 
 #include "CommonUtils.h"
 
-/// This script allows a fast reading and replotting of the existing performance plots, e.g. 'trackeff_vs_*' and 'nMeasurements_vs_*', 
-/// from the root file 'performance_track_fitter.root' or 'performance_ckf.root'. 
-/// Note that redefinition of the tracking efficiency etc. is not possible with this script. 
+/// This script allows a fast reading and replotting of the existing performance plots, e.g. 'trackeff_vs_*' and 'nMeasurements_vs_*',
+/// from the root file 'performance_track_fitter.root' or 'performance_ckf.root'.
+/// Note that redefinition of the tracking efficiency etc. is not possible with this script.
 /// If you want to define your own efficiency etc., please refer to 'defineReconstructionPerformance.C'.
-/// 
+///
 void reconstructionPerformance(std::vector<std::string> inputFileNames) {
   std::array<TCanvas*, 3> emho = {nullptr, nullptr, nullptr};
   std::vector<std::string> tags = {"eta", "pT"};
@@ -46,7 +46,7 @@ void reconstructionPerformance(std::vector<std::string> inputFileNames) {
     auto file = TFile::Open(fileName.c_str(), "read");
     unsigned int itag = 0;
     for (const auto& t : tags) {
-      unsigned int ipar = 0;  
+      unsigned int ipar = 0;
       for (const auto& p : params) {
         std::string hName = p + std::string("_vs_") + t;
         emho[itag]->cd(ipar+1);

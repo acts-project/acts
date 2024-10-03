@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
@@ -18,6 +18,7 @@
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
@@ -144,8 +145,8 @@ void EDM4hepUtil::writeSimHit(const ActsFatras::Hit& from,
   to.setEDep(-delta4[Acts::eEnergy] / Acts::UnitConstants::GeV);
 }
 
-Measurement EDM4hepUtil::readMeasurement(
-    const edm4hep::TrackerHitPlane& from,
+VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
+    MeasurementContainer& container, const edm4hep::TrackerHitPlane& from,
     const edm4hep::TrackerHitCollection* fromClusters, Cluster* toCluster,
     const MapGeometryIdFrom& geometryMapper) {
   // no need for digitization as we only want to identify the sensor
@@ -172,7 +173,7 @@ Measurement EDM4hepUtil::readMeasurement(
   dParameters.values.push_back(pos.z);
   dParameters.variances.push_back(cov[5]);
 
-  auto to = createMeasurement(dParameters, sourceLink);
+  auto to = createMeasurement(container, dParameters, sourceLink);
 
   if (fromClusters != nullptr) {
     for (const auto objectId : from.getRawHits()) {
@@ -196,59 +197,53 @@ Measurement EDM4hepUtil::readMeasurement(
   return to;
 }
 
-void EDM4hepUtil::writeMeasurement(const Measurement& from,
-                                   edm4hep::MutableTrackerHitPlane to,
-                                   const Cluster* fromCluster,
-                                   edm4hep::TrackerHitCollection& toClusters,
-                                   const MapGeometryIdTo& geometryMapper) {
-  std::visit(
-      [&](const auto& m) {
-        Acts::GeometryIdentifier geoId =
-            m.sourceLink().template get<IndexSourceLink>().geometryId();
+void EDM4hepUtil::writeMeasurement(
+    const ConstVariableBoundMeasurementProxy& from,
+    edm4hep::MutableTrackerHitPlane to, const Cluster* fromCluster,
+    edm4hep::TrackerHitCollection& toClusters,
+    const MapGeometryIdTo& geometryMapper) {
+  Acts::GeometryIdentifier geoId =
+      from.sourceLink().template get<IndexSourceLink>().geometryId();
 
-        if (geometryMapper) {
-          // no need for digitization as we only want to identify the sensor
-          to.setCellID(geometryMapper(geoId));
-        }
+  if (geometryMapper) {
+    // no need for digitization as we only want to identify the sensor
+    to.setCellID(geometryMapper(geoId));
+  }
 
-        auto parameters = (m.expander() * m.parameters()).eval();
+  const auto& parameters = from.fullParameters();
+  const auto& covariance = from.fullCovariance();
 
-        to.setTime(parameters[Acts::eBoundTime] / Acts::UnitConstants::ns);
+  to.setTime(parameters[Acts::eBoundTime] / Acts::UnitConstants::ns);
 
-        to.setType(Acts::EDM4hepUtil::EDM4HEP_ACTS_POSITION_TYPE);
-        // TODO set uv (which are in global spherical coordinates with r=1)
-        to.setPosition({parameters[Acts::eBoundLoc0],
-                        parameters[Acts::eBoundLoc1],
-                        parameters[Acts::eBoundTime]});
+  to.setType(Acts::EDM4hepUtil::EDM4HEP_ACTS_POSITION_TYPE);
+  // TODO set uv (which are in global spherical coordinates with r=1)
+  to.setPosition({parameters[Acts::eBoundLoc0], parameters[Acts::eBoundLoc1],
+                  parameters[Acts::eBoundTime]});
 
-        auto covariance =
-            (m.expander() * m.covariance() * m.expander().transpose()).eval();
-        to.setCovMatrix({
-            static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
-            static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc0)),
-            static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
-            0,
-            0,
-            0,
-        });
+  to.setCovMatrix({
+      static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
+      static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc0)),
+      static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
+      0,
+      0,
+      0,
+  });
 
-        if (fromCluster) {
-          for (const auto& c : fromCluster->channels) {
-            auto toChannel = toClusters.create();
-            to.addToRawHits(toChannel.getObjectID());
+  if (fromCluster != nullptr) {
+    for (const auto& c : fromCluster->channels) {
+      auto toChannel = toClusters.create();
+      to.addToRawHits(toChannel.getObjectID());
 
-            // TODO digitization channel
+      // TODO digitization channel
 
-            // TODO get EDM4hep fixed
-            // misusing some fields to store ACTS specific information
-            // don't ask ...
-            toChannel.setType(c.bin[0]);
-            toChannel.setQuality(c.bin[1]);
-            toChannel.setTime(c.activation);
-          }
-        }
-      },
-      from);
+      // TODO get EDM4hep fixed
+      // misusing some fields to store ACTS specific information
+      // don't ask ...
+      toChannel.setType(c.bin[0]);
+      toChannel.setQuality(c.bin[1]);
+      toChannel.setTime(c.activation);
+    }
+  }
 }
 
 void EDM4hepUtil::writeTrajectory(

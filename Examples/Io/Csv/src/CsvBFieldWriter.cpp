@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
 
@@ -15,13 +15,12 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 
 #include <iomanip>
 #include <ostream>
 #include <stdexcept>
 #include <vector>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 namespace ActsExamples {
 template <CsvBFieldWriter::CoordinateType Coord, bool Grid>
@@ -49,7 +48,7 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
 
   // Initialize a CSV writer to the specified filename using the specified
   // column names.
-  dfe::io_dsv_impl::DsvWriter<','> writer(fields, config.fileName);
+  CsvWriter writer(fields, config.fileName);
 
   // We proceed by finding the number of bins, as well as the minimum and
   // maximum coordinates. This process depends quite heavily on the structure

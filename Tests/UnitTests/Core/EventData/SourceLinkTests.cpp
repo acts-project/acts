@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -22,6 +22,7 @@ BOOST_AUTO_TEST_SUITE(EventDataSourceLink)
 
 BOOST_AUTO_TEST_CASE(TestSourceLinkCoverage) {
   using Acts::detail::Test::TestSourceLink;
+
   TestSourceLink ts;
   Acts::Vector2 stddev(0.01, 0.1);
   Acts::SquareMatrix2 cov = stddev.cwiseProduct(stddev).asDiagonal();

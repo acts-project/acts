@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -45,7 +45,7 @@ const char* beampipe_head_xml =
         <detector id="0" name="BeamPipe" type="BarrelDetector">
             <type_flags type="DetType_TRACKER + DetType_BEAMPIPE"/>
             <layers>
-                <layer id="0"  name="BeamPipeLayer">                 
+                <layer id="0"  name="BeamPipeLayer">
 )"""";
 
 const char* nec_head_xml =
@@ -79,7 +79,7 @@ const char* plugin_xml =
       <argument value="acts_world_binning: str = r"/>
       <argument value="acts_world_geo_id: str = incremental"/>
       <argument value="acts_world_root_volume_finder: str = indexed"/>
-    </plugin>	
+    </plugin>
     <plugin name="DD4hep_ParametersPlugin">
       <argument value="BeamPipe"/>
       <argument value="acts_volume: bool = true"/>
@@ -90,7 +90,7 @@ const char* plugin_xml =
       <argument value="acts_volume_bvalues_2: double = 1000*mm"/>
       <argument value="acts_volume_internals: bool = true"/>
       <argument value="acts_volume_internals_type: str = layer"/>
-    </plugin>	
+    </plugin>
     <plugin name="DD4hep_ParametersPlugin">
       <argument value="Pixel"/>
       <argument value="acts_container: bool = true"/>
@@ -100,7 +100,7 @@ const char* plugin_xml =
       <argument value="acts_container_bvalues_1: double = 150*mm"/>
       <argument value="acts_container_bvalues_2: double = 1000*mm"/>
       <argument value="acts_container_binning: str = z"/>
-    </plugin>	
+    </plugin>
     <plugin name="DD4hep_ParametersPlugin">
       <argument value="PixelNegativeEndcap"/>
       <argument value="acts_container: bool = true"/>
@@ -111,7 +111,7 @@ const char* plugin_xml =
       <argument value="acts_container_bvalues_2: double = 200*mm"/>
       <argument value="acts_container_binning: str = z"/>
       <argument value="acts_container_z: double = -800*mm"/>
-    </plugin>	
+    </plugin>
     <plugin name="DD4hep_ParametersPlugin">
       <argument value="PixelBarrel"/>
       <argument value="acts_container: bool = true"/>
@@ -121,7 +121,7 @@ const char* plugin_xml =
       <argument value="acts_container_bvalues_1: double = 150*mm"/>
       <argument value="acts_container_bvalues_2: double = 600*mm"/>
       <argument value="acts_container_binning: str = r"/>
-    </plugin>	
+    </plugin>
     <plugin name="DD4hep_ParametersPlugin">
       <argument value="PixelPositiveEndcap"/>
       <argument value="acts_container: bool = true"/>
@@ -132,7 +132,7 @@ const char* plugin_xml =
       <argument value="acts_container_bvalues_2: double = 200*mm"/>
       <argument value="acts_container_binning: str = z"/>
       <argument value="acts_container_z: double = 800*mm"/>
-    </plugin>	
+    </plugin>
   </plugins>
   )""";
 

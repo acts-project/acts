@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -24,7 +24,7 @@ enum AlignmentIndices : unsigned int {
   eAlignmentCenter0 = 0u,
   eAlignmentCenter1 = eAlignmentCenter0 + 1u,
   eAlignmentCenter2 = eAlignmentCenter0 + 2u,
-  // Rotation angle around global x/y/z axis of geometry object
+  // Rotation angle around local x/y/z axis of geometry object
   eAlignmentRotation0 = 3u,
   eAlignmentRotation1 = eAlignmentRotation0 + 1u,
   eAlignmentRotation2 = eAlignmentRotation0 + 2u,

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -13,21 +13,23 @@
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <algorithm>
 #include <array>
+#include <concepts>
 #include <cstddef>
 #include <set>
+#include <string>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
 using namespace Acts::detail;
 
 namespace Acts::Test {
+
+BOOST_AUTO_TEST_SUITE(GridTests)
 
 BOOST_AUTO_TEST_CASE(grid_test_1d_equidistant) {
   using Point = std::array<double, 1>;
@@ -1306,10 +1308,10 @@ BOOST_AUTO_TEST_CASE(grid_type_conversion) {
   Grid g2(Type<double>, std::move(a), std::move(b));
   decltype(g2) g2Copy(g2.axesTuple());
 
-  static_assert(std::is_same<decltype(g2), decltype(g2Copy)>::value);
+  static_assert(std::same_as<decltype(g2), decltype(g2Copy)>);
 
   auto g2ConvertedInt = g2Copy.convertType<int>();
-  static_assert(std::is_same<decltype(g2ConvertedInt), Grid2Int>::value);
+  static_assert(std::same_as<decltype(g2ConvertedInt), Grid2Int>);
 }
 
 BOOST_AUTO_TEST_CASE(grid_full_conversion) {
@@ -1335,4 +1337,49 @@ BOOST_AUTO_TEST_CASE(grid_full_conversion) {
   BOOST_CHECK_EQUAL(g1ConvertedInt.atPosition(Point({{0.3}})), 1);
   BOOST_CHECK_EQUAL(g1ConvertedInt.atPosition(Point({{0.6}})), 2);
 }
+
+BOOST_AUTO_TEST_CASE(Output) {
+  Axis a{AxisOpen, 0.0, 1.0, 10u};
+  Axis b{AxisBound, {1, 2, 3}};
+
+  Grid g(Type<double>, std::move(a), std::move(b));
+
+  std::stringstream ss;
+  ss << g;
+  BOOST_CHECK_EQUAL(
+      ss.str(),
+      "Axis<Equidistant, Open>(0, 1, 10), Axis<Variable, Bound>(1, 2, 3)");
+
+  const IGrid& ig = g;
+
+  ss.str("");
+
+  ss << ig;
+
+  BOOST_CHECK_EQUAL(
+      ss.str(),
+      "Axis<Equidistant, Open>(0, 1, 10), Axis<Variable, Bound>(1, 2, 3)");
+}
+
+BOOST_AUTO_TEST_CASE(Equality) {
+  Axis a{AxisOpen, 0.0, 1.0, 10u};
+  Axis b{AxisBound, {1, 2, 3}};
+  Axis c{AxisClosed, {1, 2, 5}};
+
+  Grid ab{Type<double>, a, b};
+  Grid ac{Type<double>, a, c};
+
+  BOOST_CHECK_EQUAL(ab, ab);
+  BOOST_CHECK_EQUAL(ac, ac);
+  BOOST_CHECK_NE(ab, ac);
+
+  const IGrid& iab = ab;
+  const IGrid& iac = ac;
+
+  BOOST_CHECK_EQUAL(iab, iab);
+  BOOST_CHECK_EQUAL(iac, iac);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace Acts::Test

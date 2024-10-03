@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/EventData/ScalingCalibrator.hpp"
 
@@ -85,7 +85,7 @@ readMaps(const std::filesystem::path& path) {
 
   for (auto it = lst->begin(); it != lst->end(); ++it) {
     TKey* key = static_cast<TKey*>(*it);
-    if (std::strcmp(key->GetClassName(), "TH2D") == 0) {
+    if (key != nullptr && std::strcmp(key->GetClassName(), "TH2D") == 0) {
       auto [geoId, var] = parseMapKey(key->GetName());
 
       TH2D hist;
@@ -134,7 +134,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
     const Acts::CalibrationContext& /*cctx*/,
     const Acts::SourceLink& sourceLink,
     Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
-  trackState.setUncalibratedSourceLink(sourceLink);
+  trackState.setUncalibratedSourceLink(Acts::SourceLink{sourceLink});
   const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
 
   assert((idxSourceLink.index() < measurements.size()) &&
@@ -151,34 +151,35 @@ void ActsExamples::ScalingCalibrator::calibrate(
   const Cluster& cl = clusters->at(idxSourceLink.index());
   ConstantTuple ct = m_calib_maps.at(mgid).at(cl.sizeLoc0, cl.sizeLoc1);
 
-  std::visit(
-      [&](const auto& meas) {
-        auto E = meas.expander();
-        auto P = meas.projector();
+  const ConstVariableBoundMeasurementProxy measurement =
+      measurements.getMeasurement(idxSourceLink.index());
 
-        Acts::ActsVector<Acts::eBoundSize> fpar = E * meas.parameters();
+  assert(measurement.contains(Acts::eBoundLoc0) &&
+         "Measurement does not contain the required bound loc0");
+  assert(measurement.contains(Acts::eBoundLoc1) &&
+         "Measurement does not contain the required bound loc1");
 
-        Acts::ActsSquareMatrix<Acts::eBoundSize> fcov =
-            E * meas.covariance() * E.transpose();
+  auto boundLoc0 = measurement.indexOf(Acts::eBoundLoc0);
+  auto boundLoc1 = measurement.indexOf(Acts::eBoundLoc1);
 
-        fpar[Acts::eBoundLoc0] += ct.x_offset;
-        fpar[Acts::eBoundLoc1] += ct.y_offset;
-        fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) *= ct.x_scale;
-        fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) *= ct.y_scale;
+  Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
+    constexpr std::size_t kMeasurementSize = decltype(N)::value;
+    const ConstFixedBoundMeasurementProxy<kMeasurementSize> fixedMeasurement =
+        measurement;
 
-        constexpr std::size_t kSize =
-            std::remove_reference_t<decltype(meas)>::size();
-        std::array<Acts::BoundIndices, kSize> indices = meas.indices();
-        Acts::ActsVector<kSize> cpar = P * fpar;
-        Acts::ActsSquareMatrix<kSize> ccov = P * fcov * P.transpose();
+    Acts::ActsVector<kMeasurementSize> calibratedParameters =
+        fixedMeasurement.parameters();
+    Acts::ActsSquareMatrix<kMeasurementSize> calibratedCovariance =
+        fixedMeasurement.covariance();
 
-        FixedSizeMeasurement<Acts::BoundIndices, kSize> cmeas(
-            Acts::SourceLink{idxSourceLink}, indices, cpar, ccov);
+    calibratedParameters[boundLoc0] += ct.x_offset;
+    calibratedParameters[boundLoc1] += ct.y_offset;
+    calibratedCovariance(boundLoc0, boundLoc0) *= ct.x_scale;
+    calibratedCovariance(boundLoc1, boundLoc1) *= ct.y_scale;
 
-        trackState.allocateCalibrated(cmeas.size());
-        trackState.calibrated<kSize>() = meas.parameters();
-        trackState.calibratedCovariance<kSize>() = meas.covariance();
-        trackState.setProjector(meas.projector());
-      },
-      (measurements)[idxSourceLink.index()]);
+    trackState.allocateCalibrated(kMeasurementSize);
+    trackState.calibrated<kMeasurementSize>() = calibratedParameters;
+    trackState.calibratedCovariance<kMeasurementSize>() = calibratedCovariance;
+    trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
+  });
 }

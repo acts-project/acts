@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -134,7 +134,11 @@ class DirectNavigator {
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state,
                   const stepper_t& /*stepper*/) const {
-    ACTS_VERBOSE("initialize");
+    ACTS_VERBOSE("Initialize. Surface sequence for navigation:");
+    for (auto surface : state.navigation.options.surfaces) {
+      ACTS_VERBOSE(surface->geometryId()
+                   << " - " << surface->center(state.geoContext).transpose());
+    }
 
     // We set the current surface to the start surface
     state.navigation.currentSurface = state.navigation.options.startSurface;

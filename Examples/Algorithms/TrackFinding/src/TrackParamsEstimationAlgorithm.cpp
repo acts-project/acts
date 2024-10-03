@@ -1,22 +1,22 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
-#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -44,22 +44,32 @@ Acts::BoundSquareMatrix makeInitialCovariance(
 
   for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
     double sigma = config.initialSigmas[i];
+    double variance = sigma * sigma;
 
-    // Add momentum dependent uncertainties
-    sigma +=
-        config.initialSimgaQoverPCoefficients[i] * params[Acts::eBoundQOverP];
+    if (i == Acts::eBoundQOverP) {
+      // note that we rely on the fact that sigma theta is already computed
+      double varianceTheta = result(Acts::eBoundTheta, Acts::eBoundTheta);
 
-    double var = sigma * sigma;
+      // transverse momentum contribution
+      variance +=
+          std::pow(config.initialSigmaPtRel * params[Acts::eBoundQOverP], 2);
+
+      // theta contribution
+      variance +=
+          varianceTheta * std::pow(params[Acts::eBoundQOverP] *
+                                       std::tan(params[Acts::eBoundTheta]),
+                                   2);
+    }
 
     // Inflate the time uncertainty if no time measurement is available
     if (i == Acts::eBoundTime && !sp.t().has_value()) {
-      var *= config.noTimeVarInflation;
+      variance *= config.noTimeVarInflation;
     }
 
     // Inflate the initial covariance
-    var *= config.initialVarInflation[i];
+    variance *= config.initialVarInflation[i];
 
-    result(i, i) = var;
+    result(i, i) = variance;
   }
 
   return result;
@@ -126,7 +136,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   for (std::size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
     // Get the bottom space point and its reference surface
-    const auto bottomSP = seed.sp().front();
+    const auto& bottomSP = seed.sp().front();
     if (bottomSP->sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in the space point");
       continue;

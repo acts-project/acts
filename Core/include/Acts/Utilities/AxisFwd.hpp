@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -86,18 +86,18 @@ inline std::ostream& operator<<(std::ostream& os, AxisType type) {
 template <AxisType type, AxisBoundaryType bdt = AxisBoundaryType::Open>
 class Axis;
 
-Axis(ActsScalar min, ActsScalar max, std::size_t bins)
-    ->Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
+Axis(ActsScalar min, ActsScalar max,
+     std::size_t bins) -> Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
 
 template <AxisBoundaryType bdt>
 Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, ActsScalar min, ActsScalar max,
      std::size_t bins) -> Axis<AxisType::Equidistant, bdt>;
 
 Axis(std::vector<ActsScalar> bins)
-    ->Axis<AxisType::Variable, AxisBoundaryType::Open>;
+    -> Axis<AxisType::Variable, AxisBoundaryType::Open>;
 
 template <AxisBoundaryType bdt>
-Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, std::vector<ActsScalar> bins)
-    -> Axis<AxisType::Variable, bdt>;
+Axis(AxisBoundaryTypeTag<bdt> /*bdt*/,
+     std::vector<ActsScalar> bins) -> Axis<AxisType::Variable, bdt>;
 
 }  // namespace Acts

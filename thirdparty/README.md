@@ -10,15 +10,11 @@ issues with missing files after installation.
 
 `nlohmann_json` is exempted from this rule as it is handled specially.
 
-## dfelibs
-
-CMake instructions to build [dfelibs](https://github.com/msmk0/dfelibs).
-
 ## nlohmann_json
 
 CMake instructions to build [nlohmann::json](https://github.com/nlohmann/json).
 
-## boost 
+## boost
 
 For convenience, it's possible to use the ACTS build system to build the minimum
 required version of [boost](https://www.boost.org/) (currently 1.71.0).  No source is
@@ -41,3 +37,27 @@ CMake instructions to build [Pybind11](https://github.com/pybind/pybind11), whic
 ## FRNN
 
 CMake instructions to build [FRNN](https://github.com/lxxue/FRNN), which is used by the Exa.TrkX plugin.
+
+## Algebra plugins
+
+CMake instruction to build [algebra-plugins](https://github.com/acts-project/algebra-plugins), which is used by the traccc plugin.
+
+## VecMem
+
+CMake instruction to build [VecMem](https://github.com/acts-project/vecmem), which is used by the traccc plugin.
+
+## Covfie
+
+CMake instruction to build [covfie](https://github.com/acts-project/covfie), which is used by the traccc plugin.
+
+## Detray
+
+CMake instruction to build [detray](https://github.com/acts-project/detray), which is used by the traccc plugin.
+
+## Traccc
+
+CMake instruction to build [traccc](https://github.com/acts-project/traccc), which is used by the traccc plugin.
+
+## Annoy
+
+CMake instructions to build [Annoy](https://github.com/spotify/annoy) which is used by the Hashing plugin.

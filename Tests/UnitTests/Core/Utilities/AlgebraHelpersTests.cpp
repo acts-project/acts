@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -78,14 +78,13 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPESmallMatrix) {
   BOOST_CHECK(mInv);
   BOOST_CHECK(!mInvInv);
 
-  ACTS_VERBOSE("Test: SafeInverseFPESmallMatrix"
-               << "\n"
-               << "m:\n"
-               << m << "\n"
-               << "mInv:\n"
-               << *mInv << "\n"
-               << "mInvInv [garbage]:\n"
-               << *mInvInv);
+  ACTS_VERBOSE("Test: SafeInverseFPESmallMatrix" << "\n"
+                                                 << "m:\n"
+                                                 << m << "\n"
+                                                 << "mInv:\n"
+                                                 << *mInv << "\n"
+                                                 << "mInvInv [garbage]:\n"
+                                                 << *mInvInv);
 }
 
 BOOST_AUTO_TEST_CASE(SafeInverseFPELargeMatrix) {
@@ -97,12 +96,11 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPELargeMatrix) {
 
   BOOST_CHECK(!mInv);
 
-  ACTS_VERBOSE("Test: SafeInverseFPELargeMatrix"
-               << "\n"
-               << "m:\n"
-               << m << "\n"
-               << "mInv [garbage]:\n"
-               << *mInv);
+  ACTS_VERBOSE("Test: SafeInverseFPELargeMatrix" << "\n"
+                                                 << "m:\n"
+                                                 << m << "\n"
+                                                 << "mInv [garbage]:\n"
+                                                 << *mInv);
 }
 
 /// This test should not compile

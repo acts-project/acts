@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
@@ -13,6 +13,7 @@
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
@@ -151,12 +152,11 @@ struct RootMeasurementWriter::DigitizationTree {
 
   /// Convenience function to fill bound parameters
   ///
-  /// @tparam measurement_t Type of the parameter set
-  ///
-  /// @param m The measurement set
-  template <typename measurement_t>
-  void fillBoundMeasurement(const measurement_t& m) {
-    for (auto [i, ib] : Acts::enumerate(m.indices())) {
+  /// @param m The measurement
+  void fillBoundMeasurement(const ConstVariableBoundMeasurementProxy& m) {
+    for (unsigned int i = 0; i < m.size(); ++i) {
+      auto ib = m.subspaceIndexVector()[i];
+
       recBound[ib] = m.parameters()[i];
       varBound[ib] = m.covariance()(i, i);
 
@@ -267,46 +267,42 @@ ProcessCode RootMeasurementWriter::writeT(
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
-    const auto& meas = measurements[hitIdx];
+    const ConstVariableBoundMeasurementProxy meas =
+        measurements.getMeasurement(hitIdx);
 
-    std::visit(
-        [&](const auto& m) {
-          Acts::GeometryIdentifier geoId =
-              m.sourceLink().template get<IndexSourceLink>().geometryId();
-          // find the corresponding surface
-          auto surfaceItr = m_cfg.surfaceByIdentifier.find(geoId);
-          if (surfaceItr == m_cfg.surfaceByIdentifier.end()) {
-            return;
-          }
-          const Acts::Surface& surface = *(surfaceItr->second);
+    Acts::GeometryIdentifier geoId =
+        meas.sourceLink().template get<IndexSourceLink>().geometryId();
+    // find the corresponding surface
+    auto surfaceItr = m_cfg.surfaceByIdentifier.find(geoId);
+    if (surfaceItr == m_cfg.surfaceByIdentifier.end()) {
+      continue;
+    }
+    const Acts::Surface& surface = *(surfaceItr->second);
 
-          // Fill the identification
-          m_outputTree->fillIdentification(ctx.eventNumber, geoId);
+    // Fill the identification
+    m_outputTree->fillIdentification(ctx.eventNumber, geoId);
 
-          // Find the contributing simulated hits
-          auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
-          // Use average truth in the case of multiple contributing sim hits
-          auto [local, pos4, dir] = averageSimHits(ctx.geoContext, surface,
-                                                   simHits, indices, logger());
-          Acts::RotationMatrix3 rot =
-              surface
-                  .referenceFrame(ctx.geoContext, pos4.segment<3>(Acts::ePos0),
-                                  dir)
-                  .inverse();
-          std::pair<double, double> angles =
-              Acts::VectorHelpers::incidentAngles(dir, rot);
+    // Find the contributing simulated hits
+    auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
+    // Use average truth in the case of multiple contributing sim hits
+    auto [local, pos4, dir] =
+        averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
+    Acts::RotationMatrix3 rot =
+        surface
+            .referenceFrame(ctx.geoContext, pos4.segment<3>(Acts::ePos0), dir)
+            .inverse();
+    std::pair<double, double> angles =
+        Acts::VectorHelpers::incidentAngles(dir, rot);
 
-          m_outputTree->fillTruthParameters(local, pos4, dir, angles);
-          m_outputTree->fillBoundMeasurement(m);
-          if (clusters != nullptr) {
-            const auto& c = (*clusters)[hitIdx];
-            m_outputTree->fillCluster(c);
-          }
+    m_outputTree->fillTruthParameters(local, pos4, dir, angles);
+    m_outputTree->fillBoundMeasurement(meas);
+    if (clusters != nullptr) {
+      const auto& c = (*clusters)[hitIdx];
+      m_outputTree->fillCluster(c);
+    }
 
-          m_outputTree->fill();
-          m_outputTree->clear();
-        },
-        meas);
+    m_outputTree->fill();
+    m_outputTree->clear();
   }
 
   return ProcessCode::SUCCESS;

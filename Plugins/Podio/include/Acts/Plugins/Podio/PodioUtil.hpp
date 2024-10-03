@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -19,7 +19,8 @@
 
 #include <podio/podioVersion.h>
 
-#if podio_VERSION_MAJOR >= 1
+#if podio_VERSION_MAJOR >= 1 || \
+    (podio_VERSION_MAJOR == 0 && podio_VERSION_MINOR == 99)
 #include <podio/ROOTReader.h>
 #include <podio/ROOTWriter.h>
 #else
@@ -41,7 +42,8 @@ namespace PodioUtil {
 // We want to support podio 0.16 and 1.x for now
 
 // See https://github.com/AIDASoft/podio/pull/549
-#if podio_VERSION_MAJOR >= 1
+#if podio_VERSION_MAJOR >= 1 || \
+    (podio_VERSION_MAJOR == 0 && podio_VERSION_MINOR == 99)
 using ROOTWriter = podio::ROOTWriter;
 using ROOTReader = podio::ROOTReader;
 #else

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -14,8 +14,10 @@
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <algorithm>
 #include <array>
 #include <memory>
+#include <tuple>
 
 namespace Acts::Experimental {
 
@@ -48,10 +50,13 @@ class MultiLayerNavigation : public IInternalNavigation {
 
   MultiLayerNavigation() = delete;
 
-  /// Update the navigation state
+  /// Fill the navigation state
+  ///
+  /// @note no initialization is done here (sorting and update)
+  ///
   /// @param gctx is the geometry context
   /// @param nState is the navigation state
-  void update(const GeometryContext& gctx, NavigationState& nState) const {
+  void fill(const GeometryContext& gctx, NavigationState& nState) const {
     // get the local position and direction
     auto lposition = transform * nState.position;
     auto ldirection = transform.linear() * nState.direction;
@@ -72,8 +77,16 @@ class MultiLayerNavigation : public IInternalNavigation {
 
     resolveDuplicates(gctx, surfCandidates);
     SurfacesFiller::fill(nState, surfCandidates);
-
-    updateCandidates(gctx, nState);
+  }
+  /// Fill the update the navigation state with candidates
+  ///
+  /// @note initialization is done here (sorting and update)
+  ///
+  /// @param gctx is the geometry context
+  /// @param nState is the navigation state
+  void update(const GeometryContext& gctx, NavigationState& nState) const {
+    fill(gctx, nState);
+    intitializeCandidates(gctx, nState);
   }
 
   /// Cast into a lookup position
@@ -94,16 +107,11 @@ class MultiLayerNavigation : public IInternalNavigation {
   void resolveDuplicates(const GeometryContext& gctx,
                          std::vector<const Acts::Surface*>& surfaces) const {
     // sorting the surfaces according to their radial distance
-    std::sort(surfaces.begin(), surfaces.end(),
-              [&gctx](const auto& surf1, const auto& surf2) {
-                if (surf1->center(gctx).x() != surf2->center(gctx).x()) {
-                  return surf1->center(gctx).x() < surf2->center(gctx).x();
-                }
-                if (surf1->center(gctx).y() != surf2->center(gctx).y()) {
-                  return surf1->center(gctx).y() < surf2->center(gctx).y();
-                }
-                return surf1->center(gctx).z() < surf2->center(gctx).z();
-              });
+    std::ranges::sort(surfaces, {}, [&gctx](const auto& s) {
+      assert(s != nullptr && "Uninitialized surface");
+      const auto& center = s->center(gctx);
+      return std::make_tuple(center.x(), center.y(), center.z());
+    });
 
     // Remove the duplicates
     surfaces.erase(std::unique(surfaces.begin(), surfaces.end()),

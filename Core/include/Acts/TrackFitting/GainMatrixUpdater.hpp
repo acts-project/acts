@@ -1,15 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -28,8 +29,7 @@ class GainMatrixUpdater {
     // This is used to build a covariance matrix view in the .cpp file
     const double* calibrated;
     const double* calibratedCovariance;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Projector projector;
+    BoundSubspaceIndices projector;
 
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Parameters predicted;
@@ -80,7 +80,7 @@ class GainMatrixUpdater {
             // shape later
             trackState.effectiveCalibrated().data(),
             trackState.effectiveCalibratedCovariance().data(),
-            trackState.projector(),
+            trackState.boundSubspaceIndices(),
             trackState.predicted(),
             trackState.predictedCovariance(),
             trackState.filtered(),
@@ -95,6 +95,10 @@ class GainMatrixUpdater {
 
  private:
   std::tuple<double, std::error_code> visitMeasurement(
+      InternalTrackState trackState, const Logger& logger) const;
+
+  template <std::size_t N>
+  std::tuple<double, std::error_code> visitMeasurementImpl(
       InternalTrackState trackState, const Logger& logger) const;
 };
 

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -78,7 +78,7 @@ std::array<std::size_t, kSize> selectFixedIndices(
   for (auto i = 0u; i < kSize; ++i) {
     indices[i] = fullIndices[i];
   }
-  std::sort(indices.begin(), indices.end());
+  std::ranges::sort(indices);
   return indices;
 }
 
@@ -164,8 +164,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(VariableSizeSubspace, ScalarAndSubspace,
     BOOST_CHECK_EQUAL(variableSubspace.fullSize(), fixedSubspace.fullSize());
 
     auto fixedProjector = fixedSubspace.template projector<Scalar>();
-    std::uint64_t fixedProjectorBits =
-        matrixToBitset(fixedProjector).to_ullong();
 
     Eigen::Matrix<Scalar, FixedSubspace::fullSize(), FixedSubspace::fullSize()>
         fixedFullProjector;
@@ -173,15 +171,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(VariableSizeSubspace, ScalarAndSubspace,
     fixedFullProjector.template topLeftCorner<FixedSubspace::size(),
                                               FixedSubspace::fullSize()>() =
         fixedProjector;
-    std::uint64_t fixedFullProjectorBits =
-        matrixToBitset(fixedFullProjector).to_ullong();
 
-    std::uint64_t variableProjectorBits = variableSubspace.projectorBits();
-    std::uint64_t variableFullProjectorBits =
-        variableSubspace.fullProjectorBits();
+    auto variableFullProjector =
+        variableSubspace.template fullProjector<Scalar>();
 
-    BOOST_CHECK_EQUAL(variableProjectorBits, fixedProjectorBits);
-    BOOST_CHECK_EQUAL(variableFullProjectorBits, fixedFullProjectorBits);
+    BOOST_CHECK_EQUAL(variableFullProjector, fixedFullProjector);
   } while (std::next_permutation(fullIndices.begin(), fullIndices.end()));
 }
 

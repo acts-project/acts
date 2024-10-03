@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 
@@ -425,7 +425,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
              param[Acts::eBoundTime] - t_time};
 
       for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
-        pull[i] = res[i] / error[i];  // MARK: fpeMask(FLTINV, 1, #2284)
+        pull[i] = res[i] / error[i];
       }
     }
 

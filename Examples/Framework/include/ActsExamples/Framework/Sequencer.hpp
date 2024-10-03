@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -78,13 +78,10 @@ class Sequencer {
     /// output directory for timing information, empty for working directory
     std::string outputDir;
     /// output name of the timing file
-    std::string outputTimingFile = "timing.tsv";
+    std::string outputTimingFile = "timing.csv";
     /// Callback that is invoked in the event loop.
     /// @warning This function can be called from multiple threads and should therefore be thread-safe
     IterationCallback iterationCallback = []() {};
-    /// Run data flow consistency checks
-    /// Defaults to false right now until all components are migrated
-    bool runDataFlowChecks = true;
 
     bool trackFpes = true;
     std::vector<FpeMask> fpeMasks{};

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
 
@@ -17,6 +17,7 @@
 #include "Acts/Plugins/GeoModel/detail/GeoModelExtentHelper.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <boost/algorithm/string.hpp>
@@ -40,7 +41,8 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
         "GeoModelBlueprintCreater: GeoModelTree has no GeoModelReader");
   }
 
-  auto blueprintTable = gmTree.geoReader->getTableFromTableName(options.table);
+  auto blueprintTable =
+      gmTree.geoReader->getTableFromTableName_String(options.table);
 
   // Prepare the map
   std::map<std::string, TableEntry> blueprintTableMap;
@@ -146,8 +148,7 @@ Acts::GeoModelBlueprintCreater::createNode(
       detail::GeoModelExentHelper::readBinningConstraints(entry.binnings);
   // Concatenate the binning constraints
   for (const auto& bc : binningConstraints) {
-    if (std::find(internalConstraints.begin(), internalConstraints.end(), bc) ==
-        internalConstraints.end()) {
+    if (!rangeContainsValue(internalConstraints, bc)) {
       internalConstraints.push_back(bc);
     }
   }
