@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SpacePointData.hpp"
-#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
 #include "Acts/Plugins/Hashing/HashingTraining.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
@@ -269,15 +268,31 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
     Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
         spContainer(spConfig, spOptions, container);
 
-    // extent used to store r range for middle spacepoint
-    Acts::Extent rRangeSPExtent;
     // construct the seeding tools
     Acts::CylindricalSpacePointGrid<value_type> grid =
         Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(
             m_cfg.gridConfig, m_cfg.gridOptions);
     Acts::CylindricalSpacePointGridCreator::fillGrid(
         m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid,
-        spContainer.begin(), spContainer.end(), rRangeSPExtent);
+        spContainer.begin(), spContainer.end());
+
+    // Compute radius Range
+    // we rely on the fact the grid is storing the proxies
+    // with a sorting in the radius
+    double minRange = std::numeric_limits<double>::max();
+    double maxRange = std::numeric_limits<double>::lowest();
+    for (const auto& coll : grid) {
+      if (coll.empty())
+        continue;
+      const auto* firstEl = coll.front();
+      const auto* lastEl = coll.back();
+      if (firstEl->radius() < minRange) {
+        minRange = firstEl->radius();
+      }
+      if (lastEl->radius() > maxRange) {
+        maxRange = lastEl->radius();
+      }
+    }
 
     std::array<std::vector<std::size_t>, 2ul> navigation;
     navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
@@ -288,12 +303,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
         std::move(navigation));
 
     // safely clamp double to float
-    float up = Acts::clampValue<float>(
-        std::floor(rRangeSPExtent.max(Acts::BinningValue::binR) / 2) * 2);
+    float up = Acts::clampValue<float>(std::floor(maxRange / 2) * 2);
 
     /// variable middle SP radial region of interest
     const Acts::Range1D<float> rMiddleSPRange(
-        std::floor(rRangeSPExtent.min(Acts::BinningValue::binR) / 2) * 2 +
+        std::floor(minRange / 2) * 2 +
             m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
         up - m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
 

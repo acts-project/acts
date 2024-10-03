@@ -142,7 +142,7 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     const Acts::SeedFinderOptions& options,
     Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
     external_spacepoint_iterator_t spBegin,
-    external_spacepoint_iterator_t spEnd, Acts::Extent& rRangeSPExtent) {
+    external_spacepoint_iterator_t spEnd) {
   using iterated_value_t =
       typename std::iter_value_t<external_spacepoint_iterator_t>;
   using iterated_t = typename std::remove_const_t<
@@ -184,9 +184,6 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     float spX = sp.x();
     float spY = sp.y();
     float spZ = sp.z();
-
-    // store x,y,z values in extent
-    rRangeSPExtent.extend({spX, spY, spZ});
 
     // remove SPs according to experiment specific cuts
     if (!config.spacePointSelector(sp)) {
