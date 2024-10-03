@@ -150,6 +150,7 @@ bool Acts::GeoModelDetectorObjectFactory::convertBox(std::string name) {
 void Acts::GeoModelDetectorObjectFactory::convertFpv(
     const std::string &name, GeoFullPhysVol *fpv, Cache &cache,
     const GeometryContext &gctx) {
+  const auto prevSize = cache.sensitiveSurfaces.size();
   PVConstLink physVol{fpv};
 
   // get children
@@ -163,9 +164,6 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
     const Transform3 &transform =
         fpv->getAbsoluteTransform() * surface.transform;
     convertSensitive(surface.volume, transform, sensitives);
-  }
-  for (auto &[detEl, _] : sensitives) {
-    detEl->setDatabaseEntryName(name);
   }
   cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(),
                                  sensitives.begin(), sensitives.end());
@@ -186,12 +184,12 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
     // convert fpvs to surfaces
     const Transform3 &transform = fpv->getAbsoluteTransform();
     convertSensitive(fpv, transform, cache.sensitiveSurfaces);
+  }
 
-    const auto prevSize = cache.sensitiveSurfaces.size();
-    for (auto i = prevSize; i < cache.sensitiveSurfaces.size(); ++i) {
-      auto &[detEl, _] = cache.sensitiveSurfaces[i];
-      detEl->setDatabaseEntryName(name);
-    }
+  // Set the corresponding database entry name to all sensitive surfaces
+  for (auto i = prevSize; i < cache.sensitiveSurfaces.size(); ++i) {
+    auto &[detEl, _] = cache.sensitiveSurfaces[i];
+    detEl->setDatabaseEntryName(name);
   }
 }
 // function to determine if object fits query
