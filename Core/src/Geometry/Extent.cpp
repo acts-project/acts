@@ -144,8 +144,7 @@ bool Acts::Extent::contains(const Extent& rhs,
 
   // Check all
   if (!bValue.has_value()) {
-    return std::all_of(allBinningValues().begin(), allBinningValues().end(),
-                       checkContainment);
+    return std::ranges::all_of(allBinningValues(), checkContainment);
   }
   // Check specific
   return checkContainment(bValue.value());
@@ -163,8 +162,7 @@ bool Acts::Extent::intersects(const Extent& rhs,
 
   // Check all
   if (!bValue.has_value()) {
-    return std::any_of(allBinningValues().begin(), allBinningValues().end(),
-                       checkIntersect);
+    return std::ranges::any_of(allBinningValues(), checkIntersect);
   }
   // Check specific
   return checkIntersect(bValue.value());

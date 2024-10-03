@@ -225,7 +225,7 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_MEMBER(highlights);
     ACTS_PYTHON_MEMBER(strokeWidth);
     ACTS_PYTHON_MEMBER(strokeColor);
-    ACTS_PYTHON_MEMBER(nSegments);
+    ACTS_PYTHON_MEMBER(quarterSegments);
     ACTS_PYTHON_STRUCT_END();
   }
 

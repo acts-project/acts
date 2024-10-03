@@ -19,6 +19,7 @@
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <typeinfo>
 
@@ -141,9 +142,9 @@ Acts::GeoModelDetectorObjectFactory::findAllSubVolumes(const PVConstLink &vol) {
 }
 
 bool Acts::GeoModelDetectorObjectFactory::convertBox(std::string name) {
-  auto convB = std::any_of(
-      m_cfg.convertBox.begin(), m_cfg.convertBox.end(),
-      [&](const auto &n) { return name.find(n) != std::string::npos; });
+  auto convB = std::ranges::any_of(m_cfg.convertBox, [&](const auto &n) {
+    return name.find(n) != std::string::npos;
+  });
   return convB;
 }
 
@@ -192,14 +193,14 @@ bool Acts::GeoModelDetectorObjectFactory::matches(const std::string &name,
     return true;
   }
 
-  auto matchName = std::any_of(
-      m_cfg.nameList.begin(), m_cfg.nameList.end(),
-      [&](const auto &n) { return name.find(n) != std::string::npos; });
+  auto matchName = std::ranges::any_of(m_cfg.nameList, [&](const auto &n) {
+    return name.find(n) != std::string::npos;
+  });
 
   std::string matStr = physvol->getLogVol()->getMaterial()->getName();
 
-  auto matchMaterial = std::any_of(
-      m_cfg.materialList.begin(), m_cfg.materialList.end(),
+  auto matchMaterial = std::ranges::any_of(
+      m_cfg.materialList,
       [&](const auto &m) { return matStr.find(m) != std::string::npos; });
 
   bool match = matchMaterial && matchName;

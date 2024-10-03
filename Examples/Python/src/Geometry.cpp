@@ -333,7 +333,7 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(surfacesProvider);
     ACTS_PYTHON_MEMBER(supports);
     ACTS_PYTHON_MEMBER(binnings);
-    ACTS_PYTHON_MEMBER(nSegments);
+    ACTS_PYTHON_MEMBER(quarterSegments);
     ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
 

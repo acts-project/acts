@@ -37,18 +37,22 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
                               const std::string& tag) {
   std::stringstream cStream;
 
-  ViewConfig viewSensitive = {.color = {0, 180, 240}};
-  viewSensitive.triangulate = triangulate;
-  ViewConfig viewPassive = {.color = {240, 280, 0}};
-  viewPassive.triangulate = triangulate;
-  ViewConfig viewVolume = {.color = {220, 220, 0}};
-  viewVolume.triangulate = triangulate;
-  ViewConfig viewContainer = {.color = {220, 220, 0}};
-  viewContainer.triangulate = triangulate;
-  ViewConfig viewGrid = {.color = {220, 0, 0}};
-  viewGrid.nSegments = 8;
-  viewGrid.offset = 3.;
-  viewGrid.triangulate = triangulate;
+  ViewConfig viewSensitive = {.color = {0, 180, 240},
+                              .quarterSegments = 72,
+                              .triangulate = triangulate};
+  ViewConfig viewPassive = {.color = {240, 280, 0},
+                            .quarterSegments = 72,
+                            .triangulate = triangulate};
+  ViewConfig viewVolume = {.color = {220, 220, 0},
+                           .quarterSegments = 72,
+                           .triangulate = triangulate};
+  ViewConfig viewContainer = {.color = {220, 220, 0},
+                              .quarterSegments = 72,
+                              .triangulate = triangulate};
+  ViewConfig viewGrid = {.color = {220, 0, 0},
+                         .offset = 3.,
+                         .quarterSegments = 8,
+                         .triangulate = triangulate};
 
   const Acts::TrackingVolume& tgVolume = *(tGeometry->highestTrackingVolume());
 
