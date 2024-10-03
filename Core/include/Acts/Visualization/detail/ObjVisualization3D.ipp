@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 template <typename T>
 void ObjVisualization3D<T>::vertex(const Vector3& vtx, Color color) {
@@ -106,7 +106,7 @@ void ObjVisualization3D<T>::write(std::ostream& os, std::ostream& mos) const {
     materialName += std::to_string(color[1]) + std::string("_");
     materialName += std::to_string(color[2]);
 
-    if (materials.find(materialName) == materials.end()) {
+    if (!materials.contains(materialName)) {
       mos << "newmtl " << materialName << "\n";
       std::vector<std::string> shadings = {"Ka", "Kd", "Ks"};
       for (const auto& shd : shadings) {
@@ -123,7 +123,7 @@ void ObjVisualization3D<T>::write(std::ostream& os, std::ostream& mos) const {
   std::size_t iv = 0;
   Color lastVertexColor = {0, 0, 0};
   for (const VertexType& vtx : m_vertices) {
-    if (m_vertexColors.find(iv) != m_vertexColors.end()) {
+    if (m_vertexColors.contains(iv)) {
       auto color = m_vertexColors.find(iv)->second;
       if (color != lastVertexColor) {
         os << mixColor(color) << "\n";
@@ -139,7 +139,7 @@ void ObjVisualization3D<T>::write(std::ostream& os, std::ostream& mos) const {
   std::size_t il = 0;
   Color lastLineColor = {0, 0, 0};
   for (const LineType& ln : m_lines) {
-    if (m_lineColors.find(il) != m_lineColors.end()) {
+    if (m_lineColors.contains(il)) {
       auto color = m_lineColors.find(il)->second;
       if (color != lastLineColor) {
         os << mixColor(color) << "\n";
@@ -152,7 +152,7 @@ void ObjVisualization3D<T>::write(std::ostream& os, std::ostream& mos) const {
   std::size_t is = 0;
   Color lastFaceColor = {0, 0, 0};
   for (const FaceType& fc : m_faces) {
-    if (m_faceColors.find(is) != m_faceColors.end()) {
+    if (m_faceColors.contains(is)) {
       auto color = m_faceColors.find(is)->second;
       if (color != lastFaceColor) {
         os << mixColor(color) << "\n";

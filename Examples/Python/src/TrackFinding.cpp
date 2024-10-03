@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
@@ -337,11 +337,13 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(reverseSearch);
     ACTS_PYTHON_MEMBER(seedDeduplication);
     ACTS_PYTHON_MEMBER(stayOnSeed);
-    ACTS_PYTHON_MEMBER(pixelVolumes);
-    ACTS_PYTHON_MEMBER(stripVolumes);
+    ACTS_PYTHON_MEMBER(pixelVolumeIds);
+    ACTS_PYTHON_MEMBER(stripVolumeIds);
     ACTS_PYTHON_MEMBER(maxPixelHoles);
     ACTS_PYTHON_MEMBER(maxStripHoles);
     ACTS_PYTHON_MEMBER(trimTracks);
+    ACTS_PYTHON_MEMBER(constrainToVolumeIds);
+    ACTS_PYTHON_MEMBER(endOfWorldVolumeIds);
     ACTS_PYTHON_STRUCT_END();
   }
 

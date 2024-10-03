@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 namespace Acts {
 
@@ -48,37 +48,12 @@ template <typename container_t>
 bool SpacePointProxyIterator<container_t>::operator==(
     const SpacePointProxyIterator<container_t>& other) const {
   return m_container == other.m_container && m_index == other.m_index;
-  ;
 }
 
 template <typename container_t>
-bool SpacePointProxyIterator<container_t>::operator!=(
+auto SpacePointProxyIterator<container_t>::operator<=>(
     const SpacePointProxyIterator<container_t>& other) const {
-  return !(*this == other);
-}
-
-template <typename container_t>
-bool SpacePointProxyIterator<container_t>::operator<(
-    const SpacePointProxyIterator<container_t>& other) const {
-  return m_index < other.m_index;
-}
-
-template <typename container_t>
-bool SpacePointProxyIterator<container_t>::operator>(
-    const SpacePointProxyIterator<container_t>& other) const {
-  return m_index > other.m_index;
-}
-
-template <typename container_t>
-bool SpacePointProxyIterator<container_t>::operator<=(
-    const SpacePointProxyIterator<container_t>& other) const {
-  return m_index <= other.m_index;
-}
-
-template <typename container_t>
-bool SpacePointProxyIterator<container_t>::operator>=(
-    const SpacePointProxyIterator<container_t>& other) const {
-  return m_index >= other.m_index;
+  return m_index <=> other.m_index;
 }
 
 template <typename container_t>
