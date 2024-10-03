@@ -25,10 +25,9 @@ inline void increaseHitCount(
     std::vector<ActsExamples::ParticleHitCount>& particleHitCounts,
     ActsFatras::Barcode particleId) {
   // linear search since there is no ordering
-  auto it = std::find_if(particleHitCounts.begin(), particleHitCounts.end(),
-                         [=](const ActsExamples::ParticleHitCount& phc) {
-                           return (phc.particleId == particleId);
-                         });
+  auto it = std::ranges::find_if(particleHitCounts, [=](const auto& phc) {
+    return (phc.particleId == particleId);
+  });
   // either increase count if we saw the particle before or add it
   if (it != particleHitCounts.end()) {
     it->hitCount += 1u;
