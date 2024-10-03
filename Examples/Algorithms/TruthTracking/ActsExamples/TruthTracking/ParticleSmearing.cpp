@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <ostream>
 #include <random>
 #include <stdexcept>
@@ -108,7 +109,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
             theta + sigmaTheta * stdNormal(rng));
 
         // We don't want to have theta-values parallel to the beam axis.
-        if (std::abs(newTheta) > 1e-6) {
+        if (std::abs(newTheta) > 1e-6 &&
+            std::abs(newTheta - std::numbers::pi) > 1e-6) {
           params[Acts::eBoundPhi] = newPhi;
           params[Acts::eBoundTheta] = newTheta;
           break;
