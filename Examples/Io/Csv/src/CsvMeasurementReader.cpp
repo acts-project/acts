@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 
@@ -124,7 +124,7 @@ std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
   auto measurements = readEverything<ActsExamples::MeasurementData>(
       inputDir, "measurements.csv", {"geometry_id", "t"}, event);
   // sort same way they will be sorted in the output container
-  std::sort(measurements.begin(), measurements.end(), CompareGeometryId{});
+  std::ranges::sort(measurements, CompareGeometryId{});
   return measurements;
 }
 
@@ -273,8 +273,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
   MeasurementContainer measurements;
   for (auto& [_, meas] : orderedMeasurements) {
-    auto measurement = measurements.makeMeasurement(meas.size());
-    measurement.copyFrom(meas);
+    measurements.emplaceMeasurement(meas.size(), meas);
   }
 
   // Generate measurement-particles-map

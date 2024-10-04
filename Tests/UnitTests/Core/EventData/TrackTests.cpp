@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -24,6 +24,7 @@
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <iterator>
 #include <memory>
@@ -227,9 +228,9 @@ BOOST_AUTO_TEST_CASE(IteratorConcept) {
     BOOST_CHECK(*it == tc.getTrack(0));
     std::advance(it, 4);
     BOOST_CHECK(*it == tc.getTrack(4));
-    BOOST_CHECK(*(it[-1]) == tc.getTrack(3));
-    BOOST_CHECK(*(it[0]) == tc.getTrack(4));
-    BOOST_CHECK(*(it[1]) == tc.getTrack(5));
+    BOOST_CHECK(*(it + (-1)) == tc.getTrack(3));
+    BOOST_CHECK(*(it + 0) == tc.getTrack(4));
+    BOOST_CHECK(*(it + 1) == tc.getTrack(5));
     BOOST_CHECK(*(it - 2) == tc.getTrack(2));
   }
 
@@ -441,7 +442,7 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
     indices.push_back(ts.index());
   }
 
-  std::reverse(indices.begin(), indices.end());
+  std::ranges::reverse(indices);
 
   std::vector<IndexType> act;
   for (auto ts : t.trackStates()) {

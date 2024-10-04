@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -233,7 +233,7 @@ struct MicroBenchmarkResult {
   // Sorted benchmark run times, used for computing outlier-robust statistics
   std::vector<Duration> sortedRunTimes() const {
     std::vector<Duration> sorted_timings = run_timings;
-    std::sort(sorted_timings.begin(), sorted_timings.end());
+    std::ranges::sort(sorted_timings);
     return sorted_timings;
   }
 
