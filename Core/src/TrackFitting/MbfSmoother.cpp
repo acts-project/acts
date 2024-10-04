@@ -38,9 +38,9 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
 
   visit_measurement(measurement.calibratedSize, [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
-    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
-        std::span{measurement.projector.begin(),
-                  measurement.projector.begin() + kMeasurementSize});
+    std::span s{measurement.projector.begin(),
+                measurement.projector.begin() + kMeasurementSize};
+    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(s);
 
     using ProjectorMatrix =
         Eigen::Matrix<ActsScalar, kMeasurementSize, eBoundSize>;

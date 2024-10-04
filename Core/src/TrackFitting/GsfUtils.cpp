@@ -14,6 +14,7 @@
 #include "Acts/EventData/Types.hpp"
 
 #include <cstddef>
+#include <span>
 
 namespace Acts::detail {
 
@@ -26,8 +27,8 @@ ActsScalar calculateDeterminant(
     BoundSubspaceIndices projector, unsigned int calibratedSize) {
   return visit_measurement(calibratedSize, [&](auto N) {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
-    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
-        std::span{projector.begin(), projector.begin() + kMeasurementSize});
+    std::span s{projector.begin(), projector.begin() + kMeasurementSize};
+    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(s);
 
     typename Acts::TrackStateTraits<
         kMeasurementSize, true>::CalibratedCovariance calibratedCovariance{
