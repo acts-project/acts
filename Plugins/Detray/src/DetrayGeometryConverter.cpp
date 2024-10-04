@@ -21,6 +21,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
+#include <algorithm>
+
 #include <detray/io/frontend/detector_writer.hpp>
 
 using namespace detray;
@@ -36,7 +38,7 @@ namespace {
 int findVolume(
     const Acts::Experimental::DetectorVolume* volume,
     const std::vector<const Acts::Experimental::DetectorVolume*>& volumes) {
-  auto candidate = std::find(volumes.begin(), volumes.end(), volume);
+  auto candidate = std::ranges::find(volumes, volume);
   if (candidate != volumes.end()) {
     return std::distance(volumes.begin(), candidate);
   }

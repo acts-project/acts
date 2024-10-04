@@ -39,6 +39,7 @@ struct Polyhedron {
   /// @param facesIn List of lists of indices for faces.
   /// @param triangularMeshIn List of lists of indices for a triangular mesh
   /// @param isExact A dedicated flag if this is exact or not
+  ///
   /// @note This creates copies of the input vectors
   Polyhedron(const std::vector<Vector3>& verticesIn,
              const std::vector<FaceType>& facesIn,
