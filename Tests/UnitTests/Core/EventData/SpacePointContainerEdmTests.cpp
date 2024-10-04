@@ -19,8 +19,6 @@
 #include <ranges>
 #include <vector>
 
-#include <math.h>
-
 namespace Acts::Test {
 
 struct SpacePoint {
@@ -170,7 +168,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_functionalities) {
     float refCovR = 2.5f * n;
     float refCovZ = 3.f * n;
     float refRadius = std::hypot(refX, refY);
-    float refPhi = atan2f(refY, refX);
+    float refPhi = std::atan2(refY, refX);
 
     BOOST_CHECK_EQUAL(proxy.index(), n);
     BOOST_CHECK_EQUAL(proxy.x(), refX);
