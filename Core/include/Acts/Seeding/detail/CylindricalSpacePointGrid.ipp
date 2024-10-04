@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the ACTS project.
 //
 // Copyright (C) 2016 CERN for the benefit of the ACTS project
@@ -182,9 +183,6 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
   for (external_spacepoint_iterator_t it = spBegin; it != spEnd;
        it++, ++counter) {
     const external_spacepoint_t& sp = *it;
-    float spX = sp.x();
-    float spY = sp.y();
-    float spZ = sp.z();
 
     // remove SPs according to experiment specific cuts
     if (!config.spacePointSelector(sp)) {
