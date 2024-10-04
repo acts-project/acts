@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -181,6 +182,10 @@ class TrackingVolume : public Volume {
       for (const auto& bs : m_boundarySurfaces) {
         visitor(&(bs->surfaceRepresentation()));
       }
+
+      for (const auto& portal : portals()) {
+        visitor(&portal.surface());
+      }
     }
 
     // Internal structure
@@ -213,6 +218,14 @@ class TrackingVolume : public Volume {
       for (const auto& volume : m_confinedVolumes->arrayObjects()) {
         volume->visitSurfaces(visitor, restrictToSensitives);
       }
+    }
+
+    for (const auto& surface : surfaces()) {
+      visitor(&surface);
+    }
+
+    for (const auto& volume : volumes()) {
+      volume.visitSurfaces(visitor, restrictToSensitives);
     }
   }
 
