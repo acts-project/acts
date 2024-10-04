@@ -64,7 +64,7 @@ bool Acts::DiscTrapezoidBounds::inside(
 }
 
 std::vector<Acts::Vector2> Acts::DiscTrapezoidBounds::vertices(
-    unsigned int /*lseg*/) const {
+    unsigned int /*ignoredSegments*/) const {
   Vector2 cAxis(std::cos(get(eAveragePhi)), std::sin(get(eAveragePhi)));
   Vector2 nAxis(cAxis.y(), -cAxis.x());
   auto ymin = std::sqrt(get(eMinR) * get(eMinR) -

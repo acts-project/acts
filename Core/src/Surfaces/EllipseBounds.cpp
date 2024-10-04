@@ -61,10 +61,10 @@ bool Acts::EllipseBounds::inside(
 }
 
 std::vector<Acts::Vector2> Acts::EllipseBounds::vertices(
-    unsigned int lseg) const {
+    unsigned int quarterSegments) const {
   return detail::VerticesHelper::ellipsoidVertices(
       get(eInnerRx), get(eInnerRy), get(eOuterRx), get(eOuterRy),
-      get(eAveragePhi), get(eHalfPhiSector), lseg);
+      get(eAveragePhi), get(eHalfPhiSector), quarterSegments);
 }
 
 const Acts::RectangleBounds& Acts::EllipseBounds::boundingBox() const {
