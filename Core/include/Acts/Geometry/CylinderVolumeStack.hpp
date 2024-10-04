@@ -122,11 +122,12 @@ class CylinderVolumeStack : public Volume {
                                   Acts::Logging::Level lvl);
 
   /// Helper function that prints output helping in debugging overlaps
+  /// @param direction is the overlap check direction
   /// @param a is the first volume
   /// @param b is the second volume
   /// @param logger is the logger
-  static void overlapPrint(const VolumeTuple& a, const VolumeTuple& b,
-                           const Logger& logger);
+  static void overlapPrint(BinningValue direction, const VolumeTuple& a,
+                           const VolumeTuple& b, const Logger& logger);
 
   /// Helper function that checks if volumes are properly aligned
   /// for attachment.

@@ -286,25 +286,40 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 }
 
 void CylinderVolumeStack::overlapPrint(
-    const CylinderVolumeStack::VolumeTuple& a,
+    BinningValue direction, const CylinderVolumeStack::VolumeTuple& a,
     const CylinderVolumeStack::VolumeTuple& b, const Logger& logger) {
   if (logger().doPrint(Acts::Logging::DEBUG)) {
     std::stringstream ss;
     ss << std::fixed;
     ss << std::setprecision(3);
     ss << std::setfill(' ');
-    ACTS_VERBOSE("Checking overlap between");
-    int w = 9;
-    ss << " - "
-       << " z: [ " << std::setw(w) << a.minZ() << " <- " << std::setw(w)
-       << a.midZ() << " -> " << std::setw(w) << a.maxZ() << " ]";
-    ACTS_VERBOSE(ss.str());
 
-    ss.str("");
-    ss << " - "
-       << " z: [ " << std::setw(w) << b.minZ() << " <- " << std::setw(w)
-       << b.midZ() << " -> " << std::setw(w) << b.maxZ() << " ]";
-    ACTS_VERBOSE(ss.str());
+    int w = 9;
+
+    ACTS_VERBOSE("Checking overlap between");
+    if (direction == BinningValue::binZ) {
+      ss << " - "
+         << " z: [ " << std::setw(w) << a.minZ() << " <- " << std::setw(w)
+         << a.midZ() << " -> " << std::setw(w) << a.maxZ() << " ]";
+      ACTS_VERBOSE(ss.str());
+
+      ss.str("");
+      ss << " - "
+         << " z: [ " << std::setw(w) << b.minZ() << " <- " << std::setw(w)
+         << b.midZ() << " -> " << std::setw(w) << b.maxZ() << " ]";
+      ACTS_VERBOSE(ss.str());
+    } else {
+      ss << " - "
+         << " r: [ " << std::setw(w) << a.minR() << " <-> " << std::setw(w)
+         << a.maxR() << " ]";
+      ACTS_VERBOSE(ss.str());
+
+      ss.str("");
+      ss << " - "
+         << " r: [ " << std::setw(w) << b.minR() << " <-> " << std::setw(w)
+         << b.maxR() << " ]";
+      ACTS_VERBOSE(ss.str());
+    }
   }
 }
 
@@ -319,7 +334,7 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
     auto& a = volumes.at(i);
     auto& b = volumes.at(j);
 
-    overlapPrint(a, b, logger);
+    overlapPrint(BinningValue::binZ, a, b, logger);
 
     if (a.maxZ() > b.minZ()) {
       ACTS_ERROR(" -> Overlap in z");
@@ -446,7 +461,7 @@ CylinderVolumeStack::checkOverlapAndAttachInR(
     auto& a = volumes.at(i);
     auto& b = volumes.at(j);
 
-    overlapPrint(a, b, logger);
+    overlapPrint(BinningValue::binR, a, b, logger);
 
     if (a.maxR() > b.minR()) {
       ACTS_ERROR(" -> Overlap in r");
