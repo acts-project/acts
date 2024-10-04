@@ -153,6 +153,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     assert(cylBounds != nullptr && "Volume bounds are not cylinder bounds");
     Volume::update(std::make_shared<CylinderVolumeBounds>(*cylBounds),
                    std::nullopt, logger);
+    ACTS_VERBOSE("Transform is now: " << m_transform.matrix());
     return;
   }
 
@@ -642,6 +643,17 @@ std::pair<ActsScalar, ActsScalar> CylinderVolumeStack::synchronizeZBounds(
 void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
                                  std::optional<Transform3> transform,
                                  const Logger& logger) {
+  ACTS_DEBUG(
+      "Resizing CylinderVolumeStack with strategy: " << m_resizeStrategy);
+  ACTS_DEBUG("Currently have " << m_volumes.size() << " children");
+  ACTS_DEBUG(m_gaps.size() << " gaps");
+  for (const auto& v : m_volumes) {
+    ACTS_DEBUG(" - volume bounds: \n" << v->volumeBounds());
+    ACTS_DEBUG("          transform: \n" << v->transform().matrix());
+  }
+
+  ACTS_DEBUG("New bounds are: \n" << *volbounds);
+
   auto cylBounds = std::dynamic_pointer_cast<CylinderVolumeBounds>(volbounds);
   if (cylBounds == nullptr) {
     throw std::invalid_argument(
@@ -657,8 +669,10 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
     return;
   }
 
+  ACTS_VERBOSE("Group transform is:\n" << m_groupTransform.matrix());
+  ACTS_VERBOSE("Current transform is:\n" << m_transform.matrix());
   if (transform.has_value()) {
-    ACTS_VERBOSE(transform.value().matrix());
+    ACTS_VERBOSE("Input transform:\n" << transform.value().matrix());
   }
 
   VolumeTuple oldVolume{*this, m_transform};
@@ -697,30 +711,36 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
   const ActsScalar oldHlZ = oldVolume.halfLengthZ();
 
   ACTS_VERBOSE("Previous bounds are: z: [ "
-               << oldMinZ << " <- " << oldMidZ << " -> " << oldMaxZ
-               << " ], r: [ " << oldMinR << " <-> " << oldMaxR << " ]");
+               << oldMinZ << " <- " << oldMidZ << " -> " << oldMaxZ << " ] ("
+               << oldHlZ << "), r: [ " << oldMinR << " <-> " << oldMaxR
+               << " ]");
   ACTS_VERBOSE("New bounds are: z:      [ "
-               << newMinZ << " <- " << newMidZ << " -> " << newMaxZ
-               << " ], r: [ " << newMinR << " <-> " << newMaxR << " ]");
+               << newMinZ << " <- " << newMidZ << " -> " << newMaxZ << " ] ("
+               << newHlZ << "), r: [ " << newMinR << " <-> " << newMaxR
+               << " ]");
 
   if (newMinZ > oldMinZ) {
-    ACTS_ERROR("Shrinking the stack size in z is not supported");
-    throw std::invalid_argument("Shrinking the stack is not supported");
+    ACTS_ERROR("Shrinking the stack size in z is not supported: "
+               << newMinZ << " -> " << oldMinZ);
+    throw std::invalid_argument("Shrinking the stack in z is not supported");
   }
 
   if (newMaxZ < oldMaxZ) {
-    ACTS_ERROR("Shrinking the stack size in z is not supported");
-    throw std::invalid_argument("Shrinking the stack is not supported");
+    ACTS_ERROR("Shrinking the stack size in z is not supported: "
+               << newMaxZ << " -> " << oldMaxZ);
+    throw std::invalid_argument("Shrinking the stack in z is not supported");
   }
 
   if (newMinR > oldMinR) {
-    ACTS_ERROR("Shrinking the stack size in r is not supported");
-    throw std::invalid_argument("Shrinking the stack is not supported");
+    ACTS_ERROR("Shrinking the stack size in r is not supported: "
+               << newMinR << " -> " << oldMinR);
+    throw std::invalid_argument("Shrinking the stack in r is not supported");
   }
 
   if (newMaxR < oldMaxR) {
-    ACTS_ERROR("Shrinking the stack size in r is not supported");
-    throw std::invalid_argument("Shrinking the stack is not supported");
+    ACTS_ERROR("Shrinking the stack size in r is not supported: "
+               << newMaxR << " -> " << oldMaxR);
+    throw std::invalid_argument("Shrinking the stack is r in not supported");
   }
 
   if (m_direction == BinningValue::binZ) {
