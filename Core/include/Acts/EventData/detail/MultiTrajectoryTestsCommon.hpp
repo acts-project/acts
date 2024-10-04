@@ -744,8 +744,8 @@ class MultiTrajectoryTestsCommon {
     });
 
     BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
-    BOOST_CHECK_NE(ts1.projectorSubspaceIndices(),
-                   ts2.projectorSubspaceIndices());
+    BOOST_CHECK(ts1.projectorSubspaceIndices() !=
+                ts2.projectorSubspaceIndices());
 
     BOOST_CHECK_NE(ts1.jacobian(), ts2.jacobian());
     BOOST_CHECK_NE(ts1.chi2(), ts2.chi2());
@@ -774,8 +774,8 @@ class MultiTrajectoryTestsCommon {
     });
 
     BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
-    BOOST_CHECK_EQUAL(ts1.projectorSubspaceIndices(),
-                      ts2.projectorSubspaceIndices());
+    BOOST_CHECK(ts1.projectorSubspaceIndices() ==
+                ts2.projectorSubspaceIndices());
 
     BOOST_CHECK_EQUAL(ts1.jacobian(), ts2.jacobian());
     BOOST_CHECK_EQUAL(ts1.chi2(), ts2.chi2());
@@ -800,8 +800,8 @@ class MultiTrajectoryTestsCommon {
     });
 
     BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
-    BOOST_CHECK_NE(ts1.projectorSubspaceIndices(),
-                   ts2.projectorSubspaceIndices());
+    BOOST_CHECK(ts1.projectorSubspaceIndices() !=
+                ts2.projectorSubspaceIndices());
 
     BOOST_CHECK_NE(ts1.jacobian(), ts2.jacobian());
     BOOST_CHECK_NE(ts1.chi2(), ts2.chi2());
@@ -823,8 +823,8 @@ class MultiTrajectoryTestsCommon {
     });
 
     BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
-    BOOST_CHECK_EQUAL(ts1.projectorSubspaceIndices(),
-                      ts2.projectorSubspaceIndices());
+    BOOST_CHECK(ts1.projectorSubspaceIndices() ==
+                ts2.projectorSubspaceIndices());
 
     BOOST_CHECK_EQUAL(ts1.jacobian(), ts2.jacobian());
     BOOST_CHECK_EQUAL(ts1.chi2(), ts2.chi2());              // always copied
