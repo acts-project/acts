@@ -742,7 +742,7 @@ struct GsfActor {
       result.currentTip = proxy.index();
 
       proxy.setReferenceSurface(surface.getSharedPtr());
-      proxy.copyFrom(firstCmpProxy, mask);
+      proxy.copyFrom(firstCmpProxy, mask, /*only_allocated=*/false);
 
       auto [prtMean, prtCov] =
           mergeGaussianMixture(tmpStates.tips, surface, m_cfg.mergeMethod,
