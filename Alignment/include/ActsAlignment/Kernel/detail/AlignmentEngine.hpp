@@ -208,7 +208,9 @@ TrackAlignmentState trackAlignmentState(
                                            measdim) = measCovariance;
 
     // (b) Get and fill the bound parameters to measurement projection matrix
-    const ActsDynamicMatrix H = state.effectiveProjector();
+    const ActsDynamicMatrix H =
+        state.projectorSubspaceHelper().fullProjector().topLeftCorner(
+            measdim, eBoundSize);
     alignState.projectionMatrix.block(iMeasurement, iParams, measdim,
                                       eBoundSize) = H;
     // (c) Get and fill the residual
