@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -130,12 +130,17 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     bool trimTracks = true;
 
     // Pixel and strip volume ids to be used for maxPixel/StripHoles cuts
-    std::set<Acts::GeometryIdentifier::Value> pixelVolumes;
-    std::set<Acts::GeometryIdentifier::Value> stripVolumes;
+    std::vector<std::uint32_t> pixelVolumeIds;
+    std::vector<std::uint32_t> stripVolumeIds;
 
-    /// additional track selector settings
+    // additional track selector settings
     std::size_t maxPixelHoles = std::numeric_limits<std::size_t>::max();
     std::size_t maxStripHoles = std::numeric_limits<std::size_t>::max();
+
+    /// The volume ids to constrain the track finding to
+    std::vector<std::uint32_t> constrainToVolumeIds;
+    /// The volume ids to stop the track finding at
+    std::vector<std::uint32_t> endOfWorldVolumeIds;
   };
 
   /// Constructor of the track finding algorithm

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -596,15 +596,19 @@ class CombinatorialKalmanFilter {
 
       const bool isEndOfWorldReached =
           endOfWorldReached.checkAbort(state, stepper, navigator, logger());
+      const bool isVolumeConstraintReached = volumeConstraintAborter.checkAbort(
+          state, stepper, navigator, logger());
       const bool isPathLimitReached = result.pathLimitReached.checkAbort(
           state, stepper, navigator, logger());
       const bool isTargetReached =
           targetReached.checkAbort(state, stepper, navigator, logger());
       const bool allBranchesStopped = result.activeBranches.empty();
       if (isEndOfWorldReached || isPathLimitReached || isTargetReached ||
-          allBranchesStopped) {
+          allBranchesStopped || isVolumeConstraintReached) {
         if (isEndOfWorldReached) {
           ACTS_VERBOSE("End of world reached");
+        } else if (isVolumeConstraintReached) {
+          ACTS_VERBOSE("Volume constraint reached");
         } else if (isPathLimitReached) {
           ACTS_VERBOSE("Path limit reached");
         } else if (isTargetReached) {
@@ -1172,6 +1176,9 @@ class CombinatorialKalmanFilter {
 
     /// End of world aborter
     EndOfWorldReached endOfWorldReached;
+
+    /// Volume constraint aborter
+    VolumeConstraintAborter volumeConstraintAborter;
 
     /// Actor logger instance
     const Logger* actorLogger{nullptr};

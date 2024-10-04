@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -33,13 +33,22 @@ struct PurePropagatorPlainOptions {
   /// Absolute maximum path length
   double pathLimit = std::numeric_limits<double>::max();
 
-  /// Required tolerance to reach surface
-  double surfaceTolerance = s_onSurfaceTolerance;
-
   /// Loop protection step, it adapts the pathLimit
   bool loopProtection = true;
   /// Allowed loop fraction, 1 is a full loop
   double loopFraction = 0.5;
+
+  /// Required tolerance to reach surface
+  double surfaceTolerance = s_onSurfaceTolerance;
+
+  /// Constrain the propagation to selected volumes
+  /// @note ignored if empty
+  /// @note requires `VolumeConstraintAborter` aborter
+  std::vector<std::uint32_t> constrainToVolumeIds;
+  /// Additional volumes to be considered as end of world
+  /// @note ignored if empty
+  /// @note requires `VolumeConstraintAborter` aborter
+  std::vector<std::uint32_t> endOfWorldVolumeIds;
 };
 
 }  // namespace detail
