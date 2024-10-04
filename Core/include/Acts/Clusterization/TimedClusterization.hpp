@@ -22,11 +22,11 @@ concept HasRetrievableTimeInfo = requires(Cell cell) {
 
 template <Acts::Ccl::HasRetrievableTimeInfo Cell, std::size_t N>
 struct TimedConnect : public Acts::Ccl::DefaultConnect<Cell, N> {
-  Acts::ActsScalar timeTollerance{std::numeric_limits<Acts::ActsScalar>::max()};
+  Acts::ActsScalar timeTolerance{std::numeric_limits<Acts::ActsScalar>::max()};
 
   TimedConnect() = default;
   TimedConnect(Acts::ActsScalar time);
-  TimedConnect(Acts::ActsScalar time, bool conn)
+  TimedConnect(Acts::ActsScalar time, bool commonCorner)
     requires(N == 2);
   ~TimedConnect() override = default;
 

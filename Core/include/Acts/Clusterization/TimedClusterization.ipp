@@ -10,12 +10,12 @@ namespace Acts::Ccl {
 
 template <Acts::Ccl::HasRetrievableTimeInfo Cell, std::size_t N>
 TimedConnect<Cell, N>::TimedConnect(Acts::ActsScalar time)
-    : timeTollerance(time) {}
+    : timeTolerance(time) {}
 
 template <Acts::Ccl::HasRetrievableTimeInfo Cell, std::size_t N>
-TimedConnect<Cell, N>::TimedConnect(Acts::ActsScalar time, bool conn)
+TimedConnect<Cell, N>::TimedConnect(Acts::ActsScalar time, bool commonCorner)
   requires(N == 2)
-    : Acts::Ccl::DefaultConnect<Cell, N>(conn), timeTollerance(time) {}
+    : Acts::Ccl::DefaultConnect<Cell, N>(commonCorner), timeTolerance(time) {}
 
 template <Acts::Ccl::HasRetrievableTimeInfo Cell, std::size_t N>
 Acts::Ccl::ConnectResult TimedConnect<Cell, N>::operator()(
@@ -26,7 +26,7 @@ Acts::Ccl::ConnectResult TimedConnect<Cell, N>::operator()(
     return spaceCompatibility;
   }
 
-  if (std::abs(getCellTime(ref) - getCellTime(iter)) < timeTollerance) {
+  if (std::abs(getCellTime(ref) - getCellTime(iter)) < timeTolerance) {
     return Acts::Ccl::ConnectResult::eConn;
   }
 
