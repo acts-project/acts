@@ -19,6 +19,7 @@ enum class GlobalChiSquareFitterError {
   DidNotConverge = 2,
   NotEnoughMeasurements = 3,
   UpdatePushedToNewVolume = 4,
+  UsedUnreachableMeasurements = 5,
 };
 
 std::error_code make_error_code(

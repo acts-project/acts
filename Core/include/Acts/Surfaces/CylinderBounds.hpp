@@ -112,12 +112,18 @@ class CylinderBounds : public SurfaceBounds {
   /// Returns true for full phi coverage
   bool coversFullAzimuth() const;
 
-  /// Create the bows/circles on either side of the cylinder
+  /// Create the bow/circle vertices on either side of the cylinder
   ///
-  /// @param trans is the global transform
-  /// @param lseg  are the numbero if phi segments
-  std::vector<Vector3> createCircles(const Transform3 trans,
-                                     std::size_t lseg) const;
+  /// @param transform is the global transform
+  /// @param quarterSegments is the number of segments to approximate a quarter
+  /// of a circle. In order to symmetrize fully closed and sectoral cylinders,
+  /// also in the first case the two end points are given (albeit they overlap)
+  /// in -pi / pi
+  ///
+  /// @return a singlevector containing the vertices from one side and then
+  /// from the other side consecutively
+  std::vector<Vector3> circleVertices(const Transform3 transform,
+                                      unsigned int quarterSegments) const;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;

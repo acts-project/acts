@@ -91,8 +91,9 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     /// Minimum number of surfaces to build an internal structure
     /// - otherwise the tryAll options is used
     unsigned int nMinimalSurfaces = 4u;
-    /// Polyhedron approximations
-    unsigned int nSegments = 1u;
+    /// Polyhedron approximations: number of segments to be used
+    /// to approximate a quarter of a circle
+    unsigned int quarterSegments = 1u;
     /// Extra information, mainly for screen output
     std::string auxiliary = "";
   };
