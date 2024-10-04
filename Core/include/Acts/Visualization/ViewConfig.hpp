@@ -112,8 +112,8 @@ struct ViewConfig {
   double lineThickness = 0.15;
   /// The visual surface thickness for this object
   double surfaceThickness = 0.15;
-  /// The number of segments to approximate full 2pi
-  unsigned int nSegments = 72;
+  /// The number of segments to approximate a quarter of the circle
+  unsigned int quarterSegments = 72;
   /// Whether to triangulate or not
   bool triangulate = false;
   /// Write name - non-empty string indicates writing
