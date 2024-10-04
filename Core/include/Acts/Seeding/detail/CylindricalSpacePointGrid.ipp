@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the ACTS project.
 //
 // Copyright (C) 2016 CERN for the benefit of the ACTS project
@@ -139,8 +140,8 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
                    config.rBinEdges.end());
   }
 
-  Axis zAxis(std::move(zValues));
-  Axis rAxis(std::move(rValues));
+  Axis<AxisType::Variable, AxisBoundaryType::Bound> zAxis(std::move(zValues));
+  Axis<AxisType::Variable, AxisBoundaryType::Bound> rAxis(std::move(rValues));
   return Acts::CylindricalSpacePointGrid<external_spacepoint_t>(
       std::make_tuple(std::move(phiAxis), std::move(zAxis), std::move(rAxis)));
 }
