@@ -105,13 +105,37 @@ std::size_t SpacePointContainer<container_t, holder_t>::size() const {
 
 template <typename container_t, template <typename> class holder_t>
 typename SpacePointContainer<container_t, holder_t>::iterator
-SpacePointContainer<container_t, holder_t>::begin() const {
+SpacePointContainer<container_t, holder_t>::begin() {
   return {*this, 0};
 }
 
 template <typename container_t, template <typename> class holder_t>
 typename SpacePointContainer<container_t, holder_t>::iterator
+SpacePointContainer<container_t, holder_t>::end() {
+  return {*this, size()};
+}
+
+template <typename container_t, template <typename> class holder_t>
+typename SpacePointContainer<container_t, holder_t>::const_iterator
+SpacePointContainer<container_t, holder_t>::begin() const {
+  return {*this, 0};
+}
+
+template <typename container_t, template <typename> class holder_t>
+typename SpacePointContainer<container_t, holder_t>::const_iterator
 SpacePointContainer<container_t, holder_t>::end() const {
+  return {*this, size()};
+}
+
+template <typename container_t, template <typename> class holder_t>
+typename SpacePointContainer<container_t, holder_t>::const_iterator
+SpacePointContainer<container_t, holder_t>::cbegin() const {
+  return {*this, 0};
+}
+
+template <typename container_t, template <typename> class holder_t>
+typename SpacePointContainer<container_t, holder_t>::const_iterator
+SpacePointContainer<container_t, holder_t>::cend() const {
   return {*this, size()};
 }
 
@@ -119,6 +143,18 @@ template <typename container_t, template <typename> class holder_t>
 const container_t& SpacePointContainer<container_t, holder_t>::container()
     const {
   return *m_container;
+}
+
+template <typename container_t, template <typename> class holder_t>
+typename SpacePointContainer<container_t, holder_t>::ProxyType&
+SpacePointContainer<container_t, holder_t>::at(const std::size_t n) {
+  return proxies().at(n);
+}
+
+template <typename container_t, template <typename> class holder_t>
+const typename SpacePointContainer<container_t, holder_t>::ProxyType&
+SpacePointContainer<container_t, holder_t>::at(const std::size_t n) const {
+  return proxies().at(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
@@ -171,6 +207,12 @@ const typename SpacePointContainer<container_t, holder_t>::ProxyType&
 SpacePointContainer<container_t, holder_t>::proxy(const std::size_t n) const {
   assert(n < proxies().size());
   return proxies()[n];
+}
+
+template <typename container_t, template <typename> class holder_t>
+std::vector<typename SpacePointContainer<container_t, holder_t>::ProxyType>&
+SpacePointContainer<container_t, holder_t>::proxies() {
+  return m_proxies;
 }
 
 template <typename container_t, template <typename> class holder_t>

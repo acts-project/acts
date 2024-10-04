@@ -35,11 +35,9 @@
 
 namespace ActsExamples {
 
-ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
-    ActsExamples::TrackParamsEstimationAlgorithm::Config cfg,
-    Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("TrackParamsEstimationAlgorithm", lvl),
-      m_cfg(std::move(cfg)) {
+TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
+    TrackParamsEstimationAlgorithm::Config cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("TrackParamsEstimationAlgorithm", lvl), m_cfg(std::move(cfg)) {
   if (m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds input collection");
   }
@@ -61,8 +59,8 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   m_outputTracks.maybeInitialize(m_cfg.outputProtoTracks);
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackParamsEstimationAlgorithm::execute(
+    const AlgorithmContext& ctx) const {
   auto const& seeds = m_inputSeeds(ctx);
   ACTS_VERBOSE("Read " << seeds.size() << " seeds");
 
@@ -162,4 +160,5 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
   return ProcessCode::SUCCESS;
 }
+
 }  // namespace ActsExamples
