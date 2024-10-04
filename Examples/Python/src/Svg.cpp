@@ -225,7 +225,11 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_MEMBER(highlights);
     ACTS_PYTHON_MEMBER(strokeWidth);
     ACTS_PYTHON_MEMBER(strokeColor);
+    ACTS_PYTHON_MEMBER(highlightStrokeWidth);
+    ACTS_PYTHON_MEMBER(highlightStrokeColor);
     ACTS_PYTHON_MEMBER(nSegments);
+    ACTS_PYTHON_MEMBER(fontSize);
+    ACTS_PYTHON_MEMBER(fontColor);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -297,6 +301,8 @@ void addSvg(Context& ctx) {
     svg.def("drawArrow", &actsvg::draw::arrow);
 
     svg.def("drawText", &actsvg::draw::text);
+
+    svg.def("drawInfoBox", &Svg::infoBox);
   }
 
   // Draw Eta Lines
