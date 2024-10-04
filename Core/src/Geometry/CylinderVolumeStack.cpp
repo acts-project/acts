@@ -67,7 +67,7 @@ struct CylinderVolumeStack::VolumeTuple {
     transformDirty = true;
   }
 
-  void commit() {
+  void commit(const Logger& logger) {
     // make a copy so we can't accidentally modify in-place
     auto copy = std::make_shared<CylinderVolumeBounds>(*updatedBounds);
 
@@ -76,7 +76,7 @@ struct CylinderVolumeStack::VolumeTuple {
       transform = globalTransform;
     }
 
-    volume->update(std::move(updatedBounds), transform);
+    volume->update(std::move(updatedBounds), transform, logger);
     bounds = copy.get();
     updatedBounds = std::move(copy);
     transformDirty = false;
@@ -151,7 +151,8 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     const auto* cylBounds = dynamic_cast<const CylinderVolumeBounds*>(
         &m_volumes.front()->volumeBounds());
     assert(cylBounds != nullptr && "Volume bounds are not cylinder bounds");
-    Volume::update(std::make_shared<CylinderVolumeBounds>(*cylBounds));
+    Volume::update(std::make_shared<CylinderVolumeBounds>(*cylBounds),
+                   std::nullopt, logger);
     return;
   }
 
@@ -185,7 +186,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
                    << vt.localTransform.translation()[eZ]);
       ACTS_VERBOSE(*vt.updatedBounds);
 
-      vt.commit();
+      vt.commit(logger);
     }
 
     ACTS_VERBOSE("*** Volume configuration after r synchronization:");
@@ -209,7 +210,8 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
     m_transform = m_groupTransform * Translation3{0, 0, midZ};
 
-    Volume::update(std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ));
+    Volume::update(std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ),
+                   std::nullopt, logger);
     ACTS_DEBUG("Outer bounds are:\n" << volumeBounds());
     ACTS_DEBUG("Outer transform / new group transform is:\n"
                << m_transform.matrix());
@@ -241,7 +243,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     for (auto& vt : volumeTuples) {
       ACTS_VERBOSE("Updated bounds for volume at r: " << vt.midR());
       ACTS_VERBOSE(*vt.updatedBounds);
-      vt.commit();
+      vt.commit(logger);
     }
 
     ACTS_VERBOSE("*** Volume configuration after z synchronization:");
@@ -265,7 +267,8 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
     m_transform = m_groupTransform * Translation3{0, 0, midZ};
 
-    Volume::update(std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ));
+    Volume::update(std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ),
+                   std::nullopt, logger);
 
     ACTS_DEBUG("Outer bounds are:\n" << volumeBounds());
     ACTS_DEBUG("Outer transform is:\n" << m_transform.matrix());
@@ -622,30 +625,19 @@ std::pair<ActsScalar, ActsScalar> CylinderVolumeStack::synchronizeZBounds(
 }
 
 void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
-                                 std::optional<Transform3> transform) {
-  if (volbounds == nullptr) {
-    throw std::invalid_argument("New bounds are nullptr");
-  }
+                                 std::optional<Transform3> transform,
+                                 const Logger& logger) {
   auto cylBounds = std::dynamic_pointer_cast<CylinderVolumeBounds>(volbounds);
   if (cylBounds == nullptr) {
     throw std::invalid_argument(
         "CylinderVolumeStack requires CylinderVolumeBounds");
   }
-  update(std::move(cylBounds), transform,
-         *Acts::getDefaultLogger("CYLSTACK", Logging::VERBOSE));
-}
 
-void CylinderVolumeStack::update(
-    std::shared_ptr<CylinderVolumeBounds> newBounds,
-    std::optional<Transform3> transform, const Logger& logger) {
-  ACTS_DEBUG(
-      "Resizing CylinderVolumeStack with strategy: " << m_resizeStrategy);
-
-  if (newBounds == nullptr) {
+  if (cylBounds == nullptr) {
     throw std::invalid_argument("New bounds are nullptr");
   }
 
-  if (*newBounds == volumeBounds()) {
+  if (*cylBounds == volumeBounds()) {
     ACTS_VERBOSE("Bounds are the same, no resize needed");
     return;
   }
@@ -656,7 +648,7 @@ void CylinderVolumeStack::update(
 
   VolumeTuple oldVolume{*this, m_transform};
   VolumeTuple newVolume{*this, m_transform};
-  newVolume.updatedBounds = std::make_shared<CylinderVolumeBounds>(*newBounds);
+  newVolume.updatedBounds = std::make_shared<CylinderVolumeBounds>(*cylBounds);
   newVolume.globalTransform = transform.value_or(m_transform);
   newVolume.localTransform =
       m_groupTransform.inverse() * newVolume.globalTransform;
@@ -673,7 +665,7 @@ void CylinderVolumeStack::update(
     checkVolumeAlignment(volTemp, logger);
   }
 
-  checkNoPhiOrBevel(*newBounds, logger);
+  checkNoPhiOrBevel(*cylBounds, logger);
 
   const ActsScalar newMinR = newVolume.minR();
   const ActsScalar newMaxR = newVolume.maxR();
@@ -831,7 +823,7 @@ void CylinderVolumeStack::update(
     ACTS_VERBOSE("Commit and update outer vector of volumes");
     m_volumes.clear();
     for (auto& vt : volumeTuples) {
-      vt.commit();
+      vt.commit(logger);
       m_volumes.push_back(vt.volume);
     }
 
@@ -923,13 +915,13 @@ void CylinderVolumeStack::update(
     ACTS_VERBOSE("Commit and update outer vector of volumes");
     m_volumes.clear();
     for (auto& vt : volumeTuples) {
-      vt.commit();
+      vt.commit(logger);
       m_volumes.push_back(vt.volume);
     }
   }
 
   m_transform = newVolume.globalTransform;
-  Volume::update(std::move(newBounds));
+  Volume::update(std::move(cylBounds), std::nullopt, logger);
 }
 
 void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
