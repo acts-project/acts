@@ -142,16 +142,7 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     const Acts::SeedFinderOptions& options,
     Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
     external_spacepoint_iterator_t spBegin,
-    external_spacepoint_iterator_t spEnd, Acts::Extent& rRangeSPExtent) {
-  using iterated_value_t =
-      typename std::iter_value_t<external_spacepoint_iterator_t>;
-  using iterated_t = typename std::remove_const_t<
-      typename std::remove_pointer_t<iterated_value_t>>;
-  static_assert(!std::is_pointer_v<iterated_value_t>,
-                "Iterator must contain pointers to space points");
-  static_assert(std::same_as<iterated_t, external_spacepoint_t>,
-                "Iterator does not contain type this class was templated with");
-
+    external_spacepoint_iterator_t spEnd) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
@@ -184,9 +175,6 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     float spX = sp.x();
     float spY = sp.y();
     float spZ = sp.z();
-
-    // store x,y,z values in extent
-    rRangeSPExtent.extend({spX, spY, spZ});
 
     // remove SPs according to experiment specific cuts
     if (!config.spacePointSelector(sp)) {

@@ -32,12 +32,12 @@ const ActsExamples::SimSpacePoint* ActsExamples::findSpacePointForIndex(
     ActsExamples::Index index, const SimSpacePointContainer& spacepoints) {
   auto match = [&](const SimSpacePoint& sp) {
     const auto& sls = sp.sourceLinks();
-    return std::any_of(sls.begin(), sls.end(), [&](const auto& sl) {
+    return std::ranges::any_of(sls, [&](const auto& sl) {
       return sl.template get<IndexSourceLink>().index() == index;
     });
   };
 
-  auto found = std::find_if(spacepoints.begin(), spacepoints.end(), match);
+  auto found = std::ranges::find_if(spacepoints, match);
 
   if (found == spacepoints.end()) {
     return nullptr;

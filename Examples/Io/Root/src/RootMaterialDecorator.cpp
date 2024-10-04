@@ -148,8 +148,8 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
       std::vector<const TH1*> hists{n, v, o, min, max, t, x0, l0, A, Z, rho};
 
       // Only go on when you have all histograms
-      if (std::all_of(hists.begin(), hists.end(),
-                      [](const auto* hist) { return hist != nullptr; })) {
+      if (std::ranges::all_of(
+              hists, [](const auto* hist) { return hist != nullptr; })) {
         // Get the number of bins
         int nbins0 = t->GetNbinsX();
         int nbins1 = t->GetNbinsY();
