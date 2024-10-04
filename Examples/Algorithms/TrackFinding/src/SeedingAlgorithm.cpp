@@ -261,12 +261,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     }
     const auto* firstEl = coll.front();
     const auto* lastEl = coll.back();
-    if (firstEl->radius() < minRange) {
-      minRange = firstEl->radius();
-    }
-    if (lastEl->radius() > maxRange) {
-      maxRange = lastEl->radius();
-    }
+    minRange = std::min(firstEl->radius(), minRange);
+    maxRange = std::max(lastEl->radius(), maxRange);
   }
 
   std::array<std::vector<std::size_t>, 2ul> navigation;
