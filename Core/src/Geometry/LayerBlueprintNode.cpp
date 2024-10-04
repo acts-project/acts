@@ -104,10 +104,19 @@ LayerBlueprintNode& LayerBlueprintNode::setSurfaces(
   return *this;
 }
 
+const std::vector<std::shared_ptr<Surface>>& LayerBlueprintNode::surfaces()
+    const {
+  return m_surfaces;
+}
+
 LayerBlueprintNode& LayerBlueprintNode::setTransform(
     const Transform3& transform) {
   m_transform = transform;
   return *this;
+}
+
+const Transform3& LayerBlueprintNode::transform() const {
+  return m_transform;
 }
 
 LayerBlueprintNode& LayerBlueprintNode::setEnvelope(
@@ -116,9 +125,17 @@ LayerBlueprintNode& LayerBlueprintNode::setEnvelope(
   return *this;
 }
 
+const ExtentEnvelope& LayerBlueprintNode::envelope() const {
+  return m_envelope;
+}
+
 LayerBlueprintNode& LayerBlueprintNode::setLayerType(LayerType layerType) {
   m_layerType = layerType;
   return *this;
+}
+
+const LayerBlueprintNode::LayerType& LayerBlueprintNode::layerType() const {
+  return m_layerType;
 }
 
 void LayerBlueprintNode::addToGraphviz(std::ostream& os) const {

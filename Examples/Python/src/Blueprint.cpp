@@ -6,194 +6,249 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
+#include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/RootBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <fstream>
+#include <random>
 #include <utility>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace Acts::Python {
+namespace {
+using std::uniform_real_distribution;
+
+// This is temporary!
+void pseudoNavigation(const TrackingGeometry& trackingGeometry,
+                      const GeometryContext& gctx, std::filesystem::path& path,
+                      std::size_t runs, std::size_t substepsPerCm,
+                      Logging::Level logLevel) {
+  using namespace Acts::UnitLiterals;
+
+  ACTS_LOCAL_LOGGER(getDefaultLogger("pseudoNavigation", logLevel));
+
+  std::ofstream csv{path};
+  csv << "x,y,z,volume,boundary,sensitive" << std::endl;
+
+  std::mt19937 rnd{42};
+
+  std::uniform_real_distribution<> dist{-1, 1};
+  std::uniform_real_distribution<> subStepDist{0.01, 0.99};
+
+  double etaWidth = 4.5;
+  double thetaMin = 2 * std::atan(std::exp(-etaWidth));
+  double thetaMax = 2 * std::atan(std::exp(etaWidth));
+  std::uniform_real_distribution<> thetaDist{thetaMin, thetaMax};
+
+  using namespace Acts::UnitLiterals;
+
+  for (std::size_t run = 0; run < runs; run++) {
+    Vector3 position = Vector3::Zero();
+
+    double theta = thetaDist(rnd);
+    double phi = 2 * M_PI * dist(rnd);
+
+    Vector3 direction;
+    direction[0] = std::sin(theta) * std::cos(phi);
+    direction[1] = std::sin(theta) * std::sin(phi);
+    direction[2] = std::cos(theta);
+
+    ACTS_VERBOSE("start navigation " << run);
+    ACTS_VERBOSE("pos: " << position.transpose());
+    ACTS_VERBOSE("dir: " << direction.transpose());
+    ACTS_VERBOSE(direction.norm());
+
+    std::mt19937 rng{static_cast<unsigned int>(run)};
+
+    const auto* volume = trackingGeometry.lowestTrackingVolume(gctx, position);
+    assert(volume != nullptr);
+    ACTS_VERBOSE(volume->volumeName());
+
+    NavigationStream main;
+    const TrackingVolume* currentVolume = volume;
+
+    csv << run << "," << position[0] << "," << position[1] << ","
+        << position[2];
+    csv << "," << volume->geometryId().volume();
+    csv << "," << volume->geometryId().boundary();
+    csv << "," << volume->geometryId().sensitive();
+    csv << std::endl;
+
+    ACTS_VERBOSE("start pseudo navigation");
+
+    for (std::size_t i = 0; i < 100; i++) {
+      assert(currentVolume != nullptr);
+      main = NavigationStream{};
+
+      currentVolume->updateNavigationState(
+          {.main = main, .position = position, .direction = direction});
+
+      ACTS_VERBOSE(main.candidates().size() << " candidates");
+
+      for (const auto& candidate : main.candidates()) {
+        ACTS_VERBOSE(" -> " << candidate.surface().geometryId());
+        ACTS_VERBOSE("    " << candidate.surface().toStream(gctx));
+      }
+
+      ACTS_VERBOSE("initializing candidates");
+      main.initialize(gctx, {position, direction}, BoundaryTolerance::None());
+
+      ACTS_VERBOSE(main.candidates().size() << " candidates remaining");
+
+      for (const auto& candidate : main.candidates()) {
+        ACTS_VERBOSE(" -> " << candidate.surface().geometryId());
+        ACTS_VERBOSE("    " << candidate.surface().toStream(gctx));
+      }
+
+      if (main.currentCandidate().surface().isOnSurface(gctx, position,
+                                                        direction)) {
+        ACTS_VERBOSE(
+            "Already on surface at initialization, skipping candidate");
+
+        auto id = main.currentCandidate().surface().geometryId();
+        csv << run << "," << position[0] << "," << position[1] << ","
+            << position[2];
+        csv << "," << id.volume();
+        csv << "," << id.boundary();
+        csv << "," << id.sensitive();
+        csv << std::endl;
+        if (!main.switchToNextCandidate()) {
+          ACTS_WARNING("candidates exhausted unexpectedly");
+          break;
+        }
+      }
+
+      auto writeIntersection = [&](const Vector3& position,
+                                   const Surface& surface) {
+        csv << run << "," << position[0] << "," << position[1] << ","
+            << position[2];
+        csv << "," << surface.geometryId().volume();
+        csv << "," << surface.geometryId().boundary();
+        csv << "," << surface.geometryId().sensitive();
+        csv << std::endl;
+      };
+
+      bool terminated = false;
+      while (main.remainingCandidates() > 0) {
+        const auto& candidate = main.currentCandidate();
+
+        ACTS_VERBOSE(candidate.portal);
+        ACTS_VERBOSE(candidate.intersection.position().transpose());
+
+        ACTS_VERBOSE("moving to position: " << position.transpose() << " (r="
+                                            << VectorHelpers::perp(position)
+                                            << ")");
+
+        Vector3 delta = candidate.intersection.position() - position;
+
+        std::size_t substeps =
+            std::max(1l, std::lround(delta.norm() / 10_cm * substepsPerCm));
+
+        for (std::size_t j = 0; j < substeps; j++) {
+          // position += delta / (substeps + 1);
+          Vector3 subpos = position + subStepDist(rng) * delta;
+          csv << run << "," << subpos[0] << "," << subpos[1] << ","
+              << subpos[2];
+          csv << "," << currentVolume->geometryId().volume();
+          csv << ",0,0";  // zero boundary and sensitive ids
+          csv << std::endl;
+        }
+
+        position = candidate.intersection.position();
+        ACTS_VERBOSE("                 -> "
+                     << position.transpose()
+                     << " (r=" << VectorHelpers::perp(position) << ")");
+
+        writeIntersection(position, candidate.surface());
+
+        if (candidate.portal != nullptr) {
+          ACTS_VERBOSE(
+              "On portal: " << candidate.portal->surface().toStream(gctx));
+          currentVolume =
+              candidate.portal->resolveVolume(gctx, position, direction)
+                  .value();
+
+          if (currentVolume == nullptr) {
+            ACTS_VERBOSE("switched to nullptr -> we're done");
+            terminated = true;
+          }
+          break;
+
+        } else {
+          ACTS_VERBOSE("Not on portal");
+        }
+
+        main.switchToNextCandidate();
+      }
+
+      if (terminated) {
+        ACTS_VERBOSE("Terminate pseudo navigation");
+        break;
+      }
+
+      ACTS_VERBOSE("switched to " << currentVolume->volumeName());
+
+      ACTS_VERBOSE("-----");
+    }
+  }
+}
+
+}  // namespace
+
 void addBlueprint(Context& ctx) {
   auto m = ctx.get("main");
 
-  struct AddCylinderContainerHelper {
-    BlueprintNode& parent;
-    BinningValue direction;
-    std::optional<std::string> name;
-
-    std::shared_ptr<CylinderContainerBlueprintNode> operator()(
-        const py::function& callback) {
-      auto cylinder = std::make_shared<CylinderContainerBlueprintNode>(
-          name.value_or(callback.attr("__name__").cast<std::string>()),
-          direction);
-      parent.addChild(cylinder);
-      callback(cylinder);
-      return cylinder;
-    }
-
-    std::shared_ptr<CylinderContainerBlueprintNode> enter() {
-      if (!name.has_value()) {
-        throw std::invalid_argument("Name is required in context manager");
-      }
-      auto cylinder = std::make_shared<CylinderContainerBlueprintNode>(
-          name.value(), direction);
-      parent.addChild(cylinder);
-      return cylinder;
-    }
-
-    void exit(const py::object& /*unused*/, const py::object& /*unused*/,
-              const py::object& /*unused*/) {}
-  };
-
-  py::class_<AddCylinderContainerHelper>(m, "_AddCylinderContainerHelper")
-      .def("__call__", &AddCylinderContainerHelper::operator())
-      .def("__enter__", &AddCylinderContainerHelper::enter)
-      .def("__exit__", &AddCylinderContainerHelper::exit);
-
-  struct AddMaterialDesignatorHelper {
-    BlueprintNode& parent;
-
-    std::shared_ptr<BlueprintNode> operator()(const py::function& callback) {
-      auto material = std::make_shared<MaterialDesignatorBlueprintNode>();
-      parent.addChild(material);
-      callback(material);
-      return material;
-    }
-
-    std::shared_ptr<BlueprintNode> enter() {
-      auto material = std::make_shared<MaterialDesignatorBlueprintNode>();
-      parent.addChild(material);
-      return material;
-    }
-
-    void exit(const py::object& /*unused*/, const py::object& /*unused*/,
-              const py::object& /*unused*/) {}
-  };
-
-  py::class_<AddMaterialDesignatorHelper>(m, "_AddMaterialDesignatorHelper")
-      .def("__call__", &AddMaterialDesignatorHelper::operator())
-      .def("__enter__", &AddMaterialDesignatorHelper::enter)
-      .def("__exit__", &AddMaterialDesignatorHelper::exit);
-
-  struct AddStaticVolumeHelper {
-    BlueprintNode& parent;
-    Transform3 transform;
-    std::shared_ptr<VolumeBounds> bounds;
-    std::optional<std::string> name;
-
-    std::shared_ptr<StaticBlueprintNode> operator()(
-        const py::function& callback) {
-      std::string callbackName = callback.attr("__name__").cast<std::string>();
-      auto node = std::make_shared<Acts::StaticBlueprintNode>(
-          std::make_unique<Acts::TrackingVolume>(transform, bounds,
-                                                 name.value_or(callbackName)));
-      parent.addChild(node);
-      callback(node);
-      return node;
-    }
-
-    std::shared_ptr<StaticBlueprintNode> enter() {
-      if (!name.has_value()) {
-        throw std::invalid_argument("Name is required in context manager");
-      }
-      auto node = std::make_shared<Acts::StaticBlueprintNode>(
-          std::make_unique<Acts::TrackingVolume>(transform, bounds,
-                                                 name.value()));
-      parent.addChild(node);
-      return node;
-    }
-
-    void exit(const py::object& /*type*/, const py::object& /*value*/,
-              const py::object& /*traceback*/) {}
-  };
-
-  py::class_<AddStaticVolumeHelper>(m, "_AddStaticVolumeHelper")
-      .def("__call__", &AddStaticVolumeHelper::operator())
-      .def("__enter__", &AddStaticVolumeHelper::enter)
-      .def("__exit__", &AddStaticVolumeHelper::exit);
-
   auto blueprintNode =
-      py::class_<BlueprintNode, std::shared_ptr<BlueprintNode>>(m,
-                                                                "BlueprintNode")
-          .def("__str__",
-               [](const BlueprintNode& self) {
-                 std::stringstream ss;
-                 self.toStream(ss);
-                 return ss.str();
-               })
-          .def(
-              "addStaticVolume",
-              [](BlueprintNode& self, const Transform3& transform,
-                 const std::shared_ptr<VolumeBounds>& bounds,
-                 const std::string& name) {
-                auto node = std::make_shared<Acts::StaticBlueprintNode>(
-                    std::make_unique<Acts::TrackingVolume>(transform, bounds,
-                                                           name));
-                self.addChild(node);
-                return node;
-              },
-              py::arg("transform"), py::arg("bounds"),
-              py::arg("name") = "undefined")
+      py::class_<BlueprintNode, std::shared_ptr<BlueprintNode>>(
+          m, "BlueprintNode");
 
-          .def(
-              "StaticVolume",
-              [](BlueprintNode& self, const Transform3& transform,
-                 std::shared_ptr<VolumeBounds> bounds,
-                 const std::optional<std::string>& name = std::nullopt) {
-                return AddStaticVolumeHelper{self, transform, std::move(bounds),
-                                             name.value_or("undefined")};
-              },
-              py::arg("transform"), py::arg("bounds"),
-              py::arg("name") = std::nullopt)
+  auto addContextManagerProtocol = []<typename class_>(class_& cls) {
+    using type = class_::type;
+    cls.def("__enter__", [](type& self) -> type& { return self; })
+        .def("__exit__", [](type& /*self*/, const py::object& /*exc_type*/,
+                            const py::object& /*exc_value*/,
+                            const py::object& /*traceback*/) {});
+  };
 
-          .def(
-              "addCylinderContainer",
-              [](BlueprintNode& self, const std::string& name,
-                 BinningValue direction) {
-                auto cylinder =
-                    std::make_shared<CylinderContainerBlueprintNode>(name,
-                                                                     direction);
-                self.addChild(cylinder);
-                return cylinder;
-              },
-              py::arg("name"), py::arg("direction"))
+  auto addNodeMethods = [&blueprintNode](const std::string& name,
+                                         auto&& callable, auto&&... args) {
+    blueprintNode.def(name.c_str(), callable, args...)
+        .def(("add" + name).c_str(), callable, args...);
+  };
 
-          .def(
-              "CylinderContainer",
-              [](BlueprintNode& self, BinningValue direction,
-                 std::optional<std::string> name = std::nullopt) {
-                return AddCylinderContainerHelper{self, direction,
-                                                  std::move(name)};
-              },
-              py::arg("direction"), py::arg("name") = std::nullopt)
-
-          .def("Material",
-               [](BlueprintNode& self) {
-                 return AddMaterialDesignatorHelper{self};
-               })
-
-          .def("addChild", &BlueprintNode::addChild)
-          .def_property_readonly("children",
-                                 py::overload_cast<>(&BlueprintNode::children))
-          .def_property_readonly("name", &BlueprintNode::name)
-          .def("graphViz", [](BlueprintNode& self, const py::object& fh) {
-            std::stringstream ss;
-            self.graphViz(ss);
-            fh.attr("write")(ss.str());
-          });
+  blueprintNode
+      .def("__str__",
+           [](const BlueprintNode& self) {
+             std::stringstream ss;
+             self.toStream(ss);
+             return ss.str();
+           })
+      .def("addChild", &BlueprintNode::addChild)
+      .def_property_readonly("children",
+                             py::overload_cast<>(&BlueprintNode::children))
+      .def_property_readonly("name", &BlueprintNode::name)
+      .def("graphViz", [](BlueprintNode& self, const py::object& fh) {
+        std::stringstream ss;
+        self.graphViz(ss);
+        fh.attr("write")(ss.str());
+      });
 
   // @TODO: Add ability to provide policy factories
   //        This needs a way to produce them in python!
@@ -250,18 +305,32 @@ void addBlueprint(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
   }
 
-  py::class_<Acts::StaticBlueprintNode, Acts::BlueprintNode,
-             std::shared_ptr<Acts::StaticBlueprintNode>>(m,
-                                                         "StaticBlueprintNode")
-      .def(py::init([](const Transform3& transform,
-                       const std::shared_ptr<VolumeBounds>& bounds,
-                       const std::string& name) {
-             return std::make_shared<Acts::StaticBlueprintNode>(
-                 std::make_unique<Acts::TrackingVolume>(transform, bounds,
-                                                        name));
-           }),
-           py::arg("transform"), py::arg("bounds"),
-           py::arg("name") = "undefined");
+  auto staticNode =
+      py::class_<Acts::StaticBlueprintNode, Acts::BlueprintNode,
+                 std::shared_ptr<Acts::StaticBlueprintNode>>(
+          m, "StaticBlueprintNode")
+          .def(py::init([](const Transform3& transform,
+                           const std::shared_ptr<VolumeBounds>& bounds,
+                           const std::string& name) {
+                 return std::make_shared<Acts::StaticBlueprintNode>(
+                     std::make_unique<Acts::TrackingVolume>(transform, bounds,
+                                                            name));
+               }),
+               py::arg("transform"), py::arg("bounds"),
+               py::arg("name") = "undefined");
+
+  addContextManagerProtocol(staticNode);
+
+  addNodeMethods(
+      "StaticVolume",
+      [](BlueprintNode& self, const Transform3& transform,
+         const std::shared_ptr<VolumeBounds>& bounds, const std::string& name) {
+        auto node = std::make_shared<Acts::StaticBlueprintNode>(
+            std::make_unique<Acts::TrackingVolume>(transform, bounds, name));
+        self.addChild(node);
+        return node;
+      },
+      py::arg("transform"), py::arg("bounds"), py::arg("name") = "undefined");
 
   auto cylNode =
       py::class_<Acts::CylinderContainerBlueprintNode, Acts::BlueprintNode,
@@ -277,29 +346,77 @@ void addBlueprint(Context& ctx) {
                    CylinderVolumeStack::ResizeStrategy::Gap)
           .def_property(
               "attachmentStrategy",
-              [](Acts::CylinderContainerBlueprintNode& self) {
-                return self.attachmentStrategy();
-              },
-              [](Acts::CylinderContainerBlueprintNode& self,
-                 CylinderVolumeStack::AttachmentStrategy strategy) {
-                self.setAttachmentStrategy(strategy);
-              })
+              &Acts::CylinderContainerBlueprintNode::attachmentStrategy,
+              &Acts::CylinderContainerBlueprintNode::setAttachmentStrategy)
           .def_property(
               "resizeStrategy",
-              [](Acts::CylinderContainerBlueprintNode& self) {
-                return self.resizeStrategy();
-              },
-              [](Acts::CylinderContainerBlueprintNode& self,
-                 CylinderVolumeStack::ResizeStrategy strategy) {
-                self.setResizeStrategy(strategy);
-              })
-          .def_property(
-              "direction",
-              [](Acts::CylinderContainerBlueprintNode& self) {
-                return self.direction();
-              },
-              [](Acts::CylinderContainerBlueprintNode& self,
-                 BinningValue value) { self.setDirection(value); });
+              &Acts::CylinderContainerBlueprintNode::resizeStrategy,
+              &Acts::CylinderContainerBlueprintNode::setResizeStrategy)
+          .def_property("direction",
+                        &Acts::CylinderContainerBlueprintNode::direction,
+                        &Acts::CylinderContainerBlueprintNode::setDirection);
+
+  addContextManagerProtocol(cylNode);
+
+  addNodeMethods(
+      "CylinderContainer",
+      [](BlueprintNode& self, const std::string& name, BinningValue direction) {
+        auto cylinder =
+            std::make_shared<CylinderContainerBlueprintNode>(name, direction);
+        self.addChild(cylinder);
+        return cylinder;
+      },
+      py::arg("name"), py::arg("direction"));
+
+  auto matNode =
+      py::class_<Acts::MaterialDesignatorBlueprintNode, Acts::BlueprintNode,
+                 std::shared_ptr<Acts::MaterialDesignatorBlueprintNode>>(
+          m, "MaterialDesignatorBlueprintNode")
+          .def(py::init<>());
+
+  addContextManagerProtocol(matNode);
+
+  addNodeMethods("Material", [](BlueprintNode& self) {
+    auto child = std::make_shared<MaterialDesignatorBlueprintNode>();
+    self.addChild(child);
+    return child;
+  });
+
+  auto layerNode =
+      py::class_<Acts::LayerBlueprintNode, Acts::BlueprintNode,
+                 std::shared_ptr<Acts::LayerBlueprintNode>>(
+          m, "LayerBlueprintNode")
+          .def(py::init<const std::string&>(), py::arg("name"))
+          .def_property_readonly("name", &Acts::LayerBlueprintNode::name)
+          .def_property("surfaces", &Acts::LayerBlueprintNode::surfaces,
+                        &Acts::LayerBlueprintNode::setSurfaces)
+          .def_property("transform", &Acts::LayerBlueprintNode::transform,
+                        &Acts::LayerBlueprintNode::setTransform)
+          .def_property("envelope", &Acts::LayerBlueprintNode::envelope,
+                        &Acts::LayerBlueprintNode::setEnvelope)
+          .def_property("layerType", &Acts::LayerBlueprintNode::layerType,
+                        &Acts::LayerBlueprintNode::setLayerType);
+
+  py::enum_<Acts::LayerBlueprintNode::LayerType>(layerNode, "LayerType")
+      .value("Cylinder", Acts::LayerBlueprintNode::LayerType::Cylinder)
+      .value("Disc", Acts::LayerBlueprintNode::LayerType::Disc)
+      .value("Plane", Acts::LayerBlueprintNode::LayerType::Plane);
+
+  addContextManagerProtocol(layerNode);
+
+  addNodeMethods(
+      "Layer",
+      [](BlueprintNode& self, const std::string& name) {
+        auto child = std::make_shared<LayerBlueprintNode>(name);
+        self.addChild(child);
+        return child;
+      },
+      py::arg("name"));
+
+  // TEMPORARY
+  m.def("pseudoNavigation", &pseudoNavigation, "trackingGeometry"_a, "gctx"_a,
+        "path"_a, "runs"_a, "substepsPerCm"_a = 2,
+        "logLevel"_a = Logging::INFO);
 }
 
 }  // namespace Acts::Python

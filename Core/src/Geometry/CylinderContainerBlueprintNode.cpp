@@ -38,7 +38,8 @@ const std::string& CylinderContainerBlueprintNode::name() const {
 Volume& CylinderContainerBlueprintNode::build(const Options& options,
                                               const GeometryContext& gctx,
                                               const Logger& logger) {
-  ACTS_DEBUG(prefix() << "cylinder container build");
+  ACTS_DEBUG(prefix() << "cylinder container build (dir=" << m_direction
+                      << ")");
 
   if (m_stack != nullptr) {
     ACTS_ERROR(prefix() << "Volume is already built");

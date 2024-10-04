@@ -32,11 +32,19 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   LayerBlueprintNode& setSurfaces(
       std::vector<std::shared_ptr<Surface>> surfaces);
 
+  const std::vector<std::shared_ptr<Surface>>& surfaces() const;
+
   LayerBlueprintNode& setTransform(const Transform3& transform);
+
+  const Transform3& transform() const;
 
   LayerBlueprintNode& setEnvelope(const ExtentEnvelope& envelope);
 
+  const ExtentEnvelope& envelope() const;
+
   LayerBlueprintNode& setLayerType(LayerType layerType);
+
+  const LayerType& layerType() const;
 
   void addToGraphviz(std::ostream& os) const override;
 

@@ -37,8 +37,7 @@ if True:
 
 if True:
 
-    @pixel.CylinderContainer(acts.BinningValue.binZ)
-    def PixelPosEndcap(ec):
+    with pixel.CylinderContainer("PixelPosEndcap", acts.BinningValue.binZ) as ec:
         print("Positive Endcap")
 
         ec.attachmentStrategy = acts.CylinderVolumeStack.AttachmentStrategy.Gap
@@ -52,16 +51,17 @@ if True:
 
             trf = acts.Transform3.Identity() * acts.Translation3(acts.Vector3(0, 0, z))
 
-            @ec.StaticVolume(trf, bounds, name=f"PixelPosEndcapDisk{i}")
-            def PixelEndcapDisk(disk):
+            with ec.StaticVolume(trf, bounds, name=f"PixelPosEndcapDisk{i}") as disc:
                 print("Add disk", i)
 
-            assert PixelEndcapDisk.name == f"PixelPosEndcapDisk{i}"
+                assert disc.name == f"PixelPosEndcapDisk{i}"
 
 
 if True:
     with pixel.Material() as mat:
-        with mat.CylinderContainer(acts.BinningValue.binZ, name="PixelNegEndcap") as ec:
+        with mat.CylinderContainer(
+            direction=acts.BinningValue.binZ, name="PixelNegEndcap"
+        ) as ec:
             ec.attachmentStrategy = acts.CylinderVolumeStack.AttachmentStrategy.Gap
 
             print("Negative Endcap")
