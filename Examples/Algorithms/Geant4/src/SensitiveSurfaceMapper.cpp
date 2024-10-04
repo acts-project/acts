@@ -331,7 +331,7 @@ bool ActsExamples::SensitiveSurfaceMapper::checkMapping(
   if (writeMissingSurfacesAsObj) {
     Acts::ObjVisualization3D visualizer;
     Acts::ViewConfig vcfg;
-    vcfg.nSegments = 720;
+    vcfg.quarterSegments = 720;
     for (auto srf : missing) {
       Acts::GeometryView3D::drawSurface(visualizer, *srf, gctx,
                                         Acts::Transform3::Identity(), vcfg);

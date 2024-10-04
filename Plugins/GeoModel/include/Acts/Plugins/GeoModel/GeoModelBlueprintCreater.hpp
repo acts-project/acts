@@ -40,8 +40,8 @@ class GeoModelBlueprintCreater {
     std::vector<std::shared_ptr<Surface>> detectorSurfaces = {};
     /// The binning values for the KDTree sorting
     std::vector<BinningValue> kdtBinning = {};
-    /// Polyhedron approximations
-    unsigned int nSegments = 1u;
+    /// Polyhedron approximation: number of segments per circlequarter
+    unsigned int quarterSegments = 1u;
   };
 
   /// The cache struct

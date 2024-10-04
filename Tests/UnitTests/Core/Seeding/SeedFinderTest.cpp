@@ -10,7 +10,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
@@ -174,9 +173,6 @@ int main(int argc, char** argv) {
 
   int numPhiNeighbors = 1;
 
-  // extent used to store r range for middle spacepoint
-  Acts::Extent rRangeSPExtent;
-
   config.useVariableMiddleSPRange = false;
   const Acts::Range1D<float> rMiddleSPRange;
 
@@ -214,8 +210,7 @@ int main(int argc, char** argv) {
       Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(gridConf,
                                                                      gridOpts);
   Acts::CylindricalSpacePointGridCreator::fillGrid(
-      config, options, grid, spContainer.begin(), spContainer.end(),
-      rRangeSPExtent);
+      config, options, grid, spContainer.begin(), spContainer.end());
 
   auto spGroup = Acts::CylindricalBinnedGroup<value_type>(
       std::move(grid), *bottomBinFinder, *topBinFinder);
