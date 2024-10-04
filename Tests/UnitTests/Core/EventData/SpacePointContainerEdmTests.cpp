@@ -62,7 +62,7 @@ class Adapter {
       case "BottomStripVector"_hash:
       case "StripCenterDistance"_hash:
       case "TopStripCenterPosition"_hash:
-        return Acts::Vector3(0, 0, 0);
+        return Acts::Vector3(0., 0., 0.);
       default:
         throw std::runtime_error("no such component " + std::to_string(key));
     }
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_functionalities) {
   std::size_t nExternalPoints = 100;
   SpacePointCollection externalCollection;
   externalCollection.reserve(nExternalPoints);
-  for (std::size_t i(0); i < nExternalPoints; ++i) {
+  for (std::size_t i = 0; i < nExternalPoints; ++i) {
     externalCollection.emplace_back(1.f * i, 1.5f * i, 2.f * i, 2.5f * i,
                                     3.f * i);
   }
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_functionalities) {
     const Acts::Vector3& topStripCenterPosition =
         proxy.topStripCenterPosition();
 
-    for (std::size_t i(0); i < 3ul; ++i) {
+    for (std::size_t i = 0; i < 3; ++i) {
       BOOST_CHECK_EQUAL(topStripVector[i], 0.);
       BOOST_CHECK_EQUAL(bottomStripVector[i], 0.);
       BOOST_CHECK_EQUAL(stripCenterDistance[i], 0.);
