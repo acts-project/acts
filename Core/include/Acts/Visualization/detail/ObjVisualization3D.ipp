@@ -160,8 +160,8 @@ void ObjVisualization3D<T>::write(std::ostream& os, std::ostream& mos) const {
       }
     }
     os << "f";
-    for (std::size_t i = 0; i < fc.size(); i++) {
-      os << " " << fc[i] + 1;
+    for (auto fi : fc) {
+      os << " " << fi + 1;
     }
     os << "\n";
     ++is;
