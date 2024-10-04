@@ -139,8 +139,8 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
                    config.rBinEdges.end());
   }
 
-  Axis<AxisType::Variable, AxisBoundaryType::Bound> zAxis(std::move(zValues));
-  Axis<AxisType::Variable, AxisBoundaryType::Bound> rAxis(std::move(rValues));
+  Axis zAxis(std::move(zValues));
+  Axis rAxis(std::move(rValues));
   return Acts::CylindricalSpacePointGrid<external_spacepoint_t>(
       std::make_tuple(std::move(phiAxis), std::move(zAxis), std::move(rAxis)));
 }
@@ -199,9 +199,6 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     if (!config.spacePointSelector(sp)) {
       continue;
     }
-
-    // store x,y,z values in extent
-    rRangeSPExtent.extend({spX, spY, spZ});
 
     // fill rbins into grid
     std::size_t globIndex = grid.globalBinFromPosition(
