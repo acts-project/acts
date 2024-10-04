@@ -22,6 +22,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 using namespace Acts::UnitLiterals;
@@ -811,6 +812,57 @@ BOOST_DATA_TEST_CASE(
                       50_mm);
     BOOST_CHECK_EQUAL(gap->center()[eZ], f * 950_mm);
   }
+}
+
+BOOST_AUTO_TEST_CASE(ResizeReproduction1) {
+  Transform3 trf1 =
+      Transform3::Identity() * Translation3{Vector3::UnitZ() * -2000};
+  auto bounds1 = std::make_shared<CylinderVolumeBounds>(70, 100, 100.0);
+  Volume vol1{trf1, bounds1};
+
+  std::vector<Volume*> volumes = {&vol1};
+  CylinderVolumeStack stack(volumes, BinningValue::binZ,
+                            CylinderVolumeStack::AttachmentStrategy::Gap,
+                            CylinderVolumeStack::ResizeStrategy::Gap, *logger);
+
+  Transform3 trf2 =
+      Transform3::Identity() * Translation3{Vector3::UnitZ() * -1500};
+  stack.update(std::make_shared<CylinderVolumeBounds>(30.0, 100, 600), trf2,
+               *logger);
+
+  std::cout << stack.volumeBounds() << std::endl;
+  std::cout << stack.transform().matrix() << std::endl;
+
+  Transform3 trf3 =
+      Transform3::Identity() * Translation3{Vector3::UnitZ() * -1600};
+  stack.update(std::make_shared<CylinderVolumeBounds>(30.0, 100, 700), trf3,
+               *logger);
+}
+
+BOOST_AUTO_TEST_CASE(ResizeReproduction2) {
+  // The numbers are tuned a bit to reproduce the faulty behavior
+  Transform3 trf1 =
+      Transform3::Identity() * Translation3{Vector3::UnitZ() * 263};
+  auto bounds1 = std::make_shared<CylinderVolumeBounds>(30, 100, 4.075);
+  Volume vol1{trf1, bounds1};
+
+  std::vector<Volume*> volumes = {&vol1};
+  CylinderVolumeStack stack(volumes, BinningValue::binZ,
+                            CylinderVolumeStack::AttachmentStrategy::Gap,
+                            CylinderVolumeStack::ResizeStrategy::Gap, *logger);
+
+  Transform3 trf2 =
+      Transform3::Identity() * Translation3{Vector3::UnitZ() * 260.843};
+  stack.update(std::make_shared<CylinderVolumeBounds>(30.0, 100, 6.232), trf2,
+               *logger);
+
+  std::cout << stack.volumeBounds() << std::endl;
+  std::cout << stack.transform().matrix() << std::endl;
+
+  Transform3 trf3 =
+      Transform3::Identity() * Translation3{Vector3::UnitZ() * 1627.31};
+  stack.update(std::make_shared<CylinderVolumeBounds>(30.0, 100, 1372.699),
+               trf3, *logger);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
