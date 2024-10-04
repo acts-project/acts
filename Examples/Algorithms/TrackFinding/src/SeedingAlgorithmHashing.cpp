@@ -279,8 +279,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
     // Compute radius Range
     // we rely on the fact the grid is storing the proxies
     // with a sorting in the radius
-    double minRange = std::numeric_limits<double>::max();
-    double maxRange = std::numeric_limits<double>::lowest();
+    float minRange = std::numeric_limits<float>::max();
+    float maxRange = std::numeric_limits<float>::lowest();
     for (const auto& coll : grid) {
       if (coll.empty()) {
         continue;
@@ -299,14 +299,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
         std::move(grid), *m_bottomBinFinder, *m_topBinFinder,
         std::move(navigation));
 
-    // safely clamp double to float
-    float up = Acts::clampValue<float>(std::floor(maxRange / 2) * 2);
-
     /// variable middle SP radial region of interest
     const Acts::Range1D<float> rMiddleSPRange(
-        std::floor(minRange / 2) * 2 +
-            m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
-        up - m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
+        minRange + m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
+        maxRange - m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
 
     // this creates seeds of proxy, we need to convert it to seed of space
     // points
