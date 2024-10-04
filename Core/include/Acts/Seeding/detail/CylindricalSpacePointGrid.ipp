@@ -103,7 +103,7 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
       config.phiMin, config.phiMax, phiBins);
 
   // vector that will store the edges of the bins of z
-  std::vector<AxisScalar> zValues;
+  std::vector<AxisScalar> zValues{};
 
   // If zBinEdges is not defined, calculate the edges as zMin + bin * zBinSize
   if (config.zBinEdges.empty()) {
@@ -130,9 +130,19 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
     }
   }
 
+  std::vector<AxisScalar> rValues{};
+  rValues.reserve(std::max(2ul, config.rBinEdges.size()));
+  if (config.rBinEdges.empty()) {
+    rValues = {config.rMin, config.rMax};
+  } else {
+    rValues.insert(rValues.end(), config.rBinEdges.begin(),
+                   config.rBinEdges.end());
+  }
+
   Axis<AxisType::Variable, AxisBoundaryType::Bound> zAxis(std::move(zValues));
+  Axis<AxisType::Variable, AxisBoundaryType::Bound> rAxis(std::move(rValues));
   return Acts::CylindricalSpacePointGrid<external_spacepoint_t>(
-      std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+      std::make_tuple(std::move(phiAxis), std::move(zAxis), std::move(rAxis)));
 }
 
 template <typename external_spacepoint_t,
@@ -155,13 +165,13 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
         "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
   }
 
-  // sort by radius
-  // add magnitude of beamPos to rMax to avoid excluding measurements
-  // create number of bins equal to number of millimeters rMax
-  // (worst case minR: configured minR + 1mm)
-  // binSizeR allows to increase or reduce numRBins if needed
-  std::size_t numRBins = static_cast<std::size_t>(
-      (config.rMax + options.beamPos.norm()) / config.binSizeR);
+  // Space points are assumed to be ALREADY CORRECTED for beamspot position
+  // phi, z and r space point selection comes naturally from the
+  // grid axis definition. No need to explicitly cut on those values.
+  // If a space point is outside the validity range of these quantities
+  // it goes in an over- or under-flow bin.
+  // Additional cuts can be applied by customizing the space point selector
+  // in the config object.
 
   // keep track of changed bins while sorting
   std::vector<bool> usedBinIndex(grid.size(), false);
@@ -172,37 +182,15 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
   for (external_spacepoint_iterator_t it = spBegin; it != spEnd;
        it++, ++counter) {
     const external_spacepoint_t& sp = *it;
-    float spX = sp.x();
-    float spY = sp.y();
-    float spZ = sp.z();
 
     // remove SPs according to experiment specific cuts
     if (!config.spacePointSelector(sp)) {
       continue;
     }
 
-    // remove SPs outside z and phi region
-    if (spZ > config.zMax || spZ < config.zMin) {
-      continue;
-    }
-
-    float spPhi = std::atan2(spY, spX);
-    if (spPhi > config.phiMax || spPhi < config.phiMin) {
-      continue;
-    }
-
-    // calculate r-Bin index and protect against overflow (underflow not
-    // possible)
-    std::size_t rIndex =
-        static_cast<std::size_t>(sp.radius() / config.binSizeR);
-    // if index out of bounds, the SP is outside the region of interest
-    if (rIndex >= numRBins) {
-      continue;
-    }
-
     // fill rbins into grid
-    std::size_t globIndex =
-        grid.globalBinFromPosition(Acts::Vector2{sp.phi(), sp.z()});
+    std::size_t globIndex = grid.globalBinFromPosition(
+        Acts::Vector3{sp.phi(), sp.z(), sp.radius()});
     auto& rbin = grid.at(globIndex);
     rbin.push_back(&sp);
 
