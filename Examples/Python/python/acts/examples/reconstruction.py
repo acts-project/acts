@@ -2818,7 +2818,6 @@ def addPropagation(
     pz: Optional[float]=0,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    writeTrajectories: bool = True,
     writeCovMat=False,
     suffixOut = "merged",
     det_suffix = "_vt",
@@ -2850,8 +2849,8 @@ def addPropagation(
         inputTracks=outputTracks,
         inputParticles="particles_selected"+det_suffix,
         inputMeasurementParticlesMap="measurement_particles_map"+det_suffix,
-        outputTrackParticleMatching=suffixOut+"ckf_track_particle",
-        outputParticleTrackMatching=suffixOut+"ckf_particle_track",
+        outputTrackParticleMatching=suffixOut+"_track_particle",
+        outputParticleTrackMatching=suffixOut+"_particle_track",
     )
     s.addAlgorithm(matcher)
 
@@ -2865,11 +2864,11 @@ def addPropagation(
     addTrackWriters(
         s,
         name=suffixOut,
-        tracks=outputTracks,
+        tracks=selAlg.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
-        writeStates=writeTrajectories,
-        writeSummary=writeTrajectories,
+        writeStates=True,
+        writeSummary=True,
         writeCKFperformance=True,
         logLevel=logLevel,
         writeCovMat=writeCovMat,

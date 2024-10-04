@@ -90,87 +90,47 @@ ActsExamples::ProcessCode ActsExamples::TrackletVertexingAlgorithm::execute(
     return ActsExamples::ProcessCode::SUCCESS;
   }
 
-
-  double ibz = 71.175; //spacePoints[ib].z()
-  double imz = 151.175; //imz
-  
-  int ev = int(gRandom->Rndm()*10);
-
-  std::vector<std::vector<float>> evhits1;
-  std::vector<std::vector<float>> evhits2;
-  
+  //for(auto hits1 : evhits1){
   for (size_t ib = 0; ib < spacePoints.size() - 2; ++ib) {
-    std::vector<float> sp = {static_cast<float>(spacePoints[ib].x()),static_cast<float>(spacePoints[ib].y())};
-    auto z = spacePoints[ib].z();
-    if(int(z) == int(ibz)){
-      evhits1.push_back(sp);
-    }
+    auto ibz = spacePoints[it].z();
+    if (ibz> m_cfg.zMaxBottom || ibz < m_cfg.zMinBottom)
+      continue;
     
-    if(int(z) == int(imz)){
-      evhits2.push_back(sp);
-    }
-  }
-
-
-  for(auto hits1 : evhits1){
-  //for (size_t ib = 0; ib < spacePoints.size() - 2; ++ib) {
-    
-    if (ibz> m_cfg.zmax)
-      continue;//break
-    if (ibz < m_cfg.zmin)
-      continue;//break
-    
-    //double r = std::sqrt(spacePoints[ib].x()*spacePoints[ib].x() + spacePoints[ib].y()*spacePoints[ib].y() + ibz*ibz);
-    //double phi0 = std::atan2(spacePoints[ib].y(), spacePoints[ib].x());  // atan2 is used to handle the correct quadrant
-    double r = std::sqrt(hits1[0]*hits1[0] + hits1[1]*hits1[1] + ibz*ibz);
-    double phi0 = std::atan2(hits1[1], hits1[0]);  // atan2 is used to handle the correct quadrant
+    double r = std::sqrt(spacePoints[it].x()*spacePoints[it].x() + spacePoints[it].y()*spacePoints[it].y() + ibz*ibz);
+    double phi0 = std::atan2(spacePoints[it].y(), spacePoints[it].x());  // atan2 is used to handle the correct quadrant
     double theta0 = std::acos(ibz / r);
     
-    //for (size_t im = ib + 1; im < spacePoints.size() - 1; ++im) {
-    for(auto hits2 : evhits2){
-      if (ibz>=imz)
+    for (size_t it = ib + 1; it < spacePoints.size() - 1; ++it) {
+      auto itz = spacePoints[it].z();
+
+      if (ibz>=itz)
         continue;
       
-      if (imz> m_cfg.zmax)
-        continue;//break
+      if (itz> m_cfg.zMaxBottom || itz < m_cfg.zMinBottom)
+        continue;
 
-      //double phi1 = std::atan2(spacePoints[im].y(), spacePoints[im].x());  // atan2 is used to handle the correct quadrant
-      double phi1 = std::atan2(hits2[1], hits2[0]);  // atan2 is used to handle the correct quadrant
+      double phi1 = std::atan2(spacePoints[it].y(), spacePoints[it].x());  // atan2 is used to handle the correct quadrant
        if(abs(phi0-phi1) > m_cfg.deltaPhi)
         continue;
 
-      //r = std::sqrt(spacePoints[im].x()*spacePoints[im].x() + spacePoints[im].y()*spacePoints[im].y() + imz*imz);
-      r = std::sqrt(hits2[0]*hits2[0] + hits2[1]*hits2[1] + imz*imz);
-      double theta1 = std::acos(imz / r);
+      r = std::sqrt(spacePoints[it].x()*spacePoints[it].x() + spacePoints[it].y()*spacePoints[it].y() + itz*itz);
+      double theta1 = std::acos(itz / r);
 
       if(theta1-theta0 > m_cfg.deltaThetaMax || theta1-theta0 < m_cfg.deltaThetaMin)
         continue;
         
-      double vy = (hits2[1]-hits1[1])/
-                (imz-ibz);
-      double py = hits1[1]-ibz*vy;
+      double vy = (spacePoints[it].y()-spacePoints[it].y())/
+                (itz-ibz);
+      double py = spacePoints[it].y()-ibz*vy;
 
-        
-      //double vy = (spacePoints[im].y()-spacePoints[ib].y())/
-      //          (imz-ibz);
+      hist->Fill(-py/vy);
       
-      //if(vy*spacePoints[ib].y()<0)
-      //  continue;
-      //double py = spacePoints[ib].y()-ibz*vy;
-
-      if(m_cfg.projective){
-        if(abs(hits2[0]) < 70 && abs(hits2[1]) < 70 && abs(hits1[1]) < 40 && abs(hits1[0]) < 40)
-          hist->Fill(-py/vy);
-      }
-      else{
-        hist->Fill(-py/vy);
-      }
     }
   }
 
   // Find the bin with the maximum number of entries
   int maxBin = hist->GetMaximumBin();
-  int bin_min =  hist->FindBin(-65);
+  int bin_min =  hist->FindBin(-66);
   int bin_max = hist->FindBin(1);
 
   // Initialize variables to track the maximum bin
@@ -198,7 +158,6 @@ ActsExamples::ProcessCode ActsExamples::TrackletVertexingAlgorithm::execute(
   m_outputZTracklets(ctx, std::move(zTrackletBins));
 
   if(m_cfg.doMCtruth){
-
     //MC part
     // prepare input collections
     const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);

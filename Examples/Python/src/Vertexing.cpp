@@ -75,8 +75,8 @@ void addVertexing(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackletVertexingAlgorithm,
                                 mex, "TrackletVertexingAlgorithm",
-                                inputSpacePoints, inputSpacePointsMC, inputParticles, inputMeasurementParticlesMap,
-                                zmax, zmin, deltaPhi, deltaThetaMin, deltaThetaMax, verbose, doMCtruth, outputRecPrimaryVertex, outputFitPrimaryVertex, outputGenPrimaryVertex, noGuessing,
+                                inputSpacePoints, inputSpacePointsMC, inputParticles, inputMeasurementParticlesMap,                            
+                                zMaxTop, zMinTop, zMaxBot, zMinBot,deltaPhi, deltaThetaMin, deltaThetaMax, verbose, doMCtruth, outputRecPrimaryVertex, outputFitPrimaryVertex, outputGenPrimaryVertex, noGuessing,
                                 useFit, nbins, projective, zPerigee, outputFitFunction, outputZTracklets, outputZTrackletsPeak);
 }
 

@@ -76,22 +76,20 @@ ActsExamples::TransportParticles::TransportParticles(
 
   m_inputVertices.initialize(m_cfg.inputVertices);
   m_outputTracks.initialize(m_cfg.outputTracks);
-
 }
 
 ActsExamples::ProcessCode ActsExamples::TransportParticles::execute(
     const AlgorithmContext& ctx) const {
-
   const auto& inputVertices = m_inputVertices(ctx);
   Acts::Vector3 propPoint = Acts::Vector3{m_cfg.px, m_cfg.py, m_cfg.pz};
-  if(m_cfg.useRecVtx)
+  if (m_cfg.useRecVtx)
     propPoint = inputVertices[0].position();
 
-  std::cout<<"propPoint: "<<propPoint[0]<<" "<<propPoint[1]<<" "<<propPoint[2]<<std::endl;
+  std::cout << "propPoint: " << propPoint[0] << " " << propPoint[1] << " "
+            << propPoint[2] << std::endl;
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(propPoint);
 
-  
   Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
       Acts::EigenStepper<>(m_cfg.magneticField),
       Acts::Navigator({m_cfg.trackingGeometry},
@@ -110,27 +108,27 @@ ActsExamples::ProcessCode ActsExamples::TransportParticles::execute(
   vertexFitterCfg.extractParameters
       .connect<&Acts::InputTrack::extractParameters>();
 
-
-
   TrackContainer mergedTracks{std::make_shared<Acts::VectorTrackContainer>(),
                               std::make_shared<Acts::VectorMultiTrajectory>()};
 
   bool first = true;
-  
+
   auto it1 = m_inputTrackParameters.begin();
   auto it2 = m_inputTrackContainer.begin();
-  
+
+  const auto& itrkcon_tst = *it2;
+  const auto& trackContainter_tst = (*itrkcon_tst)(ctx);
+  std::uint32_t tipindexOffset = 0;
   for (; it1 != m_inputTrackParameters.end() &&
          it2 != m_inputTrackContainer.end();
        ++it1, ++it2) {
-
     const auto& itrkpar = *it1;
     const auto& itrkcon = *it2;
 
     const auto& paramsinput = (*itrkpar)(ctx);
     const auto& trackContainter = (*itrkcon)(ctx);
-    
-    if(first){
+
+    if (first) {
       mergedTracks.ensureDynamicColumns(trackContainter);
       first = false;
     }
@@ -139,7 +137,7 @@ ActsExamples::ProcessCode ActsExamples::TransportParticles::execute(
     int index = -1;
 
     for (auto& track : inputTracks) {
-      index += 1;   
+      index += 1;
 
       Acts::BoundTrackParameters params1 =
           vertexFitterCfg.extractParameters(track);
@@ -157,22 +155,29 @@ ActsExamples::ProcessCode ActsExamples::TransportParticles::execute(
       auto srcProxy = trackContainter.getTrack(index);
 
       destProxy.copyFrom(srcProxy, true);
-      destProxy.tipIndex() = srcProxy.tipIndex();
-      destProxy.parameters() = endParams.parameters();      
+      //destProxy.tipIndex() = srcProxy.tipIndex();//+tipindexOffset;
+      destProxy.parameters() = endParams.parameters();
       if (endParams.covariance().has_value()) {
-          destProxy.covariance() = endParams.covariance().value();
+        destProxy.covariance() = endParams.covariance().value();
       }
     }
+    tipindexOffset = trackContainter.getTrack(index).tipIndex();
   }
 
-  it2 = m_inputTrackContainer.begin();
-  const auto& itrkcon = *it2;
-  const auto& trackContainter = (*itrkcon)(ctx);
   ActsExamples::ConstTrackContainer outputTracks{
       std::make_shared<Acts::ConstVectorTrackContainer>(
           std::move(mergedTracks.container())),
-      trackContainter.trackStateContainerHolder()};
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(
+          std::move(mergedTracks.trackStateContainer()))};
+  
+  /*
+  ActsExamples::ConstTrackContainer outputTracks{
+      std::make_shared<Acts::ConstVectorTrackContainer>(
+          std::move(mergedTracks.container())),
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(
+          std::move(trackContainter_tst.trackStateContainer()))};
 
+  */
   m_outputTracks(ctx, std::move(outputTracks));
   return ActsExamples::ProcessCode::SUCCESS;
 }

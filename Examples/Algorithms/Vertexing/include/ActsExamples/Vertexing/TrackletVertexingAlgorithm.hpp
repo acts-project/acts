@@ -56,8 +56,10 @@ class TrackletVertexingAlgorithm final : public IAlgorithm {
     std::string outputZTrackletsPeak;
     std::vector<std::string> inputSpacePointsMC;
 
-    double zmax = 170;
-    double zmin = 0;
+    double zMaxTop = 170;
+    double zMinTop = 0;
+    double zMaxBot = 170;
+    double zMinBot = 0;
     double deltaPhi = 0.05;
     double deltaThetaMax = 0.05;
     double deltaThetaMin = 0.05;
@@ -66,7 +68,6 @@ class TrackletVertexingAlgorithm final : public IAlgorithm {
     bool noGuessing = false;
     bool useFit = true;
     int nbins = 60;
-    bool projective = false;
     double zPerigee = 0.;
   };
 
