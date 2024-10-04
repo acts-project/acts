@@ -328,6 +328,21 @@ void addSvg(Context& ctx) {
         });
   }
 
+  {
+    auto gco = py::class_<Svg::GridConverter::Options>(svg, "GridOptions")
+                   .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(gco, Svg::GridConverter::Options);
+    ACTS_PYTHON_MEMBER(style);
+    ACTS_PYTHON_STRUCT_END();
+
+    auto isco = py::class_<Svg::IndexedSurfacesConverter::Options>(
+                    svg, "IndexedSurfacesOptions")
+                    .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(isco, Svg::IndexedSurfacesConverter::Options);
+    ACTS_PYTHON_MEMBER(gridOptions);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
   // How detector volumes are drawn: Svg DetectorVolume options & drawning
   {
     auto c = py::class_<Svg::DetectorVolumeConverter::Options>(
@@ -338,11 +353,15 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_MEMBER(portalIndices);
     ACTS_PYTHON_MEMBER(portalOptions);
     ACTS_PYTHON_MEMBER(surfaceOptions);
+    ACTS_PYTHON_MEMBER(indexedSurfacesOptions);
     ACTS_PYTHON_STRUCT_END();
 
     // Define the proto volume & indexed surface grid
     py::class_<Svg::ProtoVolume>(svg, "ProtoVolume");
     py::class_<Svg::ProtoIndexedSurfaceGrid>(svg, "ProtoIndexedSurfaceGrid");
+
+    // Define the proto grid
+    py::class_<Svg::ProtoGrid>(svg, "ProtoGrid");
 
     // Convert an Acts::Experimental::DetectorVolume object into an
     // acts::svg::proto::volume
@@ -350,6 +369,15 @@ void addSvg(Context& ctx) {
 
     // Define the view functions
     svg.def("drawDetectorVolume", &drawDetectorVolume);
+  }
+
+  // Draw the ProtoIndexedSurfaceGrid
+  {
+    svg.def("drawIndexedSurfaces",
+            [](const Svg::ProtoIndexedSurfaceGrid& pIndexedSurfaceGrid,
+               const std::string& identification) {
+              return Svg::View::xy(pIndexedSurfaceGrid, identification);
+            });
   }
 
   // How a detector is drawn: Svg Detector options & drawning
