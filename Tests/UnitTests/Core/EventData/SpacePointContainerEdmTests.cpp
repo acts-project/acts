@@ -102,9 +102,8 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_constructors) {
   Acts::SpacePointContainer<Acts::Test::Adapter, Acts::detail::RefHolder>
       spContainerRef(spConfig, spOptions, adapterForRef);
 
-  Acts::Test::Adapter adapterForVal(externalCollection);
   Acts::SpacePointContainer<Acts::Test::Adapter, Acts::detail::ValueHolder>
-      spContainerVal(spConfig, spOptions, std::move(adapterForVal));
+    spContainerVal(spConfig, spOptions, Acts::Test::Adapter(externalCollection));
 
   BOOST_CHECK_EQUAL(spContainerRef.size(), nExternalPoints);
   BOOST_CHECK_EQUAL(spContainerVal.size(), nExternalPoints);
