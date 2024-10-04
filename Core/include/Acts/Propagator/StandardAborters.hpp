@@ -161,7 +161,7 @@ struct ForcedSurfaceReached : SurfaceReached {
       : SurfaceReached(std::numeric_limits<double>::lowest()) {}
 };
 
-/// This is the condition that the end of World has been reached
+/// This is the condition that the end of world has been reached
 /// it then triggers an propagation abort
 struct EndOfWorldReached {
   /// boolean operator for abort condition without using the result
@@ -178,6 +178,60 @@ struct EndOfWorldReached {
                   const Logger& /*logger*/) const {
     bool endOfWorld = navigator.endOfWorldReached(state.navigation);
     return endOfWorld;
+  }
+};
+
+/// This is the condition that the end of world has been reached
+/// it then triggers a propagation abort
+struct VolumeConstraintAborter {
+  /// boolean operator for abort condition without using the result
+  ///
+  /// @tparam propagator_state_t Type of the propagator state
+  /// @tparam navigator_t Type of the navigator
+  ///
+  /// @param [in,out] state The propagation state object
+  /// @param [in] navigator The navigator object
+  /// @param logger a logger instance
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  bool checkAbort(propagator_state_t& state, const stepper_t& /*stepper*/,
+                  const navigator_t& navigator, const Logger& logger) const {
+    const auto& constrainToVolumeIds = state.options.constrainToVolumeIds;
+    const auto& endOfWorldVolumeIds = state.options.endOfWorldVolumeIds;
+
+    if (constrainToVolumeIds.empty() && endOfWorldVolumeIds.empty()) {
+      return false;
+    }
+    const auto* currentVolume = navigator.currentVolume(state.navigation);
+
+    // We need a volume to check its ID
+    if (currentVolume == nullptr) {
+      return false;
+    }
+
+    const auto currentVolumeId =
+        static_cast<std::uint32_t>(currentVolume->geometryId().volume());
+
+    if (!constrainToVolumeIds.empty() &&
+        std::find(constrainToVolumeIds.begin(), constrainToVolumeIds.end(),
+                  currentVolumeId) == constrainToVolumeIds.end()) {
+      ACTS_VERBOSE(
+          "VolumeConstraintAborter aborter | Abort with volume constrain "
+          << currentVolumeId);
+      return true;
+    }
+
+    if (!endOfWorldVolumeIds.empty() &&
+        std::find(endOfWorldVolumeIds.begin(), endOfWorldVolumeIds.end(),
+                  currentVolumeId) != endOfWorldVolumeIds.end()) {
+      ACTS_VERBOSE(
+          "VolumeConstraintAborter aborter | Abort with additional end of "
+          "world volume "
+          << currentVolumeId);
+      return true;
+    }
+
+    return false;
   }
 };
 

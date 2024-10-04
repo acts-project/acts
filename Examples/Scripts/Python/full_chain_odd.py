@@ -363,10 +363,27 @@ if args.reco:
             numMeasurementsCutOff=10,
             seedDeduplication=True,
             stayOnSeed=True,
-            pixelVolumes={16, 17, 18},
-            stripVolumes={23, 24, 25},
+            pixelVolumes=[16, 17, 18],
+            stripVolumes=[23, 24, 25],
             maxPixelHoles=1,
             maxStripHoles=2,
+            constrainToVolumes=[
+                2,  # beam pipe
+                32,
+                4,  # beam pip gap
+                16,
+                17,
+                18,  # pixel
+                20,  # PST
+                23,
+                24,
+                25,  # short strip
+                26,
+                8,  # long strip gap
+                28,
+                29,
+                30,  # long strip
+            ],
         ),
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,

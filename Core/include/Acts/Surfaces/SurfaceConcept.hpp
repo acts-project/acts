@@ -87,7 +87,7 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
   { cs.name() } -> std::same_as<std::string>;
 
   {
-    cs.polyhedronRepresentation(gctx, std::declval<std::size_t>())
+    cs.polyhedronRepresentation(gctx, std::declval<unsigned int>())
   } -> std::same_as<Polyhedron>;
 
   {
