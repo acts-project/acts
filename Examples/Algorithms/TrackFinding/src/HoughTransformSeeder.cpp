@@ -478,7 +478,7 @@ void ActsExamples::HoughTransformSeeder::addSpacePoints(
     ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
                             << isp->key());
     for (auto& sp : spContainer) {
-      double r = std::hypot(sp.x(), sp.y());
+      double r = std::sqrt(std::pow(sp.x(), 2) + std::pow(sp.y(), 2));
       double z = sp.z();
       float phi = std::atan2(sp.y(), sp.x());
       ResultUnsigned hitlayer = m_cfg.layerIDFinder(r).value();
@@ -548,7 +548,7 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
         Acts::Vector3 globalFakeMom(1, 1, 1);
         Acts::Vector3 globalPos =
             surface->localToGlobal(ctx.geoContext, localPos, globalFakeMom);
-        double r = std::hypot(globalPos[Acts::ePos0], globalPos[Acts::ePos1]);
+        double r = globalPos.head<2>().norm();
         double phi = std::atan2(globalPos[Acts::ePos1], globalPos[Acts::ePos0]);
         double z = globalPos[Acts::ePos2];
         ResultUnsigned hitlayer = m_cfg.layerIDFinder(r);

@@ -335,9 +335,10 @@ class StraightLineStepper {
       prop_state.stepping.derivative.template head<3>() =
           direction(prop_state.stepping);
       // dt / ds
-      prop_state.stepping.derivative(eFreeTime) =
-          std::hypot(1., prop_state.stepping.particleHypothesis.mass() /
-                             absoluteMomentum(prop_state.stepping));
+      prop_state.stepping.derivative(eFreeTime) = std::sqrt(
+          1. + std::pow(prop_state.stepping.particleHypothesis.mass() /
+                            absoluteMomentum(prop_state.stepping),
+                        2));
       // d (dr/ds) / ds : == 0
       prop_state.stepping.derivative.template segment<3>(4) =
           Acts::Vector3::Zero().transpose();
@@ -424,7 +425,7 @@ class StraightLineStepper {
     const auto m = state.stepping.particleHypothesis.mass();
     const auto p = absoluteMomentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
-    const auto dtds = std::hypot(1., m / p);
+    const auto dtds = std::sqrt(1. + std::pow(m / p, 2));
     // Update the track parameters according to the equations of motion
     Vector3 dir = direction(state.stepping);
     state.stepping.pars.template segment<3>(eFreePos0) += h * dir;

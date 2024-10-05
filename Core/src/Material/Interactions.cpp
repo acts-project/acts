@@ -395,7 +395,7 @@ float Acts::computeEnergyLossRadiative(const MaterialSlab& slab,
   // particle momentum and energy
   // do not need to care about the sign since it is only used squared
   const float momentum = absQ / qOverP;
-  const float energy = std::hypot(m, momentum);
+  const float energy = std::sqrt(std::pow(m, 2) + std::pow(momentum, 2));
 
   float dEdx = computeBremsstrahlungLossMean(m, energy);
 
@@ -424,7 +424,7 @@ float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab,
   // particle momentum and energy
   // do not need to care about the sign since it is only used squared
   const float momentum = absQ / qOverP;
-  const float energy = std::hypot(m, momentum);
+  const float energy = std::sqrt(std::pow(m, 2) + std::pow(momentum, 2));
 
   // compute derivative w/ respect to energy.
   float derE = deriveBremsstrahlungLossMeanE(m);

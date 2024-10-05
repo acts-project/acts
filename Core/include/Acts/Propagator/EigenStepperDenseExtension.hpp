@@ -108,7 +108,7 @@ struct EigenStepperDenseExtension {
       // Evaluate k for the time propagation
       Lambdappi[0] = -qop[0] * qop[0] * qop[0] * g * energy[0] / (q * q);
       //~ tKi[0] = std::hypot(1, mass / initialMomentum);
-      tKi[0] = std::hypot(1, mass * qop[0]);
+      tKi[0] = std::sqrt(1 + std::pow(mass * qop[0], 2));
       kQoP[0] = Lambdappi[0];
     } else {
       // Update parameters and check for momentum condition
@@ -122,7 +122,7 @@ struct EigenStepperDenseExtension {
       // Evaluate k_i for the time propagation
       auto qopNew = qop[0] + h * Lambdappi[i - 1];
       Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] / (q * q);
-      tKi[i] = std::hypot(1, mass * qopNew);
+      tKi[i] = std::sqrt(1 + std::pow(mass * qopNew, 2));
       kQoP[i] = Lambdappi[i];
     }
     return true;
@@ -167,14 +167,16 @@ struct EigenStepperDenseExtension {
     }
 
     // Add derivative dlambda/ds = Lambda''
-    state.stepping.derivative(7) = -std::hypot(mass, newMomentum) * g /
-                                   (newMomentum * newMomentum * newMomentum);
+    state.stepping.derivative(7) =
+        -std::sqrt(std::pow(mass, 2) + std::pow(newMomentum, 2)) * g /
+        (newMomentum * newMomentum * newMomentum);
 
     // Update momentum
     state.stepping.pars[eFreeQOverP] =
         stepper.charge(state.stepping) / newMomentum;
     // Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})
-    state.stepping.derivative(3) = std::hypot(1, mass / newMomentum);
+    state.stepping.derivative(3) =
+        std::sqrt(1 + std::pow(mass / newMomentum, 2));
     // Update time
     state.stepping.pars[eFreeTime] +=
         (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
@@ -332,7 +334,8 @@ struct EigenStepperDenseExtension {
     //~ (3. * g + qop[0] * dgdqop(energy[0], .mass,
     //~ absPdg, meanEnergyLoss));
 
-    double dtp1dl = qop[0] * mass * mass / std::hypot(1, qop[0] * mass);
+    double dtp1dl =
+        qop[0] * mass * mass / std::sqrt(1 + std::pow(qop[0] * mass, 2));
     double qopNew = qop[0] + half_h * Lambdappi[0];
 
     //~ double dtpp2dl = -mass * mass * qopNew *
@@ -340,7 +343,8 @@ struct EigenStepperDenseExtension {
     //~ (3. * g * (1. + half_h * jdL[0]) +
     //~ qopNew * dgdqop(energy[1], mass, absPdgCode, meanEnergyLoss));
 
-    double dtp2dl = qopNew * mass * mass / std::hypot(1, qopNew * mass);
+    double dtp2dl =
+        qopNew * mass * mass / std::sqrt(1 + std::pow(qopNew * mass, 2));
     qopNew = qop[0] + half_h * Lambdappi[1];
 
     //~ double dtpp3dl = -mass * mass * qopNew *
@@ -348,9 +352,11 @@ struct EigenStepperDenseExtension {
     //~ (3. * g * (1. + half_h * jdL[1]) +
     //~ qopNew * dgdqop(energy[2], mass, absPdg, meanEnergyLoss));
 
-    double dtp3dl = qopNew * mass * mass / std::hypot(1, qopNew * mass);
+    double dtp3dl =
+        qopNew * mass * mass / std::sqrt(1 + std::pow(qopNew * mass, 2));
     qopNew = qop[0] + half_h * Lambdappi[2];
-    double dtp4dl = qopNew * mass * mass / std::hypot(1, qopNew * mass);
+    double dtp4dl =
+        qopNew * mass * mass / std::sqrt(1 + std::pow(qopNew * mass, 2));
 
     //~ D(3, 7) = h * mass * mass * qop[0] /
     //~ std::hypot(1., mass * qop[0])
@@ -376,7 +382,7 @@ struct EigenStepperDenseExtension {
     PdgParticle absPdg = particleHypothesis.absolutePdg();
     float absQ = particleHypothesis.absoluteCharge();
 
-    energy[0] = std::hypot(initialMomentum, mass);
+    energy[0] = std::sqrt(std::pow(initialMomentum, 2) + std::pow(mass, 2));
     // use unit length as thickness to compute the energy loss per unit length
     MaterialSlab slab(material, 1);
     // Use the same energy loss throughout the step.
@@ -430,7 +436,7 @@ struct EigenStepperDenseExtension {
                         const stepper_t& stepper, const int i) {
     // Update parameters related to a changed momentum
     currentMomentum = initialMomentum + h * dPds[i - 1];
-    energy[i] = std::hypot(currentMomentum, mass);
+    energy[i] = std::sqrt(std::pow(currentMomentum, 2) + std::pow(mass, 2));
     dPds[i] = g * energy[i] / currentMomentum;
     qop[i] = stepper.charge(state.stepping) / currentMomentum;
     // Calculate term for later error propagation
