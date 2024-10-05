@@ -894,9 +894,9 @@ class KalmanFitter {
 
       if (not hasMaterial) {
         // Screen out message
-        ACTS_VERBOSE("No material effects on surface: " << surface->geometryId()
-                                                        << " at update stage: "
-                                                        << updateStage);
+        //ACTS_VERBOSE("No material effects on surface: " << surface->geometryId()
+	//                                              << " at update stage: "
+        //                                                << updateStage);
       }
     }
 
