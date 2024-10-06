@@ -425,7 +425,7 @@ class StraightLineStepper {
     const auto m = state.stepping.particleHypothesis.mass();
     const auto p = absoluteMomentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
-    const auto dtds = hypot(1., m / p, 2);
+    const auto dtds = hypot(1., m / p);
     // Update the track parameters according to the equations of motion
     Vector3 dir = direction(state.stepping);
     state.stepping.pars.template segment<3>(eFreePos0) += h * dir;
