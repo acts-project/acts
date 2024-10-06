@@ -15,6 +15,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -478,7 +479,7 @@ void ActsExamples::HoughTransformSeeder::addSpacePoints(
     ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
                             << isp->key());
     for (auto& sp : spContainer) {
-      double r = std::sqrt(std::pow(sp.x(), 2) + std::pow(sp.y(), 2));
+      double r = Acts::hypot(sp.x(), sp.y());
       double z = sp.z();
       float phi = std::atan2(sp.y(), sp.x());
       ResultUnsigned hitlayer = m_cfg.layerIDFinder(r).value();

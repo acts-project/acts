@@ -13,6 +13,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <cassert>
@@ -155,9 +156,9 @@ class GenericFreeTrackParameters {
     // w/ f,sin(theta) positive, the transverse magnitude is then
     //   sqrt(f^2*sin^2(theta)) = f*sin(theta)
     Scalar transverseMagnitude2 =
-        std::pow(m_params[eFreeDir0], 2) + std::pow(m_params[eFreeDir1], 2);
+        square(m_params[eFreeDir0]) + square(m_params[eFreeDir1]);
     // absolute magnitude is f by construction
-    Scalar magnitude2 = transverseMagnitude2 + std::pow(m_params[eFreeDir2], 2);
+    Scalar magnitude2 = transverseMagnitude2 + square(m_params[eFreeDir2]);
     // such that we can extract sin(theta) = f*sin(theta) / f
     return std::sqrt(transverseMagnitude2 / magnitude2) * absoluteMomentum();
   }

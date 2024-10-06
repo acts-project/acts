@@ -14,6 +14,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <array>
 #include <cmath>
@@ -276,7 +277,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // momentum on the transverse plane of the new frame)
   ActsScalar qOverPt = sign * (UnitConstants::m) / (0.3 * bFieldInTesla * R);
   // The estimated q/p in [GeV/c]^-1
-  params[eBoundQOverP] = qOverPt / std::sqrt(1. + std::pow(invTanTheta, 2));
+  params[eBoundQOverP] = qOverPt / hypot(1., invTanTheta);
 
   if (params.hasNaN()) {
     ACTS_ERROR(

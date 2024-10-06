@@ -10,6 +10,7 @@
 
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
 Acts::Result<Acts::LinearizedTrack>
@@ -85,7 +86,7 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
   ActsScalar p = params.particleHypothesis().extractMomentum(qOvP);
 
   // Speed in units of c
-  ActsScalar beta = p / std::sqrt(std::pow(p, 2) + std::pow(m0, 2));
+  ActsScalar beta = p / hypot(p, m0);
   // Transverse speed (i.e., speed in the x-y plane)
   ActsScalar betaT = beta * sinTheta;
 
