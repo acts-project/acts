@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 
@@ -392,8 +392,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
     // Now assign the material for the accumulation process
     auto tBin = currentAccMaterial->second.accumulate(
         currentPos, rmIter->materialSlab, currentPathCorrection);
-    if (touchedMapBins.find(&(currentAccMaterial->second)) ==
-        touchedMapBins.end()) {
+    if (!touchedMapBins.contains(&(currentAccMaterial->second))) {
       touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     }
     if (m_cfg.computeVariance) {
@@ -483,8 +482,7 @@ void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
     // Now assign the material for the accumulation process
     auto tBin = currentAccMaterial->second.accumulate(
         currentPos, rmIter->materialSlab, rmIter->pathCorrection);
-    if (touchedMapBins.find(&(currentAccMaterial->second)) ==
-        touchedMapBins.end()) {
+    if (!touchedMapBins.contains(&(currentAccMaterial->second))) {
       touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     }
     if (m_cfg.computeVariance) {

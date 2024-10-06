@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -112,8 +112,8 @@ struct ViewConfig {
   double lineThickness = 0.15;
   /// The visual surface thickness for this object
   double surfaceThickness = 0.15;
-  /// The number of segments to approximate full 2pi
-  unsigned int nSegments = 72;
+  /// The number of segments to approximate a quarter of the circle
+  unsigned int quarterSegments = 72;
   /// Whether to triangulate or not
   bool triangulate = false;
   /// Write name - non-empty string indicates writing

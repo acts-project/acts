@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -100,8 +100,8 @@ class SeedingAlgorithm final : public IAlgorithm {
   Acts::SeedFinder<SpacePointProxy_t,
                    Acts::CylindricalSpacePointGrid<SpacePointProxy_t>>
       m_seedFinder;
-  std::unique_ptr<const Acts::GridBinFinder<2ul>> m_bottomBinFinder;
-  std::unique_ptr<const Acts::GridBinFinder<2ul>> m_topBinFinder;
+  std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};
+  std::unique_ptr<const Acts::GridBinFinder<3ul>> m_topBinFinder{nullptr};
 
   Config m_cfg;
 

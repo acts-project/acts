@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/CuboidalContainerBuilder.hpp"
@@ -238,18 +238,33 @@ void addExperimentalGeometry(Context& ctx) {
       .def("volumes", &Detector::volumes)
       .def("volumePtrs", &Detector::volumePtrs)
       .def("numberVolumes",
-           [](Detector& self) { return self.volumes().size(); })
+           [](const Detector& self) { return self.volumes().size(); })
       .def("extractMaterialSurfaces",
-           [](Detector& self) {
+           [](const Detector& self) {
              MaterialSurfaceSelector selector;
              self.visitSurfaces(selector);
              return selector.surfaces;
            })
-      .def("geoIdSurfaceMap", [](Detector& self) {
-        IdentifierSurfacesCollector collector;
-        self.visitSurfaces(collector);
-        return collector.surfaces;
-      });
+      .def("geoIdSurfaceMap",
+           [](const Detector& self) {
+             IdentifierSurfacesCollector collector;
+             self.visitSurfaces(collector);
+             return collector.surfaces;
+           })
+      .def("cylindricalVolumeRepresentation",
+           [](const Detector& self, const Acts::GeometryContext& gctx) {
+             // Loop over the volumes and gather the extent
+             Extent extent;
+             for (const auto& volume : self.volumes()) {
+               extent.extend(volume->extent(gctx));
+             }
+             auto bounds = std::make_shared<Acts::CylinderVolumeBounds>(
+                 0., extent.max(Acts::BinningValue::binR),
+                 extent.max(Acts::BinningValue::binZ));
+
+             return std::make_shared<Acts::Volume>(Transform3::Identity(),
+                                                   std::move(bounds));
+           });
 
   // Portal definition
   py::class_<Experimental::Portal, std::shared_ptr<Experimental::Portal>>(
@@ -318,7 +333,7 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(surfacesProvider);
     ACTS_PYTHON_MEMBER(supports);
     ACTS_PYTHON_MEMBER(binnings);
-    ACTS_PYTHON_MEMBER(nSegments);
+    ACTS_PYTHON_MEMBER(quarterSegments);
     ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
 

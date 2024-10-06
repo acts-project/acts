@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 
@@ -56,7 +56,7 @@ Acts::BoundSquareMatrix makeInitialCovariance(
 
       // theta contribution
       variance +=
-          varianceTheta * std::pow(params[Acts::eBoundQOverP] *
+          varianceTheta * std::pow(params[Acts::eBoundQOverP] /
                                        std::tan(params[Acts::eBoundTheta]),
                                    2);
     }
@@ -77,11 +77,9 @@ Acts::BoundSquareMatrix makeInitialCovariance(
 
 }  // namespace
 
-ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
-    ActsExamples::TrackParamsEstimationAlgorithm::Config cfg,
-    Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("TrackParamsEstimationAlgorithm", lvl),
-      m_cfg(std::move(cfg)) {
+TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
+    TrackParamsEstimationAlgorithm::Config cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("TrackParamsEstimationAlgorithm", lvl), m_cfg(std::move(cfg)) {
   if (m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds input collection");
   }
@@ -103,8 +101,8 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   m_outputTracks.maybeInitialize(m_cfg.outputProtoTracks);
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackParamsEstimationAlgorithm::execute(
+    const AlgorithmContext& ctx) const {
   auto const& seeds = m_inputSeeds(ctx);
   ACTS_VERBOSE("Read " << seeds.size() << " seeds");
 
@@ -197,4 +195,5 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
   return ProcessCode::SUCCESS;
 }
+
 }  // namespace ActsExamples
