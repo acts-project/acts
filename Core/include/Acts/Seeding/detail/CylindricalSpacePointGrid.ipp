@@ -113,7 +113,7 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
     // FIXME: zBinSize must include scattering
     float zBinSize = config.cotThetaMax * config.deltaRMax;
     float zBins =
-        std::max(1., std::floor((config.zMax - config.zMin) / zBinSize));
+        std::max(1.f, std::floor((config.zMax - config.zMin) / zBinSize));
 
     zValues.reserve(static_cast<int>(zBins));
     for (int bin = 0; bin <= static_cast<int>(zBins); bin++) {
