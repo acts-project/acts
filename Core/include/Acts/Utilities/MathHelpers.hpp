@@ -14,7 +14,7 @@ namespace Acts {
 
 template <typename T>
 inline auto square(T x) {
-  return std::pow(x, 2);
+  return x * x;
 }
 
 template <typename... T>
