@@ -150,6 +150,7 @@ bool Acts::GeoModelDetectorObjectFactory::convertBox(std::string name) {
 void Acts::GeoModelDetectorObjectFactory::convertFpv(
     const std::string &name, GeoFullPhysVol *fpv, Cache &cache,
     const GeometryContext &gctx) {
+  const auto prevSize = cache.sensitiveSurfaces.size();
   PVConstLink physVol{fpv};
 
   // get children
