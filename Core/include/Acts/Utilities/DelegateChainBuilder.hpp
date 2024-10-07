@@ -19,12 +19,12 @@
 namespace Acts {
 
 template <typename, typename payload_types = TypeList<>, auto... Callables>
-class DelegateChainFactory;
+class DelegateChainBuilder;
 
 // @TODO: Maybe add concept requirement for default initialization of R
 template <typename R, typename... payload_types, auto... callables,
           typename... callable_args>
-class DelegateChainFactory<R(callable_args...), TypeList<payload_types...>,
+class DelegateChainBuilder<R(callable_args...), TypeList<payload_types...>,
                            callables...> {
   using return_type =
       std::conditional_t<std::is_same_v<R, void>, void,
@@ -35,12 +35,12 @@ class DelegateChainFactory<R(callable_args...), TypeList<payload_types...>,
 
  public:
   template <typename, typename Ps, auto... Cs>
-  friend class DelegateChainFactory;
+  friend class DelegateChainBuilder;
 
-  DelegateChainFactory() = default;
+  DelegateChainBuilder() = default;
 
   template <typename D>
-  DelegateChainFactory(const D& /*unused*/) {}
+  DelegateChainBuilder(const D& /*unused*/) {}
 
   template <auto Callable, typename payload_type>
   constexpr auto add(payload_type payload)
@@ -49,7 +49,7 @@ class DelegateChainFactory<R(callable_args...), TypeList<payload_types...>,
     std::tuple<payload_types..., payload_type> payloads =
         std::tuple_cat(m_payloads, std::make_tuple(payload));
 
-    return DelegateChainFactory<R(callable_args...),
+    return DelegateChainBuilder<R(callable_args...),
                                 TypeList<payload_types..., payload_type>,
                                 callables..., Callable>{payloads};
   }
@@ -59,7 +59,7 @@ class DelegateChainFactory<R(callable_args...), TypeList<payload_types...>,
     std::tuple<payload_types..., std::nullptr_t> payloads =
         std::tuple_cat(m_payloads, std::make_tuple(std::nullptr_t{}));
 
-    return DelegateChainFactory<R(callable_args...),
+    return DelegateChainBuilder<R(callable_args...),
                                 TypeList<payload_types..., std::nullptr_t>,
                                 callables..., Callable>{payloads};
   }
@@ -92,7 +92,7 @@ class DelegateChainFactory<R(callable_args...), TypeList<payload_types...>,
   }
 
  private:
-  DelegateChainFactory(std::tuple<payload_types...> payloads)
+  DelegateChainBuilder(std::tuple<payload_types...> payloads)
       : m_payloads(payloads) {}
 
   struct DispatchBlock {
@@ -155,7 +155,7 @@ class DelegateChainFactory<R(callable_args...), TypeList<payload_types...>,
 };
 
 template <typename D>
-DelegateChainFactory(const D& /*unused*/)
-    -> DelegateChainFactory<typename D::signature_type>;
+DelegateChainBuilder(const D& /*unused*/)
+    -> DelegateChainBuilder<typename D::signature_type>;
 
 }  // namespace Acts
