@@ -28,13 +28,11 @@ struct GbtsSP {
   const space_point_t *SP;  // want inside to have pointer
   int gbtsID;
   int combined_ID;
-  GbtsSP(const space_point_t *sp, int id, int combined_id)
-      : SP(sp), gbtsID(id), combined_ID{combined_id} {
-    if (SP->sourceLinks().size() == 1) {  // pixels have 1 SL
-      m_isPixel = true;
-    } else {
-      m_isPixel = false;
-    }
+  bool m_isPixel;
+  float m_phi;
+  float m_r; 
+  GbtsSP(const space_point_t *sp, int id, int combined_id, bool isPixel)
+      : SP(sp), gbtsID(id), combined_ID{combined_id}, m_isPixel(isPixel) {
     m_phi = std::atan(SP->x() / SP->y());
     m_r = std::sqrt((SP->x()*SP->x())+ (SP->y()*SP->y())) ;   
   };
@@ -42,9 +40,6 @@ struct GbtsSP {
   bool isSCT() const { return !m_isPixel; }
   float phi() const { return m_phi; }
   float r() const {return m_r;}
-  bool m_isPixel;
-  float m_phi;
-  float m_r; 
 };
 
 template <typename space_point_t>

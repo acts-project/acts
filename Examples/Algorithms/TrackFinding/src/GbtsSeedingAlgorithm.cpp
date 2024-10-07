@@ -222,9 +222,17 @@ ActsExamples::GbtsSeedingAlgorithm::MakeGbtsSpacePoints(
       // access IDs from map
       int eta_mod = Find->second.second;
       int combined_id = Gbts_id * 1000 + eta_mod;
+      
+      //check if SP is pixel, dependant of type of SP so must be done in examples 
+      bool isPixel = false ;
+      if (source_link.size() == 1) {  // pixels have 1 SL
+        isPixel = true;
+      } else {
+        isPixel = false;
+      }
 
       // fill Gbts vector with current sapce point and ID
-      gbtsSpacePoints.emplace_back(&spacePoint, Gbts_id, combined_id); //make new GbtsSP here ! 
+      gbtsSpacePoints.emplace_back(&spacePoint, Gbts_id, combined_id, isPixel); //make new GbtsSP here ! 
     }
   }
   ACTS_VERBOSE("Space points successfully assigned Gbts ID");
