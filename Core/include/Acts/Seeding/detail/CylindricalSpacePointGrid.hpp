@@ -36,29 +36,29 @@ using CylindricalBinnedGroupIterator = Acts::BinnedGroupIterator<
 
 struct CylindricalSpacePointGridConfig {
   // minimum pT to be found by seedFinder
-  float minPt = 0 * Acts::UnitConstants::MeV;
+  double minPt = 0 * Acts::UnitConstants::MeV;
   // maximum extension of sensitive detector layer relevant for seeding as
   // distance from x=y=0 (i.e. in r)
-  float rMax = 320 * Acts::UnitConstants::mm;
+  double rMax = 320 * Acts::UnitConstants::mm;
   // maximum extension of sensitive detector layer relevant for seeding as
   // distance from x=y=0 (i.e. in r)
-  float rMin = 0 * Acts::UnitConstants::mm;
+  double rMin = 0 * Acts::UnitConstants::mm;
   // maximum extension of sensitive detector layer relevant for seeding in
   // positive direction in z
-  float zMax = 0 * Acts::UnitConstants::mm;
+  double zMax = 0 * Acts::UnitConstants::mm;
   // maximum extension of sensitive detector layer relevant for seeding in
   // negative direction in z
-  float zMin = 0 * Acts::UnitConstants::mm;
+  double zMin = 0 * Acts::UnitConstants::mm;
   // maximum distance in r from middle space point to bottom or top spacepoint
-  float deltaRMax = 0 * Acts::UnitConstants::mm;
+  double deltaRMax = 0 * Acts::UnitConstants::mm;
   // maximum forward direction expressed as cot(theta)
-  float cotThetaMax = 0;
+  double cotThetaMax = 0;
   // maximum impact parameter in mm
-  float impactMax = 0 * Acts::UnitConstants::mm;
+  double impactMax = 0 * Acts::UnitConstants::mm;
   // minimum phi value for phiAxis construction
-  float phiMin = -M_PI;
+  double phiMin = -M_PI;
   // maximum phi value for phiAxis construction
-  float phiMax = M_PI;
+  double phiMax = M_PI;
   // Multiplicator for the number of phi-bins. The minimum number of phi-bins
   // depends on min_pt, magnetic field: 2*M_PI/(minPT particle phi-deflection).
   // phiBinDeflectionCoverage is a multiplier for this number. If
