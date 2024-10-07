@@ -89,22 +89,23 @@ struct CylindricalSpacePointGridConfig {
     config.zMin /= 1_mm;
     config.deltaRMax /= 1_mm;
 
-    if (phiMin < -M_PI || phiMax > M_PI) {
+    if (config.phiMin < -M_PI || config.phiMax > M_PI) {
       throw std::runtime_error(
-          "CylindricalSpacePointGridConfig: phiMin (" + std::to_string(phiMin) +
-          ") and/or phiMax (" + std::to_string(phiMax) +
+          "CylindricalSpacePointGridConfig: phiMin (" +
+          std::to_string(config.phiMin) + ") and/or phiMax (" +
+          std::to_string(config.phiMax) +
           ") are outside "
           "the allowed phi range, defined as [-M_PI, M_PI]");
     }
-    if (phiMin > phiMax) {
+    if (config.phiMin > config.phiMax) {
       throw std::runtime_error(
           "CylindricalSpacePointGridConfig: phiMin is bigger then phiMax");
     }
-    if (rMin > rMax) {
+    if (config.rMin > config.rMax) {
       throw std::runtime_error(
           "CylindricalSpacePointGridConfig: rMin is bigger then rMax");
     }
-    if (zMin > zMax) {
+    if (config.zMin > config.zMax) {
       throw std::runtime_error(
           "CylindricalSpacePointGridConfig: zMin is bigger than zMax");
     }
