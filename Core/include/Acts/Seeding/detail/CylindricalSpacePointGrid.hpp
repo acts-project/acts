@@ -91,8 +91,10 @@ struct CylindricalSpacePointGridConfig {
 
     if (phiMin < -M_PI || phiMax > M_PI) {
       throw std::runtime_error(
-          "CylindricalSpacePointGridConfig: phiMin and/or phiMax are outside "
-          "the allowed phi range, defined as [-M_PI, M_PI]");
+          "CylindricalSpacePointGridConfig: phiMin ("
+          << phiMin << ") and/or phiMax (" << phiMax
+          << ") are outside "
+             "the allowed phi range, defined as [-M_PI, M_PI]");
     }
     if (phiMin > phiMax) {
       throw std::runtime_error(
