@@ -723,4 +723,25 @@ void TrackingVolume::addSurface(std::shared_ptr<Surface> surface) {
   m_surfaces.push_back(std::move(surface));
 }
 
+void TrackingVolume::visualize(IVisualization3D& helper,
+                               const GeometryContext& gctx,
+                               const ViewConfig& viewConfig,
+                               const ViewConfig& portalViewConfig,
+                               const ViewConfig& sensitiveViewConfig) const {
+  helper.object(volumeName());
+  Volume::visualize(helper, gctx, viewConfig);
+
+  if (!surfaces().empty()) {
+    helper.object(volumeName() + "_sensitives");
+  }
+  for (const auto& surface : surfaces()) {
+    surface.visualize(helper, gctx, sensitiveViewConfig);
+  }
+
+  for (const auto& child : volumes()) {
+    child.visualize(helper, gctx, viewConfig, portalViewConfig,
+                    sensitiveViewConfig);
+  }
+}
+
 }  // namespace Acts

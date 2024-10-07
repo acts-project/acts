@@ -120,6 +120,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addAlgebra(ctx);
   addBinning(ctx);
   addEventData(ctx);
+  addOutput(ctx);
 
   addPropagation(ctx);
   addGeometryBuildingGen1(ctx);
@@ -128,7 +129,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
 
   addMagneticField(ctx);
   addMaterial(ctx);
-  addOutput(ctx);
   addDetector(ctx);
   addExampleAlgorithms(ctx);
   addInput(ctx);
