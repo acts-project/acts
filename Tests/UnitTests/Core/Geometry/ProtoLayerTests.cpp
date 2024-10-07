@@ -21,28 +21,16 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
-#include "Acts/Visualization/ObjVisualization3D.hpp"
 
-#include <array>
 #include <cmath>
 #include <memory>
 #include <sstream>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace Acts::Test::Layers {
 
 GeometryContext tgContext = GeometryContext();
-
-void draw(const ProtoLayer& layer, std::filesystem::path const& path) {
-  ObjVisualization3D obj;
-  for (auto const& surface : layer.surfaces()) {
-    surface->visualize(obj, tgContext);
-  }
-
-  obj.write(path);
-}
 
 BOOST_AUTO_TEST_SUITE(Geometry)
 
@@ -97,8 +85,6 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   // Test 0 - check constructor with surfaces and shared surfaces
   auto pLayerSf = createProtoLayer(Transform3::Identity());
   auto pLayerSfShared = createProtoLayer(Transform3::Identity());
-
-  draw(pLayerSf, "ProtoLayerTests0.obj");
 
   BOOST_CHECK(pLayerSf.extent.range() == pLayerSfShared.extent.range());
   BOOST_CHECK(pLayerSf.envelope == pLayerSfShared.envelope);
@@ -217,14 +203,10 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
   BOOST_CHECK_CLOSE(protoLayer.min(binR), 17_mm, 1e-8);
   BOOST_CHECK_CLOSE(protoLayer.max(binR), 23.769728648_mm, 1e-8);
 
-  std::cout << protoLayer << std::endl;
-
   surfaces = makeFan(45_degree);
 
   // Do NOT provide rotation matrix: sizing will be affected
   protoLayer = {tgContext, surfaces};
-
-  std::cout << protoLayer << std::endl;
 
   BOOST_CHECK_EQUAL(protoLayer.surfaces().size(), 8);
   BOOST_CHECK_CLOSE(protoLayer.min(binX), -16.26345596_mm, 1e-4);
@@ -237,8 +219,6 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
   protoLayer = {tgContext, surfaces,
                 Transform3{AngleAxis3{45_degree, Vector3::UnitY()}}.inverse()};
 
-  std::cout << protoLayer << std::endl;
-
   BOOST_CHECK_EQUAL(protoLayer.surfaces().size(), 8);
   BOOST_CHECK_CLOSE(protoLayer.range(binX), 46_mm, 1e-8);
   BOOST_CHECK_CLOSE(protoLayer.min(binX), -23_mm, 1e-8);
@@ -249,8 +229,6 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
   CHECK_SMALL(protoLayer.range(binZ), 1e-14);
   CHECK_SMALL(protoLayer.min(binZ), 1e-14);
   CHECK_SMALL(protoLayer.max(binZ), 1e-14);
-
-  draw(protoLayer, "OrientedLayer.obj");
 
   surfaces = makeFan(0_degree, 10_mm);
 
@@ -267,8 +245,6 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
   BOOST_CHECK_CLOSE(protoLayer.min(binZ), -5_mm, 1e-8);
   BOOST_CHECK_CLOSE(protoLayer.max(binZ), 5_mm, 1e-8);
 
-  std::cout << protoLayer << std::endl;
-
   surfaces = makeFan(45_degree, 10_mm);
 
   protoLayer = {tgContext, surfaces,
@@ -284,8 +260,6 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
   BOOST_CHECK_CLOSE(protoLayer.range(binZ), 10_mm, 1e-8);
   BOOST_CHECK_CLOSE(protoLayer.min(binZ), -5_mm, 1e-8);
   BOOST_CHECK_CLOSE(protoLayer.max(binZ), 5_mm, 1e-8);
-
-  std::cout << protoLayer << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
