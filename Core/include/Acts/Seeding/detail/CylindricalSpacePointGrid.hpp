@@ -12,6 +12,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
+#include <numbers>
 #include <vector>
 
 namespace Acts {
@@ -56,9 +57,9 @@ struct CylindricalSpacePointGridConfig {
   // maximum impact parameter in mm
   double impactMax = 0 * Acts::UnitConstants::mm;
   // minimum phi value for phiAxis construction
-  double phiMin = -M_PI;
+  double phiMin = -std::numbers::pi;
   // maximum phi value for phiAxis construction
-  double phiMax = M_PI;
+  double phiMax = std::numbers::pi;
   // Multiplicator for the number of phi-bins. The minimum number of phi-bins
   // depends on min_pt, magnetic field: 2*M_PI/(minPT particle phi-deflection).
   // phiBinDeflectionCoverage is a multiplier for this number. If
@@ -89,13 +90,14 @@ struct CylindricalSpacePointGridConfig {
     config.zMin /= 1_mm;
     config.deltaRMax /= 1_mm;
 
-    if (config.phiMin < -M_PI || config.phiMax > M_PI) {
-      throw std::runtime_error(
-          "CylindricalSpacePointGridConfig: phiMin (" +
-          std::to_string(config.phiMin) + ") and/or phiMax (" +
-          std::to_string(config.phiMax) +
-          ") are outside "
-          "the allowed phi range, defined as [-M_PI, M_PI]");
+    if (config.phiMin < -std::numbers::pi || config.phiMax > std::numbers::pi) {
+      throw std::runtime_error("CylindricalSpacePointGridConfig: phiMin (" +
+                               std::to_string(config.phiMin) +
+                               ") and/or phiMax (" +
+                               std::to_string(config.phiMax) +
+                               ") are outside "
+                               "the allowed phi range, defined as "
+                               "[-std::numbers::pi, std::numbers::pi]");
     }
     if (config.phiMin > config.phiMax) {
       throw std::runtime_error(
@@ -116,7 +118,7 @@ struct CylindricalSpacePointGridConfig {
 
 struct CylindricalSpacePointGridOptions {
   // magnetic field
-  float bFieldInZ = 0;
+  double bFieldInZ = 0.;
   bool isInInternalUnits = false;
   CylindricalSpacePointGridOptions toInternalUnits() const {
     if (isInInternalUnits) {
