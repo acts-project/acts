@@ -44,10 +44,10 @@ struct ProtoLayer {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The vector of surfaces to consider
-  /// @param transform The local transform to evaluate the sizing in
+  /// @param transformIn The local transform to evaluate the sizing in
   ProtoLayer(const GeometryContext& gctx,
              const std::vector<const Surface*>& surfaces,
-             const Transform3& transform = Transform3::Identity());
+             const Transform3& transformIn = Transform3::Identity());
 
   /// Constructor
   ///
@@ -57,10 +57,10 @@ struct ProtoLayer {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The vector of surfaces to consider
-  /// @param transform The local transform to evaluate the sizing in
+  /// @param transformIn The local transform to evaluate the sizing in
   ProtoLayer(const GeometryContext& gctx,
              const std::vector<std::shared_ptr<const Surface>>& surfaces,
-             const Transform3& transform = Transform3::Identity());
+             const Transform3& transformIn = Transform3::Identity());
 
   /// Constructor
   ///
@@ -70,10 +70,10 @@ struct ProtoLayer {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The vector of surfaces to consider
-  /// @param transform The local transform to evaluate the sizing in
+  /// @param transformIn The local transform to evaluate the sizing in
   ProtoLayer(const GeometryContext& gctx,
              const std::vector<std::shared_ptr<Surface>>& surfaces,
-             const Transform3& transform = Transform3::Identity());
+             const Transform3& transformIn = Transform3::Identity());
 
   ProtoLayer() = default;
 

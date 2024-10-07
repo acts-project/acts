@@ -20,23 +20,23 @@ namespace Acts {
 
 ProtoLayer::ProtoLayer(const GeometryContext& gctx,
                        const std::vector<const Surface*>& surfaces,
-                       const Transform3& transform)
-    : transform(transform), m_surfaces(surfaces) {
+                       const Transform3& transformIn)
+    : transform(transformIn), m_surfaces(surfaces) {
   measure(gctx, surfaces);
 }
 
 ProtoLayer::ProtoLayer(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<const Surface>>& surfaces,
-    const Transform3& transform)
-    : transform(transform), m_surfaces(unpack_shared_vector(surfaces)) {
+    const Transform3& transformIn)
+    : transform(transformIn), m_surfaces(unpack_shared_vector(surfaces)) {
   measure(gctx, m_surfaces);
 }
 
 ProtoLayer::ProtoLayer(const GeometryContext& gctx,
                        const std::vector<std::shared_ptr<Surface>>& surfaces,
-                       const Transform3& transform)
-    : transform(transform) {
+                       const Transform3& transformIn)
+    : transform(transformIn) {
   m_surfaces.reserve(surfaces.size());
   for (const auto& sf : surfaces) {
     m_surfaces.push_back(sf.get());
