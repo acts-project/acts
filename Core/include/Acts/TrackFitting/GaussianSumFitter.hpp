@@ -434,8 +434,7 @@ struct GaussianSumFitter {
         state.unset(TrackStatePropMask::Smoothed);
       }
 
-      assert(
-          !(state.hasUncalibratedSourceLink() && state.calibratedSize() > 2));
+      assert(!state.hasUncalibratedSourceLink() || state.calibratedSize() <= 6);
 
       measurementStatesFinal +=
           static_cast<std::size_t>(state.typeFlags().test(MeasurementFlag));
