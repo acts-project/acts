@@ -10,6 +10,7 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -57,6 +58,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace Acts {
 class TrackingGeometry;
@@ -130,9 +132,13 @@ void addOutput(Context& ctx) {
         .def(py::init<>())
         .def(py::init<int, int, int>())
         .def(py::init<double, double, double>())
-        .def(py::init<std::string>())
+        .def(py::init<std::string_view>())
         .def_readonly("rgb", &Color::rgb);
   }
+
+  py::class_<IVisualization3D>(m, "IVisualization3D")
+      .def("write", py::overload_cast<const std::filesystem::path&>(
+                        &IVisualization3D::write, py::const_));
 
   {
     using Writer = ActsExamples::ObjTrackingGeometryWriter;
