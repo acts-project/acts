@@ -122,7 +122,7 @@ class Volume : public GeometryObject {
   /// @param gctx The geometry context
   /// @param viewConfig The view configuration
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
-                 const ViewConfig& viewConfig = {}) const;
+                 const ViewConfig& viewConfig) const;
 
  protected:
   Transform3 m_transform;
