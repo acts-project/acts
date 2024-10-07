@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -58,13 +58,6 @@ class Intersection {
   constexpr Intersection(const Position& position, double pathLength,
                          Status status)
       : m_position(position), m_pathLength(pathLength), m_status(status) {}
-
-  /// Returns whether the intersection was successful or not
-  /// @deprecated
-  [[deprecated("Use isValid() instead")]] constexpr explicit operator bool()
-      const {
-    return isValid();
-  }
 
   /// Returns whether the intersection was successful or not
   constexpr bool isValid() const { return m_status != Status::missed; }
@@ -148,13 +141,6 @@ class ObjectIntersection {
   constexpr ObjectIntersection(const Intersection3D& intersection,
                                const object_t* object, std::uint8_t index = 0)
       : m_intersection(intersection), m_object(object), m_index(index) {}
-
-  /// Returns whether the intersection was successful or not
-  /// @deprecated
-  [[deprecated("Use isValid() instead")]] constexpr explicit operator bool()
-      const {
-    return isValid();
-  }
 
   /// Returns whether the intersection was successful or not
   constexpr bool isValid() const { return m_intersection.isValid(); }

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Detray/DetrayGeometryConverter.hpp"
 
@@ -21,7 +21,9 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
-#include "detray/io/frontend/detector_writer.hpp"
+#include <algorithm>
+
+#include <detray/io/frontend/detector_writer.hpp>
 
 using namespace detray;
 
@@ -36,7 +38,7 @@ namespace {
 int findVolume(
     const Acts::Experimental::DetectorVolume* volume,
     const std::vector<const Acts::Experimental::DetectorVolume*>& volumes) {
-  auto candidate = std::find(volumes.begin(), volumes.end(), volume);
+  auto candidate = std::ranges::find(volumes, volume);
   if (candidate != volumes.end()) {
     return std::distance(volumes.begin(), candidate);
   }
@@ -47,10 +49,9 @@ int findVolume(
 detray::io::transform_payload Acts::DetrayGeometryConverter::convertTransform(
     const Transform3& t) {
   detray::io::transform_payload tfPayload;
-  auto translation = t.translation();
+  Vector3 translation = t.translation();
   tfPayload.tr = {translation.x(), translation.y(), translation.z()};
-
-  const auto rotation = t.rotation();
+  RotationMatrix3 rotation = t.rotation().transpose();
   tfPayload.rot = {rotation(0, 0), rotation(0, 1), rotation(0, 2),
                    rotation(1, 0), rotation(1, 1), rotation(1, 2),
                    rotation(2, 0), rotation(2, 1), rotation(2, 2)};
@@ -127,6 +128,8 @@ Acts::DetrayGeometryConverter::convertPortal(
           instance);
 
   auto [surfaceAdjusted, insidePointer] = orientedSurfaces[ip];
+  // Assign the geometry id to the surface
+  surfaceAdjusted->assignGeometryId(surface.geometryId());
 
   // Single link detected - just write it out, we use the oriented surface
   // in order to make sure the size is adjusted
@@ -226,6 +229,7 @@ Acts::DetrayGeometryConverter::convertPortal(
                     subBoundValues[CylinderBounds::BoundValues::eHalfLengthZ]));
             auto subSurface =
                 Surface::makeShared<CylinderSurface>(subTransform, subBounds);
+            subSurface->assignGeometryId(surface.geometryId());
 
             auto portalPayload = convertSurface(gctx, *subSurface, true);
             portalPayload.mask.volume_link.link = clippedIndices[ib - 1u];
@@ -247,7 +251,7 @@ Acts::DetrayGeometryConverter::convertPortal(
             auto subBounds = std::make_shared<RadialBounds>(subBoundValues);
             auto subSurface = Surface::makeShared<DiscSurface>(
                 portal.surface().transform(gctx), subBounds);
-
+            subSurface->assignGeometryId(surface.geometryId());
             auto portalPayload = convertSurface(gctx, *subSurface, true);
             portalPayload.mask.volume_link.link = clippedIndices[ib - 1u];
             portals.push_back(portalPayload);
@@ -260,7 +264,7 @@ Acts::DetrayGeometryConverter::convertPortal(
       // Write surface with invalid link
       auto portalPayload = convertSurface(gctx, *surfaceAdjusted, true);
       using NavigationLink =
-          typename DetrayDetector::surface_type::navigation_link;
+          typename DetrayHostDetector::surface_type::navigation_link;
       portalPayload.mask.volume_link.link =
           std::numeric_limits<NavigationLink>::max();
 

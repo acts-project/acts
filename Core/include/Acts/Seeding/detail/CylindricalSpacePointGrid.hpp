@@ -1,16 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
-#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
@@ -22,9 +20,9 @@ namespace Acts {
 /// It stores a vector of internal space points to external space points
 template <typename external_spacepoint_t>
 using CylindricalSpacePointGrid = Acts::Grid<
-    std::vector<
-        std::unique_ptr<Acts::InternalSpacePoint<external_spacepoint_t>>>,
+    std::vector<const external_spacepoint_t*>,
     Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>,
+    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>,
     Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>>;
 
 /// Cylindrical Binned Group
@@ -38,22 +36,25 @@ using CylindricalBinnedGroupIterator = Acts::BinnedGroupIterator<
 
 struct CylindricalSpacePointGridConfig {
   // minimum pT to be found by seedFinder
-  float minPt = 0;
+  float minPt = 0 * Acts::UnitConstants::MeV;
   // maximum extension of sensitive detector layer relevant for seeding as
   // distance from x=y=0 (i.e. in r)
-  float rMax = 0;
+  float rMax = 320 * Acts::UnitConstants::mm;
+  // maximum extension of sensitive detector layer relevant for seeding as
+  // distance from x=y=0 (i.e. in r)
+  float rMin = 0 * Acts::UnitConstants::mm;
   // maximum extension of sensitive detector layer relevant for seeding in
   // positive direction in z
-  float zMax = 0;
+  float zMax = 0 * Acts::UnitConstants::mm;
   // maximum extension of sensitive detector layer relevant for seeding in
   // negative direction in z
-  float zMin = 0;
+  float zMin = 0 * Acts::UnitConstants::mm;
   // maximum distance in r from middle space point to bottom or top spacepoint
-  float deltaRMax = 0;
+  float deltaRMax = 0 * Acts::UnitConstants::mm;
   // maximum forward direction expressed as cot(theta)
   float cotThetaMax = 0;
   // maximum impact parameter in mm
-  float impactMax = 0;
+  float impactMax = 0 * Acts::UnitConstants::mm;
   // minimum phi value for phiAxis construction
   float phiMin = -M_PI;
   // maximum phi value for phiAxis construction
@@ -68,7 +69,8 @@ struct CylindricalSpacePointGridConfig {
   // maximum number of phi bins
   int maxPhiBins = 10000;
   // enable non equidistant binning in z
-  std::vector<float> zBinEdges;
+  std::vector<float> zBinEdges{};
+  std::vector<float> rBinEdges{};
   bool isInInternalUnits = false;
   CylindricalSpacePointGridConfig toInternalUnits() const {
     if (isInInternalUnits) {
@@ -80,6 +82,7 @@ struct CylindricalSpacePointGridConfig {
     CylindricalSpacePointGridConfig config = *this;
     config.isInInternalUnits = true;
     config.minPt /= 1_MeV;
+    config.rMin /= 1_mm;
     config.rMax /= 1_mm;
     config.zMax /= 1_mm;
     config.zMin /= 1_mm;
@@ -117,14 +120,13 @@ class CylindricalSpacePointGridCreator {
       const Acts::CylindricalSpacePointGridOptions& _options);
 
   template <typename external_spacepoint_t,
-            typename external_spacepoint_iterator_t, typename callable_t>
+            typename external_spacepoint_iterator_t>
   static void fillGrid(
       const Acts::SeedFinderConfig<external_spacepoint_t>& config,
       const Acts::SeedFinderOptions& options,
       Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
       external_spacepoint_iterator_t spBegin,
-      external_spacepoint_iterator_t spEnd, callable_t&& toGlobal,
-      Acts::Extent& rRangeSPExtent);
+      external_spacepoint_iterator_t spEnd);
 };
 
 }  // namespace Acts

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -20,19 +20,9 @@
 
 namespace Acts {
 
-using DetrayDetector = detray::detector<detray::default_metadata>;
+using DetrayHostDetector = detray::detector<detray::default_metadata>;
 
 namespace DetrayConversionUtils {
-
-/// Detray conversion options
-struct Options {
-  /// Option to switch on/off the material conversion
-  bool convertMaterial = true;
-  /// Option to switch on/off the surface grid conversin
-  bool convertSurfaceGrids = true;
-  /// Option to switch on/off the export to json
-  bool writeToJson = false;
-};
 
 /// Detray conversion cache object
 ///

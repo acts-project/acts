@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -17,9 +17,9 @@
 #include <tuple>
 #include <vector>
 
-namespace Acts {
-namespace Svg {
+namespace Acts::Svg {
 
+/// @brief Style struct
 struct Style {
   // Fill parameters
   std::array<int, 3> fillColor = {255, 255, 255};
@@ -39,7 +39,8 @@ struct Style {
 
   unsigned int fontSize = 14u;
 
-  unsigned int nSegments = 72u;
+  /// Number of segments to approximate a quarter of a circle
+  unsigned int quarterSegments = 72u;
 
   /// Conversion to fill and stroke object from the base library
   /// @return a tuple of actsvg digestable objects
@@ -178,5 +179,4 @@ inline static void toFile(const std::vector<actsvg::svg::object>& objects,
   fout.close();
 }
 
-}  // namespace Svg
-}  // namespace Acts
+}  // namespace Acts::Svg

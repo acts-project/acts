@@ -1,16 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
@@ -65,7 +66,7 @@ namespace {
 void writeG4Polyhedron(
     Acts::IVisualization3D& visualizer, const G4Polyhedron& polyhedron,
     const Acts::Transform3& trafo = Acts::Transform3::Identity(),
-    Acts::ColorRGB color = {0, 0, 0}) {
+    Acts::Color color = {0, 0, 0}) {
   constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
 
   for (int i = 1; i <= polyhedron.GetNoFacets(); ++i) {
@@ -185,13 +186,11 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
   std::string volumeName = g4LogicalVolume->GetName();
   std::string volumeMaterialName = g4LogicalVolume->GetMaterial()->GetName();
 
-  bool isSensitive = g4SensitiveDetector != nullptr;
-  bool isMappedMaterial =
-      std::find(m_cfg.materialMappings.begin(), m_cfg.materialMappings.end(),
-                volumeMaterialName) != m_cfg.materialMappings.end();
-  bool isMappedVolume =
-      std::find(m_cfg.volumeMappings.begin(), m_cfg.volumeMappings.end(),
-                volumeName) != m_cfg.volumeMappings.end();
+  const bool isSensitive = g4SensitiveDetector != nullptr;
+  const bool isMappedMaterial =
+      Acts::rangeContainsValue(m_cfg.materialMappings, volumeMaterialName);
+  const bool isMappedVolume =
+      Acts::rangeContainsValue(m_cfg.volumeMappings, volumeName);
 
   if (!(isSensitive || isMappedMaterial || isMappedVolume)) {
     ACTS_VERBOSE("Did not try mapping '"
@@ -296,13 +295,13 @@ bool ActsExamples::SensitiveSurfaceMapper::checkMapping(
     const State& state, const Acts::GeometryContext& gctx,
     bool writeMissingG4VolsAsObj, bool writeMissingSurfacesAsObj) const {
   auto allSurfaces = m_cfg.candidateSurfaces->queryAll();
-  std::sort(allSurfaces.begin(), allSurfaces.end());
+  std::ranges::sort(allSurfaces);
 
   std::vector<const Acts::Surface*> found;
   for (const auto [_, surfacePtr] : state.g4VolumeToSurfaces) {
     found.push_back(surfacePtr);
   }
-  std::sort(found.begin(), found.end());
+  std::ranges::sort(found);
   auto newEnd = std::unique(found.begin(), found.end());
   found.erase(newEnd, found.end());
 
@@ -332,7 +331,7 @@ bool ActsExamples::SensitiveSurfaceMapper::checkMapping(
   if (writeMissingSurfacesAsObj) {
     Acts::ObjVisualization3D visualizer;
     Acts::ViewConfig vcfg;
-    vcfg.nSegments = 720;
+    vcfg.quarterSegments = 720;
     for (auto srf : missing) {
       Acts::GeometryView3D::drawSurface(visualizer, *srf, gctx,
                                         Acts::Transform3::Identity(), vcfg);
