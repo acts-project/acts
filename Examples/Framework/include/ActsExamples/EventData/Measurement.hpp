@@ -17,12 +17,15 @@
 #include "Acts/EventData/detail/CalculateResiduals.hpp"
 #include "Acts/EventData/detail/ParameterTraits.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
+#include "Acts/Utilities/Iterator.hpp"
 #include "ActsExamples/EventData/MeasurementConcept.hpp"
 
 #include <array>
+#include <compare>
 #include <concepts>
 #include <cstddef>
 #include <iosfwd>
+#include <iterator>
 #include <type_traits>
 #include <variant>
 #include <vector>
@@ -58,7 +61,8 @@ using ConstVariableBoundMeasurementProxy =
 /// provide access to the individual measurements.
 class MeasurementContainer {
  public:
-  using Index = std::size_t;
+  using size_type = std::size_t;
+  using Index = size_type;
   template <std::size_t Size>
   using FixedProxy = FixedMeasurementProxy<Acts::eBoundSize, Size, false>;
   template <std::size_t Size>
@@ -80,6 +84,15 @@ class MeasurementContainer {
   /// @param size The size of the measurement
   /// @return The index of the added measurement
   Index addMeasurement(std::uint8_t size);
+
+  /// @brief Get a variable-size measurement proxy
+  /// @param index The index of the measurement
+  /// @return The variable-size measurement proxy
+  VariableProxy at(Index index);
+  /// @brief Get a const variable-size measurement proxy
+  /// @param index The index of the measurement
+  /// @return The const variable-size measurement proxy
+  ConstVariableProxy at(Index index) const;
 
   /// @brief Get a variable-size measurement proxy
   /// @param index The index of the measurement
@@ -125,48 +138,11 @@ class MeasurementContainer {
   template <std::size_t Size, typename... Args>
   FixedProxy<Size> emplaceMeasurement(Args&&... args);
 
-  template <bool Const>
-  class IteratorImpl {
-   public:
-    using value_type =
-        std::conditional_t<Const, ConstVariableProxy, VariableProxy>;
-    using reference = value_type;
-    using pointer = value_type*;
-    using difference_type = std::ptrdiff_t;
-    using iterator_category = std::forward_iterator_tag;
-
-    using Container = std::conditional_t<Const, const MeasurementContainer,
-                                         MeasurementContainer>;
-
-    IteratorImpl(Container& container, std::size_t index)
-        : m_container(container), m_index(index) {}
-
-    reference operator*() const { return m_container.getMeasurement(m_index); }
-
-    pointer operator->() const { return &operator*(); }
-
-    IteratorImpl& operator++() {
-      ++m_index;
-      return *this;
-    }
-
-    IteratorImpl operator++(int) {
-      auto copy = *this;
-      ++*this;
-      return copy;
-    }
-
-    bool operator==(const IteratorImpl& other) const {
-      return m_index == other.m_index;
-    }
-
-   private:
-    Container& m_container;
-    Index m_index;
-  };
-
-  using iterator = IteratorImpl<false>;
-  using const_iterator = IteratorImpl<true>;
+  using iterator =
+      Acts::ContainerIndexIterator<MeasurementContainer, VariableProxy, false>;
+  using const_iterator =
+      Acts::ContainerIndexIterator<const MeasurementContainer,
+                                   ConstVariableProxy, true>;
 
   iterator begin();
   iterator end();
@@ -535,4 +511,7 @@ MeasurementContainer::FixedProxy<Size> MeasurementContainer::emplaceMeasurement(
   return meas;
 }
 
+static_assert(
+    std::random_access_iterator<MeasurementContainer::iterator> &&
+    std::random_access_iterator<MeasurementContainer::const_iterator>);
 }  // namespace ActsExamples

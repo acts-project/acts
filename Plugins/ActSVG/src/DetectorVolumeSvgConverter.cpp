@@ -68,7 +68,8 @@ Acts::Svg::DetectorVolumeConverter::convert(
   // Make dedicated surface grid sheets
   const auto& internalNavigationDelegate = dVolume.internalNavigation();
 
-  IndexedSurfacesConverter::Options isOptions;
+  IndexedSurfacesConverter::Options isOptions =
+      volumeOptions.indexedSurfacesOptions;
   // Use or transfer the surface style
   if (isOptions.surfaceStyles.empty()) {
     std::pair<Acts::GeometryIdentifier, Acts::Svg::Style> style{
