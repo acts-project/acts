@@ -118,10 +118,10 @@ MeasurementSelector::Cuts MeasurementSelector::getCutsByTheta(
   // look at the positive half of the Z axis
   const double constrainedTheta = std::min(theta, M_PI - theta);
 
-  auto it = std::find_if(config.begin(), config.end(),
-                         [constrainedTheta](const InternalCutBin& cuts) {
-                           return constrainedTheta < cuts.maxTheta;
-                         });
+  auto it = std::ranges::find_if(
+      config, [constrainedTheta](const InternalCutBin& cuts) {
+        return constrainedTheta < cuts.maxTheta;
+      });
   assert(it != config.end());
   return {it->maxNumMeasurements, it->maxChi2Measurement, it->maxChi2Outlier};
 }

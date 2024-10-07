@@ -111,7 +111,7 @@ bool Acts::ConvexPolygonBounds<N>::inside(
 
 template <int N>
 std::vector<Acts::Vector2> Acts::ConvexPolygonBounds<N>::vertices(
-    unsigned int /*lseg*/) const {
+    unsigned int /*ignoredSegments*/) const {
   return {m_vertices.begin(), m_vertices.end()};
 }
 

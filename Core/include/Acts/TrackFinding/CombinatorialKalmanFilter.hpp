@@ -596,15 +596,19 @@ class CombinatorialKalmanFilter {
 
       const bool isEndOfWorldReached =
           endOfWorldReached.checkAbort(state, stepper, navigator, logger());
+      const bool isVolumeConstraintReached = volumeConstraintAborter.checkAbort(
+          state, stepper, navigator, logger());
       const bool isPathLimitReached = result.pathLimitReached.checkAbort(
           state, stepper, navigator, logger());
       const bool isTargetReached =
           targetReached.checkAbort(state, stepper, navigator, logger());
       const bool allBranchesStopped = result.activeBranches.empty();
       if (isEndOfWorldReached || isPathLimitReached || isTargetReached ||
-          allBranchesStopped) {
+          allBranchesStopped || isVolumeConstraintReached) {
         if (isEndOfWorldReached) {
           ACTS_VERBOSE("End of world reached");
+        } else if (isVolumeConstraintReached) {
+          ACTS_VERBOSE("Volume constraint reached");
         } else if (isPathLimitReached) {
           ACTS_VERBOSE("Path limit reached");
         } else if (isTargetReached) {
@@ -1172,6 +1176,9 @@ class CombinatorialKalmanFilter {
 
     /// End of world aborter
     EndOfWorldReached endOfWorldReached;
+
+    /// Volume constraint aborter
+    VolumeConstraintAborter volumeConstraintAborter;
 
     /// Actor logger instance
     const Logger* actorLogger{nullptr};
