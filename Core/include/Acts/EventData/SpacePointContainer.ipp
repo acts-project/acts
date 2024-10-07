@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <math.h>
+#include <cmath>
 
 namespace Acts {
 
@@ -44,7 +44,7 @@ void SpacePointContainer<container_t, holder_t>::initialize() {
     m_data.setZ(i, external_container.z_impl(i));
     m_data.setRadius(
         i, std::sqrt(m_data.x(i) * m_data.x(i) + m_data.y(i) * m_data.y(i)));
-    m_data.setPhi(i, atan2f(m_data.y(i), m_data.x(i)));
+    m_data.setPhi(i, std::atan2(m_data.y(i), m_data.x(i)));
     m_data.setVarianceR(i, external_container.varianceR_impl(i));
     m_data.setVarianceZ(i, external_container.varianceZ_impl(i));
 
