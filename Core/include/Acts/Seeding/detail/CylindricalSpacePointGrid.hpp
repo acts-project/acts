@@ -78,6 +78,7 @@ struct CylindricalSpacePointGridConfig {
           "Repeated conversion to internal units for "
           "CylindricalSpacePointGridConfig");
     }
+
     using namespace Acts::UnitLiterals;
     CylindricalSpacePointGridConfig config = *this;
     config.isInInternalUnits = true;
@@ -87,6 +88,24 @@ struct CylindricalSpacePointGridConfig {
     config.zMax /= 1_mm;
     config.zMin /= 1_mm;
     config.deltaRMax /= 1_mm;
+
+    if (phiMin < -M_PI || phiMax > M_PI) {
+      throw std::runtime_error(
+          "CylindricalSpacePointGridConfig: phiMin and/or phiMax are outside "
+          "the allowed phi range, defined as [-M_PI, M_PI]");
+    }
+    if (phiMin > phiMax) {
+      throw std::runtime_error(
+          "CylindricalSpacePointGridConfig: phiMin is bigger then phiMax");
+    }
+    if (rMin > rMax) {
+      throw std::runtime_error(
+          "CylindricalSpacePointGridConfig: rMin is bigger then rMax");
+    }
+    if (zMin > zMax) {
+      throw std::runtime_error(
+          "CylindricalSpacePointGridConfig: zMin is bigger than zMax");
+    }
 
     return config;
   }
