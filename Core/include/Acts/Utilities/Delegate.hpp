@@ -45,6 +45,8 @@ class Delegate;
 template <typename R, typename H, DelegateType O, typename... Args>
 class Delegate<R(Args...), H, O> {
  public:
+  static constexpr DelegateType kOwnership = O;
+
   /// Alias of the return type
   using return_type = R;
   using holder_type = H;
@@ -54,8 +56,6 @@ class Delegate<R(Args...), H, O> {
   using signature_type = R(Args...);
 
   using deleter_type = void (*)(const holder_type *);
-
-  static constexpr DelegateType kOwnership = O;
 
  private:
   template <typename T, typename C>
