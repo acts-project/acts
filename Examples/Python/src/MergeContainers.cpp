@@ -42,7 +42,7 @@ void addMergeContainers(Context& ctx) {
       inputParticles,
       inputMeasurementParticlesMapVT,
       inputMeasurementParticlesMapMS,
-      useRecVtx, px, py, pz, chi2max, fit,
+      useRecVtx, px, py, pz, chi2max, fit,inputVertices,
       trackingGeometry, magneticField);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(

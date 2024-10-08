@@ -73,6 +73,7 @@ class MatchingAlgorithm final : public IAlgorithm {
     std::string inputParticles;
     std::string inputMeasurementParticlesMapVT;
     std::string inputMeasurementParticlesMapMS;
+    std::string inputVertices = "vertices";
     bool useRecVtx = false;
     double px = 0;
     double py = 0;
@@ -140,6 +141,7 @@ class MatchingAlgorithm final : public IAlgorithm {
       this, "InputMeasurementParticlesMapVT"};
   ReadDataHandle<IndexMultimap<ActsFatras::Barcode>> m_inputMeasurementParticlesMapMS{
       this, "InputMeasurementParticlesMapMS"};
+  ReadDataHandle<std::vector<Acts::Vertex>> m_inputVertices{this, "InputVertices"};
 
   //using TrackProxyType = Acts::TrackProxy<Acts::ConstVectorTrackContainer, Acts::ConstVectorMultiTrajectory, std::shared_ptr, false>;
 

@@ -77,7 +77,7 @@ void addVertexing(Context& ctx) {
                                 mex, "TrackletVertexingAlgorithm",
                                 inputSpacePoints, inputSpacePointsMC, inputParticles, inputMeasurementParticlesMap,                            
                                 zMaxTop, zMinTop, zMaxBot, zMinBot,deltaPhi, deltaThetaMin, deltaThetaMax, verbose, doMCtruth, outputRecPrimaryVertex, outputFitPrimaryVertex, outputGenPrimaryVertex, noGuessing,
-                                useFit, nbins, projective, zPerigee, outputFitFunction, outputZTracklets, outputZTrackletsPeak);
+                                useFit, nbins, zPerigee, outputFitFunction, outputZTracklets, outputZTrackletsPeak);
 }
 
 }  // namespace Acts::Python

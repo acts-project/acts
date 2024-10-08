@@ -90,14 +90,13 @@ ActsExamples::ProcessCode ActsExamples::TrackletVertexingAlgorithm::execute(
     return ActsExamples::ProcessCode::SUCCESS;
   }
 
-  //for(auto hits1 : evhits1){
   for (size_t ib = 0; ib < spacePoints.size() - 2; ++ib) {
-    auto ibz = spacePoints[it].z();
-    if (ibz> m_cfg.zMaxBottom || ibz < m_cfg.zMinBottom)
+    auto ibz = spacePoints[ib].z();
+    if (ibz> m_cfg.zMaxBot || ibz < m_cfg.zMinBot)
       continue;
     
-    double r = std::sqrt(spacePoints[it].x()*spacePoints[it].x() + spacePoints[it].y()*spacePoints[it].y() + ibz*ibz);
-    double phi0 = std::atan2(spacePoints[it].y(), spacePoints[it].x());  // atan2 is used to handle the correct quadrant
+    double r = std::sqrt(spacePoints[ib].x()*spacePoints[ib].x() + spacePoints[ib].y()*spacePoints[ib].y() + ibz*ibz);
+    double phi0 = std::atan2(spacePoints[ib].y(), spacePoints[ib].x());  // atan2 is used to handle the correct quadrant
     double theta0 = std::acos(ibz / r);
     
     for (size_t it = ib + 1; it < spacePoints.size() - 1; ++it) {
@@ -106,7 +105,7 @@ ActsExamples::ProcessCode ActsExamples::TrackletVertexingAlgorithm::execute(
       if (ibz>=itz)
         continue;
       
-      if (itz> m_cfg.zMaxBottom || itz < m_cfg.zMinBottom)
+      if (itz> m_cfg.zMaxBot || itz < m_cfg.zMinBot)
         continue;
 
       double phi1 = std::atan2(spacePoints[it].y(), spacePoints[it].x());  // atan2 is used to handle the correct quadrant
@@ -119,9 +118,9 @@ ActsExamples::ProcessCode ActsExamples::TrackletVertexingAlgorithm::execute(
       if(theta1-theta0 > m_cfg.deltaThetaMax || theta1-theta0 < m_cfg.deltaThetaMin)
         continue;
         
-      double vy = (spacePoints[it].y()-spacePoints[it].y())/
+      double vy = (spacePoints[it].y()-spacePoints[ib].y())/
                 (itz-ibz);
-      double py = spacePoints[it].y()-ibz*vy;
+      double py = spacePoints[ib].y()-ibz*vy;
 
       hist->Fill(-py/vy);
       
@@ -130,7 +129,7 @@ ActsExamples::ProcessCode ActsExamples::TrackletVertexingAlgorithm::execute(
 
   // Find the bin with the maximum number of entries
   int maxBin = hist->GetMaximumBin();
-  int bin_min =  hist->FindBin(-66);
+  int bin_min =  hist->FindBin(-65);
   int bin_max = hist->FindBin(1);
 
   // Initialize variables to track the maximum bin
@@ -217,9 +216,9 @@ ActsExamples::ProcessCode ActsExamples::TrackletVertexingAlgorithm::execute(
       spacePointsOnTrack.reserve(track.size());
       // Loop over the hit index on the proto track to find the space points
       for (const auto& hitIndex : track) {
-        auto it = spMap.find(hitIndex);
-        if (it != spMap.end()) {
-          spacePointsOnTrack.push_back(it->second);
+        auto sp = spMap.find(hitIndex);
+        if (sp != spMap.end()) {
+          spacePointsOnTrack.push_back(sp->second);
         }
       }
 
@@ -231,14 +230,18 @@ ActsExamples::ProcessCode ActsExamples::TrackletVertexingAlgorithm::execute(
                   return lhs->z() < rhs->z();
                 });
             
-      if (spacePointsOnTrack[0]->z()> m_cfg.zmax)
+      /*      
+      if (spacePointsOnTrack[0]->z() > m_cfg.zMaxBot)
         continue;//break
-      if (spacePointsOnTrack[0]->z() < m_cfg.zmin)
+      if (spacePointsOnTrack[0]->z() < m_cfg.zMinBot)
         continue;//break  
       if (spacePointsOnTrack[0]->z()>=spacePointsOnTrack[1]->z())
         continue;
-      if (spacePointsOnTrack[1]->z()> m_cfg.zmax)
+      if (spacePointsOnTrack[1]->z()> m_cfg.zMinTop)
         continue;//break
+      if (spacePointsOnTrack[1]->z()> m_cfg.zMaxTop)
+        continue;//break
+        */
           
       double vy = (spacePointsOnTrack[1]->y()-spacePointsOnTrack[0]->y())/
                 (spacePointsOnTrack[1]->z()-spacePointsOnTrack[0]->z());

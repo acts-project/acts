@@ -117,6 +117,8 @@ ActsExamples::MatchingAlgorithm::MatchingAlgorithm(
       m_cfg.inputMeasurementParticlesMapVT);
   m_inputMeasurementParticlesMapMS.initialize(
       m_cfg.inputMeasurementParticlesMapMS);
+  m_inputVertices.initialize(m_cfg.inputVertices);
+
 }
 
 ActsExamples::ProcessCode ActsExamples::MatchingAlgorithm::execute(
@@ -129,10 +131,15 @@ ActsExamples::ProcessCode ActsExamples::MatchingAlgorithm::execute(
   const auto& hitParticlesMapVT = m_inputMeasurementParticlesMapVT(ctx);
 
   // Construct a perigee surface as the target surface
+  const auto& inputVertices = m_inputVertices(ctx);
+  Acts::Vector3 propPoint = Acts::Vector3{m_cfg.px, m_cfg.py, m_cfg.pz};
+  std::cout<<"test vtx:\n";
+  for(auto& vt: inputVertices)
+    std::cout<<vt.position()<<std::endl;
+  if (m_cfg.useRecVtx)
+    propPoint = inputVertices[0].position();
 
-  std::cout<<"px: "<<m_cfg.px<<" py: "<<m_cfg.py<<" pz: "<<m_cfg.pz<<std::endl;
-  auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-      Acts::Vector3{m_cfg.px, m_cfg.py, m_cfg.pz});
+  auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(propPoint);
 
   Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
       Acts::EigenStepper<>(m_cfg.magneticField),
