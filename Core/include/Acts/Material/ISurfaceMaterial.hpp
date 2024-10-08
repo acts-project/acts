@@ -122,9 +122,9 @@ class ISurfaceMaterial {
   ///
   /// @return the string representation
   std::string toString() const {
-    std::stringstream ss;
-    toStream(ss);
-    return ss.str();
+    std::stringstream sstrm;
+    toStream(sstrm);
+    return sstrm.str();
   }
 
  protected:
