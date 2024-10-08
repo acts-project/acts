@@ -38,6 +38,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Geometry/VolumeAssociationTest.hpp"
 
 #include <array>
@@ -110,13 +111,11 @@ void addGeometry(Context& ctx) {
 
   {
     py::class_<Acts::Surface, std::shared_ptr<Acts::Surface>>(m, "Surface")
-        .def("geometryId",
-             [](Acts::Surface& self) { return self.geometryId(); })
-        .def("center",
-             [](Acts::Surface& self) {
-               return self.center(Acts::GeometryContext{});
-             })
-        .def("type", [](Acts::Surface& self) { return self.type(); })
+        // Can't bind directly because GeometryObject is virtual base of Surface
+        .def("geometryId", &Acts::Surface::geometryId)
+        .def("center", &Surface::center)
+        .def("type", &Surface::type)
+        .def("visualize", &Surface::visualize)
         .def("surfaceMaterial", &Acts::Surface::surfaceMaterialSharedPtr);
   }
 
@@ -169,7 +168,11 @@ void addGeometry(Context& ctx) {
              })
         .def_property_readonly(
             "highestTrackingVolume",
-            &Acts::TrackingGeometry::highestTrackingVolumePtr);
+            &Acts::TrackingGeometry::highestTrackingVolumePtr)
+        .def("visualize", &Acts::TrackingGeometry::visualize, py::arg("helper"),
+             py::arg("gctx"), py::arg("viewConfig") = s_viewVolume,
+             py::arg("portalViewConfig") = s_viewPortal,
+             py::arg("sensitiveViewConfig") = s_viewSensitive);
   }
 
   {
@@ -289,7 +292,7 @@ void addExperimentalGeometry(Context& ctx) {
       for (const auto& surface : smap) {
         auto gid = surface->geometryId();
         // Exclusion criteria
-        if (sensitiveOnly and gid.sensitive() == 0) {
+        if (sensitiveOnly && gid.sensitive() == 0) {
           continue;
         };
         surfaceVolumeLayerMap[gid.volume()][gid.layer()].push_back(surface);
