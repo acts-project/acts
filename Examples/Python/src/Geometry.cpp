@@ -112,7 +112,8 @@ void addGeometry(Context& ctx) {
   {
     py::class_<Acts::Surface, std::shared_ptr<Acts::Surface>>(m, "Surface")
         // Can't bind directly because GeometryObject is virtual base of Surface
-        .def("geometryId", &Acts::Surface::geometryId)
+        .def("geometryId",
+             [](const Surface& self) { return self.geometryId(); })
         .def("center", &Surface::center)
         .def("type", &Surface::type)
         .def("visualize", &Surface::visualize)
