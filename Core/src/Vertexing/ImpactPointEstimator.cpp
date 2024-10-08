@@ -208,7 +208,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
       ActsScalar p = trkParams.particleHypothesis().extractMomentum(qOvP);
 
       // Speed in units of c
-      ActsScalar beta = p / hypot(p, m0);
+      ActsScalar beta = p / fastHypot(p, m0);
 
       pcaStraightTrack[3] = timeOnTrack + distanceToPca / beta;
     }
@@ -283,7 +283,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
     ActsScalar p = trkParams.particleHypothesis().extractMomentum(qOvP);
 
     // Speed in units of c
-    ActsScalar beta = p / hypot(p, m0);
+    ActsScalar beta = p / fastHypot(p, m0);
 
     pca[3] = tP - rho / (beta * sinTheta) * (phi - phiP);
   }

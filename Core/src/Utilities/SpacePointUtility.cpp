@@ -77,7 +77,7 @@ SpacePointUtility::globalCoords(
   //
   auto x = globalPos[ePos0];
   auto y = globalPos[ePos1];
-  auto scale = 2 / hypot(x, y);
+  auto scale = 2 / fastHypot(x, y);
   ActsMatrix<2, 3> jacXyzToRhoZ = ActsMatrix<2, 3>::Zero();
   jacXyzToRhoZ(0, ePos0) = scale * x;
   jacXyzToRhoZ(0, ePos1) = scale * y;
@@ -113,7 +113,7 @@ Vector2 SpacePointUtility::calcRhoZVars(
   const auto var2 = paramCovAccessor(slinkBack).second(0, 0);
 
   // strip1 and strip2 are tilted at +/- theta/2
-  double sigma = hypot(var1, var2);
+  double sigma = fastHypot(var1, var2);
   double sigma_x = sigma / (2 * sin(theta * 0.5));
   double sigma_y = sigma / (2 * cos(theta * 0.5));
 

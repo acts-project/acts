@@ -479,7 +479,7 @@ void ActsExamples::HoughTransformSeeder::addSpacePoints(
     ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
                             << isp->key());
     for (auto& sp : spContainer) {
-      double r = Acts::hypot(sp.x(), sp.y());
+      double r = Acts::fastHypot(sp.x(), sp.y());
       double z = sp.z();
       float phi = std::atan2(sp.y(), sp.x());
       ResultUnsigned hitlayer = m_cfg.layerIDFinder(r).value();

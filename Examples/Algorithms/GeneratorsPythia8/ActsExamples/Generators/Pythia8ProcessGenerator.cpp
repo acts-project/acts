@@ -184,7 +184,7 @@ Pythia8Generator::operator()(RandomEngine& rng) {
     // normalization/ units are not import for the direction
     particle.setDirection(genParticle.px(), genParticle.py(), genParticle.pz());
     particle.setAbsoluteMomentum(
-        Acts::hypot(genParticle.px(), genParticle.py(), genParticle.pz()) *
+        Acts::fastHypot(genParticle.px(), genParticle.py(), genParticle.pz()) *
         1_GeV);
 
     particles.push_back(std::move(particle));

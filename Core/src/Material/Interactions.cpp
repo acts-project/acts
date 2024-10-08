@@ -52,7 +52,7 @@ struct RelativisticQuantities {
     betaGamma = pOverM;
     assert((betaGamma >= 0) && "Negative betaGamma");
     // gamma = sqrt(m² + p²)/m = sqrt(1 + (p/m)²)
-    gamma = hypot(1.0f, pOverM);
+    gamma = Acts::fastHypot(1.0f, pOverM);
   }
 };
 
@@ -396,7 +396,7 @@ float Acts::computeEnergyLossRadiative(const MaterialSlab& slab,
   // particle momentum and energy
   // do not need to care about the sign since it is only used squared
   const float momentum = absQ / qOverP;
-  const float energy = hypot(m, momentum);
+  const float energy = fastHypot(m, momentum);
 
   float dEdx = computeBremsstrahlungLossMean(m, energy);
 
@@ -425,7 +425,7 @@ float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab,
   // particle momentum and energy
   // do not need to care about the sign since it is only used squared
   const float momentum = absQ / qOverP;
-  const float energy = hypot(m, momentum);
+  const float energy = fastHypot(m, momentum);
 
   // compute derivative w/ respect to energy.
   float derE = deriveBremsstrahlungLossMeanE(m);

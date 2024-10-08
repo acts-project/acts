@@ -15,12 +15,12 @@
 
 namespace Acts {
 
-/// @brief Fast inverse square root function
+/// @brief Quick inverse square root function
 /// Taken from https://en.wikipedia.org/wiki/Fast_inverse_square_root
 /// @param x the number to calculate the inverse square root of
 /// @param iterations the number of newton iterations to perform
 template <typename T>
-constexpr T fastInverseSqrt(T x, int iterations = 1) noexcept {
+constexpr T quickInverseSqrt(T x, int iterations = 1) noexcept {
   static_assert(std::numeric_limits<T>::is_iec559 &&
                 "Only IEEE 754 is supported");
   static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>,
@@ -45,12 +45,12 @@ constexpr T fastInverseSqrt(T x, int iterations = 1) noexcept {
   return u.f;
 }
 
-/// @brief Fast power function @see `std::pow`
+/// @brief Quick power function @see `std::pow`
 /// Taken from
 /// https://martin.ankerl.com/2012/01/25/optimized-approximative-pow-in-c-and-cpp
 /// @param a the base
 /// @param b the exponent
-constexpr double fastPow(double a, double b) {
+constexpr double quickPow(double a, double b) {
   // enable only on IEEE 754
   static_assert(std::numeric_limits<double>::is_iec559);
 
@@ -66,12 +66,12 @@ constexpr double fastPow(double a, double b) {
   return u.f;
 }
 
-/// @brief Fast power function more precise than @see `fastPow`
+/// @brief Quick power function more precise than @see `quickPow`
 /// Taken from
 /// https://martin.ankerl.com/2012/01/25/optimized-approximative-pow-in-c-and-cpp
 /// @param a the base
 /// @param b the exponent
-constexpr double fastPowMorePrecise(double a, double b) {
+constexpr double quickPowMorePrecise(double a, double b) {
   // binary exponentiation
   double r = 1.0;
   int exp = std::abs(static_cast<int>(b));
@@ -84,7 +84,7 @@ constexpr double fastPowMorePrecise(double a, double b) {
     exp >>= 1;
   }
 
-  return r * fastPow(a, b - static_cast<int>(b));
+  return r * quickPow(a, b - static_cast<int>(b));
 }
 
 }  // namespace Acts

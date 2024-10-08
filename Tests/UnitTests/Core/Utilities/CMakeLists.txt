@@ -55,6 +55,7 @@ add_unittest(ParticleData ParticleDataTests.cpp)
 add_unittest(Zip ZipTests.cpp)
 add_unittest(TransformRange TransformRangeTests.cpp)
 add_unittest(QuickMath QuickMathTests.cpp)
+add_unittest(MathHelpers MathHelpersTests.cpp)
 
 add_unittest(TrackHelpers TrackHelpersTests.cpp)
 add_unittest(GraphViz GraphVizTests.cpp)

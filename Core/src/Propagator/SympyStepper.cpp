@@ -137,7 +137,7 @@ Result<double> SympyStepper::stepImpl(
       x = std::sqrt(std::sqrt(x));
     } else if constexpr (std::numeric_limits<double>::is_iec559 &&
                          tryUseFastPow) {
-      x = fastPow(x, exponent);
+      x = quickPow(x, exponent);
     } else {
       x = std::pow(x, exponent);
     }

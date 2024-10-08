@@ -86,7 +86,7 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
   ActsScalar p = params.particleHypothesis().extractMomentum(qOvP);
 
   // Speed in units of c
-  ActsScalar beta = p / hypot(p, m0);
+  ActsScalar beta = p / fastHypot(p, m0);
   // Transverse speed (i.e., speed in the x-y plane)
   ActsScalar betaT = beta * sinTheta;
 

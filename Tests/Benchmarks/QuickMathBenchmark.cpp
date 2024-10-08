@@ -19,12 +19,12 @@ namespace bdata = boost::unit_test::data;
 
 namespace Acts::Test {
 
-/// @brief Another fast power function @see `fastPow`
+/// @brief Another quick power function @see `quickPow`
 // Taken from
 // https://martin.ankerl.com/2007/02/11/optimized-exponential-functions-for-java
 /// @param a the base
 /// @param b the exponent
-constexpr double fastPowAnother(double a, double b) {
+constexpr double quickPowAnother(double a, double b) {
   // enable only on IEEE 754
   static_assert(std::numeric_limits<double>::is_iec559);
 
@@ -75,17 +75,17 @@ BOOST_DATA_TEST_CASE(
             << Acts::Test::microBenchmark(
                    [&] { return std::sqrt(std::sqrt(base)); }, nReps)
             << std::endl;
-  std::cout << "- fastPow: "
-            << Acts::Test::microBenchmark([&] { return fastPow(base, exp); },
+  std::cout << "- quickPow: "
+            << Acts::Test::microBenchmark([&] { return quickPow(base, exp); },
                                           nReps)
             << std::endl;
-  std::cout << "- fastPowMorePrecise: "
+  std::cout << "- quickPowMorePrecise: "
             << Acts::Test::microBenchmark(
-                   [&] { return fastPowMorePrecise(base, exp); }, nReps)
+                   [&] { return quickPowMorePrecise(base, exp); }, nReps)
             << std::endl;
-  std::cout << "- fastPowAnother: "
+  std::cout << "- quickPowAnother: "
             << Acts::Test::microBenchmark(
-                   [&] { return fastPowAnother(base, exp); }, nReps)
+                   [&] { return quickPowAnother(base, exp); }, nReps)
             << std::endl;
 }
 

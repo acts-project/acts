@@ -13,18 +13,18 @@
 namespace Acts {
 
 template <typename T>
-inline auto square(T x) {
+constexpr auto square(T x) {
   return x * x;
 }
 
 template <typename... T>
-inline auto hypot2(T... args) {
+constexpr auto hypotSquare(T... args) {
   return (square(args) + ...);
 }
 
 template <typename... T>
-inline auto hypot(T... args) {
-  return std::sqrt(hypot2(args...));
+constexpr auto fastHypot(T... args) {
+  return std::sqrt(hypotSquare(args...));
 }
 
 }  // namespace Acts

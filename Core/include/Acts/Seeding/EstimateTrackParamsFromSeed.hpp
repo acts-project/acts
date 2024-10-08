@@ -247,7 +247,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // The momentum direction in the new frame (the center of the circle has the
   // coordinate (-1.*A/(2*B), 1./(2*B)))
   ActsScalar A = -circleCenter(0) / circleCenter(1);
-  Vector3 transDirection(1., A, std::sqrt(1 + std::pow(A, 2)) * invTanTheta);
+  Vector3 transDirection(1., A, fastHypot(1, A) * invTanTheta);
   // Transform it back to the original frame
   Vector3 direction = rotation * transDirection.normalized();
 
@@ -277,7 +277,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // momentum on the transverse plane of the new frame)
   ActsScalar qOverPt = sign * (UnitConstants::m) / (0.3 * bFieldInTesla * R);
   // The estimated q/p in [GeV/c]^-1
-  params[eBoundQOverP] = qOverPt / hypot(1., invTanTheta);
+  params[eBoundQOverP] = qOverPt / fastHypot(1., invTanTheta);
 
   if (params.hasNaN()) {
     ACTS_ERROR(

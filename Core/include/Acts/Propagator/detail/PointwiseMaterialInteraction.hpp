@@ -147,7 +147,7 @@ struct PointwiseMaterialInteraction {
     const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
     // in forward(backward) propagation, energy decreases(increases) and
     // variances increase(decrease)
-    const auto nextE = hypot(mass, momentum) - Eloss * navDir;
+    const auto nextE = fastHypot(mass, momentum) - Eloss * navDir;
     // put particle at rest if energy loss is too large
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
     // minimum momentum below which we will not push particles via material
