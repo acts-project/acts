@@ -33,7 +33,7 @@ BOOST_DATA_TEST_CASE(fastHypot, expDist ^ expDist ^ bdata::xrange(100), xExp,
       Acts::fastHypot(static_cast<float>(x), static_cast<float>(y));
   const double fastDouble = Acts::fastHypot(x, y);
 
-  const double stdFloat =
+  const float stdFloat =
       std::hypot(static_cast<float>(x), static_cast<float>(y));
   const double stdDouble = std::hypot(x, y);
 

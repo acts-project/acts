@@ -28,7 +28,7 @@ BOOST_DATA_TEST_CASE(quickInverseSqrt, expDist ^ bdata::xrange(100), exp, i) {
   const float quickFloat = Acts::quickInverseSqrt(static_cast<float>(x));
   const double quickDouble = Acts::quickInverseSqrt(x);
 
-  const double stdFloat = 1.0 / std::sqrt(static_cast<float>(x));
+  const float stdFloat = 1.0 / std::sqrt(static_cast<float>(x));
   const double stdDouble = 1.0 / std::sqrt(x);
 
   CHECK_CLOSE_REL(stdFloat, quickFloat, 0.01);
