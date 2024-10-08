@@ -87,8 +87,11 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
     };
 
     // Sort by radius (this breaks down if the particle has to low momentum)
-    std::ranges::sort(track, {},
-                      [&](const auto& t) { return radiusForOrdering(t); });
+    if (m_cfg.preferCloseSpacepoints) {
+      std::ranges::sort(track, std::less{}, radiusForOrdering);
+    } else {
+      std::ranges::sort(track, std::greater{}, radiusForOrdering);
+    }
 
     if (m_cfg.uniqueModules) {
       auto newEnd = std::unique(
@@ -105,6 +108,11 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
           });
       moduleDuplicatesRemoved += std::distance(newEnd, track.end());
       track.erase(newEnd, track.end());
+    }
+
+    // Since we sorted the other way around, we need to reverse now
+    if (!m_cfg.preferCloseSpacepoints) {
+      std::reverse(track.begin(), track.end());
     }
 
     for (auto i = 0ul; i < track.size() - 1; ++i) {
