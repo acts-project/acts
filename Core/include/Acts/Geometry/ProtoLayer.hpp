@@ -33,16 +33,8 @@ struct ProtoLayer {
   /// The envelope parameters
   ExtentEnvelope envelope = ExtentEnvelope::Zero();
 
-  /// Constructor
-  ///
-  /// Loops over a provided vector of surface and calculates the various
-  /// min/max values in one go. Also takes into account the thickness
-  /// of an associated DetectorElement, if it exists.
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param surfaces The vector of surfaces to consider
-  ProtoLayer(const GeometryContext& gctx,
-             const std::vector<const Surface*>& surfaces);
+  /// The local transform
+  Transform3 transform = Transform3::Identity();
 
   /// Constructor
   ///
@@ -52,8 +44,36 @@ struct ProtoLayer {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The vector of surfaces to consider
+  /// @param transformIn The local transform to evaluate the sizing in
   ProtoLayer(const GeometryContext& gctx,
-             const std::vector<std::shared_ptr<const Surface>>& surfaces);
+             const std::vector<const Surface*>& surfaces,
+             const Transform3& transformIn = Transform3::Identity());
+
+  /// Constructor
+  ///
+  /// Loops over a provided vector of surface and calculates the various
+  /// min/max values in one go. Also takes into account the thickness
+  /// of an associated DetectorElement, if it exists.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param surfaces The vector of surfaces to consider
+  /// @param transformIn The local transform to evaluate the sizing in
+  ProtoLayer(const GeometryContext& gctx,
+             const std::vector<std::shared_ptr<const Surface>>& surfaces,
+             const Transform3& transformIn = Transform3::Identity());
+
+  /// Constructor
+  ///
+  /// Loops over a provided vector of surface and calculates the various
+  /// min/max values in one go. Also takes into account the thickness
+  /// of an associated DetectorElement, if it exists.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param surfaces The vector of surfaces to consider
+  /// @param transformIn The local transform to evaluate the sizing in
+  ProtoLayer(const GeometryContext& gctx,
+             const std::vector<std::shared_ptr<Surface>>& surfaces,
+             const Transform3& transformIn = Transform3::Identity());
 
   ProtoLayer() = default;
 
@@ -80,6 +100,14 @@ struct ProtoLayer {
   /// Output to ostream
   /// @param sl the input ostream
   std::ostream& toStream(std::ostream& sl) const;
+
+  /// Output stream operator
+  /// @param sl the input ostream
+  /// @param pl the ProtoLayer to be printed
+  /// @return the output ostream
+  friend std::ostream& operator<<(std::ostream& sl, const ProtoLayer& pl) {
+    return pl.toStream(sl);
+  }
 
   /// Give access to the surfaces used/assigned to the ProtoLayer
   const std::vector<const Surface*>& surfaces() const;

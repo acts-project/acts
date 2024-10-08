@@ -60,6 +60,10 @@ class PlyVisualization3D : public IVisualization3D {
   /// @copydoc Acts::IVisualization3D::clear()
   void clear() final;
 
+  void object(const std::string& /*name*/) final {
+    // Unimplemented
+  }
+
  private:
   std::vector<std::pair<VertexType, Color>> m_vertices;
   std::vector<FaceType> m_faces;
