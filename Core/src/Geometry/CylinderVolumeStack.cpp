@@ -827,49 +827,49 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
       } else if (m_resizeStrategy == ResizeStrategy::Gap) {
         ACTS_VERBOSE("Creating gap volumes to fill the new z bounds");
 
+        auto printGapDimensions = [&](const VolumeTuple& gap,
+                                      const std::string& prefix = "") {
+          ACTS_VERBOSE(" -> gap" << prefix << ": [ " << gap.minZ() << " <- "
+                                 << gap.midZ() << " -> " << gap.maxZ()
+                                 << " ], r: [ " << gap.minR() << " <-> "
+                                 << gap.maxR() << " ]");
+        };
+
         if (!same(newMinZ, oldMinZ) && newMinZ < oldMinZ) {
           ActsScalar gap1MinZ = newVolume.minZ();
           ActsScalar gap1MaxZ = oldVolume.minZ();
           ActsScalar gap1HlZ = (gap1MaxZ - gap1MinZ) / 2.0;
           ActsScalar gap1PZ = (gap1MaxZ + gap1MinZ) / 2.0;
 
-          auto printGapDimensions = [&]() {
-            ACTS_VERBOSE(" -> gap1 z: [ " << gap1MinZ << " <- " << gap1PZ
-                                          << " -> " << gap1MaxZ
-                                          << " ] (hl: " << gap1HlZ << ")");
-          };
-
           // // check if we need a new gap volume or reuse an existing one
           auto& candidate = volumeTuples.front();
           if (isGap(candidate.volume)) {
-            ACTS_VERBOSE("~> Reusing existing gap volume at positive z");
-
-            const auto& candidateCylBounds =
-                dynamic_cast<const CylinderVolumeBounds&>(
-                    candidate.volume->volumeBounds());
+            ACTS_VERBOSE("~> Reusing existing gap volume at negative z");
 
             gap1HlZ =
-                candidateCylBounds.get(CylinderVolumeBounds::eHalfLengthZ) +
+                candidate.bounds->get(CylinderVolumeBounds::eHalfLengthZ) +
                 gap1HlZ;
             gap1MaxZ = gap1MinZ + gap1HlZ * 2;
             gap1PZ = (gap1MaxZ + gap1MinZ) / 2.0;
 
-            printGapDimensions();
+            printGapDimensions(candidate, " before");
             auto gap1Bounds = std::make_shared<CylinderVolumeBounds>(
                 newMinR, newMaxR, gap1HlZ);
             auto gap1Transform = m_groupTransform * Translation3{0, 0, gap1PZ};
             candidate.volume->update(std::move(gap1Bounds), gap1Transform);
             candidate = VolumeTuple{*candidate.volume, m_groupTransform};
+            ACTS_VERBOSE("After:");
+            printGapDimensions(candidate, " after ");
 
           } else {
-            ACTS_VERBOSE("~> Creating new gap volume negative z");
-            printGapDimensions();
+            ACTS_VERBOSE("~> Creating new gap volume at negative z");
             auto gap1Bounds = std::make_shared<CylinderVolumeBounds>(
                 newMinR, newMaxR, gap1HlZ);
             auto gap1Transform = m_groupTransform * Translation3{0, 0, gap1PZ};
             auto gap1 = addGapVolume(gap1Transform, std::move(gap1Bounds));
             volumeTuples.insert(volumeTuples.begin(),
                                 VolumeTuple{*gap1, m_groupTransform});
+            printGapDimensions(volumeTuples.front());
           }
         }
 
@@ -879,41 +879,33 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
           ActsScalar gap2HlZ = (gap2MaxZ - gap2MinZ) / 2.0;
           ActsScalar gap2PZ = (gap2MaxZ + gap2MinZ) / 2.0;
 
-          auto printGapDimensions = [&]() {
-            ACTS_VERBOSE(" -> gap2 z: [ " << gap2MinZ << " <- " << gap2PZ
-                                          << " -> " << gap2MaxZ
-                                          << " ] (hl: " << gap2HlZ << ")");
-          };
-
           // check if we need a new gap volume or reuse an existing one
           auto& candidate = volumeTuples.back();
           if (isGap(candidate.volume)) {
             ACTS_VERBOSE("~> Reusing existing gap volume at positive z");
 
-            const auto& candidateCylBounds =
-                dynamic_cast<const CylinderVolumeBounds&>(
-                    candidate.volume->volumeBounds());
             gap2HlZ =
-                candidateCylBounds.get(CylinderVolumeBounds::eHalfLengthZ) +
+                candidate.bounds->get(CylinderVolumeBounds::eHalfLengthZ) +
                 gap2HlZ;
             gap2MinZ = newVolume.maxZ() - gap2HlZ * 2;
             gap2PZ = (gap2MaxZ + gap2MinZ) / 2.0;
 
-            printGapDimensions();
+            printGapDimensions(candidate, " before");
             auto gap2Bounds = std::make_shared<CylinderVolumeBounds>(
                 newMinR, newMaxR, gap2HlZ);
             auto gap2Transform = m_groupTransform * Translation3{0, 0, gap2PZ};
 
             candidate.volume->update(std::move(gap2Bounds), gap2Transform);
             candidate = VolumeTuple{*candidate.volume, m_groupTransform};
+            printGapDimensions(candidate, " after ");
           } else {
             ACTS_VERBOSE("~> Creating new gap volume at positive z");
-            printGapDimensions();
             auto gap2Bounds = std::make_shared<CylinderVolumeBounds>(
                 newMinR, newMaxR, gap2HlZ);
             auto gap2Transform = m_groupTransform * Translation3{0, 0, gap2PZ};
             auto gap2 = addGapVolume(gap2Transform, std::move(gap2Bounds));
             volumeTuples.emplace_back(*gap2, m_groupTransform);
+            printGapDimensions(volumeTuples.back());
           }
         }
       }
