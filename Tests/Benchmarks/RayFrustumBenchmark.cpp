@@ -187,10 +187,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
                      return {name, func(testBox, ray)};
                    });
 
-    bool all = std::all_of(results.begin(), results.end(),
-                           [](const auto& r) { return r.second; });
-    bool none = std::none_of(results.begin(), results.end(),
-                             [](const auto& r) { return r.second; });
+    bool all =
+        std::ranges::all_of(results, [](const auto& r) { return r.second; });
+    bool none =
+        std::ranges::none_of(results, [](const auto& r) { return r.second; });
 
     if (!all && !none) {
       std::cerr << "Discrepancy: " << std::endl;
@@ -369,10 +369,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
                      return {name, func(testBox, fr)};
                    });
 
-    bool all = std::all_of(results.begin(), results.end(),
-                           [](const auto& r) { return r.second; });
-    bool none = std::none_of(results.begin(), results.end(),
-                             [](const auto& r) { return r.second; });
+    bool all =
+        std::ranges::all_of(results, [](const auto& r) { return r.second; });
+    bool none =
+        std::ranges::none_of(results, [](const auto& r) { return r.second; });
 
     if (!all && !none) {
       std::cerr << "Discrepancy: " << std::endl;

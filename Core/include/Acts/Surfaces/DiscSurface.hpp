@@ -312,13 +312,12 @@ class DiscSurface : public RegularSurface {
   /// Return a Polyhedron for the surfaces
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lseg Number of segments along curved lines, it represents
-  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
-  /// are given
+  /// @param quarterSegments Number of segments used to describe the
+  /// quarter of a full circle
   ///
   /// @return A list of vertices and a face/facett description of it
-  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      std::size_t lseg) const override;
+  Polyhedron polyhedronRepresentation(
+      const GeometryContext& gctx, unsigned int quarterSegments) const override;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates

@@ -38,6 +38,7 @@
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <fstream>
@@ -605,7 +606,7 @@ inline void NamedTupleDsvReader<Delimiter, NamedTuple>::parse_header(
   m_extra_columns.clear();
   for (std::size_t i = 0; i < m_columns.size(); ++i) {
     // find the position of the column in the tuple.
-    auto it = std::find(names.begin(), names.end(), m_columns[i]);
+    auto it = std::ranges::find(names, m_columns[i]);
     if (it != names.end()) {
       // establish mapping between column and tuple item position
       m_tuple_column_map[std::distance(names.begin(), it)] = i;
