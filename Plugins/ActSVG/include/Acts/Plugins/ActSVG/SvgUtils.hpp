@@ -38,7 +38,7 @@ struct Style {
   std::vector<int> strokeDasharray = {};
 
   unsigned int fontSize = 14u;
-  std::array<int, 3> fontColor = {0, 0, 0};
+  std::array<int, 3> fontColor = {0};
 
   /// Number of segments to approximate a quarter of a circle
   unsigned int quarterSegments = 72u;
