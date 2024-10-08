@@ -756,7 +756,7 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
 
   auto isGap = [this](const Volume* vol) {
     return std::ranges::any_of(
-        m_gaps, [&](const auto& gap) { return vol = gap.get(); });
+        m_gaps, [&](const auto& gap) { return vol == gap.get(); });
   };
 
   if (m_direction == BinningValue::binZ) {
