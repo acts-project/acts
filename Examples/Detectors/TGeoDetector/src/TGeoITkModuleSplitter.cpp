@@ -21,8 +21,6 @@
 #include <cstddef>
 #include <sstream>
 
-namespace {}
-
 ActsExamples::TGeoITkModuleSplitter::TGeoITkModuleSplitter(
     const ActsExamples::TGeoITkModuleSplitter::Config& cfg,
     std::unique_ptr<const Acts::Logger> logger)
