@@ -166,7 +166,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
 #endif
 
 #ifdef ACTS_EXATRKX_ONNX_BACKEND
-  {
+#if 0
+{
     using Alg = Acts::OnnxMetricLearning;
     using Config = Alg::Config;
 
@@ -189,6 +190,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(knnVal);
     ACTS_PYTHON_STRUCT_END();
   }
+#endif
   {
     using Alg = Acts::OnnxEdgeClassifier;
     using Config = Alg::Config;
@@ -209,6 +211,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(cut);
     ACTS_PYTHON_STRUCT_END();
   }
+#if 0
   {
     using Alg = Acts::CugraphTrackBuilding;
 
@@ -220,6 +223,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                         }),
                         py::arg("level"));
   }
+#endif
 #endif
 
 #ifdef ACTS_EXATRKX_WITH_MODULEMAP
