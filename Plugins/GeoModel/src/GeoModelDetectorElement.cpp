@@ -12,6 +12,8 @@
 
 #include <utility>
 
+#include <GeoModelKernel/GeoFullPhysVol.h>
+
 Acts::GeoModelDetectorElement::GeoModelDetectorElement(
     PVConstLink geoPhysVol, std::shared_ptr<Surface> surface,
     const Transform3& sfTransform, ActsScalar thickness)
@@ -39,4 +41,8 @@ Acts::ActsScalar Acts::GeoModelDetectorElement::thickness() const {
 
 PVConstLink Acts::GeoModelDetectorElement::physicalVolume() const {
   return m_geoPhysVol;
+}
+
+const std::string& Acts::GeoModelDetectorElement::logVolName() const {
+  return m_geoPhysVol->getLogVol()->getName();
 }
