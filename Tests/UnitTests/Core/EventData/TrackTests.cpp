@@ -228,9 +228,9 @@ BOOST_AUTO_TEST_CASE(IteratorConcept) {
     BOOST_CHECK(*it == tc.getTrack(0));
     std::advance(it, 4);
     BOOST_CHECK(*it == tc.getTrack(4));
-    BOOST_CHECK(*(it[-1]) == tc.getTrack(3));
-    BOOST_CHECK(*(it[0]) == tc.getTrack(4));
-    BOOST_CHECK(*(it[1]) == tc.getTrack(5));
+    BOOST_CHECK(*(it + (-1)) == tc.getTrack(3));
+    BOOST_CHECK(*(it + 0) == tc.getTrack(4));
+    BOOST_CHECK(*(it + 1) == tc.getTrack(5));
     BOOST_CHECK(*(it - 2) == tc.getTrack(2));
   }
 

@@ -133,19 +133,20 @@ class AnnulusBounds : public DiscBounds {
   std::vector<Vector2> corners() const;
 
   /// This method returns the xy coordinates of the four corners of the
-  /// bounds in module coordinates (in x/y)
+  /// bounds in module coordinates (in x/y), and if quarterSegments is bigger or
+  /// equal to 0, the curved part of the segment is included and approximated
+  /// by the corresponding number of segments.
+  ///
   /// Starting from the upper right (max R, pos locX) and proceeding clock-wise
   /// i.e. (max R; pos locX), (min R; pos locX), (min R; neg loc X), (max R: neg
   /// locX)
   ///
-  /// @param lseg the number of segments used to approximate
-  /// and eventually curved line
-  ///
-  /// @note that that if @c lseg > 0, the extrema points are given,
-  ///  which may slightly alter the number of segments returned
+  /// @param quarterSegments the number of segments used to approximate
+  /// a quarter of a circle
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg) const override;
+  std::vector<Vector2> vertices(
+      unsigned int quarterSegments = 2u) const override;
 
   /// This method returns inner radius
   double rMin() const final;
