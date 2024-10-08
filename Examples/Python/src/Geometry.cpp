@@ -32,6 +32,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -115,7 +116,8 @@ void addGeometry(Context& ctx) {
              [](const Surface& self) { return self.geometryId(); })
         .def("center", &Surface::center)
         .def("type", &Surface::type)
-        .def("visualize", &Surface::visualize);
+        .def("visualize", &Surface::visualize)
+        .def("surfaceMaterial", &Acts::Surface::surfaceMaterialSharedPtr);
   }
 
   {
