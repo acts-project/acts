@@ -1,17 +1,20 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+#include "Acts/Definitions/Algebra.hpp"
 
 #include <algorithm>
 #include <limits>
 #include <memory>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -41,8 +44,23 @@ struct TripletCandidate {
   TripletCandidate& operator=(const TripletCandidate&) = default;
 
   /// @brief Move operations
-  TripletCandidate(TripletCandidate&&) = default;
-  TripletCandidate& operator=(TripletCandidate&&) = default;
+  TripletCandidate(TripletCandidate&& other) noexcept
+      : bottom(std::exchange(other.bottom, nullptr)),
+        middle(std::exchange(other.middle, nullptr)),
+        top(std::exchange(other.top, nullptr)),
+        weight(other.weight),
+        zOrigin(other.zOrigin),
+        isQuality(other.isQuality) {}
+
+  TripletCandidate& operator=(TripletCandidate&& other) noexcept {
+    bottom = std::exchange(other.bottom, nullptr);
+    middle = std::exchange(other.middle, nullptr);
+    top = std::exchange(other.top, nullptr);
+    weight = other.weight;
+    zOrigin = other.zOrigin;
+    isQuality = other.isQuality;
+    return *this;
+  }
 
   external_space_point_t* bottom{nullptr};
   external_space_point_t* middle{nullptr};
@@ -60,19 +78,21 @@ struct TripletCandidate {
 /// @tparam external_space_point_t The external spacepoint type.
 
 template <typename external_space_point_t>
+concept SatisfyCandidateConcept = requires(external_space_point_t spacePoint) {
+  { spacePoint.x() } -> std::convertible_to<float>;
+  { spacePoint.y() } -> std::convertible_to<float>;
+  { spacePoint.z() } -> std::convertible_to<float>;
+};
+
+template <SatisfyCandidateConcept external_space_point_t>
 class CandidatesForMiddleSp {
  public:
   using value_type = TripletCandidate<external_space_point_t>;
 
-  /// @brief constructor
-  CandidatesForMiddleSp() = default;
-  /// @brief Destructor
-  ~CandidatesForMiddleSp() = default;
-
   /// @brief Setting maximum number of candidates to keep
-  /// @param n_low Maximum number of candidates in the low-quality collection
-  /// @param n_high Maximum number of candidates in the high-quality collection
-  void setMaxElements(std::size_t n_low, std::size_t n_high);
+  /// @param nLow Maximum number of candidates in the low-quality collection
+  /// @param nHigh Maximum number of candidates in the high-quality collection
+  void setMaxElements(std::size_t nLow, std::size_t nHigh);
 
   /// @brief Retrieve the triplet candidates, the resulting vector is already sorted,
   /// elements with higher quality first
@@ -107,12 +127,20 @@ class CandidatesForMiddleSp {
   /// @returns The comparison result
   static bool ascendingByQuality(const value_type& i1, const value_type& i2);
 
+  /// @brief Retrieve the number of Low quality candidates
+  /// @returns The number of Low quality candidates
+  std::size_t nLowQualityCandidates() const;
+
+  /// @brief Retrieve the number of High quality candidates
+  /// @returns The number of High quality candidates
+  std::size_t nHighQualityCandidates() const;
+
  private:
   /// @brief dding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
   /// @param indices The collection into which the candidate should be stored
   /// @param n The current number of stored elements in the container
-  /// @param n_max The maximum number of elements that can be stored in the container
+  /// @param nMax The maximum number of elements that can be stored in the container
   /// @param SpB The bottom space point
   /// @param SpM The middle space point
   /// @param SpT The top space point
@@ -121,25 +149,25 @@ class CandidatesForMiddleSp {
   /// @param isQuality Whether the triplet candidate is high or low quality
   /// @returns whether the triplet candidate has been added or not to the collection
   bool push(std::vector<std::size_t>& indices, std::size_t& n,
-            const std::size_t n_max, external_space_point_t& SpB,
+            const std::size_t nMax, external_space_point_t& SpB,
             external_space_point_t& SpM, external_space_point_t& SpT,
             float weight, float zOrigin, bool isQuality);
 
   /// @brief Check if an element exists in the collection. The element to be checked
   /// is supposed to be in the n position of the collection.
   /// @param n Index of the requested element
-  /// @param max_size Number of elements currently stored in the collection
+  /// @param maxSize Number of elements currently stored in the collection
   /// @returns Whether the element exists
-  bool exists(const std::size_t n, const std::size_t max_size) const;
+  bool exists(const std::size_t n, const std::size_t maxSize) const;
 
   /// @brief Pop an element from a collection. The removal of the element from the collection
   /// does not imply its destruction. In fact, the number of stored elements is
   /// simply diminished by 1. The popped element is technically still available
   /// at the end of the collection.
   /// @param indices The collection
-  /// @param current_size The current number of element stored in the collection. The function will
+  /// @param currentSize The current number of element stored in the collection. The function will
   /// diminish this value by 1
-  void pop(std::vector<std::size_t>& indices, std::size_t& current_size);
+  void pop(std::vector<std::size_t>& indices, std::size_t& currentSize);
 
   /// @brief Return the weight for a candidate
   /// @param indices The collection in which the element is stored
@@ -160,29 +188,29 @@ class CandidatesForMiddleSp {
   /// is in the correct position on the tree
   /// @param indices The collection
   /// @param n The index of the element to place in the correct position
-  /// @param actual_size The current number of elements stored in the collection
+  /// @param actualSize The current number of elements stored in the collection
   void bubbledw(std::vector<std::size_t>& indices, std::size_t n,
-                std::size_t actual_size);
+                std::size_t actualSize);
 
   /// @brief Adding a new triplet candidate to the collection. The function is called after the candidate has satisfied
   /// all the selection criteria
   /// @param indices The collection
   /// @param n Current number of stored elements in the collection
-  /// @param n_max The maximum number of elements that can be stored in the collection
+  /// @param nMax The maximum number of elements that can be stored in the collection
   /// @param element The element that must be added to the collection
   void addToCollection(std::vector<std::size_t>& indices, std::size_t& n,
-                       const std::size_t n_max, value_type&& element);
+                       const std::size_t nMax, value_type&& element);
 
  private:
   // sizes
-  // m_max_size_* is the maximum size of the indices collections. These values
+  // m_maxSize* is the maximum size of the indices collections. These values
   // are set by the user once
-  std::size_t m_max_size_high{0};
-  std::size_t m_max_size_low{0};
-  // m_n_* is the current size of the indices collections [0, m_max_size_*).
+  std::size_t m_maxSizeHigh{0};
+  std::size_t m_maxSizeLow{0};
+  // m_n_* is the current size of the indices collections [0, m_maxSize*).
   // These values are set internally by the class
-  std::size_t m_n_high{0};
-  std::size_t m_n_low{0};
+  std::size_t m_nHigh{0};
+  std::size_t m_nLow{0};
 
   // storage contains the collection of the candidates
   std::vector<value_type> m_storage{};
@@ -197,9 +225,9 @@ class CandidatesForMiddleSp {
   // and std::priority_queue were tried and were found to be slower.
 
   // list of indexes of candidates with high quality in the storage
-  std::vector<std::size_t> m_indices_high{};
+  std::vector<std::size_t> m_indicesHigh{};
   // list of indexes of candidates with low quality in the storage
-  std::vector<std::size_t> m_indices_low{};
+  std::vector<std::size_t> m_indicesLow{};
 };
 
 }  // namespace Acts

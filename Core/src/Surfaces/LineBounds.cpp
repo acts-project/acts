@@ -1,12 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/LineBounds.hpp"
+
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -15,12 +18,14 @@ Acts::SurfaceBounds::BoundsType Acts::LineBounds::type() const {
   return SurfaceBounds::eLine;
 }
 
-bool Acts::LineBounds::inside(const Acts::Vector2& lposition,
-                              const Acts::BoundaryCheck& bcheck) const {
+bool Acts::LineBounds::inside(
+    const Acts::Vector2& lposition,
+    const Acts::BoundaryTolerance& boundaryTolerance) const {
   double r = get(LineBounds::eR);
   double halfLengthZ = get(LineBounds::eHalfLengthZ);
-  return bcheck.isInside(lposition, Vector2(-r, -halfLengthZ),
-                         Vector2(r, halfLengthZ));
+  return detail::insideAlignedBox(Vector2(-r, -halfLengthZ),
+                                  Vector2(r, halfLengthZ), boundaryTolerance,
+                                  lposition, std::nullopt);
 }
 
 // ostream operator overload

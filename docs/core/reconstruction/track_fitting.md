@@ -65,7 +65,7 @@ Simplified overview of the GSF algorithm.
 :::
 
 ### The Multi-Stepper
-To implement the GSF, a special stepper is needed, that can handle a multi-component state internally: The {class}`Acts::MultiEigenStepperLoop`, which is based on the {class}`Acts::EigenStepper` and thus shares a lot of code with it. It interfaces to the navigation as one aggregate state to limit the navigation overhead, but internally processes a multi-component state. How this aggregation is performed can be configured via a template parameter, by default weighted average is used ({struct}`Acts::WeightedComponentReducerLoop`).
+To implement the GSF, a special stepper is needed, that can handle a multi-component state internally: The {class}`Acts::MultiEigenStepperLoop`, which is based on the {class}`Acts::EigenStepper` and thus shares a lot of code with it. It interfaces to the navigation as one aggregate state to limit the navigation overhead, but internally processes a multi-component state. How this aggregation is performed can be configured via a template parameter, by default maximum weight is used ({type}`Acts::MaxWeightReducerLoop`).
 
 Even though the multi-stepper interface exposes only one aggregate state and thus is compatible with most standard tools, there is a special aborter is required to stop the navigation when the surface is reached, the {struct}`Acts::MultiStepperSurfaceReached`. It checks if all components have reached the target surface already and updates their state accordingly. Optionally, it also can stop the propagation when the aggregate state reaches the surface.
 
@@ -306,24 +306,21 @@ The implementation is in some points similar to the KF, since the KF interface w
 This makes it easier to replace both fitters with each other.
 The structure of the *GX2F* implementation follows coarsely the mathematical outline given above.
 It is best to start reading the implementation from `fit()`:
+
 1. Set up the fitter:
-   - Actor
-   - Aborter
-   - Propagator
-   - Variables we need longer than one iteration
+    - Actor
+    - Aborter
+    - Propagator
+    - Variables we need longer than one iteration
 2. Iterate
-   1. Update parameters
-   2. Propagate through geometry
-   3. Collect:
-       - Residuals
-       - Covariances
-       - Projected Jacobians
-   4. Loop over collection and calculate and sum over:
-       - $\chi^2$
-       - $[a_{kl}]$
-       - $\vec b$
-   5. Solve $[a_{kl}] \vec{\delta\alpha}_n = \vec b$
-   6. Check for convergence
+    1. Update parameters
+    2. Propagate through geometry
+    3. Loop over track and calculate and sum over:
+        - $\chi^2$
+        - $[a_{kl}]$
+        - $\vec b$
+    4. Solve $[a_{kl}] \vec{\delta\alpha}_n = \vec b$
+    5. Check for convergence
 3. Calculate covariance of the final parameters
 4. Prepare and return the final track
 
@@ -338,7 +335,7 @@ Gx2FitterOptions( ... ) : ... {}
 
 Gx2FitterOptions() = delete;
 
-... 
+...
 //common options:
 // geoContext, magFieldContext, calibrationContext, extensions,
 // propagatorPlainOptions, referenceSurface, multipleScattering,
@@ -346,9 +343,6 @@ Gx2FitterOptions() = delete;
 
 /// Max number of iterations during the fit (abort condition)
 size_t nUpdateMax = 5;
-
-/// Disables the QoP fit in case of missing B-field
-bool zeroField = false;
 
 /// Check for convergence (abort condition). Set to 0 to skip.
 double relChi2changeCutOff = 1e-7;
@@ -359,11 +353,7 @@ Common options like the geometry context or toggling of the energy loss are simi
 For now there are three *GX2F* specific options:
 1. `nUpdateMax` sets an abort condition for the parameter update as a maximum number of iterations allowed.
 We do not really want to use this condition, but it stops the fit in case of poor convergence.
-2. `zeroField` toggles the q/p-fit.
-If there is no magnetic field, we get no q/p-information.
-This would crash the fitter when needing matrix inverses.
-When this option is set to `true`, most of the matrices will omit the q/p-rows and -columns.
-3. `relChi2changeCutOff` is the desired convergence criterion.
+2. `relChi2changeCutOff` is the desired convergence criterion.
 We compare at each step of the iteration the current to the previous $\chi^2$.
 If the relative change is small enough, we finish the fit.
 

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 #include <vector>
@@ -62,10 +62,10 @@ class OnnxRuntimeBase {
   std::unique_ptr<Ort::Session> m_session;
   std::vector<Ort::AllocatedStringPtr> m_inputNodeNamesAllocated;
   std::vector<const char*> m_inputNodeNames;
-  std::vector<int64_t> m_inputNodeDims;
+  std::vector<std::int64_t> m_inputNodeDims;
   std::vector<Ort::AllocatedStringPtr> m_outputNodeNamesAllocated;
   std::vector<const char*> m_outputNodeNames;
-  std::vector<std::vector<int64_t>> m_outputNodeDims;
+  std::vector<std::vector<std::int64_t>> m_outputNodeDims;
 };
 
 }  // namespace Acts

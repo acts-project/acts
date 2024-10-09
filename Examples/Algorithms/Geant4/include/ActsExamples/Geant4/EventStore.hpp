@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -73,7 +73,8 @@ struct EventStore {
   /// This is done using a pseudo-barcode that contains all fields but not the
   /// subparticle counter. This can be used as key in a map to store the
   /// subparticle information
-  using BarcodeWithoutSubparticle = Acts::MultiIndex<uint64_t, 16, 16, 16, 16>;
+  using BarcodeWithoutSubparticle =
+      Acts::MultiIndex<std::uint64_t, 16, 16, 16, 16>;
   std::unordered_map<BarcodeWithoutSubparticle, std::size_t> subparticleMap;
 };
 

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -22,8 +22,9 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
+#include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -51,6 +52,14 @@ class StraightLineStepper {
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
   using BField = NullBField;
+
+  struct Config {};
+
+  struct Options : public StepperPlainOptions {
+    void setPlainOptions(const StepperPlainOptions& options) {
+      static_cast<StepperPlainOptions&>(*this) = options;
+    }
+  };
 
   /// State for track parameter propagation
   ///
@@ -133,10 +142,6 @@ class StraightLineStepper {
     // Cache the geometry context of this propagation
     std::reference_wrapper<const GeometryContext> geoContext;
   };
-
-  /// Always use the same propagation state type, independently of the initial
-  /// track parameter type and of the target surface
-  using state_type = State;
 
   StraightLineStepper() = default;
 
@@ -229,16 +234,17 @@ class StraightLineStepper {
   /// @param [in] surface The surface provided
   /// @param [in] index The surface intersection index
   /// @param [in] navDir The navigation direction
-  /// @param [in] bcheck The boundary check for this status update
+  /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A logger instance
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
-      Direction navDir, const BoundaryCheck& bcheck,
+      Direction navDir, const BoundaryTolerance& boundaryTolerance,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<StraightLineStepper>(
-        *this, state, surface, index, navDir, bcheck, surfaceTolerance, logger);
+        *this, state, surface, index, navDir, boundaryTolerance,
+        surfaceTolerance, logger);
   }
 
   /// Update step size

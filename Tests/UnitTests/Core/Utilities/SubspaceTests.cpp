@@ -1,19 +1,22 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/detail/Subspace.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <numeric>
 #include <ostream>
 #include <tuple>
@@ -75,7 +78,7 @@ std::array<std::size_t, kSize> selectFixedIndices(
   for (auto i = 0u; i < kSize; ++i) {
     indices[i] = fullIndices[i];
   }
-  std::sort(indices.begin(), indices.end());
+  std::ranges::sort(indices);
   return indices;
 }
 
@@ -95,7 +98,7 @@ BOOST_AUTO_TEST_SUITE(UtilitiesSubspace)
 //   }
 // }
 
-BOOST_AUTO_TEST_CASE_TEMPLATE(FixedSizeSubspaceFloat, ScalarAndSubspace,
+BOOST_AUTO_TEST_CASE_TEMPLATE(FixedSizeSubspace, ScalarAndSubspace,
                               ScalarsAndFixedSizeSubspaces) {
   // extract the test types
   using Scalar = std::tuple_element_t<0, ScalarAndSubspace>;
@@ -134,6 +137,45 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(FixedSizeSubspaceFloat, ScalarAndSubspace,
       BOOST_CHECK_EQUAL(y0[i], subspace.contains(i) ? x[i] : 0);
       BOOST_CHECK_EQUAL(y1[i], subspace.contains(i) ? x[i] : 0);
     }
+  } while (std::next_permutation(fullIndices.begin(), fullIndices.end()));
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(VariableSizeSubspace, ScalarAndSubspace,
+                              ScalarsAndFixedSizeSubspaces) {
+  // extract the test types
+  using Scalar = std::tuple_element_t<0, ScalarAndSubspace>;
+  using FixedSubspace = std::tuple_element_t<1, ScalarAndSubspace>;
+  using VariableSubspace =
+      detail::VariableSizeSubspace<FixedSubspace::fullSize()>;
+
+  auto fullIndices = makeMonotonicIndices(FixedSubspace::fullSize());
+
+  // in principle, we would like to iterate over all possible ordered subsets
+  // from the full space indices with a size identical to the subspace. since i
+  // do not know how to do that in a simple manner, we are iterating over all
+  // permutations of the full indices and pick the first n elements. this should
+  // give a reasonable set of different subspace configurations.
+  do {
+    auto indices = selectFixedIndices<FixedSubspace::size()>(fullIndices);
+    FixedSubspace fixedSubspace(indices);
+    VariableSubspace variableSubspace(indices);
+
+    BOOST_CHECK_EQUAL(variableSubspace.size(), fixedSubspace.size());
+    BOOST_CHECK_EQUAL(variableSubspace.fullSize(), fixedSubspace.fullSize());
+
+    auto fixedProjector = fixedSubspace.template projector<Scalar>();
+
+    Eigen::Matrix<Scalar, FixedSubspace::fullSize(), FixedSubspace::fullSize()>
+        fixedFullProjector;
+    fixedFullProjector.setZero();
+    fixedFullProjector.template topLeftCorner<FixedSubspace::size(),
+                                              FixedSubspace::fullSize()>() =
+        fixedProjector;
+
+    auto variableFullProjector =
+        variableSubspace.template fullProjector<Scalar>();
+
+    BOOST_CHECK_EQUAL(variableFullProjector, fixedFullProjector);
   } while (std::next_permutation(fullIndices.begin(), fullIndices.end()));
 }
 

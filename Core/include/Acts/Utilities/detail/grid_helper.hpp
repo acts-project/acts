@@ -1,16 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 
 #include <array>
 #include <set>
@@ -94,8 +94,6 @@ class GlobalNeighborHoodIndices {
       ++m_localIndicesIter[0];
       return *this;
     }
-
-    bool operator!=(const iterator& it) { return !(*this == it); }
 
     bool isEqual(const iterator& b) const {
       if (b.m_parent == nullptr) {
@@ -802,7 +800,7 @@ struct grid_helper {
       const std::array<std::size_t, sizeof...(Axes)>& localIndices,
       std::size_t size, const std::tuple<Axes...>& axes) {
     return neighborHoodIndices(
-        localIndices, std::make_pair(static_cast<int>(-size), size), axes);
+        localIndices, std::make_pair(-static_cast<int>(size), size), axes);
   }
 
   /// @brief get global bin indices for bins in specified neighborhood

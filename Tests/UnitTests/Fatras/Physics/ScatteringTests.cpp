@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -38,7 +38,7 @@ double rms(const std::vector<double>& values, double mean) {
 
 // Common test method that will be instantiated for each scattering model.
 template <typename Scattering>
-void test(const Scattering& scattering, uint32_t seed,
+void test(const Scattering& scattering, std::uint32_t seed,
           const ActsFatras::Particle& before) {
   std::ranlux48 gen(seed);
   ActsFatras::Particle after = before;

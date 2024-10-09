@@ -1,0 +1,126 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "common",
+            "hidden": true,
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "OFF",
+                "ACTS_BUILD_FATRAS": "ON",
+                "ACTS_BUILD_ODD": "ON",
+                "ACTS_BUILD_UNITTESTS": "ON",
+                "ACTS_BUILD_INTEGRATIONTESTS": "ON",
+                "ACTS_BUILD_PLUGIN_LEGACY": "ON",
+                "ACTS_BUILD_EXAMPLES_DD4HEP": "ON",
+                "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
+                "ACTS_BUILD_EXAMPLES_UNITTESTS": "ON"
+            }
+        },
+        {
+            "name": "dev",
+            "displayName": "Development",
+            "inherits": "common",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "ACTS_FORCE_ASSERTIONS": "ON"
+            }
+        },
+        {
+            "name": "perf",
+            "displayName": "Performance",
+            "inherits": "common",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS": "-O3 -DNDEBUG -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer",
+                "ACTS_BUILD_BENCHMARKS": "ON"
+            }
+        },
+        {
+            "name": "ci-common",
+            "hidden": true,
+            "inherits": "common",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS": "-Werror",
+                "ACTS_FORCE_ASSERTIONS": "ON",
+                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
+                "ACTS_BUILD_BENCHMARKS": "ON",
+                "ACTS_BUILD_NONCOMPILE_TESTS": "ON",
+                "ACTS_BUILD_ANALYSIS_APPS": "ON",
+                "ACTS_BUILD_ALIGNMENT": "ON",
+                "ACTS_BUILD_FATRAS_GEANT4": "ON",
+                "ACTS_BUILD_PLUGIN_ACTSVG": "ON",
+                "ACTS_BUILD_PLUGIN_CUDA": "OFF",
+                "ACTS_BUILD_PLUGIN_DD4HEP": "ON",
+                "ACTS_BUILD_PLUGIN_PODIO": "ON",
+                "ACTS_BUILD_PLUGIN_EDM4HEP": "ON",
+                "ACTS_BUILD_PLUGIN_GEOMODEL": "ON",
+                "ACTS_BUILD_PLUGIN_TRACCC": "ON",
+                "ACTS_BUILD_PLUGIN_GEANT4": "ON",
+                "ACTS_BUILD_PLUGIN_EXATRKX": "OFF",
+                "ACTS_BUILD_PLUGIN_JSON": "ON",
+                "ACTS_BUILD_PLUGIN_ONNX": "OFF",
+                "ACTS_BUILD_PLUGIN_TGEO": "ON",
+                "ACTS_BUILD_EXAMPLES_EDM4HEP": "ON",
+                "ACTS_BUILD_EXAMPLES_EXATRKX": "OFF",
+                "ACTS_BUILD_EXAMPLES_GEANT4": "ON",
+                "ACTS_BUILD_EXAMPLES_HEPMC3": "ON",
+                "ACTS_BUILD_EXAMPLES_PYTHIA8": "ON",
+                "ACTS_BUILD_EXAMPLES_HASHING": "ON"
+            }
+        },
+        {
+            "name": "github-ci",
+            "displayName": "GitHub-CI",
+            "inherits": "ci-common",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "gitlab-ci",
+            "displayName": "GitLab-CI",
+            "inherits": "ci-common",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "ACTS_BUILD_PLUGIN_FPEMON": "ON"
+            }
+        },
+        {
+            "name": "gitlab-ci-clangtidy",
+            "displayName": "GitLab-CI",
+            "inherits": "ci-common",
+            "cacheVariables": {
+                "ACTS_BUILD_ODD": "OFF",
+                "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "OFF",
+                "ACTS_RUN_CLANG_TIDY": "ON"
+            }
+        },
+        {
+            "name": "gitlab-ci-exatrkx",
+            "displayName": "GitLab-CI",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS": "-w",
+                "CMAKE_CUDA_FLAGS": "-w",
+                "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
+                "ACTS_BUILD_EXAMPLES_EXATRKX": "ON",
+                "ACTS_BUILD_UNITTESTS": "ON",
+                "ACTS_EXATRKX_ENABLE_TORCH": "ON",
+                "ACTS_EXATRKX_ENABLE_ONNX": "OFF",
+                "ACTS_EXATRKX_ENABLE_CUDA": "ON",
+                "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
+                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON"
+            }
+        }
+    ]
+}

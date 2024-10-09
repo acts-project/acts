@@ -1,12 +1,11 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -24,8 +23,6 @@
 namespace Acts {
 class PlanarBounds;
 }  // namespace Acts
-
-namespace utf = boost::unit_test;
 
 namespace Acts::Test {
 
@@ -94,10 +91,10 @@ BOOST_AUTO_TEST_CASE(StrawSurfaceProperties) {
                     std::string("Acts::StrawSurface"));
   //
   /// Test dump
-  boost::test_tools::output_test_stream dumpOuput;
-  strawSurfaceObject->toStream(tgContext, dumpOuput);
+  boost::test_tools::output_test_stream dumpOutput;
+  dumpOutput << strawSurfaceObject->toStream(tgContext);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::StrawSurface\n\
+      dumpOutput.is_equal("Acts::StrawSurface\n\
      Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n\
      Rotation:             colX = (1.000000, 0.000000, 0.000000)\n\
                            colY = (0.000000, 1.000000, 0.000000)\n\

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -20,10 +20,9 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -291,7 +290,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   /// @param visitor will be called for each found surface,
   /// it will be handed down to contained volumes and portals
-  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
     for (const auto& s : surfaces()) {
       visitor(s);
@@ -310,7 +309,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   /// @param visitor will be called for each found surface,
   /// it will be handed down to contained volumes and portals
-  template <ACTS_CONCEPT(MutableSurfaceVisitor) visitor_t>
+  template <MutableSurfaceVisitor visitor_t>
   void visitMutableSurfaces(visitor_t&& visitor) {
     for (auto& s : surfacePtrs()) {
       visitor(s.get());
@@ -333,7 +332,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   /// @note if a context is needed for the visit, the vistitor has to provide
   /// it, e.g. as a private member
-  template <ACTS_CONCEPT(DetectorVolumeVisitor) visitor_t>
+  template <DetectorVolumeVisitor visitor_t>
   void visitVolumes(visitor_t&& visitor) const {
     visitor(this);
     for (const auto& v : volumes()) {
@@ -351,7 +350,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   /// @note if a context is needed for the visit, the vistitor has to provide
   /// it, e.g. as a private member
-  template <ACTS_CONCEPT(MutableDetectorVolumeVisitor) visitor_t>
+  template <MutableDetectorVolumeVisitor visitor_t>
   void visitMutableVolumes(visitor_t&& visitor) {
     visitor(this);
     for (auto& v : volumePtrs()) {

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -24,17 +24,17 @@ struct AlgorithmContext;
 ///
 /// Only considers the track finding itself, i.e. grouping of hits into tracks,
 /// and computes relevant per-track and per-particles statistics.
-class TrackFinderPerformanceWriter final : public WriterT<ProtoTrackContainer> {
+class TrackFinderPerformanceWriter final : public WriterT<TrackContainer> {
  public:
   struct Config {
-    /// Input reconstructed proto tracks collection.
-    std::string inputProtoTracks;
+    /// Input reconstructed track collection.
+    std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
     /// Input proto track-particle matching.
-    std::string inputProtoTrackParticleMatching;
+    std::string inputTrackParticleMatching;
     /// Output filename.
     std::string filePath = "performance_track_finder.root";
     /// Output file mode
@@ -59,7 +59,7 @@ class TrackFinderPerformanceWriter final : public WriterT<ProtoTrackContainer> {
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const ProtoTrackContainer& tracks) override;
+                     const TrackContainer& tracks) override;
 
   struct Impl;
 

@@ -1,12 +1,13 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #pragma once
 
+#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -17,7 +18,6 @@
 #include <memory>
 #include <string>
 
-#include <podio/ROOTFrameReader.h>
 #include <tbb/enumerable_thread_specific.h>
 
 namespace ActsExamples {
@@ -69,9 +69,9 @@ class EDM4hepMeasurementReader final : public IReader {
   std::pair<std::size_t, std::size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  tbb::enumerable_thread_specific<podio::ROOTFrameReader> m_reader;
+  tbb::enumerable_thread_specific<Acts::PodioUtil::ROOTReader> m_reader;
 
-  podio::ROOTFrameReader& reader();
+  Acts::PodioUtil::ROOTReader& reader();
 
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};

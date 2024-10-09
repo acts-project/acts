@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -19,7 +19,6 @@ namespace Acts {
 
 class Surface;
 class Layer;
-class BoundaryCheck;
 
 /// @class ApproachDescriptor
 ///
@@ -42,17 +41,15 @@ class ApproachDescriptor {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the position from start of the search
   /// @param direction is the direction at the start of the search
-  /// @param bcheck is the boundary check directive
+  /// @param boundaryTolerance is the boundary check directive
   /// @param nearLimit The minimum distance for an intersection to be considered
   /// @param farLimit The maximum distance for an intersection to be considered
   ///
   /// @return is a surface intersection
-  virtual SurfaceIntersection approachSurface(const GeometryContext& gctx,
-                                              const Vector3& position,
-                                              const Vector3& direction,
-                                              const BoundaryCheck& bcheck,
-                                              double nearLimit,
-                                              double farLimit) const = 0;
+  virtual SurfaceIntersection approachSurface(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
+      double nearLimit, double farLimit) const = 0;
 
   /// Get all the contained surfaces
   /// @return all contained surfaces of this approach descriptor

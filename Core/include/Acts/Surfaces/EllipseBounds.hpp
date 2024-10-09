@@ -1,15 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -85,21 +85,20 @@ class EllipseBounds : public PlanarBounds {
   /// tol1 is given
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param bcheck boundary check directive
+  /// @param boundaryTolerance boundary check directive
   /// @return boolean indicator for the success of this operation
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck) const final;
+              const BoundaryTolerance& boundaryTolerance) const final;
 
   /// Return the vertices
   ///
-  /// @param lseg the number of segments used to approximate
-  /// and eventually curved line, here it refers to the full 2PI Ellipse
-  ///
-  /// @note the number of segments to may be altered by also providing
-  /// the extremas in all direction
+  /// @param quarterSegments is the number of segments to approximate a quarter
+  /// of a circle. In order to symmetrize fully closed and sectoral cylinders,
+  /// also in the first case the two end points are given (albeit they overlap)
+  /// in -pi / pi
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg) const final;
+  std::vector<Vector2> vertices(unsigned int quarterSegments) const final;
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;

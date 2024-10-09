@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Csv/CsvExaTrkXGraphWriter.hpp"
 
@@ -12,21 +12,14 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <stdexcept>
 #include <vector>
 
-#include <dfe/dfe_io_dsv.hpp>
-#include <dfe/dfe_namedtuple.hpp>
-
-struct GraphData {
-  int64_t edge0;
-  int64_t edge1;
-  float weight;
-  DFE_NAMEDTUPLE(GraphData, edge0, edge1, weight);
-};
+#include "CsvOutputData.hpp"
 
 ActsExamples::CsvExaTrkXGraphWriter::CsvExaTrkXGraphWriter(
     const ActsExamples::CsvExaTrkXGraphWriter::Config& config,
@@ -35,20 +28,26 @@ ActsExamples::CsvExaTrkXGraphWriter::CsvExaTrkXGraphWriter(
       m_cfg(config) {}
 
 ActsExamples::ProcessCode ActsExamples::CsvExaTrkXGraphWriter::writeT(
-    const ActsExamples::AlgorithmContext& ctx,
-    const std::pair<std::vector<int64_t>, std::vector<float>>& graph) {
+    const ActsExamples::AlgorithmContext& ctx, const Graph& graph) {
+  assert(graph.weights.empty() ||
+         (graph.edges.size() / 2 == graph.weights.size()));
+  assert(graph.edges.size() % 2 == 0);
+
+  if (graph.weights.empty()) {
+    ACTS_DEBUG("No weights provide, write default value of 1");
+  }
+
   std::string path = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<GraphData> writer(path);
+  ActsExamples::NamedTupleCsvWriter<GraphData> writer(path);
 
-  const auto& [edges, weights] = graph;
-
-  for (auto i = 0ul; i < weights.size(); ++i) {
+  const auto nEdges = graph.edges.size() / 2;
+  for (auto i = 0ul; i < nEdges; ++i) {
     GraphData edge{};
-    edge.edge0 = edges[2 * i];
-    edge.edge1 = edges[2 * i + 1];
-    edge.weight = weights[i];
+    edge.edge0 = graph.edges[2 * i];
+    edge.edge1 = graph.edges[2 * i + 1];
+    edge.weight = graph.weights.empty() ? 1.f : graph.weights[i];
     writer.append(edge);
   }
 

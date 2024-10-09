@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -20,6 +20,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -39,6 +40,16 @@ class AtlasStepper {
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+
+  struct Config {
+    std::shared_ptr<const MagneticFieldProvider> bField;
+  };
+
+  struct Options : public StepperPlainOptions {
+    void setPlainOptions(const StepperPlainOptions& options) {
+      static_cast<StepperPlainOptions&>(*this) = options;
+    }
+  };
 
   /// @brief Nested State struct for the local caching
   struct State {
@@ -296,8 +307,10 @@ class AtlasStepper {
     std::size_t debugMsgWidth = 50;
   };
 
-  AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
+  explicit AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
       : m_bField(std::move(bField)) {}
+
+  explicit AtlasStepper(const Config& config) : m_bField(config.bField) {}
 
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
@@ -399,16 +412,17 @@ class AtlasStepper {
   /// @param [in] surface The surface provided
   /// @param [in] index The surface intersection index
   /// @param [in] navDir The navigation direction
-  /// @param [in] bcheck The boundary check for this status update
+  /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger Logger instance to use
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
-      Direction navDir, const BoundaryCheck& bcheck,
+      Direction navDir, const BoundaryTolerance& boundaryTolerance,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<AtlasStepper>(
-        *this, state, surface, index, navDir, bcheck, surfaceTolerance, logger);
+        *this, state, surface, index, navDir, boundaryTolerance,
+        surfaceTolerance, logger);
   }
 
   /// Update step size
@@ -1257,7 +1271,7 @@ class AtlasStepper {
           2. * h *
           (std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4)) +
            std::abs((C1 + C6) - (C3 + C4)));
-      if (std::abs(EST) > std::abs(state.options.stepTolerance)) {
+      if (std::abs(EST) > std::abs(state.options.stepping.stepTolerance)) {
         h = h * .5;
         // neutralize the sign of h again
         state.stepping.stepSize.setAccuracy(h * state.options.direction);

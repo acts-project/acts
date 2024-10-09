@@ -22,7 +22,7 @@ management of documents.
 
 The project will immediately start building the basic default note with
 dummy content using GitHub Actions. You can now clone and start making
-changes to the document and compile locally. 
+changes to the document and compile locally.
 
 :::{tip}
 :name: latexmk-tip
@@ -41,7 +41,7 @@ LaTeX installations. `latexmk` is configured to use LuaLatex by default.
 
 ## Integrate with Overleaf
 
-[Overleaf](https://overleaf.com) is a convenient web-based LaTeX authoring tool. It has GitHub integration 🎉!
+[Overleaf](https://www.overleaf.com) is a convenient web-based LaTeX authoring tool. It has GitHub integration 🎉!
 
 :::{image} figures/overleaf_import_github.png
 :align: center
@@ -107,12 +107,12 @@ changed the content of the document.
    :::
 
 - `references.bib` contains an example reference in standard *bibtex* format, and
-  is a good place to add any additional references that you want to cite in 
+  is a good place to add any additional references that you want to cite in
   your document.
 
 - `latexmkrc` configures `latexmk` (see [here](#latexmk-tip))
 
-- `theme` contains the overall theme of the document. You do not typically need 
+- `theme` contains the overall theme of the document. You do not typically need
   to change anything in this folder.
 
 (whitepaper_index_update)=
@@ -158,7 +158,7 @@ for the white papers. To run it, you need to install the dependencies in
 :::{tip}
 It is **strongly recommended** to use a [virtual
 environment](https://realpython.com/python-virtual-environments-a-primer/) for
-this purpose! For example, run 
+this purpose! For example, run
 
 ```console
 $ python -m venv venv
@@ -170,7 +170,7 @@ to create a local virtual environment, and then run the `pip` command above.
 
 You also need the `convert` executable from
 [ImageMagick](https://imagemagick.org/) available on your `$PATH`.  You can
-then run 
+then run
 
 ```console
 $ white_papers.py pull --github-token $GITHUB_TOKEN
@@ -180,7 +180,7 @@ which will for each white_paper listed in `white_papers.toml`
 
 1. Download the most recent PDF of the document built by that repository's CI
 2. Make a PNG of the first page of that PDF to be displayed in the documentation
-3. Download `metadata.tex` and `abstract.tex` from the repository, and parse 
+3. Download `metadata.tex` and `abstract.tex` from the repository, and parse
    them to extract the title, authors and abstract content.
 
 :::{important}

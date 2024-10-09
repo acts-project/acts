@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -17,7 +17,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <cstddef>
@@ -103,6 +102,13 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @return the map which can be queried with GeometryID for ranges
   const GeometryHierarchyMap<const Surface*>& sensitiveHierarchyMap() const;
 
+  /// Search for a surface with the given identifier.
+  ///
+  /// @param id is the geometry identifier of the surface
+  /// @retval nullptr if no such surface exists
+  /// @retval pointer to the found surface otherwise.
+  const Surface* findSurface(GeometryIdentifier id) const;
+
   /// @brief Visit all reachable surfaces of the detector
   ///
   /// @tparam visitor_t Type of the callable visitor
@@ -117,7 +123,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @note due to the fact that portals can be shared between volumes, multiple
   /// visits may occur, duplicated addressing needs to be taken care of by the
   /// visitor
-  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
     for (const auto& v : rootVolumes()) {
       v->template visitSurfaces<visitor_t>(std::forward<visitor_t>(visitor));
@@ -138,7 +144,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @note due to the fact that this doesn't run over root volumes, and
   /// due to the fact that portals can be shared between volumes, multiple
   /// visits may occur, duplicated addressing needs to be taken care of by the
-  template <ACTS_CONCEPT(MutableSurfaceVisitor) visitor_t>
+  template <MutableSurfaceVisitor visitor_t>
   void visitMutableSurfaces(visitor_t&& visitor) {
     for (auto& v : volumePtrs()) {
       v->template visitMutableSurfaces<visitor_t>(
@@ -156,7 +162,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
   ///
   /// @note if a context is needed for the visit, the vistitor has to provide
   /// it, e.g. as a private member
-  template <ACTS_CONCEPT(DetectorVolumeVisitor) visitor_t>
+  template <DetectorVolumeVisitor visitor_t>
   void visitVolumes(visitor_t&& visitor) const {
     for (const auto& v : rootVolumes()) {
       v->template visitVolumes<visitor_t>(std::forward<visitor_t>(visitor));
@@ -177,7 +183,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @note that due to non running over root volumes, multiple visits
   /// may occur, duplicated addressing needs to be taken care of by the
   /// visitor
-  template <ACTS_CONCEPT(MutableDetectorVolumeVisitor) visitor_t>
+  template <MutableDetectorVolumeVisitor visitor_t>
   void visitMutableVolumes(visitor_t&& visitor) {
     for (const auto& v : volumePtrs()) {
       v->template visitMutableVolumes<visitor_t>(

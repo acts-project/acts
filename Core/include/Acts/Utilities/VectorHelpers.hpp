@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <array>
 #include <limits>
@@ -20,14 +19,6 @@
 #include "Eigen/Dense"
 
 namespace Acts::VectorHelpers {
-
-namespace detail {
-template <class T>
-using phi_method_t = decltype(std::declval<const T>().phi());
-
-template <class T>
-using has_phi_method = Concepts::is_detected<phi_method_t, T>;
-}  // namespace detail
 
 /// Calculate phi (transverse plane angle) from compatible Eigen types
 /// @tparam Derived Eigen derived concrete type
@@ -55,9 +46,12 @@ double phi(const Eigen::MatrixBase<Derived>& v) noexcept {
 /// @tparam T anything that has a phi method
 /// @param v Any type that implements a phi method
 /// @return The phi value
-template <typename T,
-          std::enable_if_t<detail::has_phi_method<T>::value, int> = 0>
-double phi(const T& v) noexcept {
+template <typename T>
+double phi(const T& v) noexcept
+  requires requires {
+    { v.phi() } -> std::floating_point;
+  }
+{
   return v.phi();
 }
 
@@ -154,23 +148,23 @@ inline std::array<ActsScalar, 4> evaluateTrigonomics(const Vector3& direction) {
 /// binning values.
 inline double cast(const Vector3& position, BinningValue bval) {
   switch (bval) {
-    case binX:
+    case BinningValue::binX:
       return position[0];
-    case binY:
+    case BinningValue::binY:
       return position[1];
-    case binZ:
+    case BinningValue::binZ:
       return position[2];
-    case binR:
+    case BinningValue::binR:
       return perp(position);
-    case binPhi:
+    case BinningValue::binPhi:
       return phi(position);
-    case binRPhi:
+    case BinningValue::binRPhi:
       return perp(position) * phi(position);
-    case binH:
+    case BinningValue::binH:
       return theta(position);
-    case binEta:
+    case BinningValue::binEta:
       return eta(position);
-    case binMag:
+    case BinningValue::binMag:
       return position.norm();
     default:
       assert(false && "Invalid BinningValue enum value");

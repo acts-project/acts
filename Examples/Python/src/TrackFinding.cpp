@@ -1,11 +1,12 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
@@ -17,7 +18,7 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
+#include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
@@ -27,12 +28,6 @@
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
-#include "ActsExamples/Utilities/MeasurementMapSelector.hpp"
-#include "ActsExamples/Utilities/PrototracksToSeeds.hpp"
-#include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
-#include "ActsExamples/Utilities/TracksToParameters.hpp"
-#include "ActsExamples/Utilities/TracksToTrajectories.hpp"
-#include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
 
 #include <array>
 #include <cstddef>
@@ -92,7 +87,9 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using Config = Acts::SeedFinderConfig<SimSpacePoint>;
+    using Config = Acts::SeedFinderConfig<typename Acts::SpacePointContainer<
+        ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+        Acts::detail::RefHolder>::SpacePointProxyType>;
     auto c = py::class_<Config>(m, "SeedFinderConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(minPt);
@@ -113,7 +110,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(phiMax);
     ACTS_PYTHON_MEMBER(zMin);
     ACTS_PYTHON_MEMBER(zMax);
-    ACTS_PYTHON_MEMBER(zOutermostLayers);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(rMin);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
@@ -152,7 +148,11 @@ void addTrackFinding(Context& ctx) {
     patchKwargsConstructor(c);
   }
   {
-    using Config = Acts::SeedFinderOrthogonalConfig<SimSpacePoint>;
+    using Config =
+        Acts::SeedFinderOrthogonalConfig<typename Acts::SpacePointContainer<
+            ActsExamples::SpacePointContainer<
+                std::vector<const SimSpacePoint*>>,
+            Acts::detail::RefHolder>::SpacePointProxyType>;
     auto c =
         py::class_<Config>(m, "SeedFinderOrthogonalConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
@@ -174,7 +174,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(phiMax);
     ACTS_PYTHON_MEMBER(zMin);
     ACTS_PYTHON_MEMBER(zMax);
-    ACTS_PYTHON_MEMBER(zOutermostLayers);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(rMin);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
@@ -265,7 +264,7 @@ void addTrackFinding(Context& ctx) {
       ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
       outputSeeds, seedFilterConfig, seedFinderConfig, seedFinderOptions,
       gridConfig, gridOptions, allowSeparateRMax, zBinNeighborsTop,
-      zBinNeighborsBottom, numPhiNeighbors);
+      zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,
@@ -292,7 +291,7 @@ void addTrackFinding(Context& ctx) {
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
       "TrackParamsEstimationAlgorithm", inputSeeds, inputProtoTracks,
       outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-      magneticField, bFieldMin, initialSigmas, initialSimgaQoverPCoefficients,
+      magneticField, bFieldMin, initialSigmas, initialSigmaPtRel,
       initialVarInflation, noTimeVarInflation, particleHypothesis);
 
   {
@@ -312,7 +311,8 @@ void addTrackFinding(Context& ctx) {
                                magneticField,
                            Logging::Level level) {
                           return Alg::makeTrackFinderFunction(
-                              trackingGeometry, magneticField,
+                              std::move(trackingGeometry),
+                              std::move(magneticField),
                               *Acts::getDefaultLogger("TrackFinding", level));
                         });
 
@@ -334,45 +334,47 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(trackSelectorCfg);
     ACTS_PYTHON_MEMBER(maxSteps);
     ACTS_PYTHON_MEMBER(twoWay);
+    ACTS_PYTHON_MEMBER(reverseSearch);
     ACTS_PYTHON_MEMBER(seedDeduplication);
     ACTS_PYTHON_MEMBER(stayOnSeed);
+    ACTS_PYTHON_MEMBER(pixelVolumeIds);
+    ACTS_PYTHON_MEMBER(stripVolumeIds);
+    ACTS_PYTHON_MEMBER(maxPixelHoles);
+    ACTS_PYTHON_MEMBER(maxStripHoles);
+    ACTS_PYTHON_MEMBER(trimTracks);
+    ACTS_PYTHON_MEMBER(constrainToVolumeIds);
+    ACTS_PYTHON_MEMBER(endOfWorldVolumeIds);
     ACTS_PYTHON_STRUCT_END();
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrajectoriesToPrototracks, mex,
-                                "TrajectoriesToPrototracks", inputTrajectories,
-                                outputProtoTracks);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TracksToTrajectories, mex,
-                                "TracksToTrajectories", inputTracks,
-                                outputTrajectories);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TracksToParameters, mex,
-                                "TracksToParameters", inputTracks,
-                                outputTrackParameters);
-
   {
-    auto constructor = [](const std::vector<std::pair<
-                              GeometryIdentifier,
-                              std::tuple<std::vector<double>,
-                                         std::vector<double>,
-                                         std::vector<std::size_t>>>>& input) {
-      std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
-          converted;
-      converted.reserve(input.size());
-      for (const auto& [id, cuts] : input) {
-        const auto& [bins, chi2, num] = cuts;
-        converted.emplace_back(id, MeasurementSelectorCuts{bins, chi2, num});
-      }
-      return std::make_unique<MeasurementSelector::Config>(converted);
-    };
+    auto constructor =
+        [](const std::vector<std::pair<
+               GeometryIdentifier,
+               std::tuple<std::vector<double>, std::vector<double>,
+                          std::vector<double>, std::vector<std::size_t>>>>&
+               input) {
+          std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
+              converted;
+          converted.reserve(input.size());
+          for (const auto& [id, cuts] : input) {
+            const auto& [bins, chi2Measurement, chi2Outlier, num] = cuts;
+            converted.emplace_back(
+                id, MeasurementSelectorCuts{bins, chi2Measurement, num,
+                                            chi2Outlier});
+          }
+          return std::make_unique<MeasurementSelector::Config>(converted);
+        };
 
     py::class_<MeasurementSelectorCuts>(m, "MeasurementSelectorCuts")
         .def(py::init<>())
         .def(py::init<std::vector<double>, std::vector<double>,
-                      std::vector<std::size_t>>())
+                      std::vector<std::size_t>, std::vector<double>>())
         .def_readwrite("etaBins", &MeasurementSelectorCuts::etaBins)
-        .def_readwrite("chi2CutOff", &MeasurementSelectorCuts::chi2CutOff)
+        .def_readwrite("chi2CutOffMeasurement",
+                       &MeasurementSelectorCuts::chi2CutOff)
+        .def_readwrite("chi2CutOffOutlier",
+                       &MeasurementSelectorCuts::chi2CutOffOutlier)
         .def_readwrite("numMeasurementsCutOff",
                        &MeasurementSelectorCuts::numMeasurementsCutOff);
 
@@ -383,19 +385,6 @@ void addTrackFinding(Context& ctx) {
                      std::pair<GeometryIdentifier, MeasurementSelectorCuts>>>())
             .def(py::init(constructor));
   }
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedsToPrototracks, mex,
-                                "SeedsToPrototracks", inputSeeds,
-                                outputProtoTracks);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::PrototracksToSeeds, mex, "PrototracksToSeeds",
-      inputProtoTracks, inputSpacePoints, outputSeeds, outputProtoTracks);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::MeasurementMapSelector, mex, "MeasurementMapSelector",
-      inputMeasurementParticleMap, inputSourceLinks,
-      outputMeasurementParticleMap, geometrySelection);
 }
 
 }  // namespace Acts::Python

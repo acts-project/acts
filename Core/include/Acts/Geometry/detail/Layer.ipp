@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <limits>
 #include <map>
@@ -69,12 +69,12 @@ inline bool Layer::resolve(bool resolveSensitive, bool resolveMaterial,
 
 inline bool Layer::isOnLayer(const GeometryContext& gctx,
                              const Vector3& position,
-                             const BoundaryCheck& bcheck) const {
+                             const BoundaryTolerance& boundaryTolerance) const {
   if (m_representingVolume != nullptr) {
     return m_representingVolume->inside(position);
   }
-  return (surfaceRepresentation())
-      .isOnSurface(gctx, position, Vector3::Zero(), bcheck);
+  return surfaceRepresentation().isOnSurface(gctx, position, Vector3::Zero(),
+                                             boundaryTolerance);
 }
 
 }  // namespace Acts

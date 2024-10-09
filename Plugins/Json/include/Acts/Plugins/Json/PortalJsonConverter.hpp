@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -15,9 +15,15 @@
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <memory>
+#include <tuple>
+#include <vector>
+
 // Custom Json encoder/decoders
 
 namespace Acts {
+
+class Surface;
 
 namespace Experimental {
 class DetectorVolume;
@@ -60,8 +66,9 @@ nlohmann::json toJson(
 ///
 /// @note detray also only has outside pointing links
 ///
-/// @return a json object
-std::vector<nlohmann::json> toJsonDetray(
+/// @return a tuple of json object
+std::tuple<std::vector<nlohmann::json>, std::vector<std::shared_ptr<Surface>>>
+toJsonDetray(
     const GeometryContext& gctx, const Experimental::Portal& portal,
     std::size_t ip, const Experimental::DetectorVolume& volume,
     const std::vector<OrientedSurface>& orientedSurfaces,

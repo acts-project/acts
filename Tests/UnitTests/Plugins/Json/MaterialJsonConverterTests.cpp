@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -53,10 +53,11 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial1DTests) {
   bToX.connect<&Acts::GridAccess::LocalSubspace<0u>::toGridLocal>(
       std::move(localX));
 
-  auto globalX =
-      std::make_unique<const Acts::GridAccess::GlobalSubspace<Acts::binX>>();
+  auto globalX = std::make_unique<
+      const Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binX>>();
   Acts::IndexedSurfaceMaterial<EqGrid>::GlobalToGridLocalDelegate gToX;
-  gToX.connect<&Acts::GridAccess::GlobalSubspace<Acts::binX>::toGridLocal>(
+  gToX.connect<
+      &Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binX>::toGridLocal>(
       std::move(globalX));
 
   Acts::IndexedSurfaceMaterial<EqGrid> ism(
@@ -127,11 +128,11 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial2DTests) {
       std::move(boundToGrid));
 
   // With z shift 10
-  auto globalToGrid = std::make_unique<
-      const Acts::GridAccess::GlobalSubspace<Acts::binZ, Acts::binPhi>>();
+  auto globalToGrid = std::make_unique<const Acts::GridAccess::GlobalSubspace<
+      Acts::BinningValue::binZ, Acts::BinningValue::binPhi>>();
   Acts::IndexedSurfaceMaterial<EqEqGrid>::GlobalToGridLocalDelegate gToZphi;
-  gToZphi.connect<
-      &Acts::GridAccess::GlobalSubspace<Acts::binZ, Acts::binPhi>::toGridLocal>(
+  gToZphi.connect<&Acts::GridAccess::GlobalSubspace<
+      Acts::BinningValue::binZ, Acts::BinningValue::binPhi>::toGridLocal>(
       std::move(globalToGrid));
 
   // Create the indexed material grid

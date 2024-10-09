@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 
@@ -102,7 +102,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
                        std::back_inserter(rvalues), [&](const auto& surface) {
                          return VectorHelpers::perp(surface->center(gctx));
                        });
-        std::sort(rvalues.begin(), rvalues.end());
+        std::ranges::sort(rvalues);
         std::vector<std::string> locs;
         std::transform(rvalues.begin(),
                        std::unique(rvalues.begin(), rvalues.end()),
@@ -118,14 +118,18 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
           params.contains("envelope_z_max")) {
         // set the values of the proto layer in case enevelopes are handed
         // over
-        pl.envelope[Acts::binR] = {params.get<double>("envelope_r_min"),
-                                   params.get<double>("envelope_r_max")};
-        pl.envelope[Acts::binZ] = {params.get<double>("envelope_z_min"),
-                                   params.get<double>("envelope_z_max")};
+        pl.envelope[Acts::BinningValue::binR] = {
+            params.get<double>("envelope_r_min"),
+            params.get<double>("envelope_r_max")};
+        pl.envelope[Acts::BinningValue::binZ] = {
+            params.get<double>("envelope_z_min"),
+            params.get<double>("envelope_z_max")};
       } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
         if (tube == nullptr) {
           ACTS_ERROR(" Disc layer has wrong shape - needs to be TGeoTubeSeg!");
+          throw std::logic_error{
+              "Disc layer has wrong shape - needs to be TGeoTubeSeg!"};
         }
         // extract the boundaries
         double rMin = tube->GetRmin() * UnitConstants::cm;
@@ -151,20 +155,22 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
           // manually create a proto layer
           double eiz = (z != 0.) ? z - m_cfg.defaultThickness : 0.;
           double eoz = (z != 0.) ? z + m_cfg.defaultThickness : 0.;
-          pl.extent.range(Acts::binZ).set(eiz, eoz);
-          pl.extent.range(Acts::binR).set(rMin, rMax);
-          pl.envelope[Acts::binR] = {0., 0.};
-          pl.envelope[Acts::binZ] = {0., 0.};
+          pl.extent.range(Acts::BinningValue::binZ).set(eiz, eoz);
+          pl.extent.range(Acts::BinningValue::binR).set(rMin, rMax);
+          pl.envelope[Acts::BinningValue::binR] = {0., 0.};
+          pl.envelope[Acts::BinningValue::binZ] = {0., 0.};
         } else {
           ACTS_VERBOSE(" Disc layer has " << layerSurfaces.size()
                                           << " sensitive surfaces.");
           // set the values of the proto layer in case dimensions are given by
           // geometry
-          pl.envelope[Acts::binZ] = {std::abs(zMin - pl.min(Acts::binZ)),
-                                     std::abs(zMax - pl.max(Acts::binZ))};
-          pl.envelope[Acts::binR] = {std::abs(rMin - pl.min(Acts::binR)),
-                                     std::abs(rMax - pl.max(Acts::binR))};
-          pl.extent.range(Acts::binR).set(rMin, rMax);
+          pl.envelope[Acts::BinningValue::binZ] = {
+              std::abs(zMin - pl.min(Acts::BinningValue::binZ)),
+              std::abs(zMax - pl.max(Acts::BinningValue::binZ))};
+          pl.envelope[Acts::BinningValue::binR] = {
+              std::abs(rMin - pl.min(Acts::BinningValue::binR)),
+              std::abs(rMax - pl.max(Acts::BinningValue::binR))};
+          pl.extent.range(Acts::BinningValue::binR).set(rMin, rMax);
         }
       } else {
         throw std::logic_error(
@@ -197,13 +203,13 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
         // Create the sensitive surface
         auto sensitiveSurf = createSensitiveSurface(detElement, true);
         // Create the surfaceArray
-        std::unique_ptr<Acts::SurfaceArray> sArray =
-            std::make_unique<SurfaceArray>(sensitiveSurf);
+        auto sArray = std::make_unique<SurfaceArray>(sensitiveSurf);
 
         // create the share disc bounds
-        auto dBounds = std::make_shared<const RadialBounds>(pl.min(Acts::binR),
-                                                            pl.max(Acts::binR));
-        double thickness = std::fabs(pl.max(Acts::binZ) - pl.min(Acts::binZ));
+        auto dBounds = std::make_shared<const RadialBounds>(
+            pl.min(Acts::BinningValue::binR), pl.max(Acts::BinningValue::binR));
+        double thickness = std::fabs(pl.max(Acts::BinningValue::binZ) -
+                                     pl.min(Acts::BinningValue::binZ));
         // Create the layer containing the sensitive surface
         endcapLayer = DiscLayer::create(transform, dBounds, std::move(sArray),
                                         thickness, nullptr, Acts::active);
@@ -269,7 +275,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
                        std::back_inserter(zvalues), [&](const auto& surface) {
                          return surface->center(gctx)[eZ];
                        });
-        std::sort(zvalues.begin(), zvalues.end());
+        std::ranges::sort(zvalues);
         std::vector<std::string> locs;
         std::transform(zvalues.begin(),
                        std::unique(zvalues.begin(), zvalues.end()),
@@ -284,15 +290,19 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
           params.contains("envelope_z_min") &&
           params.contains("envelope_z_max")) {
         // set the values of the proto layer in case enevelopes are handed over
-        pl.envelope[Acts::binR] = {params.get<double>("envelope_r_min"),
-                                   params.get<double>("envelope_r_max")};
-        pl.envelope[Acts::binZ] = {params.get<double>("envelope_z_min"),
-                                   params.get<double>("envelope_z_max")};
+        pl.envelope[Acts::BinningValue::binR] = {
+            params.get<double>("envelope_r_min"),
+            params.get<double>("envelope_r_max")};
+        pl.envelope[Acts::BinningValue::binZ] = {
+            params.get<double>("envelope_z_min"),
+            params.get<double>("envelope_z_max")};
       } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
         if (tube == nullptr) {
           ACTS_ERROR(
               " Cylinder layer has wrong shape - needs to be TGeoTubeSeg!");
+          throw std::logic_error{
+              " Cylinder layer has wrong shape - needs to be TGeoTubeSeg!"};
         }
 
         // extract the boundaries
@@ -308,17 +318,19 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
           // manually create a proto layer
           double eir = (r != 0.) ? r - m_cfg.defaultThickness : 0.;
           double eor = (r != 0.) ? r + m_cfg.defaultThickness : 0.;
-          pl.extent.range(Acts::binR).set(eir, eor);
-          pl.extent.range(Acts::binZ).set(-dz, dz);
-          pl.envelope[Acts::binR] = {0., 0.};
-          pl.envelope[Acts::binZ] = {0., 0.};
+          pl.extent.range(Acts::BinningValue::binR).set(eir, eor);
+          pl.extent.range(Acts::BinningValue::binZ).set(-dz, dz);
+          pl.envelope[Acts::BinningValue::binR] = {0., 0.};
+          pl.envelope[Acts::BinningValue::binZ] = {0., 0.};
         } else {
           // set the values of the proto layer in case dimensions are given by
           // geometry
-          pl.envelope[Acts::binZ] = {std::abs(-dz - pl.min(Acts::binZ)),
-                                     std::abs(dz - pl.max(Acts::binZ))};
-          pl.envelope[Acts::binR] = {std::abs(rMin - pl.min(Acts::binR)),
-                                     std::abs(rMax - pl.max(Acts::binR))};
+          pl.envelope[Acts::BinningValue::binZ] = {
+              std::abs(-dz - pl.min(Acts::BinningValue::binZ)),
+              std::abs(dz - pl.max(Acts::BinningValue::binZ))};
+          pl.envelope[Acts::BinningValue::binR] = {
+              std::abs(rMin - pl.min(Acts::BinningValue::binR)),
+              std::abs(rMax - pl.max(Acts::BinningValue::binR))};
         }
       } else {
         throw std::logic_error(
@@ -328,7 +340,9 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
                         "constructor!"));
       }
 
-      double halfZ = (pl.min(Acts::binZ) - pl.max(Acts::binZ)) * 0.5;
+      double halfZ = (pl.min(Acts::BinningValue::binZ) -
+                      pl.max(Acts::BinningValue::binZ)) *
+                     0.5;
 
       std::shared_ptr<Layer> centralLayer = nullptr;
       // In case the layer is sensitive
@@ -340,10 +354,12 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
             std::make_unique<SurfaceArray>(sensitiveSurf);
 
         // create the layer
-        double layerR = (pl.min(Acts::binR) + pl.max(Acts::binR)) * 0.5;
-        double thickness = std::fabs(pl.max(Acts::binR) - pl.min(Acts::binR));
-        std::shared_ptr<const CylinderBounds> cBounds(
-            new CylinderBounds(layerR, halfZ));
+        double layerR = (pl.min(Acts::BinningValue::binR) +
+                         pl.max(Acts::BinningValue::binR)) *
+                        0.5;
+        double thickness = std::fabs(pl.max(Acts::BinningValue::binR) -
+                                     pl.min(Acts::BinningValue::binR));
+        auto cBounds = std::make_shared<CylinderBounds>(layerR, halfZ);
         // Create the layer containing the sensitive surface
         centralLayer =
             CylinderLayer::create(transform, cBounds, std::move(sArray),
@@ -390,9 +406,12 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   std::string detAxis =
       getParamOr<std::string>("axis_definitions", detElement, "XYZ");
   // Create the corresponding detector element !- memory leak --!
-  Acts::DD4hepDetectorElement* dd4hepDetElement =
-      new Acts::DD4hepDetectorElement(detElement, detAxis, UnitConstants::cm,
-                                      isDisc, nullptr);
+  auto dd4hepDetElement = std::make_shared<Acts::DD4hepDetectorElement>(
+      detElement, detAxis, UnitConstants::cm, isDisc, nullptr);
+
+  detElement.addExtension<DD4hepDetectorElementExtension>(
+      new dd4hep::rec::StructExtension(
+          DD4hepDetectorElementExtension(dd4hepDetElement)));
 
   // return the surface
   return dd4hepDetElement->surface().getSharedPtr();

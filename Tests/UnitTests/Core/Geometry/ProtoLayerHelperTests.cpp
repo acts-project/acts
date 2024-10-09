@@ -1,12 +1,11 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -27,9 +26,10 @@
 
 namespace Acts {
 class Surface;
+}  // namespace Acts
 
-namespace Test {
-namespace Layers {
+namespace Acts::Test::Layers {
+
 BOOST_AUTO_TEST_SUITE(Geometry)
 
 BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
                             layerSurfaces.end());
   }
 
-  ViewConfig unsorted({252, 160, 0});
+  ViewConfig unsorted{.color = {252, 160, 0}};
   for (auto& sf : cylinderSurfaces) {
     GeometryView3D::drawSurface(objVis, *sf, tgContext, Transform3::Identity(),
                                 unsorted);
@@ -73,20 +73,21 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 
   // Sort into ProtoLayers
   auto radialLayers = plHelper.protoLayers(
-      tgContext, cylinderSurfaces, ProtoLayerHelper::SortingConfig(binR, 5.));
+      tgContext, cylinderSurfaces,
+      ProtoLayerHelper::SortingConfig(BinningValue::binR, 5.));
 
   BOOST_CHECK_EQUAL(radialLayers.size(), 4);
 
-  std::vector<ColorRGB> sortedColors = {{102, 204, 255},
-                                        {102, 255, 153},
-                                        {255, 204, 102},
-                                        {204, 102, 0},
-                                        {278, 123, 55}};
+  std::vector<Color> sortedColors = {{102, 204, 255},
+                                     {102, 255, 153},
+                                     {255, 204, 102},
+                                     {204, 102, 0},
+                                     {278, 123, 55}};
 
   std::size_t il = 0;
   for (auto& layer : radialLayers) {
     for (auto& sf : layer.surfaces()) {
-      ViewConfig sorted(sortedColors[il]);
+      ViewConfig sorted{.color = sortedColors[il]};
       GeometryView3D::drawSurface(objVis, *sf, tgContext,
                                   Transform3::Identity(), sorted);
     }
@@ -127,14 +128,15 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   objVis.clear();
 
   // Sort into ProtoLayers
-  auto discLayersZ = plHelper.protoLayers(tgContext, discSurfaces, {binZ, 5.});
+  auto discLayersZ =
+      plHelper.protoLayers(tgContext, discSurfaces, {BinningValue::binZ, 5.});
 
   BOOST_CHECK_EQUAL(discLayersZ.size(), 4);
 
   il = 0;
   for (auto& layer : discLayersZ) {
     for (auto& sf : layer.surfaces()) {
-      ViewConfig ViewConfig(sortedColors[il]);
+      ViewConfig ViewConfig{.color = sortedColors[il]};
       GeometryView3D::drawSurface(objVis, *sf, tgContext,
                                   Transform3::Identity(), ViewConfig);
     }
@@ -178,16 +180,17 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 
   // First: Sort into ProtoLayers radially
   auto rSorted = plHelper.protoLayers(
-      tgContext, ringSurfaces, ProtoLayerHelper::SortingConfig(binR, 1.));
+      tgContext, ringSurfaces,
+      ProtoLayerHelper::SortingConfig(BinningValue::binR, 1.));
   BOOST_CHECK_EQUAL(rSorted.size(), 3);
 
-  ColorRGB dColor = {0, 0, 0};
+  Color dColor = {0, 0, 0};
 
   int ir = 0;
   for (auto& rBatch : rSorted) {
-    auto lSorted =
-        plHelper.protoLayers(tgContext, rBatch.surfaces(),
-                             ProtoLayerHelper::SortingConfig(binZ, 5.));
+    auto lSorted = plHelper.protoLayers(
+        tgContext, rBatch.surfaces(),
+        ProtoLayerHelper::SortingConfig(BinningValue::binZ, 5.));
     il = 0;
     dColor[ir] = 256;
     for (auto& layer : lSorted) {
@@ -204,7 +207,8 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 
   // Perform the split at once
   auto rzSorted =
-      plHelper.protoLayers(tgContext, ringSurfaces, {{binR, 1.}, {binZ, 5}});
+      plHelper.protoLayers(tgContext, ringSurfaces,
+                           {{BinningValue::binR, 1.}, {BinningValue::binZ, 5}});
 
   std::size_t irz = 0;
   for (auto& layer : rzSorted) {
@@ -218,7 +222,5 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Layers
-}  // namespace Test
 
-}  // namespace Acts
+}  // namespace Acts::Test::Layers

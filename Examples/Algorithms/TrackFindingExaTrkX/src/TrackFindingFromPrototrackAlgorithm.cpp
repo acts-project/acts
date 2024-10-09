@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
 
@@ -78,7 +78,7 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
-  Acts::PropagatorPlainOptions pOptions;
+  Acts::PropagatorPlainOptions pOptions(ctx.geoContext, ctx.magFieldContext);
   pOptions.maxSteps = 10000;
 
   PassThroughCalibrator pcalibrator;
@@ -87,16 +87,13 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
-  Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
-      extensions;
+  Acts::CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
   extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
       &calibrator);
-  extensions.updater.connect<
-      &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
-      &kfUpdater);
-  extensions.measurementSelector
-      .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
-          &measSel);
+  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
+      typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
+  extensions.measurementSelector.connect<&Acts::MeasurementSelector::select<
+      typename TrackContainer::TrackStateContainerBackend>>(&measSel);
 
   // The source link accessor
   ProtoTrackSourceLinkAccessor sourceLinkAccessor;
@@ -145,7 +142,9 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
       }
     }
 
-    auto result = (*m_cfg.findTracks)(initialParameters.at(i), options, tracks);
+    auto rootBranch = tracks.makeTrack();
+    auto result = (*m_cfg.findTracks)(initialParameters.at(i), options, tracks,
+                                      rootBranch);
     nSeed++;
 
     if (!result.ok()) {

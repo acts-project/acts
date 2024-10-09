@@ -1,24 +1,28 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/DiscSurface.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
+#include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
+#include "Acts/Surfaces/detail/MergeHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -150,12 +154,9 @@ const Acts::SurfaceBounds& Acts::DiscSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, std::size_t lseg) const {
+    const GeometryContext& gctx, unsigned int quarterSegments) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
-  std::vector<Polyhedron::FaceType> faces;
-  std::vector<Polyhedron::FaceType> triangularMesh;
-
   // Understand the disc
   bool fullDisc = m_bounds->coversFullAzimuth();
   bool toCenter = m_bounds->rMin() < s_onSurfaceTolerance;
@@ -163,7 +164,7 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
   bool exactPolyhedron = (m_bounds->type() == SurfaceBounds::eDiscTrapezoid);
   bool addCentreFromConvexFace = (m_bounds->type() != SurfaceBounds::eAnnulus);
   if (m_bounds) {
-    auto vertices2D = m_bounds->vertices(lseg);
+    auto vertices2D = m_bounds->vertices(quarterSegments);
     vertices.reserve(vertices2D.size() + 1);
     Vector3 wCenter(0., 0., 0);
     for (const auto& v2D : vertices2D) {
@@ -178,22 +179,19 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
       if (addCentreFromConvexFace) {
         vertices.push_back(wCenter);
       }
-      auto facesMesh = detail::FacesHelper::convexFaceMesh(vertices, true);
-      faces = facesMesh.first;
-      triangularMesh = facesMesh.second;
+      auto [faces, triangularMesh] =
+          detail::FacesHelper::convexFaceMesh(vertices, true);
+      return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
     } else {
       // Two concentric rings, we use the pure concentric method momentarily,
       // but that creates too  many unneccesarry faces, when only two
       // are needed to describe the mesh, @todo investigate merging flag
-      auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices, true);
-      faces = facesMesh.first;
-      triangularMesh = facesMesh.second;
+      auto [faces, triangularMesh] =
+          detail::FacesHelper::cylindricalFaceMesh(vertices);
+      return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
     }
-  } else {
-    throw std::domain_error(
-        "Polyhedron repr of boundless surface not possible.");
   }
-  return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
+  throw std::domain_error("Polyhedron repr of boundless surface not possible.");
 }
 
 Acts::Vector2 Acts::DiscSurface::localPolarToCartesian(
@@ -211,7 +209,7 @@ Acts::Vector2 Acts::DiscSurface::localCartesianToPolar(
 Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
@@ -247,7 +245,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   using VectorHelpers::perp;
   using VectorHelpers::phi;
 
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
@@ -279,7 +277,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
 
 Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck,
+    const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     ActsScalar tolerance) const {
   // Get the contextual transform
   auto gctxTransform = transform(gctx);
@@ -289,19 +287,20 @@ Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
   if (intersection.status() != Intersection3D::Status::unreachable &&
-      bcheck.isEnabled() && m_bounds != nullptr) {
+      m_bounds != nullptr && !boundaryTolerance.isInfinite()) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
     const Vector2 lcartesian = tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
-    if (bcheck.type() == BoundaryCheck::Type::eAbsolute &&
-        m_bounds->coversFullAzimuth()) {
-      double modifiedTolerance = tolerance + bcheck.tolerance()[eBoundLoc0];
+    if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
+        absoluteBound.has_value() && m_bounds->coversFullAzimuth()) {
+      double modifiedTolerance = tolerance + absoluteBound->tolerance0;
       if (!m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
                                         modifiedTolerance)) {
         status = Intersection3D::Status::missed;
       }
-    } else if (!insideBounds(localCartesianToPolar(lcartesian), bcheck)) {
+    } else if (!insideBounds(localCartesianToPolar(lcartesian),
+                             boundaryTolerance)) {
       status = Intersection3D::Status::missed;
     }
   }
@@ -347,7 +346,7 @@ Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx) const {
 
 Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
                                                  BinningValue bValue) const {
-  if (bValue == binR || bValue == binPhi) {
+  if (bValue == BinningValue::binR || bValue == BinningValue::binPhi) {
     double r = m_bounds->binningValueR();
     double phi = m_bounds->binningValuePhi();
     return localToGlobal(gctx, Vector2{r, phi}, Vector3{});
@@ -357,10 +356,10 @@ Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
 
 double Acts::DiscSurface::binningPositionValue(const GeometryContext& gctx,
                                                BinningValue bValue) const {
-  if (bValue == binR) {
+  if (bValue == BinningValue::binR) {
     return VectorHelpers::perp(binningPosition(gctx, bValue));
   }
-  if (bValue == binPhi) {
+  if (bValue == BinningValue::binPhi) {
     return VectorHelpers::phi(binningPosition(gctx, bValue));
   }
 
@@ -372,4 +371,180 @@ double Acts::DiscSurface::pathCorrection(const GeometryContext& gctx,
                                          const Vector3& direction) const {
   /// we can ignore the global position here
   return 1. / std::abs(normal(gctx).dot(direction));
+}
+
+std::pair<std::shared_ptr<Acts::DiscSurface>, bool>
+Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
+                              bool externalRotation,
+                              const Logger& logger) const {
+  using namespace Acts::UnitLiterals;
+
+  ACTS_VERBOSE("Merging disc surfaces in " << direction << " direction");
+
+  if (m_associatedDetElement != nullptr ||
+      other.m_associatedDetElement != nullptr) {
+    throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+                                  "CylinderSurface::merge: surfaces are "
+                                  "associated with a detector element");
+  }
+  assert(m_transform != nullptr && other.m_transform != nullptr);
+
+  Transform3 otherLocal = m_transform->inverse() * *other.m_transform;
+
+  constexpr auto tolerance = s_onSurfaceTolerance;
+
+  // surface cannot have any relative rotation
+  if (std::abs(otherLocal.linear().col(eX)[eZ]) >= tolerance ||
+      std::abs(otherLocal.linear().col(eY)[eZ]) >= tolerance) {
+    ACTS_ERROR("DiscSurface::merge: surfaces have relative rotation");
+    throw SurfaceMergingException(
+        getSharedPtr(), other.getSharedPtr(),
+        "DiscSurface::merge: surfaces have relative rotation");
+  }
+
+  Vector3 translation = otherLocal.translation();
+
+  if (std::abs(translation[0]) > tolerance ||
+      std::abs(translation[1]) > tolerance ||
+      std::abs(translation[2]) > tolerance) {
+    ACTS_ERROR(
+        "DiscSurface::merge: surfaces have relative translation in x/y/z");
+    throw SurfaceMergingException(
+        getSharedPtr(), other.getSharedPtr(),
+        "DiscSurface::merge: surfaces have relative translation in x/y/z");
+  }
+
+  const auto* bounds = dynamic_cast<const RadialBounds*>(m_bounds.get());
+  const auto* otherBounds =
+      dynamic_cast<const RadialBounds*>(other.m_bounds.get());
+
+  if (bounds == nullptr || otherBounds == nullptr) {
+    ACTS_ERROR("DiscSurface::merge: surfaces have bounds other than radial");
+    throw SurfaceMergingException(
+        getSharedPtr(), other.getSharedPtr(),
+        "DiscSurface::merge: surfaces have bounds other than radial");
+  }
+
+  ActsScalar minR = bounds->get(RadialBounds::eMinR);
+  ActsScalar maxR = bounds->get(RadialBounds::eMaxR);
+
+  ActsScalar hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
+  ActsScalar avgPhi = bounds->get(RadialBounds::eAveragePhi);
+  ActsScalar minPhi = detail::radian_sym(-hlPhi + avgPhi);
+  ActsScalar maxPhi = detail::radian_sym(hlPhi + avgPhi);
+
+  ACTS_VERBOSE(" this: r =   [" << minR << ", " << maxR << "]");
+  ACTS_VERBOSE("       phi = ["
+               << minPhi / 1_degree << ", " << maxPhi / 1_degree << "] ~> "
+               << avgPhi / 1_degree << " +- " << hlPhi / 1_degree);
+
+  ActsScalar otherMinR = otherBounds->get(RadialBounds::eMinR);
+  ActsScalar otherMaxR = otherBounds->get(RadialBounds::eMaxR);
+  ActsScalar otherAvgPhi = otherBounds->get(RadialBounds::eAveragePhi);
+  ActsScalar otherHlPhi = otherBounds->get(RadialBounds::eHalfPhiSector);
+  ActsScalar otherMinPhi = detail::radian_sym(-otherHlPhi + otherAvgPhi);
+  ActsScalar otherMaxPhi = detail::radian_sym(otherHlPhi + otherAvgPhi);
+
+  ACTS_VERBOSE("other: r =   [" << otherMinR << ", " << otherMaxR << "]");
+  ACTS_VERBOSE("       phi = [" << otherMinPhi / 1_degree << ", "
+                                << otherMaxPhi / 1_degree << "] ~> "
+                                << otherAvgPhi / 1_degree << " +- "
+                                << otherHlPhi / 1_degree);
+
+  if (direction == Acts::BinningValue::binR) {
+    if (std::abs(otherLocal.linear().col(eY)[eX]) >= tolerance &&
+        (!bounds->coversFullAzimuth() || !otherBounds->coversFullAzimuth())) {
+      throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+                                    "DiscSurface::merge: surfaces have "
+                                    "relative rotation in z and phi sector");
+    }
+
+    if (std::abs(minR - otherMaxR) > tolerance &&
+        std::abs(maxR - otherMinR) > tolerance) {
+      ACTS_ERROR("DiscSurface::merge: surfaces are not touching r");
+      throw SurfaceMergingException(
+          getSharedPtr(), other.getSharedPtr(),
+          "DiscSurface::merge: surfaces are not touching in r");
+    }
+
+    if (std::abs(avgPhi - otherAvgPhi) > tolerance) {
+      ACTS_ERROR("DiscSurface::merge: surfaces have different average phi");
+      throw SurfaceMergingException(
+          getSharedPtr(), other.getSharedPtr(),
+          "DiscSurface::merge: surfaces have different average phi");
+    }
+
+    if (std::abs(hlPhi - otherHlPhi) > tolerance) {
+      ACTS_ERROR("DiscSurface::merge: surfaces have different half phi sector");
+      throw SurfaceMergingException(
+          getSharedPtr(), other.getSharedPtr(),
+          "DiscSurface::merge: surfaces have different half phi sector");
+    }
+
+    ActsScalar newMinR = std::min(minR, otherMinR);
+    ActsScalar newMaxR = std::max(maxR, otherMaxR);
+    ACTS_VERBOSE("  new: r =   [" << newMinR << ", " << newMaxR << "]");
+
+    auto newBounds =
+        std::make_shared<RadialBounds>(newMinR, newMaxR, hlPhi, avgPhi);
+
+    return {Surface::makeShared<DiscSurface>(*m_transform, newBounds),
+            minR > otherMinR};
+
+  } else if (direction == Acts::BinningValue::binPhi) {
+    if (std::abs(maxR - otherMaxR) > tolerance ||
+        std::abs(minR - otherMinR) > tolerance) {
+      ACTS_ERROR("DiscSurface::merge: surfaces don't have same r bounds");
+      throw SurfaceMergingException(
+          getSharedPtr(), other.getSharedPtr(),
+          "DiscSurface::merge: surfaces don't have same r bounds");
+    }
+
+    // Figure out signed relative rotation
+    Vector2 rotatedX = otherLocal.linear().col(eX).head<2>();
+    ActsScalar zrotation = std::atan2(rotatedX[1], rotatedX[0]);
+
+    ACTS_VERBOSE("this:  [" << avgPhi / 1_degree << " +- " << hlPhi / 1_degree
+                            << "]");
+    ACTS_VERBOSE("other: [" << otherAvgPhi / 1_degree << " +- "
+                            << otherHlPhi / 1_degree << "]");
+
+    ACTS_VERBOSE("Relative rotation around local z: " << zrotation / 1_degree);
+
+    ActsScalar prevOtherAvgPhi = otherAvgPhi;
+    otherAvgPhi = detail::radian_sym(otherAvgPhi + zrotation);
+    ACTS_VERBOSE("~> local other average phi: "
+                 << otherAvgPhi / 1_degree
+                 << " (was: " << prevOtherAvgPhi / 1_degree << ")");
+
+    try {
+      auto [newHlPhi, newAvgPhi, reversed] = detail::mergedPhiSector(
+          hlPhi, avgPhi, otherHlPhi, otherAvgPhi, logger, tolerance);
+
+      Transform3 newTransform = *m_transform;
+
+      if (externalRotation) {
+        ACTS_VERBOSE("Modifying transform for external rotation of "
+                     << newAvgPhi / 1_degree);
+        newTransform = newTransform * AngleAxis3(newAvgPhi, Vector3::UnitZ());
+        newAvgPhi = 0.;
+      }
+
+      auto newBounds =
+          std::make_shared<RadialBounds>(minR, maxR, newHlPhi, newAvgPhi);
+
+      return {Surface::makeShared<DiscSurface>(newTransform, newBounds),
+              reversed};
+    } catch (const std::invalid_argument& e) {
+      throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+                                    e.what());
+    }
+
+  } else {
+    ACTS_ERROR("DiscSurface::merge: invalid direction " << direction);
+
+    throw SurfaceMergingException(
+        getSharedPtr(), other.getSharedPtr(),
+        "DiscSurface::merge: invalid direction " + binningValueName(direction));
+  }
 }

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -12,14 +12,13 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
@@ -58,15 +57,6 @@ class PlaneSurface : public RegularSurface {
   /// @param transform is the additional transform applied after copying
   PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
                const Transform3& transform);
-
-  /// @deprecated Use `CurvilinearSurface` instead
-  ///
-  /// Dedicated Constructor with normal vector
-  /// This is for curvilinear surfaces which are by definition boundless
-  ///
-  /// @param center is the center position of the surface
-  /// @param normal is thenormal vector of the plane surface
-  PlaneSurface(const Vector3& center, const Vector3& normal);
 
   /// Constructor from DetectorElementBase : Element proxy
   ///
@@ -177,7 +167,7 @@ class PlaneSurface : public RegularSurface {
   /// @param position The start position of the intersection attempt
   /// @param direction The direction of the intersection attempt,
   /// (@note expected to be normalized)
-  /// @param bcheck The boundary check directive
+  /// @param boundaryTolerance The boundary check directive
   /// @param tolerance the tolerance used for the intersection
   ///
   /// <b>mathematical motivation:</b>
@@ -201,19 +191,22 @@ class PlaneSurface : public RegularSurface {
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      const BoundaryCheck& bcheck = BoundaryCheck(false),
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Return a Polyhedron for the surfaces
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lseg Number of segments along curved lines, it represents
-  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
-  /// are given
+  /// @param quarterSegments is the number of segments used to describe curved
+  /// segments in a quarter of the phi range. If it is 1, then only the extrema
+  /// points in phi are inserted next to the segment corners.
+  ///
+  /// @note for planar surfaces without curved segments @c quarterSegments is ignored
   ///
   /// @return A list of vertices and a face/facett description of it
-  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      std::size_t lseg) const override;
+  Polyhedron polyhedronRepresentation(
+      const GeometryContext& gctx, unsigned int quarterSegments) const override;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;
@@ -236,6 +229,7 @@ class PlaneSurface : public RegularSurface {
  private:
 };
 
-ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, PlaneSurface);
+static_assert(RegularSurfaceConcept<PlaneSurface>,
+              "PlaneSurface does not fulfill RegularSurfaceConcept");
 
 }  // namespace Acts

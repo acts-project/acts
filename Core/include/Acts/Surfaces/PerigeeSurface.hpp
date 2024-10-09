@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
@@ -14,7 +14,6 @@
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 
 #include <cstddef>
 #include <iosfwd>
@@ -74,25 +73,27 @@ class PerigeeSurface : public LineSurface {
   /// Return properly formatted class name for screen output */
   std::string name() const final;
 
+  /// Return a Polyhedron for the surfaces
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param ingoreSegments is an ignored parameter
+  ///
+  /// @return A list of vertices and a face/facett description of it
+  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
+                                      unsigned int ingoreSegments) const final;
+
+ protected:
   /// Output Method for std::ostream
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param sl is the ostream to be dumped into
   ///
   /// @return ostreamn object which was streamed into
-  std::ostream& toStream(const GeometryContext& gctx,
-                         std::ostream& sl) const final;
-
-  /// Return a Polyhedron for the surfaces
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lseg is ignored for a perigee @note ignored
-  ///
-  /// @return A list of vertices and a face/facett description of it
-  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      std::size_t lseg) const final;
+  std::ostream& toStreamImpl(const GeometryContext& gctx,
+                             std::ostream& sl) const final;
 };
 
-ACTS_STATIC_CHECK_CONCEPT(SurfaceConcept, PerigeeSurface);
+static_assert(SurfaceConcept<PerigeeSurface>,
+              "PerigeeSurface does not fulfill SurfaceConcept");
 
 }  // namespace Acts

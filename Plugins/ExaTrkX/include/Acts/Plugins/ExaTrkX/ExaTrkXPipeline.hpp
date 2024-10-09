@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -32,8 +32,9 @@ struct ExaTrkXTiming {
 class ExaTrkXHook {
  public:
   virtual ~ExaTrkXHook() {}
-  virtual void operator()(const std::any &nodes, const std::any &edges,
-                          const std::any &weights) const {};
+  virtual void operator()(const std::any & /*nodes*/,
+                          const std::any & /*edges*/,
+                          const std::any & /*weights*/) const {};
 };
 
 class ExaTrkXPipeline {
@@ -46,7 +47,6 @@ class ExaTrkXPipeline {
 
   std::vector<std::vector<int>> run(std::vector<float> &features,
                                     std::vector<int> &spacepointIDs,
-                                    int deviceHint = -1,
                                     const ExaTrkXHook &hook = {},
                                     ExaTrkXTiming *timing = nullptr) const;
 

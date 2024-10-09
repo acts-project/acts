@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
 
@@ -56,14 +56,14 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
   std::shared_ptr<DetectorVolume> dVolume = nullptr;
   // If there are no internals, the volume is fully defined
   if (m_cfg.internalsBuilder == nullptr) {
-    ACTS_VERBOSE("No internal structure present.")
+    ACTS_VERBOSE("No internal structure present.");
     // Construct the DetectorVolume
     dVolume = DetectorVolumeFactory::construct(
         portalGenerator, gctx, m_cfg.name, transform, std::move(bounds),
         tryAllPortals());
   } else {
     // Internal structure is present
-    ACTS_VERBOSE("Internal structure is being built.")
+    ACTS_VERBOSE("Internal structure is being built.");
     auto [surfaces, volumes, surfacesUpdater, volumeUpdater] =
         m_cfg.internalsBuilder->construct(gctx);
 
@@ -80,7 +80,7 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
         std::move(surfacesUpdater));
   }
   // All portals are defined and build the current shell
-  for (auto [ip, p] : enumerate(dVolume->portalPtrs())) {
+  for (const auto& [ip, p] : enumerate(dVolume->portalPtrs())) {
     portalContainer[ip] = p;
   }
 
@@ -92,8 +92,8 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
   }
 
   // Assign the proto material if configured to do so
-  for (auto [ip, bDescription] : m_cfg.portalMaterialBinning) {
-    if (portalContainer.find(ip) != portalContainer.end()) {
+  for (const auto& [ip, bDescription] : m_cfg.portalMaterialBinning) {
+    if (portalContainer.contains(ip)) {
       auto bd = detail::ProtoMaterialHelper::attachProtoMaterial(
           gctx, portalContainer[ip]->surface(), bDescription);
       ACTS_VERBOSE("-> Assigning proto material to portal " << ip << " with "

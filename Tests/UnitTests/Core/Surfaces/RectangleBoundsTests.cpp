@@ -1,17 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -22,11 +20,10 @@
 #include <stdexcept>
 #include <vector>
 
-namespace utf = boost::unit_test;
 const double inf = std::numeric_limits<double>::infinity();
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 /// Unit test for creating compliant/non-compliant RectangleBounds object
@@ -74,7 +71,7 @@ BOOST_AUTO_TEST_CASE(RadialBoundsException) {
 }
 
 /// Unit test for testing RectangleBounds properties
-BOOST_TEST_DECORATOR(*utf::tolerance(1e-10))
+BOOST_TEST_DECORATOR(*boost::unit_test::tolerance(1e-10))
 BOOST_AUTO_TEST_CASE(RectangleBoundsProperties) {
   const double halfX(10.), halfY(5.);
   RectangleBounds rect(halfX, halfY);
@@ -92,8 +89,8 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsProperties) {
                                 rectVertices.cbegin(), rectVertices.cend());
   const Vector2 pointA{1.0, 1.0};
   // distance is signed, from boundary to point. (doesn't seem right, given
-  BoundaryCheck bcheck(true, true);
-  BOOST_CHECK(rect.inside(pointA, bcheck));
+  BoundaryTolerance tolerance = BoundaryTolerance::None();
+  BOOST_CHECK(rect.inside(pointA, tolerance));
 }
 BOOST_AUTO_TEST_CASE(RectangleBoundsAssignment) {
   const double halfX(10.), halfY(2.);
@@ -108,5 +105,5 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsAssignment) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

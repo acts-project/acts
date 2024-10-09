@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/Volume.hpp"
 
@@ -19,7 +19,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 
 Volume::Volume(const Transform3& transform,
-               std::shared_ptr<const VolumeBounds> volbounds)
+               std::shared_ptr<VolumeBounds> volbounds)
     : GeometryObject(),
       m_transform(transform),
       m_itransform(m_transform.inverse()),
@@ -37,7 +37,7 @@ Vector3 Volume::binningPosition(const GeometryContext& /*gctx*/,
                                 BinningValue bValue) const {
   // for most of the binning types it is actually the center,
   // just for R-binning types the
-  if (bValue == binR || bValue == binRPhi) {
+  if (bValue == BinningValue::binR || bValue == BinningValue::binRPhi) {
     // the binning Position for R-type may have an offset
     return (center() + m_volumeBounds->binningOffset(bValue));
   }
@@ -74,11 +74,11 @@ Volume::BoundingBox Volume::orientedBoundingBox() const {
                                      this);
 }
 
-void Volume::assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds) {
+void Volume::assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds) {
   update(std::move(volbounds));
 }
 
-void Volume::update(std::shared_ptr<const VolumeBounds> volbounds,
+void Volume::update(std::shared_ptr<VolumeBounds> volbounds,
                     std::optional<Transform3> transform) {
   if (volbounds) {
     m_volumeBounds = std::move(volbounds);
@@ -104,7 +104,15 @@ const VolumeBounds& Volume::volumeBounds() const {
   return *m_volumeBounds;
 }
 
+VolumeBounds& Volume::volumeBounds() {
+  return *m_volumeBounds;
+}
+
 std::shared_ptr<const VolumeBounds> Volume::volumeBoundsPtr() const {
+  return m_volumeBounds;
+}
+
+std::shared_ptr<VolumeBounds> Volume::volumeBoundsPtr() {
   return m_volumeBounds;
 }
 
@@ -119,7 +127,12 @@ bool Volume::operator==(const Volume& other) const {
          (*m_volumeBounds == *other.m_volumeBounds);
 }
 
-bool Volume::operator!=(const Volume& other) const {
-  return !(*this == other);
+void Volume::visualize(IVisualization3D& helper, const GeometryContext& gctx,
+                       const ViewConfig& viewConfig) const {
+  auto bSurfaces = volumeBounds().orientedSurfaces(transform());
+  for (const auto& bs : bSurfaces) {
+    bs.surface->visualize(helper, gctx, viewConfig);
+  }
 }
+
 }  // namespace Acts

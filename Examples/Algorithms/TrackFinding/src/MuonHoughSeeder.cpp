@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 
@@ -108,12 +108,16 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
   // loop pver true hirs
   for (auto& SH : gotSH) {
     // read the identifier
-    muonMdtIdentifierFields detailedInfo =
+    MuonMdtIdentifierFields detailedInfo =
         ActsExamples::splitId(SH.geometryId().value());
-
     // store the true parameters
     truePatterns.emplace_back(SH.direction().y() / SH.direction().z(),
                               SH.fourPosition().y());
+    // std::cout<<"station name=" <<
+    // static_cast<int>(SH.stationName)<<std::endl;
+    std::cout << "direction = " << SH.direction().y() << std::endl;
+    std::cout << "fourposition y = " << SH.fourPosition().y() << std::endl;
+    std::cin.ignore();
     // reset the hough plane
     houghPlane.reset();
     int foundDC = 0;
@@ -123,7 +127,7 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
           DC.stationPhi() == detailedInfo.stationPhi &&
           DC.stationName() == detailedInfo.stationName) {
         // build a single identifier for the drift circles
-        muonMdtIdentifierFields idf;
+        MuonMdtIdentifierFields idf;
         idf.multilayer = DC.multilayer();
         idf.stationEta = DC.stationEta();
         idf.stationPhi = DC.stationPhi();
@@ -157,7 +161,6 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
                                         houghPlane.nHits(bx, by));
       }
     }
-
     m_outCanvas->SetTitle(Form("Station %s, Eta %i, Phi %i",
                                stationDict.at(detailedInfo.stationName).c_str(),
                                static_cast<int>(detailedInfo.stationEta),

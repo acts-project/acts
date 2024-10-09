@@ -1,15 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
@@ -37,7 +38,7 @@ namespace {
 /// @param sLength The segment length, maximal allowed length
 void checkIntersection(std::vector<Acts::Intersection2D>& intersections,
                        const Acts::Intersection2D& candidate, double sLength) {
-  if (candidate && candidate.pathLength() > 0 &&
+  if (candidate.isValid() && candidate.pathLength() > 0 &&
       candidate.pathLength() < sLength) {
     intersections.push_back(candidate);
   }
@@ -57,8 +58,7 @@ void checkIntersection(std::vector<Acts::Intersection2D>& intersections,
 Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D> maskAndReturn(
     std::vector<Acts::Intersection2D>& intersections,
     const ActsFatras::PlanarSurfaceMask::Segment2D& segment, bool firstInside) {
-  std::sort(intersections.begin(), intersections.end(),
-            Acts::Intersection2D::pathLengthOrder);
+  std::ranges::sort(intersections, Acts::Intersection2D::pathLengthOrder);
   if (intersections.size() >= 2) {
     return ActsFatras::PlanarSurfaceMask::Segment2D{
         intersections[0].position(), intersections[1].position()};
@@ -97,9 +97,9 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
                             Acts::VectorHelpers::phi(segment[1]));
 
     bool startInside =
-        surface.bounds().inside(localStart, Acts::BoundaryCheck(true));
+        surface.bounds().inside(localStart, Acts::BoundaryTolerance::None());
     bool endInside =
-        surface.bounds().inside(localEnd, Acts::BoundaryCheck(true));
+        surface.bounds().inside(localEnd, Acts::BoundaryTolerance::None());
 
     // Fast exit, both inside
     if (startInside && endInside) {
@@ -132,8 +132,9 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
                          Acts::VectorHelpers::phi(segment[1]));
 
     bool startInside =
-        surface.bounds().inside(sPolar, Acts::BoundaryCheck(true));
-    bool endInside = surface.bounds().inside(ePolar, Acts::BoundaryCheck(true));
+        surface.bounds().inside(sPolar, Acts::BoundaryTolerance::None());
+    bool endInside =
+        surface.bounds().inside(ePolar, Acts::BoundaryTolerance::None());
 
     // Fast exit for both inside
     if (startInside && endInside) {
@@ -280,7 +281,7 @@ ActsFatras::PlanarSurfaceMask::annulusMask(const Acts::AnnulusBounds& aBounds,
         Acts::VectorHelpers::phi(vertices[phii[iarc * 2]] - moduleOrigin),
         Acts::VectorHelpers::phi(vertices[phii[iarc * 2 + 1]] - moduleOrigin),
         segment[0] - moduleOrigin, sDir);
-    if (intersection) {
+    if (intersection.isValid()) {
       checkIntersection(intersections,
                         Acts::Intersection2D(
                             intersection.position() + moduleOrigin,

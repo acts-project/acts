@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
@@ -55,7 +55,8 @@ unsigned int NuclearInteraction::sampleDiscreteValues(
   }
 
   // Find the bin
-  const uint32_t int_rnd = static_cast<uint32_t>(UINT32_MAX * rnd);
+  const std::uint32_t int_rnd = static_cast<std::uint32_t>(
+      std::numeric_limits<std::uint32_t>::max() * rnd);
   const auto it = std::upper_bound(distribution.second.begin(),
                                    distribution.second.end(), int_rnd);
   std::size_t iBin = std::min(
@@ -77,7 +78,8 @@ Particle::Scalar NuclearInteraction::sampleContinuousValues(
   }
 
   // Find the bin
-  const uint32_t int_rnd = static_cast<uint32_t>(UINT32_MAX * rnd);
+  const std::uint32_t int_rnd = static_cast<std::uint32_t>(
+      std::numeric_limits<std::uint32_t>::max() * rnd);
   // Fast exit for non-normalised CDFs like interaction probability
   if (int_rnd > distribution.second.back()) {
     return std::numeric_limits<Scalar>::infinity();
@@ -91,8 +93,9 @@ Particle::Scalar NuclearInteraction::sampleContinuousValues(
   if (interpolate) {
     // Interpolate between neighbouring bins and return a diced intermediate
     // value
-    const uint32_t basecont = (iBin > 0 ? distribution.second[iBin - 1] : 0);
-    const uint32_t dcont = distribution.second[iBin] - basecont;
+    const std::uint32_t basecont =
+        (iBin > 0 ? distribution.second[iBin - 1] : 0);
+    const std::uint32_t dcont = distribution.second[iBin] - basecont;
     return distribution.first[iBin] +
            (distribution.first[iBin + 1] - distribution.first[iBin]) *
                (dcont > 0 ? (int_rnd - basecont) / dcont : 0.5);

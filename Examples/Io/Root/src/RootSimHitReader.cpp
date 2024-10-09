@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 
@@ -72,6 +72,9 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
   m_inputChain->SetBranchStatus("event_id", true);
 
   auto nEntries = static_cast<std::size_t>(m_inputChain->GetEntriesFast());
+  if (nEntries == 0) {
+    throw std::runtime_error("Did not find any entries in input file");
+  }
 
   // Add the first entry
   m_inputChain->GetEntry(0);
@@ -91,10 +94,8 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
   std::get<2>(m_eventMap.back()) = nEntries;
 
   // Sort by event id
-  std::sort(m_eventMap.begin(), m_eventMap.end(),
-            [](const auto& a, const auto& b) {
-              return std::get<0>(a) < std::get<0>(b);
-            });
+  std::ranges::sort(m_eventMap, {},
+                    [](const auto& m) { return std::get<0>(m); });
 
   // Re-Enable all branches
   m_inputChain->SetBranchStatus("*", true);
@@ -107,9 +108,9 @@ std::pair<std::size_t, std::size_t> RootSimHitReader::availableEvents() const {
 }
 
 ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
-  auto it = std::find_if(
-      m_eventMap.begin(), m_eventMap.end(),
-      [&](const auto& a) { return std::get<0>(a) == context.eventNumber; });
+  auto it = std::ranges::find_if(m_eventMap, [&](const auto& a) {
+    return std::get<0>(a) == context.eventNumber;
+  });
 
   if (it == m_eventMap.end()) {
     // explicitly warn if it happens for the first or last event as that might

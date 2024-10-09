@@ -1,13 +1,12 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -21,16 +20,15 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/EigenStepperDenseExtension.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
-#include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -107,16 +105,16 @@ struct SurfaceObserver {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/, result_type& result,
-                  const Logger& /*logger*/) const {
+  void act(propagator_state_t& state, const stepper_t& stepper,
+           const navigator_t& /*navigator*/, result_type& result,
+           const Logger& /*logger*/) const {
     if (surface && !result.surfaces_passed) {
       // calculate the distance to the surface
       const double distance =
           surface
               ->intersect(state.geoContext, stepper.position(state.stepping),
                           stepper.direction(state.stepping),
-                          BoundaryCheck(true))
+                          BoundaryTolerance::None())
               .closest()
               .pathLength();
       // Adjust the step size so that we cannot cross the target surface
@@ -154,16 +152,12 @@ const int ntests = 5;
 
 // This tests the Options
 BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
-  using null_optionsType = PropagatorOptions<>;
-  null_optionsType null_options(tgContext, mfContext);
-  // todo write null options test
+  using NullOptionsType = EigenPropagatorType::Options<>;
+  NullOptionsType null_options(tgContext, mfContext);
 
-  using ActionListType = ActionList<PerpendicularMeasure>;
-  using AbortConditionsType = AbortList<>;
-
-  using optionsType = PropagatorOptions<ActionListType, AbortConditionsType>;
-
-  optionsType options(tgContext, mfContext);
+  using ActorList = ActorList<PerpendicularMeasure>;
+  using OptionsType = EigenPropagatorType::Options<ActorList>;
+  OptionsType options(tgContext, mfContext);
 }
 
 BOOST_DATA_TEST_CASE(
@@ -192,18 +186,16 @@ BOOST_DATA_TEST_CASE(
   (void)index;
 
   using CylinderObserver = SurfaceObserver<CylinderSurface>;
-  using ActionListType = ActionList<CylinderObserver>;
-  using AbortConditionsType = AbortList<>;
+  using ActorList = ActorList<CylinderObserver>;
 
   // setup propagation options
-  PropagatorOptions<ActionListType, AbortConditionsType> options(tgContext,
-                                                                 mfContext);
+  EigenPropagatorType::Options<ActorList> options(tgContext, mfContext);
 
   options.pathLimit = 20_m;
-  options.maxStepSize = 1_cm;
+  options.stepping.maxStepSize = 1_cm;
 
   // set the surface to be passed by
-  options.actionList.get<CylinderObserver>().surface = mSurface.get();
+  options.actorList.get<CylinderObserver>().surface = mSurface.get();
 
   using so_result = typename CylinderObserver::result_type;
 
@@ -254,9 +246,9 @@ BOOST_DATA_TEST_CASE(
   (void)index;
 
   // setup propagation options - the tow step options
-  PropagatorOptions<> options_2s(tgContext, mfContext);
+  EigenPropagatorType::Options<> options_2s(tgContext, mfContext);
   options_2s.pathLimit = 50_cm;
-  options_2s.maxStepSize = 1_cm;
+  options_2s.stepping.maxStepSize = 1_cm;
 
   // define start parameters
   double x = 0;
@@ -284,9 +276,9 @@ BOOST_DATA_TEST_CASE(
       epropagator.propagate(*mid_parameters, options_2s).value().endParameters;
 
   // setup propagation options - the one step options
-  PropagatorOptions<> options_1s(tgContext, mfContext);
+  EigenPropagatorType::Options<> options_1s(tgContext, mfContext);
   options_1s.pathLimit = 100_cm;
-  options_1s.maxStepSize = 1_cm;
+  options_1s.stepping.maxStepSize = 1_cm;
   // propagate to a path length of 100 in one step
   const auto& end_parameters_1s =
       epropagator.propagate(start, options_1s).value().endParameters;
@@ -334,9 +326,9 @@ BOOST_DATA_TEST_CASE(
   (void)index;
 
   // setup propagation options - 2 setp options
-  PropagatorOptions<> options_2s(tgContext, mfContext);
+  EigenPropagatorType::Options<> options_2s(tgContext, mfContext);
   options_2s.pathLimit = 10_m;
-  options_2s.maxStepSize = 1_cm;
+  options_2s.stepping.maxStepSize = 1_cm;
 
   // define start parameters
   double x = 0;
@@ -367,9 +359,9 @@ BOOST_DATA_TEST_CASE(
           .endParameters;
 
   // setup propagation options - one step options
-  PropagatorOptions<> options_1s(tgContext, mfContext);
+  EigenPropagatorType::Options<> options_1s(tgContext, mfContext);
   options_1s.pathLimit = 10_m;
-  options_1s.maxStepSize = 1_cm;
+  options_1s.stepping.maxStepSize = 1_cm;
   // propagate to a final surface in one stop
   const auto& end_parameters_1s =
       epropagator.propagate(start, *cSurface, options_1s).value().endParameters;
@@ -397,9 +389,10 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
   VoidNavigator navigator{};
 
   auto startSurface =
-      Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitX());
-  auto targetSurface = Surface::makeShared<PlaneSurface>(
-      Vector3::UnitX() * 20_mm, Vector3::UnitX());
+      CurvilinearSurface(Vector3::Zero(), Vector3::UnitX()).planeSurface();
+  auto targetSurface =
+      CurvilinearSurface(Vector3::UnitX() * 20_mm, Vector3::UnitX())
+          .planeSurface();
 
   BoundVector startPars;
   startPars << 0, 0, 0, M_PI / 2, 1 / 1_GeV, 0;
@@ -413,7 +406,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
 
   GeometryContext gctx;
   MagneticFieldContext mctx;
-  PropagatorOptions<> options{gctx, mctx};
+  EigenPropagatorType::Options<> options{gctx, mctx};
 
   {
     Propagator propagator{eigenStepper, navigator};
@@ -476,8 +469,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
     BOOST_CHECK(resultCurv.ok());
   }
 
-  EigenStepper<StepperExtensionList<DenseEnvironmentExtension>>
-      denseEigenStepper{field};
+  EigenStepper<EigenStepperDenseExtension> denseEigenStepper{field};
 
   {
     Propagator propagator{denseEigenStepper, navigator};

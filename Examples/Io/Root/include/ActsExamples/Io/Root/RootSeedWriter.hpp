@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -74,15 +74,15 @@ class RootSeedWriter final : public WriterT<SimSeedContainer> {
   TFile* m_outputFile = nullptr;
   TTree* m_outputTree = nullptr;
   /// Event identifier.
-  uint32_t m_eventId = 0;
+  std::uint32_t m_eventId = 0;
   /// Hit surface identifier.
-  uint64_t m_measurementId_1 = 0;
-  uint64_t m_measurementId_2 = 0;
-  uint64_t m_measurementId_3 = 0;
+  std::uint64_t m_measurementId_1 = 0;
+  std::uint64_t m_measurementId_2 = 0;
+  std::uint64_t m_measurementId_3 = 0;
   /// Space point surface identifier.
-  uint64_t m_geometryId_1 = 0;
-  uint64_t m_geometryId_2 = 0;
-  uint64_t m_geometryId_3 = 0;
+  std::uint64_t m_geometryId_1 = 0;
+  std::uint64_t m_geometryId_2 = 0;
+  std::uint64_t m_geometryId_3 = 0;
   /// Global space point position components in mm. init to NaN
   float m_x_1 = std::numeric_limits<float>::signaling_NaN();
   float m_x_2 = std::numeric_limits<float>::signaling_NaN();

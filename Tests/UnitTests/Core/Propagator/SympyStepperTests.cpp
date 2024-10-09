@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -31,18 +31,14 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/DefaultExtension.hpp"
-#include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
-#include "Acts/Propagator/detail/Auctioneer.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -96,10 +92,12 @@ struct PropState {
   stepper_state_t stepping;
   /// Propagator options which only carry the relevant components
   struct {
-    double stepTolerance = 1e-4;
-    double stepSizeCutOff = 0.;
-    unsigned int maxRungeKuttaStepTrials = 10000;
     Direction direction = Direction::Forward;
+    struct {
+      double stepTolerance = 1e-4;
+      double stepSizeCutOff = 0.;
+      unsigned int maxRungeKuttaStepTrials = 10000;
+    } stepping;
   } options;
 };
 
@@ -443,7 +441,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
 
   /// Repeat with surface related methods
-  auto plane = Surface::makeShared<PlaneSurface>(pos, dir.normalized());
+  auto plane = CurvilinearSurface(pos, dir.normalized()).planeSurface();
   auto bp = BoundTrackParameters::create(
                 plane, tgContext, makeVector4(pos, time), dir, charge / absMom,
                 cov, ParticleHypothesis::pion())
@@ -453,9 +451,9 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
 
   // Test the intersection in the context of a surface
   auto targetSurface =
-      Surface::makeShared<PlaneSurface>(pos + navDir * 2. * dir, dir);
+      CurvilinearSurface(pos + navDir * 2. * dir, dir).planeSurface();
   es.updateSurfaceStatus(esState, *targetSurface, 0, navDir,
-                         BoundaryCheck(false));
+                         BoundaryTolerance::None());
   CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
                   eps);
 
@@ -464,7 +462,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
       esState,
       targetSurface
           ->intersect(esState.geoContext, es.position(esState),
-                      navDir * es.direction(esState), BoundaryCheck(false))
+                      navDir * es.direction(esState), BoundaryTolerance::None())
           .closest(),
       navDir, false);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
@@ -473,7 +471,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
       esState,
       targetSurface
           ->intersect(esState.geoContext, es.position(esState),
-                      navDir * es.direction(esState), BoundaryCheck(false))
+                      navDir * es.direction(esState), BoundaryTolerance::None())
           .closest(),
       navDir, true);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
@@ -512,7 +510,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
 
   // Test a case where no step size adjustment is required
-  ps.options.stepTolerance = 2. * 4.4258e+09;
+  ps.options.stepping.stepTolerance = 2. * 4.4258e+09;
   double h0 = esState.stepSize.value();
   es.step(ps, mockNavigator);
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);

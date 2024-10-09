@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
 
@@ -62,7 +62,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
             "object. It needs at least 5 parameters, while " +
             std::to_string(boundValues.size()) + " where given");
       }
-      auto bArray = to_array<ConeVolumeBounds::BoundValues::eSize, ActsScalar>(
+      auto bArray = toArray<ConeVolumeBounds::BoundValues::eSize, ActsScalar>(
           boundValues);
       volumeBounds = std::make_unique<ConeVolumeBounds>(bArray);
     } break;
@@ -72,14 +72,15 @@ Acts::Experimental::VolumeStructureBuilder::construct(
       if (boundValues.empty() && m_cfg.extent.has_value()) {
         ACTS_VERBOSE("Cuboid: estimate parameters from Extent.");
         const auto& vExtent = m_cfg.extent.value();
-        if (vExtent.constrains(binX) && vExtent.constrains(binY) &&
-            vExtent.constrains(binZ)) {
-          eTransform.pretranslate(Vector3(vExtent.medium(binX),
-                                          vExtent.medium(binY),
-                                          vExtent.medium(binZ)));
-          boundValues = {0.5 * vExtent.interval(binX),
-                         0.5 * vExtent.interval(binY),
-                         0.5 * vExtent.interval(binZ)};
+        if (vExtent.constrains(BinningValue::binX) &&
+            vExtent.constrains(BinningValue::binY) &&
+            vExtent.constrains(BinningValue::binZ)) {
+          eTransform.pretranslate(Vector3(vExtent.medium(BinningValue::binX),
+                                          vExtent.medium(BinningValue::binY),
+                                          vExtent.medium(BinningValue::binZ)));
+          boundValues = {0.5 * vExtent.interval(BinningValue::binX),
+                         0.5 * vExtent.interval(BinningValue::binY),
+                         0.5 * vExtent.interval(BinningValue::binZ)};
 
         } else {
           throw std::runtime_error(
@@ -93,7 +94,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
             std::to_string(boundValues.size()) + " where given");
       }
       auto bArray =
-          to_array<CuboidVolumeBounds::BoundValues::eSize>(boundValues);
+          toArray<CuboidVolumeBounds::BoundValues::eSize>(boundValues);
       volumeBounds = std::make_unique<CuboidVolumeBounds>(bArray);
     } break;
     case VolumeBounds::BoundsType::eCutoutCylinder: {
@@ -107,7 +108,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
             std::to_string(boundValues.size()) + " where given");
       }
       auto bArray =
-          to_array<CutoutCylinderVolumeBounds::BoundValues::eSize>(boundValues);
+          toArray<CutoutCylinderVolumeBounds::BoundValues::eSize>(boundValues);
       volumeBounds = std::make_unique<CutoutCylinderVolumeBounds>(bArray);
     } break;
     case VolumeBounds::BoundsType::eCylinder: {
@@ -116,13 +117,16 @@ Acts::Experimental::VolumeStructureBuilder::construct(
       if (boundValues.empty() && m_cfg.extent.has_value()) {
         ACTS_VERBOSE("Cylinder: estimate parameters from Extent.");
         const auto& vExtent = m_cfg.extent.value();
-        if (vExtent.constrains(binR) && vExtent.constrains(binZ)) {
-          eTransform.pretranslate(Vector3(0., 0., vExtent.medium(binZ)));
-          boundValues = {vExtent.min(binR), vExtent.max(binR),
-                         0.5 * vExtent.interval(binZ)};
-          if (vExtent.constrains(binPhi)) {
-            boundValues.push_back(0.5 * vExtent.interval(binPhi));
-            boundValues.push_back(vExtent.medium(binPhi));
+        if (vExtent.constrains(BinningValue::binR) &&
+            vExtent.constrains(BinningValue::binZ)) {
+          eTransform.pretranslate(
+              Vector3(0., 0., vExtent.medium(BinningValue::binZ)));
+          boundValues = {vExtent.min(BinningValue::binR),
+                         vExtent.max(BinningValue::binR),
+                         0.5 * vExtent.interval(BinningValue::binZ)};
+          if (vExtent.constrains(BinningValue::binPhi)) {
+            boundValues.push_back(0.5 * vExtent.interval(BinningValue::binPhi));
+            boundValues.push_back(vExtent.medium(BinningValue::binPhi));
           }
         } else {
           throw std::runtime_error(
@@ -146,7 +150,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
                    << boundValues[2] << ", " << boundValues[3] << ", "
                    << boundValues[4]);
       auto bArray =
-          to_array<CylinderVolumeBounds::BoundValues::eSize>(boundValues);
+          toArray<CylinderVolumeBounds::BoundValues::eSize>(boundValues);
       volumeBounds = std::make_unique<CylinderVolumeBounds>(bArray);
     } break;
     case VolumeBounds::BoundsType::eGenericCuboid: {
@@ -160,7 +164,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
             std::to_string(boundValues.size()) + " where given");
       }
       auto bArray =
-          to_array<GenericCuboidVolumeBounds::BoundValues::eSize>(boundValues);
+          toArray<GenericCuboidVolumeBounds::BoundValues::eSize>(boundValues);
       volumeBounds = std::make_unique<GenericCuboidVolumeBounds>(bArray);
     } break;
     case VolumeBounds::BoundsType::eTrapezoid: {
@@ -174,7 +178,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
             std::to_string(boundValues.size()) + " where given");
       }
       auto bArray =
-          to_array<TrapezoidVolumeBounds::BoundValues::eSize>(boundValues);
+          toArray<TrapezoidVolumeBounds::BoundValues::eSize>(boundValues);
       volumeBounds = std::make_unique<TrapezoidVolumeBounds>(bArray);
     } break;
     default:

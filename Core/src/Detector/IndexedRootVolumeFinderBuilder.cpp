@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
 
@@ -31,7 +31,8 @@ void fillGridIndices2D(
         if (ic1 > 0) {
           Acts::ActsScalar v1 = 0.5 * (c1 + boundaries[1u][ic1 - 1]);
           if (casts ==
-              std::array<Acts::BinningValue, 2u>{Acts::binZ, Acts::binR}) {
+              std::array<Acts::BinningValue, 2u>{Acts::BinningValue::binZ,
+                                                 Acts::BinningValue::binR}) {
             Acts::Vector3 zrPosition{v1, 0., v0};
             for (const auto [iv, v] : Acts::enumerate(rootVolumes)) {
               if (v->inside(gctx, zrPosition)) {
@@ -50,7 +51,8 @@ void fillGridIndices2D(
 Acts::Experimental::IndexedRootVolumeFinderBuilder::
     IndexedRootVolumeFinderBuilder(std::vector<Acts::BinningValue> binning)
     : m_casts(std::move(binning)) {
-  if (m_casts != std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR}) {
+  if (m_casts != std::vector<Acts::BinningValue>{Acts::BinningValue::binZ,
+                                                 Acts::BinningValue::binR}) {
     throw std::invalid_argument("Online (z,r) binning is currently supported.");
   }
 }
@@ -77,8 +79,9 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
   fillGridIndices2D(gctx, grid, rootVolumes, boundaries, casts);
 
   using IndexedDetectorVolumesImpl =
-      IndexedUpdaterImpl<IExternalNavigation, GridType,
-                         IndexedDetectorVolumeExtractor, DetectorVolumeFiller>;
+      IndexedGridNavigation<IExternalNavigation, GridType,
+                            IndexedDetectorVolumeExtractor,
+                            DetectorVolumeFiller>;
 
   auto indexedDetectorVolumeImpl =
       std::make_unique<const IndexedDetectorVolumesImpl>(std::move(grid),

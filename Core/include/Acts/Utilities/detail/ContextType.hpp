@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -30,7 +30,7 @@ class ContextType {
   /// @tparam T The type of the value to construct from
   /// @param value The value to construct from
   template <typename T>
-  explicit ContextType(T&& value) : m_data{std::move(value)} {}
+  explicit ContextType(T&& value) : m_data{std::forward<T>(value)} {}
 
   /// Copy construct a new Context Type object from anything. Must be explicit.
   ///
@@ -46,7 +46,7 @@ class ContextType {
   /// @return ContextType&
   template <typename T>
   ContextType& operator=(T&& value) {
-    m_data = std::move(value);
+    m_data = std::forward<T>(value);
     return *this;
   }
 

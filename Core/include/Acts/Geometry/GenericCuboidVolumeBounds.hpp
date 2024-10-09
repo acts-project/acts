@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -94,7 +94,8 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   ///
   /// @return vector of canonical binning values
   std::vector<Acts::BinningValue> canonicalBinning() const override {
-    return {Acts::binX, Acts::binY, Acts::binZ};
+    return {Acts::BinningValue::binX, Acts::BinningValue::binY,
+            Acts::BinningValue::binZ};
   };
 
   /// @param sl is the output stream to be written into

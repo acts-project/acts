@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -67,7 +67,8 @@ class Sequencer {
   struct Config {
     /// number of events to skip at the beginning
     std::size_t skip = 0;
-    /// number of events to process, SIZE_MAX to process all available events
+    /// number of events to process, std::numeric_limits<std::size_t>::max() to
+    /// process all available events
     std::optional<std::size_t> events = std::nullopt;
     /// logging level
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
@@ -77,13 +78,10 @@ class Sequencer {
     /// output directory for timing information, empty for working directory
     std::string outputDir;
     /// output name of the timing file
-    std::string outputTimingFile = "timing.tsv";
+    std::string outputTimingFile = "timing.csv";
     /// Callback that is invoked in the event loop.
     /// @warning This function can be called from multiple threads and should therefore be thread-safe
     IterationCallback iterationCallback = []() {};
-    /// Run data flow consistency checks
-    /// Defaults to false right now until all components are migrated
-    bool runDataFlowChecks = true;
 
     bool trackFpes = true;
     std::vector<FpeMask> fpeMasks{};
@@ -158,7 +156,9 @@ class Sequencer {
  private:
   /// List of all configured algorithm names.
   std::vector<std::string> listAlgorithmNames() const;
-  /// Determine range of (requested) events; [SIZE_MAX, SIZE_MAX) for error.
+  /// Determine range of (requested) events;
+  /// [std::numeric_limits<std::size_t>::max(),
+  /// std::numeric_limits<std::size_t>::max()) for error.
   std::pair<std::size_t, std::size_t> determineEventsRange() const;
 
   std::pair<std::string, std::size_t> fpeMaskCount(

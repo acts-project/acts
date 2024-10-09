@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/BinnedSurfaceMaterialAccumulater.hpp"
 
@@ -113,7 +113,7 @@ void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
           "Surface material is not found, inconsistent configuration.");
     }
     // Accumulate the material - remember the touched bin
-    auto tBin = accMaterial->second.accumulate(mi.position, mi.materialSlab,
+    auto tBin = accMaterial->second.accumulate(mi.intersection, mi.materialSlab,
                                                mi.pathCorrection);
     touchedMapBins.insert(MapBin(&(accMaterial->second), tBin));
   }
@@ -126,7 +126,8 @@ void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
 
   // Empty bin correction
   if (m_cfg.emptyBinCorrection) {
-    for (auto [surface, position, direction] : surfacesWithoutAssignment) {
+    for (const auto& [surface, position, direction] :
+         surfacesWithoutAssignment) {
       // Get the accumulated material
       auto missedMaterial =
           cState->accumulatedMaterial.find(surface->geometryId());

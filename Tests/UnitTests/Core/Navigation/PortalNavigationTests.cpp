@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE(VolumeArrayUpdate) {
 
   std::vector<const Acts::Experimental::DetectorVolume*> volumes = {
       volumeA.get(), volumeB.get(), volumeC.get(), volumeD.get()};
-  Acts::Experimental::BoundVolumesGrid1Navigation bvg(zArray, Acts::binZ,
-                                                      volumes);
+  Acts::Experimental::BoundVolumesGrid1Navigation bvg(
+      zArray, Acts::BinningValue::binZ, volumes);
   // Reset the navigation state
   nState.currentVolume = nullptr;
 
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(VolumeArrayUpdate) {
   shift300.pretranslate(Acts::Vector3(0, 0, 300));
 
   Acts::Experimental::BoundVolumesGrid1Navigation bvgs(
-      zArray, Acts::binZ, volumes, shift300.inverse());
+      zArray, Acts::BinningValue::binZ, volumes, shift300.inverse());
 
   // 150 (-300) -> transforms to -150, hence it yields A
   nState.position = Acts::Vector3(0., 0., 150.);

@@ -1,17 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
-#include "ActsExamples/TruthTracking/ProtoTrackTruthMatcher.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
 #include "ActsExamples/TruthTracking/TrackTruthMatcher.hpp"
@@ -92,8 +90,9 @@ void addTruthTracking(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::ParticleSmearing, mex, "ParticleSmearing", inputParticles,
       outputTrackParameters, sigmaD0, sigmaD0PtA, sigmaD0PtB, sigmaZ0,
-      sigmaZ0PtA, sigmaZ0PtB, sigmaT0, sigmaPhi, sigmaTheta, sigmaPRel,
-      initialSigmas, initialVarInflation, particleHypothesis, randomNumbers);
+      sigmaZ0PtA, sigmaZ0PtB, sigmaT0, sigmaPhi, sigmaTheta, sigmaPtRel,
+      initialSigmas, initialSigmaPtRel, initialVarInflation, particleHypothesis,
+      randomNumbers);
 
   {
     using Alg = ActsExamples::ParticleSelector;
@@ -132,6 +131,7 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(removeCharged);
     ACTS_PYTHON_MEMBER(removeNeutral);
     ACTS_PYTHON_MEMBER(removeSecondaries);
+    ACTS_PYTHON_MEMBER(excludeAbsPdgs);
     ACTS_PYTHON_STRUCT_END();
 
     pythonRangeProperty(c, "rho", &Config::rhoMin, &Config::rhoMax);
@@ -207,12 +207,6 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::TrackTruthMatcher, mex, "TrackTruthMatcher", inputTracks,
       inputParticles, inputMeasurementParticlesMap, outputTrackParticleMatching,
       outputParticleTrackMatching, matchingRatio, doubleMatching);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::ProtoTrackTruthMatcher, mex, "ProtoTrackTruthMatcher",
-      inputProtoTracks, inputParticles, inputMeasurementParticlesMap,
-      outputProtoTrackParticleMatching, outputParticleProtoTrackMatching,
-      matchingRatio, doubleMatching);
 }
 
 }  // namespace Acts::Python

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -20,7 +20,7 @@ namespace Acts {
 struct SurfaceBinningMatcher {
   /// The binning tolerance parameters
   using Range = std::pair<double, double>;
-  std::vector<Range> tolerances{static_cast<int>(binValues), {0., 0.}};
+  std::vector<Range> tolerances{static_cast<int>(numBinningValues()), {0., 0.}};
 
   SurfaceBinningMatcher() = default;
 
@@ -49,8 +49,9 @@ struct SurfaceBinningMatcher {
     double otherMin = otherExt.min(bValue);
     double otherMax = otherExt.max(bValue);
 
-    return (std::abs(oneMin - otherMin) <= tolerances[bValue].first &&
-            std::abs(oneMax - otherMax) <= tolerances[bValue].second);
+    return (
+        std::abs(oneMin - otherMin) <= tolerances[toUnderlying(bValue)].first &&
+        std::abs(oneMax - otherMax) <= tolerances[toUnderlying(bValue)].second);
   }
 };
 

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 
@@ -76,7 +76,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       const auto theta = Acts::VectorHelpers::theta(particle.direction());
       const auto pt = particle.transverseMomentum();
       const auto p = particle.absoluteMomentum();
-      const auto q = particle.charge();
+      const auto qOverP = particle.qOverP();
       const auto particleHypothesis =
           m_cfg.particleHypothesis.value_or(particle.hypothesis());
 
@@ -87,16 +87,17 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       const double sigmaZ0 =
           m_cfg.sigmaZ0 +
           m_cfg.sigmaZ0PtA * std::exp(-1.0 * std::abs(m_cfg.sigmaZ0PtB) * pt);
-      const double sigmaP = m_cfg.sigmaPRel * p;
-      // var(q/p) = (d(1/p)/dp)² * var(p) = (-1/p²)² * var(p)
-      const double sigmaQOverP = sigmaP / (p * p);
       // shortcuts for other resolutions
       const double sigmaT0 = m_cfg.sigmaT0;
       const double sigmaPhi = m_cfg.sigmaPhi;
       const double sigmaTheta = m_cfg.sigmaTheta;
+      const double sigmaQOverP =
+          std::sqrt(std::pow(m_cfg.sigmaPtRel * qOverP, 2) +
+                    std::pow(sigmaTheta * (qOverP * std::tan(theta)), 2));
 
       Acts::BoundVector params = Acts::BoundVector::Zero();
       // smear the position/time
+      // note that we smear d0 and z0 in the perigee frame
       params[Acts::eBoundLoc0] = sigmaD0 * stdNormal(rng);
       params[Acts::eBoundLoc1] = sigmaZ0 * stdNormal(rng);
       params[Acts::eBoundTime] = time + sigmaT0 * stdNormal(rng);
@@ -105,14 +106,12 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
           phi + sigmaPhi * stdNormal(rng), theta + sigmaTheta * stdNormal(rng));
       params[Acts::eBoundPhi] = newPhi;
       params[Acts::eBoundTheta] = newTheta;
-      // compute smeared absolute momentum vector
-      const double newP = std::max(0.0, p + sigmaP * stdNormal(rng));
-      params[Acts::eBoundQOverP] = particleHypothesis.qOverP(newP, q);
+      // compute smeared q/p
+      params[Acts::eBoundQOverP] = qOverP + sigmaQOverP * stdNormal(rng);
 
       ACTS_VERBOSE("Smearing particle (pos, time, phi, theta, q/p):");
       ACTS_VERBOSE(" from: " << particle.position().transpose() << ", " << time
-                             << ", " << phi << ", " << theta << ", "
-                             << (q != 0 ? q / p : 1 / p));
+                             << ", " << phi << ", " << theta << ", " << qOverP);
       ACTS_VERBOSE("   to: " << perigee
                                     ->localToGlobal(
                                         ctx.geoContext,
@@ -130,27 +129,46 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       if (m_cfg.initialSigmas) {
         // use the initial sigmas if set
         for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
-          cov(i, i) = m_cfg.initialVarInflation[i] * (*m_cfg.initialSigmas)[i] *
-                      (*m_cfg.initialSigmas)[i];
+          double sigma = (*m_cfg.initialSigmas)[i];
+          double variance = sigma * sigma;
+
+          if (i == Acts::eBoundQOverP) {
+            // note that we rely on the fact that sigma theta is already
+            // computed
+            double varianceTheta = cov(Acts::eBoundTheta, Acts::eBoundTheta);
+
+            // transverse momentum contribution
+            variance += std::pow(
+                m_cfg.initialSigmaPtRel * params[Acts::eBoundQOverP], 2);
+
+            // theta contribution
+            variance += varianceTheta *
+                        std::pow(params[Acts::eBoundQOverP] /
+                                     std::tan(params[Acts::eBoundTheta]),
+                                 2);
+          }
+
+          // Inflate the initial covariance
+          variance *= m_cfg.initialVarInflation[i];
+
+          cov(i, i) = variance;
         }
       } else {
         // otherwise use the smearing sigmas
-        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) =
-            m_cfg.initialVarInflation[Acts::eBoundLoc0] * sigmaD0 * sigmaD0;
-        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) =
-            m_cfg.initialVarInflation[Acts::eBoundLoc1] * sigmaZ0 * sigmaZ0;
-        cov(Acts::eBoundTime, Acts::eBoundTime) =
-            m_cfg.initialVarInflation[Acts::eBoundTime] * sigmaT0 * sigmaT0;
-        cov(Acts::eBoundPhi, Acts::eBoundPhi) =
-            m_cfg.initialVarInflation[Acts::eBoundPhi] * sigmaPhi * sigmaPhi;
-        cov(Acts::eBoundTheta, Acts::eBoundTheta) =
-            m_cfg.initialVarInflation[Acts::eBoundTheta] * sigmaTheta *
-            sigmaTheta;
-        cov(Acts::eBoundQOverP, Acts::eBoundQOverP) =
-            m_cfg.initialVarInflation[Acts::eBoundQOverP] * sigmaQOverP *
-            sigmaQOverP;
-      }
 
+        Acts::BoundVector sigmas = Acts::BoundVector(
+            {sigmaD0, sigmaZ0, sigmaPhi, sigmaTheta, sigmaQOverP, sigmaT0});
+
+        for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+          double sigma = sigmas[i];
+          double variance = sigma * sigma;
+
+          // Inflate the initial covariance
+          variance *= m_cfg.initialVarInflation[i];
+
+          cov(i, i) = variance;
+        }
+      }
       parameters.emplace_back(perigee, params, cov, particleHypothesis);
     }
   }

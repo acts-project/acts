@@ -1,16 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/SympyStepper.hpp"
 
 #include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 #include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
-#include "Acts/Utilities/QuickMath.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -19,9 +18,10 @@
 
 namespace Acts {
 
-SympyStepper::SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField,
-                           double overstepLimit)
-    : m_bField(std::move(bField)), m_overstepLimit(overstepLimit) {}
+SympyStepper::SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField)
+    : m_bField(std::move(bField)) {}
+
+SympyStepper::SympyStepper(const Config& config) : m_bField(config.bField) {}
 
 SympyStepper::State SympyStepper::makeState(
     std::reference_wrapper<const GeometryContext> gctx,
@@ -115,9 +115,8 @@ Result<double> SympyStepper::stepImpl(
   double m = particleHypothesis(state).mass();
   double p_abs = absoluteMomentum(state);
 
-  auto getB = [&](const double* p) -> Vector3 {
-    auto fieldRes = getField(state, {p[0], p[1], p[2]});
-    return *fieldRes;
+  auto getB = [&](const double* p) -> Result<Vector3> {
+    return getField(state, {p[0], p[1], p[2]});
   };
 
   const auto calcStepSizeScaling = [&](const double errorEstimate_) -> double {
@@ -127,17 +126,11 @@ Result<double> SympyStepper::stepImpl(
     // This is given by the order of the Runge-Kutta method
     constexpr double exponent = 0.25;
 
-    // Whether to use fast power function if available
-    constexpr bool tryUseFastPow{false};
-
     double x = stepTolerance / errorEstimate_;
 
-    if constexpr (exponent == 0.25 && !tryUseFastPow) {
+    if constexpr (exponent == 0.25) {
       // This is 3x faster than std::pow
       x = std::sqrt(std::sqrt(x));
-    } else if constexpr (std::numeric_limits<double>::is_iec559 &&
-                         tryUseFastPow) {
-      x = fastPow(x, exponent);
     } else {
       x = std::pow(x, exponent);
     }
@@ -154,15 +147,20 @@ Result<double> SympyStepper::stepImpl(
     nStepTrials++;
 
     // For details about the factor 4 see ATL-SOFT-PUB-2009-001
-    bool ok =
+    Result<bool> res =
         rk4(pos.data(), dir.data(), t, h, qop, m, p_abs, getB, &errorEstimate,
             4 * stepTolerance, state.pars.template segment<3>(eFreePos0).data(),
             state.pars.template segment<3>(eFreeDir0).data(),
             state.pars.template segment<1>(eFreeTime).data(),
             state.derivative.data(),
             state.covTransport ? state.jacTransport.data() : nullptr);
+    if (!res.ok()) {
+      return res.error();
+    }
+    // Protect against division by zero
+    errorEstimate = std::max(1e-20, errorEstimate);
 
-    if (ok) {
+    if (*res) {
       break;
     }
 

@@ -1,13 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 
+#include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
@@ -18,7 +19,7 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
     const Acts::MagneticFieldContext& mctx,
     MagneticFieldProvider::Cache& fieldCache) const {
   // Create propagator options
-  PropagatorOptions<> pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions(gctx, mctx);
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
@@ -28,10 +29,11 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection = perigeeSurface
-                          .intersect(gctx, params.position(gctx),
-                                     params.direction(), BoundaryCheck(false))
-                          .closest();
+  auto intersection =
+      perigeeSurface
+          .intersect(gctx, params.position(gctx), params.direction(),
+                     BoundaryTolerance::Infinite())
+          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above

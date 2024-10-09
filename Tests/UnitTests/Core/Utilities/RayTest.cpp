@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
@@ -12,10 +12,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Ray.hpp"
 
-using boost::test_tools::output_test_stream;
-
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Utilities)
 BOOST_AUTO_TEST_CASE(ray_construction) {
@@ -23,7 +20,7 @@ BOOST_AUTO_TEST_CASE(ray_construction) {
 
   using Vector2F = Eigen::Matrix<float, 2, 1>;
 
-  output_test_stream output;
+  boost::test_tools::output_test_stream output;
 
   Vector2F dir2(0.5, 0.5);
   Ray<float, 2> ray2({1, 1}, dir2);
@@ -57,5 +54,4 @@ BOOST_AUTO_TEST_CASE(ray_construction) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

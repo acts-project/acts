@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
@@ -72,8 +72,8 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
       new G4Material("Silicon", 14, 28.0855 * g / mole, 2.329 * g / cm3);
 
   // Construct the rotation
-  // This assumes the binValue is binX, binY or binZ. No reset is necessary in
-  // case of binZ
+  // This assumes the binValue is BinningValue::binX, BinningValue::binY or
+  // BinningValue::binZ. No reset is necessary in case of BinningValue::binZ
   G4RotationMatrix* rotation = nullptr;
   if (static_cast<Acts::BinningValue>(m_cfg.binValue) ==
       Acts::BinningValue::binX) {

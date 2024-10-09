@@ -1,19 +1,22 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/ConeBounds.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <optional>
 
 Acts::ConeBounds::ConeBounds(double alpha, bool symm, double halfphi,
                              double avphi) noexcept(false)
@@ -54,11 +57,13 @@ Acts::Vector2 Acts::ConeBounds::shifted(const Acts::Vector2& lposition) const {
   return shifted;
 }
 
-bool Acts::ConeBounds::inside(const Acts::Vector2& lposition,
-                              const Acts::BoundaryCheck& bcheck) const {
+bool Acts::ConeBounds::inside(
+    const Acts::Vector2& lposition,
+    const Acts::BoundaryTolerance& boundaryTolerance) const {
   auto rphiHalf = r(lposition[eBoundLoc1]) * get(eHalfPhiSector);
-  return bcheck.isInside(shifted(lposition), Vector2(-rphiHalf, get(eMinZ)),
-                         Vector2(rphiHalf, get(eMaxZ)));
+  return detail::insideAlignedBox(
+      Vector2(-rphiHalf, get(eMinZ)), Vector2(rphiHalf, get(eMaxZ)),
+      boundaryTolerance, shifted(lposition), std::nullopt);
 }
 
 std::ostream& Acts::ConeBounds::toStream(std::ostream& sl) const {

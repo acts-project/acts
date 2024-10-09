@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 
@@ -21,8 +21,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
@@ -73,7 +72,7 @@ Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
 void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
     State& mState, const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
-                                   << "' for material surfaces.")
+                                   << "' for material surfaces.");
 
   ACTS_VERBOSE("- boundary surfaces ...");
   // Check the boundary surfaces
@@ -170,11 +169,10 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
 void Acts::SurfaceMaterialMapper::collectMaterialVolumes(
     State& mState, const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
-                                   << "' for material surfaces.")
+                                   << "' for material surfaces.");
   ACTS_VERBOSE("- Insert Volume ...");
   if (tVolume.volumeMaterial() != nullptr) {
-    mState.volumeMaterial[tVolume.geometryId()] =
-        tVolume.volumeMaterialSharedPtr();
+    mState.volumeMaterial[tVolume.geometryId()] = tVolume.volumeMaterialPtr();
   }
 
   // Step down into the sub volume
@@ -207,7 +205,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
-                            << " recorded material steps to map.")
+                            << " recorded material steps to map.");
 
   // Check if the material interactions are associated with a surface. If yes we
   // simply need to loop over them and accumulate the material
@@ -240,12 +238,11 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   // Prepare Action list and abort list
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
   using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
-  using ActionList =
-      ActionList<MaterialSurfaceCollector, MaterialVolumeCollector>;
-  using AbortList = AbortList<EndOfWorldReached>;
+  using ActorList = ActorList<MaterialSurfaceCollector, MaterialVolumeCollector,
+                              EndOfWorldReached>;
 
-  PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
-                                                   mState.magFieldContext);
+  StraightLinePropagator::Options<ActorList> options(mState.geoContext,
+                                                     mState.magFieldContext);
 
   // Now collect the material layers by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();
@@ -258,7 +255,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   // These should be mapped onto the mapping surfaces found
   ACTS_VERBOSE("Found     " << mappingSurfaces.size()
                             << " mapping surfaces for this track.");
-  ACTS_VERBOSE("Mapping surfaces are :")
+  ACTS_VERBOSE("Mapping surfaces are :");
   for (auto& mSurface : mappingSurfaces) {
     ACTS_VERBOSE(" - Surface : " << mSurface.surface->geometryId()
                                  << " at position = (" << mSurface.position.x()
@@ -286,8 +283,6 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   // To remember the bins of this event
   using MapBin =
       std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
-  using MaterialBin = std::pair<AccumulatedSurfaceMaterial*,
-                                std::shared_ptr<const ISurfaceMaterial>>;
   std::map<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>
       touchedMapBins;
   std::map<AccumulatedSurfaceMaterial*, std::shared_ptr<const ISurfaceMaterial>>
@@ -397,8 +392,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
     // Now assign the material for the accumulation process
     auto tBin = currentAccMaterial->second.accumulate(
         currentPos, rmIter->materialSlab, currentPathCorrection);
-    if (touchedMapBins.find(&(currentAccMaterial->second)) ==
-        touchedMapBins.end()) {
+    if (!touchedMapBins.contains(&(currentAccMaterial->second))) {
       touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     }
     if (m_cfg.computeVariance) {
@@ -416,7 +410,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
     ++rmIter;
   }
 
-  ACTS_VERBOSE("Surfaces have following number of assigned hits :")
+  ACTS_VERBOSE("Surfaces have following number of assigned hits :");
   for (auto& [key, value] : assignedMaterial) {
     ACTS_VERBOSE(" + Surface : " << key << " has " << value << " hits.");
   }
@@ -488,8 +482,7 @@ void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
     // Now assign the material for the accumulation process
     auto tBin = currentAccMaterial->second.accumulate(
         currentPos, rmIter->materialSlab, rmIter->pathCorrection);
-    if (touchedMapBins.find(&(currentAccMaterial->second)) ==
-        touchedMapBins.end()) {
+    if (!touchedMapBins.contains(&(currentAccMaterial->second))) {
       touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     }
     if (m_cfg.computeVariance) {

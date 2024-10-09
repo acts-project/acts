@@ -1,15 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -100,21 +100,21 @@ class TrapezoidBounds : public PlanarBounds {
   /// x_{min}) @f$
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param bcheck boundary check directive
+  /// @param boundaryTolerance boundary check directive
   ///
   /// @return boolean indicator for the success of this operation
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck) const final;
+              const BoundaryTolerance& boundaryTolerance) const final;
 
   /// Return the vertices
   ///
-  /// @param lseg the number of segments used to approximate
-  /// and eventually curved line
+  /// @param ignoredSegments is and ignored parameter used to describe
+  /// the number of segments to approximate curved sectors.
   ///
   /// @note the number of segments is ignored in this representation
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2> vertices(unsigned int ignoredSegments = 0u) const final;
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;

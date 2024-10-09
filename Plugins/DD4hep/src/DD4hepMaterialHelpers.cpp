@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
 
@@ -13,6 +13,7 @@
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -34,11 +35,7 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
   Acts::BinUtility bu;
   // Loop over the bins
   for (auto& bin : binning) {
-    // finding the iterator position to determine the binning value
-    auto bit = std::find(Acts::binningValueNames().begin(),
-                         Acts::binningValueNames().end(), bin.first);
-    const int indx = std::distance(Acts::binningValueNames().begin(), bit);
-    Acts::BinningValue bval = Acts::BinningValue{indx};
+    BinningValue bval = binningValueFromName(bin.first);
     Acts::BinningOption bopt = bin.second;
     double min = 0.;
     double max = 0.;

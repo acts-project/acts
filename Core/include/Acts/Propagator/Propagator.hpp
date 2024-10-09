@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -20,8 +20,10 @@
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/PropagatorOptions.hpp"
+#include "Acts/Propagator/PropagatorResult.hpp"
+#include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
@@ -34,152 +36,6 @@
 
 namespace Acts {
 
-/// @brief Different stages during propagation
-enum class PropagatorStage {
-  invalid,          ///< Invalid stage
-  prePropagation,   ///< Before the propagation
-  postPropagation,  ///< After the propagation
-  preStep,          ///< Before a step
-  postStep,         ///< After a step
-};
-
-/// @brief Simple class holding result of propagation call
-///
-/// @tparam parameters_t Type of final track parameters
-/// @tparam result_list  Result pack for additional propagation
-///                      quantities
-template <typename parameters_t, typename... result_list>
-struct PropagatorResult : private detail::Extendable<result_list...> {
-  using detail::Extendable<result_list...>::get;
-  using detail::Extendable<result_list...>::tuple;
-
-  /// Final track parameters
-  std::optional<parameters_t> endParameters = std::nullopt;
-
-  /// Full transport jacobian
-  std::optional<BoundMatrix> transportJacobian = std::nullopt;
-
-  /// Number of propagation steps that were carried out
-  std::size_t steps = 0;
-
-  /// Signed distance over which the parameters were propagated
-  double pathLength = 0.;
-};
-
-/// @brief Class holding the trivial options in propagator options
-///
-struct PropagatorPlainOptions {
-  /// Propagation direction
-  Direction direction = Direction::Forward;
-
-  /// Maximum number of steps for one propagate call
-  unsigned int maxSteps = 1000;
-
-  /// Absolute maximum path length
-  double pathLimit = std::numeric_limits<double>::max();
-
-  /// Required tolerance to reach surface
-  double surfaceTolerance = s_onSurfaceTolerance;
-
-  /// Loop protection step, it adapts the pathLimit
-  bool loopProtection = true;
-  double loopFraction = 0.5;  ///< Allowed loop fraction, 1 is a full loop
-
-  // Configurations for Stepper
-
-  /// Tolerance for the error of the integration
-  double stepTolerance = 1e-4;
-
-  /// Cut-off value for the step size
-  double stepSizeCutOff = 0.;
-
-  /// Absolute maximum step size
-  double maxStepSize = std::numeric_limits<double>::max();
-
-  /// Maximum number of Runge-Kutta steps for the stepper step call
-  unsigned int maxRungeKuttaStepTrials = 10000;
-};
-
-/// @brief Options for propagate() call
-///
-/// @tparam action_list_t List of action types called after each
-///    propagation step with the current propagation and stepper state
-///
-/// @tparam aborter_list_t List of abort conditions tested after each
-///    propagation step using the current propagation and stepper state
-///
-template <typename action_list_t = ActionList<>,
-          typename aborter_list_t = AbortList<>>
-struct PropagatorOptions : public PropagatorPlainOptions {
-  using action_list_type = action_list_t;
-  using aborter_list_type = aborter_list_t;
-
-  /// Delete default constructor
-  PropagatorOptions() = delete;
-
-  /// PropagatorOptions copy constructor
-  PropagatorOptions(
-      const PropagatorOptions<action_list_t, aborter_list_t>& po) = default;
-
-  /// PropagatorOptions with context
-  PropagatorOptions(const GeometryContext& gctx,
-                    const MagneticFieldContext& mctx)
-      : geoContext(gctx), magFieldContext(mctx) {}
-
-  /// @brief Expand the Options with extended aborters
-  ///
-  /// @tparam extended_aborter_list_t Type of the new aborter list
-  ///
-  /// @param aborters The new aborter list to be used (internally)
-  template <typename extended_aborter_list_t>
-  PropagatorOptions<action_list_t, extended_aborter_list_t> extend(
-      extended_aborter_list_t aborters) const {
-    PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions(
-        geoContext, magFieldContext);
-
-    // Copy the options over
-    eoptions.setPlainOptions(*this);
-
-    // Action / abort list
-    eoptions.actionList = std::move(actionList);
-    eoptions.abortList = std::move(aborters);
-
-    // And return the options
-    return eoptions;
-  }
-
-  /// @brief Set the plain options
-  ///
-  /// @param pOptions The plain options
-  void setPlainOptions(const PropagatorPlainOptions& pOptions) {
-    // Copy the options over
-    direction = pOptions.direction;
-    maxSteps = pOptions.maxSteps;
-    surfaceTolerance = pOptions.surfaceTolerance;
-    pathLimit = direction * std::abs(pOptions.pathLimit);
-    loopProtection = pOptions.loopProtection;
-    loopFraction = pOptions.loopFraction;
-
-    // Stepper options
-    stepTolerance = pOptions.stepTolerance;
-    stepSizeCutOff = pOptions.stepSizeCutOff;
-    maxStepSize = pOptions.maxStepSize;
-    maxRungeKuttaStepTrials = pOptions.maxRungeKuttaStepTrials;
-  }
-
-  /// List of actions
-  action_list_t actionList;
-
-  /// List of abort conditions
-  aborter_list_t abortList;
-
-  /// The context object for the geometry
-  std::reference_wrapper<const GeometryContext> geoContext;
-
-  /// The context object for the magnetic field
-  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
-};
-
 /// Common simplified base interface for propagators.
 ///
 /// This class only supports propagation from start bound parameters to a target
@@ -189,7 +45,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
 class BasePropagator {
  public:
   /// Base propagator options
-  using Options = PropagatorOptions<>;
+  using Options = PropagatorPlainOptions;
 
   /// Method to propagate start bound track parameters to a target surface.
   /// @param start The start bound track parameters.
@@ -249,18 +105,16 @@ class Propagator final
   /// Re-define bound track parameters dependent on the stepper
   using StepperBoundTrackParameters =
       detail::stepper_bound_parameters_type_t<stepper_t>;
-  static_assert(
-      Concepts::BoundTrackParametersConcept<StepperBoundTrackParameters>,
-      "Stepper bound track parameters do not fulfill bound "
-      "parameters concept.");
+  static_assert(BoundTrackParametersConcept<StepperBoundTrackParameters>,
+                "Stepper bound track parameters do not fulfill bound "
+                "parameters concept.");
 
   /// Re-define curvilinear track parameters dependent on the stepper
   using StepperCurvilinearTrackParameters =
       detail::stepper_curvilinear_parameters_type_t<stepper_t>;
-  static_assert(
-      Concepts::BoundTrackParametersConcept<StepperCurvilinearTrackParameters>,
-      "Stepper bound track parameters do not fulfill bound "
-      "parameters concept.");
+  static_assert(BoundTrackParametersConcept<StepperCurvilinearTrackParameters>,
+                "Stepper bound track parameters do not fulfill bound "
+                "parameters concept.");
 
   using Jacobian = BoundMatrix;
   using BoundState = std::tuple<StepperBoundTrackParameters, Jacobian, double>;
@@ -285,6 +139,18 @@ class Propagator final
   /// Typedef the navigator state
   using NavigatorState = typename navigator_t::State;
 
+  template <typename propagator_options_t, typename... extension_state_t>
+  using State = PropagatorState<propagator_options_t, StepperState,
+                                NavigatorState, extension_state_t...>;
+
+  using StepperOptions = typename stepper_t::Options;
+
+  using NavigatorOptions = typename navigator_t::Options;
+
+  template <typename actor_list_t = ActorList<>>
+  using Options =
+      PropagatorOptions<StepperOptions, NavigatorOptions, actor_list_t>;
+
   /// Constructor from implementation object
   ///
   /// @param stepper The stepper implementation is moved to a private member
@@ -297,66 +163,17 @@ class Propagator final
         m_navigator(std::move(navigator)),
         m_logger{std::move(_logger)} {}
 
-  /// @brief private Propagator state for navigation and debugging
-  ///
-  /// @tparam propagator_options_t Type of the Objections object
-  ///
-  /// This struct holds the common state information for propagating
-  /// which is independent of the actual stepper implementation.
-  template <typename propagator_options_t, typename... extension_state_t>
-  struct State : private detail::Extendable<extension_state_t...> {
-    using options_type = propagator_options_t;
-
-    /// Create the propagator state from the options
-    ///
-    /// @tparam propagator_options_t the type of the propagator options
-    ///
-    /// @param topts The options handed over by the propagate call
-    /// @param steppingIn Stepper state instance to begin with
-    /// @param navigationIn Navigator state instance to begin with
-    State(const propagator_options_t& topts, StepperState steppingIn,
-          NavigatorState navigationIn)
-        : options(topts),
-          stepping{std::move(steppingIn)},
-          navigation{std::move(navigationIn)},
-          geoContext(topts.geoContext) {}
-
-    using detail::Extendable<extension_state_t...>::get;
-    using detail::Extendable<extension_state_t...>::tuple;
-
-    /// Propagation stage
-    PropagatorStage stage = PropagatorStage::invalid;
-
-    /// These are the options - provided for each propagation step
-    propagator_options_t options;
-
-    /// Stepper state - internal state of the Stepper
-    StepperState stepping;
-
-    /// Navigation state - internal state of the Navigator
-    NavigatorState navigation;
-
-    /// Context object for the geometry
-    std::reference_wrapper<const GeometryContext> geoContext;
-
-    /// Number of propagation steps that were carried out
-    std::size_t steps = 0;
-
-    /// Signed distance over which the parameters were propagated
-    double pathLength = 0.;
-  };
-
  private:
   /// @brief Helper struct determining the state's type
   ///
   /// @tparam propagator_options_t Propagator options type
-  /// @tparam action_list_t List of propagation action types
+  /// @tparam actor_list_t List of propagation action types
   ///
   /// This helper struct provides type definitions to extract the correct
   /// propagation state type from a given TrackParameter type and an
-  /// ActionList.
+  /// ActorList.
   ///
-  template <typename propagator_options_t, typename action_list_t>
+  template <typename propagator_options_t, typename actor_list_t>
   struct state_type_helper {
     /// @brief Propagation state type for an arbitrary list of additional
     ///        propagation states
@@ -367,19 +184,19 @@ class Propagator final
     using this_state_type = State<propagator_options_t, args...>;
 
     /// @brief Propagation result type derived from a given action list
-    using type = typename action_list_t::template result_type<this_state_type>;
+    using type = typename actor_list_t::template result_type<this_state_type>;
   };
 
   /// @brief Helper struct determining the result's type
   ///
   /// @tparam parameters_t Type of final track parameters
-  /// @tparam action_list_t List of propagation action types
+  /// @tparam actor_list_t List of propagation action types
   ///
   /// This helper struct provides type definitions to extract the correct
   /// propagation result type from a given TrackParameter type and an
-  /// ActionList.
+  /// ActorList.
   ///
-  template <typename parameters_t, typename action_list_t>
+  template <typename parameters_t, typename actor_list_t>
   struct result_type_helper {
     /// @brief Propagation result type for an arbitrary list of additional
     ///        propagation results
@@ -390,30 +207,29 @@ class Propagator final
     using this_result_type = PropagatorResult<parameters_t, args...>;
 
     /// @brief Propagation result type derived from a given action list
-    using type = typename action_list_t::template result_type<this_result_type>;
+    using type = typename actor_list_t::template result_type<this_result_type>;
   };
 
  public:
   /// @brief Short-hand type definition for propagation state derived from
   ///        an action list
   ///
-  /// @tparam action_list_t List of propagation action types
+  /// @tparam actor_list_t List of propagation action types
   ///
-  template <typename propagator_options_t, typename action_list_t>
-  using action_list_t_state_t =
-      typename state_type_helper<propagator_options_t, action_list_t>::type;
+  template <typename propagator_options_t, typename actor_list_t>
+  using actor_list_t_state_t =
+      typename state_type_helper<propagator_options_t, actor_list_t>::type;
 
   /// @brief Short-hand type definition for propagation result derived from
   ///        an action list
   ///
   /// @tparam parameters_t Type of the final track parameters
-  /// @tparam action_list_t List of propagation action types
+  /// @tparam actor_list_t List of propagation action types
   ///
-  template <typename parameters_t, typename action_list_t>
-  using action_list_t_result_t =
-      typename result_type_helper<parameters_t, action_list_t>::type;
+  template <typename parameters_t, typename actor_list_t>
+  using actor_list_t_result_t =
+      typename result_type_helper<parameters_t, actor_list_t>::type;
 
- public:
   /// @brief Propagate track parameters
   ///
   /// This function performs the propagation of the track parameters using the
@@ -434,9 +250,8 @@ class Propagator final
   ///
   template <typename parameters_t, typename propagator_options_t,
             typename path_aborter_t = PathLimitReached>
-  Result<
-      action_list_t_result_t<StepperCurvilinearTrackParameters,
-                             typename propagator_options_t::action_list_type>>
+  Result<actor_list_t_result_t<StepperCurvilinearTrackParameters,
+                               typename propagator_options_t::actor_list_type>>
   propagate(const parameters_t& start, const propagator_options_t& options,
             bool makeCurvilinear = true) const;
 
@@ -461,11 +276,53 @@ class Propagator final
   template <typename parameters_t, typename propagator_options_t,
             typename target_aborter_t = SurfaceReached,
             typename path_aborter_t = PathLimitReached>
-  Result<
-      action_list_t_result_t<StepperBoundTrackParameters,
-                             typename propagator_options_t::action_list_type>>
+  Result<actor_list_t_result_t<StepperBoundTrackParameters,
+                               typename propagator_options_t::actor_list_type>>
   propagate(const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
+
+  /// @brief Builds the propagator state object
+  ///
+  /// This function creates the propagator state object from the initial track
+  /// parameters and the propagation options.
+  ///
+  /// @note This will also initialize the state
+  ///
+  /// @tparam parameters_t Type of initial track parameters to propagate
+  /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam path_aborter_t The path aborter type to be added
+  ///
+  /// @param [in] start Initial track parameters to propagate
+  /// @param [in] options Propagation options
+  ///
+  /// @return Propagator state object
+  template <typename parameters_t, typename propagator_options_t,
+            typename path_aborter_t = PathLimitReached>
+  auto makeState(const parameters_t& start,
+                 const propagator_options_t& options) const;
+
+  /// @brief Builds the propagator state object
+  ///
+  /// This function creates the propagator state object from the initial track
+  /// parameters, the target surface, and the propagation options.
+  ///
+  /// @note This will also initialize the state
+  ///
+  /// @tparam parameters_t Type of initial track parameters to propagate
+  /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam target_aborter_t The target aborter type to be added
+  /// @tparam path_aborter_t The path aborter type to be added
+  ///
+  /// @param [in] start Initial track parameters to propagate
+  /// @param [in] target Target surface of to propagate to
+  /// @param [in] options Propagation options
+  ///
+  /// @return Propagator state object
+  template <typename parameters_t, typename propagator_options_t,
+            typename target_aborter_t = SurfaceReached,
+            typename path_aborter_t = PathLimitReached>
+  auto makeState(const parameters_t& start, const Surface& target,
+                 const propagator_options_t& options) const;
 
   /// @brief Propagate track parameters
   ///
@@ -484,28 +341,48 @@ class Propagator final
   template <typename propagator_state_t>
   Result<void> propagate(propagator_state_t& state) const;
 
-  template <typename parameters_t, typename propagator_options_t,
-            typename path_aborter_t = PathLimitReached>
-  auto makeState(const parameters_t& start,
-                 const propagator_options_t& options) const;
-
-  template <typename parameters_t, typename propagator_options_t,
-            typename target_aborter_t = SurfaceReached,
-            typename path_aborter_t = PathLimitReached>
-  auto makeState(const parameters_t& start, const Surface& target,
-                 const propagator_options_t& options) const;
-
+  /// @brief Builds the propagator result object
+  ///
+  /// This function creates the propagator result object from the propagator
+  /// state object. The `result` is passed to pipe a potential error from the
+  /// propagation call. The `options` are used to determine the type of the
+  /// result object. The `makeCurvilinear` flag is used to determine if the
+  /// result should contain curvilinear track parameters.
+  ///
+  /// @tparam propagator_state_t Type of the propagator state object
+  /// @tparam propagator_options_t Type of the propagator options
+  ///
+  /// @param [in] state Propagator state object
+  /// @param [in] result Result of the propagation
+  /// @param [in] options Propagation options
+  /// @param [in] makeCurvilinear Produce curvilinear parameters at the end of the propagation
+  ///
+  /// @return Propagation result
   template <typename propagator_state_t, typename propagator_options_t>
-  Result<
-      action_list_t_result_t<StepperCurvilinearTrackParameters,
-                             typename propagator_options_t::action_list_type>>
+  Result<actor_list_t_result_t<StepperCurvilinearTrackParameters,
+                               typename propagator_options_t::actor_list_type>>
   makeResult(propagator_state_t state, Result<void> result,
              const propagator_options_t& options, bool makeCurvilinear) const;
 
+  /// @brief Builds the propagator result object
+  ///
+  /// This function creates the propagator result object from the propagator
+  /// state object. The `result` is passed to pipe a potential error from the
+  /// propagation call. The `options` are used to determine the type of the
+  /// result object.
+  ///
+  /// @tparam propagator_state_t Type of the propagator state object
+  /// @tparam propagator_options_t Type of the propagator options
+  ///
+  /// @param [in] state Propagator state object
+  /// @param [in] result Result of the propagation
+  /// @param [in] target Target surface of to propagate to
+  /// @param [in] options Propagation options
+  ///
+  /// @return Propagation result
   template <typename propagator_state_t, typename propagator_options_t>
-  Result<
-      action_list_t_result_t<StepperBoundTrackParameters,
-                             typename propagator_options_t::action_list_type>>
+  Result<actor_list_t_result_t<StepperBoundTrackParameters,
+                               typename propagator_options_t::actor_list_type>>
   makeResult(propagator_state_t state, Result<void> result,
              const Surface& target, const propagator_options_t& options) const;
 
@@ -515,6 +392,9 @@ class Propagator final
 
  private:
   const Logger& logger() const { return *m_logger; }
+
+  template <typename propagator_state_t, typename path_aborter_t>
+  void initialize(propagator_state_t& state) const;
 
   template <typename propagator_state_t, typename result_t>
   void moveStateToResult(propagator_state_t& state, result_t& result) const;

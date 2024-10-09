@@ -1,15 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <array>
@@ -58,11 +58,11 @@ class LineBounds : public SurfaceBounds {
   /// the bounds  Inside can be called without/with tolerances.
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param bcheck boundary check directive
+  /// @param boundaryTolerance boundary check directive
   ///
   /// @return boolean indicator for the success of this operation
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck) const final;
+              const BoundaryTolerance& boundaryTolerance) const final;
 
   /// Output Method for std::ostream
   ///

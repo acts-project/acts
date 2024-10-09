@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <limits>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
@@ -53,7 +54,8 @@ struct EventFraction {
   float initialMomentum = 0.;
 };
 
-static constexpr uint32_t s_MaxValue = UINT32_MAX;
+static constexpr std::uint32_t s_MaxValue =
+    std::numeric_limits<std::uint32_t>::max();
 using EventCollection = std::vector<EventFraction>;
 using EventProperties = std::vector<std::vector<float>>;
 using ProbabilityDistributions = std::vector<TH1F*>;

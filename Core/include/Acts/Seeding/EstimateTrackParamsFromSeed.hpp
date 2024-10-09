@@ -1,17 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -20,7 +19,6 @@
 #include <iostream>
 #include <iterator>
 #include <optional>
-#include <vector>
 
 namespace Acts {
 /// @todo:
@@ -55,7 +53,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Check the number of provided space points
   std::size_t numSP = std::distance(spBegin, spEnd);
   if (numSP < 3) {
-    ACTS_ERROR("At least three space points are required.")
+    ACTS_ERROR("At least three space points are required.");
     return std::nullopt;
   }
 
@@ -67,9 +65,10 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
     if (*it == nullptr) {
-      ACTS_ERROR("Empty space point found. This should not happen.")
+      ACTS_ERROR("Empty space point found. This should not happen.");
       return std::nullopt;
     }
+
     const auto& sp = *it;
 
     ActsScalar x = sp->x();
@@ -158,7 +157,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Check the number of provided space points
   std::size_t numSP = std::distance(spBegin, spEnd);
   if (numSP != 3) {
-    ACTS_ERROR("There should be exactly three space points provided.")
+    ACTS_ERROR("There should be exactly three space points provided.");
     return std::nullopt;
   }
 
@@ -171,7 +170,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
     // case?
     ACTS_WARNING("The magnetic field at the bottom space point: B = "
                  << bFieldInTesla << " T is smaller than |B|_min = "
-                 << bFieldMinInTesla << " T. Estimation is not performed.")
+                 << bFieldMinInTesla << " T. Estimation is not performed.");
     return std::nullopt;
   }
 
@@ -185,7 +184,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   for (std::size_t isp = 0; isp < 3; ++isp) {
     spacepoint_iterator_t it = std::next(spBegin, isp);
     if (*it == nullptr) {
-      ACTS_ERROR("Empty space point found. This should not happen.")
+      ACTS_ERROR("Empty space point found. This should not happen.");
       return std::nullopt;
     }
     const auto& sp = *it;
@@ -229,15 +228,16 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // straight line connecting the two points
   // y = a * x + c (we don't care about c right now)
   // we simply need the slope
-  ActsScalar a = local2(1) / deltaX21;
+  // we compute 1./a since this is what we need for the following computation
+  ActsScalar ia = deltaX21 / local2(1);
   // Perpendicular line is then y = -1/a *x + b
   // we can evaluate b given we know a already by imposing
   // the line passes through P = (0.5 * (x2 + x1), 0.5 * y2)
-  ActsScalar b = 0.5 * (local2(1) + 1. / a * sumX21);
-  circleCenter(1) = -1. / a * circleCenter(0) + b;
+  ActsScalar b = 0.5 * (local2(1) + ia * sumX21);
+  circleCenter(1) = -ia * circleCenter(0) + b;
   // Radius is a signed distance between circleCenter and first sp, which is at
   // (0, 0) in the new frame. Sign depends on the slope a (positive vs negative)
-  int sign = a > 0 ? -1 : 1;
+  int sign = ia > 0 ? -1 : 1;
   const ActsScalar R = circleCenter.norm();
   ActsScalar invTanTheta =
       local2.z() /

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -16,11 +16,13 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
 #include <iomanip>
 #include <iterator>
 #include <sstream>
@@ -46,18 +48,22 @@ class DetectorNavigator {
     bool resolvePassive = false;
   };
 
+  struct Options : public NavigatorPlainOptions {
+    void setPlainOptions(const NavigatorPlainOptions& options) {
+      static_cast<NavigatorPlainOptions&>(*this) = options;
+    }
+  };
+
   /// Nested State struct
   ///
   /// It acts as an internal state which is
   /// created for every propagation/extrapolation step
   /// and keep thread-local navigation information
   struct State : public NavigationState {
-    /// Navigation state - external state: the start surface
-    const Surface* startSurface = nullptr;
+    Options options;
+
     /// Navigation state - external state: the current surface
     const Surface* currentSurface = nullptr;
-    /// Navigation state - external state: the target surface
-    const Surface* targetSurface = nullptr;
     /// Indicator if the target is reached
     bool targetReached = false;
     /// Navigation state : a break has been detected
@@ -74,12 +80,10 @@ class DetectorNavigator {
                                                   Logging::Level::INFO))
       : m_cfg{cfg}, m_logger{std::move(_logger)} {}
 
-  State makeState(const Surface* startSurface,
-                  const Surface* targetSurface) const {
-    State result;
-    result.startSurface = startSurface;
-    result.targetSurface = targetSurface;
-    return result;
+  State makeState(const Options& options) const {
+    State state;
+    state.options = options;
+    return state;
   }
 
   const Surface* currentSurface(const State& state) const {
@@ -95,11 +99,11 @@ class DetectorNavigator {
   }
 
   const Surface* startSurface(const State& state) const {
-    return state.startSurface;
+    return state.options.startSurface;
   }
 
   const Surface* targetSurface(const State& state) const {
-    return state.targetSurface;
+    return state.options.targetSurface;
   }
 
   bool targetReached(const State& state) const { return state.targetReached; }
@@ -122,11 +126,6 @@ class DetectorNavigator {
 
   void navigationBreak(State& state, bool navigationBreak) const {
     state.navigationBreak = navigationBreak;
-  }
-
-  void insertExternalSurface(State& /*state*/,
-                             GeometryIdentifier /*geoid*/) const {
-    // TODO what about external surfaces?
   }
 
   /// Initialize call - start of propagation
@@ -190,27 +189,8 @@ class DetectorNavigator {
     if (nState.currentSurface != nullptr) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper) << "stepping through surface");
-    } else if (nState.currentPortal != nullptr) {
-      ACTS_VERBOSE(volInfo(state)
-                   << posInfo(state, stepper) << "stepping through portal");
-
-      nState.surfaceCandidates.clear();
-      nState.surfaceCandidateIndex = 0;
-
-      nState.currentPortal->updateDetectorVolume(state.geoContext, nState);
-
-      // If no Volume is found, we are at the end of the world
-      if (nState.currentVolume == nullptr) {
-        ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
-                                    << "no volume after Portal update");
-        nState.navigationBreak = true;
-        return;
-      }
-
-      // Switched to a new volume
-      // Update candidate surfaces
-      updateCandidateSurfaces(state, stepper);
     }
+
     for (; nState.surfaceCandidateIndex != nState.surfaceCandidates.size();
          ++nState.surfaceCandidateIndex) {
       // Screen output how much is left to try
@@ -231,10 +211,9 @@ class DetectorNavigator {
                    << " (" << surface.center(state.geoContext).transpose()
                    << ")");
       // Estimate the surface status
-      bool boundaryCheck = c.boundaryCheck.isEnabled();
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, c.objectIntersection.index(),
-          state.options.direction, BoundaryCheck(boundaryCheck),
+          state.options.direction, c.boundaryTolerance,
           state.options.surfaceTolerance, logger());
 
       ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
@@ -285,7 +264,8 @@ class DetectorNavigator {
     const Portal* nextPortal = nullptr;
     const Surface* nextSurface = nullptr;
     bool isPortal = false;
-    bool boundaryCheck = nState.surfaceCandidate().boundaryCheck.isEnabled();
+    BoundaryTolerance boundaryTolerance =
+        nState.surfaceCandidate().boundaryTolerance;
 
     if (nState.surfaceCandidate().surface != nullptr) {
       nextSurface = nState.surfaceCandidate().surface;
@@ -304,7 +284,7 @@ class DetectorNavigator {
     auto surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, *nextSurface,
         nState.surfaceCandidate().objectIntersection.index(),
-        state.options.direction, BoundaryCheck(boundaryCheck),
+        state.options.direction, boundaryTolerance,
         state.options.surfaceTolerance, logger());
 
     // Check if we are at a surface
@@ -313,14 +293,33 @@ class DetectorNavigator {
                    << posInfo(state, stepper) << "landed on surface");
 
       if (isPortal) {
-        ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
-                                    << "this is a portal, storing it.");
-
+        ACTS_VERBOSE(volInfo(state)
+                     << posInfo(state, stepper)
+                     << "this is a portal, updating to new volume.");
         nState.currentPortal = nextPortal;
+        nState.currentSurface = &nextPortal->surface();
+        nState.surfaceCandidates.clear();
+        nState.surfaceCandidateIndex = 0;
+
+        nState.currentPortal->updateDetectorVolume(state.geoContext, nState);
+
+        // If no Volume is found, we are at the end of the world
+        if (nState.currentVolume == nullptr) {
+          ACTS_VERBOSE(volInfo(state)
+                       << posInfo(state, stepper)
+                       << "no volume after Portal update, end of world.");
+          nState.navigationBreak = true;
+          return;
+        }
+
+        // Switched to a new volume
+        // Update candidate surfaces
+        updateCandidateSurfaces(state, stepper);
 
         ACTS_VERBOSE(volInfo(state)
                      << posInfo(state, stepper) << "current portal set to "
                      << nState.currentPortal->surface().geometryId());
+
       } else {
         ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
                                     << "this is a surface, storing it.");
@@ -405,17 +404,11 @@ class DetectorNavigator {
     // Here we get the candidate surfaces
     nState.currentVolume->updateNavigationState(state.geoContext, nState);
 
-    ACTS_VERBOSE("SURFACE CANDIDATES: " << nState.surfaceCandidates.size());
-
     // Sort properly the surface candidates
     auto& nCandidates = nState.surfaceCandidates;
-    std::sort(nCandidates.begin(), nCandidates.end(),
-              [&](const auto& a, const auto& b) {
-                // The two path lengths
-                ActsScalar pathToA = a.objectIntersection.pathLength();
-                ActsScalar pathToB = b.objectIntersection.pathLength();
-                return pathToA < pathToB;
-              });
+    std::ranges::sort(nCandidates, {}, [](const auto& c) {
+      return c.objectIntersection.pathLength();
+    });
     // Set the surface candidate
     nState.surfaceCandidateIndex = 0;
   }

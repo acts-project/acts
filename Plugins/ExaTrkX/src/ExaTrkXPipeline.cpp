@@ -1,12 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
+
+#include "Acts/Utilities/Helpers.hpp"
+
+#include <algorithm>
 
 namespace Acts {
 
@@ -25,19 +29,18 @@ ExaTrkXPipeline::ExaTrkXPipeline(
   if (!m_trackBuilder) {
     throw std::invalid_argument("Missing track building module");
   }
-  if (m_edgeClassifiers.empty() or
-      not std::all_of(m_edgeClassifiers.begin(), m_edgeClassifiers.end(),
-                      [](const auto &a) { return static_cast<bool>(a); })) {
+  if (m_edgeClassifiers.empty() ||
+      rangeContainsValue(m_edgeClassifiers, nullptr)) {
     throw std::invalid_argument("Missing graph construction module");
   }
 }
 
 std::vector<std::vector<int>> ExaTrkXPipeline::run(
     std::vector<float> &features, std::vector<int> &spacepointIDs,
-    int deviceHint, const ExaTrkXHook &hook, ExaTrkXTiming *timing) const {
+    const ExaTrkXHook &hook, ExaTrkXTiming *timing) const {
   auto t0 = std::chrono::high_resolution_clock::now();
-  auto [nodes, edges] =
-      (*m_graphConstructor)(features, spacepointIDs.size(), deviceHint);
+  auto [nodes, edges] = (*m_graphConstructor)(features, spacepointIDs.size(),
+                                              m_graphConstructor->device());
   auto t1 = std::chrono::high_resolution_clock::now();
 
   if (timing != nullptr) {
@@ -47,12 +50,14 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
   hook(nodes, edges, {});
 
   std::any edge_weights;
-  timing->classifierTimes.clear();
+  if (timing != nullptr) {
+    timing->classifierTimes.clear();
+  }
 
   for (auto edgeClassifier : m_edgeClassifiers) {
     t0 = std::chrono::high_resolution_clock::now();
-    auto [newNodes, newEdges, newWeights] =
-        (*edgeClassifier)(std::move(nodes), std::move(edges), deviceHint);
+    auto [newNodes, newEdges, newWeights] = (*edgeClassifier)(
+        std::move(nodes), std::move(edges), edgeClassifier->device());
     t1 = std::chrono::high_resolution_clock::now();
 
     if (timing != nullptr) {
@@ -67,9 +72,9 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
   }
 
   t0 = std::chrono::high_resolution_clock::now();
-  auto res =
-      (*m_trackBuilder)(std::move(nodes), std::move(edges),
-                        std::move(edge_weights), spacepointIDs, deviceHint);
+  auto res = (*m_trackBuilder)(std::move(nodes), std::move(edges),
+                               std::move(edge_weights), spacepointIDs,
+                               m_trackBuilder->device());
   t1 = std::chrono::high_resolution_clock::now();
 
   if (timing != nullptr) {

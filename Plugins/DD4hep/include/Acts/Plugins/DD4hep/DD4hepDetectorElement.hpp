@@ -1,15 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <map>
 #include <memory>
@@ -92,4 +93,19 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// DD4hep segmentation
   dd4hep::Segmentation m_segmentation;
 };
+
+/// This extension holds an ACTS detector element belonging to a DD4hep detector
+/// element, and synchronizes ownership
+struct DD4hepDetectorElementExtension {
+  explicit DD4hepDetectorElementExtension(
+      std::shared_ptr<DD4hepDetectorElement> de)
+      : detectorElement(std::move(de)) {
+    throw_assert(detectorElement != nullptr,
+                 "DD4hepDetectorElement is nullptr");
+  }
+
+ private:
+  std::shared_ptr<DD4hepDetectorElement> detectorElement;
+};
+
 }  // namespace Acts

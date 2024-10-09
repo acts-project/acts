@@ -1,16 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/TrackingVolume.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -19,9 +20,10 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/TransformRange.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -30,8 +32,7 @@ namespace Acts {
 
 // constructor for arguments
 TrackingVolume::TrackingVolume(
-    const Transform3& transform,
-    std::shared_ptr<const VolumeBounds> volumeBounds,
+    const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
@@ -48,28 +49,32 @@ TrackingVolume::TrackingVolume(
   connectDenseBoundarySurfaces(denseVolumeVector);
 }
 
-TrackingVolume::TrackingVolume(const Volume& volume,
-                               const std::string& volumeName)
+TrackingVolume::TrackingVolume(Volume& volume, const std::string& volumeName)
     : TrackingVolume(volume.transform(), volume.volumeBoundsPtr(), nullptr,
+                     nullptr, nullptr, MutableTrackingVolumeVector{},
                      volumeName) {}
 
-TrackingVolume::TrackingVolume(
-    const Transform3& transform, std::shared_ptr<const VolumeBounds> volbounds,
-    const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
-    const std::string& volumeName)
-    : TrackingVolume(transform, std::move(volbounds), nullptr, nullptr,
-                     containedVolumeArray, {}, volumeName) {}
+TrackingVolume::TrackingVolume(const Transform3& transform,
+                               std::shared_ptr<VolumeBounds> volbounds,
+                               const std::string& volumeName)
+    : TrackingVolume(transform, std::move(volbounds), nullptr, nullptr, nullptr,
+                     {}, volumeName) {}
 
-TrackingVolume::~TrackingVolume() {
-  delete m_glueVolumeDescriptor;
-}
+TrackingVolume::~TrackingVolume() = default;
 
 const TrackingVolume* TrackingVolume::lowestTrackingVolume(
-    const GeometryContext& /*gctx*/, const Vector3& position,
+    const GeometryContext& gctx, const Vector3& position,
     const double tol) const {
+  if (!inside(position, tol)) {
+    return nullptr;
+  }
+
   // confined static volumes - highest hierarchy
   if (m_confinedVolumes) {
-    return (m_confinedVolumes->object(position).get());
+    const TrackingVolume* volume = m_confinedVolumes->object(position).get();
+    if (volume != nullptr) {
+      return volume->lowestTrackingVolume(gctx, position, tol);
+    }
   }
 
   // search for dense volumes
@@ -155,10 +160,11 @@ void TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
                                         BoundarySurfaceFace bsfMine,
                                         TrackingVolume* neighbor,
                                         BoundarySurfaceFace bsfNeighbor) {
-  // Find the connection of the two tracking volumes: binR returns the center
-  // except for cylindrical volumes
-  Vector3 bPosition(binningPosition(gctx, binR));
-  Vector3 distance = Vector3(neighbor->binningPosition(gctx, binR) - bPosition);
+  // Find the connection of the two tracking volumes: BinningValue::binR returns
+  // the center except for cylindrical volumes
+  Vector3 bPosition(binningPosition(gctx, BinningValue::binR));
+  Vector3 distance =
+      Vector3(neighbor->binningPosition(gctx, BinningValue::binR) - bPosition);
   // glue to the face
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine =
       boundarySurfaces().at(bsfMine);
@@ -198,14 +204,14 @@ void TrackingVolume::glueTrackingVolumes(
     const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
     const std::shared_ptr<TrackingVolumeArray>& neighbors,
     BoundarySurfaceFace bsfNeighbor) {
-  // find the connection of the two tracking volumes : binR returns the center
-  // except for cylindrical volumes
+  // find the connection of the two tracking volumes : BinningValue::binR
+  // returns the center except for cylindrical volumes
   std::shared_ptr<const TrackingVolume> nRefVolume =
       neighbors->arrayObjects().at(0);
   // get the distance
-  Vector3 bPosition(binningPosition(gctx, binR));
-  Vector3 distance =
-      Vector3(nRefVolume->binningPosition(gctx, binR) - bPosition);
+  Vector3 bPosition(binningPosition(gctx, BinningValue::binR));
+  Vector3 distance(nRefVolume->binningPosition(gctx, BinningValue::binR) -
+                   bPosition);
   // take the normal at the binning positio
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine =
       boundarySurfaces().at(bsfMine);
@@ -260,16 +266,16 @@ void TrackingVolume::updateBoundarySurface(
   m_boundarySurfaces.at(bsf) = std::move(bs);
 }
 
-void TrackingVolume::registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd) {
-  delete m_glueVolumeDescriptor;
-  m_glueVolumeDescriptor = gvd;
+void TrackingVolume::registerGlueVolumeDescriptor(
+    std::unique_ptr<GlueVolumesDescriptor> gvd) {
+  m_glueVolumeDescriptor = std::move(gvd);
 }
 
 GlueVolumesDescriptor& TrackingVolume::glueVolumesDescriptor() {
   if (m_glueVolumeDescriptor == nullptr) {
-    m_glueVolumeDescriptor = new GlueVolumesDescriptor;
+    m_glueVolumeDescriptor = std::make_unique<GlueVolumesDescriptor>();
   }
-  return (*m_glueVolumeDescriptor);
+  return *m_glueVolumeDescriptor;
 }
 
 void TrackingVolume::synchronizeLayers(double envelope) const {
@@ -341,6 +347,31 @@ void TrackingVolume::closeGeometry(
     std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
     std::size_t& vol, const GeometryIdentifierHook& hook,
     const Logger& logger) {
+  if (!boundarySurfaces().empty() && !portals().empty()) {
+    ACTS_ERROR(
+        "TrackingVolume::closeGeometry: Volume "
+        << volumeName()
+        << " has both boundary surfaces and portals. This is not supported.");
+    throw std::invalid_argument(
+        "Volume has both boundary surfaces and portals");
+  }
+
+  if (m_confinedVolumes && !volumes().empty()) {
+    ACTS_ERROR(
+        "TrackingVolume::closeGeometry: Volume "
+        << volumeName()
+        << " has both confined volumes and volumes. This is not supported.");
+    throw std::invalid_argument("Volume has both confined volumes and volumes");
+  }
+
+  if (m_confinedLayers && !surfaces().empty()) {
+    ACTS_ERROR(
+        "TrackingVolume::closeGeometry: Volume "
+        << volumeName()
+        << " has both confined layers and surfaces. This is not supported.");
+    throw std::invalid_argument("Volume has both confined layers and surfaces");
+  }
+
   // we can construct the volume ID from this
   auto volumeID = GeometryIdentifier().setVolume(++vol);
   // assign the Volume ID to the volume itself
@@ -361,7 +392,7 @@ void TrackingVolume::closeGeometry(
         thisVolume->motherVolume()->volumeMaterial());
     if (protoMaterial == nullptr) {
       thisVolume->assignVolumeMaterial(
-          thisVolume->motherVolume()->volumeMaterialSharedPtr());
+          thisVolume->motherVolume()->volumeMaterialPtr());
     }
   }
 
@@ -373,7 +404,8 @@ void TrackingVolume::closeGeometry(
     // get the intersection solution
     auto& bSurface = bSurfIter->surfaceRepresentation();
     // create the boundary surface id
-    auto boundaryID = GeometryIdentifier(volumeID).setBoundary(++iboundary);
+    iboundary++;
+    auto boundaryID = GeometryIdentifier(volumeID).setBoundary(iboundary);
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<RegularSurface*>(&bSurface));
     mutableBSurface.assignGeometryId(boundaryID);
@@ -391,7 +423,8 @@ void TrackingVolume::closeGeometry(
       // loop over the layers
       for (auto& layerPtr : m_confinedLayers->arrayObjects()) {
         // create the layer identification
-        auto layerID = GeometryIdentifier(volumeID).setLayer(++ilayer);
+        ilayer++;
+        auto layerID = GeometryIdentifier(volumeID).setLayer(ilayer);
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
         mutableLayerPtr->closeGeometry(materialDecorator, layerID, hook,
@@ -419,6 +452,30 @@ void TrackingVolume::closeGeometry(
                                         logger);
     }
   }
+
+  GeometryIdentifier::Value iportal = 0;
+  for (auto& portal : portals()) {
+    iportal++;
+    auto portalId = GeometryIdentifier(volumeID).setBoundary(iportal);
+    assert(portal.isValid() && "Invalid portal encountered during closing");
+
+    portal.surface().assignGeometryId(portalId);
+  }
+
+  GeometryIdentifier::Value isensitive = 0;
+
+  for (auto& surface : surfaces()) {
+    if (surface.associatedDetectorElement() == nullptr) {
+      continue;
+    }
+    isensitive++;
+    auto sensitiveId = GeometryIdentifier(volumeID).setSensitive(isensitive);
+    surface.assignGeometryId(sensitiveId);
+  }
+
+  for (auto& volume : volumes()) {
+    volume.closeGeometry(materialDecorator, volumeMap, vol, hook, logger);
+  }
 }
 
 // Returns the boundary surfaces ordered in probability to hit them based on
@@ -441,32 +498,14 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
       [&](SurfaceMultiIntersection& candidates,
           const BoundarySurface* boundary) -> BoundaryIntersection {
     for (const auto& intersection : candidates.split()) {
-      if (!intersection) {
+      if (!intersection.isValid()) {
         continue;
-      }
-
-      if (options.forceIntersectBoundaries) {
-        const bool coCriterion =
-            std::abs(intersection.pathLength()) < std::abs(nearLimit);
-        ACTS_VERBOSE("Forcing intersection with surface "
-                     << boundary->surfaceRepresentation().geometryId());
-        if (coCriterion) {
-          ACTS_VERBOSE("Intersection forced successfully ");
-          ACTS_VERBOSE("- intersection path length "
-                       << std::abs(intersection.pathLength())
-                       << " < overstep limit " << std::abs(nearLimit));
-          return BoundaryIntersection(intersection, boundary);
-        }
-        ACTS_VERBOSE("Can't force intersection: ");
-        ACTS_VERBOSE("- intersection path length "
-                     << std::abs(intersection.pathLength())
-                     << " > overstep limit " << std::abs(nearLimit));
       }
 
       ACTS_VERBOSE("Check intersection with surface "
                    << boundary->surfaceRepresentation().geometryId());
-      if (detail::checkIntersection(intersection.intersection(), nearLimit,
-                                    farLimit, logger)) {
+      if (detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                  farLimit, logger)) {
         return BoundaryIntersection(intersection, boundary);
       }
     }
@@ -492,11 +531,11 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
         continue;
       }
 
-      auto candidates =
-          surface.intersect(gctx, position, direction, options.boundaryCheck);
+      auto candidates = surface.intersect(gctx, position, direction,
+                                          options.boundaryTolerance);
       // Intersect and continue
       auto intersection = checkIntersection(candidates, boundary.get());
-      if (intersection.first) {
+      if (intersection.first.isValid()) {
         ACTS_VERBOSE(" - Proceed with surface");
         intersections.push_back(intersection);
       } else {
@@ -551,7 +590,7 @@ TrackingVolume::compatibleLayers(
       auto atIntersection =
           tLayer->surfaceOnApproach(gctx, position, direction, options);
       // Intersection is ok - take it (move to surface on approach)
-      if (atIntersection) {
+      if (atIntersection.isValid()) {
         // create a layer intersection
         lIntersections.push_back(LayerIntersection(atIntersection, tLayer));
       }
@@ -581,12 +620,16 @@ const std::string& TrackingVolume::volumeName() const {
   return m_name;
 }
 
+void TrackingVolume::setVolumeName(const std::string& volumeName) {
+  m_name = volumeName;
+}
+
 const IVolumeMaterial* TrackingVolume::volumeMaterial() const {
   return m_volumeMaterial.get();
 }
 
 const std::shared_ptr<const IVolumeMaterial>&
-TrackingVolume::volumeMaterialSharedPtr() const {
+TrackingVolume::volumeMaterialPtr() const {
   return m_volumeMaterial;
 }
 
@@ -648,6 +691,57 @@ TrackingVolume& TrackingVolume::addVolume(
   volume->setMotherVolume(this);
   m_volumes.push_back(std::move(volume));
   return *m_volumes.back();
+}
+
+TrackingVolume::PortalRange TrackingVolume::portals() const {
+  return PortalRange{m_portals};
+}
+
+TrackingVolume::MutablePortalRange TrackingVolume::portals() {
+  return MutablePortalRange{m_portals};
+}
+
+void TrackingVolume::addPortal(std::shared_ptr<Portal> portal) {
+  if (portal == nullptr) {
+    throw std::invalid_argument("Portal is nullptr");
+  }
+  m_portals.push_back(std::move(portal));
+}
+
+TrackingVolume::SurfaceRange TrackingVolume::surfaces() const {
+  return SurfaceRange{m_surfaces};
+}
+
+TrackingVolume::MutableSurfaceRange TrackingVolume::surfaces() {
+  return MutableSurfaceRange{m_surfaces};
+}
+
+void TrackingVolume::addSurface(std::shared_ptr<Surface> surface) {
+  if (surface == nullptr) {
+    throw std::invalid_argument("Surface is nullptr");
+  }
+  m_surfaces.push_back(std::move(surface));
+}
+
+void TrackingVolume::visualize(IVisualization3D& helper,
+                               const GeometryContext& gctx,
+                               const ViewConfig& viewConfig,
+                               const ViewConfig& portalViewConfig,
+                               const ViewConfig& sensitiveViewConfig) const {
+  helper.object(volumeName());
+  Volume::visualize(helper, gctx, viewConfig);
+
+  if (!surfaces().empty()) {
+    helper.object(volumeName() + "_sensitives");
+  }
+  for (const auto& surface : surfaces()) {
+    surface.visualize(helper, gctx, sensitiveViewConfig);
+  }
+
+  for (const auto& child : volumes()) {
+    child.visualize(helper, gctx, viewConfig, portalViewConfig,
+                    sensitiveViewConfig);
+  }
 }
 
 }  // namespace Acts

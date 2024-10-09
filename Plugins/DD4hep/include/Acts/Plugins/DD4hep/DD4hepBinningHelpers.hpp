@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -12,8 +12,8 @@
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <optional>
 #include <sstream>
@@ -26,7 +26,11 @@
 namespace Acts {
 
 static std::vector<std::tuple<std::string, BinningValue>> allowedBinnings = {
-    {"x", binX}, {"y", binY}, {"z", binZ}, {"phi", binPhi}, {"r", binR}};
+    {"x", BinningValue::binX},
+    {"y", BinningValue::binY},
+    {"z", BinningValue::binZ},
+    {"phi", BinningValue::binPhi},
+    {"r", BinningValue::binR}};
 
 /// Helper method to convert the string to binning value
 ///
@@ -35,15 +39,15 @@ static std::vector<std::tuple<std::string, BinningValue>> allowedBinnings = {
 /// @return a binningValue
 inline BinningValue stringToBinningValue(const std::string &binningString) {
   if (binningString == "x") {
-    return binX;
+    return BinningValue::binX;
   } else if (binningString == "y") {
-    return binY;
+    return BinningValue::binY;
   } else if (binningString == "z") {
-    return binZ;
+    return BinningValue::binZ;
   } else if (binningString == "phi") {
-    return binPhi;
+    return BinningValue::binPhi;
   } else if (binningString == "r") {
-    return binR;
+    return BinningValue::binR;
   } else {
     throw std::invalid_argument("DD4hepBinningHelpers: Binning value " +
                                 binningString + " not allowed.");

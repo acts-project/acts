@@ -1,28 +1,25 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
+#include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 
 #include <cstddef>
 #include <vector>
 
-namespace Acts {
-
-using namespace detail;
-
-namespace Test {
+namespace Acts::Test {
+BOOST_AUTO_TEST_SUITE(Axes)
 
 BOOST_AUTO_TEST_CASE(equidistant_axis) {
-  EquidistantAxis a(0.0, 10.0, 10u);
+  Axis a(0.0, 10.0, 10u);
 
   // general binning properties
   BOOST_CHECK_EQUAL(a.getNBins(), 10u);
@@ -101,7 +98,7 @@ BOOST_AUTO_TEST_CASE(equidistant_axis) {
 }
 
 BOOST_AUTO_TEST_CASE(variable_axis) {
-  VariableAxis a({0, 0.5, 3, 4.5, 6});
+  Axis a({0, 0.5, 3, 4.5, 6});
 
   // general binning properties
   BOOST_CHECK_EQUAL(a.getNBins(), 4u);
@@ -374,6 +371,122 @@ BOOST_AUTO_TEST_CASE(wrapBin) {
   BOOST_CHECK_EQUAL(a6.wrapBin(7), 2u);
 }
 
-}  // namespace Test
+BOOST_AUTO_TEST_CASE(AxisTypeDeduction) {
+  auto eqOpen = Axis{0.0, 10., 10};
+  static_assert(
+      std::is_same_v<decltype(eqOpen),
+                     Axis<AxisType::Equidistant, AxisBoundaryType::Open>>);
+  auto eqBound = Axis{AxisBound, 0.0, 10., 10};
+  static_assert(
+      std::is_same_v<decltype(eqBound),
+                     Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>);
+  auto eqClosed = Axis{AxisClosed, 0.0, 10., 10};
+  static_assert(
+      std::is_same_v<decltype(eqClosed),
+                     Axis<AxisType::Equidistant, AxisBoundaryType::Closed>>);
 
-}  // namespace Acts
+  auto varOpen = Axis{{0, 1, 2., 3, 4}};
+  static_assert(
+      std::is_same_v<decltype(varOpen),
+                     Axis<AxisType::Variable, AxisBoundaryType::Open>>);
+  auto varBound = Axis{AxisBound, {0, 1, 2., 3, 4}};
+  static_assert(
+      std::is_same_v<decltype(varBound),
+                     Axis<AxisType::Variable, AxisBoundaryType::Bound>>);
+  auto varClosed = Axis{AxisClosed, {0, 1, 2., 3, 4}};
+  static_assert(
+      std::is_same_v<decltype(varClosed),
+                     Axis<AxisType::Variable, AxisBoundaryType::Closed>>);
+}
+
+BOOST_AUTO_TEST_CASE(AxisVisit) {
+  using enum AxisBoundaryType;
+  using enum AxisType;
+
+  auto eqOpen = Axis{0.0, 10., 10};
+  eqOpen.visit([](const auto& axis) {
+    BOOST_CHECK((
+        std::is_same_v<std::decay_t<decltype(axis)>, Axis<Equidistant, Open>>));
+  });
+
+  auto eqBound = Axis{AxisBound, 0.0, 10., 10};
+  eqBound.visit([](const auto& axis) {
+    BOOST_CHECK((std::is_same_v<std::decay_t<decltype(axis)>,
+                                Axis<Equidistant, Bound>>));
+  });
+
+  auto eqClosed = Axis{AxisClosed, 0.0, 10., 10};
+  eqClosed.visit([](const auto& axis) {
+    BOOST_CHECK((std::is_same_v<std::decay_t<decltype(axis)>,
+                                Axis<Equidistant, Closed>>));
+  });
+
+  auto varOpen = Axis{{0, 1, 2., 3, 4}};
+  varOpen.visit([](const auto& axis) {
+    BOOST_CHECK(
+        (std::is_same_v<std::decay_t<decltype(axis)>, Axis<Variable, Open>>));
+  });
+
+  auto varBound = Axis{AxisBound, {0, 1, 2., 3, 4}};
+  varBound.visit([](const auto& axis) {
+    BOOST_CHECK(
+        (std::is_same_v<std::decay_t<decltype(axis)>, Axis<Variable, Bound>>));
+  });
+
+  auto varClosed = Axis{AxisClosed, {0, 1, 2., 3, 4}};
+  varClosed.visit([](const auto& axis) {
+    BOOST_CHECK(
+        (std::is_same_v<std::decay_t<decltype(axis)>, Axis<Variable, Closed>>));
+  });
+
+  std::vector<double> edges =
+      varClosed.visit([](const auto& axis) { return axis.getBinEdges(); });
+  BOOST_CHECK_EQUAL(edges.size(), varClosed.getBinEdges().size());
+}
+
+BOOST_AUTO_TEST_CASE(Output) {
+  std::stringstream ss;
+
+  Axis a{AxisBound, 0.0, 10., 10};
+  Axis b{AxisBound, {0.0, 10., 11}};
+
+  ss << a;
+
+  BOOST_CHECK_EQUAL(ss.str(), "Axis<Equidistant, Bound>(0, 10, 10)");
+
+  ss.str("");
+
+  const IAxis& ia = a;
+
+  ss << ia;
+
+  BOOST_CHECK_EQUAL(ss.str(), "Axis<Equidistant, Bound>(0, 10, 10)");
+
+  ss.str("");
+
+  ss << b;
+
+  BOOST_CHECK_EQUAL(ss.str(), "Axis<Variable, Bound>(0, 10, 11)");
+}
+
+BOOST_AUTO_TEST_CASE(Equality) {
+  Axis a{AxisBound, 0.0, 10., 10};
+  Axis b{AxisClosed, 0.0, 10., 10};
+
+  BOOST_CHECK_EQUAL(a, a);
+  BOOST_CHECK_NE(a, b);
+
+  const IAxis& ia = a;
+  const IAxis& ib = b;
+
+  BOOST_CHECK_EQUAL(ia, ia);
+  BOOST_CHECK_NE(ia, ib);
+  BOOST_CHECK_NE(ia, b);
+  BOOST_CHECK_NE(a, ib);
+  BOOST_CHECK_EQUAL(a, ia);
+  BOOST_CHECK_EQUAL(b, ib);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace Acts::Test

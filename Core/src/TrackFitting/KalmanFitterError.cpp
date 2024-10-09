@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 
@@ -22,16 +22,16 @@ class KalmanFitterErrorCategory : public std::error_category {
     using Acts::KalmanFitterError;
 
     switch (static_cast<KalmanFitterError>(c)) {
-      case KalmanFitterError::ForwardUpdateFailed:
-        return "Kalman forward update failed";
-      case KalmanFitterError::BackwardUpdateFailed:
-        return "Kalman backward update failed";
+      case KalmanFitterError::UpdateFailed:
+        return "Kalman update failed";
       case KalmanFitterError::SmoothFailed:
         return "Kalman smooth failed";
       case KalmanFitterError::OutputConversionFailed:
         return "Kalman output conversion failed";
       case KalmanFitterError::NoMeasurementFound:
         return "No measurement detected during the propagation";
+      case KalmanFitterError::ReversePropagationFailed:
+        return "Reverse propagation failed";
       default:
         return "unknown";
     }

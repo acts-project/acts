@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -20,6 +20,7 @@
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <random>
@@ -50,13 +51,11 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
     Acts::Vector2 p = Acts::Vector2::Random();
     Acts::SquareMatrix2 c = Acts::SquareMatrix2::Random();
 
-    // NOTE this fails:
-    // auto m = Acts::makeMeasurement(sl, p, c, eBoundLoc0, eBoundTime)
-    // because we don't support non-consecutive parameters here for now
-    auto m = Acts::makeMeasurement(Acts::SourceLink{sl}, p, c, Acts::eBoundLoc0,
-                                   Acts::eBoundLoc1);
-
-    measOriginal.push_back(m);
+    FixedBoundMeasurementProxy<2> m = measOriginal.makeMeasurement<2>();
+    m.setSourceLink(Acts::SourceLink(sl));
+    m.setSubspaceIndices(std::array{Acts::eBoundLoc0, Acts::eBoundLoc1});
+    m.parameters() = p;
+    m.covariance() = c;
 
     ActsExamples::Cluster cl;
 
@@ -132,19 +131,13 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
   ///////////
   // Check //
   ///////////
-  auto checkMeasurementClose = [](const auto &m1, const auto &m2) {
-    constexpr auto SizeA = std::decay_t<decltype(m1)>::size();
-    constexpr auto SizeB = std::decay_t<decltype(m2)>::size();
-    if constexpr (SizeA == SizeB) {
-      CHECK_CLOSE_REL(m1.parameters(), m2.parameters(), 1e-4);
-    }
-  };
-
   static_assert(
       std::is_same_v<std::decay_t<decltype(measRead)>, decltype(measOriginal)>);
   BOOST_REQUIRE(measRead.size() == measOriginal.size());
   for (const auto &[a, b] : Acts::zip(measRead, measOriginal)) {
-    std::visit(checkMeasurementClose, a, b);
+    if (a.size() == b.size()) {
+      CHECK_CLOSE_REL(a.parameters(), b.parameters(), 1e-4);
+    }
   }
 
   static_assert(std::is_same_v<std::decay_t<decltype(clusterRead)>,
@@ -160,7 +153,7 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
                std::abs(ca.activation - cb.activation) < 1.e-4;
       };
 
-      BOOST_CHECK(std::any_of(b.channels.begin(), b.channels.end(), match));
+      BOOST_CHECK(std::ranges::any_of(b.channels, match));
     }
   }
 

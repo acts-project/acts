@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -104,11 +104,11 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {
   }
 
   // Check the binning value positions
-  CHECK_CLOSE_ABS(box.binningBorder(Acts::binX), hx, s_epsilon);
-  CHECK_CLOSE_ABS(box.binningBorder(Acts::binY), hy, s_epsilon);
-  CHECK_CLOSE_ABS(box.binningBorder(Acts::binZ), hz, s_epsilon);
-  CHECK_CLOSE_ABS(box.binningBorder(Acts::binR), std::sqrt(hx * hx + hy * hy),
-                  s_epsilon);
+  CHECK_CLOSE_ABS(box.binningBorder(Acts::BinningValue::binX), hx, s_epsilon);
+  CHECK_CLOSE_ABS(box.binningBorder(Acts::BinningValue::binY), hy, s_epsilon);
+  CHECK_CLOSE_ABS(box.binningBorder(Acts::BinningValue::binZ), hz, s_epsilon);
+  CHECK_CLOSE_ABS(box.binningBorder(Acts::BinningValue::binR),
+                  std::sqrt(hx * hx + hy * hy), s_epsilon);
 }
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/detail/IndexedGridFiller.hpp"
 
@@ -27,7 +27,7 @@
 
 std::vector<std::size_t> Acts::Experimental::detail::binSequence(
     std::array<std::size_t, 2u> minMaxBins, std::size_t expand,
-    std::size_t nBins, Acts::detail::AxisBoundaryType type) {
+    std::size_t nBins, Acts::AxisBoundaryType type) {
   // Return vector for iterations
   std::vector<std::size_t> rBins;
   /// Helper method to fill a range
@@ -43,15 +43,15 @@ std::vector<std::size_t> Acts::Experimental::detail::binSequence(
   std::size_t bmax = minMaxBins[1u];
 
   // Open/Bound cases
-  if (type != Acts::detail::AxisBoundaryType::Closed) {
+  if (type != Acts::AxisBoundaryType::Closed) {
     rBins.reserve(bmax - bmin + 1u + 2 * expand);
     // handle bmin:/max expand it down (for bound, don't fill underflow)
-    if (type == Acts::detail::AxisBoundaryType::Bound) {
+    if (type == Acts::AxisBoundaryType::Bound) {
       bmin = (static_cast<int>(bmin) - static_cast<int>(expand) > 0)
                  ? bmin - expand
                  : 1u;
       bmax = (bmax + expand <= nBins) ? bmax + expand : nBins;
-    } else if (type == Acts::detail::AxisBoundaryType::Open) {
+    } else if (type == Acts::AxisBoundaryType::Open) {
       bmin = (static_cast<int>(bmin) - static_cast<int>(expand) >= 0)
                  ? bmin - expand
                  : 0u;
@@ -65,7 +65,7 @@ std::vector<std::size_t> Acts::Experimental::detail::binSequence(
     if (2 * span < nBins && (bmax + expand <= nBins) &&
         (static_cast<int>(bmin) - static_cast<int>(expand) > 0)) {
       return binSequence({bmin, bmax}, expand, nBins,
-                         Acts::detail::AxisBoundaryType::Bound);
+                         Acts::AxisBoundaryType::Bound);
     } else if (2 * span < nBins) {
       bmin = static_cast<int>(bmin) - static_cast<int>(expand) > 0
                  ? bmin - expand
@@ -82,12 +82,12 @@ std::vector<std::size_t> Acts::Experimental::detail::binSequence(
             abs(static_cast<int>(bmin) - static_cast<int>(expand));
         fill_linear(nBins - understep, nBins);
       }
-      std::sort(rBins.begin(), rBins.end());
+      std::ranges::sort(rBins);
     } else {
       // Jump over the phi boundary
       fill_linear(bmax - expand, nBins);
       fill_linear(1, bmin + expand);
-      std::sort(rBins.begin(), rBins.end());
+      std::ranges::sort(rBins);
     }
   }
   return rBins;

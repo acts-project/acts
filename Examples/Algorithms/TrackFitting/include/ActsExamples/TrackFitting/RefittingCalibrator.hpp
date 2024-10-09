@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -29,11 +29,13 @@ struct RefittingCalibrator {
 
   struct RefittingSourceLink {
     ConstProxy state;
-
-    Acts::GeometryIdentifier geometryId() const {
-      return state.referenceSurface().geometryId();
-    }
   };
+
+  static const Acts::Surface* accessSurface(
+      const Acts::SourceLink& sourceLink) {
+    const auto& refittingSl = sourceLink.get<RefittingSourceLink>();
+    return &refittingSl.state.referenceSurface();
+  }
 
   void calibrate(const Acts::GeometryContext& gctx,
                  const Acts::CalibrationContext& cctx,

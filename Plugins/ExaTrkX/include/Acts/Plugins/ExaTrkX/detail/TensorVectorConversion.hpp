@@ -1,14 +1,12 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
-
-#include "Acts/Utilities/Concepts.hpp"
 
 #include <cstdint>
 #include <vector>
@@ -22,22 +20,22 @@ template <typename T>
 struct TorchTypeMap {};
 
 template <>
-struct TorchTypeMap<int64_t> {
+struct TorchTypeMap<std::int64_t> {
   constexpr static torch::Dtype type = torch::kInt64;
 };
 
 template <>
-struct TorchTypeMap<int32_t> {
+struct TorchTypeMap<std::int32_t> {
   constexpr static torch::Dtype type = torch::kInt32;
 };
 
 template <>
-struct TorchTypeMap<int16_t> {
+struct TorchTypeMap<std::int16_t> {
   constexpr static torch::Dtype type = torch::kInt16;
 };
 
 template <>
-struct TorchTypeMap<int8_t> {
+struct TorchTypeMap<std::int8_t> {
   constexpr static torch::Dtype type = torch::kInt8;
 };
 

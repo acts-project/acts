@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -15,8 +15,8 @@
 
 #include <torch/torch.h>
 
-void testTruthTestGraph(std::vector<int64_t> &truthGraph,
-                        std::vector<int64_t> &testGraph,
+void testTruthTestGraph(std::vector<std::int64_t> &truthGraph,
+                        std::vector<std::int64_t> &testGraph,
                         const std::string &resStr) {
   std::stringstream ss;
   auto logger = Acts::getDefaultLogger("Test", Acts::Logging::INFO, &ss);
@@ -39,7 +39,7 @@ void testTruthTestGraph(std::vector<int64_t> &truthGraph,
 
 BOOST_AUTO_TEST_CASE(same_graph) {
   // clang-format off
-  std::vector<int64_t> truthGraph = {
+  std::vector<std::int64_t> truthGraph = {
     1,2,
     2,3,
     3,4,
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(same_graph) {
   // clang-format on
 
   // clang-format off
-  std::vector<int64_t> testGraph = {
+  std::vector<std::int64_t> testGraph = {
     3,4,
     4,5,
     1,2,
@@ -62,9 +62,9 @@ BOOST_AUTO_TEST_CASE(same_graph) {
 // Test large numbers because overflows are a danger for cantor pairing
 BOOST_AUTO_TEST_CASE(same_graph_large_numbers) {
   // clang-format off
-  int64_t k = 100'000;
-    
-  std::vector<int64_t> truthGraph = {
+  std::int64_t k = 100'000;
+
+  std::vector<std::int64_t> truthGraph = {
     1,2,
     2,3,
     3,4,
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(same_graph_large_numbers) {
                  [&](auto i) { return k + i; });
 
   // clang-format off
-  std::vector<int64_t> testGraph = {
+  std::vector<std::int64_t> testGraph = {
     3,4,
     4,5,
     1,2,
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(same_graph_large_numbers) {
 
 BOOST_AUTO_TEST_CASE(fifty_fifty) {
   // clang-format off
-  std::vector<int64_t> truthGraph = {
+  std::vector<std::int64_t> truthGraph = {
     1,2,
     2,3,
     3,4,
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(fifty_fifty) {
   // clang-format on
 
   // clang-format off
-  std::vector<int64_t> testGraph = {
+  std::vector<std::int64_t> testGraph = {
     3,4,
     4,5,
     6,9,

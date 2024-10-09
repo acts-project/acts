@@ -91,7 +91,7 @@ There are two approaches to logger integration:
     dummy logger using {func}`Acts::getDummyLogger`. It is more suitable to
     pass into functions that might be called from other ACTS functions (rather
     than construction a local logger via `getDefaultLogger`, or creating logger
-    instances on the fly). 
+    instances on the fly).
     :::
 
 2. Passing logger instances to high level components, and rely on ACTS code to
@@ -135,13 +135,13 @@ $ LD_PRELOAD=<YOUR_SHARED_LIBRARY> path/to/your/executable
 
 Generally, log levels in ACTS are only of informative value: even
 {enumerator}`Acts::Logging::Level::ERROR` and {enumerator}`Acts::Logging::Level::FATAL` will only print a
-messages, **and not terminate execution**. 
+messages, **and not terminate execution**.
 
 This is desirable in an experiment context, where jobs should not immediately
 terminate when ACTS encounters something that is logged as an error.  In a test
 context, however, this behavior is not optimal: the tests should ensure in
 known configurations errors do not occur, or only in specific circumstances. To
-solve this, ACTS implements an optional log *threshold* mechanism. 
+solve this, ACTS implements an optional log *threshold* mechanism.
 
 The threshold mechanism is steered via two CMake options:
 `ACTS_ENABLE_LOG_FAILURE_THRESHOLD` and `ACTS_LOG_FAILURE_THRESHOLD`. Depending

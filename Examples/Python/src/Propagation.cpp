@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -15,9 +15,11 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
+#include "ActsExamples/Propagation/SimHitToSummaryConversion.hpp"
 
 #include <algorithm>
 #include <array>
@@ -113,17 +115,21 @@ void addPropagation(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::PropagationAlgorithm, mex, "PropagationAlgorithm",
-      propagatorImpl, randomNumberSvc, mode, sterileLogger, debugOutput,
-      energyLoss, multipleScattering, recordMaterialInteractions, ntests,
-      d0Sigma, z0Sigma, phiSigma, thetaSigma, qpSigma, tSigma, phiRange,
-      etaRange, ptRange, particleHypothesis, ptLoopers, maxStepSize,
-      propagationStepCollection, propagationMaterialCollection,
-      covarianceTransport, covariances, correlations);
+      propagatorImpl, sterileLogger, debugOutput, energyLoss,
+      multipleScattering, recordMaterialInteractions, ptLoopers, maxStepSize,
+      covarianceTransport, inputTrackParameters, outputSummaryCollection,
+      outputMaterialCollection);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SimHitToSummaryConversion, mex,
+                                "SimHitToSummaryConversion", inputSimHits,
+                                inputParticles, outputSummaryCollection,
+                                surfaceByIdentifier);
 
   py::class_<ActsExamples::PropagatorInterface,
              std::shared_ptr<ActsExamples::PropagatorInterface>>(
       mex, "PropagatorInterface");
 
+  // Eigen based stepper
   {
     auto stepper = py::class_<Acts::EigenStepper<>>(m, "EigenStepper");
     stepper.def(py::init<std::shared_ptr<const Acts::MagneticFieldProvider>>());
@@ -133,9 +139,10 @@ void addPropagation(Context& ctx) {
 
   {
     addPropagator<Acts::EigenStepper<>, Acts::Experimental::DetectorNavigator>(
-        prop, "EigenNext");
+        prop, "EigenDetector");
   }
 
+  // ATLAS based stepper
   {
     auto stepper = py::class_<Acts::AtlasStepper>(m, "AtlasStepper");
     stepper.def(py::init<std::shared_ptr<const Acts::MagneticFieldProvider>>());
@@ -144,12 +151,37 @@ void addPropagation(Context& ctx) {
   }
 
   {
+    addPropagator<Acts::AtlasStepper, Acts::Experimental::DetectorNavigator>(
+        prop, "AtlasDetector");
+  }
+
+  // Sympy based stepper
+  {
+    auto stepper = py::class_<Acts::SympyStepper>(m, "SympyStepper");
+    stepper.def(py::init<std::shared_ptr<const Acts::MagneticFieldProvider>>());
+
+    addPropagator<Acts::SympyStepper, Acts::Navigator>(prop, "Sympy");
+  }
+
+  {
+    addPropagator<Acts::SympyStepper, Acts::Experimental::DetectorNavigator>(
+        prop, "SympyDetector");
+  }
+
+  // Straight line stepper
+  {
     auto stepper =
         py::class_<Acts::StraightLineStepper>(m, "StraightLineStepper");
     stepper.def(py::init<>());
 
     addPropagator<Acts::StraightLineStepper, Acts::Navigator>(prop,
                                                               "StraightLine");
+  }
+
+  {
+    addPropagator<Acts::StraightLineStepper,
+                  Acts::Experimental::DetectorNavigator>(
+        prop, "StraightLineDetector");
   }
 }
 

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -63,10 +63,12 @@ auto visit_measurement(A&& param, B&& cov, std::size_t dim, L&& lambda) {
 /// @tparam L The generic lambda type to call
 /// @param dim The runtime dimension of the measurement
 /// @param lambda The generic lambda instance to call
+/// @param args Additional arguments passed to @p lambda
 /// @return Returns the lambda return value
-template <typename L>
-auto visit_measurement(std::size_t dim, L&& lambda) {
-  return template_switch_lambda<1, eBoundSize>(dim, lambda);
+template <typename L, typename... Args>
+auto visit_measurement(std::size_t dim, L&& lambda, Args&&... args) {
+  return template_switch_lambda<1, eBoundSize>(dim, lambda,
+                                               std::forward<Args>(args)...);
 }
 
 }  // namespace Acts

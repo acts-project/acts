@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Generators/EventGenerator.hpp"
 
@@ -13,7 +13,7 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
-#include <cstdint>
+#include <limits>
 #include <ostream>
 #include <stdexcept>
 
@@ -43,7 +43,7 @@ std::string ActsExamples::EventGenerator::name() const {
 
 std::pair<std::size_t, std::size_t>
 ActsExamples::EventGenerator::availableEvents() const {
-  return {0u, SIZE_MAX};
+  return {0u, std::numeric_limits<std::size_t>::max()};
 }
 
 ActsExamples::ProcessCode ActsExamples::EventGenerator::read(

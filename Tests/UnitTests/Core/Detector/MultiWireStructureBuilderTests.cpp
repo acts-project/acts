@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -71,9 +71,9 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
   mlCfg.mlSurfaces = strawSurfaces;
   mlCfg.mlBounds = vBounds;
   mlCfg.mlBinning = {
-      ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound,
+      ProtoBinning(Acts::BinningValue::binX, Acts::AxisBoundaryType::Bound,
                    -vBounds[0], vBounds[0], nSurfacesX, 1u),
-      ProtoBinning(Acts::binY, Acts::detail::AxisBoundaryType::Bound,
+      ProtoBinning(Acts::BinningValue::binY, Acts::AxisBoundaryType::Bound,
                    -vBounds[1], vBounds[1], nSurfacesY, 0u)};
 
   MultiWireStructureBuilder mlBuilder(mlCfg);

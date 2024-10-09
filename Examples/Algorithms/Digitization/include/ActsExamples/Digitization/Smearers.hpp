@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -26,6 +26,11 @@ namespace ActsExamples::Digitization {
 /// Exact smearing of a single parameter.
 ///
 struct Exact {
+  double sigma;
+
+  /// Construct with a @param sigma standard deviation
+  explicit Exact(double sigma_) : sigma{sigma_} {}
+
   /// Call operator for the SmearFunction caller interface.
   ///
   /// @param value parameter to be smeared
@@ -35,7 +40,7 @@ struct Exact {
   /// the value and a stddev of 0.0
   Acts::Result<std::pair<double, double>> operator()(
       double value, RandomEngine& /*rnd*/) const {
-    return std::pair{value, 0.0};
+    return std::pair{value, sigma};
   }
 };
 
@@ -47,7 +52,7 @@ struct Gauss {
   double sigma;
 
   /// Construct with a @param sigma standard deviation
-  Gauss(double sigma_) : sigma{sigma_} {}
+  explicit Gauss(double sigma_) : sigma{sigma_} {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
@@ -58,7 +63,7 @@ struct Gauss {
   Acts::Result<std::pair<double, double>> operator()(double value,
                                                      RandomEngine& rnd) const {
     std::normal_distribution<> dist{0, sigma};
-    return std::pair{value + dist(rnd), dist.stddev()};
+    return std::pair{value + dist(rnd), sigma};
   }
 };
 
@@ -83,12 +88,13 @@ struct GaussTrunc {
   /// @return a Result that is ok() when inside range, other DigitizationError
   Acts::Result<std::pair<double, double>> operator()(double value,
                                                      RandomEngine& rnd) const {
-    std::normal_distribution<> dist{0., sigma};
-    double svalue = value + dist(rnd);
-    if (svalue >= range.first && svalue <= range.second) {
-      return std::pair{svalue, dist.stddev()};
+    std::normal_distribution<> dist{0., 1};
+    double x = dist(rnd);
+    if (x < range.first || x > range.second) {
+      return ActsFatras::DigitizationError::SmearingOutOfRange;
     }
-    return ActsFatras::DigitizationError::SmearingOutOfRange;
+    double svalue = value + sigma * x;
+    return std::pair{svalue, sigma};
   }
 };
 
@@ -118,11 +124,12 @@ struct GaussClipped {
   /// @return a Result that is ok() when inside range, other DigitizationError
   Acts::Result<std::pair<double, double>> operator()(double value,
                                                      RandomEngine& rnd) const {
-    std::normal_distribution<> dist{0., sigma};
+    std::normal_distribution<> dist{0., 1};
     for (std::size_t attempt = 0; attempt < maxAttemps; ++attempt) {
-      double svalue = value + dist(rnd);
-      if (svalue >= range.first && svalue <= range.second) {
-        return std::pair{svalue, dist.stddev()};
+      double x = dist(rnd);
+      if (x >= range.first && x <= range.second) {
+        double svalue = value + sigma * x;
+        return std::pair{svalue, sigma};
       }
     }
     return ActsFatras::DigitizationError::SmearingError;
@@ -138,14 +145,14 @@ struct Uniform {
   /// Construct with a @param pitch standard deviation and @param range
   Uniform(double pitch, const std::pair<double, double>& range_)
       : binningData(
-            Acts::open, Acts::binX,
+            Acts::open, Acts::BinningValue::binX,
             static_cast<std::size_t>((range_.second - range_.first) / pitch),
             range_.first, range_.second) {}
 
   /// Constructor with a binning data in order to get the bin borders.
   ///
   /// @param bu the binning data
-  Uniform(Acts::BinningData&& bd) : binningData(bd) {}
+  explicit Uniform(const Acts::BinningData& bd) : binningData(bd) {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
@@ -176,14 +183,14 @@ struct Digital {
   /// Construct with a @param pitch standard deviation and @param range
   Digital(double pitch, const std::pair<double, double>& range_)
       : binningData(
-            Acts::open, Acts::binX,
+            Acts::open, Acts::BinningValue::binX,
             static_cast<std::size_t>((range_.second - range_.first) / pitch),
             range_.first, range_.second) {}
 
   /// Constructor with a bin utility in order to get the bin borders.
   ///
   /// @param bu the bin utility within hich the parameter is allowed
-  Digital(Acts::BinningData&& bd) : binningData(bd) {}
+  explicit Digital(const Acts::BinningData& bd) : binningData(bd) {}
 
   /// Call operator for the SmearFunction caller interface.
   ///

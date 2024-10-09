@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 
@@ -42,7 +42,7 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
 
   // sort it accordingly to the binning value
   GeometryObjectSorterT<std::shared_ptr<const Layer>> layerSorter(gctx, bValue);
-  std::sort(layers.begin(), layers.end(), layerSorter);
+  std::ranges::sort(layers, layerSorter);
   // useful typedef
   using LayerOrderPosition = std::pair<std::shared_ptr<const Layer>, Vector3>;
   // needed for all cases
@@ -179,19 +179,19 @@ std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
   // switching he binnig values
   switch (bValue) {
     // case x
-    case binX: {
+    case BinningValue::binX: {
       translation = Vector3(offset, 0., 0.);
     } break;
     // case y
-    case binY: {
+    case BinningValue::binY: {
       translation = Vector3(0., offset, 0.);
     } break;
     // case z
-    case binZ: {
+    case BinningValue::binZ: {
       translation = Vector3(0., 0., offset);
     } break;
     // case R
-    case binR: {
+    case BinningValue::binR: {
       // binning in R and cylinder surface means something different
       if (layerSurface.type() == Surface::Cylinder) {
         break;

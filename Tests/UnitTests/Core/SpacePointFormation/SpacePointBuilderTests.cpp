@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -14,7 +14,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
@@ -46,10 +45,9 @@
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
+using namespace Acts::UnitLiterals;
 
 namespace Acts::Test {
-
-using namespace UnitLiterals;
 
 using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
 using TestSourceLink = detail::Test::TestSourceLink;

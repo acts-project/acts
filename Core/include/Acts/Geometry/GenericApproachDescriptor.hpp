@@ -1,17 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -56,17 +56,15 @@ class GenericApproachDescriptor : public ApproachDescriptor {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The global position to start the approach from
   /// @param direction The momentum vector
-  /// @param bcheck The boundary check prescription
+  /// @param boundaryTolerance The boundary check prescription
   /// @param nearLimit The minimum distance for an intersection to be considered
   /// @param farLimit The maximum distance for an intersection to be considered
   ///
   /// @return : a @c SurfaceIntersection
-  SurfaceIntersection approachSurface(const GeometryContext& gctx,
-                                      const Vector3& position,
-                                      const Vector3& direction,
-                                      const BoundaryCheck& bcheck,
-                                      double nearLimit,
-                                      double farLimit) const override;
+  SurfaceIntersection approachSurface(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
+      double nearLimit, double farLimit) const override;
 
   /// return all contained surfaces of this approach descriptor
   const std::vector<const Surface*>& containedSurfaces() const override;

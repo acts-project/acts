@@ -1,13 +1,12 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -19,7 +18,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -113,8 +112,8 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
                                    ParticleHypothesis::pion());
 
-  PropagatorOptions<> options(tgContext, mfContext);
-  options.maxStepSize = 10_cm;
+  EigenPropagatorType::Options<> options(tgContext, mfContext);
+  options.stepping.maxStepSize = 10_cm;
   options.pathLimit = 25_cm;
 
   BOOST_CHECK(
@@ -158,18 +157,19 @@ BOOST_DATA_TEST_CASE(
   // A PlaneSelector for the SurfaceCollector
   using PlaneCollector = SurfaceCollector<PlaneSelector>;
 
-  PropagatorOptions<ActionList<PlaneCollector>> options(tgContext, mfContext);
+  EigenPropagatorType::Options<ActorList<PlaneCollector>> options(tgContext,
+                                                                  mfContext);
 
-  options.maxStepSize = 10_cm;
+  options.stepping.maxStepSize = 10_cm;
   options.pathLimit = 25_cm;
 
   const auto& result = epropagator.propagate(start, options).value();
   auto collector_result = result.get<PlaneCollector::result_type>();
 
   // step through the surfaces and go step by step
-  PropagatorOptions<> optionsEmpty(tgContext, mfContext);
+  EigenPropagatorType::Options<> optionsEmpty(tgContext, mfContext);
 
-  optionsEmpty.maxStepSize = 25_cm;
+  optionsEmpty.stepping.maxStepSize = 25_cm;
   // Try propagation from start to each surface
   for (const auto& colsf : collector_result.collected) {
     const auto& csurface = colsf.surface;
@@ -220,9 +220,9 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
                                    ParticleHypothesis::pion());
 
-  PropagatorOptions<ActionList<MaterialInteractor>> options(tgContext,
-                                                            mfContext);
-  options.maxStepSize = 25_cm;
+  EigenPropagatorType::Options<ActorList<MaterialInteractor>> options(
+      tgContext, mfContext);
+  options.stepping.maxStepSize = 25_cm;
   options.pathLimit = 25_cm;
 
   const auto& result = epropagator.propagate(start, options).value();
@@ -268,9 +268,9 @@ BOOST_DATA_TEST_CASE(
                                    ParticleHypothesis::pion());
 
   // Action list and abort list
-  PropagatorOptions<ActionList<MaterialInteractor>> options(tgContext,
-                                                            mfContext);
-  options.maxStepSize = 25_cm;
+  EigenPropagatorType::Options<ActorList<MaterialInteractor>> options(
+      tgContext, mfContext);
+  options.stepping.maxStepSize = 25_cm;
   options.pathLimit = 1500_mm;
 
   const auto& status = epropagator.propagate(start, options).value();

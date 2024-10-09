@@ -1,40 +1,41 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <algorithm>
 #include <array>
+#include <concepts>
 #include <cstddef>
 #include <set>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-namespace Acts {
+using namespace Acts::detail;
 
-using namespace detail;
+namespace Acts::Test {
 
-namespace Test {
+BOOST_AUTO_TEST_SUITE(GridTests)
 
 BOOST_AUTO_TEST_CASE(grid_test_1d_equidistant) {
   using Point = std::array<double, 1>;
   using indices = std::array<std::size_t, 1>;
-  EquidistantAxis a(0.0, 4.0, 4u);
-  Grid<double, EquidistantAxis> g(std::make_tuple(std::move(a)));
+  Axis a(0.0, 4.0, 4u);
+  Grid g(Type<double>, std::move(a));
 
   // test general properties
   BOOST_CHECK_EQUAL(g.size(), 6u);
@@ -115,10 +116,9 @@ BOOST_AUTO_TEST_CASE(grid_test_1d_equidistant) {
 BOOST_AUTO_TEST_CASE(grid_test_2d_equidistant) {
   using Point = std::array<double, 2>;
   using indices = std::array<std::size_t, 2>;
-  EquidistantAxis a(0.0, 4.0, 4u);
-  EquidistantAxis b(0.0, 3.0, 3u);
-  Grid<double, EquidistantAxis, EquidistantAxis> g(
-      std::make_tuple(std::move(a), std::move(b)));
+  Axis a(0.0, 4.0, 4u);
+  Axis b(0.0, 3.0, 3u);
+  Grid g(Type<double>, std::move(a), std::move(b));
 
   // test general properties
   BOOST_CHECK_EQUAL(g.size(), 30u);
@@ -288,11 +288,10 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_equidistant) {
 BOOST_AUTO_TEST_CASE(grid_test_3d_equidistant) {
   using Point = std::array<double, 3>;
   using indices = std::array<std::size_t, 3>;
-  EquidistantAxis a(0.0, 2.0, 2u);
-  EquidistantAxis b(0.0, 3.0, 3u);
-  EquidistantAxis c(0.0, 2.0, 2u);
-  Grid<double, EquidistantAxis, EquidistantAxis, EquidistantAxis> g(
-      std::make_tuple(std::move(a), std::move(b), std::move(c)));
+  Axis a(0.0, 2.0, 2u);
+  Axis b(0.0, 3.0, 3u);
+  Axis c(0.0, 2.0, 2u);
+  Grid g(Type<double>, std::move(a), std::move(b), std::move(c));
 
   // test general properties
   BOOST_CHECK_EQUAL(g.size(), 80u);
@@ -446,8 +445,8 @@ BOOST_AUTO_TEST_CASE(grid_test_3d_equidistant) {
 BOOST_AUTO_TEST_CASE(grid_test_1d_variable) {
   using Point = std::array<double, 1>;
   using indices = std::array<std::size_t, 1>;
-  VariableAxis a({0.0, 1.0, 4.0});
-  Grid<double, VariableAxis> g(std::make_tuple(std::move(a)));
+  Axis a({0.0, 1.0, 4.0});
+  Grid g(Type<double>, std::move(a));
 
   // test general properties
   BOOST_CHECK_EQUAL(g.size(), 4u);
@@ -514,10 +513,9 @@ BOOST_AUTO_TEST_CASE(grid_test_1d_variable) {
 BOOST_AUTO_TEST_CASE(grid_test_2d_variable) {
   using Point = std::array<double, 2>;
   using indices = std::array<std::size_t, 2>;
-  VariableAxis a({0.0, 0.5, 3.0});
-  VariableAxis b({0.0, 1.0, 4.0});
-  Grid<double, VariableAxis, VariableAxis> g(
-      std::make_tuple(std::move(a), std::move(b)));
+  Axis a({0.0, 0.5, 3.0});
+  Axis b({0.0, 1.0, 4.0});
+  Grid g(Type<double>, std::move(a), std::move(b));
 
   // test general properties
   BOOST_CHECK_EQUAL(g.size(), 16u);
@@ -638,11 +636,10 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_variable) {
 BOOST_AUTO_TEST_CASE(grid_test_3d_variable) {
   using Point = std::array<double, 3>;
   using indices = std::array<std::size_t, 3>;
-  VariableAxis a({0.0, 1.0});
-  VariableAxis b({0.0, 0.5, 3.0});
-  VariableAxis c({0.0, 0.5, 3.0, 3.3});
-  Grid<double, VariableAxis, VariableAxis, VariableAxis> g(
-      std::make_tuple(std::move(a), std::move(b), std::move(c)));
+  Axis a({0.0, 1.0});
+  Axis b({0.0, 0.5, 3.0});
+  Axis c({0.0, 0.5, 3.0, 3.3});
+  Grid g(Type<double>, std::move(a), std::move(b), std::move(c));
 
   // test general properties
   BOOST_CHECK_EQUAL(g.size(), 60u);
@@ -778,10 +775,9 @@ BOOST_AUTO_TEST_CASE(grid_test_3d_variable) {
 BOOST_AUTO_TEST_CASE(grid_test_2d_mixed) {
   using Point = std::array<double, 2>;
   using indices = std::array<std::size_t, 2>;
-  EquidistantAxis a(0.0, 1.0, 4u);
-  VariableAxis b({0.0, 0.5, 3.0});
-  Grid<double, EquidistantAxis, VariableAxis> g(
-      std::make_tuple(std::move(a), std::move(b)));
+  Axis a(0.0, 1.0, 4u);
+  Axis b({0.0, 0.5, 3.0});
+  Grid g(Type<double>, std::move(a), std::move(b));
 
   // test general properties
   BOOST_CHECK_EQUAL(g.size(), 24u);
@@ -935,10 +931,9 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_mixed) {
 }
 
 BOOST_AUTO_TEST_CASE(grid_test_2d_mixed_at) {
-  EquidistantAxis a(0.0, 6.0, 4u);
-  VariableAxis b({0.0, 1.5, 3.0});
-  Grid<double, EquidistantAxis, VariableAxis> g(
-      std::make_tuple(std::move(a), std::move(b)));
+  Axis a(0.0, 6.0, 4u);
+  Axis b({0.0, 1.5, 3.0});
+  Grid g(Type<double>, std::move(a), std::move(b));
 
   // initialize the grid
   using Point = std::array<double, 2>;
@@ -971,11 +966,10 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_mixed_at) {
 
 BOOST_AUTO_TEST_CASE(grid_interpolation) {
   using Point = std::array<double, 3>;
-  EquidistantAxis a(1.0, 3.0, 2u);
-  EquidistantAxis b(1.0, 5.0, 2u);
-  EquidistantAxis c(1.0, 7.0, 2u);
-  Grid<double, EquidistantAxis, EquidistantAxis, EquidistantAxis> g(
-      std::make_tuple(std::move(a), std::move(b), std::move(c)));
+  Axis a(1.0, 3.0, 2u);
+  Axis b(1.0, 5.0, 2u);
+  Axis c(1.0, 7.0, 2u);
+  Grid g(Type<double>, std::move(a), std::move(b), std::move(c));
 
   g.atPosition(Point({{1., 1., 1.}})) = 10.;
   g.atPosition(Point({{2., 1., 1.}})) = 20.;
@@ -1013,17 +1007,13 @@ BOOST_AUTO_TEST_CASE(grid_interpolation) {
 
 BOOST_AUTO_TEST_CASE(neighborhood) {
   using bins_t = std::vector<std::size_t>;
-  using EAxis = EquidistantAxis;
-  using Grid1_t = Grid<double, EAxis>;
-  using Grid2_t = Grid<double, EAxis, EAxis>;
-  using Grid3_t = Grid<double, EAxis, EAxis, EAxis>;
 
-  EAxis a(0.0, 1.0, 10u);
-  EAxis b(0.0, 1.0, 10u);
-  EAxis c(0.0, 1.0, 10u);
-  Grid1_t g1(std::make_tuple(a));
-  Grid2_t g2(std::make_tuple(a, b));
-  Grid3_t g3(std::make_tuple(std::move(a), std::move(b), std::move(c)));
+  Axis a(0.0, 1.0, 10u);
+  Axis b(0.0, 1.0, 10u);
+  Axis c(0.0, 1.0, 10u);
+  Grid g1(Type<double>, Axis{a});
+  Grid g2(Type<double>, Axis{a}, Axis{b});
+  Grid g3(Type<double>, std::move(a), std::move(b), std::move(c));
 
   // clang-format off
     // 1D case
@@ -1101,11 +1091,9 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
                 == bins_t({0,1}));
   // clang-format on
 
-  using EAxisClosed = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
-  using Grid1Closed_t = Grid<double, EAxisClosed>;
-  EAxisClosed d(0.0, 1.0, 10u);
+  Axis d(AxisClosed, 0.0, 1.0, 10u);
 
-  Grid1Closed_t g1Cl(std::make_tuple(std::move(d)));
+  Grid g1Cl(Type<double>, std::move(d));
   BOOST_CHECK(g1Cl.neighborHoodIndices({{0}}, 1).collectVector() ==
               bins_t({}));  // underflow, makes no sense
   BOOST_CHECK(g1Cl.neighborHoodIndices({{11}}, 1).collectVector() ==
@@ -1115,12 +1103,9 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   BOOST_CHECK(g1Cl.neighborHoodIndices({{5}}, 1).collectVector() ==
               bins_t({4, 5, 6}));  // overflow, makes no sense
 
-  using Grid2Closed_t = Grid<double, EAxisClosed, EAxisClosed>;
-  // typedef Grid<double, EAxisClosed, EAxisClosed, EAxisClosed>
-  // Grid3Closed_t;
-  EAxisClosed e(0.0, 1.0, 5u);
-  EAxisClosed f(0.0, 1.0, 5u);
-  Grid2Closed_t g2Cl(std::make_tuple(std::move(e), std::move(f)));
+  Axis f(AxisClosed, 0.0, 1.0, 5u);
+  Axis e(AxisClosed, 0.0, 1.0, 5u);
+  Grid g2Cl(Type<double>, std::move(e), std::move(f));
   BOOST_CHECK(g2Cl.neighborHoodIndices({{3, 3}}, 1).collectVector() ==
               bins_t({16, 17, 18, 23, 24, 25, 30, 31, 32}));
   BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 1}}, 1).collectVector() ==
@@ -1200,17 +1185,13 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
 BOOST_AUTO_TEST_CASE(closestPoints) {
   using Point = std::array<double, 3>;
   using bins_t = std::vector<std::size_t>;
-  using EAxis = EquidistantAxis;
-  using Grid1_t = Grid<double, EAxis>;
-  using Grid2_t = Grid<double, EAxis, EAxis>;
-  using Grid3_t = Grid<double, EAxis, EAxis, EAxis>;
 
-  EAxis a(0.0, 1.0, 10u);
-  EAxis b(0.0, 1.0, 5u);
-  EAxis c(0.0, 1.0, 3u);
-  Grid1_t g1(std::make_tuple(a));
-  Grid2_t g2(std::make_tuple(a, b));
-  Grid3_t g3(std::make_tuple(std::move(a), std::move(b), std::move(c)));
+  Axis a(0.0, 1.0, 10u);
+  Axis b(0.0, 1.0, 5u);
+  Axis c(0.0, 1.0, 3u);
+  Grid g1(Type<double>, Axis{a});
+  Grid g2(Type<double>, Axis{a}, Axis{b});
+  Grid g3(Type<double>, std::move(a), std::move(b), std::move(c));
 
   // clang-format off
     // 1D case
@@ -1261,16 +1242,10 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
 
     // @TODO: 3D checks would also be nice
 
-    using EAxisOpen = Axis<AxisType::Equidistant, AxisBoundaryType::Bound>;
-    using Grid1Op_t = Grid<double, EAxisOpen>;
-    using Grid2Op_t = Grid<double, EAxisOpen, EAxisOpen>;
-    //using Grid3Op_t = Grid<double, EAxisOpen, EAxisOpen, EAxisOpen>;
-
-    EAxisOpen  aOp(0.0, 1.0, 10u);
-    EAxisOpen  bOp(0.0, 1.0, 5u);
-    // EAxisOpen  cOp(0.0, 1.0, 3u);
-    Grid1Op_t g1Op(std::make_tuple(aOp));
-    Grid2Op_t g2Op(std::make_tuple(std::move(aOp), std::move(bOp)));
+    Axis  aOp(AxisBound,0.0, 1.0, 10u);
+    Axis  bOp(AxisBound,0.0, 1.0, 5u);
+    Grid g1Op(Type<double>, Axis{aOp});
+    Grid g2Op(Type<double>, std::move(aOp), std::move(bOp));
 
     // 1D case
     BOOST_CHECK(g1Op.closestPointsIndices(Point({{0.52}})).collectVector()
@@ -1324,24 +1299,19 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
 }
 
 BOOST_AUTO_TEST_CASE(grid_type_conversion) {
-  using EAxis = EquidistantAxis;
-  using VAxis = VariableAxis;
-
   // Type conversion test
-  using Grid2Double = Grid<double, EAxis, VAxis>;
-  using Grid2Int = Grid<int, EAxis, VAxis>;
+  using Grid2Int =
+      Grid<int, Axis<AxisType::Equidistant>, Axis<AxisType::Variable>>;
 
-  EAxis a(0.0, 1.0, 10u);
-  VAxis b({0., 1.2, 2.3, 3.4, 4.5, 5.6});
-  Grid2Double g2(std::make_tuple(a, b));
-  Grid2Double g2Copy(g2.axesTuple());
+  Axis a(0.0, 1.0, 10u);
+  Axis b({0., 1.2, 2.3, 3.4, 4.5, 5.6});
+  Grid g2(Type<double>, std::move(a), std::move(b));
+  decltype(g2) g2Copy(g2.axesTuple());
 
-  bool copyKeepsType = std::is_same<decltype(g2), decltype(g2Copy)>::value;
-  BOOST_CHECK(copyKeepsType);
+  static_assert(std::same_as<decltype(g2), decltype(g2Copy)>);
 
   auto g2ConvertedInt = g2Copy.convertType<int>();
-  bool newType = std::is_same<decltype(g2ConvertedInt), Grid2Int>::value;
-  BOOST_CHECK(newType);
+  static_assert(std::same_as<decltype(g2ConvertedInt), Grid2Int>);
 }
 
 BOOST_AUTO_TEST_CASE(grid_full_conversion) {
@@ -1353,12 +1323,9 @@ BOOST_AUTO_TEST_CASE(grid_full_conversion) {
     int operator()(double d) { return static_cast<int>(d); }
   };
 
-  using EAxis = EquidistantAxis;
-
   // Grid conversion test
-  using Grid1Double = Grid<double, EAxis>;
-  EAxis a(0.0, 1.0, 2u);
-  Grid1Double g1(std::make_tuple(a));
+  Axis a(0.0, 1.0, 2u);
+  Grid g1(Type<double>, std::move(a));
 
   using Point = std::array<double, 1>;
   g1.atPosition(Point({{0.3}})) = 1.1;
@@ -1371,6 +1338,48 @@ BOOST_AUTO_TEST_CASE(grid_full_conversion) {
   BOOST_CHECK_EQUAL(g1ConvertedInt.atPosition(Point({{0.6}})), 2);
 }
 
-}  // namespace Test
+BOOST_AUTO_TEST_CASE(Output) {
+  Axis a{AxisOpen, 0.0, 1.0, 10u};
+  Axis b{AxisBound, {1, 2, 3}};
 
-}  // namespace Acts
+  Grid g(Type<double>, std::move(a), std::move(b));
+
+  std::stringstream ss;
+  ss << g;
+  BOOST_CHECK_EQUAL(
+      ss.str(),
+      "Axis<Equidistant, Open>(0, 1, 10), Axis<Variable, Bound>(1, 2, 3)");
+
+  const IGrid& ig = g;
+
+  ss.str("");
+
+  ss << ig;
+
+  BOOST_CHECK_EQUAL(
+      ss.str(),
+      "Axis<Equidistant, Open>(0, 1, 10), Axis<Variable, Bound>(1, 2, 3)");
+}
+
+BOOST_AUTO_TEST_CASE(Equality) {
+  Axis a{AxisOpen, 0.0, 1.0, 10u};
+  Axis b{AxisBound, {1, 2, 3}};
+  Axis c{AxisClosed, {1, 2, 5}};
+
+  Grid ab{Type<double>, a, b};
+  Grid ac{Type<double>, a, c};
+
+  BOOST_CHECK_EQUAL(ab, ab);
+  BOOST_CHECK_EQUAL(ac, ac);
+  BOOST_CHECK_NE(ab, ac);
+
+  const IGrid& iab = ab;
+  const IGrid& iac = ac;
+
+  BOOST_CHECK_EQUAL(iab, iab);
+  BOOST_CHECK_EQUAL(iac, iac);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace Acts::Test

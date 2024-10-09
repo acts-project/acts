@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -97,7 +97,7 @@ class RootMaterialTrackReader : public IReader {
   TChain* m_inputChain = nullptr;
 
   /// Event identifier.
-  uint32_t m_eventId = 0;
+  std::uint32_t m_eventId = 0;
 
   /// The entry numbers for accessing events in increased order (there could be
   /// multiple entries corresponding to one event number)

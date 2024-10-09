@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Csv/CsvProtoTrackWriter.hpp"
 
@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -21,8 +22,6 @@
 #include <ios>
 #include <optional>
 #include <stdexcept>
-
-#include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
 
@@ -49,7 +48,8 @@ ActsExamples::ProcessCode ActsExamples::CsvProtoTrackWriter::writeT(
   std::string path =
       perEventFilepath(m_cfg.outputDir, "prototracks.csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<ProtoTrackData> writer(path, m_cfg.outputPrecision);
+  ActsExamples::NamedTupleCsvWriter<ProtoTrackData> writer(
+      path, m_cfg.outputPrecision);
 
   for (auto trackId = 0ul; trackId < tracks.size(); ++trackId) {
     for (Index measurmentId : tracks[trackId]) {

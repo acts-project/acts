@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Json/DetectorVolumeFinderJsonConverter.hpp"
 
@@ -39,14 +39,15 @@ struct IndexedVolumesGenerator {
       grid_type&& grid,
       const std::array<Acts::BinningValue, grid_type::DIM>& bv,
       const Acts::Transform3& transform) {
-    using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedUpdaterImpl<
-        Acts::Experimental::IExternalNavigation, grid_type,
-        Acts::Experimental::IndexedDetectorVolumeExtractor,
-        Acts::Experimental::DetectorVolumeFiller>;
+    using IndexedDetectorVolumesImpl =
+        Acts::Experimental::IndexedGridNavigation<
+            Acts::Experimental::IExternalNavigation, grid_type,
+            Acts::Experimental::IndexedDetectorVolumeExtractor,
+            Acts::Experimental::DetectorVolumeFiller>;
 
     auto indexedDetectorVolumeImpl =
-        std::make_unique<const IndexedDetectorVolumesImpl>(std::move(grid), bv,
-                                                           transform);
+        std::make_unique<const IndexedDetectorVolumesImpl>(
+            std::forward<grid_type>(grid), bv, transform);
 
     // Create the delegate and connect it
     Acts::Experimental::ExternalNavigationDelegate vFinder;

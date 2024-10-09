@@ -1,18 +1,20 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <functional>
 #include <unordered_map>
@@ -44,21 +46,27 @@ using VolumeTrajectoryStateContainer =
 /// @brief Getter for global trajectory info
 ///
 /// @param multiTraj The MultiTrajectory object
-/// @param entryIndex The entry index of trajectory to investigate
+/// @param tipIndex The entry index of trajectory to investigate
 ///
 /// @return The trajectory summary info
 template <typename traj_t>
-TrajectoryState trajectoryState(const traj_t& multiTraj,
-                                std::size_t entryIndex) {
+TrajectoryState trajectoryState(const traj_t& multiTraj, std::size_t tipIndex) {
   TrajectoryState trajState;
-  multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
+  multiTraj.visitBackwards(tipIndex, [&](const auto& state) {
     // Get the volume Id of this surface
     const auto& geoID = state.referenceSurface().geometryId();
     const auto& volume = geoID.volume();
     const auto& layer = geoID.layer();
     trajState.nStates++;
     auto typeFlags = state.typeFlags();
-    if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+      trajState.nHoles++;
+    } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
+      trajState.nOutliers++;
+      trajState.outlierChi2.push_back(state.chi2());
+      trajState.outlierVolume.push_back(volume);
+      trajState.outlierLayer.push_back(layer);
+    } else if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
       if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
         trajState.nSharedHits++;
       }
@@ -68,13 +76,6 @@ TrajectoryState trajectoryState(const traj_t& multiTraj,
       trajState.measurementLayer.push_back(layer);
       trajState.chi2Sum += state.chi2();
       trajState.NDF += state.calibratedSize();
-    } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
-      trajState.nOutliers++;
-      trajState.outlierChi2.push_back(state.chi2());
-      trajState.outlierVolume.push_back(volume);
-      trajState.outlierLayer.push_back(layer);
-    } else if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-      trajState.nHoles++;
     }
   });
   return trajState;
@@ -85,7 +86,7 @@ TrajectoryState trajectoryState(const traj_t& multiTraj,
 /// @tparam source_link_t Type of source link
 ///
 /// @param multiTraj The MultiTrajectory object
-/// @param entryIndex The entry index of trajectory to investigate
+/// @param tipIndex The entry index of trajectory to investigate
 /// track states at different sub-detectors.
 /// @param volumeIds The container for sub-detector Ids
 ///
@@ -93,17 +94,16 @@ TrajectoryState trajectoryState(const traj_t& multiTraj,
 /// different volumes)
 template <typename traj_t>
 VolumeTrajectoryStateContainer trajectoryState(
-    const traj_t& multiTraj, std::size_t entryIndex,
+    const traj_t& multiTraj, std::size_t tipIndex,
     const std::vector<GeometryIdentifier::Value>& volumeIds) {
   VolumeTrajectoryStateContainer trajStateContainer;
-  multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
+  multiTraj.visitBackwards(tipIndex, [&](const auto& state) {
     // Get the volume Id of this surface
     const auto& geoID = state.referenceSurface().geometryId();
     const auto& volume = geoID.volume();
     const auto& layer = geoID.layer();
     // Check if the track info for this sub-detector is requested
-    auto it = std::find(volumeIds.begin(), volumeIds.end(), volume);
-    if (it == volumeIds.end()) {
+    if (!rangeContainsValue(volumeIds, volume)) {
       return true;
     }
     // The trajectory state for this volume
@@ -111,7 +111,14 @@ VolumeTrajectoryStateContainer trajectoryState(
     trajState.nStates++;
     trajState.NDF += state.calibratedSize();
     auto typeFlags = state.typeFlags();
-    if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+      trajState.nHoles++;
+    } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
+      trajState.nOutliers++;
+      trajState.outlierChi2.push_back(state.chi2());
+      trajState.outlierVolume.push_back(volume);
+      trajState.outlierLayer.push_back(layer);
+    } else if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
       if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
         trajState.nSharedHits++;
       }
@@ -120,13 +127,6 @@ VolumeTrajectoryStateContainer trajectoryState(
       trajState.measurementVolume.push_back(volume);
       trajState.measurementLayer.push_back(layer);
       trajState.chi2Sum += state.chi2();
-    } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
-      trajState.nOutliers++;
-      trajState.outlierChi2.push_back(state.chi2());
-      trajState.outlierVolume.push_back(volume);
-      trajState.outlierLayer.push_back(layer);
-    } else if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-      trajState.nHoles++;
     }
     return true;
   });

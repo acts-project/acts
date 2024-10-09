@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -43,11 +43,11 @@ using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 
 namespace ActsExamples {
 
-enum class JsonFormat : uint8_t {
+enum class JsonFormat : std::uint8_t {
   NoOutput = 0,
   Json = 1,
   Cbor = 2,
-  All = std::numeric_limits<uint8_t>::max()
+  All = std::numeric_limits<std::uint8_t>::max()
 };
 
 ACTS_DEFINE_ENUM_BITWISE_OPERATORS(JsonFormat)

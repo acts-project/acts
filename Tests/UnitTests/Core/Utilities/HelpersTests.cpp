@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -30,8 +30,7 @@
 
 using namespace Acts::VectorHelpers;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Utilities)
 
@@ -194,20 +193,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
   }
 }
 
-BOOST_AUTO_TEST_CASE(min_max) {
-  std::vector<ActsScalar> ordered = {-3., -2., -1., 0., 1., 2., 3.};
-  auto [min0, max0] = Acts::min_max(ordered);
-
-  CHECK_CLOSE_ABS(min0, -3., std::numeric_limits<ActsScalar>::epsilon());
-  CHECK_CLOSE_ABS(max0, 3., std::numeric_limits<ActsScalar>::epsilon());
-
-  std::vector<ActsScalar> unordered = {3., -3., -2., -1., 0., 1., 2.};
-  auto [min1, max1] = Acts::min_max(unordered);
-
-  CHECK_CLOSE_ABS(min1, -3., std::numeric_limits<ActsScalar>::epsilon());
-  CHECK_CLOSE_ABS(max1, 3., std::numeric_limits<ActsScalar>::epsilon());
-}
-
 BOOST_AUTO_TEST_CASE(range_medium) {
   std::vector<ActsScalar> ordered = {-3., -2., -1., 0., 1., 2., 3.};
   auto [range0, medium0] = Acts::range_medium(ordered);
@@ -314,5 +299,4 @@ BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

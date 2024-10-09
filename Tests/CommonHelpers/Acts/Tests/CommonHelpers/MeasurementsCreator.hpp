@@ -1,21 +1,19 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -60,7 +58,7 @@ struct MeasurementsCreator {
   // how far away from the measurements the outliers should be
   double distanceOutlier = 10 * Acts::UnitConstants::mm;
 
-  /// @brief Operator that is callable by an ActionList. The function
+  /// @brief Operator that is callable by an ActorList. The function
   /// collects the surfaces
   ///
   /// @tparam propagator_state_t Type of the propagator state
@@ -71,9 +69,9 @@ struct MeasurementsCreator {
   /// @param [in] state State of the propagator
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, result_type& result,
-                  const Logger& logger) const {
+  void act(propagator_state_t& state, const stepper_t& stepper,
+           const navigator_t& navigator, result_type& result,
+           const Logger& logger) const {
     using namespace Acts::UnitLiterals;
 
     // only generate measurements on surfaces
@@ -156,12 +154,13 @@ Measurements createMeasurements(const propagator_t& propagator,
                                 const MeasurementResolutionMap& resolutions,
                                 std::default_random_engine& rng,
                                 std::size_t sourceId = 0u) {
-  using Actions = Acts::ActionList<MeasurementsCreator>;
-  using Aborters = Acts::AbortList<Acts::EndOfWorldReached>;
+  using ActorList =
+      Acts::ActorList<MeasurementsCreator, Acts::EndOfWorldReached>;
+  using PropagatorOptions = typename propagator_t::template Options<ActorList>;
 
   // Set options for propagator
-  Acts::PropagatorOptions<Actions, Aborters> options(geoCtx, magCtx);
-  auto& creator = options.actionList.get<MeasurementsCreator>();
+  PropagatorOptions options(geoCtx, magCtx);
+  auto& creator = options.actorList.template get<MeasurementsCreator>();
   creator.resolutions = resolutions;
   creator.rng = &rng;
   creator.sourceId = sourceId;

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -14,13 +14,14 @@
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <type_traits>
 
 using namespace Acts::UnitLiterals;
 
@@ -52,9 +53,8 @@ auto makeFieldMap(const SolenoidBField& field) {
   auto map =
       solenoidFieldMap({rMin, rMax}, {zMin, zMax}, {nBinsR, nBinsZ}, field);
   // I know this is the correct grid type
-  using Grid_t = Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
-                            Acts::detail::EquidistantAxis>;
-  const Grid_t& grid = map.getGrid();
+  const auto& grid = map.getGrid();
+  using Grid_t = std::decay_t<decltype(grid)>;
   using index_t = Grid_t::index_t;
   using point_t = Grid_t::point_t;
 

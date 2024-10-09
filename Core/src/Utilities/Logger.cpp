@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/Logger.hpp"
 
@@ -26,6 +26,7 @@ Level& getFailureThresholdMutable() {
     if (envvar == nullptr) {
       return level;
     }
+
     std::string slevel = envvar;
     if (slevel == "VERBOSE") {
       level = std::min(level, Level::VERBOSE);
@@ -59,6 +60,17 @@ void setFailureThreshold(Level level) {
   getFailureThresholdMutable() = level;
 }
 
+ScopedFailureThreshold::~ScopedFailureThreshold() noexcept {
+  try {
+    setFailureThreshold(m_previousLevel);
+  } catch (const std::bad_alloc&) {
+    // bad alloc can be thrown when initializing the global static variable
+    std::cerr << "Failed to reset log failure threshold (bad_alloc)"
+              << std::endl;
+    std::terminate();
+  }
+}
+
 #else
 
 void setFailureThreshold(Level /*lvl*/) {
@@ -69,6 +81,8 @@ void setFailureThreshold(Level /*lvl*/) {
       "https://acts.readthedocs.io/en/latest/core/misc/"
       "logging.html#logging-thresholds"};
 }
+
+ScopedFailureThreshold::~ScopedFailureThreshold() noexcept = default;
 
 #endif
 

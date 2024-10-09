@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -18,9 +18,9 @@
 #include <boost/mpl/list.hpp>
 
 // 32bit split into a three level hierarchy.
-using Index32 = Acts::MultiIndex<uint32_t, 16, 8, 8>;
+using Index32 = Acts::MultiIndex<std::uint32_t, 16, 8, 8>;
 // 64bit split into a four level hierarchy
-using Index64 = Acts::MultiIndex<uint64_t, 13, 17, 21, 13>;
+using Index64 = Acts::MultiIndex<std::uint64_t, 13, 17, 21, 13>;
 using Indices = boost::mpl::list<Index32, Index64>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(triviality, T, Indices) {
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(index32_as_key) {
   set.emplace(Index32::Encode(2u));
 
   BOOST_CHECK(!set.count(Index32(0u)));
-  BOOST_CHECK(!set.count(Index32(UINT32_MAX)));
+  BOOST_CHECK(!set.count(Index32(std::numeric_limits<std::uint32_t>::max())));
   BOOST_CHECK_EQUAL(set.size(), 3);
   // automatically converts encoded value to MultiIndex
   BOOST_CHECK(set.count(0x00010204u));
@@ -230,6 +230,6 @@ BOOST_AUTO_TEST_CASE(index64_as_key) {
   set.emplace(Index64::Encode(2u, 1u));
 
   BOOST_CHECK(!set.count(Index64(0u)));
-  BOOST_CHECK(!set.count(Index64(UINT64_MAX)));
+  BOOST_CHECK(!set.count(Index64(std::numeric_limits<std::uint64_t>::max())));
   BOOST_CHECK_EQUAL(set.size(), 3);
 }

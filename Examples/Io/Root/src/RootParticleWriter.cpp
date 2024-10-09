@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 
@@ -115,7 +115,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
   for (const auto& particle : particles) {
     m_particleId.push_back(particle.particleId().value());
     m_particleType.push_back(particle.pdg());
-    m_process.push_back(static_cast<uint32_t>(particle.process()));
+    m_process.push_back(static_cast<std::uint32_t>(particle.process()));
     // position
     m_vx.push_back(Acts::clampValue<float>(particle.fourPosition().x() /
                                            Acts::UnitConstants::mm));

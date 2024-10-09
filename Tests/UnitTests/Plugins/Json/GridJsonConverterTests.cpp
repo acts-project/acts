@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -361,12 +361,12 @@ void checkGlobalSubspaceTuple(const SubspactTuple& sstuple) {
 
 BOOST_AUTO_TEST_CASE(GlobalSubSpaceTests1D) {
   // One dimensional sub spaces
-  const std::tuple<Acts::GridAccess::GlobalSubspace<Acts::binX>,
-                   Acts::GridAccess::GlobalSubspace<Acts::binY>,
-                   Acts::GridAccess::GlobalSubspace<Acts::binZ>,
-                   Acts::GridAccess::GlobalSubspace<Acts::binR>,
-                   Acts::GridAccess::GlobalSubspace<Acts::binPhi>,
-                   Acts::GridAccess::GlobalSubspace<Acts::binEta>>
+  const std::tuple<Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binX>,
+                   Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binY>,
+                   Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binZ>,
+                   Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binR>,
+                   Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binPhi>,
+                   Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binEta>>
       sspace1D;
 
   // Check the tuple for 1D
@@ -375,16 +375,26 @@ BOOST_AUTO_TEST_CASE(GlobalSubSpaceTests1D) {
 
 BOOST_AUTO_TEST_CASE(GlobalSubSpaceTests2D) {
   // Two dimensional sub spaces
-  const std::tuple<Acts::GridAccess::GlobalSubspace<Acts::binX, Acts::binY>,
-                   Acts::GridAccess::GlobalSubspace<Acts::binY, Acts::binX>,
-                   Acts::GridAccess::GlobalSubspace<Acts::binX, Acts::binZ>,
-                   Acts::GridAccess::GlobalSubspace<Acts::binZ, Acts::binX>,
-                   Acts::GridAccess::GlobalSubspace<Acts::binY, Acts::binZ>,
-                   Acts::GridAccess::GlobalSubspace<Acts::binZ, Acts::binY>,
-                   Acts::GridAccess::GlobalSubspace<Acts::binR, Acts::binPhi>,
-                   Acts::GridAccess::GlobalSubspace<Acts::binPhi, Acts::binR>,
-                   Acts::GridAccess::GlobalSubspace<Acts::binZ, Acts::binPhi>,
-                   Acts::GridAccess::GlobalSubspace<Acts::binPhi, Acts::binZ>>
+  const std::tuple<Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binX,
+                                                    Acts::BinningValue::binY>,
+                   Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binY,
+                                                    Acts::BinningValue::binX>,
+                   Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binX,
+                                                    Acts::BinningValue::binZ>,
+                   Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binZ,
+                                                    Acts::BinningValue::binX>,
+                   Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binY,
+                                                    Acts::BinningValue::binZ>,
+                   Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binZ,
+                                                    Acts::BinningValue::binY>,
+                   Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binR,
+                                                    Acts::BinningValue::binPhi>,
+                   Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binPhi,
+                                                    Acts::BinningValue::binR>,
+                   Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binZ,
+                                                    Acts::BinningValue::binPhi>,
+                   Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binPhi,
+                                                    Acts::BinningValue::binZ>>
       sspace2D = {};
 
   // Check the tuple for 2D

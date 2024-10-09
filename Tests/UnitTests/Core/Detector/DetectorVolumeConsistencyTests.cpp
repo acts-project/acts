@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -33,8 +33,8 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeConsistencyFail) {
   // Move it into the bval direction
   auto transformB = Acts::Transform3::Identity();
   Acts::Vector3 translationB = Acts::Vector3::Zero();
-  translationB[Acts::binX] = 20;
-  translationB[Acts::binY] = 5;
+  translationB[toUnderlying(Acts::BinningValue::binX)] = 20;
+  translationB[toUnderlying(Acts::BinningValue::binY)] = 5;
   transformB.pretranslate(translationB);
   // Create volume B
   auto volumeB = Acts::Experimental::DetectorVolumeFactory::construct(
@@ -44,10 +44,10 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeConsistencyFail) {
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
       volumeA, volumeB};
 
-  BOOST_CHECK_THROW(
-      Acts::Experimental::detail::DetectorVolumeConsistency::
-          checkCenterAlignment(tContext, {volumeA, volumeB}, Acts::binX),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(Acts::Experimental::detail::DetectorVolumeConsistency::
+                        checkCenterAlignment(tContext, {volumeA, volumeB},
+                                             Acts::BinningValue::binX),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(DetectorVolumeConsistencyPass) {
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeConsistencyPass) {
   // Move it into the bval direction
   auto transformB = Acts::Transform3::Identity();
   Acts::Vector3 translationB = Acts::Vector3::Zero();
-  translationB[Acts::binX] = 20;
+  translationB[toUnderlying(Acts::BinningValue::binX)] = 20;
   transformB.pretranslate(translationB);
   // Create volume B
   auto volumeB = Acts::Experimental::DetectorVolumeFactory::construct(
@@ -72,9 +72,9 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeConsistencyPass) {
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
       volumeA, volumeB};
 
-  BOOST_CHECK_NO_THROW(
-      Acts::Experimental::detail::DetectorVolumeConsistency::
-          checkCenterAlignment(tContext, {volumeA, volumeB}, Acts::binX));
+  BOOST_CHECK_NO_THROW(Acts::Experimental::detail::DetectorVolumeConsistency::
+                           checkCenterAlignment(tContext, {volumeA, volumeB},
+                                                Acts::BinningValue::binX));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

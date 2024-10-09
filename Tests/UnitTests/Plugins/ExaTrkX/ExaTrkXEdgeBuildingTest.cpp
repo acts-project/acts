@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -12,6 +12,7 @@
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 
@@ -83,8 +84,8 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
     edges_test_cantor.push_back(a < b ? CantorPair(a, b) : CantorPair(b, a));
   }
 
-  std::sort(edges_ref_cantor.begin(), edges_ref_cantor.end());
-  std::sort(edges_test_cantor.begin(), edges_test_cantor.end());
+  std::ranges::sort(edges_ref_cantor, std::less<CantorPair>{});
+  std::ranges::sort(edges_test_cantor, std::less<CantorPair>{});
 
 #if PRINT
   std::cout << "test size " << edges_test_cantor.size() << std::endl;
@@ -158,7 +159,7 @@ BOOST_AUTO_TEST_CASE(test_random_graph_edge_building_kdtree) {
 
 BOOST_AUTO_TEST_CASE(test_self_loop_removal) {
   // clang-format off
-  std::vector<int64_t> edges = {
+  std::vector<std::int64_t> edges = {
     1,1,
     2,3,
     2,2,
@@ -177,12 +178,12 @@ BOOST_AUTO_TEST_CASE(test_self_loop_removal) {
           .transpose(1, 0)
           .flatten();
 
-  const std::vector<int64_t> postEdges(
-      withoutSelfLoops.data_ptr<int64_t>(),
-      withoutSelfLoops.data_ptr<int64_t>() + withoutSelfLoops.numel());
+  const std::vector<std::int64_t> postEdges(
+      withoutSelfLoops.data_ptr<std::int64_t>(),
+      withoutSelfLoops.data_ptr<std::int64_t>() + withoutSelfLoops.numel());
 
   // clang-format off
-  const std::vector<int64_t> ref = {
+  const std::vector<std::int64_t> ref = {
     2,3,
     5,4,
   };
@@ -193,7 +194,7 @@ BOOST_AUTO_TEST_CASE(test_self_loop_removal) {
 
 BOOST_AUTO_TEST_CASE(test_duplicate_removal) {
   // clang-format off
-  std::vector<int64_t> edges = {
+  std::vector<std::int64_t> edges = {
     1,2,
     2,1,   // duplicate, flipped
     3,2,
@@ -213,12 +214,12 @@ BOOST_AUTO_TEST_CASE(test_duplicate_removal) {
           .transpose(1, 0)
           .flatten();
 
-  const std::vector<int64_t> postEdges(
-      withoutDups.data_ptr<int64_t>(),
-      withoutDups.data_ptr<int64_t>() + withoutDups.numel());
+  const std::vector<std::int64_t> postEdges(
+      withoutDups.data_ptr<std::int64_t>(),
+      withoutDups.data_ptr<std::int64_t>() + withoutDups.numel());
 
   // clang-format off
-  const std::vector<int64_t> ref = {
+  const std::vector<std::int64_t> ref = {
     1,2,
     2,3,
     6,7,
@@ -232,7 +233,7 @@ BOOST_AUTO_TEST_CASE(test_random_flip) {
   torch::manual_seed(seed);
 
   // clang-format off
-  std::vector<int64_t> edges = {
+  std::vector<std::int64_t> edges = {
     1,2,
     2,3,
     3,4,
@@ -251,9 +252,9 @@ BOOST_AUTO_TEST_CASE(test_random_flip) {
           .transpose(0, 1)
           .flatten();
 
-  const std::vector<int64_t> postEdges(
-      flipped.data_ptr<int64_t>(),
-      flipped.data_ptr<int64_t>() + flipped.numel());
+  const std::vector<std::int64_t> postEdges(
+      flipped.data_ptr<std::int64_t>(),
+      flipped.data_ptr<std::int64_t>() + flipped.numel());
 
   BOOST_CHECK_EQUAL(postEdges.size(), edges.size());
   for (auto preIt = edges.begin(); preIt != edges.end(); preIt += 2) {

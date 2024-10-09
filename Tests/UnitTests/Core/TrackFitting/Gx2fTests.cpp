@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -14,12 +14,10 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
-#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -31,6 +29,9 @@
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitter.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Visualization/EventDataView3D.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include <vector>
 
@@ -43,6 +44,37 @@ Acts::Logging::Level logLevel = Acts::Logging::VERBOSE;
 const auto gx2fLogger = Acts::getDefaultLogger("Gx2f", logLevel);
 
 namespace Acts::Test {
+
+/// @brief Helper function to visualise measurements in a 3D environment.
+///
+/// This function iterates through the provided measurements and visualises each
+/// one using the specified 3D visualisation helper. The visualisation takes
+/// into account the surface transformations and localisation errors.
+///
+/// @param helper The 3D visualisation helper used to draw the measurements.
+/// @param measurements A collection of measurements to be visualised, containing source links with parameters and covariance information.
+/// @param geometry A shared pointer to the constant tracking geometry used to find surfaces associated with measurements.
+/// @param geoCtx The geometry context used for transformations and accessing geometry-related information.
+/// @param locErrorScale Scaling factor for localisation errors. Default value is 1.0.
+/// @param viewConfig Configuration settings for the visualisation view. Default value is s_viewMeasurement.
+static void drawMeasurements(
+    IVisualization3D& helper, const Measurements& measurements,
+    const std::shared_ptr<const TrackingGeometry>& geometry,
+    const Acts::GeometryContext& geoCtx, double locErrorScale = 1.,
+    const ViewConfig& viewConfig = s_viewMeasurement) {
+  std::cout << "\n*** Draw measurements ***\n" << std::endl;
+
+  for (auto& singleMeasurement : measurements.sourceLinks) {
+    auto cov = singleMeasurement.covariance;
+    auto lposition = singleMeasurement.parameters;
+
+    auto surf = geometry->findSurface(singleMeasurement.m_geometryId);
+    auto transf = surf->transform(geoCtx);
+
+    EventDataView3D::drawMeasurement(helper, lposition, cov, transf,
+                                     locErrorScale, viewConfig);
+  }
+}
 
 //// Construct initial track parameters.
 Acts::CurvilinearTrackParameters makeParameters(
@@ -78,6 +110,7 @@ static std::vector<Acts::SourceLink> prepareSourceLinks(
 ///
 /// @param geoCtx
 /// @param nSurfaces Number of surfaces
+/// @param surfaceIndexWithMaterial A set of index of the material surfaces
 std::shared_ptr<const TrackingGeometry> makeToyDetector(
     const Acts::GeometryContext& geoCtx, const std::size_t nSurfaces = 5,
     const std::set<std::size_t>& surfaceIndexWithMaterial = {}) {
@@ -88,7 +121,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
   // Define the dimensions of the square surfaces
   const double halfSizeSurface = 1_m;
 
-  // Rotation of the surfaces
+  // Rotation of the surfaces around the y-axis
   const double rotationAngle = M_PI * 0.5;
   const Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
   const Vector3 yPos(0., 1., 0.);
@@ -114,7 +147,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
         RectangleBounds(halfSizeSurface, halfSizeSurface));
 
     // Add material only for selected surfaces
-    if (surfaceIndexWithMaterial.count(surfPos) != 0) {
+    if (surfaceIndexWithMaterial.contains(surfPos)) {
       // Material of the surfaces
       MaterialSlab matProp(makeSilicon(), 5_mm);
       cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
@@ -150,7 +183,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
                          2 * halfSizeSurface};
   volumeConfig.position = {volumeConfig.length.x() / 2, 0., 0.};
   volumeConfig.layerCfg = layerConfig;
-  volumeConfig.name = "Test volume";
+  volumeConfig.name = "TestVolume";
 
   // Outer volume - Build TrackingGeometry configuration
   CuboidVolumeBuilder::Config config;
@@ -239,8 +272,9 @@ BOOST_AUTO_TEST_CASE(NoFit) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 0, true, 0);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 0, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -272,7 +306,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
       0);
 
@@ -326,8 +360,9 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 5, true, 0);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 5, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -368,9 +403,9 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
-      5);
+      4);
 
   ACTS_INFO("*** Test: Fit5Iterations -- Finish");
 }
@@ -431,8 +466,9 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 5, true, 0);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 5, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -472,9 +508,9 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
-      5);
+      4);
 
   ACTS_INFO("*** Test: MixedDetector -- Finish");
 }
@@ -526,8 +562,9 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 5, false, 0);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 5, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -568,9 +605,9 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
-      5);
+      4);
 
   ACTS_INFO("*** Test: FitWithBfield -- Finish");
 }
@@ -623,8 +660,9 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 500, true, 1e-5);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 500, 1e-5);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -664,7 +702,7 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   // Convergence
   BOOST_CHECK_LT(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
       10);
 
@@ -723,8 +761,9 @@ BOOST_AUTO_TEST_CASE(DidNotConverge) {
   // Since we didn't break due to convergence, we reach nUpdatesMax and
   // therefore fail the fit.
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 6, true, 0);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 6, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -791,8 +830,9 @@ BOOST_AUTO_TEST_CASE(NotEnoughMeasurements) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 6, true, 0);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 6, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -846,7 +886,7 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
   sourceLinks.pop_back();
   ACTS_VERBOSE("sourceLinks.size() [after pop] = " << sourceLinks.size());
 
-  // We remove the second to last measurement in the list. This effectivly
+  // We remove the second to last measurement in the list. This effectively
   // creates a hole on that surface.
   const std::size_t indexHole = sourceLinks.size() - 2;
   ACTS_VERBOSE("Remove measurement " << indexHole);
@@ -879,8 +919,9 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 20, true, 1e-5);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 20, 1e-5);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -984,8 +1025,9 @@ BOOST_AUTO_TEST_CASE(Material) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 5, true, 0);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, true, false,
+      FreeToBoundCorrection(false), 5, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -995,6 +1037,51 @@ BOOST_AUTO_TEST_CASE(Material) {
   ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                               startParametersFit, gx2fOptions, tracks);
+
+  // Helper to visualise the detector
+  {
+    std::cout << "\n*** Create .obj of Detector ***\n" << std::endl;
+    // Only need for obj
+    ObjVisualization3D obj;
+
+    bool triangulate = true;
+    ViewConfig viewSensitive = {.color = {0, 180, 240}};
+    viewSensitive.triangulate = triangulate;
+    ViewConfig viewPassive = {.color = {240, 280, 0}};
+    viewPassive.triangulate = triangulate;
+    ViewConfig viewVolume = {.color = {220, 220, 0}};
+    viewVolume.triangulate = triangulate;
+    ViewConfig viewContainer = {.color = {220, 220, 0}};
+    viewContainer.triangulate = triangulate;
+    ViewConfig viewGrid = {.color = {220, 0, 0}};
+    viewGrid.quarterSegments = 8;
+    viewGrid.offset = 3.;
+    viewGrid.triangulate = triangulate;
+
+    std::string tag = "gx2f_toydet";
+
+    const Acts::TrackingVolume& tgVolume =
+        *(detector.geometry->highestTrackingVolume());
+
+    GeometryView3D::drawTrackingVolume(obj, tgVolume, geoCtx, viewContainer,
+                                       viewVolume, viewPassive, viewSensitive,
+                                       viewGrid, true, tag);
+  }
+  // Helper to visualise the measurements
+  {
+    std::cout << "\n*** Create .obj of measurements ***\n" << std::endl;
+    ObjVisualization3D obj;
+
+    double localErrorScale = 10000000.;
+    ViewConfig mcolor{.color = {255, 145, 48}};
+    mcolor.offset = 2;
+    //  mcolor.visible = true;
+
+    drawMeasurements(obj, measurements, detector.geometry, geoCtx,
+                     localErrorScale, mcolor);
+
+    obj.write("meas");
+  }
 
   BOOST_REQUIRE(res.ok());
 
@@ -1015,10 +1102,10 @@ BOOST_AUTO_TEST_CASE(Material) {
   // Parameters
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
-  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
-  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
-  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -1027,9 +1114,9 @@ BOOST_AUTO_TEST_CASE(Material) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
-      5);
+      4);
 
   ACTS_INFO("*** Test: Material -- Finish");
 }

@@ -1,13 +1,12 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -19,8 +18,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -42,12 +40,9 @@
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
+using namespace Acts::detail;
 
-namespace Acts {
-
-using namespace detail;
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -107,7 +102,7 @@ struct Options {
   int debugPfxWidth = 30;
 
   /// Contains: target aborters
-  AbortList<PathLimitReached> abortList;
+  ActorList<PathLimitReached> abortList;
 
   const Acts::Logger& logger = Acts::getDummyLogger();
 };
@@ -202,7 +197,7 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta, q / p,
                                    std::nullopt, ParticleHypothesis::pion());
 
-  using PropagatorOptions = PropagatorOptions<ActionList<>, AbortList<>>;
+  using PropagatorOptions = EigenPropagator::Options<ActorList<>>;
   PropagatorOptions options(tgContext, mfContext);
   options.maxSteps = 1e6;
   const auto& result = epropagator.propagate(start, options).value();
@@ -213,5 +208,4 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_REL(pz, result.endParameters->momentum().z(), 1e-2);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

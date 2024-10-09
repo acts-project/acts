@@ -1,15 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
 
 #include "Acts/Utilities/Zip.hpp"
 
+#include <algorithm>
 #include <map>
 
 #include <boost/beast/core/span.hpp>
@@ -46,8 +47,8 @@ auto weaklyConnectedComponents(vertex_t numNodes,
 namespace Acts {
 
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
-    std::any nodes, std::any edges, std::any weights,
-    std::vector<int>& spacepointIDs, int) {
+    std::any /*nodes*/, std::any edges, std::any weights,
+    std::vector<int>& spacepointIDs, torch::Device) {
   ACTS_DEBUG("Start track building");
   const auto edgeTensor = std::any_cast<torch::Tensor>(edges).to(torch::kCPU);
   const auto edgeWeightTensor =
@@ -64,7 +65,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     return {};
   }
 
-  using vertex_t = int64_t;
+  using vertex_t = std::int64_t;
   using weight_t = float;
 
   boost::beast::span<vertex_t> rowIndices(edgeTensor.data_ptr<vertex_t>(),
@@ -82,7 +83,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
   ACTS_VERBOSE("Number of track labels: " << trackLabels.size());
   ACTS_VERBOSE("Number of unique track labels: " << [&]() {
     std::vector<vertex_t> sorted(trackLabels);
-    std::sort(sorted.begin(), sorted.end());
+    std::ranges::sort(sorted);
     sorted.erase(std::unique(sorted.begin(), sorted.end()), sorted.end());
     return sorted.size();
   }());

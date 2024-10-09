@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 
@@ -93,11 +93,11 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
   lCfg.surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>();
   LayerCreator layerCreator(lCfg);
   ProtoLayer pl{gctx, cfg.surfaces};
-  pl.envelope[binX] = cfg.envelopeX;
-  pl.envelope[binY] = cfg.envelopeY;
-  pl.envelope[binZ] = cfg.envelopeZ;
+  pl.envelope[BinningValue::binX] = cfg.envelopeX;
+  pl.envelope[BinningValue::binY] = cfg.envelopeY;
+  pl.envelope[BinningValue::binZ] = cfg.envelopeZ;
   return layerCreator.planeLayer(gctx, cfg.surfaces, cfg.binsY, cfg.binsZ,
-                                 BinningValue::binX, pl, trafo);
+                                 cfg.binningDimension, pl, trafo);
 }
 
 std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
@@ -121,10 +121,10 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
   for (const auto& layercfg : cfg.layerCfg) {
     // recreating the protolayer for each layer => slow, but only few sensors
     ProtoLayer pl{gctx, layercfg.surfaces};
-    pl.envelope[binX] = layercfg.envelopeX;
+    pl.envelope[cfg.binningDimension] = layercfg.envelopeX;
 
-    double surfacePosMin = pl.min(binX);
-    double surfacePosMax = pl.max(binX);
+    double surfacePosMin = pl.min(cfg.binningDimension);
+    double surfacePosMax = pl.max(cfg.binningDimension);
 
     // Test if new extreme is found and set it
     if (surfacePosMin < minMax.first) {
@@ -136,8 +136,10 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
   }
 
   // Use the volume boundaries as limits for the binning
-  minMax.first = std::min(minMax.first, minVolumeBoundaries(binX));
-  minMax.second = std::max(minMax.second, maxVolumeBoundaries(binX));
+  minMax.first = std::min(
+      minMax.first, minVolumeBoundaries(toUnderlying(cfg.binningDimension)));
+  minMax.second = std::max(
+      minMax.second, maxVolumeBoundaries(toUnderlying(cfg.binningDimension)));
 
   return minMax;
 }
@@ -174,7 +176,7 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
       lacCnf, getDefaultLogger("LayerArrayCreator", Logging::INFO));
   std::unique_ptr<const LayerArray> layArr(
       layArrCreator.layerArray(gctx, layVec, minMax.first, minMax.second,
-                               BinningType::arbitrary, BinningValue::binX));
+                               BinningType::arbitrary, cfg.binningDimension));
 
   // Build confined volumes
   if (cfg.trackingVolumes.empty()) {
@@ -210,10 +212,7 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
 
   // Sort the volumes vectors according to the center location, otherwise the
   // binning boundaries will fail
-  std::sort(volumes.begin(), volumes.end(),
-            [](const TrackingVolumePtr& lhs, const TrackingVolumePtr& rhs) {
-              return lhs->center().x() < rhs->center().x();
-            });
+  std::ranges::sort(volumes, {}, [](const auto& v) { return v->center().x(); });
 
   // Glue volumes
   for (unsigned int i = 0; i < volumes.size() - 1; i++) {

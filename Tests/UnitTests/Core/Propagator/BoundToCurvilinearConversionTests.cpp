@@ -1,12 +1,11 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_log_formatter.hpp>
 
@@ -92,7 +91,7 @@ FreeToPathMatrix computeFreeToPathDerivatives(
   return path_length_deriv;
 }
 template <typename T, std::size_t Rows, std::size_t Cols>
-inline constexpr Eigen::Matrix<T, Rows, Cols> makeMatrix(
+constexpr Eigen::Matrix<T, Rows, Cols> makeMatrix(
     std::initializer_list<double> elements) {
   // static_assert( elements.size() == Rows*Cols )
   if (!(elements.size() == Rows * Cols)) {
@@ -111,7 +110,7 @@ inline constexpr Eigen::Matrix<T, Rows, Cols> makeMatrix(
   return matrix;
 }
 template <typename T, std::size_t Rows>
-inline constexpr Eigen::Matrix<T, Rows, 1> makeVector(
+constexpr Eigen::Matrix<T, Rows, 1> makeVector(
     std::initializer_list<double> elements) {
   return makeMatrix<T, Rows, 1>(elements);
 }
@@ -233,29 +232,32 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
 
       MSG_DEBUG("curvilinear covariance alt.:" << std::endl << curvi_cov_alt);
 
+      auto stepper = stepper_creator(bField);
+      MSG_DEBUG("Stepper type " << typeid(stepper).name());
+
+      using Stepper = decltype(stepper);
+      using Propagator = Acts::Propagator<Stepper>;
+      using PropagatorOptions = typename Propagator::template Options<>;
+
       // configure propagator for tiny step size
-      Acts::PropagatorOptions<> null_propagation_options(geoCtx,
-                                                         magFieldContext);
+      PropagatorOptions null_propagation_options(geoCtx, magFieldContext);
 
       null_propagation_options.pathLimit =
           i == 0 ? 0 : 1e-12 * 1_m * std::pow(10, i - 1);
       if (null_propagation_options.pathLimit > 0 && i > 1) {
-        null_propagation_options.stepTolerance =
+        null_propagation_options.stepping.stepTolerance =
             null_propagation_options.pathLimit * .99;
         null_propagation_options.surfaceTolerance =
             null_propagation_options.pathLimit * .99;
       }
-      auto stepper = stepper_creator(bField);
-      MSG_DEBUG("Stepper type " << typeid(stepper).name());
 
       auto log_level = (isDebugOutputEnabled() ? Acts::Logging::VERBOSE
                                                : Acts::Logging::INFO);
 
       // Use propagator with small step size to compute parameters in
       // curvilinear parameterisation
-      Propagator<decltype(stepper)> propagator(
-          std::move(stepper), Acts::VoidNavigator(),
-          Acts::getDefaultLogger("Propagator", log_level));
+      Propagator propagator(std::move(stepper), Acts::VoidNavigator(),
+                            Acts::getDefaultLogger("Propagator", log_level));
       auto result =
           propagator.propagate(params, null_propagation_options, true);
       {
@@ -265,7 +267,8 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
           MSG_DEBUG(i << " | "
                       << "limit: " << null_propagation_options.pathLimit
                       << " tolerance: "
-                      << null_propagation_options.stepTolerance << std::endl);
+                      << null_propagation_options.stepping.stepTolerance
+                      << std::endl);
 
           Acts::BoundSquareMatrix curvi_cov =
               curvilinear_parameters.value().covariance().value();

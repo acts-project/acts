@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 
@@ -112,7 +112,16 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     nInvalidMeasurementCount +=
         static_cast<std::size_t>(!validMeasurementCount);
 
-    return validCharge && validSecondary && validMeasurementCount &&
+    // Pdg selection
+    bool validPdg = true;
+    for (auto pdg : m_cfg.excludeAbsPdgs) {
+      if (p.absolutePdg() == std::abs(pdg)) {
+        validPdg = false;
+        break;
+      }
+    }
+
+    return validPdg && validCharge && validSecondary && validMeasurementCount &&
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
            within(eta, m_cfg.etaMin, m_cfg.etaMax) &&

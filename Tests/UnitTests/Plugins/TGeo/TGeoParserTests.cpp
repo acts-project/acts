@@ -1,12 +1,11 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -79,8 +78,8 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
     tgpOptions.volumeNames = {volumeName};
     tgpOptions.targetNames = {"PixelActiveo2", "PixelActiveo4", "PixelActiveo5",
                               "PixelActiveo6"};
-    tgpOptions.parseRanges.push_back({binR, {0., 40.}});
-    tgpOptions.parseRanges.push_back({binZ, {-60., 15.}});
+    tgpOptions.parseRanges.push_back({BinningValue::binR, {0., 40.}});
+    tgpOptions.parseRanges.push_back({BinningValue::binZ, {-60., 15.}});
     tgpOptions.unit = 10.;
 
     std::string axes = "XYZ";

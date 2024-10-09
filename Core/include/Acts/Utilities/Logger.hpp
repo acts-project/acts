@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 // STL include(s)
@@ -66,11 +66,14 @@
 
 // Debug level agnostic implementation of the ACTS_XYZ logging macros
 #define ACTS_LOG(level, x)                                                     \
-  if (logger().doPrint(level)) {                                               \
-    std::ostringstream os;                                                     \
-    os << x;                                                                   \
-    logger().log(level, os.str());                                             \
-  }
+  do {                                                                         \
+    if (logger().doPrint(level)) {                                             \
+      std::ostringstream os;                                                   \
+      os << x;                                                                 \
+      logger().log(level, os.str());                                           \
+    }                                                                          \
+  }                                                                            \
+  while(0)
 
 /// @brief macro for verbose debug output
 /// @ingroup Logging
@@ -233,6 +236,22 @@ void setFailureThreshold(Level level);
 /// Custom exception class so threshold failures can be caught
 class ThresholdFailure : public std::runtime_error {
   using std::runtime_error::runtime_error;
+};
+
+/// Helper class that changes the failure threshold for the duration of its
+/// lifetime.
+class ScopedFailureThreshold {
+ public:
+  explicit ScopedFailureThreshold(Level level) { setFailureThreshold(level); }
+  ScopedFailureThreshold(const ScopedFailureThreshold&) = delete;
+  ScopedFailureThreshold& operator=(const ScopedFailureThreshold&) = delete;
+  ScopedFailureThreshold(ScopedFailureThreshold&&) = delete;
+  ScopedFailureThreshold& operator=(ScopedFailureThreshold&&) = delete;
+
+  ~ScopedFailureThreshold() noexcept;
+
+ private:
+  Level m_previousLevel{getFailureThreshold()};
 };
 
 /// @brief abstract base class for printing debug output

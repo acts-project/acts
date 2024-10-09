@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -303,7 +303,7 @@ struct CylindricalTrackingGeometry {
 
       // create the layer and store it
       ProtoLayer protoLayer(geoContext, layerSurfaces);
-      protoLayer.envelope[binR] = {0.5, 0.5};
+      protoLayer.envelope[BinningValue::binR] = {0.5, 0.5};
       auto pLayer = layerCreator->cylinderLayer(
           geoContext, std::move(layerSurfacePtrs), pLayerBinning[ilp].first,
           pLayerBinning[ilp].second, protoLayer);
@@ -317,8 +317,8 @@ struct CylindricalTrackingGeometry {
     }  // loop over layers
 
     // layer array
-    auto pLayerArray = layerArrayCreator->layerArray(geoContext, pLayers, 25.,
-                                                     300., arbitrary, binR);
+    auto pLayerArray = layerArrayCreator->layerArray(
+        geoContext, pLayers, 25., 300., arbitrary, BinningValue::binR);
     auto pVolumeBounds =
         std::make_shared<CylinderVolumeBounds>(25., 300., 1100.);
     // create the Tracking volume

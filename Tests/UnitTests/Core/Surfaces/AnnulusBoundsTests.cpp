@@ -1,36 +1,32 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// clang-format off
 #include <boost/test/unit_test.hpp>
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
+
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+
 #include <algorithm>
 #include <array>
 #include <stdexcept>
 #include <vector>
-// clang-format on
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
+namespace Acts::Test {
 
-namespace Acts {
-
-namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
-double minRadius = 7.2;
-double maxRadius = 12.0;
-double minPhi = 0.74195;
-double maxPhi = 1.33970;
+ActsScalar minRadius = 7.2;
+ActsScalar maxRadius = 12.0;
+ActsScalar minPhi = 0.74195;
+ActsScalar maxPhi = 1.33970;
 
 Vector2 offset(-2., 2.);
 
@@ -101,11 +97,16 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
     return Vector2(r, phi);
   };
 
-  BOOST_CHECK(aBounds.inside(toStripFrame(inSurfaceXY), BoundaryCheck(true)));
-  BOOST_CHECK(!aBounds.inside(toStripFrame(outsideXY1), BoundaryCheck(true)));
-  BOOST_CHECK(!aBounds.inside(toStripFrame(outsideXY2), BoundaryCheck(true)));
-  BOOST_CHECK(!aBounds.inside(toStripFrame(outsideXY3), BoundaryCheck(true)));
-  BOOST_CHECK(!aBounds.inside(toStripFrame(outsideXY4), BoundaryCheck(true)));
+  BOOST_CHECK(
+      aBounds.inside(toStripFrame(inSurfaceXY), BoundaryTolerance::None()));
+  BOOST_CHECK(
+      !aBounds.inside(toStripFrame(outsideXY1), BoundaryTolerance::None()));
+  BOOST_CHECK(
+      !aBounds.inside(toStripFrame(outsideXY2), BoundaryTolerance::None()));
+  BOOST_CHECK(
+      !aBounds.inside(toStripFrame(outsideXY3), BoundaryTolerance::None()));
+  BOOST_CHECK(
+      !aBounds.inside(toStripFrame(outsideXY4), BoundaryTolerance::None()));
 
   // Check radial inside
   BOOST_CHECK(!aBounds.insideRadialBounds(0.5));
@@ -122,8 +123,25 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
   BOOST_CHECK_EQUAL(aBounds.get(AnnulusBounds::eMaxPhiRel), maxPhi);
 }
 
+/// Unit tests for AnnulusBounds vertices
+BOOST_AUTO_TEST_CASE(AnnulusBoundsVertices) {
+  /// Test construction with radii and default sector
+  AnnulusBounds aBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
+
+  // Retrieve the corners
+  auto corners = aBounds.corners();
+  BOOST_CHECK_EQUAL(corners.size(), 4);
+
+  // Retrieve the vertices
+  auto vertices = aBounds.vertices(0u);
+  BOOST_CHECK_EQUAL(vertices.size(), 4);
+
+  // Now generate with more segments
+  unsigned int nQuarterSegments = 12;
+  vertices = aBounds.vertices(nQuarterSegments);
+  BOOST_CHECK_EQUAL(vertices.size(), 14u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

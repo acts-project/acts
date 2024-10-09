@@ -1,21 +1,21 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <array>
 #include <cstddef>
@@ -28,7 +28,7 @@ namespace Acts {
 
 class MaterialSlab;
 
-using EAxis = Acts::detail::EquidistantAxis;
+using EAxis = Acts::Axis<AxisType::Equidistant>;
 using Grid2D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
 using Grid3D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
 using MaterialGrid2D =

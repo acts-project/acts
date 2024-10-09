@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -20,6 +20,7 @@
 #include <Acts/Surfaces/SurfaceBounds.hpp>
 #include <Acts/Surfaces/TrapezoidBounds.hpp>
 
+#include <algorithm>
 #include <fstream>
 #include <map>
 #include <mutex>
@@ -36,7 +37,7 @@ namespace Acts {
 /// the surface with `mapMaterial=true` will be added to a binning map.
 class MappingMaterialDecorator : public IMaterialDecorator {
  public:
-  using BinningMap = std::map<uint64_t, std::pair<int, int>>;
+  using BinningMap = std::map<std::uint64_t, std::pair<int, int>>;
 
   using VolumeMaterialMap =
       std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
@@ -93,20 +94,16 @@ class MappingMaterialDecorator : public IMaterialDecorator {
   ///
   /// @param volume to be looped onto
   void volumeLoop(const Acts::TrackingVolume* tVolume) {
-    auto sameId =
-        [tVolume](
-            const std::pair<Acts::GeometryIdentifier,
-                            std::shared_ptr<const IVolumeMaterial>>& pair) {
-          return (tVolume->geometryId() == pair.first);
-        };
-    if (std::find_if(m_volumeMaterialMap.begin(), m_volumeMaterialMap.end(),
-                     sameId) != m_volumeMaterialMap.end()) {
+    auto sameId = [tVolume](const auto& pair) {
+      return (tVolume->geometryId() == pair.first);
+    };
+    if (std::ranges::any_of(m_volumeMaterialMap, sameId)) {
       // this volume was already visited
       return;
     }
     if (tVolume->volumeMaterial() != nullptr) {
       m_volumeMaterialMap.insert(
-          {tVolume->geometryId(), tVolume->volumeMaterialSharedPtr()});
+          {tVolume->geometryId(), tVolume->volumeMaterialPtr()});
     }
     // there are confined volumes
     if (tVolume->confinedVolumes() != nullptr) {
@@ -204,10 +201,11 @@ class MappingMaterialDecorator : public IMaterialDecorator {
                     Acts::s_epsilon
                 ? Acts::closed
                 : Acts::open,
-            Acts::binPhi);
-        bUtility +=
-            Acts::BinUtility(binning.second, radialBounds->rMin(),
-                             radialBounds->rMax(), Acts::open, Acts::binR);
+            Acts::BinningValue::binPhi);
+        bUtility += Acts::BinUtility(binning.second,
+                                     static_cast<float>(radialBounds->rMin()),
+                                     static_cast<float>(radialBounds->rMax()),
+                                     Acts::open, Acts::BinningValue::binR);
       }
       if (cylinderBounds != nullptr) {
         bUtility += Acts::BinUtility(
@@ -220,43 +218,46 @@ class MappingMaterialDecorator : public IMaterialDecorator {
                     Acts::s_epsilon
                 ? Acts::closed
                 : Acts::open,
-            Acts::binPhi);
+            Acts::BinningValue::binPhi);
         bUtility += Acts::BinUtility(
             binning.second,
             -1 * cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ),
             cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ), Acts::open,
-            Acts::binZ);
+            Acts::BinningValue::binZ);
       }
       if (annulusBounds != nullptr) {
         bUtility += Acts::BinUtility(
             binning.first, annulusBounds->get(Acts::AnnulusBounds::eMinPhiRel),
             annulusBounds->get(Acts::AnnulusBounds::eMaxPhiRel), Acts::open,
-            Acts::binPhi);
-        bUtility +=
-            Acts::BinUtility(binning.second, annulusBounds->rMin(),
-                             annulusBounds->rMax(), Acts::open, Acts::binR);
+            Acts::BinningValue::binPhi);
+        bUtility += Acts::BinUtility(binning.second,
+                                     static_cast<float>(annulusBounds->rMin()),
+                                     static_cast<float>(annulusBounds->rMax()),
+                                     Acts::open, Acts::BinningValue::binR);
       }
       if (rectangleBounds != nullptr) {
         bUtility += Acts::BinUtility(
             binning.first, rectangleBounds->get(Acts::RectangleBounds::eMinX),
             rectangleBounds->get(Acts::RectangleBounds::eMaxX), Acts::open,
-            Acts::binX);
+            Acts::BinningValue::binX);
         bUtility += Acts::BinUtility(
             binning.second, rectangleBounds->get(Acts::RectangleBounds::eMinY),
             rectangleBounds->get(Acts::RectangleBounds::eMaxY), Acts::open,
-            Acts::binY);
+            Acts::BinningValue::binY);
       }
       if (trapezoidBounds != nullptr) {
         double halfLengthX = std::max(
             trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXnegY),
             trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXposY));
-        bUtility += Acts::BinUtility(binning.first, -1 * halfLengthX,
-                                     halfLengthX, Acts::open, Acts::binX);
+        bUtility += Acts::BinUtility(binning.first,
+                                     static_cast<float>(-1 * halfLengthX),
+                                     static_cast<float>(halfLengthX),
+                                     Acts::open, Acts::BinningValue::binX);
         bUtility += Acts::BinUtility(
             binning.second,
             -1 * trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY),
             trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY),
-            Acts::open, Acts::binY);
+            Acts::open, Acts::BinningValue::binY);
       }
     }
     return std::make_shared<Acts::ProtoSurfaceMaterial>(bUtility);

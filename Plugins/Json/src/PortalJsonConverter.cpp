@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Json/PortalJsonConverter.hpp"
 
@@ -40,7 +40,7 @@ namespace {
 int findVolume(
     const Acts::Experimental::DetectorVolume* volume,
     const std::vector<const Acts::Experimental::DetectorVolume*>& volumes) {
-  auto candidate = std::find(volumes.begin(), volumes.end(), volume);
+  auto candidate = std::ranges::find(volumes, volume);
   if (candidate != volumes.end()) {
     return std::distance(volumes.begin(), candidate);
   }
@@ -69,7 +69,9 @@ nlohmann::json Acts::PortalJsonConverter::toJson(
   return jPortal;
 }
 
-std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
+std::tuple<std::vector<nlohmann::json>,
+           std::vector<std::shared_ptr<Acts::Surface>>>
+Acts::PortalJsonConverter::toJsonDetray(
     const GeometryContext& gctx, const Experimental::Portal& portal,
     std::size_t ip, const Experimental::DetectorVolume& volume,
     const std::vector<OrientedSurface>& orientedSurfaces,
@@ -82,6 +84,8 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
 
   // First assumption for outside link (along direction)
   std::size_t outside = 1u;
+
+  std::vector<std::shared_ptr<Acts::Surface>> subSurfaces = {};
 
   // Find out if you need to take the outside or inside volume
   // for planar surfaces that's easy
@@ -152,12 +156,14 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
       // Pick the surface dimension - via poly
       std::array<ActsScalar, 2u> clipRange = {0., 0.};
       std::vector<ActsScalar> boundValues = surfaceAdjusted->bounds().values();
-      if (surfaceType == Surface::SurfaceType::Cylinder && cast == binZ) {
+      if (surfaceType == Surface::SurfaceType::Cylinder &&
+          cast == BinningValue::binZ) {
         ActsScalar zPosition = surfaceAdjusted->center(gctx).z();
         clipRange = {
             zPosition - boundValues[CylinderBounds::BoundValues::eHalfLengthZ],
             zPosition + boundValues[CylinderBounds::BoundValues::eHalfLengthZ]};
-      } else if (surfaceType == Surface::SurfaceType::Disc && cast == binR) {
+      } else if (surfaceType == Surface::SurfaceType::Disc &&
+                 cast == BinningValue::binR) {
         clipRange = {boundValues[RadialBounds::BoundValues::eMinR],
                      boundValues[RadialBounds::BoundValues::eMaxR]};
       } else {
@@ -210,6 +216,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
                     subBoundValues[CylinderBounds::BoundValues::eHalfLengthZ]));
             auto subSurface =
                 Surface::makeShared<CylinderSurface>(subTransform, subBounds);
+            subSurfaces.push_back(subSurface);
             auto jPortal = SurfaceJsonConverter::toJsonDetray(gctx, *subSurface,
                                                               surfaceOptions);
             DetrayJsonHelper::addVolumeLink(jPortal["mask"],
@@ -232,6 +239,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
             auto subBounds = std::make_shared<RadialBounds>(subBoundValues);
             auto subSurface = Surface::makeShared<DiscSurface>(
                 portal.surface().transform(gctx), subBounds);
+            subSurfaces.push_back(subSurface);
             auto jPortal = SurfaceJsonConverter::toJsonDetray(gctx, *subSurface,
                                                               surfaceOptions);
             DetrayJsonHelper::addVolumeLink(jPortal["mask"],
@@ -251,7 +259,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
       jPortals.push_back(jPortal);
     }
   }
-  return jPortals;
+  return {jPortals, subSurfaces};
 }
 
 nlohmann::json Acts::PortalJsonConverter::toJson(

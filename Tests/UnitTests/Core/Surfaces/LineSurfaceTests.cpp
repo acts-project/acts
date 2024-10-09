@@ -1,13 +1,11 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -20,7 +18,7 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -46,8 +44,9 @@
 
 namespace Acts {
 class AssertionFailureException;
+}  // namespace Acts
 
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -97,8 +96,8 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   Transform3 transform(translation);
   LineSurfaceStub line(transform, 2.0, 20.);
   Vector3 referencePosition{0., 1., 2.};
-  CHECK_CLOSE_ABS(referencePosition, line.binningPosition(tgContext, binX),
-                  1e-6);
+  CHECK_CLOSE_ABS(referencePosition,
+                  line.binningPosition(tgContext, BinningValue::binX), 1e-6);
   //
   // bounds()
   auto pLineBounds = std::make_shared<const LineBounds>(2., 10.0);
@@ -118,11 +117,11 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   // intersection
   {
     const Vector3 direction{0., 1., 2.};
-    BoundaryCheck bcheck(false);
     auto sfIntersection =
-        line.intersect(tgContext, {0., 0., 0.}, direction.normalized(), bcheck)
+        line.intersect(tgContext, {0., 0., 0.}, direction.normalized(),
+                       BoundaryTolerance::Infinite())
             .closest();
-    BOOST_CHECK(sfIntersection);
+    BOOST_CHECK(sfIntersection.isValid());
     Vector3 expectedIntersection(0, 1., 2.);
     CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersection,
                     1e-6);  // need more tests..
@@ -131,11 +130,12 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   //
   // isOnSurface
   const Vector3 insidePosition{0., 2.5, 0.};
-  BOOST_CHECK(line.isOnSurface(tgContext, insidePosition, mom,
-                               BoundaryCheck(false)));  // need better test here
+  BOOST_CHECK(line.isOnSurface(
+      tgContext, insidePosition, mom,
+      BoundaryTolerance::Infinite()));  // need better test here
   const Vector3 outsidePosition{100., 100., 200.};
-  BOOST_CHECK(
-      !line.isOnSurface(tgContext, outsidePosition, mom, BoundaryCheck(true)));
+  BOOST_CHECK(!line.isOnSurface(tgContext, outsidePosition, mom,
+                                BoundaryTolerance::None()));
   //
   // localToGlobal
   Vector3 returnedGlobalPosition{0., 0., 0.};
@@ -312,13 +312,16 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   BoundTrackParameters initialParams{surface, boundVector, std::nullopt,
                                      ParticleHypothesis::pion()};
 
-  Propagator<StraightLineStepper> propagator({});
+  using Propagator = Propagator<StraightLineStepper>;
+  using PropagatorOptions = Propagator::Options<>;
+
+  Propagator propagator({});
 
   CurvilinearTrackParameters displacedParameters{
       Vector4::Zero(), Vector3::Zero(), 1, std::nullopt,
       ParticleHypothesis::pion()};
   {
-    PropagatorOptions<> options(tgContext, {});
+    PropagatorOptions options(tgContext, {});
     options.direction = Acts::Direction::Backward;
     options.pathLimit = pathLimit;
 
@@ -339,9 +342,9 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   BoundTrackParameters endParameters{surface, BoundVector::Zero(), std::nullopt,
                                      ParticleHypothesis::pion()};
   {
-    PropagatorOptions<> options(tgContext, {});
+    PropagatorOptions options(tgContext, {});
     options.direction = Acts::Direction::Forward;
-    options.maxStepSize = 1_mm;
+    options.stepping.maxStepSize = 1_mm;
 
     auto result = propagator.propagate(displacedParameters, *surface, options);
     BOOST_CHECK(result.ok());
@@ -354,5 +357,5 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
 
@@ -89,7 +89,7 @@ ProcessCode RootVertexWriter::writeT(const AlgorithmContext& ctx,
   m_eventId = ctx.eventNumber;
   for (const auto& vertex : vertices) {
     m_vertexId.push_back(vertex.vertexId().value());
-    m_process.push_back(static_cast<uint32_t>(vertex.process));
+    m_process.push_back(static_cast<std::uint32_t>(vertex.process));
     // position
     m_vx.push_back(Acts::clampValue<float>(vertex.position4.x() /
                                            Acts::UnitConstants::mm));

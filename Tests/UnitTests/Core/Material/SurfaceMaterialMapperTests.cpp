@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -40,7 +40,7 @@ namespace Acts {
 std::shared_ptr<const TrackingGeometry> trackingGeometry() {
   using namespace Acts::UnitLiterals;
 
-  BinUtility zbinned(8, -40, 40, open, binZ);
+  BinUtility zbinned(8, -40, 40, open, BinningValue::binZ);
   auto matProxy = std::make_shared<const ProtoSurfaceMaterial>(zbinned);
 
   Logging::Level surfaceLLevel = Logging::INFO;
@@ -103,7 +103,9 @@ std::shared_ptr<const TrackingGeometry> trackingGeometry() {
 
 std::shared_ptr<const TrackingGeometry> tGeometry = trackingGeometry();
 
-namespace Test {
+}  // namespace Acts
+
+namespace Acts::Test {
 
 /// Test the filling and conversion
 BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
@@ -128,6 +130,4 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   BOOST_CHECK_EQUAL(mState.accumulatedMaterial.size(), 3u);
 }
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

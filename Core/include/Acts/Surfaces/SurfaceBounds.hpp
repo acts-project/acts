@@ -1,14 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 
 #include <ostream>
 
@@ -63,30 +63,26 @@ class SurfaceBounds {
   /// the bounds  Inside can be called without/with tolerances.
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param bcheck boundary check directive
+  /// @param boundaryTolerance boundary check directive
   /// @return boolean indicator for the success of this operation
   virtual bool inside(const Vector2& lposition,
-                      const BoundaryCheck& bcheck) const = 0;
+                      const BoundaryTolerance& boundaryTolerance) const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param os is the outstream in which the string dump is done
   virtual std::ostream& toStream(std::ostream& os) const = 0;
-};
 
-inline bool operator==(const SurfaceBounds& lhs, const SurfaceBounds& rhs) {
-  if (&lhs == &rhs) {
-    return true;
+  friend bool operator==(const SurfaceBounds& lhs, const SurfaceBounds& rhs) {
+    if (&lhs == &rhs) {
+      return true;
+    }
+    return (lhs.type() == rhs.type()) && (lhs.values() == rhs.values());
   }
-  return (lhs.type() == rhs.type()) && (lhs.values() == rhs.values());
-}
 
-inline bool operator!=(const SurfaceBounds& lhs, const SurfaceBounds& rhs) {
-  return !(lhs == rhs);
-}
-
-inline std::ostream& operator<<(std::ostream& os, const SurfaceBounds& sb) {
-  return sb.toStream(os);
-}
+  friend std::ostream& operator<<(std::ostream& os, const SurfaceBounds& sb) {
+    return sb.toStream(os);
+  }
+};
 
 }  // namespace Acts

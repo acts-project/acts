@@ -1,17 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
@@ -70,15 +70,15 @@ ProtoGrid convert(const grid_type& grid,
 
   // 1D case (more to be filled in later)
   if constexpr (grid_type::DIM == 1u) {
-    if (bValues[0u] == binPhi &&
-        axes[0]->getBoundaryType() == detail::AxisBoundaryType::Closed) {
+    if (bValues[0u] == BinningValue::binPhi &&
+        axes[0]->getBoundaryType() == AxisBoundaryType::Closed) {
       // swap     needed
       edges1 = axes[0]->getBinEdges();
       pGrid._type = actsvg::proto::grid::e_r_phi;
     }
     if (cOptions.optionalBound.has_value()) {
       auto [boundRange, boundValue] = cOptions.optionalBound.value();
-      if (boundValue == binR) {
+      if (boundValue == BinningValue::binR) {
         // good - no swap needed
         edges0 = {boundRange[0u], boundRange[1u]};
       }
@@ -89,21 +89,26 @@ ProtoGrid convert(const grid_type& grid,
     // Assign
     edges0 = axes[0]->getBinEdges();
     edges1 = axes[1]->getBinEdges();
-    if (bValues[0] == binPhi && bValues[1] == binZ) {
+    if (bValues[0] == BinningValue::binPhi &&
+        bValues[1] == BinningValue::binZ) {
       //  swap needed
       std::swap(edges0, edges1);
       pGrid._type = actsvg::proto::grid::e_z_phi;
-    } else if (bValues[0] == binPhi && bValues[1] == binR) {
+    } else if (bValues[0] == BinningValue::binPhi &&
+               bValues[1] == BinningValue::binR) {
       // swap needed
       std::swap(edges0, edges1);
       pGrid._type = actsvg::proto::grid::e_r_phi;
-    } else if (bValues[0] == binZ && bValues[1] == binPhi) {
+    } else if (bValues[0] == BinningValue::binZ &&
+               bValues[1] == BinningValue::binPhi) {
       // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_z_phi;
-    } else if (bValues[0] == binR && bValues[1] == binPhi) {
+    } else if (bValues[0] == BinningValue::binR &&
+               bValues[1] == BinningValue::binPhi) {
       // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_r_phi;
-    } else if (bValues[0] == binX && bValues[1] == binY) {
+    } else if (bValues[0] == BinningValue::binX &&
+               bValues[1] == BinningValue::binY) {
       // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_x_y;
     }

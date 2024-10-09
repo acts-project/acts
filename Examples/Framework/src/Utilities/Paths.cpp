@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Utilities/Paths.hpp"
 
@@ -77,7 +77,7 @@ std::pair<std::size_t, std::size_t> ActsExamples::determineEventFilesRange(
   }
 
   // invalid default range that allows simple restriction later on
-  std::size_t eventMin = SIZE_MAX;
+  std::size_t eventMin = std::numeric_limits<std::size_t>::max();
   std::size_t eventMax = 0;
 
   // filter matching event files from the directory listing

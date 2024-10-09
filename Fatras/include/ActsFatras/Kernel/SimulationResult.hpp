@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -44,8 +44,8 @@ struct SimulationResult {
   Particle::Scalar x0Limit = std::numeric_limits<Particle::Scalar>::quiet_NaN();
   Particle::Scalar l0Limit = std::numeric_limits<Particle::Scalar>::quiet_NaN();
   // Process selection for the next interaction.
-  std::size_t x0Process = SIZE_MAX;
-  std::size_t l0Process = SIZE_MAX;
+  std::size_t x0Process = std::numeric_limits<std::size_t>::max();
+  std::size_t l0Process = std::numeric_limits<std::size_t>::max();
 };
 
 }  // namespace ActsFatras

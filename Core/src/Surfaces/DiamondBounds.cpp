@@ -1,27 +1,33 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/DiamondBounds.hpp"
 
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+
 #include <iomanip>
 #include <iostream>
+#include <optional>
 
 Acts::SurfaceBounds::BoundsType Acts::DiamondBounds::type() const {
   return SurfaceBounds::eDiamond;
 }
 
-bool Acts::DiamondBounds::inside(const Acts::Vector2& lposition,
-                                 const Acts::BoundaryCheck& bcheck) const {
-  return bcheck.isInside(lposition, vertices());
+bool Acts::DiamondBounds::inside(
+    const Acts::Vector2& lposition,
+    const Acts::BoundaryTolerance& boundaryTolerance) const {
+  return detail::insidePolygon(vertices(), boundaryTolerance, lposition,
+                               std::nullopt);
 }
 
 std::vector<Acts::Vector2> Acts::DiamondBounds::vertices(
-    unsigned int /*lseg*/) const {
+    unsigned int /*ignoredSegments*/) const {
   // Vertices starting at lower left (min rel. phi)
   // counter-clockwise
   double x1 = get(DiamondBounds::eHalfLengthXnegY);

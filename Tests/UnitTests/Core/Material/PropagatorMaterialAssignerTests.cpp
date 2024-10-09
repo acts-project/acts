@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -68,8 +68,8 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingGeometry) {
 
   LayerArrayCreator::Config lacConfig;
   LayerArrayCreator lac = LayerArrayCreator(lacConfig);
-  auto layers =
-      lac.layerArray(tContext, {pCylinderLayer}, rMin, rMid, arbitrary, binR);
+  auto layers = lac.layerArray(tContext, {pCylinderLayer}, rMin, rMid,
+                               arbitrary, BinningValue::binR);
 
   auto innerVolume = std::make_shared<TrackingVolume>(
       Transform3::Identity(), vCylinderInner, nullptr, std::move(layers),
@@ -84,8 +84,8 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingGeometry) {
   TrackingVolumeArrayCreator::Config tvacConfig;
   TrackingVolumeArrayCreator tvac = TrackingVolumeArrayCreator(tvacConfig);
 
-  auto volumes =
-      tvac.trackingVolumeArray(tContext, {innerVolume, outerVolume}, binR);
+  auto volumes = tvac.trackingVolumeArray(tContext, {innerVolume, outerVolume},
+                                          BinningValue::binR);
 
   auto vCylinderTop = std::make_shared<CylinderVolumeBounds>(rMin, rMax, 110.);
 

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -169,8 +169,8 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
     lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
     lsConfig.surfacesProvider = endcapSurfaces;
     lsConfig.binnings = {Acts::Experimental::ProtoBinning(
-        Acts::binPhi, Acts::detail::AxisBoundaryType::Closed, -M_PI, M_PI, 22u,
-        1u)};
+        Acts::BinningValue::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI,
+        22u, 1u)};
 
     auto layerBuilder =
         std::make_shared<Acts::Experimental::LayerStructureBuilder>(
@@ -230,12 +230,13 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxiliary = "*** Barrel with 448 surfaces ***";
   lsConfig.surfacesProvider = barrelSurfaces;
-  lsConfig.binnings = {Acts::Experimental::ProtoBinning{
-                           Acts::binZ, Acts::detail::AxisBoundaryType::Bound,
-                           -480., 480., 14u, 1u},
-                       Acts::Experimental::ProtoBinning(
-                           Acts::binPhi, Acts::detail::AxisBoundaryType::Closed,
-                           -M_PI, M_PI, 32u, 1u)};
+  lsConfig.binnings = {
+      Acts::Experimental::ProtoBinning{Acts::BinningValue::binZ,
+                                       Acts::AxisBoundaryType::Bound, -480.,
+                                       480., 14u, 1u},
+      Acts::Experimental::ProtoBinning(Acts::BinningValue::binPhi,
+                                       Acts::AxisBoundaryType::Closed, -M_PI,
+                                       M_PI, 32u, 1u)};
 
   auto barrelBuilder =
       std::make_shared<Acts::Experimental::LayerStructureBuilder>(
@@ -279,7 +280,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   // Build the combined barrel
   Acts::Experimental::CylindricalContainerBuilder::Config ccBarrelBuilderCfg;
   ccBarrelBuilderCfg.builders = {ivBuilder, dvBuilder, ovBuilder};
-  ccBarrelBuilderCfg.binning = {Acts::binR};
+  ccBarrelBuilderCfg.binning = {Acts::BinningValue::binR};
 
   auto ccBarrelBuilder =
       std::make_shared<Acts::Experimental::CylindricalContainerBuilder>(
@@ -290,7 +291,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   Acts::Experimental::CylindricalContainerBuilder::Config ccBarrelEcBuilderCfg;
   ccBarrelEcBuilderCfg.builders = {endcapBuilders[0u], ccBarrelBuilder,
                                    endcapBuilders[1u]};
-  ccBarrelEcBuilderCfg.binning = {Acts::binZ};
+  ccBarrelEcBuilderCfg.binning = {Acts::BinningValue::binZ};
 
   auto ccBarrelEndcapBuilder =
       std::make_shared<Acts::Experimental::CylindricalContainerBuilder>(
@@ -317,7 +318,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   // Full detector
   Acts::Experimental::CylindricalContainerBuilder::Config detCompBuilderCfg;
   detCompBuilderCfg.builders = {bpBuilder, ccBarrelEndcapBuilder};
-  detCompBuilderCfg.binning = {Acts::binR};
+  detCompBuilderCfg.binning = {Acts::BinningValue::binR};
 
   auto detCompBuilder =
       std::make_shared<Acts::Experimental::CylindricalContainerBuilder>(

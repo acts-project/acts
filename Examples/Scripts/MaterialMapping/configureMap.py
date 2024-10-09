@@ -1,10 +1,10 @@
-# This file is part of the Acts project.
+# This file is part of the ACTS project.
 #
-# Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import json
 import sys
@@ -12,7 +12,7 @@ import sys
 # Should be run with Python 3 if possible
 # Script that use the json config file to configure the Json surfaces map for the material mapping
 # Take two arguments in input : The path to the surfaces map and the path of the json config file
-# By default the input is : 'surfaces-map.json' and the output is : 'config-map.json'
+# By default the inputs are : 'geometry-map.json' and 'config-map.json'
 # The config file can be used to define a binning for all the surfaces in a given volume
 # It can also be used to define the binning for volume mapping
 
@@ -21,7 +21,7 @@ if sys.version_info[0] < 3:
     print("To obtain the proper ordering in the Json files Python 3 is recomanded")
 
 if len(sys.argv) < 2:
-    inFileName = "geometry-maps.json"
+    inFileName = "geometry-map.json"
     confFileName = "config-map.json"
 
 if len(sys.argv) < 3:

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
 
@@ -76,8 +76,8 @@ std::vector<std::vector<std::vector<float>>>
 Acts::OnnxRuntimeBase::runONNXInferenceMultiOutput(
     NetworkBatchInput& inputTensorValues) const {
   int batchSize = inputTensorValues.rows();
-  std::vector<int64_t> inputNodeDims = m_inputNodeDims;
-  std::vector<std::vector<int64_t>> outputNodeDims = m_outputNodeDims;
+  std::vector<std::int64_t> inputNodeDims = m_inputNodeDims;
+  std::vector<std::vector<std::int64_t>> outputNodeDims = m_outputNodeDims;
 
   // The first dim node should correspond to the batch size
   // If it is -1, it is dynamic and should be set to the input size
@@ -86,7 +86,7 @@ Acts::OnnxRuntimeBase::runONNXInferenceMultiOutput(
   }
 
   bool outputDimsMatch = true;
-  for (std::vector<int64_t>& nodeDim : outputNodeDims) {
+  for (std::vector<std::int64_t>& nodeDim : outputNodeDims) {
     if (nodeDim[0] == -1) {
       nodeDim[0] = batchSize;
     }

@@ -1,15 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -145,7 +145,7 @@ bool TrapezoidVolumeBounds::inside(const Vector3& pos, ActsScalar tol) const {
   }
   Vector2 locp(pos.x(), pos.y());
   bool inside(m_faceXYTrapezoidBounds->inside(
-      locp, BoundaryCheck(true, true, tol, tol)));
+      locp, BoundaryTolerance::AbsoluteBound{tol, tol}));
   return inside;
 }
 

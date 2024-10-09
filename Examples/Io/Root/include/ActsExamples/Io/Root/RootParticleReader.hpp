@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -93,7 +93,7 @@ class RootParticleReader : public IReader {
   std::vector<long long> m_entryNumbers = {};
 
   std::vector<std::uint64_t>* m_particleId = new std::vector<std::uint64_t>;
-  std::vector<int32_t>* m_particleType = new std::vector<int32_t>;
+  std::vector<std::int32_t>* m_particleType = new std::vector<std::int32_t>;
   std::vector<std::uint32_t>* m_process = new std::vector<std::uint32_t>;
   std::vector<float>* m_vx = new std::vector<float>;
   std::vector<float>* m_vy = new std::vector<float>;

@@ -1,12 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
+
+#ifndef ACTS_EXATRKX_CPUONLY
+#include <c10/cuda/CUDAGuard.h>
+#endif
 
 #include <torch/script.h>
 #include <torch/torch.h>
@@ -19,9 +23,24 @@ namespace Acts {
 
 TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
                                          std::unique_ptr<const Logger> _logger)
-    : m_logger(std::move(_logger)), m_cfg(cfg) {
+    : m_logger(std::move(_logger)),
+      m_cfg(cfg),
+      m_device(torch::Device(torch::kCPU)) {
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
+  if (m_deviceType == torch::kCPU) {
+    ACTS_DEBUG("Running on CPU...");
+  } else {
+    if (cfg.deviceID >= 0 &&
+        static_cast<std::size_t>(cfg.deviceID) < torch::cuda::device_count()) {
+      ACTS_DEBUG("GPU device " << cfg.deviceID << " is being used.");
+      m_device = torch::Device(torch::kCUDA, cfg.deviceID);
+    } else {
+      ACTS_WARNING("GPU device " << cfg.deviceID
+                                 << " not available, falling back to CPU.");
+    }
+  }
+
   ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
                                     << TORCH_VERSION_MINOR << "."
                                     << TORCH_VERSION_PATCH);
@@ -33,7 +52,7 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
 
   try {
     m_model = std::make_unique<torch::jit::Module>();
-    *m_model = torch::jit::load(m_cfg.modelPath.c_str(), m_deviceType);
+    *m_model = torch::jit::load(m_cfg.modelPath.c_str(), m_device);
     m_model->eval();
   } catch (const c10::Error& e) {
     throw std::invalid_argument("Failed to load models: " + e.msg());
@@ -43,10 +62,17 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
 TorchEdgeClassifier::~TorchEdgeClassifier() {}
 
 std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
-    std::any inputNodes, std::any inputEdges, int deviceHint) {
+    std::any inputNodes, std::any inputEdges, torch::Device device) {
   ACTS_DEBUG("Start edge classification");
   c10::InferenceMode guard(true);
-  const torch::Device device(m_deviceType, deviceHint);
+
+  // add a protection to avoid calling for kCPU
+#ifndef ACTS_EXATRKX_CPUONLY
+  std::optional<c10::cuda::CUDAGuard> device_guard;
+  if (device.is_cuda()) {
+    device_guard.emplace(device.index());
+  }
+#endif
 
   auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
   auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -77,7 +77,7 @@ class RootVertexWriter final : public WriterT<SimVertexContainer> {
   TTree* m_outputTree = nullptr;
 
   /// Event identifier.
-  uint32_t m_eventId = 0;
+  std::uint32_t m_eventId = 0;
   /// Event-unique particle identifier a.k.a barcode.
   std::vector<std::uint64_t> m_vertexId;
   /// Production process type, i.e. what generated the vertex.

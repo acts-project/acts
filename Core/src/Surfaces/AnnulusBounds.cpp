@@ -1,14 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -18,6 +19,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <stdexcept>
 
 Acts::AnnulusBounds::AnnulusBounds(
     const std::array<double, eSize>& values) noexcept(false)
@@ -101,33 +103,30 @@ std::vector<Acts::Vector2> Acts::AnnulusBounds::corners() const {
 }
 
 std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
-    unsigned int lseg) const {
-  if (lseg > 0) {
-    // List of vertices counter-clockwise starting with left inner
-    std::vector<Acts::Vector2> rvertices;
-
+    unsigned int quarterSegments) const {
+  if (quarterSegments > 0u) {
     using VectorHelpers::phi;
-    auto phisInner = detail::VerticesHelper::phiSegments(
-        phi(m_inRightStripXY - m_moduleOrigin),
-        phi(m_inLeftStripXY - m_moduleOrigin));
-    auto phisOuter = detail::VerticesHelper::phiSegments(
-        phi(m_outLeftStripXY - m_moduleOrigin),
-        phi(m_outRightStripXY - m_moduleOrigin));
 
-    // Inner bow from phi_min -> phi_max
-    for (unsigned int iseg = 0; iseg < phisInner.size() - 1; ++iseg) {
-      int addon = (iseg == phisInner.size() - 2) ? 1 : 0;
-      detail::VerticesHelper::createSegment<Vector2, Transform2>(
-          rvertices, {get(eMinR), get(eMinR)}, phisInner[iseg],
-          phisInner[iseg + 1], lseg, addon);
-    }
-    // Upper bow from phi_max -> phi_min
-    for (unsigned int iseg = 0; iseg < phisOuter.size() - 1; ++iseg) {
-      int addon = (iseg == phisOuter.size() - 2) ? 1 : 0;
-      detail::VerticesHelper::createSegment<Vector2, Transform2>(
-          rvertices, {get(eMaxR), get(eMaxR)}, phisOuter[iseg],
-          phisOuter[iseg + 1], lseg, addon);
-    }
+    ActsScalar phiMinInner = phi(m_inRightStripXY - m_moduleOrigin);
+    ActsScalar phiMaxInner = phi(m_inLeftStripXY - m_moduleOrigin);
+
+    ActsScalar phiMinOuter = phi(m_outRightStripXY - m_moduleOrigin);
+    ActsScalar phiMaxOuter = phi(m_outLeftStripXY - m_moduleOrigin);
+
+    // Inner bow from phi_min -> phi_max (needs to be reversed)
+    std::vector<Acts::Vector2> rvertices =
+        detail::VerticesHelper::segmentVertices<Vector2, Transform2>(
+            {get(eMinR), get(eMinR)}, phiMinInner, phiMaxInner, {},
+            quarterSegments);
+    std::reverse(rvertices.begin(), rvertices.end());
+
+    // Outer bow from phi_min -> phi_max
+    auto overtices =
+        detail::VerticesHelper::segmentVertices<Vector2, Transform2>(
+            {get(eMaxR), get(eMaxR)}, phiMinOuter, phiMaxOuter, {},
+            quarterSegments);
+    rvertices.insert(rvertices.end(), overtices.begin(), overtices.end());
+
     std::for_each(rvertices.begin(), rvertices.end(),
                   [&](Acts::Vector2& rv) { rv += m_moduleOrigin; });
     return rvertices;
@@ -172,12 +171,21 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition, double tolR,
   return true;
 }
 
-bool Acts::AnnulusBounds::inside(const Vector2& lposition,
-                                 const BoundaryCheck& bcheck) const {
-  // locpo is PC in STRIP SYSTEM
-  if (bcheck.type() == BoundaryCheck::Type::eAbsolute) {
-    return inside(lposition, bcheck.tolerance()[eBoundLoc0],
-                  bcheck.tolerance()[eBoundLoc1]);
+bool Acts::AnnulusBounds::inside(
+    const Vector2& lposition,
+    const BoundaryTolerance& boundaryTolerance) const {
+  if (boundaryTolerance.isInfinite()) {
+    return true;
+  }
+
+  if (boundaryTolerance.isNone()) {
+    return inside(lposition, 0., 0.);
+  }
+
+  if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
+      absoluteBound.has_value()) {
+    return inside(lposition, absoluteBound->tolerance0,
+                  absoluteBound->tolerance1);
   }
 
   // first check if inside. We don't need to look into the covariance if inside
@@ -185,6 +193,13 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition,
     return true;
   }
 
+  if (!boundaryTolerance.hasChi2Bound()) {
+    throw std::logic_error("not implemented");
+  }
+
+  const auto& boundaryToleranceChi2 = boundaryTolerance.asChi2Bound();
+
+  // locpo is PC in STRIP SYSTEM
   // we need to rotate the locpo
   Vector2 locpo_rotated = m_rotationStripPC * lposition;
 
@@ -270,15 +285,10 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition,
   jacobianStripPCToModulePC(1, 0) = -(B * O_y - C * O_x) / A;
   jacobianStripPCToModulePC(1, 1) = r_strip * (B * O_x + C * O_y + r_strip) / A;
 
-  // covariance is given in STRIP PC
-  auto covStripPC = bcheck.covariance();
-  // calculate covariance in MODULE PC using jacobian from above
-  auto covModulePC = jacobianStripPCToModulePC * covStripPC *
-                     jacobianStripPCToModulePC.transpose();
-
   // Mahalanobis distance uses inverse covariance as weights
-  auto weightStripPC = covStripPC.inverse();
-  auto weightModulePC = covModulePC.inverse();
+  const auto& weightStripPC = boundaryToleranceChi2.weight;
+  auto weightModulePC = jacobianStripPCToModulePC.transpose() * weightStripPC *
+                        jacobianStripPCToModulePC;
 
   double minDist = std::numeric_limits<double>::max();
 
@@ -325,7 +335,8 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition,
 
   // compare resulting Mahalanobis distance to configured "number of sigmas" we
   // square it b/c we never took the square root of the distance
-  return minDist < bcheck.tolerance()[0] * bcheck.tolerance()[0];
+  return minDist <
+         boundaryToleranceChi2.maxChi2 * boundaryToleranceChi2.maxChi2;
 }
 
 Acts::Vector2 Acts::AnnulusBounds::stripXYToModulePC(

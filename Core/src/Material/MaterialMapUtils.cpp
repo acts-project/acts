@@ -1,17 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/MaterialMapUtils.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -31,8 +31,9 @@ auto Acts::materialMapperRZ(
         materialVectorToGridMapper,
     std::vector<double> rPos, std::vector<double> zPos,
     const std::vector<Acts::Material>& material, double lengthUnit)
-    -> MaterialMapper<Grid<Material::ParametersVector, detail::EquidistantAxis,
-                           detail::EquidistantAxis>> {
+    -> MaterialMapper<
+        Grid<Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
+             Axis<Acts::AxisType::Equidistant>>> {
   // [1] Decompose material
   std::vector<Material::ParametersVector> materialVector;
   materialVector.reserve(material.size());
@@ -43,8 +44,8 @@ auto Acts::materialMapperRZ(
 
   // [2] Create Grid
   // sort the values
-  std::sort(rPos.begin(), rPos.end());
-  std::sort(zPos.begin(), zPos.end());
+  std::ranges::sort(rPos);
+  std::ranges::sort(zPos);
   // Get unique values
   rPos.erase(std::unique(rPos.begin(), rPos.end()), rPos.end());
   zPos.erase(std::unique(zPos.begin(), zPos.end()), zPos.end());
@@ -69,13 +70,13 @@ auto Acts::materialMapperRZ(
   zMax += stepZ;
 
   // Create the axis for the grid
-  detail::EquidistantAxis rAxis(rMin * lengthUnit, rMax * lengthUnit, nBinsR);
-  detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
+  Axis rAxis(rMin * lengthUnit, rMax * lengthUnit, nBinsR);
+  Axis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
 
   // Create the grid
-  using Grid_t = Grid<Material::ParametersVector, detail::EquidistantAxis,
-                      detail::EquidistantAxis>;
-  Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
+  Grid grid(Type<Material::ParametersVector>, std::move(rAxis),
+            std::move(zAxis));
+  using Grid_t = decltype(grid);
 
   // [3] Set the material values
   for (std::size_t i = 1; i <= nBinsR; ++i) {
@@ -102,9 +103,7 @@ auto Acts::materialMapperRZ(
 
   // [5] Create the mapper & BField Service
   // create material mapping
-  return MaterialMapper<Grid<Material::ParametersVector,
-                             detail::EquidistantAxis, detail::EquidistantAxis>>(
-      transformPos, std::move(grid));
+  return MaterialMapper(transformPos, std::move(grid));
 }
 
 auto Acts::materialMapperXYZ(
@@ -114,8 +113,9 @@ auto Acts::materialMapperXYZ(
     std::vector<double> xPos, std::vector<double> yPos,
     std::vector<double> zPos, const std::vector<Material>& material,
     double lengthUnit)
-    -> MaterialMapper<Grid<Material::ParametersVector, detail::EquidistantAxis,
-                           detail::EquidistantAxis, detail::EquidistantAxis>> {
+    -> MaterialMapper<Grid<
+        Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
+        Axis<Acts::AxisType::Equidistant>, Axis<Acts::AxisType::Equidistant>>> {
   // [1] Decompose material
   std::vector<Material::ParametersVector> materialVector;
   materialVector.reserve(material.size());
@@ -126,9 +126,9 @@ auto Acts::materialMapperXYZ(
 
   // [2] Create Grid
   // Sort the values
-  std::sort(xPos.begin(), xPos.end());
-  std::sort(yPos.begin(), yPos.end());
-  std::sort(zPos.begin(), zPos.end());
+  std::ranges::sort(xPos);
+  std::ranges::sort(yPos);
+  std::ranges::sort(zPos);
   // Get unique values
   xPos.erase(std::unique(xPos.begin(), xPos.end()), xPos.end());
   yPos.erase(std::unique(yPos.begin(), yPos.end()), yPos.end());
@@ -163,14 +163,13 @@ auto Acts::materialMapperXYZ(
   yMax += stepY;
   zMax += stepZ;
 
-  detail::EquidistantAxis xAxis(xMin * lengthUnit, xMax * lengthUnit, nBinsX);
-  detail::EquidistantAxis yAxis(yMin * lengthUnit, yMax * lengthUnit, nBinsY);
-  detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
+  Axis xAxis(xMin * lengthUnit, xMax * lengthUnit, nBinsX);
+  Axis yAxis(yMin * lengthUnit, yMax * lengthUnit, nBinsY);
+  Axis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
   // Create the grid
-  using Grid_t = Grid<Material::ParametersVector, detail::EquidistantAxis,
-                      detail::EquidistantAxis, detail::EquidistantAxis>;
-  Grid_t grid(
-      std::make_tuple(std::move(xAxis), std::move(yAxis), std::move(zAxis)));
+  Grid grid(Type<Material::ParametersVector>, std::move(xAxis),
+            std::move(yAxis), std::move(zAxis));
+  using Grid_t = decltype(grid);
 
   // [3] Set the bField values
   for (std::size_t i = 1; i <= nBinsX; ++i) {
@@ -198,8 +197,5 @@ auto Acts::materialMapperXYZ(
 
   // [5] Create the mapper & BField Service
   // create material mapping
-  return MaterialMapper<
-      Grid<Material::ParametersVector, detail::EquidistantAxis,
-           detail::EquidistantAxis, detail::EquidistantAxis>>(transformPos,
-                                                              std::move(grid));
+  return MaterialMapper(transformPos, std::move(grid));
 }

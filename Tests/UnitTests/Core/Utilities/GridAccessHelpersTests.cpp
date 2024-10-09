@@ -1,12 +1,11 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -16,8 +15,6 @@
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
 using namespace Acts;
-
-namespace bd = boost::unit_test::data;
 
 BOOST_AUTO_TEST_SUITE(GridAccessHelpersTests)
 
@@ -47,9 +44,9 @@ BOOST_AUTO_TEST_CASE(Grid1DAccess) {
 
   // Global access
   Vector3 gPosition{0.5, 3.5, 6.5};
-  std::vector<BinningValue> fCast = {Acts::binX};
-  std::vector<BinningValue> sCast = {Acts::binY};
-  std::vector<BinningValue> tCast = {Acts::binZ};
+  std::vector<BinningValue> fCast = {Acts::BinningValue::binX};
+  std::vector<BinningValue> sCast = {Acts::BinningValue::binY};
+  std::vector<BinningValue> tCast = {Acts::BinningValue::binZ};
 
   auto fgAccess = GridAccessHelpers::castPosition<GridType>(gPosition, fCast);
   auto sgAccess = GridAccessHelpers::castPosition<GridType>(gPosition, sCast);
@@ -59,9 +56,11 @@ BOOST_AUTO_TEST_CASE(Grid1DAccess) {
   BOOST_CHECK_EQUAL(grid.atPosition(tgAccess), 6u);
 
   // Can this go into a delegate?
-  auto gsu = std::make_unique<const Acts::GridAccess::GlobalSubspace<binX>>();
+  auto gsu = std::make_unique<
+      const Acts::GridAccess::GlobalSubspace<BinningValue::binX>>();
   Acts::GridAccess::GlobalToGridLocal1DimDelegate gsuDelegate;
-  gsuDelegate.connect<&Acts::GridAccess::GlobalSubspace<binX>::toGridLocal>(
+  gsuDelegate.connect<
+      &Acts::GridAccess::GlobalSubspace<BinningValue::binX>::toGridLocal>(
       std::move(gsu));
 
   BOOST_CHECK(gsuDelegate.connected());
@@ -89,23 +88,26 @@ BOOST_AUTO_TEST_CASE(Grid2DAccess) {
 
   // Global access
   Vector3 gPosition{0.5, 3.5, 6.5};
-  std::vector<BinningValue> fCast = {Acts::binX, Acts::binY};
+  std::vector<BinningValue> fCast = {Acts::BinningValue::binX,
+                                     Acts::BinningValue::binY};
   auto fgAccess = GridAccessHelpers::castPosition<GridType>(gPosition, fCast);
   BOOST_CHECK_EQUAL(grid.atPosition(fgAccess), 300u);
 }
 
 BOOST_AUTO_TEST_CASE(GlobalToGridLocalTests) {
-  Acts::GridAccess::GlobalSubspace<binX, binY> gssXY;
+  Acts::GridAccess::GlobalSubspace<BinningValue::binX, BinningValue::binY>
+      gssXY;
 
   auto xy = gssXY.toGridLocal(Vector3{1., 2., 3.});
   BOOST_CHECK_EQUAL(xy[0], 1.);
   BOOST_CHECK_EQUAL(xy[1], 2.);
 
-  Acts::GridAccess::GlobalSubspace<binZ> gssZ;
+  Acts::GridAccess::GlobalSubspace<BinningValue::binZ> gssZ;
   auto z = gssZ.toGridLocal(Vector3{1., 2., 3.});
   BOOST_CHECK_EQUAL(z[0], 3.);
 
-  Acts::GridAccess::Affine3Transformed<Acts::GridAccess::GlobalSubspace<binZ>>
+  Acts::GridAccess::Affine3Transformed<
+      Acts::GridAccess::GlobalSubspace<BinningValue::binZ>>
       gssZT(gssZ, Acts::Transform3{Acts::Transform3::Identity()}.pretranslate(
                       Vector3{0., 0., 100.}));
 

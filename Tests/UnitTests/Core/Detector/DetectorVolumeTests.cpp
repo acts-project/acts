@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -185,10 +185,10 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
 
   // Check the extent
   auto volumeExtent = tubeCylinderVolume->extent(tContext, 1);
-  CHECK_CLOSE_ABS(volumeExtent.min(Acts::binR), 10., 10e-5);
-  CHECK_CLOSE_ABS(volumeExtent.max(Acts::binR), 100., 10e-5);
-  CHECK_CLOSE_ABS(volumeExtent.min(Acts::binZ), -200., 10e-5);
-  CHECK_CLOSE_ABS(volumeExtent.max(Acts::binZ), 200., 10e-5);
+  CHECK_CLOSE_ABS(volumeExtent.min(Acts::BinningValue::binR), 10., 10e-5);
+  CHECK_CLOSE_ABS(volumeExtent.max(Acts::BinningValue::binR), 100., 10e-5);
+  CHECK_CLOSE_ABS(volumeExtent.min(Acts::BinningValue::binZ), -200., 10e-5);
+  CHECK_CLOSE_ABS(volumeExtent.max(Acts::BinningValue::binZ), 200., 10e-5);
 }
 
 BOOST_AUTO_TEST_CASE(UpdatePortal) {

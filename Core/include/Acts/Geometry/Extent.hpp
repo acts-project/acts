@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <array>
@@ -24,12 +25,87 @@
 namespace Acts {
 
 using Envelope = std::array<ActsScalar, 2>;
-using ExtentEnvelope = std::array<Envelope, binValues>;
 
 constexpr Envelope zeroEnvelope = {0, 0};
-constexpr ExtentEnvelope zeroEnvelopes = {
-    zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope,
-    zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope};
+
+/// This struct models a multi-dimensional enveloper along the binning values
+struct ExtentEnvelope {
+  /// Access a single envelope configuration
+  /// @param bValue the binning value
+  /// @return the envelope
+  Envelope& operator[](BinningValue bValue) {
+    return m_values.at(toUnderlying(bValue));
+  }
+
+  /// Access a single envelope configuration
+  /// @param bValue the binning value
+  /// @return the envelope
+  const Envelope& operator[](BinningValue bValue) const {
+    return m_values.at(toUnderlying(bValue));
+  }
+
+  /// Constructor from a single envelope that is assigned to all values
+  /// @param envelope the envelope to be assigned
+  explicit ExtentEnvelope(const Envelope& envelope = zeroEnvelope) {
+    for (auto& val : m_values) {
+      val = envelope;
+    }
+  }
+
+  /// Static factory for a zero envelope
+  /// @return the zero envelope
+  constexpr static ExtentEnvelope Zero() {
+    return ExtentEnvelope{{
+        zeroEnvelope,
+        zeroEnvelope,
+        zeroEnvelope,
+        zeroEnvelope,
+        zeroEnvelope,
+        zeroEnvelope,
+        zeroEnvelope,
+        zeroEnvelope,
+        zeroEnvelope,
+    }};
+  }
+
+  /// Helper struct for designated initializer construction
+  struct Arguments {
+    Envelope x = zeroEnvelope;
+    Envelope y = zeroEnvelope;
+    Envelope z = zeroEnvelope;
+    Envelope r = zeroEnvelope;
+    Envelope phi = zeroEnvelope;
+    Envelope rPhi = zeroEnvelope;
+    Envelope h = zeroEnvelope;
+    Envelope eta = zeroEnvelope;
+    Envelope mag = zeroEnvelope;
+  };
+
+  /// Constructor using a helper struct for designated initializaion
+  /// @param args the arguments
+  constexpr explicit ExtentEnvelope(Arguments&& args) {
+    using enum BinningValue;
+    m_values[toUnderlying(binX)] = args.x;
+    m_values[toUnderlying(binY)] = args.y;
+    m_values[toUnderlying(binZ)] = args.z;
+    m_values[toUnderlying(binR)] = args.r;
+    m_values[toUnderlying(binPhi)] = args.phi;
+    m_values[toUnderlying(binH)] = args.h;
+    m_values[toUnderlying(binEta)] = args.eta;
+    m_values[toUnderlying(binMag)] = args.mag;
+  }
+
+  /// Comparison operator between envelope sets
+  /// @param lhs the left hand side
+  /// @param rhs the right hand side
+  /// @return true if the envelopes are equal
+  friend bool operator==(const ExtentEnvelope& lhs, const ExtentEnvelope& rhs) {
+    return lhs.m_values == rhs.m_values;
+  }
+
+ private:
+  std::array<Envelope, numBinningValues()> m_values{};
+};
 
 /// A class representing the geometric extent of an object in its possible
 /// dimensions, these can be all dimensions that are described as BinningValues
@@ -40,13 +116,10 @@ constexpr ExtentEnvelope zeroEnvelopes = {
 class Extent {
  public:
   /// Constructor with (optional) @param envelope
-  Extent(const ExtentEnvelope& envelope = zeroEnvelopes);
+  explicit Extent(const ExtentEnvelope& envelope = ExtentEnvelope::Zero());
 
   /// Define a comparison operator
   bool operator==(const Extent& e) const;
-
-  /// Define a comparison operator
-  bool operator!=(const Extent& e) const { return (!operator==(e)); }
 
   /// Extend with a position vertex
   ///
@@ -56,7 +129,7 @@ class Extent {
   /// @param fillHistograms is a boolean flag to steer whether the values
   ///        to fill this extent should be stored
   void extend(const Vector3& vtx,
-              const std::vector<BinningValue>& bValues = s_binningValues,
+              const std::vector<BinningValue>& bValues = allBinningValues(),
               bool applyEnv = true, bool fillHistograms = false);
 
   /// Extend with a set of vectors by iterators
@@ -69,7 +142,7 @@ class Extent {
   ///        to fill this extent should be stored
   template <typename vector_iterator_t>
   void extend(const vector_iterator_t& start, const vector_iterator_t& end,
-              const std::vector<BinningValue>& bValues = s_binningValues,
+              const std::vector<BinningValue>& bValues = allBinningValues(),
               bool applyEnv = true, bool fillHistograms = false) {
     for (vector_iterator_t vIt = start; vIt < end; ++vIt) {
       extend(*vIt, bValues, applyEnv, fillHistograms);
@@ -91,7 +164,7 @@ class Extent {
   ///
   /// @note that the histogram values can not be filled in this call
   void extend(const Extent& rhs,
-              const std::vector<BinningValue>& bValues = s_binningValues,
+              const std::vector<BinningValue>& bValues = allBinningValues(),
               bool applyEnv = true);
 
   /// Constrain an extent by another one, this is
@@ -102,7 +175,7 @@ class Extent {
   ///
   /// @param envelope an envelope applied to the constrained value
   void addConstrain(const Extent& rhs,
-                    const ExtentEnvelope& envelope = zeroEnvelopes);
+                    const ExtentEnvelope& envelope = ExtentEnvelope::Zero());
 
   /// Set a range for a dedicated binning value
   ///
@@ -111,17 +184,29 @@ class Extent {
   /// @param max the maximum parameter
   void set(BinningValue bValue, ActsScalar min, ActsScalar max);
 
+  /// Set a min value for a dedicated binning value
+  ///
+  /// @param bValue the binning identification
+  /// @param min the minimum parameter
+  void setMin(BinningValue bValue, ActsScalar min);
+
+  /// Set a max value for a dedicated binning value
+  ///
+  /// @param bValue the binning identification
+  /// @param max the maximum parameter
+  void setMax(BinningValue bValue, ActsScalar max);
+
   /// (re-)Set the envelope
   ///
   /// @param envelope new envelope to be set
-  void setEnvelope(const ExtentEnvelope& envelope = zeroEnvelopes);
+  void setEnvelope(const ExtentEnvelope& envelope = ExtentEnvelope::Zero());
 
   /// Return the individual 1-dimensional range
   ///
   /// @param bValue is the binning value to be returned
   ///
   /// @return a one dimensional arrange
-  auto range(BinningValue bValue) { return m_range[bValue]; }
+  auto range(BinningValue bValue) { return m_range[toUnderlying(bValue)]; }
 
   /// Return the individual 1-dimensional range
   ///
@@ -131,10 +216,13 @@ class Extent {
   Range1D<ActsScalar> range(BinningValue bValue) const;
 
   /// Return the N-dimension range
-  const RangeXD<binValues, ActsScalar>& range() const;
+  const RangeXD<numBinningValues(), ActsScalar>& range() const;
 
   /// Return an D-dimensional sub range according to the
-  /// the given @param binValues
+  /// the given binvalues
+  /// @tparam kSUBDIM the number of sub dimensions
+  /// @param binValues the binning values
+  /// @return the sub range
   template <unsigned int kSUBDIM>
   RangeXD<kSUBDIM, ActsScalar> range(
       const std::array<BinningValue, kSUBDIM>& binValues) const {
@@ -154,40 +242,47 @@ class Extent {
   /// Return the histogram store
   ///
   /// The histogram store can be used for automated binning detection
-  const std::array<std::vector<ActsScalar>, binValues>& valueHistograms() const;
+  const std::array<std::vector<ActsScalar>, numBinningValues()>&
+  valueHistograms() const;
 
   /// Access the minimum parameter
   ///
   /// @param bValue the binning identification
-  ActsScalar min(BinningValue bValue) const { return m_range[bValue].min(); }
+  ActsScalar min(BinningValue bValue) const {
+    return m_range[toUnderlying(bValue)].min();
+  }
 
   /// Access the maximum parameter
   ///
   /// @param bValue the binning identification
-  ActsScalar max(BinningValue bValue) const { return m_range[bValue].max(); }
+  ActsScalar max(BinningValue bValue) const {
+    return m_range[toUnderlying(bValue)].max();
+  }
 
   /// Access the midpoint
   ///
   /// @param bValue the binning identification
   ActsScalar medium(BinningValue bValue) const {
-    return 0.5 * (m_range[bValue].min() + m_range[bValue].max());
+    return 0.5 * (m_range[toUnderlying(bValue)].min() +
+                  m_range[toUnderlying(bValue)].max());
   }
 
   /// Access the parameter interval (i.e. the range span)
   ///
   /// @param bValue the binning identification
   ActsScalar interval(BinningValue bValue) const {
-    return m_range[bValue].size();
+    return m_range[toUnderlying(bValue)].size();
   }
 
   /// Contains check
   ///
   /// @param rhs the extent that is check if it is contained
-  /// @param bValue is the binning value, if set to binValues
+  /// @param bValue is the binning value, if set to nullopt
   ///               the check on all is done
   ///
   /// @return true if the rhs is contained
-  bool contains(const Extent& rhs, BinningValue bValue = binValues) const;
+  bool contains(const Extent& rhs,
+                std::optional<BinningValue> bValue = std::nullopt) const;
 
   /// Contains check for a single point
   ///
@@ -199,16 +294,20 @@ class Extent {
   /// Intersection checks
   ///
   /// @param rhs the extent that is check for intersection
-  /// @param bValue is the binning value, if set to binValues
+  /// @param bValue is the binning value, if set to nulloptr
   ///               the check on all is done
   ///
   /// @return true if the rhs intersects
-  bool intersects(const Extent& rhs, BinningValue bValue = binValues) const;
+  bool intersects(const Extent& rhs,
+                  std::optional<BinningValue> bValue = std::nullopt) const;
 
-  /// Constraints check
+  /// Check if this object constrains a given direction
   ///
-  /// @param bValue is the binning value, if all the check on all is done
-  bool constrains(BinningValue bValue = binValues) const;
+  /// @param bValue is the binning value
+  bool constrains(BinningValue bValue) const;
+
+  /// Check if this object constrains any direction
+  bool constrains() const;
 
   /// Convert to output stream for screen output
   ///
@@ -217,20 +316,20 @@ class Extent {
 
  private:
   /// A bitset that remembers the constraint values
-  std::bitset<binValues> m_constrains{0};
+  std::bitset<numBinningValues()> m_constrains{0};
   /// The actual range store
-  RangeXD<binValues, ActsScalar> m_range;
+  RangeXD<numBinningValues(), ActsScalar> m_range;
   /// A potential envelope
-  ExtentEnvelope m_envelope = zeroEnvelopes;
+  ExtentEnvelope m_envelope = ExtentEnvelope::Zero();
   /// (Optional) Value histograms for bin detection
-  std::array<std::vector<ActsScalar>, binValues> m_valueHistograms;
+  std::array<std::vector<ActsScalar>, numBinningValues()> m_valueHistograms;
 };
 
 inline Range1D<ActsScalar> Acts::Extent::range(BinningValue bValue) const {
-  return m_range[bValue];
+  return m_range[toUnderlying(bValue)];
 }
 
-inline const RangeXD<binValues, ActsScalar>& Extent::range() const {
+inline const RangeXD<numBinningValues(), ActsScalar>& Extent::range() const {
   return m_range;
 }
 
@@ -242,7 +341,7 @@ inline const ExtentEnvelope& Extent::envelope() const {
   return m_envelope;
 }
 
-inline const std::array<std::vector<ActsScalar>, binValues>&
+inline const std::array<std::vector<ActsScalar>, numBinningValues()>&
 Extent::valueHistograms() const {
   return m_valueHistograms;
 }

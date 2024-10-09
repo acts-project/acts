@@ -1,15 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
@@ -362,11 +363,11 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
   auto intersection =
       planeSurface
           ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
-                      BoundaryCheck(false))
+                      BoundaryTolerance::Infinite())
           .closest();
 
   // Create propagator options
-  PropagatorOptions<> pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions(gctx, mctx);
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
@@ -422,11 +423,12 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  PropagatorOptions<> pOptions(gctx, mctx);
-  auto intersection = perigeeSurface
-                          ->intersect(gctx, track.position(gctx),
-                                      track.direction(), BoundaryCheck(false))
-                          .closest();
+  PropagatorPlainOptions pOptions(gctx, mctx);
+  auto intersection =
+      perigeeSurface
+          ->intersect(gctx, track.position(gctx), track.direction(),
+                      BoundaryTolerance::Infinite())
+          .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
@@ -505,7 +507,7 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  PropagatorOptions<> pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions(gctx, mctx);
   pOptions.direction = Direction::Backward;
 
   // Do the propagation to the perigeee
@@ -544,7 +546,7 @@ Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  PropagatorOptions<> pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions(gctx, mctx);
   pOptions.direction = Direction::Backward;
 
   // Do the propagation to the perigeee

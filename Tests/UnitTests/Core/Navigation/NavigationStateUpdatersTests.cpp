@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -13,9 +13,9 @@
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <algorithm>
 #include <array>
@@ -115,8 +115,10 @@ class TestAxis : public IAxis {
 
   bool isVariable() const final { return false; }
 
-  detail::AxisBoundaryType getBoundaryType() const final {
-    return detail::AxisBoundaryType::Closed;
+  AxisType getType() const final { return AxisType::Equidistant; }
+
+  AxisBoundaryType getBoundaryType() const final {
+    return AxisBoundaryType::Closed;
   }
 
   std::vector<ActsScalar> getBinEdges() const final { return {-1, 1}; }
@@ -126,6 +128,8 @@ class TestAxis : public IAxis {
   ActsScalar getMax() const final { return 1.; }
 
   std::size_t getNBins() const final { return 1; };
+
+  void toStream(std::ostream& os) const final { os << "TextAxis"; }
 };
 
 class MultiGrid1D {
@@ -239,7 +243,7 @@ BOOST_AUTO_TEST_CASE(AllPortalsAllSurfaces) {
 
   AllPortalsProvider allPortals;
   AllSurfacesProvider allSurfaces;
-  auto allPortalsAllSurfaces = Acts::Experimental::ChainedUpdaterImpl<
+  auto allPortalsAllSurfaces = Acts::Experimental::ChainedNavigation<
       Acts::Experimental::IInternalNavigation, AllPortalsProvider,
       AllSurfacesProvider>(std::tie(allPortals, allSurfaces));
 
@@ -259,13 +263,14 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid1DSurfaces) {
 
   AllPortalsProvider allPortals;
   Acts::MultiGrid1D grid;
-  using Grid1DSurfacesProvider = Acts::Experimental::IndexedUpdaterImpl<
+  using Grid1DSurfacesProvider = Acts::Experimental::IndexedGridNavigation<
       Acts::Experimental::IInternalNavigation, decltype(grid),
       Acts::Experimental::IndexedSurfacesExtractor,
       Acts::Experimental::SurfacesFiller>;
-  auto grid1DSurfaces = Grid1DSurfacesProvider(std::move(grid), {Acts::binR});
+  auto grid1DSurfaces =
+      Grid1DSurfacesProvider(std::move(grid), {Acts::BinningValue::binR});
 
-  auto allPortalsGrid1DSurfaces = Acts::Experimental::ChainedUpdaterImpl<
+  auto allPortalsGrid1DSurfaces = Acts::Experimental::ChainedNavigation<
       Acts::Experimental::IInternalNavigation, AllPortalsProvider,
       Grid1DSurfacesProvider>(std::tie(allPortals, grid1DSurfaces));
 
@@ -285,14 +290,14 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid2DSurfaces) {
 
   AllPortalsProvider allPortals;
   Acts::MultiGrid2D grid;
-  using Grid2DSurfacesProvider = Acts::Experimental::IndexedUpdaterImpl<
+  using Grid2DSurfacesProvider = Acts::Experimental::IndexedGridNavigation<
       Acts::Experimental::IInternalNavigation, decltype(grid),
       Acts::Experimental::IndexedSurfacesExtractor,
       Acts::Experimental::SurfacesFiller>;
-  auto grid2DSurfaces =
-      Grid2DSurfacesProvider(std::move(grid), {Acts::binR, Acts::binZ});
+  auto grid2DSurfaces = Grid2DSurfacesProvider(
+      std::move(grid), {Acts::BinningValue::binR, Acts::BinningValue::binZ});
 
-  auto allPortalsGrid2DSurfaces = Acts::Experimental::ChainedUpdaterImpl<
+  auto allPortalsGrid2DSurfaces = Acts::Experimental::ChainedNavigation<
       Acts::Experimental::IInternalNavigation, AllPortalsProvider,
       Grid2DSurfacesProvider>(std::tie(allPortals, grid2DSurfaces));
 

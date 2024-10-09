@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"
 
@@ -40,7 +40,7 @@ struct IndexedSurfacesGenerator {
       const std::array<Acts::BinningValue, grid_type::DIM>& bv,
       const Acts::Transform3& transform) {
     Acts::Experimental::IndexedSurfacesNavigation<grid_type> indexedSurfaces(
-        std::move(grid), bv, transform);
+        std::forward<grid_type>(grid), bv, transform);
 
     // The portal delegate
     Acts::Experimental::AllPortalsNavigation allPortals;

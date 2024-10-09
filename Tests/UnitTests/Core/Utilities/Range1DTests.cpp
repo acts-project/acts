@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -19,8 +19,8 @@ std::vector<int> v = {-100, -90, -80, -70, -60, -50, -40, -30, -20, 10, 0,
                       10,   20,  30,  40,  50,  60,  70,  80,  90,  100};
 }
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Utilities)
 
 BOOST_AUTO_TEST_SUITE(Range1D)
@@ -612,5 +612,5 @@ BOOST_AUTO_TEST_CASE(range_exclusive_right) {
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

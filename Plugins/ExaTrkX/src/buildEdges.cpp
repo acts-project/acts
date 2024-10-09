@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
 
@@ -68,7 +68,7 @@ torch::Tensor Acts::detail::buildEdgesFRNN(torch::Tensor &embedFeatures,
 #ifndef ACTS_EXATRKX_CPUONLY
   const auto device = embedFeatures.device();
 
-  const int64_t numSpacepoints = embedFeatures.size(0);
+  const std::int64_t numSpacepoints = embedFeatures.size(0);
   const int dim = embedFeatures.size(1);
 
   const int grid_params_size = 8;
@@ -229,7 +229,7 @@ struct BuildEdgesKDTree {
     /////////////////
     // Search tree //
     /////////////////
-    std::vector<int32_t> edges;
+    std::vector<std::int32_t> edges;
     edges.reserve(2 * kVal * embedFeatures.size(0));
 
     for (int iself = 0; iself < embedFeatures.size(0); ++iself) {

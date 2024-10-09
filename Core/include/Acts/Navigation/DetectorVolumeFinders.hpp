@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -15,8 +15,8 @@
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 
 #include <stdexcept>
 
@@ -116,7 +116,7 @@ struct IndexedDetectorVolumeExtractor {
 /// @tparam grid_type is the grid type used for this
 template <typename grid_type>
 using IndexedDetectorVolumesImpl =
-    IndexedUpdaterImpl<IExternalNavigation, grid_type,
-                       IndexedDetectorVolumeExtractor, DetectorVolumeFiller>;
+    IndexedGridNavigation<IExternalNavigation, grid_type,
+                          IndexedDetectorVolumeExtractor, DetectorVolumeFiller>;
 
 }  // namespace Acts::Experimental

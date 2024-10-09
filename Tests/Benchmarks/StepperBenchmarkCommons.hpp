@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -54,7 +54,7 @@ struct BenchmarkStepper {
       po::store(po::parse_command_line(argc, argv, desc), vm);
       po::notify(vm);
 
-      if (vm.count("help") != 0u) {
+      if (vm.contains("help")) {
         std::cout << desc << std::endl;
         return 0;
       }
@@ -74,6 +74,7 @@ struct BenchmarkStepper {
   template <typename Stepper>
   void run(Stepper stepper, const std::string& name) const {
     using Propagator = Propagator<Stepper>;
+    using PropagatorOptions = typename Propagator::template Options<>;
     using Covariance = BoundSquareMatrix;
 
     // Create a test context
@@ -88,7 +89,7 @@ struct BenchmarkStepper {
 
     Propagator propagator(std::move(stepper));
 
-    PropagatorOptions<> options(tgContext, mfContext);
+    PropagatorOptions options(tgContext, mfContext);
     options.pathLimit = maxPathInM * UnitConstants::m;
 
     Vector4 pos4(0, 0, 0, 0);

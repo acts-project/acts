@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -63,13 +63,16 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// Output prototrack collection - only tracks with successful parameter
     /// estimation are propagated (optional)
     std::string outputProtoTracks;
+
     /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Magnetic field variant.
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+
     /// The minimum magnetic field to trigger the track parameters estimation
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
-    /// Initial covariance matrix diagonal.
+
+    /// Initial sigmas for the track parameters.
     std::array<double, 6> initialSigmas = {
         1 * Acts::UnitConstants::mm,
         1 * Acts::UnitConstants::mm,
@@ -77,23 +80,13 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
         1 * Acts::UnitConstants::degree,
         0 * Acts::UnitConstants::e / Acts::UnitConstants::GeV,
         1 * Acts::UnitConstants::ns};
-    /// Initial q/p coefficient covariance matrix diagonal.
-    std::array<double, 6> initialSimgaQoverPCoefficients = {
-        0 * Acts::UnitConstants::mm /
-            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
-        0 * Acts::UnitConstants::mm /
-            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
-        0 * Acts::UnitConstants::degree /
-            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
-        0 * Acts::UnitConstants::degree /
-            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
-        0.1,
-        0 * Acts::UnitConstants::ns /
-            (Acts::UnitConstants::e * Acts::UnitConstants::GeV)};
+    /// Relative pt resolution used for the initial sigma of q/p.
+    double initialSigmaPtRel = 0.1;
     /// Inflate initial covariance.
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Inflate time covariance if no time measurement is available.
     double noTimeVarInflation = 100.;
+
     /// Particle hypothesis.
     Acts::ParticleHypothesis particleHypothesis =
         Acts::ParticleHypothesis::pion();

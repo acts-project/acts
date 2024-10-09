@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // TODO We still use some Kalman Fitter functionalities. Check for replacement
 
@@ -18,9 +18,9 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitter.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -47,7 +47,7 @@ class TrackingGeometry;
 
 namespace {
 
-using Stepper = Acts::EigenStepper<>;
+using Stepper = Acts::SympyStepper;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 using Fitter =
     Acts::Experimental::Gx2Fitter<Propagator, Acts::VectorMultiTrajectory>;
@@ -69,7 +69,6 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
   bool energyLoss = false;
   Acts::FreeToBoundCorrection freeToBoundCorrection;
   std::size_t nUpdateMax = 5;
-  bool zeroField = false;
   double relChi2changeCutOff = 1e-7;
 
   IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
@@ -87,15 +86,19 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
         extensions;
     extensions.calibrator.connect<&calibrator_t::calibrate>(&calibrator);
 
-    extensions.surfaceAccessor
-        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
-            &m_slSurfaceAccessor);
+    if (options.doRefit) {
+      extensions.surfaceAccessor.connect<&RefittingCalibrator::accessSurface>();
+    } else {
+      extensions.surfaceAccessor
+          .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+              &m_slSurfaceAccessor);
+    }
 
     const Acts::Experimental::Gx2FitterOptions gx2fOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,
         extensions, options.propOptions, &(*options.referenceSurface),
         multipleScattering, energyLoss, freeToBoundCorrection, nUpdateMax,
-        zeroField, relChi2changeCutOff);
+        relChi2changeCutOff);
 
     return gx2fOptions;
   }
@@ -132,7 +135,7 @@ ActsExamples::makeGlobalChiSquareFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
     Acts::FreeToBoundCorrection freeToBoundCorrection, std::size_t nUpdateMax,
-    bool zeroField, double relChi2changeCutOff, const Acts::Logger& logger) {
+    double relChi2changeCutOff, const Acts::Logger& logger) {
   // Stepper should be copied into the fitters
   const Stepper stepper(std::move(magneticField));
 
@@ -162,7 +165,6 @@ ActsExamples::makeGlobalChiSquareFitterFunction(
   fitterFunction->energyLoss = energyLoss;
   fitterFunction->freeToBoundCorrection = freeToBoundCorrection;
   fitterFunction->nUpdateMax = nUpdateMax;
-  fitterFunction->zeroField = zeroField;
   fitterFunction->relChi2changeCutOff = relChi2changeCutOff;
 
   return fitterFunction;

@@ -1,17 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <cstddef>
@@ -40,14 +38,10 @@ class SurfaceBoundsStub : public SurfaceBounds {
 #endif
 
   ~SurfaceBoundsStub() override = default;
-  BoundsType type() const final {
-    return SurfaceBounds::eOther;
-  }
-  std::vector<double> values() const override {
-    return m_values;
-  }
+  BoundsType type() const final { return SurfaceBounds::eOther; }
+  std::vector<double> values() const override { return m_values; }
   bool inside(const Vector2& /*lpos*/,
-              const BoundaryCheck& /*bcheck*/) const final {
+              const BoundaryTolerance& /*boundaryTolerance*/) const final {
     return true;
   }
 
@@ -60,7 +54,9 @@ class SurfaceBoundsStub : public SurfaceBounds {
   std::vector<double> m_values;
 };
 
-namespace Test {
+}  // namespace Acts
+
+namespace Acts::Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating compliant/non-compliant SurfaceBounds object
 BOOST_AUTO_TEST_CASE(SurfaceBoundsConstruction) {
@@ -94,6 +90,4 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsEquality) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

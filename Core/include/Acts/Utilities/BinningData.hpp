@@ -1,15 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -240,13 +241,11 @@ class BinningData {
   /// @return float value according to the binning setup
   float value(const Vector2& lposition) const {
     // ordered after occurrence
-    if (binvalue == binR || binvalue == binRPhi || binvalue == binX ||
-        binvalue == binH) {
+    if (binvalue == BinningValue::binR || binvalue == BinningValue::binRPhi ||
+        binvalue == BinningValue::binX || binvalue == BinningValue::binH) {
       return lposition[0];
     }
-    if (binvalue == binPhi) {
-      return lposition[1];
-    }
+
     return lposition[1];
   }
 
@@ -260,17 +259,17 @@ class BinningData {
     using VectorHelpers::perp;
     using VectorHelpers::phi;
     // ordered after occurrence
-    if (binvalue == binR || binvalue == binH) {
+    if (binvalue == BinningValue::binR || binvalue == BinningValue::binH) {
       return (perp(position));
     }
-    if (binvalue == binRPhi) {
+    if (binvalue == BinningValue::binRPhi) {
       return (perp(position) * phi(position));
     }
-    if (binvalue == binEta) {
+    if (binvalue == BinningValue::binEta) {
       return (eta(position));
     }
-    if (binvalue < 3) {
-      return (position[binvalue]);
+    if (toUnderlying(binvalue) < 3) {
+      return static_cast<float>(position[toUnderlying(binvalue)]);
     }
     // phi gauging
     return phi(position);
@@ -482,7 +481,7 @@ class BinningData {
         }
       }
       // sort the total boundary vector
-      std::sort(m_totalBoundaries.begin(), m_totalBoundaries.end());
+      std::ranges::sort(m_totalBoundaries);
     }
   }
 
@@ -532,9 +531,9 @@ class BinningData {
   /// String screen output method
   /// @param indent the current indentation
   /// @return a string containing the screen information
-  std::string toString(const std::string& indent) const {
+  std::string toString(const std::string& indent = "") const {
     std::stringstream sl;
-    sl << indent << "BinngingData object:" << '\n';
+    sl << indent << "BinningData object:" << '\n';
     sl << indent << "  - type       : " << static_cast<std::size_t>(type)
        << '\n';
     sl << indent << "  - option     : " << static_cast<std::size_t>(option)

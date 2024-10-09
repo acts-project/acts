@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -15,7 +15,6 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
@@ -86,7 +85,8 @@ class SurfaceStub : public RegularSurface {
   /// Surface intersction
   SurfaceMultiIntersection intersect(
       const GeometryContext& /*gctx*/, const Vector3& /*position*/,
-      const Vector3& /*direction*/, const BoundaryCheck& /*bcheck*/,
+      const Vector3& /*direction*/,
+      const BoundaryTolerance& /*boundaryTolerance*/,
       const ActsScalar /*tolerance*/) const final {
     Intersection3D stubIntersection(Vector3(20., 0., 0.), 20.,
                                     Intersection3D::Status::reachable);
@@ -102,7 +102,7 @@ class SurfaceStub : public RegularSurface {
 
   /// Return a Polyhedron for the surfaces
   Polyhedron polyhedronRepresentation(const GeometryContext& /*gctx*/,
-                                      std::size_t /*lseg */) const final {
+                                      unsigned int /* ignored */) const final {
     std::vector<Vector3> vertices;
     std::vector<std::vector<std::size_t>> faces;
     std::vector<std::vector<std::size_t>> triangularMesh;
@@ -122,6 +122,7 @@ class SurfaceStub : public RegularSurface {
   std::shared_ptr<const PlanarBounds> m_bounds;
 };
 
-ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, SurfaceStub);
+static_assert(RegularSurfaceConcept<SurfaceStub>,
+              "SurfaceStub does not fulfill RegularSurfaceConcept");
 
 }  // namespace Acts

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
@@ -16,9 +16,9 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -46,7 +46,7 @@ class TrackingGeometry;
 
 namespace {
 
-using Stepper = Acts::EigenStepper<>;
+using Stepper = Acts::SympyStepper;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 using Fitter = Acts::KalmanFitter<Propagator, Acts::VectorMultiTrajectory>;
 using DirectPropagator = Acts::Propagator<Stepper, Acts::DirectNavigator>;
@@ -114,9 +114,15 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
     kfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
-    kfOptions.extensions.surfaceAccessor
-        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
-            &slSurfaceAccessor);
+
+    if (options.doRefit) {
+      kfOptions.extensions.surfaceAccessor
+          .connect<&RefittingCalibrator::accessSurface>();
+    } else {
+      kfOptions.extensions.surfaceAccessor
+          .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+              &slSurfaceAccessor);
+    }
 
     return kfOptions;
   }

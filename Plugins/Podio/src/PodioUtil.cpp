@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Podio//PodioUtil.hpp"
 
@@ -217,13 +217,11 @@ void recoverDynamicColumns(
     std::unordered_map<HashedString,
                        std::unique_ptr<podio_detail::ConstDynamicColumnBase>>&
         dynamic) {
-  using load_type = std::unique_ptr<podio_detail::DynamicColumnBase> (*)(
-      const podio::CollectionBase*);
-
   // See
   // https://github.com/AIDASoft/podio/blob/858c0ff0b841705d1b18aafd57569fcbd1beda91/include/podio/UserDataCollection.h#L30-L31
-  using types = TypeList<float, double, int8_t, int16_t, int32_t, int64_t,
-                         uint8_t, uint16_t, uint32_t, uint64_t>;
+  using types = TypeList<float, double, std::int8_t, std::int16_t, std::int32_t,
+                         std::int64_t, std::uint8_t, std::uint16_t,
+                         std::uint32_t, std::uint64_t>;
 
   std::vector<std::string> available = frame.getAvailableCollections();
 

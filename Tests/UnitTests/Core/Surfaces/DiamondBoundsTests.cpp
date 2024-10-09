@@ -1,17 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -20,9 +19,8 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Test {
 
-namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating compliant/non-compliant DiamondBounds object
 BOOST_AUTO_TEST_CASE(DiamondBoundsConstruction) {
@@ -104,9 +102,10 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
                          "50.0000000, 30.0000000, 10.0000000, 20.0000000)"));
   //
   /// Test inside
-  BOOST_CHECK(diamondBoundsObject.inside(origin, BoundaryCheck(true)));
+  BOOST_CHECK(diamondBoundsObject.inside(origin, BoundaryTolerance::None()));
   // dont understand why this is so:
-  BOOST_CHECK(!diamondBoundsObject.inside(outsideBy10, BoundaryCheck(true)));
+  BOOST_CHECK(
+      !diamondBoundsObject.inside(outsideBy10, BoundaryTolerance::None()));
   //
   /// Test vertices (does this need to be implemented in this class??
   // auto v=diamondBoundsObject.vertices();
@@ -139,6 +138,4 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsAssignment) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

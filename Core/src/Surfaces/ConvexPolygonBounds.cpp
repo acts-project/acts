@@ -1,14 +1,18 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+
 #include <algorithm>
+#include <optional>
 #include <ostream>
 
 std::ostream& Acts::ConvexPolygonBoundsBase::toStream(std::ostream& sl) const {
@@ -45,8 +49,10 @@ Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::type() const {
 }
 
 bool Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::inside(
-    const Acts::Vector2& lposition, const Acts::BoundaryCheck& bcheck) const {
-  return bcheck.isInside(lposition, m_vertices);
+    const Acts::Vector2& lposition,
+    const Acts::BoundaryTolerance& boundaryTolerance) const {
+  return detail::insidePolygon(m_vertices, boundaryTolerance, lposition,
+                               std::nullopt);
 }
 
 std::vector<Acts::Vector2> Acts::ConvexPolygonBounds<

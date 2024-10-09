@@ -1,15 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -77,9 +77,10 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// if only tol0 is given and additional in the phi sector is tol1 is given
   /// @param lposition is the local position to be checked (in polar
   /// coordinates)
-  /// @param bcheck is the boundary check directive
+  /// @param boundaryTolerance is the boundary check directive
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck = BoundaryCheck(true)) const final;
+              const BoundaryTolerance& boundaryTolerance =
+                  BoundaryTolerance::None()) const final;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
@@ -122,13 +123,11 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// This method returns the xy coordinates of the four corners of the
   /// bounds in module coorindates (in xy)
   ///
-  /// @param lseg the number of segments used to approximate
-  /// and eventually curved line
-  ///
-  /// @note that the number of segments are ignored for this surface
+  /// @param ignoredSegments is an ignored parameter only used for
+  /// curved bound segments
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg) const final;
+  std::vector<Vector2> vertices(unsigned int ignoredSegments = 0u) const final;
 
  private:
   std::array<double, eSize> m_values;

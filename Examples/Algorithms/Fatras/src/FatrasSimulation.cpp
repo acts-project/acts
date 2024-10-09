@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 
@@ -12,10 +12,10 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -83,16 +83,14 @@ namespace {
 
 // Magnetic-field specific PIMPL implementation.
 //
-// This always uses the EigenStepper with default extensions for charged
-// particle propagation and is thus limited to propagation in vacuum at the
-// moment.
-// @TODO: Remove this, unneeded after #675
+// This always uses the SympyStepper for charged particle propagation and is
+// thus limited to propagation in vacuum at the moment.
 struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
   using CutPMin = ActsFatras::Min<ActsFatras::Casts::P>;
 
   // typedefs for charge particle simulation
   // propagate charged particles numerically in the given magnetic field
-  using ChargedStepper = Acts::EigenStepper<>;
+  using ChargedStepper = Acts::SympyStepper;
   using ChargedPropagator = Acts::Propagator<ChargedStepper, Acts::Navigator>;
   // charged particles w/ standard em physics list and selectable hits
   using ChargedSelector = CutPMin;

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -27,9 +27,7 @@
 #include <tuple>
 #include <vector>
 
-namespace Acts {
-
-namespace Svg {
+namespace Acts::Svg {
 
 using ProtoSurface = actsvg::proto::surface<std::vector<Vector3>>;
 using ProtoGrid = actsvg::proto::grid;
@@ -73,10 +71,11 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
   // Estimate the radial extension
   // - for 1D phi
   // - for 2D z-phi or phi-z
-  bool estimateR =
-      (index_grid::grid_type::DIM == 1 && indexGrid.casts[0u] == binPhi) ||
-      (index_grid::grid_type::DIM == 2 &&
-       (indexGrid.casts[0u] == binPhi || indexGrid.casts[1u] == binPhi));
+  bool estimateR = (index_grid::grid_type::DIM == 1 &&
+                    indexGrid.casts[0u] == BinningValue::binPhi) ||
+                   (index_grid::grid_type::DIM == 2 &&
+                    (indexGrid.casts[0u] == BinningValue::binPhi ||
+                     indexGrid.casts[1u] == BinningValue::binPhi));
 
   for (auto [is, s] : enumerate(surfaces)) {
     // Create the surface converter options
@@ -91,9 +90,10 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
     if (estimateR) {
       auto sExtent = s->polyhedronRepresentation(gctx, 4u).extent();
       if constexpr (index_grid::grid_type::DIM == 2u) {
-        pSurface._radii[0u] = sExtent.medium(binR);
+        pSurface._radii[0u] =
+            static_cast<float>(sExtent.medium(BinningValue::binR));
       }
-      constrain.extend(sExtent, {binR});
+      constrain.extend(sExtent, {BinningValue::binR});
     }
     // Add center info
     std::string centerInfo = " - center = (";
@@ -113,10 +113,10 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
 
   // Adjust the grid options
   if constexpr (index_grid::grid_type::DIM == 1u) {
-    if (indexGrid.casts[0u] == binPhi) {
-      auto estRangeR = constrain.range(binR);
+    if (indexGrid.casts[0u] == BinningValue::binPhi) {
+      auto estRangeR = constrain.range(BinningValue::binR);
       std::array<ActsScalar, 2u> rRange = {estRangeR.min(), estRangeR.max()};
-      gridOptions.optionalBound = {rRange, binR};
+      gridOptions.optionalBound = {rRange, BinningValue::binR};
     }
   }
 
@@ -164,7 +164,8 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
                    std::to_string(binCenter1) + ")";
         pGrid._bin_ids.push_back(binInfo);
         if (estimateR) {
-          pGrid._reference_r = constrain.medium(binR);
+          pGrid._reference_r =
+              static_cast<float>(constrain.medium(BinningValue::binR));
         }
       }
     }
@@ -301,7 +302,7 @@ static inline actsvg::svg::object xy(const ProtoIndexedSurfaceGrid& pIndexGrid,
     for (const auto [is, sis] : enumerate(pIndices[ig])) {
       const auto& ps = pSurfaces[sis];
       std::string oInfo = std::string("- object: ") + std::to_string(sis);
-      if (ps._aux_info.find("center") != ps._aux_info.end()) {
+      if (ps._aux_info.contains("center")) {
         for (const auto& ci : ps._aux_info.at("center")) {
           oInfo += ci;
         }
@@ -337,5 +338,4 @@ static inline actsvg::svg::object zphi(
 }
 
 }  // namespace View
-}  // namespace Svg
-}  // namespace Acts
+}  // namespace Acts::Svg

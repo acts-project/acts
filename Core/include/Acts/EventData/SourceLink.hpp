@@ -1,20 +1,19 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
-#include <iostream>
+#include <concepts>
 #include <type_traits>
 #include <utility>
 
@@ -34,20 +33,15 @@ class SourceLink final {
   SourceLink& operator=(const SourceLink& other) = default;
   SourceLink& operator=(SourceLink&& other) = default;
 
-  /// Constructor from concrete sourcelink
+  /// Constructor from concrete source link
   /// @tparam T The source link type
   /// @param upstream The upstream source link to store
-  template <typename T, typename = std::enable_if_t<
-                            !std::is_same_v<std::decay_t<T>, SourceLink>>>
-  explicit SourceLink(T&& upstream) {
+  template <typename T>
+  explicit SourceLink(T&& upstream)
+    requires(!std::same_as<std::decay_t<T>, SourceLink>)
+      : m_upstream(std::forward<T>(upstream)) {
     static_assert(!std::is_same_v<std::decay_t<T>, SourceLink>,
                   "Cannot wrap SourceLink in SourceLink");
-
-    if constexpr (std::is_same_v<T, std::decay_t<T>>) {
-      m_upstream = any_type{std::move(upstream)};
-    } else {
-      m_upstream = any_type{static_cast<std::decay_t<T>>(upstream)};
-    }
   }
 
   /// Concrete source link class getter
@@ -89,10 +83,6 @@ struct SourceLinkAdapterIterator {
 
   bool operator==(const SourceLinkAdapterIterator& other) const {
     return m_iterator == other.m_iterator;
-  }
-
-  bool operator!=(const SourceLinkAdapterIterator& other) const {
-    return !(*this == other);
   }
 
   Acts::SourceLink operator*() const { return Acts::SourceLink{*m_iterator}; }

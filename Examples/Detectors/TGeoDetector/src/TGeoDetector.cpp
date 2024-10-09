@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 
@@ -66,13 +66,16 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
 
     // configure surface autobinning
     std::vector<std::pair<double, double>> binTolerances(
-        static_cast<std::size_t>(Acts::binValues), {0., 0.});
-    binTolerances[Acts::binR] = {volume.binToleranceR.lower.value_or(0.),
-                                 volume.binToleranceR.upper.value_or(0.)};
-    binTolerances[Acts::binZ] = {volume.binToleranceZ.lower.value_or(0.),
-                                 volume.binToleranceZ.upper.value_or(0.)};
-    binTolerances[Acts::binPhi] = {volume.binTolerancePhi.lower.value_or(0.),
-                                   volume.binTolerancePhi.upper.value_or(0.)};
+        Acts::numBinningValues(), {0., 0.});
+    binTolerances[toUnderlying(Acts::BinningValue::binR)] = {
+        volume.binToleranceR.lower.value_or(0.),
+        volume.binToleranceR.upper.value_or(0.)};
+    binTolerances[toUnderlying(Acts::BinningValue::binZ)] = {
+        volume.binToleranceZ.lower.value_or(0.),
+        volume.binToleranceZ.upper.value_or(0.)};
+    binTolerances[toUnderlying(Acts::BinningValue::binPhi)] = {
+        volume.binTolerancePhi.lower.value_or(0.),
+        volume.binTolerancePhi.upper.value_or(0.)};
 
     layerBuilderConfig.autoSurfaceBinning = true;
     layerBuilderConfig.surfaceBinMatcher =
@@ -101,18 +104,18 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       auto zMin = zR.lower.value_or(-std::numeric_limits<double>::max());
       auto zMax = zR.upper.value_or(std::numeric_limits<double>::max());
       lConfig.parseRanges = {
-          {Acts::binR, {rMin, rMax}},
-          {Acts::binZ, {zMin, zMax}},
+          {Acts::BinningValue::binR, {rMin, rMax}},
+          {Acts::BinningValue::binZ, {zMin, zMax}},
       };
 
       // Fill the layer splitting parameters in r/z
       auto str = volume.splitTolR.at(ncp);
       auto stz = volume.splitTolZ.at(ncp);
       if (0 < str) {
-        lConfig.splitConfigs.emplace_back(Acts::binR, str);
+        lConfig.splitConfigs.emplace_back(Acts::BinningValue::binR, str);
       }
       if (0 < stz) {
-        lConfig.splitConfigs.emplace_back(Acts::binZ, stz);
+        lConfig.splitConfigs.emplace_back(Acts::BinningValue::binZ, stz);
       }
       lConfig.binning0 = volume.binning0.at(ncp);
       lConfig.binning1 = volume.binning1.at(ncp);
@@ -284,7 +287,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
         -> void {
       for (const auto& lcfg : lConfigs) {
         for (const auto& scfg : lcfg.splitConfigs) {
-          if (scfg.first == Acts::binR && scfg.second > 0.) {
+          if (scfg.first == Acts::BinningValue::binR && scfg.second > 0.) {
             volumeConfig.ringTolerance =
                 std::max(volumeConfig.ringTolerance, scfg.second);
             volumeConfig.checkRingLayout = true;

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -26,8 +26,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -60,9 +59,9 @@ struct MaterialCollector {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, result_type& result,
-                  const Logger& /*logger*/) const {
+  void act(propagator_state_t& state, const stepper_t& stepper,
+           const navigator_t& navigator, result_type& result,
+           const Logger& /*logger*/) const {
     if (navigator.currentVolume(state.navigation) != nullptr) {
       auto position = stepper.position(state.stepping);
       result.matTrue.push_back(
@@ -78,23 +77,25 @@ struct MaterialCollector {
   }
 };
 
-namespace Test {
+}  // namespace Acts
+
+namespace Acts::Test {
 
 /// Test the filling and conversion
 BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   using namespace Acts::UnitLiterals;
 
-  BinUtility bu1(4, 0_m, 1_m, open, binX);
-  bu1 += BinUtility(2, -0.5_m, 0.5_m, open, binY);
-  bu1 += BinUtility(2, -0.5_m, 0.5_m, open, binZ);
+  BinUtility bu1(4, 0_m, 1_m, open, BinningValue::binX);
+  bu1 += BinUtility(2, -0.5_m, 0.5_m, open, BinningValue::binY);
+  bu1 += BinUtility(2, -0.5_m, 0.5_m, open, BinningValue::binZ);
 
-  BinUtility bu2(4, 1_m, 2_m, open, binX);
-  bu2 += BinUtility(2, -0.5_m, 0.5_m, open, binY);
-  bu2 += BinUtility(2, -0.5_m, 0.5_m, open, binZ);
+  BinUtility bu2(4, 1_m, 2_m, open, BinningValue::binX);
+  bu2 += BinUtility(2, -0.5_m, 0.5_m, open, BinningValue::binY);
+  bu2 += BinUtility(2, -0.5_m, 0.5_m, open, BinningValue::binZ);
 
-  BinUtility bu3(4, 2_m, 3_m, open, binX);
-  bu3 += BinUtility(2, -0.5_m, 0.5_m, open, binY);
-  bu3 += BinUtility(2, -0.5_m, 0.5_m, open, binZ);
+  BinUtility bu3(4, 2_m, 3_m, open, BinningValue::binX);
+  bu3 += BinUtility(2, -0.5_m, 0.5_m, open, BinningValue::binY);
+  bu3 += BinUtility(2, -0.5_m, 0.5_m, open, BinningValue::binZ);
 
   // Build a vacuum volume
   CuboidVolumeBuilder::VolumeConfig vCfg1;
@@ -234,9 +235,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Build the material grid
   Grid3D Grid = createGrid(xAxis, yAxis, zAxis);
   std::function<Vector3(Vector3)> transfoGlobalToLocal =
-      [](Vector3 pos) -> Vector3 {
-    return {pos.x(), pos.y(), pos.z()};
-  };
+      [](Vector3 pos) -> Vector3 { return {pos.x(), pos.y(), pos.z()}; };
 
   // Walk over each property
   for (const auto& rm : matRecord) {
@@ -266,9 +265,10 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
 
   MagneticFieldContext mc;
   // Launch propagation and gather result
-  PropagatorOptions<ActionList<MaterialCollector>, AbortList<EndOfWorldReached>>
-      po(gc, mc);
-  po.maxStepSize = 1._mm;
+  using PropagatorOptions = Propagator<StraightLineStepper, Navigator>::Options<
+      ActorList<MaterialCollector, EndOfWorldReached>>;
+  PropagatorOptions po(gc, mc);
+  po.stepping.maxStepSize = 1._mm;
   po.maxSteps = 1e6;
 
   const auto& result = prop.propagate(sctp, po).value();
@@ -279,7 +279,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   std::vector<Material> matvector;
   double gridX0 = 0., gridL0 = 0., trueX0 = 0., trueL0 = 0.;
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-    matvector.push_back(matGrid.atPosition(stepResult.position[i]));
+    matvector.push_back(
+        Acts::Material{matGrid.atPosition(stepResult.position[i])});
     gridX0 += 1 / matvector[i].X0();
     gridL0 += 1 / matvector[i].L0();
     trueX0 += 1 / stepResult.matTrue[i].X0();
@@ -289,5 +290,4 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   CHECK_CLOSE_REL(gridL0, trueL0, 1e-1);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

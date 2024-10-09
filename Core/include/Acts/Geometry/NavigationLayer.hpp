@@ -1,17 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
@@ -72,11 +72,12 @@ class NavigationLayer : public Layer {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the global position for the check
-  /// @param bcheck is the boundary check directive
+  /// @param boundaryTolerance is the boundary check directive
   ///
   /// @return boolean that indicates if the position is on surface
   bool isOnLayer(const GeometryContext& gctx, const Vector3& gp,
-                 const BoundaryCheck& bcheck = BoundaryCheck(true)) const final;
+                 const BoundaryTolerance& boundaryTolerance =
+                     BoundaryTolerance::None()) const final;
 
   /// Accept layer according to the following collection directives
   ///
@@ -121,11 +122,11 @@ inline Vector3 NavigationLayer::binningPosition(const GeometryContext& gctx,
   return m_surfaceRepresentation->binningPosition(gctx, bValue);
 }
 
-inline bool NavigationLayer::isOnLayer(const GeometryContext& gctx,
-                                       const Vector3& gp,
-                                       const BoundaryCheck& bcheck) const {
+inline bool NavigationLayer::isOnLayer(
+    const GeometryContext& gctx, const Vector3& gp,
+    const BoundaryTolerance& boundaryTolerance) const {
   return m_surfaceRepresentation->isOnSurface(gctx, gp, Vector3::Zero(),
-                                              bcheck);
+                                              boundaryTolerance);
 }
 
 inline bool NavigationLayer::resolve(bool /*resolveSensitive*/,

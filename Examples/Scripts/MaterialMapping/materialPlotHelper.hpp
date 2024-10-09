@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -26,7 +26,7 @@ namespace Acts {
 ///
 class GeometryIdentifier {
  public:
-  using Value = uint64_t;
+  using Value = std::uint64_t;
 
   /// Construct from an already encoded value.
   constexpr GeometryIdentifier(Value encoded) : m_value(encoded) {}
@@ -67,7 +67,8 @@ class GeometryIdentifier {
   static constexpr int extractShift(Value mask) {
     // use compiler builtin to extract the number of trailing bits from the
     // mask. the builtin should be available on all supported compilers.
-    // need unsigned long long version (...ll) to ensure uint64_t compatibility.
+    // need unsigned long long version (...ll) to ensure std::uint64_t
+    // compatibility.
     // WARNING undefined behaviour for mask == 0 which we should not have.
     return __builtin_ctzll(mask);
   }

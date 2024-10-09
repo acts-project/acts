@@ -1,6 +1,7 @@
 import os
 import sys
 import math
+from collections import namedtuple
 from pathlib import Path
 from typing import Optional
 import acts
@@ -20,6 +21,13 @@ def getOpenDataDetector(
     odd_dir: Optional[Path] = None,
     logLevel=acts.logging.INFO,
 ):
+    """This function sets up the open data detector. Requires DD4hep.
+    Parameters
+    ----------
+    mdecorator: Material Decorator, take RootMaterialDecorator if non is given
+    odd_dir: if not given, try to get via ODD_PATH environment variable
+    logLevel: logging level
+    """
     import acts.examples.dd4hep
 
     customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)
@@ -68,8 +76,9 @@ def getOpenDataDetector(
     }
 
     def geoid_hook(geoid, surface):
+        gctx = acts.GeometryContext()
         if geoid.volume() in volumeRadiusCutsMap:
-            r = math.sqrt(surface.center()[0] ** 2 + surface.center()[1] ** 2)
+            r = math.sqrt(surface.center(gctx)[0] ** 2 + surface.center(gctx)[1] ** 2)
 
             geoid.setExtra(1)
             for cut in volumeRadiusCutsMap[geoid.volume()]:
@@ -86,14 +95,28 @@ def getOpenDataDetector(
     )
     detector = acts.examples.dd4hep.DD4hepDetector()
 
-    config = acts.MaterialMapJsonConverter.Config()
     if mdecorator is None:
-        mdecorator = acts.JsonMaterialDecorator(
-            rConfig=config,
-            jFileName=str(odd_dir / "config/odd-material-mapping-config.json"),
+        mdecorator = acts.examples.RootMaterialDecorator(
+            fileName=str(odd_dir / "data/odd-material-maps.root"),
             level=customLogLevel(minLevel=acts.logging.WARNING),
         )
 
-    trackingGeometry, deco = detector.finalize(dd4hepConfig, mdecorator)
+    trackingGeometry, decorators = detector.finalize(dd4hepConfig, mdecorator)
 
-    return detector, trackingGeometry, deco
+    OpenDataDetector = namedtuple(
+        "OpenDataDetector", ["detector", "trackingGeometry", "decorators"]
+    )
+
+    class OpenDataDetectorContextManager(OpenDataDetector):
+        def __new__(cls, detector, trackingGeometry, decorators):
+            return super(OpenDataDetectorContextManager, cls).__new__(
+                cls, detector, trackingGeometry, decorators
+            )
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            self.detector.drop()
+
+    return OpenDataDetectorContextManager(detector, trackingGeometry, decorators)

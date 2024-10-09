@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -39,9 +39,9 @@ struct SterileContinuousProcess {
   }
 };
 
-static_assert(detail::IsContinuousProcess<SterileContinuousProcess>::value,
+static_assert(detail::ContinuousProcessConcept<SterileContinuousProcess>,
               "Is not a continuous process");
-static_assert(!detail::IsPointLikeProcess<SterileContinuousProcess>::value,
+static_assert(!detail::PointLikeProcessConcept<SterileContinuousProcess>,
               "Is a point-like process");
 
 /// Continuous process that DOES trigger a break
@@ -53,9 +53,9 @@ struct FatalContinuousProcess {
     return true;
   }
 };
-static_assert(detail::IsContinuousProcess<FatalContinuousProcess>::value,
+static_assert(detail::ContinuousProcessConcept<FatalContinuousProcess>,
               "Is not a continuous process");
-static_assert(!detail::IsPointLikeProcess<FatalContinuousProcess>::value,
+static_assert(!detail::PointLikeProcessConcept<FatalContinuousProcess>,
               "Is a point-like process");
 
 /// EM-like point-like process that triggers on X0 and keeps the particle alive.
@@ -77,9 +77,9 @@ struct X0PointLikeProcess {
   }
 };
 
-static_assert(!detail::IsContinuousProcess<X0PointLikeProcess>::value,
+static_assert(!detail::ContinuousProcessConcept<X0PointLikeProcess>,
               "Is a continuous process");
-static_assert(detail::IsPointLikeProcess<X0PointLikeProcess>::value,
+static_assert(detail::PointLikeProcessConcept<X0PointLikeProcess>,
               "Is not a point-like process");
 
 /// Nuclear-like point-like process that triggers on L0 and kills the particle.
@@ -103,9 +103,9 @@ struct L0PointLikeProcess {
   }
 };
 
-static_assert(!detail::IsContinuousProcess<L0PointLikeProcess>::value,
+static_assert(!detail::ContinuousProcessConcept<L0PointLikeProcess>,
               "Is a continuous process");
-static_assert(detail::IsPointLikeProcess<L0PointLikeProcess>::value,
+static_assert(detail::PointLikeProcessConcept<L0PointLikeProcess>,
               "Is not a point-like process");
 
 struct Fixture {
@@ -131,15 +131,16 @@ BOOST_AUTO_TEST_CASE(Empty) {
   auto sel = l.armPointLike(f.rng, f.incoming);
   BOOST_CHECK_EQUAL(sel.x0Limit, std::numeric_limits<Scalar>::infinity());
   BOOST_CHECK_EQUAL(sel.l0Limit, std::numeric_limits<Scalar>::infinity());
-  BOOST_CHECK_EQUAL(sel.x0Process, SIZE_MAX);
-  BOOST_CHECK_EQUAL(sel.l0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(sel.x0Process, std::numeric_limits<std::size_t>::max());
+  BOOST_CHECK_EQUAL(sel.l0Process, std::numeric_limits<std::size_t>::max());
 
   // running with an invalid process index should do nothing
   // interaction list is empty and 0 should already be invalid
   BOOST_CHECK(!l.runPointLike(f.rng, 0u, f.incoming, f.outgoing));
   BOOST_CHECK_EQUAL(f.outgoing.size(), 0u);
-  // SIZE_MAX should always be an invalid index
-  BOOST_CHECK(!l.runPointLike(f.rng, SIZE_MAX, f.incoming, f.outgoing));
+  // std::numeric_limits<std::size_t>::max() should always be an invalid index
+  BOOST_CHECK(!l.runPointLike(f.rng, std::numeric_limits<std::size_t>::max(),
+                              f.incoming, f.outgoing));
   BOOST_CHECK_EQUAL(f.outgoing.size(), 0u);
 }
 
@@ -180,13 +181,14 @@ BOOST_AUTO_TEST_CASE(PointLikeX0) {
   BOOST_CHECK_EQUAL(sel.x0Limit, 0.5);
   BOOST_CHECK_EQUAL(sel.l0Limit, std::numeric_limits<Scalar>::infinity());
   BOOST_CHECK_EQUAL(sel.x0Process, 0u);
-  BOOST_CHECK_EQUAL(sel.l0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(sel.l0Process, std::numeric_limits<std::size_t>::max());
 
   // valid index, X0Process leaves the particle alive
   BOOST_CHECK(!l.runPointLike(f.rng, 0u, f.incoming, f.outgoing));
   BOOST_CHECK_EQUAL(f.outgoing.size(), 1u);
   // invalid index, should do nothing
-  BOOST_CHECK(!l.runPointLike(f.rng, SIZE_MAX, f.incoming, f.outgoing));
+  BOOST_CHECK(!l.runPointLike(f.rng, std::numeric_limits<std::size_t>::max(),
+                              f.incoming, f.outgoing));
   BOOST_CHECK_EQUAL(f.outgoing.size(), 1u);
 }
 
@@ -198,14 +200,15 @@ BOOST_AUTO_TEST_CASE(PointLikeL0) {
   auto sel = l.armPointLike(f.rng, f.incoming);
   BOOST_CHECK_EQUAL(sel.x0Limit, std::numeric_limits<Scalar>::infinity());
   BOOST_CHECK_EQUAL(sel.l0Limit, 1.5);
-  BOOST_CHECK_EQUAL(sel.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(sel.x0Process, std::numeric_limits<std::size_t>::max());
   BOOST_CHECK_EQUAL(sel.l0Process, 0u);
 
   // valid index, L0Process kills the particles and creates 2 descendants
   BOOST_CHECK(l.runPointLike(f.rng, 0u, f.incoming, f.outgoing));
   BOOST_CHECK_EQUAL(f.outgoing.size(), 2u);
   // invalid index, should do nothing
-  BOOST_CHECK(!l.runPointLike(f.rng, SIZE_MAX, f.incoming, f.outgoing));
+  BOOST_CHECK(!l.runPointLike(f.rng, std::numeric_limits<std::size_t>::max(),
+                              f.incoming, f.outgoing));
   BOOST_CHECK_EQUAL(f.outgoing.size(), 2u);
 }
 
@@ -227,7 +230,8 @@ BOOST_AUTO_TEST_CASE(PointLikeX0L0) {
   BOOST_CHECK(l.runPointLike(f.rng, 1u, f.incoming, f.outgoing));
   BOOST_CHECK_EQUAL(f.outgoing.size(), 3u);
   // invalid index, should do nothing
-  BOOST_CHECK(!l.runPointLike(f.rng, SIZE_MAX, f.incoming, f.outgoing));
+  BOOST_CHECK(!l.runPointLike(f.rng, std::numeric_limits<std::size_t>::max(),
+                              f.incoming, f.outgoing));
   BOOST_CHECK_EQUAL(f.outgoing.size(), 3u);
 }
 
@@ -251,7 +255,7 @@ BOOST_AUTO_TEST_CASE(Disable) {
     auto sel = l.armPointLike(f.rng, f.incoming);
     BOOST_CHECK_EQUAL(sel.x0Limit, std::numeric_limits<Scalar>::infinity());
     BOOST_CHECK_EQUAL(sel.l0Limit, 1.5);
-    BOOST_CHECK_EQUAL(sel.x0Process, SIZE_MAX);
+    BOOST_CHECK_EQUAL(sel.x0Process, std::numeric_limits<std::size_t>::max());
     BOOST_CHECK_EQUAL(sel.l0Process, 3u);
 
     // index for X0Process, should do nothing since its disabled
@@ -269,8 +273,8 @@ BOOST_AUTO_TEST_CASE(Disable) {
     auto sel = l.armPointLike(f.rng, f.incoming);
     BOOST_CHECK_EQUAL(sel.x0Limit, std::numeric_limits<Scalar>::infinity());
     BOOST_CHECK_EQUAL(sel.l0Limit, std::numeric_limits<Scalar>::infinity());
-    BOOST_CHECK_EQUAL(sel.x0Process, SIZE_MAX);
-    BOOST_CHECK_EQUAL(sel.l0Process, SIZE_MAX);
+    BOOST_CHECK_EQUAL(sel.x0Process, std::numeric_limits<std::size_t>::max());
+    BOOST_CHECK_EQUAL(sel.l0Process, std::numeric_limits<std::size_t>::max());
 
     // index for X0Process, should do nothing since its disabled
     f.outgoing.clear();
@@ -283,7 +287,8 @@ BOOST_AUTO_TEST_CASE(Disable) {
 
   // invalid index, should do nothing
   f.outgoing.clear();
-  BOOST_CHECK(!l.runPointLike(f.rng, SIZE_MAX, f.incoming, f.outgoing));
+  BOOST_CHECK(!l.runPointLike(f.rng, std::numeric_limits<std::size_t>::max(),
+                              f.incoming, f.outgoing));
   BOOST_CHECK_EQUAL(f.outgoing.size(), 0u);
 }
 

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -26,11 +26,9 @@ namespace bdata = boost::unit_test::data;
 
 using Acts::VectorHelpers::perp;
 
-namespace Acts {
+using namespace Acts::detail;
 
-using namespace detail;
-
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(bfield_creation) {
   // create grid values
@@ -368,5 +366,5 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_REL(value0_xyz, value3_xyz, 1e-10);
   CHECK_CLOSE_REL(value0_xyz, value4_xyz, 1e-10);
 }
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

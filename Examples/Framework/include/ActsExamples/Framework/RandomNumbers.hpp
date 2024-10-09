@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 //
 //  RandomNumbers.hpp
@@ -41,7 +41,7 @@ using RandomEngine = std::mt19937;  ///< Mersenne Twister
 class RandomNumbers {
  public:
   struct Config {
-    uint64_t seed = 1234567890u;  ///< random seed
+    std::uint64_t seed = 1234567890u;  ///< random seed
   };
 
   RandomNumbers(const Config& cfg);
@@ -59,7 +59,7 @@ class RandomNumbers {
   ///
   /// This should only be used in special cases e.g. where a custom
   /// random engine is used and `spawnGenerator` can not be used.
-  uint64_t generateSeed(const AlgorithmContext& context) const;
+  std::uint64_t generateSeed(const AlgorithmContext& context) const;
 
  private:
   Config m_cfg;

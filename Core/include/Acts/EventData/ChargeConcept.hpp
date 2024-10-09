@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -14,19 +14,17 @@
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <any>
-#include <type_traits>
-
-#if defined(__cpp_concepts)
 #include <concepts>
+#include <type_traits>
 
 namespace Acts {
 
 template <typename C>
-concept ChargeConcept = requires(C c, float f, double d) {
-  {C{f}};
+concept ChargeConcept = requires(C c, C c2, float f, double d) {
+  { C{f} };
 
-  { c == c } -> std::same_as<bool>;
-  { c != c } -> std::same_as<bool>;
+  { c == c2 } -> std::same_as<bool>;
+  { c != c2 } -> std::same_as<bool>;
 
   { c.absQ() } -> std::same_as<float>;
   { c.extractCharge(d) } -> std::same_as<float>;
@@ -35,5 +33,3 @@ concept ChargeConcept = requires(C c, float f, double d) {
 };
 
 }  // namespace Acts
-
-#endif

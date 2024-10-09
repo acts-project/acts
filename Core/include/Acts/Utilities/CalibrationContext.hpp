@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,7 +13,7 @@
 #include ACTS_CORE_CALIBRATIONCONTEXT_PLUGIN
 #else
 
-#include <any>
+#include "Acts/Utilities/detail/ContextType.hpp"
 
 namespace Acts {
 
@@ -23,7 +23,12 @@ namespace Acts {
 /// It is propagated through the code to allow for event/thread
 /// dependent calibration
 
-using CalibrationContext = std::any;
+class CalibrationContext : public ContextType {
+ public:
+  /// Inherit all constructors
+  using ContextType::ContextType;
+  using ContextType::operator=;
+};
 
 }  // namespace Acts
 
