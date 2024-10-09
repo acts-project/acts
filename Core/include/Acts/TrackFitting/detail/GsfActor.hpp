@@ -732,16 +732,17 @@ struct GsfActor {
       const auto isMeasurement =
           firstCmpProxy.typeFlags().test(MeasurementFlag);
 
-      const auto mask = isMeasurement ? TrackStatePropMask::Calibrated |
-                                            TrackStatePropMask::Predicted |
-                                            TrackStatePropMask::Filtered |
-                                            TrackStatePropMask::Smoothed
-                                      : TrackStatePropMask::Predicted;
+      const auto mask =
+          isMeasurement
+              ? TrackStatePropMask::Calibrated | TrackStatePropMask::Predicted |
+                    TrackStatePropMask::Filtered | TrackStatePropMask::Smoothed
+              : TrackStatePropMask::Calibrated | TrackStatePropMask::Predicted;
 
       auto proxy = result.fittedStates->makeTrackState(mask, result.currentTip);
       result.currentTip = proxy.index();
 
-      proxy.copyFrom(firstCmpProxy, mask, /*only_allocated=*/false);
+      proxy.setReferenceSurface(surface.getSharedPtr());
+      proxy.copyFrom(firstCmpProxy, mask);
 
       auto [prtMean, prtCov] =
           mergeGaussianMixture(tmpStates.tips, surface, m_cfg.mergeMethod,
@@ -761,6 +762,7 @@ struct GsfActor {
         proxy.shareFrom(TrackStatePropMask::Predicted,
                         TrackStatePropMask::Filtered);
       }
+
     } else {
       assert((result.currentTip != MultiTrajectoryTraits::kInvalid &&
               "tip not valid"));
