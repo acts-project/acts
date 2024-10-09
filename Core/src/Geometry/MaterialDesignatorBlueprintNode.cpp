@@ -136,7 +136,25 @@ void MaterialDesignatorBlueprintNode::finalize(const Options& options,
 }
 
 void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
-  os << GraphViz::Node{.id = name(), .shape = GraphViz::Shape::InvTrapezium};
+  std::stringstream ss;
+  ss << "" + name() + "";
+  ss << "<br/><i>CylinderContainer</i>";
+
+  std::visit(
+      overloaded{
+          [&](const std::vector<
+              std::tuple<CylinderPortalShell::Face, Experimental::ProtoBinning,
+                         Experimental::ProtoBinning>>& binning) {
+            for (const auto& [face, loc0, loc1] : binning) {
+              ss << "<br/>" << face;
+              ss << ": " << loc0.binValue << "=" << loc0.bins();
+              ss << ", " << loc1.binValue << "=" << loc1.bins();
+            }
+          },
+          [&](const auto& /*binning*/) {}},
+      m_binning.value());
+  os << GraphViz::Node{
+      .id = name(), .label = ss.str(), .shape = GraphViz::Shape::Hexagon};
   BlueprintNode::addToGraphviz(os);
 }
 
