@@ -98,6 +98,11 @@ class DirectNavigator {
       }
       return surfaceIndex + 1;
     }
+
+    void resetSurfaceIndex(Direction direction) {
+      surfaceIndex =
+          direction == Direction::Forward ? 0 : options.surfaces.size() - 1;
+    }
   };
 
   explicit DirectNavigator(std::unique_ptr<const Logger> _logger =
@@ -176,21 +181,26 @@ class DirectNavigator {
     }
 
     // Reset the surface index
-    state.navigation.surfaceIndex =
-        state.options.direction == Direction::Forward
-            ? 0
-            : state.navigation.options.surfaces.size() - 1;
+    state.navigation.resetSurfaceIndex(state.options.direction);
     for (const Surface* surface : state.navigation.options.surfaces) {
+      // make sure we skip over the start surface
+      state.navigation.nextSurface(state.options.direction);
       if (surface == state.navigation.currentSurface) {
         break;
       }
-      state.navigation.nextSurface(state.options.direction);
     }
     ACTS_VERBOSE("Start surface index set to "
                  << state.navigation.surfaceIndex);
     if (state.navigation.endOfSurfaces()) {
-      ACTS_ERROR("Start surface not found in the sequence.");
+      ACTS_DEBUG(
+          "Did not find the start surface in the sequence. Assuming it is not "
+          "part of the sequence. Trusting the correctness of the input "
+          "sequence.");
+      state.navigation.resetSurfaceIndex(state.options.direction);
     }
+
+    state.navigation.navigationBreak = false;
+    state.navigation.targetReached = false;
   }
 
   /// @brief Navigator pre step call
