@@ -347,6 +347,31 @@ void TrackingVolume::closeGeometry(
     std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
     std::size_t& vol, const GeometryIdentifierHook& hook,
     const Logger& logger) {
+  if (!boundarySurfaces().empty() && !portals().empty()) {
+    ACTS_ERROR(
+        "TrackingVolume::closeGeometry: Volume "
+        << volumeName()
+        << " has both boundary surfaces and portals. This is not supported.");
+    throw std::invalid_argument(
+        "Volume has both boundary surfaces and portals");
+  }
+
+  if (m_confinedVolumes && !volumes().empty()) {
+    ACTS_ERROR(
+        "TrackingVolume::closeGeometry: Volume "
+        << volumeName()
+        << " has both confined volumes and volumes. This is not supported.");
+    throw std::invalid_argument("Volume has both confined volumes and volumes");
+  }
+
+  if (m_confinedLayers && !surfaces().empty()) {
+    ACTS_ERROR(
+        "TrackingVolume::closeGeometry: Volume "
+        << volumeName()
+        << " has both confined layers and surfaces. This is not supported.");
+    throw std::invalid_argument("Volume has both confined layers and surfaces");
+  }
+
   // we can construct the volume ID from this
   auto volumeID = GeometryIdentifier().setVolume(++vol);
   // assign the Volume ID to the volume itself
@@ -379,7 +404,8 @@ void TrackingVolume::closeGeometry(
     // get the intersection solution
     auto& bSurface = bSurfIter->surfaceRepresentation();
     // create the boundary surface id
-    auto boundaryID = GeometryIdentifier(volumeID).setBoundary(++iboundary);
+    iboundary++;
+    auto boundaryID = GeometryIdentifier(volumeID).setBoundary(iboundary);
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<RegularSurface*>(&bSurface));
     mutableBSurface.assignGeometryId(boundaryID);
@@ -397,7 +423,8 @@ void TrackingVolume::closeGeometry(
       // loop over the layers
       for (auto& layerPtr : m_confinedLayers->arrayObjects()) {
         // create the layer identification
-        auto layerID = GeometryIdentifier(volumeID).setLayer(++ilayer);
+        ilayer++;
+        auto layerID = GeometryIdentifier(volumeID).setLayer(ilayer);
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
         mutableLayerPtr->closeGeometry(materialDecorator, layerID, hook,
@@ -428,10 +455,22 @@ void TrackingVolume::closeGeometry(
 
   GeometryIdentifier::Value iportal = 0;
   for (auto& portal : portals()) {
-    auto portalId = GeometryIdentifier(volumeID).setBoundary(++iportal);
+    iportal++;
+    auto portalId = GeometryIdentifier(volumeID).setBoundary(iportal);
     assert(portal.isValid() && "Invalid portal encountered during closing");
 
     portal.surface().assignGeometryId(portalId);
+  }
+
+  GeometryIdentifier::Value isensitive = 0;
+
+  for (auto& surface : surfaces()) {
+    if (surface.associatedDetectorElement() == nullptr) {
+      continue;
+    }
+    isensitive++;
+    auto sensitiveId = GeometryIdentifier(volumeID).setSensitive(isensitive);
+    surface.assignGeometryId(sensitiveId);
   }
 
   for (auto& volume : volumes()) {
@@ -682,6 +721,27 @@ void TrackingVolume::addSurface(std::shared_ptr<Surface> surface) {
     throw std::invalid_argument("Surface is nullptr");
   }
   m_surfaces.push_back(std::move(surface));
+}
+
+void TrackingVolume::visualize(IVisualization3D& helper,
+                               const GeometryContext& gctx,
+                               const ViewConfig& viewConfig,
+                               const ViewConfig& portalViewConfig,
+                               const ViewConfig& sensitiveViewConfig) const {
+  helper.object(volumeName());
+  Volume::visualize(helper, gctx, viewConfig);
+
+  if (!surfaces().empty()) {
+    helper.object(volumeName() + "_sensitives");
+  }
+  for (const auto& surface : surfaces()) {
+    surface.visualize(helper, gctx, sensitiveViewConfig);
+  }
+
+  for (const auto& child : volumes()) {
+    child.visualize(helper, gctx, viewConfig, portalViewConfig,
+                    sensitiveViewConfig);
+  }
 }
 
 }  // namespace Acts
