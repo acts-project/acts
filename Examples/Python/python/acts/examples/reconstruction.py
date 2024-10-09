@@ -90,7 +90,7 @@ SpacePointGridConfigArg = namedtuple(
         "maxPhiBins",
         "phi",  # (min,max)
     ],
-    defaults=[None] * 6 + [(-math.pi, math.pi)],
+    defaults=[None] * 6 + [(None, None)] * 1,
 )
 
 SeedingAlgorithmConfigArg = namedtuple(

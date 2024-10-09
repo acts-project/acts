@@ -57,9 +57,9 @@ struct CylindricalSpacePointGridConfig {
   // maximum impact parameter in mm
   float impactMax = 0 * Acts::UnitConstants::mm;
   // minimum phi value for phiAxis construction
-  double phiMin = -std::numbers::pi;
+  float phiMin = -std::numbers::pi_v<float>;
   // maximum phi value for phiAxis construction
-  double phiMax = std::numbers::pi;
+  float phiMax = std::numbers::pi_v<float>;
   // Multiplicator for the number of phi-bins. The minimum number of phi-bins
   // depends on min_pt, magnetic field: 2*M_PI/(minPT particle phi-deflection).
   // phiBinDeflectionCoverage is a multiplier for this number. If
@@ -90,14 +90,15 @@ struct CylindricalSpacePointGridConfig {
     config.zMin /= 1_mm;
     config.deltaRMax /= 1_mm;
 
-    if (config.phiMin < -std::numbers::pi || config.phiMax > std::numbers::pi) {
-      throw std::runtime_error("CylindricalSpacePointGridConfig: phiMin (" +
-                               std::to_string(config.phiMin) +
-                               ") and/or phiMax (" +
-                               std::to_string(config.phiMax) +
-                               ") are outside "
-                               "the allowed phi range, defined as "
-                               "[-std::numbers::pi, std::numbers::pi]");
+    if (config.phiMin < -std::numbers::pi_v<float> ||
+        config.phiMax > std::numbers::pi_v<float>) {
+      throw std::runtime_error(
+          "CylindricalSpacePointGridConfig: phiMin (" +
+          std::to_string(config.phiMin) + ") and/or phiMax (" +
+          std::to_string(config.phiMax) +
+          ") are outside "
+          "the allowed phi range, defined as "
+          "[-std::numbers::pi_v<float>, std::numbers::pi_v<float>]");
     }
     if (config.phiMin > config.phiMax) {
       throw std::runtime_error(
