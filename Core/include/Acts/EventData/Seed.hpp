@@ -14,7 +14,7 @@
 namespace Acts {
 
 template <typename external_spacepoint_t, std::size_t N = 3ul>
-  requires(N >= 3)
+  requires(N >= 3ul)
 class Seed {
  public:
   using value_type = external_spacepoint_t;
