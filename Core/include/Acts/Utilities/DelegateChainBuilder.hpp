@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/TypeList.hpp"
-#include "Acts/Utilities/TypeTag.hpp"
 
 #include <tuple>
 #include <type_traits>
@@ -18,12 +17,14 @@
 
 namespace Acts {
 
-template <typename, typename payload_types = TypeList<>, auto... Callables>
-class DelegateChainBuilder;
+template <typename Fn, typename payload_types = TypeList<>, auto... Callables>
+class DelegateChainBuilder {
+  static_assert(false, "Fn must be a valid function type");
+};
 
-// @TODO: Maybe add concept requirement for default initialization of R
 template <typename R, typename... payload_types, auto... callables,
           typename... callable_args>
+  requires(std::is_same_v<R, void> || std::is_default_constructible_v<R>)
 class DelegateChainBuilder<R(callable_args...), TypeList<payload_types...>,
                            callables...> {
   using return_type =
@@ -86,9 +87,6 @@ class DelegateChainBuilder<R(callable_args...), TypeList<payload_types...>,
     constexpr auto callable =
         DispatchBlock::template findCallable<0, 0, callables...>();
     delegate.template connect<callable>(std::get<0>(m_payloads));
-
-    // auto block = std::make_unique<const DispatchBlock>(m_payloads);
-    // delegate.template connect<&DispatchBlock::dispatch>(std::move(block));
   }
 
  private:
