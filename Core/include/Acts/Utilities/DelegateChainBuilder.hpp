@@ -18,15 +18,10 @@
 namespace Acts {
 
 template <typename Fn, typename payload_types = TypeList<>, auto... Callables>
-class DelegateChainBuilder {
-  static_assert(
-      false,
-      "Delegate chain return type must be void or default constructible");
-};
+class DelegateChainBuilder;
 
 template <typename R, typename... payload_types, auto... callables,
           typename... callable_args>
-  requires(std::is_same_v<R, void> || std::is_default_constructible_v<R>)
 class DelegateChainBuilder<R(callable_args...), TypeList<payload_types...>,
                            callables...> {
   using return_type =
@@ -143,6 +138,9 @@ class DelegateChainBuilder<R(callable_args...), TypeList<payload_types...>,
       if constexpr (std::is_same_v<R, void>) {
         invoke(nullptr, &m_payloads, std::forward<callable_args>(args)...);
       } else {
+        static_assert(
+            std::is_same_v<R, void> || std::is_default_constructible_v<R>,
+            "Delegate chain return type must be void or default constructible");
         return_type result{};
         invoke(&result, &m_payloads, std::forward<callable_args>(args)...);
         return result;
