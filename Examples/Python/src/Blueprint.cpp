@@ -46,7 +46,7 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   ACTS_LOCAL_LOGGER(getDefaultLogger("pseudoNavigation", logLevel));
 
   std::ofstream csv{path};
-  csv << "x,y,z,volume,boundary,sensitive" << std::endl;
+  csv << "x,y,z,volume,boundary,sensitive,material" << std::endl;
 
   std::mt19937 rnd{42};
 
@@ -89,9 +89,21 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
     csv << "," << volume->geometryId().volume();
     csv << "," << volume->geometryId().boundary();
     csv << "," << volume->geometryId().sensitive();
+    csv << "," << 0;
     csv << std::endl;
 
     ACTS_VERBOSE("start pseudo navigation");
+
+    auto writeIntersection = [&](const Vector3& position,
+                                 const Surface& surface) {
+      csv << run << "," << position[0] << "," << position[1] << ","
+          << position[2];
+      csv << "," << surface.geometryId().volume();
+      csv << "," << surface.geometryId().boundary();
+      csv << "," << surface.geometryId().sensitive();
+      csv << "," << (surface.surfaceMaterial() != nullptr ? 1 : 0);
+      csv << std::endl;
+    };
 
     for (std::size_t i = 0; i < 100; i++) {
       assert(currentVolume != nullptr);
@@ -122,28 +134,22 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
         ACTS_VERBOSE(
             "Already on surface at initialization, skipping candidate");
 
-        auto id = main.currentCandidate().surface().geometryId();
-        csv << run << "," << position[0] << "," << position[1] << ","
-            << position[2];
-        csv << "," << id.volume();
-        csv << "," << id.boundary();
-        csv << "," << id.sensitive();
-        csv << std::endl;
+        // auto id = main.currentCandidate().surface().geometryId();
+        // csv << run << "," << position[0] << "," << position[1] << ","
+        //     << position[2];
+        // csv << "," << id.volume();
+        // csv << "," << id.boundary();
+        // csv << "," << id.sensitive();
+
+        // csv << std::endl;
+
+        writeIntersection(position, main.currentCandidate().surface());
+
         if (!main.switchToNextCandidate()) {
           ACTS_WARNING("candidates exhausted unexpectedly");
           break;
         }
       }
-
-      auto writeIntersection = [&](const Vector3& position,
-                                   const Surface& surface) {
-        csv << run << "," << position[0] << "," << position[1] << ","
-            << position[2];
-        csv << "," << surface.geometryId().volume();
-        csv << "," << surface.geometryId().boundary();
-        csv << "," << surface.geometryId().sensitive();
-        csv << std::endl;
-      };
 
       bool terminated = false;
       while (main.remainingCandidates() > 0) {
@@ -167,7 +173,7 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
           csv << run << "," << subpos[0] << "," << subpos[1] << ","
               << subpos[2];
           csv << "," << currentVolume->geometryId().volume();
-          csv << ",0,0";  // zero boundary and sensitive ids
+          csv << ",0,0,0";  // zero boundary and sensitive ids
           csv << std::endl;
         }
 
@@ -369,24 +375,28 @@ void addBlueprint(Context& ctx) {
       py::arg("name"), py::arg("direction"));
 
   auto matNode =
-      py::class_<Acts::MaterialDesignatorBlueprintNode, Acts::BlueprintNode,
-                 std::shared_ptr<Acts::MaterialDesignatorBlueprintNode>>(
+      py::class_<MaterialDesignatorBlueprintNode, BlueprintNode,
+                 std::shared_ptr<MaterialDesignatorBlueprintNode>>(
           m, "MaterialDesignatorBlueprintNode")
-          .def(py::init<const std::string&, Experimental::ProtoBinning>(),
-               "name"_a, "binning"_a);
+          .def(py::init<const std::string&>(), "name"_a)
+          .def_property("name", &MaterialDesignatorBlueprintNode::name,
+                        &MaterialDesignatorBlueprintNode::setName)
+          .def_property("binning", &MaterialDesignatorBlueprintNode::binning,
+                        &MaterialDesignatorBlueprintNode::setBinning);
+
+  // py::class_<MaterialDesignatorBlueprintNode::BinningConfig>(matNode,
+  //                                                            "BinningConfig");
 
   addContextManagerProtocol(matNode);
 
   addNodeMethods(
       "Material",
-      [](BlueprintNode& self, const std::string& name,
-         const Experimental::ProtoBinning& binning) {
-        auto child =
-            std::make_shared<MaterialDesignatorBlueprintNode>(name, binning);
+      [](BlueprintNode& self, const std::string& name) {
+        auto child = std::make_shared<MaterialDesignatorBlueprintNode>(name);
         self.addChild(child);
         return child;
       },
-      "name"_a, "binning"_a);
+      "name"_a);
 
   auto layerNode =
       py::class_<Acts::LayerBlueprintNode, Acts::BlueprintNode,

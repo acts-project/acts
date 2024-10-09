@@ -102,9 +102,10 @@ CylinderContainerBlueprintNode& BlueprintNode::addCylinderContainer(
 }
 
 MaterialDesignatorBlueprintNode& BlueprintNode::addMaterial(
+    const std::string& name,
     const std::function<void(MaterialDesignatorBlueprintNode& material)>&
         callback) {
-  auto material = std::make_shared<MaterialDesignatorBlueprintNode>();
+  auto material = std::make_shared<MaterialDesignatorBlueprintNode>(name);
   addChild(material);
   if (callback) {
     callback(*material);

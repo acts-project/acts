@@ -8,59 +8,59 @@
 
 #pragma once
 
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/GraphViz.hpp"
+#include "Acts/Geometry/PortalShell.hpp"
+
+#include <utility>
+#include <variant>
 
 namespace Acts {
 
 class MaterialDesignatorBlueprintNode final : public BlueprintNode {
  public:
-  const std::string& name() const override {
-    const static std::string s_name = "Material";
-    return s_name;
-  }
+  // @TODO: This needs cuboid volume storage as well
+  // @TODO: I don't love the type
+  using BinningConfig = std::variant<std::vector<
+      std::tuple<CylinderPortalShell::Face, Experimental::ProtoBinning,
+                 Experimental::ProtoBinning>>>;
 
-  void toStream(std::ostream& os) const override {
-    os << "MaterialDesignatorBlueprintNode(" << name() << ")";
-  }
+  MaterialDesignatorBlueprintNode(const std::string& name) : m_name(name) {}
+
+  const std::string& name() const override;
+
+  void toStream(std::ostream& os) const override;
 
   Volume& build(const Options& options, const GeometryContext& gctx,
-                const Logger& logger = Acts::getDummyLogger()) override {
-    if (children().size() != 1) {
-      throw std::runtime_error(
-          "MaterialDesignatorBlueprintNode must have exactly one child");
-    }
-    return children().at(0).build(options, gctx, logger);
-  }
+                const Logger& logger = Acts::getDummyLogger()) override;
 
   PortalShellBase& connect(
       const Options& options, const GeometryContext& gctx,
-      const Logger& logger = Acts::getDummyLogger()) override {
-    if (children().size() != 1) {
-      throw std::runtime_error(
-          "MaterialDesignatorBlueprintNode must have exactly one child");
-    }
-    return children().at(0).connect(options, gctx, logger);
-  }
+      const Logger& logger = Acts::getDummyLogger()) override;
 
   void finalize(const Options& options, TrackingVolume& parent,
-                const Logger& logger) override {
-    if (children().size() != 1) {
-      throw std::runtime_error(
-          "MaterialDesignatorBlueprintNode must have exactly one child");
-    }
-    return children().at(0).finalize(options, parent, logger);
+                const Logger& logger) override;
+
+  void addToGraphviz(std::ostream& os) const override;
+
+  const std::optional<BinningConfig>& binning() { return m_binning; }
+
+  MaterialDesignatorBlueprintNode& setBinning(BinningConfig binning) {
+    m_binning = std::move(binning);
+    return *this;
   }
 
-  void addToGraphviz(std::ostream& os) const override {
-    os << GraphViz::Node{.id = name(), .shape = GraphViz::Shape::InvTrapezium};
-    BlueprintNode::addToGraphviz(os);
+  const std::string& getName() const { return m_name; }
+
+  MaterialDesignatorBlueprintNode& setName(std::string name) {
+    m_name = std::move(name);
+    return *this;
   }
 
  private:
-  std::string m_name;
-  std::string m_material;
+  std::string m_name{};
+
+  std::optional<BinningConfig> m_binning{};
 };
 
 }  // namespace Acts

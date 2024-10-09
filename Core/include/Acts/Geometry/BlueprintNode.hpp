@@ -77,6 +77,7 @@ class BlueprintNode {
           callback = {});
 
   MaterialDesignatorBlueprintNode& addMaterial(
+      const std::string& name,
       const std::function<void(MaterialDesignatorBlueprintNode& material)>&
           callback = {});
 
