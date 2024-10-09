@@ -1,15 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -20,6 +21,7 @@
 #include "ActsExamples/Io/Csv/CsvProtoTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvSpacePointsBucketWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
@@ -56,6 +58,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace Acts {
 class TrackingGeometry;
@@ -118,13 +121,24 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_MEMBER(offset);
     ACTS_PYTHON_MEMBER(lineThickness);
     ACTS_PYTHON_MEMBER(surfaceThickness);
-    ACTS_PYTHON_MEMBER(nSegments);
+    ACTS_PYTHON_MEMBER(quarterSegments);
     ACTS_PYTHON_MEMBER(triangulate);
     ACTS_PYTHON_MEMBER(outputName);
     ACTS_PYTHON_STRUCT_END();
 
     patchKwargsConstructor(c);
+
+    py::class_<Color>(m, "Color")
+        .def(py::init<>())
+        .def(py::init<int, int, int>())
+        .def(py::init<double, double, double>())
+        .def(py::init<std::string_view>())
+        .def_readonly("rgb", &Color::rgb);
   }
+
+  py::class_<IVisualization3D>(m, "IVisualization3D")
+      .def("write", py::overload_cast<const std::filesystem::path&>(
+                        &IVisualization3D::write, py::const_));
 
   {
     using Writer = ActsExamples::ObjTrackingGeometryWriter;
@@ -361,6 +375,10 @@ void addOutput(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSpacepointWriter, mex,
                              "CsvSpacepointWriter", inputSpacepoints, outputDir,
                              outputPrecision);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSpacePointsBucketWriter, mex,
+                             "CsvSpacePointsBucketWriter", inputBuckets,
+                             outputDir, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvTrackWriter, mex,
                              "CsvTrackWriter", inputTracks, outputDir, fileName,

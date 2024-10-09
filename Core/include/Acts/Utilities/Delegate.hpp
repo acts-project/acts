@@ -1,14 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
-#include "Acts/Utilities/TypeTraits.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 
 #include <cassert>
 #include <functional>
@@ -16,7 +16,6 @@
 #include <type_traits>
 
 namespace Acts {
-
 /// Ownership enum for @c Delegate
 enum class DelegateType { Owning, NonOwning };
 
@@ -45,6 +44,7 @@ class Delegate;
 ///
 template <typename R, typename H, DelegateType O, typename... Args>
 class Delegate<R(Args...), H, O> {
+ public:
   static constexpr DelegateType kOwnership = O;
 
   /// Alias of the return type
@@ -52,11 +52,12 @@ class Delegate<R(Args...), H, O> {
   using holder_type = H;
   /// Alias to the function pointer type this class will store
   using function_type = return_type (*)(const holder_type *, Args...);
-
   using function_ptr_type = return_type (*)(Args...);
+  using signature_type = R(Args...);
 
   using deleter_type = void (*)(const holder_type *);
 
+ private:
   template <typename T, typename C>
   using isSignatureCompatible =
       decltype(std::declval<T &>() = std::declval<C>());
@@ -65,11 +66,12 @@ class Delegate<R(Args...), H, O> {
       Delegate<R(Args...), holder_type, DelegateType::Owning>;
   using NonOwningDelegate =
       Delegate<R(Args...), holder_type, DelegateType::NonOwning>;
+
   template <typename T>
-  using isNoFunPtr =
-      std::enable_if_t<!std::is_convertible_v<std::decay_t<T>, function_type> &&
-                       !std::is_same_v<std::decay_t<T>, OwningDelegate> &&
-                       !std::is_same_v<std::decay_t<T>, NonOwningDelegate>>;
+  using isNoFunPtr = std::conjunction<
+      std::negation<std::is_convertible<std::decay_t<T>, function_type>>,
+      std::negation<std::is_same<std::decay_t<T>, OwningDelegate>>,
+      std::negation<std::is_same<std::decay_t<T>, NonOwningDelegate>>>;
 
  public:
   Delegate() = default;
@@ -91,8 +93,10 @@ class Delegate<R(Args...), H, O> {
   /// @param callable The callable (function object or lambda)
   /// @note @c Delegate does not assume owner ship over @p callable. You need to ensure
   ///       it's lifetime is longer than that of @c Delegate.
-  template <typename Callable, typename = isNoFunPtr<Callable>>
-  explicit Delegate(Callable &callable) {
+  template <typename Callable>
+  explicit Delegate(Callable &callable)
+    requires(isNoFunPtr<Callable>::value)
+  {
     connect(callable);
   }
 
@@ -110,16 +114,20 @@ class Delegate<R(Args...), H, O> {
   /// @param instance The instance on which the member function pointer should be called on
   /// @note @c Delegate does not assume owner ship over @p instance.
   /// @note @c DelegateFuncTag is used to communicate the callable type
-  template <auto Callable, typename Type, DelegateType T = kOwnership,
-            typename = std::enable_if_t<T == DelegateType::NonOwning>>
-  Delegate(DelegateFuncTag<Callable> /*tag*/, const Type *instance) {
+  template <auto Callable, typename Type>
+
+  Delegate(DelegateFuncTag<Callable> /*tag*/, const Type *instance)
+    requires(kOwnership == DelegateType::NonOwning)
+  {
     connect<Callable>(instance);
   }
 
   /// Constructor from rvalue reference is deleted, should catch construction
   /// with temporary objects and thus invalid pointers
-  template <typename Callable, typename = isNoFunPtr<Callable>>
-  Delegate(Callable &&) = delete;
+  template <typename Callable>
+  Delegate(Callable &&)
+    requires(isNoFunPtr<Callable>::value)
+  = delete;
 
   /// Assignment operator with an explicit runtime callable
   /// @param callable The runtime value of the callable
@@ -133,26 +141,32 @@ class Delegate<R(Args...), H, O> {
   /// @param callable The callable (function object or lambda)
   /// @note @c Delegate does not assume owner ship over @p callable. You need to ensure
   ///       it's lifetime is longer than that of @c Delegate.
-  template <typename Callable, typename = isNoFunPtr<Callable>>
-  void operator=(Callable &callable) {
+  template <typename Callable>
+  void operator=(Callable &callable)
+    requires(isNoFunPtr<Callable>::value)
+  {
     connect(callable);
   }
 
   /// Assignment operator from rvalue reference is deleted, should catch
   /// assignment from temporary objects and thus invalid pointers
-  template <typename Callable, typename = isNoFunPtr<Callable>>
-  void operator=(Callable &&) = delete;
+  template <typename Callable>
+  void operator=(Callable &&)
+    requires(isNoFunPtr<Callable>::value)
+  = delete;
 
   /// Connect a free function pointer.
   /// @note The function pointer must be ``constexpr`` for @c Delegate to accept it
   /// @tparam Callable The compile-time free function pointer
   template <auto Callable>
-  void connect() {
+  void connect()
+    requires(
+        Concepts::invocable_and_returns<Callable, return_type, Args && ...>)
+  {
     m_payload.payload = nullptr;
 
     static_assert(
-        Concepts::is_detected<isSignatureCompatible, function_ptr_type,
-                              decltype(Callable)>::value,
+        Concepts::invocable_and_returns<Callable, return_type, Args &&...>,
         "Callable given does not correspond exactly to required call "
         "signature");
 
@@ -167,15 +181,19 @@ class Delegate<R(Args...), H, O> {
   /// @param callable The callable (function object or lambda)
   /// @note @c Delegate does not assume owner ship over @p callable. You need to ensure
   ///       it's lifetime is longer than that of @c Delegate.
-  template <typename Callable, typename = isNoFunPtr<Callable>>
-  void connect(Callable &callable) {
+  template <typename Callable>
+  void connect(Callable &callable)
+    requires(isNoFunPtr<Callable>::value)
+  {
     connect<&Callable::operator(), Callable>(&callable);
   }
 
   /// Connection with rvalue reference is deleted, should catch assignment
   /// from temporary objects and thus invalid pointers
-  template <typename Callable, typename = isNoFunPtr<Callable>>
-  void connect(Callable &&) = delete;
+  template <typename Callable>
+  void connect(Callable &&)
+    requires(isNoFunPtr<Callable>::value)
+  = delete;
 
   /// Connect anything that is assignable to the function pointer
   /// @param callable The runtime value of the callable
@@ -189,22 +207,27 @@ class Delegate<R(Args...), H, O> {
     m_function = callable;
   }
 
+  template <typename Type>
+  void connect(function_type callable, const Type *instance)
+    requires(kOwnership == DelegateType::NonOwning)
+  {
+    m_payload.payload = instance;
+    m_function = callable;
+  }
+
   /// Connect a member function to be called on an instance
   /// @tparam Callable The compile-time member function pointer
   /// @tparam Type The type of the instance the member function should be called on
   /// @param instance The instance on which the member function pointer should be called on
   /// @note @c Delegate does not assume owner ship over @p instance. You need to ensure
   ///       it's lifetime is longer than that of @c Delegate.
-  template <auto Callable, typename Type, DelegateType T = kOwnership,
-            typename = std::enable_if_t<T == DelegateType::NonOwning>>
-  void connect(const Type *instance) {
-    using member_ptr_type = return_type (Type::*)(Args...) const;
+  template <auto Callable, typename Type>
+  void connect(const Type *instance)
+    requires(kOwnership == DelegateType::NonOwning &&
+             Concepts::invocable_and_returns<Callable, return_type, Type,
+                                             Args && ...>)
 
-    static_assert(Concepts::is_detected<isSignatureCompatible, member_ptr_type,
-                                        decltype(Callable)>::value,
-                  "Callable given does not correspond exactly to required call "
-                  "signature");
-
+  {
     m_payload.payload = instance;
 
     m_function = [](const holder_type *payload, Args... args) -> return_type {
@@ -220,15 +243,12 @@ class Delegate<R(Args...), H, O> {
   /// @tparam Type The type of the instance the member function should be called on
   /// @param instance The instance on which the member function pointer should be called on
   /// @note @c Delegate assumes owner ship over @p instance.
-  template <auto Callable, typename Type, DelegateType T = kOwnership,
-            typename = std::enable_if_t<T == DelegateType::Owning>>
-  void connect(std::unique_ptr<const Type> instance) {
-    using member_ptr_type = return_type (Type::*)(Args &&...) const;
-    static_assert(Concepts::is_detected<isSignatureCompatible, member_ptr_type,
-                                        decltype(Callable)>::value,
-                  "Callable given does not correspond exactly to required call "
-                  "signature");
-
+  template <auto Callable, typename Type>
+  void connect(std::unique_ptr<const Type> instance)
+    requires(kOwnership == DelegateType::Owning &&
+             Concepts::invocable_and_returns<Callable, return_type, Type,
+                                             Args && ...>)
+  {
     m_payload.payload = std::unique_ptr<const holder_type, deleter_type>(
         instance.release(), [](const holder_type *payload) {
           const auto *concretePayload = static_cast<const Type *>(payload);
@@ -247,7 +267,9 @@ class Delegate<R(Args...), H, O> {
   /// @param args The arguments to call the contained function with
   /// @return Return value of the contained function
   template <typename... Ts>
-  return_type operator()(Ts &&...args) const {
+  return_type operator()(Ts &&...args) const
+    requires(std::is_invocable_v<function_type, const holder_type *, Ts...>)
+  {
     assert(connected() && "Delegate is not connected");
     return std::invoke(m_function, m_payload.ptr(), std::forward<Ts>(args)...);
   }
@@ -266,9 +288,9 @@ class Delegate<R(Args...), H, O> {
     m_function = nullptr;
   }
 
-  template <typename holder_t = holder_type,
-            typename = std::enable_if_t<!std::is_same_v<holder_t, void>>>
-  const holder_type *instance() const {
+  const holder_type *instance() const
+    requires(!std::same_as<holder_type, void>)
+  {
     return m_payload.ptr();
   }
 
@@ -316,6 +338,11 @@ class OwningDelegate;
 /// Alias for an owning delegate
 template <typename R, typename H, typename... Args>
 class OwningDelegate<R(Args...), H>
-    : public Delegate<R(Args...), H, DelegateType::Owning> {};
+    : public Delegate<R(Args...), H, DelegateType::Owning> {
+ public:
+  OwningDelegate() = default;
+  OwningDelegate(Delegate<R(Args...), H, DelegateType::Owning> &&delegate)
+      : Delegate<R(Args...), H, DelegateType::Owning>(std::move(delegate)) {}
+};
 
 }  // namespace Acts

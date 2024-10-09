@@ -7,7 +7,7 @@ find_package(
     Acts
     CONFIG
     REQUIRED
-    COMPONENTS Core Fatras PluginJson PluginLegacy PluginTGeo
+    COMPONENTS Core Fatras PluginJson PluginLegacy PluginTGeo PluginCovfie
 )
 
 # place artifacts in GNU-like paths, e.g. binaries in `<build>/bin`
@@ -24,7 +24,13 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
 add_executable(ShowActsVersion ShowActsVersion.cpp)
 target_link_libraries(
     ShowActsVersion
-    PRIVATE ActsCore ActsFatras ActsPluginJson ActsPluginLegacy ActsPluginTGeo
+    PRIVATE
+        ActsCore
+        ActsFatras
+        ActsPluginJson
+        ActsPluginLegacy
+        ActsPluginTGeo
+        ActsPluginCovfie
 )
 
 option(DD4HEP "Build with DD4hep" ON)
@@ -46,4 +52,11 @@ if(EDM4HEP)
     message(STATUS "Adding EDM4hep plugin")
     find_package(Acts CONFIG REQUIRED COMPONENTS PluginEDM4hep)
     target_link_libraries(ShowActsVersion PRIVATE ActsPluginEDM4hep)
+endif()
+
+option(GEOMODEL "Build with GeoModel" ON)
+if(GEOMODEL)
+    message(STATUS "Adding GeoModel plugin")
+    find_package(Acts CONFIG REQUIRED COMPONENTS PluginGeoModel)
+    target_link_libraries(ShowActsVersion PRIVATE ActsPluginGeoModel)
 endif()

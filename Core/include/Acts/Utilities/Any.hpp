@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -142,9 +142,9 @@ class AnyBase : public AnyBaseAll {
   AnyBase() = default;
 #endif
 
-  template <typename T, typename = std::enable_if_t<
-                            !std::is_same_v<std::decay_t<T>, AnyBase<SIZE>>>>
+  template <typename T>
   explicit AnyBase(T&& value)
+    requires(!std::same_as<std::decay_t<T>, AnyBase<SIZE>>)
       : AnyBase{std::in_place_type<T>, std::forward<T>(value)} {}
 
   template <typename T>
