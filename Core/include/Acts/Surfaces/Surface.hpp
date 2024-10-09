@@ -482,7 +482,7 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const Vector3& position) const = 0;
 
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
-                 const ViewConfig& viewConfig = {}) const;
+                 const ViewConfig& viewConfig = s_viewSurface) const;
 
  protected:
   /// Output Method for std::ostream, to be overloaded by child classes
