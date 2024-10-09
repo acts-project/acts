@@ -180,13 +180,14 @@ void addGeometry(Context& ctx) {
     py::class_<Acts::VolumeBounds, std::shared_ptr<Acts::VolumeBounds>>(
         m, "VolumeBounds");
 
-    py::class_<Acts::CylinderVolumeBounds,
-               std::shared_ptr<Acts::CylinderVolumeBounds>, Acts::VolumeBounds>(
-        m, "CylinderVolumeBounds")
-        .def(py::init<ActsScalar, ActsScalar, ActsScalar, ActsScalar,
-                      ActsScalar, ActsScalar, ActsScalar>(),
-             "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = M_PI, "avgphi"_a = 0.,
-             "bevelMinZ"_a = 0., "bevelMaxZ"_a = 0.);
+    auto cvb =
+        py::class_<Acts::CylinderVolumeBounds,
+                   std::shared_ptr<Acts::CylinderVolumeBounds>,
+                   Acts::VolumeBounds>(m, "CylinderVolumeBounds")
+            .def(py::init<ActsScalar, ActsScalar, ActsScalar, ActsScalar,
+                          ActsScalar, ActsScalar, ActsScalar>(),
+                 "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = M_PI,
+                 "avgphi"_a = 0., "bevelMinZ"_a = 0., "bevelMaxZ"_a = 0.);
   }
 
   {
@@ -307,10 +308,15 @@ void addExperimentalGeometry(Context& ctx) {
     // Be able to construct a proto binning
     py::class_<ProtoBinning>(m, "ProtoBinning")
         .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType,
-                      const std::vector<Acts::ActsScalar>&, std::size_t>())
+                      const std::vector<Acts::ActsScalar>&, std::size_t>(),
+             "bValue"_a, "bType"_a, "e"_a, "exp"_a = 0u)
         .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType,
                       Acts::ActsScalar, Acts::ActsScalar, std::size_t,
-                      std::size_t>());
+                      std::size_t>(),
+             "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a, "exp"_a = 0u)
+        .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType, std::size_t,
+                      std::size_t>(),
+             "bValue"_a, "bType"_a, "nbins"_a, "exp"_a = 0u);
   }
 
   {
