@@ -3,6 +3,7 @@
 import os
 import argparse
 import pathlib
+import math
 
 import acts
 import acts.examples
@@ -412,8 +413,8 @@ if args.reco:
                 maxSharedTracksPerMeasurement=2,
                 pTMax=1400,
                 pTMin=0.5,
-                phiMax=3.14,
-                phiMin=-3.14,
+                phiMax=math.pi,
+                phiMin=-math.pi,
                 etaMax=4,
                 etaMin=-4,
                 useAmbiguityFunction=False,

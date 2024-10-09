@@ -167,9 +167,11 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
 
   // Space points are assumed to be ALREADY CORRECTED for beamspot position
   // phi, z and r space point selection comes naturally from the
-  // grid axis definition. No need to explicitly cut on those values.
+  // grid axis definition. Calling `isInside` will let us know if we are
+  // inside the grid range.
   // If a space point is outside the validity range of these quantities
-  // it goes in an over- or under-flow bin.
+  // it goes in an over- or under-flow bin. We want to avoid to consider those
+  // and skip some computations.
   // Additional cuts can be applied by customizing the space point selector
   // in the config object.
 
@@ -189,8 +191,12 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     }
 
     // fill rbins into grid
-    std::size_t globIndex = grid.globalBinFromPosition(
-        Acts::Vector3{sp.phi(), sp.z(), sp.radius()});
+    Acts::Vector3 position(sp.phi(), sp.z(), sp.radius());
+    if (!grid.isInside(position)) {
+      continue;
+    }
+
+    std::size_t globIndex = grid.globalBinFromPosition(position);
     auto& rbin = grid.at(globIndex);
     rbin.push_back(&sp);
 
