@@ -195,7 +195,7 @@ class DirectNavigator {
       ACTS_DEBUG(
           "Did not find the start surface in the sequence. Assuming it is not "
           "part of the sequence. Trusting the correctness of the input "
-          "sequence.");
+          "sequence. Resetting the surface index.");
       state.navigation.resetSurfaceIndex(state.options.direction);
     }
 
