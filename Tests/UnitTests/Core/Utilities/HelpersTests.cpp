@@ -297,6 +297,20 @@ BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(Overloaded) {
+  struct A {};
+  std::variant<int, double, A> var;
+
+  var = 42;
+
+  std::visit(overloaded{
+                 [](int) { BOOST_CHECK(true); },
+                 [](double) { BOOST_CHECK(false); },
+                 [](A) { BOOST_CHECK(false); },
+             },
+             var);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test
