@@ -19,7 +19,9 @@ namespace Acts {
 
 template <typename Fn, typename payload_types = TypeList<>, auto... Callables>
 class DelegateChainBuilder {
-  static_assert(false, "Fn must be a valid function type");
+  static_assert(
+      false,
+      "Delegate chain return type must be void or default constructible");
 };
 
 template <typename R, typename... payload_types, auto... callables,
