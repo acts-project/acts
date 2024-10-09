@@ -53,7 +53,7 @@ bool Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::inside(
     const Acts::Vector2& lposition,
     const Acts::BoundaryTolerance& boundaryTolerance) const {
   return detail::insidePolygon(
-      std::span<const Vector2>(m_vertices.begin(), m_vertices.end()),
+      std::span<const Vector2>(m_vertices.data(), m_vertices.size()),
       boundaryTolerance, lposition, std::nullopt);
 }
 
