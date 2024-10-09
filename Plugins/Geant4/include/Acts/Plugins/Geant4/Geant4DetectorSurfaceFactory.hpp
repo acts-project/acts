@@ -67,7 +67,7 @@ class Geant4DetectorSurfaceFactory {
     /// Convert the length scale
     ActsScalar scaleConversion = 1.;
     /// Convert the material
-    bool convertMaterial = true;
+    bool convertMaterial = false;
     /// Converted material thickness (< 0 indicates keeping original thickness)
     ActsScalar convertedMaterialThickness = -1;
     /// A selector for sensitive surfaces
