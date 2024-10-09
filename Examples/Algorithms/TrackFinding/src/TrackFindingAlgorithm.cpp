@@ -174,13 +174,13 @@ class BranchStopper {
   using BranchStopperResult =
       Acts::CombinatorialKalmanFilterBranchStopperResult;
 
-  struct BrachState {
+  struct BranchState {
     std::size_t nPixelHoles = 0;
     std::size_t nStripHoles = 0;
   };
 
-  static constexpr Acts::ProxyAccessor<BrachState> branchStateAccessor =
-      Acts::ProxyAccessor<BrachState>(Acts::hashString("MyBranchState"));
+  static constexpr Acts::ProxyAccessor<BranchState> branchStateAccessor =
+      Acts::ProxyAccessor<BranchState>(Acts::hashString("MyBranchState"));
 
   mutable std::atomic<std::size_t> m_nStoppedBranches{0};
 
@@ -400,8 +400,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   TrackContainer tracksTemp(trackContainerTemp, trackStateContainerTemp);
 
   // Note that not all backends support PODs as column types
-  tracks.addColumn<BranchStopper::BrachState>("MyBranchState");
-  tracksTemp.addColumn<BranchStopper::BrachState>("MyBranchState");
+  tracks.addColumn<BranchStopper::BranchState>("MyBranchState");
+  tracksTemp.addColumn<BranchStopper::BranchState>("MyBranchState");
 
   tracks.addColumn<unsigned int>("trackGroup");
   tracksTemp.addColumn<unsigned int>("trackGroup");
