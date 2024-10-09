@@ -106,7 +106,12 @@ void addGeometry(Context& ctx) {
         .def("approach", &Acts::GeometryIdentifier::approach)
         .def("sensitive", &Acts::GeometryIdentifier::sensitive)
         .def("extra", &Acts::GeometryIdentifier::extra)
-        .def("value", &Acts::GeometryIdentifier::value);
+        .def("value", &Acts::GeometryIdentifier::value)
+        .def("__str__", [](const Acts::GeometryIdentifier& self) {
+          std::stringstream ss;
+          ss << self;
+          return ss.str();
+        });
   }
 
   {
