@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
@@ -51,8 +52,9 @@ Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::type() const {
 bool Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::inside(
     const Acts::Vector2& lposition,
     const Acts::BoundaryTolerance& boundaryTolerance) const {
-  return detail::insidePolygon({m_vertices.begin(), m_vertices.end()},
-                               boundaryTolerance, lposition, std::nullopt);
+  return detail::insidePolygon(
+      std::span<const Vector2>(m_vertices.begin(), m_vertices.end()),
+      boundaryTolerance, lposition, std::nullopt);
 }
 
 std::vector<Acts::Vector2> Acts::ConvexPolygonBounds<
