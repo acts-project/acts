@@ -8,9 +8,13 @@
 
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
+#include "Acts/EventData/Types.hpp"
 
 #include <cstddef>
+#include <span>
 
 namespace Acts::detail {
 
@@ -20,16 +24,17 @@ using TrackStateTraits =
 ActsScalar calculateDeterminant(
     const double* fullCalibratedCovariance,
     TrackStateTraits::Covariance predictedCovariance,
-    TrackStateTraits::Projector projector, unsigned int calibratedSize) {
+    BoundSubspaceIndices projector, unsigned int calibratedSize) {
   return visit_measurement(calibratedSize, [&](auto N) {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
+    std::span s{projector.begin(), projector.begin() + kMeasurementSize};
+    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(s);
 
     typename Acts::TrackStateTraits<
         kMeasurementSize, true>::CalibratedCovariance calibratedCovariance{
         fullCalibratedCovariance};
 
-    const auto H =
-        projector.template topLeftCorner<kMeasurementSize, eBoundSize>().eval();
+    const auto H = subspaceHelper.projector();
 
     return (H * predictedCovariance * H.transpose() + calibratedCovariance)
         .determinant();
