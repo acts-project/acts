@@ -12,6 +12,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
+#include <numbers>
 #include <vector>
 
 namespace Acts {
@@ -56,9 +57,9 @@ struct CylindricalSpacePointGridConfig {
   // maximum impact parameter in mm
   float impactMax = 0 * Acts::UnitConstants::mm;
   // minimum phi value for phiAxis construction
-  float phiMin = -M_PI;
+  float phiMin = -std::numbers::pi_v<float>;
   // maximum phi value for phiAxis construction
-  float phiMax = M_PI;
+  float phiMax = std::numbers::pi_v<float>;
   // Multiplicator for the number of phi-bins. The minimum number of phi-bins
   // depends on min_pt, magnetic field: 2*M_PI/(minPT particle phi-deflection).
   // phiBinDeflectionCoverage is a multiplier for this number. If
@@ -78,6 +79,7 @@ struct CylindricalSpacePointGridConfig {
           "Repeated conversion to internal units for "
           "CylindricalSpacePointGridConfig");
     }
+
     using namespace Acts::UnitLiterals;
     CylindricalSpacePointGridConfig config = *this;
     config.isInInternalUnits = true;
@@ -88,13 +90,36 @@ struct CylindricalSpacePointGridConfig {
     config.zMin /= 1_mm;
     config.deltaRMax /= 1_mm;
 
+    if (config.phiMin < -std::numbers::pi_v<float> ||
+        config.phiMax > std::numbers::pi_v<float>) {
+      throw std::runtime_error(
+          "CylindricalSpacePointGridConfig: phiMin (" +
+          std::to_string(config.phiMin) + ") and/or phiMax (" +
+          std::to_string(config.phiMax) +
+          ") are outside "
+          "the allowed phi range, defined as "
+          "[-std::numbers::pi_v<float>, std::numbers::pi_v<float>]");
+    }
+    if (config.phiMin > config.phiMax) {
+      throw std::runtime_error(
+          "CylindricalSpacePointGridConfig: phiMin is bigger then phiMax");
+    }
+    if (config.rMin > config.rMax) {
+      throw std::runtime_error(
+          "CylindricalSpacePointGridConfig: rMin is bigger then rMax");
+    }
+    if (config.zMin > config.zMax) {
+      throw std::runtime_error(
+          "CylindricalSpacePointGridConfig: zMin is bigger than zMax");
+    }
+
     return config;
   }
 };
 
 struct CylindricalSpacePointGridOptions {
   // magnetic field
-  float bFieldInZ = 0;
+  float bFieldInZ = 0.;
   bool isInInternalUnits = false;
   CylindricalSpacePointGridOptions toInternalUnits() const {
     if (isInInternalUnits) {
