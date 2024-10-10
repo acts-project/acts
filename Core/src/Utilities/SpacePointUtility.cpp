@@ -15,6 +15,7 @@
 #include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -76,7 +77,7 @@ SpacePointUtility::globalCoords(
   //
   auto x = globalPos[ePos0];
   auto y = globalPos[ePos1];
-  auto scale = 2 / std::hypot(x, y);
+  auto scale = 2 / fastHypot(x, y);
   ActsMatrix<2, 3> jacXyzToRhoZ = ActsMatrix<2, 3>::Zero();
   jacXyzToRhoZ(0, ePos0) = scale * x;
   jacXyzToRhoZ(0, ePos1) = scale * y;
@@ -112,8 +113,9 @@ Vector2 SpacePointUtility::calcRhoZVars(
   const auto var2 = paramCovAccessor(slinkBack).second(0, 0);
 
   // strip1 and strip2 are tilted at +/- theta/2
-  double sigma_x = std::hypot(var1, var2) / (2 * sin(theta * 0.5));
-  double sigma_y = std::hypot(var1, var2) / (2 * cos(theta * 0.5));
+  double sigma = fastHypot(var1, var2);
+  double sigma_x = sigma / (2 * sin(theta * 0.5));
+  double sigma_y = sigma / (2 * cos(theta * 0.5));
 
   // projection to the surface with strip1.
   double sig_x1 = sigma_x * cos(0.5 * theta) + sigma_y * sin(0.5 * theta);
@@ -138,7 +140,7 @@ Vector2 SpacePointUtility::rhoZCovariance(const GeometryContext& gctx,
 
   auto x = globalPos[ePos0];
   auto y = globalPos[ePos1];
-  auto scale = 2 / std::hypot(x, y);
+  auto scale = 2 / globalPos.head<2>().norm();
   ActsMatrix<2, 3> jacXyzToRhoZ = ActsMatrix<2, 3>::Zero();
   jacXyzToRhoZ(0, ePos0) = scale * x;
   jacXyzToRhoZ(0, ePos1) = scale * y;
