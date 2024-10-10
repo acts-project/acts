@@ -27,10 +27,54 @@
 
 namespace Acts {
 
+namespace {
+std::shared_ptr<RegularSurface> mergedSurface(const Surface& a,
+                                              const Surface& b,
+                                              BinningValue direction) {
+  if (a.type() != b.type()) {
+    throw std::invalid_argument{"Cannot merge surfaces of different types"};
+  }
+
+  if (const auto* cylinderA = dynamic_cast<const CylinderSurface*>(&a);
+      cylinderA != nullptr) {
+    const auto& cylinderB = dynamic_cast<const CylinderSurface&>(b);
+
+    auto [merged, reversed] = cylinderA->mergedWith(cylinderB, direction, true);
+    return merged;
+  } else if (const auto* discA = dynamic_cast<const DiscSurface*>(&a);
+             discA != nullptr) {
+    const auto& discB = dynamic_cast<const DiscSurface&>(b);
+    auto [merged, reversed] = discA->mergedWith(discB, direction, true);
+    return merged;
+  } else if (const auto* planeA = dynamic_cast<const PlaneSurface*>(&a);
+             planeA != nullptr) {
+    throw std::logic_error{"Plane surfaces not implemented yet"};
+  } else {
+    throw std::invalid_argument{"Unsupported surface type"};
+  }
+}
+
+std::shared_ptr<RegularSurface> mergePortalLinks(
+    const std::vector<std::unique_ptr<PortalLinkBase>>& links,
+    BinningValue direction) {
+  assert(std::ranges::all_of(links,
+                             [](const auto& link) { return link != nullptr; }));
+  assert(!links.empty());
+
+  std::shared_ptr<RegularSurface> result = links.front()->surfacePtr();
+  for (auto it = std::next(links.begin()); it != links.end(); ++it) {
+    assert(result != nullptr);
+    result = mergedSurface(*result, it->get()->surface(), direction);
+  }
+
+  return result;
+}
+}  // namespace
+
 CompositePortalLink::CompositePortalLink(std::unique_ptr<PortalLinkBase> a,
                                          std::unique_ptr<PortalLinkBase> b,
                                          BinningValue direction, bool flatten)
-    : PortalLinkBase(mergedSurface(a.get(), b.get(), direction)),
+    : PortalLinkBase(mergedSurface(a->surface(), b->surface(), direction)),
       m_direction{direction} {
   if (!flatten) {
     m_children.push_back(std::move(a));
@@ -51,6 +95,35 @@ CompositePortalLink::CompositePortalLink(std::unique_ptr<PortalLinkBase> a,
 
     handle(std::move(a));
     handle(std::move(b));
+  }
+}
+
+CompositePortalLink::CompositePortalLink(
+    std::vector<std::unique_ptr<PortalLinkBase>> links, BinningValue direction,
+    bool flatten)
+    : PortalLinkBase(mergePortalLinks(links, direction)),
+      m_direction(direction) {
+  if (!flatten) {
+    for (auto& child : links) {
+      m_children.push_back(std::move(child));
+    }
+
+  } else {
+    auto handle = [&](std::unique_ptr<PortalLinkBase> link) {
+      if (auto* composite = dynamic_cast<CompositePortalLink*>(link.get());
+          composite != nullptr) {
+        m_children.insert(
+            m_children.end(),
+            std::make_move_iterator(composite->m_children.begin()),
+            std::make_move_iterator(composite->m_children.end()));
+      } else {
+        m_children.push_back(std::move(link));
+      }
+    };
+
+    for (auto& child : links) {
+      handle(std::move(child));
+    }
   }
 }
 
@@ -81,36 +154,6 @@ Result<const TrackingVolume*> CompositePortalLink::resolveVolume(
   }
 
   return PortalError::PositionNotOnAnyChildPortalLink;
-}
-
-std::shared_ptr<RegularSurface> CompositePortalLink::mergedSurface(
-    const PortalLinkBase* a, const PortalLinkBase* b, BinningValue direction) {
-  assert(a != nullptr);
-  assert(b != nullptr);
-  if (a->surface().type() != b->surface().type()) {
-    throw std::invalid_argument{"Cannot merge surfaces of different types"};
-  }
-
-  if (const auto* cylinderA =
-          dynamic_cast<const CylinderSurface*>(&a->surface());
-      cylinderA != nullptr) {
-    const auto& cylinderB = dynamic_cast<const CylinderSurface&>(b->surface());
-
-    auto [merged, reversed] = cylinderA->mergedWith(cylinderB, direction, true);
-    return merged;
-  } else if (const auto* discA =
-                 dynamic_cast<const DiscSurface*>(&a->surface());
-             discA != nullptr) {
-    const auto& discB = dynamic_cast<const DiscSurface&>(b->surface());
-    auto [merged, reversed] = discA->mergedWith(discB, direction, true);
-    return merged;
-  } else if (const auto* planeA =
-                 dynamic_cast<const PlaneSurface*>(&a->surface());
-             planeA != nullptr) {
-    throw std::logic_error{"Plane surfaces not implemented yet"};
-  } else {
-    throw std::invalid_argument{"Unsupported surface type"};
-  }
 }
 
 std::size_t CompositePortalLink::depth() const {

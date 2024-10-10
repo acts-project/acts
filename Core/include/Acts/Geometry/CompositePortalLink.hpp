@@ -18,6 +18,7 @@
 namespace Acts {
 
 class GridPortalLink;
+class Surface;
 
 /// Composite portal links can graft together other portal link instances, for
 /// example grids that could not be merged due to invalid binnings.
@@ -50,6 +51,15 @@ class CompositePortalLink final : public PortalLinkBase {
   CompositePortalLink(std::unique_ptr<PortalLinkBase> a,
                       std::unique_ptr<PortalLinkBase> b, BinningValue direction,
                       bool flatten = true);
+
+  /// Construct a composite portal from any number of arbitrary other portal
+  /// links. The only requirement is that the portal link surfaces are
+  /// mergeable.
+  /// @param links The portal links
+  /// @param direction The binning direction
+  /// @param flatten If true, the composite will flatten any nested composite
+  CompositePortalLink(std::vector<std::unique_ptr<PortalLinkBase>> links,
+                      BinningValue direction, bool flatten = true);
 
   /// Print the composite portal link
   /// @param os The output stream
@@ -87,16 +97,6 @@ class CompositePortalLink final : public PortalLinkBase {
                                            const Logger& logger) const;
 
  private:
-  /// Helper function to construct a merged surface from two portal links along
-  /// a given direction
-  /// @param a The first portal link
-  /// @param b The second portal link
-  /// @param direction The merging direction
-  /// @return The merged surface
-  static std::shared_ptr<RegularSurface> mergedSurface(const PortalLinkBase* a,
-                                                       const PortalLinkBase* b,
-                                                       BinningValue direction);
-
   boost::container::small_vector<std::unique_ptr<PortalLinkBase>, 4>
       m_children{};
 
