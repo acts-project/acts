@@ -29,6 +29,7 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
+#include <fstream>
 #include <random>
 #include <vector>
 
@@ -365,7 +366,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
   cfg.envelope[BinningValue::binR] = {0_mm, 20_mm};
   auto root = std::make_unique<RootBlueprintNode>(cfg);
 
-  root->addMaterial([&](auto& mat) {
+  root->addMaterial("GlobalMaterial", [&](auto& mat) {
     mat.addCylinderContainer("Detector", BinningValue::binR, [&](auto& det) {
       det.addCylinderContainer("Pixel", BinningValue::binZ, [&](auto& cyl) {
         cyl.setAttachmentStrategy(CylinderVolumeStack::AttachmentStrategy::Gap)
