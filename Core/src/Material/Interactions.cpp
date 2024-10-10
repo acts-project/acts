@@ -102,8 +102,10 @@ inline float logDeriveWMax(float mass, float qOverP,
 ///
 /// where (Z/A)*rho is the electron density in the material and x is the
 /// traversed length (thickness) of the material.
-inline float computeEpsilon(float molarElectronDensity, float thickness,
+inline float computeEpsilon(float molarElectronDensity,
+                            Acts::ActsScalar thickness_,
                             const RelativisticQuantities& rq) {
+  const float thickness = static_cast<float>(thickness_);
   return 0.5f * K * molarElectronDensity * thickness * rq.q2OverBeta2;
 }
 
@@ -160,7 +162,7 @@ inline float computeEnergyLossLandauFwhm(const Acts::MaterialSlab& slab,
   }
 
   const float Ne = slab.material().molarElectronDensity();
-  const float thickness = slab.thickness();
+  const Acts::ActsScalar thickness = slab.thickness();
   // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
   return 4 * computeEpsilon(Ne, thickness, rq);
 }
@@ -179,7 +181,7 @@ float Acts::computeEnergyLossBethe(const MaterialSlab& slab, float m,
   const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
-  const float thickness = slab.thickness();
+  const ActsScalar thickness = slab.thickness();
   const float eps = computeEpsilon(Ne, thickness, rq);
   const float dhalf = computeDeltaHalf(I, Ne, rq);
   const float u = computeMassTerm(Me, rq);
@@ -204,7 +206,7 @@ float Acts::deriveEnergyLossBetheQOverP(const MaterialSlab& slab, float m,
   const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
-  const float thickness = slab.thickness();
+  const ActsScalar thickness = slab.thickness();
   const float eps = computeEpsilon(Ne, thickness, rq);
   const float dhalf = computeDeltaHalf(I, Ne, rq);
   const float u = computeMassTerm(Me, rq);
@@ -241,7 +243,7 @@ float Acts::computeEnergyLossLandau(const MaterialSlab& slab, float m,
   const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
-  const float thickness = slab.thickness();
+  const ActsScalar thickness = slab.thickness();
   const float eps = computeEpsilon(Ne, thickness, rq);
   const float dhalf = computeDeltaHalf(I, Ne, rq);
   const float u = computeMassTerm(Me, rq);
@@ -261,7 +263,7 @@ float Acts::deriveEnergyLossLandauQOverP(const MaterialSlab& slab, float m,
   const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
-  const float thickness = slab.thickness();
+  const ActsScalar thickness = slab.thickness();
   const float eps = computeEpsilon(Ne, thickness, rq);
   const float dhalf = computeDeltaHalf(I, Ne, rq);
   const float t = computeMassTerm(Me, rq);
@@ -295,7 +297,7 @@ float Acts::computeEnergyLossLandauSigma(const MaterialSlab& slab, float m,
 
   const RelativisticQuantities rq{m, qOverP, absQ};
   const float Ne = slab.material().molarElectronDensity();
-  const float thickness = slab.thickness();
+  const ActsScalar thickness = slab.thickness();
   // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
   const float fwhm = 4 * computeEpsilon(Ne, thickness, rq);
   return convertLandauFwhmToGaussianSigma(fwhm);
@@ -392,7 +394,7 @@ float Acts::computeEnergyLossRadiative(const MaterialSlab& slab,
   }
 
   // relative radiation length
-  const float x = slab.thicknessInX0();
+  const float x = static_cast<float>(slab.thicknessInX0());
   // particle momentum and energy
   // do not need to care about the sign since it is only used squared
   const float momentum = absQ / qOverP;
@@ -421,7 +423,7 @@ float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab,
   }
 
   // relative radiation length
-  const float x = slab.thicknessInX0();
+  const float x = static_cast<float>(slab.thicknessInX0());
   // particle momentum and energy
   // do not need to care about the sign since it is only used squared
   const float momentum = absQ / qOverP;
@@ -510,7 +512,7 @@ float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab,
   }
 
   // relative radiation length
-  const float xOverX0 = slab.thicknessInX0();
+  const float xOverX0 = static_cast<float>(slab.thicknessInX0());
   // 1/p = q/(pq) = (q/p)/q
   const float momentumInv = std::abs(qOverP / absQ);
   // q²/beta²; a smart compiler should be able to remove the unused computations
