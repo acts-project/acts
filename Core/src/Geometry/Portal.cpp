@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
@@ -247,7 +249,7 @@ Portal Portal::fuse(const GeometryContext& gctx, Portal& aPortal,
                     Portal& bPortal, const Logger& logger) {
   ACTS_VERBOSE("Fusing two portals");
   if (&aPortal == &bPortal) {
-    ACTS_ERROR("Cannot merge a portal with itself");
+    ACTS_ERROR("Cannot fuse a portal with itself");
     throw PortalMergingException{};
   }
 
@@ -288,16 +290,27 @@ Portal Portal::fuse(const GeometryContext& gctx, Portal& aPortal,
     throw PortalFusingException();
   }
 
+  auto maybeConvertToGrid = [&](std::unique_ptr<PortalLinkBase> link)
+      -> std::unique_ptr<PortalLinkBase> {
+    auto* composite = dynamic_cast<CompositePortalLink*>(link.get());
+    if (composite == nullptr) {
+      return link;
+    }
+
+    ACTS_VERBOSE("Converting composite to grid during portal fusing");
+    return composite->makeGrid(gctx, logger);
+  };
+
   aPortal.m_surface.reset();
   bPortal.m_surface.reset();
   if (aHasAlongNormal) {
     ACTS_VERBOSE("Taking along normal from lhs, opposite normal from rhs");
-    return Portal{gctx, std::move(aPortal.m_alongNormal),
-                  std::move(bPortal.m_oppositeNormal)};
+    return Portal{gctx, maybeConvertToGrid(std::move(aPortal.m_alongNormal)),
+                  maybeConvertToGrid(std::move(bPortal.m_oppositeNormal))};
   } else {
     ACTS_VERBOSE("Taking along normal from rhs, opposite normal from lhs");
-    return Portal{gctx, std::move(bPortal.m_alongNormal),
-                  std::move(aPortal.m_oppositeNormal)};
+    return Portal{gctx, maybeConvertToGrid(std::move(bPortal.m_alongNormal)),
+                  maybeConvertToGrid(std::move(aPortal.m_oppositeNormal))};
   }
 }
 
