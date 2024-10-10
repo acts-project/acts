@@ -287,4 +287,22 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   return params;
 }
 
+struct EstimateTrackParamCovarianceConfig {
+  BoundVector initialSigmas = {1. * UnitConstants::mm,
+                               1. * UnitConstants::mm,
+                               1. * UnitConstants::degree,
+                               1. * UnitConstants::degree,
+                               1. * UnitConstants::e / UnitConstants::GeV,
+                               1. * UnitConstants::ns};
+
+  double initialSigmaPtRel = 0.1;
+
+  BoundVector initialVarInflation = {1., 1., 1., 1., 1., 1.};
+  double noTimeVarInflation = 100.;
+};
+
+BoundMatrix estimateTrackParamCovariance(
+    const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
+    bool hasTime);
+
 }  // namespace Acts
