@@ -136,6 +136,8 @@ struct SeedFinderConfig {
   /// Contains parameters for forward seed confirmation
   SeedConfirmationRangeConfig forwardSeedConfirmationRange;
   /// Maximum number (minus one) of accepted seeds per middle space-point
+
+  /// TODO: MOVE AWAY
   unsigned int maxSeedsPerSpM = 5;
 
   /// Other parameters

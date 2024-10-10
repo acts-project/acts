@@ -27,9 +27,17 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <ranges>
 
 namespace Acts {
 
+template<typename Coll>
+concept GridBinCollection = std::ranges::random_access_range<Coll> &&
+  std::same_as<typename Coll::value_type, std::size_t>;
+
+template<typename Coll, typename external_t, std::size_t N = 3ul>
+concept CollectionStoresSeedsTo = std::ranges::output_range<Coll, Acts::Seed<external_t, N>>;
+  
 enum class SpacePointCandidateType : short { eBottom, eTop };
 
 enum class DetectorMeasurementInfo : short { eDefault, eDetailed };
@@ -44,33 +52,34 @@ class SeedFinder {
  public:
   struct SeedingState {
     // bottom space point
-    std::vector<const external_spacepoint_t*> compatBottomSP;
-    std::vector<const external_spacepoint_t*> compatTopSP;
+    std::vector<const external_spacepoint_t*> compatBottomSP{};
+    std::vector<const external_spacepoint_t*> compatTopSP{};
     // contains parameters required to calculate circle with linear equation
     // ...for bottom-middle
-    std::vector<LinCircle> linCircleBottom;
+    std::vector<LinCircle> linCircleBottom{};
     // ...for middle-top
-    std::vector<LinCircle> linCircleTop;
+    std::vector<LinCircle> linCircleTop{};
 
     // create vectors here to avoid reallocation in each loop
-    std::vector<const external_spacepoint_t*> topSpVec;
-    std::vector<float> curvatures;
-    std::vector<float> impactParameters;
+    std::vector<const external_spacepoint_t*> topSpVec{};
+    std::vector<float> curvatures{};
+    std::vector<float> impactParameters{};
 
     // managing seed candidates for SpM
-    CandidatesForMiddleSp<const external_spacepoint_t> candidates_collector;
+    CandidatesForMiddleSp<const external_spacepoint_t> candidates_collector{};
 
     // managing doublet candidates
     boost::container::small_vector<Acts::Neighbour<grid_t>,
                                    Acts::detail::ipow(3, grid_t::DIM)>
-        bottomNeighbours;
+    bottomNeighbours{};
     boost::container::small_vector<Acts::Neighbour<grid_t>,
                                    Acts::detail::ipow(3, grid_t::DIM)>
-        topNeighbours;
+    topNeighbours{};
 
     // Mutable variables for Space points used in the seeding
-    Acts::SpacePointMutableData spacePointMutableData;
+    Acts::SpacePointMutableData spacePointMutableData{};
   };
+  
 
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the SeedFinder
@@ -96,7 +105,9 @@ class SeedFinder {
   /// @param topSPs group of space points to be used as outermost SP in a seed.
   /// @note Ranges must return pointers.
   /// @note Ranges must be separate objects for each parallel call.
-  template <typename container_t, typename sp_range_t>
+  template <typename container_t,
+	    Acts::GridBinCollection sp_range_t>
+  requires Acts::CollectionStoresSeedsTo<container_t, external_spacepoint_t, 3ul>
   void createSeedsForGroup(const Acts::SeedFinderOptions& options,
                            SeedingState& state, const grid_t& grid,
                            container_t& outputCollection,
