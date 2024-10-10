@@ -9,13 +9,15 @@
 #include "Acts/Geometry/Portal.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
-#include <algorithm>
+#include <cstdlib>
 #include <memory>
 #include <stdexcept>
 
@@ -267,6 +269,10 @@ Portal Portal::fuse(const GeometryContext& gctx, Portal& aPortal,
 
   if (!isSameSurface(gctx, *aPortal.m_surface, *bPortal.m_surface)) {
     ACTS_ERROR("Portals have different surfaces");
+    ACTS_ERROR("A: " << aPortal.m_surface->bounds());
+    ACTS_ERROR("\n" << aPortal.m_surface->transform(gctx).matrix());
+    ACTS_ERROR("B: " << bPortal.m_surface->bounds());
+    ACTS_ERROR("\n" << bPortal.m_surface->transform(gctx).matrix());
     throw PortalFusingException();
   }
 
@@ -305,12 +311,34 @@ bool Portal::isSameSurface(const GeometryContext& gctx, const Surface& a,
     return false;
   }
 
-  if (a.bounds() != b.bounds()) {
+  std::vector<double> aValues = a.bounds().values();
+  std::vector<double> bValues = b.bounds().values();
+  bool different = false;
+  for (auto [aVal, bVal] : zip(aValues, bValues)) {
+    if (std::abs(aVal - bVal) > s_onSurfaceTolerance) {
+      different = true;
+      break;
+    }
+  }
+
+  if (a.bounds().type() != b.bounds().type() || different) {
     return false;
   }
 
-  if (!a.transform(gctx).isApprox(b.transform(gctx),
-                                  s_transformEquivalentTolerance)) {
+  if (!a.transform(gctx).linear().isApprox(b.transform(gctx).linear(),
+                                           s_transformEquivalentTolerance)) {
+    return false;
+  }
+
+  auto small = [](const Transform3& t) {
+    Vector3 translation = t.translation();
+    return (std::abs(translation[0]) < s_onSurfaceTolerance) &&
+           (std::abs(translation[1]) < s_onSurfaceTolerance) &&
+           (std::abs(translation[2]) < s_onSurfaceTolerance);
+  };
+  if (!a.transform(gctx).translation().isApprox(b.transform(gctx).translation(),
+                                                s_onSurfaceTolerance) &&
+      !small(a.transform(gctx)) && !small(b.transform(gctx))) {
     return false;
   }
 
