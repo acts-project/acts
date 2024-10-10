@@ -94,7 +94,6 @@ class SeedFinder {
   /// @param bottomSPs group of space points to be used as innermost SP in a seed.
   /// @param middleSPs group of space points to be used as middle SP in a seed.
   /// @param topSPs group of space points to be used as outermost SP in a seed.
-  /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin.
   /// @note Ranges must return pointers.
   /// @note Ranges must be separate objects for each parallel call.
   template <typename container_t, typename sp_range_t>
@@ -103,27 +102,20 @@ class SeedFinder {
                            container_t& outputCollection,
                            const sp_range_t& bottomSPs,
                            const std::size_t middleSPs,
-                           const sp_range_t& topSPs,
-                           const Acts::Range1D<float>& rMiddleSPRange) const;
+                           const sp_range_t& topSPs) const;
 
-  private:
-  /// Check if the middle space point is in a valid range
-  /// The range check is performed on the radius coordinate
-  /// This check the minimum value. If not satisfied we move to
-  /// the next space point in the collection
-  bool satisfiedMinimumRadius(const Acts::SeedFinderOptions& options,
-			      const external_spacepoint_t& spM) const;
-  /// Check if the middle space point is in a valid range
-  /// The range check is performed on the radius coordinate
-  /// This check the maximum value. If not satisfied we move to the
-  /// next grid bin. This is because space points in the grid are sorted in
-  /// radius. Thus, following space points in the collection will
-  /// be outside the validity range
-  bool satisfiedMaximumRadius(const Acts::SeedFinderOptions& options,
-			      const external_spacepoint_t& spM) const;
+ private:
+  /// Given a middle space point candidate get the proper radius validity range
+  /// In case the radius range changes according to the z-bin we need to
+  /// retrieve the proper range We can do it this computation only once, since
+  /// all the middle space point candidates belong to the same z-bin
+  /// @param options frequently changing configuration (like beam position) 
+  /// @param spM space point candidate to be used as middle SP in a seed
+  /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin.
+  std::pair<float, float> retrieveRadiusRangeForMiddle(
+      const Acts::SeedFinderOptions& options,
+      const external_spacepoint_t& spM) const;
 
-
-  
   /// Iterates over dublets and tests the compatibility between them by applying
   /// a series of cuts that can be tested with only two SPs
   /// @param options frequently changing configuration (like beam position)

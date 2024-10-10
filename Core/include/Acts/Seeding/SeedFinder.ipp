@@ -42,8 +42,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
     const grid_t& grid, container_t& outputCollection,
     const sp_range_t& bottomSPsIdx, const std::size_t middleSPsIdx,
-    const sp_range_t& topSPsIdx,
-    const Acts::Range1D<float>& rMiddleSPRange) const {
+    const sp_range_t& topSPsIdx) const {
   if (!options.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderOptions not in ACTS internal units in SeedFinder");
@@ -105,41 +104,22 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     return;
   }
 
+  // we compute this since all middle space point candidates belong to the same
+  // z-bin
+  auto [minRadiusRangeForMiddle, maxRadiusRangeForMiddle] =
+    retrieveRadiusRangeForMiddle(options, *middleSPs.front());
   for (const external_spacepoint_t* spM : middleSPs) {
     const float rM = spM->radius();
 
-    // check if spM is outside our radial region of interest
-    if (m_config.middleRangeStrategy ==
-	Acts::SeedFinding::MiddleRadialStrategy::UserRange) {
-      if (rM < rMiddleSPRange.min()) {
-        continue;
+    // Unless we rely on the grid, we need to check if the middle space point
+    // is in a valid radius range
+    if(m_config.middleRangeStrategy != Acts::SeedFinding::MiddleRadialStrategy::RelyOnGrid) {
+      if (rM < minRadiusRangeForMiddle) {
+	continue;
       }
-      if (rM > rMiddleSPRange.max()) {
-        // break because SPs are sorted in r
-        break;
-      }
-    } else if (m_config.middleRangeStrategy ==
-	       Acts::SeedFinding::MiddleRadialStrategy::VariableRange) {
-      /// get zBin position of the middle SP
-      auto pVal = std::lower_bound(m_config.zBinEdges.begin(),
-                                   m_config.zBinEdges.end(), spM->z());
-      int zBin = std::distance(m_config.zBinEdges.begin(), pVal);
-      /// protects against zM at the limit of zBinEdges
-      zBin == 0 ? zBin : --zBin;
-      if (rM < m_config.rRangeMiddleSP[zBin][0]) {
-        continue;
-      }
-      if (rM > m_config.rRangeMiddleSP[zBin][1]) {
-        // break because SPs are sorted in r
-        break;
-      }
-    } else {
-      if (rM < options.rMinMiddle) {
-        continue;
-      }
-      if (rM > options.rMaxMiddle) {
-        // break because SPs are sorted in r
-        break;
+      if (rM > maxRadiusRangeForMiddle) {
+	// break because SPs are sorted in r
+	break;
       }
     }
 
@@ -210,24 +190,6 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   }  // loop on mediums
 }
 
-template <typename external_spacepoint_t, typename grid_t, typename platform_t>
-std::pair<float, float> SeedFinder<external_spacepoint_t, grid_t, platform_t>::getRadiusRangeForMiddle(const Acts::SeedFinderOptions& options,
-												       const external_spacepoint_t& spM) const {
-  switch(m_config.middleRangeStrategy) {
-  case Acts::SeedFinding::MiddleRadialStrategy::RelyOnGrid:
-    // The grid makes sure the middle space point is in the proper range
-    // no need to check
-    return true;
-  case Acts::SeedFinding::MiddleRadialStrategy::VariableRange:
-    // The range depends on the z-bin. Needs some computation
-    return false;
-  case Acts::SeedFinding::MiddleRadialStrategy::UserRange:
-    // Range provided by the user in the options
-    return sp.radius() > options.rMinMiddle && sp.radius() < options.rMaxMiddle;
-  default:
-    throw std::runtime_error("MiddleRadialStrategy is not recognized");
-  };
-}
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
 template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
@@ -847,6 +809,36 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
         state.topSpVec, state.curvatures, state.impactParameters,
         seedFilterState, state.candidates_collector);
   }  // loop on bottoms
+}
+
+template <typename external_spacepoint_t, typename grid_t, typename platform_t>
+std::pair<float, float> SeedFinder<external_spacepoint_t, grid_t, platform_t>::
+retrieveRadiusRangeForMiddle(const Acts::SeedFinderOptions& options,
+			     const external_spacepoint_t& spM) const {
+  
+  switch(m_config.middleRangeStrategy) {
+  case Acts::SeedFinding::MiddleRadialStrategy::RelyOnGrid:
+    // The grid makes sure the middle space point is in the proper range
+    // no need to check
+    return {};
+  case Acts::SeedFinding::MiddleRadialStrategy::UserRange:
+    // Range provided by the user in the options
+    return std::make_pair(options.rMinMiddle, options.rMaxMiddle);
+  case Acts::SeedFinding::MiddleRadialStrategy::VariableRange:
+    {
+      // The range depends on the z-bin. Needs some computation
+      /// get zBin position of the middle SP
+      auto pVal = std::lower_bound(m_config.zBinEdges.begin(),
+				   m_config.zBinEdges.end(), spM.z());
+      int zBin = std::distance(m_config.zBinEdges.begin(), pVal);
+      /// protects against zM at the limit of zBinEdges
+      zBin == 0 ? zBin : --zBin;
+      return std::make_pair(m_config.rRangeMiddleSP[zBin][0],
+			    m_config.rRangeMiddleSP[zBin][1]);
+    }
+  default:
+    throw std::runtime_error("MiddleRadialStrategy is not recognized");
+  };
 }
 
 }  // namespace Acts

@@ -167,8 +167,6 @@ int main(int argc, char** argv) {
 
   int numPhiNeighbors = 1;
 
-  const Acts::Range1D<float> rMiddleSPRange;
-
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
@@ -203,7 +201,7 @@ int main(int argc, char** argv) {
       Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(gridConf,
                                                                      gridOpts);
   Acts::CylindricalSpacePointGridCreator::fillGrid(
-      config, options, grid, spContainer.begin(), spContainer.end());
+      config, grid, spContainer.begin(), spContainer.end());
 
   auto spGroup = Acts::CylindricalBinnedGroup<value_type>(
       std::move(grid), *bottomBinFinder, *topBinFinder);
@@ -214,7 +212,7 @@ int main(int argc, char** argv) {
   for (auto [bottom, middle, top] : spGroup) {
     auto& v = seedVector.emplace_back();
     a.createSeedsForGroup(options, state, spGroup.grid(), v, bottom, middle,
-                          top, rMiddleSPRange);
+                          top);
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;

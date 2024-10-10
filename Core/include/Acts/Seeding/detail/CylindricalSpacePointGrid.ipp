@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the ACTS project.
 //
 // Copyright (C) 2016 CERN for the benefit of the ACTS project
@@ -149,7 +150,6 @@ template <typename external_spacepoint_t,
           typename external_spacepoint_iterator_t>
 void Acts::CylindricalSpacePointGridCreator::fillGrid(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-    const Acts::SeedFinderOptions& options,
     Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
     external_spacepoint_iterator_t spBegin,
     external_spacepoint_iterator_t spEnd) {
@@ -159,10 +159,6 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
   }
   if (config.seedFilter == nullptr) {
     throw std::runtime_error("SeedFinderConfig has a null SeedFilter object");
-  }
-  if (!options.isInInternalUnits) {
-    throw std::runtime_error(
-        "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
   }
 
   // Space points are assumed to be ALREADY CORRECTED for beamspot position

@@ -226,12 +226,14 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   using value_type = typename decltype(spContainer)::SpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;
 
+  auto localSeedFinderOptions = m_cfg.seedFinderOptions;
+  
   Acts::CylindricalSpacePointGrid<value_type> grid =
       Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(
           m_cfg.gridConfig, m_cfg.gridOptions);
 
   Acts::CylindricalSpacePointGridCreator::fillGrid(
-      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid,
+						   m_cfg.seedFinderConfig, grid,
       spContainer.begin(), spContainer.end());
 
   // Compute radius Range
@@ -257,12 +259,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       std::move(navigation));
 
   /// variable middle SP radial region of interest
-  const Acts::Range1D<float> rMiddleSPRange(
-      std::floor(minRange / 2) * 2 +
-          m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
-      std::floor(maxRange / 2) * 2 -
-          m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
-
+  localSeedFinderOptions.rMinMiddle = std::floor(minRange / 2) * 2 +
+    m_cfg.seedFinderConfig.deltaRMiddleMinSPRange;
+  localSeedFinderOptions.rMaxMiddle = std::floor(maxRange / 2) * 2 -
+    m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange;
+  
   // run the seeding
   static thread_local std::vector<seed_type> seeds;
   seeds.clear();
@@ -270,9 +271,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   state.spacePointMutableData.resize(spContainer.size());
 
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
-    m_seedFinder.createSeedsForGroup(m_cfg.seedFinderOptions, state,
+    m_seedFinder.createSeedsForGroup(localSeedFinderOptions, state,
                                      spacePointsGrouping.grid(), seeds, bottom,
-                                     middle, top, rMiddleSPRange);
+                                     middle, top);
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "

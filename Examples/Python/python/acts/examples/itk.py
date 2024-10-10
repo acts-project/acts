@@ -348,7 +348,6 @@ def itkSeedingAlgConfig(
         [40.0, 90.0],
     ]  # if useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}. If useVariableMiddleSPRange is set to false and the vector is empty, the cuts won't be applied
     useVariableMiddleSPRange = True  # if useVariableMiddleSPRange is true, the values in rRangeMiddleSP will be calculated based on r values of the SPs and deltaRMiddleSPRange
-    binSizeR = 1 * u.mm
     seedConfirmation = True
     centralSeedConfirmationRange = acts.SeedConfirmationRangeConfig(
         zMinSeedConf=-500 * u.mm,
@@ -540,7 +539,6 @@ def itkSeedingAlgConfig(
         zBinsCustomLooping=zBinsCustomLooping,
         rRangeMiddleSP=rRangeMiddleSP,
         useVariableMiddleSPRange=useVariableMiddleSPRange,
-        binSizeR=binSizeR,
         seedConfirmation=seedConfirmation,
         centralSeedConfirmationRange=centralSeedConfirmationRange,
         forwardSeedConfirmationRange=forwardSeedConfirmationRange,
