@@ -93,6 +93,7 @@ void addTrackFinding(Context& ctx) {
     auto c = py::class_<Config>(m, "SeedFinderConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(minPt);
+    ACTS_PYTHON_MEMBER(middleRangeStrategy);
     ACTS_PYTHON_MEMBER(cotThetaMax);
     ACTS_PYTHON_MEMBER(deltaRMin);
     ACTS_PYTHON_MEMBER(deltaRMax);
@@ -108,10 +109,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(collisionRegionMax);
     ACTS_PYTHON_MEMBER(phiMin);
     ACTS_PYTHON_MEMBER(phiMax);
-    ACTS_PYTHON_MEMBER(zMin);
-    ACTS_PYTHON_MEMBER(zMax);
-    ACTS_PYTHON_MEMBER(rMax);
-    ACTS_PYTHON_MEMBER(rMin);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
     ACTS_PYTHON_MEMBER(zAlign);
     ACTS_PYTHON_MEMBER(rAlign);
@@ -124,13 +121,9 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(zBinsCustomLooping);
-    ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleMinSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleMaxSPRange);
     ACTS_PYTHON_MEMBER(rRangeMiddleSP);
-    ACTS_PYTHON_MEMBER(rMinMiddle);
-    ACTS_PYTHON_MEMBER(rMaxMiddle);
-    ACTS_PYTHON_MEMBER(binSizeR);
     ACTS_PYTHON_MEMBER(seedConfirmation);
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
@@ -144,6 +137,8 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, seedOptions);
     ACTS_PYTHON_MEMBER(beamPos);
     ACTS_PYTHON_MEMBER(bFieldInZ);
+    ACTS_PYTHON_MEMBER(rMinMiddle);
+    ACTS_PYTHON_MEMBER(rMaxMiddle);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }

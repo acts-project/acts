@@ -26,7 +26,7 @@ struct LinCircle {
   float x{0.};
   float y{0.};
 };
-
+  
 template <typename external_spacepoint_t, typename callable_t>
 LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
                                const external_spacepoint_t& sp,

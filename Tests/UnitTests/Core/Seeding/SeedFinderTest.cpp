@@ -144,8 +144,6 @@ int main(int argc, char** argv) {
 
   Acts::SeedFinderConfig<value_type> config;
   // silicon detector max
-  config.rMax = 160._mm;
-  config.rMin = 0._mm;
   config.deltaRMin = 5._mm;
   config.deltaRMax = 160._mm;
   config.deltaRMinTopSP = config.deltaRMin;
@@ -154,8 +152,6 @@ int main(int argc, char** argv) {
   config.deltaRMaxBottomSP = config.deltaRMax;
   config.collisionRegionMin = -250._mm;
   config.collisionRegionMax = 250._mm;
-  config.zMin = -2800._mm;
-  config.zMax = 2800._mm;
   config.maxSeedsPerSpM = 5;
   // 2.7 eta
   config.cotThetaMax = 7.40627;
@@ -165,15 +161,12 @@ int main(int argc, char** argv) {
 
   config.impactMax = 10._mm;
 
-  config.useVariableMiddleSPRange = false;
-
   Acts::SeedFinderOptions options;
   options.beamPos = spOptions.beamPos;
   options.bFieldInZ = 2_T;
 
   int numPhiNeighbors = 1;
 
-  config.useVariableMiddleSPRange = false;
   const Acts::Range1D<float> rMiddleSPRange;
 
   std::vector<std::pair<int, int>> zBinNeighborsTop;
@@ -196,9 +189,9 @@ int main(int argc, char** argv) {
   // setup spacepoint grid config
   Acts::CylindricalSpacePointGridConfig gridConf;
   gridConf.minPt = config.minPt;
-  gridConf.rMax = config.rMax;
-  gridConf.zMax = config.zMax;
-  gridConf.zMin = config.zMin;
+  gridConf.rMax = 160._mm;
+  gridConf.zMax = 2800._mm;
+  gridConf.zMin = -2800._mm;
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
   // setup spacepoint grid options

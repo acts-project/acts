@@ -106,7 +106,24 @@ class SeedFinder {
                            const sp_range_t& topSPs,
                            const Acts::Range1D<float>& rMiddleSPRange) const;
 
- private:
+  private:
+  /// Check if the middle space point is in a valid range
+  /// The range check is performed on the radius coordinate
+  /// This check the minimum value. If not satisfied we move to
+  /// the next space point in the collection
+  bool satisfiedMinimumRadius(const Acts::SeedFinderOptions& options,
+			      const external_spacepoint_t& spM) const;
+  /// Check if the middle space point is in a valid range
+  /// The range check is performed on the radius coordinate
+  /// This check the maximum value. If not satisfied we move to the
+  /// next grid bin. This is because space points in the grid are sorted in
+  /// radius. Thus, following space points in the collection will
+  /// be outside the validity range
+  bool satisfiedMaximumRadius(const Acts::SeedFinderOptions& options,
+			      const external_spacepoint_t& spM) const;
+
+
+  
   /// Iterates over dublets and tests the compatibility between them by applying
   /// a series of cuts that can be tested with only two SPs
   /// @param options frequently changing configuration (like beam position)

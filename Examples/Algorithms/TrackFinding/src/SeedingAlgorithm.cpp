@@ -76,14 +76,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 
-  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax &&
-      m_cfg.allowSeparateRMax == false) {
-    throw std::invalid_argument(
-        "Inconsistent config rMax: using different values in gridConfig and "
-        "seedFinderConfig. If values are intentional set allowSeparateRMax to "
-        "true");
-  }
-
   if (m_cfg.seedFilterConfig.deltaRMin != m_cfg.seedFinderConfig.deltaRMin) {
     throw std::invalid_argument("Inconsistent config deltaRMin");
   }
@@ -126,14 +118,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
   if (std::isnan(m_cfg.seedFinderConfig.deltaRMinBottomSP)) {
     m_cfg.seedFinderConfig.deltaRMinBottomSP = m_cfg.seedFinderConfig.deltaRMin;
-  }
-
-  if (m_cfg.gridConfig.zMin != m_cfg.seedFinderConfig.zMin) {
-    throw std::invalid_argument("Inconsistent config zMin");
-  }
-
-  if (m_cfg.gridConfig.zMax != m_cfg.seedFinderConfig.zMax) {
-    throw std::invalid_argument("Inconsistent config zMax");
   }
 
   if (m_cfg.seedFilterConfig.maxSeedsPerSpM !=
