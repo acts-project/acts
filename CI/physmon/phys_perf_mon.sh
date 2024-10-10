@@ -15,7 +15,7 @@ function run() {
 
 export run
 
-
+run which python3
 shopt -s extglob
 
 
@@ -223,6 +223,7 @@ function trackfinding() {
         $path/performance_ckf.html \
         $path/performance_ckf_plots \
         --config $default_config
+
 
     run Examples/Scripts/generic_plotter.py \
         $outdir/data/$path/tracksummary_ckf.root \

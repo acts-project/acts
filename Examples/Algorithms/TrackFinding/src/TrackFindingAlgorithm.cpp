@@ -378,8 +378,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   Extrapolator extrapolator(
       Acts::SympyStepper(m_cfg.magneticField),
       Acts::Navigator({m_cfg.trackingGeometry},
-                      logger().cloneWithSuffix("Navigator")),
-      logger().cloneWithSuffix("Propagator"));
+                      logger().clone("Navigator", Acts::Logging::VERBOSE)),
+      logger().clone("Propagator", Acts::Logging::VERBOSE));
 
   ExtrapolatorOptions extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
   extrapolationOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
@@ -535,6 +535,14 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
           Acts::BoundTrackParameters secondInitialParameters =
               trackCandidate.createParametersFromState(firstMeasurement);
+
+          if (!secondInitialParameters.referenceSurface().insideBounds(
+                  secondInitialParameters.localPosition())) {
+            ACTS_WARNING(
+                "Smoothing of first pass fit produced out-of-bounds parameters "
+                "relative to the surface. Skipping second pass.");
+            continue;
+          }
 
           auto secondRootBranch = tracksTemp.makeTrack();
           secondRootBranch.copyFrom(trackCandidate, false);
