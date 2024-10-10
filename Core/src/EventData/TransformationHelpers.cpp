@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
 

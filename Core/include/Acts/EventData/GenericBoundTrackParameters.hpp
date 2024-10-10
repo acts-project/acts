@@ -250,6 +250,17 @@ class GenericBoundTrackParameters {
     return m_surface->referenceFrame(geoCtx, position(geoCtx), momentum());
   }
 
+  /// Reflect the parameters in place.
+  void reflectInplace() { m_params = reflectBoundParameters(m_params); }
+
+  /// Reflect the parameters.
+  /// @return Reflected parameters.
+  GenericBoundTrackParameters<ParticleHypothesis> reflect() const {
+    GenericBoundTrackParameters<ParticleHypothesis> reflected = *this;
+    reflected.reflectInplace();
+    return reflected;
+  }
+
  private:
   BoundVector m_params;
   std::optional<BoundSquareMatrix> m_cov;
