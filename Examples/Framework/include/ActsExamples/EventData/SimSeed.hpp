@@ -11,7 +11,6 @@
 #include "Acts/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 
-#include <map>
 #include <vector>
 
 namespace ActsExamples {
