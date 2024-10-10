@@ -42,4 +42,8 @@ void TrivialPortalLink::toStream(std::ostream& os) const {
   os << "TrivialPortalLink<vol=" << m_volume << ">";
 }
 
+const TrackingVolume& TrivialPortalLink::volume() const {
+  return *m_volume;
+}
+
 }  // namespace Acts

@@ -58,6 +58,8 @@ class TrivialPortalLink final : public PortalLinkBase {
       const GeometryContext& gctx, const Vector3& position,
       double tolerance = s_onSurfaceTolerance) const override;
 
+  const TrackingVolume& volume() const;
+
  private:
   TrackingVolume* m_volume;
 };

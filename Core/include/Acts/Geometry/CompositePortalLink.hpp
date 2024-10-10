@@ -17,6 +17,8 @@
 
 namespace Acts {
 
+class GridPortalLink;
+
 /// Composite portal links can graft together other portal link instances, for
 /// example grids that could not be merged due to invalid binnings.
 ///
@@ -81,6 +83,9 @@ class CompositePortalLink final : public PortalLinkBase {
   /// @return The number of children
   std::size_t size() const;
 
+  std::unique_ptr<GridPortalLink> makeGrid(const GeometryContext& gctx,
+                                           const Logger& logger) const;
+
  private:
   /// Helper function to construct a merged surface from two portal links along
   /// a given direction
@@ -94,6 +99,8 @@ class CompositePortalLink final : public PortalLinkBase {
 
   boost::container::small_vector<std::unique_ptr<PortalLinkBase>, 4>
       m_children{};
+
+  BinningValue m_direction;
 };
 
 }  // namespace Acts
