@@ -176,7 +176,7 @@ struct CubicTrackingGeometry {
     tapVec.push_back(std::make_pair(trackVolume1, Vector3(-1.5_m, 0., 0.)));
     tapVec.push_back(std::make_pair(trackVolume2, Vector3(1.5_m, 0., 0.)));
 
-    std::vector<float> binBoundaries = {-3._m, 0., 3._m};
+    std::vector<ActsScalar> binBoundaries = {-3._m, 0., 3._m};
 
     BinningData binData(BinningOption::open, BinningValue::binX, binBoundaries);
     std::unique_ptr<const BinUtility> bu(new BinUtility(binData));
