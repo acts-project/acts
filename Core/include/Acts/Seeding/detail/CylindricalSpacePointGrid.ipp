@@ -139,8 +139,8 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
                    config.rBinEdges.end());
   }
 
-  Axis<AxisType::Variable, AxisBoundaryType::Bound> zAxis(std::move(zValues));
-  Axis<AxisType::Variable, AxisBoundaryType::Bound> rAxis(std::move(rValues));
+  Axis<AxisType::Variable, AxisBoundaryType::Open> zAxis(std::move(zValues));
+  Axis<AxisType::Variable, AxisBoundaryType::Open> rAxis(std::move(rValues));
   return Acts::CylindricalSpacePointGrid<external_spacepoint_t>(
       std::make_tuple(std::move(phiAxis), std::move(zAxis), std::move(rAxis)));
 }

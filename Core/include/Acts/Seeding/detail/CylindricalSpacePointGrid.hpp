@@ -23,8 +23,8 @@ template <typename external_spacepoint_t>
 using CylindricalSpacePointGrid = Acts::Grid<
     std::vector<const external_spacepoint_t*>,
     Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>,
-    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>,
-    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>>;
+    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Open>,
+    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Open>>;
 
 /// Cylindrical Binned Group
 template <typename external_spacepoint_t>
