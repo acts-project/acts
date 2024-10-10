@@ -46,6 +46,13 @@ Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
     const GeoBox* box = dynamic_cast<const GeoBox*>(&shape);
     bounds = std::make_shared<CuboidVolumeBounds>(
         box->getXHalfLength(), box->getYHalfLength(), box->getZHalfLength());
+  } else if (shape.typeID() == GeoSimplePolygonBrep::getClassTypeID()) {
+    const GeoSimplePolygonBrep* brep =
+        dynamic_cast<const GeoSimplePolygonBrep*>(&shape);
+    double xmin{0}, xmax{0}, ymin{0}, ymax{0}, zmin{0}, zmax{0};
+    brep->extent(xmin, ymin, zmin, xmax, ymax, zmax);
+    bounds = std::make_shared<CuboidVolumeBounds>(
+        (xmax - xmin) / 2, (ymax - ymin) / 2, (zmax - zmin) / 2);
   } else if (shape.typeID() == GeoTrd::getClassTypeID()) {
     const GeoTrd* trd = dynamic_cast<const GeoTrd*>(&shape);
     double x1 = trd->getXHalfLength1();
@@ -117,9 +124,10 @@ Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
         dynamic_cast<const GeoShapeShift*>(&shape);
     const GeoShape* shapeOp = shiftShape->getOp();
     newTrf = trf * shiftShape->getX();
-    return convertVolume(trf, *shapeOp);
+    return convertVolume(newTrf, *shapeOp);
   } else {
-    throw std::runtime_error("FATAL: Unsupported GeoModel shape");
+    throw std::runtime_error("FATAL: Unsupported GeoModel shape: " +
+                             shape.type());
   }
   return Volume(newTrf, bounds);
 }
