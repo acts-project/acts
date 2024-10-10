@@ -47,7 +47,7 @@ Acts::ITkIdentifier::ITkIdentifier(int hardware, int barrelEndcap,
   }
   m_identifier.set(1, found->first);
   m_identifier.set(2, layerWheel);
-  m_identifier.set(3, etaModule < 0);
+  m_identifier.set(3, static_cast<std::size_t>(etaModule < 0));
   m_identifier.set(4, std::abs(etaModule));
   m_identifier.set(5, phiModule);
   m_identifier.set(6, side);

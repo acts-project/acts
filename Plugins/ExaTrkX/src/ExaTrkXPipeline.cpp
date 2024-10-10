@@ -8,6 +8,8 @@
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 
+#include "Acts/Utilities/Helpers.hpp"
+
 #include <algorithm>
 
 namespace Acts {
@@ -27,9 +29,8 @@ ExaTrkXPipeline::ExaTrkXPipeline(
   if (!m_trackBuilder) {
     throw std::invalid_argument("Missing track building module");
   }
-  if (m_edgeClassifiers.empty() or
-      not std::all_of(m_edgeClassifiers.begin(), m_edgeClassifiers.end(),
-                      [](const auto &a) { return static_cast<bool>(a); })) {
+  if (m_edgeClassifiers.empty() ||
+      rangeContainsValue(m_edgeClassifiers, nullptr)) {
     throw std::invalid_argument("Missing graph construction module");
   }
 }

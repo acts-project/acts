@@ -359,6 +359,7 @@ void Acts::Surface::associateLayer(const Acts::Layer& lay) {
 void Acts::Surface::visualize(IVisualization3D& helper,
                               const GeometryContext& gctx,
                               const ViewConfig& viewConfig) const {
-  Polyhedron polyhedron = polyhedronRepresentation(gctx, viewConfig.nSegments);
+  Polyhedron polyhedron =
+      polyhedronRepresentation(gctx, viewConfig.quarterSegments);
   polyhedron.visualize(helper, viewConfig);
 }

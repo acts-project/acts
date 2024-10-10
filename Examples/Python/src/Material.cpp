@@ -9,6 +9,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterialAccumulater.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -16,6 +17,7 @@
 #include "Acts/Material/MaterialMapper.hpp"
 #include "Acts/Material/MaterialValidater.hpp"
 #include "Acts/Material/PropagatorMaterialAssigner.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
@@ -57,7 +59,20 @@ void addMaterial(Context& ctx) {
 
   {
     py::class_<Acts::ISurfaceMaterial, std::shared_ptr<ISurfaceMaterial>>(
-        m, "ISurfaceMaterial");
+        m, "ISurfaceMaterial")
+        .def("toString", &Acts::ISurfaceMaterial::toString);
+
+    py::class_<Acts::ProtoGridSurfaceMaterial, Acts::ISurfaceMaterial,
+               std::shared_ptr<ProtoGridSurfaceMaterial>>(
+        m, "ProtoGridSurfaceMaterial");
+
+    py::class_<Acts::ProtoSurfaceMaterial, Acts::ISurfaceMaterial,
+               std::shared_ptr<ProtoSurfaceMaterial>>(m,
+                                                      "ProtoSurfaceMaterial");
+
+    py::class_<Acts::HomogeneousSurfaceMaterial, Acts::ISurfaceMaterial,
+               std::shared_ptr<HomogeneousSurfaceMaterial>>(
+        m, "HomogeneousSurfaceMaterial");
 
     py::class_<Acts::IVolumeMaterial, std::shared_ptr<IVolumeMaterial>>(
         m, "IVolumeMaterial");

@@ -19,6 +19,7 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <algorithm>
 #include <numeric>
 
 using namespace ActsExamples;
@@ -98,8 +99,8 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
       NodeFeature::eCellCount,   NodeFeature::eChargeSum,
       NodeFeature::eCluster1R,   NodeFeature::eCluster2R};
 
-  auto wantClFeatures = std::any_of(
-      m_cfg.nodeFeatures.begin(), m_cfg.nodeFeatures.end(),
+  auto wantClFeatures = std::ranges::any_of(
+      m_cfg.nodeFeatures,
       [&](const auto& f) { return Acts::rangeContainsValue(clFeatures, f); });
 
   if (wantClFeatures && !m_inputClusters.isInitialized()) {

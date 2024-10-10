@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -25,6 +26,7 @@
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -181,6 +183,10 @@ class TrackingVolume : public Volume {
       for (const auto& bs : m_boundarySurfaces) {
         visitor(&(bs->surfaceRepresentation()));
       }
+
+      for (const auto& portal : portals()) {
+        visitor(&portal.surface());
+      }
     }
 
     // Internal structure
@@ -213,6 +219,14 @@ class TrackingVolume : public Volume {
       for (const auto& volume : m_confinedVolumes->arrayObjects()) {
         volume->visitSurfaces(visitor, restrictToSensitives);
       }
+    }
+
+    for (const auto& surface : surfaces()) {
+      visitor(&surface);
+    }
+
+    for (const auto& volume : volumes()) {
+      volume.visitSurfaces(visitor, restrictToSensitives);
     }
   }
 
@@ -321,6 +335,25 @@ class TrackingVolume : public Volume {
   /// Add a portal to this tracking volume
   /// @param portal The portal to add
   void addPortal(std::shared_ptr<Portal> portal);
+
+  using MutableSurfaceRange =
+      detail::TransformRange<detail::Dereference,
+                             std::vector<std::shared_ptr<Surface>>>;
+  using SurfaceRange =
+      detail::TransformRange<detail::ConstDereference,
+                             const std::vector<std::shared_ptr<Surface>>>;
+
+  /// Return all surfaces registered under this tracking volume
+  /// @return the range of surfaces
+  SurfaceRange surfaces() const;
+
+  /// Return mutable view of the registered surfaces under this tracking volume
+  /// @return the range of surfaces
+  MutableSurfaceRange surfaces();
+
+  /// Add a surface to this tracking volume
+  /// @param surface The surface to add
+  void addSurface(std::shared_ptr<Surface> surface);
 
   /// Add a child volume to this tracking volume
   /// @param volume The volume to add
@@ -454,6 +487,17 @@ class TrackingVolume : public Volume {
   ///  - positiveFaceXY
   GlueVolumesDescriptor& glueVolumesDescriptor();
 
+  /// Produces a 3D visualization of this tracking volume
+  /// @param helper The visualization helper describing the output format
+  /// @param gctx The geometry context
+  /// @param viewConfig The view configuration
+  /// @param portalViewConfig View configuration for portals
+  /// @param sensitiveViewConfig View configuration for sensitive surfaces
+  void visualize(IVisualization3D& helper, const GeometryContext& gctx,
+                 const ViewConfig& viewConfig,
+                 const ViewConfig& portalViewConfig,
+                 const ViewConfig& sensitiveViewConfig) const;
+
  private:
   void connectDenseBoundarySurfaces(
       MutableTrackingVolumeVector& confinedDenseVolumes);
@@ -516,6 +560,7 @@ class TrackingVolume : public Volume {
 
   std::vector<std::unique_ptr<TrackingVolume>> m_volumes;
   std::vector<std::shared_ptr<Portal>> m_portals;
+  std::vector<std::shared_ptr<Surface>> m_surfaces;
 };
 
 }  // namespace Acts

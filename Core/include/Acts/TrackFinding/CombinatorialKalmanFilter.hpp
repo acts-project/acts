@@ -11,43 +11,30 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/ProxyAccessor.hpp"
-#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/TrackHelpers.hpp"
-#include "Acts/Utilities/Zip.hpp"
 
 #include <functional>
 #include <limits>
 #include <memory>
-#include <ranges>
-#include <string_view>
 #include <type_traits>
-#include <unordered_map>
 
 namespace Acts {
 
@@ -596,15 +583,19 @@ class CombinatorialKalmanFilter {
 
       const bool isEndOfWorldReached =
           endOfWorldReached.checkAbort(state, stepper, navigator, logger());
+      const bool isVolumeConstraintReached = volumeConstraintAborter.checkAbort(
+          state, stepper, navigator, logger());
       const bool isPathLimitReached = result.pathLimitReached.checkAbort(
           state, stepper, navigator, logger());
       const bool isTargetReached =
           targetReached.checkAbort(state, stepper, navigator, logger());
       const bool allBranchesStopped = result.activeBranches.empty();
       if (isEndOfWorldReached || isPathLimitReached || isTargetReached ||
-          allBranchesStopped) {
+          allBranchesStopped || isVolumeConstraintReached) {
         if (isEndOfWorldReached) {
           ACTS_VERBOSE("End of world reached");
+        } else if (isVolumeConstraintReached) {
+          ACTS_VERBOSE("Volume constraint reached");
         } else if (isPathLimitReached) {
           ACTS_VERBOSE("Path limit reached");
         } else if (isTargetReached) {
@@ -1172,6 +1163,9 @@ class CombinatorialKalmanFilter {
 
     /// End of world aborter
     EndOfWorldReached endOfWorldReached;
+
+    /// Volume constraint aborter
+    VolumeConstraintAborter volumeConstraintAborter;
 
     /// Actor logger instance
     const Logger* actorLogger{nullptr};
