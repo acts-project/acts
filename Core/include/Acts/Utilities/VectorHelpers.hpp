@@ -73,7 +73,7 @@ double perp(const Eigen::MatrixBase<Derived>& v) noexcept {
     assert(v.rows() >= 2 &&
            "Perp function not valid for vectors not at least 2D");
   }
-  return std::hypot(v[0], v[1]);
+  return v.template head<2>().norm();
 }
 
 /// Calculate the theta angle (longitudinal w.r.t. z axis) of a vector

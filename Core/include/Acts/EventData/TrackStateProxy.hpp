@@ -1043,8 +1043,9 @@ class TrackStateProxy {
         jacobian() = other.jacobian();
       }
 
+      // NOTE: we should not check hasCalibrated on this, since it
+      // may be not yet allocated
       if (ACTS_CHECK_BIT(mask, PM::Calibrated) &&
-          has<hashString("calibrated")>() &&
           other.template has<hashString("calibrated")>()) {
         allocateCalibrated(other.calibratedSize());
 
