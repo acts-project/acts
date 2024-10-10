@@ -107,9 +107,9 @@ class SeedFinder {
                            const Acts::Range1D<float>& rMiddleSPRange) const;
 
  private:
-  /// Given a middle space point candidate get the proper radius validity range
+  /// Given a middle space point candidate, get the proper radius validity range
   /// In case the radius range changes according to the z-bin we need to
-  /// retrieve the proper range We can do it this computation only once, since
+  /// retrieve the proper range. We can do this computation only once, since
   /// all the middle space point candidates belong to the same z-bin
   /// @param spM space point candidate to be used as middle SP in a seed
   /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin.

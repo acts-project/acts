@@ -104,8 +104,8 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     return;
   }
 
-  // we compute this since all middle space point candidates belong to the same
-  // z-bin
+  // we compute this here since all middle space point candidates belong to the
+  // same z-bin
   auto [minRadiusRangeForMiddle, maxRadiusRangeForMiddle] =
       retrieveRadiusRangeForMiddle(*middleSPs.front(), rMiddleSPRange);
   for (const external_spacepoint_t* spM : middleSPs) {
