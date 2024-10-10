@@ -111,6 +111,9 @@ class SeedFinder {
   /// In case the radius range changes according to the z-bin we need to
   /// retrieve the proper range We can do it this computation only once, since
   /// all the middle space point candidates belong to the same z-bin
+  /// @param SpM space point candidate to be used as middle SP in a seed
+  /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin.
+  /// @output A pair of values representing the minimum and mazimum radius
   std::pair<float, float> retrieveRadiusRangeForMiddle(
       const external_spacepoint_t& spM,
       const Acts::Range1D<float>& rMiddleSPRange) const;
