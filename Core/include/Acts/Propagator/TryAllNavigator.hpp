@@ -159,6 +159,9 @@ class TryAllNavigatorBase {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
+    assert(state.navigation.options.startSurface != nullptr &&
+           "Start surface must be set");
+
     ACTS_VERBOSE("initialize");
 
     const TrackingVolume* startVolume = nullptr;
