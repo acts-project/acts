@@ -25,7 +25,7 @@ namespace Acts::SeedFinding {
   /// Rely on the Grid. In case there is a binnind in radius
   /// and the binning assures the middle space point candidate
   // is already in the proper radius range
-  RelyOnGrid,
+  RelyOnGrid=0,
   /// The radius validity range changes according to the z-bin
   /// The user has to provide a list of ranges, one entry for each z bin in the
   /// grid
