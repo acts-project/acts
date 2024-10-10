@@ -49,12 +49,10 @@ SeedFinderConfigArg = namedtuple(
         "deltaR",  # (min,max)
         "deltaRBottomSP",  # (min,max)
         "deltaRTopSP",  # (min,max)
-        "deltaRMiddleSPRange",  # (min,max)
         "collisionRegion",  # (min,max)
         "r",  # (min,max)
-        "z",  # (min,max)
     ],
-    defaults=[None] * 17 + [(None, None)] * 7,
+    defaults=[None] * 17 + [(None, None)] * 5,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -100,8 +98,10 @@ SeedingAlgorithmConfigArg = namedtuple(
         "zBinNeighborsBottom",
         "numPhiNeighbors",
         "useExtraCuts",
+        "deltaRMiddleMinSPRange",
+        "deltaRMiddleMaxSPRange"
     ],
-    defaults=[None] * 5,
+    defaults=[None] * 7,
 )
 
 TruthEstimatedSeedingAlgorithmConfigArg = namedtuple(
@@ -685,8 +685,6 @@ def addStandardSeeding(
                 if seedFinderConfigArg.deltaRBottomSP[1] is None
                 else seedFinderConfigArg.deltaRBottomSP[1]
             ),
-            deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
-            deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
             collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
@@ -783,6 +781,8 @@ def addStandardSeeding(
             zBinNeighborsBottom=seedingAlgorithmConfigArg.zBinNeighborsBottom,
             numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
             useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
+            deltaRMiddleMinSPRange=seedingAlgorithmConfigArg.deltaRMiddleMinSPRange,
+            deltaRMiddleMaxSPRange=seedingAlgorithmConfigArg.deltaRMiddleMaxSPRange,
         ),
         gridConfig=gridConfig,
         gridOptions=gridOptions,

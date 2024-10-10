@@ -80,10 +80,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config deltaRMin");
   }
 
-  if (m_cfg.gridConfig.deltaRMax != m_cfg.seedFinderConfig.deltaRMax) {
-    throw std::invalid_argument("Inconsistent config deltaRMax");
-  }
-
   static_assert(
       std::numeric_limits<
           decltype(m_cfg.seedFinderConfig.deltaRMaxTopSP)>::has_quiet_NaN,
@@ -105,7 +101,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
       "Value of deltaRMinBottomSP must support NaN values");
 
   if (std::isnan(m_cfg.seedFinderConfig.deltaRMaxTopSP)) {
-    m_cfg.seedFinderConfig.deltaRMaxTopSP = m_cfg.seedFinderConfig.deltaRMax;
+    m_cfg.seedFinderConfig.deltaRMaxTopSP = m_cfg.gridConfig.deltaRMax;
   }
 
   if (std::isnan(m_cfg.seedFinderConfig.deltaRMinTopSP)) {
@@ -113,7 +109,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
 
   if (std::isnan(m_cfg.seedFinderConfig.deltaRMaxBottomSP)) {
-    m_cfg.seedFinderConfig.deltaRMaxBottomSP = m_cfg.seedFinderConfig.deltaRMax;
+    m_cfg.seedFinderConfig.deltaRMaxBottomSP = m_cfg.gridConfig.deltaRMax;
   }
 
   if (std::isnan(m_cfg.seedFinderConfig.deltaRMinBottomSP)) {
@@ -148,11 +144,11 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config zBinNeighborsBottom");
   }
 
-  if (!m_cfg.seedFinderConfig.zBinsCustomLooping.empty()) {
+  if (!m_cfg.zBinsCustomLooping.empty()) {
     // check that the bins required in the custom bin looping
     // are contained in the bins defined by the total number of edges
 
-    for (std::size_t i : m_cfg.seedFinderConfig.zBinsCustomLooping) {
+    for (std::size_t i : m_cfg.zBinsCustomLooping) {
       if (i >= m_cfg.gridConfig.zBinEdges.size()) {
         throw std::invalid_argument(
             "Inconsistent config zBinsCustomLooping does not contain a subset "
@@ -252,7 +248,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   }
 
   std::array<std::vector<std::size_t>, 3ul> navigation;
-  navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
+  navigation[1ul] = m_cfg.zBinsCustomLooping;
 
   auto spacePointsGrouping = Acts::CylindricalBinnedGroup<value_type>(
       std::move(grid), *m_bottomBinFinder, *m_topBinFinder,
@@ -260,9 +256,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   /// variable middle SP radial region of interest
   localSeedFinderOptions.rMinMiddle = std::floor(minRange / 2) * 2 +
-    m_cfg.seedFinderConfig.deltaRMiddleMinSPRange;
+    m_cfg.deltaRMiddleMinSPRange;
   localSeedFinderOptions.rMaxMiddle = std::floor(maxRange / 2) * 2 -
-    m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange;
+    m_cfg.deltaRMiddleMaxSPRange;
   
   // run the seeding
   static thread_local std::vector<seed_type> seeds;

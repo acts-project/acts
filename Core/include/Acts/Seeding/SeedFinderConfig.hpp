@@ -25,7 +25,7 @@ namespace Acts::SeedFinding {
   /// Rely on the Grid. In case there is a binnind in radius
   /// and the binning assures the middle space point candidate
   // is already in the proper radius range
-  RelyOnGrid=0,
+  RelyOnGrid,
   /// The radius validity range changes according to the z-bin
   /// The user has to provide a list of ranges, one entry for each z bin in the
   /// grid
@@ -46,24 +46,12 @@ template <typename T>
 class SeedFilter;
 
 /// @brief Structure that holds configuration parameters for the seed finder algorithm
-template <typename SpacePoint>
+template <typename external_spacepoint_t>
 struct SeedFinderConfig {
-  std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
-
-  /// Seeding parameters used in the space-point grid creation and bin finding
-
-  /// Geometry Settings + Detector ROI
-  /// (r, z, phi) range for limiting location of all measurements and grid
-  /// creation
-  float phiMin = -std::numbers::pi_v<float>;
-  float phiMax = std::numbers::pi_v<float>;
+  std::shared_ptr<Acts::SeedFilter<external_spacepoint_t>> seedFilter{nullptr};
 
   /// Vector containing the z-bin edges for non equidistant binning in z
   std::vector<float> zBinEdges = {};
-
-  /// TODO: THIS SHOULD NOT BE HERE - REMOVE
-  /// Order of z bins to loop over when searching for SPs
-  std::vector<std::size_t> zBinsCustomLooping = {};
 
   /// Seeding parameters used to define the region of interest for middle
   /// space-point
@@ -75,25 +63,15 @@ struct SeedFinderConfig {
   /// rRangeMiddleSP can be used to define a fixed r range for each z bin:
   /// {{rMin, rMax}, ...} Range defined in vector for each z bin
   std::vector<std::vector<float>> rRangeMiddleSP = {};
-  /// If MiddleRadialStrategy is set to UserRange, the radial range can be
-  /// calculated based on the maximum and minimum r values of the space-points
-  /// in the event and a deltaR (deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange)
-
-  /// TODO: THIS SHOULD NOT BE HERE - REMOVE
-  float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
-  /// TODO: THIS SHOULD NOT BE HERE - REMOVE
-  float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
 
   /// Seeding parameters used to define the cuts on space-point doublets
 
   /// Minimum radial distance between two doublet components (prefer
   /// deltaRMinTopSP and deltaRMinBottomSP to set separate values for outer and
   /// inner space-points)
+  /// TODO Used in the filtering step ... is this correct???
   float deltaRMin = 5 * Acts::UnitConstants::mm;
-  /// Maximum radial distance between two doublet components (prefer
-  /// deltaRMaxTopSP and deltaRMacBottomSP to set separate values for outer and
-  /// inner space-points)
-  float deltaRMax = 270 * Acts::UnitConstants::mm;
+
   /// Minimum radial distance between middle-outer doublet components
   float deltaRMinTopSP = std::numeric_limits<float>::quiet_NaN();
   /// Maximum radial distance between middle-outer doublet components
@@ -190,10 +168,10 @@ struct SeedFinderConfig {
   /// Enables setting of the following delegates.
   bool useDetailedDoubleMeasurementInfo = false;
 
-  Delegate<bool(const SpacePoint&)> spacePointSelector{
+  Delegate<bool(const external_spacepoint_t&)> spacePointSelector{
       DelegateFuncTag<voidSpacePointSelector>{}};
 
-  static bool voidSpacePointSelector(const SpacePoint& /*sp*/) { return true; }
+  static bool voidSpacePointSelector(const external_spacepoint_t& /*sp*/) { return true; }
 
   /// Tolerance parameter used to check the compatibility of space-point
   /// coordinates in xyz. This is only used in a detector specific check for
@@ -238,13 +216,10 @@ struct SeedFinderConfig {
     config.isInInternalUnits = true;
     config.minPt /= 1_MeV;
     config.deltaRMin /= 1_mm;
-    config.deltaRMax /= 1_mm;
     config.deltaRMinTopSP /= 1_mm;
     config.deltaRMaxTopSP /= 1_mm;
     config.deltaRMinBottomSP /= 1_mm;
     config.deltaRMaxBottomSP /= 1_mm;
-    config.deltaRMiddleMinSPRange /= 1_mm;
-    config.deltaRMiddleMaxSPRange /= 1_mm;
     config.impactMax /= 1_mm;
     config.maxPtScattering /= 1_MeV;  // correct?
     config.collisionRegionMin /= 1_mm;

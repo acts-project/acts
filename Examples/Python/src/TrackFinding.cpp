@@ -96,7 +96,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(middleRangeStrategy);
     ACTS_PYTHON_MEMBER(cotThetaMax);
     ACTS_PYTHON_MEMBER(deltaRMin);
-    ACTS_PYTHON_MEMBER(deltaRMax);
     ACTS_PYTHON_MEMBER(deltaRMinBottomSP);
     ACTS_PYTHON_MEMBER(deltaRMaxBottomSP);
     ACTS_PYTHON_MEMBER(deltaRMinTopSP);
@@ -107,8 +106,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
     ACTS_PYTHON_MEMBER(collisionRegionMin);
     ACTS_PYTHON_MEMBER(collisionRegionMax);
-    ACTS_PYTHON_MEMBER(phiMin);
-    ACTS_PYTHON_MEMBER(phiMax);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
     ACTS_PYTHON_MEMBER(zAlign);
     ACTS_PYTHON_MEMBER(rAlign);
@@ -120,9 +117,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(deltaZMax);
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_MEMBER(interactionPointCut);
-    ACTS_PYTHON_MEMBER(zBinsCustomLooping);
-    ACTS_PYTHON_MEMBER(deltaRMiddleMinSPRange);
-    ACTS_PYTHON_MEMBER(deltaRMiddleMaxSPRange);
     ACTS_PYTHON_MEMBER(rRangeMiddleSP);
     ACTS_PYTHON_MEMBER(seedConfirmation);
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
@@ -259,7 +253,7 @@ void addTrackFinding(Context& ctx) {
       ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
       outputSeeds, seedFilterConfig, seedFinderConfig, seedFinderOptions,
       gridConfig, gridOptions, allowSeparateRMax, zBinNeighborsTop,
-      zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
+      zBinNeighborsBottom, numPhiNeighbors, useExtraCuts, deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,

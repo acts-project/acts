@@ -145,11 +145,10 @@ int main(int argc, char** argv) {
   Acts::SeedFinderConfig<value_type> config;
   // silicon detector max
   config.deltaRMin = 5._mm;
-  config.deltaRMax = 160._mm;
   config.deltaRMinTopSP = config.deltaRMin;
   config.deltaRMinBottomSP = config.deltaRMin;
-  config.deltaRMaxTopSP = config.deltaRMax;
-  config.deltaRMaxBottomSP = config.deltaRMax;
+  config.deltaRMaxTopSP = 160._mm;
+  config.deltaRMaxBottomSP = config.deltaRMaxTopSP;
   config.collisionRegionMin = -250._mm;
   config.collisionRegionMax = 250._mm;
   config.maxSeedsPerSpM = 5;
@@ -190,7 +189,7 @@ int main(int argc, char** argv) {
   gridConf.rMax = 160._mm;
   gridConf.zMax = 2800._mm;
   gridConf.zMin = -2800._mm;
-  gridConf.deltaRMax = config.deltaRMax;
+  gridConf.deltaRMax = config.deltaRMaxTopSP;
   gridConf.cotThetaMax = config.cotThetaMax;
   // setup spacepoint grid options
   Acts::CylindricalSpacePointGridOptions gridOpts;

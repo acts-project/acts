@@ -545,10 +545,7 @@ def itkSeedingAlgConfig(
         deltaR=(deltaRMin, deltaRMax),
         deltaRBottomSP=(deltaRMinSP, deltaRMaxBottomSP),
         deltaRTopSP=(deltaRMinSP, deltaRMaxTopSP),
-        deltaRMiddleSPRange=(deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange),
         collisionRegion=(collisionRegionMin, collisionRegionMax),
-        r=(None, rMaxSeedFinderConfig),
-        z=(zMin, zMax),
     )
 
     seedFinderOptionsArg = SeedFinderOptionsArg(bFieldInZ=bFieldInZ, beamPos=beamPos)
@@ -579,6 +576,8 @@ def itkSeedingAlgConfig(
         zBinNeighborsTop=zBinNeighborsTop,
         zBinNeighborsBottom=zBinNeighborsBottom,
         numPhiNeighbors=numPhiNeighbors,
+        deltaRMiddleMinSPRange=deltaRMiddleMinSPRange,
+        deltaRMiddleMaxSPRange=deltaRMiddleMaxSPRange
     )
 
     return (
