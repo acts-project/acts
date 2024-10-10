@@ -77,10 +77,12 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_outputPixelSpacePoints.initialize(m_cfg.outputPixelSpacePoints);
   m_outputStripSpacePoints.initialize(m_cfg.outputStripSpacePoints);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
-  m_outputClusters.initialize(m_cfg.outputClusters);
-  m_outputParticles.initialize(m_cfg.outputParticles);
-  m_outputMeasParticleMap.initialize(m_cfg.outputMeasurementParticlesMap);
-  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  if (!m_cfg.onlySpacepoints) {
+    m_outputClusters.initialize(m_cfg.outputClusters);
+    m_outputParticles.initialize(m_cfg.outputParticles);
+    m_outputMeasParticleMap.initialize(m_cfg.outputMeasurementParticlesMap);
+    m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  }
 
   // Set the branches
 
@@ -483,15 +485,16 @@ RootAthenaDumpReader::readMeasurements(
   return {clusters, measurements, measPartMap, imIdxMap};
 }
 
-std::pair<SimSpacePointContainer, SimSpacePointContainer>
+std::tuple<SimSpacePointContainer, SimSpacePointContainer,
+           SimSpacePointContainer>
 RootAthenaDumpReader::readSpacepoints(
-    const std::unordered_map<int, std::size_t>& imIdxMap) const {
-  // Prepare pixel space points
+    const std::optional<std::unordered_map<int, std::size_t>>& imIdxMap) const {
   SimSpacePointContainer pixelSpacePoints;
   pixelSpacePoints.reserve(nSP);
 
-  // Prepare space-point container
-  // They contain both pixel and SCT space points
+  SimSpacePointContainer stripSpacePoints;
+  stripSpacePoints.reserve(nSP);
+
   SimSpacePointContainer spacePoints;
   spacePoints.reserve(nSP);
 
@@ -509,15 +512,15 @@ RootAthenaDumpReader::readSpacepoints(
       continue;
     }
 
-    Acts::Vector3 globalPos{SPx[isp], SPy[isp], SPz[isp]};
-    double sp_covr = SPcovr[isp];
-    double sp_covz = SPcovz[isp];
+    const Acts::Vector3 globalPos{SPx[isp], SPy[isp], SPz[isp]};
+    const double spCovr = SPcovr[isp];
+    const double spCovz = SPcovz[isp];
 
     // PIX=1  STRIP = 2
     auto type = SPCL2_index[isp] == -1 ? ePixel : eStrip;
 
     ACTS_VERBOSE("SP:: " << type << " [" << globalPos.transpose() << "] "
-                         << sp_covr << " " << sp_covz);
+                         << spCovr << " " << spCovz);
 
     boost::container::static_vector<Acts::SourceLink, 2> sLinks;
 
@@ -542,15 +545,23 @@ RootAthenaDumpReader::readSpacepoints(
       continue;
     }
 
-    if (!imIdxMap.contains(cl1Index)) {
+    if (imIdxMap && !imIdxMap->contains(cl1Index)) {
       ACTS_WARNING("Measurement 1 for spacepoint " << isp << " not created");
       continue;
     }
 
-    IndexSourceLink first(*cl1GeoId, imIdxMap.at(cl1Index));
+    IndexSourceLink first(*cl1GeoId,
+                          imIdxMap ? imIdxMap->at(cl1Index) : cl1Index);
     sLinks.emplace_back(first);
 
-    if (type == eStrip) {
+    // First create pixel spacepoint here, later maybe overwrite with strip
+    // spacepoint
+    SimSpacePoint sp(globalPos, std::nullopt, spCovr, spCovz, std::nullopt,
+                     sLinks);
+
+    if (type == ePixel) {
+      pixelSpacePoints.push_back(sp);
+    } else {
       const auto cl2Index = SPCL2_index[isp];
       assert(cl2Index >= 0 && cl2Index < nCL);
 
@@ -560,20 +571,39 @@ RootAthenaDumpReader::readSpacepoints(
         continue;
       }
 
-      if (!imIdxMap.contains(cl2Index)) {
+      if (imIdxMap && !imIdxMap->contains(cl2Index)) {
         ACTS_WARNING("Measurement 2 for spacepoint " << isp << " not created");
         continue;
       }
 
-      IndexSourceLink second(*cl2GeoId, imIdxMap.at(cl2Index));
+      IndexSourceLink second(*cl2GeoId,
+                             imIdxMap ? imIdxMap->at(cl2Index) : cl2Index);
       sLinks.emplace_back(second);
-    }
 
-    SimSpacePoint sp(globalPos, std::nullopt, sp_covr, sp_covz, std::nullopt,
-                     sLinks);
+      using Vector3f = Eigen::Matrix<float, 3, 1>;
+      const Vector3f topStripDirection{SPtopStripDirection->at(isp).at(0),
+                                       SPtopStripDirection->at(isp).at(1),
+                                       SPtopStripDirection->at(isp).at(2)};
+      const Vector3f bottomStripDirection{
+          SPbottomStripDirection->at(isp).at(0),
+          SPbottomStripDirection->at(isp).at(1),
+          SPbottomStripDirection->at(isp).at(2)};
+      const Vector3f stripCenterDistance{SPstripCenterDistance->at(isp).at(0),
+                                         SPstripCenterDistance->at(isp).at(1),
+                                         SPstripCenterDistance->at(isp).at(2)};
+      const Vector3f topStripCenterPosition{
+          SPtopStripCenterPosition->at(isp).at(0),
+          SPtopStripCenterPosition->at(isp).at(1),
+          SPtopStripCenterPosition->at(isp).at(2)};
 
-    if (type == ePixel) {
-      pixelSpacePoints.push_back(sp);
+      sp = SimSpacePoint(globalPos, std::nullopt, spCovr, spCovz, std::nullopt,
+                         sLinks, SPhl_topstrip[isp], SPhl_botstrip[isp],
+                         topStripDirection.cast<double>(),
+                         bottomStripDirection.cast<double>(),
+                         stripCenterDistance.cast<double>(),
+                         topStripCenterPosition.cast<double>());
+
+      stripSpacePoints.push_back(sp);
     }
 
     spacePoints.push_back(sp);
@@ -592,7 +622,7 @@ RootAthenaDumpReader::readSpacepoints(
   ACTS_DEBUG("Created " << pixelSpacePoints.size() << " "
                         << " pixel space points");
 
-  return {spacePoints, pixelSpacePoints};
+  return {spacePoints, pixelSpacePoints, stripSpacePoints};
 }
 
 std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
@@ -662,22 +692,30 @@ ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
 
   m_inputchain->GetEntry(entry);
 
-  auto candidateParticles = readParticles();
+  std::optional<std::unordered_map<int, std::size_t>> optImIdxMap;
 
-  auto [clusters, measurements, candidateMeasPartMap, imIdxMap] =
-      readMeasurements(candidateParticles, ctx.geoContext);
+  if (!m_cfg.onlySpacepoints) {
+    auto candidateParticles = readParticles();
 
-  auto [spacePoints, pixelSpacePoints] = readSpacepoints(imIdxMap);
+    auto [clusters, measurements, candidateMeasPartMap, imIdxMap] =
+        readMeasurements(candidateParticles, ctx.geoContext);
+    optImIdxMap.emplace(std::move(imIdxMap));
 
-  auto [particles, measPartMap] =
-      reprocessParticles(candidateParticles, candidateMeasPartMap);
+    auto [particles, measPartMap] =
+        reprocessParticles(candidateParticles, candidateMeasPartMap);
+
+    m_outputClusters(ctx, std::move(clusters));
+    m_outputParticles(ctx, std::move(particles));
+    m_outputMeasParticleMap(ctx, std::move(measPartMap));
+    m_outputMeasurements(ctx, std::move(measurements));
+  }
+
+  auto [spacePoints, pixelSpacePoints, stripSpacePoints] =
+      readSpacepoints(optImIdxMap);
 
   m_outputPixelSpacePoints(ctx, std::move(pixelSpacePoints));
+  m_outputStripSpacePoints(ctx, std::move(stripSpacePoints));
   m_outputSpacePoints(ctx, std::move(spacePoints));
-  m_outputClusters(ctx, std::move(clusters));
-  m_outputParticles(ctx, std::move(particles));
-  m_outputMeasParticleMap(ctx, std::move(measPartMap));
-  m_outputMeasurements(ctx, std::move(measurements));
 
   return ProcessCode::SUCCESS;
 }

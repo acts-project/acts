@@ -64,6 +64,9 @@ class RootAthenaDumpReader : public IReader {
     // name of the track parameters (fitted by athena?)
     std::string outputTrackParameters = "athena_track_parameters";
 
+    /// Only extract spacepoints
+    bool onlySpacepoints = false;
+
     /// Only extract particles that passed the tracking requirements, for
     /// details see:
     /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.cxx?ref_type=heads#L1363
@@ -135,8 +138,13 @@ class RootAthenaDumpReader : public IReader {
                    const Acts::GeometryContext &gctx) const;
 
   /// Helper method to read spacepoints
-  std::pair<SimSpacePointContainer, SimSpacePointContainer> readSpacepoints(
-      const std::unordered_map<int, std::size_t> &imIdxMap) const;
+  /// @param imIdxMap optional remapping of indices. Since the measurement
+  /// index must be continuous, we need to remap the measurements indices
+  /// if we skip measurements in the first place
+  std::tuple<SimSpacePointContainer, SimSpacePointContainer,
+             SimSpacePointContainer>
+  readSpacepoints(const std::optional<std::unordered_map<int, std::size_t>>
+                      &imIdxMap) const;
 
   /// Helper method to reprocess particle ids
   std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
