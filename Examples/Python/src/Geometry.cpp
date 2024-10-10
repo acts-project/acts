@@ -25,6 +25,7 @@
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
@@ -183,7 +184,13 @@ void addGeometry(Context& ctx) {
 
   {
     py::class_<Acts::VolumeBounds, std::shared_ptr<Acts::VolumeBounds>>(
-        m, "VolumeBounds");
+        m, "VolumeBounds")
+        .def("type", &Acts::VolumeBounds::type)
+        .def("__str__", [](Acts::VolumeBounds& self) {
+          std::stringstream ss;
+          ss << self;
+          return ss.str();
+        });
 
     auto cvb =
         py::class_<Acts::CylinderVolumeBounds,
@@ -241,6 +248,22 @@ void addGeometry(Context& ctx) {
                                                   self.max(bval)};
         });
   }
+
+  {
+    auto cylStack = py::class_<CylinderVolumeStack>(m, "CylinderVolumeStack");
+
+    py::enum_<CylinderVolumeStack::AttachmentStrategy>(cylStack,
+                                                       "AttachmentStrategy")
+        .value("Gap", CylinderVolumeStack::AttachmentStrategy::Gap)
+        .value("First", CylinderVolumeStack::AttachmentStrategy::First)
+        .value("Second", CylinderVolumeStack::AttachmentStrategy::Second)
+        .value("Midpoint", CylinderVolumeStack::AttachmentStrategy::Midpoint);
+
+    py::enum_<CylinderVolumeStack::ResizeStrategy>(cylStack, "ResizeStrategy")
+        .value("Gap", CylinderVolumeStack::ResizeStrategy::Gap)
+        .value("Expand", CylinderVolumeStack::ResizeStrategy::Expand);
+  }
+
 }
 
 void addExperimentalGeometry(Context& ctx) {
