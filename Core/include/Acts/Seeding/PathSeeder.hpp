@@ -113,7 +113,8 @@ class PathSeeder {
   /// sort the source links into the seeds
   ///
   /// @param gctx The geometry context
-  /// @param sourceLinks The source links to seed
+  /// @param sourceLinkGridLookup The lookup table for the source links
+  /// @param seedCollection The collection of seeds to fill
   ///
   /// @return The vector of seeds
   template <SourceLinkGrid grid_t, typename container_t>
