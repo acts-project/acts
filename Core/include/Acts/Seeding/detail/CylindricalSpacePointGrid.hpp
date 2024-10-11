@@ -175,6 +175,7 @@ class CylindricalSpacePointGridCreator {
                           external_spacepoint_t>
   static void fillGrid(
       const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+      const Acts::SeedFinderOptions& options,
       Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
       const external_collection_t& collection);
 };
