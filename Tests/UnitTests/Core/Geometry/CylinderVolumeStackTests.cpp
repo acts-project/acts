@@ -864,6 +864,34 @@ BOOST_AUTO_TEST_CASE(ResizeReproduction2) {
                trf3, *logger);
 }
 
+//   original size
+// <--------------->
+// +---------------+
+// |               |
+// |               |
+// |   Volume 1    |
+// |               |
+// |               |
+// +---------------+
+//         first resize
+// <-------------------------->
+// +---------------+----------+
+// |               |          |
+// |               |          |
+// |   Volume 1    |   Gap    |
+// |               |          |      Gap is
+// |               |          |      reused!--+
+// +---------------+----------+               |
+//             second resize                  |
+// <----------------------------------->      |
+// +---------------+-------------------+      |
+// |               |                   |      |
+// |               |                   |      |
+// |   Volume 1    |        Gap        |<-----+
+// |               |                   |
+// |               |                   |
+// +---------------+-------------------+
+//
 BOOST_AUTO_TEST_CASE(ResizeGapMultiple) {
   Transform3 trf = Transform3::Identity();
   auto bounds = std::make_shared<CylinderVolumeBounds>(70, 100, 100.0);
