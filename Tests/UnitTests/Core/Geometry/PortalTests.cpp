@@ -172,10 +172,9 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
   BOOST_CHECK_NE(merged12.getLink(Direction::AlongNormal), nullptr);
   BOOST_CHECK_EQUAL(merged12.getLink(Direction::OppositeNormal), nullptr);
 
-  auto grid12 = dynamic_cast<const GridPortalLink*>(
+  auto composite12 = dynamic_cast<const CompositePortalLink*>(
       merged12.getLink(Direction::AlongNormal));
-  BOOST_REQUIRE_NE(grid12, nullptr);
-  grid12->printContents(std::cout);
+  BOOST_REQUIRE_NE(composite12, nullptr);
 
   BOOST_CHECK_EQUAL(
       merged12
