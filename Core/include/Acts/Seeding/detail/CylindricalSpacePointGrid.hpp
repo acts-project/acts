@@ -17,9 +17,19 @@
 
 namespace Acts {
 
-/// Cylindrical Space Point bin is a 2D grid with (phi, z) bins
-/// It stores a vector of internal space points to external space points
+/// Concept to check the provided external space point type
+/// can be used to fill the space point grid
 template <typename external_spacepoint_t>
+concept CylindricalGridElement = requires(external_spacepoint_t sp) {
+  { sp.phi() } -> std::same_as<float>;
+  { sp.z() } -> std::same_as<float>;
+  { sp.radius() } -> std::same_as<float>;
+};
+  
+  
+/// Cylindrical Space Point bin is a 3D grid with (phi, z, radius) bins
+/// It stores a vector of external space points
+template <Acts::CylindricalGridElement external_spacepoint_t>
 using CylindricalSpacePointGrid = Acts::Grid<
     std::vector<const external_spacepoint_t*>,
     Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>,
@@ -151,6 +161,13 @@ class CylindricalSpacePointGridCreator {
       Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
       external_spacepoint_iterator_t spBegin,
       external_spacepoint_iterator_t spEnd);
+
+  template <typename external_spacepoint_t,
+	    typename external_collection_t>
+  requires std::ranges::range<external_collection_t> && std::same_as<typename external_collection_t::value_type, external_spacepoint_t>
+  static void fillGrid(const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+		       Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
+		       const external_collection_t& collection);
 };
 
 }  // namespace Acts
