@@ -104,7 +104,7 @@ class PathSeeder {
   };
 
   /// @brief Constructor
-  PathSeeder(const Config& config) : m_cfg(std::move(config)){};
+  PathSeeder(const Config& config) : m_cfg(std::move(config)) {};
 
   /// @brief Destructor
   ~PathSeeder() = default;
@@ -126,20 +126,20 @@ class PathSeeder {
     int bin1 = static_cast<int>(m_cfg.binDirections.second);
 
     // Create the seeds
-    for (auto& firstGeoId : m_cfg.refLayerIds) {
-      auto firstGrid = sourceLinkGridLookup.at(firstGeoId);
+    for (auto& refGeoId : m_cfg.refLayerIds) {
+      auto refGrid = sourceLinkGridLookup.at(refGeoId);
 
-      for (auto it = firstGrid.begin(); it != firstGrid.end(); it++) {
+      for (auto it = refGrid.begin(); it != refGrid.end(); it++) {
         std::vector<SourceLink> pivotSourceLinks = *it;
 
         for (const auto& pivot : pivotSourceLinks) {
           // Get the IP parameters
-          auto [ipParameters, firstLayerParameters] =
+          auto [ipParameters, refLayerParameters] =
               m_cfg.trackEstimator(gctx, pivot);
 
           // Intersect with the surfaces
           std::vector<std::pair<GeometryIdentifier, Vector2>> intersections =
-              m_cfg.intersectionFinder(gctx, firstLayerParameters);
+              m_cfg.intersectionFinder(gctx, refLayerParameters);
 
           // Continue if no intersections
           if (intersections.empty()) {
