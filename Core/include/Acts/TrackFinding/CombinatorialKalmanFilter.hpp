@@ -715,173 +715,78 @@ class CombinatorialKalmanFilter {
       bool isSensitive = surface->associatedDetectorElement() != nullptr;
       bool isMaterial = surface->surfaceMaterial() != nullptr;
 
-      std::size_t nBranchesOnSurface = 0;
+      std::size_t nBranchesOnSurface = 1;
 
       if (isSensitive) {
-        // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
-
-        auto [slBegin, slEnd] = m_sourceLinkAccessor(*surface);
-
-        if (slBegin == slEnd) {
-          ACTS_VERBOSE("Detected hole before measurement selection on surface "
-                       << surface->geometryId());
-        }
-
-        // Transport the covariance to the surface
-        stepper.transportCovarianceToBound(state.stepping, *surface);
-
-        // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PreUpdate);
-
-        // Bind the transported state to the current surface
-        auto boundStateRes =
-            stepper.boundState(state.stepping, *surface, false);
-        if (!boundStateRes.ok()) {
-          return boundStateRes.error();
-        }
-        auto& boundState = *boundStateRes;
-        auto& [boundParams, jacobian, pathLength] = boundState;
-        boundParams.covariance() = state.stepping.cov;
-
-        auto currentBranch = result.activeBranches.back();
-        TrackIndexType prevTip = currentBranch.tipIndex();
-
-        // Create trackstates for all source links (will be filtered later)
-        using TrackStatesResult =
-            Acts::Result<CkfTypes::BranchVector<TrackIndexType>>;
-        TrackStatesResult tsRes = trackStateCandidateCreator(
-            state.geoContext, *calibrationContextPtr, *surface, boundState,
-            slBegin, slEnd, prevTip, *result.trackStates,
-            result.trackStateCandidates, *result.trackStates, logger());
-        if (!tsRes.ok()) {
-          ACTS_ERROR(
-              "Processing of selected track states failed: " << tsRes.error());
-          return tsRes.error();
-        }
-        const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList =
-            *tsRes;
-
-        if (newTrackStateList.empty()) {
-          ACTS_VERBOSE("Detected hole on surface " << surface->geometryId());
-
-          // Setting the number of branches on the surface to 1 as the hole
-          // still counts as a branch
-          nBranchesOnSurface = 1;
-
-          auto stateMask = PM::Predicted | PM::Jacobian;
-
-          // Add a hole track state to the multitrajectory
-          TrackIndexType currentTip = addNonSourcelinkState(
-              stateMask, boundState, result, true, prevTip);
-          auto nonSourcelinkState =
-              result.trackStates->getTrackState(currentTip);
-          currentBranch.tipIndex() = currentTip;
-          currentBranch.nHoles()++;
-
-          BranchStopperResult branchStopperResult =
-              m_extensions.branchStopper(currentBranch, nonSourcelinkState);
-
-          // Check the branch
-          if (branchStopperResult == BranchStopperResult::Continue) {
-            // Remembered the active branch and its state
-          } else {
-            // No branch on this surface
-            nBranchesOnSurface = 0;
-            if (branchStopperResult == BranchStopperResult::StopAndKeep) {
-              storeLastActiveBranch(result);
-            }
-            // Remove the branch from list
-            result.activeBranches.pop_back();
-          }
-        } else {
-          Result<unsigned int> procRes = processNewTrackStates(
-              state.geoContext, newTrackStateList, result);
-          if (!procRes.ok()) {
-            ACTS_ERROR("Processing of selected track states failed: "
-                       << procRes.error());
-            return procRes.error();
-          }
-          nBranchesOnSurface = *procRes;
-
-          if (nBranchesOnSurface == 0) {
-            // All branches on the surface have been stopped. Reset happens at
-            // the end of the function
-            ACTS_VERBOSE("All branches on surface " << surface->geometryId()
-                                                    << " have been stopped");
-          } else {
-            // `currentBranch` is invalidated after `processNewTrackStates`
-            currentBranch = result.activeBranches.back();
-            prevTip = currentBranch.tipIndex();
-
-            auto currentState = currentBranch.outermostTrackState();
-
-            if (currentState.typeFlags().test(TrackStateFlag::OutlierFlag)) {
-              // We don't need to update the stepper given an outlier state
-              ACTS_VERBOSE("Outlier state detected on surface "
-                           << surface->geometryId());
-            } else {
-              // If there are measurement track states on this surface
-              ACTS_VERBOSE("Filtering step successful with "
-                           << nBranchesOnSurface << " branches");
-              // Update stepping state using filtered parameters of last track
-              // state on this surface
-              stepper.update(state.stepping,
-                             MultiTrajectoryHelpers::freeFiltered(
-                                 state.options.geoContext, currentState),
-                             currentState.filtered(),
-                             currentState.filteredCovariance(), *surface);
-              ACTS_VERBOSE(
-                  "Stepping state is updated with filtered parameter:");
-              ACTS_VERBOSE("-> " << currentState.filtered().transpose()
-                                 << " of track state with tip = "
-                                 << currentState.index());
-            }
-          }
-        }
-
-        // Update state and stepper with post material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PostUpdate);
       } else if (isMaterial) {
-        ACTS_VERBOSE("Handle material surface: " << surface->geometryId());
+        ACTS_VERBOSE("Material surface " << surface->geometryId()
+                                         << " detected.");
+      } else {
+        ACTS_VERBOSE("Passive surface " << surface->geometryId()
+                                        << " detected.");
+      }
 
-        // No splitting on the surface without source links. Set it to one
-        // first, but could be changed later
+      auto [slBegin, slEnd] = m_sourceLinkAccessor(*surface);
+
+      if (isSensitive && slBegin == slEnd) {
+        ACTS_VERBOSE("Detected hole before measurement selection on surface "
+                     << surface->geometryId());
+      }
+
+      // Transport the covariance to the surface
+      stepper.transportCovarianceToBound(state.stepping, *surface);
+
+      // Update state and stepper with pre material effects
+      materialInteractor(surface, state, stepper, navigator,
+                         MaterialUpdateStage::PreUpdate);
+
+      // Bind the transported state to the current surface
+      auto boundStateRes = stepper.boundState(state.stepping, *surface, false);
+      if (!boundStateRes.ok()) {
+        return boundStateRes.error();
+      }
+      auto& boundState = *boundStateRes;
+      auto& [boundParams, jacobian, pathLength] = boundState;
+      boundParams.covariance() = state.stepping.cov;
+
+      auto currentBranch = result.activeBranches.back();
+      TrackIndexType prevTip = currentBranch.tipIndex();
+
+      // Create trackstates for all source links (will be filtered later)
+      using TrackStatesResult =
+          Acts::Result<CkfTypes::BranchVector<TrackIndexType>>;
+      TrackStatesResult tsRes = trackStateCandidateCreator(
+          state.geoContext, *calibrationContextPtr, *surface, boundState,
+          slBegin, slEnd, prevTip, *result.trackStates,
+          result.trackStateCandidates, *result.trackStates, logger());
+      if (!tsRes.ok()) {
+        ACTS_ERROR(
+            "Processing of selected track states failed: " << tsRes.error());
+        return tsRes.error();
+      }
+      const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList = *tsRes;
+
+      if (newTrackStateList.empty()) {
+        if (isSensitive) {
+          ACTS_VERBOSE("Detected hole on surface " << surface->geometryId());
+        }
+
+        // Setting the number of branches on the surface to 1 as the hole
+        // still counts as a branch
         nBranchesOnSurface = 1;
 
-        auto currentBranch = result.activeBranches.back();
-        TrackIndexType prevTip = currentBranch.tipIndex();
-
-        // No source links on surface, add passive material TrackState. No
-        // storage allocation for uncalibrated/calibrated measurement and
-        // filtered parameter
         auto stateMask = PM::Predicted | PM::Jacobian;
 
-        // Transport the covariance to a curvilinear surface
-        stepper.transportCovarianceToCurvilinear(state.stepping);
-
-        // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PreUpdate);
-
-        // Transport & bind the state to the current surface
-        auto boundStateRes =
-            stepper.boundState(state.stepping, *surface, false);
-        if (!boundStateRes.ok()) {
-          return boundStateRes.error();
-        }
-        auto& boundState = *boundStateRes;
-        auto& [boundParams, jacobian, pathLength] = boundState;
-        boundParams.covariance() = state.stepping.cov;
-
-        // Add a material track state to the multitrajectory
-        TrackIndexType currentTip = addNonSourcelinkState(
-            stateMask, boundState, result, isSensitive, prevTip);
+        // Add a hole track state to the multitrajectory
+        TrackIndexType currentTip =
+            addNonSourcelinkState(stateMask, boundState, result, true, prevTip);
         auto nonSourcelinkState = result.trackStates->getTrackState(currentTip);
         currentBranch.tipIndex() = currentTip;
+        if (isSensitive) {
+          currentBranch.nHoles()++;
+        }
 
         BranchStopperResult branchStopperResult =
             m_extensions.branchStopper(currentBranch, nonSourcelinkState);
@@ -898,15 +803,54 @@ class CombinatorialKalmanFilter {
           // Remove the branch from list
           result.activeBranches.pop_back();
         }
-
-        // Update state and stepper with post material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PostUpdate);
       } else {
-        // Neither measurement nor material on surface, this branch is still
-        // valid. Count the branch on current surface
-        nBranchesOnSurface = 1;
+        Result<unsigned int> procRes =
+            processNewTrackStates(state.geoContext, newTrackStateList, result);
+        if (!procRes.ok()) {
+          ACTS_ERROR("Processing of selected track states failed: "
+                     << procRes.error());
+          return procRes.error();
+        }
+        nBranchesOnSurface = *procRes;
+
+        if (nBranchesOnSurface == 0) {
+          // All branches on the surface have been stopped. Reset happens at
+          // the end of the function
+          ACTS_VERBOSE("All branches on surface " << surface->geometryId()
+                                                  << " have been stopped");
+        } else {
+          // `currentBranch` is invalidated after `processNewTrackStates`
+          currentBranch = result.activeBranches.back();
+          prevTip = currentBranch.tipIndex();
+
+          auto currentState = currentBranch.outermostTrackState();
+
+          if (currentState.typeFlags().test(TrackStateFlag::OutlierFlag)) {
+            // We don't need to update the stepper given an outlier state
+            ACTS_VERBOSE("Outlier state detected on surface "
+                         << surface->geometryId());
+          } else {
+            // If there are measurement track states on this surface
+            ACTS_VERBOSE("Filtering step successful with " << nBranchesOnSurface
+                                                           << " branches");
+            // Update stepping state using filtered parameters of last track
+            // state on this surface
+            stepper.update(state.stepping,
+                           MultiTrajectoryHelpers::freeFiltered(
+                               state.options.geoContext, currentState),
+                           currentState.filtered(),
+                           currentState.filteredCovariance(), *surface);
+            ACTS_VERBOSE("Stepping state is updated with filtered parameter:");
+            ACTS_VERBOSE("-> " << currentState.filtered().transpose()
+                               << " of track state with tip = "
+                               << currentState.index());
+          }
+        }
       }
+
+      // Update state and stepper with post material effects
+      materialInteractor(surface, state, stepper, navigator,
+                         MaterialUpdateStage::PostUpdate);
 
       // Reset current branch if there is no branch on current surface
       if (nBranchesOnSurface == 0) {
