@@ -202,7 +202,7 @@ Acts::Vector2 Acts::DiscSurface::localPolarToCartesian(
 
 Acts::Vector2 Acts::DiscSurface::localCartesianToPolar(
     const Vector2& lcart) const {
-  return Vector2(std::hypot(lcart[eBoundLoc0], lcart[eBoundLoc1]),
+  return Vector2(lcart.norm(),
                  std::atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
 }
 
