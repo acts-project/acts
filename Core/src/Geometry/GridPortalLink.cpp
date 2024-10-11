@@ -89,7 +89,10 @@ void GridPortalLink::checkConsistency(const CylinderSurface& cyl) const {
     ActsScalar hlZ = cyl.bounds().get(CylinderBounds::eHalfLengthZ);
     if (!same(axis.getMin(), -hlZ) || !same(axis.getMax(), hlZ)) {
       throw std::invalid_argument(
-          "GridPortalLink: CylinderBounds: invalid length setup.");
+          "GridPortalLink: CylinderBounds: invalid length setup: " +
+          std::to_string(axis.getMin()) + " != " + std::to_string(-hlZ) +
+          " or " + std::to_string(axis.getMax()) +
+          " != " + std::to_string(hlZ));
     }
   };
   auto checkRPhi = [&cyl, same](const IAxis& axis) {
