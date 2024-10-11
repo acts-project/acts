@@ -263,33 +263,23 @@ auto fromJson(const nlohmann::json& jGrid,
   using GridType = typename axis_generator_type::template grid_type<value_type>;
   GridType grid(aGenerator());
   nlohmann::json jData = jGrid["data"];
-  std::cout << "jData: " << jData << std::endl;
   // Index filling
   if constexpr (GridType::DIM == 1u) {
     for (const auto& jd : jData) {
       std::array<std::size_t, 1u> lbin = jd[0u];
       if (!jd[1u].is_null()) {
-        // value_type values = jd[1u];
         grid.atLocalBins(lbin) = jd[1u].get<value_type>();
       }
-      //   grid.atLocalBins(lbin) = jd[1u];
     }
   }
   if constexpr (GridType::DIM == 2u) {
     for (const auto& jd : jData) {
       std::array<std::size_t, 2u> lbin = jd[0u];
-      std::cout << "lbin: " << lbin[0] << " " << lbin[1] << std::endl;
       if (!jd[1u].is_null()) {
-        std::cout << "jd[1u]: " << jd[1u] << std::endl;
-        // value_type values = jd[1u].get<value_type>();
         grid.atLocalBins(lbin) = jd[1u].get<value_type>();
-        // grid.atLocalBins(lbin) = jd[1u];
       }
-      std::cout << "lbin: " << lbin[0] << " " << lbin[1] << " SONE"
-                << std::endl;
     }
   }
-  std::cout << "grid done" << std::endl;
   return grid;
 }
 
