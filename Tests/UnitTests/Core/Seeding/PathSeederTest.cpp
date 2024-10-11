@@ -263,7 +263,7 @@ std::shared_ptr<Experimental::Detector> constructTelescopeDetector() {
 
   // Connect the volumes
   auto portalContainer = Experimental::detail::CuboidalDetectorHelper::connect(
-      gctx, volumes, BinningValue::binX, {}, Logging::VERBOSE);
+      gctx, volumes, BinningValue::binX, {}, Logging::INFO);
 
   // Make sure that the geometry ids are
   // independent of the potential Id generation
