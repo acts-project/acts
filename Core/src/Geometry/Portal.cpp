@@ -343,15 +343,11 @@ bool Portal::isSameSurface(const GeometryContext& gctx, const Surface& a,
     return false;
   }
 
-  auto small = [](const Transform3& t) {
-    Vector3 translation = t.translation();
-    return (std::abs(translation[0]) < s_onSurfaceTolerance) &&
-           (std::abs(translation[1]) < s_onSurfaceTolerance) &&
-           (std::abs(translation[2]) < s_onSurfaceTolerance);
-  };
-  if (!a.transform(gctx).translation().isApprox(b.transform(gctx).translation(),
-                                                s_onSurfaceTolerance) &&
-      !small(a.transform(gctx)) && !small(b.transform(gctx))) {
+  Vector3 delta =
+      (a.transform(gctx).translation() - b.transform(gctx).translation())
+          .cwiseAbs();
+
+  if (delta.maxCoeff() > s_onSurfaceTolerance) {
     return false;
   }
 
