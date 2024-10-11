@@ -818,7 +818,7 @@ retrieveRadiusRangeForMiddle(const Acts::SeedFinderOptions& options,
 			     const external_spacepoint_t& spM) const {
   
   switch(m_config.middleRangeStrategy) {
-    using Acts::SeedFinding::MiddleRadialStrategy;
+    using enum Acts::SeedFinding::MiddleRadialStrategy;
   case RelyOnGrid:
     // The grid makes sure the middle space point is in the proper range
     // no need to check
