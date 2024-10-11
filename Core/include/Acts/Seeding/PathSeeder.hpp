@@ -71,6 +71,9 @@ class PathSeeder {
   ///
   /// @arg The geometry context to use
   /// @arg Track parameters at the reference tracking layer
+  ///
+  /// @return Vector of pairs of the geometry identifier
+  /// and the local intersection point
   using IntersectionLookup =
       Delegate<std::vector<std::pair<GeometryIdentifier, Vector2>>(
           const GeometryContext&, const CurvilinearTrackParameters&)>;
@@ -98,9 +101,6 @@ class PathSeeder {
     PathWidthLookup pathWidthProvider;
     /// Reference layer IDs
     std::vector<GeometryIdentifier> refLayerIds;
-    /// Binning directions of the tracking layers
-    std::pair<BinningValue, BinningValue> binDirections = {BinningValue::binY,
-                                                           BinningValue::binZ};
   };
 
   /// @brief Constructor
@@ -122,10 +122,6 @@ class PathSeeder {
                  const std::unordered_map<GeometryIdentifier, grid_t>&
                      sourceLinkGridLookup,
                  container_t& seedCollection) const {
-    // Get plane of the telescope sensitive surfaces
-    int bin0 = static_cast<int>(m_cfg.binDirections.first);
-    int bin1 = static_cast<int>(m_cfg.binDirections.second);
-
     // Create the seeds
     for (auto& refGeoId : m_cfg.refLayerIds) {
       auto refGrid = sourceLinkGridLookup.at(refGeoId);
@@ -147,25 +143,20 @@ class PathSeeder {
             continue;
           }
 
-          // Create the seed
-          std::vector<SourceLink> seedSourceLinks;
-
-          // Add the pivot source link
-          seedSourceLinks.push_back(pivot);
-
           // Iterate over the intersections
           // and get the source links
           // in the subsequent layers
+          std::vector<SourceLink> seedSourceLinks;
           for (auto& [geoId, refPoint] : intersections) {
             // Get the path width
             auto [pathWidth0, pathWidth1] =
                 m_cfg.pathWidthProvider(gctx, geoId);
 
             // Get the bounds of the path
-            ActsScalar top0 = refPoint[bin0] + pathWidth0;
-            ActsScalar bot0 = refPoint[bin0] - pathWidth0;
-            ActsScalar top1 = refPoint[bin1] + pathWidth1;
-            ActsScalar bot1 = refPoint[bin1] - pathWidth1;
+            ActsScalar top0 = refPoint[0] + pathWidth0;
+            ActsScalar bot0 = refPoint[0] - pathWidth0;
+            ActsScalar top1 = refPoint[1] + pathWidth1;
+            ActsScalar bot1 = refPoint[1] - pathWidth1;
 
             // Get the lookup table for the source links
             auto grid = sourceLinkGridLookup.at(geoId);

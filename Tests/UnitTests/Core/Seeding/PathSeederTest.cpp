@@ -48,6 +48,12 @@ const ActsScalar halfZ = 10.;
 const ActsScalar deltaX = 10.;
 const ActsScalar deltaYZ = 1.;
 
+const Vector4 trueVertex(-5., 0., 0., 0);
+const std::vector<ActsScalar> truePhis = {-0.15, -0.1, -0.05, 0,
+                                          0.05,  0.1,  0.15};
+const ActsScalar trueTheta = M_PI_2;
+const ActsScalar trueQOverP = 1. / 1._GeV;
+
 // Intersection finding to get the
 // region of interest for seeding
 class NoFieldIntersectionFinder {
@@ -141,14 +147,14 @@ struct ConstructSourceLinkGrid {
   SourceLinkSurfaceAccessor m_surfaceAccessor;
 
   std::unordered_map<GeometryIdentifier, Grid> construct(
-      GeometryContext geoCtx, std::vector<SourceLink> sourceLinks) {
+      GeometryContext /*geoCtx*/, std::vector<SourceLink> sourceLinks) {
     // Lookup table for each layer
     std::unordered_map<GeometryIdentifier, Grid> lookupTable;
 
     // Construct a binned grid for each layer
     for (int i : {14, 15, 16, 17}) {
-      Axis xAxis(-halfY, halfY, 50);
-      Axis yAxis(-halfZ, halfZ, 50);
+      Axis xAxis(-halfY, halfY, 100);
+      Axis yAxis(-halfZ, halfZ, 100);
 
       Grid grid(std::make_tuple(xAxis, yAxis));
 
@@ -160,15 +166,10 @@ struct ConstructSourceLinkGrid {
     }
     // Fill the grid with source links
     for (auto& sl : sourceLinks) {
-      auto ssl = sl.get<detail::Test::TestSourceLink>();
-      auto id = ssl.m_geometryId;
+      auto tsl = sl.get<detail::Test::TestSourceLink>();
+      auto id = tsl.m_geometryId;
 
-      // Grid works with global positions
-      Vector3 globalPos = m_surfaceAccessor(sl)->localToGlobal(
-          geoCtx, ssl.parameters, Vector3{0, 1, 0});
-
-      auto bin = lookupTable.at(id).localBinsFromPosition(
-          Vector2(globalPos.y(), globalPos.z()));
+      auto bin = lookupTable.at(id).localBinsFromPosition(tsl.parameters);
       lookupTable.at(id).atLocalBins(bin).push_back(sl);
     }
 
@@ -308,12 +309,9 @@ std::vector<SourceLink> createSourceLinks(
     }
   }
 
-  Vector4 vertex(-5., 0., 0., 0);
-  std::vector<ActsScalar> phis = {-0.15, -0.1, -0.05, 0, 0.05, 0.1, 0.15};
-
   std::vector<SourceLink> sourceLinks;
-  for (ActsScalar phi : phis) {
-    TrackParameters trackParameters(vertex, phi, M_PI_2, 1_e / 1._GeV,
+  for (ActsScalar phi : truePhis) {
+    TrackParameters trackParameters(trueVertex, phi, trueTheta, trueQOverP,
                                     std::nullopt,
                                     ParticleHypothesis::electron());
 
@@ -389,7 +387,7 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   Acts::Experimental::PathSeeder pathSeeder(pathSeederCfg);
 
   // Get the seeds
-  pathWidthProvider.width = {0.01, 0.01};
+  pathWidthProvider.width = {1e-3, 1e-3};
 
   std::vector<Acts::Experimental::PathSeeder::PathSeed> seeds;
 
@@ -398,6 +396,14 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
 
   // Check the seeds
   BOOST_CHECK_EQUAL(seeds.size(), 7);
+
+  for (std::size_t i = 0; i < seeds.size(); i++) {
+    auto seed = seeds.at(i);
+    BOOST_CHECK_EQUAL(seed.second.size(), 4);
+    BOOST_CHECK_EQUAL(seed.first.phi(), truePhis.at(i));
+    BOOST_CHECK_EQUAL(seed.first.theta(), trueTheta);
+    BOOST_CHECK_EQUAL(seed.first.qOverP(), trueQOverP);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
