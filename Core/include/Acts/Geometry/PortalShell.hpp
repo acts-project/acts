@@ -70,7 +70,7 @@ class CylinderPortalShell : public PortalShellBase {
  public:
   using Face = CylinderVolumeBounds::Face;
 
-  using enum Face;
+  using enum CylinderVolumeBounds::Face;
 
   /// Retrieve the portal associated to the given face. Can be nullptr if unset.
   /// @param face The face to retrieve the portal for
