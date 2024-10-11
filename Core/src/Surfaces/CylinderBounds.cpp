@@ -153,10 +153,12 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::circleVertices(
 
 void Acts::CylinderBounds::checkConsistency() noexcept(false) {
   if (get(eR) <= 0.) {
-    throw std::invalid_argument("CylinderBounds: invalid radial setup.");
+    throw std::invalid_argument(
+        "CylinderBounds: invalid radial setup: radius is negative");
   }
   if (get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument("CylinderBounds: invalid length setup.");
+    throw std::invalid_argument(
+        "CylinderBounds: invalid length setup: half length is negative");
   }
   if (get(eHalfPhiSector) <= 0. || get(eHalfPhiSector) > M_PI) {
     throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
