@@ -1891,7 +1891,7 @@ def addExaTrkX(
 
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
-        inputProtoTracks="tracks",
+        inputTracks="tracks",
         inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="exatrkx_track_particle_matching",
