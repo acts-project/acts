@@ -31,7 +31,30 @@ concept IsGenericBound =
 }  // namespace
 
 namespace Acts {
-    NLOHMANN_JSON_SERIALIZE_ENUM(PdgParticle)
+NLOHMANN_JSON_SERIALIZE_ENUM(Acts::PdgParticle,
+
+                             {{Acts::PdgParticle::eInvalid, "Invalid"},
+                              {Acts::PdgParticle::eElectron, "Electron"},
+                              {Acts::PdgParticle::eAntiElectron,
+                               "AntiElectron"},
+                              {Acts::PdgParticle::ePositron, "Positron"},
+                              {Acts::PdgParticle::eMuon, "Muon"},
+                              {Acts::PdgParticle::eAntiMuon, "AntiMuon"},
+                              {Acts::PdgParticle::eTau, "Tau"},
+                              {Acts::PdgParticle::eAntiTau, "AntiTau"},
+                              {Acts::PdgParticle::eGamma, "Gamma"},
+                              {Acts::PdgParticle::ePionZero, "PionZero"},
+                              {Acts::PdgParticle::ePionPlus, "PionPlus"},
+                              {Acts::PdgParticle::ePionMinus, "PionMinus"},
+                              {Acts::PdgParticle::eKaonPlus, "KaonPlus"},
+                              {Acts::PdgParticle::eKaonMinus, "KaonMinus"},
+                              {Acts::PdgParticle::eNeutron, "Neutron"},
+                              {Acts::PdgParticle::eAntiNeutron, "AntiNeutron"},
+                              {Acts::PdgParticle::eProton, "Proton"},
+                              {Acts::PdgParticle::eAntiProton, "AntiProton"},
+                              {Acts::PdgParticle::eLead, "Lead"}}
+
+)
 }
 
 namespace nlohmann {
