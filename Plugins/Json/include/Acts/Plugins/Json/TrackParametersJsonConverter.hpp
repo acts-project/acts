@@ -20,7 +20,7 @@ namespace {
 // only to track parameters
 template <class parameters_t>
 concept TrackParameters = Acts::FreeTrackParametersConcept<parameters_t> ||
-    Acts::BoundTrackParametersConcept<parameters_t>;
+                          Acts::BoundTrackParametersConcept<parameters_t>;
 
 // Shorthand for bound track parameters
 template <class parameters_t>
