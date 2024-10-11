@@ -55,6 +55,31 @@ class GenericFreeTrackParameters {
         m_cov(std::move(cov)),
         m_particleHypothesis(std::move(particleHypothesis)) {}
 
+  /// Construct from four-position, direction, absolute momentum, and charge.
+  ///
+  /// @param pos4 Track position/time four-vector
+  /// @param phi Transverse track direction angle
+  /// @param theta Longitudinal track direction angle
+  /// @param qOverP Charge over momentum
+  /// @param cov Free parameters covariance matrix
+  /// @param particleHypothesis Particle hypothesis
+  GenericFreeTrackParameters(const Vector4& pos4, const Vector3& dir,
+                             Scalar qOverP, std::optional<CovarianceMatrix> cov,
+                             ParticleHypothesis particleHypothesis)
+      : m_params(FreeVector::Zero()),
+        m_cov(std::move(cov)),
+        m_particleHypothesis(std::move(particleHypothesis)) {
+    m_params[eFreePos0] = pos4[ePos0];
+    m_params[eFreePos1] = pos4[ePos1];
+    m_params[eFreePos2] = pos4[ePos2];
+    m_params[eFreeTime] = pos4[eTime];
+    m_params[eFreeDir0] = dir[eMom0];
+    m_params[eFreeDir1] = dir[eMom1];
+    m_params[eFreeDir2] = dir[eMom2];
+    m_params[eFreeQOverP] = qOverP;
+  }
+
+
   /// Construct from four-position, angles, absolute momentum, and charge.
   ///
   /// @param pos4 Track position/time four-vector
@@ -135,9 +160,9 @@ class GenericFreeTrackParameters {
   Scalar time() const { return m_params[eFreeTime]; }
 
   /// Phi direction.
-  Scalar phi() const { return phi(direction()); }
+  Scalar phi() const { return Acts::VectorHelpers::phi(direction()); }
   /// Theta direction.
-  Scalar theta() const { return theta(direction()); }
+  Scalar theta() const { return Acts::VectorHelpers::theta(direction()); }
   /// Charge over momentum.
   Scalar qOverP() const { return m_params[eFreeQOverP]; }
 
