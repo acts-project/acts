@@ -26,7 +26,6 @@ concept CylindricalGridElement = requires(external_spacepoint_t sp) {
   { sp.radius() } -> std::same_as<float>;
 };
   
-  
 /// Cylindrical Space Point bin is a 3D grid with (phi, z, radius) bins
 /// It stores a vector of external space points
 template <Acts::CylindricalGridElement external_spacepoint_t>
@@ -99,7 +98,13 @@ struct CylindricalSpacePointGridConfig {
     config.zMax /= 1_mm;
     config.zMin /= 1_mm;
     config.deltaRMax /= 1_mm;
-
+    for (float& val : config.zBinEdges) {
+      val /= 1_mm;
+    }
+    for (float& val : config.rBinEdges) {
+      val /= 1_mm;
+    }
+    
     if (config.phiMin < -std::numbers::pi_v<float> ||
         config.phiMax > std::numbers::pi_v<float>) {
       throw std::runtime_error(
@@ -129,7 +134,7 @@ struct CylindricalSpacePointGridConfig {
 
 struct CylindricalSpacePointGridOptions {
   // magnetic field
-  float bFieldInZ = 0.;
+  float bFieldInZ = 0. * Acts::UnitConstants::T;
   bool isInInternalUnits = false;
   CylindricalSpacePointGridOptions toInternalUnits() const {
     if (isInInternalUnits) {
