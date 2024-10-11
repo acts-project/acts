@@ -300,7 +300,6 @@ void addGeometry(Context& ctx) {
         .value("Gap", CylinderVolumeStack::ResizeStrategy::Gap)
         .value("Expand", CylinderVolumeStack::ResizeStrategy::Expand);
   }
-
 }
 
 void addExperimentalGeometry(Context& ctx) {
