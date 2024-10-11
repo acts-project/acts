@@ -247,8 +247,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
           m_cfg.gridConfig, m_cfg.gridOptions);
 
   Acts::CylindricalSpacePointGridCreator::fillGrid(
-      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid,
-      spContainer.begin(), spContainer.end());
+      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid, spContainer);
 
   // Compute radius Range
   // we rely on the fact the grid is storing the proxies

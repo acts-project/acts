@@ -214,3 +214,16 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     std::ranges::sort(rbin, {}, [](const auto& rb) { return rb->radius(); });
   }
 }
+
+template <typename external_spacepoint_t, typename external_collection_t>
+  requires std::ranges::range<external_collection_t> &&
+           std::same_as<typename external_collection_t::value_type,
+                        external_spacepoint_t>
+void Acts::CylindricalSpacePointGridCreator::fillGrid(
+    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+    Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
+    const external_collection_t& collection) {
+  Acts::CylindricalSpacePointGridCreator::fillGrid<external_spacepoint_t>(
+      config, grid, std::ranges::begin(collection),
+      std::ranges::end(collection));
+}

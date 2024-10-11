@@ -36,7 +36,9 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
 }
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
-template <typename container_t, typename sp_range_t>
+template <typename container_t, Acts::GridBinCollection sp_range_t>
+  requires Acts::CollectionStoresSeedsTo<container_t, external_spacepoint_t,
+                                         3ul>
 void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
     const grid_t& grid, container_t& outputCollection,
