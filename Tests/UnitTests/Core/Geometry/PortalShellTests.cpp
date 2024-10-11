@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   SingleCylinderPortalShell shell1{cyl1};
   BOOST_CHECK_EQUAL(shell1.size(), 4);
 
-  using enum CylinderPortalShell::Face;
+  using enum CylinderVolumeBounds::Face;
 
   const auto* pDisc = shell1.portal(PositiveDisc);
   BOOST_REQUIRE_NE(pDisc, nullptr);
