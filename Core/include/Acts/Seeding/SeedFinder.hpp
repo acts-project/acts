@@ -17,6 +17,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
 #include <array>
 #include <limits>
@@ -37,8 +38,10 @@ concept GridBinCollection =
     std::same_as<typename Coll::value_type, std::size_t>;
 
 template <typename Coll, typename external_t, std::size_t N = 3ul>
-concept CollectionStoresSeedsTo =
-    std::ranges::output_range<Coll, Acts::Seed<external_t, N>>;
+concept CollectionStoresSeedsTo = requires(Coll coll, external_t sp) {
+  Acts::detail::pushBackOrInsertAtEnd(coll,
+                                      Acts::Seed<external_t, N>(sp, sp, sp));
+};
 
 enum class SpacePointCandidateType : short { eBottom, eTop };
 
