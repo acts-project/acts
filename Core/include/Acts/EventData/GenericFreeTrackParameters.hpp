@@ -58,6 +58,7 @@ class GenericFreeTrackParameters {
   /// Construct from four-position, direction, absolute momentum, and charge.
   ///
   /// @param pos4 Track position/time four-vector
+  /// @param dir Track direction three-vector; normalization is ignored.
   /// @param phi Transverse track direction angle
   /// @param theta Longitudinal track direction angle
   /// @param qOverP Charge over momentum
