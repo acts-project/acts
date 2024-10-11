@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
 
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -183,7 +184,7 @@ Pythia8Generator::operator()(RandomEngine& rng) {
     // normalization/ units are not import for the direction
     particle.setDirection(genParticle.px(), genParticle.py(), genParticle.pz());
     particle.setAbsoluteMomentum(
-        std::hypot(genParticle.px(), genParticle.py(), genParticle.pz()) *
+        Acts::fastHypot(genParticle.px(), genParticle.py(), genParticle.pz()) *
         1_GeV);
 
     particles.push_back(std::move(particle));
