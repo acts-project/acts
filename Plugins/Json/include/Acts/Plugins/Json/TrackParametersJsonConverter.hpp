@@ -1,3 +1,11 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2024 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
@@ -56,8 +64,8 @@ struct adl_serializer<parameters_t> {
       auto cov = t.covariance().value();
       constexpr unsigned int size = cov.rows();
       std::array<Acts::ActsScalar, size * size> covData;
-      for (size_t n = 0; n < size; ++n) {
-        for (size_t m = 0; m < size; ++m) {
+      for (std::size_t n = 0; n < size; ++n) {
+        for (std::size_t m = 0; m < size; ++m) {
           covData[n * size + m] = cov(n, m);
         }
       }
@@ -101,9 +109,9 @@ struct adl_serializer<parameters_t> {
       // parameters and deserialize
       CovarianceMatrix mat;
       constexpr unsigned int size = mat.rows();
-      std::array<Acts::ActsScalar, size* size> covData = j.at("covariance");
-      for (size_t n = 0; n < size; ++n) {
-        for (size_t m = 0; m < size; ++m) {
+      std::array<Acts::ActsScalar, size * size> covData = j.at("covariance");
+      for (std::size_t n = 0; n < size; ++n) {
+        for (std::size_t m = 0; m < size; ++m) {
           mat(n, m) = covData[n * size + m];
         }
       }
