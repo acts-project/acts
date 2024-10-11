@@ -1911,7 +1911,7 @@ def addExaTrkX(
         s.addWriter(
             acts.examples.TrackFinderPerformanceWriter(
                 level=customLogLevel(),
-                inputProtoTracks=findingAlg.config.outputProtoTracks,
+                inputTracks="tracks",
                 # the original selected particles after digitization
                 inputParticles="particles_initial",
                 inputMeasurementParticlesMap="measurement_particles_map",
