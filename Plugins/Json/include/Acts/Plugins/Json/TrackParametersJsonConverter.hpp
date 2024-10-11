@@ -30,6 +30,10 @@ concept IsGenericBound =
 
 }  // namespace
 
+namespace Acts {
+    NLOHMANN_JSON_SERIALIZE_ENUM(PdgParticle)
+}
+
 namespace nlohmann {
 
 /// @brief Serialize a track parameters object to json
