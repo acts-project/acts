@@ -818,14 +818,15 @@ retrieveRadiusRangeForMiddle(const Acts::SeedFinderOptions& options,
 			     const external_spacepoint_t& spM) const {
   
   switch(m_config.middleRangeStrategy) {
-  case Acts::SeedFinding::MiddleRadialStrategy::RelyOnGrid:
+    using Acts::SeedFinding::MiddleRadialStrategy;
+  case RelyOnGrid:
     // The grid makes sure the middle space point is in the proper range
     // no need to check
     return {};
-  case Acts::SeedFinding::MiddleRadialStrategy::UserRange:
+  case UserRange:
     // Range provided by the user in the options
     return std::make_pair(options.rMinMiddle, options.rMaxMiddle);
-  case Acts::SeedFinding::MiddleRadialStrategy::VariableRange:
+  case VariableRange:
     {
       // The range depends on the z-bin. Needs some computation
       /// get zBin position of the middle SP

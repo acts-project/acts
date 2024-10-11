@@ -21,7 +21,7 @@
 namespace Acts::SeedFinding {
 /// @brief enum to define how to check the Radial range for middle space-point
 /// used in the Seed Finding process
-  enum MiddleRadialStrategy : int {
+  enum class MiddleRadialStrategy : int {
   /// Rely on the Grid. In case there is a binnind in radius
   /// and the binning assures the middle space point candidate
   // is already in the proper radius range
