@@ -79,7 +79,6 @@ class GenericFreeTrackParameters {
     m_params[eFreeQOverP] = qOverP;
   }
 
-
   /// Construct from four-position, angles, absolute momentum, and charge.
   ///
   /// @param pos4 Track position/time four-vector

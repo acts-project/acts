@@ -8,9 +8,8 @@
 
 #pragma once
 
-#include "Acts/Plugins/Json/TrackParametersJsonConverter.hpp"
-
 #include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Plugins/Json/TrackParametersJsonConverter.hpp"
 #include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -273,7 +272,7 @@ auto fromJson(const nlohmann::json& jGrid,
         // value_type values = jd[1u];
         grid.atLocalBins(lbin) = jd[1u].get<value_type>();
       }
-    //   grid.atLocalBins(lbin) = jd[1u];
+      //   grid.atLocalBins(lbin) = jd[1u];
     }
   }
   if constexpr (GridType::DIM == 2u) {
@@ -282,11 +281,12 @@ auto fromJson(const nlohmann::json& jGrid,
       std::cout << "lbin: " << lbin[0] << " " << lbin[1] << std::endl;
       if (!jd[1u].is_null()) {
         std::cout << "jd[1u]: " << jd[1u] << std::endl;
-        value_type values = jd[1u].get<value_type>();
-        grid.atLocalBins(lbin) = values;
-            // grid.atLocalBins(lbin) = jd[1u];
+        // value_type values = jd[1u].get<value_type>();
+        grid.atLocalBins(lbin) = jd[1u].get<value_type>();
+        // grid.atLocalBins(lbin) = jd[1u];
       }
-      std::cout << "lbin: " << lbin[0] << " " << lbin[1] << " SONE" << std::endl;
+      std::cout << "lbin: " << lbin[0] << " " << lbin[1] << " SONE"
+                << std::endl;
     }
   }
   std::cout << "grid done" << std::endl;
