@@ -21,9 +21,10 @@ MeasurementSelector::select(
 
   ACTS_VERBOSE("Invoked MeasurementSelector");
 
-  // Return error if no measurement
+  // Return if no measurement
   if (candidates.empty()) {
-    return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
+    return Result::success(
+        std::make_pair(candidates.begin(), candidates.end()));
   }
 
   // Get geoID of this surface

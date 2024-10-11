@@ -717,11 +717,17 @@ class CombinatorialKalmanFilter {
 
       std::size_t nBranchesOnSurface = 0;
 
-      if (auto [slBegin, slEnd] = m_sourceLinkAccessor(*surface);
-          slBegin != slEnd) {
+      if (isSensitive) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
+
+        auto [slBegin, slEnd] = m_sourceLinkAccessor(*surface);
+
+        if (slBegin == slEnd) {
+          ACTS_VERBOSE("Detected hole before measurement selection on surface "
+                       << surface->geometryId());
+        }
 
         // Transport the covariance to the surface
         stepper.transportCovarianceToBound(state.stepping, *surface);
@@ -759,8 +765,7 @@ class CombinatorialKalmanFilter {
             *tsRes;
 
         if (newTrackStateList.empty()) {
-          ACTS_VERBOSE("Detected hole after measurement selection on surface "
-                       << surface->geometryId());
+          ACTS_VERBOSE("Detected hole on surface " << surface->geometryId());
 
           // Setting the number of branches on the surface to 1 as the hole
           // still counts as a branch
@@ -840,10 +845,8 @@ class CombinatorialKalmanFilter {
         // Update state and stepper with post material effects
         materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PostUpdate);
-      } else if (isSensitive || isMaterial) {
-        ACTS_VERBOSE("Handle " << (isSensitive ? "sensitive" : "passive")
-                               << " surface: " << surface->geometryId()
-                               << " without measurements");
+      } else if (isMaterial) {
+        ACTS_VERBOSE("Handle material surface: " << surface->geometryId());
 
         // No splitting on the surface without source links. Set it to one
         // first, but could be changed later
@@ -852,9 +855,9 @@ class CombinatorialKalmanFilter {
         auto currentBranch = result.activeBranches.back();
         TrackIndexType prevTip = currentBranch.tipIndex();
 
-        // No source links on surface, add either hole or passive material
-        // TrackState. No storage allocation for uncalibrated/calibrated
-        // measurement and filtered parameter
+        // No source links on surface, add passive material TrackState. No
+        // storage allocation for uncalibrated/calibrated measurement and
+        // filtered parameter
         auto stateMask = PM::Predicted | PM::Jacobian;
 
         // Transport the covariance to a curvilinear surface
@@ -874,15 +877,11 @@ class CombinatorialKalmanFilter {
         auto& [boundParams, jacobian, pathLength] = boundState;
         boundParams.covariance() = state.stepping.cov;
 
-        // Add a hole or material track state to the multitrajectory
+        // Add a material track state to the multitrajectory
         TrackIndexType currentTip = addNonSourcelinkState(
             stateMask, boundState, result, isSensitive, prevTip);
         auto nonSourcelinkState = result.trackStates->getTrackState(currentTip);
         currentBranch.tipIndex() = currentTip;
-
-        if (isSensitive) {
-          currentBranch.nHoles()++;
-        }
 
         BranchStopperResult branchStopperResult =
             m_extensions.branchStopper(currentBranch, nonSourcelinkState);
