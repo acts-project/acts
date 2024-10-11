@@ -11,6 +11,7 @@
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 
+#include <concepts>
 #include <memory>
 namespace Acts {
 
@@ -39,6 +40,18 @@ class NavigationPolicyFactory {
 
 namespace detail {
 
+template <typename F, typename... Args>
+concept NavigationPolicyIsolatedFactoryConcept = requires(F f) {
+  {
+    f(std::declval<const TrackingVolume&>(), std::declval<Args>()...)
+  } -> std::derived_from<INavigationPolicy>;
+
+  requires NavigationPolicyConcept<decltype(f(
+      std::declval<const TrackingVolume&>(), std::declval<Args>()...))>;
+
+  requires(std::is_copy_constructible_v<Args> && ...);
+};
+
 template <>
 class NavigationPolicyFactoryImpl<> {
  public:
@@ -58,7 +71,18 @@ class NavigationPolicyFactoryImpl<> {
     };
 
     return NavigationPolicyFactoryImpl<decltype(factory)>{
-        std::tuple_cat(std::make_tuple(std::move(factory)))};
+        std::make_tuple(std::move(factory))};
+  }
+
+  template <typename Fn, typename... Args>
+    requires(NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
+  constexpr auto add(Fn&& fn, Args&&... args) {
+    auto factory = [&](const TrackingVolume& volume) {
+      return fn(volume, std::forward<Args>(args)...);
+    };
+
+    return NavigationPolicyFactoryImpl<decltype(factory)>{
+        std::make_tuple(std::move(factory))};
   }
 };
 
@@ -78,6 +102,18 @@ class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
   {
     auto factory = [&](const TrackingVolume& volume) {
       return P{volume, std::forward<Args>(args)...};
+    };
+
+    return NavigationPolicyFactoryImpl<F, Fs..., decltype(factory)>{
+        std::tuple_cat(std::move(m_factories),
+                       std::make_tuple(std::move(factory)))};
+  }
+
+  template <typename Fn, typename... Args>
+    requires(NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
+  constexpr auto add(Fn&& fn, Args&&... args) {
+    auto factory = [&](const TrackingVolume& volume) {
+      return fn(volume, std::forward<Args>(args)...);
     };
 
     return NavigationPolicyFactoryImpl<F, Fs..., decltype(factory)>{

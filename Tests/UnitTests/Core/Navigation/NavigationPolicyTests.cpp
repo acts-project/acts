@@ -146,4 +146,72 @@ BOOST_AUTO_TEST_CASE(AsUniquePtrTest) {
   BOOST_CHECK(std::get<APolicy>(policy.policies()).executed);
 }
 
+struct CPolicy : public INavigationPolicy {};
+
+template <typename T>
+struct CPolicySpecialized : public CPolicy {
+  struct Config {
+    T value;
+  };
+
+  CPolicySpecialized(const TrackingVolume& /*volume*/, Config config)
+      : m_config(config) {}
+
+  void connect(NavigationDelegate& delegate) const override {
+    connectDefault<TryAllPortalNavigationPolicy>(delegate);
+  }
+
+  void updateState(const NavigationArguments& /*unused*/) const {
+    auto* self = const_cast<CPolicySpecialized<int>*>(this);
+    self->executed = true;
+    self->value = m_config.value;
+  }
+
+  bool executed = false;
+  int value = 0;
+
+  Config m_config;
+};
+
+struct IsolatedConfig {
+  int value;
+};
+
+auto makeCPolicy(const TrackingVolume& volume, IsolatedConfig config) {
+  // I can do arbitrary stuff here
+  CPolicySpecialized<int>::Config config2{.value = config.value};
+  return CPolicySpecialized<int>(volume, config2);
+}
+
+BOOST_AUTO_TEST_CASE(IsolatedFactory) {
+  TrackingVolume volume{
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(250_mm, 400_mm, 310_mm),
+      "PixelLayer3"};
+
+  IsolatedConfig config{.value = 44};
+  auto factory =
+      NavigationPolicyFactory::make().add<APolicy>().add(makeCPolicy, config);
+
+  auto factory2 =
+      NavigationPolicyFactory::make().add(makeCPolicy, config).add<APolicy>();
+
+  auto policyBase = factory(volume);
+  auto& policy =
+      dynamic_cast<MultiNavigationPolicy<APolicy, CPolicySpecialized<int>>&>(
+          *policyBase);
+
+  NavigationDelegate delegate;
+  policyBase->connect(delegate);
+
+  NavigationStream main;
+  delegate(NavigationArguments{
+      .main = main, .position = Vector3::Zero(), .direction = Vector3::Zero()});
+
+  BOOST_CHECK(std::get<APolicy>(policy.policies()).executed);
+  BOOST_CHECK(std::get<CPolicySpecialized<int>>(policy.policies()).executed);
+  BOOST_CHECK_EQUAL(std::get<CPolicySpecialized<int>>(policy.policies()).value,
+                    44);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
