@@ -188,7 +188,7 @@ void addGeometry(Context& ctx) {
     py::class_<Acts::VolumeBounds, std::shared_ptr<Acts::VolumeBounds>>(
         m, "VolumeBounds")
         .def("type", &Acts::VolumeBounds::type)
-        .def("__str__", [](Acts::VolumeBounds& self) {
+        .def("__str__", [](const Acts::VolumeBounds& self) {
           std::stringstream ss;
           ss << self;
           return ss.str();
