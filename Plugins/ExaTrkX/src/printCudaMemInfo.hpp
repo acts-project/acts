@@ -22,7 +22,7 @@ namespace {
 
 inline void printCudaMemInfo(const Acts::Logger& logger) {
 #ifndef ACTS_EXATRKX_CPUONLY
-  if (torch::cuda::is_available()) {
+  if (torch::cuda::is_available() && logger.level() == Acts::Logging::VERBOSE) {
     constexpr float kb = 1024;
     constexpr float mb = kb * kb;
 

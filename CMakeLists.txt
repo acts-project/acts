@@ -56,6 +56,7 @@ option(ACTS_EXATRKX_ENABLE_TORCH "Build the torchscript backend for the exatrkx 
 option(ACTS_EXATRKX_ENABLE_TORCH_AOT "Add the torch AOT inference" OFF)
 option(ACTS_EXATRKX_ENABLE_MODULEMAP "Build the torchscript backend for the exatrkx plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_CUDA "Enable CUDA for the exatrkx plugin" OFF)
+option(ACTS_EXATRKX_ENABLE_TENSORRT "Enable TensorRT inference" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)

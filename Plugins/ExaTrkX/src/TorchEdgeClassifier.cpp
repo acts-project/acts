@@ -136,12 +136,20 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
       output = torch::cat(results);
     } else {
       inputTensors[1] = edgeIndexTmp;
+
+      // ACTS_VERBOSE("node\n" << inputTensors[0]);
+      // ACTS_VERBOSE("edge_idx\n" << edgeIndexTmp.t());
+      // ACTS_VERBOSE("edge_att\n" << inputTensors[2]);
+
       t3 = std::chrono::high_resolution_clock::now();
       output = model.forward(inputTensors).toTensor().to(torch::kFloat32);
       t4 = std::chrono::high_resolution_clock::now();
       output.squeeze_();
     }
   }
+
+  ACTS_VERBOSE("Slice of classified output before sigmoid:\n"
+               << output.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
 
   output.sigmoid_();
 

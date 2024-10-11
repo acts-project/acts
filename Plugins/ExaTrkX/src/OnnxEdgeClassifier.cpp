@@ -57,6 +57,37 @@ auto torchToOnnx(Ort::MemoryInfo &memInfo, at::Tensor &tensor) {
                                      shape.size());
 }
 
+std::ostream &operator<<(std::ostream &os, Ort::Value &v) {
+  if (!v.IsTensor()) {
+    os << "no tensor";
+    return os;
+  }
+
+  auto shape = v.GetTensorTypeAndShapeInfo().GetShape();
+
+  auto printVal = [&]<typename T>() {
+    for (int i = 0; i < shape.at(0); ++i) {
+      for (int j = 0; j < shape.at(1); ++j) {
+        os << v.At<T>({i, j}) << " ";
+      }
+      os << "\n";
+    }
+  };
+
+  auto type = v.GetTensorTypeAndShapeInfo().GetElementType();
+  if (type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
+    os << "[float tensor]\n";
+    printVal.operator()<float>();
+  } else if (type == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64) {
+    os << "[int64 tensor]\n";
+    printVal.operator()<std::int64_t>();
+  } else {
+    os << "not implemented datatype";
+  }
+
+  return os;
+}
+
 std::tuple<std::any, std::any, std::any, std::any>
 OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
                                std::any inEdgeFeatures, torch::Device) {
@@ -74,7 +105,8 @@ OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
   std::vector<const char *> inputNames{m_inputNames.at(0).c_str(),
                                        m_inputNames.at(1).c_str()};
 
-  auto edgeListClone = edgeList.clone();
+  // TODO move this contiguous to graph construction
+  auto edgeListClone = edgeList.clone().contiguous();
   ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeListClone});
   auto nodeTensorClone = nodeTensor.clone();
   ACTS_DEBUG("nodes: " << detail::TensorDetails{nodeTensorClone});
@@ -91,7 +123,6 @@ OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
   }
 
   std::vector<const char *> outputNames{m_outputName.c_str()};
-  std::vector<float> outputData(numEdges);
 
   auto outputTensor =
       m_model->Run({}, inputNames.data(), inputTensors.data(),
@@ -115,7 +146,7 @@ OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
   ACTS_VERBOSE("Slice of classified output before sigmoid:\n"
                << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
 
-  scores = scores.sigmoid();
+  scores.sigmoid_();
 
   ACTS_DEBUG("scores: " << detail::TensorDetails{scores});
   ACTS_VERBOSE("Slice of classified output:\n"

@@ -191,7 +191,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   assert(edgeIndexVector.size() % numEdges == 0);
   auto edgeIndex = detail::vectorToTensor2D(edgeIndexVector, 2)
                        .t()
-                       .clone()
+                       .contiguous()
                        .to(torch::kInt64);
 
   assert(edgeFeatureVector.size() % numEdgeFeatures == 0);
