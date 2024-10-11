@@ -22,7 +22,6 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/TrackHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 using namespace Acts::UnitLiterals;
