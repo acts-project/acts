@@ -15,6 +15,7 @@
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -158,9 +159,9 @@ class GenericFreeTrackParameters {
   Scalar time() const { return m_params[eFreeTime]; }
 
   /// Phi direction.
-  Scalar phi() const { return Acts::VectorHelpers::phi(direction()); }
+  Scalar phi() const { return VectorHelpers::phi(direction()); }
   /// Theta direction.
-  Scalar theta() const { return Acts::VectorHelpers::theta(direction()); }
+  Scalar theta() const { return VectorHelpers::theta(direction()); }
   /// Charge over momentum.
   Scalar qOverP() const { return m_params[eFreeQOverP]; }
 
