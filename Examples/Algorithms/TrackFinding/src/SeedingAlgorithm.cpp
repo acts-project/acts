@@ -246,7 +246,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(
           m_cfg.gridConfig, m_cfg.gridOptions);
 
-  Acts::CylindricalSpacePointGridCreator::fillGrid(
+  Acts::CylindricalSpacePointGridCreator::fillGrid<value_type>(
       m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid, spContainer);
 
   // Compute radius Range
