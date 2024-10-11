@@ -93,6 +93,14 @@ class CompositePortalLink final : public PortalLinkBase {
   /// @return The number of children
   std::size_t size() const;
 
+  /// (Potentially) create a grid portal link that represents this composite
+  /// portal link.
+  /// @note This only works, if the composite is **flat** and only contains
+  ///       **trivial portal links**. If these preconditions are not met, this
+  ///       function returns a nullptr.
+  /// @param gctx The geometry context
+  /// @param logger The logger
+  /// @return The grid portal link
   std::unique_ptr<GridPortalLink> makeGrid(const GeometryContext& gctx,
                                            const Logger& logger) const;
 
