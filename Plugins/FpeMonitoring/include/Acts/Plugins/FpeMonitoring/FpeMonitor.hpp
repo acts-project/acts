@@ -40,7 +40,7 @@ std::ostream &operator<<(std::ostream &os, FpeType type);
 class FpeMonitor {
  public:
   struct Buffer {
-    Buffer(std::size_t bufferSize)
+    explicit Buffer(std::size_t bufferSize)
         : m_data{std::make_unique<std::byte[]>(bufferSize)},
           m_size{bufferSize} {}
 
@@ -105,7 +105,9 @@ class FpeMonitor {
 
     Result() = default;
 
-    operator bool() const { return !m_stacktraces.empty(); }
+    operator bool() const = delete;
+
+    bool hasStackTraces() const { return !m_stackTraces.empty(); }
 
     void add(Acts::FpeType type, void *stackPtr, std::size_t bufferSize);
 
