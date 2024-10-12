@@ -89,9 +89,10 @@ void LayerBlueprintNode::buildVolume(const Extent& extent,
 }
 
 void LayerBlueprintNode::finalize(const BlueprintNode::Options& options,
+                                  const GeometryContext& gctx,
                                   TrackingVolume& parent,
                                   const Logger& logger) {
-  StaticBlueprintNode::finalize(options, parent, logger);
+  StaticBlueprintNode::finalize(options, gctx, parent, logger);
 }
 
 const std::string& LayerBlueprintNode::name() const {

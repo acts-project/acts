@@ -40,7 +40,8 @@ class RootBlueprintNode : public BlueprintNode {
       const Options& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
-  void finalize(const Options& options, TrackingVolume& parent,
+  void finalize(const Options& options, const GeometryContext& gctx,
+                TrackingVolume& parent,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
   void addToGraphviz(std::ostream& os) const override;

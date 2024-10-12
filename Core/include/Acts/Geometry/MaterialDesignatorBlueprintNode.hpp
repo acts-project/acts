@@ -38,8 +38,8 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
       const Options& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
-  void finalize(const Options& options, TrackingVolume& parent,
-                const Logger& logger) override;
+  void finalize(const Options& options, const GeometryContext& gctx,
+                TrackingVolume& parent, const Logger& logger) override;
 
   void addToGraphviz(std::ostream& os) const override;
 

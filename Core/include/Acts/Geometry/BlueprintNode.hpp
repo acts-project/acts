@@ -59,7 +59,8 @@ class BlueprintNode {
       const Options& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) = 0;
 
-  virtual void finalize(const Options& options, TrackingVolume& parent,
+  virtual void finalize(const Options& options, const GeometryContext& gctx,
+                        TrackingVolume& parent,
                         const Logger& logger = Acts::getDummyLogger()) = 0;
 
   StaticBlueprintNode& addStaticVolume(

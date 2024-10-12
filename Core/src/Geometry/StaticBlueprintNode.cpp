@@ -74,6 +74,7 @@ PortalShellBase& StaticBlueprintNode::connect(const Options& options,
 }
 
 void StaticBlueprintNode::finalize(const Options& options,
+                                   const GeometryContext& gctx,
                                    TrackingVolume& parent,
                                    const Logger& logger) {
   ACTS_DEBUG(prefix() << "Finalizing static volume");
@@ -89,7 +90,7 @@ void StaticBlueprintNode::finalize(const Options& options,
   }
 
   for (auto& child : children()) {
-    child.finalize(options, *m_volume, logger);
+    child.finalize(options, gctx, *m_volume, logger);
   }
 
   ACTS_DEBUG(prefix() << "Registering " << m_shell->size()

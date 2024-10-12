@@ -146,6 +146,7 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
 }
 
 void CylinderContainerBlueprintNode::finalize(const Options& options,
+                                              const GeometryContext& gctx,
                                               TrackingVolume& parent,
                                               const Logger& logger) {
   ACTS_DEBUG(prefix() << "Finalizing cylinder container");
@@ -176,7 +177,7 @@ void CylinderContainerBlueprintNode::finalize(const Options& options,
   ACTS_DEBUG(prefix() << "Finalizing " << children().size() << " children");
 
   for (auto& child : children()) {
-    child.finalize(options, parent, logger);
+    child.finalize(options, gctx, parent, logger);
   }
 }
 

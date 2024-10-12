@@ -38,6 +38,7 @@ PortalShellBase &RootBlueprintNode::connect(const Options & /*options*/,
 }
 
 void RootBlueprintNode::finalize(const Options & /*options*/,
+                                 const GeometryContext & /*gctx*/,
                                  TrackingVolume & /*parent*/,
                                  const Logger & /*logger*/) {
   throw std::logic_error("Root node cannot be finalized");
@@ -128,7 +129,7 @@ std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
 
   shell.connectOuter(*world);
 
-  child.finalize(options, *world, logger);
+  child.finalize(options, gctx, *world, logger);
 
   // @TODO: Handle material decorator, geo id hook
   // @TODO: Maybe add a name uniqueness check

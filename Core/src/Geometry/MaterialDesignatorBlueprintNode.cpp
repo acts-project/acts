@@ -126,13 +126,14 @@ PortalShellBase& MaterialDesignatorBlueprintNode::connect(
 }
 
 void MaterialDesignatorBlueprintNode::finalize(const Options& options,
+                                               const GeometryContext& gctx,
                                                TrackingVolume& parent,
                                                const Logger& logger) {
   if (children().size() != 1) {
     throw std::runtime_error(
         "MaterialDesignatorBlueprintNode must have exactly one child");
   }
-  return children().at(0).finalize(options, parent, logger);
+  return children().at(0).finalize(options, gctx, parent, logger);
 }
 
 void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
