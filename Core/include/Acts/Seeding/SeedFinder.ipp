@@ -366,10 +366,11 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       const float uT = xNewFrame * iDeltaR2;
       const float vT = yNewFrame * iDeltaR2;
 
-      // We check the interaction point buy evaluating the minimal distance
+      // We check the interaction point by evaluating the minimal distance
       // between the origin and the straight line connecting the two points in
-      // the doublets The Im is given by yNewFrame * rM / deltaR <=
-      // m_config.impactMax We use squared quantities to avoid square roots
+      // the doublets. Using a geometric similarity, the Im is given by
+      // yNewFrame * rM / deltaR <= m_config.impactMax We use squared quantities
+      // to avoid square roots
       if (yNewFrame * yNewFrame * rM * rM <=
           m_config.impactMax * m_config.impactMax * deltaR2) {
         // check if duplet cotTheta is within the region of interest
