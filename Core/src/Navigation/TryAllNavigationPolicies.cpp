@@ -14,7 +14,8 @@
 namespace Acts {
 
 TryAllPortalNavigationPolicy::TryAllPortalNavigationPolicy(
-    const TrackingVolume& volume)
+    const GeometryContext& /*gctx*/, const TrackingVolume& volume,
+    const Logger& /*logger*/)
     : m_volume(&volume) {}
 
 void TryAllPortalNavigationPolicy::updateState(
@@ -31,7 +32,8 @@ void TryAllPortalNavigationPolicy::connect(NavigationDelegate& delegate) const {
 }
 
 TryAllSurfaceNavigationPolicy::TryAllSurfaceNavigationPolicy(
-    const TrackingVolume& volume)
+    const GeometryContext& /*gctx*/, const TrackingVolume& volume,
+    const Logger& /*logger*/)
     : m_volume(&volume) {}
 
 void TryAllSurfaceNavigationPolicy::updateState(

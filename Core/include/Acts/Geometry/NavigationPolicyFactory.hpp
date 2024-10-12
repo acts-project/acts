@@ -16,6 +16,8 @@
 namespace Acts {
 
 class TrackingVolume;
+class GeometryContext;
+class Logger;
 class INavigationPolicy;
 
 namespace detail {
@@ -35,7 +37,8 @@ class NavigationPolicyFactory {
   // functionality
 
   virtual std::unique_ptr<INavigationPolicy> build(
-      const TrackingVolume& volume) const = 0;
+      const GeometryContext& gctx, const TrackingVolume& volume,
+      const Logger& logger) const = 0;
 };
 
 namespace detail {
@@ -43,11 +46,15 @@ namespace detail {
 template <typename F, typename... Args>
 concept NavigationPolicyIsolatedFactoryConcept = requires(F f) {
   {
-    f(std::declval<const TrackingVolume&>(), std::declval<Args>()...)
+    f(std::declval<const GeometryContext&>(),
+      std::declval<const TrackingVolume&>(), std::declval<const Logger&>(),
+      std::declval<Args>()...)
   } -> std::derived_from<INavigationPolicy>;
 
   requires NavigationPolicyConcept<decltype(f(
-      std::declval<const TrackingVolume&>(), std::declval<Args>()...))>;
+      std::declval<const GeometryContext&>(),
+      std::declval<const TrackingVolume&>(), std::declval<const Logger&>(),
+      std::declval<Args>()...))>;
 
   requires(std::is_copy_constructible_v<Args> && ...);
 };
@@ -63,11 +70,14 @@ class NavigationPolicyFactoryImpl<> {
   // execute multiple times.
   template <NavigationPolicyConcept P, typename... Args>
   constexpr auto add(Args&&... args)
-    requires(std::is_constructible_v<P, const TrackingVolume&, Args...> &&
+    requires(std::is_constructible_v<P, const GeometryContext&,
+                                     const TrackingVolume&, const Logger&,
+                                     Args...> &&
              (std::is_copy_constructible_v<Args> && ...))
   {
-    auto factory = [&](const TrackingVolume& volume) {
-      return P{volume, std::forward<Args>(args)...};
+    auto factory = [&](const GeometryContext& gctx,
+                       const TrackingVolume& volume, const Logger& logger) {
+      return P{gctx, volume, logger, std::forward<Args>(args)...};
     };
 
     return NavigationPolicyFactoryImpl<decltype(factory)>{
@@ -77,8 +87,9 @@ class NavigationPolicyFactoryImpl<> {
   template <typename Fn, typename... Args>
     requires(NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
   constexpr auto add(Fn&& fn, Args&&... args) {
-    auto factory = [&](const TrackingVolume& volume) {
-      return fn(volume, std::forward<Args>(args)...);
+    auto factory = [&](const GeometryContext& gctx,
+                       const TrackingVolume& volume, const Logger& logger) {
+      return fn(gctx, volume, logger, std::forward<Args>(args)...);
     };
 
     return NavigationPolicyFactoryImpl<decltype(factory)>{
@@ -89,19 +100,24 @@ class NavigationPolicyFactoryImpl<> {
 template <typename F, typename... Fs>
 class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
   template <typename... Ts>
-  using policy_type_helper = decltype(MultiNavigationPolicy(std::invoke(
-      std::declval<Ts>(), std::declval<const TrackingVolume&>())...));
+  using policy_type_helper = decltype(MultiNavigationPolicy(
+      std::invoke(std::declval<Ts>(), std::declval<const GeometryContext&>(),
+                  std::declval<const TrackingVolume&>(),
+                  std::declval<const Logger&>())...));
 
   using policy_type = policy_type_helper<F, Fs...>;
 
  public:
   template <NavigationPolicyConcept P, typename... Args>
   constexpr auto add(Args&&... args)
-    requires(std::is_constructible_v<P, const TrackingVolume&, Args...> &&
+    requires(std::is_constructible_v<P, const GeometryContext&,
+                                     const TrackingVolume&, const Logger&,
+                                     Args...> &&
              (std::is_copy_constructible_v<Args> && ...))
   {
-    auto factory = [&](const TrackingVolume& volume) {
-      return P{volume, std::forward<Args>(args)...};
+    auto factory = [&](const GeometryContext& gctx,
+                       const TrackingVolume& volume, const Logger& logger) {
+      return P{gctx, volume, logger, std::forward<Args>(args)...};
     };
 
     return NavigationPolicyFactoryImpl<F, Fs..., decltype(factory)>{
@@ -112,8 +128,9 @@ class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
   template <typename Fn, typename... Args>
     requires(NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
   constexpr auto add(Fn&& fn, Args&&... args) {
-    auto factory = [&](const TrackingVolume& volume) {
-      return fn(volume, std::forward<Args>(args)...);
+    auto factory = [&](const GeometryContext& gctx,
+                       const TrackingVolume& volume, const Logger& logger) {
+      return fn(gctx, volume, logger, std::forward<Args>(args)...);
     };
 
     return NavigationPolicyFactoryImpl<F, Fs..., decltype(factory)>{
@@ -127,18 +144,21 @@ class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
         std::move(*this));
   }
 
-  std::unique_ptr<policy_type> operator()(const TrackingVolume& volume) const {
+  std::unique_ptr<policy_type> operator()(const GeometryContext& gctx,
+                                          const TrackingVolume& volume,
+                                          const Logger& logger) const {
     return std::apply(
         [&](auto&&... factories) -> std::unique_ptr<policy_type> {
           return std::make_unique<policy_type>(
-              std::invoke(factories, volume)...);
+              std::invoke(factories, gctx, volume, logger)...);
         },
         m_factories);
   }
 
   std::unique_ptr<INavigationPolicy> build(
-      const TrackingVolume& volume) const override {
-    return operator()(volume);
+      const GeometryContext& gctx, const TrackingVolume& volume,
+      const Logger& logger) const override {
+    return operator()(gctx, volume, logger);
   }
 
  private:

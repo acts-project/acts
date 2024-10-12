@@ -23,8 +23,12 @@ using namespace Acts::UnitLiterals;
 
 BOOST_AUTO_TEST_SUITE(NavigationPolicyTests)
 
+GeometryContext gctx;
+auto logger = getDefaultLogger("NavigationPolicyTests", Logging::VERBOSE);
+
 struct APolicy : public INavigationPolicy {
-  APolicy(const TrackingVolume& /*volume*/) {}
+  APolicy(const GeometryContext& /*gctx*/, const TrackingVolume& /*volume*/,
+          const Logger& /*logger*/) {}
 
   void updateState(const NavigationArguments& /*unused*/) const {
     const_cast<APolicy*>(this)->executed = true;
@@ -42,7 +46,9 @@ struct BPolicy : public INavigationPolicy {
     int value;
   };
 
-  BPolicy(const TrackingVolume& /*volume*/, Config config) : m_config(config) {}
+  BPolicy(const GeometryContext& /*gctx*/, const TrackingVolume& /*volume*/,
+          const Logger& /*logger*/, Config config)
+      : m_config(config) {}
 
   void connect(NavigationDelegate& delegate) const override {
     connectDefault<TryAllPortalNavigationPolicy>(delegate);
@@ -65,8 +71,8 @@ BOOST_AUTO_TEST_CASE(DirectTest) {
       std::make_shared<CylinderVolumeBounds>(250_mm, 400_mm, 310_mm),
       "PixelLayer3"};
 
-  MultiNavigationPolicy policy{APolicy{volume},
-                               BPolicy{volume, {.value = 4242}}};
+  MultiNavigationPolicy policy{APolicy{gctx, volume, *logger},
+                               BPolicy{gctx, volume, *logger, {.value = 4242}}};
 
   NavigationDelegate delegate;
   policy.connect(delegate);
@@ -88,13 +94,14 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
 
   BPolicy::Config config{.value = 42};
 
-  std::function<std::unique_ptr<INavigationPolicy>(const TrackingVolume&)>
+  std::function<std::unique_ptr<INavigationPolicy>(
+      const GeometryContext&, const TrackingVolume&, const Logger&)>
       factory = NavigationPolicyFactory::make()
                     .add<APolicy>()         // no arguments
                     .add<BPolicy>(config);  // config struct as argument
 
-  auto policyBase = factory(volume);
-  auto policyBase2 = factory(volume);
+  auto policyBase = factory(gctx, volume, *logger);
+  auto policyBase2 = factory(gctx, volume, *logger);
 
   auto& policy =
       dynamic_cast<MultiNavigationPolicy<APolicy, BPolicy>&>(*policyBase);
@@ -133,7 +140,7 @@ BOOST_AUTO_TEST_CASE(AsUniquePtrTest) {
   std::unique_ptr<NavigationPolicyFactory> factory =
       NavigationPolicyFactory::make().add<APolicy>().asUniquePtr();
 
-  auto policyBase = factory->build(volume);
+  auto policyBase = factory->build(gctx, volume, *logger);
   auto& policy = dynamic_cast<MultiNavigationPolicy<APolicy>&>(*policyBase);
 
   NavigationDelegate delegate;
@@ -177,7 +184,8 @@ struct IsolatedConfig {
   int value;
 };
 
-auto makeCPolicy(const TrackingVolume& volume, IsolatedConfig config) {
+auto makeCPolicy(const GeometryContext& /*gctx*/, const TrackingVolume& volume,
+                 const Logger& /*logger*/, IsolatedConfig config) {
   // I can do arbitrary stuff here
   CPolicySpecialized<int>::Config config2{.value = config.value};
   return CPolicySpecialized<int>(volume, config2);
@@ -196,7 +204,7 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
   auto factory2 =
       NavigationPolicyFactory::make().add(makeCPolicy, config).add<APolicy>();
 
-  auto policyBase = factory(volume);
+  auto policyBase = factory(gctx, volume, *logger);
   auto& policy =
       dynamic_cast<MultiNavigationPolicy<APolicy, CPolicySpecialized<int>>&>(
           *policyBase);

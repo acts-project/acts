@@ -13,12 +13,16 @@
 namespace Acts {
 
 class TrackingVolume;
+class GeometryContext;
+class Logger;
 
 // @NOTE: This implementation is PRELIMINARY! It is subject to change!
 
 class TryAllPortalNavigationPolicy final : public INavigationPolicy {
  public:
-  explicit TryAllPortalNavigationPolicy(const TrackingVolume& volume);
+  explicit TryAllPortalNavigationPolicy(const GeometryContext& gctx,
+                                        const TrackingVolume& volume,
+                                        const Logger& logger);
 
   void updateState(const NavigationArguments& args) const;
 
@@ -32,7 +36,9 @@ static_assert(NavigationPolicyConcept<TryAllPortalNavigationPolicy>);
 
 class TryAllSurfaceNavigationPolicy final : public INavigationPolicy {
  public:
-  explicit TryAllSurfaceNavigationPolicy(const TrackingVolume& volume);
+  explicit TryAllSurfaceNavigationPolicy(const GeometryContext& gctx,
+                                         const TrackingVolume& volume,
+                                         const Logger& logger);
 
   void updateState(const NavigationArguments& args) const;
 
