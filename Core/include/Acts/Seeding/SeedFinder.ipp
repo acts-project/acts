@@ -362,13 +362,16 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
 
       const float deltaR2 = (deltaX * deltaX + deltaY * deltaY);
       const float iDeltaR2 = 1. / deltaR2;
-      
+
       const float uT = xNewFrame * iDeltaR2;
       const float vT = yNewFrame * iDeltaR2;
 
-      // interactionPointCut == true we apply this cut first cuts before
-      // coordinate transformation to avoid unnecessary calculations
-      if (yNewFrame*yNewFrame * rM*rM <= m_config.impactMax*m_config.impactMax * deltaR2) {
+      // We check the interaction point buy evaluating the minimal distance
+      // between the origin and the straight line connecting the two points in
+      // the doublets The Im is given by yNewFrame * rM / deltaR <=
+      // m_config.impactMax We use squared quantities to avoid square roots
+      if (yNewFrame * yNewFrame * rM * rM <=
+          m_config.impactMax * m_config.impactMax * deltaR2) {
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
@@ -425,7 +428,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
           deltaZ < -m_config.cotThetaMax * deltaR) {
         continue;
       }
-      
+
       const float iDeltaR = std::sqrt(iDeltaR2);
       const float cotTheta = deltaZ * iDeltaR;
 
