@@ -147,7 +147,7 @@ struct ConstructSourceLinkGrid {
   SourceLinkSurfaceAccessor m_surfaceAccessor;
 
   std::unordered_map<GeometryIdentifier, Grid> construct(
-      GeometryContext /*geoCtx*/, std::vector<SourceLink> sourceLinks) {
+      std::vector<SourceLink> sourceLinks) {
     // Lookup table for each layer
     std::unordered_map<GeometryIdentifier, Grid> lookupTable;
 
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
 
   // Create the grid
   std::unordered_map<GeometryIdentifier, Grid> sourceLinkGrid =
-      sourceLinkGridConstructor.construct(gctx, sourceLinks);
+      sourceLinkGridConstructor.construct(sourceLinks);
 
   // Estimator of the IP and first hit
   // parameters of the track

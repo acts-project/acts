@@ -104,7 +104,7 @@ class PathSeeder {
   };
 
   /// @brief Constructor
-  PathSeeder(const Config& config) : m_cfg(std::move(config)) {};
+  PathSeeder(const Config& config) : m_cfg(config) {};
 
   /// @brief Destructor
   ~PathSeeder() = default;
