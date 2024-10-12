@@ -137,6 +137,10 @@ void MaterialDesignatorBlueprintNode::finalize(const Options& options,
 }
 
 void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
+  if (!m_binning) {
+    throw std::runtime_error("Binning is not set");
+  }
+
   std::stringstream ss;
   ss << "" + name() + "";
   ss << "<br/><i>CylinderContainer</i>";

@@ -13,6 +13,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -366,7 +367,17 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
   cfg.envelope[BinningValue::binR] = {0_mm, 20_mm};
   auto root = std::make_unique<RootBlueprintNode>(cfg);
 
-  root->addMaterial("GlobalMaterial", [&](auto& mat) {
+  root->addMaterial("GlobalMaterial", [&](MaterialDesignatorBlueprintNode&
+                                              mat) {
+    Experimental::ProtoBinning zBinning{BinningValue::binZ,
+                                        AxisBoundaryType::Bound, 20};
+
+    Experimental::ProtoBinning rPhiBinning{BinningValue::binRPhi,
+                                           AxisBoundaryType::Bound, 20};
+
+    mat.setBinning(std::vector{std::tuple{
+        CylinderVolumeBounds::Face::OuterCylinder, rPhiBinning, zBinning}});
+
     mat.addCylinderContainer("Detector", BinningValue::binR, [&](auto& det) {
       det.addCylinderContainer("Pixel", BinningValue::binZ, [&](auto& cyl) {
         cyl.setAttachmentStrategy(CylinderVolumeStack::AttachmentStrategy::Gap)
