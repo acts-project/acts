@@ -105,8 +105,6 @@ class FpeMonitor {
 
     Result() = default;
 
-    operator bool() const = delete;
-
     bool hasStackTraces() const { return !m_stackTraces.empty(); }
 
     void add(Acts::FpeType type, void *stackPtr, std::size_t bufferSize);
