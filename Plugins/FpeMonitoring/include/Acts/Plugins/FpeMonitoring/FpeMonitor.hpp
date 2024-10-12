@@ -105,12 +105,12 @@ class FpeMonitor {
 
     Result() = default;
 
-    operator bool() const { return !m_stracktraces.empty(); }
+    operator bool() const { return !m_stacktraces.empty(); }
 
     void add(Acts::FpeType type, void *stackPtr, std::size_t bufferSize);
 
    private:
-    std::vector<FpeInfo> m_stracktraces;
+    std::vector<FpeInfo> m_stackTraces;
     std::array<unsigned int, 32> m_counts{};
 
     friend FpeMonitor;
