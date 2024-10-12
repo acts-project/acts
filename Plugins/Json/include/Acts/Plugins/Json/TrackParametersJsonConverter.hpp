@@ -90,7 +90,7 @@ struct adl_serializer<parameters_t> {
       // parameters and serialize
       auto cov = t.covariance().value();
       constexpr unsigned int size = cov.rows();
-      std::array<Acts::ActsScalar, size * size> covData;
+      std::array<Acts::ActsScalar, size * size> covData{};
       for (std::size_t n = 0; n < size; ++n) {
         for (std::size_t m = 0; m < size; ++m) {
           covData[n * size + m] = cov(n, m);
