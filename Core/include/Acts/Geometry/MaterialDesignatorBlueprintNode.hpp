@@ -22,7 +22,7 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   // @TODO: This needs cuboid volume storage as well
   // @TODO: I don't love the type
   using BinningConfig = std::variant<std::vector<
-      std::tuple<CylinderPortalShell::Face, Experimental::ProtoBinning,
+      std::tuple<CylinderVolumeBounds::Face, Experimental::ProtoBinning,
                  Experimental::ProtoBinning>>>;
 
   MaterialDesignatorBlueprintNode(const std::string& name) : m_name(name) {}
