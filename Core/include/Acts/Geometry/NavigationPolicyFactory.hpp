@@ -75,9 +75,9 @@ class NavigationPolicyFactoryImpl<> {
                                      Args...> &&
              (std::is_copy_constructible_v<Args> && ...))
   {
-    auto factory = [&](const GeometryContext& gctx,
+    auto factory = [=](const GeometryContext& gctx,
                        const TrackingVolume& volume, const Logger& logger) {
-      return P{gctx, volume, logger, std::forward<Args>(args)...};
+      return P{gctx, volume, logger, args...};
     };
 
     return NavigationPolicyFactoryImpl<decltype(factory)>{
@@ -87,9 +87,9 @@ class NavigationPolicyFactoryImpl<> {
   template <typename Fn, typename... Args>
     requires(NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
   constexpr auto add(Fn&& fn, Args&&... args) {
-    auto factory = [&](const GeometryContext& gctx,
+    auto factory = [=](const GeometryContext& gctx,
                        const TrackingVolume& volume, const Logger& logger) {
-      return fn(gctx, volume, logger, std::forward<Args>(args)...);
+      return fn(gctx, volume, logger, args...);
     };
 
     return NavigationPolicyFactoryImpl<decltype(factory)>{
@@ -115,9 +115,9 @@ class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
                                      Args...> &&
              (std::is_copy_constructible_v<Args> && ...))
   {
-    auto factory = [&](const GeometryContext& gctx,
+    auto factory = [=](const GeometryContext& gctx,
                        const TrackingVolume& volume, const Logger& logger) {
-      return P{gctx, volume, logger, std::forward<Args>(args)...};
+      return P{gctx, volume, logger, args...};
     };
 
     return NavigationPolicyFactoryImpl<F, Fs..., decltype(factory)>{
@@ -128,9 +128,9 @@ class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
   template <typename Fn, typename... Args>
     requires(NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
   constexpr auto add(Fn&& fn, Args&&... args) {
-    auto factory = [&](const GeometryContext& gctx,
+    auto factory = [=](const GeometryContext& gctx,
                        const TrackingVolume& volume, const Logger& logger) {
-      return fn(gctx, volume, logger, std::forward<Args>(args)...);
+      return fn(gctx, volume, logger, args...);
     };
 
     return NavigationPolicyFactoryImpl<F, Fs..., decltype(factory)>{
