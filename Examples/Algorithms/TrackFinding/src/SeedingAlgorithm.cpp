@@ -236,7 +236,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       spContainer(spConfig, spOptions, container);
 
   using value_type = typename decltype(spContainer)::SpacePointProxyType;
-  using seed_type = Acts::Seed<value_type>;
 
   Acts::CylindricalSpacePointGrid<value_type> grid =
       Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(
@@ -276,7 +275,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
           m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
 
   // run the seeding
-  static thread_local std::vector<seed_type> seeds;
+  static thread_local SimSeedContainer seeds;
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
   state.spacePointMutableData.resize(spContainer.size());
@@ -290,19 +289,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 
-  // we have seeds of proxies
-  // convert them to seed of external space points
-  SimSeedContainer SeedContainerForStorage;
-  SeedContainerForStorage.reserve(seeds.size());
-  for (const auto& seed : seeds) {
-    const auto& sps = seed.sp();
-    SeedContainerForStorage.emplace_back(*sps[0]->externalSpacePoint(),
-                                         *sps[1]->externalSpacePoint(),
-                                         *sps[2]->externalSpacePoint());
-    SeedContainerForStorage.back().setVertexZ(seed.z());
-    SeedContainerForStorage.back().setQuality(seed.seedQuality());
-  }
-
-  m_outputSeeds(ctx, std::move(SeedContainerForStorage));
+  m_outputSeeds(ctx, std::move(seeds));
   return ActsExamples::ProcessCode::SUCCESS;
 }

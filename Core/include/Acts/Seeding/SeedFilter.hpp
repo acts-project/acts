@@ -14,6 +14,7 @@
 #include "Acts/Seeding/IExperimentCuts.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
 #include <memory>
 #include <mutex>
@@ -22,6 +23,23 @@
 #include <vector>
 
 namespace Acts {
+template <typename Coll, typename external_t, std::size_t N = 3ul>
+concept CollectionStoresSeedsTo = requires(Coll coll, external_t sp) {
+  Acts::detail::pushBackOrInsertAtEnd(coll,
+                                      Acts::Seed<external_t, N>(sp, sp, sp));
+};
+
+template <typename Coll, typename external_t, std::size_t N = 3ul>
+concept CollectionStoresSeedsToProxied =  // (!CollectionStoresSeedsTo<Coll,
+                                          // external_t, N>) &&
+    requires(external_t sp) {
+      typename external_t::ValueType;
+      sp.externalSpacePoint();
+    } && CollectionStoresSeedsTo<Coll,
+                                 std::remove_const_t<std::remove_pointer_t<
+                                     typename external_t::ValueType> >,
+                                 N>;
+
 struct SeedFilterState {
   // longitudinal impact parameter as defined by bottom and middle space point
   float zOrigin = 0;
@@ -104,6 +122,22 @@ class SeedFilter final {
 
  private:
   const Logger& logger() const { return *m_logger; }
+
+  template <typename collection_t>
+  void createAndStoreSeeds(collection_t& outputCollection,
+                           const external_spacepoint_t& bottom,
+                           const external_spacepoint_t& middle,
+                           const external_spacepoint_t& top, float zOrigin,
+                           float bestSeedQuality) const;
+
+  template <typename collection_t>
+    requires Acts::CollectionStoresSeedsToProxied<collection_t,
+                                                  external_spacepoint_t, 3ul>
+  void createAndStoreSeeds(collection_t& outputCollection,
+                           const external_spacepoint_t& bottom,
+                           const external_spacepoint_t& middle,
+                           const external_spacepoint_t& top, float zOrigin,
+                           float bestSeedQuality) const;
 
   const SeedFilterConfig m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger =
