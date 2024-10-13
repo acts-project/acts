@@ -49,10 +49,10 @@ struct CylindricalSpacePointGridConfig {
   float minPt = 0 * Acts::UnitConstants::MeV;
   // maximum extension of sensitive detector layer relevant for seeding as
   // distance from x=y=0 (i.e. in r)
-  float rMax = 320 * Acts::UnitConstants::mm;
+  float rMax = 600 * Acts::UnitConstants::mm;
   // maximum extension of sensitive detector layer relevant for seeding as
   // distance from x=y=0 (i.e. in r)
-  float rMin = 0 * Acts::UnitConstants::mm;
+  float rMin = 33 * Acts::UnitConstants::mm;
   // maximum extension of sensitive detector layer relevant for seeding in
   // positive direction in z
   float zMax = 0 * Acts::UnitConstants::mm;
