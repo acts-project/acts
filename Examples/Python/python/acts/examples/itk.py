@@ -526,6 +526,7 @@ def itkSeedingAlgConfig(
 
     # fill namedtuples
     seedFinderConfigArg = SeedFinderConfigArg(
+        middleRangeStrategy=acts.examples.MiddleRadialStrategy.UserRange,
         maxSeedsPerSpM=maxSeedsPerSpM,
         cotThetaMax=cotThetaMax,
         sigmaScattering=sigmaScattering,
