@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -78,6 +79,18 @@ class CylinderVolumeBounds : public VolumeBounds {
     eBevelMinZ = 5,
     eBevelMaxZ = 6,
     eSize
+  };
+
+  /// Enum describing the possible faces of a cylinder volume
+  /// @note These values are synchronized with the BoundarySurfaceFace enum.
+  ///       Once Gen1 is removed, this can be changed.
+  enum class Face : unsigned int {
+    PositiveDisc = BoundarySurfaceFace::positiveFaceXY,
+    NegativeDisc = BoundarySurfaceFace::negativeFaceXY,
+    OuterCylinder = BoundarySurfaceFace::tubeOuterCover,
+    InnerCylinder = BoundarySurfaceFace::tubeInnerCover,
+    NegativePhiPlane = BoundarySurfaceFace::tubeSectorNegativePhi,
+    PositivePhiPlane = BoundarySurfaceFace::tubeSectorPositivePhi
   };
 
   CylinderVolumeBounds() = delete;
