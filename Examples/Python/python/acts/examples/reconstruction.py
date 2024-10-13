@@ -223,8 +223,13 @@ HashingTrainingConfigArg = namedtuple(
 
 HashingAlgorithmConfigArg = namedtuple(
     "HashingAlgorithmConfig",
-    ["bucketSize", "zBins", "phiBins"],
-    defaults=[None] * 3,
+    ["bucketSize",
+     "zBins",
+     "phiBins",
+     "deltaRMiddleMinSPRange",
+     "deltaRMiddleMaxSPRange",
+     "zBinsCustomLooping"],
+    defaults=[None] * 6,
 )
 
 
@@ -690,6 +695,7 @@ def addStandardSeeding(
                 if seedFinderConfigArg.deltaRBottomSP[1] is None
                 else seedFinderConfigArg.deltaRBottomSP[1]
             ),
+            middleRangeStrategy=seedFinderConfigArg.middleRangeStrategy,
             collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
@@ -918,10 +924,7 @@ def addHashingSeeding(
     # Same configuration than the standard seeding
     seedFinderConfig = acts.SeedFinderConfig(
         **acts.examples.defaultKWArgs(
-            rMin=seedFinderConfigArg.r[0],
-            rMax=seedFinderConfigArg.r[1],
             deltaRMin=seedFinderConfigArg.deltaR[0],
-            deltaRMax=seedFinderConfigArg.deltaR[1],
             deltaRMinTopSP=(
                 seedFinderConfigArg.deltaR[0]
                 if seedFinderConfigArg.deltaRTopSP[0] is None
@@ -942,12 +945,9 @@ def addHashingSeeding(
                 if seedFinderConfigArg.deltaRBottomSP[1] is None
                 else seedFinderConfigArg.deltaRBottomSP[1]
             ),
-            deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
-            deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
+            middleRangeStrategy=seedFinderConfigArg.middleRangeStrategy,
             collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
-            zMin=seedFinderConfigArg.z[0],
-            zMax=seedFinderConfigArg.z[1],
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             cotThetaMax=seedFinderConfigArg.cotThetaMax,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
@@ -958,10 +958,6 @@ def addHashingSeeding(
             deltaZMax=seedFinderConfigArg.deltaZMax,
             maxPtScattering=seedFinderConfigArg.maxPtScattering,
             zBinEdges=seedFinderConfigArg.zBinEdges,
-            zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
-            rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
-            useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
-            binSizeR=seedFinderConfigArg.binSizeR,
             seedConfirmation=seedFinderConfigArg.seedConfirmation,
             centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
             forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
@@ -1005,13 +1001,10 @@ def addHashingSeeding(
     gridConfig = acts.SpacePointGridConfig(
         **acts.examples.defaultKWArgs(
             minPt=seedFinderConfig.minPt,
-            rMax=(
-                seedFinderConfig.rMax
-                if spacePointGridConfigArg.rMax is None
-                else spacePointGridConfigArg.rMax
-            ),
-            zMax=seedFinderConfig.zMax,
-            zMin=seedFinderConfig.zMin,
+            rMin=spacePointGridConfigArg.r[0],
+            rMax=spacePointGridConfigArg.r[1],
+            zMin=spacePointGridConfigArg.z[0],
+            zMax=spacePointGridConfigArg.z[1],
             deltaRMax=(
                 seedFinderConfig.deltaRMax
                 if spacePointGridConfigArg.deltaRMax is None
@@ -1046,6 +1039,9 @@ def addHashingSeeding(
             bucketSize=hashingAlgorithmConfigArg.bucketSize,
             zBins=hashingAlgorithmConfigArg.zBins,
             phiBins=hashingAlgorithmConfigArg.phiBins,
+            deltaRMiddleMinSPRange=hashingAlgorithmConfigArg.deltaRMiddleMinSPRange,
+            deltaRMiddleMaxSPRange=hashingAlgorithmConfigArg.deltaRMiddleMaxSPRange,
+            zBinsCustomLooping=hashingAlgorithmConfigArg.zBinsCustomLooping,
         ),
     )
 

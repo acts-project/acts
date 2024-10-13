@@ -31,13 +31,17 @@
 
 namespace Acts {
 
-template<typename Coll>
-concept GridBinCollection = std::ranges::random_access_range<Coll> &&
+template <typename Coll>
+concept GridBinCollection =
+  std::ranges::random_access_range<Coll> &&
   std::same_as<typename Coll::value_type, std::size_t>;
 
-template<typename Coll, typename external_t, std::size_t N = 3ul>
-concept CollectionStoresSeedsTo = std::ranges::output_range<Coll, Acts::Seed<external_t, N>>;
-  
+template <typename Coll, typename external_t, std::size_t N = 3ul>
+concept CollectionStoresSeedsTo = requires(Coll coll, external_t sp) {
+  Acts::detail::pushBackOrInsertAtEnd(coll,
+                                      Acts::Seed<external_t, N>(sp, sp, sp));
+};
+    
 enum class SpacePointCandidateType : short { eBottom, eTop };
 
 enum class DetectorMeasurementInfo : short { eDefault, eDetailed };
