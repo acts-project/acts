@@ -1,13 +1,27 @@
 add_library(ActsPluginExaTrkX SHARED src/buildEdges.cpp src/ExaTrkXPipeline.cpp)
 
 if(ACTS_EXATRKX_ENABLE_MODULEMAP)
-    target_sources(
-        ActsPluginExaTrkX
-        PRIVATE src/ModuleMapCpp.cpp src/GraphCreatorWrapperCpu.cpp
-    )
+    set(OLD_MMG_API OFF)
+
+    if(OLD_MMG_API)
+        target_sources(
+            ActsPluginExaTrkX
+            PRIVATE src/ModuleMapCpp.cpp src/GraphCreatorWrapperCpu.cpp
+        )
+    endif()
 
     if(ACTS_EXATRKX_ENABLE_CUDA)
-        target_sources(ActsPluginExaTrkX PRIVATE src/GraphCreatorWrapperCuda.cu)
+        if(OLD_MMG_API)
+            target_sources(
+                ActsPluginExaTrkX
+                PRIVATE src/GraphCreatorWrapperCuda.cu
+            )
+        else()
+            target_sources(
+                ActsPluginExaTrkX
+                PRIVATE src/GraphCreatorWrapperCuda2.cu
+            )
+        endif()
     endif()
 endif()
 

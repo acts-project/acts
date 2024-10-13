@@ -31,10 +31,13 @@ GraphCreatorWrapperCuda::GraphCreatorWrapperCuda(const std::string &path,
 
 GraphCreatorWrapperCuda::~GraphCreatorWrapperCuda() {}
 
-graph<float> GraphCreatorWrapperCuda::build(TTree_hits<float> &hits,
-                                            bool print) {
-  CUDA_graph_creator<float>::graph_building_stats stats;
-  return m_graphCreator->build_impl(hits, stats, print);
+graph<float> GraphCreatorWrapperCuda::build() {
+  auto builder = [&](auto &hits, bool print) {
+    CUDA_graph_creator<float>::graph_building_stats stats;
+    return m_graphCreator->build_impl(hits, stats, print);
+  };
+  return oldApiBuild(features, moduleIds, logger, builder, 1000.f, 3.14159f,
+                     1000.f);
 }
 
 }  // namespace Acts::detail

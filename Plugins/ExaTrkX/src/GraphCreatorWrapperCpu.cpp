@@ -20,6 +20,8 @@
 #include <graph>
 #include <graph_creator>
 
+#include "oldApiHelper.hpp"
+
 namespace Acts::detail {
 
 GraphCreatorWrapperCpu::GraphCreatorWrapperCpu(const std::string &path) {
@@ -30,14 +32,22 @@ GraphCreatorWrapperCpu::GraphCreatorWrapperCpu(const std::string &path) {
 
 GraphCreatorWrapperCpu::~GraphCreatorWrapperCpu() {}
 
-graph<float> GraphCreatorWrapperCpu::build(TTree_hits<float> &hits,
-                                           bool print) {
-  TTree_particles<float> particles;
-  std::string eventId = "no-id";
+std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCpu::build(
+    const std::vector<float> &features,
+    const std::vector<std::uint64_t> &moduleIds, const Acts::Logger &logger) {
+  auto builder = [&](auto &hits, bool print) {
+    TTree_particles<float> particles;
+    std::string eventId = "no-id";
 
-  auto [graph, _] = m_graphCreator->build_impl(hits, particles, eventId, print);
+    auto [graph, _] =
+        m_graphCreator->build_impl(hits, particles, eventId, print);
 
-  return graph;
+    return graph;
+  };
+
+  // TODO hardocded
+  return oldApiBuild(features, moduleIds, logger, builder, 1000.f, 3.14159f,
+                     1000.f);
 }
 
 }  // namespace Acts::detail
