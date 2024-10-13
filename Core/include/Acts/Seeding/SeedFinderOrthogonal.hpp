@@ -38,7 +38,8 @@ class SeedFinderOrthogonal {
   /**
    * @brief The seed type used by this seeder internally.
    */
-  using seed_t = Seed<external_spacepoint_t>;
+  using seed_t = Seed<std::remove_const_t<
+      std::remove_pointer_t<typename external_spacepoint_t::ValueType>>>;
 
   /**
    * @brief The k-d tree type used by this seeder internally, which is
