@@ -182,8 +182,8 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
 
   std::size_t counter = 0ul;
   for (external_spacepoint_iterator_t it = spBegin; it != spEnd;
-       it++, ++counter) {
-    const external_spacepoint_t& sp = *it;
+       ++it, ++counter) {
+    const external_spacepoint_t sp = *it;
 
     // remove SPs according to experiment specific cuts
     if (!config.spacePointSelector(sp)) {
@@ -198,7 +198,7 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
 
     std::size_t globIndex = grid.globalBinFromPosition(position);
     auto& rbin = grid.at(globIndex);
-    rbin.push_back(&sp);
+    rbin.push_back(std::move(sp));
 
     // keep track of the bins we modify so that we can later sort the SPs in
     // those bins only
@@ -206,11 +206,11 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
       usedBinIndex[globIndex] = true;
       rBinsIndex.push_back(globIndex);
     }
-  }
+  }  // loop on external_spacepoint_t container
 
   /// sort SPs in R for each filled bin
   for (std::size_t binIndex : rBinsIndex) {
     auto& rbin = grid.atPosition(binIndex);
-    std::ranges::sort(rbin, {}, [](const auto& rb) { return rb->radius(); });
+    std::ranges::sort(rbin, {}, [](const auto& rb) { return rb.radius(); });
   }
 }
