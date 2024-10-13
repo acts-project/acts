@@ -347,7 +347,8 @@ def itkSeedingAlgConfig(
         [40.0, 90.0],
         [40.0, 90.0],
     ]  # if useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}. If useVariableMiddleSPRange is set to false and the vector is empty, the cuts won't be applied
-    middleRangeStrategy=2
+    useVariableMiddleSPRange = True  # if useVariableMiddleSPRange is true, the values in rRangeMiddleSP will be calculated based on r values of the SPs and deltaRMiddleSPRange
+    binSizeR = 1 * u.mm
     seedConfirmation = True
     centralSeedConfirmationRange = acts.SeedConfirmationRangeConfig(
         zMinSeedConf=-500 * u.mm,
@@ -521,7 +522,7 @@ def itkSeedingAlgConfig(
             [40.0, 80.0],
             [40.0, 80.0],
         ]
-        middleRangeStrategy=1
+        useVariableMiddleSPRange = False
 
     # fill namedtuples
     seedFinderConfigArg = SeedFinderConfigArg(
@@ -538,14 +539,18 @@ def itkSeedingAlgConfig(
         zBinEdges=zBinEdges,
         zBinsCustomLooping=zBinsCustomLooping,
         rRangeMiddleSP=rRangeMiddleSP,
-        middleRangeStrategy=middleRangeStrategy,
+        useVariableMiddleSPRange=useVariableMiddleSPRange,
+        binSizeR=binSizeR,
         seedConfirmation=seedConfirmation,
         centralSeedConfirmationRange=centralSeedConfirmationRange,
         forwardSeedConfirmationRange=forwardSeedConfirmationRange,
         deltaR=(deltaRMin, deltaRMax),
         deltaRBottomSP=(deltaRMinSP, deltaRMaxBottomSP),
         deltaRTopSP=(deltaRMinSP, deltaRMaxTopSP),
+        deltaRMiddleSPRange=(deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange),
         collisionRegion=(collisionRegionMin, collisionRegionMax),
+        r=(None, rMaxSeedFinderConfig),
+        z=(zMin, zMax),
     )
 
     seedFinderOptionsArg = SeedFinderOptionsArg(bFieldInZ=bFieldInZ, beamPos=beamPos)
@@ -576,8 +581,6 @@ def itkSeedingAlgConfig(
         zBinNeighborsTop=zBinNeighborsTop,
         zBinNeighborsBottom=zBinNeighborsBottom,
         numPhiNeighbors=numPhiNeighbors,
-        deltaRMiddleMinSPRange=deltaRMiddleMinSPRange,
-        deltaRMiddleMaxSPRange=deltaRMiddleMaxSPRange
     )
 
     return (
