@@ -684,8 +684,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
 
 template <typename external_spacepoint_t>
 auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
-    const std::vector<const external_spacepoint_t *> &spacePoints) const
-    -> tree_t {
+    const std::vector<external_spacepoint_t> &spacePoints) const -> tree_t {
   std::vector<typename tree_t::pair_t> points;
 
   /*
@@ -693,14 +692,14 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
    * linearly pass to the k-d tree constructor. That constructor will take
    * care of sorting the pairs and splitting the space.
    */
-  for (const external_spacepoint_t *sp : spacePoints) {
+  for (const external_spacepoint_t &sp : spacePoints) {
     typename tree_t::coordinate_t point;
 
-    point[DimPhi] = sp->phi();
-    point[DimR] = sp->radius();
-    point[DimZ] = sp->z();
+    point[DimPhi] = sp.phi();
+    point[DimR] = sp.radius();
+    point[DimZ] = sp.z();
 
-    points.emplace_back(point, sp);
+    points.emplace_back(point, &sp);
   }
 
   return tree_t(std::move(points));
@@ -735,7 +734,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * point, and save it in a vector.
    */
   Acts::Extent rRangeSPExtent;
-  std::vector<const external_spacepoint_t *> internal_sps;
+  std::vector<external_spacepoint_t> internal_sps;
   internal_sps.reserve(spacePoints.size());
 
   Acts::SpacePointMutableData mutableData;
@@ -744,7 +743,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   for (const external_spacepoint_t &p : spacePoints) {
     // store x,y,z values in extent
     rRangeSPExtent.extend({p.x(), p.y(), p.z()});
-    internal_sps.push_back(&p);
+    internal_sps.push_back(std::move(p));
   }
   // variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(

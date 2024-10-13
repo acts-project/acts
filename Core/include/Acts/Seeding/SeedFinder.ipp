@@ -66,8 +66,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   }
 
   // Get the middle space point candidates
-  const std::vector<external_spacepoint_t>& middleSPs =
-      grid.at(middleSPsIdx);
+  const std::vector<external_spacepoint_t>& middleSPs = grid.at(middleSPsIdx);
   // Return if somehow there are no middle sp candidates
   if (middleSPs.empty()) {
     return;
@@ -175,10 +174,9 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
 
     // Iterate over middle-bottom dublets
     getCompatibleDoublets<Acts::SpacePointCandidateType::eBottom>(
-        options, grid, state.spacePointMutableData, state.bottomNeighbours,
-        spM, state.linCircleBottom, state.compatBottomSP,
-        m_config.deltaRMinBottomSP, m_config.deltaRMaxBottomSP, uIP, uIP2,
-        cosPhiM, sinPhiM);
+        options, grid, state.spacePointMutableData, state.bottomNeighbours, spM,
+        state.linCircleBottom, state.compatBottomSP, m_config.deltaRMinBottomSP,
+        m_config.deltaRMaxBottomSP, uIP, uIP2, cosPhiM, sinPhiM);
 
     // no bottom SP found -> try next spM
     if (state.compatBottomSP.empty()) {
