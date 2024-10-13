@@ -537,20 +537,13 @@ def itkSeedingAlgConfig(
         deltaZMax=deltaZMax,
         maxPtScattering=maxPtScattering,
         zBinEdges=zBinEdges,
-        zBinsCustomLooping=zBinsCustomLooping,
-        rRangeMiddleSP=rRangeMiddleSP,
-        useVariableMiddleSPRange=useVariableMiddleSPRange,
-        binSizeR=binSizeR,
         seedConfirmation=seedConfirmation,
         centralSeedConfirmationRange=centralSeedConfirmationRange,
         forwardSeedConfirmationRange=forwardSeedConfirmationRange,
         deltaR=(deltaRMin, deltaRMax),
         deltaRBottomSP=(deltaRMinSP, deltaRMaxBottomSP),
         deltaRTopSP=(deltaRMinSP, deltaRMaxTopSP),
-        deltaRMiddleSPRange=(deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange),
         collisionRegion=(collisionRegionMin, collisionRegionMax),
-        r=(None, rMaxSeedFinderConfig),
-        z=(zMin, zMax),
     )
 
     seedFinderOptionsArg = SeedFinderOptionsArg(bFieldInZ=bFieldInZ, beamPos=beamPos)
@@ -568,11 +561,12 @@ def itkSeedingAlgConfig(
         useDeltaRorTopRadius=useDeltaRorTopRadius,
     )
     spacePointGridConfigArg = SpacePointGridConfigArg(
-        rMax=rMaxGridConfig,
         deltaRMax=deltaRMax,
         zBinEdges=zBinEdges,
         phiBinDeflectionCoverage=phiBinDeflectionCoverage,
         phi=(phiMin, phiMax),
+        r=(None, rMaxGridConfig),
+        z=(zMin, zMax),
         impactMax=impactMax,
         maxPhiBins=maxPhiBins,
     )
@@ -581,6 +575,9 @@ def itkSeedingAlgConfig(
         zBinNeighborsTop=zBinNeighborsTop,
         zBinNeighborsBottom=zBinNeighborsBottom,
         numPhiNeighbors=numPhiNeighbors,
+        deltaRMiddleMinSPRange=deltaRMiddleMinSPRange,
+        deltaRMiddleMaxSPRange=deltaRMiddleMaxSPRange,
+        zBinsCustomLooping=zBinsCustomLooping,
     )
 
     return (
