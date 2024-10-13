@@ -757,11 +757,7 @@ def addStandardSeeding(
             zMax=spacePointGridConfigArg.z[1],
             phiMin=spacePointGridConfigArg.phi[0],
             phiMax=spacePointGridConfigArg.phi[1],
-            deltaRMax=(
-                seedFinderConfig.deltaRMax
-                if spacePointGridConfigArg.deltaRMax is None
-                else spacePointGridConfigArg.deltaRMax
-            ),
+            deltaRMax=spacePointGridConfigArg.deltaRMax,
             cotThetaMax=seedFinderConfig.cotThetaMax,
             maxPhiBins=spacePointGridConfigArg.maxPhiBins,
             impactMax=spacePointGridConfigArg.impactMax,
@@ -1005,11 +1001,7 @@ def addHashingSeeding(
             rMax=spacePointGridConfigArg.r[1],
             zMin=spacePointGridConfigArg.z[0],
             zMax=spacePointGridConfigArg.z[1],
-            deltaRMax=(
-                seedFinderConfig.deltaRMax
-                if spacePointGridConfigArg.deltaRMax is None
-                else spacePointGridConfigArg.deltaRMax
-            ),
+            deltaRMax=spacePointGridConfigArg.deltaRMax,
             cotThetaMax=seedFinderConfig.cotThetaMax,
             phiMin=spacePointGridConfigArg.phi[0],
             phiMax=spacePointGridConfigArg.phi[1],
