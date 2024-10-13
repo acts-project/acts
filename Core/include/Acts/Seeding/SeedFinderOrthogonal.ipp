@@ -720,9 +720,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * run some basic checks to make sure the containers have the correct value
    * types.
    */
-  static_assert(std::is_same_v<typename output_container_t::value_type,
-                               Seed<external_spacepoint_t>>,
-                "Output iterator container type must accept seeds.");
+  static_assert(
+      std::is_same_v<
+          typename output_container_t::value_type,
+          typename SeedFinderOrthogonal<external_spacepoint_t>::seed_t>,
+      "Output iterator container type must accept seeds.");
   static_assert(std::is_same_v<typename input_container_t::value_type,
                                external_spacepoint_t>,
                 "Input container must contain external spacepoints.");
@@ -795,7 +797,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
 
 template <typename external_spacepoint_t>
 template <typename input_container_t>
-std::vector<Seed<external_spacepoint_t>>
+std::vector<typename SeedFinderOrthogonal<external_spacepoint_t>::seed_t>
 SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     const Acts::SeedFinderOptions &options,
     const input_container_t &spacePoints) const {
