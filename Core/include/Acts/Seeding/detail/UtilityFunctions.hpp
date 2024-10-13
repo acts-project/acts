@@ -30,16 +30,23 @@ concept isCollectionThatSupportsInsert =
     };
 
 // Define some functions
-template <typename value_t>
-void pushBackOrInsertAtEnd(
-    Acts::detail::isCollectionThatSupportsPushBack auto& storage,
-    value_t&& value) {
+template <Acts::detail::isCollectionThatSupportsPushBack storage_t,
+          typename value_t>
+  requires requires(storage_t coll, value_t value) {
+    coll.push_back(value);
+    coll.push_back(std::move(value));
+  }
+void pushBackOrInsertAtEnd(storage_t& storage, value_t&& value) {
   storage.push_back(std::forward<value_t>(value));
 }
 
 template <std::ranges::range storage_t, typename value_t>
   requires(!Acts::detail::isCollectionThatSupportsPushBack<storage_t> &&
-           Acts::detail::isCollectionThatSupportsInsert<storage_t>)
+           Acts::detail::isCollectionThatSupportsInsert<storage_t> &&
+           requires(storage_t coll, value_t value) {
+             coll.insert(std::ranges::end(coll), value);
+             coll.insert(std::ranges::end(coll), std::move(value));
+           })
 void pushBackOrInsertAtEnd(storage_t& storage, value_t&& value) {
   storage.insert(std::ranges::end(storage), std::forward<value_t>(value));
 }
