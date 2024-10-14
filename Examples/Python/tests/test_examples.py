@@ -1005,6 +1005,40 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
     [
         DIGI_SHARE_DIR / "default-smearing-config-generic.json",
         DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+        pytest.param(
+            (
+                getOpenDataDetectorDirectory()
+                / "config"
+                / "odd-digi-smearing-config.json"
+            ),
+            marks=[
+                pytest.mark.odd,
+            ],
+        ),
+        pytest.param(
+            (
+                getOpenDataDetectorDirectory()
+                / "config"
+                / "odd-digi-geometric-config.json"
+            ),
+            marks=[
+                pytest.mark.odd,
+            ],
+        ),
+    ],
+    ids=["smeared", "geometric", "odd-smeared", "odd-geometric"],
+)
+def test_digitization_example_input_parsing(digi_config_file):
+    from acts.examples import readDigiConfigFromJson
+
+    acts.examples.readDigiConfigFromJson(str(digi_config_file))
+
+
+@pytest.mark.parametrize(
+    "digi_config_file",
+    [
+        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
+        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
     ],
     ids=["smeared", "geometric"],
 )
