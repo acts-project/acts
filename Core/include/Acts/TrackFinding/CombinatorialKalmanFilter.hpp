@@ -717,13 +717,13 @@ class CombinatorialKalmanFilter {
 
       bool isSensitive = surface->associatedDetectorElement() != nullptr;
       bool hasMaterial = surface->surfaceMaterial() != nullptr;
-      bool isMaterial = hasMaterial && !isSensitive;
+      bool isMaterialOnly = hasMaterial && !isSensitive;
       bool expectMeasurements = isSensitive;
 
       if (isSensitive) {
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
-      } else if (isMaterial) {
+      } else if (isMaterialOnly) {
         ACTS_VERBOSE("Material surface " << surface->geometryId()
                                          << " detected.");
       } else {
@@ -747,7 +747,7 @@ class CombinatorialKalmanFilter {
       }
 
       // Transport the covariance to the surface
-      if (isHole || isMaterial) {
+      if (isHole || isMaterialOnly) {
         stepper.transportCovarianceToCurvilinear(state.stepping);
       } else {
         stepper.transportCovarianceToBound(state.stepping, *surface);
@@ -774,9 +774,11 @@ class CombinatorialKalmanFilter {
           Acts::Result<CkfTypes::BranchVector<TrackIndexType>>;
       TrackStatesResult tsRes = TrackStatesResult::success({});
       if (hasMeasurements) {
+        auto [slBegin, slEnd] = *slRange;
+
         tsRes = trackStateCandidateCreator(
             state.geoContext, *calibrationContextPtr, *surface, boundState,
-            slRange->first, slRange->second, prevTip, *result.trackStates,
+            slBegin, slEnd, prevTip, *result.trackStates,
             result.trackStateCandidates, *result.trackStates, logger());
         if (!tsRes.ok()) {
           ACTS_ERROR(
@@ -816,7 +818,7 @@ class CombinatorialKalmanFilter {
 
         auto stateMask = PM::Predicted | PM::Jacobian;
 
-        // Add a hole track state to the multitrajectory
+        // Add a hole or material track state to the multitrajectory
         TrackIndexType currentTip = addNonSourcelinkState(
             stateMask, boundState, result, expectMeasurements, prevTip);
         currentBranch.tipIndex() = currentTip;
