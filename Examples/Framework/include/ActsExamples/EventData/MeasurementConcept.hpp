@@ -17,12 +17,10 @@ namespace ActsExamples {
 
 template <typename T>
 concept MeasurementConcept = requires(const T& m) {
-                               { m.size() } -> std::integral;
-                               {
-                                 m.geometryId()
-                               } -> std::same_as<Acts::GeometryIdentifier>;
-                               { m.subspaceIndexVector() };
-                               { m.parameters() };
-                               { m.covariance() };
-                             };
+  { m.size() } -> std::integral;
+  { m.geometryId() } -> std::same_as<Acts::GeometryIdentifier>;
+  { m.subspaceIndexVector() };
+  { m.parameters() };
+  { m.covariance() };
+};
 }  // namespace ActsExamples

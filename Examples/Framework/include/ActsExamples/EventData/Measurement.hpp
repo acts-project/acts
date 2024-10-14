@@ -301,8 +301,8 @@ class MeasurementProxyBase {
   template <typename OtherDerived>
   void copyFrom(const OtherDerived& other)
     requires(!ReadOnly) && requires {
-                             { this->fill(other) };
-                           }
+      { this->fill(other) };
+    }
   {
     fill(other);
   }

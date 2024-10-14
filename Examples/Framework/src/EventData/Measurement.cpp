@@ -67,7 +67,7 @@ MeasurementContainer::VariableProxy MeasurementContainer::makeMeasurement(
   return getMeasurement(addMeasurement(size, geometryId));
 }
 
-const MeasurementContainer::OrderedIndices &
+const MeasurementContainer::OrderedIndices&
 MeasurementContainer::orderedIndices() const {
   return m_orderedIndices;
 }
