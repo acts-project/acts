@@ -214,7 +214,7 @@ def test_csv_meas_reader(tmp_path, fatras, trk_geo, conf_const):
 
     algs = [
         AssertCollectionExistsAlg(k, f"check_alg_{k}", acts.logging.WARNING)
-        for k in ("measurements", "simhitsmap", "sourcelinks", "meas_ptcl_map")
+        for k in ("measurements", "simhitsmap", "meas_ptcl_map")
     ]
     for alg in algs:
         s.addAlgorithm(alg)
@@ -368,7 +368,7 @@ def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
 
     algs = [
         AssertCollectionExistsAlg(k, f"check_alg_{k}", acts.logging.WARNING)
-        for k in ("measurements", "simhitsmap", "sourcelinks")
+        for k in ("measurements", "simhitsmap")
     ]
     for alg in algs:
         s.addAlgorithm(alg)
