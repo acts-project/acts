@@ -199,8 +199,7 @@ void EDM4hepUtil::writeMeasurement(
     edm4hep::MutableTrackerHitPlane to, const Cluster* fromCluster,
     edm4hep::TrackerHitCollection& toClusters,
     const MapGeometryIdTo& geometryMapper) {
-  Acts::GeometryIdentifier geoId =
-      from.sourceLink().template get<IndexSourceLink>().geometryId();
+  Acts::GeometryIdentifier geoId = from.geometryId();
 
   if (geometryMapper) {
     // no need for digitization as we only want to identify the sensor
