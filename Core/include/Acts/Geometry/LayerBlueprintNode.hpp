@@ -47,6 +47,12 @@ class LayerBlueprintNode : public StaticBlueprintNode {
 
   const LayerType& layerType() const;
 
+  LayerBlueprintNode& setNavigationPolicyFactory(
+      std::shared_ptr<NavigationPolicyFactory> navigationPolicyFactory)
+      override;
+
+  const NavigationPolicyFactory* navigationPolicyFactory() const;
+
   void addToGraphviz(std::ostream& os) const override;
 
  private:

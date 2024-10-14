@@ -33,12 +33,19 @@ class StaticBlueprintNode : public BlueprintNode {
                 TrackingVolume& parent,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
+  virtual StaticBlueprintNode& setNavigationPolicyFactory(
+      std::shared_ptr<NavigationPolicyFactory> navigationPolicyFactory);
+
+  const NavigationPolicyFactory* navigationPolicyFactory() const;
+
  protected:
   void addToGraphviz(std::ostream& os) const override;
 
   std::unique_ptr<TrackingVolume> m_volume;
 
   std::unique_ptr<PortalShellBase> m_shell;
+
+  std::shared_ptr<NavigationPolicyFactory> m_navigationPolicyFactory = nullptr;
 };
 
 }  // namespace Acts

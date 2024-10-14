@@ -100,9 +100,12 @@ void StaticBlueprintNode::finalize(const Options& options,
   ACTS_DEBUG(prefix() << " Adding volume (" << m_volume->volumeName()
                       << ") to parent volume (" << parent.volumeName() << ")");
 
-  // @TODO: This needs to become configurable
-  m_volume->setNavigationPolicy(
-      options.defaultNavigationPolicyFactory->build(gctx, *m_volume, logger));
+  const auto* policyFactory = options.defaultNavigationPolicyFactory.get();
+
+  if (m_navigationPolicyFactory) {
+    policyFactory = m_navigationPolicyFactory.get();
+  }
+  m_volume->setNavigationPolicy(policyFactory->build(gctx, *m_volume, logger));
 
   parent.addVolume(std::move(m_volume));
 }
@@ -113,6 +116,17 @@ const std::string& StaticBlueprintNode::name() const {
     return uninitialized;
   }
   return m_volume->volumeName();
+}
+
+StaticBlueprintNode& StaticBlueprintNode::setNavigationPolicyFactory(
+    std::shared_ptr<NavigationPolicyFactory> navigationPolicyFactory) {
+  m_navigationPolicyFactory = std::move(navigationPolicyFactory);
+  return *this;
+}
+
+const NavigationPolicyFactory* StaticBlueprintNode::navigationPolicyFactory()
+    const {
+  return m_navigationPolicyFactory.get();
 }
 
 void StaticBlueprintNode::addToGraphviz(std::ostream& os) const {

@@ -139,6 +139,17 @@ const LayerBlueprintNode::LayerType& LayerBlueprintNode::layerType() const {
   return m_layerType;
 }
 
+LayerBlueprintNode& LayerBlueprintNode::setNavigationPolicyFactory(
+    std::shared_ptr<NavigationPolicyFactory> navigationPolicyFactory) {
+  m_navigationPolicyFactory = std::move(navigationPolicyFactory);
+  return *this;
+}
+
+const NavigationPolicyFactory* LayerBlueprintNode::navigationPolicyFactory()
+    const {
+  return m_navigationPolicyFactory.get();
+}
+
 void LayerBlueprintNode::addToGraphviz(std::ostream& os) const {
   std::stringstream ss;
   ss << "<b>" << name() << "</b>";
