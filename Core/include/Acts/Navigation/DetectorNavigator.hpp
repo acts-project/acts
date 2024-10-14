@@ -81,8 +81,6 @@ class DetectorNavigator {
       : m_cfg{cfg}, m_logger{std::move(_logger)} {}
 
   State makeState(const Options& options) const {
-    assert(options.startSurface != nullptr && "Start surface must be set");
-
     State state;
     state.options = options;
     return state;
@@ -141,9 +139,6 @@ class DetectorNavigator {
   /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
-    assert(state.navigation.options.startSurface != nullptr &&
-           "Start surface must be set");
-
     ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper) << "initialize");
 
     auto& nState = state.navigation;

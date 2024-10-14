@@ -205,8 +205,6 @@ class Navigator {
       : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {}
 
   State makeState(const Options& options) const {
-    assert(options.startSurface != nullptr && "Start surface must be set");
-
     State state;
     state.options = options;
     state.startSurface = options.startSurface;
@@ -268,9 +266,6 @@ class Navigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
-    assert(state.navigation.options.startSurface != nullptr &&
-           "Start surface must be set");
-
     // Call the navigation helper prior to actual navigation
     ACTS_VERBOSE(volInfo(state) << "Initialization.");
 

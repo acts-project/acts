@@ -111,8 +111,6 @@ class DirectNavigator {
       : m_logger{std::move(_logger)} {}
 
   State makeState(const Options& options) const {
-    assert(options.startSurface != nullptr && "Start surface must be set");
-
     State state;
     state.options = options;
     return state;
@@ -167,9 +165,6 @@ class DirectNavigator {
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state,
                   const stepper_t& /*stepper*/) const {
-    assert(state.navigation.options.startSurface != nullptr &&
-           "Start surface must be set");
-
     ACTS_VERBOSE("Initialize. Surface sequence for navigation:");
     for (const Surface* surface : state.navigation.options.surfaces) {
       ACTS_VERBOSE(surface->geometryId()
@@ -178,8 +173,12 @@ class DirectNavigator {
 
     // We set the current surface to the start surface
     state.navigation.currentSurface = state.navigation.options.startSurface;
-    ACTS_VERBOSE("Current surface set to start surface "
-                 << state.navigation.currentSurface->geometryId());
+    if (state.navigation.currentSurface != nullptr) {
+      ACTS_VERBOSE("Current surface set to start surface "
+                   << state.navigation.currentSurface->geometryId());
+    } else {
+      ACTS_VERBOSE("Current surface set to nullptr");
+    }
 
     // Reset the surface index
     state.navigation.resetSurfaceIndex(state.options.direction);
