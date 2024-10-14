@@ -23,6 +23,8 @@ TryAllPortalNavigationPolicy::TryAllPortalNavigationPolicy(
 
 void TryAllPortalNavigationPolicy::updateState(
     const NavigationArguments& args) const {
+  const Logger& logger = args.logger;
+  ACTS_VERBOSE("TryAllPortalNavigationPolicy");
   assert(m_volume != nullptr);
 
   for (const auto& portal : m_volume->portals()) {
@@ -44,6 +46,8 @@ TryAllSurfaceNavigationPolicy::TryAllSurfaceNavigationPolicy(
 
 void TryAllSurfaceNavigationPolicy::updateState(
     const NavigationArguments& args) const {
+  const Logger& logger = args.logger;
+  ACTS_VERBOSE("TryAllSurfaceNavigationPolicy");
   assert(m_volume != nullptr);
 
   for (const auto& surface : m_volume->surfaces()) {

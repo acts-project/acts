@@ -15,6 +15,7 @@
 namespace Acts {
 
 class NavigationStream;
+class Logger;
 
 struct NavigationArguments {
   NavigationStream& main;
@@ -22,6 +23,8 @@ struct NavigationArguments {
   Vector3 direction;
 
   BoundaryTolerance tolerance = BoundaryTolerance::None();
+
+  const Logger& logger;
 };
 
 using NavigationDelegate = OwningDelegate<void(const NavigationArguments&)>;

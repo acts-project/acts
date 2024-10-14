@@ -23,7 +23,10 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
 }
 
 void SurfaceArrayNavigationPolicy::updateState(
-    const NavigationArguments& args) const {}
+    const NavigationArguments& args) const {
+  const Logger& logger = args.logger;
+  ACTS_VERBOSE("SrfArrNavPol (volume=" << m_volume.volumeName() << ")");
+}
 
 void SurfaceArrayNavigationPolicy::connect(NavigationDelegate& delegate) const {
   connectDefault<SurfaceArrayNavigationPolicy>(delegate);
