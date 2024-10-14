@@ -34,6 +34,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <type_traits>
 
 namespace Acts {
@@ -717,6 +718,7 @@ class CombinatorialKalmanFilter {
       bool isSensitive = surface->associatedDetectorElement() != nullptr;
       bool hasMaterial = surface->surfaceMaterial() != nullptr;
       bool isMaterial = hasMaterial && !isSensitive;
+      bool expectMeasurements = isSensitive;
 
       if (isSensitive) {
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
@@ -730,8 +732,14 @@ class CombinatorialKalmanFilter {
         return Result<void>::success();
       }
 
-      auto [slBegin, slEnd] = m_sourceLinkAccessor(*surface);
-      bool isHole = isSensitive && slBegin == slEnd;
+      using SourceLinkRange = decltype(m_sourceLinkAccessor(*surface));
+      std::optional<SourceLinkRange> slRange = std::nullopt;
+      bool hasMeasurements = false;
+      if (isSensitive) {
+        slRange = m_sourceLinkAccessor(*surface);
+        hasMeasurements = slRange->first != slRange->second;
+      }
+      bool isHole = isSensitive && !hasMeasurements;
 
       if (isHole) {
         ACTS_VERBOSE("Detected hole before measurement selection on surface "
@@ -740,9 +748,9 @@ class CombinatorialKalmanFilter {
 
       // Transport the covariance to the surface
       if (isHole || isMaterial) {
-        stepper.transportCovarianceToBound(state.stepping, *surface);
-      } else {
         stepper.transportCovarianceToCurvilinear(state.stepping);
+      } else {
+        stepper.transportCovarianceToBound(state.stepping, *surface);
       }
 
       // Update state and stepper with pre material effects
@@ -764,14 +772,17 @@ class CombinatorialKalmanFilter {
       // Create trackstates for all source links (will be filtered later)
       using TrackStatesResult =
           Acts::Result<CkfTypes::BranchVector<TrackIndexType>>;
-      TrackStatesResult tsRes = trackStateCandidateCreator(
-          state.geoContext, *calibrationContextPtr, *surface, boundState,
-          slBegin, slEnd, prevTip, *result.trackStates,
-          result.trackStateCandidates, *result.trackStates, logger());
-      if (!tsRes.ok()) {
-        ACTS_ERROR(
-            "Processing of selected track states failed: " << tsRes.error());
-        return tsRes.error();
+      TrackStatesResult tsRes = TrackStatesResult::success({});
+      if (hasMeasurements) {
+        tsRes = trackStateCandidateCreator(
+            state.geoContext, *calibrationContextPtr, *surface, boundState,
+            slRange->first, slRange->second, prevTip, *result.trackStates,
+            result.trackStateCandidates, *result.trackStates, logger());
+        if (!tsRes.ok()) {
+          ACTS_ERROR(
+              "Processing of selected track states failed: " << tsRes.error());
+          return tsRes.error();
+        }
       }
       const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList = *tsRes;
 
@@ -798,7 +809,7 @@ class CombinatorialKalmanFilter {
         currentBranch = result.activeBranches.back();
         prevTip = currentBranch.tipIndex();
       } else {
-        if (!isHole) {
+        if (expectMeasurements) {
           ACTS_VERBOSE("Detected hole after measurement selection on surface "
                        << surface->geometryId());
         }
@@ -806,11 +817,11 @@ class CombinatorialKalmanFilter {
         auto stateMask = PM::Predicted | PM::Jacobian;
 
         // Add a hole track state to the multitrajectory
-        TrackIndexType currentTip =
-            addNonSourcelinkState(stateMask, boundState, result, true, prevTip);
+        TrackIndexType currentTip = addNonSourcelinkState(
+            stateMask, boundState, result, expectMeasurements, prevTip);
         currentBranch.tipIndex() = currentTip;
         auto currentState = currentBranch.outermostTrackState();
-        if (isSensitive) {
+        if (expectMeasurements) {
           currentBranch.nHoles()++;
         }
 
