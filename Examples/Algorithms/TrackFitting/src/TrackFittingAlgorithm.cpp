@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -126,10 +127,11 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     trackSourceLinks.reserve(protoTrack.size());
 
     // Fill the source links via their indices from the container
-    for (auto hitIndex : protoTrack) {
+    for (auto measIndex : protoTrack) {
       ConstVariableBoundMeasurementProxy measurement =
-          measurements.getMeasurement(hitIndex);
-      trackSourceLinks.push_back(measurement.sourceLink());
+          measurements.getMeasurement(measIndex);
+      IndexSourceLink sourceLink(measurement.geometryId(), measIndex);
+      trackSourceLinks.push_back(Acts::SourceLink(sourceLink));
     }
 
     ACTS_DEBUG("Invoke direct fitter for track " << itrack);
