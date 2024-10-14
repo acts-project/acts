@@ -139,7 +139,9 @@ void ActsExamples::to_json(nlohmann::json& j,
   j["thickness"] = gdc.thickness;
   j["threshold"] = gdc.threshold;
   j["digital"] = gdc.digital;
-  to_json(j["charge-smearing"], gdc.chargeSmearer);
+  if (j.find("charge-smearing") != j.end()) {
+    to_json(j["charge-smearing"], gdc.chargeSmearer);
+  }
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
@@ -161,7 +163,9 @@ void ActsExamples::from_json(const nlohmann::json& j,
       gdc.varianceMap[idx] = vars;
     }
   }
-  from_json(j["charge-smearing"], gdc.chargeSmearer);
+  if (j.find("charge-smearing") != j.end()) {
+    from_json(j["charge-smearing"], gdc.chargeSmearer);
+  }
 }
 
 void ActsExamples::to_json(nlohmann::json& j,

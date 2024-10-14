@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -174,9 +175,8 @@ bool onHyperPlane(const std::vector<Vector3>& vertices,
                   ActsScalar tolerance = s_onSurfaceTolerance);
 
 /// Calculate the closest point on the polygon.
-template <typename Vector2Container>
 inline Vector2 computeClosestPointOnPolygon(const Vector2& point,
-                                            const Vector2Container& vertices,
+                                            std::span<const Vector2> vertices,
                                             const SquareMatrix2& metric) {
   auto squaredNorm = [&](const Vector2& x) {
     return (x.transpose() * metric * x).value();
