@@ -325,7 +325,10 @@ void addBlueprint(Context& ctx) {
                                                             name));
                }),
                py::arg("transform"), py::arg("bounds"),
-               py::arg("name") = "undefined");
+               py::arg("name") = "undefined")
+          .def_property("navigationPolicyFactory",
+                        &Acts::StaticBlueprintNode::navigationPolicyFactory,
+                        &Acts::StaticBlueprintNode::setNavigationPolicyFactory);
 
   addContextManagerProtocol(staticNode);
 
@@ -386,9 +389,6 @@ void addBlueprint(Context& ctx) {
           .def_property("binning", &MaterialDesignatorBlueprintNode::binning,
                         &MaterialDesignatorBlueprintNode::setBinning);
 
-  // py::class_<MaterialDesignatorBlueprintNode::BinningConfig>(matNode,
-  //                                                            "BinningConfig");
-
   addContextManagerProtocol(matNode);
 
   addNodeMethods(
@@ -401,7 +401,7 @@ void addBlueprint(Context& ctx) {
       "name"_a);
 
   auto layerNode =
-      py::class_<Acts::LayerBlueprintNode, Acts::BlueprintNode,
+      py::class_<Acts::LayerBlueprintNode, Acts::StaticBlueprintNode,
                  std::shared_ptr<Acts::LayerBlueprintNode>>(
           m, "LayerBlueprintNode")
           .def(py::init<const std::string&>(), py::arg("name"))
@@ -413,7 +413,10 @@ void addBlueprint(Context& ctx) {
           .def_property("envelope", &Acts::LayerBlueprintNode::envelope,
                         &Acts::LayerBlueprintNode::setEnvelope)
           .def_property("layerType", &Acts::LayerBlueprintNode::layerType,
-                        &Acts::LayerBlueprintNode::setLayerType);
+                        &Acts::LayerBlueprintNode::setLayerType)
+          .def_property("navigationPolicyFactory",
+                        &Acts::LayerBlueprintNode::navigationPolicyFactory,
+                        &Acts::LayerBlueprintNode::setNavigationPolicyFactory);
 
   py::enum_<Acts::LayerBlueprintNode::LayerType>(layerNode, "LayerType")
       .value("Cylinder", Acts::LayerBlueprintNode::LayerType::Cylinder)
