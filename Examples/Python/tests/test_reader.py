@@ -206,7 +206,6 @@ def test_csv_meas_reader(tmp_path, fatras, trk_geo, conf_const):
             level=acts.logging.WARNING,
             outputMeasurements="measurements",
             outputMeasurementSimHitsMap="simhitsmap",
-            outputSourceLinks="sourcelinks",
             outputMeasurementParticlesMap="meas_ptcl_map",
             inputSimHits=simAlg.config.outputSimHits,
             inputDir=str(out),
@@ -363,7 +362,6 @@ def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
             level=acts.logging.WARNING,
             outputMeasurements="measurements",
             outputMeasurementSimHitsMap="simhitsmap",
-            outputSourceLinks="sourcelinks",
             inputPath=str(out),
         )
     )
