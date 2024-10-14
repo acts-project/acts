@@ -82,7 +82,10 @@ void Acts::Experimental::detail::BlueprintDrawer::dotStream(
   }
   // Recursive for children
   for (const auto& c : node.children) {
-    ss << nodeName << " -> " << c->name << ";" << '\n';
+    // Replace the "/" in node names
+    std::string childName = c->name;
+    std::replace(childName.begin(), childName.end(), '/', '_');
+    ss << nodeName << " -> " << childName << ";" << '\n';
     dotStream(ss, *c, options);
   }
 
