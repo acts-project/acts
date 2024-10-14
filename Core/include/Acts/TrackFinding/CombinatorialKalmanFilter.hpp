@@ -765,7 +765,10 @@ class CombinatorialKalmanFilter {
             *tsRes;
 
         if (newTrackStateList.empty()) {
-          ACTS_VERBOSE("Detected hole on surface " << surface->geometryId());
+          if (slBegin != slEnd) {
+            ACTS_VERBOSE("Detected hole after measurement selection on surface "
+                         << surface->geometryId());
+          }
 
           // Setting the number of branches on the surface to 1 as the hole
           // still counts as a branch
