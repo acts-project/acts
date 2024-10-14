@@ -139,7 +139,8 @@ void addNavigation(Context& ctx) {
   py::class_<NavigationPolicyFactory, Acts::NavigationPolicyFactory,
              std::shared_ptr<NavigationPolicyFactory>>(
       m, "NavigationPolicyFactory")
-      .def(py::init<>())
+      // only to mirror the C++ API
+      .def_static("make", []() { return NavigationPolicyFactory{}; })
       .def("add", &NavigationPolicyFactory::addNoArguments)
       .def("add", &NavigationPolicyFactory::addSurfaceArray)
       .def("_buildTest", [](NavigationPolicyFactory& self) {
@@ -166,8 +167,8 @@ void addNavigation(Context& ctx) {
     using Config = SurfaceArrayNavigationPolicy::Config;
     auto c = py::class_<Config>(saPolicy, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(surfaceArrayConfig);
     ACTS_PYTHON_MEMBER(layerType);
+    ACTS_PYTHON_MEMBER(bins);
     ACTS_PYTHON_STRUCT_END();
   }
 }

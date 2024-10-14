@@ -19,8 +19,8 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
   enum class LayerType { Cylinder, Disc, Plane };
 
   struct Config {
-    SurfaceArrayCreator::Config surfaceArrayConfig{};
     LayerType layerType = LayerType::Cylinder;
+    std::pair<std::size_t, std::size_t> bins;
   };
 
   explicit SurfaceArrayNavigationPolicy(const GeometryContext& gctx,
@@ -49,6 +49,7 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
 
  private:
   std::unique_ptr<SurfaceArray> m_surfaceArray{};
+  const TrackingVolume& m_volume;
 };
 
 }  // namespace Acts
