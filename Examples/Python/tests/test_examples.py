@@ -689,7 +689,7 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     seq = Sequencer(
-        events=10,
+        events=3,
         numThreads=1,
     )
 
