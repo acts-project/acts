@@ -217,19 +217,19 @@ function trackfinding() {
     fi
 
     run_histcmp \
-        $outdir/data/$path/performance_finder_ckf.root \
-        $refdir/$path/performance_finder_ckf.root \
+        $outdir/data/$path/performance_finding_ckf.root \
+        $refdir/$path/performance_finding_ckf.root \
         "CKF finding performance | ${name}" \
-        $path/performance_finder_ckf.html \
-        $path/performance_finder_ckf_plots \
+        $path/performance_finding_ckf.html \
+        $path/performance_finding_ckf_plots \
         --config $default_config
 
     run_histcmp \
-        $outdir/data/$path/performance_fitter_ckf.root \
-        $refdir/$path/performance_fitter_ckf.root \
+        $outdir/data/$path/performance_fitting_ckf.root \
+        $refdir/$path/performance_fitting_ckf.root \
         "CKF fitting performance | ${name}" \
-        $path/performance_fitter_ckf.html \
-        $path/performance_fitter_ckf_plots \
+        $path/performance_fitting_ckf.html \
+        $path/performance_fitting_ckf_plots \
         --config $default_config
 
     run_histcmp \
