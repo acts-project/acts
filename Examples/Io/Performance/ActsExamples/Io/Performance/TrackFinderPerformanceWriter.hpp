@@ -24,7 +24,7 @@ struct AlgorithmContext;
 ///
 /// Only considers the track finding itself, i.e. grouping of hits into tracks,
 /// and computes relevant per-track and per-particles statistics.
-class TrackFinderPerformanceWriter final : public WriterT<TrackContainer> {
+class TrackFinderPerformanceWriter final : public WriterT<ConstTrackContainer> {
  public:
   struct Config {
     /// Input reconstructed track collection.
@@ -59,7 +59,7 @@ class TrackFinderPerformanceWriter final : public WriterT<TrackContainer> {
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrackContainer& tracks) override;
+                     const ConstTrackContainer& tracks) override;
 
   struct Impl;
 

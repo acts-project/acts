@@ -217,9 +217,25 @@ function trackfinding() {
     fi
 
     run_histcmp \
+        $outdir/data/$path/performance_finder_ckf.root \
+        $refdir/$path/performance_finder_ckf.root \
+        "CKF finding performance | ${name}" \
+        $path/performance_finder_ckf.html \
+        $path/performance_finder_ckf_plots \
+        --config $default_config
+
+    run_histcmp \
+        $outdir/data/$path/performance_fitter_ckf.root \
+        $refdir/$path/performance_fitter_ckf.root \
+        "CKF fitting performance | ${name}" \
+        $path/performance_fitter_ckf.html \
+        $path/performance_fitter_ckf_plots \
+        --config $default_config
+
+    run_histcmp \
         $outdir/data/$path/performance_ckf.root \
         $refdir/$path/performance_ckf.root \
-        "CKF | ${name}" \
+        "CKF specific performance | ${name}" \
         $path/performance_ckf.html \
         $path/performance_ckf_plots \
         --config $default_config
@@ -246,7 +262,7 @@ function trackfinding() {
         run_histcmp \
             $outdir/data/$path/performance_ckf_ambi.root \
             $refdir/$path/performance_ckf_ambi.root \
-            "Ambisolver | ${name}" \
+            "Ambisolver CKF specific performance | ${name}" \
             $path/performance_ckf_ambi.html \
             $path/performance_ckf_ambi
     fi
