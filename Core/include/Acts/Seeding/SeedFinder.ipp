@@ -373,7 +373,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       // the doublets. Using a geometric similarity, the Im is given by
       // yNewFrame * rM / deltaR <= m_config.impactMax
       // However, we make here an approximation of the impact parameter
-      // which is valid under the assumption xNewFrame / yNewFrame is small
+      // which is valid under the assumption yNewFrame / xNewFrame is small
       // The correct computation would be:
       // yNewFrame * yNewFrame * rM * rM <= m_config.impactMax *
       // m_config.impactMax * deltaR2
