@@ -227,7 +227,7 @@ function trackfinding() {
     run_histcmp \
         $outdir/data/$path/performance_ckf.root \
         $refdir/$path/performance_ckf.root \
-        "CKF specific performance | ${name}" \
+        "CKF finding performance | ${name}" \
         $path/performance_ckf.html \
         $path/performance_ckf_plots \
         --config $default_config
