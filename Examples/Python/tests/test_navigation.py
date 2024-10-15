@@ -11,6 +11,12 @@ def test_navigation_policy_factory():
         acts.NavigationPolicyFactory()
         .add(acts.TryAllPortalNavigationPolicy)
         .add(acts.TryAllSurfaceNavigationPolicy)
+        .add(
+            acts.SurfaceArrayNavigationPolicy,
+            acts.SurfaceArrayNavigationPolicy.Config(
+                layerType=acts.SurfaceArrayNavigationPolicy.LayerType.Plane
+            ),
+        )
     )
 
     policy._buildTest()
