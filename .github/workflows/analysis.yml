@@ -53,6 +53,7 @@ jobs:
           --preset=github-ci
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_CXX_FLAGS="-Werror --coverage -g -gz -g1"
+          -DPython_EXECUTABLE=$(which python3)
           -DACTS_BUILD_ODD=OFF
       - name: Build
         run: cmake --build build
@@ -106,6 +107,7 @@ jobs:
           --preset=github-ci
           -DCMAKE_BUILD_TYPE=RelWithDebInfo
           -DCMAKE_CXX_FLAGS="-Werror"
+          -DPython_EXECUTABLE=$(which python3)
           -DACTS_BUILD_ODD=OFF
       - name: Measure
         run: cmakeperf collect build/compile_commands.json -o perf.csv
