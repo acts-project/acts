@@ -195,8 +195,6 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   MeasurementContainer tmpMeasurements;
   GeometryIdMultimap<ConstVariableBoundMeasurementProxy> orderedMeasurements;
   IndexMultimap<Index> measurementSimHitsMap;
-  // need list here for stable addresses
-  std::list<IndexSourceLink> sourceLinkStorage;
 
   tmpMeasurements.reserve(measurementData.size());
   orderedMeasurements.reserve(measurementData.size());
