@@ -109,8 +109,10 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
       assert(currentVolume != nullptr);
       main = NavigationStream{};
 
-      currentVolume->updateNavigationState(
-          {.main = main, .position = position, .direction = direction});
+      currentVolume->updateNavigationState({.main = main,
+                                            .position = position,
+                                            .direction = direction,
+                                            .logger = logger()});
 
       ACTS_VERBOSE(main.candidates().size() << " candidates");
 
