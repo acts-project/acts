@@ -86,7 +86,7 @@ def runRefittingKf(
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
             inputTrackParticleMatching="track_particle_matching",
-            filePath=str(outputDir / "performance_refitter.root"),
+            filePath=str(outputDir / "performance_kf_refit.root"),
         )
     )
 

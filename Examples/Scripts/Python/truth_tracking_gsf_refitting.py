@@ -84,7 +84,7 @@ def runRefittingGsf(
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
             inputTrackParticleMatching="track_particle_matching",
-            filePath=str(outputDir / "performance_refitter.root"),
+            filePath=str(outputDir / "performance_gsf_refit.root"),
         )
     )
 
