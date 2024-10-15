@@ -76,7 +76,7 @@ run $CURL \
 orig_share=$(${destination}/bin/geant4-config --datasets|head -n1|perl -pe 's|.*?(\/.*)\/share.*|\1|')
 orig_share_escaped=$(echo $orig_share|perl -pe 's|/|\\/|g')
 destination_escaped=$(echo "$destination"|perl -pe 's|/|\\/|g')
-perl -pi.bak -e "s/$orig_share_escaped/$destination_escaped/g" dependencies/bin/geant4-config
+run perl -pi.bak -e "s/$orig_share_escaped/$destination_escaped/g" dependencies/bin/geant4-config
 
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
   echo "Running in GitHub Actions"
