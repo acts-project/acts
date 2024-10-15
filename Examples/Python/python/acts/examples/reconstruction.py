@@ -1582,7 +1582,6 @@ def addCKFTracks(
         outputDirRoot=outputDirRoot,
         writeSummary=writeTrackSummary,
         writeStates=writeTrackStates,
-        writeFinderPerformance=writePerformance,
         writeFitterPerformance=writePerformance,
         writeCkfPerformance=writePerformance,
         writeCovMat=writeCovMat,
@@ -1660,7 +1659,6 @@ def addTrackWriters(
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeSummary: bool = True,
     writeStates: bool = False,
-    writeFinderPerformance: bool = False,
     writeFitterPerformance: bool = False,
     writeCkfPerformance: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1705,17 +1703,6 @@ def addTrackWriters(
                 treeName="trackstates",
             )
             s.addWriter(trackStatesWriter)
-
-        if writeFinderPerformance:
-            trackFinderPerformanceWriter = acts.examples.TrackFinderPerformanceWriter(
-                level=customLogLevel(),
-                inputTracks=tracks,
-                inputParticles="particles",
-                inputMeasurementParticlesMap="measurement_particles_map",
-                inputTrackParticleMatching="track_particle_matching",
-                filePath=str(outputDirRoot / f"performance_finding_{name}.root"),
-            )
-            s.addWriter(trackFinderPerformanceWriter)
 
         if writeFitterPerformance:
             trackFitterPerformanceWriter = acts.examples.TrackFitterPerformanceWriter(
@@ -1991,7 +1978,6 @@ def addAmbiguityResolution(
         outputDirRoot=outputDirRoot,
         writeSummary=writeTrackStates,
         writeStates=writeTrackSummary,
-        writeFinderPerformance=writePerformance,
         writeFitterPerformance=writePerformance,
         writeCkfPerformance=writePerformance,
         writeCovMat=writeCovMat,
@@ -2049,7 +2035,6 @@ def addScoreBasedAmbiguityResolution(
         outputDirRoot=outputDirRoot,
         writeSummary=writeTrackSummary,
         writeStates=writeTrackStates,
-        writeFinderPerformance=writePerformance,
         writeFitterPerformance=writePerformance,
         writeCkfPerformance=writePerformance,
         writeCovMat=writeCovMat,
@@ -2111,7 +2096,6 @@ def addAmbiguityResolutionML(
         outputDirRoot=outputDirRoot,
         writeSummary=writeTrackSummary,
         writeStates=writeTrackStates,
-        writeFinderPerformance=writePerformance,
         writeFitterPerformance=writePerformance,
         writeCkfPerformance=writePerformance,
         writeCovMat=writeCovMat,
@@ -2161,7 +2145,6 @@ def addAmbiguityResolutionMLDBScan(
         outputDirCsv=outputDirCsv,
         writeSummary=writeTrackSummary,
         writeStates=writeTrackStates,
-        writeFinderPerformance=writePerformance,
         writeFitterPerformance=writePerformance,
         writeCkfPerformance=writePerformance,
         writeCovMat=writeCovMat,
