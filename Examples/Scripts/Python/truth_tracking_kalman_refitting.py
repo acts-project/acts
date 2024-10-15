@@ -10,7 +10,7 @@ from truth_tracking_kalman import runTruthTrackingKalman
 u = acts.UnitConstants
 
 
-def runRefittingGsf(
+def runRefittingKf(
     trackingGeometry,
     field,
     outputDir,
@@ -28,30 +28,19 @@ def runRefittingGsf(
         s=s,
     )
 
-    gsfOptions = {
-        "betheHeitlerApprox": acts.examples.AtlasBetheHeitlerApprox.makeDefault(),
-        "maxComponents": 12,
-        "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
-        "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
-        "weightCutoff": 1.0e-4,
-        "level": acts.logging.INFO,
-    }
-
     s.addAlgorithm(
         acts.examples.RefittingAlgorithm(
-            acts.logging.INFO,
+            level=acts.logging.VERBOSE,
             inputTracks="kf_tracks",
-            outputTracks="gsf_refit_tracks",
-            fit=acts.examples.makeGsfFitterFunction(
-                trackingGeometry, field, **gsfOptions
-            ),
+            outputTracks="kf_refit_tracks",
+            fit=acts.examples.makeKfFitterFunction(trackingGeometry, field),
         )
     )
 
     s.addAlgorithm(
         acts.examples.TrackTruthMatcher(
             level=acts.logging.INFO,
-            inputTracks="gsf_refit_tracks",
+            inputTracks="kf_refit_tracks",
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             outputTrackParticleMatching="refit_track_particle_matching",
@@ -62,12 +51,12 @@ def runRefittingGsf(
     s.addWriter(
         acts.examples.RootTrackStatesWriter(
             level=acts.logging.INFO,
-            inputTracks="gsf_refit_tracks",
+            inputTracks="kf_refit_tracks",
             inputParticles="truth_seeds_selected",
             inputTrackParticleMatching="refit_track_particle_matching",
             inputSimHits="simhits",
             inputMeasurementSimHitsMap="measurement_simhits_map",
-            filePath=str(outputDir / "trackstates_gsf_refit.root"),
+            filePath=str(outputDir / "trackstates_kf_refit.root"),
         )
     )
 
@@ -77,7 +66,7 @@ def runRefittingGsf(
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
             inputTrackParticleMatching="refit_track_particle_matching",
-            filePath=str(outputDir / "tracksummary_gsf_refit.root"),
+            filePath=str(outputDir / "tracksummary_kf_refit.root"),
         )
     )
 
@@ -101,4 +90,4 @@ if __name__ == "__main__":
     detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runRefittingGsf(trackingGeometry, field, outputDir).run()
+    runRefittingKf(trackingGeometry, field, outputDir).run()
