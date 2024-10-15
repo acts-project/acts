@@ -372,20 +372,24 @@ if(ACTS_BUILD_PLUGIN_JSON)
     endif()
 endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
-    foreach(_gm_ver 7.0.0;6.3.0)
-        message(STATUS "Trying to find GeoModel version ${_gm_ver}")
-        find_package(GeoModelCore ${_gm_ver} CONFIG)
-        find_package(GeoModelIO ${_gm_ver} CONFIG)
-        if(GeoModelCore_FOUND AND GeoModelIO_FOUND)
-            break()
-        endif()
-    endforeach()
+    find_package(GeoModelCore CONFIG)
     if(NOT GeoModelCore_FOUND)
         message(
             FATAL_ERROR
             "GeoModel not found. Please install GeoModel or set ACTS_BUILD_PLUGIN_GEOMODEL to OFF."
         )
     endif()
+
+    set(_gm_ver_min 6.3.0)
+
+    if(GeoModelCore_VERSION VERSION_LESS _gm_ver_min)
+        message(
+            FATAL_ERROR
+            "GeoModel version ${GeoModelCore_VERSION} is insufficient. Please install GeoModel version ${_gm_ver_min} or newer."
+        )
+    endif()
+    # find other GeoModel components of EXACT same version
+    find_package(GeoModelIO ${GeoModelCore_VERSION} REQUIRED EXACT CONFIG)
 endif()
 if(ACTS_BUILD_PLUGIN_TGEO)
     find_package(
