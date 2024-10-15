@@ -225,14 +225,15 @@ ActsExamples::GbtsSeedingAlgorithm::MakeGbtsSpacePoints(
       
       //check if SP is pixel, dependant of type of SP so must be done in examples 
       bool isPixel = false ;
-      if (source_link.size() == 1) {  // pixels have 1 SL
+      if (sourceLink.size() == 1) {  // pixels have 1 SL
         isPixel = true;
       } else {
         isPixel = false;
       }
 
+      float ClusterWidth = 0 ; //false input as this is not available in examples 
       // fill Gbts vector with current sapce point and ID
-      gbtsSpacePoints.emplace_back(&spacePoint, Gbts_id, combined_id, isPixel); //make new GbtsSP here ! 
+      gbtsSpacePoints.emplace_back(&spacePoint, Gbts_id, combined_id, isPixel, ClusterWidth); //make new GbtsSP here ! 
     }
   }
   ACTS_VERBOSE("Space points successfully assigned Gbts ID");
