@@ -8,17 +8,30 @@ function run() {
     { set +x;  } 2> /dev/null
 }
 
+function set_env {
+  key="$1"
+  value="$2"
 
+  echo "Setting ${key}=${value}"
+
+  if [ -n "${GITHUB_ACTIONS:-}" ]; then
+    echo "${key}=${value}" >> $GITHUB_ENV
+  else
+    export ${key}=${value}
+  fi
+}
 
 url=${1:-${DEPENDENCY_URL:-}}
 
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
     destination="${GITHUB_WORKSPACE}/dependencies"
-    echo "DEPENDENCY_DIR=${destination}" >> $GITHUB_ENV
+elif [ -n "${GITLAB_CI:-}" ];then
+    destination="${CI_PROJECT_DIR}/dependencies"
 else
     destination=${2}
 fi
 
+set_env DEPENDENCY_DIR "${destination}"
 
 if [ -z "${url}" ]; then
     echo "url is not set"
@@ -64,19 +77,6 @@ orig_share=$(dependencies/bin/geant4-config --datasets|head -n1|perl -pe 's|.*?(
 orig_share_escaped=$(echo $orig_share|perl -pe 's|/|\\/|g')
 destination_escaped=$(echo "$destination"|perl -pe 's|/|\\/|g')
 perl -pi.bak -e "s/$orig_share_escaped/$destination_escaped/g" dependencies/bin/geant4-config
-
-function set_env {
-  key="$1"
-  value="$2"
-
-  echo "Setting ${key}=${value}"
-
-  if [ -n "${GITHUB_ACTIONS:-}" ]; then
-    echo "${key}=${value}" >> $GITHUB_ENV
-  else
-    export ${key}=${value}
-  fi
-}
 
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
   echo "Running in GitHub Actions"
