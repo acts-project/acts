@@ -51,7 +51,7 @@ void addUtilities(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::MeasurementMapSelector, mex, "MeasurementMapSelector",
-      inputMeasurementParticleMap, inputSourceLinks,
+      inputMeasurements, inputMeasurementParticleMap,
       outputMeasurementParticleMap, geometrySelection);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::PrototracksToTracks, mex,

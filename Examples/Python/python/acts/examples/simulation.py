@@ -818,7 +818,6 @@ def addDigitization(
         surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         randomNumbers=rnd,
         inputSimHits="simhits",
-        outputSourceLinks="sourcelinks",
         outputMeasurements="measurements",
         outputMeasurementParticlesMap="measurement_particles_map",
         outputMeasurementSimHitsMap="measurement_simhits_map",

@@ -21,9 +21,9 @@ MeasurementSelector::select(
 
   ACTS_VERBOSE("Invoked MeasurementSelector");
 
-  // Return error if no measurement
+  // Return if no measurement
   if (candidates.empty()) {
-    return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
+    return Result::success(std::pair(candidates.begin(), candidates.end()));
   }
 
   // Get geoID of this surface
@@ -92,20 +92,19 @@ MeasurementSelector::select(
           "No measurement candidate. Return an outlier measurement chi2="
           << minChi2);
       isOutlier = true;
-      return Result::success(std::make_pair(candidates.begin() + minIndex,
-                                            candidates.begin() + minIndex + 1));
+      return Result::success(std::pair(candidates.begin() + minIndex,
+                                       candidates.begin() + minIndex + 1));
     } else {
       ACTS_VERBOSE("No measurement candidate. Return empty chi2=" << minChi2);
-      return Result::success(
-          std::make_pair(candidates.begin(), candidates.begin()));
+      return Result::success(std::pair(candidates.begin(), candidates.begin()));
     }
   }
 
   if (passedCandidates <= 1ul) {
     // return single item range, no sorting necessary
     ACTS_VERBOSE("Returning only 1 element chi2=" << minChi2);
-    return Result::success(std::make_pair(candidates.begin() + minIndex,
-                                          candidates.begin() + minIndex + 1));
+    return Result::success(std::pair(candidates.begin() + minIndex,
+                                     candidates.begin() + minIndex + 1));
   }
 
   std::sort(
@@ -115,7 +114,7 @@ MeasurementSelector::select(
   ACTS_VERBOSE("Number of selected measurements: "
                << passedCandidates << ", max: " << cuts.numMeasurements);
 
-  return Result::success(std::make_pair(
+  return Result::success(std::pair(
       candidates.begin(),
       candidates.begin() + std::min(cuts.numMeasurements, passedCandidates)));
 }
