@@ -65,16 +65,38 @@ orig_share_escaped=$(echo $orig_share|perl -pe 's|/|\\/|g')
 destination_escaped=$(echo "$destination"|perl -pe 's|/|\\/|g')
 perl -pi.bak -e "s/$orig_share_escaped/$destination_escaped/g" dependencies/bin/geant4-config
 
+function set_env {
+  key="$1"
+  value="$2"
+
+  echo "Setting ${key}=${value}"
+
+  if [ -n "${GITHUB_ACTIONS:-}" ]; then
+    echo "${key}=${value}" >> $GITHUB_ENV
+  else
+    export ${key}=${value}
+  fi
+}
+
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
-    venv="${GITHUB_WORKSPACE}/venv"
-    run "${destination}/bin/python3" -m venv "${venv}"
-    run "${venv}/bin/python3" -m pip install pyyaml jinja2
-    echo "PATH=${venv}/bin:${destination}/bin/:${PATH}" >> $GITHUB_ENV
-    echo "CMAKE_PREFIX_PATH=${destination}" >> $GITHUB_ENV
-    echo "LD_LIBRARY_PATH=${destination}/lib" >> $GITHUB_ENV
-    echo "ROOT_INCLUDE_PATH=${destination}/include" >> $GITHUB_ENV
-    # Geant4 puts CLHEP in a subdirectory
-    echo "ROOT_INCLUDE_PATH=${destination}/include/Geant4" >> $GITHUB_ENV
-    # Pythia8 looks for settings in this directory
-    echo "PYTHIA8DATA=${destination}/share/Pythia8/xmldoc" >> $GITHUB_ENV
+  echo "Running in GitHub Actions"
+  venv="${GITHUB_WORKSPACE}/venv"
+fi
+
+if [ -n "${GITLAB_CI:-}" ];then
+  echo "Running in GitLab CI"
+  venv="${CI_PROJECT_DIR}/venv"
+fi
+
+if [ -n "${CI:-}" ];then
+  run "${destination}/bin/python3" -m venv "${venv}"
+  run "${venv}/bin/python3" -m pip install pyyaml jinja2
+  set_env PATH "${venv}/bin:${destination}/bin/:${PATH}"
+  set_env CMAKE_PREFIX_PATH "${destination}"
+  set_env LD_LIBRARY_PATH "${destination}/lib"
+  set_env ROOT_INCLUDE_PATH "${destination}/include"
+  # Geant4 puts CLHEP in a subdirectory
+  set_env ROOT_INCLUDE_PATH "${destination}/include/Geant4"
+  # Pythia8 looks for settings in this directory
+  set_env PYTHIA8DATA "${destination}/share/Pythia8/xmldoc"
 fi

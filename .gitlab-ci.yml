@@ -29,7 +29,7 @@ clang_tidy:
         && ln -sf /usr/bin/clang-18 /usr/bin/clang
         && ln -sf /usr/bin/clang-tidy-18 /usr/bin/clang-tidy
 
-    - CI/dependencies.sh
+    - source CI/dependencies.sh
 
     - >
         cmake -B build -S .
@@ -82,7 +82,7 @@ build_exatrkx_cpu:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - CI/dependencies.sh
+    - source CI/dependencies.sh
     - cd ..
     - mkdir build
     # Here we only do a minimal build without examples to save resources
@@ -124,7 +124,7 @@ build_exatrkx:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - CI/dependencies.sh
+    - source CI/dependencies.sh
     - cd ..
     - mkdir build
     - >
@@ -193,7 +193,7 @@ build_linux_ubuntu:
     - git checkout $HEAD_SHA
     - git submodule init
     - git submodule update
-    - CI/dependencies.sh
+    - source CI/dependencies.sh
 
     - cd ..
     - mkdir build
@@ -221,7 +221,7 @@ linux_test_examples:
     - git checkout $HEAD_SHA
     - git submodule init
     - git submodule update
-    - CI/dependencies.sh
+    - source CI/dependencies.sh
     - cd ..
 
     - /usr/local/bin/geant4-config --install-datasets
@@ -251,7 +251,7 @@ linux_physmon:
     - git checkout $HEAD_SHA
     - git submodule init
     - git submodule update
-    - CI/dependencies.sh
+    - source CI/dependencies.sh
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
