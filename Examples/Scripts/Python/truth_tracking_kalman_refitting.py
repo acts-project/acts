@@ -11,29 +11,39 @@ u = acts.UnitConstants
 
 
 def runRefittingKf(
-    trackingGeometry,
-    field,
-    outputDir,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
+    digiConfigFile: Path,
+    outputDir: Path,
+    multipleScattering: bool = True,
+    energyLoss: bool = True,
+    reverseFilteringMomThreshold=0 * u.GeV,
     s: acts.examples.Sequencer = None,
 ):
-    srcdir = Path(__file__).resolve().parent.parent.parent.parent
-
     s = runTruthTrackingKalman(
         trackingGeometry,
         field,
-        digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
+        digiConfigFile=digiConfigFile,
         outputDir=outputDir,
         s=s,
     )
 
+    kalmanOptions = {
+        "multipleScattering": multipleScattering,
+        "energyLoss": energyLoss,
+        "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
+        "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
+        "level": acts.logging.INFO,
+    }
+
     s.addAlgorithm(
         acts.examples.RefittingAlgorithm(
-            level=acts.logging.VERBOSE,
+            level=acts.logging.INFO,
             inputTracks="kf_tracks",
             outputTracks="kf_refit_tracks",
-            fit=acts.examples.makeKfFitterFunction(trackingGeometry, field),
+            fit=acts.examples.makeKalmanFitterFunction(
+                trackingGeometry, field, **kalmanOptions
+            ),
         )
     )
 
@@ -84,10 +94,20 @@ def runRefittingKf(
 
 
 if __name__ == "__main__":
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
     outputDir = Path.cwd()
 
     # detector, trackingGeometry, decorators = getOpenDataDetector()
+    # digiConfigFile = (
+    #     srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
+    # )
+
     detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    digiConfigFile = (
+        srcdir
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    )
+
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     runRefittingKf(trackingGeometry, field, outputDir).run()

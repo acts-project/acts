@@ -11,19 +11,16 @@ u = acts.UnitConstants
 
 
 def runRefittingGsf(
-    trackingGeometry,
-    field,
-    outputDir,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
+    digiConfigFile: Path,
+    outputDir: Path,
     s: acts.examples.Sequencer = None,
 ):
-    srcdir = Path(__file__).resolve().parent.parent.parent.parent
-
     s = runTruthTrackingKalman(
         trackingGeometry,
         field,
-        digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
+        digiConfigFile=digiConfigFile,
         outputDir=outputDir,
         s=s,
     )
@@ -95,10 +92,20 @@ def runRefittingGsf(
 
 
 if __name__ == "__main__":
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
     outputDir = Path.cwd()
 
     # detector, trackingGeometry, decorators = getOpenDataDetector()
+    # digiConfigFile = (
+    #     srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
+    # )
+
     detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    digiConfigFile = (
+        srcdir
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    )
+
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     runRefittingGsf(trackingGeometry, field, outputDir).run()
