@@ -185,7 +185,7 @@ with tempfile.TemporaryDirectory() as temp:
         tp / "performance_fitting_ckf_ambi.root",
     )
     shutil.move(
-        tp / "performance_ckf.root",
+        tp / "performance_ambi.root",
         tp / "performance_ckf_ambi.root",
     )
     for vertexing in ["amvf_gauss_notime", "amvf_grid_time"]:
