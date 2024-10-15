@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Geometry/BoundarySurfaceFace.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -68,19 +68,9 @@ class PortalShellBase {
 /// volumes
 class CylinderPortalShell : public PortalShellBase {
  public:
-  /// Enum describing the possible faces of a cylinder portal shell
-  /// @note These values are synchronized with the BoundarySurfaceFace enum.
-  ///       Once Gen1 is removed, this can be changed.
-  enum class Face : unsigned int {
-    PositiveDisc = BoundarySurfaceFace::positiveFaceXY,
-    NegativeDisc = BoundarySurfaceFace::negativeFaceXY,
-    OuterCylinder = BoundarySurfaceFace::tubeOuterCover,
-    InnerCylinder = BoundarySurfaceFace::tubeInnerCover,
-    NegativePhiPlane = BoundarySurfaceFace::tubeSectorNegativePhi,
-    PositivePhiPlane = BoundarySurfaceFace::tubeSectorPositivePhi
-  };
+  using Face = CylinderVolumeBounds::Face;
 
-  using enum Face;
+  using enum CylinderVolumeBounds::Face;
 
   /// Retrieve the portal associated to the given face. Can be nullptr if unset.
   /// @param face The face to retrieve the portal for
