@@ -538,7 +538,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
           if (!secondInitialParameters.referenceSurface().insideBounds(
                   secondInitialParameters.localPosition())) {
-            ACTS_WARNING(
+            m_nSkippedSecondPass++;
+            ACTS_DEBUG(
                 "Smoothing of first pass fit produced out-of-bounds parameters "
                 "relative to the surface. Skipping second pass.");
             continue;
@@ -693,6 +694,7 @@ ProcessCode TrackFindingAlgorithm::finalize() {
   ACTS_INFO("- found tracks: " << m_nFoundTracks);
   ACTS_INFO("- selected tracks: " << m_nSelectedTracks);
   ACTS_INFO("- stopped branches: " << m_nStoppedBranches);
+  ACTS_INFO("- skipped second pass: " << m_nSkippedSecondPass);
 
   auto memoryStatistics =
       m_memoryStatistics.combine([](const auto& a, const auto& b) {

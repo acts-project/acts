@@ -184,6 +184,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   mutable std::atomic<std::size_t> m_nFoundTracks{0};
   mutable std::atomic<std::size_t> m_nSelectedTracks{0};
   mutable std::atomic<std::size_t> m_nStoppedBranches{0};
+  mutable std::atomic<std::size_t> m_nSkippedSecondPass{0};
 
   mutable tbb::combinable<Acts::VectorMultiTrajectory::Statistics>
       m_memoryStatistics{[]() {
