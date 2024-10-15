@@ -119,7 +119,7 @@ std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
 
   // @TODO: This needs to become configurable
   world->setNavigationPolicy(
-      options.defaultNavigationPolicyFactory->build(*world));
+      options.defaultNavigationPolicyFactory->build(gctx, *world, logger));
 
   // Need one-sided portal shell that connects outwards to nullptr
   SingleCylinderPortalShell worldShell{*world};

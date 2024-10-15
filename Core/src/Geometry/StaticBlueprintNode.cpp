@@ -102,7 +102,7 @@ void StaticBlueprintNode::finalize(const Options& options,
 
   // @TODO: This needs to become configurable
   m_volume->setNavigationPolicy(
-      options.defaultNavigationPolicyFactory->build(*m_volume));
+      options.defaultNavigationPolicyFactory->build(gctx, *m_volume, logger));
 
   parent.addVolume(std::move(m_volume));
 }
