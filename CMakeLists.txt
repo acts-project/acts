@@ -383,7 +383,7 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL)
     if(NOT GeoModelCore_FOUND)
         message(
             FATAL_ERROR
-            "GeoModel not found. Please install GeoModel or set ACTS_USE_SYSTEM_GEOMODEL to OFF."
+            "GeoModel not found. Please install GeoModel or set ACTS_BUILD_PLUGIN_GEOMODEL to OFF."
         )
     endif()
 endif()
