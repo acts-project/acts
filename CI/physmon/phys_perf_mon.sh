@@ -424,7 +424,7 @@ if [[ "$mode" == "all" || "$mode" == "kf_refit" ]]; then
         "Truth tracking (KF refit)" \
         trackrefitting_kf/performance_trackfitting.html \
         trackrefitting_kf/performance_trackfitting_plots \
-        --config CI/physmon/config/trackrefitting_kf.yml
+        --config CI/physmon/config/trackfitting_kf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf_refit" ]]; then
@@ -434,7 +434,7 @@ if [[ "$mode" == "all" || "$mode" == "gsf_refit" ]]; then
         "Truth tracking (GSF refit)" \
         trackrefitting_gsf/performance_trackfitting.html \
         trackrefitting_gsf/performance_trackfitting_plots \
-        --config CI/physmon/config/trackrefitting_gsf.yml
+        --config CI/physmon/config/trackfitting_gsf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
