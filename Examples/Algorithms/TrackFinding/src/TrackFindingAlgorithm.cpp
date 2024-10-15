@@ -32,6 +32,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -262,9 +263,6 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
-  if (m_cfg.inputSourceLinks.empty()) {
-    throw std::invalid_argument("Missing source links input collection");
-  }
   if (m_cfg.inputInitialTrackParameters.empty()) {
     throw std::invalid_argument(
         "Missing initial track parameters input collection");
@@ -293,7 +291,6 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
   }
 
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
-  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
   m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
   m_inputSeeds.maybeInitialize(m_cfg.inputSeeds);
   m_outputTracks.initialize(m_cfg.outputTracks);
@@ -302,7 +299,6 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
 ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
-  const auto& sourceLinks = m_inputSourceLinks(ctx);
   const auto& initialParameters = m_inputInitialTrackParameters(ctx);
   const SimSeedContainer* seeds = nullptr;
 
@@ -339,7 +335,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
 
   IndexSourceLinkAccessor slAccessor;
-  slAccessor.container = &sourceLinks;
+  slAccessor.container = &measurements.orderedIndices();
   Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
       slAccessorDelegate;
   slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
@@ -648,7 +644,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   // Compute shared hits from all the reconstructed tracks
   if (m_cfg.computeSharedHits) {
-    computeSharedHits(sourceLinks, tracks);
+    computeSharedHits(tracks, measurements);
   }
 
   ACTS_DEBUG("Finalized track finding with " << tracks.size()
@@ -696,6 +692,56 @@ ProcessCode TrackFindingAlgorithm::finalize() {
   memoryStatistics.toStream(ss);
   ACTS_DEBUG("Track State memory statistics (averaged):\n" << ss.str());
   return ProcessCode::SUCCESS;
+}
+
+// TODO this is somewhat duplicated in AmbiguityResolutionAlgorithm.cpp
+// TODO we should make a common implementation in the core at some point
+void TrackFindingAlgorithm::computeSharedHits(
+    TrackContainer& tracks, const MeasurementContainer& measurements) const {
+  // Compute shared hits from all the reconstructed tracks
+  // Compute nSharedhits and Update ckf results
+  // hit index -> list of multi traj indexes [traj, meas]
+
+  std::vector<std::size_t> firstTrackOnTheHit(
+      measurements.size(), std::numeric_limits<std::size_t>::max());
+  std::vector<std::size_t> firstStateOnTheHit(
+      measurements.size(), std::numeric_limits<std::size_t>::max());
+
+  for (auto track : tracks) {
+    for (auto state : track.trackStatesReversed()) {
+      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        continue;
+      }
+
+      std::size_t hitIndex = state.getUncalibratedSourceLink()
+                                 .template get<IndexSourceLink>()
+                                 .index();
+
+      // Check if hit not already used
+      if (firstTrackOnTheHit.at(hitIndex) ==
+          std::numeric_limits<std::size_t>::max()) {
+        firstTrackOnTheHit.at(hitIndex) = track.index();
+        firstStateOnTheHit.at(hitIndex) = state.index();
+        continue;
+      }
+
+      // if already used, control if first track state has been marked
+      // as shared
+      int indexFirstTrack = firstTrackOnTheHit.at(hitIndex);
+      int indexFirstState = firstStateOnTheHit.at(hitIndex);
+
+      auto firstState = tracks.getTrack(indexFirstTrack)
+                            .container()
+                            .trackStateContainer()
+                            .getTrackState(indexFirstState);
+      if (!firstState.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
+        firstState.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+      }
+
+      // Decorate this track state
+      state.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+    }
+  }
 }
 
 }  // namespace ActsExamples
