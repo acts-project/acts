@@ -378,8 +378,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   Extrapolator extrapolator(
       Acts::SympyStepper(m_cfg.magneticField),
       Acts::Navigator({m_cfg.trackingGeometry},
-                      logger().clone("Navigator", Acts::Logging::VERBOSE)),
-      logger().clone("Propagator", Acts::Logging::VERBOSE));
+                      logger().cloneWithSuffix("Navigator")),
+      logger().cloneWithSuffix("Propagator"));
 
   ExtrapolatorOptions extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
   extrapolationOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;

@@ -336,14 +336,6 @@ class Navigator {
 
     if (state.navigation.startVolume != nullptr) {
       ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
-      if (!state.navigation.startVolume->inside(
-              stepper.position(state.stepping),
-              state.options.surfaceTolerance)) {
-        ACTS_WARNING("We did not end up inside of the volume:");
-        ACTS_WARNING("-> starting volume:" << *state.navigation.startVolume);
-        ACTS_WARNING("-> starting position: "
-                     << stepper.position(state.stepping).transpose());
-      }
       assert(state.navigation.startVolume->inside(
                  stepper.position(state.stepping),
                  state.options.surfaceTolerance) &&
