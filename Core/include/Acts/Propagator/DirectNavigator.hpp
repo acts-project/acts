@@ -212,6 +212,10 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void preStep(propagator_state_t& state, const stepper_t& stepper) const {
+    if (state.navigation.navigationBreak) {
+      return;
+    }
+
     ACTS_VERBOSE("pre step");
 
     // Navigator target always resets the current surface
@@ -224,7 +228,9 @@ class DirectNavigator {
 
     if (state.navigation.endOfSurfaces()) {
       // Set the navigation break
+      ACTS_VERBOSE("End of surfaces reached, navigation break.");
       state.navigation.navigationBreak = true;
+      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       // If no externally provided target is given, the target is reached
       if (state.navigation.options.targetSurface == nullptr) {
         state.navigation.targetReached = true;
@@ -270,6 +276,10 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void postStep(propagator_state_t& state, const stepper_t& stepper) const {
+    if (state.navigation.navigationBreak) {
+      return;
+    }
+
     ACTS_VERBOSE("post step");
 
     // Navigator post step always resets the current surface
