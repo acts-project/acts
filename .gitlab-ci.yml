@@ -4,9 +4,11 @@ variables:
   CCACHE_KEY_SUFFIX: r1
   CTEST_OUTPUT_ON_FAILURE: 1
 
+  DEPENDENCY_TAG: v4
+
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404:59
+  image: ghcr.io/acts-project/ubuntu2404:63
   tags:
     - large
   artifacts:
@@ -14,6 +16,8 @@ clang_tidy:
       - src/clang-tidy/
     when: always
     expire_in: 1 week
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
   script:
     - git clone $CLONE_URL src
     - cd src
@@ -24,11 +28,15 @@ clang_tidy:
         && ln -sf /usr/bin/clang++-18 /usr/bin/clang++
         && ln -sf /usr/bin/clang-18 /usr/bin/clang
         && ln -sf /usr/bin/clang-tidy-18 /usr/bin/clang-tidy
+
+    - CI/dependencies.sh
+
     - >
         cmake -B build -S .
         --preset=gitlab-ci-clangtidy
         -DCMAKE_CXX_COMPILER=clang++
         -DCMAKE_C_COMPILER=clang
+        -DPython_EXECUTABLE=$(which python3)
         -DACTS_RUN_CLANG_TIDY=ON
         -DACTS_BUILD_ODD=OFF
 
@@ -55,7 +63,9 @@ clang_tidy:
 
 build_exatrkx_cpu:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:59
+  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
   tags:
     - large
 
@@ -72,6 +82,7 @@ build_exatrkx_cpu:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
+    - CI/dependencies.sh
     - cd ..
     - mkdir build
     # Here we only do a minimal build without examples to save resources
@@ -86,7 +97,9 @@ build_exatrkx_cpu:
 
 build_exatrkx:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:59
+  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
   tags:
     - large
 
@@ -111,6 +124,7 @@ build_exatrkx:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
+    - CI/dependencies.sh
     - cd ..
     - mkdir build
     - >
@@ -126,7 +140,7 @@ build_exatrkx:
 #   stage: test
 #   needs:
 #     - build_exatrkx
-#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:59
+#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
 #   tags:
 #     - docker-gpu-nvidia
 #   script:
@@ -136,7 +150,7 @@ build_exatrkx:
 #   stage: test
 #   needs:
 #     - build_exatrkx
-#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:59
+#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
 #   tags:
 #     - docker-gpu-nvidia
 #   script:
@@ -152,7 +166,9 @@ build_exatrkx:
 
 build_linux_ubuntu:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404:59
+  image: ghcr.io/acts-project/ubuntu2404:63
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
 
   cache:
     key: ccache-${CI_JOB_NAME_SLUG}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
@@ -177,6 +193,7 @@ build_linux_ubuntu:
     - git checkout $HEAD_SHA
     - git submodule init
     - git submodule update
+    - CI/dependencies.sh
 
     - cd ..
     - mkdir build
@@ -191,7 +208,9 @@ build_linux_ubuntu:
 
 linux_test_examples:
   stage: test
-  image: ghcr.io/acts-project/ubuntu2404:59
+  image: ghcr.io/acts-project/ubuntu2404:63
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
   needs: [build_linux_ubuntu]
 
   script:
@@ -202,6 +221,7 @@ linux_test_examples:
     - git checkout $HEAD_SHA
     - git submodule init
     - git submodule update
+    - CI/dependencies.sh
     - cd ..
 
     - /usr/local/bin/geant4-config --install-datasets
@@ -212,7 +232,9 @@ linux_test_examples:
 
 linux_physmon:
   stage: test
-  image: ghcr.io/acts-project/ubuntu2404:59
+  image: ghcr.io/acts-project/ubuntu2404:63
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
   needs: [build_linux_ubuntu]
 
   artifacts:
@@ -229,6 +251,7 @@ linux_physmon:
     - git checkout $HEAD_SHA
     - git submodule init
     - git submodule update
+    - CI/dependencies.sh
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
@@ -299,13 +322,15 @@ linux_ubuntu_2404:
   <<: *linux_ubuntu_extra
   variables:
     CXXSTD: 20
-  image: ghcr.io/acts-project/ubuntu2404:59
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
+  image: ghcr.io/acts-project/ubuntu2404:63
 
 linux_ubuntu_2204_clang:
   <<: *linux_ubuntu_extra
   variables:
     CXXSTD: 20
-  image: ghcr.io/acts-project/ubuntu2204_clang:59
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
+  image: ghcr.io/acts-project/ubuntu2204_clang:63
 
 
 ######################
@@ -313,7 +338,7 @@ linux_ubuntu_2204_clang:
 ######################
 
 .lcg: &lcg_base_job
-  image: ghcr.io/acts-project/${OS}-base:59
+  image: ghcr.io/acts-project/${OS}-base:63
   stage: build
   tags:
     - cvmfs
