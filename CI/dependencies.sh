@@ -92,11 +92,12 @@ if [ -n "${CI:-}" ];then
   run "${destination}/bin/python3" -m venv "${venv}"
   run "${venv}/bin/python3" -m pip install pyyaml jinja2
   set_env PATH "${venv}/bin:${destination}/bin/:${PATH}"
-  set_env CMAKE_PREFIX_PATH "${destination}"
-  set_env LD_LIBRARY_PATH "${destination}/lib"
-  set_env ROOT_INCLUDE_PATH "${destination}/include"
-  # Geant4 puts CLHEP in a subdirectory
-  set_env ROOT_INCLUDE_PATH "${destination}/include/Geant4"
-  # Pythia8 looks for settings in this directory
-  set_env PYTHIA8DATA "${destination}/share/Pythia8/xmldoc"
 fi
+
+set_env CMAKE_PREFIX_PATH "${destination}"
+set_env LD_LIBRARY_PATH "${destination}/lib"
+set_env ROOT_INCLUDE_PATH "${destination}/include"
+# Geant4 puts CLHEP in a subdirectory
+set_env ROOT_INCLUDE_PATH "${destination}/include/Geant4"
+# Pythia8 looks for settings in this directory
+set_env PYTHIA8DATA "${destination}/share/Pythia8/xmldoc"
