@@ -72,10 +72,16 @@ $CURL \
     --strip-components=1 \
     --directory "${destination}"
 
+
+echo "check geant4 dataset"
+
 # Patch up geant4-config data install script
 orig_share=$(${destination}/bin/geant4-config --datasets|head -n1|perl -pe 's|.*?(\/.*)\/share.*|\1|')
+echo "Original share: $orig_share"
 orig_share_escaped=$(echo $orig_share|perl -pe 's|/|\\/|g')
+echo "Original share escaped: $orig_share_escaped"
 destination_escaped=$(echo "$destination"|perl -pe 's|/|\\/|g')
+echo "Destination escaped: $destination_escaped"
 run perl -pi.bak -e "s/$orig_share_escaped/$destination_escaped/g" ${destination}/bin/geant4-config
 
 echo "Check CI mode"
