@@ -366,8 +366,9 @@ inline std::size_t TrackSelector::EtaBinnedConfig::binIndexNoCheck(
   auto binIt =
       std::upper_bound(absEtaEdges.begin(), absEtaEdges.end(), std::abs(eta));
   std::size_t index = std::distance(absEtaEdges.begin(), binIt);
-  if (index == 0)
+  if (index == 0) {
     index = absEtaEdges.size() + 1;  // positive value to check for underflow
+  }
   return index - 1;
 }
 
