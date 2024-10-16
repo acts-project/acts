@@ -166,6 +166,7 @@ def runCKFTracks(
         ),
         outputDirRoot=outputDir,
         outputDirCsv=outputDir / "csv" if outputCsv else None,
+        writeTrackStates=True,
     )
 
     return s
