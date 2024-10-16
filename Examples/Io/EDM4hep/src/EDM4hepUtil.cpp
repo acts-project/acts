@@ -152,9 +152,6 @@ VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
   // no need for digitization as we only want to identify the sensor
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
-  IndexSourceLink sourceLink{
-      geometryId, static_cast<Index>(podioObjectIDToInteger(from.id()))};
-
   auto pos = from.getPosition();
   auto cov = from.getCovMatrix();
 
@@ -173,7 +170,7 @@ VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
   dParameters.values.push_back(pos.z);
   dParameters.variances.push_back(cov[5]);
 
-  auto to = createMeasurement(container, dParameters, sourceLink);
+  auto to = createMeasurement(container, geometryId, dParameters);
 
   if (fromClusters != nullptr) {
     for (const auto objectId : from.getRawHits()) {
@@ -202,8 +199,7 @@ void EDM4hepUtil::writeMeasurement(
     edm4hep::MutableTrackerHitPlane to, const Cluster* fromCluster,
     edm4hep::TrackerHitCollection& toClusters,
     const MapGeometryIdTo& geometryMapper) {
-  Acts::GeometryIdentifier geoId =
-      from.sourceLink().template get<IndexSourceLink>().geometryId();
+  Acts::GeometryIdentifier geoId = from.geometryId();
 
   if (geometryMapper) {
     // no need for digitization as we only want to identify the sensor
