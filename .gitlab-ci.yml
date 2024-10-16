@@ -89,6 +89,7 @@ build_exatrkx_cpu:
     - >
       cmake -B build -S src
       --preset=gitlab-ci-exatrkx
+      -DPython_EXECUTABLE=$(which python3)
       -DACTS_EXATRKX_ENABLE_CUDA=OFF
 
     - ccache -z
@@ -130,6 +131,7 @@ build_exatrkx:
     - >
       cmake -B build -S src
       --preset=gitlab-ci-exatrkx
+      -DPython_EXECUTABLE=$(which python3)
       -DCMAKE_CUDA_ARCHITECTURES="75;86"
 
     - ccache -z
@@ -200,6 +202,7 @@ build_linux_ubuntu:
     - >
       cmake -B build -S src
       --preset=gitlab-ci
+      -DPython_EXECUTABLE=$(which python3)
       -DACTS_BUILD_PLUGIN_ONNX=ON
 
     - ccache -z
@@ -224,7 +227,6 @@ linux_test_examples:
     - source CI/dependencies.sh
     - cd ..
 
-    - /usr/local/bin/geant4-config --install-datasets
     - source build/this_acts_withdeps.sh
     - cd src
     - python3 -m pip install -r Examples/Python/tests/requirements.txt
@@ -291,6 +293,7 @@ linux_physmon:
     - >
       cmake -B build -S src
       --preset=gitlab-ci
+      -DPython_EXECUTABLE=$(which python3)
       -DCMAKE_CXX_STANDARD=${CXXSTD}
 
     - ccache -z
@@ -389,6 +392,7 @@ linux_ubuntu_2204_clang:
       cmake -B build -S src
       --preset=gitlab-ci
       -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+      -DPython_EXECUTABLE=$(which python3)
       -DACTS_BUILD_PLUGIN_GEOMODEL=OFF # GeoModel is not in LCG at this point
 
     - ccache -z

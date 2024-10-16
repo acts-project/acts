@@ -60,9 +60,9 @@ if [ -z "$TAR" ]; then
     exit 1
 fi
 
-mkdir -p "${destination}"
+run mkdir -p "${destination}"
 
-$CURL \
+run $CURL \
   --retry 5 \
   --connect-timeout 2 \
   --location $url \
@@ -72,34 +72,23 @@ $CURL \
     --strip-components=1 \
     --directory "${destination}"
 
-
-echo "check geant4 dataset"
-
 # Patch up geant4-config data install script
 out=$(${destination}/bin/geant4-config --datasets)
-echo "step1"
 line=$(echo "$out" | head -n1)
 orig_share=$(echo "$line" | perl -pe 's|.*?(\/.*)\/share.*|\1|')
-echo "step3"
-echo "Original share: $orig_share"
 orig_share_escaped=$(echo $orig_share|perl -pe 's|/|\\/|g')
-echo "Original share escaped: $orig_share_escaped"
 destination_escaped=$(echo "$destination"|perl -pe 's|/|\\/|g')
-echo "Destination escaped: $destination_escaped"
 run perl -pi.bak -e "s/$orig_share_escaped/$destination_escaped/g" ${destination}/bin/geant4-config
 
-echo "Check CI mode"
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
   echo "Running in GitHub Actions"
   venv="${GITHUB_WORKSPACE}/venv"
 fi
-echo "not github"
 
 if [ -n "${GITLAB_CI:-}" ];then
   echo "Running in GitLab CI"
   venv="${CI_PROJECT_DIR}/venv"
 fi
-echo "after gitlab"
 
 if [ -n "${CI:-}" ];then
   run "${destination}/bin/python3" -m venv "${venv}"
