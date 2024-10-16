@@ -79,11 +79,8 @@ echo "check geant4 dataset"
 out=$(${destination}/bin/geant4-config --datasets)
 echo "step1"
 line=$(echo "$out" | head -n1)
-echo "step2"
-echo "$line" | perl -pe 's|.*?(\/.*)\/share.*|\1|' | tee step2.txt
+orig_share=$(echo "$line" | perl -pe 's|.*?(\/.*)\/share.*|\1|')
 echo "step3"
-
-orig_share=$(${destination}/bin/geant4-config --datasets|head -n1|perl -pe 's|.*?(\/.*)\/share.*|\1|')
 echo "Original share: $orig_share"
 orig_share_escaped=$(echo $orig_share|perl -pe 's|/|\\/|g')
 echo "Original share escaped: $orig_share_escaped"
