@@ -440,14 +440,61 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     trackScore = simpleScore(tracks, trackFeaturesVectors, optionalCuts);
   }
 
-  std::vector<bool> cleanTracks = getCleanedOutTracks(
-      trackScore, trackFeaturesVectors, measurementsPerTrack);
+  if (trackScore.size() != measurementsPerTrack.size()) {
+    throw std::invalid_argument(
+        "Track score and measurementsPerTrack size mismatch");
+  }
+
+  boost::container::flat_map<std::size_t,
+                             boost::container::flat_set<std::size_t>>
+      tracksPerMeasurement;
+
+  // Removes bad tracks and counts computes the vector of tracks per
+  // measurement.
+  for (std::size_t iTrack = 0; iTrack < trackScore.size(); ++iTrack) {
+    if (trackScore[iTrack] <= 0) {
+      continue;
+    }
+    for (const auto& measurementObjects : measurementsPerTrack[iTrack]) {
+      auto iMeasurement = measurementObjects.iMeasurement;
+      tracksPerMeasurement[iMeasurement].insert(iTrack);
+    }
+  }
 
   std::vector<int> goodTracks;
   int cleanTrackIndex = 0;
-  std::size_t iTrack = 0;
-  for (const auto& track : tracks) {
-    if (cleanTracks[iTrack]) {
+
+  auto optionalHitSelections = optionalCuts.hitSelections;
+
+  for (std::size_t iTrack = 0; const auto& track : tracks) {
+    // Check if the track has too many shared hits to be accepted.
+    auto trackFeaturesVector = trackFeaturesVectors.at(iTrack);
+    bool trkCouldBeAccepted = true;
+    for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
+         detectorId++) {
+      auto detector = m_cfg.detectorConfigs.at(detectorId);
+      if (trackFeaturesVector[detectorId].nSharedHits >
+          detector.maxSharedHits) {
+        trkCouldBeAccepted = false;
+        break;
+      }
+    }
+    if (trkCouldBeAccepted) {
+      iTrack++;
+      continue;
+    }
+
+    std::map<std::size_t, std::size_t> nTracksPerMeasurement;
+    for (const auto& measurementObjects : measurementsPerTrack[iTrack]) {
+      auto iMeasurement = measurementObjects.iMeasurement;
+      auto size = tracksPerMeasurement[iMeasurement].size();
+      nTracksPerMeasurement[iMeasurement] = size;
+    }
+
+    trkCouldBeAccepted = getCleanedOutTracks(
+        track, trackScore[iTrack], measurementsPerTrack[iTrack],
+        nTracksPerMeasurement, optionalHitSelections);
+    if (trkCouldBeAccepted) {
       cleanTrackIndex++;
       if (trackScore[iTrack] >= m_cfg.minScore) {
         goodTracks.push_back(track.index());
@@ -459,6 +506,121 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
   ACTS_VERBOSE("Min score: " << m_cfg.minScore);
   ACTS_INFO("Number of Good tracks: " << goodTracks.size());
   return goodTracks;
+}
+
+template <TrackProxyConcept track_proxy_t>
+bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
+    const track_proxy_t& track, const double& trackScore,
+    const std::vector<MeasurementInfo>& measurementsPerTrack,
+    const std::map<std::size_t, std::size_t> nTracksPerMeasurement,
+    const std::vector<std::function<bool(
+        const track_proxy_t&,
+        const typename track_proxy_t::ConstTrackStateProxy&, TrackStateTypes)>>&
+        optionalHitSelections) const {
+  // For tracks with shared hits, we need to check and remove bad hits
+
+  std::vector<TrackStateTypes> trackStateTypes;
+  // Loop over all measurements of the track and for each hit a
+  // trackStateTypes is assigned.
+  for (auto index = 0; const auto& measurementObjects : measurementsPerTrack) {
+    auto iMeasurement = measurementObjects.iMeasurement;
+
+    auto it = nTracksPerMeasurement.find(iMeasurement);
+    if (it == nTracksPerMeasurement.end()) {
+      ACTS_ERROR("Measurement not found in nTracksPerMeasurement");
+      return false;
+    }
+
+    auto nTracksShared = it->second;
+
+    auto isoutliner = measurementObjects.isOutlier;
+    auto detectorId = measurementObjects.detectorId;
+
+    auto detector = m_cfg.detectorConfigs.at(detectorId);
+    if (isoutliner) {
+      ACTS_VERBOSE("Measurement is outlier on a fitter track, copy it over");
+      trackStateTypes[0] = TrackStateTypes::Outlier;
+      index++;
+      continue;
+    }
+    if (nTracksShared == 1) {
+      ACTS_VERBOSE("Measurement is not shared, copy it over");
+
+      trackStateTypes[index] = TrackStateTypes::UnsharedHit;
+
+      index++;
+      continue;
+    }
+    if (nTracksShared > 1) {
+      ACTS_VERBOSE("Measurement is shared, copy it over");
+
+      if (detector.sharedHitsFlag == true) {
+        ACTS_VERBOSE("Measurement is shared, Reject it");
+        trackStateTypes[index] = TrackStateTypes::RejectedHit;
+        index++;
+        continue;
+      }
+
+      trackStateTypes[index] = TrackStateTypes::SharedHit;
+
+      index++;
+      continue;
+    }
+  }
+  std::vector<std::size_t> newMeasurementsPerTrack;
+  std::size_t measurement = 0;
+  std::size_t nshared = 0;
+
+  // Loop over all measurements of the track and process them according to the
+  // trackStateTypes and other conditions.
+  // Good measurements are copied to the newMeasurementsPerTrack vector.
+  for (std::size_t index = 0; const auto& ts : track.trackStatesReversed()) {
+    auto& measurementObjects = measurementsPerTrack[index];
+    measurement = measurementObjects.iMeasurement;
+
+    auto it = nTracksPerMeasurement.find(measurement);
+    if (it == nTracksPerMeasurement.end()) {
+      ACTS_ERROR("Measurement not found in nTracksPerMeasurement");
+      return false;
+    }
+    auto nTracksShared = it->second;
+    for (const auto& hitSelection : optionalHitSelections) {
+      hitSelection(track, ts, trackStateTypes[index]);
+    }
+
+    if (trackStateTypes[index] == TrackStateTypes::RejectedHit) {
+      ACTS_DEBUG("Dropping rejected hit");
+    } else if (trackStateTypes[index] != TrackStateTypes::SharedHit) {
+      ACTS_DEBUG("Good TSOS, copy hit");
+      newMeasurementsPerTrack.push_back(measurement);
+
+      // a counter called nshared is used to keep track of the number of
+      // shared hits accepted.
+    } else if (nshared >= m_cfg.maxShared) {
+      ACTS_DEBUG("Too many shared hit, drop it");
+    }
+    // If the track is shared, the hit is only accepted if the track has
+    // score higher than the minimum score for shared tracks.
+    else {
+      ACTS_DEBUG("Try to recover shared hit ");
+      if (nTracksShared <= m_cfg.maxSharedTracksPerMeasurement &&
+          trackScore > m_cfg.minScoreSharedTracks) {
+        ACTS_DEBUG("Accepted hit shared with " << nTracksShared << " tracks");
+        newMeasurementsPerTrack.push_back(measurement);
+        nshared++;
+      } else {
+        ACTS_DEBUG("Rejected hit shared with " << nTracksShared << " tracks");
+      }
+    }
+    index++;
+  }
+
+  // Check if the track has enough hits to be accepted.
+  if (newMeasurementsPerTrack.size() < 3) {
+    return false;
+  } else {
+    return true;
+  }
 }
 
 }  // namespace Acts

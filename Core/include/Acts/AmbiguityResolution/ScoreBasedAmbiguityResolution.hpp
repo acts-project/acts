@@ -12,6 +12,7 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
+#include "Acts/EventData/TrackStateProxy.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -80,11 +81,25 @@ class ScoreBasedAmbiguityResolution {
     std::size_t nSharedHits = 0;
   };
 
+  enum class TrackStateTypes : int {
+    // A measurement not yet used in any other track
+    UnsharedHit = 1,
+    // A measurement shared with another track
+    SharedHit = 2,
+    // A hit that needs to be removed from the track
+    RejectedHit = 3,
+    // An outlier, to be copied in case
+    Outlier = 4,
+    // Other trackstate types to be copied in case
+    OtherTrackStateType = 5
+  };
+
   /// @brief MeasurementInfo : contains the measurement ID and the detector ID
   struct MeasurementInfo {
     std::size_t iMeasurement = 0;
     std::size_t detectorId = 0;
     bool isOutlier = false;
+    TrackStateTypes trackStateType = TrackStateTypes::OtherTrackStateType;
   };
 
   /// @brief Configuration struct : contains the configuration for the ambiguity resolution.
@@ -124,11 +139,17 @@ class ScoreBasedAmbiguityResolution {
 
     using OptionalScoreModifier =
         std::function<void(const track_proxy_t&, double&)>;
+
+    using OptionalHitSelection = std::function<bool(
+        const track_proxy_t&,
+        const typename track_proxy_t::ConstTrackStateProxy&, TrackStateTypes)>;
+
     std::vector<OptionalFilter> cuts = {};
     std::vector<OptionalScoreModifier> weights = {};
 
     /// applied only if useAmbiguityFunction is true
     std::vector<OptionalScoreModifier> scores = {};
+    std::vector<OptionalHitSelection> hitSelections = {};
   };
 
   ScoreBasedAmbiguityResolution(
@@ -185,11 +206,15 @@ class ScoreBasedAmbiguityResolution {
   /// @param trackFeaturesVectors is the trackFeatures map for each track
   /// @param measurementsPerTrack is the list of measurements for each track
   /// @return a vector of IDs of the tracks we want to keep
-  std::vector<bool> getCleanedOutTracks(
-      const std::vector<double>& trackScore,
-      const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-      const std::vector<std::vector<MeasurementInfo>>& measurementsPerTrack)
-      const;
+  template <TrackProxyConcept track_proxy_t>
+  bool getCleanedOutTracks(
+      const track_proxy_t& track, const double& trackScore,
+      const std::vector<MeasurementInfo>& measurementsPerTrack,
+      const std::map<std::size_t, std::size_t> nTracksPerMeasurement,
+      const std::vector<std::function<
+          bool(const track_proxy_t&,
+               const typename track_proxy_t::ConstTrackStateProxy&,
+               TrackStateTypes)>>& optionalHitSelections) const;
 
   /// Remove tracks that are bad based on cuts and weighted scores.
   ///
