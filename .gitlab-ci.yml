@@ -261,7 +261,11 @@ linux_physmon:
     - python3 -m pip install histcmp==0.6.8 matplotlib
     - python3 -m pip install -r src/Examples/Scripts/requirements.txt
     - geant4-config --install-datasets
+    - echo $venv_python
     - source build/this_acts_withdeps.sh
+    - export PATH=$(dirname $venv_python):$PATH
+    - echo $PATH
+    - which python3
     - cd src
     - CI/physmon/phys_perf_mon.sh all physmon
 
