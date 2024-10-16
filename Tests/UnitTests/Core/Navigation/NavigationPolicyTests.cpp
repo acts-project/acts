@@ -78,8 +78,10 @@ BOOST_AUTO_TEST_CASE(DirectTest) {
   policy.connect(delegate);
 
   NavigationStream main;
-  delegate(NavigationArguments{
-      .main = main, .position = Vector3::Zero(), .direction = Vector3::Zero()});
+  delegate(NavigationArguments{.main = main,
+                               .position = Vector3::Zero(),
+                               .direction = Vector3::Zero(),
+                               .logger = *logger});
 
   BOOST_CHECK(std::get<APolicy>(policy.policies()).executed);
   BOOST_CHECK(std::get<BPolicy>(policy.policies()).executed);
@@ -110,8 +112,10 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
   policy.connect(delegate);
 
   NavigationStream main;
-  delegate(NavigationArguments{
-      .main = main, .position = Vector3::Zero(), .direction = Vector3::Zero()});
+  delegate(NavigationArguments{.main = main,
+                               .position = Vector3::Zero(),
+                               .direction = Vector3::Zero(),
+                               .logger = *logger});
 
   BOOST_CHECK(std::get<APolicy>(policy.policies()).executed);
   BOOST_CHECK(std::get<BPolicy>(policy.policies()).executed);
@@ -123,8 +127,10 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
   NavigationDelegate delegate2;
   policyBase2->connect(delegate2);
 
-  delegate2(NavigationArguments{
-      .main = main, .position = Vector3::Zero(), .direction = Vector3::Zero()});
+  delegate2(NavigationArguments{.main = main,
+                                .position = Vector3::Zero(),
+                                .direction = Vector3::Zero(),
+                                .logger = *logger});
 
   BOOST_CHECK(std::get<APolicy>(policy2.policies()).executed);
   BOOST_CHECK(std::get<BPolicy>(policy2.policies()).executed);
@@ -147,8 +153,10 @@ BOOST_AUTO_TEST_CASE(AsUniquePtrTest) {
   policyBase->connect(delegate);
 
   NavigationStream main;
-  delegate(NavigationArguments{
-      .main = main, .position = Vector3::Zero(), .direction = Vector3::Zero()});
+  delegate(NavigationArguments{.main = main,
+                               .position = Vector3::Zero(),
+                               .direction = Vector3::Zero(),
+                               .logger = *logger});
 
   BOOST_CHECK(std::get<APolicy>(policy.policies()).executed);
 }
@@ -213,8 +221,10 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
   policyBase->connect(delegate);
 
   NavigationStream main;
-  delegate(NavigationArguments{
-      .main = main, .position = Vector3::Zero(), .direction = Vector3::Zero()});
+  delegate(NavigationArguments{.main = main,
+                               .position = Vector3::Zero(),
+                               .direction = Vector3::Zero(),
+                               .logger = *logger});
 
   BOOST_CHECK(std::get<APolicy>(policy.policies()).executed);
   BOOST_CHECK(std::get<CPolicySpecialized<int>>(policy.policies()).executed);
