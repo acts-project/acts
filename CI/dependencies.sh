@@ -78,15 +78,18 @@ orig_share_escaped=$(echo $orig_share|perl -pe 's|/|\\/|g')
 destination_escaped=$(echo "$destination"|perl -pe 's|/|\\/|g')
 run perl -pi.bak -e "s/$orig_share_escaped/$destination_escaped/g" ${destination}/bin/geant4-config
 
+echo "Check CI mode"
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
   echo "Running in GitHub Actions"
   venv="${GITHUB_WORKSPACE}/venv"
 fi
+echo "not github"
 
 if [ -n "${GITLAB_CI:-}" ];then
   echo "Running in GitLab CI"
   venv="${CI_PROJECT_DIR}/venv"
 fi
+echo "after gitlab"
 
 if [ -n "${CI:-}" ];then
   run "${destination}/bin/python3" -m venv "${venv}"
