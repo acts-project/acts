@@ -287,6 +287,7 @@ linux_physmon:
     - git checkout $HEAD_SHA
     - git submodule init
     - git submodule update
+    - source CI/dependencies.sh
 
     - cd ..
     - mkdir build
@@ -321,12 +322,12 @@ linux_physmon:
     # Downstream run
     - ./build-downstream/bin/ShowActsVersion
 
-linux_ubuntu_2404:
+linux_ubuntu_2204:
   <<: *linux_ubuntu_extra
   variables:
     CXXSTD: 20
-    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
-  image: ghcr.io/acts-project/ubuntu2404:63
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
+  image: ghcr.io/acts-project/ubuntu2204:63
 
 linux_ubuntu_2204_clang:
   <<: *linux_ubuntu_extra
