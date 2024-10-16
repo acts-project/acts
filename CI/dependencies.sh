@@ -76,6 +76,8 @@ $CURL \
 echo "check geant4 dataset"
 
 # Patch up geant4-config data install script
+run ${destination}/bin/geant4-config --datasets
+echo "next"
 orig_share=$(${destination}/bin/geant4-config --datasets|head -n1|perl -pe 's|.*?(\/.*)\/share.*|\1|')
 echo "Original share: $orig_share"
 orig_share_escaped=$(echo $orig_share|perl -pe 's|/|\\/|g')
