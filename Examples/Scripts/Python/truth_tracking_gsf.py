@@ -24,13 +24,13 @@ def runTruthTrackingGsf(
         EtaConfig,
         PhiConfig,
         MomentumConfig,
+        ParticleSelectorConfig,
         addFatras,
         addDigitization,
     )
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
-        TruthSeedRanges,
         addTruthTrackingGsf,
     )
 
@@ -77,6 +77,10 @@ def runTruthTrackingGsf(
         field,
         rnd=rnd,
         enableInteractions=True,
+        postSelectParticles=ParticleSelectorConfig(
+            measurements=(7, None),
+            removeNeutral=True,
+        ),
     )
 
     addDigitization(
@@ -95,9 +99,6 @@ def runTruthTrackingGsf(
         inputParticles="particles_input",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.electron,
-        truthSeedRanges=TruthSeedRanges(
-            nHits=(7, None),
-        ),
     )
 
     addTruthTrackingGsf(

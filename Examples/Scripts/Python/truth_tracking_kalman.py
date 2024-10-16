@@ -27,13 +27,13 @@ def runTruthTrackingKalman(
         EtaConfig,
         PhiConfig,
         MomentumConfig,
+        ParticleSelectorConfig,
         addFatras,
         addDigitization,
     )
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
-        TruthSeedRanges,
         addKalmanTracks,
     )
 
@@ -82,6 +82,10 @@ def runTruthTrackingKalman(
             field,
             rnd=rnd,
             enableInteractions=True,
+            postSelectParticles=ParticleSelectorConfig(
+                measurements=(7, None),
+                removeNeutral=True,
+            ),
         )
     else:
         logger.info("Reading hits from %s", inputHitsPath.resolve())
@@ -110,9 +114,6 @@ def runTruthTrackingKalman(
         inputParticles="particles_input",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.muon,
-        truthSeedRanges=TruthSeedRanges(
-            nHits=(7, None),
-        ),
     )
 
     addKalmanTracks(

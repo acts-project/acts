@@ -254,7 +254,7 @@ function trackfinding() {
         run_histcmp \
             $outdir/data/$path/performance_ckf_ambi.root \
             $refdir/$path/performance_ckf_ambi.root \
-            "Ambisolver CKF specific performance | ${name}" \
+            "Ambisolver finding performance | ${name}" \
             $path/performance_ckf_ambi.html \
             $path/performance_ckf_ambi
     fi

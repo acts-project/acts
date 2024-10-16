@@ -13,12 +13,6 @@ SeedingAlgorithm = Enum(
     "Default TruthSmeared TruthEstimated Orthogonal HoughTransform Gbts Hashing",
 )
 
-TruthSeedRanges = namedtuple(
-    "TruthSeedRanges",
-    ["rho", "z", "phi", "eta", "absEta", "pt", "nHits"],
-    defaults=[(None, None)] * 7,
-)
-
 ParticleSmearingSigmas = namedtuple(
     "ParticleSmearingSigmas",
     ["d0", "d0PtA", "d0PtB", "z0", "z0PtA", "z0PtB", "t0", "phi", "theta", "ptRel"],
@@ -230,7 +224,6 @@ class VertexFinder(Enum):
 
 @acts.examples.NamedTypeArgs(
     seedingAlgorithm=SeedingAlgorithm,
-    truthSeedRanges=TruthSeedRanges,
     particleSmearingSigmas=ParticleSmearingSigmas,
     seedFinderConfigArg=SeedFinderConfigArg,
     seedFinderOptionsArg=SeedFinderOptionsArg,
@@ -250,7 +243,6 @@ def addSeeding(
     layerMappingConfigFile: Optional[Union[Path, str]] = None,
     connector_inputConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
-    truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialSigmas: Optional[list] = None,
     initialSigmaPtRel: Optional[float] = None,
@@ -272,6 +264,7 @@ def addSeeding(
         acts.ParticleHypothesis
     ] = acts.ParticleHypothesis.pion,
     inputParticles: str = "particles",
+    selectedParticles: str = "particles_selected",
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -288,10 +281,6 @@ def addSeeding(
         Json file for space point geometry selection. Not required for SeedingAlgorithm.TruthSmeared.
     seedingAlgorithm : SeedingAlgorithm, Default
         seeding algorithm to use: one of Default (no truth information used), TruthSmeared, TruthEstimated
-    truthSeedRanges : TruthSeedRanges(rho, z, phi, eta, absEta, pt, nHits)
-        TruthSeedSelector configuration. Each range is specified as a tuple of (min,max).
-        Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TruthSeedSelector.hpp
-        If specified as None, don't run ParticleSmearing at all (and use addCKFTracks(selectedParticles="particles"))
     particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, ptRel)
         ParticleSmearing configuration.
         Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
@@ -334,18 +323,6 @@ def addSeeding(
     logLevel = acts.examples.defaultLogging(s, logLevel)()
     logger = acts.logging.getLogger("addSeeding")
     logger.setLevel(logLevel)
-
-    if truthSeedRanges is not None:
-        selectedParticles = "truth_seeds_selected"
-        addSeedingTruthSelection(
-            s,
-            inputParticles,
-            selectedParticles,
-            truthSeedRanges,
-            logLevel,
-        )
-    else:
-        selectedParticles = inputParticles
 
     # Create starting parameters from either particle smearing or combined seed
     # finding and track parameters estimation
@@ -503,41 +480,6 @@ def addSeeding(
                 )
 
     return s
-
-
-def addSeedingTruthSelection(
-    s: acts.examples.Sequencer,
-    inputParticles: str,
-    outputParticles: str,
-    truthSeedRanges: TruthSeedRanges,
-    logLevel: acts.logging.Level = None,
-):
-    """adds truth particles filtering before filtering
-    For parameters description see addSeeding
-    """
-    selAlg = acts.examples.TruthSeedSelector(
-        **acts.examples.defaultKWArgs(
-            ptMin=truthSeedRanges.pt[0],
-            ptMax=truthSeedRanges.pt[1],
-            etaMin=truthSeedRanges.eta[0],
-            etaMax=truthSeedRanges.eta[1],
-            nHitsMin=truthSeedRanges.nHits[0],
-            nHitsMax=truthSeedRanges.nHits[1],
-            rhoMin=truthSeedRanges.rho[0],
-            rhoMax=truthSeedRanges.rho[1],
-            zMin=truthSeedRanges.z[0],
-            zMax=truthSeedRanges.z[1],
-            phiMin=truthSeedRanges.phi[0],
-            phiMax=truthSeedRanges.phi[1],
-            absEtaMin=truthSeedRanges.absEta[0],
-            absEtaMax=truthSeedRanges.absEta[1],
-        ),
-        level=logLevel,
-        inputParticles=inputParticles,
-        inputMeasurementParticlesMap="measurement_particles_map",
-        outputParticles=outputParticles,
-    )
-    s.addAlgorithm(selAlg)
 
 
 def addTruthSmearedSeeding(
