@@ -46,7 +46,7 @@ void RootBlueprintNode::finalize(const Options & /*options*/,
 
 void RootBlueprintNode::addToGraphviz(std::ostream &os) const {
   GraphViz::Node node{
-      .id = name(), .label = "Root", .shape = GraphViz::Shape::House};
+      .id = name(), .label = "World", .shape = GraphViz::Shape::House};
 
   os << node;
   BlueprintNode::addToGraphviz(os);

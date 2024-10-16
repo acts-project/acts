@@ -99,6 +99,8 @@ class BlueprintNode {
   MutableChildRange children();
   ChildRange children() const;
 
+  void clearChildren();
+
   std::size_t depth() const;
 
   void graphViz(std::ostream& os) const;

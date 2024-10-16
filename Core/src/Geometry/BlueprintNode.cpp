@@ -124,6 +124,10 @@ LayerBlueprintNode& BlueprintNode::addLayer(
   return *layer;
 }
 
+void BlueprintNode::clearChildren() {
+  m_children.clear();
+}
+
 void BlueprintNode::graphViz(std::ostream& os) const {
   os << "digraph BlueprintNode {" << std::endl;
   addToGraphviz(os);

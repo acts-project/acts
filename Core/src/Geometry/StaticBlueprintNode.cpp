@@ -133,6 +133,9 @@ void StaticBlueprintNode::addToGraphviz(std::ostream& os) const {
   std::stringstream ss;
   ss << "<b>" << name() << "</b>";
   ss << "<br/>";
+  if (m_volume == nullptr) {
+    throw std::runtime_error("Volume is not built");
+  }
   switch (m_volume->volumeBounds().type()) {
     case VolumeBounds::eCylinder:
       ss << "Cylinder";
