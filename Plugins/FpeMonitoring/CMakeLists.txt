@@ -51,7 +51,9 @@ else()
                 "${CMAKE_BINARY_DIR}"
                 "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                 LINK_LIBRARIES ${dl_LIBRARY}
-                CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
+                CMAKE_FLAGS
+                    "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
+                    "-DCMAKE_CXX_FLAGS=\"\""
                 COMPILE_DEFINITIONS -DBOOST_STACKTRACE_USE_BACKTRACE
                 OUTPUT_VARIABLE __OUTPUT
             )
@@ -94,6 +96,7 @@ else()
                         LINK_LIBRARIES ${dl_LIBRARY}
                         CMAKE_FLAGS
                             "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
+                            "-DCMAKE_CXX_FLAGS=\"\""
                         COMPILE_DEFINITIONS
                             -DBOOST_STACKTRACE_USE_BACKTRACE
                             ${backtrace_include}
@@ -125,7 +128,9 @@ else()
                 "${CMAKE_BINARY_DIR}"
                 "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                 LINK_LIBRARIES ${dl_LIBRARY}
-                CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
+                CMAKE_FLAGS
+                    "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
+                    "-DCMAKE_CXX_FLAGS=\"\""
                 COMPILE_DEFINITIONS
                     -DBOOST_STACKTRACE_USE_BACKTRACE
                     ${backtrace_include}
