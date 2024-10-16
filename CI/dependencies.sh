@@ -76,12 +76,10 @@ $CURL \
 echo "check geant4 dataset"
 
 # Patch up geant4-config data install script
-run ${destination}/bin/geant4-config --datasets | tee step1.txt
+line=$(${destination}/bin/geant4-config --datasets | head -n1)
 echo "step1"
-head -n1 step1.txt | tee step2.txt
+echo "$line" | perl -pe 's|.*?(\/.*)\/share.*|\1|' | tee step2.txt
 echo "step2"
-cat step2.txt | perl -pe 's|.*?(\/.*)\/share.*|\1|' | tee step3.txt
-echo "step3"
 
 orig_share=$(${destination}/bin/geant4-config --datasets|head -n1|perl -pe 's|.*?(\/.*)\/share.*|\1|')
 echo "Original share: $orig_share"
