@@ -39,6 +39,7 @@ namespace py = pybind11;
 
 using namespace ActsExamples;
 using namespace Acts;
+using namespace py::literals;
 
 namespace Acts::Python {
 
