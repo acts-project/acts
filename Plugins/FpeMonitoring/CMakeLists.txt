@@ -51,14 +51,10 @@ else()
                 "${CMAKE_BINARY_DIR}"
                 "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                 LINK_LIBRARIES ${dl_LIBRARY}
-                CMAKE_FLAGS
-                    "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
-                    "-DCMAKE_CXX_FLAGS=\"\""
+                CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
                 COMPILE_DEFINITIONS -DBOOST_STACKTRACE_USE_BACKTRACE
                 OUTPUT_VARIABLE __OUTPUT
             )
-
-            message(STATUS "OUTPUT: ${__OUTPUT}")
 
             if(_backtrace_default_header)
                 message(CHECK_PASS "yes")
@@ -103,8 +99,6 @@ else()
                         OUTPUT_VARIABLE __OUTPUT
                     )
 
-                    message(STATUS "OUTPUT: ${__OUTPUT}")
-
                     if(_backtrace_explicit_header)
                         message(CHECK_PASS "yes")
                         list(APPEND _fpe_options "${backtrace_include}")
@@ -136,8 +130,6 @@ else()
                     ${backtrace_include}
                 OUTPUT_VARIABLE __OUTPUT
             )
-
-            message(STATUS "OUTPUT: ${__OUTPUT}")
 
             if(_backtrace_nolink)
                 message(CHECK_PASS "yes")
