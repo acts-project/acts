@@ -110,9 +110,12 @@ void addTrackFitting(Context& ctx) {
             "loadFromFiles", &ActsExamples::BetheHeitlerApprox::loadFromFiles,
             "lowParametersPath"_a, "highParametersPath"_a, "lowLimit"_a = 0.1,
             "highLimit"_a = 0.2, "clampToRange"_a = false)
-        .def_static("makeDefault", [](bool clampToRange) {
-          return Acts::makeDefaultBetheHeitlerApprox(clampToRange);
-        } "clampToRange"_a = false);
+        .def_static(
+            "makeDefault",
+            [](bool clampToRange) {
+              return Acts::makeDefaultBetheHeitlerApprox(clampToRange);
+            },
+            "clampToRange"_a = false);
 
     mex.def(
         "makeGsfFitterFunction",
