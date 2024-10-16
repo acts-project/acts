@@ -33,10 +33,6 @@
 #include <unordered_set>
 #include <utility>
 
-namespace ActsExamples {
-class IndexSourceLink;
-}  // namespace ActsExamples
-
 using namespace ActsExamples;
 
 CsvTrackWriter::CsvTrackWriter(const CsvTrackWriter::Config& config,

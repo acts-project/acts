@@ -44,8 +44,6 @@
 
 namespace ActsExamples {
 
-class IndexSourceLink;
-
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;

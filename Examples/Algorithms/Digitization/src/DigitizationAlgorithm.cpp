@@ -18,7 +18,6 @@
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
@@ -55,9 +54,6 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
   }
 
   if (m_cfg.doClusterization) {
-    if (m_cfg.outputSourceLinks.empty()) {
-      throw std::invalid_argument("Missing source links output collection");
-    }
     if (m_cfg.outputMeasurements.empty()) {
       throw std::invalid_argument("Missing measurements output collection");
     }
@@ -73,7 +69,6 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
           "Missing hit-to-simulated-hits map output collection");
     }
 
-    m_sourceLinkWriteHandle.initialize(m_cfg.outputSourceLinks);
     m_measurementWriteHandle.initialize(m_cfg.outputMeasurements);
     m_clusterWriteHandle.initialize(m_cfg.outputClusters);
     m_measurementParticlesMapWriteHandle.initialize(
@@ -152,12 +147,10 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
   // Prepare output containers
   // need list here for stable addresses
-  IndexSourceLinkContainer sourceLinks;
   MeasurementContainer measurements;
   ClusterContainer clusters;
   IndexMultimap<ActsFatras::Barcode> measurementParticlesMap;
   IndexMultimap<Index> measurementSimHitsMap;
-  sourceLinks.reserve(simHits.size());
   measurements.reserve(simHits.size());
   measurementParticlesMap.reserve(simHits.size());
   measurementSimHitsMap.reserve(simHits.size());
@@ -292,15 +285,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               // The measurement container is unordered and the index under
               // which the measurement will be stored is known before adding it.
               Index measurementIdx = measurements.size();
-              IndexSourceLink sourceLink{moduleGeoId, measurementIdx};
 
-              // Add to output containers:
-              // index map and source link container are geometry-ordered.
-              // since the input is also geometry-ordered, new items can
-              // be added at the end.
-              sourceLinks.insert(sourceLinks.end(), sourceLink);
-
-              createMeasurement(measurements, dParameters, sourceLink);
+              createMeasurement(measurements, moduleGeoId, dParameters);
               clusters.emplace_back(std::move(dParameters.cluster));
               // this digitization does hit merging so there can be more than
               // one mapping entry for each digitized hit.
@@ -328,7 +314,6 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   }
 
   if (m_cfg.doClusterization) {
-    m_sourceLinkWriteHandle(ctx, std::move(sourceLinks));
     m_measurementWriteHandle(ctx, std::move(measurements));
     m_clusterWriteHandle(ctx, std::move(clusters));
     m_measurementParticlesMapWriteHandle(ctx,

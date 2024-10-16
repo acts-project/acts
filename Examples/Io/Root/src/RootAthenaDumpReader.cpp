@@ -299,7 +299,6 @@ RootAthenaDumpReader::readMeasurements(
   IndexMultimap<ActsFatras::Barcode> measPartMap;
 
   // We cannot use im for the index since we might skip measurements
-  std::size_t idx = 0;
   std::unordered_map<int, std::size_t> imIdxMap;
 
   for (int im = 0; im < nCL; im++) {
@@ -375,7 +374,7 @@ RootAthenaDumpReader::readMeasurements(
                                 << CLloc_direction3[im]);
     const auto& locCov = CLlocal_cov->at(im);
 
-    std::optional<IndexSourceLink> sl;
+    Acts::GeometryIdentifier geoId;
     std::vector<double> localParams;
     if (m_cfg.geometryIdMap && m_cfg.trackingGeometry) {
       const auto& geoIdMap = m_cfg.geometryIdMap->left;
@@ -384,8 +383,7 @@ RootAthenaDumpReader::readMeasurements(
         continue;
       }
 
-      auto geoId = m_cfg.geometryIdMap->left.at(CLmoduleID[im]);
-      sl = IndexSourceLink(geoId, idx);
+      geoId = m_cfg.geometryIdMap->left.at(CLmoduleID[im]);
 
       auto surface = m_cfg.trackingGeometry->findSurface(geoId);
       if (surface == nullptr) {
@@ -427,7 +425,7 @@ RootAthenaDumpReader::readMeasurements(
       // bounds?
       localParams = std::vector<double>(loc->begin(), loc->end());
     } else {
-      sl = IndexSourceLink(Acts::GeometryIdentifier(CLmoduleID[im]), idx);
+      geoId = Acts::GeometryIdentifier(CLmoduleID[im]);
       localParams = {CLloc_direction1[im], CLloc_direction2[im]};
     }
 
@@ -444,7 +442,8 @@ RootAthenaDumpReader::readMeasurements(
       digiPars.values = {localParams[0]};
     }
 
-    createMeasurement(measurements, digiPars, *sl);
+    std::size_t measIndex = measurements.size();
+    createMeasurement(measurements, geoId, digiPars);
 
     // Create measurement particles map and particles container
     for (const auto& [subevt, barcode] :
@@ -459,12 +458,10 @@ RootAthenaDumpReader::readMeasurements(
         particles.emplace(dummyBarcode, Acts::PdgParticle::eInvalid);
       }
       measPartMap.insert(
-          std::pair<Index, ActsFatras::Barcode>{idx, dummyBarcode});
+          std::pair<Index, ActsFatras::Barcode>{measIndex, dummyBarcode});
     }
 
-    // Finally increment the measurement index
-    imIdxMap.emplace(im, idx);
-    ++idx;
+    imIdxMap.emplace(im, measIndex);
   }
 
   if (measurements.size() < static_cast<std::size_t>(nCL)) {
