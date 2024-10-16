@@ -1675,10 +1675,6 @@ def addTrackWriters(
             trackSummaryWriter = acts.examples.RootTrackSummaryWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
-                # @note The full particles collection is used here to avoid lots of warnings
-                # since the unselected CKF track might have a majority particle not in the
-                # filtered particle collection. This could be avoided when a separate track
-                # selection algorithm is used.
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 filePath=str(outputDirRoot / f"tracksummary_{name}.root"),
@@ -1691,10 +1687,6 @@ def addTrackWriters(
             trackStatesWriter = acts.examples.RootTrackStatesWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
-                # @note The full particles collection is used here to avoid lots of warnings
-                # since the unselected CKF track might have a majority particle not in the
-                # filtered particle collection. This could be avoided when a separate track
-                # selection algorithm is used.
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 inputSimHits="simhits",
@@ -1708,7 +1700,7 @@ def addTrackWriters(
             trackFitterPerformanceWriter = acts.examples.TrackFitterPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
-                inputParticles="particles",
+                inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
             )
@@ -1718,7 +1710,7 @@ def addTrackWriters(
             ckfPerfWriter = acts.examples.CKFPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
-                inputParticles="truth_seeds_selected",
+                inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 inputParticleTrackMatching="particle_track_matching",
                 filePath=str(outputDirRoot / f"performance_{name}.root"),
