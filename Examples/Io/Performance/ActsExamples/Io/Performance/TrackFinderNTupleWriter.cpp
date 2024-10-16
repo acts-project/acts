@@ -32,7 +32,9 @@
 #include <TFile.h>
 #include <TTree.h>
 
-struct ActsExamples::TrackFinderNTupleWriter::Impl {
+namespace ActsExamples {
+
+struct TrackFinderNTupleWriter::Impl {
   Config cfg;
 
   ReadDataHandle<SimParticleContainer> inputParticles;
@@ -84,14 +86,14 @@ struct ActsExamples::TrackFinderNTupleWriter::Impl {
   UShort_t prtNumTracksMajority =
       0;  // number of tracks reconstructed as majority
   // extra logger reference for the logging macros
-  const Acts::Logger& _logger;
+  const Acts::Logger& logger;
 
   Impl(TrackFinderNTupleWriter* parent, Config&& c, const Acts::Logger& l)
       : cfg(std::move(c)),
         inputParticles{parent, "InputParticles"},
         inputMeasurementParticlesMap{parent, "InputMeasurementParticlesMap"},
         inputTrackParticleMatching{parent, "InputTrackParticleMatching"},
-        _logger(l) {
+        logger(l) {
     if (cfg.inputTracks.empty()) {
       throw std::invalid_argument("Missing track input collection");
     }
@@ -150,8 +152,6 @@ struct ActsExamples::TrackFinderNTupleWriter::Impl {
     prtTree->Branch("ntracks", &prtNumTracks);
     prtTree->Branch("ntracks_majority", &prtNumTracksMajority);
   }
-
-  const Acts::Logger& logger() const { return _logger; }
 
   void write(std::uint64_t eventId, const TrackContainer& tracks,
              const SimParticleContainer& particles,
@@ -265,17 +265,15 @@ struct ActsExamples::TrackFinderNTupleWriter::Impl {
   }
 };
 
-ActsExamples::TrackFinderNTupleWriter::TrackFinderNTupleWriter(
-    ActsExamples::TrackFinderNTupleWriter::Config config,
-    Acts::Logging::Level level)
+TrackFinderNTupleWriter::TrackFinderNTupleWriter(
+    TrackFinderNTupleWriter::Config config, Acts::Logging::Level level)
     : WriterT(config.inputTracks, "TrackFinderNTupleWriter", level),
       m_impl(std::make_unique<Impl>(this, std::move(config), logger())) {}
 
-ActsExamples::TrackFinderNTupleWriter::~TrackFinderNTupleWriter() = default;
+TrackFinderNTupleWriter::~TrackFinderNTupleWriter() = default;
 
-ActsExamples::ProcessCode ActsExamples::TrackFinderNTupleWriter::writeT(
-    const ActsExamples::AlgorithmContext& ctx,
-    const ActsExamples::TrackContainer& tracks) {
+ProcessCode TrackFinderNTupleWriter::writeT(const AlgorithmContext& ctx,
+                                            const TrackContainer& tracks) {
   const auto& particles = m_impl->inputParticles(ctx);
   const auto& hitParticlesMap = m_impl->inputMeasurementParticlesMap(ctx);
   const auto& trackParticleMatching = m_impl->inputTrackParticleMatching(ctx);
@@ -284,12 +282,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFinderNTupleWriter::writeT(
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFinderNTupleWriter::finalize() {
+ProcessCode TrackFinderNTupleWriter::finalize() {
   m_impl->close();
   return ProcessCode::SUCCESS;
 }
 
-const ActsExamples::TrackFinderNTupleWriter::Config&
-ActsExamples::TrackFinderNTupleWriter::config() const {
+const TrackFinderNTupleWriter::Config& TrackFinderNTupleWriter::config() const {
   return m_impl->cfg;
 }
+
+}  // namespace ActsExamples
