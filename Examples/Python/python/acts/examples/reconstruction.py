@@ -1711,7 +1711,7 @@ def addTrackWriters(
                 inputParticles="truth_seeds_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 inputParticleTrackMatching="particle_track_matching",
-                filePath=str(outputDirRoot / f"performance_{name}.root"),
+                filePath=str(outputDirRoot / f"performance_finding_{name}.root"),
             )
             s.addWriter(ckfPerfWriter)
 

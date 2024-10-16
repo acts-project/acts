@@ -53,7 +53,7 @@ class TrackFinderPerformanceWriter final : public WriterT<ConstTrackContainer> {
     /// Input track-particle matching.
     std::string inputParticleTrackMatching;
     /// Output filename.
-    std::string filePath = "performance_ckf.root";
+    std::string filePath = "performance_finding.root";
     /// Output filemode
     std::string fileMode = "RECREATE";
 
