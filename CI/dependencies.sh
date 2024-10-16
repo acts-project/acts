@@ -78,7 +78,7 @@ line=$(echo "$out" | head -n1)
 orig_share=$(echo "$line" | perl -pe 's|.*?(\/.*)\/share.*|\1|')
 orig_share_escaped=$(echo $orig_share|perl -pe 's|/|\\/|g')
 destination_escaped=$(echo "$destination"|perl -pe 's|/|\\/|g')
-run perl -pi.bak -e "s/$orig_share_escaped/$destination_escaped/g" ${destination}/bin/geant4-config
+perl -pi.bak -e "s/$orig_share_escaped/$destination_escaped/g" ${destination}/bin/geant4-config
 
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
   echo "Running in GitHub Actions"
