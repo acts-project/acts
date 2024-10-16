@@ -49,7 +49,7 @@ def runRefittingGsf(
         acts.examples.TrackTruthMatcher(
             level=acts.logging.INFO,
             inputTracks="gsf_refit_tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             outputTrackParticleMatching="refit_track_particle_matching",
             outputParticleTrackMatching="refit_particle_track_matching",
@@ -60,7 +60,7 @@ def runRefittingGsf(
         acts.examples.RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="gsf_refit_tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="refit_track_particle_matching",
             inputSimHits="simhits",
             inputMeasurementSimHitsMap="measurement_simhits_map",
@@ -72,7 +72,7 @@ def runRefittingGsf(
         acts.examples.RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="refit_track_particle_matching",
             filePath=str(outputDir / "tracksummary_gsf_refit.root"),
         )
@@ -82,7 +82,7 @@ def runRefittingGsf(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "performance_gsf_refit.root"),
         )
