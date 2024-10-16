@@ -177,10 +177,6 @@ with tempfile.TemporaryDirectory() as temp:
     s.run()
 
     shutil.move(
-        tp / "performance_finding_ambi.root",
-        tp / "performance_finding_ckf_ambi.root",
-    )
-    shutil.move(
         tp / "performance_fitting_ambi.root",
         tp / "performance_fitting_ckf_ambi.root",
     )
@@ -197,10 +193,8 @@ with tempfile.TemporaryDirectory() as temp:
     for file in [
         "performance_seeding.root",
         "tracksummary_ckf.root",
-        "performance_finding_ckf.root",
         "performance_fitting_ckf.root",
         "performance_ckf.root",
-        "performance_finding_ckf_ambi.root",
         "performance_fitting_ckf_ambi.root",
         "performance_ckf_ambi.root",
         "performance_vertexing_amvf_gauss_notime.root",

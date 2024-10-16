@@ -161,7 +161,6 @@ def run_ckf_tracking(label, seeding):
         ) + [
             "tracksummary_ckf.root",
             "performance_finding_ckf.root",
-            "performance_fitting_ckf.root",
             "performance_ckf.root",
         ]:
             perf_file = tp / file
