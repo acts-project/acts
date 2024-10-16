@@ -268,7 +268,7 @@ linux_physmon:
 ### UBUNTU EXTRA JOB MATRIX ###
 ###############################
 
-.linux_ubuntu_extra: &linux_ubuntu_extra
+.linux_ubuntu_extra:
   variables:
     INSTALL_DIR: ${CI_PROJECT_DIR}/install
 
@@ -323,14 +323,14 @@ linux_physmon:
     - ./build-downstream/bin/ShowActsVersion
 
 linux_ubuntu_2204:
-  <<: *linux_ubuntu_extra
+  extends: .linux_ubuntu_extra
   variables:
     CXXSTD: 20
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
   image: ghcr.io/acts-project/ubuntu2204:63
 
 linux_ubuntu_2204_clang:
-  <<: *linux_ubuntu_extra
+  extends: .linux_ubuntu_extra
   variables:
     CXXSTD: 20
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
@@ -341,7 +341,7 @@ linux_ubuntu_2204_clang:
 ### LCG JOB MATRIX ###
 ######################
 
-.lcg: &lcg_base_job
+.lcg_base_job:
   image: ghcr.io/acts-project/${OS}-base:63
   stage: build
   tags:
@@ -404,7 +404,7 @@ linux_ubuntu_2204_clang:
 
 
 lcg_105:
-  <<: *lcg_base_job
+  extends: .lcg_base_job
 
   variables:
     LCG_VERSION: "105"
