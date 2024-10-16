@@ -1,6 +1,4 @@
 #!/bin/bash
-set -e
-set -u
 
 function run() {
     set -x
