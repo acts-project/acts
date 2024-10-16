@@ -419,21 +419,21 @@ fi
 
 if [[ "$mode" == "all" || "$mode" == "kf_refit" ]]; then
     run_histcmp \
-        $outdir/data/trackrefitting_kf/performance_trackfitting.root \
-        $refdir/trackrefitting_kf/performance_trackfitting.root \
+        $outdir/data/trackrefitting_kf/performance_trackrefitting.root \
+        $refdir/trackrefitting_kf/performance_trackrefitting.root \
         "Truth tracking (KF refit)" \
-        trackrefitting_kf/performance_trackfitting.html \
-        trackrefitting_kf/performance_trackfitting_plots \
+        trackrefitting_kf/performance_trackrefitting.html \
+        trackrefitting_kf/performance_trackrefitting_plots \
         --config CI/physmon/config/trackfitting_kf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf_refit" ]]; then
     run_histcmp \
-        $outdir/data/trackrefitting_gsf/performance_trackfitting.root \
-        $refdir/trackrefitting_gsf/performance_trackfitting.root \
+        $outdir/data/trackrefitting_gsf/performance_trackrefitting.root \
+        $refdir/trackrefitting_gsf/performance_trackrefitting.root \
         "Truth tracking (GSF refit)" \
-        trackrefitting_gsf/performance_trackfitting.html \
-        trackrefitting_gsf/performance_trackfitting_plots \
+        trackrefitting_gsf/performance_trackrefitting.html \
+        trackrefitting_gsf/performance_trackrefitting_plots \
         --config CI/physmon/config/trackfitting_gsf.yml
 fi
 

@@ -93,19 +93,27 @@ def runRefittingGsf(
 
 if __name__ == "__main__":
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
-    outputDir = Path.cwd()
 
-    # detector, trackingGeometry, decorators = getOpenDataDetector()
-    # digiConfigFile = (
-    #     srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
-    # )
+    # ODD
+    from acts.examples.odd import getOpenDataDetector
 
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    detector, trackingGeometry, decorators = getOpenDataDetector()
     digiConfigFile = (
-        srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+        srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
     )
+
+    ## GenericDetector
+    # detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
+    # digiConfigFile = (
+    #     srcdir
+    #     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    # )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runRefittingGsf(trackingGeometry, field, outputDir).run()
+    runRefittingGsf(
+        trackingGeometry=trackingGeometry,
+        field=field,
+        digiConfigFile=digiConfigFile,
+        outputDir=Path.cwd(),
+    ).run()
