@@ -29,6 +29,7 @@ else()
             NAMES "boost/stacktrace.hpp"
             REQUIRED
         )
+        message(STATUS "boost_stacktrace_include: ${boost_stacktrace_include}")
 
         if(Backtrace_FOUND)
             # check if we need to link against bracktrace or not
@@ -54,6 +55,8 @@ else()
                 COMPILE_DEFINITIONS -DBOOST_STACKTRACE_USE_BACKTRACE
                 OUTPUT_VARIABLE __OUTPUT
             )
+
+            message(STATUS "OUTPUT: ${__OUTPUT}")
 
             if(_backtrace_default_header)
                 message(CHECK_PASS "yes")
@@ -97,6 +100,8 @@ else()
                         OUTPUT_VARIABLE __OUTPUT
                     )
 
+                    message(STATUS "OUTPUT: ${__OUTPUT}")
+
                     if(_backtrace_explicit_header)
                         message(CHECK_PASS "yes")
                         list(APPEND _fpe_options "${backtrace_include}")
@@ -126,6 +131,8 @@ else()
                     ${backtrace_include}
                 OUTPUT_VARIABLE __OUTPUT
             )
+
+            message(STATUS "OUTPUT: ${__OUTPUT}")
 
             if(_backtrace_nolink)
                 message(CHECK_PASS "yes")
