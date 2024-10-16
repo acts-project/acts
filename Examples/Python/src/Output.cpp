@@ -27,8 +27,8 @@
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/NuclearInteractions/RootNuclearInteractionParametersWriter.hpp"
-#include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
+#include "ActsExamples/Io/Performance/TrackFinderNTupleWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/VertexPerformanceWriter.hpp"
@@ -163,7 +163,7 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
   }
 
-  // Bindings for the binning in e.g., CKFPerformanceWriter
+  // Bindings for the binning in e.g., TrackFinderPerformanceWriter
   {
     py::class_<PlotHelpers::Binning>(mex, "Binning")
         .def(py::init<std::string, int, double, double>(), "title"_a, "bins"_a,
@@ -200,8 +200,8 @@ void addOutput(Context& ctx) {
                              "RootVertexWriter", inputVertices, filePath,
                              fileMode, treeName);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderPerformanceWriter, mex,
-                             "TrackFinderPerformanceWriter", inputTracks,
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderNTupleWriter, mex,
+                             "TrackFinderNTupleWriter", inputTracks,
                              inputParticles, inputMeasurementParticlesMap,
                              inputTrackParticleMatching, filePath, fileMode,
                              treeNameTracks, treeNameParticles);
@@ -395,12 +395,13 @@ void addOutput(Context& ctx) {
       trackingGeometry, outputDir, outputPrecision, writeSensitive,
       writeBoundary, writeSurfaceGrid, writeLayerVolume, writePerEvent);
 
-  ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::CKFPerformanceWriter, mex, "CKFPerformanceWriter",
-      inputTracks, inputParticles, inputTrackParticleMatching,
-      inputParticleTrackMatching, filePath, fileMode, effPlotToolConfig,
-      fakeRatePlotToolConfig, duplicationPlotToolConfig,
-      trackSummaryPlotToolConfig, writeMatchingDetails);
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderPerformanceWriter, mex,
+                             "TrackFinderPerformanceWriter", inputTracks,
+                             inputParticles, inputTrackParticleMatching,
+                             inputParticleTrackMatching, filePath, fileMode,
+                             effPlotToolConfig, fakeRatePlotToolConfig,
+                             duplicationPlotToolConfig,
+                             trackSummaryPlotToolConfig, writeMatchingDetails);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootNuclearInteractionParametersWriter, mex,

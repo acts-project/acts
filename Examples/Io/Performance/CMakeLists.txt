@@ -1,9 +1,9 @@
 add_library(
     ActsExamplesIoPerformance
     SHARED
-    ActsExamples/Io/Performance/CKFPerformanceWriter.cpp
-    ActsExamples/Io/Performance/SeedingPerformanceWriter.cpp
     ActsExamples/Io/Performance/TrackFinderPerformanceWriter.cpp
+    ActsExamples/Io/Performance/SeedingPerformanceWriter.cpp
+    ActsExamples/Io/Performance/TrackFinderNTupleWriter.cpp
     ActsExamples/Io/Performance/TrackFitterPerformanceWriter.cpp
     ActsExamples/Io/Performance/VertexPerformanceWriter.cpp
 )
