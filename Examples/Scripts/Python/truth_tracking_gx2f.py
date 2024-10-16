@@ -75,6 +75,7 @@ def runTruthTrackingGx2f(
         rnd=rnd,
         enableInteractions=True,
         postSelectParticles=ParticleSelectorConfig(
+            pt=(0.5 * u.GeV, None),
             measurements=(7, None),
             removeNeutral=True,
         ),
