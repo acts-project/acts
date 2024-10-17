@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
@@ -210,10 +211,11 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   Translation3 trans(spGlobalPositions[0]);
   // The transform which constructs the new frame
   Transform3 transform(trans * rotation);
+  Transform3 itransform = inverseTransform(transform);
 
   // The coordinate of the middle and top space point in the new frame
-  Vector3 local1 = transform.inverse() * spGlobalPositions[1];
-  Vector3 local2 = transform.inverse() * spGlobalPositions[2];
+  Vector3 local1 = itransform * spGlobalPositions[1];
+  Vector3 local2 = itransform * spGlobalPositions[2];
 
   // In the new frame the bottom sp is at the origin, while the middle
   // sp in along the x axis. As such, the x-coordinate of the circle is
