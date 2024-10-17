@@ -20,6 +20,7 @@
 #include <detray/propagator/actor_chain.hpp>
 #include <detray/propagator/propagator.hpp>
 #include <detray/test/utils/inspectors.hpp>
+#include <detray/test/validation/material_validation_utils.hpp>
 
 namespace ActsExamples {
 
@@ -101,7 +102,7 @@ class DetrayPropagator : public PropagatorInterface {
                             detray::navigation::default_cache_size,
                             DetrayInspector>;
 
-      // Propagator with empty actor chain (for the moment)
+      // Propagator with empty actor chain
       using Propagator =
           detray::propagator<stepper_t, DetrayNavigator, detray::actor_chain<>>;
 
