@@ -94,14 +94,6 @@ class ScoreBasedAmbiguityResolution {
     OtherTrackStateType = 5
   };
 
-  /// @brief MeasurementInfo : contains the measurement ID and the detector ID
-  struct MeasurementInfo {
-    std::size_t iMeasurement = 0;
-    std::size_t detectorId = 0;
-    bool isOutlier = false;
-    TrackStateTypes trackStateType = TrackStateTypes::OtherTrackStateType;
-  };
-
   /// @brief Configuration struct : contains the configuration for the ambiguity resolution.
   struct Config {
     std::map<std::size_t, std::size_t> volumeMap = {{0, 0}};
@@ -165,12 +157,9 @@ class ScoreBasedAmbiguityResolution {
   /// @param sourceLinkEquality is the equality function for the source links
   /// @param trackFeaturesVectors is the trackFeatures map from detector ID to trackFeatures
   /// @return a vector of the initial state of the tracks
-  template <TrackContainerFrontend track_container_t,
-            typename source_link_hash_t, typename source_link_equality_t>
-  std::vector<std::vector<MeasurementInfo>> computeInitialState(
-      const track_container_t& tracks, source_link_hash_t sourceLinkHash,
-      source_link_equality_t sourceLinkEquality,
-      std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors) const;
+  template <TrackContainerFrontend track_container_t>
+  std::vector<std::vector<TrackFeatures>> computeInitialState(
+      const track_container_t& tracks) const;
 
   /// Compute the score of each track.
   ///
@@ -209,7 +198,7 @@ class ScoreBasedAmbiguityResolution {
   template <TrackProxyConcept track_proxy_t>
   bool getCleanedOutTracks(
       const track_proxy_t& track, const double& trackScore,
-      const std::vector<MeasurementInfo>& measurementsPerTrack,
+      const std::vector<std::size_t>& measurementsPerTrack,
       const std::map<std::size_t, std::size_t> nTracksPerMeasurement,
       const std::vector<std::function<
           bool(const track_proxy_t&,
@@ -224,11 +213,11 @@ class ScoreBasedAmbiguityResolution {
   /// @param trackFeaturesVectors is the map of detector id to trackFeatures for each track
   /// @param optionalCuts is the optional cuts to be applied
   /// @return a vector of IDs of the tracks we want to keep
-  template <TrackContainerFrontend track_container_t>
+  template <TrackContainerFrontend track_container_t,
+            typename source_link_hash_t, typename source_link_equality_t>
   std::vector<int> solveAmbiguity(
-      const track_container_t& tracks,
-      const std::vector<std::vector<MeasurementInfo>>& measurementsPerTrack,
-      const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
+      const track_container_t& tracks, source_link_hash_t sourceLinkHash,
+      source_link_equality_t sourceLinkEquality,
       const OptionalCuts<typename track_container_t::ConstTrackProxy>&
           optionalCuts = {}) const;
 
