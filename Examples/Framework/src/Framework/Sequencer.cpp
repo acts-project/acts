@@ -126,6 +126,13 @@ Sequencer::Sequencer(const Sequencer::Config& cfg)
         "ACTS_SEQUENCER_DISABLE_FPEMON");
     m_cfg.trackFpes = false;
   }
+
+  if (m_cfg.trackFpes && !m_cfg.fpeMasks.empty() &&
+      !Acts::FpeMonitor::canSymbolize()) {
+    ACTS_ERROR("FPE monitoring is enabled but symbolization is not available");
+    throw std::runtime_error(
+        "FPE monitoring is enabled but symbolization is not available");
+  }
 }
 
 void Sequencer::addContextDecorator(
@@ -199,10 +206,8 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
         ACTS_ERROR("Adding "
                    << elementType << " " << element->name() << ":"
                    << "\n-> white board will contain key '" << handle->key()
-                   << "'"
-                   << "\nat this point in the sequence (source: "
-                   << source.fullName() << "),"
-                   << "\nbut the type will be\n"
+                   << "'" << "\nat this point in the sequence (source: "
+                   << source.fullName() << ")," << "\nbut the type will be\n"
                    << "'" << demangleAndShorten(source.typeInfo().name()) << "'"
                    << "\nand not\n"
                    << "'" << demangleAndShorten(handle->typeInfo().name())
@@ -211,8 +216,8 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
       }
     } else {
       ACTS_ERROR("Adding " << elementType << " " << element->name() << ":"
-                           << "\n-> white board will not contain key"
-                           << " '" << handle->key()
+                           << "\n-> white board will not contain key" << " '"
+                           << handle->key()
                            << "' at this point in the sequence."
                            << "\n   Needed for read data handle '"
                            << handle->name() << "'");

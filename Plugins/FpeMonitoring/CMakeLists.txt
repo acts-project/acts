@@ -29,8 +29,6 @@ else()
             NAMES "boost/stacktrace.hpp"
             REQUIRED
         )
-        message(STATUS "boost_stacktrace_include: ${boost_stacktrace_include}")
-
         if(Backtrace_FOUND)
             # check if we need to link against bracktrace or not
             set(backtrace_include "")
@@ -92,7 +90,6 @@ else()
                         LINK_LIBRARIES ${dl_LIBRARY}
                         CMAKE_FLAGS
                             "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
-                            "-DCMAKE_CXX_FLAGS=\"\""
                         COMPILE_DEFINITIONS
                             -DBOOST_STACKTRACE_USE_BACKTRACE
                             ${backtrace_include}
@@ -122,9 +119,7 @@ else()
                 "${CMAKE_BINARY_DIR}"
                 "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                 LINK_LIBRARIES ${dl_LIBRARY}
-                CMAKE_FLAGS
-                    "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
-                    "-DCMAKE_CXX_FLAGS=\"\""
+                CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
                 COMPILE_DEFINITIONS
                     -DBOOST_STACKTRACE_USE_BACKTRACE
                     ${backtrace_include}
@@ -151,6 +146,8 @@ else()
                     "${CMAKE_BINARY_DIR}"
                     "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                     LINK_LIBRARIES backtrace ${dl_LIBRARY}
+                    CMAKE_FLAGS
+                        "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
                     COMPILE_DEFINITIONS
                         -DBOOST_STACKTRACE_USE_BACKTRACE
                         ${backtrace_include}
@@ -173,30 +170,13 @@ else()
         endif()
 
         if(NOT _backtrace_setup_complete)
-            message(CHECK_START "Is addr2line available")
-            if(addr2line_EXECUTABLE)
-                list(APPEND _fpe_options -DBOOST_STACKTRACE_USE_ADDR2LINE)
-                list(
-                    APPEND
-                    _fpe_options
-                    -DBOOST_STACKTRACE_ADDR2LINE_LOCATION=${addr2line_EXECUTABLE}
-                )
-                message(CHECK_PASS "yes")
-
-                set(_backtrace_setup_complete TRUE)
-            else()
-                message(CHECK_FAIL "no")
-            endif()
-        endif()
-
-        if(NOT _backtrace_setup_complete)
             message(STATUS "Unable to set up stacktrace setup: use noop")
             list(APPEND _fpe_options -BOOST_STACKTRACE_USE_NOOP)
         endif()
     endif()
 endif()
 
-target_compile_options(ActsPluginFpeMonitoring PUBLIC "${_fpe_options}")
+target_compile_options(ActsPluginFpeMonitoring PRIVATE "${_fpe_options}")
 
 install(
     TARGETS ActsPluginFpeMonitoring
