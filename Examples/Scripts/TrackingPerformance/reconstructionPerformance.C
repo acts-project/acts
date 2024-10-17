@@ -19,7 +19,7 @@
 #include "CommonUtils.h"
 
 /// This script allows a fast reading and replotting of the existing performance plots, e.g. 'trackeff_vs_*' and 'nMeasurements_vs_*',
-/// from the root file 'performance_track_fitter.root' or 'performance_ckf.root'.
+/// from the root file 'performance_track_fitter.root' or 'performance_finding_ckf.root'.
 /// Note that redefinition of the tracking efficiency etc. is not possible with this script.
 /// If you want to define your own efficiency etc., please refer to 'defineReconstructionPerformance.C'.
 ///

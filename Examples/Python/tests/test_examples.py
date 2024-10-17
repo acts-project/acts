@@ -1141,7 +1141,7 @@ def test_ckf_tracks_example(
 
     root_files = [
         (
-            "performance_ckf.root",
+            "performance_finding_ckf.root",
             None,
         ),
         (

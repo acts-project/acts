@@ -96,7 +96,7 @@ class Objective:
 def get_tracking_perf(self, ckf_perf, params, keys):
     if ckf_perf:
         outDirName = "Output_CKF"
-        outputfile = srcDir / outDirName / "performance_ckf.root"
+        outputfile = srcDir / outDirName / "performance_finding_ckf.root"
         effContName = "particles"
         contName = "tracks"
     else:
