@@ -211,7 +211,26 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
     assert(i == nCorners);
 
-    return FieldCell(lowerLeft, upperRight, std::move(neighbors));
+    // This possible conversion is necessary, in case we want to use custom
+    // general scalar type ActsScalar != double
+    auto convertArray = [](const auto& inputArray) {
+      using T = typename std::decay_t<decltype(inputArray)>::value_type;
+
+      std::array<double, DIM_POS> outputArray;
+
+      if constexpr (!std::is_same_v<T, double>) {
+        std::transform(inputArray.begin(), inputArray.end(),
+                       outputArray.begin(),
+                       [](T val) { return static_cast<double>(val); });
+      } else {
+        std::copy(inputArray.begin(), inputArray.end(), outputArray.begin());
+      }
+
+      return outputArray;
+    };
+
+    return FieldCell(convertArray(lowerLeft), convertArray(upperRight),
+                     std::move(neighbors));
   }
 
   /// @brief get the number of bins for all axes of the field map
