@@ -80,7 +80,7 @@ Acts::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
           auto materialSlab = homogeneousMaterial->materialSlab();
           detray::io::material_slab_payload slabPayload =
               convertMaterialSlab(materialSlab);
-          // Find the surfaces to assigne
+          // Find the surfaces to assign
           auto vIndex = cCache.volumeIndex(volume);
           auto localSurfaceLinks = cCache.localSurfaceLinks.find(vIndex);
           if (localSurfaceLinks != cCache.localSurfaceLinks.end()) {
@@ -266,7 +266,7 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
       std::vector<DetrayMaterialGrid> volumeMaterialGrids = {};
       // Now convert the surfaces
       for (const auto& surface : selector.surfaces) {
-        // Find the surfaces to assigne
+        // Find the surfaces to assign
         auto vIndex = cCache.volumeIndex(volume);
         auto localSurfaceLinks = cCache.localSurfaceLinks.find(vIndex);
         if (localSurfaceLinks != cCache.localSurfaceLinks.end()) {

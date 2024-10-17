@@ -39,7 +39,7 @@ struct Cache {
   Cache(const std::vector<const Acts::Experimental::DetectorVolume*>& dVolumes)
       : detectorVolumes(dVolumes) {}
 
-  /// The voluems fo the detector for index lookup
+  /// The volumes of the detector for index lookup
   std::vector<const Acts::Experimental::DetectorVolume*> detectorVolumes;
   /// This is a map to pass on volume link information
   std::map<GeometryIdentifier, unsigned long> volumeLinks;
