@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
   BOOST_CHECK(isEqual(reference, test, 0.0001));
 
   // Increase to three dimensions
-  std::vector<float> boundaries = {-4., -1.5, 0., 10.};
+  std::vector<ActsScalar> boundaries = {-4., -1.5, 0., 10.};
   reference += BinUtility(boundaries, open, BinningValue::binZ);
   nlohmann::json jthreeDimOut;
   to_json(jthreeDimOut, reference);

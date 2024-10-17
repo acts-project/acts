@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(ProtoBinningVariable) {
 BOOST_AUTO_TEST_CASE(BinningDescriptionFromAndToBinUtility) {
   // A valid binning
   Acts::BinUtility bUtility(5u, 0., 10., Acts::open, Acts::BinningValue::binR);
-  std::vector<float> edges = {-M_PI, 0.1, M_PI};
+  std::vector<Acts::ActsScalar> edges = {-M_PI, 0.1, M_PI};
   bUtility += Acts::BinUtility(edges, Acts::closed, Acts::BinningValue::binPhi);
 
   auto bDescription = BinningDescription::fromBinUtility(bUtility);

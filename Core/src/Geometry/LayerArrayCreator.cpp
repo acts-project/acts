@@ -69,7 +69,7 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
 
     // arbitrary binning
     case arbitrary: {
-      std::vector<float> boundaries;
+      std::vector<ActsScalar> boundaries;
       // initial step
       boundaries.push_back(min);
       double layerValue = 0.;
