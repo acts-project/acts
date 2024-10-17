@@ -84,11 +84,6 @@ struct IndexSourceLinkSurfaceAccessor {
 
 }  // namespace Experimental
 
-/// Container of index source links.
-///
-/// Since the source links provide a `.geometryId()` accessor, they can be
-/// stored in an ordered geometry container.
-using IndexSourceLinkContainer = GeometryIdMultiset<IndexSourceLink>;
 /// Accessor for the above source link container
 ///
 /// It wraps up a few lookup methods to be used in the Combinatorial Kalman
@@ -105,4 +100,5 @@ struct IndexSourceLinkAccessor : GeometryIdMultisetAccessor<IndexSourceLink> {
     return {Iterator{begin}, Iterator{end}};
   }
 };
+
 }  // namespace ActsExamples

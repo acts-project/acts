@@ -41,6 +41,8 @@ struct Options {
   PortalConverter::Options portalOptions;
   /// The Surface converter options
   SurfaceConverter::Options surfaceOptions;
+  /// The Grid converter options
+  IndexedSurfacesConverter::Options indexedSurfacesOptions;
 };
 
 /// Write/create the detector volume

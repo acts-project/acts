@@ -26,7 +26,6 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -36,17 +35,8 @@
 #include <cmath>
 #include <filesystem>
 #include <memory>
-#include <ostream>
 #include <utility>
 #include <vector>
-
-namespace Acts::Experimental {
-ViewConfig s_viewSensitive = {.color = {0, 180, 240}};
-ViewConfig s_viewPassive = {.color = {240, 280, 0}};
-ViewConfig s_viewVolume = {.color = {220, 220, 0}};
-ViewConfig s_viewGrid = {.color = {220, 0, 0}};
-ViewConfig s_viewLine = {.color = {0, 0, 220}};
-}  // namespace Acts::Experimental
 
 void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
                                           const Polyhedron& polyhedron,
@@ -95,7 +85,6 @@ void Acts::GeometryView3D::drawSurfaceArray(
       auto phiValues = axes[0]->getBinEdges();
       auto zValues = axes[1]->getBinEdges();
       ViewConfig gridRadConfig = gridConfig;
-      gridRadConfig.nSegments = phiValues.size();
       // Longitudinal lines
       for (auto phi : phiValues) {
         double cphi = std::cos(phi);
@@ -120,7 +109,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
       auto rValues = axes[0]->getBinEdges();
       auto phiValues = axes[1]->getBinEdges();
       ViewConfig gridRadConfig = gridConfig;
-      gridRadConfig.nSegments = phiValues.size();
+      gridRadConfig.quarterSegments = phiValues.size();
       for (auto r : rValues) {
         CylinderVolumeBounds cvb(r - 0.5 * thickness, r + 0.5 * thickness,
                                  0.5 * thickness);
@@ -244,7 +233,7 @@ void Acts::GeometryView3D::drawTrackingVolume(
   ViewConfig lConfig = layerView;
   ViewConfig sConfig = sensitiveView;
   ViewConfig gConfig = gridView;
-  gConfig.nSegments = 8;
+  gConfig.quarterSegments = 8;
 
   ViewConfig vcConfig = cConfig;
   std::string vname = tVolume.volumeName();
