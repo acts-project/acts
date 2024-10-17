@@ -20,8 +20,8 @@ shopt -s extglob
 
 
 mode=${1:-all}
-if ! [[ $mode = @(all|kf|gsf|gx2f|fullchains|simulation) ]]; then
-    echo "Usage: $0 <all|kf|gsf|gx2f|fullchains|simulation> (outdir)"
+if ! [[ $mode = @(all|kf|gsf|gx2f|refit_kf|refit_gsf|fullchains|simulation) ]]; then
+    echo "Usage: $0 <all|kf|gsf|gx2f|refit_kf|refit_gsf|fullchains|simulation> (outdir)"
     exit 1
 fi
 
@@ -151,6 +151,12 @@ if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
 fi
 if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
     run_physmon_gen "Truth Tracking GX2F" "trackfitting_gx2f"
+fi
+if [[ "$mode" == "all" || "$mode" == "refit_kf" ]]; then
+    run_physmon_gen "Truth Tracking KF refit" "trackrefitting_kf"
+fi
+if [[ "$mode" == "all" || "$mode" == "refit_gsf" ]]; then
+    run_physmon_gen "Truth Tracking GSF refit" "trackrefitting_gsf"
 fi
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     run_physmon_gen "CKF single muon" "trackfinding_1muon"
@@ -409,6 +415,26 @@ if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
         trackfitting_gx2f/performance_trackfitting.html \
         trackfitting_gx2f/performance_trackfitting_plots \
         --config CI/physmon/config/trackfitting_gx2f.yml
+fi
+
+if [[ "$mode" == "all" || "$mode" == "kf_refit" ]]; then
+    run_histcmp \
+        $outdir/data/trackrefitting_kf/performance_trackrefitting.root \
+        $refdir/trackrefitting_kf/performance_trackrefitting.root \
+        "Truth tracking (KF refit)" \
+        trackrefitting_kf/performance_trackrefitting.html \
+        trackrefitting_kf/performance_trackrefitting_plots \
+        --config CI/physmon/config/trackfitting_kf.yml
+fi
+
+if [[ "$mode" == "all" || "$mode" == "gsf_refit" ]]; then
+    run_histcmp \
+        $outdir/data/trackrefitting_gsf/performance_trackrefitting.root \
+        $refdir/trackrefitting_gsf/performance_trackrefitting.root \
+        "Truth tracking (GSF refit)" \
+        trackrefitting_gsf/performance_trackrefitting.html \
+        trackrefitting_gsf/performance_trackrefitting_plots \
+        --config CI/physmon/config/trackfitting_gsf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then

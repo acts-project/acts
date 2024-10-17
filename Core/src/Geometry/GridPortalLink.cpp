@@ -89,7 +89,10 @@ void GridPortalLink::checkConsistency(const CylinderSurface& cyl) const {
     ActsScalar hlZ = cyl.bounds().get(CylinderBounds::eHalfLengthZ);
     if (!same(axis.getMin(), -hlZ) || !same(axis.getMax(), hlZ)) {
       throw std::invalid_argument(
-          "GridPortalLink: CylinderBounds: invalid length setup.");
+          "GridPortalLink: CylinderBounds: invalid length setup: " +
+          std::to_string(axis.getMin()) + " != " + std::to_string(-hlZ) +
+          " or " + std::to_string(axis.getMax()) +
+          " != " + std::to_string(hlZ));
     }
   };
   auto checkRPhi = [&cyl, same](const IAxis& axis) {
@@ -295,7 +298,7 @@ void GridPortalLink::fillGrid1dTo2d(FillDirection dir,
   assert(locDest.size() == 2);
 
   for (std::size_t i = 0; i <= locSource[0] + 1; ++i) {
-    TrackingVolume* source = grid1d.atLocalBins({i});
+    const TrackingVolume* source = grid1d.atLocalBins({i});
 
     if (dir == FillDirection::loc1) {
       for (std::size_t j = 0; j <= locDest[1] + 1; ++j) {

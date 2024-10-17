@@ -347,15 +347,6 @@ void TrackingVolume::closeGeometry(
     std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
     std::size_t& vol, const GeometryIdentifierHook& hook,
     const Logger& logger) {
-  if (!boundarySurfaces().empty() && !portals().empty()) {
-    ACTS_ERROR(
-        "TrackingVolume::closeGeometry: Volume "
-        << volumeName()
-        << " has both boundary surfaces and portals. This is not supported.");
-    throw std::invalid_argument(
-        "Volume has both boundary surfaces and portals");
-  }
-
   if (m_confinedVolumes && !volumes().empty()) {
     ACTS_ERROR(
         "TrackingVolume::closeGeometry: Volume "
@@ -721,6 +712,27 @@ void TrackingVolume::addSurface(std::shared_ptr<Surface> surface) {
     throw std::invalid_argument("Surface is nullptr");
   }
   m_surfaces.push_back(std::move(surface));
+}
+
+void TrackingVolume::visualize(IVisualization3D& helper,
+                               const GeometryContext& gctx,
+                               const ViewConfig& viewConfig,
+                               const ViewConfig& portalViewConfig,
+                               const ViewConfig& sensitiveViewConfig) const {
+  helper.object(volumeName());
+  Volume::visualize(helper, gctx, viewConfig);
+
+  if (!surfaces().empty()) {
+    helper.object(volumeName() + "_sensitives");
+  }
+  for (const auto& surface : surfaces()) {
+    surface.visualize(helper, gctx, sensitiveViewConfig);
+  }
+
+  for (const auto& child : volumes()) {
+    child.visualize(helper, gctx, viewConfig, portalViewConfig,
+                    sensitiveViewConfig);
+  }
 }
 
 }  // namespace Acts

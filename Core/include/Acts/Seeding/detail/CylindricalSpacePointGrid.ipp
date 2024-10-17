@@ -139,8 +139,8 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
                    config.rBinEdges.end());
   }
 
-  Axis<AxisType::Variable, AxisBoundaryType::Bound> zAxis(std::move(zValues));
-  Axis<AxisType::Variable, AxisBoundaryType::Bound> rAxis(std::move(rValues));
+  Axis<AxisType::Variable, AxisBoundaryType::Open> zAxis(std::move(zValues));
+  Axis<AxisType::Variable, AxisBoundaryType::Open> rAxis(std::move(rValues));
   return Acts::CylindricalSpacePointGrid<external_spacepoint_t>(
       std::make_tuple(std::move(phiAxis), std::move(zAxis), std::move(rAxis)));
 }
@@ -167,9 +167,11 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
 
   // Space points are assumed to be ALREADY CORRECTED for beamspot position
   // phi, z and r space point selection comes naturally from the
-  // grid axis definition. No need to explicitly cut on those values.
+  // grid axis definition. Calling `isInside` will let us know if we are
+  // inside the grid range.
   // If a space point is outside the validity range of these quantities
-  // it goes in an over- or under-flow bin.
+  // it goes in an over- or under-flow bin. We want to avoid to consider those
+  // and skip some computations.
   // Additional cuts can be applied by customizing the space point selector
   // in the config object.
 
@@ -189,8 +191,12 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     }
 
     // fill rbins into grid
-    std::size_t globIndex = grid.globalBinFromPosition(
-        Acts::Vector3{sp.phi(), sp.z(), sp.radius()});
+    Acts::Vector3 position(sp.phi(), sp.z(), sp.radius());
+    if (!grid.isInside(position)) {
+      continue;
+    }
+
+    std::size_t globIndex = grid.globalBinFromPosition(position);
     auto& rbin = grid.at(globIndex);
     rbin.push_back(&sp);
 
@@ -207,4 +213,18 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     auto& rbin = grid.atPosition(binIndex);
     std::ranges::sort(rbin, {}, [](const auto& rb) { return rb->radius(); });
   }
+}
+
+template <typename external_spacepoint_t, typename external_collection_t>
+  requires std::ranges::range<external_collection_t> &&
+           std::same_as<typename external_collection_t::value_type,
+                        external_spacepoint_t>
+void Acts::CylindricalSpacePointGridCreator::fillGrid(
+    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+    const Acts::SeedFinderOptions& options,
+    Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
+    const external_collection_t& collection) {
+  Acts::CylindricalSpacePointGridCreator::fillGrid<external_spacepoint_t>(
+      config, options, grid, std::ranges::begin(collection),
+      std::ranges::end(collection));
 }

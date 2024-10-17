@@ -63,8 +63,8 @@ void addInput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_READER(
       ActsExamples::CsvMeasurementReader, mex, "CsvMeasurementReader", inputDir,
-      outputMeasurements, outputMeasurementSimHitsMap, outputSourceLinks,
-      outputClusters, outputMeasurementParticlesMap, inputSimHits);
+      outputMeasurements, outputMeasurementSimHitsMap, outputClusters,
+      outputMeasurementParticlesMap, inputSimHits);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvSimHitReader, mex,
                              "CsvSimHitReader", inputDir, inputStem,
@@ -93,7 +93,16 @@ void addInput(Context& ctx) {
   ACTS_PYTHON_DECLARE_READER(
       ActsExamples::RootAthenaDumpReader, mex, "RootAthenaDumpReader", treename,
       inputfile, outputMeasurements, outputPixelSpacePoints,
-      outputStripSpacePoints, outputSpacePoints, outputClusters);
+      outputStripSpacePoints, outputSpacePoints, outputClusters,
+      outputMeasurementParticlesMap, outputParticles, onlyPassedParticles,
+      skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap, trackingGeometry,
+      absBoundaryTolerance);
+
+#ifdef WITH_GEOMODEL_PLUGIN
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::RootAthenaDumpGeoIdCollector, mex,
+                             "RootAthenaDumpGeoIdCollector", treename,
+                             inputfile, trackingGeometry, geometryIdMap);
+#endif
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootSimHitReader, mex,
                              "RootSimHitReader", treeName, filePath,

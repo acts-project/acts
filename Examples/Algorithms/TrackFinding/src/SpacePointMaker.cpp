@@ -32,9 +32,6 @@
 ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
                                                Acts::Logging::Level lvl)
     : IAlgorithm("SpacePointMaker", lvl), m_cfg(std::move(cfg)) {
-  if (m_cfg.inputSourceLinks.empty()) {
-    throw std::invalid_argument("Missing source link input collection");
-  }
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement input collection");
   }
@@ -48,7 +45,6 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
     throw std::invalid_argument("Missing space point maker geometry selection");
   }
 
-  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
 
@@ -119,7 +115,6 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
 
 ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
     const AlgorithmContext& ctx) const {
-  const auto& sourceLinks = m_inputSourceLinks(ctx);
   const auto& measurements = m_inputMeasurements(ctx);
 
   // TODO Support strip measurements
@@ -136,7 +131,8 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   SimSpacePointContainer spacePoints;
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
-    auto range = selectLowestNonZeroGeometryObject(sourceLinks, geoId);
+    auto range =
+        selectLowestNonZeroGeometryObject(measurements.orderedIndices(), geoId);
     // groupByModule only works with geometry containers, not with an
     // arbitrary range. do the equivalent grouping manually
     auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
