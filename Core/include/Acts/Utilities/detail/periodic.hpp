@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cmath>
+#include <tuple>
 
 namespace Acts::detail {
 
