@@ -11,12 +11,12 @@ from acts.examples.simulation import (
     EtaConfig,
     PhiConfig,
     ParticleConfig,
+    ParticleSelectorConfig,
     addFatras,
     addDigitization,
 )
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
@@ -69,6 +69,11 @@ with tempfile.TemporaryDirectory() as temp:
         setup.trackingGeometry,
         setup.field,
         rnd=rnd,
+        postSelectParticles=ParticleSelectorConfig(
+            pt=(0.99 * u.GeV, None),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     addDigitization(
@@ -83,7 +88,6 @@ with tempfile.TemporaryDirectory() as temp:
         s,
         setup.trackingGeometry,
         setup.field,
-        TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
         SeedFinderConfigArg(
             r=(33 * u.mm, 200 * u.mm),
             deltaR=(1 * u.mm, 60 * u.mm),
@@ -192,6 +196,10 @@ with tempfile.TemporaryDirectory() as temp:
     s.run()
 
     shutil.move(
+        tp / "performance_fitting_ambi.root",
+        tp / "performance_fitting_ckf_ambi.root",
+    )
+    shutil.move(
         tp / "performance_ambi.root",
         tp / "performance_ckf_ambi.root",
     )
@@ -204,7 +212,9 @@ with tempfile.TemporaryDirectory() as temp:
     for file in [
         "performance_seeding.root",
         "tracksummary_ckf.root",
+        "performance_fitting_ckf.root",
         "performance_ckf.root",
+        "performance_fitting_ckf_ambi.root",
         "performance_ckf_ambi.root",
         "performance_vertexing_ivf_notime.root",
         "performance_vertexing_amvf_gauss_notime.root",

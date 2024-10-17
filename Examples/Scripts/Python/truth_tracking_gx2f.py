@@ -23,13 +23,13 @@ def runTruthTrackingGx2f(
         EtaConfig,
         PhiConfig,
         MomentumConfig,
+        ParticleSelectorConfig,
         addFatras,
         addDigitization,
     )
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
-        TruthSeedRanges,
         addGx2fTracks,
     )
 
@@ -74,6 +74,10 @@ def runTruthTrackingGx2f(
         field,
         rnd=rnd,
         enableInteractions=True,
+        postSelectParticles=ParticleSelectorConfig(
+            measurements=(7, None),
+            removeNeutral=True,
+        ),
     )
 
     addDigitization(
@@ -92,9 +96,6 @@ def runTruthTrackingGx2f(
         inputParticles="particles_input",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.muon,
-        truthSeedRanges=TruthSeedRanges(
-            nHits=(7, None),
-        ),
     )
 
     addGx2fTracks(
