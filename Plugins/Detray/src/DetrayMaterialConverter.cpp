@@ -281,7 +281,7 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
           DetrayMaterialGrid materialGrid =
               convertGridSurfaceMaterial(*surface->surfaceMaterial(), logger);
           // Ignore if an empty payload is returned
-          if (materialGrid.axes.empty() && materialGrid.bins.empty()) {
+          if (materialGrid.axes.empty() || materialGrid.bins.empty()) {
             continue;
           }
 
