@@ -78,7 +78,7 @@ class AnnulusBounds : public DiscBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<ActsScalar> values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -248,8 +248,8 @@ inline double AnnulusBounds::binningValuePhi() const {
   return get(eAveragePhi);
 }
 
-inline std::vector<double> AnnulusBounds::values() const {
-  std::vector<double> valvector;
+inline std::vector<ActsScalar> AnnulusBounds::values() const {
+  std::vector<ActsScalar> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }

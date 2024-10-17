@@ -56,8 +56,8 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// @param rmax The outer radius of the overall shape
   /// @param hlZ The longer halflength of the shape
   /// @param hlZc The cutout halflength of the shape
-  CutoutCylinderVolumeBounds(double rmin, double rmed, double rmax, double hlZ,
-                             double hlZc) noexcept(false)
+  CutoutCylinderVolumeBounds(ActsScalar rmin, ActsScalar rmed, ActsScalar rmax,
+                             ActsScalar hlZ, ActsScalar hlZc) noexcept(false)
       : m_values({rmin, rmed, rmax, hlZ, hlZc}) {
     checkConsistency();
     buildSurfaceBounds();
@@ -66,8 +66,8 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// Constructor - from a fixed size array
   ///
   /// @param values The bound values
-  CutoutCylinderVolumeBounds(const std::array<double, eSize>& values) noexcept(
-      false)
+  CutoutCylinderVolumeBounds(
+      const std::array<ActsScalar, eSize>& values) noexcept(false)
       : m_values(values) {
     checkConsistency();
     buildSurfaceBounds();
@@ -82,14 +82,14 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<ActsScalar> values() const final;
 
   /// Inside method to test whether a point is inside the shape
   ///
   /// @param gpos The point to test
   /// @param tol The tolerance to test with
   /// @return Whether the point is inside or not.
-  bool inside(const Vector3& gpos, double tol = 0) const override;
+  bool inside(const Vector3& gpos, ActsScalar tol = 0) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -134,7 +134,7 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:
-  std::array<double, eSize> m_values;
+  std::array<ActsScalar, eSize> m_values;
 
   // The surface bound objects
   std::shared_ptr<const CylinderBounds> m_innerCylinderBounds{nullptr};
@@ -151,8 +151,8 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   void checkConsistency() noexcept(false);
 };
 
-inline std::vector<double> CutoutCylinderVolumeBounds::values() const {
-  std::vector<double> valvector;
+inline std::vector<ActsScalar> CutoutCylinderVolumeBounds::values() const {
+  std::vector<ActsScalar> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }

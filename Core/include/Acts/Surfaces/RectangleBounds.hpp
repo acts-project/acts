@@ -45,7 +45,7 @@ class RectangleBounds : public PlanarBounds {
   ///
   /// @param halfX halflength in X
   /// @param halfY halflength in Y
-  RectangleBounds(double halfX, double halfY) noexcept(false)
+  RectangleBounds(ActsScalar halfX, ActsScalar halfY) noexcept(false)
       : m_min({-halfX, -halfY}), m_max({halfX, halfY}) {
     checkConsistency();
   }
@@ -53,7 +53,7 @@ class RectangleBounds : public PlanarBounds {
   /// Constructor - from fixed size array - generic
   ///
   /// @param values The parameter values
-  RectangleBounds(const std::array<double, eSize>& values) noexcept(false)
+  RectangleBounds(const std::array<ActsScalar, eSize>& values) noexcept(false)
       : m_min({values[eMinX], values[eMinY]}),
         m_max({values[eMaxX], values[eMaxY]}) {
     checkConsistency();
@@ -72,7 +72,7 @@ class RectangleBounds : public PlanarBounds {
 
   BoundsType type() const final;
 
-  std::vector<double> values() const final;
+  std::vector<ActsScalar> values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -148,7 +148,7 @@ inline double RectangleBounds::halfLengthY() const {
   return 0.5 * (m_max.y() - m_min.y());
 }
 
-inline std::vector<double> RectangleBounds::values() const {
+inline std::vector<ActsScalar> RectangleBounds::values() const {
   return {m_min.x(), m_min.y(), m_max.x(), m_max.y()};
 }
 

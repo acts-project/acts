@@ -614,14 +614,18 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
       const CylinderVolumeBounds* cvBounds =
           dynamic_cast<const CylinderVolumeBounds*>(&volume->volumeBounds());
       if (cvBounds != nullptr) {
-        lConfig.rMin =
-            std::min(lConfig.rMin, cvBounds->get(CylinderVolumeBounds::eMinR));
-        lConfig.rMax =
-            std::max(lConfig.rMax, cvBounds->get(CylinderVolumeBounds::eMaxR));
-        lConfig.zMin = std::min(
-            lConfig.zMin, -cvBounds->get(CylinderVolumeBounds::eHalfLengthZ));
-        lConfig.zMax = std::max(
-            lConfig.zMax, cvBounds->get(CylinderVolumeBounds::eHalfLengthZ));
+        lConfig.rMin = std::min(
+            lConfig.rMin,
+            static_cast<double>(cvBounds->get(CylinderVolumeBounds::eMinR)));
+        lConfig.rMax = std::max(
+            lConfig.rMax,
+            static_cast<double>(cvBounds->get(CylinderVolumeBounds::eMaxR)));
+        lConfig.zMin =
+            std::min(lConfig.zMin, static_cast<double>(-cvBounds->get(
+                                       CylinderVolumeBounds::eHalfLengthZ)));
+        lConfig.zMax =
+            std::max(lConfig.zMax, static_cast<double>(cvBounds->get(
+                                       CylinderVolumeBounds::eHalfLengthZ)));
       }
     }
   }

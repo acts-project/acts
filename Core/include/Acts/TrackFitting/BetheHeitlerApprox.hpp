@@ -225,7 +225,7 @@ class AtlasBetheHeitlerApprox {
     }
     // Return a component representation for higher x0
     // Cap the x because beyond the parameterization goes wild
-    const auto high_x = std::min(m_highLimit, x);
+    const auto high_x = std::min(m_highLimit, static_cast<double>(x));
     return make_mixture(m_highData, high_x, m_highTransform);
   }
 

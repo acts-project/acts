@@ -27,7 +27,7 @@
 #include <utility>
 
 bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3& gpos,
-                                              double tol) const {
+                                              Acts::ActsScalar tol) const {
   // first check whether we are in the outer envelope at all (ignore r_med)
   using VectorHelpers::perp;
   using VectorHelpers::phi;

@@ -30,8 +30,8 @@ std::ostream& Acts::ConvexPolygonBoundsBase::toStream(std::ostream& sl) const {
   return sl;
 }
 
-std::vector<double> Acts::ConvexPolygonBoundsBase::values() const {
-  std::vector<double> values;
+std::vector<Acts::ActsScalar> Acts::ConvexPolygonBoundsBase::values() const {
+  std::vector<Acts::ActsScalar> values;
   for (const auto& vtx : vertices()) {
     values.push_back(vtx.x());
     values.push_back(vtx.y());

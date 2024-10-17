@@ -98,16 +98,16 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
   if (bevelMinZ != 0.) {
     ActsScalar sy = 1 - 1 / std::cos(bevelMinZ);
     transMinZ = transform * vMinZ *
-                Eigen::AngleAxisd(-bevelMinZ, Eigen::Vector3d(1., 0., 0.)) *
-                Eigen::Scaling(1., 1. + sy, 1.);
+                Eigen::AngleAxis<ActsScalar>(-bevelMinZ, Vector3(1., 0., 0.)) *
+                Eigen::DiagonalMatrix<ActsScalar, 3>(1., 1. + sy, 1.);
   } else {
     transMinZ = transform * vMinZ;
   }
   if (bevelMaxZ != 0.) {
     ActsScalar sy = 1 - 1 / std::cos(bevelMaxZ);
     transMaxZ = transform * vMaxZ *
-                Eigen::AngleAxisd(bevelMaxZ, Eigen::Vector3d(1., 0., 0.)) *
-                Eigen::Scaling(1., 1. + sy, 1.);
+                Eigen::AngleAxis<ActsScalar>(bevelMaxZ, Vector3(1., 0., 0.)) *
+                Eigen::DiagonalMatrix<ActsScalar, 3>(1., 1. + sy, 1.);
   } else {
     transMaxZ = transform * vMaxZ;
   }

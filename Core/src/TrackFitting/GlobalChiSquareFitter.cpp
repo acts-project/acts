@@ -11,7 +11,8 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 
 void Acts::Experimental::updateGx2fCovarianceParams(
-    BoundMatrix& fullCovariancePredicted, Eigen::MatrixXd& aMatrixExtended,
+    BoundMatrix& fullCovariancePredicted,
+    Eigen::Matrix<ActsScalar, Eigen::Dynamic, Eigen::Dynamic>& aMatrixExtended,
     const std::size_t ndfSystem) {
   // make invertible
   for (int i = 0; i < aMatrixExtended.rows(); ++i) {

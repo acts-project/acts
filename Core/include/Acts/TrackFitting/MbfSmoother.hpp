@@ -103,8 +103,8 @@ class MbfSmoother {
     struct Measurement final {
       unsigned int calibratedSize{0};
       // This is used to build a covariance matrix view in the .cpp file
-      const double* calibrated{nullptr};
-      const double* calibratedCovariance{nullptr};
+      const ActsScalar* calibrated{nullptr};
+      const ActsScalar* calibratedCovariance{nullptr};
       Projector projector;
 
       template <typename TrackStateProxy>

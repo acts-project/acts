@@ -298,11 +298,11 @@ struct ScatteringProperties {
 /// @param trackState The track state to analyse
 /// @param logger A logger instance
 template <std::size_t kMeasDim, typename track_state_t>
-void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
-                              Eigen::VectorXd& bVectorExtended, double& chi2sum,
-                              const std::vector<BoundMatrix>& jacobianFromStart,
-                              const track_state_t& trackState,
-                              const Logger& logger) {
+void addMeasurementToGx2fSums(
+    Eigen::Matrix<ActsScalar, Eigen::Dynamic, Eigen::Dynamic>& aMatrixExtended,
+    Eigen::Matrix<ActsScalar, Eigen::Dynamic, 1>& bVectorExtended,
+    double& chi2sum, const std::vector<BoundMatrix>& jacobianFromStart,
+    const track_state_t& trackState, const Logger& logger) {
   // First we get back the covariance and try to invert it. If the inversion
   // fails, we can already abort.
   const ActsSquareMatrix<kMeasDim> covarianceMeasurement =
@@ -321,8 +321,9 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
   const std::size_t dimsExtendedParams = aMatrixExtended.rows();
 
   // We create an empty Jacobian and fill it in the next steps
-  Eigen::MatrixXd extendedJacobian =
-      Eigen::MatrixXd::Zero(eBoundSize, dimsExtendedParams);
+  Eigen::Matrix<ActsScalar, Eigen::Dynamic, Eigen::Dynamic> extendedJacobian =
+      Eigen::Matrix<ActsScalar, Eigen::Dynamic, Eigen::Dynamic>::Zero(
+          eBoundSize, dimsExtendedParams);
 
   // This part of the Jacobian comes from the material-less propagation
   extendedJacobian.topLeftCorner<eBoundSize, eBoundSize>() =
@@ -352,7 +353,8 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
   const ActsMatrix<kMeasDim, eBoundSize> projector =
       trackState.projector().template topLeftCorner<kMeasDim, eBoundSize>();
 
-  const Eigen::MatrixXd projJacobian = projector * extendedJacobian;
+  const Eigen::Matrix<ActsScalar, Eigen::Dynamic, Eigen::Dynamic> projJacobian =
+      projector * extendedJacobian;
 
   const ActsMatrix<kMeasDim, 1> projPredicted = projector * predicted;
 
@@ -418,7 +420,8 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
 /// @param logger A logger instance
 template <typename track_state_t>
 void addMaterialToGx2fSums(
-    Eigen::MatrixXd& aMatrixExtended, Eigen::VectorXd& bVectorExtended,
+    Eigen::Matrix<ActsScalar, Eigen::Dynamic, Eigen::Dynamic>& aMatrixExtended,
+    Eigen::Matrix<ActsScalar, Eigen::Dynamic, 1>& bVectorExtended,
     double& chi2sum, const std::size_t nMaterialsHandled,
     const std::unordered_map<GeometryIdentifier, ScatteringProperties>&
         scatteringMap,
@@ -498,9 +501,10 @@ void addMaterialToGx2fSums(
 /// @param ndfSystem The number of degrees of freedom, determining the size of meaning full block
 ///
 /// @return deltaParams The calculated delta parameters.
-void updateGx2fCovarianceParams(BoundMatrix& fullCovariancePredicted,
-                                Eigen::MatrixXd& aMatrixExtended,
-                                const std::size_t ndfSystem);
+void updateGx2fCovarianceParams(
+    BoundMatrix& fullCovariancePredicted,
+    Eigen::Matrix<ActsScalar, Eigen::Dynamic, Eigen::Dynamic>& aMatrixExtended,
+    const std::size_t ndfSystem);
 
 /// Global Chi Square fitter (GX2F) implementation.
 ///
@@ -1180,10 +1184,13 @@ class Gx2Fitter {
 
       // Set to zero before filling
       chi2sum = 0;
-      Eigen::MatrixXd aMatrixExtended =
-          Eigen::MatrixXd::Zero(dimsExtendedParams, dimsExtendedParams);
-      Eigen::VectorXd bVectorExtended =
-          Eigen::VectorXd::Zero(dimsExtendedParams);
+      Eigen::Matrix<ActsScalar, Eigen::Dynamic, Eigen::Dynamic>
+          aMatrixExtended =
+              Eigen::Matrix<ActsScalar, Eigen::Dynamic, Eigen::Dynamic>::Zero(
+                  dimsExtendedParams, dimsExtendedParams);
+      Eigen::Matrix<ActsScalar, Eigen::Dynamic, 1> bVectorExtended =
+          Eigen::Matrix<ActsScalar, Eigen::Dynamic, 1>::Zero(
+              dimsExtendedParams);
 
       std::vector<BoundMatrix> jacobianFromStart;
       jacobianFromStart.emplace_back(BoundMatrix::Identity());
@@ -1300,7 +1307,7 @@ class Gx2Fitter {
       bVector = bVectorExtended.topLeftCorner<eBoundSize, 1>().eval();
 
       // calculate delta params [a] * delta = b
-      Eigen::VectorXd deltaParamsExtended =
+      Eigen::Matrix<ActsScalar, Eigen::Dynamic, 1> deltaParamsExtended =
           aMatrixExtended.colPivHouseholderQr().solve(bVectorExtended);
 
       deltaParams = deltaParamsExtended.topLeftCorner<eBoundSize, 1>().eval();

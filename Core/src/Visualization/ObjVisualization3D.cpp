@@ -60,7 +60,8 @@ void ObjVisualization3D::faces(const std::vector<Vector3>& vtxs,
     if (color != Color{0, 0, 0}) {
       o.vertexColors[o.vertices.size()] = color;
     }
-    o.vertices.insert(o.vertices.end(), vtxs.begin(), vtxs.end());
+    std::transform(vtxs.begin(), vtxs.end(), std::back_inserter(o.vertices),
+                   [](const Vector3& v) { return v.template cast<double>(); });
     for (const auto& face : faces) {
       if (face.size() == 2) {
         o.lines.push_back({face[0] + vtxoffs, face[2] + vtxoffs});

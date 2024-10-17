@@ -28,7 +28,7 @@ class InfiniteBounds : public SurfaceBounds {
     return SurfaceBounds::eBoundless;
   }
 
-  std::vector<double> values() const final { return {}; }
+  std::vector<ActsScalar> values() const final { return {}; }
 
   /// Method inside() returns true for any case
   ///

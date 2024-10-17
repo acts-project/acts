@@ -136,10 +136,12 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
   }
 
   // Use the volume boundaries as limits for the binning
-  minMax.first = std::min(
-      minMax.first, minVolumeBoundaries(toUnderlying(cfg.binningDimension)));
-  minMax.second = std::max(
-      minMax.second, maxVolumeBoundaries(toUnderlying(cfg.binningDimension)));
+  minMax.first =
+      std::min(minMax.first, static_cast<double>(minVolumeBoundaries(
+                                 toUnderlying(cfg.binningDimension))));
+  minMax.second =
+      std::max(minMax.second, static_cast<double>(maxVolumeBoundaries(
+                                  toUnderlying(cfg.binningDimension))));
 
   return minMax;
 }

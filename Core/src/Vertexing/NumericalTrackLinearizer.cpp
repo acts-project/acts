@@ -13,6 +13,8 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
+#include <numbers>
+
 Acts::Result<Acts::LinearizedTrack>
 Acts::NumericalTrackLinearizer::linearizeTrack(
     const BoundTrackParameters& params, double linPointTime,
@@ -141,7 +143,8 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
     // previously computed value for better readability.
     completeJacobian(eLinPhi, i) =
         Acts::detail::difference_periodic(newPerigeeParams(eLinPhi),
-                                          perigeeParams(eLinPhi), 2 * M_PI) /
+                                          perigeeParams(eLinPhi),
+                                          ActsScalar{2. * std::numbers::pi}) /
         m_cfg.delta;
   }
 

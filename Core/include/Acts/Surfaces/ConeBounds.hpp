@@ -82,7 +82,7 @@ class ConeBounds : public SurfaceBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<ActsScalar> values() const final;
 
   /// inside method for local position
   ///
@@ -134,8 +134,8 @@ inline double ConeBounds::tanAlpha() const {
   return m_tanAlpha;
 }
 
-inline std::vector<double> ConeBounds::values() const {
-  std::vector<double> valvector;
+inline std::vector<ActsScalar> ConeBounds::values() const {
+  std::vector<ActsScalar> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }

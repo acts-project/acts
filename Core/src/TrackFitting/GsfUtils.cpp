@@ -18,7 +18,7 @@ using TrackStateTraits =
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>;
 
 ActsScalar calculateDeterminant(
-    const double* fullCalibratedCovariance,
+    const ActsScalar* fullCalibratedCovariance,
     TrackStateTraits::Covariance predictedCovariance,
     TrackStateTraits::Projector projector, unsigned int calibratedSize) {
   return visit_measurement(calibratedSize, [&](auto N) {

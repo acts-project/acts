@@ -22,9 +22,9 @@
 /// @param halfXposY maximal half length X, definition at positive Y
 /// @param halfY half length Y - defined at x=0
 /// @param rotAngle: rotation angle of the bounds w.r.t coordinate axes
-Acts::TrapezoidBounds::TrapezoidBounds(double halfXnegY, double halfXposY,
-                                       double halfY,
-                                       double rotAngle) noexcept(false)
+Acts::TrapezoidBounds::TrapezoidBounds(
+    Acts::ActsScalar halfXnegY, Acts::ActsScalar halfXposY,
+    Acts::ActsScalar halfY, Acts::ActsScalar rotAngle) noexcept(false)
     : m_values({halfXnegY, halfXposY, halfY, rotAngle}),
       m_boundingBox(std::max(halfXnegY, halfXposY), halfY) {
   rotateBoundingBox();
@@ -35,7 +35,7 @@ Acts::TrapezoidBounds::TrapezoidBounds(double halfXnegY, double halfXposY,
 ///
 /// @param values the values to be stream in
 Acts::TrapezoidBounds::TrapezoidBounds(
-    const std::array<double, eSize>& values) noexcept(false)
+    const std::array<Acts::ActsScalar, eSize>& values) noexcept(false)
     : m_values(values),
       m_boundingBox(
           std::max(values[eHalfLengthXnegY], values[eHalfLengthXposY]),
@@ -57,19 +57,20 @@ bool Acts::TrapezoidBounds::inside(
     return true;
   }
 
-  const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
-  const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
-  const double hlY = get(TrapezoidBounds::eHalfLengthY);
-  const double rotAngle = get(TrapezoidBounds::eRotationAngle);
+  const Acts::ActsScalar hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
+  const Acts::ActsScalar hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
+  const Acts::ActsScalar hlY = get(TrapezoidBounds::eHalfLengthY);
+  const Acts::ActsScalar rotAngle = get(TrapezoidBounds::eRotationAngle);
 
-  const Acts::Vector2 extPosition = Eigen::Rotation2Dd(rotAngle) * lposition;
-  const double x = extPosition[0];
-  const double y = extPosition[1];
+  const Acts::Vector2 extPosition =
+      Eigen::Rotation2D<Acts::ActsScalar>(rotAngle) * lposition;
+  const Acts::ActsScalar x = extPosition[0];
+  const Acts::ActsScalar y = extPosition[1];
 
   if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt(true);
       absoluteBound.has_value()) {
-    double tolX = absoluteBound->tolerance0;
-    double tolY = absoluteBound->tolerance1;
+    Acts::ActsScalar tolX = absoluteBound->tolerance0;
+    Acts::ActsScalar tolY = absoluteBound->tolerance1;
 
     if (std::abs(y) - hlY > tolY) {
       // outside y range
@@ -97,15 +98,15 @@ bool Acts::TrapezoidBounds::inside(
 
 std::vector<Acts::Vector2> Acts::TrapezoidBounds::vertices(
     unsigned int /*ignoredSegments*/) const {
-  const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
-  const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
-  const double hlY = get(TrapezoidBounds::eHalfLengthY);
-  const double rotAngle = get(TrapezoidBounds::eRotationAngle);
+  const Acts::ActsScalar hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
+  const Acts::ActsScalar hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
+  const Acts::ActsScalar hlY = get(TrapezoidBounds::eHalfLengthY);
+  const Acts::ActsScalar rotAngle = get(TrapezoidBounds::eRotationAngle);
 
   std::vector<Acts::Vector2> vertices = {
       {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
   for (auto& v : vertices) {
-    v = Eigen::Rotation2Dd(-rotAngle) * v;
+    v = Eigen::Rotation2D<Acts::ActsScalar>(-rotAngle) * v;
   }
   return vertices;
 }
@@ -124,14 +125,14 @@ std::ostream& Acts::TrapezoidBounds::toStream(std::ostream& sl) const {
   return sl;
 }
 
-std::vector<double> Acts::TrapezoidBounds::values() const {
-  std::vector<double> valvector;
+std::vector<Acts::ActsScalar> Acts::TrapezoidBounds::values() const {
+  std::vector<Acts::ActsScalar> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
 
 void Acts::TrapezoidBounds::rotateBoundingBox() noexcept(false) {
-  const double rotAngle = get(eRotationAngle);
+  const Acts::ActsScalar rotAngle = get(eRotationAngle);
 
   if (rotAngle != 0.) {
     m_boundingBox = ConvexPolygonBounds<4>(vertices()).boundingBox();
