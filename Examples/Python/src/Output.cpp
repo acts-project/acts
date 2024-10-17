@@ -31,7 +31,7 @@
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
-#include "ActsExamples/Io/Performance/VertexPerformanceWriter.hpp"
+#include "ActsExamples/Io/Performance/VertexNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
@@ -353,7 +353,7 @@ void addOutput(Context& ctx) {
       treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific);
 
   ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::VertexPerformanceWriter, mex, "VertexPerformanceWriter",
+      ActsExamples::VertexNTupleWriter, mex, "VertexNTupleWriter",
       inputVertices, inputTracks, inputTruthVertices, inputParticles,
       inputSelectedParticles, inputTrackParticleMatching, bField, filePath,
       treeName, fileMode, vertexMatchThreshold, trackMatchThreshold, useTracks);
