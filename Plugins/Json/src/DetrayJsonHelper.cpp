@@ -50,7 +50,7 @@ std::tuple<unsigned int, std::vector<ActsScalar>> maskFromBounds(
         break;
     }
   }
-  return std::tie(type, boundaries);
+  return {type, boundaries};
 }
 
 void addVolumeLink(nlohmann::json& jSurface, int vLink) {
