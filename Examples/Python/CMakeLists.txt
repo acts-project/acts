@@ -54,11 +54,9 @@ target_link_libraries(
         ActsExamplesDetectorTGeo
         ActsExamplesMagneticField
         ActsExamplesIoRoot
-        ActsExamplesIoNuclearInteractions
         ActsExamplesIoCsv
         ActsExamplesIoObj
         ActsExamplesIoJson
-        ActsExamplesIoPerformance
         ActsExamplesGenerators
         ActsExamplesPrinters
         ActsExamplesTrackFinding
