@@ -177,13 +177,13 @@ class GenericFreeTrackParameters {
   }
 
   /// Reflect the parameters in place.
-  void reflectInplace() { m_params = reflectFreeParameters(m_params); }
+  void reflectInPlace() { m_params = reflectFreeParameters(m_params); }
 
   /// Reflect the parameters.
   /// @return Reflected parameters.
   GenericFreeTrackParameters<ParticleHypothesis> reflect() const {
     GenericFreeTrackParameters<ParticleHypothesis> reflected = *this;
-    reflected.reflectInplace();
+    reflected.reflectInPlace();
     return reflected;
   }
 

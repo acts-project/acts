@@ -251,13 +251,13 @@ class GenericBoundTrackParameters {
   }
 
   /// Reflect the parameters in place.
-  void reflectInplace() { m_params = reflectBoundParameters(m_params); }
+  void reflectInPlace() { m_params = reflectBoundParameters(m_params); }
 
   /// Reflect the parameters.
   /// @return Reflected parameters.
   GenericBoundTrackParameters<ParticleHypothesis> reflect() const {
     GenericBoundTrackParameters<ParticleHypothesis> reflected = *this;
-    reflected.reflectInplace();
+    reflected.reflectInPlace();
     return reflected;
   }
 
