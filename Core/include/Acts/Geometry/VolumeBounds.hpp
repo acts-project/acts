@@ -86,7 +86,7 @@ class VolumeBounds {
   /// vector containing the parameters needed to describe these bounds
   ///
   /// @return of the stored values for this SurfaceBounds object
-  virtual std::vector<double> values() const = 0;
+  virtual std::vector<ActsScalar> values() const = 0;
 
   /// Checking if position given in volume frame is inside
   ///
@@ -94,7 +94,7 @@ class VolumeBounds {
   /// @param tol is the tolerance applied for the inside check
   ///
   /// @return boolean indicating if the position is inside
-  virtual bool inside(const Vector3& gpos, double tol = 0.) const = 0;
+  virtual bool inside(const Vector3& gpos, ActsScalar tol = 0.) const = 0;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -143,7 +143,7 @@ class VolumeBounds {
   /// @param bValue is the binning schema used
   ///
   /// @return float offset to be used for the binning
-  virtual double binningBorder(BinningValue bValue) const;
+  virtual ActsScalar binningBorder(BinningValue bValue) const;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
@@ -157,8 +157,8 @@ inline Vector3 VolumeBounds::binningOffset(
   return Vector3(0., 0., 0.);
 }
 
-inline double VolumeBounds::binningBorder(BinningValue /*bValue*/) const {
-  return 0.;
+inline ActsScalar VolumeBounds::binningBorder(BinningValue /*bValue*/) const {
+  return ActsScalar{0.};
 }
 
 /// Overload of << operator for std::ostream for debug output

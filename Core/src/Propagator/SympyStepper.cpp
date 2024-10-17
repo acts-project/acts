@@ -110,12 +110,12 @@ Result<double> SympyStepper::stepImpl(
     double stepSizeCutOff, std::size_t maxRungeKuttaStepTrials) const {
   auto pos = position(state);
   auto dir = direction(state);
-  double t = time(state);
-  double qop = qOverP(state);
-  double m = particleHypothesis(state).mass();
-  double p_abs = absoluteMomentum(state);
+  ActsScalar t = time(state);
+  ActsScalar qop = qOverP(state);
+  ActsScalar m = particleHypothesis(state).mass();
+  ActsScalar p_abs = absoluteMomentum(state);
 
-  auto getB = [&](const double* p) -> Result<Vector3> {
+  auto getB = [&](const ActsScalar* p) -> Result<Vector3> {
     return getField(state, {p[0], p[1], p[2]});
   };
 
@@ -138,10 +138,10 @@ Result<double> SympyStepper::stepImpl(
     return std::clamp(x, lower, upper);
   };
 
-  double h = state.stepSize.value() * stepDirection;
+  ActsScalar h = state.stepSize.value() * stepDirection;
   double initialH = h;
   std::size_t nStepTrials = 0;
-  double errorEstimate = 0.;
+  ActsScalar errorEstimate = 0.;
 
   while (true) {
     nStepTrials++;
@@ -149,7 +149,8 @@ Result<double> SympyStepper::stepImpl(
     // For details about the factor 4 see ATL-SOFT-PUB-2009-001
     Result<bool> res =
         rk4(pos.data(), dir.data(), t, h, qop, m, p_abs, getB, &errorEstimate,
-            4 * stepTolerance, state.pars.template segment<3>(eFreePos0).data(),
+            ActsScalar{4 * stepTolerance},
+            state.pars.template segment<3>(eFreePos0).data(),
             state.pars.template segment<3>(eFreeDir0).data(),
             state.pars.template segment<1>(eFreeTime).data(),
             state.derivative.data(),
@@ -158,13 +159,13 @@ Result<double> SympyStepper::stepImpl(
       return res.error();
     }
     // Protect against division by zero
-    errorEstimate = std::max(1e-20, errorEstimate);
+    errorEstimate = std::max(ActsScalar{1e-20}, errorEstimate);
 
     if (*res) {
       break;
     }
 
-    const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
+    const ActsScalar stepSizeScaling = calcStepSizeScaling(errorEstimate);
     h *= stepSizeScaling;
 
     // If step size becomes too small the particle remains at the initial
@@ -186,10 +187,10 @@ Result<double> SympyStepper::stepImpl(
   ++state.nSteps;
   state.nStepTrials += nStepTrials;
 
-  const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
-  const double nextAccuracy = std::abs(h * stepSizeScaling);
-  const double previousAccuracy = std::abs(state.stepSize.accuracy());
-  const double initialStepLength = std::abs(initialH);
+  const ActsScalar stepSizeScaling = calcStepSizeScaling(errorEstimate);
+  const ActsScalar nextAccuracy = std::abs(h * stepSizeScaling);
+  const ActsScalar previousAccuracy = std::abs(state.stepSize.accuracy());
+  const ActsScalar initialStepLength = std::abs(initialH);
   if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
     state.stepSize.setAccuracy(nextAccuracy);
   }

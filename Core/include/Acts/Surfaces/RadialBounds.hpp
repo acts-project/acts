@@ -47,8 +47,8 @@ class RadialBounds : public DiscBounds {
   /// @param maxR The outer radius
   /// @param halfPhi The half opening angle (Pi for full angular coverage)
   /// @param avgPhi The average phi for the disc/ring sector
-  RadialBounds(double minR, double maxR, double halfPhi = M_PI,
-               double avgPhi = 0.) noexcept(false)
+  RadialBounds(ActsScalar minR, ActsScalar maxR, ActsScalar halfPhi = M_PI,
+               ActsScalar avgPhi = 0.) noexcept(false)
       : m_values({minR, maxR, halfPhi, avgPhi}) {
     checkConsistency();
   }
@@ -56,7 +56,7 @@ class RadialBounds : public DiscBounds {
   /// Constructor from array values
   ///
   /// @param values The bound values
-  RadialBounds(const std::array<double, eSize>& values) noexcept(false)
+  RadialBounds(const std::array<ActsScalar, eSize>& values) noexcept(false)
       : m_values(values) {
     checkConsistency();
   }
@@ -68,7 +68,7 @@ class RadialBounds : public DiscBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<ActsScalar> values() const final;
 
   /// For disc surfaces the local position in (r,phi) is checked
   ///
@@ -108,7 +108,7 @@ class RadialBounds : public DiscBounds {
   double binningValuePhi() const final;
 
  private:
-  std::array<double, eSize> m_values;
+  std::array<ActsScalar, eSize> m_values;
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
@@ -157,8 +157,8 @@ inline double RadialBounds::binningValuePhi() const {
   return get(eAveragePhi);
 }
 
-inline std::vector<double> RadialBounds::values() const {
-  std::vector<double> valvector;
+inline std::vector<ActsScalar> RadialBounds::values() const {
+  std::vector<ActsScalar> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }

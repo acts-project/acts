@@ -43,7 +43,7 @@ void Acts::Extent::extend(const Vector3& vtx,
     ActsScalar mValue = cValue - lEnv;
     // Special protection for radial value
     if (bValue == BinningValue::binR && mValue < 0.) {
-      mValue = std::max(mValue, 0.);
+      mValue = std::max(mValue, ActsScalar{0.});
     }
     if (constrains(bValue)) {
       m_range[toUnderlying(bValue)].expand(mValue, cValue + hEnv);
