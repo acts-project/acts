@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
