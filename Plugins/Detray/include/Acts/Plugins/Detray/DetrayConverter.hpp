@@ -54,7 +54,7 @@ class DetrayConverter {
                      const Experimental::Detector& detector,
                      vecmem::memory_resource& mr, const Options& options) {
     // The building cache object
-    DetrayConversionUtils::GeometryIdCache geoIdCache;
+    DetrayConversionUtils::Cache cCache(detector.volumes());
 
     typename detector_t::name_map names = {{0u, detector.name()}};
 
@@ -62,30 +62,30 @@ class DetrayConverter {
     detray::detector_builder<typename detector_t::metadata> detectorBuilder{};
     // (1) geometry
     detray::io::detector_payload detectorPayload =
-        DetrayGeometryConverter::convertDetector(geoIdCache, gctx, detector,
+        DetrayGeometryConverter::convertDetector(cCache, gctx, detector,
                                                  logger());
     detray::io::geometry_reader::convert<detector_t>(detectorBuilder, names,
                                                      detectorPayload);
 
     // (2a) homogeneous material
-    if constexpr (detray::detail::has_homogeneous_material_v<detector_t>) {
+    if constexpr (detray::concepts::has_homogeneous_material<detector_t>) {
       if (options.convertMaterial) {
         detray::io::detector_homogeneous_material_payload materialSlabsPayload =
             DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
-                geoIdCache, detector, logger());
+                cCache, detector, logger());
         detray::io::homogeneous_material_reader::convert<detector_t>(
             detectorBuilder, names, std::move(materialSlabsPayload));
       }
     }
 
     // (2b) material grids
-    if constexpr (detray::detail::has_material_grids_v<detector_t>) {
+    if constexpr (detray::concepts::has_material_rods<detector_t>) {
       if (options.convertMaterial) {
         detray::io::detector_grids_payload<detray::io::material_slab_payload,
                                            detray::io::material_id>
             materialGridsPayload =
                 DetrayMaterialConverter::convertGridSurfaceMaterial(
-                    geoIdCache, detector, logger());
+                    cCache, detector, logger());
         detray::io::material_map_reader<std::integral_constant<
             std::size_t, 2>>::convert<detector_t>(detectorBuilder, names,
                                                   std::move(
