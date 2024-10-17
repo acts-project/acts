@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -61,7 +62,8 @@ class GenericBoundTrackParameters {
         m_cov(std::move(cov)),
         m_surface(std::move(surface)),
         m_particleHypothesis(std::move(particleHypothesis)) {
-    assert(m_surface);
+    assert(isBoundVectorValid(m_params) && "Invalid bound parameters");
+    assert(m_surface != nullptr && "Reference surface must not be null");
     normalizePhiTheta();
   }
 
