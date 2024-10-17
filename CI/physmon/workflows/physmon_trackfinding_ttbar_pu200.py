@@ -13,7 +13,6 @@ from acts.examples.simulation import (
 )
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
@@ -68,6 +67,11 @@ with tempfile.TemporaryDirectory() as temp:
             rho=(0.0, 24 * u.mm),
             absZ=(0.0, 1.0 * u.m),
         ),
+        postSelectParticles=ParticleSelectorConfig(
+            pt=(0.5 * u.GeV, None),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     addDigitization(
@@ -82,7 +86,6 @@ with tempfile.TemporaryDirectory() as temp:
         s,
         setup.trackingGeometry,
         setup.field,
-        TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
         SeedFinderConfigArg(
             r=(33 * u.mm, 200 * u.mm),
             deltaR=(1 * u.mm, 60 * u.mm),
