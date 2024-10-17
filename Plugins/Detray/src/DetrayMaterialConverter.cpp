@@ -92,9 +92,7 @@ Acts::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
             for (auto itr = surfaceIndices.first; itr != surfaceIndices.second;
                  ++itr) {
               // Make an identified link copy for every matching surface
-              detray::io::single_link_payload surfaceLink;
-              surfaceLink.link = itr->second;
-              slabPayload.surface = surfaceLink;
+              slabPayload.surface.link = itr->second;
               volumePayload.mat_slabs.push_back(slabPayload);
             }
           } else {
