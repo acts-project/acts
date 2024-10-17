@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   ts.allocateCalibrated(2);
   ts.calibrated<2>() << 0.351, 0.473;
   ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
-  ts.setSubspaceIndices<2>(projector);
+  ts.setProjectorSubspaceIndices<2>(projector);
 
   ts.filtered() << 0.301, 0.503, 0.5 * M_PI, 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   ts.allocateCalibrated(2);
   ts.calibrated<2>() << 0.351, 0.473;
   ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
-  ts.setSubspaceIndices<2>(projector);
+  ts.setProjectorSubspaceIndices<2>(projector);
 
   ts.filtered() << 0.27, 0.53, 0.5 * M_PI, 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   ts.allocateCalibrated(2);
   ts.calibrated<2>() << 0.351, 0.473;
   ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
-  ts.setSubspaceIndices<2>(projector);
+  ts.setProjectorSubspaceIndices<2>(projector);
 
   ts.filtered() << 0.33, 0.43, 0.5 * M_PI, 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;
