@@ -332,4 +332,12 @@ std::string FpeMonitor::getSourceLocation(
   return frame.source_file() + ":" + std::to_string(frame.source_line());
 }
 
+bool FpeMonitor::canSymbolize() {
+#if defined(BOOST_STACKTRACE_USE_NOOP)
+  return false;
+#else
+  return true;
+#endif
+}
+
 }  // namespace Acts
