@@ -1375,8 +1375,13 @@ def addTruthTrackingGsf(
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
+    # NOTE we specify clampToRange as True to silence warnings in the test about
+    # queries to the loss distribution outside the specified range, since no dedicated
+    # approximation for the ODD is done yet.
+    bha = acts.examples.AtlasBetheHeitlerApprox.makeDefault(clampToRange=True)
+
     gsfOptions = {
-        "betheHeitlerApprox": acts.examples.AtlasBetheHeitlerApprox.makeDefault(),
+        "betheHeitlerApprox": bha,
         "maxComponents": 12,
         "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
         "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
