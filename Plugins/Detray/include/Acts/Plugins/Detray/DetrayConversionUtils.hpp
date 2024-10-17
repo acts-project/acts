@@ -46,7 +46,7 @@ struct Cache {
   /// This is a multimap to pass volume local surface link information
   /// The portal splitting requires a multimap implementation here
   ///
-  /// These are voljme local, heence indexed per volumes
+  /// These are volume local, hence indexed per volumes
   std::map<std::size_t, std::multimap<GeometryIdentifier, unsigned long>>
       localSurfaceLinks;
 
