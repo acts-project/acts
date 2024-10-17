@@ -103,8 +103,12 @@ class DetrayPropagator : public PropagatorInterface {
                             DetrayInspector>;
 
       // Propagator with empty actor chain
-      using Propagator =
-          detray::propagator<stepper_t, DetrayNavigator, detray::actor_chain<>>;
+      using MaterialTracer =
+          detray::material_validator::material_tracer<DetrayAlgebraType,
+                                                      detray::dvector>;
+      using Propagator = detray::propagator<
+          stepper_t, DetrayNavigator,
+          detray::actor_chain<detray::dtuple, MaterialTracer>>;
 
       typename Propagator::state propagation(track,
                                              m_cfg.detrayStore->detector);
