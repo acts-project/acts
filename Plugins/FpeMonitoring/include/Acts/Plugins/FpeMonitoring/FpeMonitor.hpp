@@ -131,6 +131,8 @@ class FpeMonitor {
                                         std::size_t depth);
   static std::string getSourceLocation(const boost::stacktrace::frame &frame);
 
+  static bool canSymbolize();
+
  private:
   void enable();
   void disable();
