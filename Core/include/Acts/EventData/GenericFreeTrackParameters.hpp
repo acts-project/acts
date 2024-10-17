@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -173,6 +174,17 @@ class GenericFreeTrackParameters {
   /// Particle hypothesis.
   const ParticleHypothesis& particleHypothesis() const {
     return m_particleHypothesis;
+  }
+
+  /// Reflect the parameters in place.
+  void reflectInPlace() { m_params = reflectFreeParameters(m_params); }
+
+  /// Reflect the parameters.
+  /// @return Reflected parameters.
+  GenericFreeTrackParameters<ParticleHypothesis> reflect() const {
+    GenericFreeTrackParameters<ParticleHypothesis> reflected = *this;
+    reflected.reflectInPlace();
+    return reflected;
   }
 
  private:
