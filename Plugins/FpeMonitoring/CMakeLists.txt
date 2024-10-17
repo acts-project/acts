@@ -176,7 +176,7 @@ else()
     endif()
 endif()
 
-target_compile_options(ActsPluginFpeMonitoring PRIVATE "${_fpe_options}")
+target_compile_options(ActsPluginFpeMonitoring PUBLIC "${_fpe_options}")
 
 install(
     TARGETS ActsPluginFpeMonitoring
