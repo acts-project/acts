@@ -309,4 +309,7 @@ void CylinderVolumeBounds::set(
   }
 }
 
+CylinderVolumeBounds::CylinderVolumeBounds(const CylinderVolumeBounds& cylbo) =
+    default;
+
 }  // namespace Acts
