@@ -347,15 +347,6 @@ void TrackingVolume::closeGeometry(
     std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
     std::size_t& vol, const GeometryIdentifierHook& hook,
     const Logger& logger) {
-  if (!boundarySurfaces().empty() && !portals().empty()) {
-    ACTS_ERROR(
-        "TrackingVolume::closeGeometry: Volume "
-        << volumeName()
-        << " has both boundary surfaces and portals. This is not supported.");
-    throw std::invalid_argument(
-        "Volume has both boundary surfaces and portals");
-  }
-
   if (m_confinedVolumes && !volumes().empty()) {
     ACTS_ERROR(
         "TrackingVolume::closeGeometry: Volume "

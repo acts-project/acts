@@ -699,6 +699,7 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
         runRefittingGsf(
             trackingGeometry=trackingGeometry,
             field=field,
+            digiConfigFile=detector_config.digiConfigFile,
             outputDir=tmp_path,
             s=seq,
         ).run()

@@ -76,13 +76,7 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
         "HoughTransformSeeder: Missing hough track seeds output collection");
   }
 
-  if (m_cfg.inputSourceLinks.empty()) {
-    throw std::invalid_argument(
-        "HoughTransformSeeder: Missing source link input collection");
-  }
-
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
-  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
 
   if (!m_cfg.trackingGeometry) {
@@ -503,14 +497,14 @@ void ActsExamples::HoughTransformSeeder::addSpacePoints(
 void ActsExamples::HoughTransformSeeder::addMeasurements(
     const AlgorithmContext& ctx) const {
   const auto& measurements = m_inputMeasurements(ctx);
-  const auto& sourceLinks = m_inputSourceLinks(ctx);
 
   ACTS_DEBUG("Inserting " << measurements.size() << " space points from "
                           << m_cfg.inputMeasurements);
 
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
-    auto range = selectLowestNonZeroGeometryObject(sourceLinks, geoId);
+    auto range =
+        selectLowestNonZeroGeometryObject(measurements.orderedIndices(), geoId);
     // groupByModule only works with geometry containers, not with an
     // arbitrary range. do the equivalent grouping manually
     auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
