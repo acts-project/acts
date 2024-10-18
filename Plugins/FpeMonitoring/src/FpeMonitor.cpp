@@ -61,10 +61,10 @@ FpeMonitor::Result FpeMonitor::Result::merged(const Result &with) const {
     result.m_counts[i] = m_counts[i] + with.m_counts[i];
   }
 
-  std::copy(with.m_stracktraces.begin(), with.m_stracktraces.end(),
-            std::back_inserter(result.m_stracktraces));
-  std::copy(m_stracktraces.begin(), m_stracktraces.end(),
-            std::back_inserter(result.m_stracktraces));
+  std::copy(with.m_stackTraces.begin(), with.m_stackTraces.end(),
+            std::back_inserter(result.m_stackTraces));
+  std::copy(m_stackTraces.begin(), m_stackTraces.end(),
+            std::back_inserter(result.m_stackTraces));
 
   result.deduplicate();
 
@@ -76,8 +76,8 @@ void FpeMonitor::Result::merge(const Result &with) {
     m_counts[i] = m_counts[i] + with.m_counts[i];
   }
 
-  std::copy(with.m_stracktraces.begin(), with.m_stracktraces.end(),
-            std::back_inserter(m_stracktraces));
+  std::copy(with.m_stackTraces.begin(), with.m_stackTraces.end(),
+            std::back_inserter(m_stackTraces));
 
   deduplicate();
 }
@@ -87,20 +87,20 @@ void FpeMonitor::Result::add(FpeType type, void *stackPtr,
   auto st = std::make_unique<boost::stacktrace::stacktrace>(
       boost::stacktrace::stacktrace::from_dump(stackPtr, bufferSize));
 
-  auto it = std::ranges::find_if(m_stracktraces, [&](const FpeInfo &el) {
+  auto it = std::ranges::find_if(m_stackTraces, [&](const FpeInfo &el) {
     return areFpesEquivalent({el.type, *el.st}, {type, *st});
   });
 
-  if (it != m_stracktraces.end()) {
+  if (it != m_stackTraces.end()) {
     it->count += 1;
   } else {
-    m_stracktraces.push_back({1, type, std::move(st)});
+    m_stackTraces.push_back({1, type, std::move(st)});
   }
 }
 
 bool FpeMonitor::Result::contains(
     FpeType type, const boost::stacktrace::stacktrace &st) const {
-  return std::ranges::any_of(m_stracktraces, [&](const FpeInfo &el) {
+  return std::ranges::any_of(m_stackTraces, [&](const FpeInfo &el) {
     return areFpesEquivalent({el.type, *el.st}, {type, st});
   });
 }
@@ -128,12 +128,12 @@ unsigned int FpeMonitor::Result::count(FpeType type) const {
 }
 
 unsigned int FpeMonitor::Result::numStackTraces() const {
-  return m_stracktraces.size();
+  return m_stackTraces.size();
 }
 
 const std::vector<FpeMonitor::Result::FpeInfo> &
 FpeMonitor::Result::stackTraces() const {
-  return m_stracktraces;
+  return m_stackTraces;
 }
 
 bool FpeMonitor::Result::encountered(FpeType type) const {
@@ -161,18 +161,18 @@ void FpeMonitor::Result::summary(std::ostream &os, std::size_t depth) const {
 
 void FpeMonitor::Result::deduplicate() {
   std::vector<FpeInfo> copy{};
-  copy = std::move(m_stracktraces);
-  m_stracktraces.clear();
+  copy = std::move(m_stackTraces);
+  m_stackTraces.clear();
 
   for (auto &info : copy) {
-    auto it = std::ranges::find_if(m_stracktraces, [&info](const FpeInfo &el) {
+    auto it = std::ranges::find_if(m_stackTraces, [&info](const FpeInfo &el) {
       return areFpesEquivalent({el.type, *el.st}, {info.type, *info.st});
     });
-    if (it != m_stracktraces.end()) {
+    if (it != m_stackTraces.end()) {
       it->count += info.count;
       continue;
     }
-    m_stracktraces.push_back({info.count, info.type, std::move(info.st)});
+    m_stackTraces.push_back({info.count, info.type, std::move(info.st)});
   }
 }
 
