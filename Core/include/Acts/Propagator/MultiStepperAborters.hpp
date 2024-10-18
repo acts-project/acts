@@ -71,8 +71,8 @@ struct MultiStepperSurfaceReached : public SurfaceReached {
       }
 
       ACTS_VERBOSE(
-          "MultiStepperSurfaceReached aborter | "
-          "Target intersection not found. Maybe next time?");
+          "MultiStepperSurfaceReached aborter | Average distance to target: "
+          << sIntersection.pathLength());
     }
 
     bool reached = true;
@@ -84,6 +84,7 @@ struct MultiStepperSurfaceReached : public SurfaceReached {
 
       if (!SurfaceReached::checkAbort(singleState, singleStepper, navigator,
                                       logger)) {
+        cmp.status() = Acts::Intersection3D::Status::reachable;
         reached = false;
       } else {
         cmp.status() = Acts::Intersection3D::Status::onSurface;
