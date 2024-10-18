@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
 
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -154,11 +155,10 @@ Pythia8Generator::operator()(RandomEngine& rng) {
 
       // check if an existing vertex is close enough
       auto it =
-          std::find_if(vertices.begin(), vertices.end(),
-                       [&pos4, this](const SimVertex& other) {
-                         return (pos4.head<3>() - other.position()).norm() <
-                                m_cfg.spatialVertexThreshold;
-                       });
+          std::ranges::find_if(vertices, [&pos4, this](const SimVertex& v) {
+            return (pos4.head<3>() - v.position()).norm() <
+                   m_cfg.spatialVertexThreshold;
+          });
 
       if (it != vertices.end()) {
         particleId.setVertexSecondary(std::distance(vertices.begin(), it));
@@ -184,7 +184,7 @@ Pythia8Generator::operator()(RandomEngine& rng) {
     // normalization/ units are not import for the direction
     particle.setDirection(genParticle.px(), genParticle.py(), genParticle.pz());
     particle.setAbsoluteMomentum(
-        std::hypot(genParticle.px(), genParticle.py(), genParticle.pz()) *
+        Acts::fastHypot(genParticle.px(), genParticle.py(), genParticle.pz()) *
         1_GeV);
 
     particles.push_back(std::move(particle));

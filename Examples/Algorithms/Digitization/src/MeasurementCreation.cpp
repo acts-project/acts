@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
@@ -18,10 +19,8 @@
 #include <utility>
 
 ActsExamples::VariableBoundMeasurementProxy ActsExamples::createMeasurement(
-    MeasurementContainer& container, const DigitizedParameters& dParams,
-    const IndexSourceLink& isl) {
-  Acts::SourceLink sl{isl};
-
+    MeasurementContainer& container, Acts::GeometryIdentifier geometryId,
+    const DigitizedParameters& dParams) {
   if (dParams.indices.size() > 4u) {
     std::string errorMsg = "Invalid/mismatching measurement dimension: " +
                            std::to_string(dParams.indices.size());
@@ -31,6 +30,6 @@ ActsExamples::VariableBoundMeasurementProxy ActsExamples::createMeasurement(
   return Acts::visit_measurement(
       dParams.indices.size(), [&](auto dim) -> VariableBoundMeasurementProxy {
         auto [indices, par, cov] = measurementConstituents<dim>(dParams);
-        return container.emplaceMeasurement<dim>(sl, indices, par, cov);
+        return container.emplaceMeasurement<dim>(geometryId, indices, par, cov);
       });
 }

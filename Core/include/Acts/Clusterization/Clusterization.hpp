@@ -13,6 +13,26 @@
 
 namespace Acts::Ccl {
 
+template <typename Cell>
+concept HasRetrievableColumnInfo = requires(Cell cell) {
+  { getCellColumn(cell) } -> std::same_as<int>;
+};
+
+template <typename Cell>
+concept HasRetrievableRowInfo = requires(Cell cell) {
+  { getCellRow(cell) } -> std::same_as<int>;
+};
+
+template <typename Cell>
+concept HasRetrievableLabelInfo = requires(Cell cell) {
+  { getCellLabel(cell) } -> std::same_as<int&>;
+};
+
+template <typename Cell, typename Cluster>
+concept CanAcceptCell = requires(Cell cell, Cluster cluster) {
+  { clusterAddCell(cluster, cell) } -> std::same_as<void>;
+};
+
 using Label = int;
 constexpr Label NO_LABEL = 0;
 
@@ -28,17 +48,21 @@ enum class ConnectResult {
 
 // Default connection type for 2-D grids: 4- or 8-cell connectivity
 template <typename Cell>
+  requires(Acts::Ccl::HasRetrievableColumnInfo<Cell> &&
+           Acts::Ccl::HasRetrievableRowInfo<Cell>)
 struct Connect2D {
-  bool conn8;
-  Connect2D() : conn8{true} {}
+  bool conn8{true};
+  Connect2D() = default;
   explicit Connect2D(bool commonCorner) : conn8{commonCorner} {}
-  ConnectResult operator()(const Cell& ref, const Cell& iter) const;
+  virtual ConnectResult operator()(const Cell& ref, const Cell& iter) const;
+  virtual ~Connect2D() = default;
 };
 
 // Default connection type for 1-D grids: 2-cell connectivity
-template <typename Cell>
+template <Acts::Ccl::HasRetrievableColumnInfo Cell>
 struct Connect1D {
-  ConnectResult operator()(const Cell& ref, const Cell& iter) const;
+  virtual ConnectResult operator()(const Cell& ref, const Cell& iter) const;
+  virtual ~Connect1D() = default;
 };
 
 // Default connection type based on GridDim
@@ -49,13 +73,16 @@ struct DefaultConnect {
 };
 
 template <typename Cell>
-struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
-  explicit DefaultConnect(bool commonCorner) : Connect2D<Cell>(commonCorner) {}
-  DefaultConnect() : DefaultConnect(true) {}
+struct DefaultConnect<Cell, 1> : public Connect1D<Cell> {
+  ~DefaultConnect() override = default;
 };
 
 template <typename Cell>
-struct DefaultConnect<Cell, 1> : public Connect1D<Cell> {};
+struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
+  explicit DefaultConnect(bool commonCorner) : Connect2D<Cell>(commonCorner) {}
+  DefaultConnect() = default;
+  ~DefaultConnect() override = default;
+};
 
 /// @brief labelClusters
 ///
@@ -70,6 +97,8 @@ struct DefaultConnect<Cell, 1> : public Connect1D<Cell> {};
 template <typename CellCollection, std::size_t GridDim = 2,
           typename Connect =
               DefaultConnect<typename CellCollection::value_type, GridDim>>
+  requires(
+      Acts::Ccl::HasRetrievableLabelInfo<typename CellCollection::value_type>)
 void labelClusters(CellCollection& cells, Connect connect = Connect());
 
 /// @brief mergeClusters
@@ -82,6 +111,9 @@ void labelClusters(CellCollection& cells, Connect connect = Connect());
 /// @return nothing
 template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim>
+  requires(GridDim == 1 || GridDim == 2) &&
+          Acts::Ccl::HasRetrievableLabelInfo<
+              typename CellCollection::value_type>
 ClusterCollection mergeClusters(CellCollection& /*cells*/);
 
 /// @brief createClusters

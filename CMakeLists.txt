@@ -31,7 +31,6 @@ option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
 option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_USE_SYSTEM_GEOMODEL "Use a system-provided GeoModel installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
@@ -229,7 +228,6 @@ set(_acts_actsvg_version 0.4.50)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.21)
 set(_acts_edm4hep_version 0.7)
-set(_acts_geomodel_version 6.3.0)
 set(_acts_eigen3_version 3.4.0)
 set(_acts_podio_version 1.0.1) # will try this first
 set(_acts_podio_fallback_version 0.16) # if not found, will try this one
@@ -374,8 +372,24 @@ if(ACTS_BUILD_PLUGIN_JSON)
     endif()
 endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
-    find_package(GeoModelCore ${_acts_geomodel_version} REQUIRED CONFIG)
-    find_package(GeoModelIO ${_acts_geomodel_version} REQUIRED CONFIG)
+    find_package(GeoModelCore CONFIG)
+    if(NOT GeoModelCore_FOUND)
+        message(
+            FATAL_ERROR
+            "GeoModel not found. Please install GeoModel or set ACTS_BUILD_PLUGIN_GEOMODEL to OFF."
+        )
+    endif()
+
+    set(_gm_ver_min 6.3.0)
+
+    if(GeoModelCore_VERSION VERSION_LESS _gm_ver_min)
+        message(
+            FATAL_ERROR
+            "GeoModel version ${GeoModelCore_VERSION} is insufficient. Please install GeoModel version ${_gm_ver_min} or newer."
+        )
+    endif()
+    # find other GeoModel components of EXACT same version
+    find_package(GeoModelIO ${GeoModelCore_VERSION} REQUIRED EXACT CONFIG)
 endif()
 if(ACTS_BUILD_PLUGIN_TGEO)
     find_package(

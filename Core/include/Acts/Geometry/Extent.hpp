@@ -52,12 +52,6 @@ struct ExtentEnvelope {
     }
   }
 
-  /// Constructor from an array of envelopes
-  /// @param values the array of envelopes
-  constexpr explicit ExtentEnvelope(
-      const std::array<Envelope, numBinningValues()>& values)
-      : m_values(values) {}
-
   /// Static factory for a zero envelope
   /// @return the zero envelope
   constexpr static ExtentEnvelope Zero() {
@@ -72,6 +66,33 @@ struct ExtentEnvelope {
         zeroEnvelope,
         zeroEnvelope,
     }};
+  }
+
+  /// Helper struct for designated initializer construction
+  struct Arguments {
+    Envelope x = zeroEnvelope;
+    Envelope y = zeroEnvelope;
+    Envelope z = zeroEnvelope;
+    Envelope r = zeroEnvelope;
+    Envelope phi = zeroEnvelope;
+    Envelope rPhi = zeroEnvelope;
+    Envelope h = zeroEnvelope;
+    Envelope eta = zeroEnvelope;
+    Envelope mag = zeroEnvelope;
+  };
+
+  /// Constructor using a helper struct for designated initializaion
+  /// @param args the arguments
+  constexpr explicit ExtentEnvelope(Arguments&& args) {
+    using enum BinningValue;
+    m_values[toUnderlying(binX)] = args.x;
+    m_values[toUnderlying(binY)] = args.y;
+    m_values[toUnderlying(binZ)] = args.z;
+    m_values[toUnderlying(binR)] = args.r;
+    m_values[toUnderlying(binPhi)] = args.phi;
+    m_values[toUnderlying(binH)] = args.h;
+    m_values[toUnderlying(binEta)] = args.eta;
+    m_values[toUnderlying(binMag)] = args.mag;
   }
 
   /// Comparison operator between envelope sets

@@ -10,7 +10,6 @@
 
 #include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 #include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
-#include "Acts/Utilities/QuickMath.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -127,17 +126,11 @@ Result<double> SympyStepper::stepImpl(
     // This is given by the order of the Runge-Kutta method
     constexpr double exponent = 0.25;
 
-    // Whether to use fast power function if available
-    constexpr bool tryUseFastPow{false};
-
     double x = stepTolerance / errorEstimate_;
 
-    if constexpr (exponent == 0.25 && !tryUseFastPow) {
+    if constexpr (exponent == 0.25) {
       // This is 3x faster than std::pow
       x = std::sqrt(std::sqrt(x));
-    } else if constexpr (std::numeric_limits<double>::is_iec559 &&
-                         tryUseFastPow) {
-      x = fastPow(x, exponent);
     } else {
       x = std::pow(x, exponent);
     }

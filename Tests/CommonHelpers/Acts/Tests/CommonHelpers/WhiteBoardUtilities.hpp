@@ -15,6 +15,7 @@
 #include <tuple>
 
 namespace Acts::Test {
+
 struct DummySequenceElement : public ActsExamples::SequenceElement {
   ActsExamples::ProcessCode initialize() override { return {}; };
   ActsExamples::ProcessCode finalize() override { return {}; };
@@ -102,4 +103,5 @@ struct GenericReadWriteTool {
     return get(get, std::tuple<>{}, std::integral_constant<std::size_t, 0>{});
   }
 };
+
 }  // namespace Acts::Test

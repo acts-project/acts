@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(CylinderPortalsSvg) {
   portalStyle.highlights = {};
   portalStyle.strokeColor = {25, 25, 25};
   portalStyle.strokeWidth = 0.5;
-  portalStyle.nSegments = 72u;
+  portalStyle.quarterSegments = 72u;
 
   Acts::ActsScalar rInner = 10.;
   Acts::ActsScalar rOuter = 100.;
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(CylinderContainerPortalsSvg) {
   portalStyle.highlights = {};
   portalStyle.strokeColor = {25, 25, 25};
   portalStyle.strokeWidth = 0.5;
-  portalStyle.nSegments = 72u;
+  portalStyle.quarterSegments = 72u;
 
   Acts::ActsScalar rInner = 10.;
   Acts::ActsScalar rMiddle = 100.;

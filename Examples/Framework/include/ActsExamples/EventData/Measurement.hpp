@@ -11,18 +11,23 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/detail/CalculateResiduals.hpp"
 #include "Acts/EventData/detail/ParameterTraits.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/Iterator.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementConcept.hpp"
 
 #include <array>
+#include <compare>
 #include <concepts>
 #include <cstddef>
 #include <iosfwd>
+#include <iterator>
 #include <type_traits>
 #include <variant>
 #include <vector>
@@ -58,13 +63,15 @@ using ConstVariableBoundMeasurementProxy =
 /// provide access to the individual measurements.
 class MeasurementContainer {
  public:
-  using Index = std::size_t;
+  using size_type = std::size_t;
+  using Index = size_type;
   template <std::size_t Size>
   using FixedProxy = FixedMeasurementProxy<Acts::eBoundSize, Size, false>;
   template <std::size_t Size>
   using ConstFixedProxy = FixedMeasurementProxy<Acts::eBoundSize, Size, true>;
   using VariableProxy = VariableMeasurementProxy<Acts::eBoundSize, false>;
   using ConstVariableProxy = VariableMeasurementProxy<Acts::eBoundSize, true>;
+  using OrderedIndices = GeometryIdMultiset<IndexSourceLink>;
 
   MeasurementContainer();
 
@@ -78,8 +85,18 @@ class MeasurementContainer {
 
   /// @brief Add a measurement of a given size
   /// @param size The size of the measurement
+  /// @param geometryId The geometry identifier of the measurement surface
   /// @return The index of the added measurement
-  Index addMeasurement(std::uint8_t size);
+  Index addMeasurement(std::uint8_t size, Acts::GeometryIdentifier geometryId);
+
+  /// @brief Get a variable-size measurement proxy
+  /// @param index The index of the measurement
+  /// @return The variable-size measurement proxy
+  VariableProxy at(Index index);
+  /// @brief Get a const variable-size measurement proxy
+  /// @param index The index of the measurement
+  /// @return The const variable-size measurement proxy
+  ConstVariableProxy at(Index index) const;
 
   /// @brief Get a variable-size measurement proxy
   /// @param index The index of the measurement
@@ -109,64 +126,35 @@ class MeasurementContainer {
 
   /// @brief Make a measurement of a given size
   /// @param size The size of the measurement
+  /// @param geometryId The geometry identifier of the measurement surface
   /// @return The variable-size measurement proxy
-  VariableProxy makeMeasurement(std::uint8_t size);
+  VariableProxy makeMeasurement(std::uint8_t size,
+                                Acts::GeometryIdentifier geometryId);
   /// @brief Make a fixed-size measurement
   /// @tparam Size The size of the measurement
+  /// @param geometryId The geometry identifier of the measurement surface
   /// @return The fixed-size measurement proxy
   template <std::size_t Size>
-  FixedProxy<Size> makeMeasurement() {
-    return getMeasurement<Size>(addMeasurement(Size));
+  FixedProxy<Size> makeMeasurement(Acts::GeometryIdentifier geometryId) {
+    return getMeasurement<Size>(addMeasurement(Size, geometryId));
   }
 
   template <typename... Args>
-  VariableProxy emplaceMeasurement(std::uint8_t size, Args&&... args);
+  VariableProxy emplaceMeasurement(std::uint8_t size,
+                                   Acts::GeometryIdentifier geometryId,
+                                   Args&&... args);
 
   template <std::size_t Size, typename... Args>
-  FixedProxy<Size> emplaceMeasurement(Args&&... args);
+  FixedProxy<Size> emplaceMeasurement(Acts::GeometryIdentifier geometryId,
+                                      Args&&... args);
 
-  template <bool Const>
-  class IteratorImpl {
-   public:
-    using value_type =
-        std::conditional_t<Const, ConstVariableProxy, VariableProxy>;
-    using reference = value_type;
-    using pointer = value_type*;
-    using difference_type = std::ptrdiff_t;
-    using iterator_category = std::forward_iterator_tag;
+  const OrderedIndices& orderedIndices() const;
 
-    using Container = std::conditional_t<Const, const MeasurementContainer,
-                                         MeasurementContainer>;
-
-    IteratorImpl(Container& container, std::size_t index)
-        : m_container(container), m_index(index) {}
-
-    reference operator*() const { return m_container.getMeasurement(m_index); }
-
-    pointer operator->() const { return &operator*(); }
-
-    IteratorImpl& operator++() {
-      ++m_index;
-      return *this;
-    }
-
-    IteratorImpl operator++(int) {
-      auto copy = *this;
-      ++*this;
-      return copy;
-    }
-
-    bool operator==(const IteratorImpl& other) const {
-      return m_index == other.m_index;
-    }
-
-   private:
-    Container& m_container;
-    Index m_index;
-  };
-
-  using iterator = IteratorImpl<false>;
-  using const_iterator = IteratorImpl<true>;
+  using iterator =
+      Acts::ContainerIndexIterator<MeasurementContainer, VariableProxy, false>;
+  using const_iterator =
+      Acts::ContainerIndexIterator<const MeasurementContainer,
+                                   ConstVariableProxy, true>;
 
   iterator begin();
   iterator end();
@@ -185,10 +173,12 @@ class MeasurementContainer {
 
   std::vector<MeasurementEntry> m_entries;
 
-  std::vector<std::optional<Acts::SourceLink>> m_sourceLinks;
+  std::vector<Acts::GeometryIdentifier> m_geometryIds;
   std::vector<std::uint8_t> m_subspaceIndices;
   std::vector<double> m_parameters;
   std::vector<double> m_covariances;
+
+  OrderedIndices m_orderedIndices;
 };
 
 /// @brief Base class for measurement proxies
@@ -247,18 +237,10 @@ class MeasurementProxyBase {
     return self().subspaceHelper().indexOf(i);
   }
 
-  /// @brief Set the source link of the measurement
-  /// @param sourceLink The source link
-  void setSourceLink(const Acts::SourceLink& sourceLink)
-    requires(!ReadOnly)
-  {
-    container().m_sourceLinks.at(m_index) = sourceLink;
-  }
-
-  /// @brief Get the source link of the measurement
-  /// @return The source link
-  const Acts::SourceLink& sourceLink() const {
-    return container().m_sourceLinks.at(m_index).value();
+  /// @brief Get the geometry ID of the measurement
+  /// @return The geometry ID
+  Acts::GeometryIdentifier geometryId() const {
+    return container().m_geometryIds.at(m_index);
   }
 
   /// @brief Set the subspace indices of the measurement
@@ -286,23 +268,22 @@ class MeasurementProxyBase {
     return self().subspaceHelper().expandMatrix(self().covariance());
   }
 
-  /// @brief Construct the measurement from a sourcelink, subspace vector,
+  /// @brief Construct the measurement from a subspace vector,
   /// parameters, and covariance.
   ///
   template <typename Subspace, typename ParameterDerived,
             typename CovarianceDerived>
-  void fill(const Acts::SourceLink& source_link, Subspace&& subspace,
+  void fill(Subspace&& subspace,
             const Eigen::DenseBase<ParameterDerived>& parameters,
             const Eigen::DenseBase<CovarianceDerived>& covariance)
     requires(!ReadOnly)
   {
-    setSourceLink(source_link);
     self().setSubspaceIndices(std::forward<Subspace>(subspace));
     self().parameters() = parameters;
     self().covariance() = covariance;
   }
 
-  /// @brief Construct the measurement from a sourcelink, subspace vector,
+  /// @brief Construct the measurement from a subspace vector,
   /// parameters, and covariance.
   ///
   template <MeasurementConcept OtherDerived>
@@ -310,8 +291,7 @@ class MeasurementProxyBase {
     requires(!ReadOnly)
   {
     assert(size() == other.size() && "Size mismatch");
-    fill(other.sourceLink(), other.subspaceIndexVector(), other.parameters(),
-         other.covariance());
+    fill(other.subspaceIndexVector(), other.parameters(), other.covariance());
   }
 
   /// @brief Copy the data from another measurement
@@ -517,8 +497,8 @@ class VariableMeasurementProxy
 
 template <typename... Args>
 MeasurementContainer::VariableProxy MeasurementContainer::emplaceMeasurement(
-    std::uint8_t size, Args&&... args) {
-  VariableProxy meas = makeMeasurement(size);
+    std::uint8_t size, Acts::GeometryIdentifier geometryId, Args&&... args) {
+  VariableProxy meas = makeMeasurement(size, geometryId);
 
   meas.fill(std::forward<Args>(args)...);
 
@@ -527,12 +507,16 @@ MeasurementContainer::VariableProxy MeasurementContainer::emplaceMeasurement(
 
 template <std::size_t Size, typename... Args>
 MeasurementContainer::FixedProxy<Size> MeasurementContainer::emplaceMeasurement(
-    Args&&... args) {
-  FixedProxy<Size> meas = makeMeasurement<Size>();
+    Acts::GeometryIdentifier geometryId, Args&&... args) {
+  FixedProxy<Size> meas = makeMeasurement<Size>(geometryId);
 
   meas.fill(std::forward<Args>(args)...);
 
   return meas;
 }
+
+static_assert(
+    std::random_access_iterator<MeasurementContainer::iterator> &&
+    std::random_access_iterator<MeasurementContainer::const_iterator>);
 
 }  // namespace ActsExamples
