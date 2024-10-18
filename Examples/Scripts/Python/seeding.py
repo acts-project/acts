@@ -57,6 +57,7 @@ def runSeeding(
         EtaConfig,
         PhiConfig,
         ParticleConfig,
+        ParticleSelectorConfig,
         addFatras,
         addDigitization,
     )
@@ -86,6 +87,12 @@ def runSeeding(
         outputDirRoot=outputDir,
         rnd=rnd,
         preSelectParticles=None,
+        postSelectParticles=ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-2.5, 2.5),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
@@ -99,7 +106,6 @@ def runSeeding(
     )
     from acts.examples.reconstruction import (
         addSeeding,
-        TruthSeedRanges,
         SeedFinderConfigArg,
         SeedFinderOptionsArg,
     )
@@ -108,7 +114,6 @@ def runSeeding(
         s,
         trackingGeometry,
         field,
-        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-2.5, 2.5), nHits=(9, None)),
         SeedFinderConfigArg(
             r=(None, 200 * u.mm),  # rMin=default, 33mm
             deltaR=(1 * u.mm, 60 * u.mm),

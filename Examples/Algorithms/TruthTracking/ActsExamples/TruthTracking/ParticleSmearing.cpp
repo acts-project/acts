@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -128,31 +129,16 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       Acts::BoundSquareMatrix cov = Acts::BoundSquareMatrix::Zero();
       if (m_cfg.initialSigmas) {
         // use the initial sigmas if set
-        for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
-          double sigma = (*m_cfg.initialSigmas)[i];
-          double variance = sigma * sigma;
 
-          if (i == Acts::eBoundQOverP) {
-            // note that we rely on the fact that sigma theta is already
-            // computed
-            double varianceTheta = cov(Acts::eBoundTheta, Acts::eBoundTheta);
+        Acts::EstimateTrackParamCovarianceConfig config{
+            .initialSigmas =
+                Eigen::Map<const Acts::BoundVector>{
+                    m_cfg.initialSigmas->data()},
+            .initialSigmaPtRel = m_cfg.initialSigmaPtRel,
+            .initialVarInflation = Eigen::Map<const Acts::BoundVector>{
+                m_cfg.initialVarInflation.data()}};
 
-            // transverse momentum contribution
-            variance += std::pow(
-                m_cfg.initialSigmaPtRel * params[Acts::eBoundQOverP], 2);
-
-            // theta contribution
-            variance += varianceTheta *
-                        std::pow(params[Acts::eBoundQOverP] /
-                                     std::tan(params[Acts::eBoundTheta]),
-                                 2);
-          }
-
-          // Inflate the initial covariance
-          variance *= m_cfg.initialVarInflation[i];
-
-          cov(i, i) = variance;
-        }
+        cov = Acts::estimateTrackParamCovariance(config, params, false);
       } else {
         // otherwise use the smearing sigmas
 
