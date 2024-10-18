@@ -14,6 +14,10 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::TrackDensityVertexFinder::find(
     IVertexFinder::State& /*state*/) const {
   GaussianTrackDensity::State densityState(trackVector.size());
 
+  // Extract the reference time from the tracks
+  // Need to determine a consistent method for handling the time reference
+  double referenceTime = trackVector.empty() ? 0.0 : InputTrack::extractParameters(trackVector[0]).time();  // For now: using the first track's time
+
   // Calculate z seed position
   auto zAndWidthRes = m_cfg.trackDensityEstimator.globalMaximumWithWidth(
       densityState, trackVector);
