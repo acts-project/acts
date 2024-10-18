@@ -167,10 +167,11 @@ void CylinderContainerBlueprintNode::finalize(const Options& options,
   ACTS_DEBUG(prefix() << "Registering " << m_gaps.size()
                       << " gap volumes with parent");
   for (auto& [shell, gap] : m_gaps) {
-    std::cout << "~> " << gap->volumeName() << std::endl;
+    auto* gapPtr = gap.get();
     parent.addVolume(std::move(gap));
     shell->applyToVolume();
-    gap->setNavigationPolicy(policyFactory->build(gctx, *gap, logger));
+    auto policy = policyFactory->build(gctx, *gapPtr, logger);
+    gapPtr->setNavigationPolicy(policyFactory->build(gctx, *gapPtr, logger));
   }
 
   ACTS_DEBUG(prefix() << "Finalizing " << children().size() << " children");
