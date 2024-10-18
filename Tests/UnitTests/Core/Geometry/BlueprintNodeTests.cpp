@@ -247,10 +247,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
       }
     }
 
-    auto writeIntersection = [&](const Vector3& position,
-                                 const Surface& surface) {
-      csv << run << "," << position[0] << "," << position[1] << ","
-          << position[2];
+    auto writeIntersection = [&](const Vector3& pos, const Surface& surface) {
+      csv << run << "," << pos[0] << "," << pos[1] << "," << pos[2];
       csv << "," << surface.geometryId().volume();
       csv << "," << surface.geometryId().boundary();
       csv << "," << surface.geometryId().sensitive();
