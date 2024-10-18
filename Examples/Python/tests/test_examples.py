@@ -407,6 +407,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         EtaConfig,
         MomentumConfig,
         ParticleConfig,
+        ParticleSelectorConfig,
         addFatras,
         addDigitization,
     )
@@ -428,6 +429,12 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         outputDirCsv=tmp_path / "csv",
         outputDirRoot=str(tmp_path),
         rnd=rnd,
+        postSelectParticles=ParticleSelectorConfig(
+            pt=(0.9 * u.GeV, None),
+            eta=(-4, 4),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
@@ -442,7 +449,6 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
 
     from acts.examples.reconstruction import (
         addSeeding,
-        TruthSeedRanges,
     )
     from acts.examples.itk import itkSeedingAlgConfig, InputSpacePointsType
 
@@ -450,7 +456,6 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         seq,
         trk_geo,
         field,
-        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4, 4), nHits=(9, None)),
         *itkSeedingAlgConfig(InputSpacePointsType.PixelSpacePoints),
         acts.logging.VERBOSE,
         geoSelectionConfigFile=srcdir
