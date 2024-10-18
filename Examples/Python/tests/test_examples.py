@@ -689,7 +689,7 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     seq = Sequencer(
-        events=10,
+        events=3,
         numThreads=1,
     )
 
@@ -699,6 +699,7 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
         runRefittingGsf(
             trackingGeometry=trackingGeometry,
             field=field,
+            digiConfigFile=detector_config.digiConfigFile,
             outputDir=tmp_path,
             s=seq,
         ).run()
@@ -998,6 +999,40 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
     assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
 
     assert_root_hash(root_file.name, root_file)
+
+
+@pytest.mark.parametrize(
+    "digi_config_file",
+    [
+        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
+        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+        pytest.param(
+            (
+                getOpenDataDetectorDirectory()
+                / "config"
+                / "odd-digi-smearing-config.json"
+            ),
+            marks=[
+                pytest.mark.odd,
+            ],
+        ),
+        pytest.param(
+            (
+                getOpenDataDetectorDirectory()
+                / "config"
+                / "odd-digi-geometric-config.json"
+            ),
+            marks=[
+                pytest.mark.odd,
+            ],
+        ),
+    ],
+    ids=["smeared", "geometric", "odd-smeared", "odd-geometric"],
+)
+def test_digitization_example_input_parsing(digi_config_file):
+    from acts.examples import readDigiConfigFromJson
+
+    acts.examples.readDigiConfigFromJson(str(digi_config_file))
 
 
 @pytest.mark.parametrize(

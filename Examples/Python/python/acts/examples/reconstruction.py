@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Optional, Union, List
 from enum import Enum
 from collections import namedtuple
+import math
 
 import acts
 import acts.examples
@@ -146,8 +147,25 @@ CkfConfig = namedtuple(
         "stripVolumes",
         "maxPixelHoles",
         "maxStripHoles",
+        "trimTracks",
+        "constrainToVolumes",
+        "endOfWorldVolumes",
     ],
-    defaults=[15.0, 25.0, 10, None, None, None, None, None, None, None],
+    defaults=[
+        15.0,
+        25.0,
+        10,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -385,7 +403,6 @@ def addSeeding(
             logger.info("Using Hough Transform seeding")
             houghTransformConfig.inputSpacePoints = [spacePoints]
             houghTransformConfig.inputMeasurements = "measurements"
-            houghTransformConfig.inputSourceLinks = "sourcelinks"
             houghTransformConfig.outputProtoTracks = "prototracks"
             houghTransformConfig.outputSeeds = "seeds"
             houghTransformConfig.trackingGeometry = trackingGeometry
@@ -617,7 +634,6 @@ def addSpacePointsMaking(
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     spAlg = acts.examples.SpacePointMaker(
         level=logLevel,
-        inputSourceLinks="sourcelinks",
         inputMeasurements="measurements",
         outputSpacePoints="spacepoints",
         trackingGeometry=trackingGeometry,
@@ -1150,7 +1166,6 @@ def addGbtsSeeding(
         geometrySelection=acts.examples.readJsonGeometryList(
             str(geoSelectionConfigFile)
         ),
-        inputSourceLinks="sourcelinks",
         trackingGeometry=trackingGeometry,
         fill_module_csv=False,
         inputClusters="clusters",
@@ -1510,7 +1525,6 @@ def addCKFTracks(
             ]
         ),
         inputMeasurements="measurements",
-        inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
         inputSeeds=(
             "estimatedseeds"
@@ -1530,10 +1544,13 @@ def addCKFTracks(
             reverseSearch=reverseSearch,
             seedDeduplication=ckfConfig.seedDeduplication,
             stayOnSeed=ckfConfig.stayOnSeed,
-            pixelVolumes=ckfConfig.pixelVolumes,
-            stripVolumes=ckfConfig.stripVolumes,
+            pixelVolumeIds=ckfConfig.pixelVolumes,
+            stripVolumeIds=ckfConfig.stripVolumes,
             maxPixelHoles=ckfConfig.maxPixelHoles,
             maxStripHoles=ckfConfig.maxStripHoles,
+            trimTracks=ckfConfig.trimTracks,
+            constrainToVolumeIds=ckfConfig.constrainToVolumes,
+            endOfWorldVolumeIds=ckfConfig.endOfWorldVolumes,
         ),
     )
     s.addAlgorithm(trackFinder)
@@ -1792,7 +1809,6 @@ def addExaTrkX(
     s.addAlgorithm(
         acts.examples.SpacePointMaker(
             level=customLogLevel(),
-            inputSourceLinks="sourcelinks",
             inputMeasurements="measurements",
             outputSpacePoints="spacepoints",
             trackingGeometry=trackingGeometry,

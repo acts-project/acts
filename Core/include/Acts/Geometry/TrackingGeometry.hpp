@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -144,6 +144,17 @@ class TrackingGeometry {
   /// Access to the GeometryIdentifier - Surface association map
   const std::unordered_map<GeometryIdentifier, const Surface*>&
   geoIdSurfaceMap() const;
+
+  /// Visualize a tracking geometry including substructure
+  /// @param helper The visualization helper that implement the output
+  /// @param gctx The geometry context
+  /// @param viewConfig Global view config
+  /// @param portalViewConfig View config for portals
+  /// @param sensitiveViewConfig View configuration for sensitive surfaces
+  void visualize(IVisualization3D& helper, const GeometryContext& gctx,
+                 const ViewConfig& viewConfig = s_viewVolume,
+                 const ViewConfig& portalViewConfig = s_viewPortal,
+                 const ViewConfig& sensitiveViewConfig = s_viewSensitive) const;
 
  private:
   // the known world

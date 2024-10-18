@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // @file HoughTransformSeeder.hpp
 // @author Riley Xu then modified to ACTS by Jahred Adelman
@@ -76,7 +76,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -168,8 +167,6 @@ class HoughTransformSeeder final : public IAlgorithm {
     std::string outputSeeds;
     /// Output hough track collection.
     std::string outputProtoTracks;
-    /// Input source links collection.
-    std::string inputSourceLinks;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// For which part of the detector geometry should space points be created.
@@ -280,9 +277,6 @@ class HoughTransformSeeder final : public IAlgorithm {
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
-
-  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
-      this, "InputSourceLinks"};
 
   ////////////////////////////////////////////////////////////////////////
   /// Convenience

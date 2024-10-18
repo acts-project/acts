@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
@@ -12,7 +12,6 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -270,8 +269,7 @@ ProcessCode RootMeasurementWriter::writeT(
     const ConstVariableBoundMeasurementProxy meas =
         measurements.getMeasurement(hitIdx);
 
-    Acts::GeometryIdentifier geoId =
-        meas.sourceLink().template get<IndexSourceLink>().geometryId();
+    Acts::GeometryIdentifier geoId = meas.geometryId();
     // find the corresponding surface
     auto surfaceItr = m_cfg.surfaceByIdentifier.find(geoId);
     if (surfaceItr == m_cfg.surfaceByIdentifier.end()) {

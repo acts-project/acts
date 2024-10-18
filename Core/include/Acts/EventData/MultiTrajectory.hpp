@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -102,8 +102,6 @@ class TrackStateRange {
       }
       return false;
     }
-
-    bool operator!=(const Iterator& other) const { return !(*this == other); }
 
     ProxyType operator*() const { return *proxy; }
     ProxyType operator*() { return *proxy; }
@@ -698,13 +696,10 @@ class MultiTrajectory {
     self().allocateCalibrated_impl(istate, measdim);
   }
 
-  // This function will move to an rvalue reference in the next major version
-  template <typename source_link_t>
-  void setUncalibratedSourceLink(IndexType istate, source_link_t&& sourceLink)
+  void setUncalibratedSourceLink(IndexType istate, SourceLink&& sourceLink)
     requires(!ReadOnly)
   {
-    self().setUncalibratedSourceLink_impl(
-        istate, std::forward<source_link_t>(sourceLink));
+    self().setUncalibratedSourceLink_impl(istate, std::move(sourceLink));
   }
 
   SourceLink getUncalibratedSourceLink(IndexType istate) const {

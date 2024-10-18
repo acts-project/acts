@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/PortalLinkBase.hpp"
 
@@ -109,8 +109,10 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
     } else if (const auto* bTrivial =
                    dynamic_cast<const TrivialPortalLink*>(b.get());
                bTrivial != nullptr) {
-      ACTS_VERBOSE("Merging a grid portal with a trivial portal");
-      return gridMerge(*aGrid, *bTrivial->makeGrid(direction));
+      ACTS_VERBOSE(
+          "Merging a grid portal with a trivial portal (via composite)");
+      return std::make_unique<CompositePortalLink>(std::move(a), std::move(b),
+                                                   direction);
 
     } else if (dynamic_cast<const CompositePortalLink*>(b.get()) != nullptr) {
       ACTS_WARNING("Merging a grid portal with a composite portal");
@@ -126,15 +128,17 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
              aTrivial != nullptr) {
     if (const auto* bGrid = dynamic_cast<const GridPortalLink*>(b.get());
         bGrid) {
-      ACTS_VERBOSE("Merging a trivial portal with a grid portal");
-      return gridMerge(*aTrivial->makeGrid(direction), *bGrid);
+      ACTS_VERBOSE(
+          "Merging a trivial portal with a grid portal (via composite)");
+      return std::make_unique<CompositePortalLink>(std::move(a), std::move(b),
+                                                   direction);
 
     } else if (const auto* bTrivial =
                    dynamic_cast<const TrivialPortalLink*>(b.get());
                bTrivial != nullptr) {
-      ACTS_VERBOSE("Merging two trivial portals");
-      return gridMerge(*aTrivial->makeGrid(direction),
-                       *bTrivial->makeGrid(direction));
+      ACTS_VERBOSE("Merging two trivial portals (via composite");
+      return std::make_unique<CompositePortalLink>(std::move(a), std::move(b),
+                                                   direction);
 
     } else if (dynamic_cast<const CompositePortalLink*>(b.get()) != nullptr) {
       ACTS_WARNING("Merging a trivial portal with a composite portal");

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/tools/context.hpp>
 #include <boost/test/tools/old/interface.hpp>
@@ -12,6 +12,7 @@
 #include <boost/test/unit_test_suite.hpp>
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
@@ -171,10 +172,9 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
   BOOST_CHECK_NE(merged12.getLink(Direction::AlongNormal), nullptr);
   BOOST_CHECK_EQUAL(merged12.getLink(Direction::OppositeNormal), nullptr);
 
-  auto grid12 = dynamic_cast<const GridPortalLink*>(
+  auto composite12 = dynamic_cast<const CompositePortalLink*>(
       merged12.getLink(Direction::AlongNormal));
-  BOOST_REQUIRE_NE(grid12, nullptr);
-  grid12->printContents(std::cout);
+  BOOST_REQUIRE_NE(composite12, nullptr);
 
   BOOST_CHECK_EQUAL(
       merged12
@@ -526,6 +526,67 @@ BOOST_AUTO_TEST_CASE(Material) {
   // cyl2 had material, so this surface needs to be retained
   BOOST_CHECK_EQUAL(&portal12.surface(), cyl2.get());
   BOOST_CHECK_EQUAL(portal12.surface().surfaceMaterial(), material.get());
+}
+
+BOOST_AUTO_TEST_CASE(GridCreationOnFuse) {
+  Transform3 base = Transform3::Identity();
+
+  auto vol1 = std::make_shared<TrackingVolume>(
+      base, std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+  auto vol2 = std::make_shared<TrackingVolume>(
+      base, std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+  auto vol3 = std::make_shared<TrackingVolume>(
+      base, std::make_shared<CylinderVolumeBounds>(40_mm, 50_mm, 100_mm));
+
+  auto vol4 = std::make_shared<TrackingVolume>(
+      base, std::make_shared<CylinderVolumeBounds>(40_mm, 50_mm, 100_mm));
+
+  auto disc1 =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 60_mm);
+
+  auto disc2 =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 60_mm, 90_mm);
+
+  auto disc3 =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 90_mm, 120_mm);
+
+  auto trivial1 = std::make_unique<TrivialPortalLink>(disc1, *vol1);
+  BOOST_REQUIRE(trivial1);
+  auto trivial2 = std::make_unique<TrivialPortalLink>(disc2, *vol2);
+  BOOST_REQUIRE(trivial2);
+  auto trivial3 = std::make_unique<TrivialPortalLink>(disc3, *vol3);
+  BOOST_REQUIRE(trivial3);
+
+  std::vector<std::unique_ptr<PortalLinkBase>> links;
+  links.push_back(std::move(trivial1));
+  links.push_back(std::move(trivial2));
+  links.push_back(std::move(trivial3));
+
+  auto composite = std::make_unique<CompositePortalLink>(std::move(links),
+                                                         BinningValue::binR);
+
+  auto discOpposite =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 120_mm);
+
+  auto trivialOpposite =
+      std::make_unique<TrivialPortalLink>(discOpposite, *vol4);
+
+  Portal aPortal{gctx, std::move(composite), nullptr};
+  Portal bPortal{gctx, nullptr, std::move(trivialOpposite)};
+
+  Portal fused = Portal::fuse(gctx, aPortal, bPortal, *logger);
+
+  BOOST_CHECK_NE(dynamic_cast<const TrivialPortalLink*>(
+                     fused.getLink(Direction::OppositeNormal)),
+                 nullptr);
+
+  const auto* grid = dynamic_cast<const GridPortalLink*>(
+      fused.getLink(Direction::AlongNormal));
+  BOOST_REQUIRE_NE(grid, nullptr);
+
+  BOOST_CHECK_EQUAL(grid->grid().axes().front()->getNBins(), 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()  // Fusing

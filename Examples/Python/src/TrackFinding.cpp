@@ -1,11 +1,12 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
@@ -17,6 +18,7 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
@@ -56,10 +58,9 @@ namespace Acts::Python {
 void addTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SpacePointMaker, mex,
-                                "SpacePointMaker", inputSourceLinks,
-                                inputMeasurements, outputSpacePoints,
-                                trackingGeometry, geometrySelection);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::SpacePointMaker, mex, "SpacePointMaker", inputMeasurements,
+      outputSpacePoints, trackingGeometry, geometrySelection);
 
   {
     using Config = Acts::SeedFilterConfig;
@@ -85,7 +86,9 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using Config = Acts::SeedFinderConfig<SimSpacePoint>;
+    using Config = Acts::SeedFinderConfig<typename Acts::SpacePointContainer<
+        ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+        Acts::detail::RefHolder>::SpacePointProxyType>;
     auto c = py::class_<Config>(m, "SeedFinderConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(minPt);
@@ -144,7 +147,11 @@ void addTrackFinding(Context& ctx) {
     patchKwargsConstructor(c);
   }
   {
-    using Config = Acts::SeedFinderOrthogonalConfig<SimSpacePoint>;
+    using Config =
+        Acts::SeedFinderOrthogonalConfig<typename Acts::SpacePointContainer<
+            ActsExamples::SpacePointContainer<
+                std::vector<const SimSpacePoint*>>,
+            Acts::detail::RefHolder>::SpacePointProxyType>;
     auto c =
         py::class_<Config>(m, "SeedFinderOrthogonalConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
@@ -266,14 +273,14 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm",
       inputSpacePoints, outputSeeds, seedFilterConfig, seedFinderConfig,
-      seedFinderOptions, layerMappingFile, geometrySelection, inputSourceLinks,
-      trackingGeometry, ActsGbtsMap, fill_module_csv, inputClusters);
+      seedFinderOptions, layerMappingFile, geometrySelection, trackingGeometry,
+      ActsGbtsMap, fill_module_csv, inputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
-      inputSpacePoints, outputProtoTracks, inputSourceLinks, trackingGeometry,
-      geometrySelection, inputMeasurements, subRegions, nLayers, xMin, xMax,
-      yMin, yMax, houghHistSize_x, houghHistSize_y, hitExtend_x, threshold,
+      inputSpacePoints, outputProtoTracks, trackingGeometry, geometrySelection,
+      inputMeasurements, subRegions, nLayers, xMin, xMax, yMin, yMax,
+      houghHistSize_x, houghHistSize_y, hitExtend_x, threshold,
       localMaxWindowSize, kA);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
@@ -315,7 +322,6 @@ void addTrackFinding(Context& ctx) {
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputMeasurements);
-    ACTS_PYTHON_MEMBER(inputSourceLinks);
     ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
     ACTS_PYTHON_MEMBER(inputSeeds);
     ACTS_PYTHON_MEMBER(outputTracks);
@@ -329,10 +335,13 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(reverseSearch);
     ACTS_PYTHON_MEMBER(seedDeduplication);
     ACTS_PYTHON_MEMBER(stayOnSeed);
-    ACTS_PYTHON_MEMBER(pixelVolumes);
-    ACTS_PYTHON_MEMBER(stripVolumes);
+    ACTS_PYTHON_MEMBER(pixelVolumeIds);
+    ACTS_PYTHON_MEMBER(stripVolumeIds);
     ACTS_PYTHON_MEMBER(maxPixelHoles);
     ACTS_PYTHON_MEMBER(maxStripHoles);
+    ACTS_PYTHON_MEMBER(trimTracks);
+    ACTS_PYTHON_MEMBER(constrainToVolumeIds);
+    ACTS_PYTHON_MEMBER(endOfWorldVolumeIds);
     ACTS_PYTHON_STRUCT_END();
   }
 

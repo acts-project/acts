@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <iosfwd>
 #include <memory>
@@ -83,8 +84,10 @@ class Volume : public GeometryObject {
   /// Set the volume bounds and optionally also update the volume transform
   /// @param volbounds The volume bounds to be assigned
   /// @param transform The transform to be assigned, can be optional
+  /// @param logger A logger object to log messages
   virtual void update(std::shared_ptr<VolumeBounds> volbounds,
-                      std::optional<Transform3> transform = std::nullopt);
+                      std::optional<Transform3> transform = std::nullopt,
+                      const Logger& logger = Acts::getDummyLogger());
 
   /// Construct bounding box for this shape
   /// @param envelope Optional envelope to add / subtract from min/max
@@ -116,14 +119,13 @@ class Volume : public GeometryObject {
                           BinningValue bValue) const override;
 
   bool operator==(const Volume& other) const;
-  bool operator!=(const Volume& other) const;
 
   /// Produces a 3D visualization of this volume
   /// @param helper The visualization helper describing the output format
   /// @param gctx The geometry context
   /// @param viewConfig The view configuration
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
-                 const ViewConfig& viewConfig = {}) const;
+                 const ViewConfig& viewConfig) const;
 
  protected:
   Transform3 m_transform;
