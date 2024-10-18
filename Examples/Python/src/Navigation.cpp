@@ -81,7 +81,8 @@ struct NavigationPolicyFactoryT : public AnyNavigationPolicyFactory {
   template <typename T, typename... Args>
   std::unique_ptr<AnyNavigationPolicyFactory> add(Args&&... args) {
     if constexpr (!((std::is_same_v<T, Policies> || ...))) {
-      auto impl = m_impl.template add<T>(std::forward<Args>(args)...);
+      auto impl =
+          std::move(m_impl).template add<T>(std::forward<Args>(args)...);
       return std::make_unique<
           NavigationPolicyFactoryT<decltype(impl), Policies..., T>>(
           std::move(impl));

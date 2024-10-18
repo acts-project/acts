@@ -25,6 +25,16 @@ template <typename... Factories>
 class NavigationPolicyFactoryImpl;
 }
 
+/// Base class for navigation policy factories. The factory can be assembled
+/// iteratively by using `make` followed by a number of calls to the `add`
+/// function of the helper type. Example:
+///
+/// ```cpp
+/// auto factory = NavigationPolicyFactory::make()
+///  .add<NavigationPolicy1>(arg1, arg2)
+///  .add<NavigationPolicy2>(/*no args*/)
+///  .asUniquePtr();
+/// ```
 class NavigationPolicyFactory {
  public:
   virtual ~NavigationPolicyFactory() = default;
@@ -69,12 +79,11 @@ class NavigationPolicyFactoryImpl<> {
   // Arguments need to be copy constructible because the factory must be able to
   // execute multiple times.
   template <NavigationPolicyConcept P, typename... Args>
-  constexpr auto add(Args&&... args)
     requires(std::is_constructible_v<P, const GeometryContext&,
                                      const TrackingVolume&, const Logger&,
                                      Args...> &&
              (std::is_copy_constructible_v<Args> && ...))
-  {
+  constexpr auto add(Args&&... args) && {
     auto factory = [=](const GeometryContext& gctx,
                        const TrackingVolume& volume, const Logger& logger) {
       return P{gctx, volume, logger, args...};
@@ -101,12 +110,11 @@ template <typename F, typename... Fs>
 class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
  public:
   template <NavigationPolicyConcept P, typename... Args>
-  constexpr auto add(Args&&... args)
     requires(std::is_constructible_v<P, const GeometryContext&,
                                      const TrackingVolume&, const Logger&,
                                      Args...> &&
              (std::is_copy_constructible_v<Args> && ...))
-  {
+  constexpr auto add(Args&&... args) && {
     auto factory = [=](const GeometryContext& gctx,
                        const TrackingVolume& volume, const Logger& logger) {
       return P{gctx, volume, logger, args...};
@@ -119,7 +127,7 @@ class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
 
   template <typename Fn, typename... Args>
     requires(NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
-  constexpr auto add(Fn&& fn, Args&&... args) {
+  constexpr auto add(Fn&& fn, Args&&... args) && {
     auto factory = [=](const GeometryContext& gctx,
                        const TrackingVolume& volume, const Logger& logger) {
       return fn(gctx, volume, logger, args...);
