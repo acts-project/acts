@@ -15,7 +15,11 @@
 
 namespace Acts {
 
-/// Check if a bound vector is valid
+/// Check if a bound vector is valid. This checks the following:
+/// - All values are finite
+/// - The phi value is in the range [-pi, pi)
+/// - The theta value is in the range [0, pi]
+/// - The q/p value is non-zero
 ///
 /// @param v The bound vector to check
 /// @param epsilon The epsilon to use for the checks
@@ -23,7 +27,10 @@ namespace Acts {
 /// @return True if the bound vector is valid
 bool isBoundVectorValid(const BoundVector& v, double epsilon = 1e-6);
 
-/// Check if a free vector is valid
+/// Check if a free vector is valid. This checks the following:
+/// - All values are finite
+/// - Direction is normalized
+/// - The q/p value is non-zero
 ///
 /// @param v The free vector to check
 /// @param epsilon The epsilon to use for the checks

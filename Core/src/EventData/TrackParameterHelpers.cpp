@@ -9,7 +9,7 @@
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 
 bool Acts::isBoundVectorValid(const BoundVector& v, double epsilon) {
-  auto pi = std::numbers::pi_v<double>;
+  constexpr auto pi = std::numbers::pi_v<double>;
 
   bool loc0Valid = std::isfinite(v[eBoundLoc0]);
   bool loc1Valid = std::isfinite(v[eBoundLoc1]);
