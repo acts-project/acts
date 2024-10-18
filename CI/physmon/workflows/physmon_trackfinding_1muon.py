@@ -11,13 +11,13 @@ from acts.examples.simulation import (
     EtaConfig,
     PhiConfig,
     ParticleConfig,
+    ParticleSelectorConfig,
     addFatras,
     addDigitization,
 )
 
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
     ParticleSmearingSigmas,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
@@ -72,6 +72,11 @@ def run_ckf_tracking(label, seeding):
             setup.field,
             enableInteractions=True,
             rnd=rnd,
+            postSelectParticles=ParticleSelectorConfig(
+                pt=(0.9 * u.GeV, None),
+                measurements=(9, None),
+                removeNeutral=True,
+            ),
         )
 
         addDigitization(
@@ -86,7 +91,6 @@ def run_ckf_tracking(label, seeding):
             s,
             setup.trackingGeometry,
             setup.field,
-            TruthSeedRanges(pt=(500 * u.MeV, None), nHits=(9, None)),
             ParticleSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
                 # zero eveything so the CKF has a chance to find the measurements
                 d0=0,
@@ -134,7 +138,7 @@ def run_ckf_tracking(label, seeding):
             setup.trackingGeometry,
             setup.field,
             TrackSelectorConfig(
-                pt=(500 * u.MeV, None),
+                pt=(0.9 * u.GeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 nMeasurementsMin=6,
                 maxHoles=2,
