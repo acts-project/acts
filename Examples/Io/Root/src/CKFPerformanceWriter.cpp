@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/CKFPerformanceWriter.hpp"
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
