@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   BOOST_CHECK(track.hasReferenceSurface());
 
   // Track quantities
-  BOOST_CHECK_EQUAL(track.chi2(), 0.);
+  BOOST_CHECK(std::isinf(track.chi2()));
   BOOST_CHECK_EQUAL(track.nDoF(), 0u);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
