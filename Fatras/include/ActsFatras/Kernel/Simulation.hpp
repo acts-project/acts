@@ -245,6 +245,9 @@ struct Simulation {
           continue;
         }
 
+        assert(result->particle.particleId() == initialParticle.particleId() &&
+               "Particle id must not change during simulation");
+
         copyOutputs(result.value(), simulatedParticlesInitial,
                     simulatedParticlesFinal, hits);
         // since physics processes are independent, there can be particle id
@@ -255,6 +258,10 @@ struct Simulation {
         renumberTailParticleIds(simulatedParticlesInitial, iinitial);
       }
     }
+
+    assert(
+        (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) &&
+        "Inconsistent final sizes of the simulated particle containers");
 
     // the overall function call succeeded, i.e. no fatal errors occurred.
     // yet, there might have been some particle for which the propagation
@@ -284,12 +291,13 @@ struct Simulation {
     // initial particle state was already pushed to the container before
     // store final particle state at the end of the simulation
     particlesFinal.push_back(result.particle);
+    std::copy(result.hits.begin(), result.hits.end(), std::back_inserter(hits));
+
     // move generated secondaries that should be simulated to the output
     std::copy_if(
         result.generatedParticles.begin(), result.generatedParticles.end(),
         std::back_inserter(particlesInitial),
         [this](const Particle &particle) { return selectParticle(particle); });
-    std::copy(result.hits.begin(), result.hits.end(), std::back_inserter(hits));
   }
 
   /// Renumber particle ids in the tail of the container.
