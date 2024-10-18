@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <string>
+
 // for GNU: ignore this specific warning, otherwise just include Eigen/Dense
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER)
 #pragma GCC diagnostic push
@@ -101,5 +103,13 @@ using Transform2 = Eigen::Transform<ActsScalar, 2, Eigen::AffineCompact>;
 using Transform3 = Eigen::Transform<ActsScalar, 3, Eigen::Affine>;
 
 constexpr ActsScalar s_transformEquivalentTolerance = 1e-9;
+
+// User-defined literals for creating ActsScalar. Use as 3_scalar
+constexpr ActsScalar operator""_scalar(long double n) {
+  return ActsScalar{n};
+}
+constexpr ActsScalar operator""_scalar(unsigned long long n) {
+  return ActsScalar{n};
+}
 
 }  // namespace Acts
