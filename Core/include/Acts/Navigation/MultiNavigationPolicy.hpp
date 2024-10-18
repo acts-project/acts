@@ -15,6 +15,7 @@ namespace Acts {
 class MultiNavigationPolicyBase : public INavigationPolicy {};
 
 template <NavigationPolicyConcept... Policies>
+  requires(sizeof...(Policies) > 0)
 class MultiNavigationPolicy final : public MultiNavigationPolicyBase {
  public:
   MultiNavigationPolicy(Policies&&... policies)

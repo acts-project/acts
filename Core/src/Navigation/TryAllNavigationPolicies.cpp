@@ -17,6 +17,7 @@ TryAllPortalNavigationPolicy::TryAllPortalNavigationPolicy(
     const GeometryContext& /*gctx*/, const TrackingVolume& volume,
     const Logger& logger)
     : m_volume(&volume) {
+  assert(m_volume != nullptr);
   ACTS_VERBOSE("TryAllPortalNavigationPolicy created for volume "
                << m_volume->volumeName());
 }

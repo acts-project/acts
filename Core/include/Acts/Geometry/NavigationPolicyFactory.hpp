@@ -99,14 +99,6 @@ class NavigationPolicyFactoryImpl<> {
 
 template <typename F, typename... Fs>
 class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
-  template <typename... Ts>
-  using policy_type_helper = decltype(MultiNavigationPolicy(
-      std::invoke(std::declval<Ts>(), std::declval<const GeometryContext&>(),
-                  std::declval<const TrackingVolume&>(),
-                  std::declval<const Logger&>())...));
-
-  using policy_type = policy_type_helper<F, Fs...>;
-
  public:
   template <NavigationPolicyConcept P, typename... Args>
   constexpr auto add(Args&&... args)
@@ -144,11 +136,18 @@ class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
         std::move(*this));
   }
 
-  std::unique_ptr<policy_type> operator()(const GeometryContext& gctx,
-                                          const TrackingVolume& volume,
-                                          const Logger& logger) const {
+  auto operator()(const GeometryContext& gctx, const TrackingVolume& volume,
+                  const Logger& logger) const {
     return std::apply(
-        [&](auto&&... factories) -> std::unique_ptr<policy_type> {
+        [&](auto&&... factories) {
+          // Deduce policy type explicitly here...
+          using policy_type = decltype(MultiNavigationPolicy{
+              std::invoke(factories, std::declval<const GeometryContext&>(),
+                          std::declval<const TrackingVolume&>(),
+                          std::declval<const Logger&>())...});
+
+          // ... so we can create a unique_ptr of the concrete type here rather
+          // than the base. (`make_unique` can't do type deduction)
           return std::make_unique<policy_type>(
               std::invoke(factories, gctx, volume, logger)...);
         },
