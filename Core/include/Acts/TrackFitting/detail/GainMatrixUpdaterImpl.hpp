@@ -8,11 +8,9 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cstddef>
 #include <tuple>

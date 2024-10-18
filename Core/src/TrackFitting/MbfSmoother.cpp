@@ -8,9 +8,7 @@
 
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 namespace Acts {
 

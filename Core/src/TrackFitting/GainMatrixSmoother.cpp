@@ -12,7 +12,6 @@
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/detail/CovarianceHelper.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
 #include <ostream>

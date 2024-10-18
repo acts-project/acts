@@ -14,6 +14,11 @@
 
 namespace Acts {
 
+/// Normalize the bound parameter angles
+///
+/// @param boundParams The bound parameters to normalize
+///
+/// @return The normalized bound parameters
 inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
   BoundVector result = boundParams;
   std::tie(result[eBoundPhi], result[eBoundTheta]) =
@@ -21,6 +26,13 @@ inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
   return result;
 }
 
+/// Subtract bound parameters and take care of angle periodicity for phi and
+/// theta.
+///
+/// @param lhs The left hand side bound parameters
+/// @param rhs The right hand side bound parameters
+///
+/// @return The difference of the bound parameters
 inline BoundVector subtractBoundParameters(const BoundVector& lhs,
                                            const BoundVector& rhs) {
   BoundVector result = lhs - rhs;
