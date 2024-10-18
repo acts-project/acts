@@ -135,8 +135,6 @@ class DigitizationConfig {
 
   /// Input collection of simulated hits.
   std::string inputSimHits = "simhits";
-  /// Output source links collection.
-  std::string outputSourceLinks = "sourcelinks";
   /// Output measurements collection.
   std::string outputMeasurements = "measurements";
   /// Output cells map (geoID -> collection of cells).
