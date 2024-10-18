@@ -73,7 +73,7 @@ def run_ckf_tracking(label, seeding):
             enableInteractions=True,
             rnd=rnd,
             postSelectParticles=ParticleSelectorConfig(
-                pt=(0.99 * u.GeV, None),
+                pt=(0.9 * u.GeV, None),
                 measurements=(9, None),
                 removeNeutral=True,
             ),
@@ -138,7 +138,7 @@ def run_ckf_tracking(label, seeding):
             setup.trackingGeometry,
             setup.field,
             TrackSelectorConfig(
-                pt=(500 * u.MeV, None),
+                pt=(0.9 * u.GeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 nMeasurementsMin=6,
                 maxHoles=2,

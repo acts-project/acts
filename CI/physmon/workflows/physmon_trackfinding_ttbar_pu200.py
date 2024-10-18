@@ -68,7 +68,7 @@ with tempfile.TemporaryDirectory() as temp:
             absZ=(0.0, 1.0 * u.m),
         ),
         postSelectParticles=ParticleSelectorConfig(
-            pt=(1.0 * u.GeV, None),
+            pt=(0.5 * u.GeV, None),
             measurements=(9, None),
             removeNeutral=True,
         ),

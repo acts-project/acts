@@ -312,6 +312,8 @@ def addSeeding(
         The hypothesis used for track finding. Defaults to pion.
     inputParticles : str, "particles"
         input particles name in the WhiteBoard
+    selectedParticles : str, "particles_selected"
+        selected particles name in the WhiteBoard
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     logLevel : acts.logging.Level, None
@@ -1174,7 +1176,7 @@ def addSeedFilterML(
     from acts.examples.onnx import SeedFilterMLAlgorithm
 
     inputParticles = "particles"
-    selectedParticles = "truth_seeds_selected"
+    selectedParticles = "particles_selected"
     seeds = "seeds"
     estParams = "estimatedparameters"
 
@@ -1316,8 +1318,13 @@ def addTruthTrackingGsf(
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
+    # NOTE we specify clampToRange as True to silence warnings in the test about
+    # queries to the loss distribution outside the specified range, since no dedicated
+    # approximation for the ODD is done yet.
+    bha = acts.examples.AtlasBetheHeitlerApprox.makeDefault(clampToRange=True)
+
     gsfOptions = {
-        "betheHeitlerApprox": acts.examples.AtlasBetheHeitlerApprox.makeDefault(),
+        "betheHeitlerApprox": bha,
         "maxComponents": 12,
         "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
         "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,

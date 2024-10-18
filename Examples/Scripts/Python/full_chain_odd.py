@@ -13,6 +13,7 @@ from acts.examples.simulation import (
     EtaConfig,
     PhiConfig,
     ParticleConfig,
+    ParticleSelectorConfig,
     addPythia8,
     addFatras,
     addGeant4,

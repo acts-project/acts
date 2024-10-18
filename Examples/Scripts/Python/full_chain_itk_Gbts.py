@@ -5,6 +5,7 @@ from acts.examples.simulation import (
     MomentumConfig,
     EtaConfig,
     ParticleConfig,
+    ParticleSelectorConfig,
     addPythia8,
     addFatras,
     ParticleSelectorConfig,

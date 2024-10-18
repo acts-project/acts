@@ -209,7 +209,15 @@ def runHashingSeeding(
         trackingGeometry,
         field,
         preSelectParticles=ParticleSelectorConfig(
-            eta=(-eta, eta), pt=(150 * u.MeV, None), removeNeutral=True
+            eta=(-eta, eta),
+            pt=(150 * u.MeV, None),
+            removeNeutral=True,
+        ),
+        postSelectParticles=ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-eta, eta),
+            measurements=(9, None),
+            removeNeutral=True,
         ),
         postSelectParticles=ParticleSelectorConfig(
             pt=(1.0 * u.GeV, None),

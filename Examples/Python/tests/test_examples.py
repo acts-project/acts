@@ -430,7 +430,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         outputDirRoot=str(tmp_path),
         rnd=rnd,
         postSelectParticles=ParticleSelectorConfig(
-            pt=(1.0 * u.GeV, None),
+            pt=(0.9 * u.GeV, None),
             eta=(-4, 4),
             measurements=(9, None),
             removeNeutral=True,
@@ -704,6 +704,7 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
         runRefittingGsf(
             trackingGeometry=trackingGeometry,
             field=field,
+            digiConfigFile=detector_config.digiConfigFile,
             outputDir=tmp_path,
             s=seq,
         ).run()
