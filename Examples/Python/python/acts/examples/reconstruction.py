@@ -2121,7 +2121,7 @@ def addVertexFitting(
         VertexFitterAlgorithm,
         IterativeVertexFinderAlgorithm,
         AdaptiveMultiVertexFinderAlgorithm,
-        VertexPerformanceWriter,
+        VertexNTupleWriter,
     )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -2204,7 +2204,7 @@ def addVertexFitting(
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
         s.addWriter(
-            VertexPerformanceWriter(
+            VertexNTupleWriter(
                 level=customLogLevel(),
                 inputVertices=outputVertices,
                 inputTracks=tracks,
@@ -2230,7 +2230,7 @@ def addSingleSeedVertexFinding(
 ) -> None:
     from acts.examples import (
         SingleSeedVertexFinderAlgorithm,
-        VertexPerformanceWriter,
+        VertexNTupleWriter,
     )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -2251,7 +2251,7 @@ def addSingleSeedVertexFinding(
             outputDirRoot.mkdir()
 
         s.addWriter(
-            VertexPerformanceWriter(
+            VertexNTupleWriter(
                 level=customLogLevel(),
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
