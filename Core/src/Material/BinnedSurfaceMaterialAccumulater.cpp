@@ -120,8 +120,7 @@ void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
 
   // After mapping this track, average the touched bins
   for (const auto& [key, value] : touchedMapBins) {
-    std::vector<std::array<std::size_t, 3>> trackBins = {value};
-    key->trackAverage(trackBins, true);
+    key->trackAverage({value}, true);
   }
 
   // Empty bin correction
