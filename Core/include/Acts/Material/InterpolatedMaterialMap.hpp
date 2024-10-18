@@ -247,8 +247,7 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @brief Create interpolated map
   ///
   /// @param [in] mapper Material map
-  explicit InterpolatedMaterialMap(Mapper_t&& mapper)
-      : m_mapper(std::move(mapper)) {}
+  InterpolatedMaterialMap(Mapper_t&& mapper) : m_mapper(std::move(mapper)) {}
 
   /// @brief Create interpolated map
   ///

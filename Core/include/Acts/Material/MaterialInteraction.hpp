@@ -32,11 +32,11 @@ struct InteractionVolume {
 
   /// Constructor from tracking volume
   /// @param tv The tracking volume
-  explicit InteractionVolume(const TrackingVolume* tv) : trackingVolume(tv) {}
+  InteractionVolume(const TrackingVolume* tv) : trackingVolume(tv) {}
 
   /// Constructor from detector volume
   /// @param dv The detector volume
-  explicit InteractionVolume(const Experimental::DetectorVolume* dv)
+  InteractionVolume(const Experimental::DetectorVolume* dv)
       : detectorVolume(dv) {}
 
   /// Forward the geometry identifier

@@ -38,7 +38,7 @@ class ISurfaceMaterial {
   /// Constructor
   ///
   /// @param splitFactor is the splitting ratio between pre/post update
-  explicit ISurfaceMaterial(double splitFactor) : m_splitFactor(splitFactor) {}
+  ISurfaceMaterial(double splitFactor) : m_splitFactor(splitFactor) {}
 
   /// Constructor
   ///
