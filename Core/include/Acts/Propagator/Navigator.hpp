@@ -205,8 +205,6 @@ class Navigator {
       : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {}
 
   State makeState(const Options& options) const {
-    assert(options.startSurface != nullptr && "Start surface must be set");
-
     State state;
     state.options = options;
     state.startSurface = options.startSurface;

@@ -114,13 +114,13 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
 
   /// Return the vertices
   ///
-  /// @param lseg the number of segments used to approximate
+  /// @param ignoredSegments the number of segments used to approximate
   /// and eventually curved line
   ///
   /// @note the number of segments is ignored in this representation
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2> vertices(unsigned int ignoredSegments = 0u) const final;
 
   /// Return a rectangle bounds object that encloses this polygon.
   /// @return The rectangular bounds

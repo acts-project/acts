@@ -103,33 +103,30 @@ std::vector<Acts::Vector2> Acts::AnnulusBounds::corners() const {
 }
 
 std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
-    unsigned int lseg) const {
-  if (lseg > 0) {
-    // List of vertices counter-clockwise starting with left inner
-    std::vector<Acts::Vector2> rvertices;
-
+    unsigned int quarterSegments) const {
+  if (quarterSegments > 0u) {
     using VectorHelpers::phi;
-    auto phisInner = detail::VerticesHelper::phiSegments(
-        phi(m_inRightStripXY - m_moduleOrigin),
-        phi(m_inLeftStripXY - m_moduleOrigin));
-    auto phisOuter = detail::VerticesHelper::phiSegments(
-        phi(m_outLeftStripXY - m_moduleOrigin),
-        phi(m_outRightStripXY - m_moduleOrigin));
 
-    // Inner bow from phi_min -> phi_max
-    for (unsigned int iseg = 0; iseg < phisInner.size() - 1; ++iseg) {
-      int addon = (iseg == phisInner.size() - 2) ? 1 : 0;
-      detail::VerticesHelper::createSegment<Vector2, Transform2>(
-          rvertices, {get(eMinR), get(eMinR)}, phisInner[iseg],
-          phisInner[iseg + 1], lseg, addon);
-    }
-    // Upper bow from phi_max -> phi_min
-    for (unsigned int iseg = 0; iseg < phisOuter.size() - 1; ++iseg) {
-      int addon = (iseg == phisOuter.size() - 2) ? 1 : 0;
-      detail::VerticesHelper::createSegment<Vector2, Transform2>(
-          rvertices, {get(eMaxR), get(eMaxR)}, phisOuter[iseg],
-          phisOuter[iseg + 1], lseg, addon);
-    }
+    ActsScalar phiMinInner = phi(m_inRightStripXY - m_moduleOrigin);
+    ActsScalar phiMaxInner = phi(m_inLeftStripXY - m_moduleOrigin);
+
+    ActsScalar phiMinOuter = phi(m_outRightStripXY - m_moduleOrigin);
+    ActsScalar phiMaxOuter = phi(m_outLeftStripXY - m_moduleOrigin);
+
+    // Inner bow from phi_min -> phi_max (needs to be reversed)
+    std::vector<Acts::Vector2> rvertices =
+        detail::VerticesHelper::segmentVertices<Vector2, Transform2>(
+            {get(eMinR), get(eMinR)}, phiMinInner, phiMaxInner, {},
+            quarterSegments);
+    std::reverse(rvertices.begin(), rvertices.end());
+
+    // Outer bow from phi_min -> phi_max
+    auto overtices =
+        detail::VerticesHelper::segmentVertices<Vector2, Transform2>(
+            {get(eMaxR), get(eMaxR)}, phiMinOuter, phiMaxOuter, {},
+            quarterSegments);
+    rvertices.insert(rvertices.end(), overtices.begin(), overtices.end());
+
     std::for_each(rvertices.begin(), rvertices.end(),
                   [&](Acts::Vector2& rv) { rv += m_moduleOrigin; });
     return rvertices;

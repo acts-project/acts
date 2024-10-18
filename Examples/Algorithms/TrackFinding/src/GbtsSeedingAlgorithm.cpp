@@ -61,8 +61,6 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
 
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 
-  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
-
   m_inputClusters.initialize(m_cfg.inputClusters);
 
   // map

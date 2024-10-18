@@ -6,10 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/BinUtility.hpp"
+#pragma once
 
-#include <iostream>
+#include <type_traits>
 
-std::ostream& Acts::operator<<(std::ostream& sl, const BinUtility& bgen) {
-  return bgen.toStream(sl);
-}
+namespace Acts {
+template <bool C, typename T>
+using const_if_t = std::conditional_t<C, const T, T>;
+}  // namespace Acts
