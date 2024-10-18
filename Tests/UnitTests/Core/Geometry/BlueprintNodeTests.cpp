@@ -596,10 +596,10 @@ BOOST_AUTO_TEST_CASE(LayerNodeDisk) {
 
   std::vector<std::shared_ptr<Surface>> surfaces = makeFan(2.5_mm);
 
-  RootBlueprintNode root{{.envelope{{
-      .z = {2_mm, 2_mm},
-      .r = {3_mm, 5_mm},
-  }}}};
+  RootBlueprintNode root{{.envelope = ExtentEnvelope{{
+                              .z = {2_mm, 2_mm},
+                              .r = {3_mm, 5_mm},
+                          }}}};
 
   root.addLayer("Layer0", [&](auto& layer) {
     layer.setSurfaces(surfaces)
@@ -643,10 +643,10 @@ BOOST_AUTO_TEST_CASE(LayerNodeCylinder) {
   std::vector<std::shared_ptr<Surface>> surfaces =
       makeBarrelLayer(base, detectorElements, 300_mm, 24, 8, 2.5_mm);
 
-  RootBlueprintNode root{{.envelope{{
-      .z = {2_mm, 2_mm},
-      .r = {3_mm, 5_mm},
-  }}}};
+  RootBlueprintNode root{{.envelope = ExtentEnvelope{{
+                              .z = {2_mm, 2_mm},
+                              .r = {3_mm, 5_mm},
+                          }}}};
 
   root.addLayer("Layer0", [&](auto& layer) {
     layer.setSurfaces(surfaces)
