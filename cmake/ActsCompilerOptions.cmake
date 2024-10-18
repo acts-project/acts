@@ -13,16 +13,9 @@ set(cxx_flags
     "-Wall -Wextra -Wpedantic -Wshadow -Wzero-as-null-pointer-constant -Wold-style-cast"
 )
 
-# Add assertions to standard libraries for debug builds
-if(
-    (CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
-    OR (CMAKE_BUILD_TYPE STREQUAL Debug)
-)
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-        set(cxx_flags "${cxx_flags} -D_GLIBCXX_ASSERTIONS")
-    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        set(cxx_flags "${cxx_flags} -D_LIBCPP_DEBUG")
-    endif()
+# Add assertions to standard libraries
+if(ACTS_FORCE_ASSERTIONS)
+    set(cxx_flags "${cxx_flags} -D_GLIBCXX_ASSERTIONS -D_LIBCPP_DEBUG")
 endif()
 
 # This adds some useful conversion checks like float-to-bool, float-to-int, etc.
