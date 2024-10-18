@@ -17,6 +17,8 @@ namespace Acts {
 class NavigationStream;
 class Logger;
 
+/// Struct that serves as the argument to the navigation delegate.
+/// It is not supposed to be used as an lvalue.
 struct NavigationArguments {
   NavigationStream& main;
   Vector3 position;
@@ -27,6 +29,8 @@ struct NavigationArguments {
   const Logger& logger;
 };
 
+/// Central alias for the navigation delegate. This type is owning to support
+/// (type-erased) navigation delegate chains (i.e. multiple policies).
 using NavigationDelegate = OwningDelegate<void(const NavigationArguments&)>;
 
 }  // namespace Acts

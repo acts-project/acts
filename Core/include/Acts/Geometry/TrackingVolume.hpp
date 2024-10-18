@@ -496,8 +496,14 @@ class TrackingVolume : public Volume {
                  const ViewConfig& portalViewConfig,
                  const ViewConfig& sensitiveViewConfig) const;
 
+  /// Register a navigation policy with this volume. The argument can not be
+  /// nullptr.
+  /// @param policy is the navigation policy to be registered
   void setNavigationPolicy(std::unique_ptr<INavigationPolicy> policy);
 
+  /// Update the navigation state for this volume. Internally, this consults the
+  /// registered navigation policy, where the default is a noop.
+  /// @param args are the navigation arguments
   void updateNavigationState(const NavigationArguments& args) const;
 
  private:

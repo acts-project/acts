@@ -29,9 +29,11 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
   SurfaceArrayCreator sac{sacConfig, logger.clone("SrfArrCrtr")};
 
   std::vector<std::shared_ptr<const Surface>> surfaces;
-  // @TODO: Fill only sensitives
   surfaces.reserve(volume.surfaces().size());
   for (const auto& surface : volume.surfaces()) {
+    if (surface.associatedDetectorElement() == nullptr) {
+      continue;
+    }
     surfaces.push_back(surface.getSharedPtr());
   }
 
