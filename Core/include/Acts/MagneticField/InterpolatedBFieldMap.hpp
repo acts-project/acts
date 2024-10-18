@@ -32,12 +32,12 @@ class InterpolatedMagneticField : public MagneticFieldProvider {
   /// @brief get the minimum value of all axes of the field map
   ///
   /// @return vector returning the minima of all field map axes
-  virtual std::vector<double> getMin() const = 0;
+  virtual std::vector<ActsScalar> getMin() const = 0;
 
   /// @brief get the maximum value of all axes of the field map
   ///
   /// @return vector returning the maxima of all field map axes
-  virtual std::vector<double> getMax() const = 0;
+  virtual std::vector<ActsScalar> getMax() const = 0;
 
   /// @brief check whether given 3D position is inside look-up domain
   ///
@@ -98,8 +98,8 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     ///                         each Dimension)
     /// @param [in] fieldValues field values at the hyper box corners sorted in
     ///                         the canonical order defined in Acts::interpolate
-    FieldCell(std::array<double, DIM_POS> lowerLeft,
-              std::array<double, DIM_POS> upperRight,
+    FieldCell(std::array<ActsScalar, DIM_POS> lowerLeft,
+              std::array<ActsScalar, DIM_POS> upperRight,
               std::array<Vector3, N> fieldValues)
         : m_lowerLeft(std::move(lowerLeft)),
           m_upperRight(std::move(upperRight)),
@@ -132,10 +132,10 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
    private:
     /// generalized lower-left corner of the confining hyper-box
-    std::array<double, DIM_POS> m_lowerLeft;
+    std::array<ActsScalar, DIM_POS> m_lowerLeft;
 
     /// generalized upper-right corner of the confining hyper-box
-    std::array<double, DIM_POS> m_upperRight;
+    std::array<ActsScalar, DIM_POS> m_upperRight;
 
     /// @brief magnetic field vectors at the hyper-box corners
     ///
@@ -211,26 +211,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
     assert(i == nCorners);
 
-    // This possible conversion is necessary, in case we want to use custom
-    // general scalar type ActsScalar != double
-    auto convertArray = [](const auto& inputArray) {
-      using T = typename std::decay_t<decltype(inputArray)>::value_type;
-
-      std::array<double, DIM_POS> outputArray;
-
-      if constexpr (!std::is_same_v<T, double>) {
-        std::transform(inputArray.begin(), inputArray.end(),
-                       outputArray.begin(),
-                       [](T val) { return static_cast<double>(val); });
-      } else {
-        std::copy(inputArray.begin(), inputArray.end(), outputArray.begin());
-      }
-
-      return outputArray;
-    };
-
-    return FieldCell(convertArray(lowerLeft), convertArray(upperRight),
-                     std::move(neighbors));
+    return FieldCell(lowerLeft, upperRight, std::move(neighbors));
   }
 
   /// @brief get the number of bins for all axes of the field map
@@ -244,15 +225,15 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @brief get the minimum value of all axes of the field map
   ///
   /// @return vector returning the minima of all field map axes
-  std::vector<double> getMin() const final {
-    return std::vector<double>(m_lowerLeft.begin(), m_lowerLeft.end());
+  std::vector<ActsScalar> getMin() const final {
+    return std::vector<ActsScalar>(m_lowerLeft.begin(), m_lowerLeft.end());
   }
 
   /// @brief get the maximum value of all axes of the field map
   ///
   /// @return vector returning the maxima of all field map axes
-  std::vector<double> getMax() const final {
-    return std::vector<double>(m_upperRight.begin(), m_upperRight.end());
+  std::vector<ActsScalar> getMax() const final {
+    return std::vector<ActsScalar>(m_upperRight.begin(), m_upperRight.end());
   }
 
   /// @brief check whether given 3D position is inside look-up domain
