@@ -254,12 +254,9 @@ Acts::solenoidFieldMap(std::pair<double, double> rlim,
                        std::pair<double, double> zlim,
                        std::pair<std::size_t, std::size_t> nbins,
                        const SolenoidBField& field) {
-  double rMin = 0, rMax = 0, zMin = 0, zMax = 0;
-  std::tie(rMin, rMax) = rlim;
-  std::tie(zMin, zMax) = zlim;
-
-  std::size_t nBinsR = 0, nBinsZ = 0;
-  std::tie(nBinsR, nBinsZ) = nbins;
+  auto [rMin, rMax] = rlim;
+  auto [zMin, zMax] = zlim;
+  const auto [nBinsR, nBinsZ] = nbins;
 
   double stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
   double stepR = std::abs(rMax - rMin) / (nBinsR - 1);
