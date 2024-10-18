@@ -126,6 +126,13 @@ Sequencer::Sequencer(const Sequencer::Config& cfg)
         "ACTS_SEQUENCER_DISABLE_FPEMON");
     m_cfg.trackFpes = false;
   }
+
+  if (m_cfg.trackFpes && !m_cfg.fpeMasks.empty() &&
+      !Acts::FpeMonitor::canSymbolize()) {
+    ACTS_ERROR("FPE monitoring is enabled but symbolization is not available");
+    throw std::runtime_error(
+        "FPE monitoring is enabled but symbolization is not available");
+  }
 }
 
 void Sequencer::addContextDecorator(

@@ -9,6 +9,7 @@
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 
@@ -16,7 +17,6 @@
 #include <vector>
 
 namespace ActsExamples {
-class IndexSourceLink;
 struct AlgorithmContext;
 
 TrajectoriesToPrototracks::TrajectoriesToPrototracks(Config cfg,
