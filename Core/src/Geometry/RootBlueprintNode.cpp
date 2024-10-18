@@ -83,7 +83,8 @@ std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
 
   std::shared_ptr<VolumeBounds> worldBounds;
 
-  if (const auto *cyl = dynamic_cast<const CylinderVolumeBounds *>(&bounds)) {
+  if (const auto *cyl = dynamic_cast<const CylinderVolumeBounds *>(&bounds);
+      cyl != nullptr) {
     using enum CylinderVolumeBounds::BoundValues;
 
     // Make a copy that we'll modify
@@ -106,7 +107,8 @@ std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
     worldBounds = std::move(newBounds);
 
   } else if (const auto *box =
-                 dynamic_cast<const CuboidVolumeBounds *>(&bounds)) {
+                 dynamic_cast<const CuboidVolumeBounds *>(&bounds);
+             box != nullptr) {
     throw std::logic_error{"Not implemented"};
   } else {
     throw std::logic_error{"Unsupported volume bounds type"};
