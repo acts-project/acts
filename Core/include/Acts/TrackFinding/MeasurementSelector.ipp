@@ -63,7 +63,7 @@ MeasurementSelector::select(
         trackState.effectiveCalibrated().data(),
         trackState.effectiveCalibratedCovariance().data(),
         trackState.predicted(), trackState.predictedCovariance(),
-        trackState.boundSubspaceIndices(), trackState.calibratedSize());
+        trackState.projectorSubspaceIndices(), trackState.calibratedSize());
     trackState.chi2() = chi2;
 
     if (chi2 < minChi2) {
