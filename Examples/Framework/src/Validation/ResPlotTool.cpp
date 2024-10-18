@@ -158,21 +158,27 @@ void ActsExamples::ResPlotTool::fill(
   auto trackParameter = fittedParamters.parameters();
 
   // get the perigee surface
-  auto pSurface = &fittedParamters.referenceSurface();
+  const auto& pSurface = fittedParamters.referenceSurface();
 
   // get the truth position and momentum
   ParametersVector truthParameter = ParametersVector::Zero();
 
   // get the truth perigee parameter
-  auto lpResult = pSurface->globalToLocal(gctx, truthParticle.position(),
-                                          truthParticle.direction());
-  if (lpResult.ok()) {
+  auto intersection =
+      pSurface
+          .intersect(gctx, truthParticle.position(), truthParticle.direction())
+          .closest();
+  if (intersection.isValid()) {
+    auto lpResult = pSurface.globalToLocal(gctx, intersection.position(),
+                                           truthParticle.direction());
+    assert(lpResult.ok());
+
     truthParameter[Acts::BoundIndices::eBoundLoc0] =
         lpResult.value()[Acts::BoundIndices::eBoundLoc0];
     truthParameter[Acts::BoundIndices::eBoundLoc1] =
         lpResult.value()[Acts::BoundIndices::eBoundLoc1];
   } else {
-    ACTS_ERROR("Global to local transformation did not succeed.");
+    ACTS_ERROR("Cannot get the truth perigee parameter");
   }
   truthParameter[Acts::BoundIndices::eBoundPhi] =
       phi(truthParticle.direction());

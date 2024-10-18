@@ -94,7 +94,7 @@ with tempfile.TemporaryDirectory() as temp:
             maxSeedsPerSpM=1,
             sigmaScattering=5,
             radLengthPerSeed=0.1,
-            minPt=500 * u.MeV,
+            minPt=0.5 * u.GeV,
             impactMax=3 * u.mm,
         ),
         SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
@@ -118,7 +118,7 @@ with tempfile.TemporaryDirectory() as temp:
         setup.trackingGeometry,
         setup.field,
         TrackSelectorConfig(
-            pt=(500 * u.MeV, None),
+            pt=(0.5 * u.GeV, None),
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
             nMeasurementsMin=6,
             maxHoles=2,
@@ -180,6 +180,10 @@ with tempfile.TemporaryDirectory() as temp:
     s.run()
 
     shutil.move(
+        tp / "performance_fitting_ambi.root",
+        tp / "performance_fitting_ckf_ambi.root",
+    )
+    shutil.move(
         tp / "performance_ambi.root",
         tp / "performance_ckf_ambi.root",
     )
@@ -192,7 +196,9 @@ with tempfile.TemporaryDirectory() as temp:
     for file in [
         "performance_seeding.root",
         "tracksummary_ckf.root",
+        "performance_fitting_ckf.root",
         "performance_ckf.root",
+        "performance_fitting_ckf_ambi.root",
         "performance_ckf_ambi.root",
         "performance_vertexing_amvf_gauss_notime.root",
         "performance_vertexing_amvf_grid_time.root",
