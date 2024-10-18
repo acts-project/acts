@@ -19,9 +19,9 @@ if(
     OR (CMAKE_BUILD_TYPE STREQUAL Debug)
 )
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-        set(cxx_flags "${cxx_final} -D_GLIBCXX_ASSERTIONS")
+        set(cxx_flags "${cxx_flags} -D_GLIBCXX_ASSERTIONS")
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        set(cxx_flags "${cxx_final} -D_LIBCPP_DEBUG")
+        set(cxx_flags "${cxx_flags} -D_LIBCPP_DEBUG")
     endif()
 endif()
 
