@@ -13,6 +13,18 @@ set(cxx_flags
     "-Wall -Wextra -Wpedantic -Wshadow -Wzero-as-null-pointer-constant -Wold-style-cast"
 )
 
+# Add assertions to standard libraries for debug builds
+if(
+    (CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
+    OR (CMAKE_BUILD_TYPE STREQUAL Debug)
+)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        set(cxx_flags "${cxx_final} -D_GLIBCXX_ASSERTIONS")
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set(cxx_flags "${cxx_final} -D_LIBCPP_DEBUG")
+    endif()
+endif()
+
 # This adds some useful conversion checks like float-to-bool, float-to-int, etc.
 # However, at the moment this is only added to clang builds, since GCC's -Wfloat-conversion
 # is much more aggressive and also triggers on e.g., double-to-float
