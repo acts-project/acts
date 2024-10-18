@@ -20,7 +20,7 @@ namespace ActsExamples::Geant4::HepMC3 {
 /// Collects the particles history.
 class SteppingAction : public G4UserSteppingAction {
  public:
-  SteppingAction(std::vector<std::string> eventRejectionProcess);
+  explicit SteppingAction(std::vector<std::string> eventRejectionProcess);
   ~SteppingAction() override;
 
   /// Static access method to the instance

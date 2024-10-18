@@ -249,7 +249,8 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
       // Count the number of particles associated with each vertex
       std::size_t particleCount = 0;
       for (const auto& particle : truthParticles) {
-        if (particle.particleId().vertexId() == truthVertex.vertexId()) {
+        if (static_cast<SimVertexBarcode>(particle.particleId().vertexId()) ==
+            truthVertex.vertexId()) {
           ++particleCount;
         }
       }

@@ -89,7 +89,7 @@ class Sequencer {
     std::size_t fpeStackTraceLength = 8;
   };
 
-  Sequencer(const Config &cfg);
+  explicit Sequencer(const Config &cfg);
 
   /// Add a context decorator to the set of context decorators.
   ///

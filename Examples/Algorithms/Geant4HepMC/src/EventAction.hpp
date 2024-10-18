@@ -28,7 +28,7 @@ class EventAction final : public G4UserEventAction {
   static EventAction* instance();
 
   /// Construct the action and ensure singleton usage.
-  EventAction(std::vector<std::string> processFilter);
+  explicit EventAction(std::vector<std::string> processFilter);
   ~EventAction() override;
 
   /// Interface method for begin of the event

@@ -21,8 +21,9 @@ class SimVertexBarcode {
   using Value = SimBarcode::Value;
 
   constexpr SimVertexBarcode() = default;
-  constexpr SimVertexBarcode(Value encoded) : m_id(SimBarcode(encoded)) {}
-  constexpr SimVertexBarcode(SimBarcode vertexId)
+  explicit constexpr SimVertexBarcode(Value encoded)
+      : m_id(SimBarcode(encoded)) {}
+  explicit constexpr SimVertexBarcode(SimBarcode vertexId)
       : m_id(vertexId.setParticle(0).setSubParticle(0)) {
     if (vertexId != vertexId.vertexId()) {
       throw std::invalid_argument("SimVertexBarcode: invalid vertexId");

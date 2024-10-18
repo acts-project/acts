@@ -28,7 +28,7 @@ class SteppingActionList : public G4UserSteppingAction {
     std::vector<std::shared_ptr<G4UserSteppingAction>> actions;
   };
 
-  SteppingActionList(const Config &cfg) : m_cfg(cfg) {}
+  explicit SteppingActionList(const Config &cfg) : m_cfg(cfg) {}
 
   void UserSteppingAction(const G4Step *step) override {
     for (const auto &action : m_cfg.actions) {

@@ -38,8 +38,9 @@ class DetrayConverter {
   };
 
   /// Constructor with logger
-  DetrayConverter(std::unique_ptr<const Logger> logger =
-                      getDefaultLogger("DetrayConverter", Logging::INFO));
+  explicit DetrayConverter(
+      std::unique_ptr<const Logger> logger = getDefaultLogger("DetrayConverter",
+                                                              Logging::INFO));
 
   /// Convert an Acts::Experimental::Detector to a detray::detector object
   ///

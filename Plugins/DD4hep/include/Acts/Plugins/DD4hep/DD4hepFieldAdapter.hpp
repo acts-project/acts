@@ -22,7 +22,7 @@ class DD4hepFieldAdapter : public Acts::MagneticFieldProvider {
   struct Cache {};
 
  public:
-  DD4hepFieldAdapter(dd4hep::OverlayedField field);
+  explicit DD4hepFieldAdapter(dd4hep::OverlayedField field);
 
   MagneticFieldProvider::Cache makeCache(
       const Acts::MagneticFieldContext& mctx) const override;

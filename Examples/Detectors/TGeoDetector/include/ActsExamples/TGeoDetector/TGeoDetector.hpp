@@ -75,7 +75,7 @@ struct TGeoDetector {
     struct LayerTriplet {
       LayerTriplet() = default;
 
-      LayerTriplet(T value)
+      explicit LayerTriplet(T value)
           : negative{value}, central{value}, positive{value} {}
 
       LayerTriplet(T _negative, T _central, T _positive)
