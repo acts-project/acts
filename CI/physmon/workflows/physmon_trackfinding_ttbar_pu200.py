@@ -94,7 +94,7 @@ with tempfile.TemporaryDirectory() as temp:
             maxSeedsPerSpM=1,
             sigmaScattering=5,
             radLengthPerSeed=0.1,
-            minPt=500 * u.MeV,
+            minPt=0.5 * u.GeV,
             impactMax=3 * u.mm,
         ),
         SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
@@ -118,7 +118,7 @@ with tempfile.TemporaryDirectory() as temp:
         setup.trackingGeometry,
         setup.field,
         TrackSelectorConfig(
-            pt=(900 * u.MeV, None),
+            pt=(0.5 * u.GeV, None),
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
             nMeasurementsMin=6,
             maxHoles=2,
