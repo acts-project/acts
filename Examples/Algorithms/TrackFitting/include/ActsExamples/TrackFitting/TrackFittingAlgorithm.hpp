@@ -72,8 +72,6 @@ class TrackFittingAlgorithm final : public IAlgorithm {
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
-  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
-      this, "InputSourceLinks"};
   ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
                                                          "InputProtoTracks"};
   ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
