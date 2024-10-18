@@ -163,7 +163,7 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
     lgv.reserve(l1ConnMap.size());
 
     for (const auto &[key, value] : l1ConnMap) {
-      lgv.push_back(LayerGroup(key, value));
+      lgv.emplace_back(LayerGroup(key, value));
     }
 
     m_layerGroups.insert(std::make_pair(currentStage, lgv));
@@ -174,7 +174,7 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
 
 GbtsConnector::~GbtsConnector() {
   m_layerGroups.clear();
-  for (auto &[_, connections] : m_connMap) {
+  for (const auto &[_, connections] : m_connMap) {
     for (auto *conn : connections) {
       delete conn;
     }
