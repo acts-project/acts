@@ -45,8 +45,7 @@ Acts::detail::AnnulusBoundsHelper::create(const Transform3& transform,
   Line2D lB = Line2D::Through(boundLines[1].first, boundLines[1].second);
   Vector2 ix = lA.intersection(lB);
 
-  const Eigen::Translation<ActsScalar, 3> originTranslation(ix.x(), ix.y(),
-                                                            0_scalar);
+  const Translation3 originTranslation(ix.x(), ix.y(), 0);
   const Vector2 originShift = -ix;
 
   // Update transform by prepending the origin shift translation
