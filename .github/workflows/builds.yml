@@ -303,7 +303,8 @@ jobs:
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
 
-  linux_acts_scalar:
+  linux_float:
+    # This job tests the correct usage of the type ActsScalar by testing it with float instead of double
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404:58
     env:
@@ -323,9 +324,9 @@ jobs:
         id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-linux_ubuntu_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          key: ${{ runner.os  }}-ccache-linux_float_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
           restore-keys: |
-            ${{ runner.os  }}-ccache-linux_ubuntu_${{ env.CCACHE_KEY_SUFFIX }}_
+            ${{ runner.os  }}-ccache-linux_float_${{ env.CCACHE_KEY_SUFFIX }}_
 
       - name: Configure
         # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
