@@ -159,7 +159,7 @@ Result<double> SympyStepper::stepImpl(
       return res.error();
     }
     // Protect against division by zero
-    errorEstimate = std::max(ActsScalar{1e-20}, errorEstimate);
+    errorEstimate = std::max(1e-20_scalar, errorEstimate);
 
     if (*res) {
       break;

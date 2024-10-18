@@ -158,7 +158,7 @@ inline Vector3 VolumeBounds::binningOffset(
 }
 
 inline ActsScalar VolumeBounds::binningBorder(BinningValue /*bValue*/) const {
-  return ActsScalar{0.};
+  return 0_scalar;
 }
 
 /// Overload of << operator for std::ostream for debug output
