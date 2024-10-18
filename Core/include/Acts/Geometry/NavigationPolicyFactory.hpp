@@ -76,8 +76,12 @@ class NavigationPolicyFactoryImpl<> {
   friend class NavigationPolicyFactoryImpl;
   NavigationPolicyFactoryImpl() = default;
 
-  // Arguments need to be copy constructible because the factory must be able to
-  // execute multiple times.
+  /// Create a factory with the specified policy added
+  /// @tparam P The policy type to add
+  /// @param args The arguments to pass to the policy constructor
+  /// @note Arguments need to be copy constructible because the factory must be
+  ///       able to execute multiple times.
+  /// @return A new policy factory including the @c P policy.
   template <NavigationPolicyConcept P, typename... Args>
     requires(std::is_constructible_v<P, const GeometryContext&,
                                      const TrackingVolume&, const Logger&,
@@ -93,6 +97,12 @@ class NavigationPolicyFactoryImpl<> {
         std::make_tuple(std::move(factory))};
   }
 
+  /// Create a factory with a policy returned by a factory function
+  /// @tparam Fn The type of the function to construct the policy
+  /// @param args The arguments to pass to the policy factory
+  /// @note Arguments need to be copy constructible because the factory must be
+  ///       able to execute multiple times.
+  /// @return A new policy factory including the function
   template <typename Fn, typename... Args>
     requires(NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
   constexpr auto add(Fn&& fn, Args&&... args) {
@@ -109,6 +119,12 @@ class NavigationPolicyFactoryImpl<> {
 template <typename F, typename... Fs>
 class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
  public:
+  /// Create a factory with the specified policy added
+  /// @tparam P The policy type to add
+  /// @param args The arguments to pass to the policy constructor
+  /// @note Arguments need to be copy constructible because the factory must be
+  ///       able to execute multiple times.
+  /// @return A new policy factory including the @c P policy.
   template <NavigationPolicyConcept P, typename... Args>
     requires(std::is_constructible_v<P, const GeometryContext&,
                                      const TrackingVolume&, const Logger&,
@@ -125,6 +141,12 @@ class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
                        std::make_tuple(std::move(factory)))};
   }
 
+  /// Create a factory with a policy returned by a factory function
+  /// @tparam Fn The type of the function to construct the policy
+  /// @param args The arguments to pass to the policy factory
+  /// @note Arguments need to be copy constructible because the factory must be
+  ///       able to execute multiple times.
+  /// @return A new policy factory including the function
   template <typename Fn, typename... Args>
     requires(NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
   constexpr auto add(Fn&& fn, Args&&... args) && {
@@ -138,12 +160,19 @@ class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
                        std::make_tuple(std::move(factory)))};
   }
 
+  /// Move the factory into a unique pointer
+  /// @note Only callable on rvalue references
+  /// @return A unique pointer to the factory
   constexpr std::unique_ptr<NavigationPolicyFactoryImpl<F, Fs...>>
   asUniquePtr() && {
     return std::make_unique<NavigationPolicyFactoryImpl<F, Fs...>>(
         std::move(*this));
   }
 
+  /// Construct a navigation policy using the factories
+  /// @param gctx The geometry context
+  /// @param volume The tracking volume
+  /// @param logger The logger
   auto operator()(const GeometryContext& gctx, const TrackingVolume& volume,
                   const Logger& logger) const {
     return std::apply(
@@ -162,6 +191,10 @@ class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
         m_factories);
   }
 
+  /// Construct a navigation policy using the factories
+  /// @param gctx The geometry context
+  /// @param volume The tracking volume
+  /// @param logger The logger
   std::unique_ptr<INavigationPolicy> build(
       const GeometryContext& gctx, const TrackingVolume& volume,
       const Logger& logger) const override {
