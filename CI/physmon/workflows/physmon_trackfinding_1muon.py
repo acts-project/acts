@@ -163,7 +163,7 @@ def run_ckf_tracking(label, seeding):
             if seeding != SeedingAlgorithm.TruthSmeared
             else []
         ) + [
-            "performance_ckf.root",
+            "performance_finding_ckf.root",
             "tracksummary_ckf.root",
         ]:
             perf_file = tp / file

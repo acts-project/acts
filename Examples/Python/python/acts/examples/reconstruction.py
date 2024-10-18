@@ -1530,7 +1530,7 @@ def addCKFTracks(
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
-        writeCKFperformance=True,
+        writePerformance=True,
         logLevel=logLevel,
         writeCovMat=writeCovMat,
     )
@@ -1606,7 +1606,7 @@ def addTrackWriters(
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeStates: bool = True,
     writeSummary: bool = True,
-    writeCKFperformance: bool = True,
+    writePerformance: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
 ):
@@ -1644,17 +1644,17 @@ def addTrackWriters(
             )
             s.addWriter(trackSummaryWriter)
 
-        if writeCKFperformance:
+        if writePerformance:
             # Write CKF performance data
-            ckfPerfWriter = acts.examples.CKFPerformanceWriter(
+            trackFinderPerfWriter = acts.examples.TrackFinderPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 inputParticleTrackMatching="particle_track_matching",
-                filePath=str(outputDirRoot / f"performance_{name}.root"),
+                filePath=str(outputDirRoot / f"performance_finding_{name}.root"),
             )
-            s.addWriter(ckfPerfWriter)
+            s.addWriter(trackFinderPerfWriter)
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
@@ -1838,7 +1838,7 @@ def addExaTrkX(
     # Write truth track finding / seeding performance
     if outputDirRoot is not None:
         s.addWriter(
-            acts.examples.TrackFinderPerformanceWriter(
+            acts.examples.TrackFinderNTupleWriter(
                 level=customLogLevel(),
                 inputProtoTracks=findingAlg.config.outputProtoTracks,
                 # the original selected particles after digitization
@@ -1907,7 +1907,7 @@ def addAmbiguityResolution(
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
-        writeCKFperformance=True,
+        writePerformance=True,
         logLevel=logLevel,
         writeCovMat=writeCovMat,
     )
@@ -1961,7 +1961,7 @@ def addScoreBasedAmbiguityResolution(
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
-        writeCKFperformance=True,
+        writePerformance=True,
         logLevel=logLevel,
         writeCovMat=writeCovMat,
     )
@@ -2018,7 +2018,7 @@ def addAmbiguityResolutionML(
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
-        writeCKFperformance=True,
+        writePerformance=True,
         logLevel=logLevel,
     )
 
@@ -2062,7 +2062,7 @@ def addAmbiguityResolutionMLDBScan(
         outputDirCsv=outputDirCsv,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
-        writeCKFperformance=True,
+        writePerformance=True,
         logLevel=logLevel,
     )
 

@@ -223,11 +223,11 @@ function trackfinding() {
     fi
 
     run_histcmp \
-        $outdir/data/$path/performance_ckf.root \
-        $refdir/$path/performance_ckf.root \
+        $outdir/data/$path/performance_finding_ckf.root \
+        $refdir/$path/performance_finding_ckf.root \
         "CKF | ${name}" \
-        $path/performance_ckf.html \
-        $path/performance_ckf_plots \
+        $path/performance_finding_ckf.html \
+        $path/performance_finding_ckf_plots \
         --config $default_config
 
     run Examples/Scripts/generic_plotter.py \
@@ -248,13 +248,13 @@ function trackfinding() {
         $path/tracksummary_ckf.html \
         $path/tracksummary_ckf_plots
 
-    if [ -f $refdir/$path/performance_ckf_ambi.root ]; then
+    if [ -f $refdir/$path/performance_finding_ckf_ambi.root ]; then
         run_histcmp \
-            $outdir/data/$path/performance_ckf_ambi.root \
-            $refdir/$path/performance_ckf_ambi.root \
+            $outdir/data/$path/performance_finding_ckf_ambi.root \
+            $refdir/$path/performance_finding_ckf_ambi.root \
             "Ambisolver | ${name}" \
-            $path/performance_ckf_ambi.html \
-            $path/performance_ckf_ambi
+            $path/performance_finding_ckf_ambi.html \
+            $path/performance_finding_ckf_ambi
     fi
 }
 
