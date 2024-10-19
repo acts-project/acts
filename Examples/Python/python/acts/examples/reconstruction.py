@@ -1532,7 +1532,7 @@ def addCKFTracks(
         writeSummary=writeTrackSummary,
         writeStates=writeTrackStates,
         writeFitterPerformance=writePerformance,
-        writeCkfPerformance=writePerformance,
+        writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
         logLevel=logLevel,
     )
@@ -1609,7 +1609,7 @@ def addTrackWriters(
     writeSummary: bool = True,
     writeStates: bool = False,
     writeFitterPerformance: bool = False,
-    writeCkfPerformance: bool = False,
+    writeFinderPerformance: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
 ):
@@ -1655,16 +1655,16 @@ def addTrackWriters(
             )
             s.addWriter(trackFitterPerformanceWriter)
 
-        if writeCkfPerformance:
-            ckfPerfWriter = acts.examples.CKFPerformanceWriter(
+        if writeFinderPerformance:
+            trackFinderPerfWriter = acts.examples.TrackFinderPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 inputParticleTrackMatching="particle_track_matching",
-                filePath=str(outputDirRoot / f"performance_{name}.root"),
+                filePath=str(outputDirRoot / f"performance_finding_{name}.root"),
             )
-            s.addWriter(ckfPerfWriter)
+            s.addWriter(trackFinderPerfWriter)
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
@@ -1920,7 +1920,7 @@ def addAmbiguityResolution(
         writeSummary=writeTrackStates,
         writeStates=writeTrackSummary,
         writeFitterPerformance=writePerformance,
-        writeCkfPerformance=writePerformance,
+        writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
         logLevel=logLevel,
     )
@@ -1974,10 +1974,10 @@ def addScoreBasedAmbiguityResolution(
         tracks=algScoreBased.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
-        writeSummary=writeTrackSummary,
-        writeStates=writeTrackStates,
+        writeSummary=writeTrackStates,
+        writeStates=writeTrackSummary,
         writeFitterPerformance=writePerformance,
-        writeCkfPerformance=writePerformance,
+        writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
         logLevel=logLevel,
     )
@@ -2035,10 +2035,10 @@ def addAmbiguityResolutionML(
         tracks=algGreedy.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
-        writeSummary=writeTrackSummary,
-        writeStates=writeTrackStates,
+        writeSummary=writeTrackStates,
+        writeStates=writeTrackSummary,
         writeFitterPerformance=writePerformance,
-        writeCkfPerformance=writePerformance,
+        writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
         logLevel=logLevel,
     )
@@ -2084,10 +2084,10 @@ def addAmbiguityResolutionMLDBScan(
         trajectories=alg.config.outputTracks,
         outputDirRoot=outputDirRoot,
         outputDirCsv=outputDirCsv,
-        writeSummary=writeTrackSummary,
-        writeStates=writeTrackStates,
+        writeSummary=writeTrackStates,
+        writeStates=writeTrackSummary,
         writeFitterPerformance=writePerformance,
-        writeCkfPerformance=writePerformance,
+        writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
         logLevel=logLevel,
     )
