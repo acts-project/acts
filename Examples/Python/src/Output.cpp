@@ -43,7 +43,7 @@
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
 #include "ActsExamples/Io/Root/SeedingPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/TrackFinderPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/TrackFinderNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/TrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
@@ -200,8 +200,8 @@ void addOutput(Context& ctx) {
                              "RootVertexWriter", inputVertices, filePath,
                              fileMode, treeName);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderPerformanceWriter, mex,
-                             "TrackFinderPerformanceWriter", inputTracks,
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderNTupleWriter, mex,
+                             "TrackFinderNTupleWriter", inputTracks,
                              inputParticles, inputMeasurementParticlesMap,
                              inputTrackParticleMatching, filePath, fileMode,
                              treeNameTracks, treeNameParticles);

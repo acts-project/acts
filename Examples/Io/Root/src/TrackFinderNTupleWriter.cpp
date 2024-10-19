@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/TrackFinderPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/TrackFinderNTupleWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -32,7 +32,7 @@
 #include <TFile.h>
 #include <TTree.h>
 
-struct ActsExamples::TrackFinderPerformanceWriter::Impl {
+struct ActsExamples::TrackFinderNTupleWriter::Impl {
   Config cfg;
 
   ReadDataHandle<SimParticleContainer> inputParticles;
@@ -86,7 +86,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
   // extra logger reference for the logging macros
   const Acts::Logger& _logger;
 
-  Impl(TrackFinderPerformanceWriter* parent, Config&& c, const Acts::Logger& l)
+  Impl(TrackFinderNTupleWriter* parent, Config&& c, const Acts::Logger& l)
       : cfg(std::move(c)),
         inputParticles{parent, "InputParticles"},
         inputMeasurementParticlesMap{parent, "InputMeasurementParticlesMap"},
@@ -265,16 +265,15 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
   }
 };
 
-ActsExamples::TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
-    ActsExamples::TrackFinderPerformanceWriter::Config config,
+ActsExamples::TrackFinderNTupleWriter::TrackFinderNTupleWriter(
+    ActsExamples::TrackFinderNTupleWriter::Config config,
     Acts::Logging::Level level)
-    : WriterT(config.inputTracks, "TrackFinderPerformanceWriter", level),
+    : WriterT(config.inputTracks, "TrackFinderNTupleWriter", level),
       m_impl(std::make_unique<Impl>(this, std::move(config), logger())) {}
 
-ActsExamples::TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() =
-    default;
+ActsExamples::TrackFinderNTupleWriter::~TrackFinderNTupleWriter() = default;
 
-ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::TrackFinderNTupleWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx,
     const ActsExamples::ConstTrackContainer& tracks) {
   const auto& particles = m_impl->inputParticles(ctx);
@@ -285,13 +284,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::writeT(
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode
-ActsExamples::TrackFinderPerformanceWriter::finalize() {
+ActsExamples::ProcessCode ActsExamples::TrackFinderNTupleWriter::finalize() {
   m_impl->close();
   return ProcessCode::SUCCESS;
 }
 
-const ActsExamples::TrackFinderPerformanceWriter::Config&
-ActsExamples::TrackFinderPerformanceWriter::config() const {
+const ActsExamples::TrackFinderNTupleWriter::Config&
+ActsExamples::TrackFinderNTupleWriter::config() const {
   return m_impl->cfg;
 }

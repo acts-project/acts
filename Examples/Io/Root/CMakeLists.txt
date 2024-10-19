@@ -27,7 +27,7 @@ add_library(
     src/detail/NuclearInteractionParametrisation.cpp
     src/CKFPerformanceWriter.cpp
     src/SeedingPerformanceWriter.cpp
-    src/TrackFinderPerformanceWriter.cpp
+    src/TrackFinderNTupleWriter.cpp
     src/TrackFitterPerformanceWriter.cpp
     src/VertexNTupleWriter.cpp
 )
