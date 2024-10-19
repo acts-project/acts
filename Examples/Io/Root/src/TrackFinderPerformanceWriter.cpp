@@ -153,7 +153,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
 
   const Acts::Logger& logger() const { return _logger; }
 
-  void write(std::uint64_t eventId, const TrackContainer& tracks,
+  void write(std::uint64_t eventId, const ConstTrackContainer& tracks,
              const SimParticleContainer& particles,
              const HitParticlesMap& hitParticlesMap,
              const TrackParticleMatching& trackParticleMatching) {
@@ -276,7 +276,7 @@ ActsExamples::TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() =
 
 ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx,
-    const ActsExamples::TrackContainer& tracks) {
+    const ActsExamples::ConstTrackContainer& tracks) {
   const auto& particles = m_impl->inputParticles(ctx);
   const auto& hitParticlesMap = m_impl->inputMeasurementParticlesMap(ctx);
   const auto& trackParticleMatching = m_impl->inputTrackParticleMatching(ctx);
