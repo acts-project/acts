@@ -31,8 +31,8 @@ inline void cudaAssert(cudaError_t code, const char *file, int line) {
     std::stringstream ss;
     ss << "CUDA error: " << cudaGetErrorString(code) << ", " << file << ":"
        << line;
-    throw std::runtime_error(ss.str());
-    // std::cout << ss.str() << std::endl;
+    // throw std::runtime_error(ss.str());
+    std::cout << ss.str() << std::endl;
   }
   cudaDeviceSynchronize();
 }
@@ -59,6 +59,9 @@ __global__ void computeXandY(std::size_t nbHits, T *cuda_x, T *cuda_y,
 
   cuda_x[i] = r * std::cos(phi);
   cuda_y[i] = r * std::sin(phi);
+
+  printf("%lu: %f, %f -> %f, %f\n", i, cuda_R[i], cuda_phi[i], cuda_x[i],
+         cuda_y[i]);
 }
 
 __global__ void setHitId(std::size_t nbHits, int *hitIds) {
@@ -75,16 +78,16 @@ __global__ void setHitId(std::size_t nbHits, int *hitIds) {
 
 namespace Acts::detail {
 
-GraphCreatorWrapperCuda2::GraphCreatorWrapperCuda2(const std::string &path,
-                                                   int device, int blocks) {
+GraphCreatorWrapperCuda::GraphCreatorWrapperCuda(const std::string &path,
+                                                 int device, int blocks) {
   m_graphCreator = std::make_unique<CUDA_graph_creator<float>>(
       blocks, device, path, 10,
       std::pair<float, float>{0.f, std::numeric_limits<float>::max()});
 }
 
-GraphCreatorWrapperCuda2::~GraphCreatorWrapperCuda2() {}
+GraphCreatorWrapperCuda::~GraphCreatorWrapperCuda() {}
 
-std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda2::build(
+std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
     const std::vector<float> &features,
     const std::vector<std::uint64_t> &moduleIds, const Acts::Logger &logger) {
   using GC = CUDA_graph_creator<float>;
@@ -144,6 +147,11 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda2::build(
   auto [edgeData, outHitData] =
       m_graphCreator->build_implementation(inputData, stats);
 
+  std::cout << "Made " << stats.nb_doublet_edges << " doublet edges "
+            << std::endl;
+  std::cout << "Made " << edgeData.nb_graph_edges << " edges" << std::endl;
+  assert(edgeData.nb_graph_edges > 0 && edgeData.nb_graph_edges < 100'000'000);
+
   int *edgeIndexPtr{};
   CUDA_CHECK(
       cudaMallocT(&edgeIndexPtr, 2 * edgeData.nb_graph_edges * sizeof(int)));
@@ -153,7 +161,9 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda2::build(
   CUDA_CHECK(cudaMemcpy(
       edgeIndexPtr + edgeData.nb_graph_edges, edgeData.cuda_graph_M2_hits,
       edgeData.nb_graph_edges * sizeof(int), cudaMemcpyDeviceToDevice));
+  cudaDeviceSynchronize();
 
+  std::cout << "Make edge index from blob" << std::endl;
   auto edgeIndex =
       torch::from_blob(edgeIndexPtr,
                        {2, static_cast<long>(edgeData.nb_graph_edges)},
@@ -187,7 +197,9 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda2::build(
                           edgeData.cuda_graph_r_phi_slope, sizeof(float),
                           sizeof(float), edgeData.nb_graph_edges,
                           cudaMemcpyDeviceToDevice));
+  cudaDeviceSynchronize();
 
+  std::cout << "Make edge features from blob" << std::endl;
   auto edgeFeatures = torch::from_blob(
       edgeFeaturePtr, {static_cast<long>(edgeData.nb_graph_edges), 6},
       [](void *ptr) { CUDA_CHECK(cudaFree(ptr)); },

@@ -70,20 +70,5 @@ class GraphCreatorWrapperCuda : public GraphCreatorWrapperBase {
  private:
   std::unique_ptr<CUDA_graph_creator<float>> m_graphCreator;
 };
-
-class GraphCreatorWrapperCuda2 : public GraphCreatorWrapperBase {
- public:
-  GraphCreatorWrapperCuda2(const std::string &path, int device, int blocks);
-  ~GraphCreatorWrapperCuda2();
-
-  std::pair<at::Tensor, at::Tensor> build(
-      const std::vector<float> &features,
-      const std::vector<std::uint64_t> &moduleIds,
-      const Acts::Logger &logger) override;
-
- private:
-  std::unique_ptr<CUDA_graph_creator<float>> m_graphCreator;
-};
 #endif
-
 }  // namespace Acts::detail

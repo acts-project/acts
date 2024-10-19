@@ -25,9 +25,11 @@
 namespace Acts::detail {
 
 GraphCreatorWrapperCpu::GraphCreatorWrapperCpu(const std::string &path) {
+#ifdef MMG_OLD_API
   m_graphCreator = std::make_unique<graph_creator<float>>(
       path, 10,
       std::pair<float, float>{0.f, std::numeric_limits<float>::max()});
+#endif
 }
 
 GraphCreatorWrapperCpu::~GraphCreatorWrapperCpu() {}
@@ -35,6 +37,7 @@ GraphCreatorWrapperCpu::~GraphCreatorWrapperCpu() {}
 std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCpu::build(
     const std::vector<float> &features,
     const std::vector<std::uint64_t> &moduleIds, const Acts::Logger &logger) {
+#ifdef MMG_OLD_API
   auto builder = [&](auto &hits, bool print) {
     TTree_particles<float> particles;
     std::string eventId = "no-id";
@@ -48,6 +51,9 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCpu::build(
   // TODO hardocded
   return oldApiBuild(features, moduleIds, logger, builder, 1000.f, 3.14159f,
                      1000.f);
+#else
+  return {};
+#endif
 }
 
 }  // namespace Acts::detail
