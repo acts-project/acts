@@ -31,7 +31,7 @@ from acts.examples import (
     RootSimHitWriter,
     RootTrackStatesWriter,
     RootTrackSummaryWriter,
-    VertexPerformanceWriter,
+    VertexNTupleWriter,
     RootMeasurementWriter,
     CsvParticleWriter,
     CsvSimHitWriter,
@@ -259,7 +259,7 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
         RootSimHitWriter,
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
-        VertexPerformanceWriter,
+        VertexNTupleWriter,
         SeedingPerformanceWriter,
     ],
 )
