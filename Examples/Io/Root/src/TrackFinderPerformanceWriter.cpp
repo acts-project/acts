@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/CKFPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/TrackFinderPerformanceWriter.hpp"
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -27,9 +27,9 @@ using Acts::VectorHelpers::phi;
 
 namespace ActsExamples {
 
-CKFPerformanceWriter::CKFPerformanceWriter(CKFPerformanceWriter::Config cfg,
-                                           Acts::Logging::Level lvl)
-    : WriterT(cfg.inputTracks, "CKFPerformanceWriter", lvl),
+TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
+    TrackFinderPerformanceWriter::Config cfg, Acts::Logging::Level lvl)
+    : WriterT(cfg.inputTracks, "TrackFinderPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
       m_effPlotTool(m_cfg.effPlotToolConfig, lvl),
       m_fakeRatePlotTool(m_cfg.fakeRatePlotToolConfig, lvl),
@@ -76,7 +76,7 @@ CKFPerformanceWriter::CKFPerformanceWriter(CKFPerformanceWriter::Config cfg,
   m_trackSummaryPlotTool.book(m_trackSummaryPlotCache);
 }
 
-CKFPerformanceWriter::~CKFPerformanceWriter() {
+TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() {
   m_effPlotTool.clear(m_effPlotCache);
   m_fakeRatePlotTool.clear(m_fakeRatePlotCache);
   m_duplicationPlotTool.clear(m_duplicationPlotCache);
@@ -86,7 +86,7 @@ CKFPerformanceWriter::~CKFPerformanceWriter() {
   }
 }
 
-ProcessCode CKFPerformanceWriter::finalize() {
+ProcessCode TrackFinderPerformanceWriter::finalize() {
   float eff_tracks = static_cast<float>(m_nTotalMatchedTracks) / m_nTotalTracks;
   float fakeRate_tracks =
       static_cast<float>(m_nTotalFakeTracks) / m_nTotalTracks;
@@ -147,8 +147,8 @@ ProcessCode CKFPerformanceWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
-                                         const ConstTrackContainer& tracks) {
+ProcessCode TrackFinderPerformanceWriter::writeT(
+    const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // The number of majority particle hits and fitted track parameters
   using Acts::VectorHelpers::perp;
 
