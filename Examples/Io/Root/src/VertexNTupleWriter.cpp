@@ -497,7 +497,7 @@ ProcessCode VertexNTupleWriter::writeT(
       fmap[vtxId].second += weight;
     }
     double truthMajorityVertexTrackWeights = 0;
-    SimVertexBarcode truthMajorityVertexId = 0;
+    SimVertexBarcode truthMajorityVertexId{0};
     for (const auto& [vtxId, counter] : fmap) {
       if (counter.second > truthMajorityVertexTrackWeights) {
         truthMajorityVertexId = vtxId;
@@ -629,7 +629,8 @@ ProcessCode VertexNTupleWriter::writeT(
       // Count number of reconstructible tracks on truth vertex
       int nTracksOnTruthVertex = 0;
       for (const auto& particle : selectedParticles) {
-        if (particle.particleId().vertexId() == truthVertex.vertexId()) {
+        if (static_cast<SimVertexBarcode>(particle.particleId().vertexId()) ==
+            truthVertex.vertexId()) {
           ++nTracksOnTruthVertex;
         }
       }
