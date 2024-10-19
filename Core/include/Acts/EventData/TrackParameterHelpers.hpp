@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <numbers>
@@ -37,5 +39,32 @@ bool isBoundVectorValid(const BoundVector& v, double epsilon = 1e-6);
 ///
 /// @return True if the free vector is valid
 bool isFreeVectorValid(const FreeVector& v, double epsilon = 1e-6);
+
+/// Normalize the bound parameter angles
+///
+/// @param boundParams The bound parameters to normalize
+///
+/// @return The normalized bound parameters
+inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
+  BoundVector result = boundParams;
+  std::tie(result[eBoundPhi], result[eBoundTheta]) =
+      detail::normalizePhiTheta(result[eBoundPhi], result[eBoundTheta]);
+  return result;
+}
+
+/// Subtract bound parameters and take care of angle periodicity for phi and
+/// theta.
+///
+/// @param lhs The left hand side bound parameters
+/// @param rhs The right hand side bound parameters
+///
+/// @return The difference of the bound parameters
+inline BoundVector subtractBoundParameters(const BoundVector& lhs,
+                                           const BoundVector& rhs) {
+  BoundVector result = lhs - rhs;
+  result[eBoundPhi] =
+      detail::difference_periodic(lhs[eBoundPhi], rhs[eBoundPhi], 2 * M_PI);
+  return result;
+}
 
 }  // namespace Acts

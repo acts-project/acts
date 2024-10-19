@@ -12,7 +12,7 @@
 #include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include "ActsExamples/Io/NuclearInteractions/detail/NuclearInteractionParametrisation.hpp"
+#include "ActsExamples/Io/Root/detail/NuclearInteractionParametrisation.hpp"
 
 #include <mutex>
 #include <string>
