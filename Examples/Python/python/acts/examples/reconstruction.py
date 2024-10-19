@@ -1838,7 +1838,7 @@ def addExaTrkX(
     # Write truth track finding / seeding performance
     if outputDirRoot is not None:
         s.addWriter(
-            acts.examples.TrackFinderPerformanceWriter(
+            acts.examples.TrackFinderNTupleWriter(
                 level=customLogLevel(),
                 inputProtoTracks=findingAlg.config.outputProtoTracks,
                 # the original selected particles after digitization
