@@ -12,6 +12,8 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
+#include <numbers>
+
 namespace Acts {
 
 /// Normalize the bound parameter angles
@@ -36,8 +38,8 @@ inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
 inline BoundVector subtractBoundParameters(const BoundVector& lhs,
                                            const BoundVector& rhs) {
   BoundVector result = lhs - rhs;
-  result[eBoundPhi] =
-      detail::difference_periodic(lhs[eBoundPhi], rhs[eBoundPhi], 2 * M_PI);
+  result[eBoundPhi] = detail::difference_periodic(
+      lhs[eBoundPhi], rhs[eBoundPhi], ActsScalar{2 * std::numbers::pi});
   return result;
 }
 
