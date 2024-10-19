@@ -29,7 +29,7 @@ add_library(
     src/SeedingPerformanceWriter.cpp
     src/TrackFinderPerformanceWriter.cpp
     src/TrackFitterPerformanceWriter.cpp
-    src/VertexPerformanceWriter.cpp
+    src/VertexNTupleWriter.cpp
 )
 target_include_directories(
     ActsExamplesIoRoot
