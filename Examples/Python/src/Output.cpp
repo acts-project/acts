@@ -26,16 +26,12 @@
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
-#include "ActsExamples/Io/NuclearInteractions/RootNuclearInteractionParametersWriter.hpp"
-#include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
-#include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
-#include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
-#include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
-#include "ActsExamples/Io/Performance/VertexPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
+#include "ActsExamples/Io/Root/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationSummaryWriter.hpp"
@@ -46,6 +42,10 @@
 #include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
+#include "ActsExamples/Io/Root/SeedingPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/TrackFinderPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/TrackFitterPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
@@ -194,7 +194,7 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootParticleWriter, mex,
                              "RootParticleWriter", inputParticles,
-                             inputFinalParticles, filePath, fileMode, treeName);
+                             inputParticlesFinal, filePath, fileMode, treeName);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootVertexWriter, mex,
                              "RootVertexWriter", inputVertices, filePath,
@@ -353,7 +353,7 @@ void addOutput(Context& ctx) {
       treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific);
 
   ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::VertexPerformanceWriter, mex, "VertexPerformanceWriter",
+      ActsExamples::VertexNTupleWriter, mex, "VertexNTupleWriter",
       inputVertices, inputTracks, inputTruthVertices, inputParticles,
       inputSelectedParticles, inputTrackParticleMatching, bField, filePath,
       treeName, fileMode, vertexMatchThreshold, trackMatchThreshold, useTracks);
