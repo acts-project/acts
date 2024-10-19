@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 
@@ -29,9 +29,16 @@ ActsExamples::ParticleSelector::ParticleSelector(const Config& config,
   if (m_cfg.outputParticles.empty()) {
     throw std::invalid_argument("Missing output particles collection");
   }
+  if (!m_cfg.outputParticlesFinal.empty() &&
+      m_cfg.inputParticlesFinal.empty()) {
+    throw std::invalid_argument(
+        "Output final particles collection requires input final particles");
+  }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputParticlesFinal.maybeInitialize(m_cfg.inputParticlesFinal);
   m_outputParticles.initialize(m_cfg.outputParticles);
+  m_outputParticlesFinal.maybeInitialize(m_cfg.outputParticlesFinal);
 
   ACTS_DEBUG("selection particle rho [" << m_cfg.rhoMin << "," << m_cfg.rhoMax
                                         << ")");
@@ -52,29 +59,15 @@ ActsExamples::ParticleSelector::ParticleSelector(const Config& config,
   ACTS_DEBUG("remove charged particles " << m_cfg.removeCharged);
   ACTS_DEBUG("remove neutral particles " << m_cfg.removeNeutral);
   ACTS_DEBUG("remove secondary particles " << m_cfg.removeSecondaries);
-
-  // We only initialize this if we actually select on this
-  if (m_cfg.measurementsMin > 0 ||
-      m_cfg.measurementsMax < std::numeric_limits<std::size_t>::max()) {
-    m_inputMap.initialize(m_cfg.inputMeasurementParticlesMap);
-    ACTS_DEBUG("selection particle number of measurements ["
-               << m_cfg.measurementsMin << "," << m_cfg.measurementsMax << ")");
-  }
 }
 
 ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     const AlgorithmContext& ctx) const {
-  using ParticlesMeasurmentMap =
-      boost::container::flat_multimap<ActsFatras::Barcode, Index>;
-
   // prepare input/ output types
-  const auto& inputParticles = m_inputParticles(ctx);
-
-  // Make global particles measurement map if necessary
-  std::optional<ParticlesMeasurmentMap> particlesMeasMap;
-  if (m_inputMap.isInitialized()) {
-    particlesMeasMap = invertIndexMultimap(m_inputMap(ctx));
-  }
+  const SimParticleContainer& inputParticles = m_inputParticles(ctx);
+  const SimParticleContainer& inputParticlesFinal =
+      (m_inputParticlesFinal.isInitialized()) ? m_inputParticlesFinal(ctx)
+                                              : inputParticles;
 
   std::size_t nInvalidCharge = 0;
   std::size_t nInvalidMeasurementCount = 0;
@@ -96,17 +89,14 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
 
     nInvalidCharge += static_cast<std::size_t>(!validCharge);
 
-    // default valid measurement count to true and only change if we have loaded
-    // the measurement particles map
     bool validMeasurementCount = true;
-    if (particlesMeasMap) {
-      auto [b, e] = particlesMeasMap->equal_range(p.particleId());
+    if (auto finalParticleIt = inputParticlesFinal.find(p.particleId());
+        finalParticleIt != inputParticlesFinal.end()) {
       validMeasurementCount =
-          within(static_cast<std::size_t>(std::distance(b, e)),
-                 m_cfg.measurementsMin, m_cfg.measurementsMax);
-
-      ACTS_VERBOSE("Found " << std::distance(b, e) << " measurements for "
-                            << p.particleId());
+          within(finalParticleIt->numberOfHits(), m_cfg.measurementsMin,
+                 m_cfg.measurementsMax);
+    } else {
+      ACTS_WARNING("No final particle found for " << p.particleId());
     }
 
     nInvalidMeasurementCount +=
@@ -136,14 +126,30 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
   SimParticleContainer outputParticles;
   outputParticles.reserve(inputParticles.size());
 
+  SimParticleContainer outputParticlesFinal;
+  if (m_outputParticlesFinal.isInitialized()) {
+    outputParticlesFinal.reserve(inputParticles.size());
+  }
+
   // copy selected particles
   for (const auto& inputParticle : inputParticles) {
-    if (isValidParticle(inputParticle)) {
-      // the input parameters should already be
-      outputParticles.insert(outputParticles.end(), inputParticle);
+    if (!isValidParticle(inputParticle)) {
+      continue;
+    }
+
+    outputParticles.insert(outputParticles.end(), inputParticle);
+
+    if (m_outputParticlesFinal.isInitialized()) {
+      if (auto particleFinalIt =
+              inputParticlesFinal.find(inputParticle.particleId());
+          particleFinalIt != inputParticlesFinal.end()) {
+        outputParticlesFinal.insert(outputParticlesFinal.end(),
+                                    *particleFinalIt);
+      }
     }
   }
   outputParticles.shrink_to_fit();
+  outputParticlesFinal.shrink_to_fit();
 
   ACTS_DEBUG("event " << ctx.eventNumber << " selected "
                       << outputParticles.size() << " from "
@@ -153,5 +159,9 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
              << nInvalidMeasurementCount);
 
   m_outputParticles(ctx, std::move(outputParticles));
+  if (m_outputParticlesFinal.isInitialized()) {
+    m_outputParticlesFinal(ctx, std::move(outputParticlesFinal));
+  }
+
   return ProcessCode::SUCCESS;
 }

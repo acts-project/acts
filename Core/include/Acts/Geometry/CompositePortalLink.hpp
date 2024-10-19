@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -16,6 +16,9 @@
 #include <boost/container/small_vector.hpp>
 
 namespace Acts {
+
+class GridPortalLink;
+class Surface;
 
 /// Composite portal links can graft together other portal link instances, for
 /// example grids that could not be merged due to invalid binnings.
@@ -49,6 +52,15 @@ class CompositePortalLink final : public PortalLinkBase {
                       std::unique_ptr<PortalLinkBase> b, BinningValue direction,
                       bool flatten = true);
 
+  /// Construct a composite portal from any number of arbitrary other portal
+  /// links. The only requirement is that the portal link surfaces are
+  /// mergeable.
+  /// @param links The portal links
+  /// @param direction The binning direction
+  /// @param flatten If true, the composite will flatten any nested composite
+  CompositePortalLink(std::vector<std::unique_ptr<PortalLinkBase>> links,
+                      BinningValue direction, bool flatten = true);
+
   /// Print the composite portal link
   /// @param os The output stream
   void toStream(std::ostream& os) const override;
@@ -81,19 +93,22 @@ class CompositePortalLink final : public PortalLinkBase {
   /// @return The number of children
   std::size_t size() const;
 
- private:
-  /// Helper function to construct a merged surface from two portal links along
-  /// a given direction
-  /// @param a The first portal link
-  /// @param b The second portal link
-  /// @param direction The merging direction
-  /// @return The merged surface
-  static std::shared_ptr<RegularSurface> mergedSurface(const PortalLinkBase* a,
-                                                       const PortalLinkBase* b,
-                                                       BinningValue direction);
+  /// (Potentially) create a grid portal link that represents this composite
+  /// portal link.
+  /// @note This only works, if the composite is **flat** and only contains
+  ///       **trivial portal links**. If these preconditions are not met, this
+  ///       function returns a nullptr.
+  /// @param gctx The geometry context
+  /// @param logger The logger
+  /// @return The grid portal link
+  std::unique_ptr<GridPortalLink> makeGrid(const GeometryContext& gctx,
+                                           const Logger& logger) const;
 
+ private:
   boost::container::small_vector<std::unique_ptr<PortalLinkBase>, 4>
       m_children{};
+
+  BinningValue m_direction;
 };
 
 }  // namespace Acts

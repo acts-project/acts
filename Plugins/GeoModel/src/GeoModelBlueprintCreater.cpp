@@ -1,15 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
+#include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
@@ -19,6 +20,8 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
+
+#include <fstream>
 
 #include <boost/algorithm/string.hpp>
 
@@ -127,6 +130,14 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
   blueprint.name = topEntry->second.name;
   blueprint.topNode =
       createNode(cache, gctx, topEntry->second, blueprintTableMap, Extent());
+
+  // Export to dot graph if configured
+  if (!options.dotGraph.empty()) {
+    std::ofstream dotFile(options.dotGraph);
+    Experimental::detail::BlueprintDrawer::dotStream(dotFile,
+                                                     *blueprint.topNode);
+    dotFile.close();
+  }
 
   // Return the ready-to-use blueprint
   return blueprint;
@@ -354,7 +365,7 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
       // Loop over surfaces and create an internal extent
       for (auto& sf : surfaces) {
         auto sfExtent =
-            sf->polyhedronRepresentation(gctx, m_cfg.nSegments).extent();
+            sf->polyhedronRepresentation(gctx, m_cfg.quarterSegments).extent();
         internalExtent.extend(sfExtent, internalConstraints);
       }
       ACTS_VERBOSE("Found " << surfaces.size() << " surfaces in range "

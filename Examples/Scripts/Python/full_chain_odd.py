@@ -3,6 +3,7 @@
 import os
 import argparse
 import pathlib
+import math
 
 import acts
 import acts.examples
@@ -12,6 +13,7 @@ from acts.examples.simulation import (
     EtaConfig,
     PhiConfig,
     ParticleConfig,
+    ParticleSelectorConfig,
     addPythia8,
     addFatras,
     addGeant4,
@@ -21,7 +23,6 @@ from acts.examples.simulation import (
 )
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
     CkfConfig,
     addCKFTracks,
     TrackSelectorConfig,
@@ -270,6 +271,12 @@ else:
                 pt=(150 * u.MeV, None),
                 removeNeutral=True,
             ),
+            postSelectParticles=ParticleSelectorConfig(
+                pt=(1.0 * u.GeV, None),
+                eta=(-3.0, 3.0),
+                measurements=(9, None),
+                removeNeutral=True,
+            ),
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,
             rnd=rnd,
@@ -292,6 +299,12 @@ else:
                 if args.ttbar
                 else ParticleSelectorConfig()
             ),
+            postSelectParticles=ParticleSelectorConfig(
+                pt=(1.0 * u.GeV, None),
+                eta=(-3.0, 3.0),
+                measurements=(9, None),
+                removeNeutral=True,
+            ),
             enableInteractions=True,
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,
@@ -313,11 +326,6 @@ if args.reco:
         s,
         trackingGeometry,
         field,
-        (
-            TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
-            if args.ttbar
-            else TruthSeedRanges()
-        ),
         initialSigmas=[
             1 * u.mm,
             1 * u.mm,
@@ -363,10 +371,27 @@ if args.reco:
             numMeasurementsCutOff=10,
             seedDeduplication=True,
             stayOnSeed=True,
-            pixelVolumes={16, 17, 18},
-            stripVolumes={23, 24, 25},
+            pixelVolumes=[16, 17, 18],
+            stripVolumes=[23, 24, 25],
             maxPixelHoles=1,
             maxStripHoles=2,
+            constrainToVolumes=[
+                2,  # beam pipe
+                32,
+                4,  # beam pip gap
+                16,
+                17,
+                18,  # pixel
+                20,  # PST
+                23,
+                24,
+                25,  # short strip
+                26,
+                8,  # long strip gap
+                28,
+                29,
+                30,  # long strip
+            ],
         ),
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
@@ -395,8 +420,8 @@ if args.reco:
                 maxSharedTracksPerMeasurement=2,
                 pTMax=1400,
                 pTMin=0.5,
-                phiMax=3.14,
-                phiMin=-3.14,
+                phiMax=math.pi,
+                phiMin=-math.pi,
                 etaMax=4,
                 etaMin=-4,
                 useAmbiguityFunction=False,

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -57,6 +57,10 @@ class TrivialPortalLink final : public PortalLinkBase {
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector3& position,
       double tolerance = s_onSurfaceTolerance) const override;
+
+  /// Get the single volume that this trivial portal link is associated with
+  /// @return The target volume
+  const TrackingVolume& volume() const;
 
  private:
   TrackingVolume* m_volume;

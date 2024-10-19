@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -250,6 +250,17 @@ class GenericBoundTrackParameters {
     return m_surface->referenceFrame(geoCtx, position(geoCtx), momentum());
   }
 
+  /// Reflect the parameters in place.
+  void reflectInPlace() { m_params = reflectBoundParameters(m_params); }
+
+  /// Reflect the parameters.
+  /// @return Reflected parameters.
+  GenericBoundTrackParameters<ParticleHypothesis> reflect() const {
+    GenericBoundTrackParameters<ParticleHypothesis> reflected = *this;
+    reflected.reflectInPlace();
+    return reflected;
+  }
+
  private:
   BoundVector m_params;
   std::optional<BoundSquareMatrix> m_cov;
@@ -282,11 +293,7 @@ class GenericBoundTrackParameters {
            (lhs.m_surface == rhs.m_surface) &&
            (lhs.m_particleHypothesis == rhs.m_particleHypothesis);
   }
-  /// Compare two bound track parameters for bitwise in-equality.
-  friend bool operator!=(const GenericBoundTrackParameters& lhs,
-                         const GenericBoundTrackParameters& rhs) {
-    return !(lhs == rhs);
-  }
+
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
                                   const GenericBoundTrackParameters& tp) {

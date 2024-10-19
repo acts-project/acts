@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 
@@ -36,7 +36,7 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
     throw std::invalid_argument("Missing tree name");
   }
 
-  m_inputFinalParticles.maybeInitialize(m_cfg.inputFinalParticles);
+  m_inputParticlesFinal.maybeInitialize(m_cfg.inputParticlesFinal);
 
   // open root file and create the tree
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
@@ -73,7 +73,7 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("generation", &m_generation);
   m_outputTree->Branch("sub_particle", &m_subParticle);
 
-  if (m_inputFinalParticles.isInitialized()) {
+  if (m_inputParticlesFinal.isInitialized()) {
     m_outputTree->Branch("e_loss", &m_eLoss);
     m_outputTree->Branch("total_x0", &m_pathInX0);
     m_outputTree->Branch("total_l0", &m_pathInL0);
@@ -102,8 +102,8 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::finalize() {
 ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     const AlgorithmContext& ctx, const SimParticleContainer& particles) {
   const SimParticleContainer* finalParticles = nullptr;
-  if (m_inputFinalParticles.isInitialized()) {
-    finalParticles = &m_inputFinalParticles(ctx);
+  if (m_inputParticlesFinal.isInitialized()) {
+    finalParticles = &m_inputParticlesFinal(ctx);
   }
 
   // ensure exclusive access to tree/file while writing

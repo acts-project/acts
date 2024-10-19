@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -182,7 +182,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       ACTS_DEBUG("---> Number of outliers: " << trackFeatures.nOutliers);
 
       if ((trackFeatures.nHits < detector.minHits) ||
-          (trackFeatures.nHits > detector.maxHits) ||
           (trackFeatures.nHoles > detector.maxHoles) ||
           (trackFeatures.nOutliers > detector.maxOutliers)) {
         score = 0;
@@ -333,7 +332,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       ACTS_DEBUG("---> Number of outliers: " << trackFeatures.nOutliers);
 
       if ((trackFeatures.nHits < detector.minHits) ||
-          (trackFeatures.nHits > detector.maxHits) ||
           (trackFeatures.nHoles > detector.maxHoles) ||
           (trackFeatures.nOutliers > detector.maxOutliers)) {
         score = 0;

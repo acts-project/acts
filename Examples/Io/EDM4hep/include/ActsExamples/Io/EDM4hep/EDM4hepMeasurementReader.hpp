@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #pragma once
 
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
@@ -41,8 +41,6 @@ class EDM4hepMeasurementReader final : public IReader {
     std::string outputMeasurements;
     /// Output measurement to sim hit collection.
     std::string outputMeasurementSimHitsMap;
-    /// Output source links collection.
-    std::string outputSourceLinks;
     /// Output cluster collection (optional).
     std::string outputClusters;
   };
@@ -78,9 +76,6 @@ class EDM4hepMeasurementReader final : public IReader {
 
   WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
       this, "OutputMeasurementSimHitsMap"};
-
-  WriteDataHandle<GeometryIdMultiset<IndexSourceLink>> m_outputSourceLinks{
-      this, "OutputSourceLinks"};
 
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
 };
