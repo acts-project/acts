@@ -106,10 +106,10 @@ constexpr ActsScalar s_transformEquivalentTolerance = 1e-9;
 
 // User-defined literals for creating ActsScalar. Use as 3_scalar
 constexpr ActsScalar operator""_scalar(long double n) {
-  return ActsScalar{n};
+  return static_cast<ActsScalar>(n);
 }
 constexpr ActsScalar operator""_scalar(unsigned long long n) {
-  return ActsScalar{n};
+  return static_cast<ActsScalar>(n);
 }
 
 }  // namespace Acts
