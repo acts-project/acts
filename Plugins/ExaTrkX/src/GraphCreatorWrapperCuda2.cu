@@ -64,16 +64,6 @@ __global__ void computeXandY(std::size_t nbHits, T *cuda_x, T *cuda_y,
          cuda_y[i]);
 }
 
-__global__ void setHitId(std::size_t nbHits, int *hitIds) {
-  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if (i >= nbHits) {
-    return;
-  }
-
-  hitIds[i] = i;
-}
-
 }  // namespace
 
 namespace Acts::detail {
@@ -93,6 +83,32 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
   using GC = CUDA_graph_creator<float>;
   const auto nHits = moduleIds.size();
   const auto nFeatures = features.size() / moduleIds.size();
+
+  // TODO understand this algorithm
+  std::vector<int> hit_indice;
+  {
+    // Check should not be necessary here I guess?
+    std::vector<std::uint8_t> check_unique_hit_id(nHits, 0);
+
+    const auto &module_map =
+        m_graphCreator->get_module_map_doublet().module_map();
+    std::vector<int> nb_hits(module_map.size(), 0);
+
+    for (std::size_t i = 0; i < nHits; ++i) {
+      const auto it = module_map.find(moduleIds[i]);
+      if (it != module_map.end()) {
+        if (check_unique_hit_id[i] == 0) {
+          check_unique_hit_id[i] = 1;
+          nb_hits[it->second] += 1;
+        }
+      }
+    }
+
+    hit_indice.push_back(0);
+    for (int i = 0; i < nb_hits.size(); i++) {
+      hit_indice.push_back(hit_indice[i] + nb_hits[i]);
+    }
+  }
 
   GC::input_hit_data_t inputData;
   inputData.nb_graph_hits = moduleIds.size();
@@ -129,6 +145,7 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
 
   dim3 blockDim = 512;
   dim3 gridDim = (nHits + blockDim.x - 1) / blockDim.x;
+
   computeXandY<<<gridDim, blockDim>>>(nHits, inputData.cuda_x, inputData.cuda_y,
                                       inputData.cuda_R, inputData.cuda_phi);
   CUDA_CHECK(cudaGetLastError());
@@ -138,8 +155,9 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
                         nHits * sizeof(std::size_t), cudaMemcpyHostToDevice));
 
   CUDA_CHECK(cudaMallocT(&inputData.cuda_hit_indices, nHits * sizeof(int)));
-  setHitId<<<gridDim, blockDim>>>(nHits * sizeof(int),
-                                  inputData.cuda_hit_indices);
+  CUDA_CHECK(cudaMemcpy(inputData.cuda_hit_indices, hit_indice.data(),
+                        nHits * sizeof(int), cudaMemcpyHostToDevice));
+
   CUDA_CHECK(cudaGetLastError());
 
   GC::statistics_t stats;
