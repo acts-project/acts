@@ -64,8 +64,8 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
   SimParticleContainer::sequence_type particles;
 
   // create the primary vertex
-  auto& primaryVertex =
-      vertices.emplace_back(0, SimVertex::Vector4(0., 0., 0., 0.));
+  auto& primaryVertex = vertices.emplace_back(
+      SimVertexBarcode{0}, SimVertex::Vector4(0., 0., 0., 0.));
 
   // counter will be reused as barcode particle number which must be non-zero.
   for (std::size_t ip = 1; ip <= m_cfg.numParticles; ++ip) {

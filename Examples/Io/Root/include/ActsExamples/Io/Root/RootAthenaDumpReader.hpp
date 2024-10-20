@@ -173,6 +173,7 @@ class RootAthenaDumpReader : public IReader {
   std::vector<std::tuple<std::uint32_t, std::size_t, std::size_t>> m_eventMap;
   std::shared_ptr<TChain> m_inputchain;
   long unsigned int m_events;
+  bool m_haveStripFeatures = true;
 
   static constexpr unsigned int maxCL = 1500000;
   static constexpr unsigned int maxSP = 1500000;
@@ -189,7 +190,7 @@ class RootAthenaDumpReader : public IReader {
   int CLindex[maxCL] = {};  //[nCL]
 
   // Clusters
-  std::vector<std::string> *CLhardware;
+  std::vector<std::string> *CLhardware{};
   Double_t CLx[maxCL] = {};           //[nCL]
   Double_t CLy[maxCL] = {};           //[nCL]
   Double_t CLz[maxCL] = {};           //[nCL]
@@ -199,13 +200,13 @@ class RootAthenaDumpReader : public IReader {
   Int_t CLphi_module[maxCL] = {};     //[nCL]
   Int_t CLside[maxCL] = {};           //[nCL]
   ULong64_t CLmoduleID[maxCL] = {};   //[nCL]
-  std::vector<std::vector<int>> *CLparticleLink_eventIndex;
-  std::vector<std::vector<int>> *CLparticleLink_barcode;
-  std::vector<std::vector<bool>> *CLbarcodesLinked;
-  std::vector<std::vector<float>> *CLparticle_charge;
-  std::vector<std::vector<int>> *CLphis;
-  std::vector<std::vector<int>> *CLetas;
-  std::vector<std::vector<int>> *CLtots;
+  std::vector<std::vector<int>> *CLparticleLink_eventIndex{};
+  std::vector<std::vector<int>> *CLparticleLink_barcode{};
+  std::vector<std::vector<bool>> *CLbarcodesLinked{};
+  std::vector<std::vector<float>> *CLparticle_charge{};
+  std::vector<std::vector<int>> *CLphis{};
+  std::vector<std::vector<int>> *CLetas{};
+  std::vector<std::vector<int>> *CLtots{};
   Double_t CLloc_direction1[maxCL] = {};      //[nCL]
   Double_t CLloc_direction2[maxCL] = {};      //[nCL]
   Double_t CLloc_direction3[maxCL] = {};      //[nCL]
@@ -223,7 +224,7 @@ class RootAthenaDumpReader : public IReader {
   Float_t CLnorm_x[maxCL] = {};               //[nCL]
   Float_t CLnorm_y[maxCL] = {};               //[nCL]
   Float_t CLnorm_z[maxCL] = {};               //[nCL]
-  std::vector<std::vector<double>> *CLlocal_cov;
+  std::vector<std::vector<double>> *CLlocal_cov{};
 
   // Particles
   Int_t nPartEVT = 0;
@@ -246,8 +247,8 @@ class RootAthenaDumpReader : public IReader {
   Int_t Part_vProdNout[maxPart] = {};     //[nPartEVT]
   Int_t Part_vProdStatus[maxPart] = {};   //[nPartEVT]
   Int_t Part_vProdBarcode[maxPart] = {};  //[nPartEVT]
-  std::vector<std::vector<int>> *Part_vParentID;
-  std::vector<std::vector<int>> *Part_vParentBarcode;
+  std::vector<std::vector<int>> *Part_vParentID{};
+  std::vector<std::vector<int>> *Part_vParentBarcode{};
 
   // Spacepoints
   Int_t nSP = 0;
@@ -263,27 +264,27 @@ class RootAthenaDumpReader : public IReader {
   double SPcovz[maxSP] = {};        //[nSP]
   float SPhl_topstrip[maxSP] = {};  //[nSP]
   float SPhl_botstrip[maxSP] = {};  //[nSP]
-  std::vector<std::vector<float>> *SPtopStripDirection;
-  std::vector<std::vector<float>> *SPbottomStripDirection;
-  std::vector<std::vector<float>> *SPstripCenterDistance;
-  std::vector<std::vector<float>> *SPtopStripCenterPosition;
+  std::vector<std::vector<float>> *SPtopStripDirection{};
+  std::vector<std::vector<float>> *SPbottomStripDirection{};
+  std::vector<std::vector<float>> *SPstripCenterDistance{};
+  std::vector<std::vector<float>> *SPtopStripCenterPosition{};
 
   // Tracks
   Int_t nTRK = 0;
   Int_t TRKindex[maxTRK] = {};                //[nTRK]
   Int_t TRKtrack_fitter[maxTRK] = {};         //[nTRK]
   Int_t TRKparticle_hypothesis[maxTRK] = {};  //[nTRK]
-  std::vector<std::vector<int>> *TRKproperties;
-  std::vector<std::vector<int>> *TRKpattern;
+  std::vector<std::vector<int>> *TRKproperties{};
+  std::vector<std::vector<int>> *TRKpattern{};
   Int_t TRKndof[maxTRK] = {};     //[nTRK]
   Int_t TRKmot[maxTRK] = {};      //[nTRK]
   Int_t TRKoot[maxTRK] = {};      //[nTRK]
   Float_t TRKchiSq[maxTRK] = {};  //[nTRK]
-  std::vector<std::vector<int>> *TRKmeasurementsOnTrack_pixcl_sctcl_index;
-  std::vector<std::vector<int>> *TRKoutliersOnTrack_pixcl_sctcl_index;
+  std::vector<std::vector<int>> *TRKmeasurementsOnTrack_pixcl_sctcl_index{};
+  std::vector<std::vector<int>> *TRKoutliersOnTrack_pixcl_sctcl_index{};
   Int_t TRKcharge[maxTRK] = {};  //[nTRK]
-  std::vector<std::vector<double>> *TRKperigee_position;
-  std::vector<std::vector<double>> *TRKperigee_momentum;
+  std::vector<std::vector<double>> *TRKperigee_position{};
+  std::vector<std::vector<double>> *TRKperigee_momentum{};
   Int_t TTCindex[maxTRK] = {};          //[nTRK]
   Int_t TTCevent_index[maxTRK] = {};    //[nTRK]
   Int_t TTCparticle_link[maxTRK] = {};  //[nTRK]
@@ -293,10 +294,10 @@ class RootAthenaDumpReader : public IReader {
   Int_t nDTT = 0;
   Int_t DTTindex[maxDTT] = {};  //[nDTT]
   Int_t DTTsize[maxDTT] = {};   //[nDTT]
-  std::vector<std::vector<int>> *DTTtrajectory_eventindex;
-  std::vector<std::vector<int>> *DTTtrajectory_barcode;
-  std::vector<std::vector<int>> *DTTstTruth_subDetType;
-  std::vector<std::vector<int>> *DTTstTrack_subDetType;
-  std::vector<std::vector<int>> *DTTstCommon_subDetType;
+  std::vector<std::vector<int>> *DTTtrajectory_eventindex{};
+  std::vector<std::vector<int>> *DTTtrajectory_barcode{};
+  std::vector<std::vector<int>> *DTTstTruth_subDetType{};
+  std::vector<std::vector<int>> *DTTstTrack_subDetType{};
+  std::vector<std::vector<int>> *DTTstCommon_subDetType{};
 };
 }  // namespace ActsExamples

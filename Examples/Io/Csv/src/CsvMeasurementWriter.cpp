@@ -13,7 +13,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
@@ -101,8 +100,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
       writerMeasurementSimHitMap.append({measIdx, simHitIdx});
     }
 
-    Acts::GeometryIdentifier geoId =
-        measurement.sourceLink().template get<IndexSourceLink>().geometryId();
+    Acts::GeometryIdentifier geoId = measurement.geometryId();
     // MEASUREMENT information ------------------------------------
 
     // Encoded geometry identifier. same for all hits on the module

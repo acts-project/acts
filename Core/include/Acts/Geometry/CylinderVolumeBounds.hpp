@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -80,6 +81,18 @@ class CylinderVolumeBounds : public VolumeBounds {
     eSize
   };
 
+  /// Enum describing the possible faces of a cylinder volume
+  /// @note These values are synchronized with the BoundarySurfaceFace enum.
+  ///       Once Gen1 is removed, this can be changed.
+  enum class Face : unsigned int {
+    PositiveDisc = BoundarySurfaceFace::positiveFaceXY,
+    NegativeDisc = BoundarySurfaceFace::negativeFaceXY,
+    OuterCylinder = BoundarySurfaceFace::tubeOuterCover,
+    InnerCylinder = BoundarySurfaceFace::tubeInnerCover,
+    NegativePhiPlane = BoundarySurfaceFace::tubeSectorNegativePhi,
+    PositivePhiPlane = BoundarySurfaceFace::tubeSectorPositivePhi
+  };
+
   CylinderVolumeBounds() = delete;
 
   /// Constructor
@@ -115,7 +128,7 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// Copy Constructor
   ///
   /// @param cylbo is the source cylinder volume bounds for the copy
-  CylinderVolumeBounds(const CylinderVolumeBounds& cylbo) = default;
+  CylinderVolumeBounds(const CylinderVolumeBounds& cylbo);
 
   ~CylinderVolumeBounds() override = default;
   CylinderVolumeBounds& operator=(const CylinderVolumeBounds& cylbo) = default;

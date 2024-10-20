@@ -70,7 +70,7 @@ struct PositionSelector : public IGeant4PhysicalVolumeSelector {
 
   /// Constructor with arguments
   /// @param ranges the provided map of axes of ranges
-  PositionSelector(
+  explicit PositionSelector(
       const std::map<unsigned int, std::tuple<double, double>>& ranges)
       : m_ranges(ranges) {}
 

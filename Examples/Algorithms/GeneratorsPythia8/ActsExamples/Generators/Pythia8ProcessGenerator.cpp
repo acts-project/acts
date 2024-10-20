@@ -121,7 +121,8 @@ Pythia8Generator::operator()(RandomEngine& rng) {
   }
 
   // create the primary vertex
-  vertices.emplace_back(0, SimVertex::Vector4(0., 0., 0., 0.));
+  vertices.emplace_back(SimVertexBarcode{0},
+                        SimVertex::Vector4(0., 0., 0., 0.));
 
   // convert generated final state particles into internal format
   for (int ip = 0; ip < m_pythia8->event.size(); ++ip) {
@@ -166,7 +167,8 @@ Pythia8Generator::operator()(RandomEngine& rng) {
       } else {
         // no matching secondary vertex exists -> create new one
         particleId.setVertexSecondary(vertices.size());
-        auto& vertex = vertices.emplace_back(particleId.vertexId(), pos4);
+        auto& vertex = vertices.emplace_back(
+            static_cast<SimVertexBarcode>(particleId.vertexId()), pos4);
         vertex.outgoing.insert(particleId);
         ACTS_VERBOSE("created new secondary vertex " << pos4.transpose());
       }
