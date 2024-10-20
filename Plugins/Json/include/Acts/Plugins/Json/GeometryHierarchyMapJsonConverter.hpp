@@ -42,7 +42,7 @@ class GeometryHierarchyMapJsonConverter {
   /// Construct the converter.
   ///
   /// @param valueIdentifier user-defined identifier for the stored value
-  GeometryHierarchyMapJsonConverter(std::string valueIdentifier)
+  explicit GeometryHierarchyMapJsonConverter(std::string valueIdentifier)
       : m_valueIdentifier(std::move(valueIdentifier)) {
     if (m_valueIdentifier.empty()) {
       throw std::invalid_argument("Value identifier must be non-empty");

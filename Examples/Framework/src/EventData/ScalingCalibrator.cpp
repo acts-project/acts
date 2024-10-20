@@ -165,7 +165,8 @@ void ActsExamples::ScalingCalibrator::calibrate(
   Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
     const ConstFixedBoundMeasurementProxy<kMeasurementSize> fixedMeasurement =
-        measurement;
+        static_cast<ConstFixedBoundMeasurementProxy<kMeasurementSize>>(
+            measurement);
 
     Acts::ActsVector<kMeasurementSize> calibratedParameters =
         fixedMeasurement.parameters();

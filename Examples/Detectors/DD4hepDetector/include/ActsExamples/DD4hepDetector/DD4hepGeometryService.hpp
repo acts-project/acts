@@ -87,7 +87,7 @@ class DD4hepGeometryService {
         std::make_shared<const Acts::GeometryIdentifierHook>();
   };
 
-  DD4hepGeometryService(const Config& cfg);
+  explicit DD4hepGeometryService(const Config& cfg);
   DD4hepGeometryService(const DD4hepGeometryService&) = delete;
   DD4hepGeometryService(DD4hepGeometryService&&) = delete;
   ~DD4hepGeometryService();
