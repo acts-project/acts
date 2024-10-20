@@ -18,18 +18,18 @@ namespace Acts::detail {
 template <typename external_t>
 concept isCollectionThatSupportsPushBack =
     std::ranges::range<external_t> && requires {
-  typename external_t::value_type;
-} && requires(external_t coll, typename external_t::value_type val) {
-  coll.push_back(val);
-};
+      typename external_t::value_type;
+    } && requires(external_t coll, typename external_t::value_type val) {
+      coll.push_back(val);
+    };
 
 template <typename external_t>
 concept isCollectionThatSupportsInsert =
     std::ranges::range<external_t> && requires {
-  typename external_t::value_type;
-} && requires(external_t coll, typename external_t::value_type val) {
-  coll.insert(std::ranges::end(coll), val);
-};
+      typename external_t::value_type;
+    } && requires(external_t coll, typename external_t::value_type val) {
+      coll.insert(std::ranges::end(coll), val);
+    };
 
 template <typename grid_t>
 concept SourceLinkGrid =
