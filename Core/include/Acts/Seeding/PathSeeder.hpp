@@ -15,14 +15,7 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/GridIterator.hpp"
 
-namespace {
-
-template <typename grid_t>
-concept SourceLinkGrid =
-    std::same_as<typename grid_t::value_type, std::vector<Acts::SourceLink>>;
-}
-
-namespace Acts::Experimental {
+namespace Acts {
 
 /// @brief Seeding algorigthm that extracts
 /// the IP parameters and sorts the source links
@@ -117,7 +110,7 @@ class PathSeeder {
   /// @param seedCollection The collection of seeds to fill
   ///
   /// @return The vector of seeds
-  template <SourceLinkGrid grid_t, typename container_t>
+  template <Acts::detail::SourceLinkGrid grid_t, typename container_t>
   void findSeeds(const GeometryContext& gctx,
                  const std::unordered_map<GeometryIdentifier, grid_t>&
                      sourceLinkGridLookup,
@@ -195,4 +188,4 @@ class PathSeeder {
   Config m_cfg;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

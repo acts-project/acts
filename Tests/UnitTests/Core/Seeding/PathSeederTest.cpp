@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   auto sourceLinks = createSourceLinks(gctx, *detector);
 
   // Prepare the PathSeeder
-  auto pathSeederCfg = Acts::Experimental::PathSeeder::Config();
+  auto pathSeederCfg = Acts::PathSeeder::Config();
 
   // Grid to bin the source links
   SurfaceAccessor surfaceAccessor{*detector};
@@ -384,12 +384,12 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   pathSeederCfg.refLayerIds.push_back(geoId);
 
   // Create the PathSeeder
-  Acts::Experimental::PathSeeder pathSeeder(pathSeederCfg);
+  Acts::PathSeeder pathSeeder(pathSeederCfg);
 
   // Get the seeds
   pathWidthProvider.width = {1e-3, 1e-3};
 
-  std::vector<Acts::Experimental::PathSeeder::PathSeed> seeds;
+  std::vector<Acts::PathSeeder::PathSeed> seeds;
 
   // SeedTreeContainer seeds;
   pathSeeder.findSeeds(gctx, sourceLinkGrid, seeds);
