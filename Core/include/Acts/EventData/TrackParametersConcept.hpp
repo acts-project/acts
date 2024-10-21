@@ -12,9 +12,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 
-#include <concepts>
 #include <optional>
-#include <type_traits>
 
 namespace Acts {
 
@@ -68,4 +66,5 @@ concept BoundTrackParametersConcept =
         { p.position(c) } -> std::same_as<Vector3>;
       };
     };
+
 }  // namespace Acts
