@@ -8,12 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Plugins/Json/TrackParametersJsonConverter.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <fstream>
 #include <memory>
 
 #include <nlohmann/json.hpp>
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(TrackParametersJsonIO) {
                     ctpRead.referenceSurface().bounds());
 
   // Bound track parameters conversion
-  Acts::BoundVector boundPosition{1., 2., 0, 0, 5., 6.};
+  Acts::BoundVector boundPosition{1., 2., 1.0, 1.0, 5., 6.};
   Acts::BoundTrackParameters btp(surface, boundPosition, boundCov, particle);
 
   nlohmann::json btpJson = btp;
