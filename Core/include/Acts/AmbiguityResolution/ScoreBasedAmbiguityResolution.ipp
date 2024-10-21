@@ -479,10 +479,10 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     const track_proxy_t& track, const double& trackScore,
     const std::vector<std::size_t>& measurementsPerTrack,
     const std::map<std::size_t, std::size_t> nTracksPerMeasurement,
-    const std::vector<std::function<void(
-        const track_proxy_t&,
-        const typename track_proxy_t::ConstTrackStateProxy&, TrackStateTypes&)>>&
-        optionalHitSelections) const {
+    const std::vector<
+        std::function<void(const track_proxy_t&,
+                           const typename track_proxy_t::ConstTrackStateProxy&,
+                           TrackStateTypes&)>>& optionalHitSelections) const {
   // For tracks with shared hits, we need to check and remove bad hits
 
   std::vector<TrackStateTypes> trackStateTypes;
