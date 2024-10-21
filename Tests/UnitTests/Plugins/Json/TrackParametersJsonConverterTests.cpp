@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(TrackParametersJsonIO) {
                     ctpRead.referenceSurface().bounds());
 
   // Bound track parameters conversion
-  Acts::BoundVector boundPosition{1., 2., 1.0, 1.0, 5., 6.};
+  Acts::BoundVector boundPosition{1., 2., 3., 4., 5., 6.};
   Acts::BoundTrackParameters btp(surface, boundPosition, boundCov, particle);
 
   nlohmann::json btpJson = btp;
