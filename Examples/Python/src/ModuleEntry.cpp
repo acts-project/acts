@@ -50,6 +50,7 @@ void addBinning(Context& ctx);
 void addEventData(Context& ctx);
 
 void addPropagation(Context& ctx);
+void addNavigation(Context& ctx);
 
 void addGeometry(Context& ctx);
 void addGeometryBuildingGen1(Context& ctx);
@@ -123,6 +124,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addOutput(ctx);
 
   addPropagation(ctx);
+  addNavigation(ctx);
   addGeometryBuildingGen1(ctx);
   addGeometry(ctx);
   addExperimentalGeometry(ctx);

@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
 
   NavigationStream nStreamTemplate;
   for (const auto& surface : surfaces) {
-    nStreamTemplate.addSurfaceCandidate(surface.get(),
+    nStreamTemplate.addSurfaceCandidate(*surface,
                                         Acts::BoundaryTolerance::None());
   }
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 4u);
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
 
   // (5) Test de-duplication
   nStream = nStreamTemplate;
-  nStreamTemplate.addSurfaceCandidate(surfaces[0].get(),
+  nStreamTemplate.addSurfaceCandidate(*surfaces.at(0),
                                       Acts::BoundaryTolerance::None());
   // One surface is duplicated in the stream
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 5u);
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   // reachable and intersections inside bounds
   NavigationStream nStreamTemplate;
   for (const auto& surface : surfaces) {
-    nStreamTemplate.addSurfaceCandidate(surface.get(),
+    nStreamTemplate.addSurfaceCandidate(*surface,
                                         Acts::BoundaryTolerance::None());
   }
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 4u);
@@ -231,7 +231,8 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinders) {
   // Let us fill the surfaces into the navigation stream
   NavigationStream nStreamTemplate;
   for (const auto& surface : surfaces) {
-    nStreamTemplate.addSurfaceCandidates({surface.get()},
+    const Surface* pointer = surface.get();
+    nStreamTemplate.addSurfaceCandidates({&pointer, 1},
                                          Acts::BoundaryTolerance::None());
   }
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 4u);
