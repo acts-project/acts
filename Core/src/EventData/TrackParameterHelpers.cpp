@@ -8,9 +8,12 @@
 
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 
+#include "Acts/Utilities/VectorHelpers.hpp"
+
 #include <numbers>
 
-bool Acts::isBoundVectorValid(const BoundVector& v, double epsilon) {
+bool Acts::isBoundVectorValid(const BoundVector& v, double epsilon,
+                              double maxAbsEta) {
   constexpr auto pi = std::numbers::pi_v<double>;
 
   bool loc0Valid = std::isfinite(v[eBoundLoc0]);
@@ -25,11 +28,15 @@ bool Acts::isBoundVectorValid(const BoundVector& v, double epsilon) {
                      (std::abs(v[eBoundQOverP]) - epsilon >= 0);
   bool timeValid = std::isfinite(v[eBoundTime]);
 
+  double eta = -std::log(std::tan(v[eBoundTheta] / 2));
+  bool etaValid = std::isfinite(eta) && (std::abs(eta) - epsilon <= maxAbsEta);
+
   return loc0Valid && loc1Valid && phiValid && thetaValid && qOverPValid &&
-         timeValid;
+         timeValid && etaValid;
 }
 
-bool Acts::isFreeVectorValid(const FreeVector& v, double epsilon) {
+bool Acts::isFreeVectorValid(const FreeVector& v, double epsilon,
+                             double maxAbsEta) {
   bool pos0Valid = std::isfinite(v[eFreePos0]);
   bool pos1Valid = std::isfinite(v[eFreePos1]);
   bool pos2Valid = std::isfinite(v[eFreePos2]);
@@ -41,6 +48,9 @@ bool Acts::isFreeVectorValid(const FreeVector& v, double epsilon) {
                      (std::abs(v[eFreeQOverP]) - epsilon >= 0);
   bool timeValid = std::isfinite(v[eFreeTime]);
 
+  double eta = VectorHelpers::eta(v.segment<3>(eFreeDir0));
+  bool etaValid = std::isfinite(eta) && (std::abs(eta) - epsilon <= maxAbsEta);
+
   return pos0Valid && pos1Valid && pos2Valid && dir0Valid && dir1Valid &&
-         dir2Valid && dirValid && qOverPValid && timeValid;
+         dir2Valid && dirValid && qOverPValid && timeValid && etaValid;
 }
