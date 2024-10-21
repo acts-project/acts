@@ -45,7 +45,7 @@ void ActsExamples::PassThroughCalibrator::calibrate(
     trackState.calibrated<kMeasurementSize>() = fixedMeasurement.parameters();
     trackState.calibratedCovariance<kMeasurementSize>() =
         fixedMeasurement.covariance();
-    trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
+    trackState.setProjectorSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }
 

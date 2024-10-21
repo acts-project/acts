@@ -192,6 +192,6 @@ void ActsExamples::NeuralCalibrator::calibrate(
     trackState.allocateCalibrated(kMeasurementSize);
     trackState.calibrated<kMeasurementSize>() = calibratedParameters;
     trackState.calibratedCovariance<kMeasurementSize>() = calibratedCovariance;
-    trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
+    trackState.setProjectorSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }
