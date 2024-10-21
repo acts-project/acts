@@ -84,7 +84,7 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
       TrackExtrapolationError::CompatibleTrackStateNotFound);
 }
 
-/// @brief Smooth a track using the gain matrix smoother
+/// @brief Smooth a track using the gain matrix smoother by default
 ///
 /// @tparam track_proxy_t The track proxy type
 /// @tparam smoother_t The smoother type
@@ -100,7 +100,7 @@ template <TrackProxyConcept track_proxy_t,
 Result<void> smoothTrack(
     const GeometryContext &geoContext, track_proxy_t &track,
     const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO),
-    smoother_t smoother = GainMatrixSmoother()) {
+    smoother_t smoother = smoother_t()) {
   auto &trackContainer = track.container();
   auto &trackStateContainer = trackContainer.trackStateContainer();
 

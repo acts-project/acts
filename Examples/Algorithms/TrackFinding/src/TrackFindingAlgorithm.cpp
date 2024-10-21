@@ -28,6 +28,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
@@ -493,8 +494,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       auto trackCandidate = tracksTemp.makeTrack();
       trackCandidate.copyFrom(firstTrack, true);
 
-      auto firstSmoothingResult =
-          Acts::smoothTrack(ctx.geoContext, trackCandidate, logger());
+      auto firstSmoothingResult = Acts::smoothTrack(
+          ctx.geoContext, trackCandidate, logger(), Acts::MbfSmoother());
       if (!firstSmoothingResult.ok()) {
         m_nFailedSmoothing++;
         ACTS_ERROR("First smoothing for seed "
@@ -588,7 +589,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 // smooth the full track and extrapolate to the reference
 
                 auto secondSmoothingResult =
-                    Acts::smoothTrack(ctx.geoContext, trackCandidate, logger());
+                    Acts::smoothTrack(ctx.geoContext, trackCandidate, logger(),
+                                      Acts::MbfSmoother());
                 if (!secondSmoothingResult.ok()) {
                   m_nFailedSmoothing++;
                   ACTS_ERROR("Second smoothing for seed "
