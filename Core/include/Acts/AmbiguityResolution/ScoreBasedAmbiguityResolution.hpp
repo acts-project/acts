@@ -188,9 +188,10 @@ class ScoreBasedAmbiguityResolution {
   /// that have a score below a certain threshold or not enough hits.
   ///
   /// @brief Remove tracks that are not good enough based on cuts
+  /// @param track is the input track
   /// @param trackScore is the score of each track
-  /// @param trackFeaturesVectors is the trackFeatures map for each track
   /// @param measurementsPerTrack is the list of measurements for each track
+  /// @param nTracksPerMeasurement is the number of tracks per measurement
   /// @return a vector of IDs of the tracks we want to keep
   template <TrackProxyConcept track_proxy_t>
   bool getCleanedOutTracks(
