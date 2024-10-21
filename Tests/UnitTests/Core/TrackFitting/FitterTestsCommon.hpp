@@ -90,7 +90,7 @@ auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(
-      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
+      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::INFO));
   Acts::StraightLineStepper stepper;
   return Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>(
       stepper, std::move(navigator));
@@ -105,7 +105,7 @@ auto makeConstantFieldPropagator(
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(
-      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
+      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::INFO));
   auto field =
       std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, bz));
   stepper_t stepper(std::move(field));
