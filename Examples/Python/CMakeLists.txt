@@ -66,6 +66,10 @@ target_link_libraries(
         ActsExamplesDetectorTelescope
         ActsExamplesUtilities
         ActsExamplesAmbiguityResolution
+        ActsExamplesTruthTracking
+        ActsExamplesDigitization
+        ActsExamplesPropagation
+        ActsExamplesMaterialMapping
 )
 
 set(py_files
