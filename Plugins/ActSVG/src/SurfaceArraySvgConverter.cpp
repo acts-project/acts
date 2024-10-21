@@ -206,5 +206,5 @@ Acts::Svg::SurfaceArrayConverter::convert(
   // Return the surfaces and the grid
   std::vector<ProtoSurfaces> pSurfaceBatches = {pSurfaces};
   std::vector<ProtoAssociations> pAssociationBatchs = {pAssociations};
-  return std::tie(pSurfaceBatches, pGrid, pAssociationBatchs);
+  return {pSurfaceBatches, pGrid, pAssociationBatchs};
 }
