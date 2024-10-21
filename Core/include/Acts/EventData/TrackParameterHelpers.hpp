@@ -73,7 +73,10 @@ inline BoundVector addBoundParameters(const BoundVector& lhs,
 /// @return The difference of the bound parameters
 inline BoundVector subtractBoundParameters(const BoundVector& lhs,
                                            const BoundVector& rhs) {
-  return normalizeBoundParameters(lhs - rhs);
+  BoundVector result = lhs - rhs;
+  result[eBoundPhi] = detail::radian_sym(result[eBoundPhi]);
+  result[eBoundTheta] = detail::radian_sym(result[eBoundTheta]);
+  return result;
 }
 
 }  // namespace Acts
