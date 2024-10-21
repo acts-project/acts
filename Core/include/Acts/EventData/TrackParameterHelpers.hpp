@@ -8,12 +8,8 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
-
-#include <cmath>
-#include <numbers>
 
 namespace Acts {
 
@@ -52,8 +48,20 @@ inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
   return result;
 }
 
+/// Add bound parameters and take care of angle periodicity for phi and theta.
+/// This is intended for small differences only i.e. KF updates.
+///
+/// @param lhs The left hand side bound parameters
+/// @param rhs The right hand side bound parameters
+///
+/// @return The sum of the bound parameters
+inline BoundVector addBoundParameters(const BoundVector& lhs,
+                                      const BoundVector& rhs) {
+  return normalizeBoundParameters(lhs + rhs);
+}
+
 /// Subtract bound parameters and take care of angle periodicity for phi and
-/// theta.
+/// theta. This is intended for small differences only i.e. KF updates.
 ///
 /// @param lhs The left hand side bound parameters
 /// @param rhs The right hand side bound parameters
@@ -61,10 +69,7 @@ inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
 /// @return The difference of the bound parameters
 inline BoundVector subtractBoundParameters(const BoundVector& lhs,
                                            const BoundVector& rhs) {
-  BoundVector result = lhs - rhs;
-  result[eBoundPhi] =
-      detail::difference_periodic(lhs[eBoundPhi], rhs[eBoundPhi], 2 * M_PI);
-  return result;
+  return normalizeBoundParameters(lhs - rhs);
 }
 
 }  // namespace Acts

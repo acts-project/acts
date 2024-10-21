@@ -8,6 +8,8 @@
 
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 
+#include <numbers>
+
 bool Acts::isBoundVectorValid(const BoundVector& v, double epsilon) {
   constexpr auto pi = std::numbers::pi_v<double>;
 
@@ -20,7 +22,7 @@ bool Acts::isBoundVectorValid(const BoundVector& v, double epsilon) {
                     (v[eBoundTheta] + epsilon >= 0) &&
                     (v[eBoundTheta] - epsilon <= pi);
   bool qOverPValid = std::isfinite(v[eBoundQOverP]) &&
-                     (std::abs(v[eBoundQOverP]) + epsilon > 0);
+                     (std::abs(v[eBoundQOverP]) - epsilon >= 0);
   bool timeValid = std::isfinite(v[eBoundTime]);
 
   return loc0Valid && loc1Valid && phiValid && thetaValid && qOverPValid &&
@@ -34,9 +36,9 @@ bool Acts::isFreeVectorValid(const FreeVector& v, double epsilon) {
   bool dir0Valid = std::isfinite(v[eFreeDir0]);
   bool dir1Valid = std::isfinite(v[eFreeDir1]);
   bool dir2Valid = std::isfinite(v[eFreeDir2]);
-  bool dirValid = (v.segment<3>(eFreeDir0).norm() + epsilon > 0);
-  bool qOverPValid =
-      std::isfinite(v[eFreeQOverP]) && (std::abs(v[eFreeQOverP]) + epsilon > 0);
+  bool dirValid = (std::abs(v.segment<3>(eFreeDir0).norm() - 1) - epsilon <= 0);
+  bool qOverPValid = std::isfinite(v[eFreeQOverP]) &&
+                     (std::abs(v[eFreeQOverP]) - epsilon >= 0);
   bool timeValid = std::isfinite(v[eFreeTime]);
 
   return pos0Valid && pos1Valid && pos2Valid && dir0Valid && dir1Valid &&

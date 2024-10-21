@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -19,7 +18,6 @@
 #include <cassert>
 #include <cmath>
 #include <memory>
-#include <type_traits>
 
 namespace Acts {
 
@@ -62,7 +60,6 @@ class GenericBoundTrackParameters {
         m_cov(std::move(cov)),
         m_surface(std::move(surface)),
         m_particleHypothesis(std::move(particleHypothesis)) {
-    assert(isBoundVectorValid(m_params) && "Invalid bound parameters");
     assert(m_surface != nullptr && "Reference surface must not be null");
     normalizePhiTheta();
   }
