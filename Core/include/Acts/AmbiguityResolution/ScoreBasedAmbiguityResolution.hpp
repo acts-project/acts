@@ -192,6 +192,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param trackScore is the score of each track
   /// @param measurementsPerTrack is the list of measurements for each track
   /// @param nTracksPerMeasurement is the number of tracks per measurement
+  /// @param optionalHitSelections is the optional hit selections to be applied
   /// @return a vector of IDs of the tracks we want to keep
   template <TrackProxyConcept track_proxy_t>
   bool getCleanedOutTracks(
