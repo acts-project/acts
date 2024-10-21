@@ -212,7 +212,7 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
       throw std::runtime_error{"Unsupported binning direction"};
     }
 
-    std::vector<double> edges;
+    std::vector<ActsScalar> edges;
     edges.reserve(m_children.size() + 1);
 
     const Transform3& groupTransform = m_surface->transform(gctx);
@@ -256,7 +256,7 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
       throw std::runtime_error{"Unsupported binning direction"};
     }
 
-    std::vector<double> edges;
+    std::vector<ActsScalar> edges;
     edges.reserve(m_children.size() + 1);
 
     std::ranges::sort(trivialLinks, [](const auto& a, const auto& b) {

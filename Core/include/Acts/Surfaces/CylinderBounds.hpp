@@ -69,9 +69,9 @@ class CylinderBounds : public SurfaceBounds {
   /// @param avgPhi (optional) The phi value from which the opening angle spans
   /// @param bevelMinZ (optional) The bevel on the negative z side
   /// @param bevelMaxZ (optional) The bevel on the positive z sid The bevel on the positive z side
-  CylinderBounds(double r, double halfZ, double halfPhi = M_PI,
-                 double avgPhi = 0., double bevelMinZ = 0.,
-                 double bevelMaxZ = 0.) noexcept(false)
+  CylinderBounds(ActsScalar r, ActsScalar halfZ, ActsScalar halfPhi = M_PI,
+                 ActsScalar avgPhi = 0., ActsScalar bevelMinZ = 0.,
+                 ActsScalar bevelMaxZ = 0.) noexcept(false)
       : m_values({r, halfZ, halfPhi, avgPhi, bevelMinZ, bevelMaxZ}),
         m_closed(std::abs(halfPhi - M_PI) < s_epsilon) {
     checkConsistency();
@@ -80,7 +80,7 @@ class CylinderBounds : public SurfaceBounds {
   /// Constructor - from fixed size array
   ///
   /// @param values The parameter values
-  CylinderBounds(const std::array<double, eSize>& values) noexcept(false)
+  CylinderBounds(const std::array<ActsScalar, eSize>& values) noexcept(false)
       : m_values(values),
         m_closed(std::abs(values[eHalfPhiSector] - M_PI) < s_epsilon) {
     checkConsistency();
@@ -93,7 +93,7 @@ class CylinderBounds : public SurfaceBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<ActsScalar> values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -107,7 +107,7 @@ class CylinderBounds : public SurfaceBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  ActsScalar get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Returns true for full phi coverage
   bool coversFullAzimuth() const;
@@ -130,7 +130,7 @@ class CylinderBounds : public SurfaceBounds {
 
  private:
   /// The bound radius, half Z, half phi and average phi
-  std::array<double, eSize> m_values;
+  std::array<ActsScalar, eSize> m_values;
   /// Indicator if the bounds are closed
   bool m_closed{false};
 
@@ -146,8 +146,8 @@ class CylinderBounds : public SurfaceBounds {
   ActsMatrix<2, 2> jacobian() const;
 };
 
-inline std::vector<double> CylinderBounds::values() const {
-  std::vector<double> valvector;
+inline std::vector<ActsScalar> CylinderBounds::values() const {
+  std::vector<ActsScalar> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }

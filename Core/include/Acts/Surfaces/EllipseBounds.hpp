@@ -78,7 +78,7 @@ class EllipseBounds : public PlanarBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<ActsScalar> values() const final;
 
   /// This method checks if the point given in the local coordinates is between
   /// two ellipsoids if only tol0 is given and additional in the phi sector is
@@ -119,8 +119,8 @@ class EllipseBounds : public PlanarBounds {
   void checkConsistency() noexcept(false);
 };
 
-inline std::vector<double> EllipseBounds::values() const {
-  std::vector<double> valvector;
+inline std::vector<ActsScalar> EllipseBounds::values() const {
+  std::vector<ActsScalar> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
