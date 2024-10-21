@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/ParticleData.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
@@ -35,8 +35,8 @@ ParametricParticleGenerator::ParametricParticleGenerator(const Config& cfg)
       m_cosThetaMax(std::nextafter(std::cos(m_cfg.thetaMax),
                                    std::numeric_limits<double>::max())),
       // in case we force uniform eta generation
-      m_etaMin(-std::log(std::tan(0.5 * m_cfg.thetaMin))),
-      m_etaMax(-std::log(std::tan(0.5 * m_cfg.thetaMax))) {}
+      m_etaMin(Acts::AngleHelpers::etaFromTheta(m_cfg.thetaMin)),
+      m_etaMax(Acts::AngleHelpers::etaFromTheta(m_cfg.thetaMax)) {}
 
 std::pair<SimVertexContainer, SimParticleContainer>
 ParametricParticleGenerator::operator()(RandomEngine& rng) {

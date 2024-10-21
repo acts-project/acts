@@ -12,11 +12,11 @@
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
 
 #include <cmath>
 #include <functional>
 #include <limits>
-#include <numeric>
 #include <ostream>
 #include <vector>
 
@@ -419,7 +419,7 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
 
   auto absEta = [&]() {
     if (_absEta == kUnset) {
-      _eta = -std::log(std::tan(theta / 2));
+      _eta = AngleHelpers::etaFromTheta(theta);
       _absEta = std::abs(_eta);
     }
     return _absEta;
