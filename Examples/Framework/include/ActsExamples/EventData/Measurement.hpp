@@ -205,7 +205,7 @@ class MeasurementProxyBase {
   MeasurementProxyBase(Container& container_, Index index_)
       : m_container(&container_), m_index(index_) {}
   template <typename OtherDerived, bool OtherReadOnly>
-  MeasurementProxyBase(
+  explicit MeasurementProxyBase(
       const MeasurementProxyBase<OtherDerived, FullSize, OtherReadOnly>& other)
     requires(ReadOnly == OtherReadOnly || ReadOnly)
       : m_container(&other.container()), m_index(other.index()) {}
@@ -358,7 +358,7 @@ class FixedMeasurementProxy
     assert(container().m_entries.at(index()).size == Size && "Size mismatch");
   }
   template <typename OtherDerived, bool OtherReadOnly>
-  FixedMeasurementProxy(
+  explicit FixedMeasurementProxy(
       const MeasurementProxyBase<OtherDerived, FullSize, OtherReadOnly>& other)
     requires(ReadOnly == OtherReadOnly || ReadOnly)
       : Base(other) {
@@ -450,7 +450,7 @@ class VariableMeasurementProxy
   VariableMeasurementProxy(Container& container_, Index index_)
       : Base(container_, index_) {}
   template <typename OtherDerived, bool OtherReadOnly>
-  VariableMeasurementProxy(
+  explicit VariableMeasurementProxy(
       const MeasurementProxyBase<OtherDerived, FullSize, OtherReadOnly>& other)
     requires(ReadOnly == OtherReadOnly || ReadOnly)
       : Base(other) {}

@@ -52,13 +52,13 @@ Acts::DetrayMaterialConverter::convertMaterialSlab(
 
 detray::io::detector_homogeneous_material_payload
 Acts::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
-    const DetrayConversionUtils::GeometryIdCache& geoIdCache,
+    const DetrayConversionUtils::Cache& cCache,
     const Experimental::Detector& detector, const Logger& logger) {
   detray::io::detector_homogeneous_material_payload materialPayload;
 
   for (const auto volume : detector.volumes()) {
-    auto volumeIndex = geoIdCache.volumeLinks.find(volume->geometryId());
-    if (volumeIndex != geoIdCache.volumeLinks.end()) {
+    auto volumeIndex = cCache.volumeLinks.find(volume->geometryId());
+    if (volumeIndex != cCache.volumeLinks.end()) {
       // The volume material payload & its link
       detray::io::material_volume_payload volumePayload;
       detray::io::single_link_payload volumeLink;
@@ -80,18 +80,24 @@ Acts::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
           auto materialSlab = homogeneousMaterial->materialSlab();
           detray::io::material_slab_payload slabPayload =
               convertMaterialSlab(materialSlab);
-          // Find the surfaces and assign
-          auto surfaceIndices =
-              geoIdCache.localSurfaceLinks.equal_range(surface->geometryId());
-          // Loop over the equal range and fill one grid each, this is needed
-          // as the initial portal could be split into multiple surfaces
-          for (auto itr = surfaceIndices.first; itr != surfaceIndices.second;
-               ++itr) {
-            // Make an identified link copy for every matching surface
-            detray::io::single_link_payload surfaceLink;
-            surfaceLink.link = itr->second;
-            slabPayload.surface = surfaceLink;
-            volumePayload.mat_slabs.push_back(slabPayload);
+          // Find the surfaces to assign
+          auto vIndex = cCache.volumeIndex(volume);
+          auto localSurfaceLinks = cCache.localSurfaceLinks.find(vIndex);
+          if (localSurfaceLinks != cCache.localSurfaceLinks.end()) {
+            // Find the surface link
+            auto surfaceIndices =
+                localSurfaceLinks->second.equal_range(surface->geometryId());
+            // Loop over the equal range and fill one grid each, this is needed
+            // as the initial portal could be split into multiple surfaces
+            for (auto itr = surfaceIndices.first; itr != surfaceIndices.second;
+                 ++itr) {
+              // Make an identified link copy for every matching surface
+              slabPayload.surface.link = itr->second;
+              volumePayload.mat_slabs.push_back(slabPayload);
+            }
+          } else {
+            ACTS_WARNING(
+                "DetrayMaterialConverter: no local surface links found");
           }
         }
       }
@@ -232,7 +238,7 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
 detray::io::detector_grids_payload<detray::io::material_slab_payload,
                                    detray::io::material_id>
 Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
-    const DetrayConversionUtils::GeometryIdCache& geoIdCache,
+    const DetrayConversionUtils::Cache& cCache,
     const Experimental::Detector& detector, const Logger& logger) {
   // The material grid payload
   detray::io::detector_grids_payload<detray::io::material_slab_payload,
@@ -248,39 +254,49 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
     // Per volume surface selector
     MaterialSurfaceSelector selector;
     volume->visitSurfaces(selector);
-    ACTS_DEBUG("DetrayMaterialConverter: found "
-               << selector.surfaces.size()
-               << " surfaces/portals with material in volume "
-               << volume->name());
+    ACTS_VERBOSE("DetrayMaterialConverter: found "
+                 << selector.surfaces.size()
+                 << " surfaces/portals with material in volume "
+                 << volume->name());
     // Find the voluem index first
-    auto volumeIndex = geoIdCache.volumeLinks.find(volume->geometryId());
-    if (volumeIndex != geoIdCache.volumeLinks.end()) {
+    auto volumeIndex = cCache.volumeLinks.find(volume->geometryId());
+    if (volumeIndex != cCache.volumeLinks.end()) {
       std::vector<DetrayMaterialGrid> volumeMaterialGrids = {};
       // Now convert the surfaces
       for (const auto& surface : selector.surfaces) {
-        // Find the surface index
-        auto surfaceIndices =
-            geoIdCache.localSurfaceLinks.equal_range(surface->geometryId());
-        DetrayMaterialGrid materialGrid =
-            convertGridSurfaceMaterial(*surface->surfaceMaterial(), logger);
-        // Ignore if an empty payload is returned
-        if (materialGrid.axes.empty() && materialGrid.bins.empty()) {
-          continue;
-        }
-        // Loop over the equal range and fill one grid each, this is needed
-        // as the initial portal could be split into multiple surfaces
-        for (auto itr = surfaceIndices.first; itr != surfaceIndices.second;
-             ++itr) {
-          // Fill the surface index
-          materialGrid.owner_link =
-              detray::io::single_link_payload{itr->second};
-          // Fill the grid
-          volumeMaterialGrids.push_back(materialGrid);
+        // Find the surfaces to assign
+        auto vIndex = cCache.volumeIndex(volume);
+        auto localSurfaceLinks = cCache.localSurfaceLinks.find(vIndex);
+        if (localSurfaceLinks != cCache.localSurfaceLinks.end()) {
+          // Find the surface link
+          auto surfaceIndices =
+              localSurfaceLinks->second.equal_range(surface->geometryId());
+
+          ACTS_VERBOSE(
+              "DetrayMaterialConverter: assigning to "
+              << std::distance(surfaceIndices.first, surfaceIndices.second)
+              << " surfaces with material in volume " << volume->name());
+          DetrayMaterialGrid materialGrid =
+              convertGridSurfaceMaterial(*surface->surfaceMaterial(), logger);
+          // Ignore if an empty payload is returned
+          if (materialGrid.axes.empty() || materialGrid.bins.empty()) {
+            continue;
+          }
+
+          // Loop over the equal range and fill one grid each, this is needed
+          // as the initial portal could be split into multiple surfaces
+          for (auto itr = surfaceIndices.first; itr != surfaceIndices.second;
+               ++itr) {
+            // Fill the surface index
+            materialGrid.owner_link =
+                detray::io::single_link_payload{itr->second};
+            // Fill the grid
+            volumeMaterialGrids.push_back(materialGrid);
+          }
         }
       }
       // Register the grids of this volume
       materialGrids.grids.insert({volumeIndex->second, volumeMaterialGrids});
-
     } else {
       ACTS_WARNING(
           "DetrayMaterialConverter: volume not found in cache, should not "

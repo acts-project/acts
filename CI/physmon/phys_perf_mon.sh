@@ -223,11 +223,19 @@ function trackfinding() {
     fi
 
     run_histcmp \
-        $outdir/data/$path/performance_ckf.root \
-        $refdir/$path/performance_ckf.root \
-        "CKF | ${name}" \
-        $path/performance_ckf.html \
-        $path/performance_ckf_plots \
+        $outdir/data/$path/performance_finding_ckf.root \
+        $refdir/$path/performance_finding_ckf.root \
+        "CKF finding performance | ${name}" \
+        $path/performance_finding_ckf.html \
+        $path/performance_finding_ckf_plots \
+        --config $default_config
+
+    run_histcmp \
+        $outdir/data/$path/performance_fitting_ckf.root \
+        $refdir/$path/performance_fitting_ckf.root \
+        "CKF fitting performance | ${name}" \
+        $path/performance_fitting_ckf.html \
+        $path/performance_fitting_ckf_plots \
         --config $default_config
 
 
@@ -245,17 +253,17 @@ function trackfinding() {
     run_histcmp \
         $outdir/data/$path/tracksummary_ckf_hist.root \
         $refdir/$path/tracksummary_ckf_hist.root \
-        "Track Summary CKF | ${name}" \
+        "CKF track summary | ${name}" \
         $path/tracksummary_ckf.html \
         $path/tracksummary_ckf_plots
 
-    if [ -f $refdir/$path/performance_ckf_ambi.root ]; then
+    if [ -f $refdir/$path/performance_finding_ckf_ambi.root ]; then
         run_histcmp \
-            $outdir/data/$path/performance_ckf_ambi.root \
-            $refdir/$path/performance_ckf_ambi.root \
-            "Ambisolver | ${name}" \
-            $path/performance_ckf_ambi.html \
-            $path/performance_ckf_ambi
+            $outdir/data/$path/performance_finding_ckf_ambi.root \
+            $refdir/$path/performance_finding_ckf_ambi.root \
+            "Ambisolver finding performance | ${name}" \
+            $path/performance_finding_ckf_ambi.html \
+            $path/performance_finding_ckf_ambi
     fi
 }
 
