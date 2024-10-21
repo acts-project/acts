@@ -58,13 +58,13 @@ BinningData etaData_eq(open, BinningValue::binEta, 5, -2.5, 2.5);
 BinningData xData_eq_copy(open, BinningValue::binX, 10, 0., 10.);
 
 // the binnings - arbitrary
-std::vector<float> values = {0., 1., 2., 3., 4., 10.};
+std::vector<ActsScalar> values = {0., 1., 2., 3., 4., 10.};
 // bin boundaries
 // | 0 | 1 | 2 | 3 | 4 | 10 |
 BinningData xData_arb(open, BinningValue::binX, values);
 BinningData yData_arb(open, BinningValue::binY, values);
 // | -M_PI |  -2 |  -1 |  1 |  2 |  M_PI |
-std::vector<float> phiValues = {-M_PI, -2., -1., 1., 2., M_PI};
+std::vector<ActsScalar> phiValues = {-M_PI, -2., -1., 1., 2., M_PI};
 BinningData phiData_arb(closed, BinningValue::binPhi, phiValues);
 
 // the binnings - arbitrary when switching to binary search - for boundary
@@ -76,7 +76,7 @@ double delta = 0.5;
 double phiDelta = 0.1064;
 
 // the binning - substructure
-std::vector<float> sstr = {0., 1., 1.5, 2., 3.};
+std::vector<ActsScalar> sstr = {0., 1., 1.5, 2., 3.};
 // multiplicative
 auto xData_sstr_mult =
     std::make_unique<const BinningData>(open, BinningValue::binX, sstr);
@@ -85,7 +85,7 @@ BinningData xData_mult(open, BinningValue::binX, 3, 0., 9.,
                        std::move(xData_sstr_mult));
 /// additive
 // | 0 | 1 | 1.5 | 2 |  3 | 4 | 5 |
-std::vector<float> main_sstr = {0., 3., 4., 5.};
+std::vector<ActsScalar> main_sstr = {0., 3., 4., 5.};
 auto xData_sstr_add =
     std::make_unique<const BinningData>(open, BinningValue::binX, sstr);
 BinningData xData_add(open, BinningValue::binX, main_sstr,
@@ -99,8 +99,8 @@ BinningData xData_add(open, BinningValue::binX, main_sstr,
 BOOST_AUTO_TEST_CASE(BinningData_BinningValue) {
   // the binnings - arbitrary when switching to binary search - for boundary
   // sizes >= 50
-  std::vector<float> values_binary;
-  std::vector<float> phiValues_binary;
+  std::vector<ActsScalar> values_binary;
+  std::vector<ActsScalar> phiValues_binary;
   for (std::size_t i = 0; i <= nBins_binary; i++) {
     values_binary.push_back(valueMin + i * delta);
     phiValues_binary.push_back(phiMin + i * phiDelta);
@@ -161,8 +161,8 @@ BOOST_AUTO_TEST_CASE(BinningData_BinningValue) {
 BOOST_AUTO_TEST_CASE(BinningData_bins) {
   // the binnings - arbitrary when switching to binary search - for boundary
   // sizes >= 50
-  std::vector<float> values_binary;
-  std::vector<float> phiValues_binary;
+  std::vector<ActsScalar> values_binary;
+  std::vector<ActsScalar> phiValues_binary;
   for (std::size_t i = 0; i <= nBins_binary; i++) {
     values_binary.push_back(valueMin + i * delta);
     phiValues_binary.push_back(phiMin + i * phiDelta);
@@ -229,8 +229,8 @@ BOOST_AUTO_TEST_CASE(BinningData_bins) {
 BOOST_AUTO_TEST_CASE(BinningData_inside_outside) {
   // the binnings - arbitrary when switching to binary search - for boundary
   // sizes >= 50
-  std::vector<float> values_binary;
-  std::vector<float> phiValues_binary;
+  std::vector<ActsScalar> values_binary;
+  std::vector<ActsScalar> phiValues_binary;
   for (std::size_t i = 0; i <= nBins_binary; i++) {
     values_binary.push_back(valueMin + i * delta);
     phiValues_binary.push_back(phiMin + i * phiDelta);
@@ -273,8 +273,8 @@ BOOST_AUTO_TEST_CASE(BinningData_inside_outside) {
 BOOST_AUTO_TEST_CASE(BinningData_open_close) {
   // the binnings - arbitrary when switching to binary search - for boundary
   // sizes >= 50
-  std::vector<float> values_binary;
-  std::vector<float> phiValues_binary;
+  std::vector<ActsScalar> values_binary;
+  std::vector<ActsScalar> phiValues_binary;
   for (std::size_t i = 0; i <= nBins_binary; i++) {
     values_binary.push_back(valueMin + i * delta);
     phiValues_binary.push_back(phiMin + i * phiDelta);
@@ -305,19 +305,20 @@ BOOST_AUTO_TEST_CASE(BinningData_open_close) {
 // test boundaries
 BOOST_AUTO_TEST_CASE(BinningData_boundaries) {
   // open values
-  std::vector<float> boundaries = {0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.};
+  std::vector<ActsScalar> boundaries = {0., 1., 2., 3., 4., 5.,
+                                        6., 7., 8., 9., 10.};
   BOOST_CHECK_EQUAL_COLLECTIONS(xData_eq.boundaries().begin(),
                                 xData_eq.boundaries().end(), boundaries.begin(),
                                 boundaries.end());
 
-  float phiStep = M_PI * 2. / 5.;
-  std::vector<float> phiBoundaries_eq = {
+  ActsScalar phiStep = M_PI * 2. / 5.;
+  std::vector<ActsScalar> phiBoundaries_eq = {
       -M_PI,
-      static_cast<float>(-M_PI + 1 * phiStep),
-      static_cast<float>(-M_PI + 2 * phiStep),
-      static_cast<float>(-M_PI + 3 * phiStep),
-      static_cast<float>(-M_PI + 4 * phiStep),
-      static_cast<float>(-M_PI + 5 * phiStep)};
+      static_cast<ActsScalar>(-M_PI + 1 * phiStep),
+      static_cast<ActsScalar>(-M_PI + 2 * phiStep),
+      static_cast<ActsScalar>(-M_PI + 3 * phiStep),
+      static_cast<ActsScalar>(-M_PI + 4 * phiStep),
+      static_cast<ActsScalar>(-M_PI + 5 * phiStep)};
   CHECK_CLOSE_REL(phiData_eq.boundaries(), phiBoundaries_eq, 1e-5);
 }
 
@@ -326,8 +327,8 @@ BOOST_AUTO_TEST_CASE(BinningData_boundaries) {
 BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
   // the binnings - arbitrary when switching to binary search - for boundary
   // sizes >= 50
-  std::vector<float> values_binary;
-  std::vector<float> phiValues_binary;
+  std::vector<ActsScalar> values_binary;
+  std::vector<ActsScalar> phiValues_binary;
   for (std::size_t i = 0; i <= nBins_binary; i++) {
     values_binary.push_back(valueMin + i * delta);
     phiValues_binary.push_back(phiMin + i * phiDelta);
@@ -355,20 +356,20 @@ BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
   BOOST_CHECK_EQUAL(xData_arb_binary.center(0), 0.5 * delta);
 
   // open values
-  std::vector<float> center = {0.5, 1.5, 2.5, 3.5, 4.5,
-                               5.5, 6.5, 7.5, 8.5, 9.5};
+  std::vector<ActsScalar> center = {0.5, 1.5, 2.5, 3.5, 4.5,
+                                    5.5, 6.5, 7.5, 8.5, 9.5};
   for (std::size_t ib = 0; ib < center.size(); ++ib) {
     BOOST_CHECK_EQUAL(xData_eq.center(ib), center[ib]);
   }
 
   // running into rounding errors here
-  float phiStep = M_PI * 2. / 5.;
-  std::vector<float> phiCenters_eq = {
-      static_cast<float>(-M_PI + 0.5 * phiStep),
-      static_cast<float>(-M_PI + 1.5 * phiStep),
-      static_cast<float>(-M_PI + 2.5 * phiStep),
-      static_cast<float>(-M_PI + 3.5 * phiStep),
-      static_cast<float>(-M_PI + 4.5 * phiStep)};
+  ActsScalar phiStep = M_PI * 2. / 5.;
+  std::vector<ActsScalar> phiCenters_eq = {
+      static_cast<ActsScalar>(-M_PI + 0.5 * phiStep),
+      static_cast<ActsScalar>(-M_PI + 1.5 * phiStep),
+      static_cast<ActsScalar>(-M_PI + 2.5 * phiStep),
+      static_cast<ActsScalar>(-M_PI + 3.5 * phiStep),
+      static_cast<ActsScalar>(-M_PI + 4.5 * phiStep)};
 
   for (std::size_t ib = 0; ib < phiCenters_eq.size(); ++ib) {
     CHECK_CLOSE_ABS(phiData_eq.center(ib), phiCenters_eq[ib], 1e-3);
@@ -379,39 +380,39 @@ BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
 BOOST_AUTO_TEST_CASE(BinningData_phi_modules) {
   // n phi modules with phi boundary at -M_Pi/+M_PI are checked above
   // one module expands over -M_Pi/+M_PI
-  float deltaPhi = 0.1;
+  ActsScalar deltaPhi = 0.1;
   BinningData phiData_mod(closed, BinningValue::binPhi, 5, -M_PI + deltaPhi,
                           M_PI + deltaPhi);
-  float phiStep = M_PI * 2. / 5.;
-  std::vector<float> phiBoundaries_mod = {
-      static_cast<float>(-M_PI + deltaPhi),
-      static_cast<float>(-M_PI + 1 * phiStep) + deltaPhi,
-      static_cast<float>(-M_PI + 2 * phiStep) + deltaPhi,
-      static_cast<float>(-M_PI + 3 * phiStep) + deltaPhi,
-      static_cast<float>(-M_PI + 4 * phiStep) + deltaPhi,
-      static_cast<float>(-M_PI + 5 * phiStep) + deltaPhi};
+  ActsScalar phiStep = M_PI * 2. / 5.;
+  std::vector<ActsScalar> phiBoundaries_mod = {
+      static_cast<ActsScalar>(-M_PI + deltaPhi),
+      static_cast<ActsScalar>(-M_PI + 1 * phiStep) + deltaPhi,
+      static_cast<ActsScalar>(-M_PI + 2 * phiStep) + deltaPhi,
+      static_cast<ActsScalar>(-M_PI + 3 * phiStep) + deltaPhi,
+      static_cast<ActsScalar>(-M_PI + 4 * phiStep) + deltaPhi,
+      static_cast<ActsScalar>(-M_PI + 5 * phiStep) + deltaPhi};
   // this is the boundary test
   CHECK_CLOSE_REL(phiData_mod.boundaries(), phiBoundaries_mod, 1e-5);
 
   // now test the bin jump 0/maxbin
 
-  float firstAngle = (-M_PI + 1.5 * deltaPhi);
+  ActsScalar firstAngle = (-M_PI + 1.5 * deltaPhi);
   Vector3 firstBin(cos(firstAngle), sin(firstAngle), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(firstAngle), std::size_t{0});
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(firstBin), std::size_t{0});
 
-  float firstAngleNeg = (-M_PI + 0.5 * deltaPhi);
+  ActsScalar firstAngleNeg = (-M_PI + 0.5 * deltaPhi);
   Vector3 lastBinNeg(cos(firstAngleNeg), sin(firstAngleNeg), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(firstAngleNeg), std::size_t{4});
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(lastBinNeg), std::size_t{4});
 
-  float lastAnglePos = (M_PI + 0.5 * deltaPhi);
+  ActsScalar lastAnglePos = (M_PI + 0.5 * deltaPhi);
   Vector3 lastBinPos(cos(lastAnglePos), sin(lastAnglePos), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(lastAnglePos), std::size_t{4});
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(lastBinPos), std::size_t{4});
 
   // now test the (remaining) phi scaling
-  float underscaledAngle = -M_PI - 0.5 * deltaPhi;
+  ActsScalar underscaledAngle = -M_PI - 0.5 * deltaPhi;
   Vector3 underscaledPos(cos(underscaledAngle), sin(underscaledAngle), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(underscaledAngle), std::size_t{4});
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(underscaledPos), std::size_t{4});
