@@ -408,9 +408,11 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
                                                  sourceLinkEquality);
 
   std::vector<std::vector<std::size_t>> measurementsPerTrackVector;
-  // Removes bad tracks and counts the number of tracks per
-  // measurement.
   std::map<std::size_t, std::size_t> nTracksPerMeasurement;
+
+  // Stores tracks measurment into a vector or vectors
+  // (measurementsPerTrackVector) and counts the number of tracks per
+  // measurement.(nTracksPerMeasurement)
 
   for (const auto& track : tracks) {
     std::vector<std::size_t> measurementsPerTrack;
@@ -439,6 +441,11 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
 
   auto optionalHitSelections = optionalCuts.hitSelections;
 
+  // Loop over all the tracks in the container
+  // For each track, check if the track has too many shared hits to be accepted.
+  // If the track is accepted, remove bad hits and check if the track has a
+  // score higher than the minimum score for shared tracks.
+  // If the track is good, add it to the goodTracks vector.
   for (std::size_t iTrack = 0; const auto& track : tracks) {
     // Check if the track has too many shared hits to be accepted.
     auto trackFeaturesVector = trackFeaturesVectors.at(iTrack);
@@ -542,6 +549,10 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
         continue;
       }
       auto nTracksShared = it->second;
+
+      // Loop over all optionalHitSelections and apply them to trackStateType of
+      // the TrackState.
+
       for (const auto& hitSelection : optionalHitSelections) {
         hitSelection(track, ts, trackStateTypes[index]);
       }
