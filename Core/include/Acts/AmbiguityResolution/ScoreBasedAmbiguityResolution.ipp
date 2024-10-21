@@ -410,7 +410,7 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
   std::vector<std::vector<std::size_t>> measurementsPerTrackVector;
   std::map<std::size_t, std::size_t> nTracksPerMeasurement;
 
-  // Stores tracks measurment into a vector or vectors
+  // Stores tracks measurement into a vector or vectors
   // (measurementsPerTrackVector) and counts the number of tracks per
   // measurement.(nTracksPerMeasurement)
 
