@@ -1826,11 +1826,18 @@ def addExaTrkX(
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("prototracks", findingAlg.config.outputProtoTracks)
 
-    # TODO convert prototracks to tracks
+    s.addAlgorithm(
+        acts.examples.PrototracksToTracks(
+            level=customLogLevel(),
+            inputProtoTracks="prototracks",
+            inputMeasurements="measurements",
+            outputTracks="tracks",
+        )
+    )
 
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
-        inputProtoTracks=findingAlg.config.outputProtoTracks,
+        inputTracks="tracks",
         inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="exatrkx_track_particle_matching",
@@ -1850,7 +1857,7 @@ def addExaTrkX(
         s.addWriter(
             acts.examples.TrackFinderNTupleWriter(
                 level=customLogLevel(),
-                inputProtoTracks=findingAlg.config.outputProtoTracks,
+                inputTracks="tracks",
                 # the original selected particles after digitization
                 inputParticles="particles_initial",
                 inputMeasurementParticlesMap="measurement_particles_map",
