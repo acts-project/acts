@@ -104,6 +104,7 @@ def runSeeding(
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
         rnd=rnd,
     )
+
     from acts.examples.reconstruction import (
         addSeeding,
         SeedFinderConfigArg,

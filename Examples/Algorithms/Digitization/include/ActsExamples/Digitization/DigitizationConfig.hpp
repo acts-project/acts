@@ -130,7 +130,7 @@ class DigitizationConfig {
       bool doMerge, double mergeNsigma, bool mergeCommonCorner,
       Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
-  DigitizationConfig(
+  explicit DigitizationConfig(
       Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
   /// Input collection of simulated hits.
