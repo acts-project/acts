@@ -30,7 +30,6 @@ ScoreBasedAmbiguityResolution::computeInitialState(
 
   for (const auto& track : tracks) {
     int numberOfDetectors = m_cfg.detectorConfigs.size();
-    int numberOfTrackStates = track.nTrackStates();
 
     std::vector<TrackFeatures> trackFeaturesVector(numberOfDetectors);
 
@@ -414,19 +413,17 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
   std::map<std::size_t, std::size_t> nTracksPerMeasurement;
 
   for (const auto& track : tracks) {
-    auto iTrack = track.index();
+    std::vector<std::size_t> measurementsPerTrack;
     for (const auto& ts : track.trackStatesReversed()) {
-      Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
-
-      // assign a new measurement index if the source link was not seen yet
-      auto emplace = MeasurementIndexMap.try_emplace(
-          sourceLink, MeasurementIndexMap.size());
-      auto iMeasurement = emplace.first->second;
-      measurementsPerTrackVector[iTrack].push_back(iMeasurement);
       if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
           ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         ACTS_DEBUG("Track state type is OutlierFlag");
-
+        Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
+        // assign a new measurement index if the source link was not seen yet
+        auto emplace = MeasurementIndexMap.try_emplace(
+            sourceLink, MeasurementIndexMap.size());
+        auto iMeasurement = emplace.first->second;
+        measurementsPerTrack.push_back(iMeasurement);
         if (nTracksPerMeasurement.find(iMeasurement) ==
             nTracksPerMeasurement.end()) {
           nTracksPerMeasurement[iMeasurement] = 0;
@@ -434,6 +431,7 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
         nTracksPerMeasurement[iMeasurement]++;
       }
     }
+    measurementsPerTrackVector.push_back(std::move(measurementsPerTrack));
   }
 
   std::vector<int> goodTracks;
@@ -481,9 +479,9 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     const track_proxy_t& track, const double& trackScore,
     const std::vector<std::size_t>& measurementsPerTrack,
     const std::map<std::size_t, std::size_t> nTracksPerMeasurement,
-    const std::vector<std::function<bool(
+    const std::vector<std::function<void(
         const track_proxy_t&,
-        const typename track_proxy_t::ConstTrackStateProxy&, TrackStateTypes)>>&
+        const typename track_proxy_t::ConstTrackStateProxy&, TrackStateTypes&)>>&
         optionalHitSelections) const {
   // For tracks with shared hits, we need to check and remove bad hits
 
@@ -491,32 +489,35 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
   // Loop over all measurements of the track and for each hit a
   // trackStateTypes is assigned.
   for (std::size_t index = 0; auto ts : track.trackStatesReversed()) {
-    auto iMeasurement = measurementsPerTrack[index];
-    auto it = nTracksPerMeasurement.find(iMeasurement);
-    if (it == nTracksPerMeasurement.end()) {
-      trackStateTypes.push_back(TrackStateTypes::OtherTrackStateType);
-      index++;
-      continue;
-    }
+    if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
+        ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      auto iMeasurement = measurementsPerTrack[index];
+      auto it = nTracksPerMeasurement.find(iMeasurement);
+      if (it == nTracksPerMeasurement.end()) {
+        trackStateTypes.push_back(TrackStateTypes::OtherTrackStateType);
+        index++;
+        continue;
+      }
 
-    auto nTracksShared = it->second;
-    auto isoutliner = ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
+      auto nTracksShared = it->second;
+      auto isoutliner = ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
 
-    if (isoutliner) {
-      ACTS_VERBOSE("Measurement is outlier on a fitter track, copy it over");
-      trackStateTypes.push_back(TrackStateTypes::Outlier);
-      continue;
-    }
-    if (nTracksShared == 1) {
-      ACTS_VERBOSE("Measurement is not shared, copy it over");
+      if (isoutliner) {
+        ACTS_VERBOSE("Measurement is outlier on a fitter track, copy it over");
+        trackStateTypes.push_back(TrackStateTypes::Outlier);
+        continue;
+      }
+      if (nTracksShared == 1) {
+        ACTS_VERBOSE("Measurement is not shared, copy it over");
 
-      trackStateTypes.push_back(TrackStateTypes::UnsharedHit);
-      continue;
-    }
-    if (nTracksShared > 1) {
-      ACTS_VERBOSE("Measurement is shared, copy it over");
-      trackStateTypes.push_back(TrackStateTypes::SharedHit);
-      continue;
+        trackStateTypes.push_back(TrackStateTypes::UnsharedHit);
+        continue;
+      }
+      if (nTracksShared > 1) {
+        ACTS_VERBOSE("Measurement is shared, copy it over");
+        trackStateTypes.push_back(TrackStateTypes::SharedHit);
+        continue;
+      }
     }
   }
   std::vector<std::size_t> newMeasurementsPerTrack;
@@ -527,49 +528,51 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
   // trackStateTypes and other conditions.
   // Good measurements are copied to the newMeasurementsPerTrack vector.
   for (std::size_t index = 0; auto ts : track.trackStatesReversed()) {
-    if (!ts.hasReferenceSurface()) {
-      ACTS_DEBUG("Track state has no reference surface");
-      continue;
-    }
-    measurement = measurementsPerTrack[index];
-
-    auto it = nTracksPerMeasurement.find(measurement);
-    if (it == nTracksPerMeasurement.end()) {
-      index++;
-      continue;
-    }
-    auto nTracksShared = it->second;
-    for (const auto& hitSelection : optionalHitSelections) {
-      hitSelection(track, ts, trackStateTypes[index]);
-    }
-
-    if (trackStateTypes[index] == TrackStateTypes::RejectedHit) {
-      ACTS_DEBUG("Dropping rejected hit");
-    } else if (trackStateTypes[index] != TrackStateTypes::SharedHit) {
-      ACTS_DEBUG("Good TSOS, copy hit");
-      newMeasurementsPerTrack.push_back(measurement);
-
-      // a counter called nshared is used to keep track of the number of
-      // shared hits accepted.
-    } else if (nshared >= m_cfg.maxShared) {
-      ACTS_DEBUG("Too many shared hit, drop it");
-    }
-    // If the track is shared, the hit is only accepted if the track has
-    // score higher than the minimum score for shared tracks.
-    else {
-      ACTS_DEBUG("Try to recover shared hit ");
-      if (nTracksShared <= m_cfg.maxSharedTracksPerMeasurement &&
-          trackScore > m_cfg.minScoreSharedTracks) {
-        ACTS_DEBUG("Accepted hit shared with " << nTracksShared << " tracks");
-        newMeasurementsPerTrack.push_back(measurement);
-        nshared++;
-      } else {
-        ACTS_DEBUG("Rejected hit shared with " << nTracksShared << " tracks");
+    if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
+        ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (!ts.hasReferenceSurface()) {
+        ACTS_DEBUG("Track state has no reference surface");
+        continue;
       }
-    }
-    index++;
-  }
+      measurement = measurementsPerTrack[index];
 
+      auto it = nTracksPerMeasurement.find(measurement);
+      if (it == nTracksPerMeasurement.end()) {
+        index++;
+        continue;
+      }
+      auto nTracksShared = it->second;
+      for (const auto& hitSelection : optionalHitSelections) {
+        hitSelection(track, ts, trackStateTypes[index]);
+      }
+
+      if (trackStateTypes[index] == TrackStateTypes::RejectedHit) {
+        ACTS_DEBUG("Dropping rejected hit");
+      } else if (trackStateTypes[index] != TrackStateTypes::SharedHit) {
+        ACTS_DEBUG("Good TSOS, copy hit");
+        newMeasurementsPerTrack.push_back(measurement);
+
+        // a counter called nshared is used to keep track of the number of
+        // shared hits accepted.
+      } else if (nshared >= m_cfg.maxShared) {
+        ACTS_DEBUG("Too many shared hit, drop it");
+      }
+      // If the track is shared, the hit is only accepted if the track has
+      // score higher than the minimum score for shared tracks.
+      else {
+        ACTS_DEBUG("Try to recover shared hit ");
+        if (nTracksShared <= m_cfg.maxSharedTracksPerMeasurement &&
+            trackScore > m_cfg.minScoreSharedTracks) {
+          ACTS_DEBUG("Accepted hit shared with " << nTracksShared << " tracks");
+          newMeasurementsPerTrack.push_back(measurement);
+          nshared++;
+        } else {
+          ACTS_DEBUG("Rejected hit shared with " << nTracksShared << " tracks");
+        }
+      }
+      index++;
+    }
+  }
   // Check if the track has enough hits to be accepted.
   if (newMeasurementsPerTrack.size() < 3) {
     return false;
