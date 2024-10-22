@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
 
 #include <numbers>
@@ -18,11 +19,11 @@ using Acts::AngleHelpers::thetaFromEta;
 BOOST_AUTO_TEST_SUITE(AngleHelpers)
 
 BOOST_AUTO_TEST_CASE(EtaThetaConversion) {
-  BOOST_CHECK_CLOSE(0.0, etaFromTheta(std::numbers::pi / 2), 1e-6);
+  CHECK_CLOSE_ABS(0.0, etaFromTheta(std::numbers::pi / 2), 1e-6);
 
-  BOOST_CHECK_CLOSE(1.0, etaFromTheta(thetaFromEta(1.0)), 1e-6);
+  CHECK_CLOSE_ABS(1.0, etaFromTheta(thetaFromEta(1.0)), 1e-6);
 
-  BOOST_CHECK_CLOSE(1.0, thetaFromEta(etaFromTheta(1.0)), 1e-6);
+  CHECK_CLOSE_ABS(1.0, thetaFromEta(etaFromTheta(1.0)), 1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
