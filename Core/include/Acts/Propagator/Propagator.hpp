@@ -71,7 +71,7 @@ struct PropagatorPlainOptions {
   Direction direction = Direction::Forward;
 
   /// Maximum number of steps for one propagate call
-  unsigned int maxSteps = 1000;
+  unsigned int maxSteps = 20000;
 
   /// Absolute maximum path length
   double pathLimit = std::numeric_limits<double>::max();
@@ -95,7 +95,7 @@ struct PropagatorPlainOptions {
   double maxStepSize = std::numeric_limits<double>::max();
 
   /// Maximum number of Runge-Kutta steps for the stepper step call
-  unsigned int maxRungeKuttaStepTrials = 10000;
+  unsigned int maxRungeKuttaStepTrials = 200000;
 };
 
 /// @brief Options for propagate() call

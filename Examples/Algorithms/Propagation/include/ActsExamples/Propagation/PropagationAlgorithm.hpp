@@ -102,12 +102,12 @@ class PropagationAlgorithm : public IAlgorithm {
     /// t gaussian sigma (used for covariance transport)
     double tSigma = 1 * Acts::UnitConstants::ns;
     /// phi range
-    std::pair<double, double> phiRange = {-M_PI, M_PI};
+    std::pair<double, double> phiRange = {-0.15, 0.15};
     /// eta range
-    std::pair<double, double> etaRange = {-4., 4.};
+    std::pair<double, double> etaRange = {-0.1, 0.1};
     /// pt range
-    std::pair<double, double> ptRange = {100 * Acts::UnitConstants::MeV,
-                                         100 * Acts::UnitConstants::GeV};
+    std::pair<double, double> ptRange = {10 * Acts::UnitConstants::MeV,
+                                         6000 * Acts::UnitConstants::GeV};
     /// particle hypothesis
     Acts::ParticleHypothesis particleHypothesis =
         Acts::ParticleHypothesis::pion();

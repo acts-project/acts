@@ -63,6 +63,9 @@ class AlignedTelescopeDetectorElement : public Acts::DetectorElementBase {
   /// Return surface associated with this detector element
   const Acts::Surface& surface() const final;
 
+  /// Non-const access to the surface associated with this detector element
+  Acts::Surface& surface() final;
+
   /// The maximal thickness of the detector element wrt normal axis
   double thickness() const final;
 

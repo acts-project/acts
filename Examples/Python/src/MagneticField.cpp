@@ -17,7 +17,21 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/MagneticField/FieldMapRootIo.hpp"
 #include "ActsExamples/MagneticField/FieldMapTextIo.hpp"
+
 #include "Acts/MagneticField/RestrictedBField.hpp"
+#include "Acts/MagneticField/RestrictedBFieldCylindrical.hpp"
+#include "Acts/MagneticField/RestrictedBFieldCylindrical2.hpp"
+#include "Acts/MagneticField/RestrictedBFieldCylindrical3.hpp"
+
+//#include "Acts/MagneticField/RestrictedBFieldIndu2.hpp"
+
+#include "Acts/MagneticField/RestrictedBField_Samu.hpp"
+#include "Acts/MagneticField/RestrictedBField_Samu_red.hpp"
+
+#include "Acts/MagneticField/RestrictedBFieldIndu2.hpp"
+#include "Acts/MagneticField/RestrictedBFieldIndu3.hpp"
+#include "Acts/MagneticField/RestrictedBFieldIndu4.hpp"
+#include "Acts/MagneticField/RestrictedBFieldIndu3_2m.hpp"
 
 #include <array>
 #include <cstddef>
@@ -54,10 +68,48 @@ void addMagneticField(Context& ctx) {
   py::class_<Acts::ConstantBField, Acts::MagneticFieldProvider,
              std::shared_ptr<Acts::ConstantBField>>(m, "ConstantBField")
       .def(py::init<Acts::Vector3>());
-  
+
   py::class_<RestrictedBField, Acts::MagneticFieldProvider, std::shared_ptr<RestrictedBField>>(m, "RestrictedBField")
       .def(py::init<Acts::Vector3>());
 
+  py::class_<RestrictedBFieldCylindrical, Acts::MagneticFieldProvider, std::shared_ptr<RestrictedBFieldCylindrical>>(m, "RestrictedBFieldCylindrical")
+      .def(py::init<Acts::Vector3>());
+
+
+  //Industrial magnet
+
+  // py::class_<RestrictedBFieldIndu2, Acts::MagneticFieldProvider, std::shared_ptr<RestrictedBFieldIndu2>>(m, "RestrictedBFieldIndu2")
+  //     .def(py::init<Acts::Vector3>());
+
+  //Samurai Baseline 1x3x4 m
+
+  py::class_<RestrictedBField_Samu, Acts::MagneticFieldProvider, std::shared_ptr<RestrictedBField_Samu>>(m, "RestrictedBField_Samu")
+      .def(py::init<Acts::Vector3>());
+
+  //Samurai Baseline reduced 2.6m width
+
+  py::class_<RestrictedBField_Samu_red, Acts::MagneticFieldProvider, std::shared_ptr<RestrictedBField_Samu_red>>(m, "RestrictedBField_Samu_red")
+      .def(py::init<Acts::Vector3>());
+
+  //Industrial magnet 1.6m 2 Crystall pull
+
+  py::class_<RestrictedBFieldIndu2, Acts::MagneticFieldProvider, std::shared_ptr<RestrictedBFieldIndu2>>(m, "RestrictedBFieldIndu2")
+      .def(py::init<Acts::Vector3>());
+
+  //Industrial magnet 1.6m 3 Crystall pull
+
+  py::class_<RestrictedBFieldIndu3, Acts::MagneticFieldProvider, std::shared_ptr<RestrictedBFieldIndu3>>(m, "RestrictedBFieldIndu3")
+      .def(py::init<Acts::Vector3>());
+
+  //Industrial magnet 1.6m 4 Crystall pull
+
+  py::class_<RestrictedBFieldIndu4, Acts::MagneticFieldProvider, std::shared_ptr<RestrictedBFieldIndu4>>(m, "RestrictedBFieldIndu4")
+      .def(py::init<Acts::Vector3>());
+
+  //Industrial magnet 2m 3 Crystall pull
+
+  py::class_<RestrictedBFieldIndu3_2m, Acts::MagneticFieldProvider, std::shared_ptr<RestrictedBFieldIndu3_2m>>(m, "RestrictedBFieldIndu3_2m")
+      .def(py::init<Acts::Vector3>());
 
   py::class_<ActsExamples::detail::InterpolatedMagneticField2,
              Acts::InterpolatedMagneticField, Acts::MagneticFieldProvider,

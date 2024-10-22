@@ -73,12 +73,12 @@ inline void addPropagationOptions(
       "prop-corr-offd", po::value<Reals<15>>(),
       "The 15 off-diagonal correlation rho(d0,z0), rho(d0,phi), [...], "
       "rho(z0,phi), rho(z0, theta), [...], rho(qop,t). Row-wise.")(
-      "prop-phi-range", po::value<Reals<2>>()->default_value({{-M_PI, M_PI}}),
+      "prop-phi-range", po::value<Reals<2>>()->default_value({{-0.5, 0.5}}),
       "Azimutal angle phi range for proprapolated tracks.")(
-      "prop-eta-range", po::value<Reals<2>>()->default_value({{-4., 4.}}),
+      "prop-eta-range", po::value<Reals<2>>()->default_value({{-0.1, 0.1}}),
       "Pseudorapidity range for proprapolated tracks.")(
       "prop-pt-range",
-      po::value<Reals<2>>()->default_value({{100_MeV, 100_GeV}}),
+      po::value<Reals<2>>()->default_value({{100_MeV, 6000_GeV}}),
       "Transverse momentum range for proprapolated tracks [in GeV].")(
       "prop-max-stepsize", po::value<double>()->default_value(3_m),
       "Maximum step size for the propagation [in mm].")(

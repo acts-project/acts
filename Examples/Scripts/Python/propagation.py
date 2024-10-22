@@ -11,7 +11,7 @@ u = acts.UnitConstants
 
 
 def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
-    s = s or acts.examples.Sequencer(events=100, numThreads=1)
+    s = s or acts.examples.Sequencer(events=20, numThreads=1)
 
     for d in decorators:
         s.addContextDecorator(d)
@@ -29,9 +29,9 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
 
     alg = acts.examples.PropagationAlgorithm(
         propagatorImpl=prop,
-        level=acts.logging.INFO,
+        level=acts.logging.VERBOSE,
         randomNumberSvc=rnd,
-        ntests=1000,
+        ntests=100,
         sterileLogger=True,
         propagationStepCollection="propagation-steps",
     )
@@ -41,7 +41,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
     # Output
     s.addWriter(
         acts.examples.ObjPropagationStepsWriter(
-            level=acts.logging.INFO,
+            level=acts.logging.VERBOSE,
             collection="propagation-steps",
             outputDir=outputDir + "/obj",
         )
@@ -90,7 +90,7 @@ if "__main__" == __name__:
     # trackingGeometry, contextDecorators = detector.finalize(dd4hepCfg, None)
 
     ## Magnetic field setup: Default: constant 2T longitudinal field
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+    field = acts.ConstantBField(acts.Vector3(0, 0, 1 * acts.UnitConstants.T))
 
     ## Alternative: no B field
     # field = acts.NullBField()
@@ -110,5 +110,5 @@ if "__main__" == __name__:
     # )
 
     runPropagation(
-        trackingGeometry, field, os.getcwd(), decorators=contextDecorators
+        trackingGeometry, field, os.getcwd(), decorators=contextDecorators,
     ).run()

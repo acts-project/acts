@@ -9,24 +9,15 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/F2TelescopeDetector/F2TelescopeDetector.hpp"
 #include "ActsExamples/AlignedTelescopeDetector/AlignedTelescopeDetector.hpp"
 
-#include <array>
-#include <cstddef>
 #include <memory>
-#include <optional>
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -82,13 +73,41 @@ void addDetector(Context& ctx) {
     py::class_<Config>(td, "Config")
         .def(py::init<>())
         .def_readwrite("positions", &Config::positions)
-        .def_readwrite("stereos", &Config::stereos)
         .def_readwrite("offsets", &Config::offsets)
         .def_readwrite("bounds", &Config::bounds)
         .def_readwrite("thickness", &Config::thickness)
         .def_readwrite("surfaceType", &Config::surfaceType)
         .def_readwrite("binValue", &Config::binValue);
   }
+
+  {
+    using F2TelescopeDetector = F2Telescope::F2TelescopeDetector;
+    using Config = F2TelescopeDetector::Config;
+
+    auto F2td =
+        py::class_<F2TelescopeDetector, std::shared_ptr<F2TelescopeDetector>>(
+            mex, "F2TelescopeDetector")
+            .def(py::init<>())
+            .def("finalize",
+                 py::overload_cast<
+                     const Config&,
+                     const std::shared_ptr<const Acts::IMaterialDecorator>&>(
+                     &F2TelescopeDetector::finalize));
+
+    py::class_<Config>(F2td, "Config")
+        .def(py::init<>())
+        .def_readwrite("positions", &Config::positions)
+        .def_readwrite("offsets", &Config::offsets)
+        .def_readwrite("bounds", &Config::bounds)
+        .def_readwrite("thickness", &Config::thickness)
+        .def_readwrite("surfaceType", &Config::surfaceType)
+        .def_readwrite("boundsX", &Config::boundsX)
+        .def_readwrite("boundsY", &Config::boundsY)
+        .def_readwrite("Type_surf", &Config::Type_surf)
+        .def_readwrite("binValue", &Config::binValue);
+
+  }
+
   {
     using AlignedTelescopeDetector = AlignedTelescope::AlignedTelescopeDetector;
     using Config = AlignedTelescopeDetector::Config;
@@ -117,6 +136,7 @@ void addDetector(Context& ctx) {
         .def_readwrite("sigmaOutRot", &Config::sigmaOutRot)
         .def_readwrite("sigmaInRot", &Config::sigmaInRot);
   }
+
   {
     using AlignedDetector = Contextual::AlignedDetector;
     using Config = AlignedDetector::Config;
@@ -132,6 +152,8 @@ void addDetector(Context& ctx) {
 
     auto c = py::class_<Config, GenericDetector::Config>(d, "Config")
                  .def(py::init<>());
+    // auto c = py::class_<Config, TelescopeDetector::Config>(d, "Config")
+    //              .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(seed);
     ACTS_PYTHON_MEMBER(iovSize);
@@ -242,8 +264,6 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_MEMBER(beamPipeRadius);
     ACTS_PYTHON_MEMBER(beamPipeHalflengthZ);
     ACTS_PYTHON_MEMBER(beamPipeLayerThickness);
-    ACTS_PYTHON_MEMBER(beamPipeEnvelopeR);
-    ACTS_PYTHON_MEMBER(layerEnvelopeR);
     ACTS_PYTHON_MEMBER(unitScalor);
     ACTS_PYTHON_MEMBER(volumes);
     ACTS_PYTHON_STRUCT_END();
@@ -251,5 +271,4 @@ void addDetector(Context& ctx) {
     patchKwargsConstructor(c);
   }
 }
-
 }  // namespace Acts::Python

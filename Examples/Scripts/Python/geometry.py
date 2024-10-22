@@ -89,6 +89,10 @@ def runGeometry(
 
 if "__main__" == __name__:
     detector, trackingGeometry, decorators = AlignedDetector.create()
+
+    detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
+        bounds=[500, 1500], positions=[0,50,200,10000,  10500, 11000, 19500, 20000,20500], binValue=0,thickness=4,stereos=[0] * 9,
+    )
     # detector, trackingGeometry, decorators = GenericDetector.create()
     # detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory())
 

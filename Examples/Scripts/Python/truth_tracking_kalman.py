@@ -37,7 +37,7 @@ def runTruthTrackingKalman(
     )
 
     s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
+        events=10000, numThreads=-1, logLevel=acts.logging.INFO
     )
 
     for d in decorators:
@@ -49,13 +49,15 @@ def runTruthTrackingKalman(
     if inputParticlePath is None:
         addParticleGun(
             s,
-            ParticleConfig(num=1, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
-            EtaConfig(-3.0, 3.0, uniform=True),
-            MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
-            PhiConfig(0.0, 360.0 * u.degree),
+            ParticleConfig(num=2, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
+            EtaConfig(-0.01, 0.01, uniform=True),
+            MomentumConfig(1.0 * u.GeV, 1000.0 * u.GeV),
+            PhiConfig(-2.0, 2.0 * u.degree),
             vtxGen=acts.examples.GaussianVertexGenerator(
-                mean=acts.Vector4(0, 0, 0, 0),
-                stddev=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(
+                    1300 * u.mm, 500 * u.mm, 200 * u.mm, 0 * u.ns
+                ),
+                mean=acts.Vector4(3750, 0, 0, 0),
             ),
             multiplicity=1,
             rnd=rnd,
@@ -100,7 +102,7 @@ def runTruthTrackingKalman(
         particleHypothesis=acts.ParticleHypothesis.muon,
         truthSeedRanges=TruthSeedRanges(
             pt=(1 * u.GeV, None),
-            nHits=(7, None),
+            nHits=(4, None),
         ),
     )
 
@@ -118,7 +120,7 @@ def runTruthTrackingKalman(
             inputTracks="tracks",
             outputTracks="selected-tracks",
             selectorConfig=acts.TrackSelector.Config(
-                minMeasurements=7,
+                minMeasurements=4,
             ),
         )
     )

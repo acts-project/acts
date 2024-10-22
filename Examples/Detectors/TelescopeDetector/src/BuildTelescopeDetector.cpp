@@ -56,7 +56,7 @@ ActsExamples::Telescope::buildDetector(
 
   // Material of the surfaces
   Acts::Material silicon = Acts::Material::fromMassDensity(
-      9.370_cm, 46.52_cm, 28.0855, 14, 2.329_g / 1_cm3);
+      42.20_cm, 90.2_cm, 12.0855, 6, 1.18_g / 1_cm3);
   Acts::MaterialSlab matProp(silicon, thickness);
   const auto surfaceMaterial =
       std::make_shared<Acts::HomogeneousSurfaceMaterial>(matProp);
