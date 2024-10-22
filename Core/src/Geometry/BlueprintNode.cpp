@@ -13,7 +13,7 @@
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
-#include "Acts/Navigation/TryAllNavigationPolicies.hpp"
+#include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 
 #include <ostream>
 
@@ -58,8 +58,7 @@ void BlueprintNode::Options::validate() const {
 std::unique_ptr<NavigationPolicyFactory>
 BlueprintNode::Options::makeDefaultNavigationPolicyFactory() {
   return NavigationPolicyFactory::make()
-      .add<TryAllPortalNavigationPolicy>()
-      .add<TryAllSurfaceNavigationPolicy>()
+      .add<TryAllNavigationPolicy>()
       .asUniquePtr();
 }
 

@@ -207,11 +207,10 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
 
   for (std::size_t i = 0; i < 100; i++) {
     main = NavigationStream{};
+    AppendOnlyNavigationStream stream{main};
 
-    currentVolume->updateNavigationState({.main = main,
-                                          .position = position,
-                                          .direction = direction,
-                                          .logger = logger});
+    currentVolume->initializeNavigationCandidates(
+        {.position = position, .direction = direction}, stream, logger);
 
     ACTS_VERBOSE(main.candidates().size() << " candidates");
 
