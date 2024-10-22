@@ -2,6 +2,6 @@ target_sources(
     ActsCore
     PRIVATE
         NavigationStream.cpp
-        TryAllNavigationPolicies.cpp
+        TryAllNavigationPolicy.cpp
         SurfaceArrayNavigationPolicy.cpp
 )

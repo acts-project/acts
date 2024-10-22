@@ -17,6 +17,7 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
+#include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -52,7 +53,7 @@ TrackingVolume::TrackingVolume(
   connectDenseBoundarySurfaces(denseVolumeVector);
 
   DelegateChainBuilder{m_navigationDelegate}
-      .add<&INavigationPolicy::noopUpdate>()
+      .add<&INavigationPolicy::noopInitializeCandidates>()
       .store(m_navigationDelegate);
 }
 
@@ -754,9 +755,10 @@ void TrackingVolume::setNavigationPolicy(
   m_navigationPolicy->connect(m_navigationDelegate);
 }
 
-void TrackingVolume::updateNavigationState(
-    const NavigationArguments& args) const {
-  m_navigationDelegate(args);
+void TrackingVolume::initializeNavigationCandidates(
+    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
+    const Logger& logger) const {
+  m_navigationDelegate(args, stream, logger);
 }
 
 }  // namespace Acts

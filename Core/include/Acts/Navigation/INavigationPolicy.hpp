@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Navigation/NavigationDelegate.hpp"
+#include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Utilities/DelegateChainBuilder.hpp"
 
 #include <type_traits>
@@ -26,7 +27,9 @@ concept NavigationPolicyConcept = requires {
   requires std::is_base_of_v<INavigationPolicy, T>;
   // Has a conforming update method
   requires requires(T policy, const NavigationArguments& args) {
-    { policy.updateState(args) };
+    policy.initializeCandidates(args,
+                                std::declval<AppendOnlyNavigationStream&>(),
+                                std::declval<const Logger&>());
   };
 };
 
@@ -39,7 +42,9 @@ class INavigationPolicy {
  public:
   /// Noop update function that is suitable as a default for default navigation
   /// delegates.
-  static void noopUpdate(const NavigationArguments& /*unused*/) {}
+  static void noopInitializeCandidates(const NavigationArguments& /*unused*/,
+                                       AppendOnlyNavigationStream& /*unused*/,
+                                       const Logger& /*unused*/) {}
 
   /// Virtual destructor so policies can be held through this base class.
   virtual ~INavigationPolicy() = default;
@@ -60,7 +65,8 @@ class INavigationPolicy {
   void connectDefault(NavigationDelegate& delegate) const {
     // This cannot be a concept because we use it in CRTP below
     const auto* self = static_cast<const T*>(this);
-    DelegateChainBuilder{delegate}.add<&T::updateState>(self).store(delegate);
+    DelegateChainBuilder{delegate}.add<&T::initializeCandidates>(self).store(
+        delegate);
   }
 };
 

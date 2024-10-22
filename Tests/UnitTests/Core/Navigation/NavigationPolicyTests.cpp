@@ -16,7 +16,7 @@
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
-#include "Acts/Navigation/TryAllNavigationPolicies.hpp"
+#include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -30,12 +30,14 @@ struct APolicy : public INavigationPolicy {
   APolicy(const GeometryContext& /*gctx*/, const TrackingVolume& /*volume*/,
           const Logger& /*logger*/) {}
 
-  void updateState(const NavigationArguments& /*unused*/) const {
+  void initializeCandidates(const NavigationArguments& /*unused*/,
+                            AppendOnlyNavigationStream& /*unused*/,
+                            const Logger& /*unused*/) const {
     const_cast<APolicy*>(this)->executed = true;
   }
 
   void connect(NavigationDelegate& delegate) const override {
-    connectDefault<TryAllPortalNavigationPolicy>(delegate);
+    connectDefault<APolicy>(delegate);
   }
 
   bool executed = false;
@@ -51,10 +53,12 @@ struct BPolicy : public INavigationPolicy {
       : m_config(config) {}
 
   void connect(NavigationDelegate& delegate) const override {
-    connectDefault<TryAllPortalNavigationPolicy>(delegate);
+    connectDefault<BPolicy>(delegate);
   }
 
-  void updateState(const NavigationArguments& /*unused*/) const {
+  void initializeCandidates(const NavigationArguments& /*unused*/,
+                            AppendOnlyNavigationStream& /*unused*/,
+                            const Logger& /*unused*/) const {
     const_cast<BPolicy*>(this)->executed = true;
     const_cast<BPolicy*>(this)->value = m_config.value;
   }
@@ -78,10 +82,10 @@ BOOST_AUTO_TEST_CASE(DirectTest) {
   policy.connect(delegate);
 
   NavigationStream main;
-  delegate(NavigationArguments{.main = main,
-                               .position = Vector3::Zero(),
-                               .direction = Vector3::Zero(),
-                               .logger = *logger});
+  AppendOnlyNavigationStream stream{main};
+  delegate(NavigationArguments{.position = Vector3::Zero(),
+                               .direction = Vector3::Zero()},
+           stream, *logger);
 
   BOOST_CHECK(std::get<APolicy>(policy.policies()).executed);
   BOOST_CHECK(std::get<BPolicy>(policy.policies()).executed);
@@ -112,10 +116,10 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
   policy.connect(delegate);
 
   NavigationStream main;
-  delegate(NavigationArguments{.main = main,
-                               .position = Vector3::Zero(),
-                               .direction = Vector3::Zero(),
-                               .logger = *logger});
+  AppendOnlyNavigationStream stream{main};
+  delegate(NavigationArguments{.position = Vector3::Zero(),
+                               .direction = Vector3::Zero()},
+           stream, *logger);
 
   BOOST_CHECK(std::get<APolicy>(policy.policies()).executed);
   BOOST_CHECK(std::get<BPolicy>(policy.policies()).executed);
@@ -127,10 +131,9 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
   NavigationDelegate delegate2;
   policyBase2->connect(delegate2);
 
-  delegate2(NavigationArguments{.main = main,
-                                .position = Vector3::Zero(),
-                                .direction = Vector3::Zero(),
-                                .logger = *logger});
+  delegate(NavigationArguments{.position = Vector3::Zero(),
+                               .direction = Vector3::Zero()},
+           stream, *logger);
 
   BOOST_CHECK(std::get<APolicy>(policy2.policies()).executed);
   BOOST_CHECK(std::get<BPolicy>(policy2.policies()).executed);
@@ -153,10 +156,10 @@ BOOST_AUTO_TEST_CASE(AsUniquePtrTest) {
   policyBase->connect(delegate);
 
   NavigationStream main;
-  delegate(NavigationArguments{.main = main,
-                               .position = Vector3::Zero(),
-                               .direction = Vector3::Zero(),
-                               .logger = *logger});
+  AppendOnlyNavigationStream stream{main};
+  delegate(NavigationArguments{.position = Vector3::Zero(),
+                               .direction = Vector3::Zero()},
+           stream, *logger);
 
   BOOST_CHECK(std::get<APolicy>(policy.policies()).executed);
 }
@@ -173,10 +176,12 @@ struct CPolicySpecialized : public CPolicy {
       : m_config(config) {}
 
   void connect(NavigationDelegate& delegate) const override {
-    connectDefault<TryAllPortalNavigationPolicy>(delegate);
+    connectDefault<CPolicySpecialized<T>>(delegate);
   }
 
-  void updateState(const NavigationArguments& /*unused*/) const {
+  void initializeCandidates(const NavigationArguments& /*unused*/,
+                            AppendOnlyNavigationStream& /*stream*/,
+                            const Logger& /*logger*/) const {
     auto* self = const_cast<CPolicySpecialized<int>*>(this);
     self->executed = true;
     self->value = m_config.value;
@@ -221,10 +226,10 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
   policyBase->connect(delegate);
 
   NavigationStream main;
-  delegate(NavigationArguments{.main = main,
-                               .position = Vector3::Zero(),
-                               .direction = Vector3::Zero(),
-                               .logger = *logger});
+  AppendOnlyNavigationStream stream{main};
+  delegate(NavigationArguments{.position = Vector3::Zero(),
+                               .direction = Vector3::Zero()},
+           stream, *logger);
 
   BOOST_CHECK(std::get<APolicy>(policy.policies()).executed);
   BOOST_CHECK(std::get<CPolicySpecialized<int>>(policy.policies()).executed);

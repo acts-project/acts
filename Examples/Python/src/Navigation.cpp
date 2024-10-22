@@ -10,7 +10,7 @@
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
-#include "Acts/Navigation/TryAllNavigationPolicies.hpp"
+#include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeTag.hpp"
@@ -30,10 +30,7 @@ namespace Acts::Python {
 
 struct AnyNavigationPolicyFactory : public Acts::NavigationPolicyFactory {
   virtual std::unique_ptr<AnyNavigationPolicyFactory> add(
-      TypeTag<TryAllPortalNavigationPolicy> /*type*/) = 0;
-
-  virtual std::unique_ptr<AnyNavigationPolicyFactory> add(
-      TypeTag<TryAllSurfaceNavigationPolicy> /*type*/) = 0;
+      TypeTag<TryAllNavigationPolicy> /*type*/) = 0;
 
   virtual std::unique_ptr<AnyNavigationPolicyFactory> add(
       TypeTag<SurfaceArrayNavigationPolicy> /*type*/,
@@ -52,13 +49,8 @@ struct NavigationPolicyFactoryT : public AnyNavigationPolicyFactory {
       : m_impl{} {}
 
   std::unique_ptr<AnyNavigationPolicyFactory> add(
-      TypeTag<TryAllPortalNavigationPolicy> /*type*/) override {
-    return add<TryAllPortalNavigationPolicy>();
-  }
-
-  std::unique_ptr<AnyNavigationPolicyFactory> add(
-      TypeTag<TryAllSurfaceNavigationPolicy> /*type*/) override {
-    return add<TryAllSurfaceNavigationPolicy>();
+      TypeTag<TryAllNavigationPolicy> /*type*/) override {
+    return add<TryAllNavigationPolicy>();
   }
 
   std::unique_ptr<AnyNavigationPolicyFactory> add(
@@ -101,11 +93,9 @@ class NavigationPolicyFactory : public Acts::NavigationPolicyFactory {
   NavigationPolicyFactory& addNoArguments(const py::object& cls) {
     auto m = py::module_::import("acts");
     if (py::object o = m.attr("TryAllPortalNavigationPolicy"); cls.is(o)) {
-      m_impl = m_impl->add(Type<TryAllPortalNavigationPolicy>);
-    } else if (o = m.attr("TryAllSurfaceNavigationPolicy"); cls.is(o)) {
-      m_impl = m_impl->add(Type<TryAllSurfaceNavigationPolicy>);
-    } else {
+      m_impl = m_impl->add(Type<TryAllNavigationPolicy>);
     }
+    // Add other policies here
     return *this;
   }
 
@@ -134,8 +124,7 @@ void addNavigation(Context& ctx) {
              std::shared_ptr<Acts::NavigationPolicyFactory>>(
       m, "_NavigationPolicyFactory");
 
-  py::class_<TryAllPortalNavigationPolicy>(m, "TryAllPortalNavigationPolicy");
-  py::class_<TryAllSurfaceNavigationPolicy>(m, "TryAllSurfaceNavigationPolicy");
+  py::class_<TryAllNavigationPolicy>(m, "TryAllNavigationPolicy");
 
   py::class_<NavigationPolicyFactory, Acts::NavigationPolicyFactory,
              std::shared_ptr<NavigationPolicyFactory>>(

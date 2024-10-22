@@ -13,10 +13,12 @@
 
 #include <algorithm>
 
-bool Acts::NavigationStream::initialize(const GeometryContext& gctx,
-                                        const QueryPoint& queryPoint,
-                                        const BoundaryTolerance& cTolerance,
-                                        ActsScalar onSurfaceTolerance) {
+namespace Acts {
+
+bool NavigationStream::initialize(const GeometryContext& gctx,
+                                  const QueryPoint& queryPoint,
+                                  const BoundaryTolerance& cTolerance,
+                                  ActsScalar onSurfaceTolerance) {
   // Position and direction from the query point
   const Vector3& position = queryPoint.position;
   const Vector3& direction = queryPoint.direction;
@@ -91,9 +93,9 @@ bool Acts::NavigationStream::initialize(const GeometryContext& gctx,
   return true;
 }
 
-bool Acts::NavigationStream::update(const GeometryContext& gctx,
-                                    const QueryPoint& queryPoint,
-                                    ActsScalar onSurfaceTolerance) {
+bool NavigationStream::update(const GeometryContext& gctx,
+                              const QueryPoint& queryPoint,
+                              ActsScalar onSurfaceTolerance) {
   // Loop over the (currently valid) candidates and update
   for (; m_currentIndex < m_candidates.size(); ++m_currentIndex) {
     // Get the candidate, and resolve the tuple
@@ -121,14 +123,14 @@ bool Acts::NavigationStream::update(const GeometryContext& gctx,
   return false;
 }
 
-void Acts::NavigationStream::addSurfaceCandidate(
+void NavigationStream::addSurfaceCandidate(
     const Surface& surface, const BoundaryTolerance& bTolerance) {
   m_candidates.emplace_back(
       Candidate{.intersection = ObjectIntersection<Surface>::invalid(&surface),
                 .bTolerance = bTolerance});
 }
 
-void Acts::NavigationStream::addSurfaceCandidates(
+void NavigationStream::addSurfaceCandidates(
     std::span<const Surface*> surfaces, const BoundaryTolerance& bTolerance) {
   std::ranges::for_each(surfaces, [&](const auto* surface) {
     m_candidates.emplace_back(
@@ -137,22 +139,21 @@ void Acts::NavigationStream::addSurfaceCandidates(
   });
 }
 
-void Acts::NavigationStream::addPortalCandidate(
-    const Experimental::Portal& portal) {
+void NavigationStream::addPortalCandidate(const Experimental::Portal& portal) {
   m_candidates.emplace_back(Candidate{
       .intersection = ObjectIntersection<Surface>::invalid(&portal.surface()),
       .gen2Portal = &portal,
       .bTolerance = BoundaryTolerance::None()});
 }
 
-void Acts::NavigationStream::addPortalCandidate(const Portal& portal) {
+void NavigationStream::addPortalCandidate(const Portal& portal) {
   m_candidates.emplace_back(Candidate{
       .intersection = ObjectIntersection<Surface>::invalid(&portal.surface()),
       .portal = &portal,
       .bTolerance = BoundaryTolerance::None()});
 }
 
-void Acts::NavigationStream::addPortalCandidates(
+void NavigationStream::addPortalCandidates(
     std::span<const Experimental::Portal*> portals) {
   std::ranges::for_each(portals, [&](const auto& portal) {
     m_candidates.emplace_back(Candidate{
@@ -162,3 +163,17 @@ void Acts::NavigationStream::addPortalCandidates(
         .bTolerance = BoundaryTolerance::None()});
   });
 }
+
+AppendOnlyNavigationStream::AppendOnlyNavigationStream(NavigationStream& stream)
+    : m_stream{&stream} {}
+
+void AppendOnlyNavigationStream::addPortalCandidate(const Portal& portal) {
+  m_stream->addPortalCandidate(portal);
+}
+
+void AppendOnlyNavigationStream::addSurfaceCandidate(
+    const Surface& surface, const BoundaryTolerance& bTolerance) {
+  m_stream->addSurfaceCandidate(surface, bTolerance);
+}
+
+}  // namespace Acts

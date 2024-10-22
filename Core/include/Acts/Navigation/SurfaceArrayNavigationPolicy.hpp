@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 
 #pragma once
 
 namespace Acts {
+
+class SurfaceArray;
 
 /// A navigation policy that internally uses the Gen1 @c SurfaceArray class
 class SurfaceArrayNavigationPolicy : public INavigationPolicy {
@@ -44,7 +44,11 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
 
   /// Update the navigation state from the surface array
   /// @param args The navigation arguments
-  void updateState(const NavigationArguments& args) const;
+  /// @param stream The navigation stream to update
+  /// @param logger The logger
+  void initializeCandidates(const NavigationArguments& args,
+                            AppendOnlyNavigationStream& stream,
+                            const Logger& logger) const;
 
   /// Connect this policy with a navigation delegate
   /// @param delegate The navigation delegate to connect to
@@ -73,5 +77,7 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
   std::unique_ptr<SurfaceArray> m_surfaceArray{};
   const TrackingVolume& m_volume;
 };
+
+static_assert(NavigationPolicyConcept<SurfaceArrayNavigationPolicy>);
 
 }  // namespace Acts

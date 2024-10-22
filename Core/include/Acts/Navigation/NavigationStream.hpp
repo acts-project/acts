@@ -179,4 +179,14 @@ class NavigationStream {
   std::size_t m_currentIndex = 0u;
 };
 
+struct AppendOnlyNavigationStream {
+  explicit AppendOnlyNavigationStream(NavigationStream& stream);
+  void addSurfaceCandidate(const Surface& surface,
+                           const BoundaryTolerance& bTolerance);
+  void addPortalCandidate(const Portal& portal);
+
+ private:
+  NavigationStream* m_stream;
+};
+
 }  // namespace Acts

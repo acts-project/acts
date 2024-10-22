@@ -63,7 +63,8 @@ class MultiNavigationPolicy final : public MultiNavigationPolicyBase {
     using policy_type = std::tuple_element_t<I, decltype(m_policies)>;
     auto* policy = &std::get<I>(m_policies);
 
-    auto added = factory.template add<&policy_type::updateState>(policy);
+    auto added =
+        factory.template add<&policy_type::initializeCandidates>(policy);
 
     if constexpr (sizeof...(Is) > 0) {
       return add<Is...>(added);

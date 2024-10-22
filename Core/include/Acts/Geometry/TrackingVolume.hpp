@@ -19,6 +19,7 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
+#include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
@@ -501,10 +502,15 @@ class TrackingVolume : public Volume {
   /// @param policy is the navigation policy to be registered
   void setNavigationPolicy(std::unique_ptr<INavigationPolicy> policy);
 
-  /// Update the navigation state for this volume. Internally, this consults the
-  /// registered navigation policy, where the default is a noop.
+  /// Populate the navigation stream with navigation candidates from this
+  /// volume. Internally, this consults the registered navigation policy, where
+  /// the default is a noop.
   /// @param args are the navigation arguments
-  void updateNavigationState(const NavigationArguments& args) const;
+  /// @param stream is the navigation stream to be updated
+  /// @param logger is the logger
+  void initializeNavigationCandidates(const NavigationArguments& args,
+                                      AppendOnlyNavigationStream& stream,
+                                      const Logger& logger) const;
 
  private:
   void connectDenseBoundarySurfaces(

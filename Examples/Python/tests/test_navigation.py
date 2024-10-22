@@ -9,8 +9,7 @@ def test_navigation_policy_factory():
 
     policy = (
         acts.NavigationPolicyFactory.make()
-        .add(acts.TryAllPortalNavigationPolicy)
-        .add(acts.TryAllSurfaceNavigationPolicy)
+        .add(acts.TryAllNavigationPolicy)
         .add(
             acts.SurfaceArrayNavigationPolicy,
             acts.SurfaceArrayNavigationPolicy.Config(
@@ -22,11 +21,7 @@ def test_navigation_policy_factory():
 
     policy._buildTest()
 
-    policy = (
-        acts.NavigationPolicyFactory.make()
-        .add(acts.TryAllPortalNavigationPolicy)
-        .add(acts.TryAllSurfaceNavigationPolicy)
-    )
+    policy = acts.NavigationPolicyFactory.make().add(acts.TryAllNavigationPolicy)
 
     policy._buildTest()
 
@@ -42,7 +37,6 @@ def test_navigation_policy_factory_add_multiple():
     with pytest.raises(ValueError):
         (
             acts.NavigationPolicyFactory.make()
-            .add(acts.TryAllPortalNavigationPolicy)
-            .add(acts.TryAllSurfaceNavigationPolicy)
-            .add(acts.TryAllPortalNavigationPolicy)
+            .add(acts.TryAllNavigationPolicy)
+            .add(acts.TryAllNavigationPolicy)
         )

@@ -8,9 +8,9 @@
 
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <algorithm>
 
@@ -60,9 +60,9 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
   }
 }
 
-void SurfaceArrayNavigationPolicy::updateState(
-    const NavigationArguments& args) const {
-  const Logger& logger = args.logger;
+void SurfaceArrayNavigationPolicy::initializeCandidates(
+    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
+    const Logger& logger) const {
   ACTS_VERBOSE("SrfArrNavPol (volume=" << m_volume.volumeName() << ")");
 
   ACTS_VERBOSE("Querying sensitive surfaces at " << args.position.transpose());
@@ -72,7 +72,7 @@ void SurfaceArrayNavigationPolicy::updateState(
                                            << " sensitive surfaces");
 
   for (const auto* surface : sensitiveSurfaces) {
-    args.main.addSurfaceCandidate(*surface, args.tolerance);
+    stream.addSurfaceCandidate(*surface, args.tolerance);
   };
 }
 
