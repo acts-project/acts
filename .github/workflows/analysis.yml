@@ -22,6 +22,7 @@ env:
   CCACHE_MAXSIZE: 1.25G
   CCACHE_KEY_SUFFIX: r1
   ACTS_LOG_FAILURE_THRESHOLD: WARNING
+  DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v4.tar.zst
 
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
@@ -29,10 +30,13 @@ env:
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:58
+    container: ghcr.io/acts-project/ubuntu2404:63
     steps:
 
       - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: CI/dependencies.sh
 
       - name: Cache build
         uses: actions/cache@v4
@@ -49,6 +53,7 @@ jobs:
           --preset=github-ci
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_CXX_FLAGS="-Werror --coverage -g -gz -g1"
+          -DPython_EXECUTABLE=$(which python3)
           -DACTS_BUILD_ODD=OFF
       - name: Build
         run: cmake --build build
@@ -86,10 +91,14 @@ jobs:
 
   build_performance:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:58
+    container: ghcr.io/acts-project/ubuntu2404:63
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: CI/dependencies.sh
+
       - name: Install dependencies
         run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@2a409b5
       - name: Configure
@@ -98,6 +107,7 @@ jobs:
           --preset=github-ci
           -DCMAKE_BUILD_TYPE=RelWithDebInfo
           -DCMAKE_CXX_FLAGS="-Werror"
+          -DPython_EXECUTABLE=$(which python3)
           -DACTS_BUILD_ODD=OFF
       - name: Measure
         run: cmakeperf collect build/compile_commands.json -o perf.csv
