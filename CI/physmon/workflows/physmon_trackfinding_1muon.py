@@ -112,7 +112,7 @@ def run_ckf_tracking(label, seeding):
                 maxSeedsPerSpM=1,
                 sigmaScattering=5,
                 radLengthPerSeed=0.1,
-                minPt=500 * u.MeV,
+                minPt=0.5 * u.GeV,
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=2 * u.T),
@@ -163,8 +163,9 @@ def run_ckf_tracking(label, seeding):
             if seeding != SeedingAlgorithm.TruthSmeared
             else []
         ) + [
-            "performance_ckf.root",
             "tracksummary_ckf.root",
+            "performance_finding_ckf.root",
+            "performance_fitting_ckf.root",
         ]:
             perf_file = tp / file
             assert perf_file.exists(), f"Performance file not found {perf_file}"

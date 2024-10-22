@@ -26,7 +26,7 @@ class ScalableBField final : public Acts::MagneticFieldProvider {
     Acts::ActsScalar scalor = 1.;
 
     /// @brief constructor with context
-    Cache(const Acts::MagneticFieldContext& mctx) {
+    explicit Cache(const Acts::MagneticFieldContext& mctx) {
       scalor = mctx.get<const ScalableBFieldContext>().scalor;
     }
   };

@@ -416,19 +416,19 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   }
 
   // After mapping this track, average the touched bins
-  for (auto tmapBin : touchedMapBins) {
-    std::vector<std::array<std::size_t, 3>> trackBins = {tmapBin.second};
+  for (const auto& [key, value] : touchedMapBins) {
+    std::vector<std::array<std::size_t, 3>> trackBins = {value};
     if (m_cfg.computeVariance) {
       // This only makes sense for the binned material
       auto binnedMaterial = dynamic_cast<const BinnedSurfaceMaterial*>(
-          touchedMaterialBin[tmapBin.first].get());
+          touchedMaterialBin[key].get());
       if (binnedMaterial != nullptr) {
-        tmapBin.first->trackVariance(
+        key->trackVariance(
             trackBins,
             binnedMaterial->fullMaterial()[trackBins[0][1]][trackBins[0][0]]);
       }
     }
-    tmapBin.first->trackAverage(trackBins);
+    key->trackAverage(trackBins);
   }
 
   // After mapping this track, average the untouched but intersected bins
@@ -493,14 +493,14 @@ void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
   }
 
   // After mapping this track, average the touched bins
-  for (auto tmapBin : touchedMapBins) {
-    std::vector<std::array<std::size_t, 3>> trackBins = {tmapBin.second};
+  for (const auto& [key, value] : touchedMapBins) {
+    std::vector<std::array<std::size_t, 3>> trackBins = {value};
     if (m_cfg.computeVariance) {
       // This only makes sense for the binned material
       auto binnedMaterial = dynamic_cast<const BinnedSurfaceMaterial*>(
-          touchedMaterialBin[tmapBin.first].get());
+          touchedMaterialBin[key].get());
       if (binnedMaterial != nullptr) {
-        tmapBin.first->trackVariance(
+        key->trackVariance(
             trackBins,
             binnedMaterial->fullMaterial()[trackBins[0][1]][trackBins[0][0]],
             true);
@@ -508,6 +508,6 @@ void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
     }
     // No need to do an extra pass for untouched surfaces they would have been
     // added to the material interaction in the initial mapping
-    tmapBin.first->trackAverage(trackBins, true);
+    key->trackAverage(trackBins, true);
   }
 }

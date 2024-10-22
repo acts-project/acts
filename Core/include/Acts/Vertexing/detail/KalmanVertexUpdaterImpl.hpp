@@ -254,9 +254,7 @@ void updateVertexWithTrackImpl(Vertex& vtx, TrackAtVertex& trk, int sign) {
   calculateUpdate(vtx, trk.linearizedState, trackWeight, sign, cache);
 
   // Get fit quality parameters wrt to old vertex
-  double chi2 = 0.;
-  double ndf = 0.;
-  std::tie(chi2, ndf) = vtx.fitQuality();
+  auto [chi2, ndf] = vtx.fitQuality();
 
   // Chi2 of the track parameters
   double trkChi2 = trackParametersChi2(trk.linearizedState, cache);

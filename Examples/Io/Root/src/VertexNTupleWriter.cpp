@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/VertexPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
@@ -106,9 +106,9 @@ std::uint32_t getNumberOfTruePriVertices(
 
 }  // namespace
 
-VertexPerformanceWriter::VertexPerformanceWriter(
-    const VertexPerformanceWriter::Config& config, Acts::Logging::Level level)
-    : WriterT(config.inputVertices, "VertexPerformanceWriter", level),
+VertexNTupleWriter::VertexNTupleWriter(const VertexNTupleWriter::Config& config,
+                                       Acts::Logging::Level level)
+    : WriterT(config.inputVertices, "VertexNTupleWriter", level),
       m_cfg(config) {
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
@@ -253,13 +253,13 @@ VertexPerformanceWriter::VertexPerformanceWriter(
   m_outputTree->Branch("trk_pullQOverPFitted", &m_pullQOverPFitted);
 }
 
-VertexPerformanceWriter::~VertexPerformanceWriter() {
+VertexNTupleWriter::~VertexNTupleWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ProcessCode VertexPerformanceWriter::finalize() {
+ProcessCode VertexNTupleWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -267,7 +267,7 @@ ProcessCode VertexPerformanceWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode VertexPerformanceWriter::writeT(
+ProcessCode VertexNTupleWriter::writeT(
     const AlgorithmContext& ctx, const std::vector<Acts::Vertex>& vertices) {
   const double nan = std::numeric_limits<double>::quiet_NaN();
 
@@ -497,7 +497,7 @@ ProcessCode VertexPerformanceWriter::writeT(
       fmap[vtxId].second += weight;
     }
     double truthMajorityVertexTrackWeights = 0;
-    SimVertexBarcode truthMajorityVertexId = 0;
+    SimVertexBarcode truthMajorityVertexId{0};
     for (const auto& [vtxId, counter] : fmap) {
       if (counter.second > truthMajorityVertexTrackWeights) {
         truthMajorityVertexId = vtxId;
@@ -629,7 +629,8 @@ ProcessCode VertexPerformanceWriter::writeT(
       // Count number of reconstructible tracks on truth vertex
       int nTracksOnTruthVertex = 0;
       for (const auto& particle : selectedParticles) {
-        if (particle.particleId().vertexId() == truthVertex.vertexId()) {
+        if (static_cast<SimVertexBarcode>(particle.particleId().vertexId()) ==
+            truthVertex.vertexId()) {
           ++nTracksOnTruthVertex;
         }
       }
