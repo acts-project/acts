@@ -9,10 +9,10 @@
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -526,7 +526,7 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
   const double theta = params[BoundIndices::eBoundTheta];
 
   double vs = std::sin(std::atan2(direction[1], direction[0]) - phi) * d0;
-  double eta = -std::log(std::tan(theta / 2.));
+  double eta = AngleHelpers::etaFromTheta(theta);
   double dir_eta = VectorHelpers::eta(direction);
 
   double zs = (dir_eta - eta) * z0;
