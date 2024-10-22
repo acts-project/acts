@@ -9,6 +9,7 @@
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -17,44 +18,46 @@
 #include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/ContextualDetector/InternalAlignmentDecorator.hpp"
 #include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
 using namespace Acts::UnitLiterals;
+
 namespace ActsExamples::Contextual {
 
-auto AlignedDetector::finalize(
-    const Config& cfg,
-    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
-    -> std::pair<TrackingGeometryPtr, ContextDecorators> {
-  ContextDecorators aContextDecorators;
+AlignedDetector::AlignedDetector(const Config& cfg)
+    : DetectorCommons::Detector(
+          Acts::getDefaultLogger("AlignedDetector", m_cfg.logLevel)),
+      m_cfg(cfg) {}
 
+void AlignedDetector::buildTrackingGeometry() {
   // Let's create a random number service
   ActsExamples::RandomNumbers::Config randomNumberConfig;
-  randomNumberConfig.seed = cfg.seed;
+  randomNumberConfig.seed = m_cfg.seed;
   auto randomNumberSvc =
       std::make_shared<ActsExamples::RandomNumbers>(randomNumberConfig);
 
   auto fillDecoratorConfig = [&](AlignmentDecorator::Config& config) {
-    config.iovSize = cfg.iovSize;
-    config.flushSize = cfg.flushSize;
-    config.doGarbageCollection = cfg.doGarbageCollection;
+    config.iovSize = m_cfg.iovSize;
+    config.flushSize = m_cfg.flushSize;
+    config.doGarbageCollection = m_cfg.doGarbageCollection;
 
     // The misalignments
-    config.gSigmaX = cfg.sigmaInPlane;
-    config.gSigmaY = cfg.sigmaInPlane;
-    config.gSigmaZ = cfg.sigmaOutPlane;
-    config.aSigmaX = cfg.sigmaOutRot;
-    config.aSigmaY = cfg.sigmaOutRot;
-    config.aSigmaZ = cfg.sigmaInRot;
+    config.gSigmaX = m_cfg.sigmaInPlane;
+    config.gSigmaY = m_cfg.sigmaInPlane;
+    config.gSigmaZ = m_cfg.sigmaOutPlane;
+    config.aSigmaX = m_cfg.sigmaOutRot;
+    config.aSigmaY = m_cfg.sigmaOutRot;
+    config.aSigmaZ = m_cfg.sigmaInRot;
     config.randomNumberSvc = randomNumberSvc;
-    config.firstIovNominal = cfg.firstIovNominal;
+    config.firstIovNominal = m_cfg.firstIovNominal;
   };
 
-  TrackingGeometryPtr aTrackingGeometry;
-  if (cfg.mode == Config::Mode::External) {
-    ExternallyAlignedDetectorElement::ContextType nominalContext;
+  if (m_cfg.mode == Config::Mode::External) {
+    InternallyAlignedDetectorElement::ContextType nominalContext;
+    auto gctx = Acts::GeometryContext(nominalContext);
 
     ExternalAlignmentDecorator::Config agcsConfig;
     fillDecoratorConfig(agcsConfig);
@@ -62,13 +65,12 @@ auto AlignedDetector::finalize(
     std::vector<std::vector<std::shared_ptr<ExternallyAlignedDetectorElement>>>
         detectorStore;
 
-    aTrackingGeometry =
+    m_trackingGeometry =
         ActsExamples::Generic::buildDetector<ExternallyAlignedDetectorElement>(
-            nominalContext, detectorStore, cfg.buildLevel,
-            std::move(mdecorator), cfg.buildProto, cfg.surfaceLogLevel,
-            cfg.layerLogLevel, cfg.volumeLogLevel);
-
-    agcsConfig.trackingGeometry = aTrackingGeometry;
+            gctx, detectorStore, m_cfg.buildLevel, m_cfg.materialDecorator,
+            m_cfg.buildProto, m_cfg.surfaceLogLevel, m_cfg.layerLogLevel,
+            m_cfg.volumeLogLevel);
+    agcsConfig.trackingGeometry = m_trackingGeometry;
 
     // need to upcast to store in this object as well
     for (auto& lstore : detectorStore) {
@@ -78,21 +80,22 @@ auto AlignedDetector::finalize(
       }
     }
 
-    aContextDecorators.push_back(std::make_shared<ExternalAlignmentDecorator>(
+    m_contextDecorators.push_back(std::make_shared<ExternalAlignmentDecorator>(
         std::move(agcsConfig),
-        Acts::getDefaultLogger("AlignmentDecorator", cfg.decoratorLogLevel)));
+        Acts::getDefaultLogger("AlignmentDecorator", m_cfg.decoratorLogLevel)));
   } else {
     InternallyAlignedDetectorElement::ContextType nominalContext;
     nominalContext.nominal = true;
+    auto gctx = Acts::GeometryContext(nominalContext);
 
     InternalAlignmentDecorator::Config agcsConfig;
     fillDecoratorConfig(agcsConfig);
 
-    aTrackingGeometry =
+    m_trackingGeometry =
         ActsExamples::Generic::buildDetector<InternallyAlignedDetectorElement>(
-            nominalContext, agcsConfig.detectorStore, cfg.buildLevel,
-            std::move(mdecorator), cfg.buildProto, cfg.surfaceLogLevel,
-            cfg.layerLogLevel, cfg.volumeLogLevel);
+            gctx, agcsConfig.detectorStore, m_cfg.buildLevel,
+            m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
+            m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
 
     // need to upcast to store in this object as well
     for (auto& lstore : agcsConfig.detectorStore) {
@@ -102,14 +105,10 @@ auto AlignedDetector::finalize(
       }
     }
 
-    aContextDecorators.push_back(std::make_shared<InternalAlignmentDecorator>(
+    m_contextDecorators.push_back(std::make_shared<InternalAlignmentDecorator>(
         std::move(agcsConfig),
-        Acts::getDefaultLogger("AlignmentDecorator", cfg.decoratorLogLevel)));
+        Acts::getDefaultLogger("AlignmentDecorator", m_cfg.decoratorLogLevel)));
   }
-
-  // return the pair of geometry and the alignment decorator(s)
-  return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(aTrackingGeometry), std::move(aContextDecorators));
 }
 
 }  // namespace ActsExamples::Contextual

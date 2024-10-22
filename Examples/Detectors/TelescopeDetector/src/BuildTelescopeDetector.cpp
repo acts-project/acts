@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerArrayCreator.hpp"
@@ -35,10 +36,8 @@
 
 std::unique_ptr<const Acts::TrackingGeometry>
 ActsExamples::Telescope::buildDetector(
-    const typename ActsExamples::Telescope::TelescopeDetectorElement::
-        ContextType& gctx,
-    std::vector<
-        std::shared_ptr<ActsExamples::Telescope::TelescopeDetectorElement>>&
+    const Acts::GeometryContext& gctx,
+    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
         detectorStore,
     const std::vector<double>& positions,
     const std::vector<double>& stereoAngles,

@@ -1,9 +1,4 @@
-add_library(
-    ActsExamplesDetectorDD4hep
-    SHARED
-    src/DD4hepDetector.cpp
-    src/DD4hepGeometryService.cpp
-)
+add_library(ActsExamplesDetectorDD4hep SHARED src/DD4hepDetector.cpp)
 
 target_include_directories(
     ActsExamplesDetectorDD4hep
@@ -11,7 +6,11 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesDetectorDD4hep
-    PUBLIC ActsCore ActsPluginDD4hep ActsExamplesFramework
+    PUBLIC
+        ActsCore
+        ActsPluginDD4hep
+        ActsExamplesFramework
+        ActsExamplesDetectorCommons
 )
 
 if(${DD4hep_VERSION} VERSION_LESS 1.11)
