@@ -19,7 +19,7 @@ env:
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
-  CCACHE_KEY_SUFFIX: r1
+  CCACHE_KEY_SUFFIX: r2
 
 jobs:
   linux_ubuntu:
@@ -43,10 +43,10 @@ jobs:
         uses: actions/cache/restore@v4
         id: ccache-restore
         with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-linux_ubuntu_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os  }}-ccache-linux_ubuntu_${{ env.CCACHE_KEY_SUFFIX }}_
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
       - name: Configure
         # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
@@ -260,10 +260,10 @@ jobs:
         uses: actions/cache/restore@v4
         id: ccache-restore
         with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-linux_${{ matrix.image }}_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os  }}-ccache-linux_${{ matrix.image }}_${{ env.CCACHE_KEY_SUFFIX }}_
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
 
       - name: Configure
@@ -339,10 +339,10 @@ jobs:
         uses: actions/cache/restore@v4
         id: ccache-restore
         with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os  }}-ccache_${{ env.CCACHE_KEY_SUFFIX }}_
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
       - name: Configure
         run: >
