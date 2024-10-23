@@ -87,19 +87,20 @@ def getOpenDataDetector(
 
         return geoid
 
-    dd4hepConfig = acts.examples.dd4hep.DD4hepDetector.Config(
-        xmlFileNames=[str(odd_xml)],
-        logLevel=customLogLevel(),
-        dd4hepLogLevel=customLogLevel(),
-        geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
-    )
-    detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
-
     if mdecorator is None:
         mdecorator = acts.examples.RootMaterialDecorator(
             fileName=str(odd_dir / "data/odd-material-maps.root"),
             level=customLogLevel(minLevel=acts.logging.WARNING),
         )
+
+    dd4hepConfig = acts.examples.dd4hep.DD4hepDetector.Config(
+        xmlFileNames=[str(odd_xml)],
+        logLevel=customLogLevel(),
+        dd4hepLogLevel=customLogLevel(),
+        geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
+        materialDecorator=mdecorator,
+    )
+    detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
 
     trackingGeometry, decorators, _ = detector.trackingGeometry()
 
