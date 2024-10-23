@@ -52,7 +52,8 @@ struct DD4hepDetector {
   DD4hepDetector() = default;
   /// @brief Constructor from geometry service
   /// @param _geometryService the geometry service
-  DD4hepDetector(std::shared_ptr<DD4hepGeometryService> _geometryService);
+  explicit DD4hepDetector(
+      std::shared_ptr<DD4hepGeometryService> _geometryService);
   /// @brief  Default destructor
   ~DD4hepDetector() = default;
 

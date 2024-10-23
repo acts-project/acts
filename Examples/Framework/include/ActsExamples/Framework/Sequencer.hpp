@@ -22,7 +22,6 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <typeinfo>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -89,7 +88,7 @@ class Sequencer {
     std::size_t fpeStackTraceLength = 8;
   };
 
-  Sequencer(const Config &cfg);
+  explicit Sequencer(const Config &cfg);
 
   /// Add a context decorator to the set of context decorators.
   ///

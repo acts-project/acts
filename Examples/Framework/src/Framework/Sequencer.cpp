@@ -367,7 +367,7 @@ struct StopWatch {
   Timepoint start;
   Duration& store;
 
-  StopWatch(Duration& s) : start(Clock::now()), store(s) {}
+  explicit StopWatch(Duration& s) : start(Clock::now()), store(s) {}
   ~StopWatch() { store += Clock::now() - start; }
 };
 

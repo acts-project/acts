@@ -31,7 +31,7 @@ struct AlignmentFunctionImpl
     : public ActsExamples::AlignmentAlgorithm::AlignmentFunction {
   Alignment align;
 
-  AlignmentFunctionImpl(Alignment&& a) : align(std::move(a)) {}
+  explicit AlignmentFunctionImpl(Alignment&& a) : align(std::move(a)) {}
 
   ActsExamples::AlignmentAlgorithm::AlignmentResult operator()(
       const std::vector<std::vector<ActsExamples::IndexSourceLink>>&
