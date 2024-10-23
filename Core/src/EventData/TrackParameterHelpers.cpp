@@ -12,21 +12,24 @@
 
 #include <numbers>
 
-bool Acts::isBoundVectorValid(const BoundVector& v, double epsilon,
-                              double maxAbsEta) {
+bool Acts::isBoundVectorValid(const BoundVector& v, bool validateAngleRange,
+                              double epsilon, double maxAbsEta) {
   constexpr auto pi = std::numbers::pi_v<double>;
 
   bool loc0Valid = std::isfinite(v[eBoundLoc0]);
   bool loc1Valid = std::isfinite(v[eBoundLoc1]);
-  bool phiValid = std::isfinite(v[eBoundPhi]) &&
-                  (v[eBoundPhi] + epsilon >= -pi) &&
-                  (v[eBoundPhi] - epsilon < pi);
-  bool thetaValid = std::isfinite(v[eBoundTheta]) &&
-                    (v[eBoundTheta] + epsilon >= 0) &&
-                    (v[eBoundTheta] - epsilon <= pi);
+  bool phiValid = std::isfinite(v[eBoundPhi]);
+  bool thetaValid = std::isfinite(v[eBoundTheta]);
   bool qOverPValid = std::isfinite(v[eBoundQOverP]) &&
                      (std::abs(v[eBoundQOverP]) - epsilon >= 0);
   bool timeValid = std::isfinite(v[eBoundTime]);
+
+  if (validateAngleRange) {
+    phiValid = phiValid && (v[eBoundPhi] + epsilon >= -pi) &&
+               (v[eBoundPhi] - epsilon < pi);
+    thetaValid = thetaValid && (v[eBoundTheta] + epsilon >= 0) &&
+                 (v[eBoundTheta] - epsilon <= pi);
+  }
 
   double eta = -std::log(std::tan(v[eBoundTheta] / 2));
   bool etaValid = std::isfinite(eta) && (std::abs(eta) - epsilon <= maxAbsEta);

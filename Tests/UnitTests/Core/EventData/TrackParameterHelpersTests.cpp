@@ -15,8 +15,8 @@
 BOOST_AUTO_TEST_SUITE(TrackParameterHelpers)
 
 BOOST_AUTO_TEST_CASE(isBoundVectorValid) {
-  BOOST_CHECK(!Acts::isBoundVectorValid({1, 2, 3, 4, 5, 6}));
-  BOOST_CHECK(Acts::isBoundVectorValid({1, 2, 1, 1, 5, 6}));
+  BOOST_CHECK(!Acts::isBoundVectorValid({1, 2, 3, 4, 5, 6}, true));
+  BOOST_CHECK(Acts::isBoundVectorValid({1, 2, 1, 1, 5, 6}, true));
 }
 
 BOOST_AUTO_TEST_CASE(isFreeVectorValid) {

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -60,6 +61,9 @@ class GenericBoundTrackParameters {
         m_cov(std::move(cov)),
         m_surface(std::move(surface)),
         m_particleHypothesis(std::move(particleHypothesis)) {
+    // TODO set `validateAngleRange` to `true` after fixing caller code
+    assert(isBoundVectorValid(m_params, false) &&
+           "Invalid bound parameters vector");
     assert(m_surface != nullptr && "Reference surface must not be null");
     normalizePhiTheta();
   }
