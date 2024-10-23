@@ -46,7 +46,7 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   ///
   /// @param values The input values
   GenericCuboidVolumeBounds(
-      const std::array<double, BoundValues::eSize>& values) noexcept(false);
+      const std::array<ActsScalar, BoundValues::eSize>& values) noexcept(false);
 
   ~GenericCuboidVolumeBounds() override = default;
 
@@ -57,7 +57,7 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<ActsScalar> values() const final;
 
   /// Checking if position given in volume frame is inside
   ///
@@ -65,7 +65,7 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// @param tol is the tolerance applied for the inside check
   ///
   /// @return boolean indicating if the position is inside
-  bool inside(const Vector3& gpos, double tol = 0.) const override;
+  bool inside(const Vector3& gpos, ActsScalar tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal

@@ -70,7 +70,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<ActsScalar> values() const final;
 
   ///  This method checks if the radius given in the LocalPosition is inside
   ///  [rMin,rMax]
@@ -207,8 +207,8 @@ inline double DiscTrapezoidBounds::binningValuePhi() const {
   return get(eAveragePhi);
 }
 
-inline std::vector<double> DiscTrapezoidBounds::values() const {
-  std::vector<double> valvector;
+inline std::vector<ActsScalar> DiscTrapezoidBounds::values() const {
+  std::vector<ActsScalar> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }

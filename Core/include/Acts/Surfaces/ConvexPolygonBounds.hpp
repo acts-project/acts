@@ -40,7 +40,7 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<ActsScalar> values() const final;
 
  protected:
   /// Return a rectangle bounds instance that encloses a set of vertices.

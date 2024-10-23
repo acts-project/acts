@@ -73,7 +73,8 @@ MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
 }
 
 double MeasurementSelector::calculateChi2(
-    const double* fullCalibrated, const double* fullCalibratedCovariance,
+    const ActsScalar* fullCalibrated,
+    const ActsScalar* fullCalibratedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Parameters predicted,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,

@@ -151,7 +151,7 @@ class ScopedGsfInfoPrinterAndChecker {
 };
 
 ActsScalar calculateDeterminant(
-    const double *fullCalibratedCovariance,
+    const ActsScalar *fullCalibratedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      true>::Covariance predictedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>::Projector
