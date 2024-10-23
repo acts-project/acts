@@ -34,7 +34,9 @@ BOOST_AUTO_TEST_CASE(subtractBoundParameters) {
       Acts::subtractBoundParameters({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}),
       Acts::BoundVector(0, 0, 0, 0, 0, 0), 1e-3, 1e-3);
   CHECK_CLOSE_OR_SMALL(
-      Acts::subtractBoundParameters({1, 2, 4, 5, 5, 6}, {0, 0, 1, 1, 0, 0}),
+      Acts::addBoundParameters(
+          Acts::subtractBoundParameters({1, 2, 3, 4, 5, 6}, {0, 0, 1, 1, 0, 0}),
+          {0, 0, 1, 1, 0, 0}),
       Acts::normalizeBoundParameters({1, 2, 3, 4, 5, 6}), 1e-3, 1e-3);
 }
 
