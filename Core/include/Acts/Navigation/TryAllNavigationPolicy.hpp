@@ -34,6 +34,10 @@ class TryAllNavigationPolicy final : public INavigationPolicy {
   TryAllNavigationPolicy(const Config& config, const GeometryContext& gctx,
                          const TrackingVolume& volume, const Logger& logger);
 
+  /// Constructor from a volume
+  /// @param gctx is the geometry context
+  /// @param volume is the volume to navigate
+  /// @param logger is the logger
   TryAllNavigationPolicy(const GeometryContext& gctx,
                          const TrackingVolume& volume, const Logger& logger);
 

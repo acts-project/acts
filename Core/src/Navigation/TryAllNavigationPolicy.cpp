@@ -40,10 +40,11 @@ void TryAllNavigationPolicy::initializeCandidates(
     }
   }
 
-  if (m_cfg.sensitives)
+  if (m_cfg.sensitives) {
     for (const auto& surface : m_volume->surfaces()) {
       stream.addSurfaceCandidate(surface, args.tolerance);
     };
+  }
 }
 
 void TryAllNavigationPolicy::connect(NavigationDelegate& delegate) const {
