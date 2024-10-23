@@ -13,7 +13,7 @@ def test_navigation_policy_factory():
         .add(
             acts.SurfaceArrayNavigationPolicy,
             acts.SurfaceArrayNavigationPolicy.Config(
-                layerType=acts.SurfaceArrayNavigationPolicy.LayerType.Plane,
+                layerType=acts.SurfaceArrayNavigationPolicy.LayerType.Disc,
                 bins=(10, 10),
             ),
         )

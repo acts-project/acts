@@ -12,6 +12,8 @@
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeTag.hpp"
 
@@ -117,6 +119,33 @@ class NavigationPolicyFactory : public Acts::NavigationPolicyFactory {
       std::make_unique<NavigationPolicyFactoryT<>>();
 };
 
+namespace Test {
+class DetectorElementStub : public DetectorElementBase {
+ public:
+  DetectorElementStub() : DetectorElementBase() {}
+
+  const Transform3& transform(const GeometryContext&) const override {
+    return m_transform;
+  }
+
+  /// Return surface representation - const return pattern
+  const Surface& surface() const override {
+    throw std::runtime_error("Not implemented");
+  }
+
+  /// Non-const return pattern
+  Surface& surface() override { throw std::runtime_error("Not implemented"); }
+
+  /// Returns the thickness of the module
+  /// @return double that indicates the thickness of the module
+  double thickness() const override { return 0; }
+
+ private:
+  Transform3 m_transform;
+};
+
+}  // namespace Test
+
 void addNavigation(Context& ctx) {
   auto m = ctx.get("main");
 
@@ -138,6 +167,14 @@ void addNavigation(Context& ctx) {
             Transform3::Identity(),
             std::make_shared<CylinderVolumeBounds>(30, 40, 100));
         vol1->setVolumeName("TestVolume");
+
+        auto detElem = std::make_unique<Test::DetectorElementStub>();
+
+        auto surface = Surface::makeShared<CylinderSurface>(
+            Transform3::Identity(), std::make_shared<CylinderBounds>(30, 40));
+        surface->assignDetectorElement(*detElem);
+
+        vol1->addSurface(std::move(surface));
 
         std::unique_ptr<INavigationPolicy> result =
             self.build(GeometryContext{}, *vol1,
