@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -103,8 +104,8 @@ class ScoreBasedAmbiguityResolution {
     double pTMin = 0 * UnitConstants::GeV;
     double pTMax = 1e5 * UnitConstants::GeV;
 
-    double phiMin = -M_PI * UnitConstants::rad;
-    double phiMax = M_PI * UnitConstants::rad;
+    double phiMin = -std::numbers::pi * UnitConstants::rad;
+    double phiMax = std::numbers::pi * UnitConstants::rad;
 
     double etaMin = -5;
     double etaMax = 5;

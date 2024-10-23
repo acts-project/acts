@@ -15,6 +15,8 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
+#include <numbers>
+
 namespace Acts {
 
 class Surface;
@@ -25,8 +27,9 @@ class Surface;
 /// @return Reflected bound track parameters vector
 inline BoundVector reflectBoundParameters(const BoundVector& boundParams) {
   BoundVector reflected = boundParams;
-  auto [phi, theta] = detail::normalizePhiTheta(
-      boundParams[eBoundPhi] - M_PI, M_PI - boundParams[eBoundTheta]);
+  auto [phi, theta] =
+      detail::normalizePhiTheta(boundParams[eBoundPhi] - std::numbers::pi,
+                                std::numbers::pi - boundParams[eBoundTheta]);
   reflected[eBoundPhi] = phi;
   reflected[eBoundTheta] = theta;
   reflected[eBoundQOverP] = -boundParams[eBoundQOverP];

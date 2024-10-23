@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 
 std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
     ActsScalar phiMin, ActsScalar phiMax,
@@ -39,7 +40,8 @@ std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
   // Minimum approximation for a circle need
   // - if the circle is closed the last point is given twice
   for (unsigned int i = 0; i < 4 * quarterSegments + 1; ++i) {
-    ActsScalar phiExt = -M_PI + i * 2 * M_PI / (4 * quarterSegments);
+    ActsScalar phiExt =
+        -std::numbers::pi + i * 2 * std::numbers::pi / (4 * quarterSegments);
     if (phiExt > phiMin && phiExt < phiMax &&
         std::ranges::none_of(phiSegments, [&phiExt](ActsScalar phi) {
           return std::abs(phi - phiExt) <
@@ -76,7 +78,7 @@ std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
   std::vector<Vector2> overtices;  // outer verices
 
   bool innerExists = (innerRx > 0. && innerRy > 0.);
-  bool closed = std::abs(halfPhi - M_PI) < s_onSurfaceTolerance;
+  bool closed = std::abs(halfPhi - std::numbers::pi) < s_onSurfaceTolerance;
 
   std::vector<ActsScalar> refPhi = {};
   if (avgPhi != 0.) {

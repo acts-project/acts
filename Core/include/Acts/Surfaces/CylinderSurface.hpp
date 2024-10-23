@@ -27,6 +27,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <string>
 
 namespace Acts {
@@ -57,7 +58,7 @@ class CylinderSurface : public RegularSurface {
   /// @param bevelMinZ (optional) The bevel on the negative z side
   /// @param bevelMaxZ (optional) The bevel on the positive z sid The bevel on the positive z side
   CylinderSurface(const Transform3& transform, double radius, double halfz,
-                  double halfphi = M_PI, double avphi = 0.,
+                  double halfphi = std::numbers::pi, double avphi = 0.,
                   double bevelMinZ = 0., double bevelMaxZ = 0.);
 
   /// Constructor from Transform3 and CylinderBounds arguments

@@ -8,6 +8,8 @@
 
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
 
+#include <numbers>
+
 namespace Acts::detail {
 
 std::tuple<ActsScalar, ActsScalar, bool> mergedPhiSector(
@@ -15,23 +17,24 @@ std::tuple<ActsScalar, ActsScalar, bool> mergedPhiSector(
     ActsScalar avgPhi2, const Logger& logger, ActsScalar tolerance) {
   using namespace Acts::UnitLiterals;
 
-  if (std::abs(hlPhi1 - M_PI / 2.0) < tolerance &&
-      std::abs(hlPhi2 - M_PI / 2.0) < tolerance) {
+  if (std::abs(hlPhi1 - std::numbers::pi / 2.) < tolerance &&
+      std::abs(hlPhi2 - std::numbers::pi / 2.) < tolerance) {
     ACTS_VERBOSE("Both phi sectors cover a half circle");
 
-    ACTS_VERBOSE("-> distance between sectors: "
-                 << detail::difference_periodic(avgPhi1, avgPhi2, 2 * M_PI) /
-                        1_degree);
+    ACTS_VERBOSE("-> distance between sectors: " << detail::difference_periodic(
+                                                        avgPhi1, avgPhi2,
+                                                        2 * std::numbers::pi) /
+                                                        1_degree);
 
-    if (std::abs(
-            std::abs(detail::difference_periodic(avgPhi1, avgPhi2, 2 * M_PI)) -
-            M_PI) > tolerance) {
+    if (std::abs(std::abs(detail::difference_periodic(avgPhi1, avgPhi2,
+                                                      2 * std::numbers::pi)) -
+                 std::numbers::pi) > tolerance) {
       throw std::invalid_argument(
           "Phi sectors cover half a circle but are not opposite");
     }
 
-    ActsScalar newAvgPhi = detail::radian_sym(avgPhi1 + M_PI / 2.0);
-    ActsScalar newHlPhi = M_PI;
+    ActsScalar newAvgPhi = detail::radian_sym(avgPhi1 + std::numbers::pi / 2.);
+    ActsScalar newHlPhi = std::numbers::pi;
     ACTS_VERBOSE("merged: ["
                  << detail::radian_sym(newAvgPhi - newHlPhi) / 1_degree << ", "
                  << detail::radian_sym(newAvgPhi + newHlPhi) / 1_degree

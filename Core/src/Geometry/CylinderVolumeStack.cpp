@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <numbers>
 #include <sstream>
 
 namespace Acts {
@@ -1046,7 +1047,7 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
 
 void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
                                             const Logger& logger) {
-  if (bounds.get(CylinderVolumeBounds::eHalfPhiSector) != M_PI) {
+  if (bounds.get(CylinderVolumeBounds::eHalfPhiSector) != std::numbers::pi) {
     ACTS_ERROR(
         "CylinderVolumeStack requires all volumes to have a full "
         "phi sector");

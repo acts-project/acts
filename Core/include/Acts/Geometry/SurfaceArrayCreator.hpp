@@ -24,6 +24,7 @@
 #include <functional>
 #include <iterator>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <ostream>
 #include <tuple>
@@ -257,7 +258,7 @@ class SurfaceArrayCreator {
 
       // ...so by injecting them into atan2, we get the angle between them
       auto dPhi = std::atan2(sin_dPhi_n2, cos_dPhi_n2);
-      return std::abs(dPhi) < M_PI / 180.;
+      return std::abs(dPhi) < std::numbers::pi / 180.;
     }
 
     if (bValue == Acts::BinningValue::binZ) {

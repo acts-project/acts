@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <exception>
 #include <iosfwd>
+#include <numbers>
 #include <stdexcept>
 #include <vector>
 
@@ -57,7 +58,8 @@ class EllipseBounds : public PlanarBounds {
   /// @param halfPhi spanning phi sector (is set to pi as default)
   /// @param averagePhi average phi (is set to 0. as default)
   EllipseBounds(double innerRx, double innerRy, double outerRx, double outerRy,
-                double halfPhi = M_PI, double averagePhi = 0.) noexcept(false)
+                double halfPhi = std::numbers::pi,
+                double averagePhi = 0.) noexcept(false)
       : m_values({innerRx, innerRy, outerRx, outerRy, halfPhi, averagePhi}),
         m_boundingBox(m_values[eInnerRy], m_values[eOuterRy]) {
     checkConsistency();
@@ -134,7 +136,7 @@ inline void EllipseBounds::checkConsistency() noexcept(false) {
       get(eOuterRy) <= 0.) {
     throw std::invalid_argument("EllipseBounds: invalid along y axis.");
   }
-  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > std::numbers::pi) {
     throw std::invalid_argument("EllipseBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {

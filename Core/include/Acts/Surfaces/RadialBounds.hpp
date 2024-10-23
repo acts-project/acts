@@ -18,6 +18,7 @@
 #include <array>
 #include <cmath>
 #include <iosfwd>
+#include <numbers>
 #include <stdexcept>
 #include <vector>
 
@@ -47,7 +48,7 @@ class RadialBounds : public DiscBounds {
   /// @param maxR The outer radius
   /// @param halfPhi The half opening angle (Pi for full angular coverage)
   /// @param avgPhi The average phi for the disc/ring sector
-  RadialBounds(double minR, double maxR, double halfPhi = M_PI,
+  RadialBounds(double minR, double maxR, double halfPhi = std::numbers::pi,
                double avgPhi = 0.) noexcept(false)
       : m_values({minR, maxR, halfPhi, avgPhi}) {
     checkConsistency();
@@ -142,7 +143,7 @@ inline double RadialBounds::rMax() const {
 }
 
 inline bool RadialBounds::coversFullAzimuth() const {
-  return (get(eHalfPhiSector) == M_PI);
+  return (get(eHalfPhiSector) == std::numbers::pi);
 }
 
 inline bool RadialBounds::insideRadialBounds(double R, double tolerance) const {
@@ -167,7 +168,7 @@ inline void RadialBounds::checkConsistency() noexcept(false) {
   if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) > get(eMaxR)) {
     throw std::invalid_argument("RadialBounds: invalid radial setup");
   }
-  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > std::numbers::pi) {
     throw std::invalid_argument("RadialBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {

@@ -26,6 +26,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <string>
 
 namespace Acts {
@@ -61,7 +62,7 @@ class ConeSurface : public RegularSurface {
   /// @param zmax is the z range over which the cone spans
   /// @param halfPhi is the opening angle for cone ssectors
   ConeSurface(const Transform3& transform, double alpha, double zmin,
-              double zmax, double halfPhi = M_PI);
+              double zmax, double halfPhi = std::numbers::pi);
 
   /// Constructor from HepTransform and ConeBounds
   ///

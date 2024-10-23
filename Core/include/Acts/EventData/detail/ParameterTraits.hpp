@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 
 namespace Acts::detail {
 
@@ -106,12 +107,12 @@ struct CyclicParameterTraits {
 //
 // The functions names are chosen to be consistent w/ std::numeric_limits
 struct PhiBoundParameterLimits {
-  static constexpr double lowest() { return -M_PI; }
-  static constexpr double max() { return M_PI; }
+  static constexpr double lowest() { return -std::numbers::pi; }
+  static constexpr double max() { return std::numbers::pi; }
 };
 struct ThetaBoundParameterLimits {
   static constexpr double lowest() { return 0; }
-  static constexpr double max() { return M_PI; }
+  static constexpr double max() { return std::numbers::pi; }
 };
 
 // Traits implementation structs for single parameters.

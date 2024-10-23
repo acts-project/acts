@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <span>
 #include <utility>
 #include <vector>
@@ -29,10 +30,11 @@ namespace Acts::detail::VerticesHelper {
 /// @param quarterSegments number of segments used to approximate a segment quarter
 ///
 /// @return a vector of generated phi values
-std::vector<ActsScalar> phiSegments(ActsScalar phiMin = -M_PI,
-                                    ActsScalar phiMax = M_PI,
-                                    const std::vector<ActsScalar>& phiRefs = {},
-                                    unsigned int quarterSegments = 2u);
+std::vector<ActsScalar> phiSegments(
+    ActsScalar phiMin = -std::numbers::pi_v<ActsScalar>,
+    ActsScalar phiMax = std::numbers::pi_v<ActsScalar>,
+    const std::vector<ActsScalar>& phiRefs = {},
+    unsigned int quarterSegments = 2u);
 
 /// Helper method to create a regular 2 or 3 D segment
 /// between two phi values with a given number of segments
@@ -83,11 +85,11 @@ std::vector<vertex_t> segmentVertices(
 /// @param quarterSegments number of segments used to approximate a segment quarter
 ///
 /// @return a vector of 2d-vectors
-std::vector<Vector2> ellipsoidVertices(ActsScalar innerRx, ActsScalar innerRy,
-                                       ActsScalar outerRx, ActsScalar outerRy,
-                                       ActsScalar avgPhi = 0.,
-                                       ActsScalar halfPhi = M_PI,
-                                       unsigned int quarterSegments = 2u);
+std::vector<Vector2> ellipsoidVertices(
+    ActsScalar innerRx, ActsScalar innerRy, ActsScalar outerRx,
+    ActsScalar outerRy, ActsScalar avgPhi = 0.,
+    ActsScalar halfPhi = std::numbers::pi_v<ActsScalar>,
+    unsigned int quarterSegments = 2u);
 
 /// Construct vertices on an disc/wheel-like bound object.
 ///
@@ -98,10 +100,10 @@ std::vector<Vector2> ellipsoidVertices(ActsScalar innerRx, ActsScalar innerRy,
 /// @param quarterSegments number of segments used to approximate a segment quarter
 ///
 /// @return a vector of 2d-vectors
-std::vector<Vector2> circularVertices(ActsScalar innerR, ActsScalar outerR,
-                                      ActsScalar avgPhi = 0.,
-                                      ActsScalar halfPhi = M_PI,
-                                      unsigned int quarterSegments = 2u);
+std::vector<Vector2> circularVertices(
+    ActsScalar innerR, ActsScalar outerR, ActsScalar avgPhi = 0.,
+    ActsScalar halfPhi = std::numbers::pi_v<ActsScalar>,
+    unsigned int quarterSegments = 2u);
 
 /// Check if the point is inside the polygon w/o any tolerances.
 ///

@@ -18,6 +18,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <numbers>
 #include <utility>
 
 using Acts::VectorHelpers::perp;
@@ -160,11 +161,11 @@ void Acts::CylinderBounds::checkConsistency() noexcept(false) {
     throw std::invalid_argument(
         "CylinderBounds: invalid length setup: half length is negative");
   }
-  if (get(eHalfPhiSector) <= 0. || get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) <= 0. || get(eHalfPhiSector) > std::numbers::pi) {
     throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi)) &&
-      std::abs(std::abs(get(eAveragePhi)) - M_PI) > s_epsilon) {
+      std::abs(std::abs(get(eAveragePhi)) - std::numbers::pi) > s_epsilon) {
     throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
   }
   if (get(eBevelMinZ) != detail::radian_sym(get(eBevelMinZ))) {

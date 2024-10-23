@@ -23,6 +23,7 @@
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <cmath>
+#include <numbers>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -107,8 +108,8 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
       auto vStore = bounds().values();
       innerExists = vStore[EllipseBounds::eInnerRx] > s_epsilon &&
                     vStore[EllipseBounds::eInnerRy] > s_epsilon;
-      coversFull =
-          std::abs(vStore[EllipseBounds::eHalfPhiSector] - M_PI) < s_epsilon;
+      coversFull = std::abs(vStore[EllipseBounds::eHalfPhiSector] -
+                            std::numbers::pi) < s_epsilon;
     }
     // All of those can be described as convex
     // @todo same as for Discs: coversFull is not the right criterium

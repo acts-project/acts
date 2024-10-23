@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <stdexcept>
 
 using Acts::VectorHelpers::perp;
@@ -444,7 +445,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
                phi(keys.at(1)->binningPosition(gctx, BinningValue::binPhi)));
 
     // create rotation, so that maxPhi is +pi
-    AxisScalar angle = -(M_PI + maxPhi);
+    AxisScalar angle = -(std::numbers::pi + maxPhi);
     transform = (transform)*AngleAxis3(angle, Vector3::UnitZ());
 
     // iterate over all key surfaces, and use their mean position as bValues,
@@ -488,7 +489,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
 
     bValues.push_back(maxBValue);
 
-    bValues.push_back(M_PI);
+    bValues.push_back(std::numbers::pi_v<AxisScalar>);
 
   } else if (bValue == Acts::BinningValue::binZ) {
     std::stable_sort(
@@ -612,16 +613,16 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
       if (keys.size() > 1) {
         // bOption = Acts::closed;
 
-        minimum = -M_PI;
-        maximum = M_PI;
+        minimum = -std::numbers::pi;
+        maximum = std::numbers::pi;
 
-        // double step = 2 * M_PI / keys.size();
-        double step = 2 * M_PI / binNumber;
+        // double step = 2 * std::numbers::pi / keys.size();
+        double step = 2 * std::numbers::pi / binNumber;
         // rotate to max phi module plus one half step
         // this should make sure that phi wrapping at +- pi
         // never falls on a module center
         double max = phi(maxElem->binningPosition(gctx, BinningValue::binR));
-        double angle = M_PI - (max + 0.5 * step);
+        double angle = std::numbers::pi - (max + 0.5 * step);
 
         // replace given transform ref
         transform = (transform)*AngleAxis3(angle, Vector3::UnitZ());
@@ -632,8 +633,8 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
         // we do not need a transform in this case
       }
     } else {
-      minimum = -M_PI;
-      maximum = M_PI;
+      minimum = -std::numbers::pi;
+      maximum = std::numbers::pi;
     }
   } else {
     maximum = protoLayer.max(bValue, false);

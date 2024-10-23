@@ -36,6 +36,7 @@
 #include <cstddef>
 #include <iterator>
 #include <map>
+#include <numbers>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -404,7 +405,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     }
   } else {
     ACTS_VERBOSE(
-        "No sector planes present, full 2 * M_PI cylindrical geometry.");
+        "No sector planes present, full 2 * std::numbers::pi cylindrical "
+        "geometry.");
   }
 
   // Attach the new volume multi links
@@ -604,7 +606,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
     }
   } else {
     ACTS_VERBOSE(
-        "No sector planes present, full 2 * M_PI cylindrical geometry.");
+        "No sector planes present, full 2 * std::numbers::pi cylindrical "
+        "geometry.");
   }
 
   // Attach the new volume multi links
@@ -823,7 +826,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     std::vector<PortalReplacement> pReplacements;
     pReplacements.push_back(createCylinderReplacement(
         volumes[0u]->transform(gctx), innerR, {-HlZ, -hlZ, hlZ, HlZ},
-        {-M_PI, M_PI}, 3u, Direction::Forward));
+        {-std::numbers::pi, std::numbers::pi}, 3u, Direction::Forward));
     std::vector<std::shared_ptr<DetectorVolume>> zVolumes = {
         volumes[1u], volumes[0u], volumes[1u]};
     // Attach the new volume multi links

@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <algorithm>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -63,7 +64,7 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
     for (auto& side : sides) {
       /// Helper method to create the segment
       auto svertices = detail::VerticesHelper::segmentVertices(
-          {r, r}, -M_PI, M_PI, {}, quarterSegments,
+          {r, r}, -std::numbers::pi, std::numbers::pi, {}, quarterSegments,
           Vector3(0., 0., side * m_bounds->get(LineBounds::eHalfLengthZ)),
           ctransform);
       vertices.insert(vertices.end(), svertices.begin(), svertices.end());

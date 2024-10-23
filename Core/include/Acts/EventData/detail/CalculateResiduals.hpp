@@ -12,6 +12,7 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cassert>
+#include <numbers>
 
 #include <Eigen/Core>
 
@@ -55,7 +56,7 @@ inline void calculateResiduals(BoundIndices size,
     if (fullIndex == eBoundPhi) {
       residuals[i] = difference_periodic<OutputScalar>(
           measured[i], reference[fullIndex],
-          static_cast<OutputScalar>(2 * M_PI));
+          static_cast<OutputScalar>(2 * std::numbers::pi));
     } else {
       residuals[i] = measured[i] - reference[fullIndex];
     }
