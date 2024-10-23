@@ -131,9 +131,9 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
   NavigationDelegate delegate2;
   policyBase2->connect(delegate2);
 
-  delegate(NavigationArguments{.position = Vector3::Zero(),
-                               .direction = Vector3::Zero()},
-           stream, *logger);
+  delegate2(NavigationArguments{.position = Vector3::Zero(),
+                                .direction = Vector3::Zero()},
+            stream, *logger);
 
   BOOST_CHECK(std::get<APolicy>(policy2.policies()).executed);
   BOOST_CHECK(std::get<BPolicy>(policy2.policies()).executed);
