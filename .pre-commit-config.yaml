@@ -44,7 +44,7 @@ repos:
     - id: license
       name: license
       language: system
-      entry: CI/check_license.py
+      entry: CI/check_license.py --fix
       files: \.(cpp|hpp|ipp|cu|cuh)$
 
   - repo: local

@@ -346,8 +346,7 @@ template <typename entity_t, typename value_t, std::size_t DIM>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::transformed(
     const transform_type& trf) const {
-  VertexType vmin, vmax;
-  std::tie(vmin, vmax) = transformVertices(trf);
+  const auto [vmin, vmax] = transformVertices(trf);
   return self_t(m_entity, vmin, vmax);
 }
 
@@ -463,8 +462,7 @@ box_t* octree_inner(std::vector<std::unique_ptr<box_t>>& store,
 
   std::array<std::vector<box_t*>, 8> octants;
   // calc center of boxes
-  VertexType vmin, vmax;
-  std::tie(vmin, vmax) = box_t::wrap(lprims);
+  const auto [vmin, vmax] = box_t::wrap(lprims);
   VertexType glob_ctr = (vmin + vmax) / 2.;
 
   for (auto* box : lprims) {
