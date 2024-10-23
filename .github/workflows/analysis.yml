@@ -20,7 +20,7 @@ env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 1.25G
-  CCACHE_KEY_SUFFIX: r1
+  CCACHE_KEY_SUFFIX: r2
   ACTS_LOG_FAILURE_THRESHOLD: WARNING
   DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v4.tar.zst
 
@@ -41,10 +41,10 @@ jobs:
       - name: Cache build
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
       - name: Configure
         run: >

@@ -40,14 +40,6 @@ struct LoopHook : public Acts::ExaTrkXHook {
   }
 };
 
-// TODO do we have these function in the repo somewhere?
-float theta(float r, float z) {
-  return std::atan2(r, z);
-}
-float eta(float r, float z) {
-  return -std::log(std::tan(0.5 * theta(r, z)));
-}
-
 }  // namespace
 
 ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
@@ -187,7 +179,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
         break; case NF::eZ:           f[ift] = sp.z();
         break; case NF::eX:           f[ift] = sp.x();
         break; case NF::eY:           f[ift] = sp.y();
-        break; case NF::eEta:         f[ift] = eta(std::hypot(sp.x(), sp.y()), sp.z());
+        break; case NF::eEta:         f[ift] = Acts::VectorHelpers::eta(Acts::Vector3{sp.x(), sp.y(), sp.z()});
         break; case NF::eClusterX:    f[ift] = cl1->sizeLoc0;
         break; case NF::eClusterY:    f[ift] = cl1->sizeLoc1;
         break; case NF::eCellSum:     f[ift] = cl1->sumActivations();
@@ -198,8 +190,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
         break; case NF::eCluster2Phi: f[ift] = std::atan2(cl2->globalPosition[Acts::ePos1], cl2->globalPosition[Acts::ePos0]);
         break; case NF::eCluster1Z:   f[ift] = cl1->globalPosition[Acts::ePos2];
         break; case NF::eCluster2Z:   f[ift] = cl2->globalPosition[Acts::ePos2];
-        break; case NF::eCluster1Eta: f[ift] = eta(std::hypot(cl1->globalPosition[Acts::ePos0], cl1->globalPosition[Acts::ePos1]), cl1->globalPosition[Acts::ePos2]);
-        break; case NF::eCluster2Eta: f[ift] = eta(std::hypot(cl2->globalPosition[Acts::ePos0], cl2->globalPosition[Acts::ePos1]), cl2->globalPosition[Acts::ePos2]);
+        break; case NF::eCluster1Eta: f[ift] = Acts::VectorHelpers::eta(Acts::Vector3{cl1->globalPosition[Acts::ePos0], cl1->globalPosition[Acts::ePos1], cl1->globalPosition[Acts::ePos2]});
+        break; case NF::eCluster2Eta: f[ift] = Acts::VectorHelpers::eta(Acts::Vector3{cl2->globalPosition[Acts::ePos0], cl2->globalPosition[Acts::ePos1], cl2->globalPosition[Acts::ePos2]});
       }
       // clang-format on
 
