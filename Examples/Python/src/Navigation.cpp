@@ -92,7 +92,7 @@ class NavigationPolicyFactory : public Acts::NavigationPolicyFactory {
   // arguments
   NavigationPolicyFactory& addNoArguments(const py::object& cls) {
     auto m = py::module_::import("acts");
-    if (py::object o = m.attr("TryAllPortalNavigationPolicy"); cls.is(o)) {
+    if (py::object o = m.attr("TryAllNavigationPolicy"); cls.is(o)) {
       m_impl = m_impl->add(Type<TryAllNavigationPolicy>);
     }
     // Add other policies here

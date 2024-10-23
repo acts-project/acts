@@ -19,7 +19,7 @@ TryAllNavigationPolicy::TryAllNavigationPolicy(const Config& config,
                                                const Logger& logger)
     : m_cfg{config}, m_volume(&volume) {
   assert(m_volume != nullptr);
-  ACTS_VERBOSE("TryAllPortalNavigationPolicy created for volume "
+  ACTS_VERBOSE("TryAllNavigationPolicy created for volume "
                << m_volume->volumeName());
 }
 
@@ -31,7 +31,7 @@ TryAllNavigationPolicy::TryAllNavigationPolicy(const GeometryContext& gctx,
 void TryAllNavigationPolicy::initializeCandidates(
     const NavigationArguments& args, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
-  ACTS_VERBOSE("TryAllPortalNavigationPolicy");
+  ACTS_VERBOSE("TryAllNavigationPolicy");
   assert(m_volume != nullptr);
 
   if (m_cfg.portals) {
