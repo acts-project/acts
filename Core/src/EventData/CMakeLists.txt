@@ -8,5 +8,4 @@ target_sources(
         TrackStatePropMask.cpp
         VectorMultiTrajectory.cpp
         VectorTrackContainer.cpp
-        TrackParameterHelpers.cpp
 )

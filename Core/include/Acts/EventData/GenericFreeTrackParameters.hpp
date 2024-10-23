@@ -18,8 +18,10 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <cassert>
 #include <cmath>
 #include <optional>
+#include <type_traits>
 
 namespace Acts {
 

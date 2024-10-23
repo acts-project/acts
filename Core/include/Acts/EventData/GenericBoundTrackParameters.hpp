@@ -18,6 +18,7 @@
 #include <cassert>
 #include <cmath>
 #include <memory>
+#include <type_traits>
 
 namespace Acts {
 
@@ -60,7 +61,7 @@ class GenericBoundTrackParameters {
         m_cov(std::move(cov)),
         m_surface(std::move(surface)),
         m_particleHypothesis(std::move(particleHypothesis)) {
-    assert(m_surface != nullptr && "Reference surface must not be null");
+    assert(m_surface);
     normalizePhiTheta();
   }
 

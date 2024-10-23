@@ -14,16 +14,6 @@
 
 BOOST_AUTO_TEST_SUITE(TrackParameterHelpers)
 
-BOOST_AUTO_TEST_CASE(isBoundVectorValid) {
-  BOOST_CHECK(!Acts::isBoundVectorValid({1, 2, 3, 4, 5, 6}));
-  BOOST_CHECK(Acts::isBoundVectorValid({1, 2, 1, 1, 5, 6}));
-}
-
-BOOST_AUTO_TEST_CASE(isFreeVectorValid) {
-  BOOST_CHECK(!Acts::isFreeVectorValid({1, 2, 3, 4, 5, 6, 7, 8}));
-  BOOST_CHECK(Acts::isFreeVectorValid({1, 2, 3, 4, 1, 0, 0, 8}));
-}
-
 BOOST_AUTO_TEST_CASE(normalizeBoundParameters) {
   CHECK_CLOSE_OR_SMALL(Acts::normalizeBoundParameters({1, 2, 3, 4, 5, 6}),
                        Acts::BoundVector(1, 2, -0.141593, 2.28319, 5, 6), 1e-3,
