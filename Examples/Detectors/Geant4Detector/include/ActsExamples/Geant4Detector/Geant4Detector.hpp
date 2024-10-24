@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 
 #include <memory>
 #include <string>
@@ -32,18 +33,19 @@ class Detector;
 
 namespace ActsExamples {
 class IContextDecorator;
+}  // namespace ActsExamples
 
-namespace Geant4 {
+namespace ActsExamples::Geant4 {
 
-struct Geant4Detector {
-  using DetectorElements =
-      std::vector<std::shared_ptr<Acts::Geant4DetectorElement>>;
+struct Geant4Detector : public DetectorCommons::Detector {
+  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
   using DetectorPtr = std::shared_ptr<Acts::Experimental::Detector>;
-  using Surfaces = std::vector<std::shared_ptr<Acts::Surface>>;
-
   using ContextDecorators =
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
+
+  using DetectorElements =
+      std::vector<std::shared_ptr<Acts::Geant4DetectorElement>>;
+  using Surfaces = std::vector<std::shared_ptr<Acts::Surface>>;
 
   /// Nested configuration struct
   struct Config {
@@ -62,12 +64,30 @@ struct Geant4Detector {
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
   };
 
+  explicit Geant4Detector(const Config& cfg);
+
+  const DetectorElements& detectorElements() const;
+
+  void drop() final;
+
+ private:
+  Config m_cfg;
+
+  DetectorElements m_detectorElements;
+
+  std::unique_ptr<const Acts::Logger> m_logger;
+
+  const Acts::Logger& logger() const { return *m_logger; }
+
+  void buildTrackingGeometry() final;
+  void buildDetector() final;
+
   /// @brief Construct an Acts::Detector from a Geant4 world volume
   /// @param cfg the configuration of the Geant4 detector
   /// @param logger a logger instance
   /// @return a tuple of an Acts::Detector object, a ContextDecorator & the created detector elements
   std::tuple<DetectorPtr, ContextDecorators, DetectorElements>
-  constructDetector(const Config& cfg, const Acts::Logger& logger);
+  constructDetector() const;
 
   /// @brief Construct a TrackingGeometry from a Geant4 world volume using the KDTreeTrackingGeometryBuilder builder
   ///
@@ -77,18 +97,15 @@ struct Geant4Detector {
   ///
   /// @return a tuple of an Acts::TrackingGeometry object,  a ContextDecorator & the created detector elements
   std::tuple<TrackingGeometryPtr, ContextDecorators, DetectorElements>
-  constructTrackingGeometry(const Config& cfg, const Acts::Logger& logger);
+  constructTrackingGeometry() const;
 
- private:
   /// @brief Convert Geant4VPhysicalVolume objects into Acts components
   ///
   /// @param cfg the configuration of the Geant4 detector
   /// @param logger a logger instance
   ///
   /// @return a tuple of surfaces and detector elements
-  std::tuple<Surfaces, DetectorElements> convertGeant4Volumes(
-      const Config& cfg, const Acts::Logger& logger) const;
+  std::tuple<Surfaces, DetectorElements> convertGeant4Volumes() const;
 };
 
-}  // namespace Geant4
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

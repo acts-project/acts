@@ -46,8 +46,9 @@ enum class TelescopeSurfaceType {
 /// @param binValue indicates which axis the detector surface normals are
 /// parallel to
 std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
-    const typename TelescopeDetectorElement::ContextType& gctx,
-    std::vector<std::shared_ptr<TelescopeDetectorElement>>& detectorStore,
+    const Acts::GeometryContext& gctx,
+    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
+        detectorStore,
     const std::vector<double>& positions,
     const std::vector<double>& stereoAngles,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,

@@ -9,46 +9,40 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 
 #include <cstddef>
 #include <memory>
 #include <utility>
 #include <vector>
 
-namespace Acts {
-class TrackingGeometry;
-class IMaterialDecorator;
-}  // namespace Acts
-
-namespace ActsExamples {
-class IContextDecorator;
-}  // namespace ActsExamples
-
 namespace ActsExamples::Generic {
 class GenericDetectorElement;
-}  // namespace ActsExamples::Generic
 
-struct GenericDetector {
-  using DetectorElement = ActsExamples::Generic::GenericDetectorElement;
-  using DetectorElementPtr = std::shared_ptr<DetectorElement>;
-  using DetectorStore = std::vector<std::vector<DetectorElementPtr>>;
-
+class GenericDetector : public ActsExamples::DetectorCommons::Detector {
+ public:
+  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
   using ContextDecorators =
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
+
+  using DetectorElement = ActsExamples::Generic::GenericDetectorElement;
 
   struct Config {
     std::size_t buildLevel{3};
+    Acts::Logging::Level logLevel{Acts::Logging::INFO};
     Acts::Logging::Level surfaceLogLevel{Acts::Logging::INFO};
     Acts::Logging::Level layerLogLevel{Acts::Logging::INFO};
     Acts::Logging::Level volumeLogLevel{Acts::Logging::INFO};
     bool buildProto{false};
+    std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
   };
 
-  /// The Store of the detector elements (lifetime: job)
-  DetectorStore detectorStore;
+  explicit GenericDetector(const Config& cfg);
 
-  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
-      const Config& cfg,
-      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+ private:
+  Config m_cfg;
+
+  void buildTrackingGeometry() final;
 };
+
+}  // namespace ActsExamples::Generic
