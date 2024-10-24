@@ -31,7 +31,7 @@ class MultiNavigationPolicy final : public MultiNavigationPolicyBase {
   /// Constructor from a set of child policies.
   /// @param policies The child policies
   MultiNavigationPolicy(Policies&&... policies)
-      : m_policies{std::forward<Policies>(policies)...} {}
+      : m_policies{std::move(policies)...} {}
 
   /// Implementation of the connection to a navigation delegate.
   /// It uses the delegate chain factory to produce a delegate chain and stores
