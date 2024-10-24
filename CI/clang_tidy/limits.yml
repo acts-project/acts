@@ -9,7 +9,6 @@ limits:
   "modernize-use-default-member-init": 0
   "modernize-use-nullptr": 0
   "modernize-use-override": 0
-  "modernize-use-std-numbers": 0
   "modernize-use-using": 0
   "performance-for-range-copy": 0
   "performance-move-const-arg": 0
