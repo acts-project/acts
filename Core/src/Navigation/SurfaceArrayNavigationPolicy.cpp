@@ -45,8 +45,6 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     auto [binsPhi, binsZ] = config.bins;
     m_surfaceArray =
         sac.surfaceArrayOnCylinder(gctx, std::move(surfaces), binsPhi, binsZ);
-    // m_surfaces = sac.createCylinderSurfaces(config.bins.first,
-    // config.bins.second);
   } else if (config.layerType == LayerType::Plane) {
     ACTS_ERROR("Plane layers are not yet supported");
     throw std::invalid_argument("Plane layers are not yet supported");

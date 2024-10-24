@@ -69,8 +69,8 @@ TrackingVolume::TrackingVolume(const Transform3& transform,
                      {}, volumeName) {}
 
 TrackingVolume::~TrackingVolume() = default;
-TrackingVolume::TrackingVolume(TrackingVolume&&) = default;
-TrackingVolume& TrackingVolume::operator=(TrackingVolume&&) = default;
+TrackingVolume::TrackingVolume(TrackingVolume&&) noexcept = default;
+TrackingVolume& TrackingVolume::operator=(TrackingVolume&&) noexcept = default;
 
 const TrackingVolume* TrackingVolume::lowestTrackingVolume(
     const GeometryContext& gctx, const Vector3& position,
