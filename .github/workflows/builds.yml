@@ -20,6 +20,7 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r2
+  DEPENDENCY_TAG: v5
 
 jobs:
   linux_ubuntu:
@@ -28,7 +29,7 @@ jobs:
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v4.tar.zst
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.${{ env.DEPENDENCY_TAG }}.tar.zst
 
     steps:
       - uses: actions/checkout@v4
@@ -114,7 +115,7 @@ jobs:
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v4.tar.zst
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.${{ env.DEPENDENCY_TAG }}.tar.zst
 
     steps:
       - uses: actions/checkout@v4
@@ -152,7 +153,7 @@ jobs:
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v4.tar.zst
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.${{ env.DEPENDENCY_TAG }}.tar.zst
 
     steps:
       - uses: actions/checkout@v4
@@ -246,7 +247,7 @@ jobs:
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.v4.tar.zst
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.${{ env.DEPENDENCY_TAG }}.tar.zst
     steps:
       - uses: actions/checkout@v4
         with:
@@ -320,7 +321,7 @@ jobs:
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/macos-14/deps.v4.tar.zst
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/macos-14/deps.${{ env.DEPENDENCY_TAG }}.tar.zst
     steps:
       - uses: actions/checkout@v4
         with:
