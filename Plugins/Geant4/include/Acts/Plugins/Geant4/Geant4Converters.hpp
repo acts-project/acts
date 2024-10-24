@@ -21,10 +21,6 @@ class Hep3Vector;
 class HepRotation;
 }  // namespace CLHEP
 
-namespace HepGeom {
-class Transform3D;
-}
-
 class G4Box;
 class G4Material;
 class G4Trd;
@@ -132,6 +128,14 @@ struct Geant4ShapeConverter {
   /// @return an ACTS Trapezoid bounds object, axis orientation, and thickness
   std::tuple<std::shared_ptr<TrapezoidBounds>, std::array<int, 2u>, ActsScalar>
   trapezoidBounds(const G4Trd& g4Trd);
+
+  /// @brief Convert to trapezoid bounds - from Trap
+  ///
+  /// @param g4Trd a Geant4 trapezoid shape
+  ///
+  /// @return an ACTS Trapezoid bounds object, axis orientation, and thickness
+  std::tuple<std::shared_ptr<TrapezoidBounds>, std::array<int, 2u>, ActsScalar>
+  trapezoidBounds(const G4Trap& g4Trap);
 
   /// @brief Convert to general solid into a planar shape
   ///
