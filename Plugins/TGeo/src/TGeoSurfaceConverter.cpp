@@ -27,6 +27,7 @@
 #include <cctype>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 #include <tuple>
 #include <utility>
@@ -87,14 +88,14 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
     double halfZ = tube->GetDz() * scalor;
     if (halfZ > deltaR) {
       transform = TGeoPrimitivesHelper::makeTransform(ax, ay, az, t);
-      double halfPhi = M_PI;
+      double halfPhi = std::numbers::pi;
       double avgPhi = 0.;
       // Check if it's a segment
       auto tubeSeg = dynamic_cast<const TGeoTubeSeg*>(tube);
       if (tubeSeg != nullptr) {
         double phi1 = toRadian(tubeSeg->GetPhi1());
         double phi2 = toRadian(tubeSeg->GetPhi2());
-        if (std::abs(phi2 - phi1) < M_PI * (1. - s_epsilon)) {
+        if (std::abs(phi2 - phi1) < std::numbers::pi * (1. - s_epsilon)) {
           if (!boost::starts_with(axes, "X")) {
             throw std::invalid_argument(
                 "TGeoShape -> CylinderSurface (sectorial): can only be "
@@ -176,7 +177,8 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
             Vector2 ab = b - a;
             double phi = VectorHelpers::phi(ab);
 
-            if (std::abs(phi) > 3 * M_PI / 4. || std::abs(phi) < M_PI / 4.) {
+            if (std::abs(phi) > 3 * std::numbers::pi / 4. ||
+                std::abs(phi) < std::numbers::pi / 4.) {
               if (a.norm() < b.norm()) {
                 boundLines.push_back(std::make_pair(a, b));
               } else {
@@ -245,14 +247,14 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
       double minR = tube->GetRmin() * scalor;
       double maxR = tube->GetRmax() * scalor;
       double halfZ = tube->GetDz() * scalor;
-      double halfPhi = M_PI;
+      double halfPhi = std::numbers::pi;
       double avgPhi = 0.;
       // Check if it's a segment
       auto tubeSeg = dynamic_cast<const TGeoTubeSeg*>(tube);
       if (tubeSeg != nullptr) {
         double phi1 = toRadian(tubeSeg->GetPhi1());
         double phi2 = toRadian(tubeSeg->GetPhi2());
-        if (std::abs(phi2 - phi1) < 2 * M_PI * (1. - s_epsilon)) {
+        if (std::abs(phi2 - phi1) < 2 * std::numbers::pi * (1. - s_epsilon)) {
           if (!boost::starts_with(axes, "X")) {
             throw std::invalid_argument(
                 "TGeoShape -> CylinderSurface (sectorial): can only be "

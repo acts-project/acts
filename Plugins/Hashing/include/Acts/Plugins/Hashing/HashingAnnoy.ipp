@@ -10,6 +10,7 @@
 #include "Acts/Definitions/Units.hpp"
 
 #include <map>
+#include <numbers>
 #include <set>
 #include <vector>
 
@@ -67,8 +68,8 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
   };
 
   auto getBinIndexPhi = [&phiBins](Scalar phi) {
-    Scalar binSize = 2 * M_PI / phiBins;
-    auto binIndex = static_cast<int>((phi + M_PI) / binSize);
+    Scalar binSize = 2 * std::numbers::pi / phiBins;
+    auto binIndex = static_cast<int>((phi + std::numbers::pi) / binSize);
     return binIndex;
   };
 

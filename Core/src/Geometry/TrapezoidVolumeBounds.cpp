@@ -127,7 +127,7 @@ void TrapezoidVolumeBounds::buildSurfaceBounds() {
       get(eHalfLengthXnegY), get(eHalfLengthXposY), get(eHalfLengthY));
 
   m_faceAlphaRectangleBounds = std::make_shared<const RectangleBounds>(
-      get(eHalfLengthY) / cos(get(eAlpha) - std::numbers::pi / 2.,
+      get(eHalfLengthY) / cos(get(eAlpha) - std::numbers::pi / 2.),
       get(eHalfLengthZ));
 
   m_faceBetaRectangleBounds = std::make_shared<const RectangleBounds>(

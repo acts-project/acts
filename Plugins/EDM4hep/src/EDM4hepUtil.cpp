@@ -16,6 +16,8 @@
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 
+#include <numbers>
+
 #include "edm4hep/TrackState.h"
 
 namespace Acts::EDM4hepUtil::detail {
@@ -149,7 +151,8 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
   result.values[0] = targetPars[Acts::eBoundLoc0];
   result.values[1] = targetPars[Acts::eBoundLoc1];
   result.values[2] = targetPars[Acts::eBoundPhi];
-  result.values[3] = std::tan(M_PI_2 - targetPars[Acts::eBoundTheta]);
+  result.values[3] =
+      std::tan(std::numbers::pi / 2. - targetPars[Acts::eBoundTheta]);
   result.values[4] = targetPars[Acts::eBoundQOverP] /
                      std::sin(targetPars[Acts::eBoundTheta]) * Bz;
   result.values[5] = targetPars[Acts::eBoundTime];
@@ -174,7 +177,7 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
   targetPars[eBoundLoc0] = params.values[0];
   targetPars[eBoundLoc1] = params.values[1];
   targetPars[eBoundPhi] = params.values[2];
-  targetPars[eBoundTheta] = M_PI_2 - std::atan(params.values[3]);
+  targetPars[eBoundTheta] = std::numbers::pi / 2. - std::atan(params.values[3]);
   targetPars[eBoundQOverP] =
       params.values[4] * std::sin(targetPars[eBoundTheta]) / Bz;
   targetPars[eBoundTime] = params.values[5];

@@ -12,6 +12,7 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <tuple>
 
@@ -77,7 +78,7 @@ struct TGeoSurfaceConverter {
   /// Convert a TGeoShape to a Surface
   ///
   /// @param tgShape The TGeoShape
-  /// @param tgMatrix The matrix representing the tranbsform
+  /// @param tgMatrix The matrix representing the transform
   /// @param axes The axes definition
   /// @param scalor The unit scalor between TGeo and Acts
   ///
@@ -95,7 +96,7 @@ struct TGeoSurfaceConverter {
     if (degree > 180. && degree < 360.) {
       degree -= 360.;
     }
-    return degree / 180. * M_PI;
+    return degree / 180. * std::numbers::pi;
   }
 };
 

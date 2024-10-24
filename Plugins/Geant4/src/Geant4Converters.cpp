@@ -27,6 +27,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iterator>
+#include <numbers>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -98,9 +99,9 @@ Acts::Geant4ShapeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
   tArray[B::eHalfLengthZ] = static_cast<ActsScalar>(g4Tubs.GetZHalfLength());
   tArray[B::eHalfPhiSector] =
       0.5 * static_cast<ActsScalar>(g4Tubs.GetDeltaPhiAngle());
-  // Geant fiddles around with user given values, i.e. it would not
-  // allow [-M_PI, +M_PI) as a full segment (has to be [0, 2PI)])
-  if (std::abs(tArray[B::eHalfPhiSector] - M_PI) <
+  // Geant fiddles around with user given values, i.e. it would not allow [-PI,
+  // +PI) as a full segment (has to be [0, 2PI)])
+  if (std::abs(tArray[B::eHalfPhiSector] - std::numbers::pi) <
       std::numeric_limits<ActsScalar>::epsilon()) {
     tArray[B::eAveragePhi] = 0.;
   } else {
@@ -122,9 +123,9 @@ Acts::Geant4ShapeConverter::radialBounds(const G4Tubs& g4Tubs) {
   tArray[B::eMaxR] = static_cast<ActsScalar>(g4Tubs.GetOuterRadius());
   tArray[B::eHalfPhiSector] =
       0.5 * static_cast<ActsScalar>(g4Tubs.GetDeltaPhiAngle());
-  // Geant fiddles around with user given values, i.e. it would not
-  // allow [-M_PI, +M_PI) as a full segment (has to be [0, 2PI)])
-  if (std::abs(tArray[B::eHalfPhiSector] - M_PI) <
+  // Geant fiddles around with user given values, i.e. it would not allow [-PI,
+  // +PI) as a full segment (has to be [0, 2PI)])
+  if (std::abs(tArray[B::eHalfPhiSector] - std::numbers::pi) <
       std::numeric_limits<ActsScalar>::epsilon()) {
     tArray[B::eAveragePhi] = 0.;
   } else {
