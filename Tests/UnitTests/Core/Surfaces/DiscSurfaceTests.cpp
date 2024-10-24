@@ -54,8 +54,9 @@ auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit tests for creating DiscSurface object
 BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
-  // default constructor is deleted
-  // scaffolding...
+  /// Test default construction
+  // default construction is deleted
+
   const double rMin = 1.;
   const double rMax = 5.;
   const double halfPhiSector = std::numbers::pi / 8.;
@@ -146,12 +147,12 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   returnedPosition =
       discSurfaceObject->localToGlobal(tgContext, rPhiOnDisc, ignoredMomentum);
   CHECK_CLOSE_ABS(returnedPosition, expectedPosition, 1e-6);
-  //
+
   returnedPosition = discSurfaceObject->localToGlobal(
       tgContext, rPhiNotInSector, ignoredMomentum);
   Vector3 expectedNonPosition{-1.2, 0, 0};
   CHECK_CLOSE_ABS(returnedPosition, expectedNonPosition, 1e-6);
-  //
+
   /// Test globalToLocal
   Vector2 returnedLocalPosition{33., 44.};
   Vector2 expectedLocalPosition{1.2, 0.0};
@@ -809,8 +810,8 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     // bounds should be equal however
     BOOST_CHECK_EQUAL(disc76->bounds(), disc67->bounds());
 
-    BOOST_CHECK(!reversed76);  // not reversed either because you get the
-                               // ordering you put in
+    // not reversed either because you get the ordering you put in
+    BOOST_CHECK(!reversed76);
 
     const auto* bounds67 = dynamic_cast<const RadialBounds*>(&disc67->bounds());
     BOOST_REQUIRE_NE(bounds67, nullptr);
