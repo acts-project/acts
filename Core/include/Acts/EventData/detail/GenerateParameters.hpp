@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
 
 #include <cmath>
@@ -215,16 +214,10 @@ inline BoundVector generateBoundParameters(
   return {loc0, loc1, phi, theta, qOverP, time};
 }
 
-struct GenerateBoundParametersCovarianceOptions {
-  GenerateBoundParametersOptions parameters;
-
-  EstimateTrackParamCovarianceConfig covariance;
-};
-
 template <typename generator_t>
 inline std::pair<BoundVector, BoundMatrix> generateBoundParametersCovariance(
-    generator_t& rng, const GenerateBoundParametersCovarianceOptions& options) {
-  auto params = generateBoundParameters(rng, options.parameters);
+    generator_t& rng, const GenerateBoundParametersOptions& options) {
+  auto params = generateBoundParameters(rng, options);
   auto cov = generateCovariance<ActsScalar, eBoundSize>(rng);
   return {params, cov};
 }
