@@ -17,6 +17,7 @@
 #include "ActsFatras/Physics/ElectroMagnetic/detail/Highland.hpp"
 
 #include <array>
+#include <numbers>
 #include <random>
 
 namespace ActsFatras {
@@ -52,8 +53,8 @@ struct GenericScattering {
     // drawn from the specific scattering model distribution.
 
     // draw the random orientation angle
-    const auto psi =
-        std::uniform_real_distribution<double>(-M_PI, M_PI)(generator);
+    const auto psi = std::uniform_real_distribution<double>(
+        -std::numbers::pi, std::numbers::pi)(generator);
     // draw the scattering angle
     const auto theta = angle(generator, slab, particle);
 

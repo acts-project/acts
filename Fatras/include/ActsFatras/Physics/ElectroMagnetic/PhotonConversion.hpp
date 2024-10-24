@@ -22,6 +22,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <numbers>
 #include <random>
 #include <utility>
 #include <vector>
@@ -241,8 +242,8 @@ Particle::Vector3 PhotonConversion::generateChildDirection(
                : u * 1. / 3.;  // 9./(9.+27) = 0.25
 
   // draw the random orientation angle
-  const auto psi =
-      std::uniform_real_distribution<double>(-M_PI, M_PI)(generator);
+  const auto psi = std::uniform_real_distribution<double>(
+      -std::numbers::pi, std::numbers::pi)(generator);
 
   Acts::Vector3 direction = particle.direction();
   // construct the combined rotation to the scattered direction

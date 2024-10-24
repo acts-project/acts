@@ -25,6 +25,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 
 namespace {
 
@@ -217,7 +218,7 @@ ActsFatras::PlanarSurfaceMask::radialMask(const Acts::RadialBounds& rBounds,
   };
 
   // Intersect phi lines
-  if ((M_PI - hPhi) > Acts::s_epsilon) {
+  if ((std::numbers::pi - hPhi) > Acts::s_epsilon) {
     if (sPhi < phii[0] || ePhi < phii[0]) {
       intersectPhiLine(phii[0]);
     }

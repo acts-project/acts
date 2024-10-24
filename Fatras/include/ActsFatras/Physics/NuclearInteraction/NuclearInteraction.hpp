@@ -23,6 +23,7 @@
 #include <cmath>
 #include <iterator>
 #include <limits>
+#include <numbers>
 #include <optional>
 #include <random>
 #include <utility>
@@ -517,9 +518,9 @@ std::vector<Particle> NuclearInteraction::convertParametersToParticles(
     const float p1p2 = 2. * momentum * parametrizedMomentum;
     const float costheta = 1. - invariantMass * invariantMass / p1p2;
 
-    const auto phiTheta =
-        globalAngle(phi, theta, uniformDistribution(generator) * 2. * M_PI,
-                    std::acos(costheta));
+    const auto phiTheta = globalAngle(
+        phi, theta, uniformDistribution(generator) * 2. * std::numbers::pi,
+        std::acos(costheta));
     const auto direction =
         Acts::makeDirectionFromPhiTheta(phiTheta.first, phiTheta.second);
 
