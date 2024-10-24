@@ -35,6 +35,7 @@
 #include <cmath>
 #include <initializer_list>
 #include <memory>
+#include <numbers>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -55,28 +56,29 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
   // default constructor is deleted
   // scaffolding...
-  double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
-  //
+  const double rMin = 1.;
+  const double rMax = 5.;
+  const double halfPhiSector = std::numbers::pi / 8.;
+
   /// Test DiscSurface constructor with default halfPhiSector
   BOOST_CHECK_NO_THROW(
       Surface::makeShared<DiscSurface>(Transform3::Identity(), rMin, rMax));
-  //
+
   /// Test DiscSurface constructor with a transform specified
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
   BOOST_CHECK_NO_THROW(
       Surface::makeShared<DiscSurface>(pTransform, rMin, rMax, halfPhiSector));
-  //
+
   /// Copy constructed DiscSurface
   auto anotherDiscSurface =
       Surface::makeShared<DiscSurface>(pTransform, rMin, rMax, halfPhiSector);
   // N.B. Just using
   // BOOST_CHECK_NO_THROW(Surface::makeShared<DiscSurface>(anotherDiscSurface))
-  // tries to call
-  // the (deleted) default constructor.
+  // tries to call the (deleted) default constructor.
   auto copiedSurface = Surface::makeShared<DiscSurface>(*anotherDiscSurface);
   BOOST_TEST_MESSAGE("Copy constructed DiscSurface ok");
-  //
+
   /// Copied and transformed DiscSurface
   BOOST_CHECK_NO_THROW(Surface::makeShared<DiscSurface>(
       tgContext, *anotherDiscSurface, pTransform));
@@ -90,22 +92,26 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
 
 /// Unit tests of all named methods
 BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
-  Vector3 origin3D{0, 0, 0};
-  double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
+  const double rMin = 1.;
+  const double rMax = 5.;
+  const double halfPhiSector = std::numbers::pi / 8.;
+
+  const Vector3 origin3D{0, 0, 0};
+
   auto discSurfaceObject = Surface::makeShared<DiscSurface>(
       Transform3::Identity(), rMin, rMax, halfPhiSector);
-  //
+
   /// Test type
   BOOST_CHECK_EQUAL(discSurfaceObject->type(), Surface::Disc);
-  //
+
   /// Test normal, no local position specified
   Vector3 zAxis{0, 0, 1};
   BOOST_CHECK_EQUAL(discSurfaceObject->normal(tgContext), zAxis);
-  //
+
   /// Test normal, local position specified
   Vector2 lpos(2.0, 0.05);
   BOOST_CHECK_EQUAL(discSurfaceObject->normal(tgContext, lpos), zAxis);
-  //
+
   /// Test binningPosition
   // auto binningPosition=
   // discSurfaceObject.binningPosition(BinningValue::BinningValue::binRPhi );
@@ -113,32 +119,30 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   BOOST_CHECK_EQUAL(
       discSurfaceObject->binningPosition(tgContext, BinningValue::binRPhi),
       origin3D);
-  //
+
   /// Test bounds
   BOOST_CHECK_EQUAL(discSurfaceObject->bounds().type(), SurfaceBounds::eDisc);
-  //
+
   Vector3 ignoredMomentum{0., 0., 0.};
   /// Test isOnSurface()
   Vector3 point3DNotInSector{0.0, 1.2, 0};
   Vector3 point3DOnSurface{1.2, 0.0, 0};
-  BOOST_CHECK(!discSurfaceObject->isOnSurface(
-      tgContext, point3DNotInSector, ignoredMomentum,
-      BoundaryTolerance::None()));  // passes
-  BOOST_CHECK(
-      !discSurfaceObject->isOnSurface(tgContext, point3DNotInSector,
-                                      BoundaryTolerance::None()));  // passes
+  BOOST_CHECK(!discSurfaceObject->isOnSurface(tgContext, point3DNotInSector,
+                                              ignoredMomentum,
+                                              BoundaryTolerance::None()));
+  BOOST_CHECK(!discSurfaceObject->isOnSurface(tgContext, point3DNotInSector,
+                                              BoundaryTolerance::None()));
   BOOST_CHECK(discSurfaceObject->isOnSurface(
-      tgContext, point3DOnSurface, ignoredMomentum,
-      BoundaryTolerance::None()));  // passes
-  BOOST_CHECK(
-      discSurfaceObject->isOnSurface(tgContext, point3DOnSurface,
-                                     BoundaryTolerance::None()));  // passes
-  //
+      tgContext, point3DOnSurface, ignoredMomentum, BoundaryTolerance::None()));
+  BOOST_CHECK(discSurfaceObject->isOnSurface(tgContext, point3DOnSurface,
+                                             BoundaryTolerance::None()));
+
   /// Test localToGlobal
   Vector3 returnedPosition{10.9, 8.7, 6.5};
   Vector3 expectedPosition{1.2, 0, 0};
   Vector2 rPhiOnDisc{1.2, 0.0};
-  Vector2 rPhiNotInSector{1.2, M_PI};  // outside sector at Phi=0, +/- pi/8
+  Vector2 rPhiNotInSector{
+      1.2, std::numbers::pi};  // outside sector at Phi=0, +/- pi/8
   returnedPosition =
       discSurfaceObject->localToGlobal(tgContext, rPhiOnDisc, ignoredMomentum);
   CHECK_CLOSE_ABS(returnedPosition, expectedPosition, 1e-6);
@@ -162,51 +166,51 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
       discSurfaceObject
           ->globalToLocal(tgContext, point3DNotInSector, ignoredMomentum)
           .value();
-  //
+
   Vector3 pointOutsideR{0.0, 100., 0};
   returnedLocalPosition =
       discSurfaceObject
           ->globalToLocal(tgContext, pointOutsideR, ignoredMomentum)
           .value();
-  //
+
   /// Test localPolarToCartesian
-  Vector2 rPhi1_1{std::sqrt(2.), M_PI / 4.};
+  Vector2 rPhi1_1{std::numbers::sqrt2, std::numbers::pi / 4.};
   Vector2 cartesian1_1{1., 1.};
   CHECK_CLOSE_REL(discSurfaceObject->localPolarToCartesian(rPhi1_1),
                   cartesian1_1, 1e-6);
-  //
+
   /// Test localCartesianToPolar
   CHECK_CLOSE_REL(discSurfaceObject->localCartesianToPolar(cartesian1_1),
                   rPhi1_1, 1e-6);
-  //
+
   /// Test localPolarToLocalCartesian
   CHECK_CLOSE_REL(discSurfaceObject->localPolarToLocalCartesian(rPhi1_1),
                   cartesian1_1, 1e-6);
-  //
+
   /// Test localCartesianToGlobal
   Vector3 cartesian3D1_1{1., 1., 0.};
   CHECK_CLOSE_ABS(
       discSurfaceObject->localCartesianToGlobal(tgContext, cartesian1_1),
       cartesian3D1_1, 1e-6);
-  //
+
   /// Test globalToLocalCartesian
   CHECK_CLOSE_REL(
       discSurfaceObject->globalToLocalCartesian(tgContext, cartesian3D1_1),
       cartesian1_1, 1e-6);
-  //
+
   /// Test pathCorrection
-  double projected3DMomentum = std::sqrt(3.) * 1.e6;
+  double projected3DMomentum = std::numbers::sqrt3 * 1.e6;
   Vector3 momentum{projected3DMomentum, projected3DMomentum,
                    projected3DMomentum};
   Vector3 ignoredPosition = discSurfaceObject->center(tgContext);
   CHECK_CLOSE_REL(discSurfaceObject->pathCorrection(tgContext, ignoredPosition,
                                                     momentum.normalized()),
-                  std::sqrt(3), 0.01);
-  //
+                  std::numbers::sqrt3, 0.01);
+
   /// intersection test
-  Vector3 globalPosition{1.2, 0.0, -10.};
+  Vector3 globalPosition{1.2, 0., -10.};
   Vector3 direction{0., 0., 1.};  // must be normalised
-  Vector3 expected{1.2, 0.0, 0.0};
+  Vector3 expected{1.2, 0., 0.};
 
   // intersect is a struct of (Vector3) position, pathLength, distance and
   // (bool) valid, it's contained in a Surface intersection
@@ -223,17 +227,18 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
                   1e-9);
   BOOST_CHECK_EQUAL(sfIntersection.object(), discSurfaceObject.get());
 
-  //
   /// Test name
   boost::test_tools::output_test_stream nameOuput;
   nameOuput << discSurfaceObject->name();
   BOOST_CHECK(nameOuput.is_equal("Acts::DiscSurface"));
 }
-//
+
 /// Unit test for testing DiscSurface assignment and equality
 BOOST_AUTO_TEST_CASE(DiscSurfaceAssignment) {
-  Vector3 origin3D{0, 0, 0};
-  double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
+  const double rMin = 1.;
+  const double rMax = 5.;
+  const double halfPhiSector = std::numbers::pi / 8.;
+
   auto discSurfaceObject = Surface::makeShared<DiscSurface>(
       Transform3::Identity(), rMin, rMax, halfPhiSector);
   auto assignedDisc =
@@ -245,7 +250,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAssignment) {
 
 /// Unit test for testing DiscSurface assignment and equality
 BOOST_AUTO_TEST_CASE(DiscSurfaceExtent) {
-  double rMin(1.0), rMax(5.0);
+  const double rMin = 1.;
+  const double rMax = 5.;
 
   auto pDisc =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 0., rMax);
@@ -267,9 +273,9 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceExtent) {
                   s_onSurfaceTolerance);
   CHECK_CLOSE_ABS(rMax, pDiscExtent.max(BinningValue::binY),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(-M_PI, pDiscExtent.min(BinningValue::binPhi),
+  CHECK_CLOSE_ABS(-std::numbers::pi, pDiscExtent.min(BinningValue::binPhi),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(M_PI, pDiscExtent.max(BinningValue::binPhi),
+  CHECK_CLOSE_ABS(std::numbers::pi, pDiscExtent.max(BinningValue::binPhi),
                   s_onSurfaceTolerance);
 
   auto pRing =
@@ -298,7 +304,10 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceExtent) {
 BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
   Translation3 translation{0., 1., 2.};
   Transform3 transform(translation);
-  double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
+  const double rMin = 1.;
+  const double rMax = 5.;
+  const double halfPhiSector = std::numbers::pi / 8.;
+
   auto discSurfaceObject =
       Surface::makeShared<DiscSurface>(transform, rMin, rMax, halfPhiSector);
 
@@ -345,7 +354,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceBinningPosition) {
 
   {
     // Radial Bounds
-    auto bounds = std::make_shared<RadialBounds>(minR, maxR, M_PI / 8, 0.1);
+    auto bounds =
+        std::make_shared<RadialBounds>(minR, maxR, std::numbers::pi / 8, 0.1);
     auto disc = Acts::Surface::makeShared<Acts::DiscSurface>(trf, bounds);
 
     Vector3 bp = disc->binningPosition(tgContext, BinningValue::binR);
@@ -410,7 +420,8 @@ BOOST_AUTO_TEST_SUITE(DiscSurfaceMerging)
 
 namespace {
 std::shared_ptr<DiscSurface> makeDisc(const Transform3& transform, double rmin,
-                                      double rmax, double halfPhi = M_PI,
+                                      double rmax,
+                                      double halfPhi = std::numbers::pi,
                                       double avgPhi = 0) {
   return Surface::makeShared<DiscSurface>(
       transform, std::make_shared<RadialBounds>(rmin, rmax, halfPhi, avgPhi));
@@ -657,7 +668,7 @@ BOOST_DATA_TEST_CASE(PhiDirection,
 
     BOOST_CHECK_SMALL(
         detail::difference_periodic(bounds->get(RadialBounds::eAveragePhi),
-                                    a(85_degree), 2 * M_PI),
+                                    a(85_degree), 2 * std::numbers::pi),
         1e-6);
     BOOST_CHECK_CLOSE(bounds->get(RadialBounds::eHalfPhiSector), 55_degree,
                       1e-6);
@@ -682,7 +693,7 @@ BOOST_DATA_TEST_CASE(PhiDirection,
 
     BOOST_CHECK_SMALL(
         detail::difference_periodic(bounds45->get(RadialBounds::eAveragePhi),
-                                    a(180_degree), 2 * M_PI),
+                                    a(180_degree), 2 * std::numbers::pi),
         1e-6);
     BOOST_CHECK_CLOSE(bounds45->get(RadialBounds::eHalfPhiSector), 30_degree,
                       1e-6);
@@ -714,7 +725,7 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     BOOST_REQUIRE_NE(bounds67, nullptr);
     BOOST_CHECK_SMALL(
         detail::difference_periodic(bounds67->get(RadialBounds::eAveragePhi),
-                                    a(90_degree), 2 * M_PI),
+                                    a(90_degree), 2 * std::numbers::pi),
         1e-6);
     BOOST_CHECK_CLOSE(bounds67->get(RadialBounds::eHalfPhiSector), 180_degree,
                       1e-6);

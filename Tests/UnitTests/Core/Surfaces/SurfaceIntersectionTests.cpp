@@ -23,6 +23,7 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <utility>
 
 using namespace Acts::UnitLiterals;
@@ -169,7 +170,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
 /// This tests the intersection with cylinders
 /// and looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
-  double alpha = 0.25 * M_PI;
+  double alpha = std::numbers::pi / 4.;
 
   auto testConeIntersection = [&](const Transform3& transform) -> void {
     // A cone surface ready to use
@@ -179,7 +180,8 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
     auto lTransform = transform.linear();
 
     // An onCylinder solution
-    Vector3 onCone = transform * Vector3(std::sqrt(2.), std::sqrt(2.), 2.);
+    Vector3 onCone =
+        transform * Vector3(std::numbers::sqrt2, std::numbers::sqrt2, 2.);
     Vector3 outCone = transform * Vector3(std::sqrt(4.), std::sqrt(4.), 2.);
     // Simply along the x axis
     Vector3 perpXY = lTransform * Vector3(1., -1., 0.).normalized();
