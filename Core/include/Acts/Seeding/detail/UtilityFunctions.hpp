@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/EventData/SourceLink.hpp"
+
 #include <ranges>
 
 namespace Acts::detail {
@@ -28,6 +30,10 @@ concept isCollectionThatSupportsInsert =
     } && requires(external_t coll, typename external_t::value_type val) {
       coll.insert(std::ranges::end(coll), val);
     };
+
+template <typename grid_t>
+concept SourceLinkGrid =
+    std::same_as<typename grid_t::value_type, std::vector<Acts::SourceLink>>;
 
 // Define some functions
 template <Acts::detail::isCollectionThatSupportsPushBack storage_t,

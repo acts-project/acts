@@ -21,7 +21,7 @@ import acts
 from acts import UnitConstants as u
 from acts.examples import (
     ObjPropagationStepsWriter,
-    TrackFinderPerformanceWriter,
+    TrackFinderNTupleWriter,
     SeedingPerformanceWriter,
     RootPropagationStepsWriter,
     RootParticleWriter,
@@ -31,7 +31,7 @@ from acts.examples import (
     RootSimHitWriter,
     RootTrackStatesWriter,
     RootTrackSummaryWriter,
-    VertexPerformanceWriter,
+    VertexNTupleWriter,
     RootMeasurementWriter,
     CsvParticleWriter,
     CsvSimHitWriter,
@@ -250,7 +250,7 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
     [
         RootPropagationStepsWriter,
         RootParticleWriter,
-        TrackFinderPerformanceWriter,
+        TrackFinderNTupleWriter,
         SeedingPerformanceWriter,
         RootTrackParameterWriter,
         RootMaterialTrackWriter,
@@ -259,7 +259,7 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
         RootSimHitWriter,
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
-        VertexPerformanceWriter,
+        VertexNTupleWriter,
         SeedingPerformanceWriter,
     ],
 )
