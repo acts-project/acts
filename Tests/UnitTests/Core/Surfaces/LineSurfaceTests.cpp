@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
       line.alignmentToPathDerivative(tgContext, globalPosition, direction);
   // The expected results
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
-  const double value = std::sqrt(3) / 2;
+  const double value = std::numbers::sqrt3 / 2;
   expAlignToPath << -value, value, 0, -3 * value, -value, 0;
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
@@ -241,7 +241,8 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
       line.localCartesianToBoundLocalDerivative(tgContext, globalPosition);
   // Check if the result is as expected
   ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
-  expLoc3DToLocBound << 1 / std::sqrt(2), 1 / std::sqrt(2), 0, 0, 0, 1;
+  expLoc3DToLocBound << 1 / std::numbers::sqrt2, 1 / std::numbers::sqrt2, 0, 0,
+      0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }
 

@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   /// Test pathCorrection
   CHECK_CLOSE_REL(planeSurfaceObject->pathCorrection(tgContext, offSurface,
                                                      momentum.normalized()),
-                  std::sqrt(3), 0.01);
+                  std::numbers::sqrt3, 0.01);
   //
   /// Test name
   BOOST_CHECK_EQUAL(planeSurfaceObject->name(),

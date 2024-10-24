@@ -25,7 +25,7 @@ Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
   value_type angle = VectorHelpers::phi(dir);
   Eigen::Rotation2D<value_type> rot(angle);
 
-  value_type normal_angle = 0.5 * std::numbers::pi - 0.5 * opening_angle;
+  value_type normal_angle = std::numbers::pi / 2. - opening_angle / 2.;
   VertexType normal1 = rotation_t(normal_angle) * VertexType::UnitX();
   VertexType normal2 = rotation_t(-normal_angle) * VertexType::UnitX();
 

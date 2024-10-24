@@ -153,7 +153,7 @@ bool Acts::RiddersPropagator<propagator_t>::inconsistentDerivativesOnDisc(
       // If there is at least one with a similar angle then it seems to work
       // properly
       if (i != j && std::abs(derivatives[i](1) - derivatives[j](1)) <
-                        0.5 * std::numbers::pi) {
+                        std::numbers::pi / 2.) {
         jumpedAngle = false;
         break;
       }

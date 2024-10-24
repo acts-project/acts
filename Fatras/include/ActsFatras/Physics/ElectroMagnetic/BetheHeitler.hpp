@@ -14,6 +14,7 @@
 
 #include <array>
 #include <cmath>
+#include <numbers>
 #include <random>
 
 namespace ActsFatras {
@@ -58,8 +59,8 @@ struct BetheHeitler {
                                      const Acts::MaterialSlab &slab,
                                      Particle &particle) const {
     // Take a random gamma-distributed value - depending on t/X0
-    std::gamma_distribution<double> gDist(slab.thicknessInX0() / std::log(2.0),
-                                          1.0);
+    std::gamma_distribution<double> gDist(
+        slab.thicknessInX0() / std::numbers::ln2, 1.);
 
     const auto u = gDist(generator);
     const auto z = std::exp(-u);  // MARK: fpeMask(FLTUND, 1, #2346)

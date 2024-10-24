@@ -180,7 +180,8 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
     auto lTransform = transform.linear();
 
     // An onCylinder solution
-    Vector3 onCone = transform * Vector3(std::sqrt(2.), std::sqrt(2.), 2.);
+    Vector3 onCone =
+        transform * Vector3(std::numbers::sqrt2, std::numbers::sqrt2, 2.);
     Vector3 outCone = transform * Vector3(std::sqrt(4.), std::sqrt(4.), 2.);
     // Simply along the x axis
     Vector3 perpXY = lTransform * Vector3(1., -1., 0.).normalized();

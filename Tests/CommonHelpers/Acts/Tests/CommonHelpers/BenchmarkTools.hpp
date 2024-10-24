@@ -13,6 +13,7 @@
 #include <chrono>
 #include <cmath>
 #include <iomanip>
+#include <numbers>
 #include <numeric>
 #include <ostream>
 #include <type_traits>
@@ -299,7 +300,8 @@ struct MicroBenchmarkResult {
   //
   Duration runTimeRobustStddev() const {
     auto [firstq, thirdq] = runTimeQuartiles();
-    return (thirdq - firstq) / (2. * std::sqrt(2.) * 0.4769362762044698733814);
+    return (thirdq - firstq) /
+           (2. * std::numbers::sqrt2 * 0.4769362762044698733814);
   }
 
   // Standard error on the median benchmark run time

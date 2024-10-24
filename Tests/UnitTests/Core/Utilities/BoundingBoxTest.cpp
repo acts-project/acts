@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     // ActsVector<BoundingBoxScalar,2> origin = {min + step * i, min + step *
     // j}; origin.x() *= 1.10;  // visual Eigen::Rotation2D<BoundingBoxScalar>
     // rot(2 * std::numbers::pi / static_cast<BoundingBoxScalar>(n) * i);
-    // BoundingBoxScalar angle = 0.5 * std::numbers::pi / n * j; Frustum2
+    // BoundingBoxScalar angle = std::numbers::pi / 2. / n * j; Frustum2
     // fr(origin, rot * dir, angle); fr.svg(os, w, w, 2);
     //}
     //}

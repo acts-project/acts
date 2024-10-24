@@ -35,12 +35,12 @@ struct OrientedSurface {
 // Planar definitions to help construct the boundary surfaces
 static const Transform3 s_planeXY = Transform3::Identity();
 static const Transform3 s_planeYZ =
-    AngleAxis3(0.5 * std::numbers::pi, Vector3::UnitY()) *
-    AngleAxis3(0.5 * std::numbers::pi, Vector3::UnitZ()) *
+    AngleAxis3(std::numbers::pi / 2., Vector3::UnitY()) *
+    AngleAxis3(std::numbers::pi / 2., Vector3::UnitZ()) *
     Transform3::Identity();
 static const Transform3 s_planeZX =
-    AngleAxis3(-0.5 * std::numbers::pi, Vector3::UnitX()) *
-    AngleAxis3(-0.5 * std::numbers::pi, Vector3::UnitZ()) *
+    AngleAxis3(-std::numbers::pi / 2., Vector3::UnitX()) *
+    AngleAxis3(-std::numbers::pi / 2., Vector3::UnitZ()) *
     Transform3::Identity();
 
 /// @class VolumeBounds
