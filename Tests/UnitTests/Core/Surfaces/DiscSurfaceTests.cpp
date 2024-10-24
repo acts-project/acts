@@ -54,8 +54,9 @@ auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit tests for creating DiscSurface object
 BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
-  // default constructor is deleted
-  // scaffolding...
+  /// Test default construction
+  // default construction is deleted
+
   const double rMin = 1.;
   const double rMax = 5.;
   const double halfPhiSector = std::numbers::pi / 8.;
@@ -109,7 +110,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   BOOST_CHECK_EQUAL(discSurfaceObject->normal(tgContext), zAxis);
 
   /// Test normal, local position specified
-  Vector2 lpos(2.0, 0.05);
+  Vector2 lpos(2., 0.05);
   BOOST_CHECK_EQUAL(discSurfaceObject->normal(tgContext, lpos), zAxis);
 
   /// Test binningPosition
@@ -125,8 +126,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
 
   Vector3 ignoredMomentum{0., 0., 0.};
   /// Test isOnSurface()
-  Vector3 point3DNotInSector{0.0, 1.2, 0};
-  Vector3 point3DOnSurface{1.2, 0.0, 0};
+  Vector3 point3DNotInSector{0., 1.2, 0};
+  Vector3 point3DOnSurface{1.2, 0., 0};
   BOOST_CHECK(!discSurfaceObject->isOnSurface(tgContext, point3DNotInSector,
                                               ignoredMomentum,
                                               BoundaryTolerance::None()));
@@ -140,21 +141,21 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   /// Test localToGlobal
   Vector3 returnedPosition{10.9, 8.7, 6.5};
   Vector3 expectedPosition{1.2, 0, 0};
-  Vector2 rPhiOnDisc{1.2, 0.0};
+  Vector2 rPhiOnDisc{1.2, 0.};
   Vector2 rPhiNotInSector{
       1.2, std::numbers::pi};  // outside sector at Phi=0, +/- pi/8
   returnedPosition =
       discSurfaceObject->localToGlobal(tgContext, rPhiOnDisc, ignoredMomentum);
   CHECK_CLOSE_ABS(returnedPosition, expectedPosition, 1e-6);
-  //
+
   returnedPosition = discSurfaceObject->localToGlobal(
       tgContext, rPhiNotInSector, ignoredMomentum);
   Vector3 expectedNonPosition{-1.2, 0, 0};
   CHECK_CLOSE_ABS(returnedPosition, expectedNonPosition, 1e-6);
-  //
+
   /// Test globalToLocal
   Vector2 returnedLocalPosition{33., 44.};
-  Vector2 expectedLocalPosition{1.2, 0.0};
+  Vector2 expectedLocalPosition{1.2, 0.};
   returnedLocalPosition =
       discSurfaceObject
           ->globalToLocal(tgContext, point3DOnSurface, ignoredMomentum)
@@ -167,7 +168,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
           ->globalToLocal(tgContext, point3DNotInSector, ignoredMomentum)
           .value();
 
-  Vector3 pointOutsideR{0.0, 100., 0};
+  Vector3 pointOutsideR{0., 100., 0};
   returnedLocalPosition =
       discSurfaceObject
           ->globalToLocal(tgContext, pointOutsideR, ignoredMomentum)
@@ -243,7 +244,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAssignment) {
       Transform3::Identity(), rMin, rMax, halfPhiSector);
   auto assignedDisc =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 2.2, 4.4, 0.07);
-  //
+
   BOOST_CHECK_NO_THROW(*assignedDisc = *discSurfaceObject);
   BOOST_CHECK((*assignedDisc) == (*discSurfaceObject));
 }
@@ -339,7 +340,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
                                                               globalPosition);
   // Check if the result is as expected
   ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
-  expLoc3DToLocBound << 0, 1, 0, -1.0 / 3, 0, 0;
+  expLoc3DToLocBound << 0, 1, 0, -1. / 3, 0, 0;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }
 
@@ -419,12 +420,12 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceBinningPosition) {
 BOOST_AUTO_TEST_SUITE(DiscSurfaceMerging)
 
 namespace {
-std::shared_ptr<DiscSurface> makeDisc(const Transform3& transform, double rmin,
-                                      double rmax,
+std::shared_ptr<DiscSurface> makeDisc(const Transform3& transform, double rMin,
+                                      double rMax,
                                       double halfPhi = std::numbers::pi,
                                       double avgPhi = 0) {
   return Surface::makeShared<DiscSurface>(
-      transform, std::make_shared<RadialBounds>(rmin, rmax, halfPhi, avgPhi));
+      transform, std::make_shared<RadialBounds>(rMin, rMax, halfPhi, avgPhi));
 }
 
 }  // namespace
@@ -809,8 +810,8 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     // bounds should be equal however
     BOOST_CHECK_EQUAL(disc76->bounds(), disc67->bounds());
 
-    BOOST_CHECK(!reversed76);  // not reversed either because you get the
-                               // ordering you put in
+    // not reversed either because you get the ordering you put in
+    BOOST_CHECK(!reversed76);
 
     const auto* bounds67 = dynamic_cast<const RadialBounds*>(&disc67->bounds());
     BOOST_REQUIRE_NE(bounds67, nullptr);

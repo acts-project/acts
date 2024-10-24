@@ -37,9 +37,10 @@ BOOST_AUTO_TEST_SUITE(ConeSurfaces)
 
 /// Unit test for creating compliant/non-compliant ConeSurface object
 BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
-  // ConeSurface default constructor is deleted
-  //
-  // Constructor with transform, alpha and symmetry indicator
+  /// Test default construction
+  // default construction is deleted
+
+  /// Constructor with transform, alpha and symmetry indicator
   const double alpha = std::numbers::pi / 8.;
   const double halfPhiSector = std::numbers::pi / 16.;
   const double zMin = 1.;
@@ -56,34 +57,32 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric)->type(),
       Surface::Cone);
 
-  // Constructor with transform pointer, alpha,z min and max, halfPhiSector
+  /// Constructor with transform pointer, alpha,z min and max, halfPhiSector
   BOOST_CHECK_EQUAL(Surface::makeShared<ConeSurface>(pTransform, alpha, zMin,
                                                      zMax, halfPhiSector)
                         ->type(),
                     Surface::Cone);
 
-  // Constructor with transform and ConeBounds pointer
-  // ConeBounds (double alpha, double zmin, double zmax, double
-  // halfphi=std::numbers::pi, double avphi=0.)
+  /// Constructor with transform and ConeBounds pointer
   auto pConeBounds =
       std::make_shared<const ConeBounds>(alpha, zMin, zMax, halfPhiSector, 0.);
   BOOST_CHECK_EQUAL(
       Surface::makeShared<ConeSurface>(pTransform, pConeBounds)->type(),
       Surface::Cone);
 
-  // Copy constructor
+  /// Copy constructor
   auto coneSurfaceObject =
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
   auto copiedConeSurface = Surface::makeShared<ConeSurface>(*coneSurfaceObject);
   BOOST_CHECK_EQUAL(copiedConeSurface->type(), Surface::Cone);
   BOOST_CHECK(*copiedConeSurface == *coneSurfaceObject);
 
-  // Copied and transformed
+  /// Copied and transformed
   auto copiedTransformedConeSurface = Surface::makeShared<ConeSurface>(
       tgContext, *coneSurfaceObject, pTransform);
   BOOST_CHECK_EQUAL(copiedTransformedConeSurface->type(), Surface::Cone);
 
-  // Construct with nullptr bounds
+  /// Construct with nullptr bounds
   BOOST_CHECK_THROW(auto nullBounds = Surface::makeShared<ConeSurface>(
                         Transform3::Identity(), nullptr),
                     AssertionFailureException);
@@ -110,7 +109,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
       binningPosition, 1e-6);
 
   /// Test referenceFrame
-  Vector3 globalPosition{2.0, 2.0, 2.0};
+  Vector3 globalPosition{2., 2., 2.};
   Vector3 momentum{1.e6, 1.e6, 1.e6};
   double rootHalf = std::sqrt(0.5);
   RotationMatrix3 expectedFrame;
@@ -143,7 +142,6 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   Vector2 localPosition{1., std::numbers::pi / 2.};
   globalPosition =
       coneSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
-  // std::cout<<globalPosition<<std::endl;
   Vector3 expectedPosition{0.0220268, 1.65027, 3.5708};
 
   CHECK_CLOSE_REL(globalPosition, expectedPosition, 1e-2);
@@ -152,7 +150,6 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   localPosition =
       coneSurfaceObject->globalToLocal(tgContext, globalPosition, momentum)
           .value();
-  // std::cout<<localPosition<<std::endl;
   Vector2 expectedLocalPosition{1., std::numbers::pi / 2.};
 
   CHECK_CLOSE_REL(localPosition, expectedLocalPosition, 1e-6);
@@ -220,7 +217,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
   const double zMax = 10.;
   const Translation3 translation{0., 0., 0.};  // != {0., 1., 2.}
 
-  // Testing a Full cone
+  /// Testing a Full cone
   auto pTransform = Transform3(translation);
   auto pConeBounds = std::make_shared<const ConeBounds>(alpha, zMin, zMax);
   auto pCone = Surface::makeShared<ConeSurface>(pTransform, pConeBounds);
@@ -244,7 +241,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
   CHECK_CLOSE_ABS(rMax, pConeExtent.max(BinningValue::binY),
                   s_onSurfaceTolerance);
 
-  // Now a sector
+  /// Now a sector
   pConeBounds =
       std::make_shared<const ConeBounds>(alpha, zMin, zMax, halfPhiSector, 0.);
   pCone = Surface::makeShared<ConeSurface>(pTransform, pConeBounds);

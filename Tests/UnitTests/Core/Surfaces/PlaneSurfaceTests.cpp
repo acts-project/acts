@@ -45,16 +45,20 @@ GeometryContext tgContext = GeometryContext();
 BOOST_AUTO_TEST_SUITE(PlaneSurfaces)
 /// Unit test for creating compliant/non-compliant PlaneSurface object
 BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
-  // PlaneSurface default constructor is deleted
+  /// Test default construction
+  // default construction is deleted
+
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   /// Constructor with transform and bounds
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
-  // constructor with transform
+
+  /// Constructor with transform
   BOOST_CHECK_EQUAL(
       Surface::makeShared<PlaneSurface>(pTransform, rBounds)->type(),
       Surface::Plane);
+
   /// Copy constructor
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
@@ -62,7 +66,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
       Surface::makeShared<PlaneSurface>(*planeSurfaceObject);
   BOOST_CHECK_EQUAL(copiedPlaneSurface->type(), Surface::Plane);
   BOOST_CHECK(*copiedPlaneSurface == *planeSurfaceObject);
-  //
+
   /// Copied and transformed
   auto copiedTransformedPlaneSurface = Surface::makeShared<PlaneSurface>(
       tgContext, *planeSurfaceObject, pTransform);
@@ -74,11 +78,12 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
       auto nullBounds = Surface::makeShared<PlaneSurface>(nullptr, detElem),
       AssertionFailureException);
 }
-//
+
 /// Unit test for testing PlaneSurface properties
 BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
+
   /// Test clone method
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
@@ -89,17 +94,18 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   auto pTransform2 = Transform3(translation2);
   auto planeSurfaceObject2 =
       Surface::makeShared<PlaneSurface>(pTransform2, rBounds);
+
   /// Test type (redundant)
   BOOST_CHECK_EQUAL(planeSurfaceObject->type(), Surface::Plane);
-  //
+
   /// Test binningPosition
   Vector3 binningPosition{0., 1., 2.};
   BOOST_CHECK_EQUAL(
       planeSurfaceObject->binningPosition(tgContext, BinningValue::binX),
       binningPosition);
-  //
+
   /// Test referenceFrame
-  Vector3 arbitraryGlobalPosition{2.0, 2.0, 2.0};
+  Vector3 arbitraryGlobalPosition{2., 2., 2.};
   Vector3 momentum{1.e6, 1.e6, 1.e6};
   RotationMatrix3 expectedFrame;
   expectedFrame << 1., 0., 0., 0., 1., 0., 0., 0., 1.;
@@ -107,11 +113,11 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   CHECK_CLOSE_OR_SMALL(planeSurfaceObject->referenceFrame(
                            tgContext, arbitraryGlobalPosition, momentum),
                        expectedFrame, 1e-6, 1e-9);
-  //
+
   /// Test normal, given 3D position
   Vector3 normal3D(0., 0., 1.);
   BOOST_CHECK_EQUAL(planeSurfaceObject->normal(tgContext), normal3D);
-  //
+
   /// Test bounds
   BOOST_CHECK_EQUAL(planeSurfaceObject->bounds().type(),
                     SurfaceBounds::eRectangle);
@@ -120,13 +126,12 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   Vector2 localPosition{1.5, 1.7};
   Vector3 globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
-  //
   // expected position is the translated one
   Vector3 expectedPosition{1.5 + translation.x(), 1.7 + translation.y(),
                            translation.z()};
 
   CHECK_CLOSE_REL(globalPosition, expectedPosition, 1e-2);
-  //
+
   /// Testing globalToLocal
   localPosition =
       planeSurfaceObject->globalToLocal(tgContext, globalPosition, momentum)
@@ -159,8 +164,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
                                                BoundaryTolerance::None()));
   BOOST_CHECK(!planeSurfaceObject->isOnSurface(tgContext, offSurface,
                                                BoundaryTolerance::None()));
-  //
-  // Test intersection
+
+  /// Test intersection
   Vector3 direction{0., 0., 1.};
   auto sfIntersection = planeSurfaceObject
                             ->intersect(tgContext, offSurface, direction,
@@ -173,17 +178,16 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   BOOST_CHECK_EQUAL(sfIntersection.pathLength(),
                     expectedIntersect.pathLength());
   BOOST_CHECK_EQUAL(sfIntersection.object(), planeSurfaceObject.get());
-  //
 
   /// Test pathCorrection
   CHECK_CLOSE_REL(planeSurfaceObject->pathCorrection(tgContext, offSurface,
                                                      momentum.normalized()),
                   std::numbers::sqrt3, 0.01);
-  //
+
   /// Test name
   BOOST_CHECK_EQUAL(planeSurfaceObject->name(),
                     std::string("Acts::PlaneSurface"));
-  //
+
   /// Test dump
   // TODO 2017-04-12 msmk: check how to correctly check output
   //    boost::test_tools::output_test_stream dumpOuput;
@@ -208,16 +212,18 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
   auto planeSurfaceObject2 =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
-  //
+
   /// Test equality operator
   BOOST_CHECK(*planeSurfaceObject == *planeSurfaceObject2);
-  //
+
   BOOST_TEST_CHECKPOINT(
       "Create and then assign a PlaneSurface object to the existing one");
+
   /// Test assignment
   auto assignedPlaneSurface =
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), nullptr);
   *assignedPlaneSurface = *planeSurfaceObject;
+
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedPlaneSurface == *planeSurfaceObject);
 }

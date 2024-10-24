@@ -24,10 +24,11 @@
 // Note on nomenclature:
 // - alpha = cone opening half angle
 // - z is the axis of symmetry
-// - zmin, zmax define limits for truncated cone
+// - zMin, zMax define limits for truncated cone
 // - phi is clock angle around cone, with x axis corresponding to phi=0
-// - Cone segments may be defined with the avphi (central position of segment)
-// and halfphi (extent in phi of cone segment either side of the avphi)
+// - Cone segments may be defined with the averagePhi (central position of
+// segment) and halfPhi (extent in phi of cone segment either side of the
+// averagePhi)
 // - Local coords are z, rphi
 
 namespace Acts::Test {
@@ -41,10 +42,10 @@ const double halfPhi = std::numbers::pi / 4.;
 const double averagePhi = 0.;
 const bool symmetric = false;
 
-// Unit test for creating compliant/non-compliant ConeBounds object
+/// Unit test for creating compliant/non-compliant ConeBounds object
 BOOST_AUTO_TEST_CASE(ConeBoundsConstruction) {
-  // test default construction
-  // ConeBounds defaultConstructedConeBounds;  // deleted
+  /// Test default construction
+  // default construction is deleted
 
   BOOST_TEST_CHECKPOINT("Four parameter constructor (last two at default)");
   ConeBounds defaultConeBounds(alpha, symmetric);
@@ -69,7 +70,7 @@ BOOST_AUTO_TEST_CASE(ConeBoundsConstruction) {
   BOOST_CHECK_EQUAL(copyConstructedConeBounds, fiveParamConstructedConeBounds);
 }
 
-// Streaning and recreation test
+/// Streaning and recreation test
 BOOST_AUTO_TEST_CASE(ConeBoundsRecreation) {
   ConeBounds original(alpha, zMin, zMax, halfPhi, averagePhi);
   auto valvector = original.values();
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE(ConeBoundsRecreation) {
   BOOST_CHECK_EQUAL(recreated, original);
 }
 
-// Unit tests for AnnulusBounds exception throwing
+/// Unit tests for AnnulusBounds exception throwing
 BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
   // Exception for opening angle smaller 0
   BOOST_CHECK_THROW(ConeBounds(-alpha, zMin, zMax, halfPhi, averagePhi),
@@ -105,38 +106,38 @@ BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
       std::logic_error);
 }
 
-// Unit tests for properties of ConeBounds object
+/// Unit tests for properties of ConeBounds object
 BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
   const Vector2 origin(0, 0);
   const Vector2 somewhere(4., 4.);
   ConeBounds coneBoundsObject(alpha, zMin, zMax, halfPhi, averagePhi);
 
-  // test for type (redundant)
+  /// Test for type (redundant)
   BOOST_CHECK_EQUAL(coneBoundsObject.type(), SurfaceBounds::eCone);
 
-  // test for inside
+  /// Test for inside
   BOOST_CHECK(!coneBoundsObject.inside(origin));
 
-  // test for r
+  /// Test for r
   CHECK_CLOSE_REL(coneBoundsObject.r(zMin), zMin * std::tan(alpha), 1e-6);
 
-  // test for tanAlpha
+  /// Test for tanAlpha
   CHECK_CLOSE_REL(coneBoundsObject.tanAlpha(), std::tan(alpha), 1e-6);
 
-  // test for alpha
+  /// Test for alpha
   CHECK_CLOSE_REL(coneBoundsObject.get(ConeBounds::eAlpha), alpha, 1e-6);
 
-  // test for minZ
+  /// Test for minZ
   CHECK_CLOSE_REL(coneBoundsObject.get(ConeBounds::eMinZ), zMin, 1e-6);
 
-  // test for maxZ
+  /// Test for maxZ
   CHECK_CLOSE_REL(coneBoundsObject.get(ConeBounds::eMaxZ), zMax, 1e-6);
 
-  // test for averagePhi
+  /// Test for averagePhi
   CHECK_CLOSE_REL(coneBoundsObject.get(ConeBounds::eHalfPhiSector), halfPhi,
                   1e-6);
 
-  // test for dump
+  /// Test for dump
   boost::test_tools::output_test_stream dumpOuput;
   coneBoundsObject.toStream(dumpOuput);
   BOOST_CHECK(dumpOuput.is_equal(
