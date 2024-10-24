@@ -52,7 +52,7 @@ class DD4hepGeometryService {
     /// Log level for the geometry service.
     Acts::Logging::Level logLevel = Acts::Logging::Level::INFO;
     /// Log level for DD4hep itself
-    Acts::Logging::Level dd4hepLogLevel = Acts::Logging::Level::INFO;
+    Acts::Logging::Level dd4hepLogLevel = Acts::Logging::Level::WARNING;
     /// XML-file with the detector description
     std::vector<std::string> xmlFileNames;
     /// The name of the service

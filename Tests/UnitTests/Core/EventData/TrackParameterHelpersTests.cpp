@@ -30,4 +30,24 @@ BOOST_AUTO_TEST_CASE(normalizeBoundParameters) {
                        1e-3);
 }
 
+BOOST_AUTO_TEST_CASE(addBoundParameters) {
+  CHECK_CLOSE_OR_SMALL(
+      Acts::addBoundParameters({1, 2, 3, 4, 5, 6}, {0, 0, 0, 0, 0, 0}),
+      Acts::normalizeBoundParameters({1, 2, 3, 4, 5, 6}), 1e-3, 1e-3);
+  CHECK_CLOSE_OR_SMALL(
+      Acts::addBoundParameters({1, 2, 3, 4, 5, 6}, {0, 0, 1, 1, 0, 0}),
+      Acts::normalizeBoundParameters({1, 2, 4, 5, 5, 6}), 1e-3, 1e-3);
+}
+
+BOOST_AUTO_TEST_CASE(subtractBoundParameters) {
+  CHECK_CLOSE_OR_SMALL(
+      Acts::subtractBoundParameters({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}),
+      Acts::BoundVector(0, 0, 0, 0, 0, 0), 1e-3, 1e-3);
+  CHECK_CLOSE_OR_SMALL(
+      Acts::addBoundParameters(
+          Acts::subtractBoundParameters({1, 2, 3, 4, 5, 6}, {0, 0, 1, 1, 0, 0}),
+          {0, 0, 1, 1, 0, 0}),
+      Acts::normalizeBoundParameters({1, 2, 3, 4, 5, 6}), 1e-3, 1e-3);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
