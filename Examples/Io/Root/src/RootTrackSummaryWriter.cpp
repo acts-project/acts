@@ -33,6 +33,7 @@
 #include <ios>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
@@ -418,8 +419,9 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     if (foundMajorityParticle && hasFittedParams) {
       res = {param[Acts::eBoundLoc0] - t_d0,
              param[Acts::eBoundLoc1] - t_z0,
-             Acts::detail::difference_periodic(param[Acts::eBoundPhi], t_phi,
-                                               static_cast<float>(2 * M_PI)),
+             Acts::detail::difference_periodic(
+                 param[Acts::eBoundPhi], t_phi,
+                 static_cast<float>(2 * std::numbers::pi)),
              param[Acts::eBoundTheta] - t_theta,
              param[Acts::eBoundQOverP] - t_qop,
              param[Acts::eBoundTime] - t_time};

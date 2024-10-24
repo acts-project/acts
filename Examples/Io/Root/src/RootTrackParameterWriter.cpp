@@ -25,6 +25,7 @@
 #include <ios>
 #include <iostream>
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 #include <tuple>
 #include <utility>
@@ -284,7 +285,7 @@ ProcessCode RootTrackParameterWriter::writeT(
       m_res_loc0 = m_loc0 - m_t_loc0;
       m_res_loc1 = m_loc1 - m_t_loc1;
       m_res_phi = Acts::detail::difference_periodic(
-          m_phi, m_t_phi, static_cast<float>(2 * M_PI));
+          m_phi, m_t_phi, static_cast<float>(2 * std::numbers::pi));
       m_res_theta = m_theta - m_t_theta;
       m_res_qop = m_qop - m_t_qop;
       m_res_time = m_time - m_t_time;

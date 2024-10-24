@@ -25,6 +25,7 @@
 #include <fstream>
 #include <ios>
 #include <iostream>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -124,9 +125,9 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
       float truthPhi = phi(truthUnitDir);
       float truthEta = std::atanh(std::cos(theta(truthUnitDir)));
       float dEta = fabs(truthEta - seedEta);
-      float dPhi = fabs(truthPhi - seedPhi) < M_PI
+      float dPhi = fabs(truthPhi - seedPhi) < std::numbers::pi_v<float>
                        ? fabs(truthPhi - seedPhi)
-                       : fabs(truthPhi - seedPhi) - M_PI;
+                       : fabs(truthPhi - seedPhi) - std::numbers::pi_v<float>;
       truthDistance = sqrt(dPhi * dPhi + dEta * dEta);
       // If the seed is truth matched, check if it is the closest one for the
       // contributing particle

@@ -19,6 +19,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <numbers>
 #include <random>
 #include <sstream>
 #include <vector>
@@ -108,11 +109,11 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   finder.loadSpacePoints(GbtsSpacePoints);
 
   // trigGbts file :
-  Acts::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -M_PI, M_PI, 0, -150.0,
-                                  150.0);
+  Acts::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -std::numbers::pi,
+                                  std::numbers::pi, 0, -150., 150.);
   // ROI file:
-  //  Acts::RoiDescriptor internalRoi(0, -5, 5, 0, -M_PI, M_PI, 0, -225.0,
-  //                                  225.0);
+  //  Acts::RoiDescriptor internalRoi(0, -5, 5, 0, -std::numbers::pi,
+  //  std::numbers::pi, 0, -225., 225.);
 
   // new version returns seeds
   SimSeedContainer seeds = finder.createSeeds(internalRoi, *m_gbtsGeo);

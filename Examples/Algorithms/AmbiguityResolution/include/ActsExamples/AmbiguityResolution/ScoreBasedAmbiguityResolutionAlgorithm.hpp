@@ -16,6 +16,7 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <numbers>
 #include <string>
 
 namespace ActsExamples {
@@ -56,8 +57,8 @@ class ScoreBasedAmbiguityResolutionAlgorithm final : public IAlgorithm {
     double pTMin = 0 * Acts::UnitConstants::GeV;
     double pTMax = 1e5 * Acts::UnitConstants::GeV;
 
-    double phiMin = -M_PI * Acts::UnitConstants::rad;
-    double phiMax = M_PI * Acts::UnitConstants::rad;
+    double phiMin = -std::numbers::pi * Acts::UnitConstants::rad;
+    double phiMax = std::numbers::pi * Acts::UnitConstants::rad;
 
     double etaMin = -5;
     double etaMax = 5;

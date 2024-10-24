@@ -12,6 +12,7 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
 
+#include <numbers>
 #include <random>
 
 namespace ActsExamples {
@@ -57,8 +58,8 @@ struct GaussianDisplacedVertexPositionGenerator
   double tStdDev = 1;
 
   Acts::Vector4 operator()(RandomEngine& rng) const override {
-    double min_value = -M_PI;  // -π
-    double max_value = M_PI;   // π
+    double min_value = -std::numbers::pi;
+    double max_value = std::numbers::pi;
 
     std::uniform_real_distribution<> uniform(min_value, max_value);
 
