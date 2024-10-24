@@ -56,28 +56,34 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 
 /// Unit test for creating compliant/non-compliant LineSurface object
 BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test) {
-  // Default ctor is deleted
-  // LineSurfaceStub l;
-  // ctor with translation, radius, halfz
+  /// Test default construction
+  // default construction is deleted
+
   Translation3 translation{0., 1., 2.};
   Transform3 transform(translation);
   auto pTransform = Transform3(translation);
-  const double radius{2.0}, halfz{20.};
+  const double radius = 2.;
+  const double halfz = 20.;
   BOOST_CHECK(LineSurfaceStub(pTransform, radius, halfz).constructedOk());
-  // ctor with nullptr for LineBounds
+
+  /// ctor with nullptr for LineBounds
   BOOST_CHECK(LineSurfaceStub(pTransform).constructedOk());
-  // ctor with LineBounds
+
+  /// ctor with LineBounds
   auto pLineBounds = std::make_shared<const LineBounds>(2., 10.0);
   BOOST_CHECK(LineSurfaceStub(pTransform, pLineBounds).constructedOk());
-  // ctor with LineBounds, detector element, Identifier
+
+  /// ctor with LineBounds, detector element, Identifier
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement{pTransform, pLineBounds, 0.2, pMaterial};
   BOOST_CHECK(LineSurfaceStub(pLineBounds, detElement).constructedOk());
   LineSurfaceStub lineToCopy(pTransform, 2.0, 20.);
-  // Copy ctor
+
+  /// Copy ctor
   BOOST_CHECK(LineSurfaceStub(lineToCopy).constructedOk());
-  // Copied and transformed ctor
+
+  /// Copied and transformed ctor
   BOOST_CHECK(
       LineSurfaceStub(tgContext, lineToCopy, transform).constructedOk());
 
@@ -99,14 +105,14 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   Vector3 referencePosition{0., 1., 2.};
   CHECK_CLOSE_ABS(referencePosition,
                   line.binningPosition(tgContext, BinningValue::binX), 1e-6);
-  //
+
   // bounds()
   auto pLineBounds = std::make_shared<const LineBounds>(2., 10.0);
   LineSurfaceStub boundedLine(transform, pLineBounds);
   const LineBounds& bounds =
       dynamic_cast<const LineBounds&>(boundedLine.bounds());
   BOOST_CHECK_EQUAL(bounds, LineBounds(2., 10.0));
-  //
+
   // globalToLocal()
   Vector3 gpos{0., 1., 0.};
   const Vector3 mom{20., 0., 0.};  // needs more realistic parameters
@@ -114,7 +120,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
       line.globalToLocal(tgContext, gpos, mom.normalized()).value();
   const Vector2 expectedResult{0, -2};
   CHECK_CLOSE_ABS(expectedResult, localPosition, 1e-6);
-  //
+
   // intersection
   {
     const Vector3 direction{0., 1., 2.};
@@ -128,7 +134,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
                     1e-6);  // need more tests..
     BOOST_CHECK_EQUAL(sfIntersection.object(), &line);
   }
-  //
+
   // isOnSurface
   const Vector3 insidePosition{0., 2.5, 0.};
   BOOST_CHECK(line.isOnSurface(
@@ -137,7 +143,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   const Vector3 outsidePosition{100., 100., 200.};
   BOOST_CHECK(!line.isOnSurface(tgContext, outsidePosition, mom,
                                 BoundaryTolerance::None()));
-  //
+
   // localToGlobal
   Vector3 returnedGlobalPosition{0., 0., 0.};
   // Vector2 localPosition{0., 0.};
@@ -146,7 +152,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
       line.localToGlobal(tgContext, localPosition, momentum.normalized());
   const Vector3 expectedGlobalPosition{0, 1, 0};
   CHECK_CLOSE_ABS(returnedGlobalPosition, expectedGlobalPosition, 1e-6);
-  //
+
   // referenceFrame
   Vector3 globalPosition{0., 0., 0.};
   auto returnedRotationMatrix =
@@ -155,16 +161,14 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   double v1 = std::sin(std::atan(2. / 3.));
   RotationMatrix3 expectedRotationMatrix;
   expectedRotationMatrix << -v1, 0., v0, v0, 0., v1, 0., 1., -0.;
-  // std::cout<<returnedRotationMatrix<<std::endl;
-  // std::cout<<expectedRotationMatrix<<std::endl;
   CHECK_CLOSE_OR_SMALL(returnedRotationMatrix, expectedRotationMatrix, 1e-6,
                        1e-9);
-  //
+
   // name()
   boost::test_tools::output_test_stream output;
   output << line.name();
   BOOST_CHECK(output.is_equal("Acts::LineSurface"));
-  //
+
   // normal
   {
     Vector3 position{5, 5, 5};  // should be irrelevant
@@ -190,7 +194,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
     CHECK_CLOSE_ABS(line.normal(tgContext, position, direction), direction,
                     1e-6);
   }
-  //
+
   // pathCorrection
   Vector3 any3DVector = Vector3::Random();
   CHECK_CLOSE_REL(line.pathCorrection(tgContext, any3DVector, any3DVector), 1.,

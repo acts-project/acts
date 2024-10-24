@@ -52,9 +52,6 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsConstruction) {
 
 // Streaning and recreation test
 BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsRecreation) {
-  double minHalfX(1.0), maxHalfX(5.0), rMin(2.0), rMax(6.0), averagePhi(0.0),
-      stereo(0.1);
-
   DiscTrapezoidBounds original(minHalfX, maxHalfX, rMin, rMax, averagePhi,
                                stereo);
   auto valvector = original.values();

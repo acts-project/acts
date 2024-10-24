@@ -36,15 +36,15 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsConstruction) {
   const double outerRx = 25.;
   const double outerRy = 30.;
 
-  // test default construction
-  // EllipseBounds defaultConstructedEllipseBounds;  //deleted
-  //
+  /// Test default construction
+  // default construction is deleted
+
   /// Test construction with dimensions
   BOOST_CHECK_EQUAL(
       EllipseBounds(innerRx, innerRy, outerRx, outerRy, phiSector, averagePhi)
           .type(),
       SurfaceBounds::eEllipse);
-  //
+
   /// Copy constructor
   EllipseBounds original(innerRx, innerRy, outerRx, outerRy, phiSector,
                          averagePhi);
@@ -124,8 +124,6 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
 
   /// Test type() (redundant; already used in constructor confirmation)
   BOOST_CHECK_EQUAL(ellipseBoundsObject.type(), SurfaceBounds::eEllipse);
-
-  // clone already tested
 
   /// Test distanceToBoundary
   Vector2 origin{0., 0.};

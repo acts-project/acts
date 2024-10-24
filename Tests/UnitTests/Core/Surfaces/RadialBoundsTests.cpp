@@ -30,10 +30,10 @@ const double rMax = 5.;
 const double halfPhiSector = std::numbers::pi / 8.;
 const double avgPhi = 0.1;
 
-/// Unit tests for RadialBounds constrcuctors
+/// Unit tests for RadialBounds constructors
 BOOST_AUTO_TEST_CASE(RadialBoundsConstruction) {
-  // test default construction
-  // RadialBounds defaultConstructedRadialBounds;  should be deleted
+  /// Test default construction
+  // default construction is deleted
 
   /// Test construction with radii and default sector
   BOOST_CHECK_EQUAL(RadialBounds(rMin, rMax).type(), SurfaceBounds::eDisc);
