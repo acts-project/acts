@@ -23,12 +23,12 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
-ActsScalar minRadius = 7.2;
-ActsScalar maxRadius = 12.0;
-ActsScalar minPhi = 0.74195;
-ActsScalar maxPhi = 1.33970;
+const ActsScalar minRadius = 7.2;
+const ActsScalar maxRadius = 12.0;
+const ActsScalar minPhi = 0.74195;
+const ActsScalar maxPhi = 1.33970;
 
-Vector2 offset(-2., 2.);
+const Vector2 offset(-2., 2.);
 
 // Unit tests for AnnulusBounds constructors
 BOOST_AUTO_TEST_CASE(AnnulusBoundsConstruction) {
@@ -76,7 +76,6 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
   /// Test construction with radii and default sector
   AnnulusBounds aBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
 
-  //
   /// Test type() (redundant; already used in constructor confirmation)
   BOOST_CHECK_EQUAL(aBounds.type(), SurfaceBounds::eAnnulus);
 

@@ -42,6 +42,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxSimple) {
   BOOST_CHECK(
       !detail::insideAlignedBox(ll, ur, tolerance, {2, 0}, std::nullopt));
 }
+
 // Aligned box w/ tolerance check along first axis
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
   boost::execution_monitor em;

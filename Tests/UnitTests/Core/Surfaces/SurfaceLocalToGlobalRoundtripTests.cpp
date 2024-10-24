@@ -31,6 +31,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <ostream>
 #include <type_traits>
 #include <utility>
@@ -75,14 +76,17 @@ void runTest(const Surface& surface, double l0, double l1, double phi,
 // test datasets
 
 // local positions
-const auto posAngle = bdata::xrange(-M_PI, M_PI, 0.25);
+const auto posAngle = bdata::xrange(-std::numbers::pi, std::numbers::pi, 0.25);
 const auto posPositiveNonzero = bdata::xrange(0.25, 1.0, 0.25);
 const auto posPositive = bdata::make(0.0) + posPositiveNonzero;
 const auto posSymmetric = bdata::xrange(-1.0, 1.0, 0.25);
 // direction angles
-const auto phis = bdata::xrange(-M_PI, M_PI, M_PI_4);
-const auto thetasNoForwardBackward = bdata::xrange(M_PI_4, M_PI, M_PI_4);
-const auto thetas = bdata::make({0.0, M_PI}) + thetasNoForwardBackward;
+const auto phis =
+    bdata::xrange(-std::numbers::pi, std::numbers::pi, std::numbers::pi / 4.);
+const auto thetasNoForwardBackward = bdata::xrange(
+    std::numbers::pi / 4., std::numbers::pi, std::numbers::pi / 4.);
+const auto thetas =
+    bdata::make({0., std::numbers::pi}) + thetasNoForwardBackward;
 
 // different surfaces
 // parameters must be chosen such that all possible local positions (as defined
