@@ -55,9 +55,9 @@ class DD4hepDetectorStructure {
   /// @param logger is the screen output logger
   ///
   /// @note this needs to be provided
-  DD4hepDetectorStructure(std::unique_ptr<const Logger> logger =
-                              getDefaultLogger("DD4hepLayerStructure",
-                                               Acts::Logging::INFO));
+  explicit DD4hepDetectorStructure(std::unique_ptr<const Logger> logger =
+                                       getDefaultLogger("DD4hepLayerStructure",
+                                                        Acts::Logging::INFO));
 
   DD4hepDetectorStructure() = delete;
 

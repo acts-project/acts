@@ -55,11 +55,9 @@ target_link_libraries(
         ActsExamplesDetectorTGeo
         ActsExamplesMagneticField
         ActsExamplesIoRoot
-        ActsExamplesIoNuclearInteractions
         ActsExamplesIoCsv
         ActsExamplesIoObj
         ActsExamplesIoJson
-        ActsExamplesIoPerformance
         ActsExamplesGenerators
         ActsExamplesPrinters
         ActsExamplesTrackFinding
@@ -69,6 +67,10 @@ target_link_libraries(
         ActsExamplesDetectorTelescope
         ActsExamplesUtilities
         ActsExamplesAmbiguityResolution
+        ActsExamplesTruthTracking
+        ActsExamplesDigitization
+        ActsExamplesPropagation
+        ActsExamplesMaterialMapping
 )
 
 set(py_files

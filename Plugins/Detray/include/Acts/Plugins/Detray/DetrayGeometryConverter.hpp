@@ -64,25 +64,25 @@ detray::io::surface_payload convertSurface(const GeometryContext& gctx,
 
 /// Conversion method for Portal object to detray::portal payloads
 ///
+/// @param cCache [in, out] object
 /// @param gctx the geometry context
 /// @param portal the portal to be converted
 /// @param ip the portal index
 /// @param volume the volume to which the portal belongs
 /// @param orientedSurfaces the oriented surfaces of the portal
-/// @param detectorVolumes the detector volumes for the link lookup
 ///
 /// @note due to portal splitting this can add up in N portals for one initial one
 ///
 /// @brief convert the acts portal to detray surface payload and populate the payload
 std::vector<detray::io::surface_payload> convertPortal(
-    const GeometryContext& gctx, const Experimental::Portal& portal,
-    std::size_t ip, const Experimental::DetectorVolume& volume,
-    const std::vector<OrientedSurface>& orientedSurfaces,
-    const std::vector<const Experimental::DetectorVolume*>& detectorVolumes);
+    DetrayConversionUtils::Cache& cCache, const GeometryContext& gctx,
+    const Experimental::Portal& portal, std::size_t ip,
+    const Experimental::DetectorVolume& volume,
+    const std::vector<OrientedSurface>& orientedSurfaces);
 
 /// Conversion method for volume objects to detray::volume payloads
 ///
-/// @param geoIdCache [in, out] object
+/// @param cCache [in, out] object
 /// @param gctx the geometry context
 /// @param volume the volume to be converted
 /// @param detectorVolumes the detector volumes for the link lookup
@@ -90,23 +90,20 @@ std::vector<detray::io::surface_payload> convertPortal(
 ///
 /// @return the volume_payload for portals and volumes by @param volume acts object
 detray::io::volume_payload convertVolume(
-    DetrayConversionUtils::GeometryIdCache& geoIdCache,
-    const GeometryContext& gctx, const Experimental::DetectorVolume& volume,
-    const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
-    const Acts::Logger& logger);
+    DetrayConversionUtils::Cache& cCache, const GeometryContext& gctx,
+    const Experimental::DetectorVolume& volume, const Acts::Logger& logger);
 
 /// Conversion method for detector objects to detray::detector payload
 ///
-/// @param geoIdCache [in, out] object
+/// @param cCache [in, out] object
 /// @param gctx the geometry context
 /// @param detector the detector to be converted
 /// @param logger the logger object for screen output
 ///
 /// @return the detector_payload for portals and volumes by @param detector acts object
 detray::io::detector_payload convertDetector(
-    DetrayConversionUtils::GeometryIdCache& geoIdCache,
-    const GeometryContext& gctx, const Experimental::Detector& detector,
-    const Acts::Logger& logger);
+    DetrayConversionUtils::Cache& cCache, const GeometryContext& gctx,
+    const Experimental::Detector& detector, const Acts::Logger& logger);
 
 }  // namespace DetrayGeometryConverter
 }  // namespace Acts
