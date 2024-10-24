@@ -34,6 +34,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -89,7 +90,7 @@ void checkParameters(const BoundTrackParameters& params, double l0, double l1,
 void runTest(const std::shared_ptr<const Surface>& surface, double l0,
              double l1, double time, double phi, double theta, double p) {
   // phi is ill-defined in forward/backward tracks
-  phi = ((0 < theta) && (theta < M_PI)) ? phi : 0.0;
+  phi = ((0 < theta) && (theta < std::numbers::pi)) ? phi : 0.;
 
   // global direction for reference
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);

@@ -24,6 +24,8 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
+#include <numbers>
+
 using namespace Acts::UnitLiterals;
 
 namespace Acts::Test {
@@ -1821,15 +1823,17 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidInput,
   BOOST_TEST_CONTEXT("Volume has phi values or bevel values") {
     std::vector<std::shared_ptr<CylinderVolumeBounds>> invalidVolumeBounds = {
         std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm,
-                                               0.2 * M_PI),
+                                               0.2 * std::numbers::pi),
 
-        std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm, M_PI,
-                                               0.3 * M_PI),
+        std::make_shared<CylinderVolumeBounds>(
+            100_mm, 400_mm, 400_mm, std::numbers::pi, 0.3 * std::numbers::pi),
 
-        std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm, M_PI,
-                                               0.0, 0.3 * M_PI),
-        std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm, M_PI,
-                                               0.0, 0.0, 0.3 * M_PI),
+        std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm,
+                                               std::numbers::pi, 0.,
+                                               0.3 * std::numbers::pi),
+        std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm,
+                                               std::numbers::pi, 0., 0.,
+                                               0.3 * std::numbers::pi),
     };
 
     for (const auto& invalid : invalidVolumeBounds) {

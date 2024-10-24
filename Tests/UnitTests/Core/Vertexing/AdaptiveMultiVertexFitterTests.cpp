@@ -41,6 +41,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <random>
 #include <tuple>
 #include <type_traits>
@@ -75,9 +76,10 @@ std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
 std::uniform_real_distribution<double> pTDist(1._GeV, 30._GeV);
 // Track phi distribution
-std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
+std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
+                                               std::numbers::pi);
 // Track theta distribution
-std::uniform_real_distribution<double> thetaDist(1.0, M_PI - 1.0);
+std::uniform_real_distribution<double> thetaDist(1., std::numbers::pi - 1.);
 // Track charge helper distribution
 std::uniform_real_distribution<double> qDist(-1, 1);
 // Distribution of track time (relative to vertex time). Values are unrealistic

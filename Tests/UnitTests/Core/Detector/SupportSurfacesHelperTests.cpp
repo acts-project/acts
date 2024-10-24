@@ -21,6 +21,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <stdexcept>
 #include <vector>
@@ -97,7 +98,7 @@ BOOST_AUTO_TEST_CASE(DiscSupportCase) {
   // As a single disc
   // rmin = 100
   // rmax = 400
-  /// phi min = 0
+  // phi min = 0
   // phi max = 2pi
   Acts::Extent lExtent;
   lExtent.set(Acts::BinningValue::binR, 100., 400.);
@@ -147,7 +148,7 @@ BOOST_AUTO_TEST_CASE(DiscSupportCase) {
   dsValues = {120., 399.};
   BOOST_CHECK_THROW(cylindricalSupport(dsComponents), std::invalid_argument);
 
-  dsValues = {120., 399., M_PI, 0.};
+  dsValues = {120., 399., std::numbers::pi, 0.};
   dsType = Acts::Surface::SurfaceType::Cylinder;
   BOOST_CHECK_THROW(cylindricalSupport(dsComponents), std::invalid_argument);
 }

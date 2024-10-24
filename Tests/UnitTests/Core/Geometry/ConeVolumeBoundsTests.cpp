@@ -16,6 +16,7 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -27,7 +28,7 @@ BOOST_AUTO_TEST_SUITE(VolumeBounds)
 
 BOOST_AUTO_TEST_CASE(ConeVolumeBoundsTests) {
   // Single solid Cone
-  ConeVolumeBounds solidCone(0., 0., 0.45, 50_mm, 50_mm, 0., M_PI);
+  ConeVolumeBounds solidCone(0., 0., 0.45, 50_mm, 50_mm, 0., std::numbers::pi);
 
   // Test correct parameter return
   BOOST_CHECK_EQUAL(solidCone.get(ConeVolumeBounds::eInnerAlpha), 0.);
@@ -36,7 +37,8 @@ BOOST_AUTO_TEST_CASE(ConeVolumeBoundsTests) {
   BOOST_CHECK_EQUAL(solidCone.get(ConeVolumeBounds::eOuterOffsetZ), 50.);
   BOOST_CHECK_EQUAL(solidCone.get(ConeVolumeBounds::eHalfLengthZ), 50.);
   BOOST_CHECK_EQUAL(solidCone.get(ConeVolumeBounds::eAveragePhi), 0.);
-  BOOST_CHECK_EQUAL(solidCone.get(ConeVolumeBounds::eHalfPhiSector), M_PI);
+  BOOST_CHECK_EQUAL(solidCone.get(ConeVolumeBounds::eHalfPhiSector),
+                    std::numbers::pi);
   // Derived quantities
   BOOST_CHECK_EQUAL(solidCone.innerTanAlpha(), 0.);
   BOOST_CHECK_EQUAL(solidCone.innerRmin(), 0.);
@@ -51,12 +53,13 @@ BOOST_AUTO_TEST_CASE(ConeVolumeBoundsTests) {
   BOOST_CHECK_EQUAL(solidConeSurfaces.size(), 2);
 
   // Single solid Cone - with cut off
-  ConeVolumeBounds cutOffCone(0., 0., 0.45, 80_mm, 50_mm, 0., M_PI);
+  ConeVolumeBounds cutOffCone(0., 0., 0.45, 80_mm, 50_mm, 0., std::numbers::pi);
   auto cutOffConeSurfaces = cutOffCone.orientedSurfaces();
   BOOST_CHECK_EQUAL(cutOffConeSurfaces.size(), 3);
 
   // Cone - Cone inlay
-  ConeVolumeBounds cutOffHollowCone(0.35, 70_mm, 0.45, 80_mm, 50_mm, 0., M_PI);
+  ConeVolumeBounds cutOffHollowCone(0.35, 70_mm, 0.45, 80_mm, 50_mm, 0.,
+                                    std::numbers::pi);
   auto cutOffHollowConeSurfaces = cutOffHollowCone.orientedSurfaces();
   BOOST_CHECK_EQUAL(cutOffHollowConeSurfaces.size(), 4);
 
@@ -68,18 +71,20 @@ BOOST_AUTO_TEST_CASE(ConeVolumeBoundsTests) {
   BOOST_CHECK_EQUAL(cutOffHollowSectoralConeSurfaces.size(), 6);
 
   // Sectoral Cone - Hollow Cone
-  ConeVolumeBounds cutOffHollowCylCone(10_mm, 0.45, 80_mm, 50_mm, 0., M_PI);
+  ConeVolumeBounds cutOffHollowCylCone(10_mm, 0.45, 80_mm, 50_mm, 0.,
+                                       std::numbers::pi);
   auto cutOffHollowCylConeSurfaces = cutOffHollowCylCone.orientedSurfaces();
   BOOST_CHECK_EQUAL(cutOffHollowCylConeSurfaces.size(), 4);
 
   // Single Hollow Cylinder - Cone inlay
-  ConeVolumeBounds cutOffHollowConeCyl(120_mm, 0.35, 70_mm, 50_mm, 0., M_PI);
+  ConeVolumeBounds cutOffHollowConeCyl(120_mm, 0.35, 70_mm, 50_mm, 0.,
+                                       std::numbers::pi);
   auto cutOffHollowConeCylSurfaces = cutOffHollowConeCyl.orientedSurfaces();
   BOOST_CHECK_EQUAL(cutOffHollowConeCylSurfaces.size(), 4);
 }
 
 BOOST_AUTO_TEST_CASE(ConeVolumeBoundsSurfaceOrientation) {
-  ConeVolumeBounds hcone(10_mm, 0.45, 80_mm, 50_mm, 0., M_PI);
+  ConeVolumeBounds hcone(10_mm, 0.45, 80_mm, 50_mm, 0., std::numbers::pi);
 
   auto cvbOrientedSurfaces = hcone.orientedSurfaces(Transform3::Identity());
   BOOST_CHECK_EQUAL(cvbOrientedSurfaces.size(), 4);

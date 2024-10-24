@@ -30,6 +30,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <ostream>
 #include <set>
 #include <utility>
@@ -267,7 +268,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
 
   // z-phi Axes & Grid
   Axis axisZ(AxisBound, -9., 9., 9);
-  Axis axisPhi(AxisClosed, -M_PI, M_PI, 36);
+  Axis axisPhi(AxisClosed, -std::numbers::pi, std::numbers::pi, 36);
   Grid gridZPhi(Type<std::vector<unsigned int>>, std::move(axisZ),
                 std::move(axisPhi));
 
@@ -275,7 +276,8 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
   IndexedSurfacesNavigation<decltype(gridZPhi)> indexedGridZPhi(
       std::move(gridZPhi), {BinningValue::binZ, BinningValue::binPhi});
 
-  auto cBounds = std::make_shared<CylinderBounds>(10, 2., M_PI / 30, 0.);
+  auto cBounds =
+      std::make_shared<CylinderBounds>(10, 2., std::numbers::pi / 30, 0.);
   auto cSurface = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
                                                        std::move(cBounds));
 
@@ -298,11 +300,13 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
 BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("*** Test 4", logLevel));
   ACTS_INFO("Testing Phi-Z grid.");
-  ACTS_INFO("Testing one surface at M_PI jump, with polyhedron generator");
+  ACTS_INFO(
+      "Testing one surface at std::numbers::pi jump, with polyhedron "
+      "generator");
 
   // z-phi Axes & Grid
   Axis axisZ(AxisBound, -9., 9., 9);
-  Axis axisPhi(AxisClosed, -M_PI, M_PI, 36);
+  Axis axisPhi(AxisClosed, -std::numbers::pi, std::numbers::pi, 36);
   Grid gridZPhi(Type<std::vector<unsigned int>>, std::move(axisZ),
                 std::move(axisPhi));
 
@@ -310,8 +314,10 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
   IndexedSurfacesNavigation<decltype(gridZPhi)> indexedGridZPhi(
       std::move(gridZPhi), {BinningValue::binZ, BinningValue::binPhi});
 
-  auto cBounds = std::make_shared<CylinderBounds>(10, 2., M_PI / 10, 0.);
-  auto tf = AngleAxis3(M_PI, Vector3::UnitZ()) * Transform3::Identity();
+  auto cBounds =
+      std::make_shared<CylinderBounds>(10, 2., std::numbers::pi / 10, 0.);
+  auto tf =
+      AngleAxis3(std::numbers::pi, Vector3::UnitZ()) * Transform3::Identity();
   auto cSurface = Surface::makeShared<CylinderSurface>(tf, std::move(cBounds));
 
   // The Filler instance and a center based generator

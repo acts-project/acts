@@ -37,6 +37,7 @@
 #include <iomanip>
 #include <iterator>
 #include <memory>
+#include <numbers>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -91,7 +92,7 @@ struct SurfaceArrayCreatorFixture {
     SrfVec res;
     // TODO: The test is extremely numerically unstable in the face of upward
     //       rounding in this multiplication and division. Find out why.
-    double phiStep = 2 * M_PI / n;
+    double phiStep = 2 * std::numbers::pi / n;
     for (std::size_t i = 0; i < n; ++i) {
       double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
       double phi = std::fma(i, phiStep, shift);
@@ -115,12 +116,13 @@ struct SurfaceArrayCreatorFixture {
   }
 
   SrfVec fullPhiTestSurfacesBRL(std::size_t n = 10, double shift = 0,
-                                double zbase = 0, double incl = M_PI / 9.,
+                                double zbase = 0,
+                                double incl = std::numbers::pi / 9.,
                                 double w = 2, double h = 1.5) {
     SrfVec res;
     // TODO: The test is extremely numerically unstable in the face of upward
     //       rounding in this multiplication and division. Find out why.
-    double phiStep = 2 * M_PI / n;
+    double phiStep = 2 * std::numbers::pi / n;
     for (std::size_t i = 0; i < n; ++i) {
       double z = zbase;
       double phi = std::fma(i, phiStep, shift);
@@ -130,7 +132,7 @@ struct SurfaceArrayCreatorFixture {
       trans.rotate(Eigen::AngleAxisd(phi, Vector3(0, 0, 1)));
       trans.translate(Vector3(10, 0, z));
       trans.rotate(Eigen::AngleAxisd(incl, Vector3(0, 0, 1)));
-      trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3(0, 1, 0)));
+      trans.rotate(Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
       std::shared_ptr<Surface> srf =
@@ -153,8 +155,8 @@ struct SurfaceArrayCreatorFixture {
       Transform3 trans;
       trans.setIdentity();
       trans.translate(origin + dir * step * i);
-      // trans.rotate(AngleAxis3(M_PI/9., Vector3(0, 0, 1)));
-      trans.rotate(AngleAxis3(M_PI / 2., Vector3(1, 0, 0)));
+      // trans.rotate(AngleAxis3(std::numbers::pi / 9., Vector3(0, 0, 1)));
+      trans.rotate(AngleAxis3(std::numbers::pi / 2., Vector3(1, 0, 0)));
       trans = trans * pretrans;
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1.5);
@@ -177,7 +179,8 @@ struct SurfaceArrayCreatorFixture {
     for (int i = 0; i < nZ; i++) {
       double z = i * w * 2 + z0;
       // std::cout << "z=" << z << std::endl;
-      SrfVec ring = fullPhiTestSurfacesBRL(nPhi, 0, z, M_PI / 9., w, h);
+      SrfVec ring =
+          fullPhiTestSurfacesBRL(nPhi, 0, z, std::numbers::pi / 9., w, h);
       res.insert(res.end(), ring.begin(), ring.end());
     }
 
@@ -185,14 +188,15 @@ struct SurfaceArrayCreatorFixture {
   }
 
   std::pair<SrfVec, std::vector<std::pair<const Surface*, const Surface*>>>
-  makeBarrelStagger(int nPhi, int nZ, double shift = 0, double incl = M_PI / 9.,
-                    double w = 2, double h = 1.5) {
+  makeBarrelStagger(int nPhi, int nZ, double shift = 0,
+                    double incl = std::numbers::pi / 9., double w = 2,
+                    double h = 1.5) {
     double z0 = -(nZ - 1) * w;
     SrfVec res;
     std::vector<std::pair<const Surface*, const Surface*>> pairs;
     // TODO: The test is extremely numerically unstable in the face of upward
     //       rounding in this multiplication and division. Find out why.
-    double phiStep = 2 * M_PI / nPhi;
+    double phiStep = 2 * std::numbers::pi / nPhi;
     for (int i = 0; i < nZ; i++) {
       double z = i * w * 2 + z0;
       for (int j = 0; j < nPhi; ++j) {
@@ -202,7 +206,8 @@ struct SurfaceArrayCreatorFixture {
         trans.rotate(Eigen::AngleAxisd(phi, Vector3(0, 0, 1)));
         trans.translate(Vector3(10, 0, z));
         trans.rotate(Eigen::AngleAxisd(incl, Vector3(0, 0, 1)));
-        trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3(0, 1, 0)));
+        trans.rotate(
+            Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
         std::shared_ptr<PlaneSurface> srfA =
@@ -278,7 +283,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
       1.25664,  1.46608,  1.67552,  1.88496,  2.09439,   2.30383,   2.51327,
       2.72271,  2.93215,  3.14159};
 
-  double step = 2 * M_PI / 30.;
+  double step = 2 * std::numbers::pi / 30.;
 
   // endcap style modules
 
@@ -294,8 +299,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
                                       BinningValue::binPhi, pl, tr);
 
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
-    CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
-    CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+    CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
+    CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
     CHECK_SMALL(phi(tr * Vector3::UnitX()), 1e-6);
 
@@ -310,8 +315,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_EC_2.obj");
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
-    CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
-    CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+    CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
+    CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
     // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
     CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), -0.5 * step, 1e-3);
@@ -326,8 +331,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_EC_3.obj");
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
-    CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
-    CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+    CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
+    CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
     CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), step / -4., 1e-3);
 
@@ -344,8 +349,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_EC_4.obj");
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
-    CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
-    CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+    CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
+    CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
     CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), step / 4., 1e-3);
   }
@@ -363,8 +368,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_BRL_1.obj");
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
-    CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
-    CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+    CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
+    CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
     CHECK_SMALL(phi(tr * Vector3::UnitX()), 1e-6);
 
@@ -379,8 +384,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_BRL_2.obj");
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
-    CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
-    CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+    CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
+    CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
     // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
     CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), -0.5 * step, 1e-3);
@@ -396,8 +401,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_BRL_3.obj");
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
-    CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
-    CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+    CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
+    CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
     // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
     CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), step / -4., 1e-3);
@@ -413,8 +418,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_BRL_4.obj");
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
-    CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
-    CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+    CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
+    CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
     // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
     CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), step / 4., 1e-3);
@@ -477,7 +482,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
 
   // z row where elements are rotated around y
   Transform3 tr = Transform3::Identity();
-  tr.rotate(AngleAxis3(M_PI / 4., Vector3(0, 0, 1)));
+  tr.rotate(AngleAxis3(std::numbers::pi / 4., Vector3(0, 0, 1)));
   surfaces = straightLineSurfaces(10, 3, Vector3(0, 0, 0 + 1.5), tr);
   surfacesRaw = unpack_shared_vector(surfaces);
   pl = ProtoLayer(tgContext, surfacesRaw);
@@ -563,16 +568,16 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
   std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
   draw_surfaces(brl, "SurfaceArrayCreator_completeBinning_BRL.obj");
 
-  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(-M_PI, M_PI,
-                                                                30u);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
+      -std::numbers::pi, std::numbers::pi, 30u);
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> zAxis(-14, 14, 7u);
 
   double R = 10.;
   auto globalToLocal = [](const Vector3& pos) {
-    return Vector2(phi(pos) + 2 * M_PI / 30 / 2, pos.z());
+    return Vector2(phi(pos) + 2 * std::numbers::pi / 30 / 2, pos.z());
   };
   auto localToGlobal = [R](const Vector2& loc) {
-    double phi = loc[0] - 2 * M_PI / 30 / 2;
+    double phi = loc[0] - 2 * std::numbers::pi / 30 / 2;
     return Vector3(R * std::cos(phi), R * std::sin(phi), loc[1]);
   };
 
@@ -600,7 +605,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
                         SurfaceArrayCreatorFixture) {
-  auto barrel = makeBarrelStagger(30, 7, 0, M_PI / 9.);
+  auto barrel = makeBarrelStagger(30, 7, 0, std::numbers::pi / 9.);
   auto brl = barrel.first;
   std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
   draw_surfaces(brl, "SurfaceArrayCreator_barrelStagger.obj");
@@ -696,7 +701,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
     for (const auto& edge : axes.at(0)->getBinEdges()) {
       BOOST_TEST_INFO("phi edge index " << i);
       auto phiEdge = phiEdgesExp.at(i);
-      CHECK_CLOSE_ABS(edge, phiEdge, 1e-5 * M_PI);
+      CHECK_CLOSE_ABS(edge, phiEdge, 1e-5 * std::numbers::pi);
       i++;
     }
     i = 0;

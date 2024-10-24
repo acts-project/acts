@@ -22,6 +22,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <array>
+#include <numbers>
 #include <tuple>
 #include <vector>
 
@@ -87,23 +88,28 @@ struct PlanarSurfaceTestBeds {
         Acts::Transform3::Identity(), discTrapezoid);
     Acts::BinUtility stripsPhi(1, rmin, rmax, Acts::open,
                                Acts::BinningValue::binR);
-    stripsPhi += Acts::BinUtility(25, M_PI_2 - alpha, M_PI_2 + alpha,
-                                  Acts::open, Acts::BinningValue::binPhi);
+    stripsPhi += Acts::BinUtility(25, std::numbers::pi / 2. - alpha,
+                                  std::numbers::pi / 2. + alpha, Acts::open,
+                                  Acts::BinningValue::binPhi);
     TrapezoidRandom dtRandom(xmin * rScale, xmax * rScale, rmin * irScale,
                              ymax * rScale);
 
     // Raidal disc test
-    auto discRadial =
-        std::make_shared<Acts::RadialBounds>(rmin, rmax, M_PI_4, M_PI_2);
+    auto discRadial = std::make_shared<Acts::RadialBounds>(
+        rmin, rmax, std::numbers::pi / 4., std::numbers::pi / 2.);
     auto dSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
         Acts::Transform3::Identity(), discRadial);
     Acts::BinUtility rphiseg(10, rmin, rmax, Acts::open,
                              Acts::BinningValue::binR);
-    rphiseg += Acts::BinUtility(20, (M_PI_2 - M_PI_4), (M_PI_2 + M_PI_4),
-                                Acts::open, Acts::BinningValue::binPhi);
+    rphiseg +=
+        Acts::BinUtility(20, (std::numbers::pi / 2. - std::numbers::pi / 4.),
+                         (std::numbers::pi / 2. + std::numbers::pi / 4.),
+                         Acts::open, Acts::BinningValue::binPhi);
 
-    DiscRandom dRandom(rmin * irScale, rmax * rScale,
-                       (M_PI_2 - M_PI_4) * irScale, (M_PI_2 + M_PI_4) * rScale);
+    DiscRandom dRandom(
+        rmin * irScale, rmax * rScale,
+        (std::numbers::pi / 2. - std::numbers::pi / 4.) * irScale,
+        (std::numbers::pi / 2. + std::numbers::pi / 4.) * rScale);
 
     // Annulus disc test
     rmin = 2.5;

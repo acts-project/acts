@@ -33,6 +33,7 @@
 #include <functional>
 #include <initializer_list>
 #include <memory>
+#include <numbers>
 #include <random>
 #include <stdexcept>
 #include <tuple>
@@ -231,8 +232,8 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
           a.boundPars = BoundVector::Ones();
           a.boundPars[eBoundLoc0] *= p_it->first;
           a.boundPars[eBoundLoc1] *= p_it->second;
-          a.boundPars[eBoundPhi] =
-              detail::wrap_periodic(phi + dphi, -M_PI, 2 * M_PI);
+          a.boundPars[eBoundPhi] = detail::wrap_periodic(
+              phi + dphi, -std::numbers::pi, 2 * std::numbers::pi);
           a.boundPars[eBoundTheta] = theta + dtheta;
 
           // We don't look at covariance in this test
@@ -293,7 +294,7 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   const auto boundCov_data = boundCov(samples, mean_data, [](auto a, auto b) {
     Vector2 res = Vector2::Zero();
     for (int i = 0; i < 2; ++i) {
-      res[i] = detail::difference_periodic(a[i], b[i], 2 * M_PI);
+      res[i] = detail::difference_periodic(a[i], b[i], 2 * std::numbers::pi);
     }
     return res;
   });
@@ -303,10 +304,10 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   const auto [mean_test, boundCov_test] =
       detail::gaussianMixtureMeanCov(cmps, std::identity{}, d);
 
-  BOOST_CHECK(std::abs(detail::difference_periodic(mean_data[0], mean_test[0],
-                                                   2 * M_PI)) < 1.e-1);
-  BOOST_CHECK(std::abs(detail::difference_periodic(mean_data[1], mean_test[1],
-                                                   2 * M_PI)) < 1.e-1);
+  BOOST_CHECK(std::abs(detail::difference_periodic(
+                  mean_data[0], mean_test[0], 2 * std::numbers::pi)) < 1.e-1);
+  BOOST_CHECK(std::abs(detail::difference_periodic(
+                  mean_data[1], mean_test[1], 2 * std::numbers::pi)) < 1.e-1);
   CHECK_CLOSE_MATRIX(boundCov_data, boundCov_test, 1.e-1);
 }
 

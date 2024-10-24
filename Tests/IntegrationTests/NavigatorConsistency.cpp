@@ -24,6 +24,7 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
+#include <numbers>
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -356,11 +357,11 @@ auto eventGen =
                    bdata::distribution = std::uniform_real_distribution<double>(
                        0.5_GeV, 10_GeV))) ^
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
-                   bdata::distribution =
-                       std::uniform_real_distribution<double>(-M_PI, M_PI))) ^
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       -std::numbers::pi, std::numbers::pi))) ^
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                    bdata::distribution = std::uniform_real_distribution<double>(
-                       1.0, M_PI - 1.0))) ^
+                       1., std::numbers::pi - 1.))) ^
     bdata::random(
         (bdata::engine = std::mt19937(), bdata::seed = 23,
          bdata::distribution = std::uniform_int_distribution<int>(0, 1)));

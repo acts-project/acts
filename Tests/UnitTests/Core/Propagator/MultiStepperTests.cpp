@@ -38,6 +38,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <stdexcept>
 #include <tuple>
@@ -429,8 +430,8 @@ void test_multi_stepper_surface_status_update() {
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
-  std::get<BoundVector>(cmps[0])[eBoundTheta] = M_PI_2;
-  std::get<BoundVector>(cmps[1])[eBoundTheta] = -M_PI_2;
+  std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
+  std::get<BoundVector>(cmps[1])[eBoundTheta] = -std::numbers::pi / 2.;
   std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
   std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
@@ -540,8 +541,8 @@ void test_component_bound_state() {
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
-  std::get<BoundVector>(cmps[0])[eBoundTheta] = M_PI_2;
-  std::get<BoundVector>(cmps[1])[eBoundTheta] = -M_PI_2;
+  std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
+  std::get<BoundVector>(cmps[1])[eBoundTheta] = -std::numbers::pi / 2.;
   std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
   std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 

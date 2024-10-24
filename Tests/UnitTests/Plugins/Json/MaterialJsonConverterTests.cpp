@@ -19,6 +19,7 @@
 #include <array>
 #include <fstream>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -108,18 +109,20 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial2DTests) {
   using EqEqGrid = EqBoundEqClosed::grid_type<std::size_t>;
   using Point = EqEqGrid::point_t;
 
-  EqBoundEqClosed eqeqBound{{-1., 1.}, 2, {-M_PI, M_PI}, 4};
+  EqBoundEqClosed eqeqBound{
+      {-1., 1.}, 2, {-std::numbers::pi, std::numbers::pi}, 4};
   EqEqGrid eqeqGrid{eqeqBound()};
 
-  eqeqGrid.atPosition(Point{-0.5, -M_PI * 0.75}) = 1u;  // material 1
-  eqeqGrid.atPosition(Point{-0.5, -M_PI * 0.25}) = 1u;  // material 1
-  eqeqGrid.atPosition(Point{-0.5, M_PI * 0.25}) = 0u;   // vacuum
-  eqeqGrid.atPosition(Point{-0.5, M_PI * 0.75}) = 2u;   // material 2
+  eqeqGrid.atPosition(Point{-0.5, -std::numbers::pi * 0.75}) =
+      1u;                                                          // material 1
+  eqeqGrid.atPosition(Point{-0.5, -std::numbers::pi / 4.}) = 1u;   // material 1
+  eqeqGrid.atPosition(Point{-0.5, std::numbers::pi / 4.}) = 0u;    // vacuum
+  eqeqGrid.atPosition(Point{-0.5, std::numbers::pi * 0.75}) = 2u;  // material 2
 
-  eqeqGrid.atPosition(Point{0.5, -M_PI * 0.75}) = 0u;  // vacuum
-  eqeqGrid.atPosition(Point{0.5, -M_PI * 0.25}) = 3u;  // material 3
-  eqeqGrid.atPosition(Point{0.5, M_PI * 0.25}) = 3u;   // material 3
-  eqeqGrid.atPosition(Point{0.5, M_PI * 0.75}) = 0u;   // vacuum
+  eqeqGrid.atPosition(Point{0.5, -std::numbers::pi * 0.75}) = 0u;  // vacuum
+  eqeqGrid.atPosition(Point{0.5, -std::numbers::pi / 4.}) = 3u;    // material 3
+  eqeqGrid.atPosition(Point{0.5, std::numbers::pi / 4.}) = 3u;     // material 3
+  eqeqGrid.atPosition(Point{0.5, std::numbers::pi * 0.75}) = 0u;   // vacuum
 
   auto boundToGrid =
       std::make_unique<const Acts::GridAccess::LocalSubspace<0u, 1u>>();

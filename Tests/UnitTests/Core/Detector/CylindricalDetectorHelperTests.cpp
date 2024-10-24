@@ -30,6 +30,7 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -110,7 +111,8 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Connect: R", logLevel));
   ACTS_INFO("*** Test: connect DetectorVolumes in R, create proto container");
   // Test with different opening angles
-  std::vector<ActsScalar> testOpenings = {M_PI, 0.5 * M_PI};
+  std::vector<ActsScalar> testOpenings = {std::numbers::pi,
+                                          std::numbers::pi / 2.};
 
   std::vector<ActsScalar> radii = {0., 10., 100., 200.};
   ActsScalar halfZ = 100.;
@@ -345,7 +347,7 @@ BOOST_AUTO_TEST_CASE(ConnectInPhi) {
 
   std::vector<Transform3> transforms = {Transform3::Identity()};
   unsigned int phiSectors = 5;
-  ActsScalar phiHalfSector = M_PI / phiSectors;
+  ActsScalar phiHalfSector = std::numbers::pi / phiSectors;
 
   for (auto [it, t] : enumerate(transforms)) {
     ACTS_INFO("    -> test series with transform id " << it);
@@ -354,7 +356,7 @@ BOOST_AUTO_TEST_CASE(ConnectInPhi) {
     for (unsigned int i = 0; i < phiSectors; ++i) {
       auto cBounds = std::make_unique<CylinderVolumeBounds>(
           10., 100., 100., phiHalfSector,
-          -M_PI + (2u * i + 1u) * phiHalfSector);
+          -std::numbers::pi + (2u * i + 1u) * phiHalfSector);
 
       // create the volume
       phiVolumes.push_back(DetectorVolumeFactory::construct(

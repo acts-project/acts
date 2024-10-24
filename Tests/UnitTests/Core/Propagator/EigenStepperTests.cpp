@@ -54,6 +54,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -968,7 +969,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
 // Test case a). The DenseEnvironmentExtension should state that it is not
 // valid in this case.
 BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
-  double rotationAngle = M_PI * 0.5;
+  double rotationAngle = std::numbers::pi / 2.;
   Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
   Vector3 yPos(0., 1., 0.);
   Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));

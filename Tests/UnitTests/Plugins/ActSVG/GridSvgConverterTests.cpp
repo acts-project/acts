@@ -17,6 +17,7 @@
 
 #include <fstream>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <vector>
 
@@ -206,7 +207,7 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
 
   // z-phi Axes & Grid
   Axis axisZ(AxisBound, -200., 200., 3);
-  Axis axisPhi(AxisClosed, -M_PI, M_PI, 6);
+  Axis axisPhi(AxisClosed, -std::numbers::pi, std::numbers::pi, 6);
   Grid gridZPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisZ, axisPhi);
 
   Svg::GridConverter::Options cOptions;
@@ -285,7 +286,7 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
 
   // r-phi Axes & Grid
   Axis axisR(AxisBound, 100., 400., 3);
-  Axis axisPhi(AxisClosed, -M_PI, M_PI, 4);
+  Axis axisPhi(AxisClosed, -std::numbers::pi, std::numbers::pi, 4);
   Grid gridRPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisR, axisPhi);
 
   Svg::GridConverter::Options cOptions;

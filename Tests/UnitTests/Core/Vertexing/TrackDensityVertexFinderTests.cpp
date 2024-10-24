@@ -34,6 +34,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <numbers>
 #include <random>
 #include <string>
 #include <system_error>
@@ -204,7 +205,8 @@ std::normal_distribution<double> z2dist(-3_mm, 0.5_mm);
 // Track pT distribution
 std::uniform_real_distribution<double> pTDist(0.1_GeV, 100_GeV);
 // Track phi distribution
-std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
+std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
+                                               std::numbers::pi);
 // Track eta distribution
 std::uniform_real_distribution<double> etaDist(-4., 4.);
 

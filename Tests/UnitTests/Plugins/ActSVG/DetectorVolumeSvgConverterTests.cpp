@@ -25,6 +25,7 @@
 
 #include <fstream>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 namespace {
@@ -97,7 +98,7 @@ BOOST_AUTO_TEST_CASE(TubeSectorCylindricalDetectorVolume) {
   Acts::ActsScalar rInner = 10.;
   Acts::ActsScalar rOuter = 100.;
   Acts::ActsScalar zHalfL = 300.;
-  Acts::ActsScalar phiSector = 0.25 * M_PI;
+  Acts::ActsScalar phiSector = std::numbers::pi / 4.;
   std::vector<Acts::ActsScalar> avgPhi = {0., 0.75};
   std::vector<std::string> avgPhiTag = {"zero", "nonzero"};
 
@@ -149,8 +150,8 @@ BOOST_AUTO_TEST_CASE(EndcapVolumeWithSurfaces) {
   lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
   lsConfig.surfacesProvider = endcapSurfaces;
   lsConfig.binnings = {Acts::Experimental::ProtoBinning(
-      Acts::BinningValue::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI,
-      22u, 1u)};
+      Acts::BinningValue::binPhi, Acts::AxisBoundaryType::Closed,
+      -std::numbers::pi, std::numbers::pi, 22u, 1u)};
 
   auto layerBuilder =
       std::make_shared<Acts::Experimental::LayerStructureBuilder>(
@@ -158,7 +159,7 @@ BOOST_AUTO_TEST_CASE(EndcapVolumeWithSurfaces) {
                                            Acts::Logging::VERBOSE));
 
   Acts::Experimental::VolumeStructureBuilder::Config shapeConfig;
-  shapeConfig.boundValues = {10, 100, 10., M_PI, 0.};
+  shapeConfig.boundValues = {10, 100, 10., std::numbers::pi, 0.};
   shapeConfig.transform =
       Acts::Transform3{Acts::Transform3::Identity()}.pretranslate(
           Acts::Vector3(0., 0., -800.));
@@ -222,9 +223,9 @@ BOOST_AUTO_TEST_CASE(BarrelVolumeWithSurfaces) {
       Acts::Experimental::ProtoBinning{Acts::BinningValue::binZ,
                                        Acts::AxisBoundaryType::Bound, -480.,
                                        480., 14u, 1u},
-      Acts::Experimental::ProtoBinning(Acts::BinningValue::binPhi,
-                                       Acts::AxisBoundaryType::Closed, -M_PI,
-                                       M_PI, 32u, 1u)};
+      Acts::Experimental::ProtoBinning(
+          Acts::BinningValue::binPhi, Acts::AxisBoundaryType::Closed,
+          -std::numbers::pi, std::numbers::pi, 32u, 1u)};
 
   auto barrelBuilder =
       std::make_shared<Acts::Experimental::LayerStructureBuilder>(
@@ -232,7 +233,7 @@ BOOST_AUTO_TEST_CASE(BarrelVolumeWithSurfaces) {
                                            Acts::Logging::VERBOSE));
 
   Acts::Experimental::VolumeStructureBuilder::Config shapeConfig;
-  shapeConfig.boundValues = {60., 80., 800., M_PI, 0.};
+  shapeConfig.boundValues = {60., 80., 800., std::numbers::pi, 0.};
   shapeConfig.boundsType = Acts::VolumeBounds::BoundsType::eCylinder;
 
   auto shapeBuilder =

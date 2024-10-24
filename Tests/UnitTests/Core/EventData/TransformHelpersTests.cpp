@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -74,7 +75,7 @@ BOOST_DATA_TEST_CASE(
     surfaces* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
     surface, l0, l1, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
-  const auto phi = ((0 < theta) && (theta < M_PI)) ? phiInput : 0.0;
+  const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const auto qOverP = q / p;
 
   GeometryContext geoCtx;
@@ -158,7 +159,7 @@ BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
                      ts* phis* thetas* ps* qsNonZero, time, phiInput, theta, p,
                      q) {
   // phi is ill-defined in forward/backward tracks
-  const auto phi = ((0 < theta) && (theta < M_PI)) ? phiInput : 0.0;
+  const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const auto qOverP = q / p;
 
   GeometryContext geoCtx;

@@ -24,6 +24,7 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -41,12 +42,14 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   auto recBounds = std::make_shared<RectangleBounds>(3., 6.);
 
   // Planar definitions to help construct the boundary surfaces
-  static const Transform3 planeYZ = AngleAxis3(0.5 * M_PI, Vector3::UnitY()) *
-                                    AngleAxis3(0.5 * M_PI, Vector3::UnitZ()) *
-                                    Transform3::Identity();
-  static const Transform3 planeZX = AngleAxis3(-0.5 * M_PI, Vector3::UnitX()) *
-                                    AngleAxis3(-0.5 * M_PI, Vector3::UnitZ()) *
-                                    Transform3::Identity();
+  static const Transform3 planeYZ =
+      AngleAxis3(std::numbers::pi / 2., Vector3::UnitY()) *
+      AngleAxis3(std::numbers::pi / 2., Vector3::UnitZ()) *
+      Transform3::Identity();
+  static const Transform3 planeZX =
+      AngleAxis3(-std::numbers::pi / 2., Vector3::UnitX()) *
+      AngleAxis3(-std::numbers::pi / 2., Vector3::UnitZ()) *
+      Transform3::Identity();
 
   std::vector<std::shared_ptr<const Surface>> surfaceStore;
   surfaceStore.reserve(100);
@@ -171,7 +174,7 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
     detectorElements.clear();
 
     std::size_t nSensors = 8;
-    double deltaPhi = 2 * M_PI / nSensors;
+    double deltaPhi = 2 * std::numbers::pi / nSensors;
     double r = 20_mm;
     std::vector<std::shared_ptr<const Surface>> surfaces;
     for (std::size_t i = 0; i < nSensors; i++) {
