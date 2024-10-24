@@ -13,6 +13,34 @@
 
 namespace Acts {
 
+/// Check if a bound vector is valid. This checks the following:
+/// - All values are finite
+/// - (optionally) The phi value is in the range [-pi, pi)
+/// - (optionally) The theta value is in the range [0, pi]
+/// - The q/p value is non-zero
+///
+/// @param v The bound vector to check
+/// @param validateAngleRange If true, the phi and theta values are range checked
+/// @param epsilon The epsilon to use for the checks
+/// @param maxAbsEta The maximum allowed eta value
+///
+/// @return True if the bound vector is valid
+bool isBoundVectorValid(const BoundVector& v, bool validateAngleRange,
+                        double epsilon = 1e-6, double maxAbsEta = 6.);
+
+/// Check if a free vector is valid. This checks the following:
+/// - All values are finite
+/// - Direction is normalized
+/// - The q/p value is non-zero
+///
+/// @param v The free vector to check
+/// @param epsilon The epsilon to use for the checks
+/// @param maxAbsEta The maximum allowed eta value
+///
+/// @return True if the free vector is valid
+bool isFreeVectorValid(const FreeVector& v, double epsilon = 1e-6,
+                       double maxAbsEta = 6.);
+
 /// Normalize the bound parameter angles
 ///
 /// @param boundParams The bound parameters to normalize
