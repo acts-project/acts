@@ -45,21 +45,21 @@ int main(int argc, char* argv[]) {
 
   ACTS_LOCAL_LOGGER(getDefaultLogger("BinUtility", Acts::Logging::Level(lvl)));
 
-  std::vector<float> fewBins;
+  std::vector<ActsScalar> fewBins;
   fewBins.reserve(6);
   for (unsigned int ib = 0; ib < 6; ++ib) {
     fewBins.push_back(ib * 6. / 5.);
   }
   Acts::BinUtility small(fewBins, Acts::open, Acts::BinningValue::binX);
 
-  std::vector<float> mediumBins;
+  std::vector<ActsScalar> mediumBins;
   mediumBins.reserve(21);
   for (unsigned int ib = 0; ib < 21; ++ib) {
     mediumBins.push_back(ib * 6. / 20.);
   }
   Acts::BinUtility medium(mediumBins, Acts::open, Acts::BinningValue::binX);
 
-  std::vector<float> manyBins;
+  std::vector<ActsScalar> manyBins;
   manyBins.reserve(101);
   for (unsigned int ib = 0; ib < 101; ++ib) {
     manyBins.push_back(ib * 6. / 100.);

@@ -60,9 +60,9 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   BOOST_CHECK_EQUAL(Grid.minPosition()[0], bd[0].min);
   BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
 
-  float max1 =
+  ActsScalar max1 =
       bd[0].max + std::fabs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
-  float max2 =
+  ActsScalar max2 =
       bd[1].max + std::fabs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
 
   BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
@@ -152,9 +152,9 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   BOOST_CHECK_EQUAL(Grid.minPosition()[0], bd[0].min);
   BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
 
-  float max1 =
+  ActsScalar max1 =
       bd[0].max + std::fabs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
-  float max2 =
+  ActsScalar max2 =
       bd[1].max + std::fabs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
 
   BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
@@ -244,11 +244,11 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
   BOOST_CHECK_EQUAL(Grid.minPosition()[2], bd[2].min);
 
-  float max1 =
+  ActsScalar max1 =
       bd[0].max + std::fabs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
-  float max2 =
+  ActsScalar max2 =
       bd[1].max + std::fabs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
-  float max3 =
+  ActsScalar max3 =
       bd[2].max + std::fabs(bd[2].max - bd[2].min) / (bd[2].bins() - 1);
 
   BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
@@ -341,11 +341,11 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
   BOOST_CHECK_EQUAL(Grid.minPosition()[2], bd[2].min);
 
-  float max1 =
+  ActsScalar max1 =
       bd[0].max + std::fabs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
-  float max2 =
+  ActsScalar max2 =
       bd[1].max + std::fabs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
-  float max3 =
+  ActsScalar max3 =
       bd[2].max + std::fabs(bd[2].max - bd[2].min) / (bd[2].bins() - 1);
 
   BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
