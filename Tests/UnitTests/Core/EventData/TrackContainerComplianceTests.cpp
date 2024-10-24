@@ -75,6 +75,7 @@ ACTS_DOES_NOT_COMPILE_SUITE_BEGIN(BuildFromConstRef)
   (void)t;
 
   ConstProxyAccessor<unsigned int> caccNMeasuements("nMeasurements");
+  static_cast<void>(caccNMeasuements);  // suppressed unused warning
   ACTS_DOES_NOT_COMPILE_BEGIN(ConstAccessorMutate)
   caccNMeasuements(t) = 66;
   ACTS_DOES_NOT_COMPILE_END()
