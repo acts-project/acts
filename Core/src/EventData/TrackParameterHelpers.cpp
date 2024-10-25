@@ -21,8 +21,7 @@ bool Acts::isBoundVectorValid(const BoundVector& v, bool validateAngleRange,
   bool loc1Valid = std::isfinite(v[eBoundLoc1]);
   bool phiValid = std::isfinite(v[eBoundPhi]);
   bool thetaValid = std::isfinite(v[eBoundTheta]);
-  bool qOverPValid = std::isfinite(v[eBoundQOverP]) &&
-                     (std::abs(v[eBoundQOverP]) - epsilon >= 0);
+  bool qOverPValid = std::isfinite(v[eBoundQOverP]);
   bool timeValid = std::isfinite(v[eBoundTime]);
 
   if (validateAngleRange) {
@@ -51,8 +50,7 @@ bool Acts::isFreeVectorValid(const FreeVector& v, double epsilon,
   bool dir1Valid = std::isfinite(v[eFreeDir1]);
   bool dir2Valid = std::isfinite(v[eFreeDir2]);
   bool dirValid = (std::abs(v.segment<3>(eFreeDir0).norm() - 1) - epsilon <= 0);
-  bool qOverPValid = std::isfinite(v[eFreeQOverP]) &&
-                     (std::abs(v[eFreeQOverP]) - epsilon >= 0);
+  bool qOverPValid = std::isfinite(v[eFreeQOverP]);
   bool timeValid = std::isfinite(v[eFreeTime]);
 
   bool etaValid = true;

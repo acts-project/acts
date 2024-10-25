@@ -19,7 +19,6 @@ namespace Acts {
 /// - All values are finite
 /// - (optionally) The phi value is in the range [-pi, pi)
 /// - (optionally) The theta value is in the range [0, pi]
-/// - The q/p value is non-zero
 ///
 /// @param v The bound vector to check
 /// @param validateAngleRange If true, the phi and theta values are range checked
@@ -34,7 +33,6 @@ bool isBoundVectorValid(
 /// Check if a free vector is valid. This checks the following:
 /// - All values are finite
 /// - Direction is normalized
-/// - The q/p value is non-zero
 ///
 /// @param v The free vector to check
 /// @param epsilon The epsilon to use for the checks
