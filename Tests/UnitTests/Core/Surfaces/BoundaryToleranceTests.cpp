@@ -20,8 +20,6 @@
 #include <optional>
 #include <vector>
 
-#include "BoundaryToleranceTestsRefs.hpp"
-
 namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
