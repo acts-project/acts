@@ -8,6 +8,7 @@
 
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 
+#include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <numbers>
@@ -31,8 +32,11 @@ bool Acts::isBoundVectorValid(const BoundVector& v, bool validateAngleRange,
                  (v[eBoundTheta] - epsilon <= pi);
   }
 
-  double eta = -std::log(std::tan(v[eBoundTheta] / 2));
-  bool etaValid = std::isfinite(eta) && (std::abs(eta) - epsilon <= maxAbsEta);
+  bool etaValid = true;
+  if (std::isfinite(maxAbsEta)) {
+    double eta = AngleHelpers::etaFromTheta(v[eBoundTheta]);
+    etaValid = std::isfinite(eta) && (std::abs(eta) - epsilon <= maxAbsEta);
+  }
 
   return loc0Valid && loc1Valid && phiValid && thetaValid && qOverPValid &&
          timeValid && etaValid;
@@ -51,8 +55,11 @@ bool Acts::isFreeVectorValid(const FreeVector& v, double epsilon,
                      (std::abs(v[eFreeQOverP]) - epsilon >= 0);
   bool timeValid = std::isfinite(v[eFreeTime]);
 
-  double eta = VectorHelpers::eta(v.segment<3>(eFreeDir0));
-  bool etaValid = std::isfinite(eta) && (std::abs(eta) - epsilon <= maxAbsEta);
+  bool etaValid = true;
+  if (std::isfinite(maxAbsEta)) {
+    double eta = VectorHelpers::eta(v.segment<3>(eFreeDir0));
+    etaValid = std::isfinite(eta) && (std::abs(eta) - epsilon <= maxAbsEta);
+  }
 
   return pos0Valid && pos1Valid && pos2Valid && dir0Valid && dir1Valid &&
          dir2Valid && dirValid && qOverPValid && timeValid && etaValid;
