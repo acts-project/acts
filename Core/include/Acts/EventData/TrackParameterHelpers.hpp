@@ -11,8 +11,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
-#include <numbers>
-
 namespace Acts {
 
 /// Normalize the bound parameter angles
