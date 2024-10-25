@@ -12,13 +12,13 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <cstddef>
-#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -93,8 +93,11 @@ class EventGenerator final : public ActsExamples::IReader {
   struct Config {
     /// Name of the output particles collection.
     std::string outputParticles;
-    /// Name of the vertex collection.
+    /// Name of the output vertex collection.
     std::string outputVertices;
+    /// Optional. Name of the output track parameters collection.
+    std::string outputTrackParameters;
+
     /// List of generators that should be used to generate the event.
     std::vector<Generator> generators;
     /// The random number service.
@@ -123,6 +126,8 @@ class EventGenerator final : public ActsExamples::IReader {
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
   WriteDataHandle<SimVertexContainer> m_outputVertices{this, "OutputVertices"};
+  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
+      this, "OutputTrackParameters"};
 };
 
 }  // namespace ActsExamples
