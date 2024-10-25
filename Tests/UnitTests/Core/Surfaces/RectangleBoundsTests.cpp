@@ -83,14 +83,14 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsProperties) {
   const double halfY = 5.;
 
   RectangleBounds rect(halfX, halfY);
-  BOOST_CHECK_EQUAL(rect.halfLengthX(), 10.);
-  BOOST_CHECK_EQUAL(rect.halfLengthY(), 5.);
+  BOOST_CHECK_EQUAL(rect.halfLengthX(), halfX);
+  BOOST_CHECK_EQUAL(rect.halfLengthY(), halfY);
 
   CHECK_CLOSE_ABS(rect.min(), Vector2(-halfX, -halfY), 1e-6);
   CHECK_CLOSE_ABS(rect.max(), Vector2(halfX, halfY), 1e-6);
 
   const std::vector<Vector2> coords = {
-      {-10., -5.}, {10., -5.}, {10., 5.}, {-10., 5.}};
+      {-halfX, -halfY}, {halfX, -halfY}, {halfX, halfY}, {-halfX, halfY}};
   // equality, ensure ordering is ok
   const auto& rectVertices = rect.vertices();
   BOOST_CHECK_EQUAL_COLLECTIONS(coords.cbegin(), coords.cend(),
@@ -101,7 +101,9 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsProperties) {
   BOOST_CHECK(rect.inside(pointA, tolerance));
 }
 BOOST_AUTO_TEST_CASE(RectangleBoundsAssignment) {
-  const double halfX(10.), halfY(2.);
+  const double halfX = 10.;
+  const double halfY = 2.;  // != 5.
+
   RectangleBounds rectA(halfX, halfY);
   RectangleBounds rectB(0., 0.);
   rectB = rectA;

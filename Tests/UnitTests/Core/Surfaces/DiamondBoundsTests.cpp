@@ -97,9 +97,6 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   Vector2 inRectangle(15., 0.);
 
   /// Test dump
-  // Acts::DiamondBounds:  (minHlengthX, medHlengthX, maxHlengthX, hlengthY1,
-  // hlengthY2 ) = (30.0000000, 10.0000000, 50.0000000, 10.0000000,
-  // 20.0000000)
   diamondBoundsObject.toStream(std::cout);
   boost::test_tools::output_test_stream dumpOuput;
   diamondBoundsObject.toStream(dumpOuput);

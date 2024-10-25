@@ -123,7 +123,9 @@ BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
 /// Unit test for testing RadialBounds assignment
 BOOST_AUTO_TEST_CASE(RadialBoundsAssignment) {
   RadialBounds radialBoundsObject(rMin, rMax, halfPhiSector);
-  // operator == not implemented in this class
+
+  /// Test operator ==
+  // not implemented in this class
 
   /// Test assignment
   RadialBounds assignedRadialBoundsObject(10.1, 123.);

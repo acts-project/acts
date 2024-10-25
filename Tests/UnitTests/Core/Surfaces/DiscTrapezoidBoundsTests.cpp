@@ -146,17 +146,17 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   /// Test halfPhiSector (redundant; not configurable)
   CHECK_SMALL(DiscTrapezoidBoundsObject.stereo(), 1e-6);
 
-  /// Test minHalflengthX
+  /// Test minHalfLengthX
   CHECK_CLOSE_REL(
       DiscTrapezoidBoundsObject.get(DiscTrapezoidBounds::eHalfLengthXminR),
       minHalfX, 1e-6);
 
-  /// Test maxHalflengthX
+  /// Test maxHalfLengthX
   CHECK_CLOSE_REL(
       DiscTrapezoidBoundsObject.get(DiscTrapezoidBounds::eHalfLengthXmaxR),
       maxHalfX, 1e-6);
 
-  /// Test halflengthY
+  /// Test halfLengthY
   CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.halfLengthY(), 0.792286991, 1e-6);
 }
 /// Unit test for testing DiscTrapezoidBounds assignment

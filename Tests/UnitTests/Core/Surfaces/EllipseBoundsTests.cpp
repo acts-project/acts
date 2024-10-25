@@ -75,38 +75,47 @@ BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
   BOOST_CHECK_THROW(
       EllipseBounds(-innerRx, innerRy, outerRx, outerRy, phiSector, averagePhi),
       std::logic_error);
+
   // Exception for innerRy < 0
   BOOST_CHECK_THROW(
       EllipseBounds(innerRx, -innerRy, outerRx, outerRy, phiSector, averagePhi),
       std::logic_error);
+
   // Exception for innerRx < 0 and innerRy < 0
   BOOST_CHECK_THROW(EllipseBounds(-innerRx, -innerRy, outerRx, outerRy,
                                   phiSector, averagePhi),
                     std::logic_error);
+
   // Exception for opening outerRx <= 0
   BOOST_CHECK_THROW(
       EllipseBounds(innerRx, innerRy, 0., outerRy, phiSector, averagePhi),
       std::logic_error);
+
   // Exception for opening outerRy <= 0
   BOOST_CHECK_THROW(
       EllipseBounds(innerRx, innerRy, outerRx, 0., phiSector, averagePhi),
       std::logic_error);
+
   // Exception for iouterRx < 0 and outerRy < 0
   BOOST_CHECK_THROW(EllipseBounds(innerRx, innerRy, -outerRx, -outerRy,
                                   phiSector, averagePhi),
                     std::logic_error);
+
   // Exception for innerRx > outerRx
   BOOST_CHECK_THROW(
       EllipseBounds(outerRx, innerRy, innerRx, outerRy, phiSector, averagePhi),
       std::logic_error);
+
   // Exception for innerRxy > outerRy
   BOOST_CHECK_THROW(
       EllipseBounds(innerRx, outerRy, outerRx, innerRy, phiSector, averagePhi),
       std::logic_error);
+
   // Exception for negative phiSector
   BOOST_CHECK_THROW(
       EllipseBounds(innerRx, innerRy, outerRx, outerRy, -phiSector, averagePhi),
       std::logic_error);
+
   // Exception for average phi out of bound
   BOOST_CHECK_THROW(
       EllipseBounds(innerRx, innerRy, outerRx, outerRy, phiSector, 4.),

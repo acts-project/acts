@@ -170,26 +170,24 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   BOOST_CHECK(output.is_equal("Acts::LineSurface"));
 
   // normal
+  // arbitrary position, because should be irrelevant
+  Vector3 position{5, 5, 5};  // should be irrelevant
   {
-    Vector3 position{5, 5, 5};  // should be irrelevant
     Vector3 direction{1, 0, 0};
     CHECK_CLOSE_ABS(line.normal(tgContext, position, direction), direction,
                     1e-6);
   }
   {
-    Vector3 position{5, 5, 5};  // should be irrelevant
     Vector3 direction = Vector3{1, 0, 0.1}.normalized();
     CHECK_CLOSE_ABS(line.normal(tgContext, position, direction),
                     Vector3::UnitX(), 1e-6);
   }
   {
-    Vector3 position{5, 5, 5};  // should be irrelevant
     Vector3 direction{-1, 0, 0};
     CHECK_CLOSE_ABS(line.normal(tgContext, position, direction), direction,
                     1e-6);
   }
   {
-    Vector3 position{5, 5, 5};  // should be irrelevant
     Vector3 direction{0, 1, 0};
     CHECK_CLOSE_ABS(line.normal(tgContext, position, direction), direction,
                     1e-6);

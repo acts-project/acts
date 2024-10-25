@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   /// Test for r()
   BOOST_CHECK_EQUAL(lineBoundsObject.get(LineBounds::eR), radius);
 
-  /// Test for halflengthZ (NOTE: Naming violation)
+  /// Test for halfLengthZ
   BOOST_CHECK_EQUAL(lineBoundsObject.get(LineBounds::eHalfLengthZ), halfZ);
 
   /// Test for dump

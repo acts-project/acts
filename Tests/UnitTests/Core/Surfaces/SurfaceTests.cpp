@@ -168,7 +168,8 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   BOOST_CHECK(surface1 == surface2);
 
   // remove test for the moment, surfaces do not have a concept of thickness
-  // (only detector elements have) only thickness is different here
+  // (only detector elements have)
+  // only thickness is different here
   // BOOST_CHECK_NE(surface1, surface3);
 
   BOOST_CHECK(surface1 != surface4);

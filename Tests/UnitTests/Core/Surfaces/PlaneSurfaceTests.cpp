@@ -289,10 +289,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
 }
 
 BOOST_AUTO_TEST_CASE(RotatedTrapezoid) {
-  double shortHalfX{100.};
-  double longHalfX{200.};
-  double halfY{300.};
-  double rotAngle{45._degree};
+  const double shortHalfX = 100.;
+  const double longHalfX = 200.;
+  const double halfY = 300.;
+  const double rotAngle = 45._degree;
 
   Vector2 edgePoint{longHalfX - 10., halfY};
 
