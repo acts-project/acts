@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
       {2, 2.5},
       {-2, 2.5},
       {2, -2.5},
-      {2, -2.5},  // TODO why is this point here twice? maybe -2?
+      {-2, -2.5},
       {4, -1},
       {-4, -1},
       {-7, 0},
