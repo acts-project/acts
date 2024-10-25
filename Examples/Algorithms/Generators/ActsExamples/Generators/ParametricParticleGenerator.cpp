@@ -89,7 +89,7 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
       sinTheta = std::sqrt(1 - cosTheta * cosTheta);
     } else {
       const double eta = etaDist(rng);
-      const double theta = 2 * std::atan(std::exp(-eta));
+      const double theta = Acts::AngleHelpers::thetaFromEta(eta);
       sinTheta = std::sin(theta);
       cosTheta = std::cos(theta);
     }
