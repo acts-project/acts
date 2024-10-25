@@ -367,7 +367,7 @@ struct StopWatch {
   Timepoint start;
   Duration& store;
 
-  StopWatch(Duration& s) : start(Clock::now()), store(s) {}
+  explicit StopWatch(Duration& s) : start(Clock::now()), store(s) {}
   ~StopWatch() { store += Clock::now() - start; }
 };
 
@@ -611,7 +611,7 @@ void Sequencer::fpeReport() const {
     auto merged = std::accumulate(
         fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
         [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); });
-    if (!merged) {
+    if (!merged.hasStackTraces()) {
       // no FPEs to report
       continue;
     }

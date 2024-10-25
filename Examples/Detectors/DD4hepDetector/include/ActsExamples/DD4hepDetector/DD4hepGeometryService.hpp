@@ -52,7 +52,7 @@ class DD4hepGeometryService {
     /// Log level for the geometry service.
     Acts::Logging::Level logLevel = Acts::Logging::Level::INFO;
     /// Log level for DD4hep itself
-    Acts::Logging::Level dd4hepLogLevel = Acts::Logging::Level::INFO;
+    Acts::Logging::Level dd4hepLogLevel = Acts::Logging::Level::WARNING;
     /// XML-file with the detector description
     std::vector<std::string> xmlFileNames;
     /// The name of the service
@@ -87,7 +87,7 @@ class DD4hepGeometryService {
         std::make_shared<const Acts::GeometryIdentifierHook>();
   };
 
-  DD4hepGeometryService(const Config& cfg);
+  explicit DD4hepGeometryService(const Config& cfg);
   DD4hepGeometryService(const DD4hepGeometryService&) = delete;
   DD4hepGeometryService(DD4hepGeometryService&&) = delete;
   ~DD4hepGeometryService();
