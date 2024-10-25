@@ -163,9 +163,9 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
                   bevelMaxZ, 1e-6);
 
   /// Test for dump
-  boost::test_tools::output_test_stream dumpOuput;
-  cylinderBoundsObject.toStream(dumpOuput);
-  BOOST_CHECK(dumpOuput.is_equal(
+  boost::test_tools::output_test_stream dumpOutput;
+  cylinderBoundsObject.toStream(dumpOutput);
+  BOOST_CHECK(dumpOutput.is_equal(
       "Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, "
       "averagePhi, bevelMinZ, bevelMaxZ) = (0.5000000, 20.0000000, 3.1415927, "
       "0.0000000, 0.0000000, 0.0000000)"));

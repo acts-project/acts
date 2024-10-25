@@ -98,12 +98,12 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
 
   /// Test dump
   diamondBoundsObject.toStream(std::cout);
-  boost::test_tools::output_test_stream dumpOuput;
-  diamondBoundsObject.toStream(dumpOuput);
+  boost::test_tools::output_test_stream dumpOutput;
+  diamondBoundsObject.toStream(dumpOutput);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::DiamondBounds: (halfXatYneg, halfXatYzero, "
-                         "halfXatYpos, halfYneg, halfYpos) = (10.0000000, "
-                         "50.0000000, 30.0000000, 10.0000000, 20.0000000)"));
+      dumpOutput.is_equal("Acts::DiamondBounds: (halfXatYneg, halfXatYzero, "
+                          "halfXatYpos, halfYneg, halfYpos) = (10.0000000, "
+                          "50.0000000, 30.0000000, 10.0000000, 20.0000000)"));
 
   /// Test inside
   BOOST_CHECK(diamondBoundsObject.inside(origin, BoundaryTolerance::None()));

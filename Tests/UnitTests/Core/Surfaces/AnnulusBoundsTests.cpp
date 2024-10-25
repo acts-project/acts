@@ -60,13 +60,13 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsExcpetion) {
   // Exception for swapped radii
   BOOST_CHECK_THROW(AnnulusBounds(maxRadius, minRadius, minPhi, maxPhi, offset),
                     std::logic_error);
-  // Exception for out of range  min phi
+  // Exception for out of range min phi
   BOOST_CHECK_THROW(AnnulusBounds(minRadius, maxRadius, -4., maxPhi, offset),
                     std::logic_error);
-  // Exception for out of range  max phi
+  // Exception for out of range max phi
   BOOST_CHECK_THROW(AnnulusBounds(minRadius, maxRadius, minPhi, 4., offset),
                     std::logic_error);
-  // Exception for out of range  max phi
+  // Exception for out of range max phi
   BOOST_CHECK_THROW(AnnulusBounds(minRadius, maxRadius, maxPhi, minPhi, offset),
                     std::logic_error);
 }

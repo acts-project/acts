@@ -114,9 +114,6 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   BOOST_CHECK_EQUAL(discSurfaceObject->normal(tgContext, lpos), zAxis);
 
   /// Test binningPosition
-  // auto binningPosition=
-  // discSurfaceObject.binningPosition(BinningValue::BinningValue::binRPhi );
-  // std::cout<<binningPosition<<std::endl;
   BOOST_CHECK_EQUAL(
       discSurfaceObject->binningPosition(tgContext, BinningValue::binRPhi),
       origin3D);

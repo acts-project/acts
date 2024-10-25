@@ -117,9 +117,9 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
                     RectangleBounds(6., 2.));
 
   /// Test dump
-  boost::test_tools::output_test_stream dumpOuput;
-  trapezoidBoundsObject.toStream(dumpOuput);
-  BOOST_CHECK(dumpOuput.is_equal(
+  boost::test_tools::output_test_stream dumpOutput;
+  trapezoidBoundsObject.toStream(dumpOutput);
+  BOOST_CHECK(dumpOutput.is_equal(
       "Acts::TrapezoidBounds:  (halfXnegY, halfXposY, halfY, rotAngle) = "
       "(1.0000000, 6.0000000, 2.0000000, 0.0000000)"));
 

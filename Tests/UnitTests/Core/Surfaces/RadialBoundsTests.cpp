@@ -96,12 +96,12 @@ BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
   Vector2 inSurface(2., 0.);
 
   /// Test dump
-  boost::test_tools::output_test_stream dumpOuput;
-  radialBoundsObject.toStream(dumpOuput);
+  boost::test_tools::output_test_stream dumpOutput;
+  radialBoundsObject.toStream(dumpOutput);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::RadialBounds:  (innerRadius, outerRadius, "
-                         "hPhiSector, averagePhi) = (1.0000000, "
-                         "5.0000000, 0.3926991, 0.0000000)"));
+      dumpOutput.is_equal("Acts::RadialBounds:  (innerRadius, outerRadius, "
+                          "hPhiSector, averagePhi) = (1.0000000, "
+                          "5.0000000, 0.3926991, 0.0000000)"));
 
   /// Test inside
   BOOST_CHECK(radialBoundsObject.inside(inSurface, BoundaryTolerance::None()));

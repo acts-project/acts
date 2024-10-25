@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   // associatedDetectorElement
   BOOST_CHECK_EQUAL(surface.associatedDetectorElement(), &detElement);
 
-  // test  associatelayer, associatedLayer
+  // test associatelayer, associatedLayer
   surface.associateLayer(*pLayer);
   BOOST_CHECK_EQUAL(surface.associatedLayer(), pLayer.get());
 
@@ -135,6 +135,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   BOOST_CHECK_EQUAL(surface.surfaceMaterial(), pNewMaterial.get());
 
   CHECK_CLOSE_OR_SMALL(surface.transform(tgContext), pTransform, 1e-6, 1e-9);
+
   // type() is pure virtual
 }
 

@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
   BOOST_CHECK_THROW(ConeBounds(alpha, zMin, zMax, -halfPhi, averagePhi),
                     std::logic_error);
 
-  // Exception for out of range  phi positioning
+  // Exception for out of range phi positioning
   BOOST_CHECK_THROW(
       ConeBounds(alpha, zMin, zMax, halfPhi, 2 * std::numbers::pi),
       std::logic_error);
@@ -138,9 +138,9 @@ BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
                   1e-6);
 
   /// Test for dump
-  boost::test_tools::output_test_stream dumpOuput;
-  coneBoundsObject.toStream(dumpOuput);
-  BOOST_CHECK(dumpOuput.is_equal(
+  boost::test_tools::output_test_stream dumpOutput;
+  coneBoundsObject.toStream(dumpOutput);
+  BOOST_CHECK(dumpOutput.is_equal(
       "Acts::ConeBounds: (tanAlpha, minZ, maxZ, halfPhiSector, averagePhi) = "
       "(0.4142136, 3.0000000, 6.0000000, 0.7853982, 0.0000000)"));
 }

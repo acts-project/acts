@@ -170,9 +170,9 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
                     std::numbers::pi / 2.);
 
   /// Test dump
-  boost::test_tools::output_test_stream dumpOuput;
-  ellipseBoundsObject.toStream(dumpOuput);
-  BOOST_CHECK(dumpOuput.is_equal(
+  boost::test_tools::output_test_stream dumpOutput;
+  ellipseBoundsObject.toStream(dumpOutput);
+  BOOST_CHECK(dumpOutput.is_equal(
       "Acts::EllipseBounds:  (innerRadius0, outerRadius0, innerRadius1, "
       "outerRadius1, hPhiSector, averagePhi) = (10.0000000, 15.0000000, "
       "15.0000000, 20.0000000, 0.0000000, 1.5707963, 0.0000000)"));

@@ -109,9 +109,9 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   BOOST_CHECK_EQUAL(lineBoundsObject.get(LineBounds::eHalfLengthZ), halfZ);
 
   /// Test for dump
-  boost::test_tools::output_test_stream dumpOuput;
-  lineBoundsObject.toStream(dumpOuput);
-  BOOST_CHECK(dumpOuput.is_equal(
+  boost::test_tools::output_test_stream dumpOutput;
+  lineBoundsObject.toStream(dumpOutput);
+  BOOST_CHECK(dumpOutput.is_equal(
       "Acts::LineBounds: (radius, halflengthInZ) = (0.5000000, 20.0000000)"));
 }
 

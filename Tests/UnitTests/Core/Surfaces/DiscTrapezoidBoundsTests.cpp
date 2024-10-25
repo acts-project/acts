@@ -115,9 +115,9 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   Vector2 inSurface(2.5, 0.);
 
   /// Test dump
-  boost::test_tools::output_test_stream dumpOuput;
-  DiscTrapezoidBoundsObject.toStream(dumpOuput);
-  BOOST_CHECK(dumpOuput.is_equal(
+  boost::test_tools::output_test_stream dumpOutput;
+  DiscTrapezoidBoundsObject.toStream(dumpOutput);
+  BOOST_CHECK(dumpOutput.is_equal(
       "Acts::DiscTrapezoidBounds: (innerRadius, outerRadius, halfLengthXminR, "
       "halfLengthXmaxR, halfLengthY, halfPhiSector, averagePhi, rCenter, "
       "stereo) = "
