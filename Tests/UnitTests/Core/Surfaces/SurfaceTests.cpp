@@ -167,16 +167,9 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   surface5.assignSurfaceMaterial(pMaterial);  // 5 has non-null surface material
 
   BOOST_CHECK(surface1 == surface2);
-
-  // remove test for the moment, surfaces do not have a concept of thickness
-  // (only detector elements have)
-  // only thickness is different here
-  // BOOST_CHECK_NE(surface1, surface3);
-
+  BOOST_CHECK(surface1 != surface3);
   BOOST_CHECK(surface1 != surface4);
-
   BOOST_CHECK(surface1 != surface5);
-
   BOOST_CHECK(surface1 != *planeSurface);
 
   // Test the getSharedPtr

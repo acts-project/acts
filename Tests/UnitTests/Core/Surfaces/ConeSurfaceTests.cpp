@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
+#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -171,18 +172,18 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
                     std::string("Acts::ConeSurface"));
 
   /// Test dump
-  // TODO 2017-04-12 msmk: check how to correctly check output
-  //    boost::test_tools::output_test_stream dumpOuput;
-  //    coneSurfaceObject.toStream(dumpOuput);
-  //    BOOST_CHECK(dumpOuput.is_equal(
-  //      "Acts::ConeSurface\n"
-  //      "    Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n"
-  //      "    Rotation:             colX = (1.000000, 0.000000, 0.000000)\n"
-  //      "                          colY = (0.000000, 1.000000, 0.000000)\n"
-  //      "                          colZ = (0.000000, 0.000000, 1.000000)\n"
-  //      "    Bounds  : Acts::ConeBounds: (tanAlpha, minZ, maxZ, averagePhi,
-  //      halfPhiSector) = (0.4142136, 0.0000000, inf, 0.0000000,
-  //      3.1415927)"));
+  boost::test_tools::output_test_stream dumpOutput;
+  dumpOutput << coneSurfaceObject->toStream(tgContext);
+  BOOST_CHECK(dumpOutput.is_equal(
+      "Acts::ConeSurface\n"
+      "     Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n"
+      "     Rotation:             colX = (1.000000, 0.000000, 0.000000)\n"
+      "                           colY = (0.000000, 1.000000, 0.000000)\n"
+      "                           colZ = (0.000000, 0.000000, 1.000000)\n"
+      "     Bounds  : Acts::ConeBounds: (tanAlpha, minZ, maxZ, halfPhiSector, "
+      "averagePhi) = (0.4142136, 0.0000000, inf, 3.1415927, 0.0000000)"
+
+      ));
 }
 
 BOOST_AUTO_TEST_CASE(ConeSurfaceEqualityOperators) {

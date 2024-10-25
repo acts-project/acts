@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// #include <boost/test/tools/output_test_stream.hpp>
+#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -189,18 +189,19 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
                     std::string("Acts::PlaneSurface"));
 
   /// Test dump
-  // TODO 2017-04-12 msmk: check how to correctly check output
-  //    boost::test_tools::output_test_stream dumpOuput;
-  //    planeSurfaceObject.toStream(dumpOuput);
-  //    BOOST_CHECK(dumpOuput.is_equal(
-  //      "Acts::PlaneSurface\n"
-  //      "    Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n"
-  //      "    Rotation:             colX = (1.000000, 0.000000, 0.000000)\n"
-  //      "                          colY = (0.000000, 1.000000, 0.000000)\n"
-  //      "                          colZ = (0.000000, 0.000000, 1.000000)\n"
-  //      "    Bounds  : Acts::ConeBounds: (tanAlpha, minZ, maxZ, averagePhi,
-  //      halfPhiSector) = (0.4142136, 0.0000000, inf, 0.0000000,
-  //      3.1415927)"));
+  boost::test_tools::output_test_stream dumpOutput;
+  dumpOutput << planeSurfaceObject->toStream(tgContext);
+  BOOST_CHECK(dumpOutput.is_equal(
+      "Acts::PlaneSurface\n"
+      "     Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n"
+      "     Rotation:             colX = (1.000000, 0.000000, 0.000000)\n"
+      "                           colY = (0.000000, 1.000000, 0.000000)\n"
+      "                           colZ = (0.000000, 0.000000, 1.000000)\n"
+      "     Bounds  : Acts::RectangleBounds:  (hlX, hlY) = (3.0000000, "
+      "4.0000000)\n"
+      "(lower left, upper right):\n"
+      "-3.0000000 -4.0000000\n"
+      "3.0000000 4.0000000"));
 }
 
 BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
