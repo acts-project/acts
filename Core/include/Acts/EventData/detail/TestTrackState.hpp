@@ -20,6 +20,10 @@
 namespace Acts::detail::Test {
 
 struct TestTrackState {
+  static BoundVector someValidParams() {
+    return {0, 0, 0, std::numbers::pi / 2, 1, 0};
+  }
+
   std::shared_ptr<Surface> surface;
   TestSourceLink sourceLink;
   BoundTrackParameters predicted;
@@ -38,11 +42,11 @@ struct TestTrackState {
       : surface(
             CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).surface()),
         // set bogus parameters first since they are not default-constructible
-        predicted(surface, BoundVector::Zero(), std::nullopt,
+        predicted(surface, someValidParams(), std::nullopt,
                   ParticleHypothesis::pion()),
-        filtered(surface, BoundVector::Zero(), std::nullopt,
+        filtered(surface, someValidParams(), std::nullopt,
                  ParticleHypothesis::pion()),
-        smoothed(surface, BoundVector::Zero(), std::nullopt,
+        smoothed(surface, someValidParams(), std::nullopt,
                  ParticleHypothesis::pion()),
         jacobian(BoundMatrix::Identity()),
         chi2(std::chi_squared_distribution<double>(measdim)(rng)),
