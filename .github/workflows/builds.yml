@@ -29,7 +29,6 @@ jobs:
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.${{ env.DEPENDENCY_TAG }}.tar.zst
 
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +36,7 @@ jobs:
           submodules: true
           lfs: true
 
+      - run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
       - name: Install dependencies
         run: CI/dependencies.sh
 
@@ -115,7 +115,6 @@ jobs:
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.${{ env.DEPENDENCY_TAG }}.tar.zst
 
     steps:
       - uses: actions/checkout@v4
@@ -123,6 +122,7 @@ jobs:
           submodules: true
           lfs: true
 
+      - run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
       - name: Install dependencies
         run: CI/dependencies.sh
 
@@ -153,7 +153,6 @@ jobs:
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.${{ env.DEPENDENCY_TAG }}.tar.zst
 
     steps:
       - uses: actions/checkout@v4
@@ -162,6 +161,7 @@ jobs:
           lfs: true
 
       - run: apt-get update && apt-get install -y time
+      - run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
       - name: Install dependencies
         run: CI/dependencies.sh
 
@@ -247,13 +247,14 @@ jobs:
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.${{ env.DEPENDENCY_TAG }}.tar.zst
+
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
 
+      - run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
       - name: Install dependencies
         run: CI/dependencies.sh
 
@@ -321,7 +322,7 @@ jobs:
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/macos-14/deps.${{ env.DEPENDENCY_TAG }}.tar.zst
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -331,6 +332,7 @@ jobs:
       - name: Print architecture
         run: uname -p
 
+      - run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/macos-14/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
       - name: Install dependencies
         run: >
           brew install cmake ninja ccache xerces-c
