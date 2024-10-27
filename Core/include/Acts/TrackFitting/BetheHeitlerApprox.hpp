@@ -87,7 +87,7 @@ struct BetheHeitlerApproxSingleCmp {
 
     ret[0].weight = 1.0;
 
-    const double c = x / std::numbers::sqrt2;
+    const double c = x / std::numbers::ln2;
     ret[0].mean = std::pow(2, -c);
     ret[0].var = std::pow(3, -c) - std::pow(4, -c);
 
