@@ -62,7 +62,7 @@ struct SimpleReverseFilteringLogic {
 
   bool doBackwardFiltering(
       Acts::VectorMultiTrajectory::ConstTrackStateProxy trackState) const {
-    auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
+    auto momentum = std::abs(1 / trackState.filtered()[Acts::eBoundQOverP]);
     return (momentum <= momentumThreshold);
   }
 };
