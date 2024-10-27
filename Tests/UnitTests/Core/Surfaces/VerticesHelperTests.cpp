@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <algorithm>
+#include <numbers>
 #include <vector>
 
 #include <Eigen/Geometry>
@@ -158,7 +159,8 @@ BOOST_AUTO_TEST_CASE(GenerateSegmentVertices) {
   vertices = VerticesHelper::segmentVertices<Vector3, Transform3>(
       {rx, ry}, minPhi, maxPhi, {}, quarterVertices);
   expectedVertices =
-      static_cast<unsigned int>((maxPhi - minPhi) / M_PI_2 * quarterVertices) +
+      static_cast<unsigned int>((maxPhi - minPhi) / (std::numbers::pi / 2.) *
+                                quarterVertices) +
       2u;
   BOOST_CHECK_EQUAL(vertices.size(), expectedVertices);
 
@@ -175,7 +177,8 @@ BOOST_AUTO_TEST_CASE(GenerateSegmentVertices) {
       {rx, ry}, minPhi, maxPhi, {}, quarterVertices);
   // Extrema will be covered by the segments
   expectedVertices =
-      static_cast<unsigned int>((maxPhi - minPhi) / M_PI_2 * quarterVertices) +
+      static_cast<unsigned int>((maxPhi - minPhi) / (std::numbers::pi / 2.) *
+                                quarterVertices) +
       2u;
   BOOST_CHECK_EQUAL(vertices.size(), expectedVertices);
 }
@@ -186,7 +189,8 @@ BOOST_AUTO_TEST_CASE(GenerateCircleEllipseVertices) {
   ActsScalar ro = 10.;
 
   // Extreme points in phi - only outer radius
-  auto vertices = VerticesHelper::circularVertices(ri, ro, 0., M_PI, 1u);
+  auto vertices =
+      VerticesHelper::circularVertices(ri, ro, 0., std::numbers::pi, 1u);
   unsigned int expectedVertices = 5u;
   BOOST_CHECK_EQUAL(vertices.size(), expectedVertices);
 
@@ -194,21 +198,23 @@ BOOST_AUTO_TEST_CASE(GenerateCircleEllipseVertices) {
   ri = 3.;
 
   // Extreme points in phi - only outer radius
-  vertices = VerticesHelper::circularVertices(ri, ro, 0., M_PI, 1u);
+  vertices = VerticesHelper::circularVertices(ri, ro, 0., std::numbers::pi, 1u);
   expectedVertices = 10u;
   BOOST_CHECK_EQUAL(vertices.size(), expectedVertices);
 
   // Now with 10 bins per sector
   ri = 0.;
 
-  vertices = VerticesHelper::circularVertices(ri, ro, 0., M_PI, 10u);
+  vertices =
+      VerticesHelper::circularVertices(ri, ro, 0., std::numbers::pi, 10u);
   expectedVertices = 41u;  // 4 sectors + 1 overlap at (-pi/pi)
   BOOST_CHECK_EQUAL(vertices.size(), expectedVertices);
 
-  // Now ellipsiod
+  // Now ellipsoid
   ActsScalar riy = 4.;
   ActsScalar roy = 14.;
-  vertices = VerticesHelper::ellipsoidVertices(ri, riy, ro, roy, 0., M_PI, 10u);
+  vertices = VerticesHelper::ellipsoidVertices(ri, riy, ro, roy, 0.,
+                                               std::numbers::pi, 10u);
   expectedVertices = 41u;  // 4 sectors + 1 overlap at (-pi/pi)
   BOOST_CHECK_EQUAL(vertices.size(), expectedVertices);
 }
