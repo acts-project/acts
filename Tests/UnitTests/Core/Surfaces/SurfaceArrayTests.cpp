@@ -29,6 +29,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -54,7 +55,7 @@ struct SurfaceArrayFixture {
                                double zbase = 0, double r = 10) {
     SrfVec res;
 
-    double phiStep = 2 * M_PI / n;
+    double phiStep = 2 * std::numbers::pi / n;
     for (std::size_t i = 0; i < n; ++i) {
       double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
 
@@ -76,11 +77,11 @@ struct SurfaceArrayFixture {
   }
 
   SrfVec fullPhiTestSurfacesBRL(int n = 10, double shift = 0, double zbase = 0,
-                                double incl = M_PI / 9., double w = 2,
-                                double h = 1.5) {
+                                double incl = std::numbers::pi / 9.,
+                                double w = 2, double h = 1.5) {
     SrfVec res;
 
-    double phiStep = 2 * M_PI / n;
+    double phiStep = 2 * std::numbers::pi / n;
     for (int i = 0; i < n; ++i) {
       double z = zbase;
 
@@ -89,7 +90,7 @@ struct SurfaceArrayFixture {
       trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3(0, 0, 1)));
       trans.translate(Vector3(10, 0, z));
       trans.rotate(Eigen::AngleAxisd(incl, Vector3(0, 0, 1)));
-      trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3(0, 1, 0)));
+      trans.rotate(Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
       std::shared_ptr<const Surface> srf =
@@ -112,8 +113,8 @@ struct SurfaceArrayFixture {
       Transform3 trans;
       trans.setIdentity();
       trans.translate(origin + dir * step * i);
-      // trans.rotate(AngleAxis3(M_PI/9., Vector3(0, 0, 1)));
-      trans.rotate(AngleAxis3(M_PI / 2., Vector3(1, 0, 0)));
+      // trans.rotate(AngleAxis3(std::numbers::pi/9., Vector3(0, 0, 1)));
+      trans.rotate(AngleAxis3(std::numbers::pi / 2., Vector3(1, 0, 0)));
       trans = trans * pretrans;
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1.5);
@@ -135,8 +136,8 @@ struct SurfaceArrayFixture {
 
     for (int i = 0; i < nZ; i++) {
       double z = i * w * 2 + z0;
-      // std::cout << "z=" << z << std::endl;
-      SrfVec ring = fullPhiTestSurfacesBRL(nPhi, 0, z, M_PI / 9., w, h);
+      SrfVec ring =
+          fullPhiTestSurfacesBRL(nPhi, 0, z, std::numbers::pi / 9., w, h);
       res.insert(res.end(), ring.begin(), ring.end());
     }
 
@@ -185,11 +186,11 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
   draw_surfaces(brl, "SurfaceArray_create_BRL_1.obj");
 
-  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(-M_PI, M_PI,
-                                                                30u);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
+      -std::numbers::pi, std::numbers::pi, 30u);
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> zAxis(-14, 14, 7u);
 
-  double angleShift = 2 * M_PI / 30. / 2.;
+  double angleShift = 2 * std::numbers::pi / 30. / 2.;
   auto transform = [angleShift](const Vector3& pos) {
     return Vector2(phi(pos) + angleShift, pos.z());
   };
@@ -225,7 +226,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
       SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
       transform, itransform,
       std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-  // do NOT fill, only completebinning
+  // do NOT fill, only complete binning
   sl2->completeBinning(tgContext, brlRaw);
   SurfaceArray sa2(std::move(sl2), brl);
   sa.toStream(tgContext, std::cout);
@@ -239,7 +240,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
-  double w = 3, h = 4;
+  const double w = 3;
+  const double h = 4;
   auto bounds = std::make_shared<const RectangleBounds>(w, h);
   auto srf = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
 
@@ -253,7 +255,8 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceArray_manyElementsSingleLookup) {
-  double w = 3, h = 4;
+  const double w = 3;
+  const double h = 4;
   auto bounds = std::make_shared<const RectangleBounds>(w, h);
   auto srf0 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
   auto srf1 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
