@@ -22,6 +22,7 @@ add_library(
     src/VolumeJsonConverter.cpp
     src/AmbiguityConfigJsonConverter.cpp
     src/DetrayJsonHelper.cpp
+    src/JsonDetectorElement.cpp
 )
 target_include_directories(
     ActsPluginJson

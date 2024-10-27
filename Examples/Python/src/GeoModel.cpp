@@ -17,7 +17,6 @@
 #include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
@@ -27,7 +26,7 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
+#include "ActsExamples/ITkHelpers/ITkModuleSplitting.hpp"
 
 #include <string>
 
@@ -49,7 +48,7 @@ void addGeoModel(Context& ctx) {
 
   gm.def("readFromDb", &Acts::GeoModelReader::readFromDb);
 
-  py::class_<Acts::GeoModelDetectorElement,
+  py::class_<Acts::GeoModelDetectorElement, Acts::DetectorElementBase,
              std::shared_ptr<Acts::GeoModelDetectorElement>>(
       gm, "GeoModelDetectorElement")
       .def("logVolName", &Acts::GeoModelDetectorElement::logVolName)
@@ -238,13 +237,5 @@ void addGeoModel(Context& ctx) {
       },
       "gxtx"_a, "detElement"_a, "splitRanges"_a,
       "logLevel"_a = Acts::Logging::INFO);
-
-  py::class_<Acts::GeoModelDetectorElementITk,
-             std::shared_ptr<Acts::GeoModelDetectorElementITk>>(
-      gm, "GeoModelDetectorElementITk")
-      .def("surface", [](Acts::GeoModelDetectorElementITk& self) {
-        return self.surface().getSharedPtr();
-      });
-  gm.def("convertToItk", &GeoModelDetectorElementITk::convertFromGeomodel);
 }
 }  // namespace Acts::Python

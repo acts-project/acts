@@ -168,6 +168,16 @@ void addJson(Context& ctx) {
 
     mex.def("readSurfaceVectorFromJson",
             ActsExamples::JsonSurfacesReader::readVector);
+
+    py::class_<Acts::JsonDetectorElement, Acts::DetectorElementBase,
+               std::shared_ptr<Acts::JsonDetectorElement>>(
+        mex, "JsonDetectorElement")
+        .def("surface", [](Acts::JsonDetectorElement& self) {
+          return self.surface().getSharedPtr();
+        });
+
+    mex.def("readDetectorElementsFromJson",
+            ActsExamples::JsonSurfacesReader::readDetectorElements);
   }
 
   {

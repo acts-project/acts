@@ -14,7 +14,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
+#include "ActsExamples/ITkHelpers/ITkDetectorElement.hpp"
 
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -23,15 +23,15 @@
 
 #include <ranges>
 
-namespace Acts {
+namespace ActsExamples {
 
 // Mapping between the barrel-endcap identifier and its unsigned representation
 constexpr static std::array<std::pair<unsigned, int>, 3> s_barrelEndcapMap{
     {{0, 0}, {1, 2}, {2, -2}}};
 
-Acts::ITkIdentifier::ITkIdentifier(int hardware, int barrelEndcap,
-                                   int layerWheel, int etaModule, int phiModule,
-                                   int side) {
+ActsExamples::ITkIdentifier::ITkIdentifier(int hardware, int barrelEndcap,
+                                           int layerWheel, int etaModule,
+                                           int phiModule, int side) {
   assert((hardware == 0) || (hardware == 1));
   assert((barrelEndcap == 2) || (barrelEndcap == -2) || (barrelEndcap == 0));
   assert(layerWheel >= 0);
@@ -53,11 +53,11 @@ Acts::ITkIdentifier::ITkIdentifier(int hardware, int barrelEndcap,
   m_identifier.set(6, side);
 }
 
-int Acts::ITkIdentifier::hardware() const {
+int ActsExamples::ITkIdentifier::hardware() const {
   return m_identifier.level(0);
 }
 
-int Acts::ITkIdentifier::barrelEndcap() const {
+int ActsExamples::ITkIdentifier::barrelEndcap() const {
   auto found = std::ranges::find(s_barrelEndcapMap, m_identifier.level(1),
                                  &std::pair<unsigned, int>::first);
   if (found == s_barrelEndcapMap.end()) {
@@ -66,24 +66,24 @@ int Acts::ITkIdentifier::barrelEndcap() const {
   return found->second;
 }
 
-int Acts::ITkIdentifier::layerWheel() const {
+int ActsExamples::ITkIdentifier::layerWheel() const {
   return m_identifier.level(2);
 }
 
-int Acts::ITkIdentifier::etaModule() const {
+int ActsExamples::ITkIdentifier::etaModule() const {
   int sign = (m_identifier.level(3) == 0) ? 1 : -1;
   return sign * m_identifier.level(4);
 }
 
-int Acts::ITkIdentifier::phiModule() const {
+int ActsExamples::ITkIdentifier::phiModule() const {
   return m_identifier.level(5);
 }
 
-int Acts::ITkIdentifier::side() const {
+int ActsExamples::ITkIdentifier::side() const {
   return m_identifier.level(6);
 }
 
-std::size_t Acts::ITkIdentifier::value() const {
+std::size_t ActsExamples::ITkIdentifier::value() const {
   return m_identifier.value();
 }
 
@@ -94,38 +94,4 @@ std::ostream &operator<<(std::ostream &os, const ITkIdentifier &id) {
   return os;
 }
 
-std::tuple<std::shared_ptr<Acts::GeoModelDetectorElementITk>,
-           std::shared_ptr<Acts::Surface>>
-Acts::GeoModelDetectorElementITk::convertFromGeomodel(
-    std::shared_ptr<GeoModelDetectorElement> detEl,
-    std::shared_ptr<Surface> srf, const GeometryContext &gctx, int hardware,
-    int barrelEndcap, int layerWheel, int etaModule, int phiModule, int side) {
-  auto helper = [&]<typename surface_t, typename bounds_t>() {
-    auto bounds = std::make_shared<bounds_t>(
-        dynamic_cast<const bounds_t &>(srf->bounds()));
-
-    auto itkEl = std::make_shared<GeoModelDetectorElementITk>(
-        detEl->physicalVolume(), nullptr, detEl->transform(gctx),
-        detEl->thickness(), hardware, barrelEndcap, layerWheel, etaModule,
-        phiModule, side);
-    auto surface = Surface::makeShared<surface_t>(bounds, *itkEl.get());
-
-    itkEl->attachSurface(surface);
-    itkEl->setDatabaseEntryName(detEl->databaseEntryName());
-    return std::pair{itkEl, surface};
-  };
-
-  if (srf->type() == Acts::Surface::Plane &&
-      srf->bounds().type() == Acts::SurfaceBounds::eRectangle) {
-    return helper.operator()<Acts::PlaneSurface, Acts::RectangleBounds>();
-  }
-  if (srf->type() == Acts::Surface::Disc &&
-      srf->bounds().type() == Acts::SurfaceBounds::eAnnulus) {
-    return helper.operator()<Acts::DiscSurface, Acts::AnnulusBounds>();
-  }
-
-  throw std::runtime_error(
-      "Only Plane+Rectangle and Disc+Annulus are converted for the ITk");
-}
-
-}  // namespace Acts
+}  // namespace ActsExamples

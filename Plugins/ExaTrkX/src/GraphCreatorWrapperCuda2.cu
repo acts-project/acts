@@ -64,6 +64,16 @@ __global__ void computeXandY(std::size_t nbHits, T *cuda_x, T *cuda_y,
          cuda_y[i]);
 }
 
+__global__ void setHitId(std::size_t nbHits, int *hitIds) {
+  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
+
+  if (i >= nbHits) {
+    return;
+  }
+
+  hitIds[i] = i;
+}
+
 }  // namespace
 
 namespace Acts::detail {
@@ -151,8 +161,8 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
   CUDA_CHECK(cudaGetLastError());
 
   CUDA_CHECK(cudaMallocT(&inputData.cuda_hit_id, nHits * sizeof(std::size_t)));
-  CUDA_CHECK(cudaMemcpy(inputData.cuda_hit_id, moduleIds.data(),
-                        nHits * sizeof(std::size_t), cudaMemcpyHostToDevice));
+  setHitId<<<gridDim, blockDim>>>(nHits, inputData.cuda_hit_id);
+  CUDA_CHECK(cudaGetLastError());
 
   CUDA_CHECK(cudaMallocT(&inputData.cuda_hit_indices, nHits * sizeof(int)));
   CUDA_CHECK(cudaMemcpy(inputData.cuda_hit_indices, hit_indice.data(),

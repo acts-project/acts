@@ -19,6 +19,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/ITkHelpers/ITkDetectorElement.hpp"
 
 #include <TChain.h>
 
@@ -79,7 +80,7 @@ class RootAthenaDumpGeoIdCollector : public IReader {
   Config m_cfg;
 
   /// A map that stores a mapping between the
-  std::unordered_map<std::size_t, const Acts::GeoModelDetectorElementITk *>
+  std::unordered_map<std::size_t, const ActsExamples::ITkDetectorElement *>
       m_detectorElementMap;
 
   std::unique_ptr<const Acts::Logger> m_logger;

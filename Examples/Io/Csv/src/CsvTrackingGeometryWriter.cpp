@@ -18,6 +18,8 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -25,6 +27,7 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/ITkHelpers/ITkDetectorElement.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
@@ -33,12 +36,6 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
-
-#ifdef WITH_GEOMODEL_PLUGIN
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
-#include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#endif
 
 #include "CsvOutputData.hpp"
 
@@ -119,7 +116,6 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
                     Acts::UnitConstants::mm;
   }
 
-#ifdef WITH_GEOMODEL_PLUGIN
   auto addVertices = [&](const auto& b) {
     std::vector<Acts::Vector2> vs = b.vertices(0);
     data.v0_0 = vs[0].x();
@@ -141,7 +137,7 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
     addVertices(*bndPtr);
   }
 
-  if (auto detEl = dynamic_cast<const Acts::GeoModelDetectorElementITk*>(
+  if (auto detEl = dynamic_cast<const ActsExamples::ITkDetectorElement*>(
           surface.associatedDetectorElement());
       detEl != nullptr) {
     data.hardware = detEl->identifier().hardware();
@@ -151,7 +147,6 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
     data.pm = detEl->identifier().phiModule();
     data.sd = detEl->identifier().side();
   }
-#endif
 }
 
 /// Write a single surface.

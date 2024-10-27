@@ -68,6 +68,7 @@ target_link_libraries(
         ActsExamplesDetectorTelescope
         ActsExamplesUtilities
         ActsExamplesAmbiguityResolution
+        ActsExamplesITkHelpers
 )
 
 set(py_files
@@ -88,10 +89,7 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
-    target_link_libraries(
-        ActsPythonBindings
-        PUBLIC ActsPluginGeoModel ActsExamplesITkModuleSplitting
-    )
+    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginGeoModel)
     target_sources(ActsPythonBindings PRIVATE src/GeoModel.cpp)
     target_compile_definitions(ActsPythonBindings PRIVATE WITH_GEOMODEL_PLUGIN)
 else()

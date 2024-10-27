@@ -14,6 +14,7 @@
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
+#include "ActsExamples/ITkHelpers/ITkDetectorElement.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -32,6 +33,7 @@
 
 namespace py = pybind11;
 using namespace ActsExamples;
+using namespace py::literals;
 
 namespace Acts::Python {
 void addDetector(Context& ctx) {
@@ -221,6 +223,23 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
 
     patchKwargsConstructor(c);
+  }
+
+  {
+    py::class_<Acts::DetectorElementBase,
+               std::shared_ptr<Acts::DetectorElementBase>>(
+        mex, "DetectorElementBase");
+
+    py::class_<ActsExamples::ITkDetectorElement, Acts::DetectorElementBase,
+               std::shared_ptr<ActsExamples::ITkDetectorElement>>(
+        mex, "ITkDetectorElement")
+        .def(py::init<std::shared_ptr<Acts::DetectorElementBase>, int, int, int,
+                      int, int, int>(),
+             "element"_a, "hardware"_a, "barrelEndcap"_a, "layerWheel"_a,
+             "etaModule"_a, "phiModule"_a, "side"_a)
+        .def("surface", [](const ActsExamples::ITkDetectorElement& el) {
+          return el.surface().getSharedPtr();
+        });
   }
 }
 

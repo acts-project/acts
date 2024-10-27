@@ -16,10 +16,11 @@
 
 #pragma once
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
 
-namespace Acts {
+namespace ActsExamples {
 
 class ITkIdentifier {
   Acts::MultiIndex<std::size_t, 1, 2, 20, 1, 19, 20, 1> m_identifier{};
@@ -52,36 +53,35 @@ class ITkIdentifier {
 
 std::ostream& operator<<(std::ostream& os, const ITkIdentifier& id);
 
-/// Specialization of the GeoModelDetectorElement for the ITk. This allows
-/// mapping of Acts::GeometryIdentifiers to ITk modules in a straight-forward
-/// way.
-class GeoModelDetectorElementITk : public GeoModelDetectorElement {
+/// Wrapper detector element that stores additional information for the ITk
+/// Probably not optimal performancewise due to pointer chasing...
+class ITkDetectorElement : public Acts::DetectorElementBase {
  public:
-  GeoModelDetectorElementITk(const PVConstLink& geoPhysVol,
-                             std::shared_ptr<Surface> surface,
-                             const Transform3& sfTransform,
-                             ActsScalar thickness, int hardware,
-                             int barrelEndcap, int layerWheel, int etaModule,
-                             int phiModule, int side)
-      : GeoModelDetectorElement(geoPhysVol, std::move(surface), sfTransform,
-                                thickness),
+  ITkDetectorElement(std::shared_ptr<DetectorElementBase> element, int hardware,
+                     int barrelEndcap, int layerWheel, int etaModule,
+                     int phiModule, int side)
+      : m_element(element),
         m_identifier(hardware, barrelEndcap, layerWheel, etaModule, phiModule,
-                     side) {}
+                     side) {
+    m_element->surface().assignDetectorElement(*this);
+  }
 
   ITkIdentifier identifier() const { return m_identifier; }
 
-  /// Convert a GeoModelDetectorElement to a GeoModelDetectorElementITk
-  /// A new surface is constructed.
-  /// @todo Remove redundancy in signature once plugin is refactored
-  static std::tuple<std::shared_ptr<GeoModelDetectorElementITk>,
-                    std::shared_ptr<Surface>>
-  convertFromGeomodel(std::shared_ptr<GeoModelDetectorElement> detEl,
-                      std::shared_ptr<Surface> srf, const GeometryContext& gctx,
-                      int hardware, int barrelEndcap, int layerWheel,
-                      int etaModule, int phiModule, int side);
+  double thickness() const override { return m_element->thickness(); }
+
+  Acts::Surface& surface() override { return m_element->surface(); }
+
+  const Acts::Surface& surface() const override { return m_element->surface(); }
+
+  const Acts::Transform3& transform(
+      const Acts::GeometryContext& gctx) const override {
+    return m_element->transform(gctx);
+  }
 
  private:
+  std::shared_ptr<DetectorElementBase> m_element;
   ITkIdentifier m_identifier;
 };
 
-}  // namespace Acts
+}  // namespace ActsExamples

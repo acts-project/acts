@@ -14,7 +14,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
+#include "ActsExamples/ITkHelpers/ITkModuleSplitting.hpp"
 
 #include <algorithm>
 #include <array>

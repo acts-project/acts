@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Io/Root/RootAthenaDumpGeoIdCollector.hpp"
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
+#include "ActsExamples/ITkHelpers/ITkDetectorElement.hpp"
 
 #include <fstream>
 #include <ranges>
@@ -60,11 +60,10 @@ RootAthenaDumpGeoIdCollector::RootAthenaDumpGeoIdCollector(
   m_inputchain->GetEntry(0);
 
   m_cfg.trackingGeometry->visitSurfaces([&](const Acts::Surface* surface) {
-    auto detEl = dynamic_cast<const Acts::GeoModelDetectorElementITk*>(
+    auto detEl = dynamic_cast<const ActsExamples::ITkDetectorElement*>(
         surface->associatedDetectorElement());
     if (detEl == nullptr) {
-      throw std::runtime_error(
-          "Could not convert to GeoModelDetectorElementITk!");
+      throw std::runtime_error("Could not convert to ITkDetectorElement!");
     }
 
     m_detectorElementMap.emplace(detEl->identifier().value(), detEl);
@@ -91,8 +90,8 @@ ProcessCode RootAthenaDumpGeoIdCollector::read(const AlgorithmContext& ctx) {
   const auto prev = athenaToActsGeoId.size();
   ACTS_DEBUG("Read data from " << nCL << " measurements");
 
-  std::vector<const Acts::GeoModelDetectorElementITk*> matched;
-  std::vector<Acts::ITkIdentifier> missed;
+  std::vector<const ActsExamples::ITkDetectorElement*> matched;
+  std::vector<ActsExamples::ITkIdentifier> missed;
 
   for (int im = 0; im < nCL; im++) {
     const auto athenaRepresentation = CLmoduleID[im];
@@ -103,8 +102,9 @@ ProcessCode RootAthenaDumpGeoIdCollector::read(const AlgorithmContext& ctx) {
       // Here we use the same identifier that is used during geometry
       // construction to match the Acts::GeometryIdentifier and the athena
       // module id
-      Acts::ITkIdentifier itkId(hardware, CLbarrel_endcap[im], CLlayer_disk[im],
-                                CLeta_module[im], CLphi_module[im], CLside[im]);
+      ActsExamples::ITkIdentifier itkId(hardware, CLbarrel_endcap[im],
+                                        CLlayer_disk[im], CLeta_module[im],
+                                        CLphi_module[im], CLside[im]);
 
       if (!m_detectorElementMap.contains(itkId.value())) {
         ACTS_WARNING("Missing sensitive surface for "
@@ -129,8 +129,9 @@ ProcessCode RootAthenaDumpGeoIdCollector::read(const AlgorithmContext& ctx) {
   }
 
   {
-    std::ranges::sort(missed, {}, &Acts::ITkIdentifier::value);
-    auto ret = std::ranges::unique(missed, {}, &Acts::ITkIdentifier::value);
+    std::ranges::sort(missed, {}, &ActsExamples::ITkIdentifier::value);
+    auto ret =
+        std::ranges::unique(missed, {}, &ActsExamples::ITkIdentifier::value);
     missed.erase(ret.begin(), ret.end());
   }
 

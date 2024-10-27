@@ -37,6 +37,7 @@ target_link_libraries(
         ActsExamplesPropagation
         ActsExamplesTruthTracking
         ActsExamplesMaterialMapping
+        ActsExamplesITkHelpers
         Threads::Threads
     PRIVATE ROOT::Core ROOT::Hist ROOT::Tree
 )

@@ -73,4 +73,27 @@ std::vector<std::shared_ptr<Acts::Surface>> JsonSurfacesReader::readVector(
   return surfaces;
 }
 
+std::vector<std::shared_ptr<Acts::JsonDetectorElement>>
+JsonSurfacesReader::readDetectorElements(const Options& options,
+                                         double thickness = 0.0) {
+  nlohmann::json j;
+  {
+    std::ifstream in(options.inputFile);
+    in >> j;
+  }
+
+  // Walk down the path to the surface entries
+  nlohmann::json jSurfaces = j;
+  for (const auto& jep : options.jsonEntryPath) {
+    jSurfaces = jSurfaces[jep];
+  }
+
+  std::vector<std::shared_ptr<Acts::JsonDetectorElement>> elements;
+  for (const auto& jSurface : jSurfaces) {
+    elements.emplace_back(
+        std::make_shared<Acts::JsonDetectorElement>(jSurface, thickness));
+  }
+  return elements;
+}
+
 }  // namespace ActsExamples
