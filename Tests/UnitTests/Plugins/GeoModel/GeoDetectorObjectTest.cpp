@@ -101,9 +101,9 @@ GeoGeometry constructGeoModel() {
                        {123, 50},  {-123, 50}, {-153, 0}};
   geoDims.tube = {5, 6, 100};
   geoDims.trapHls = {
-      fabs(geoDims.trapVerts[0][0] - geoDims.trapVerts[1][0]) / 2,
-      fabs(geoDims.trapVerts[2][0] - geoDims.trapVerts[3][0]) / 2,
-      fabs(geoDims.trapVerts[0][1] - geoDims.trapVerts[2][1]) / 2};
+      std::abs(geoDims.trapVerts[0][0] - geoDims.trapVerts[1][0]) / 2,
+      std::abs(geoDims.trapVerts[2][0] - geoDims.trapVerts[3][0]) / 2,
+      std::abs(geoDims.trapVerts[0][1] - geoDims.trapVerts[2][1]) / 2};
 
   // create shapes
   GeoIntrusivePtr<GeoBox> boxXY(

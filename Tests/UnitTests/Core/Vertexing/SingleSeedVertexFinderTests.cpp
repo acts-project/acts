@@ -294,10 +294,10 @@ BOOST_AUTO_TEST_CASE(single_seed_vertex_finder_full_planes_test) {
         double x1 =
             (D * dirY + sgn * dirX * std::sqrt(r * r * dirR2 - D * D)) / dirR2;
         double y1 =
-            (-D * dirX + std::fabs(dirY) * std::sqrt(r * r * dirR2 - D * D)) /
+            (-D * dirX + std::abs(dirY) * std::sqrt(r * r * dirR2 - D * D)) /
             dirR2;
         // how many units from the vertex to the intersection
-        double zDist = std::fabs((x1 - posX) / dirX);
+        double zDist = std::abs((x1 - posX) / dirX);
 
         // position of the new spacepoint
         posX = x1;
@@ -411,11 +411,11 @@ BOOST_AUTO_TEST_CASE(single_seed_vertex_finder_full_rays_test) {
         double x1 =
             (D * dirY + part * sgn * dirX * std::sqrt(r * r * dirR2 - D * D)) /
             dirR2;
-        double y1 = (-D * dirX + part * std::fabs(dirY) *
-                                     std::sqrt(r * r * dirR2 - D * D)) /
+        double y1 = (-D * dirX +
+                     part * std::abs(dirY) * std::sqrt(r * r * dirR2 - D * D)) /
                     dirR2;
         // how many units from the vertex to the intersection
-        double zDist = std::fabs((x1 - vtxX) / dirX);
+        double zDist = std::abs((x1 - vtxX) / dirX);
         // use the same amount of units for distance in Z
         inputSpacepoints.emplace_back(x1, y1, zDist * dirZ + vtxZ);
       }

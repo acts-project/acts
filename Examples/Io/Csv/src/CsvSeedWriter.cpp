@@ -123,10 +123,10 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
       // Compute the distance between the truth and estimated directions
       float truthPhi = phi(truthUnitDir);
       float truthEta = std::atanh(std::cos(theta(truthUnitDir)));
-      float dEta = fabs(truthEta - seedEta);
-      float dPhi = fabs(truthPhi - seedPhi) < M_PI
-                       ? fabs(truthPhi - seedPhi)
-                       : fabs(truthPhi - seedPhi) - M_PI;
+      float dEta = std::abs(truthEta - seedEta);
+      float dPhi = std::abs(truthPhi - seedPhi) < M_PI
+                       ? std::abs(truthPhi - seedPhi)
+                       : std::abs(truthPhi - seedPhi) - M_PI;
       truthDistance = sqrt(dPhi * dPhi + dEta * dEta);
       // If the seed is truth matched, check if it is the closest one for the
       // contributing particle
