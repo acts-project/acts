@@ -55,8 +55,9 @@ GeometryContext testContext = GeometryContext();
 BOOST_AUTO_TEST_SUITE(CylinderSurfaces)
 /// Unit test for creating compliant/non-compliant CylinderSurface object
 BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
-  // CylinderSurface default constructor is deleted
-  //
+  /// Test default construction
+  // default construction is deleted
+
   /// Constructor with transform, radius and halfZ
   const double radius = 1.;
   const double halfZ = 10.;
@@ -105,7 +106,6 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   /// Test clone method
   const double radius = 1.;
   const double halfZ = 10.;
-  // const double halfPhiSector = std::numbers::pi / 8.;
   const Translation3 translation{0., 1., 2.};
 
   auto pTransform = Transform3(translation);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   /// Test referenceFrame
   const double invSqrt2 = 1. / std::numbers::sqrt2;
   Vector3 globalPosition{invSqrt2, 1. - invSqrt2, 0.};
-  Vector3 globalPositionZ{invSqrt2, 1. - invSqrt2, 2.0};
+  Vector3 globalPositionZ{invSqrt2, 1. - invSqrt2, 2.};
   Vector3 momentum{15., 15., 15.};
   Vector3 momentum2{6.6, -3., 2.};
   RotationMatrix3 expectedFrame;
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   BOOST_CHECK(!cylinderSurfaceObject->isOnSurface(testContext, offSurface,
                                                   BoundaryTolerance::None()));
 
-  /// intersection test
+  /// Intersection test
   Vector3 direction{-1., 0, 0};
   auto sfIntersection = cylinderSurfaceObject->intersect(
       testContext, offSurface, direction, BoundaryTolerance::Infinite());

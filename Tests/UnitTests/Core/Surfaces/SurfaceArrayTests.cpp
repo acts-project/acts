@@ -136,7 +136,6 @@ struct SurfaceArrayFixture {
 
     for (int i = 0; i < nZ; i++) {
       double z = i * w * 2 + z0;
-      // std::cout << "z=" << z << std::endl;
       SrfVec ring =
           fullPhiTestSurfacesBRL(nPhi, 0, z, std::numbers::pi / 9., w, h);
       res.insert(res.end(), ring.begin(), ring.end());
@@ -227,7 +226,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
       SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
       transform, itransform,
       std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-  // do NOT fill, only completebinning
+  // do NOT fill, only complete binning
   sl2->completeBinning(tgContext, brlRaw);
   SurfaceArray sa2(std::move(sl2), brl);
   sa.toStream(tgContext, std::cout);
@@ -241,7 +240,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
-  double w = 3, h = 4;
+  const double w = 3;
+  const double h = 4;
   auto bounds = std::make_shared<const RectangleBounds>(w, h);
   auto srf = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
 
@@ -255,7 +255,8 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceArray_manyElementsSingleLookup) {
-  double w = 3, h = 4;
+  const double w = 3;
+  const double h = 4;
   auto bounds = std::make_shared<const RectangleBounds>(w, h);
   auto srf0 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
   auto srf1 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);

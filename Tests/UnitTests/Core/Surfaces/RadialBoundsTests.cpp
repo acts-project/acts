@@ -30,10 +30,10 @@ const double rMax = 5.;
 const double halfPhiSector = std::numbers::pi / 8.;
 const double avgPhi = 0.1;
 
-/// Unit tests for RadialBounds constrcuctors
+/// Unit tests for RadialBounds constructors
 BOOST_AUTO_TEST_CASE(RadialBoundsConstruction) {
-  // test default construction
-  // RadialBounds defaultConstructedRadialBounds;  should be deleted
+  /// Test default construction
+  // default construction is deleted
 
   /// Test construction with radii and default sector
   BOOST_CHECK_EQUAL(RadialBounds(rMin, rMax).type(), SurfaceBounds::eDisc);
@@ -93,15 +93,15 @@ BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
 
   /// Test distanceToBoundary
   Vector2 outside(30., 0.);
-  Vector2 inSurface(2., 0.0);
+  Vector2 inSurface(2., 0.);
 
   /// Test dump
-  boost::test_tools::output_test_stream dumpOuput;
-  radialBoundsObject.toStream(dumpOuput);
+  boost::test_tools::output_test_stream dumpOutput;
+  radialBoundsObject.toStream(dumpOutput);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::RadialBounds:  (innerRadius, outerRadius, "
-                         "hPhiSector, averagePhi) = (1.0000000, "
-                         "5.0000000, 0.3926991, 0.0000000)"));
+      dumpOutput.is_equal("Acts::RadialBounds:  (innerRadius, outerRadius, "
+                          "hPhiSector, averagePhi) = (1.0000000, "
+                          "5.0000000, 0.3926991, 0.0000000)"));
 
   /// Test inside
   BOOST_CHECK(radialBoundsObject.inside(inSurface, BoundaryTolerance::None()));
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
   BOOST_CHECK_EQUAL(radialBoundsObject.get(RadialBounds::eMaxR), rMax);
 
   /// Test averagePhi (should be a redundant method, this is not configurable)
-  BOOST_CHECK_EQUAL(radialBoundsObject.get(RadialBounds::eAveragePhi), 0.0);
+  BOOST_CHECK_EQUAL(radialBoundsObject.get(RadialBounds::eAveragePhi), 0.);
 
   /// Test halfPhiSector
   BOOST_CHECK_EQUAL(radialBoundsObject.get(RadialBounds::eHalfPhiSector),
@@ -123,7 +123,9 @@ BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
 /// Unit test for testing RadialBounds assignment
 BOOST_AUTO_TEST_CASE(RadialBoundsAssignment) {
   RadialBounds radialBoundsObject(rMin, rMax, halfPhiSector);
-  // operator == not implemented in this class
+
+  /// Test operator ==
+  // not implemented in this class
 
   /// Test assignment
   RadialBounds assignedRadialBoundsObject(10.1, 123.);

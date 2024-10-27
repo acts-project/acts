@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(GenerateCircleEllipseVertices) {
   expectedVertices = 41u;  // 4 sectors + 1 overlap at (-pi/pi)
   BOOST_CHECK_EQUAL(vertices.size(), expectedVertices);
 
-  // Now ellipsiod
+  // Now ellipsoid
   ActsScalar riy = 4.;
   ActsScalar roy = 14.;
   vertices = VerticesHelper::ellipsoidVertices(ri, riy, ro, roy, 0.,

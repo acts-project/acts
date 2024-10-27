@@ -36,15 +36,15 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsConstruction) {
   const double outerRx = 25.;
   const double outerRy = 30.;
 
-  // test default construction
-  // EllipseBounds defaultConstructedEllipseBounds;  //deleted
-  //
+  /// Test default construction
+  // default construction is deleted
+
   /// Test construction with dimensions
   BOOST_CHECK_EQUAL(
       EllipseBounds(innerRx, innerRy, outerRx, outerRy, phiSector, averagePhi)
           .type(),
       SurfaceBounds::eEllipse);
-  //
+
   /// Copy constructor
   EllipseBounds original(innerRx, innerRy, outerRx, outerRy, phiSector,
                          averagePhi);
@@ -75,38 +75,47 @@ BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
   BOOST_CHECK_THROW(
       EllipseBounds(-innerRx, innerRy, outerRx, outerRy, phiSector, averagePhi),
       std::logic_error);
+
   // Exception for innerRy < 0
   BOOST_CHECK_THROW(
       EllipseBounds(innerRx, -innerRy, outerRx, outerRy, phiSector, averagePhi),
       std::logic_error);
+
   // Exception for innerRx < 0 and innerRy < 0
   BOOST_CHECK_THROW(EllipseBounds(-innerRx, -innerRy, outerRx, outerRy,
                                   phiSector, averagePhi),
                     std::logic_error);
+
   // Exception for opening outerRx <= 0
   BOOST_CHECK_THROW(
       EllipseBounds(innerRx, innerRy, 0., outerRy, phiSector, averagePhi),
       std::logic_error);
+
   // Exception for opening outerRy <= 0
   BOOST_CHECK_THROW(
       EllipseBounds(innerRx, innerRy, outerRx, 0., phiSector, averagePhi),
       std::logic_error);
+
   // Exception for iouterRx < 0 and outerRy < 0
   BOOST_CHECK_THROW(EllipseBounds(innerRx, innerRy, -outerRx, -outerRy,
                                   phiSector, averagePhi),
                     std::logic_error);
+
   // Exception for innerRx > outerRx
   BOOST_CHECK_THROW(
       EllipseBounds(outerRx, innerRy, innerRx, outerRy, phiSector, averagePhi),
       std::logic_error);
+
   // Exception for innerRxy > outerRy
   BOOST_CHECK_THROW(
       EllipseBounds(innerRx, outerRy, outerRx, innerRy, phiSector, averagePhi),
       std::logic_error);
+
   // Exception for negative phiSector
   BOOST_CHECK_THROW(
       EllipseBounds(innerRx, innerRy, outerRx, outerRy, -phiSector, averagePhi),
       std::logic_error);
+
   // Exception for average phi out of bound
   BOOST_CHECK_THROW(
       EllipseBounds(innerRx, innerRy, outerRx, outerRy, phiSector, 4.),
@@ -124,8 +133,6 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
 
   /// Test type() (redundant; already used in constructor confirmation)
   BOOST_CHECK_EQUAL(ellipseBoundsObject.type(), SurfaceBounds::eEllipse);
-
-  // clone already tested
 
   /// Test distanceToBoundary
   Vector2 origin{0., 0.};
@@ -163,9 +170,9 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
                     std::numbers::pi / 2.);
 
   /// Test dump
-  boost::test_tools::output_test_stream dumpOuput;
-  ellipseBoundsObject.toStream(dumpOuput);
-  BOOST_CHECK(dumpOuput.is_equal(
+  boost::test_tools::output_test_stream dumpOutput;
+  ellipseBoundsObject.toStream(dumpOutput);
+  BOOST_CHECK(dumpOutput.is_equal(
       "Acts::EllipseBounds:  (innerRadius0, outerRadius0, innerRadius1, "
       "outerRadius1, hPhiSector, averagePhi) = (10.0000000, 15.0000000, "
       "15.0000000, 20.0000000, 0.0000000, 1.5707963, 0.0000000)"));
