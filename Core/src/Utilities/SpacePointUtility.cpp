@@ -204,8 +204,8 @@ Result<void> SpacePointUtility::calculateStripSPPosition(
   }
 
   // Check if m and n can be resolved in the interval (-1, 1)
-  if (fabs(spParams.m) <= spParams.limit &&
-      fabs(spParams.n) <= spParams.limit) {
+  if (std::abs(spParams.m) <= spParams.limit &&
+      std::abs(spParams.n) <= spParams.limit) {
     return Result<void>::success();
   }
   return Result<void>::failure(m_error);
@@ -226,7 +226,7 @@ Result<void> SpacePointUtility::recoverSpacePoint(
       spParams.limit + stripLengthGapTolerance / spParams.mag_firstBtmToTop;
 
   // Check if m is just slightly outside
-  if (fabs(spParams.m) > spParams.limitExtended) {
+  if (std::abs(spParams.m) > spParams.limitExtended) {
     return Result<void>::failure(m_error);
   }
   // Calculate n if not performed previously
@@ -236,7 +236,7 @@ Result<void> SpacePointUtility::recoverSpacePoint(
         spParams.secondBtmToTop.dot(spParams.firstBtmToTopXvtxToFirstMid2);
   }
   // Check if n is just slightly outside
-  if (fabs(spParams.n) > spParams.limitExtended) {
+  if (std::abs(spParams.n) > spParams.limitExtended) {
     return Result<void>::failure(m_error);
   }
   /// The following code considers an overshoot of m and n in the same direction
@@ -275,8 +275,8 @@ Result<void> SpacePointUtility::recoverSpacePoint(
     spParams.n -= (biggerOvershoot / secOnFirstScale);
     // Check if this recovered the space point
 
-    if (fabs(spParams.m) < spParams.limit &&
-        fabs(spParams.n) < spParams.limit) {
+    if (std::abs(spParams.m) < spParams.limit &&
+        std::abs(spParams.n) < spParams.limit) {
       return Result<void>::success();
     } else {
       return Result<void>::failure(m_error);
@@ -294,8 +294,8 @@ Result<void> SpacePointUtility::recoverSpacePoint(
     spParams.m += biggerOvershoot;
     spParams.n += (biggerOvershoot / secOnFirstScale);
     // Check if this recovered the space point
-    if (fabs(spParams.m) < spParams.limit &&
-        fabs(spParams.n) < spParams.limit) {
+    if (std::abs(spParams.m) < spParams.limit &&
+        std::abs(spParams.n) < spParams.limit) {
       return Result<void>::success();
     }
   }
@@ -325,7 +325,7 @@ Result<double> SpacePointUtility::calcPerpendicularProjection(
   double qr = (spParams.firstBtmToTop).dot(spParams.secondBtmToTop);
   double denom = spParams.firstBtmToTop.dot(spParams.firstBtmToTop) - qr * qr;
   // Check for numerical stability
-  if (fabs(denom) > 1e-6) {
+  if (std::abs(denom) > 1e-6) {
     // Return lambda0
     return Result<double>::success(
         (ac.dot(spParams.secondBtmToTop) * qr -
