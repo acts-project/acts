@@ -102,7 +102,7 @@ class DelegateChainBuilder<R(callable_args...), TypeList<payload_types...>,
 
     template <std::size_t I = 0, typename result_ptr>
     static constexpr auto invoke(result_ptr result, const tuple_type* payloads,
-                                 callable_args... args) {
+                                 callable_args&&... args) {
       const auto& callable = findCallable<I, 0, callables...>();
 
       if constexpr (!std::is_same_v<std::tuple_element_t<I, tuple_type>,
@@ -134,7 +134,7 @@ class DelegateChainBuilder<R(callable_args...), TypeList<payload_types...>,
 
     tuple_type m_payloads{};
 
-    auto dispatch(callable_args... args) const {
+    auto dispatch(callable_args&&... args) const {
       if constexpr (std::is_same_v<R, void>) {
         invoke(nullptr, &m_payloads, std::forward<callable_args>(args)...);
       } else {
