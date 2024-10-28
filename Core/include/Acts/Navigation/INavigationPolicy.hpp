@@ -42,9 +42,11 @@ class INavigationPolicy {
  public:
   /// Noop update function that is suitable as a default for default navigation
   /// delegates.
-  static void noopInitializeCandidates(const NavigationArguments& /*unused*/,
-                                       AppendOnlyNavigationStream& /*unused*/,
-                                       const Logger& /*unused*/) {}
+  static void noopInitializeCandidates(
+      const NavigationArguments& /*unused*/,
+      const AppendOnlyNavigationStream& /*unused*/, const Logger& /*unused*/) {
+    // This is a noop
+  }
 
   /// Virtual destructor so policies can be held through this base class.
   virtual ~INavigationPolicy() = default;
