@@ -62,6 +62,8 @@ class LayerCreator {
                std::unique_ptr<const Logger> logger =
                    getDefaultLogger("LayerCreator", Logging::INFO));
 
+  LayerCreator(LayerCreator&&) = default;
+
   /// Destructor
   ~LayerCreator() = default;
 

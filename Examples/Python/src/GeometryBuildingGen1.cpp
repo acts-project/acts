@@ -39,7 +39,11 @@ void addGeometryBuildingGen1(Context &ctx) {
   {
     auto creator =
         py::class_<Acts::LayerCreator>(m, "LayerCreator")
-            .def(py::init<Acts::LayerCreator::Config>())
+            .def(py::init([](const Acts::LayerCreator::Config &cfg,
+                             Acts::Logging::Level level) {
+              return Acts::LayerCreator(
+                  cfg, Acts::getDefaultLogger("LayerCreator", level));
+            }))
             .def("cylinderLayer",
                  [](const Acts::LayerCreator &self, const GeometryContext &gctx,
                     SurfacePtrVector surfaces, std::size_t binsPhi,

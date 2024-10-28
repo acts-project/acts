@@ -195,7 +195,11 @@ void addGeometry(Context& ctx) {
     py::class_<Acts::TrackingVolume, Acts::Volume,
                std::shared_ptr<Acts::TrackingVolume>>(m, "TrackingVolume")
         .def(py::init<const Transform3&, std::shared_ptr<Acts::VolumeBounds>,
-                      std::string>());
+                      std::string>())
+        .def("visitSurfaces",
+             [](Acts::TrackingVolume& self, py::function& func) {
+               self.visitSurfaces(func);
+             });
   }
 
   {
