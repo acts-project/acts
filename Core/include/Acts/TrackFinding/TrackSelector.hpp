@@ -80,8 +80,8 @@ class TrackSelector {
     std::size_t maxSharedHits = std::numeric_limits<std::size_t>::max();
     double maxChi2 = inf;
 
-    // Whether a reference surface is required for the track
-    // If false, the parameter cuts are not evaluated
+    /// Whether a reference surface is required for the track
+    /// If false, the parameter cuts are not evaluated
     bool requireReferenceSurface = true;
 
     // Defaults to: no cut
