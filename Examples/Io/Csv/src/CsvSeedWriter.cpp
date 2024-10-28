@@ -125,9 +125,10 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
       float truthPhi = phi(truthUnitDir);
       float truthEta = std::atanh(std::cos(theta(truthUnitDir)));
       float dEta = std::abs(truthEta - seedEta);
-      float dPhi = std::abs(truthPhi - seedPhi) < std::numbers::pi_v<float>
-                       ? std::abs(truthPhi - seedPhi)
-                       : std::abs(truthPhi - seedPhi) - std::numbers::pi_v<float>;
+      float dPhi =
+          std::abs(truthPhi - seedPhi) < std::numbers::pi_v<float>
+              ? std::abs(truthPhi - seedPhi)
+              : std::abs(truthPhi - seedPhi) - std::numbers::pi_v<float>;
       truthDistance = sqrt(dPhi * dPhi + dEta * dEta);
       // If the seed is truth matched, check if it is the closest one for the
       // contributing particle
