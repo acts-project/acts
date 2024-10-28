@@ -24,20 +24,20 @@ struct EtaThetaConversionTraits {
 
 template <>
 struct EtaThetaConversionTraits<float> {
-  static constexpr float minTheta = 0;
+  static constexpr float minTheta = 1e-6f;
   static constexpr float maxTheta = std::numbers::pi_v<float> - 1e-6f;
 
-  static constexpr float minEta = -std::numeric_limits<float>::infinity();
-  static constexpr float maxEta = std::numeric_limits<float>::infinity();
+  static constexpr float minEta = -80.0f;
+  static constexpr float maxEta = 80.0f;
 };
 
 template <>
 struct EtaThetaConversionTraits<double> {
-  static constexpr double minTheta = 0;
-  static constexpr double maxTheta = std::numbers::pi;
+  static constexpr double minTheta = 1e-12;
+  static constexpr double maxTheta = std::numbers::pi - 1e-12;
 
-  static constexpr double minEta = -std::numeric_limits<double>::infinity();
-  static constexpr double maxEta = std::numeric_limits<double>::infinity();
+  static constexpr double minEta = -700.0;
+  static constexpr double maxEta = 700.0;
 };
 
 /// Calculate the pseudorapidity from the polar angle theta.
@@ -54,7 +54,7 @@ Scalar etaFromTheta(Scalar theta) {
     return -std::numeric_limits<Scalar>::infinity();
   }
 
-  return -std::log(std::tan(0.5 * theta));
+  return -std::log(std::tan(theta / 2));
 }
 
 /// Calculate the polar angle theta from the pseudorapidity.
