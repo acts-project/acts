@@ -56,20 +56,6 @@ def test_steppers(conf_const, trk_geo):
             rnd=rnd,
         )
 
-        # Run particle smearing
-        trackParametersGenerator = acts.examples.ParticleSmearing(
-            level=acts.logging.INFO,
-            inputParticles="particles_input",
-            outputTrackParameters="start_parameters",
-            randomNumbers=rnd,
-            sigmaD0=0.0,
-            sigmaZ0=0.0,
-            sigmaPhi=0.0,
-            sigmaTheta=0.0,
-            sigmaPtRel=0.0,
-        )
-        seq.addAlgorithm(trackParametersGenerator)
-
         prop = acts.examples.ConcretePropagator(
             acts.Propagator(stepper=s, navigator=nav)
         )
@@ -78,7 +64,7 @@ def test_steppers(conf_const, trk_geo):
             acts.examples.PropagationAlgorithm,
             level=acts.logging.WARNING,
             propagatorImpl=prop,
-            inputTrackParameters="start_parameters",
+            inputTrackParameters="particle_track_parameters",
             outputSummaryCollection="propagation_summary",
             sterileLogger=False,
         )

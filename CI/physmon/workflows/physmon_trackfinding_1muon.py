@@ -18,7 +18,7 @@ from acts.examples.simulation import (
 
 from acts.examples.reconstruction import (
     addSeeding,
-    ParticleSmearingSigmas,
+    TrackSmearingSigmas,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
@@ -91,7 +91,7 @@ def run_ckf_tracking(label, seeding):
             s,
             setup.trackingGeometry,
             setup.field,
-            ParticleSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
+            TrackSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
                 # zero eveything so the CKF has a chance to find the measurements
                 d0=0,
                 d0PtA=0,

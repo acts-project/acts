@@ -209,20 +209,6 @@ def basic_prop_seq(rng):
             rnd=rng,
         )
 
-        # Run particle smearing
-        trackParametersGenerator = acts.examples.ParticleSmearing(
-            level=acts.logging.INFO,
-            inputParticles="particles_input",
-            outputTrackParameters="start_parameters",
-            randomNumbers=rng,
-            sigmaD0=0.0,
-            sigmaZ0=0.0,
-            sigmaPhi=0.0,
-            sigmaTheta=0.0,
-            sigmaPtRel=0.0,
-        )
-        s.addAlgorithm(trackParametersGenerator)
-
         nav = acts.Navigator(trackingGeometry=geo)
         stepper = acts.StraightLineStepper()
 
@@ -232,7 +218,7 @@ def basic_prop_seq(rng):
             level=acts.logging.WARNING,
             propagatorImpl=prop,
             sterileLogger=False,
-            inputTrackParameters="start_parameters",
+            inputTrackParameters="particle_track_parameters",
             outputSummaryCollection="propagation_summary",
         )
 

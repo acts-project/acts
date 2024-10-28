@@ -44,27 +44,12 @@ def runMaterialValidation(
         rnd=rnd,
     )
 
-    # Run particle smearing
-    trackParametersGenerator = acts.examples.ParticleSmearing(
-        level=acts.logging.INFO,
-        inputParticles="particles_input",
-        outputTrackParameters="start_parameters",
-        randomNumbers=rnd,
-        sigmaD0=0.0,
-        sigmaZ0=0.0,
-        sigmaPhi=0.0,
-        sigmaTheta=0.0,
-        sigmaPRel=0.0,
-        addCovariances=False,
-    )
-    s.addAlgorithm(trackParametersGenerator)
-
     alg = acts.examples.PropagationAlgorithm(
         propagatorImpl=prop,
         level=acts.logging.INFO,
         sterileLogger=False,
         recordMaterialInteractions=True,
-        inputTrackParameters="start_parameters",
+        inputTrackParameters="particle_track_parameters",
         outputPropagationSteps="propagation_steps",
         outputMaterialTracks="material-tracks",
     )

@@ -6,7 +6,7 @@ import acts
 from acts.examples import (
     Sequencer,
     ParticleSelector,
-    ParticleSmearing,
+    TrackParameterSmearing,
     TrackParameterSelector,
 )
 from acts.examples.simulation import addPythia8
@@ -65,9 +65,9 @@ def runVertexFitting(
     if inputTrackSummary is None or inputParticlePath is None:
         logger.info("Using smeared particles")
 
-        ptclSmearing = ParticleSmearing(
+        ptclSmearing = TrackParameterSmearing(
             level=acts.logging.INFO,
-            inputParticles=selectedParticles,
+            inputTrackParameters="particle_track_parameters",
             outputTrackParameters=trackParameters,
             randomNumbers=rnd,
         )
