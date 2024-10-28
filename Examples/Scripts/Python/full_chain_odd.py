@@ -221,6 +221,7 @@ else:
                 args.gun_pt_range[0] * u.GeV,
                 args.gun_pt_range[1] * u.GeV,
                 transverse=True,
+                logUniform=True,
             ),
             EtaConfig(args.gun_eta_range[0], args.gun_eta_range[1]),
             PhiConfig(0.0, 360.0 * u.degree),

@@ -52,7 +52,7 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
     /// Indicate if the momentum referse to transverse momentum.
     bool pTransverse = false;
     /// Indicate if the momentum should be uniformly distributed in log space.
-    bool pUniformLog = false;
+    bool pLogUniform = false;
     /// (Absolute) PDG particle number to identify the particle type.
     Acts::PdgParticle pdg = Acts::PdgParticle::eMuon;
     /// Randomize the charge and flip the PDG particle number sign accordingly.
