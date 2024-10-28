@@ -58,7 +58,8 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
   UniformReal phiDist(m_cfg.phiMin, m_cfg.phiMax);
   UniformReal cosThetaDist(m_cosThetaMin, m_cosThetaMax);
   UniformReal etaDist(m_etaMin, m_etaMax);
-  UniformReal pDist(m_cfg.pMin, m_cfg.pMax);
+  UniformReal pDist(m_cfg.pUniformLog ? std::log(m_cfg.pMin) : m_cfg.pMin,
+                    m_cfg.pUniformLog ? std::log(m_cfg.pMax) : m_cfg.pMax);
 
   SimVertexContainer::sequence_type vertices;
   SimParticleContainer::sequence_type particles;
@@ -100,6 +101,7 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
     // construct the particle;
     ActsFatras::Particle particle(pid, pdg, q, m_mass);
     particle.setDirection(dir);
+    p = m_cfg.pUniformLog ? std::exp(p) : p;
     p *= m_cfg.pTransverse ? 1. / sinTheta : 1.;
     particle.setAbsoluteMomentum(p);
 

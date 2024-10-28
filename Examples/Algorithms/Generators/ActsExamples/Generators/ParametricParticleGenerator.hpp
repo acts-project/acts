@@ -49,8 +49,10 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
     /// Low, high (exclusive) for absolute/transverse momentum.
     double pMin = 1 * Acts::UnitConstants::GeV;
     double pMax = 10 * Acts::UnitConstants::GeV;
-    /// Indicate if the momentum referse to transverse momentum
+    /// Indicate if the momentum referse to transverse momentum.
     bool pTransverse = false;
+    /// Indicate if the momentum should be uniformly distributed in log space.
+    bool pUniformLog = false;
     /// (Absolute) PDG particle number to identify the particle type.
     Acts::PdgParticle pdg = Acts::PdgParticle::eMuon;
     /// Randomize the charge and flip the PDG particle number sign accordingly.
