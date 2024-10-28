@@ -135,6 +135,38 @@ TrackSelectorConfig = namedtuple(
     defaults=[(None, None)] * 7 + [None] * 8,
 )
 
+
+# Encapsulate this boilerplate code into a function so different uses do not get out of sync
+# Gets an additional lambda for the etaMax, because we might want to use this with eta binning
+def convertPyTrackSelectorConfig(pyCfg, etaMaxLambda=lambda etaMax: etaMax):
+    return acts.TrackSelector.Config(
+        **acts.examples.defaultKWArgs(
+            loc0Min=c.loc0[0],
+            loc0Max=c.loc0[1],
+            loc1Min=c.loc1[0],
+            loc1Max=c.loc1[1],
+            timeMin=c.time[0],
+            timeMax=c.time[1],
+            phiMin=c.phi[0],
+            phiMax=c.phi[1],
+            etaMin=c.eta[0],
+            etaMax=c.eta[1],
+            absEtaMin=c.absEta[0],
+            absEtaMax=etaMaxLambda(c.absEta[1]),
+            ptMin=c.pt[0],
+            ptMax=c.pt[1],
+            minMeasurements=c.nMeasurementsMin,
+            maxHoles=c.maxHoles,
+            maxOutliers=c.maxOutliers,
+            maxHolesAndOutliers=c.maxHolesAndOutliers,
+            maxSharedHits=c.maxSharedHits,
+            maxChi2=c.maxChi2,
+            measurementCounter=c.nMeasurementsGroupMin,
+            requireReferenceSurface=c.requireReferenceSurface,
+        )
+    )
+
+
 CkfConfig = namedtuple(
     "CkfConfig",
     [
@@ -1473,31 +1505,8 @@ def addCKFTracks(
         )
     )
     cutSets = [
-        acts.TrackSelector.Config(
-            **acts.examples.defaultKWArgs(
-                loc0Min=c.loc0[0],
-                loc0Max=c.loc0[1],
-                loc1Min=c.loc1[0],
-                loc1Max=c.loc1[1],
-                timeMin=c.time[0],
-                timeMax=c.time[1],
-                phiMin=c.phi[0],
-                phiMax=c.phi[1],
-                etaMin=c.eta[0],
-                etaMax=c.eta[1],
-                absEtaMin=c.absEta[0],
-                absEtaMax=c.absEta[1] if len(tslist) == 1 else None,
-                ptMin=c.pt[0],
-                ptMax=c.pt[1],
-                minMeasurements=c.nMeasurementsMin,
-                maxHoles=c.maxHoles,
-                maxOutliers=c.maxOutliers,
-                maxHolesAndOutliers=c.maxHolesAndOutliers,
-                maxSharedHits=c.maxSharedHits,
-                maxChi2=c.maxChi2,
-                measurementCounter=c.nMeasurementsGroupMin,
-                requireReferenceSurface=c.requireReferenceSurface,
-            )
+        convertPyTrackSelectorConfig(
+            c, lambda etaMax: etaMax if len(tslist) == 1 else None
         )
         for c in tslist
     ]
@@ -1750,26 +1759,7 @@ def addTrackSelection(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # single cut config for implicit single bin eta configuration
-    selectorConfig = acts.TrackSelector.Config(
-        **acts.examples.defaultKWArgs(
-            loc0Min=trackSelectorConfig.loc0[0],
-            loc0Max=trackSelectorConfig.loc0[1],
-            loc1Min=trackSelectorConfig.loc1[0],
-            loc1Max=trackSelectorConfig.loc1[1],
-            timeMin=trackSelectorConfig.time[0],
-            timeMax=trackSelectorConfig.time[1],
-            phiMin=trackSelectorConfig.phi[0],
-            phiMax=trackSelectorConfig.phi[1],
-            etaMin=trackSelectorConfig.eta[0],
-            etaMax=trackSelectorConfig.eta[1],
-            absEtaMin=trackSelectorConfig.absEta[0],
-            absEtaMax=trackSelectorConfig.absEta[1],
-            ptMin=trackSelectorConfig.pt[0],
-            ptMax=trackSelectorConfig.pt[1],
-            minMeasurements=trackSelectorConfig.nMeasurementsMin,
-            requireReferenceSurface=trackSelectorConfig.requireReferenceSurface,
-        )
-    )
+    selectorConfig = convertPyTrackSelectorConfig(trackSelectorConfig)
 
     trackSelector = acts.examples.TrackSelectorAlgorithm(
         level=customLogLevel(),
