@@ -79,6 +79,7 @@ void addGenerators(Context& ctx) {
         .def(py::init<>())
         .def_readwrite("outputParticles", &Config::outputParticles)
         .def_readwrite("outputVertices", &Config::outputVertices)
+        .def_readwrite("outputTrackParameters", &Config::outputTrackParameters)
         .def_readwrite("generators", &Config::generators)
         .def_readwrite("randomNumbers", &Config::randomNumbers);
   }
