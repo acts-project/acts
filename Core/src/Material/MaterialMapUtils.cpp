@@ -64,8 +64,8 @@ auto Acts::materialMapperRZ(
   double zMax = *minMaxZ.second;
   // calculate maxima (add one last bin, because bin value always corresponds to
   // left boundary)
-  double stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
-  double stepR = std::fabs(rMax - rMin) / (nBinsR - 1);
+  double stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
+  double stepR = std::abs(rMax - rMin) / (nBinsR - 1);
   rMax += stepR;
   zMax += stepZ;
 
@@ -156,9 +156,9 @@ auto Acts::materialMapperXYZ(
   double zMax = *minMaxZ.second;
   // calculate maxima (add one last bin, because bin value always corresponds to
   // left boundary)
-  double stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
-  double stepY = std::fabs(yMax - yMin) / (nBinsY - 1);
-  double stepX = std::fabs(xMax - xMin) / (nBinsX - 1);
+  double stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
+  double stepY = std::abs(yMax - yMin) / (nBinsY - 1);
+  double stepX = std::abs(xMax - xMin) / (nBinsX - 1);
   xMax += stepX;
   yMax += stepY;
   zMax += stepZ;

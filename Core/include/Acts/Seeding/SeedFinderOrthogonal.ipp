@@ -226,7 +226,7 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
    * Cut: Ensure that the forward angle (z / r) lies within reasonable bounds,
    * which is to say the absolute value must be smaller than the max cot(θ).
    */
-  if (std::fabs(cotTheta) > m_config.cotThetaMax) {
+  if (std::abs(cotTheta) > m_config.cotThetaMax) {
     return false;
   }
 
