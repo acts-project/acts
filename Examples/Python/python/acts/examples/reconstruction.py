@@ -130,8 +130,9 @@ TrackSelectorConfig = namedtuple(
         "maxSharedHits",
         "maxChi2",
         "nMeasurementsGroupMin",
+        "requireReferenceSurface",
     ],
-    defaults=[(None, None)] * 7 + [None] * 7,
+    defaults=[(None, None)] * 7 + [None] * 8,
 )
 
 CkfConfig = namedtuple(
@@ -1495,6 +1496,7 @@ def addCKFTracks(
                 maxSharedHits=c.maxSharedHits,
                 maxChi2=c.maxChi2,
                 measurementCounter=c.nMeasurementsGroupMin,
+                requireReferenceSurface=c.requireReferenceSurface,
             )
         )
         for c in tslist
@@ -1765,6 +1767,7 @@ def addTrackSelection(
             ptMin=trackSelectorConfig.pt[0],
             ptMax=trackSelectorConfig.pt[1],
             minMeasurements=trackSelectorConfig.nMeasurementsMin,
+            requireReferenceSurface=trackSelectorConfig.requireReferenceSurface,
         )
     )
 
