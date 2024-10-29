@@ -60,13 +60,14 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
   friend std::ostream& operator<<(std::ostream& os,
                                   const LayerType& layerType) {
     switch (layerType) {
-      case LayerType::Cylinder:
+      using enum LayerType;
+      case Cylinder:
         os << "Cylinder";
         break;
-      case LayerType::Disc:
+      case Disc:
         os << "Disc";
         break;
-      case LayerType::Plane:
+      case Plane:
         os << "Plane";
         break;
     }
