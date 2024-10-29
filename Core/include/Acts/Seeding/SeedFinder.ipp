@@ -15,8 +15,9 @@ namespace Acts {
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
 SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& config)
-    : m_config(config) {
+    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+    std::unique_ptr<const Acts::Logger> logger)
+    : m_config(config), m_logger(std::move(logger)) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderConfig not in ACTS internal units in SeedFinder");
@@ -110,6 +111,12 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   // same z-bin
   auto [minRadiusRangeForMiddle, maxRadiusRangeForMiddle] =
       retrieveRadiusRangeForMiddle(*middleSPs.front(), rMiddleSPRange);
+  ACTS_VERBOSE("Current global bin: " << middleSPsIdx << ", z value of "
+                                      << middleSPs.front()->z());
+  ACTS_VERBOSE("Validity range (radius) for the middle space point is ["
+               << minRadiusRangeForMiddle << ", " << maxRadiusRangeForMiddle
+               << "]");
+
   for (const external_spacepoint_t* spM : middleSPs) {
     const float rM = spM->radius();
 
@@ -136,6 +143,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
 
     // no top SP found -> try next spM
     if (state.compatTopSP.empty()) {
+      ACTS_VERBOSE("No compatible Tops, moving to next middle candidate");
       continue;
     }
 
@@ -157,6 +165,10 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
       seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
       // continue if number of top SPs is smaller than minimum
       if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
+        ACTS_VERBOSE(
+            "Number of top SPs is "
+            << state.compatTopSP.size()
+            << " and is smaller than minimum, moving to next middle candidate");
         continue;
       }
     }
@@ -170,9 +182,14 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
 
     // no bottom SP found -> try next spM
     if (state.compatBottomSP.empty()) {
+      ACTS_VERBOSE("No compatible Bottoms, moving to next middle candidate");
       continue;
     }
 
+    ACTS_VERBOSE("Candidates: " << state.compatBottomSP.size()
+                                << " bottoms and " << state.compatTopSP.size()
+                                << " tops for middle candidate indexed "
+                                << spM->index());
     // filter candidates
     if (m_config.useDetailedDoubleMeasurementInfo) {
       filterCandidates<Acts::DetectorMeasurementInfo::eDetailed>(

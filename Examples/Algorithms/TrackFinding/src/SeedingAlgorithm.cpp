@@ -45,9 +45,8 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   // internal units
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_shared<Acts::SeedFilter<SpacePointProxy_type>>(
-          m_cfg.seedFilterConfig);
-
+      std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
+          m_cfg.seedFilterConfig, logger().cloneWithSuffix("SeedFilter"));
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
   m_cfg.seedFinderOptions =
@@ -195,13 +194,10 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   m_topBinFinder = std::make_unique<const Acts::GridBinFinder<3ul>>(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop, 0);
 
-  m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
-          m_cfg.seedFilterConfig);
   m_seedFinder =
       Acts::SeedFinder<SpacePointProxy_type,
                        Acts::CylindricalSpacePointGrid<SpacePointProxy_type>>(
-          m_cfg.seedFinderConfig);
+          m_cfg.seedFinderConfig, logger().cloneWithSuffix("SeedFinder"));
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
