@@ -747,7 +747,7 @@ class CombinatorialKalmanFilter {
       }
 
       // Transport the covariance to the surface
-      if (isHole || isMaterialOnly) {
+      if (isMaterialOnly) {
         stepper.transportCovarianceToCurvilinear(state.stepping);
       } else {
         stepper.transportCovarianceToBound(state.stepping, *surface);
