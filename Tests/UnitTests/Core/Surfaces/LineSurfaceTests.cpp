@@ -14,6 +14,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -343,8 +344,9 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
           .closest();
   CHECK_CLOSE_ABS(intersection.pathLength(), pathLimit, eps);
 
-  BoundTrackParameters endParameters{surface, BoundVector::Zero(), std::nullopt,
-                                     ParticleHypothesis::pion()};
+  BoundTrackParameters endParameters{surface,
+                                     detail::Test::someBoundParametersA(),
+                                     std::nullopt, ParticleHypothesis::pion()};
   {
     PropagatorOptions options(tgContext, {});
     options.direction = Acts::Direction::Forward;

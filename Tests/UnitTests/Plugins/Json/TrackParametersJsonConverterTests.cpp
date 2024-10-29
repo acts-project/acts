@@ -8,12 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Plugins/Json/TrackParametersJsonConverter.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <fstream>
 #include <memory>
 
 #include <nlohmann/json.hpp>
