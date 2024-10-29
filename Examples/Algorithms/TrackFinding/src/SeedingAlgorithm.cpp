@@ -244,10 +244,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   Acts::CylindricalSpacePointGrid<value_type> grid =
       Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(
-          m_cfg.gridConfig, m_cfg.gridOptions);
+          m_cfg.gridConfig, m_cfg.gridOptions, logger());
 
   Acts::CylindricalSpacePointGridCreator::fillGrid<value_type>(
-      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid, spContainer);
+      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid, spContainer,
+      logger());
 
   // Compute radius Range
   // we rely on the fact the grid is storing the proxies
