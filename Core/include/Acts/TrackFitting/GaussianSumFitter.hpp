@@ -123,15 +123,11 @@ struct GaussianSumFitter {
       using Actors = ActorList<GsfActor>;
       using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
-      std::vector<const Surface*> backwardSequence(
-          std::next(sSequence.rbegin()), sSequence.rend());
-      backwardSequence.push_back(opts.referenceSurface);
-
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.navigation.surfaces = backwardSequence;
+      propOptions.navigation.surfaces = sSequence;
       propOptions.actorList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
 

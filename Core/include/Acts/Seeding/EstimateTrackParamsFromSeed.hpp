@@ -287,4 +287,41 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   return params;
 }
 
+/// Configuration for the estimation of the covariance matrix of the track
+/// parameters with `estimateTrackParamCovariance`.
+struct EstimateTrackParamCovarianceConfig {
+  /// The initial sigmas for the track parameters
+  BoundVector initialSigmas = {1. * UnitConstants::mm,
+                               1. * UnitConstants::mm,
+                               1. * UnitConstants::degree,
+                               1. * UnitConstants::degree,
+                               1. * UnitConstants::e / UnitConstants::GeV,
+                               1. * UnitConstants::ns};
+
+  /// The initial relative uncertainty of the q/pt
+  double initialSigmaPtRel = 0.1;
+
+  /// The inflation factors for the variances of the track parameters
+  BoundVector initialVarInflation = {1., 1., 1., 1., 1., 1.};
+  /// The inflation factor for time uncertainty if the time parameter was not
+  /// estimated
+  double noTimeVarInflation = 100.;
+};
+
+/// Estimate the covariance matrix of the given track parameters based on the
+/// provided configuration. The assumption is that we can model the uncertainty
+/// of the track parameters as a diagonal matrix with the provided initial
+/// sigmas. The inflation factors are used to inflate the initial variances
+/// based on the provided configuration. The uncertainty of q/p is estimated
+/// based on the relative uncertainty of the q/pt and the theta uncertainty.
+///
+/// @param config is the configuration for the estimation
+/// @param params is the track parameters
+/// @param hasTime is true if the track parameters have time
+///
+/// @return the covariance matrix of the track parameters
+BoundMatrix estimateTrackParamCovariance(
+    const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
+    bool hasTime);
+
 }  // namespace Acts

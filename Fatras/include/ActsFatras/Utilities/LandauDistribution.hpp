@@ -51,7 +51,7 @@ class LandauDistribution {
   /// Construct directly from the distribution parameters.
   LandauDistribution(double location, double scale) : m_cfg(location, scale) {}
   /// Construct from a parameter object.
-  LandauDistribution(const param_type &cfg) : m_cfg(cfg) {}
+  explicit LandauDistribution(const param_type &cfg) : m_cfg(cfg) {}
   // Explicitlely defaulted construction and assignment
   LandauDistribution() = default;
   LandauDistribution(const LandauDistribution &) = default;

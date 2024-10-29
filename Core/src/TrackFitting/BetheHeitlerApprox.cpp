@@ -8,7 +8,8 @@
 
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 
-Acts::AtlasBetheHeitlerApprox<6, 5> Acts::makeDefaultBetheHeitlerApprox() {
+Acts::AtlasBetheHeitlerApprox<6, 5> Acts::makeDefaultBetheHeitlerApprox(
+    bool clampToRange) {
   // Tracking/TrkFitter/TrkGaussianSumFilterUtils/Data/BetheHeitler_cdf_nC6_O5.par
   // clang-format off
   constexpr static AtlasBetheHeitlerApprox<6, 5>::Data cdf_cmps6_order5_data = {{
@@ -51,6 +52,7 @@ Acts::AtlasBetheHeitlerApprox<6, 5> Acts::makeDefaultBetheHeitlerApprox() {
   }};
   // clang-format on
 
-  return AtlasBetheHeitlerApprox<6, 5>(
-      cdf_cmps6_order5_data, cdf_cmps6_order5_data, true, true, 0.2, 0.2);
+  return AtlasBetheHeitlerApprox<6, 5>(cdf_cmps6_order5_data,
+                                       cdf_cmps6_order5_data, true, true, 0.2,
+                                       0.2, clampToRange);
 }

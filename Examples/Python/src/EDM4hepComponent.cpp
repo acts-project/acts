@@ -42,7 +42,7 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
   ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepMeasurementReader, m,
                              "EDM4hepMeasurementReader", inputPath,
                              outputMeasurements, outputMeasurementSimHitsMap,
-                             outputSourceLinks, outputClusters);
+                             outputClusters);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepMeasurementWriter, m,
                              "EDM4hepMeasurementWriter", inputMeasurements,

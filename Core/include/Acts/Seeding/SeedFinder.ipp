@@ -36,7 +36,9 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
 }
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
-template <typename container_t, typename sp_range_t>
+template <typename container_t, Acts::GridBinCollection sp_range_t>
+  requires Acts::CollectionStoresSeedsTo<container_t, external_spacepoint_t,
+                                         3ul>
 void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
     const grid_t& grid, container_t& outputCollection,
@@ -366,8 +368,15 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       const float uT = xNewFrame * iDeltaR2;
       const float vT = yNewFrame * iDeltaR2;
 
-      // interactionPointCut == true we apply this cut first cuts before
-      // coordinate transformation to avoid unnecessary calculations
+      // We check the interaction point by evaluating the minimal distance
+      // between the origin and the straight line connecting the two points in
+      // the doublets. Using a geometric similarity, the Im is given by
+      // yNewFrame * rM / deltaR <= m_config.impactMax
+      // However, we make here an approximation of the impact parameter
+      // which is valid under the assumption yNewFrame / xNewFrame is small
+      // The correct computation would be:
+      // yNewFrame * yNewFrame * rM * rM <= m_config.impactMax *
+      // m_config.impactMax * deltaR2
       if (std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply

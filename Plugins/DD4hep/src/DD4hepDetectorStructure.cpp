@@ -75,7 +75,7 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
       detail::BlueprintDrawer::dotStream(bpf, *dd4hepBlueprint);
       bpf.close();
       // Return without building
-      return std::tie(detector, detectorStore);
+      return {detector, detectorStore};
     }
 
     // Create a Cylindrical detector builder from this blueprint
@@ -100,5 +100,5 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
         "DD4hepDetectorStructure: Only cylindrical detectors are (currently) "
         "supported.");
   }
-  return std::tie(detector, detectorStore);
+  return {detector, detectorStore};
 }

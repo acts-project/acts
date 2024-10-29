@@ -58,6 +58,8 @@ class GeoModelBlueprintCreater {
     std::string topEntry;
     /// Optionally override the top node bounds
     std::string topBoundsOverride = "";
+    /// Export dot graph
+    std::string dotGraph = "";
   };
 
   /// The Blueprint return object

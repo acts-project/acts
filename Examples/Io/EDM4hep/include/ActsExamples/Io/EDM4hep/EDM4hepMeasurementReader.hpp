@@ -41,8 +41,6 @@ class EDM4hepMeasurementReader final : public IReader {
     std::string outputMeasurements;
     /// Output measurement to sim hit collection.
     std::string outputMeasurementSimHitsMap;
-    /// Output source links collection.
-    std::string outputSourceLinks;
     /// Output cluster collection (optional).
     std::string outputClusters;
   };
@@ -78,9 +76,6 @@ class EDM4hepMeasurementReader final : public IReader {
 
   WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
       this, "OutputMeasurementSimHitsMap"};
-
-  WriteDataHandle<GeometryIdMultiset<IndexSourceLink>> m_outputSourceLinks{
-      this, "OutputSourceLinks"};
 
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
 };

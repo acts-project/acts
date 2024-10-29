@@ -170,7 +170,7 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
       }
     }
   }
-  return std::tie(pSurfaces, pGrid, highlightIndices);
+  return {pSurfaces, pGrid, highlightIndices};
 }
 
 /// @brief Convert the single delegate if it is of the type of the reference

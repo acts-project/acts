@@ -14,7 +14,6 @@ from acts.examples.simulation import (
 
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
     addCKFTracks,
     TrackSelectorConfig,
     SeedingAlgorithm,
@@ -210,7 +209,15 @@ def runHashingSeeding(
         trackingGeometry,
         field,
         preSelectParticles=ParticleSelectorConfig(
-            eta=(-eta, eta), pt=(150 * u.MeV, None), removeNeutral=True
+            eta=(-eta, eta),
+            pt=(150 * u.MeV, None),
+            removeNeutral=True,
+        ),
+        postSelectParticles=ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-eta, eta),
+            measurements=(9, None),
+            removeNeutral=True,
         ),
         enableInteractions=True,
         # outputDirRoot=outputDir,  # RootParticle ERROR when setting the outputDirRoot
@@ -272,7 +279,6 @@ def runHashingSeeding(
         seedFinderOptionsArg,
         hashingTrainingConfigArg,
         hashingAlgorithmConfigArg,
-        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-eta, eta), nHits=(9, None)),
         seedingAlgorithm=seedingAlgorithm,
         geoSelectionConfigFile=geoSelectionConfigFile,
         initialSigmas=initialSigmas,
@@ -336,10 +342,6 @@ if __name__ == "__main__":
         annoySeed=annoySeed,
         zBins=zBins,
         phiBins=phiBins,
-    )
-
-    truthSeedRanges = TruthSeedRanges(
-        pt=(1.0 * u.GeV, None), eta=(-eta, eta), nHits=(9, None)
     )
 
     doHashing = config.doHashing
