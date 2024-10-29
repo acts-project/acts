@@ -143,6 +143,9 @@ struct GenerateQoverPOptions {
   /// Indicate if the momentum referse to transverse momentum
   bool pTransverse = true;
 
+  /// Indicate if the momentum should be uniformly distributed in log space.
+  bool pLogUniform = false;
+
   /// Charge of the parameters.
   double charge = 1;
 
@@ -165,14 +168,17 @@ inline double generateQoverP(generator_t& rng,
       options.charge,
       -options.charge,
   };
-  UniformReal pDist(options.pMin, options.pMax);
+  UniformReal pDist(
+      options.pLogUniform ? std::log(options.pMin) : options.pMin,
+      options.pLogUniform ? std::log(options.pMax) : options.pMax);
 
   // draw parameters
   const std::uint8_t type = particleTypeChoice(rng);
   const double q = qChoices[type];
 
-  const double p =
-      pDist(rng) * (options.pTransverse ? 1. / std::sin(theta) : 1.);
+  double p = pDist(rng);
+  p = options.pLogUniform ? std::exp(p) : p;
+  p = p * (options.pTransverse ? 1. / std::sin(theta) : 1.);
   const double qOverP = (q != 0) ? q / p : 1 / p;
 
   return qOverP;
