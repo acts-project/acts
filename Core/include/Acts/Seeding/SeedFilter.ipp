@@ -18,7 +18,7 @@ template <typename external_spacepoint_t>
 SeedFilter<external_spacepoint_t>::SeedFilter(
     SeedFilterConfig config,
     IExperimentCuts<external_spacepoint_t>* expCuts /* = 0*/)
-    : m_cfg(config), m_experimentCuts(expCuts) {
+    : m_cfg(std::move(config)), m_experimentCuts(expCuts) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFilterConfig not in ACTS internal units in SeedFilter");
@@ -29,7 +29,9 @@ template <typename external_spacepoint_t>
 SeedFilter<external_spacepoint_t>::SeedFilter(
     SeedFilterConfig config, std::unique_ptr<const Acts::Logger> logger,
     IExperimentCuts<external_spacepoint_t>* expCuts /* = 0*/)
-    : m_cfg(config), m_logger(std::move(logger)), m_experimentCuts(expCuts) {
+    : m_cfg(std::move(config)),
+      m_logger(std::move(logger)),
+      m_experimentCuts(expCuts) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFilterConfig not in ACTS internal units in SeedFilter");
