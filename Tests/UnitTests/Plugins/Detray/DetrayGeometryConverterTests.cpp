@@ -107,10 +107,11 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversion) {
   auto [volumes, portals, rootVolumes] = beampipe->construct(tContext);
   auto volume = volumes.front();
 
-  DetrayConversionUtils::GeometryIdCache geoIdCache;
+  std::vector<const Experimental::DetectorVolume*> dVolumes = {volume.get()};
+  DetrayConversionUtils::Cache cCache(dVolumes);
 
   detray::io::volume_payload payload = DetrayGeometryConverter::convertVolume(
-      geoIdCache, tContext, *volume, {volume.get()}, *logger);
+      cCache, tContext, *volume, *logger);
 
   // Check the volume payload
   BOOST_CHECK(payload.name == "BeamPipe");
@@ -134,10 +135,10 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
   auto detector = buildCylindricalDetector(tContext);
 
   // Convert the detector
-  DetrayConversionUtils::GeometryIdCache geoIdCache;
+  DetrayConversionUtils::Cache cCache(detector->volumes());
 
   detray::io::detector_payload payload =
-      DetrayGeometryConverter::convertDetector(geoIdCache, tContext, *detector,
+      DetrayGeometryConverter::convertDetector(cCache, tContext, *detector,
                                                *logger);
 
   // Test the payload - we have six volumes

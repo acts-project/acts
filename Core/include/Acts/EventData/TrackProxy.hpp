@@ -324,7 +324,8 @@ class TrackProxy {
     return std::distance(tsRange.begin(), tsRange.end());
   }
 
-  /// Return the number of measurements for the track. Const version
+  /// Return a mutable reference to the number of measurements for the track.
+  /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return The number of measurements
   unsigned int& nMeasurements()
@@ -333,8 +334,7 @@ class TrackProxy {
     return component<unsigned int, hashString("nMeasurements")>();
   }
 
-  /// Return a mutable reference to the number of measurements for the track.
-  /// Mutable version
+  /// Return the number of measurements for the track. Const version
   /// @return The number of measurements
   unsigned int nMeasurements() const {
     return component<unsigned int, hashString("nMeasurements")>();

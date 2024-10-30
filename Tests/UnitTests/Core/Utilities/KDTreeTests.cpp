@@ -482,12 +482,10 @@ BOOST_FIXTURE_TEST_CASE(range_search_combinatorial, TreeFixture3DDoubleInt2) {
 
               std::vector<int> valid;
 
-              for (const std::pair<std::array<double, 3>, int>& i :
-                   test_vector) {
-                const std::array<double, 3>& c = i.first;
+              for (const auto& [c, value] : test_vector) {
                 if (xmin <= c[0] && c[0] < xmax && ymin <= c[1] &&
                     c[1] < ymax && zmin <= c[2] && c[2] < zmax) {
-                  valid.push_back(i.second);
+                  valid.push_back(value);
                 }
               }
 

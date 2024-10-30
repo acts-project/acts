@@ -161,7 +161,7 @@ class queuing_mutex {
 #endif
     }
 
-    scoped_lock(queuing_mutex& ACTS_EXAMPLES_WITH_TBB(m)) {
+    explicit scoped_lock(queuing_mutex& ACTS_EXAMPLES_WITH_TBB(m)) {
 #ifndef ACTS_EXAMPLES_NO_TBB
       if (enableTBB()) {
         tbb.emplace(*m.tbb);
