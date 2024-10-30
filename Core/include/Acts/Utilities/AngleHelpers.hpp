@@ -9,19 +9,12 @@
 #pragma once
 
 #include <cmath>
-#include <concepts>
 #include <numbers>
 
 namespace Acts::AngleHelpers {
 
-template <std::floating_point Scalar>
-struct EtaThetaConversionTraits {
-  static constexpr Scalar minTheta = 0;
-  static constexpr Scalar maxTheta = std::numbers::pi_v<Scalar>;
-
-  static constexpr Scalar minEta = -std::numeric_limits<Scalar>::infinity();
-  static constexpr Scalar maxEta = std::numeric_limits<Scalar>::infinity();
-};
+template <typename Scalar>
+struct EtaThetaConversionTraits {};
 
 template <>
 struct EtaThetaConversionTraits<float> {
@@ -46,7 +39,7 @@ struct EtaThetaConversionTraits<double> {
 /// @param theta is the polar angle in radian towards the z-axis.
 ///
 /// @return the pseudorapidity towards the z-axis.
-template <std::floating_point Scalar>
+template <typename Scalar>
 Scalar etaFromTheta(Scalar theta) {
   if (theta < EtaThetaConversionTraits<Scalar>::minTheta) {
     return std::numeric_limits<Scalar>::infinity();
