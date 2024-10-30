@@ -111,7 +111,7 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// Constructor - from a fixed size array
   ///
   /// @param values The bound values
-  CylinderVolumeBounds(const std::array<ActsScalar, eSize>& values);
+  explicit CylinderVolumeBounds(const std::array<ActsScalar, eSize>& values);
 
   /// Constructor - extruded from cylinder bounds and thickness
   ///
