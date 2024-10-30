@@ -107,7 +107,7 @@ class TrackStateRange {
     ProxyType operator*() { return *proxy; }
   };
 
-  TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
+  explicit TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
   TrackStateRange() : m_begin{std::nullopt} {}
 
   Iterator begin() { return m_begin; }
