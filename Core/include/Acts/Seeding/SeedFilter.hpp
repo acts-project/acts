@@ -38,9 +38,9 @@ struct SeedFilterState {
 template <typename external_spacepoint_t>
 class SeedFilter final {
  public:
-  SeedFilter(SeedFilterConfig config,
+  SeedFilter(const SeedFilterConfig& config,
              IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
-  SeedFilter(SeedFilterConfig config,
+  SeedFilter(const SeedFilterConfig& config,
              std::unique_ptr<const Acts::Logger> logger,
              IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
   SeedFilter(const SeedFilter<external_spacepoint_t>&) = delete;
