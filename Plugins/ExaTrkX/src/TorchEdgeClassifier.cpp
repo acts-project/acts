@@ -84,6 +84,10 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
   auto nodeFeatures = std::any_cast<torch::Tensor>(inNodeFeatures).to(device);
   auto edgeIndex = std::any_cast<torch::Tensor>(inEdgeIndex).to(device);
 
+  if (edgeIndex.numel() == 0) {
+    throw NoEdgesError{};
+  }
+
   ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
 
   std::optional<torch::Tensor> edgeFeatures;
@@ -92,9 +96,6 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
     ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
   }
   t1 = std::chrono::high_resolution_clock::now();
-  auto model = m_model->clone();
-  model.to(device);
-  t2 = std::chrono::high_resolution_clock::now();
 
   torch::Tensor output;
 
@@ -129,7 +130,7 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
         ACTS_VERBOSE("Process chunk with shape" << chunk.sizes());
         inputTensors[1] = chunk;
 
-        results.push_back(model.forward(inputTensors).toTensor());
+        results.push_back(m_model->forward(inputTensors).toTensor());
         results.back().squeeze_();
       }
 
@@ -141,9 +142,9 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
       // ACTS_VERBOSE("edge_idx\n" << edgeIndexTmp.t());
       // ACTS_VERBOSE("edge_att\n" << inputTensors[2]);
 
+      t2 = std::chrono::high_resolution_clock::now();
+      output = m_model->forward(inputTensors).toTensor().to(torch::kFloat32);
       t3 = std::chrono::high_resolution_clock::now();
-      output = model.forward(inputTensors).toTensor().to(torch::kFloat32);
-      t4 = std::chrono::high_resolution_clock::now();
       output.squeeze_();
     }
   }
@@ -169,16 +170,15 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
 
   ACTS_VERBOSE("Size after score cut: " << edgesAfterCut.size(1));
   printCudaMemInfo(logger());
-  t5 = std::chrono::high_resolution_clock::now();
+  t4 = std::chrono::high_resolution_clock::now();
 
   auto milliseconds = [](const auto& a, const auto& b) {
     return std::chrono::duration<double, std::milli>(b - a).count();
   };
   ACTS_DEBUG("Time anycast, device guard:  " << milliseconds(t0, t1));
-  ACTS_DEBUG("Time model clone, to device: " << milliseconds(t1, t2));
-  ACTS_DEBUG("Time jit::IValue creation:   " << milliseconds(t2, t3));
-  ACTS_DEBUG("Time model forward:          " << milliseconds(t3, t4));
-  ACTS_DEBUG("Time sigmoid and cut:        " << milliseconds(t4, t5));
+  ACTS_DEBUG("Time jit::IValue creation:   " << milliseconds(t1, t2));
+  ACTS_DEBUG("Time model forward:          " << milliseconds(t2, t3));
+  ACTS_DEBUG("Time sigmoid and cut:        " << milliseconds(t3, t4));
 
   return {std::move(nodeFeatures), std::move(edgesAfterCut),
           std::move(inEdgeFeatures), output.masked_select(mask)};
