@@ -45,7 +45,7 @@ class SeedFilter final {
              IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
   SeedFilter(const SeedFilter<external_spacepoint_t>&) = delete;
   SeedFilter& operator=(const SeedFilter<external_spacepoint_t>&) = delete;
-  SeedFilter(SeedFilter<external_spacepoint_t>&&) = default;
+  SeedFilter(SeedFilter<external_spacepoint_t>&&) noexcept = default;
   SeedFilter& operator=(SeedFilter<external_spacepoint_t>&&) noexcept = default;
 
   SeedFilter() = delete;
