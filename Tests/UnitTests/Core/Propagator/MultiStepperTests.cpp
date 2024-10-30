@@ -454,7 +454,7 @@ void test_multi_stepper_surface_status_update() {
       cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
   std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
   std::get<BoundVector>(cmps[1])[eBoundPhi] = std::numbers::pi;
-  std::get<BoundVector>(cmps[1])[eBoundTheta] = -std::numbers::pi / 2.;
+  std::get<BoundVector>(cmps[1])[eBoundTheta] = std::numbers::pi / 2.;
   std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
   std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
@@ -566,7 +566,7 @@ void test_component_bound_state() {
       cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
   std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
   std::get<BoundVector>(cmps[1])[eBoundPhi] = std::numbers::pi;
-  std::get<BoundVector>(cmps[1])[eBoundTheta] = -std::numbers::pi / 2.;
+  std::get<BoundVector>(cmps[1])[eBoundTheta] = std::numbers::pi / 2.;
   std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
   std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
