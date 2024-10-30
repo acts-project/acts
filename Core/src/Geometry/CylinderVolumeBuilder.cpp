@@ -171,7 +171,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   }
 
   std::string layerConfiguration = "|";
-  if (wConfig.nVolumeConfig) {
+  if (wConfig.nVolumeConfig.isPresent()) {
     // negative layers are present
     ACTS_VERBOSE("Negative layers are present: rmin, rmax | zmin, zmax = "
                  << wConfig.nVolumeConfig.toString());
@@ -185,7 +185,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     // add to the string output
     layerConfiguration += " Negative Endcap |";
   }
-  if (wConfig.cVolumeConfig) {
+  if (wConfig.cVolumeConfig.isPresent()) {
     // central layers are present
     ACTS_VERBOSE("Central layers are present:  rmin, rmax | zmin, zmax = "
                  << wConfig.cVolumeConfig.toString());
@@ -199,7 +199,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     // add to the string output
     layerConfiguration += " Barrel |";
   }
-  if (wConfig.pVolumeConfig) {
+  if (wConfig.pVolumeConfig.isPresent()) {
     // positive layers are present
     ACTS_VERBOSE("Positive layers are present: rmin, rmax | zmin, zmax = "
                  << wConfig.pVolumeConfig.toString());
@@ -226,7 +226,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                << '\n'
                << wConfig.toString());
   // now let's understand the wrapping if needed
-  if (wConfig.existingVolumeConfig) {
+  if (wConfig.existingVolumeConfig.isPresent()) {
     wConfig.wrapInsertAttach();
     ACTS_VERBOSE("Configuration after wrapping, insertion, attachment "
                  << '\n'
@@ -242,7 +242,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   auto tvHelper = m_cfg.trackingVolumeHelper;
   // the barrel is always created
   auto barrel =
-      wConfig.cVolumeConfig
+      wConfig.cVolumeConfig.isPresent()
           ? tvHelper->createTrackingVolume(
                 gctx, wConfig.cVolumeConfig.layers,
                 wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial,
@@ -258,7 +258,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       [&](VolumeConfig& centralConfig, VolumeConfig& endcapConfig,
           const std::string& endcapName) -> MutableTrackingVolumePtr {
     // No config - no volume
-    if (!endcapConfig) {
+    if (!endcapConfig.isPresent()) {
       return nullptr;
     }
     // Check for ring layout
@@ -478,7 +478,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   if (existingVolumeCp) {
     // Check if gaps are needed
     std::vector<TrackingVolumePtr> existingContainer;
-    if (wConfig.fGapVolumeConfig) {
+    if (wConfig.fGapVolumeConfig.isPresent()) {
       // create the gap volume
       auto fGap = tvHelper->createGapTrackingVolume(
           gctx, wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial,
@@ -489,7 +489,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       existingContainer.push_back(fGap);
     }
     existingContainer.push_back(existingVolumeCp);
-    if (wConfig.sGapVolumeConfig) {
+    if (wConfig.sGapVolumeConfig.isPresent()) {
       // create the gap volume
       auto sGap = tvHelper->createGapTrackingVolume(
           gctx, wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial,
