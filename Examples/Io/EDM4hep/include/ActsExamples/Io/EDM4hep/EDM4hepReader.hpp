@@ -11,11 +11,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <memory>
 #include <string>
@@ -44,12 +41,10 @@ class EDM4hepReader final : public IReader {
     std::string inputParticles = "MCParticles";
     /// Names of the sim hit collections
     std::vector<std::string> inputSimHits{};
-    /// Particles at creation
-    std::string outputParticlesInitial;
-    /// Particles at their endpoints
-    std::string outputParticlesFinal;
     /// Particles from the generator
     std::string outputParticlesGenerator;
+    /// Particles from the simulation
+    std::string outputParticlesSimulated;
 
     /// Output simulated (truth) hits collection.
     std::string outputSimHits;
@@ -111,12 +106,10 @@ class EDM4hepReader final : public IReader {
 
   Acts::PodioUtil::ROOTReader& reader();
 
-  WriteDataHandle<SimParticleContainer> m_outputParticlesInitial{
-      this, "OutputParticlesInitial"};
-  WriteDataHandle<SimParticleContainer> m_outputParticlesFinal{
-      this, "OutputParticlesFinal"};
   WriteDataHandle<SimParticleContainer> m_outputParticlesGenerator{
       this, "OutputParticlesGenerator"};
+  WriteDataHandle<SimParticleContainer> m_outputParticlesSimulated{
+      this, "OutputParticlesSimulated"};
 
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
 

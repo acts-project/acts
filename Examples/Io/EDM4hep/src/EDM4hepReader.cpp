@@ -36,12 +36,8 @@ namespace ActsExamples {
 EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
     : m_cfg(config),
       m_logger(Acts::getDefaultLogger("EDM4hepParticleReader", level)) {
-  if (m_cfg.outputParticlesInitial.empty()) {
-    throw std::invalid_argument("Missing output collection initial particles");
-  }
-
-  if (m_cfg.outputParticlesFinal.empty()) {
-    throw std::invalid_argument("Missing output collection final particles");
+  if (m_cfg.outputParticles.empty()) {
+    throw std::invalid_argument("Missing output collection particles");
   }
 
   if (m_cfg.outputParticlesGenerator.empty()) {
@@ -55,8 +51,7 @@ EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
 
   m_eventsRange = std::make_pair(0, reader().getEntries("events"));
 
-  m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
-  m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
+  m_outputParticles.initialize(m_cfg.outputParticles);
   m_outputParticlesGenerator.initialize(m_cfg.outputParticlesGenerator);
   m_outputSimHits.initialize(m_cfg.outputSimHits);
 
@@ -245,8 +240,8 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
 
   // @TODO: Order simhits by time
 
-  SimParticleContainer particlesFinal;
   SimParticleContainer particlesGenerator;
+  SimParticleContainer particlesSimulated;
   for (const auto& inParticle : mcParticleCollection) {
     auto particleIt = edm4hepParticleMap.find(inParticle.getObjectID().index);
     if (particleIt == edm4hepParticleMap.end()) {
@@ -255,11 +250,10 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
       continue;
     }
     const std::size_t index = particleIt->second;
-    const auto& particleInitial = unordered.at(index);
+    const auto& particleSimulated = unordered.at(index);
     if (!inParticle.isCreatedInSimulation()) {
-      particlesGenerator.insert(particleInitial);
+      particlesGenerator.insert(particleSimulated);
     }
-    SimParticle particleFinal = particleInitial;
 
     float time = inParticle.getTime() * Acts::UnitConstants::ns;
     for (const auto& daughter : inParticle.getDaughters()) {
@@ -269,25 +263,25 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
       }
     }
 
-    particleFinal.setPosition4(
+    particleSimulated.finalState().position4 = {
         inParticle.getEndpoint()[0] * Acts::UnitConstants::mm,
         inParticle.getEndpoint()[1] * Acts::UnitConstants::mm,
-        inParticle.getEndpoint()[2] * Acts::UnitConstants::mm, time);
+        inParticle.getEndpoint()[2] * Acts::UnitConstants::mm, time};
 
     Acts::Vector3 momentumFinal = {inParticle.getMomentumAtEndpoint()[0],
                                    inParticle.getMomentumAtEndpoint()[1],
                                    inParticle.getMomentumAtEndpoint()[2]};
-    particleFinal.setDirection(momentumFinal.normalized());
-    particleFinal.setAbsoluteMomentum(momentumFinal.norm());
+    particleSimulated.finalState().direction = momentumFinal.normalized();
+    particleSimulated.finalState().absMomentum = momentumFinal.norm();
 
     ACTS_VERBOSE("- Updated particle initial -> final, position: "
-                 << particleInitial.fourPosition().transpose() << " -> "
-                 << particleFinal.fourPosition().transpose());
+                 << particleSimulated.initialState().position4.transpose()
+                 << " -> "
+                 << particleSimulated.finalState().position4.transpose());
     ACTS_VERBOSE("                                     momentum: "
-                 << particleInitial.fourMomentum().transpose() << " -> "
-                 << particleFinal.fourMomentum().transpose());
-
-    particlesFinal.insert(particleFinal);
+                 << particleInitial.initialState().momentum().transpose()
+                 << " -> "
+                 << particleFinal.finalState().momentum().transpose());
   }
 
   // Write ordered particles container to the EventStore
@@ -416,9 +410,8 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     }
   }
 
-  m_outputParticlesInitial(ctx, std::move(particlesInitial));
-  m_outputParticlesFinal(ctx, std::move(particlesFinal));
   m_outputParticlesGenerator(ctx, std::move(particlesGenerator));
+  m_outputParticlesSimulated(ctx, std::move(particlesSimulated));
 
   m_outputSimHits(ctx, std::move(simHits));
 

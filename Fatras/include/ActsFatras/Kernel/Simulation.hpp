@@ -155,8 +155,7 @@ struct Simulation {
   /// @param magCtx is the magnetic field context to access field values
   /// @param generator is the random number generator
   /// @param inputParticles contains all particles that should be simulated
-  /// @param simulatedParticlesInitial contains initial particle states
-  /// @param simulatedParticlesFinal contains final particle states
+  /// @param simulatedParticles contains simulated particle states
   /// @param hits contains all generated hits
   /// @retval Acts::Result::Error if there is a fundamental issue
   /// @retval Acts::Result::Success with all particles that failed to simulate
@@ -191,12 +190,7 @@ struct Simulation {
       const Acts::GeometryContext &geoCtx,
       const Acts::MagneticFieldContext &magCtx, generator_t &generator,
       const input_particles_t &inputParticles,
-      output_particles_t &simulatedParticlesInitial,
-      output_particles_t &simulatedParticlesFinal, hits_t &hits) const {
-    assert(
-        (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) &&
-        "Inconsistent initial sizes of the simulated particle containers");
-
+      output_particles_t &simulatedParticles, hits_t &hits) const {
     using SingleParticleSimulationResult = Acts::Result<SimulationResult>;
 
     std::vector<FailedParticle> failedParticles;
@@ -221,10 +215,10 @@ struct Simulation {
       //         during iteration. New secondaries are added to and failed
       //         particles might be removed. To avoid issues, access must always
       //         occur via indices.
-      auto iinitial = simulatedParticlesInitial.size();
-      simulatedParticlesInitial.push_back(inputParticle);
-      for (; iinitial < simulatedParticlesInitial.size(); ++iinitial) {
-        const auto &initialParticle = simulatedParticlesInitial[iinitial];
+      std::size_t iinitial = simulatedParticles.size();
+      simulatedParticles.push_back(inputParticle);
+      for (; iinitial < simulatedParticles.size(); ++iinitial) {
+        const auto &initialParticle = simulatedParticles[iinitial];
 
         // only simulatable particles are pushed to the container and here we
         // only need to switch between charged/neutral.
@@ -238,8 +232,8 @@ struct Simulation {
 
         if (!result.ok()) {
           // remove particle from output container since it was not simulated.
-          simulatedParticlesInitial.erase(
-              std::next(simulatedParticlesInitial.begin(), iinitial));
+          simulatedParticles.erase(
+              std::next(simulatedParticles.begin(), iinitial));
           // record the particle as failed
           failedParticles.push_back({initialParticle, result.error()});
           continue;
@@ -248,20 +242,15 @@ struct Simulation {
         assert(result->particle.particleId() == initialParticle.particleId() &&
                "Particle id must not change during simulation");
 
-        copyOutputs(result.value(), simulatedParticlesInitial,
-                    simulatedParticlesFinal, hits);
+        copyOutputs(result.value(), simulatedParticles, hits, iinitial);
         // since physics processes are independent, there can be particle id
         // collisions within the generated secondaries. they can be resolved by
         // renumbering within each sub-particle generation. this must happen
         // before the particle is simulated since the particle id is used to
         // associate generated hits back to the particle.
-        renumberTailParticleIds(simulatedParticlesInitial, iinitial);
+        renumberTailParticleIds(simulatedParticles, iinitial);
       }
     }
-
-    assert(
-        (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) &&
-        "Inconsistent final sizes of the simulated particle containers");
 
     // the overall function call succeeded, i.e. no fatal errors occurred.
     // yet, there might have been some particle for which the propagation
@@ -285,19 +274,23 @@ struct Simulation {
   /// @tparam particles_t is a SequenceContainer for particles
   /// @tparam hits_t is a SequenceContainer for hits
   template <typename particles_t, typename hits_t>
-  void copyOutputs(const SimulationResult &result,
-                   particles_t &particlesInitial, particles_t &particlesFinal,
-                   hits_t &hits) const {
-    // initial particle state was already pushed to the container before
-    // store final particle state at the end of the simulation
-    particlesFinal.push_back(result.particle);
+  void copyOutputs(const SimulationResult &result, particles_t &particles,
+                   hits_t &hits, std::size_t iinitial) const {
+    // store final state
+    particles[iinitial].finalState() = result.particle.currentState();
+
+    // store hits
     std::copy(result.hits.begin(), result.hits.end(), std::back_inserter(hits));
 
     // move generated secondaries that should be simulated to the output
-    std::copy_if(
-        result.generatedParticles.begin(), result.generatedParticles.end(),
-        std::back_inserter(particlesInitial),
-        [this](const Particle &particle) { return selectParticle(particle); });
+    for (const auto &generatedParticle : result.generatedParticles) {
+      if (!selectParticle(generatedParticle)) {
+        continue;
+      }
+
+      auto &newParticle = particles.emplace_back(generatedParticle);
+      newParticle.storeInitialState();
+    }
   }
 
   /// Renumber particle ids in the tail of the container.

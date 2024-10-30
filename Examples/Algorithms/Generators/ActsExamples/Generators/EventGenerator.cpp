@@ -84,6 +84,7 @@ ActsExamples::ProcessCode ActsExamples::EventGenerator::read(
       };
       for (auto& vertexParticle : newParticles) {
         updateParticleInPlace(vertexParticle);
+        vertexParticle.storeInitialState();
       }
 
       auto updateVertexInPlace = [&](SimVertex& vertex) {

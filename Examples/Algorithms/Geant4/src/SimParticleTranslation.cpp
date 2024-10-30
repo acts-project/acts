@@ -10,16 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <ostream>
-#include <string>
 #include <unordered_map>
 #include <utility>
 
@@ -33,18 +29,16 @@
 #include <G4UnitsTable.hh>
 
 namespace ActsExamples {
-class WhiteBoard;
-}  // namespace ActsExamples
 
-ActsExamples::SimParticleTranslation::SimParticleTranslation(
+SimParticleTranslation::SimParticleTranslation(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4VUserPrimaryGeneratorAction(),
       m_cfg(cfg),
       m_logger(std::move(logger)) {}
 
-ActsExamples::SimParticleTranslation::~SimParticleTranslation() = default;
+SimParticleTranslation::~SimParticleTranslation() = default;
 
-void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
+void SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   anEvent->SetEventID(m_eventNr++);
   unsigned int eventID = anEvent->GetEventID();
 
@@ -150,7 +144,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     // Add the primary to the vertex
     pVertex->SetPrimary(particle);
 
-    eventStore().particlesInitial.insert(part);
+    eventStore().particlesSimulated.insert(part);
     eventStore().trackIdMapping[particle->GetTrackID()] = part.particleId();
 
     ++pCounter;
@@ -162,3 +156,5 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
                            << lastVertex->transpose());
   }
 }
+
+}  // namespace ActsExamples

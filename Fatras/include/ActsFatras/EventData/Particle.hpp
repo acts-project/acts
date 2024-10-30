@@ -36,6 +36,49 @@ class Particle {
   using Vector3 = Acts::ActsVector<3>;
   using Vector4 = Acts::ActsVector<4>;
 
+  struct State {
+    // kinematics, i.e. things that change over the particle lifetime.
+    Vector4 position4 = Vector4::Zero();
+    Vector3 direction = Vector3::Zero();
+    Scalar absMomentum = Scalar{0};
+    /// proper time in the particle rest frame
+    Scalar properTime = Scalar{0};
+    // accumulated material
+    Scalar pathInX0 = Scalar{0};
+    Scalar pathInL0 = Scalar{0};
+    /// number of hits
+    std::uint32_t numberOfHits = 0;
+
+    /// Three-position, i.e. spatial coordinates without the time.
+    auto position() const { return position4.segment<3>(Acts::ePos0); }
+    /// Time coordinate.
+    Scalar time() const { return position4[Acts::eTime]; }
+    /// Energy-momentum four-vector.
+    Vector4 fourMomentum(const Particle &particle) const {
+      Vector4 mom4;
+      // stored direction is always normalized
+      mom4[Acts::eMom0] = absMomentum * direction[Acts::ePos0];
+      mom4[Acts::eMom1] = absMomentum * direction[Acts::ePos1];
+      mom4[Acts::eMom2] = absMomentum * direction[Acts::ePos2];
+      mom4[Acts::eEnergy] = energy(particle);
+      return mom4;
+    }
+    /// Polar angle.
+    Scalar theta() const { return Acts::VectorHelpers::theta(direction); }
+    /// Azimuthal angle.
+    Scalar phi() const { return Acts::VectorHelpers::phi(direction); }
+    /// Absolute momentum in the x-y plane.
+    Scalar transverseMomentum() const {
+      return absMomentum * direction.segment<2>(Acts::eMom0).norm();
+    }
+    /// Absolute momentum.
+    Vector3 momentum() const { return absMomentum * direction; }
+    /// Total energy, i.e. norm of the four-momentum.
+    Scalar energy(const Particle &particle) const {
+      return Acts::fastHypot(particle.mass(), absMomentum);
+    }
+  };
+
   /// Construct a default particle with invalid identity.
   Particle() = default;
   /// Construct a particle at rest with explicit mass and charge.
@@ -100,40 +143,40 @@ class Particle {
   }
   /// Set the space-time position four-vector.
   Particle &setPosition4(const Vector4 &pos4) {
-    m_position4 = pos4;
+    m_currentState.position4 = pos4;
     return *this;
   }
   /// Set the space-time position four-vector from three-position and time.
   Particle &setPosition4(const Vector3 &position, Scalar time) {
-    m_position4.segment<3>(Acts::ePos0) = position;
-    m_position4[Acts::eTime] = time;
+    m_currentState.position4.segment<3>(Acts::ePos0) = position;
+    m_currentState.position4[Acts::eTime] = time;
     return *this;
   }
   /// Set the space-time position four-vector from scalar components.
   Particle &setPosition4(Scalar x, Scalar y, Scalar z, Scalar time) {
-    m_position4[Acts::ePos0] = x;
-    m_position4[Acts::ePos1] = y;
-    m_position4[Acts::ePos2] = z;
-    m_position4[Acts::eTime] = time;
+    m_currentState.position4[Acts::ePos0] = x;
+    m_currentState.position4[Acts::ePos1] = y;
+    m_currentState.position4[Acts::ePos2] = z;
+    m_currentState.position4[Acts::eTime] = time;
     return *this;
   }
   /// Set the direction three-vector
   Particle &setDirection(const Vector3 &direction) {
-    m_direction = direction;
-    m_direction.normalize();
+    m_currentState.direction = direction;
+    m_currentState.direction.normalize();
     return *this;
   }
   /// Set the direction three-vector from scalar components.
   Particle &setDirection(Scalar dx, Scalar dy, Scalar dz) {
-    m_direction[Acts::ePos0] = dx;
-    m_direction[Acts::ePos1] = dy;
-    m_direction[Acts::ePos2] = dz;
-    m_direction.normalize();
+    m_currentState.direction[Acts::ePos0] = dx;
+    m_currentState.direction[Acts::ePos1] = dy;
+    m_currentState.direction[Acts::ePos2] = dz;
+    m_currentState.direction.normalize();
     return *this;
   }
   /// Set the absolute momentum.
   Particle &setAbsoluteMomentum(Scalar absMomentum) {
-    m_absMomentum = absMomentum;
+    m_currentState.absMomentum = absMomentum;
     return *this;
   }
 
@@ -143,11 +186,13 @@ class Particle {
   /// would result in an unphysical value, the particle is put to rest, i.e.
   /// its absolute momentum is set to zero.
   Particle &correctEnergy(Scalar delta) {
-    const auto newEnergy = std::hypot(m_mass, m_absMomentum) + delta;
+    const auto newEnergy =
+        Acts::fastHypot(m_mass, m_currentState.absMomentum) + delta;
     if (newEnergy <= m_mass) {
-      m_absMomentum = Scalar{0};
+      m_currentState.absMomentum = Scalar{0};
     } else {
-      m_absMomentum = std::sqrt(newEnergy * newEnergy - m_mass * m_mass);
+      m_currentState.absMomentum =
+          std::sqrt(newEnergy * newEnergy - m_mass * m_mass);
     }
     return *this;
   }
@@ -179,40 +224,38 @@ class Particle {
   }
 
   /// Space-time position four-vector.
-  constexpr const Vector4 &fourPosition() const { return m_position4; }
-  /// Three-position, i.e. spatial coordinates without the time.
-  auto position() const { return m_position4.segment<3>(Acts::ePos0); }
-  /// Time coordinate.
-  Scalar time() const { return m_position4[Acts::eTime]; }
-  /// Energy-momentum four-vector.
-  Vector4 fourMomentum() const {
-    Vector4 mom4;
-    // stored direction is always normalized
-    mom4[Acts::eMom0] = m_absMomentum * m_direction[Acts::ePos0];
-    mom4[Acts::eMom1] = m_absMomentum * m_direction[Acts::ePos1];
-    mom4[Acts::eMom2] = m_absMomentum * m_direction[Acts::ePos2];
-    mom4[Acts::eEnergy] = energy();
-    return mom4;
+  constexpr const Vector4 &fourPosition() const {
+    return m_currentState.position4;
   }
+  /// Three-position, i.e. spatial coordinates without the time.
+  auto position() const { return m_currentState.position(); }
+  /// Time coordinate.
+  Scalar time() const { return m_currentState.time(); }
+  /// Energy-momentum four-vector.
+  Vector4 fourMomentum() const { return m_currentState.fourMomentum(*this); }
   /// Unit three-direction, i.e. the normalized momentum three-vector.
-  const Vector3 &direction() const { return m_direction; }
+  const Vector3 &direction() const { return m_currentState.direction; }
   /// Polar angle.
-  Scalar theta() const { return Acts::VectorHelpers::theta(direction()); }
+  Scalar theta() const { return m_currentState.theta(); }
   /// Azimuthal angle.
-  Scalar phi() const { return Acts::VectorHelpers::phi(direction()); }
+  Scalar phi() const { return m_currentState.phi(); }
   /// Absolute momentum in the x-y plane.
   Scalar transverseMomentum() const {
-    return m_absMomentum * m_direction.segment<2>(Acts::eMom0).norm();
+    return m_currentState.transverseMomentum();
   }
   /// Absolute momentum.
-  constexpr Scalar absoluteMomentum() const { return m_absMomentum; }
+  constexpr Scalar absoluteMomentum() const {
+    return m_currentState.absMomentum;
+  }
   /// Absolute momentum.
-  Vector3 momentum() const { return absoluteMomentum() * direction(); }
+  Vector3 momentum() const { return m_currentState.momentum(); }
   /// Total energy, i.e. norm of the four-momentum.
-  Scalar energy() const { return std::hypot(m_mass, m_absMomentum); }
+  Scalar energy() const { return m_currentState.energy(*this); }
 
   /// Check if the particle is alive, i.e. is not at rest.
-  constexpr bool isAlive() const { return Scalar{0} < m_absMomentum; }
+  constexpr bool isAlive() const {
+    return Scalar{0} < m_currentState.absMomentum;
+  }
 
   constexpr bool isSecondary() const {
     return particleId().vertexSecondary() != 0 ||
@@ -225,25 +268,25 @@ class Particle {
   ///
   /// @param properTime passed proper time in the rest frame
   constexpr Particle &setProperTime(Scalar properTime) {
-    m_properTime = properTime;
+    m_currentState.properTime = properTime;
     return *this;
   }
   /// Proper time in the particle rest frame.
-  constexpr Scalar properTime() const { return m_properTime; }
+  constexpr Scalar properTime() const { return m_currentState.properTime; }
 
   /// Set the accumulated material measured in radiation/interaction lengths.
   ///
   /// @param pathInX0 accumulated material measured in radiation lengths
   /// @param pathInL0 accumulated material measured in interaction lengths
   constexpr Particle &setMaterialPassed(Scalar pathInX0, Scalar pathInL0) {
-    m_pathInX0 = pathInX0;
-    m_pathInL0 = pathInL0;
+    m_currentState.pathInX0 = pathInX0;
+    m_currentState.pathInL0 = pathInL0;
     return *this;
   }
   /// Accumulated path within material measured in radiation lengths.
-  constexpr Scalar pathInX0() const { return m_pathInX0; }
+  constexpr Scalar pathInX0() const { return m_currentState.pathInX0; }
   /// Accumulated path within material measured in interaction lengths.
-  constexpr Scalar pathInL0() const { return m_pathInL0; }
+  constexpr Scalar pathInL0() const { return m_currentState.pathInL0; }
 
   /// Set the reference surface.
   ///
@@ -286,12 +329,14 @@ class Particle {
   ///
   /// @param nHits number of hits
   constexpr Particle &setNumberOfHits(std::uint32_t nHits) {
-    m_numberOfHits = nHits;
+    m_currentState.numberOfHits = nHits;
     return *this;
   }
 
   /// Number of hits.
-  constexpr std::uint32_t numberOfHits() const { return m_numberOfHits; }
+  constexpr std::uint32_t numberOfHits() const {
+    return m_currentState.numberOfHits;
+  }
 
   /// Set the outcome of particle.
   ///
@@ -304,6 +349,34 @@ class Particle {
   /// Particle outcome.
   constexpr ParticleOutcome outcome() const { return m_outcome; }
 
+  /// Get the initial state of the particle.
+  constexpr const State &initialState() const { return m_initialState; }
+  /// Get the current state of the particle.
+  constexpr const State &currentState() const { return m_currentState; }
+  /// Get the final state of the particle.
+  constexpr const State &finalState() const { return m_finalState; }
+
+  /// Get mutable access to the initial state of the particle.
+  constexpr State &initialState() { return m_initialState; }
+  /// Get mutable access to the current state of the particle.
+  constexpr State &currentState() { return m_currentState; }
+  /// Get mutable access to the final state of the particle.
+  constexpr State &finalState() { return m_finalState; }
+
+  /// Store the current state as the initial state.
+  constexpr void storeInitialState() { m_initialState = m_currentState; }
+  /// Store the current state as the final state.
+  constexpr void storeFinalState() { m_finalState = m_currentState; }
+
+  constexpr double energyLoss() const {
+    return m_initialState.energy(*this) - m_finalState.energy(*this);
+  }
+  constexpr double finalPathInX0() const { return m_finalState.pathInX0; }
+  constexpr double finalPathInL0() const { return m_finalState.pathInL0; }
+  constexpr std::uint32_t finalNumberOfHits() const {
+    return m_finalState.numberOfHits;
+  }
+
  private:
   // identity, i.e. things that do not change over the particle lifetime.
   /// Particle identifier within the event.
@@ -315,21 +388,18 @@ class Particle {
   // Particle charge and mass.
   Scalar m_charge = Scalar{0};
   Scalar m_mass = Scalar{0};
-  // kinematics, i.e. things that change over the particle lifetime.
-  Vector3 m_direction = Vector3::UnitZ();
-  Scalar m_absMomentum = Scalar{0};
-  Vector4 m_position4 = Vector4::Zero();
-  /// proper time in the particle rest frame
-  Scalar m_properTime = Scalar{0};
-  // accumulated material
-  Scalar m_pathInX0 = Scalar{0};
-  Scalar m_pathInL0 = Scalar{0};
-  /// number of hits
-  std::uint32_t m_numberOfHits = 0;
+
+  State m_initialState{};
+  State m_currentState{};
+  State m_finalState{};
+
+  // additional initial information
   /// reference surface
   const Acts::Surface *m_referenceSurface{nullptr};
+
+  // additional final information
   /// outcome
-  ParticleOutcome m_outcome = ParticleOutcome::Alive;
+  ParticleOutcome m_outcome = ParticleOutcome::Unknown;
 };
 
 std::ostream &operator<<(std::ostream &os, const Particle &particle);

@@ -355,8 +355,6 @@ def addParticleSelection(
     config: ParticleSelectorConfig,
     inputParticles: str,
     outputParticles: str,
-    inputParticlesFinal: Optional[str] = None,
-    outputParticlesFinal: Optional[str] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """
@@ -372,18 +370,12 @@ def addParticleSelection(
         the identifier for the input particles to be selected
     outputParticles: str
         the identifier for the final selected particle collection
-    inputParticlesFinal: str, None
-        the identifier for the input final particles to be selected
-    outputParticlesFinal: str, None
-        the identifier for the final selected final particle collection
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     s.addAlgorithm(
         acts.examples.ParticleSelector(
             **acts.examples.defaultKWArgs(
-                inputParticlesFinal=inputParticlesFinal,
-                outputParticlesFinal=outputParticlesFinal,
                 rhoMin=config.rho[0],
                 rhoMax=config.rho[1],
                 absZMin=config.absZ[0],
@@ -423,8 +415,7 @@ def addFatras(
     enableInteractions: bool = True,
     pMin: Optional[float] = None,
     inputParticles: str = "particles_input",
-    outputParticlesInitial: str = "particles_initial",
-    outputParticlesFinal: str = "particles_final",
+    outputParticles: str = "particles_simulated",
     outputSimHits: str = "simhits",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -445,7 +436,7 @@ def addFatras(
         Default of no selections specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSelector.hpp
         Specify preSelectParticles=None to inhibit ParticleSelector altogether.
     postSelectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
-        Similar to preSelectParticles but applied after simulation to "particles_initial", therefore also filters secondaries.
+        Similar to preSelectParticles but applied after simulation to "particles_simulated", therefore also filters secondaries.
     enableInteractions : Enable the particle interactions in the simulation
     pMin : Minimum monmentum of particles simulated by FATRAS
     outputDirCsv : Path|str, path, None
@@ -458,24 +449,23 @@ def addFatras(
 
     # Selector
     if preSelectParticles is not None:
-        particlesSelected = "fatras_particles_preselected"
+        particlesPreSelected = "fatras_particles_preselected"
         addParticleSelection(
             s,
             preSelectParticles,
             inputParticles=inputParticles,
-            outputParticles=particlesSelected,
+            outputParticles=particlesPreSelected,
         )
-        s.addWhiteboardAlias("particles_selected", particlesSelected)
+        s.addWhiteboardAlias("particles_selected", particlesPreSelected)
     else:
-        particlesSelected = inputParticles
+        particlesPreSelected = inputParticles
 
     # Simulation
     alg = acts.examples.FatrasSimulation(
         **acts.examples.defaultKWArgs(
             level=customLogLevel(),
-            inputParticles=particlesSelected,
-            outputParticlesInitial=outputParticlesInitial,
-            outputParticlesFinal=outputParticlesFinal,
+            inputParticles=particlesPreSelected,
+            outputParticles=outputParticles,
             outputSimHits=outputSimHits,
             randomNumbers=rnd,
             trackingGeometry=trackingGeometry,
@@ -494,30 +484,24 @@ def addFatras(
 
     # Selector
     if postSelectParticles is not None:
-        particlesInitial = "fatras_particles_initial_selected"
-        particlesFinal = "fatras_particles_final_selected"
+        particlesPostSelected = "fatras_particles_selected"
         addParticleSelection(
             s,
             postSelectParticles,
-            inputParticles=outputParticlesInitial,
-            inputParticlesFinal=outputParticlesFinal,
-            outputParticles=particlesInitial,
-            outputParticlesFinal=particlesFinal,
+            inputParticles=particlesSimulated,
+            outputParticles=particlesPostSelected,
         )
-        s.addWhiteboardAlias("particles_selected", particlesInitial)
+        s.addWhiteboardAlias("particles_selected", particlesPostSelected)
     else:
-        particlesInitial = outputParticlesInitial
-        particlesFinal = outputParticlesFinal
+        particlesSimulated = particlesPostSelected
 
-    # Only add alias for 'particles_initial' as this is the one we use most
-    s.addWhiteboardAlias("particles", outputParticlesInitial)
+    s.addWhiteboardAlias("particles", particlesPostSelected)
 
     # Output
     addSimWriters(
         s,
         alg.config.outputSimHits,
-        particlesInitial,
-        particlesFinal,
+        particlesPostSelected,
         outputDirCsv,
         outputDirRoot,
         logLevel,
@@ -529,8 +513,7 @@ def addFatras(
 def addSimWriters(
     s: acts.examples.Sequencer,
     simHits: Optional[str] = None,
-    particlesInitial="particles_initial",
-    particlesFinal="particles_final",
+    particlesSimulated="particles_simulated",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -545,16 +528,8 @@ def addSimWriters(
             acts.examples.CsvParticleWriter(
                 level=customLogLevel(),
                 outputDir=str(outputDirCsv),
-                inputParticles=particlesInitial,
-                outputStem="particles_initial",
-            )
-        )
-        s.addWriter(
-            acts.examples.CsvParticleWriter(
-                level=customLogLevel(),
-                outputDir=str(outputDirCsv),
-                inputParticles=particlesFinal,
-                outputStem="particles_final",
+                inputParticles=particlesSimulated,
+                outputStem="particles_simulated",
             )
         )
         s.addWriter(
@@ -573,9 +548,8 @@ def addSimWriters(
         s.addWriter(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
-                inputParticles=particlesInitial,
-                inputParticlesFinal=particlesFinal,
-                filePath=str(outputDirRoot / "particles_simulation.root"),
+                inputParticles=particlesSimulated,
+                filePath=str(outputDirRoot / "particles_simulated.root"),
             )
         )
         s.addWriter(
@@ -635,8 +609,7 @@ def addGeant4(
     volumeMappings: List[str] = [],
     materialMappings: List[str] = ["Silicon"],
     inputParticles: str = "particles_input",
-    outputParticlesInitial: str = "particles_initial",
-    outputParticlesFinal: str = "particles_final",
+    outputParticles: str = "particles_simulated",
     outputSimHits: str = "simhits",
     preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
@@ -685,16 +658,16 @@ def addGeant4(
 
     # Selector
     if preSelectParticles is not None:
-        particlesSelected = "geant4_particles_preselected"
+        particlesPreSelected = "geant4_particles_preselected"
         addParticleSelection(
             s,
             preSelectParticles,
             inputParticles=inputParticles,
-            outputParticles=particlesSelected,
+            outputParticles=particlesPreSelected,
         )
-        s.addWhiteboardAlias("particles_selected", particlesSelected)
+        s.addWhiteboardAlias("particles_selected", particlesPreSelected)
     else:
-        particlesSelected = inputParticles
+        particlesPreSelected = inputParticles
 
     if g4DetectorConstructionFactory is None:
         if detector is None:
@@ -718,9 +691,8 @@ def addGeant4(
         geant4Handle=__geant4Handle,
         detectorConstructionFactory=g4DetectorConstructionFactory,
         randomNumbers=rnd,
-        inputParticles=particlesSelected,
-        outputParticlesInitial=outputParticlesInitial,
-        outputParticlesFinal=outputParticlesFinal,
+        inputParticles=particlesPreSelected,
+        outputParticles=outputParticles,
         outputSimHits=outputSimHits,
         sensitiveSurfaceMapper=sensitiveMapper,
         magneticField=field,
@@ -739,30 +711,24 @@ def addGeant4(
 
     # Selector
     if postSelectParticles is not None:
-        particlesInitial = "geant4_particles_initial_postselected"
-        particlesFinal = "geant4_particles_final_postselected"
+        particlesPostSelected = "geant4_particles_initial_postselected"
         addParticleSelection(
             s,
             postSelectParticles,
-            inputParticles=outputParticlesInitial,
-            inputParticlesFinal=outputParticlesFinal,
-            outputParticles=particlesInitial,
-            outputParticlesFinal=particlesFinal,
+            inputParticles=outputParticles,
+            outputParticles=particlesPostSelected,
         )
-        s.addWhiteboardAlias("particles_selected", particlesInitial)
+        s.addWhiteboardAlias("particles_selected", particlesPostSelected)
     else:
-        particlesInitial = outputParticlesInitial
-        particlesFinal = outputParticlesFinal
+        particlesPostSelected = outputParticles
 
-    # Only add alias for 'particles_initial' as this is the one we use most
-    s.addWhiteboardAlias("particles", outputParticlesInitial)
+    s.addWhiteboardAlias("particles", particlesPostSelected)
 
     # Output
     addSimWriters(
         s,
         alg.config.outputSimHits,
-        particlesInitial,
-        particlesFinal,
+        particlesPostSelected,
         outputDirCsv,
         outputDirRoot,
         logLevel=logLevel,

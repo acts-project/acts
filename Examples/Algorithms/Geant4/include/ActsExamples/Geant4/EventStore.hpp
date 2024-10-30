@@ -14,9 +14,10 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsFatras/EventData/ParticleOutcome.hpp"
 
-#include <set>
 #include <unordered_map>
 #include <vector>
+
+#include <boost/container/flat_set.hpp>
 
 #include "G4Types.hh"
 
@@ -30,14 +31,14 @@ struct EventStore {
   /// The current event store
   WhiteBoard* store = nullptr;
 
-  /// Use a std::set here because it allows for fast insertion and ensures
-  /// uniqueness. Thus particle collisions are detected early.
+  /// Use a boost::container::flat_set here because it allows for fast insertion
+  /// and ensures uniqueness. Thus particle collisions are detected early.
   using ParticleContainer =
-      std::set<ActsFatras::Particle, ActsExamples::detail::CompareParticleId>;
+      boost::container::flat_set<ActsFatras::Particle,
+                                 ActsExamples::detail::CompareParticleId>;
 
-  /// Initial and final particle collections
-  ParticleContainer particlesInitial;
-  ParticleContainer particlesFinal;
+  /// Simulated particle collections
+  ParticleContainer particlesSimulated;
 
   /// The hits in sensitive detectors
   SimHitContainer::sequence_type hits;

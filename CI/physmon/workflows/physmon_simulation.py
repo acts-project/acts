@@ -73,8 +73,7 @@ with tempfile.TemporaryDirectory() as temp:
         preSelectParticles=None,
         postSelectParticles=ParticleSelectorConfig(removeSecondaries=True),
         inputParticles="particles_input",
-        outputParticlesInitial="particles_initial_fatras",
-        outputParticlesFinal="particles_final_fatras",
+        outputParticles="particles_simulated_fatras",
         outputSimHits="simhits_fatras",
         outputDirRoot=tp / "fatras",
     )
@@ -91,8 +90,7 @@ with tempfile.TemporaryDirectory() as temp:
         killAfterTime=25 * u.ns,
         killSecondaries=True,
         inputParticles="particles_input",
-        outputParticlesInitial="particles_initial_geant4",
-        outputParticlesFinal="particles_final_geant4",
+        outputParticles="particles_simulated_geant4",
         outputSimHits="simhits_geant4",
         outputDirRoot=tp / "geant4",
     )

@@ -17,6 +17,7 @@ namespace ActsFatras {
 ///
 /// Encodes the outcome of the particle after the simulation
 enum class ParticleOutcome : std::uint32_t {
+  Unknown = 5,
   Alive = 0,
   KilledInteraction = 1,
   KilledVolumeExit = 2,

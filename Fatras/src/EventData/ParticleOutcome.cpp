@@ -15,6 +15,8 @@ namespace ActsFatras {
 
 std::ostream &operator<<(std::ostream &os, ParticleOutcome outcome) {
   switch (outcome) {
+    case ActsFatras::ParticleOutcome::Unknown:
+      return (os << "Unknown");
     case ActsFatras::ParticleOutcome::Alive:
       return (os << "Alive");
     case ActsFatras::ParticleOutcome::KilledInteraction:

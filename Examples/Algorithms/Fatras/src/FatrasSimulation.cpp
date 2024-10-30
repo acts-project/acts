@@ -8,8 +8,6 @@
 
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 
-#include "Acts/Definitions/Direction.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -24,23 +22,16 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
 #include "ActsFatras/Kernel/Simulation.hpp"
 #include "ActsFatras/Physics/Decay/NoDecay.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/PhotonConversion.hpp"
-#include "ActsFatras/Physics/NuclearInteraction/NuclearInteractionParameters.hpp"
 #include "ActsFatras/Physics/StandardInteractions.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
-#include <algorithm>
-#include <array>
-#include <map>
 #include <ostream>
 #include <stdexcept>
-#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -74,7 +65,6 @@ struct ActsExamples::detail::FatrasSimulation {
   virtual Acts::Result<std::vector<ActsFatras::FailedParticle>> simulate(
       const Acts::GeometryContext &, const Acts::MagneticFieldContext &,
       ActsExamples::RandomEngine &, const ActsExamples::SimParticleContainer &,
-      ActsExamples::SimParticleContainer::sequence_type &,
       ActsExamples::SimParticleContainer::sequence_type &,
       ActsExamples::SimHitContainer::sequence_type &) const = 0;
 };
@@ -173,14 +163,10 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
       const Acts::GeometryContext &geoCtx,
       const Acts::MagneticFieldContext &magCtx, ActsExamples::RandomEngine &rng,
       const ActsExamples::SimParticleContainer &inputParticles,
-      ActsExamples::SimParticleContainer::sequence_type
-          &simulatedParticlesInitial,
-      ActsExamples::SimParticleContainer::sequence_type
-          &simulatedParticlesFinal,
+      ActsExamples::SimParticleContainer::sequence_type &simulatedParticles,
       ActsExamples::SimHitContainer::sequence_type &simHits) const final {
     return simulation.simulate(geoCtx, magCtx, rng, inputParticles,
-                               simulatedParticlesInitial,
-                               simulatedParticlesFinal, simHits);
+                               simulatedParticles, simHits);
   }
 };
 
@@ -212,8 +198,7 @@ ActsExamples::FatrasSimulation::FatrasSimulation(Config cfg,
   m_sim = std::make_unique<FatrasSimulationT>(m_cfg, lvl);
 
   m_inputParticles.initialize(m_cfg.inputParticles);
-  m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
-  m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
+  m_outputParticles.initialize(m_cfg.outputParticles);
   m_outputSimHits.initialize(m_cfg.outputSimHits);
 }
 
@@ -228,20 +213,18 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
   ACTS_DEBUG(inputParticles.size() << " input particles");
 
   // prepare output containers
-  SimParticleContainer::sequence_type particlesInitialUnordered;
-  SimParticleContainer::sequence_type particlesFinalUnordered;
+  SimParticleContainer::sequence_type outputParticlesUnordered;
   SimHitContainer::sequence_type simHitsUnordered;
   // reserve appropriate resources
-  particlesInitialUnordered.reserve(inputParticles.size());
-  particlesFinalUnordered.reserve(inputParticles.size());
+  outputParticlesUnordered.reserve(inputParticles.size());
   simHitsUnordered.reserve(inputParticles.size() *
                            m_cfg.averageHitsPerParticle);
 
   // run the simulation w/ a local random generator
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
-  auto ret = m_sim->simulate(ctx.geoContext, ctx.magFieldContext, rng,
-                             inputParticles, particlesInitialUnordered,
-                             particlesFinalUnordered, simHitsUnordered);
+  auto ret =
+      m_sim->simulate(ctx.geoContext, ctx.magFieldContext, rng, inputParticles,
+                      outputParticlesUnordered, simHitsUnordered);
   // fatal error leads to panic
   if (!ret.ok()) {
     ACTS_FATAL("event " << ctx.eventNumber << " simulation failed with error "
@@ -257,36 +240,26 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
                         << ": " << failed.error.message());
   }
 
-  ACTS_DEBUG(particlesInitialUnordered.size()
-             << " simulated particles (initial state)");
-  ACTS_DEBUG(particlesFinalUnordered.size()
-             << " simulated particles (final state)");
+  ACTS_DEBUG(outputParticlesUnordered.size() << " simulated particles");
   ACTS_DEBUG(simHitsUnordered.size() << " simulated hits");
 
   // order output containers
 #if BOOST_VERSION >= 107800
-  SimParticleContainer particlesInitial(particlesInitialUnordered.begin(),
-                                        particlesInitialUnordered.end());
-  SimParticleContainer particlesFinal(particlesFinalUnordered.begin(),
-                                      particlesFinalUnordered.end());
+  SimParticleContainer outputParticles(outputParticlesUnordered.begin(),
+                                       outputParticlesUnordered.end());
   SimHitContainer simHits(simHitsUnordered.begin(), simHitsUnordered.end());
 #else
   // working around a nasty boost bug
   // https://github.com/boostorg/container/issues/244
 
-  SimParticleContainer particlesInitial;
-  SimParticleContainer particlesFinal;
+  SimParticleContainer outputParticles;
   SimHitContainer simHits;
 
-  particlesInitial.reserve(particlesInitialUnordered.size());
-  particlesFinal.reserve(particlesFinalUnordered.size());
+  outputParticles.reserve(outputParticlesUnordered.size());
   simHits.reserve(simHitsUnordered.size());
 
-  for (const auto &p : particlesInitialUnordered) {
-    particlesInitial.insert(p);
-  }
-  for (const auto &p : particlesFinalUnordered) {
-    particlesFinal.insert(p);
+  for (const auto &p : outputParticlesUnordered) {
+    outputParticles.insert(p);
   }
   for (const auto &h : simHitsUnordered) {
     simHits.insert(h);
@@ -294,8 +267,7 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
 #endif
 
   // store ordered output containers
-  m_outputParticlesInitial(ctx, std::move(particlesInitial));
-  m_outputParticlesFinal(ctx, std::move(particlesFinal));
+  m_outputParticles(ctx, std::move(outputParticles));
   m_outputSimHits(ctx, std::move(simHits));
 
   return ActsExamples::ProcessCode::SUCCESS;
