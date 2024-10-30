@@ -159,7 +159,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                     .m_phiSliceWidth;  // the default sliding window along phi
 
             if (m_config.m_useEtaBinning) {
-              deltaPhi = 0.001f + m_maxCurv * std::fabs(rb2 - rb1);
+              deltaPhi = 0.001f + m_maxCurv * std::abs(rb2 - rb1);
             }
 
             unsigned int first_it = 0;
@@ -219,7 +219,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
                 float dz = z2 - z1;
                 float tau = dz / dr;
-                float ftau = std::fabs(tau);
+                float ftau = std::abs(tau);
                 if (ftau > 36.0) {
                   continue;
                 }
@@ -288,17 +288,18 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                     float tau2 = edgeStorage.at(n2_in_idx).m_p[0];
                     float tau_ratio = tau2 * uat_1 - 1.0f;
 
-                    if (std::fabs(tau_ratio) >
-                        m_config.cut_tau_ratio_max) {  // bad
-                                                       // match
+                    // bad match
+                    if (std::abs(tau_ratio) > m_config.cut_tau_ratio_max) {
                       continue;
                     }
-                    isGood = true;  // good match found
+
+                    // good match found
+                    isGood = true;
                     break;
                   }
                 }
                 if (!isGood) {
-                  continue;  // no moatch found, skip creating [n1 <- n2] edge
+                  continue;  // no match found, skip creating [n1 <- n2] edge
                 }
 
                 float curv = D * std::sqrt(L2);  // signed curvature
