@@ -69,15 +69,15 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
     // particles within the group originate from the same position and use it to
     // as the reference position for the perigee frame.
     auto perigee = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-        vtxParticles.begin()->position());
+        vtxParticles.begin()->initialState().position());
 
     for (const auto& particle : vtxParticles) {
-      const auto time = particle.time();
-      const auto phi = Acts::VectorHelpers::phi(particle.direction());
-      const auto theta = Acts::VectorHelpers::theta(particle.direction());
-      const auto pt = particle.transverseMomentum();
-      const auto p = particle.absoluteMomentum();
-      const auto qOverP = particle.qOverP();
+      const auto time = particle.initialState().time();
+      const auto phi = particle.initialState().phi();
+      const auto theta = particle.initialState().theta();
+      const auto pt = particle.initialState().transverseMomentum();
+      const auto p = particle.initialState().absoluteMomentum();
+      const auto qOverP = particle.initialState().qOverP();
       const auto particleHypothesis =
           m_cfg.particleHypothesis.value_or(particle.hypothesis());
 
@@ -111,14 +111,15 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       params[Acts::eBoundQOverP] = qOverP + sigmaQOverP * stdNormal(rng);
 
       ACTS_VERBOSE("Smearing particle (pos, time, phi, theta, q/p):");
-      ACTS_VERBOSE(" from: " << particle.position().transpose() << ", " << time
-                             << ", " << phi << ", " << theta << ", " << qOverP);
+      ACTS_VERBOSE(" from: " << particle.initialState().position().transpose()
+                             << ", " << time << ", " << phi << ", " << theta
+                             << ", " << qOverP);
       ACTS_VERBOSE("   to: " << perigee
                                     ->localToGlobal(
                                         ctx.geoContext,
                                         Acts::Vector2{params[Acts::eBoundLoc0],
                                                       params[Acts::eBoundLoc1]},
-                                        particle.direction() * p)
+                                        particle.initialState().direction() * p)
                                     .transpose()
                              << ", " << params[Acts::eBoundTime] << ", "
                              << params[Acts::eBoundPhi] << ", "

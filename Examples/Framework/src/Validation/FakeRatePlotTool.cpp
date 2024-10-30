@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Validation/FakeRatePlotTool.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
@@ -20,11 +19,13 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
-ActsExamples::FakeRatePlotTool::FakeRatePlotTool(
-    const ActsExamples::FakeRatePlotTool::Config& cfg, Acts::Logging::Level lvl)
+namespace ActsExamples {
+
+FakeRatePlotTool::FakeRatePlotTool(const FakeRatePlotTool::Config& cfg,
+                                   Acts::Logging::Level lvl)
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("FakeRatePlotTool", lvl)) {}
 
-void ActsExamples::FakeRatePlotTool::book(
+void FakeRatePlotTool::book(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache) const {
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
@@ -67,8 +68,7 @@ void ActsExamples::FakeRatePlotTool::book(
       "fakerate_vs_phi", "Tracking fake rate;#phi;Fake rate", bPhi);
 }
 
-void ActsExamples::FakeRatePlotTool::clear(
-    FakeRatePlotCache& fakeRatePlotCache) const {
+void FakeRatePlotTool::clear(FakeRatePlotCache& fakeRatePlotCache) const {
   delete fakeRatePlotCache.nReco_vs_pT;
   delete fakeRatePlotCache.nTruthMatched_vs_pT;
   delete fakeRatePlotCache.nFake_vs_pT;
@@ -80,7 +80,7 @@ void ActsExamples::FakeRatePlotTool::clear(
   delete fakeRatePlotCache.fakeRate_vs_phi;
 }
 
-void ActsExamples::FakeRatePlotTool::write(
+void FakeRatePlotTool::write(
     const FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache) const {
   ACTS_DEBUG("Write the plots to output file.");
   fakeRatePlotCache.nReco_vs_pT->Write();
@@ -94,7 +94,7 @@ void ActsExamples::FakeRatePlotTool::write(
   fakeRatePlotCache.fakeRate_vs_phi->Write();
 }
 
-void ActsExamples::FakeRatePlotTool::fill(
+void FakeRatePlotTool::fill(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache,
     const Acts::BoundTrackParameters& fittedParameters, bool status) const {
   const auto momentum = fittedParameters.momentum();
@@ -107,12 +107,14 @@ void ActsExamples::FakeRatePlotTool::fill(
   PlotHelpers::fillEff(fakeRatePlotCache.fakeRate_vs_phi, fit_phi, status);
 }
 
-void ActsExamples::FakeRatePlotTool::fill(
+void FakeRatePlotTool::fill(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache,
     const ActsFatras::Particle& truthParticle, std::size_t nTruthMatchedTracks,
     std::size_t nFakeTracks) const {
-  const auto t_eta = eta(truthParticle.direction());
-  const auto t_pT = truthParticle.transverseMomentum();
+  auto particleState = truthParticle.initialState();
+
+  const auto t_eta = particleState.eta();
+  const auto t_pT = particleState.transverseMomentum();
 
   PlotHelpers::fillHisto(fakeRatePlotCache.nReco_vs_pT, t_pT,
                          nTruthMatchedTracks + nFakeTracks);
@@ -126,3 +128,5 @@ void ActsExamples::FakeRatePlotTool::fill(
                          nTruthMatchedTracks);
   PlotHelpers::fillHisto(fakeRatePlotCache.nFake_vs_eta, t_eta, nFakeTracks);
 }
+
+}  // namespace ActsExamples

@@ -77,7 +77,9 @@ void SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   unsigned int trackId = 1;
   // Loop over the input partilces and run
   for (const auto& part : inputParticles) {
-    auto currentVertex = part.fourPosition();
+    auto partState = part.initialState();
+
+    auto currentVertex = partState.fourPosition();
     if (!lastVertex || !currentVertex.isApprox(*lastVertex)) {
       // Add the vertex to the event
       if (pVertex != nullptr) {
@@ -95,7 +97,7 @@ void SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
 
     // Add a new primary to the vertex
 
-    Acts::Vector4 mom4 = part.fourMomentum() * convertEnergy;
+    Acts::Vector4 mom4 = partState.fourMomentum() * convertEnergy;
 
     // Particle properties, may be forced to specific value
     G4int particlePdgCode = m_cfg.forcedPdgCode.value_or(part.pdg());

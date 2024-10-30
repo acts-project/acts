@@ -10,11 +10,8 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <optional>
 #include <ostream>
@@ -23,12 +20,13 @@
 #include <TH2.h>
 #include <TString.h>
 
-ActsExamples::ResPlotTool::ResPlotTool(
-    const ActsExamples::ResPlotTool::Config& cfg, Acts::Logging::Level lvl)
+namespace ActsExamples {
+
+ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
+                         Acts::Logging::Level lvl)
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("ResPlotTool", lvl)) {}
 
-void ActsExamples::ResPlotTool::book(
-    ResPlotTool::ResPlotCache& resPlotCache) const {
+void ResPlotTool::book(ResPlotTool::ResPlotCache& resPlotCache) const {
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bPull = m_cfg.varBinning.at("Pull");
@@ -101,7 +99,7 @@ void ActsExamples::ResPlotTool::book(
   }
 }
 
-void ActsExamples::ResPlotTool::clear(ResPlotCache& resPlotCache) const {
+void ResPlotTool::clear(ResPlotCache& resPlotCache) const {
   ACTS_DEBUG("Delete the hists.");
   for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
@@ -122,8 +120,7 @@ void ActsExamples::ResPlotTool::clear(ResPlotCache& resPlotCache) const {
   }
 }
 
-void ActsExamples::ResPlotTool::write(
-    const ResPlotTool::ResPlotCache& resPlotCache) const {
+void ResPlotTool::write(const ResPlotTool::ResPlotCache& resPlotCache) const {
   ACTS_DEBUG("Write the hists to output file.");
   for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
@@ -144,7 +141,7 @@ void ActsExamples::ResPlotTool::write(
   }
 }
 
-void ActsExamples::ResPlotTool::fill(
+void ResPlotTool::fill(
     ResPlotTool::ResPlotCache& resPlotCache, const Acts::GeometryContext& gctx,
     const ActsFatras::Particle& truthParticle,
     const Acts::BoundTrackParameters& fittedParamters) const {
@@ -153,6 +150,8 @@ void ActsExamples::ResPlotTool::fill(
   using Acts::VectorHelpers::perp;
   using Acts::VectorHelpers::phi;
   using Acts::VectorHelpers::theta;
+
+  auto particleState = truthParticle.initialState();
 
   // get the fitted parameter (at perigee surface) and its error
   auto trackParameter = fittedParamters.parameters();
@@ -166,11 +165,11 @@ void ActsExamples::ResPlotTool::fill(
   // get the truth perigee parameter
   auto intersection =
       pSurface
-          .intersect(gctx, truthParticle.position(), truthParticle.direction())
+          .intersect(gctx, particleState.position(), particleState.direction())
           .closest();
   if (intersection.isValid()) {
     auto lpResult = pSurface.globalToLocal(gctx, intersection.position(),
-                                           truthParticle.direction());
+                                           particleState.direction());
     assert(lpResult.ok());
 
     truthParameter[Acts::BoundIndices::eBoundLoc0] =
@@ -180,16 +179,14 @@ void ActsExamples::ResPlotTool::fill(
   } else {
     ACTS_ERROR("Cannot get the truth perigee parameter");
   }
-  truthParameter[Acts::BoundIndices::eBoundPhi] =
-      phi(truthParticle.direction());
-  truthParameter[Acts::BoundIndices::eBoundTheta] =
-      theta(truthParticle.direction());
-  truthParameter[Acts::BoundIndices::eBoundQOverP] = truthParticle.qOverP();
-  truthParameter[Acts::BoundIndices::eBoundTime] = truthParticle.time();
+  truthParameter[Acts::BoundIndices::eBoundPhi] = particleState.phi();
+  truthParameter[Acts::BoundIndices::eBoundTheta] = particleState.theta();
+  truthParameter[Acts::BoundIndices::eBoundQOverP] = particleState.qOverP();
+  truthParameter[Acts::BoundIndices::eBoundTime] = particleState.time();
 
   // get the truth eta and pT
-  const auto truthEta = eta(truthParticle.direction());
-  const auto truthPt = truthParticle.transverseMomentum();
+  const auto truthEta = particleState.eta();
+  const auto truthPt = particleState.transverseMomentum();
 
   // fill the histograms for residual and pull
   for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
@@ -224,8 +221,7 @@ void ActsExamples::ResPlotTool::fill(
 
 // get the mean and width of residual/pull in each eta/pT bin and fill them into
 // histograms
-void ActsExamples::ResPlotTool::refinement(
-    ResPlotTool::ResPlotCache& resPlotCache) const {
+void ResPlotTool::refinement(ResPlotTool::ResPlotCache& resPlotCache) const {
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
@@ -260,3 +256,5 @@ void ActsExamples::ResPlotTool::refinement(
     }
   }
 }
+
+}  // namespace ActsExamples

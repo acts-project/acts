@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
@@ -20,13 +19,14 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
-ActsExamples::DuplicationPlotTool::DuplicationPlotTool(
-    const ActsExamples::DuplicationPlotTool::Config& cfg,
-    Acts::Logging::Level lvl)
+namespace ActsExamples {
+
+DuplicationPlotTool::DuplicationPlotTool(const DuplicationPlotTool::Config& cfg,
+                                         Acts::Logging::Level lvl)
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("DuplicationPlotTool", lvl)) {}
 
-void ActsExamples::DuplicationPlotTool::book(
+void DuplicationPlotTool::book(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache) const {
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
@@ -58,7 +58,7 @@ void ActsExamples::DuplicationPlotTool::book(
       bNum);
 }
 
-void ActsExamples::DuplicationPlotTool::clear(
+void DuplicationPlotTool::clear(
     DuplicationPlotCache& duplicationPlotCache) const {
   delete duplicationPlotCache.duplicationRate_vs_pT;
   delete duplicationPlotCache.duplicationRate_vs_eta;
@@ -68,9 +68,8 @@ void ActsExamples::DuplicationPlotTool::clear(
   delete duplicationPlotCache.nDuplicated_vs_phi;
 }
 
-void ActsExamples::DuplicationPlotTool::write(
-    const DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache)
-    const {
+void DuplicationPlotTool::write(const DuplicationPlotTool::DuplicationPlotCache&
+                                    duplicationPlotCache) const {
   ACTS_DEBUG("Write the plots to output file.");
   duplicationPlotCache.duplicationRate_vs_pT->Write();
   duplicationPlotCache.duplicationRate_vs_eta->Write();
@@ -80,7 +79,7 @@ void ActsExamples::DuplicationPlotTool::write(
   duplicationPlotCache.nDuplicated_vs_phi->Write();
 }
 
-void ActsExamples::DuplicationPlotTool::fill(
+void DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
     const Acts::BoundTrackParameters& fittedParameters, bool status) const {
   const auto momentum = fittedParameters.momentum();
@@ -96,13 +95,15 @@ void ActsExamples::DuplicationPlotTool::fill(
                        status);
 }
 
-void ActsExamples::DuplicationPlotTool::fill(
+void DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
     const ActsFatras::Particle& truthParticle,
     std::size_t nDuplicatedTracks) const {
-  const auto t_phi = phi(truthParticle.direction());
-  const auto t_eta = eta(truthParticle.direction());
-  const auto t_pT = truthParticle.transverseMomentum();
+  auto particleState = truthParticle.initialState();
+
+  const auto t_phi = particleState.phi();
+  const auto t_eta = particleState.eta();
+  const auto t_pT = particleState.transverseMomentum();
 
   PlotHelpers::fillProf(duplicationPlotCache.nDuplicated_vs_pT, t_pT,
                         nDuplicatedTracks);
@@ -111,3 +112,5 @@ void ActsExamples::DuplicationPlotTool::fill(
   PlotHelpers::fillProf(duplicationPlotCache.nDuplicated_vs_phi, t_phi,
                         nDuplicatedTracks);
 }
+
+}  // namespace ActsExamples

@@ -67,16 +67,17 @@ ProcessCode ParticleSelector::execute(const AlgorithmContext& ctx) const {
   };
 
   auto isValidParticle = [&](const ActsFatras::Particle& p) {
-    const auto eta = Acts::VectorHelpers::eta(p.direction());
-    const auto phi = Acts::VectorHelpers::phi(p.direction());
-    const auto rho = Acts::VectorHelpers::perp(p.position());
+    const auto eta = p.initialState().eta();
+    const auto phi = p.initialState().phi();
+    const auto rho = Acts::VectorHelpers::perp(p.initialState().position());
     // define charge selection
     const bool validNeutral = (p.charge() == 0) && !m_cfg.removeNeutral;
     const bool validCharged = (p.charge() != 0) && !m_cfg.removeCharged;
     const bool validCharge = validNeutral || validCharged;
     const bool validSecondary = !m_cfg.removeSecondaries || !p.isSecondary();
-    const bool validMeasurementCount = within(
-        p.finalNumberOfHits(), m_cfg.measurementsMin, m_cfg.measurementsMax);
+    const bool validMeasurementCount =
+        within(p.lastState().numberOfHits(), m_cfg.measurementsMin,
+               m_cfg.measurementsMax);
 
     nInvalidCharge += static_cast<std::size_t>(!validCharge);
     nInvalidMeasurementCount +=
@@ -92,14 +93,15 @@ ProcessCode ParticleSelector::execute(const AlgorithmContext& ctx) const {
     }
 
     return validPdg && validCharge && validSecondary && validMeasurementCount &&
-           within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
+           within(p.initialState().transverseMomentum(), m_cfg.ptMin,
+                  m_cfg.ptMax) &&
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
            within(eta, m_cfg.etaMin, m_cfg.etaMax) &&
            within(phi, m_cfg.phiMin, m_cfg.phiMax) &&
-           within(std::abs(p.position()[Acts::ePos2]), m_cfg.absZMin,
-                  m_cfg.absZMax) &&
+           within(std::abs(p.initialState().position()[Acts::ePos2]),
+                  m_cfg.absZMin, m_cfg.absZMax) &&
            within(rho, m_cfg.rhoMin, m_cfg.rhoMax) &&
-           within(p.time(), m_cfg.timeMin, m_cfg.timeMax) &&
+           within(p.initialState().time(), m_cfg.timeMin, m_cfg.timeMax) &&
            within(p.mass(), m_cfg.mMin, m_cfg.mMax);
   };
 

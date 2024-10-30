@@ -60,19 +60,20 @@ ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
     return (min <= x) && (x < max);
   };
   auto isValidparticle = [&](const auto& p) {
-    const auto eta = Acts::VectorHelpers::eta(p.direction());
-    const auto phi = Acts::VectorHelpers::phi(p.direction());
-    const auto rho = Acts::VectorHelpers::perp(p.position());
+    const auto eta = p.initialState().eta();
+    const auto phi = p.initialState().phi();
+    const auto rho = Acts::VectorHelpers::perp(p.initialState().position());
     // find the corresponding hits for this particle
     const auto& hits = makeRange(particleHitsMap.equal_range(p.particleId()));
     // number of recorded hits
     std::size_t nHits = hits.size();
     return within(rho, 0., m_cfg.rhoMax) &&
-           within(p.position().z(), m_cfg.zMin, m_cfg.zMax) &&
+           within(p.initialState().position().z(), m_cfg.zMin, m_cfg.zMax) &&
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
            within(eta, m_cfg.etaMin, m_cfg.etaMax) &&
            within(phi, m_cfg.phiMin, m_cfg.phiMax) &&
-           within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
+           within(p.initialState().transverseMomentum(), m_cfg.ptMin,
+                  m_cfg.ptMax) &&
            within(nHits, m_cfg.nHitsMin, m_cfg.nHitsMax) &&
            (m_cfg.keepNeutral || (p.charge() != 0));
   };

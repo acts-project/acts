@@ -52,6 +52,8 @@ ActsFatras::Particle EDM4hepUtil::readParticle(
 
   to.setAbsoluteMomentum(momentum.norm() * 1_GeV);
 
+  to.storeInitialState();
+
   return to;
 }
 

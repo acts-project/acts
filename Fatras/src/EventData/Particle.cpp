@@ -13,18 +13,21 @@
 
 #include <ostream>
 
-ActsFatras::Particle::Particle(Barcode particleId, Acts::PdgParticle pdg)
+namespace ActsFatras {
+
+Particle::Particle(Barcode particleId, Acts::PdgParticle pdg)
     : Particle(particleId, pdg, findCharge(pdg).value_or(0),
                findMass(pdg).value_or(0)) {}
 
-std::ostream& ActsFatras::operator<<(std::ostream& os,
-                                     const ActsFatras::Particle& particle) {
+std::ostream& operator<<(std::ostream& os, const Particle& particle) {
   // compact format w/ only identity information but no kinematics
   os << "id=" << particle.particleId().value() << "(" << particle.particleId()
      << ")";
   os << "|pdg=" << particle.pdg();
   os << "|q=" << particle.charge();
   os << "|m=" << particle.mass();
-  os << "|p=" << particle.absoluteMomentum();
+  os << "|p=" << particle.lastState().absoluteMomentum();
   return os;
 }
+
+}  // namespace ActsFatras

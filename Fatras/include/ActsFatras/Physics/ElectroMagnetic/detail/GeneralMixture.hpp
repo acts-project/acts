@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Material/Interactions.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 #include <random>
 
@@ -39,6 +40,8 @@ struct GeneralMixture {
   template <typename generator_t>
   double operator()(generator_t &generator, const Acts::MaterialSlab &slab,
                     Particle &particle) const {
+    auto particleState = particle.lastState();
+
     double theta = 0.0;
 
     if (particle.absolutePdg() != Acts::PdgParticle::eElectron) {
@@ -53,7 +56,7 @@ struct GeneralMixture {
       //   beta² = (p/E)² = p²/(p² + m²) = 1/(1 + (m/p)²)
       // 1/beta² = 1 + (m/p)²
       //    beta = 1/sqrt(1 + (m/p)²)
-      double mOverP = particle.mass() / particle.absoluteMomentum();
+      double mOverP = particle.mass() / particleState.absoluteMomentum();
       double beta2Inv = 1 + mOverP * mOverP;
       double beta = 1 / std::sqrt(beta2Inv);
       double tInX0 = slab.thicknessInX0();
@@ -61,11 +64,11 @@ struct GeneralMixture {
       if (tob2 > 0.6 / std::pow(slab.material().Z(), 0.6)) {
         // Gaussian mixture or pure Gaussian
         if (tob2 > 10) {
-          scattering_params = getGaussian(beta, particle.absoluteMomentum(),
-                                          tInX0, genMixtureScalor);
+          scattering_params = getGaussian(
+              beta, particleState.absoluteMomentum(), tInX0, genMixtureScalor);
         } else {
           scattering_params =
-              getGaussmix(beta, particle.absoluteMomentum(), tInX0,
+              getGaussmix(beta, particleState.absoluteMomentum(), tInX0,
                           slab.material().Z(), genMixtureScalor);
         }
         // Simulate
@@ -73,7 +76,7 @@ struct GeneralMixture {
       } else {
         // Semigaussian mixture - get parameters
         auto scattering_params_sg =
-            getSemigauss(beta, particle.absoluteMomentum(), tInX0,
+            getSemigauss(beta, particleState.absoluteMomentum(), tInX0,
                          slab.material().Z(), genMixtureScalor);
         // Simulate
         theta = semigauss(generator, scattering_params_sg);
@@ -82,7 +85,7 @@ struct GeneralMixture {
       // for electrons we fall back to the Highland (extension)
       // return projection factor times sigma times gauss random
       const auto theta0 = Acts::computeMultipleScatteringTheta0(
-          slab, particle.absolutePdg(), particle.mass(), particle.qOverP(),
+          slab, particle.absolutePdg(), particle.mass(), particleState.qOverP(),
           particle.absoluteCharge());
       theta = std::normal_distribution<double>(0.0, theta0)(generator);
     }

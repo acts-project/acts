@@ -9,7 +9,6 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
@@ -20,10 +19,7 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
-#include <algorithm>
 #include <iomanip>
-#include <map>
-#include <stdexcept>
 
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/SimTrackerHit.h>
@@ -36,23 +32,22 @@ namespace ActsExamples {
 EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
     : m_cfg(config),
       m_logger(Acts::getDefaultLogger("EDM4hepParticleReader", level)) {
-  if (m_cfg.outputParticles.empty()) {
-    throw std::invalid_argument("Missing output collection particles");
-  }
-
   if (m_cfg.outputParticlesGenerator.empty()) {
     throw std::invalid_argument(
         "Missing output collection generator particles");
   }
-
+  if (m_cfg.outputParticlesSimulated.empty()) {
+    throw std::invalid_argument(
+        "Missing output collection simulated particles");
+  }
   if (m_cfg.outputSimHits.empty()) {
     throw std::invalid_argument("Missing output collection sim hits");
   }
 
   m_eventsRange = std::make_pair(0, reader().getEntries("events"));
 
-  m_outputParticles.initialize(m_cfg.outputParticles);
   m_outputParticlesGenerator.initialize(m_cfg.outputParticlesGenerator);
+  m_outputParticlesSimulated.initialize(m_cfg.outputParticlesSimulated);
   m_outputSimHits.initialize(m_cfg.outputSimHits);
 
   m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
@@ -107,8 +102,8 @@ std::string plabel(const SimParticle& particle) {
   using namespace Acts::UnitLiterals;
   std::stringstream ss;
   ss << particle.pdg() << "\\n(" << particle.particleId() << ")\\n"
-     << "p=" << std::setprecision(3) << particle.absoluteMomentum() / 1_GeV
-     << " GeV";
+     << "p=" << std::setprecision(3)
+     << particle.initialState().absoluteMomentum() / 1_GeV << " GeV";
   return ss.str();
 }
 
@@ -279,9 +274,11 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
                  << " -> "
                  << particleSimulated.finalState().position4.transpose());
     ACTS_VERBOSE("                                     momentum: "
-                 << particleInitial.initialState().momentum().transpose()
+                 << particleSimulated.initialState().momentum().transpose()
                  << " -> "
-                 << particleFinal.finalState().momentum().transpose());
+                 << particleSimulated.finalState().momentum().transpose());
+
+    particlesSimulated.insert(particleSimulated);
   }
 
   // Write ordered particles container to the EventStore

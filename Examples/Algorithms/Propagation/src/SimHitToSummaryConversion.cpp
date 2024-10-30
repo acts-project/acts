@@ -114,10 +114,8 @@ ActsExamples::ProcessCode ActsExamples::SimHitToSummaryConversion::execute(
   // Loop over the particles and create the propagation summaries
   for (const auto& particle : particles) {
     // Create the propagation summary
-    Acts::CurvilinearTrackParameters start(
-        particle.fourPosition(), particle.direction(),
-        particle.charge() / particle.momentum().norm(), std::nullopt,
-        particle.hypothesis());
+    Acts::CurvilinearTrackParameters start =
+        particle.initialState().curvilinearParameters();
     PropagationSummary propagationSummary(start);
     // Find the associated steps
     auto steps = trackSteps.find(particle.particleId().value());

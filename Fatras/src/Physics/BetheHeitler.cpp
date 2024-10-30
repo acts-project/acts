@@ -14,13 +14,13 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
-#include <algorithm>
 #include <cmath>
-#include <utility>
 
-ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
-    const Particle &particle, Scalar gammaE, Scalar rndPsi, Scalar rndTheta1,
-    Scalar rndTheta2, Scalar rndTheta3) const {
+namespace ActsFatras {
+
+Particle BetheHeitler::bremPhoton(const Particle &particle, Scalar gammaE,
+                                  Scalar rndPsi, Scalar rndTheta1,
+                                  Scalar rndTheta2, Scalar rndTheta3) const {
   // ------------------------------------------------------
   // simple approach
   // (a) simulate theta uniform within the opening angle of the relativistic
@@ -30,23 +30,25 @@ ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
   // later
   //      the azimutal angle
 
+  auto particleState = particle.lastState();
+
   Scalar psi = 2. * M_PI * rndPsi;
 
   // the start of the equation
   Scalar theta = 0.;
   if (uniformHertzDipoleAngle) {
     // the simplest simulation
-    theta = particle.mass() / particle.energy() * rndTheta1;
+    theta = particle.mass() / particleState.energy() * rndTheta1;
   } else {
     // ----->
-    theta = particle.mass() / particle.energy();
+    theta = particle.mass() / particleState.energy();
     // follow
     constexpr Scalar a = 0.625;  // 5/8
     Scalar u = -log(rndTheta2 * rndTheta3) / a;
     theta *= (rndTheta1 < 0.25) ? u : u / 3.;  // 9./(9.+27) = 0.25
   }
 
-  Vector3 particleDirection = particle.direction();
+  Vector3 particleDirection = particleState.direction();
   Vector3 photonDirection = particleDirection;
 
   // construct the combined rotation to the scattered direction
@@ -59,10 +61,13 @@ ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
 
   Particle photon(particle.particleId().makeDescendant(0),
                   Acts::PdgParticle::eGamma);
-  photon.setProcess(ActsFatras::ProcessType::eBremsstrahlung)
-      .setPosition4(particle.fourPosition())
+  photon.setProcess(ActsFatras::ProcessType::eBremsstrahlung);
+  photon.initialState()
+      .setPosition4(particleState.fourPosition())
       .setDirection(photonDirection)
       .setAbsoluteMomentum(gammaE)
-      .setReferenceSurface(particle.referenceSurface());
+      .setReferenceSurface(particleState.referenceSurface());
   return photon;
 }
+
+}  // namespace ActsFatras

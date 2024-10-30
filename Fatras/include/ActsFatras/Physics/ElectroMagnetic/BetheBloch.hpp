@@ -40,9 +40,11 @@ struct BetheBloch {
   std::array<Particle, 0> operator()(generator_t &generator,
                                      const Acts::MaterialSlab &slab,
                                      Particle &particle) const {
+    auto particleState = particle.lastState();
+
     // compute energy loss distribution parameters
     const float m = particle.mass();
-    const float qOverP = particle.qOverP();
+    const float qOverP = particleState.qOverP();
     const float absQ = particle.absoluteCharge();
     // most probable value
     const float energyLoss =
@@ -59,7 +61,7 @@ struct BetheBloch {
     const auto loss = lossDistribution(generator);
 
     // Apply the energy loss
-    particle.correctEnergy(-loss);
+    particleState.correctEnergy(-loss);
 
     // Generates no new particles
     return {};

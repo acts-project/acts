@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <array>
@@ -57,6 +56,8 @@ struct BetheHeitler {
   std::array<Particle, 1> operator()(generator_t &generator,
                                      const Acts::MaterialSlab &slab,
                                      Particle &particle) const {
+    auto particleState = particle.lastState();
+
     // Take a random gamma-distributed value - depending on t/X0
     std::gamma_distribution<double> gDist(slab.thicknessInX0() / std::log(2.0),
                                           1.0);
@@ -64,19 +65,21 @@ struct BetheHeitler {
     const auto u = gDist(generator);
     const auto z = std::exp(-u);  // MARK: fpeMask(FLTUND, 1, #2346)
     const auto sampledEnergyLoss =
-        std::abs(scaleFactor * particle.energy() * (z - 1.));
+        std::abs(scaleFactor * particleState.energy() * (z - 1.));
 
     std::uniform_real_distribution<Scalar> uDist(0., 1.);
     // Build the produced photon
     Particle photon =
         bremPhoton(particle, sampledEnergyLoss, uDist(generator),
                    uDist(generator), uDist(generator), uDist(generator));
+    auto photonState = photon.initialState();
     // Recoil input momentum
-    particle.setDirection(particle.direction() * particle.absoluteMomentum() -
-                          photon.energy() * photon.direction());
+    particleState.setDirection(particleState.direction() *
+                                   particleState.absoluteMomentum() -
+                               photonState.energy() * photonState.direction());
 
     // apply the energy loss
-    particle.correctEnergy(-sampledEnergyLoss);
+    particleState.correctEnergy(-sampledEnergyLoss);
 
     return {photon};
   }

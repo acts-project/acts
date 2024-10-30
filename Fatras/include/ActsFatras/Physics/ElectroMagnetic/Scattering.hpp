@@ -51,13 +51,15 @@ struct GenericScattering {
     // angle drawn uniformly from the [-pi,pi) range and the scattering angle
     // drawn from the specific scattering model distribution.
 
+    auto particleState = particle.lastState();
+
     // draw the random orientation angle
     const auto psi =
         std::uniform_real_distribution<double>(-M_PI, M_PI)(generator);
     // draw the scattering angle
     const auto theta = angle(generator, slab, particle);
 
-    Acts::Vector3 direction = particle.direction();
+    Acts::Vector3 direction = particleState.direction();
     // construct the combined rotation to the scattered direction
     Acts::RotationMatrix3 rotation(
         // rotation of the scattering deflector axis relative to the reference
@@ -65,7 +67,7 @@ struct GenericScattering {
         // rotation by the scattering angle around the deflector axis
         Acts::AngleAxis3(theta, Acts::makeCurvilinearUnitU(direction)));
     direction.applyOnTheLeft(rotation);
-    particle.setDirection(direction);
+    particleState.setDirection(direction);
 
     // scattering is non-destructive and produces no secondaries
     return {};

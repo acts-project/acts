@@ -53,7 +53,9 @@ void ParticleTrackingAction::PreUserTrackingAction(const G4Track* aTrack) {
   }
 
   auto particle = convert(*aTrack, *barcode);
-  particle.storeInitialState();
+  // copy last state to initial state as we might encounter this particle the
+  // first time
+  particle.initialState().copyFrom(particle.lastState());
   auto [it, success] = eventStore().particlesSimulated.insert(particle);
 
   // Only register particle at the initial state AND if there is no particle ID
@@ -95,10 +97,10 @@ void ParticleTrackingAction::PostUserTrackingAction(const G4Track* aTrack) {
       it != eventStore().particlesSimulated.end()) {
     // sadly there is not way to mutate the particle in the set, so we have to
     // copy, modify, erase and reinsert
-    SimParticle finalParticle = *it;
-    finalParticle.finalState() = particle.currentState();
+    SimParticle storedParticle = *it;
+    storedParticle.lastState().copyFrom(particle.lastState());
     eventStore().particlesSimulated.erase(it);
-    eventStore().particlesSimulated.insert(finalParticle);
+    eventStore().particlesSimulated.insert(storedParticle);
   } else {
     ACTS_WARNING("Could not store final state. Particle ID "
                  << barcode << " not found in simulated particles");
@@ -137,11 +139,12 @@ SimParticle ParticleTrackingAction::convert(const G4Track& aTrack,
 
   // Now create the Particle
   SimParticle aParticle(particleId, Acts::PdgParticle{pdg}, charge, mass);
-  aParticle.setPosition4(pPosition[0], pPosition[1], pPosition[2], pTime);
-  aParticle.setDirection(pDirection[0], pDirection[1], pDirection[2]);
-  aParticle.setAbsoluteMomentum(p);
-  aParticle.setNumberOfHits(numberOfHits);
   aParticle.setOutcome(particleOutcome);
+  auto aParticleState = aParticle.lastState();
+  aParticleState.setPosition4(pPosition[0], pPosition[1], pPosition[2], pTime);
+  aParticleState.setDirection(pDirection[0], pDirection[1], pDirection[2]);
+  aParticleState.setAbsoluteMomentum(p);
+  aParticleState.setNumberOfHits(numberOfHits);
   return aParticle;
 }
 

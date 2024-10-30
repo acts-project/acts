@@ -77,14 +77,15 @@ ActsExamples::ProcessCode ActsExamples::EventGenerator::read(
         const auto pid = SimBarcode{particle.particleId()}.setVertexPrimary(
             nPrimaryVertices);
         // move particle to the vertex
-        const auto pos4 = (vertexPosition + particle.fourPosition()).eval();
+        const auto pos4 =
+            (vertexPosition + particle.initialState().fourPosition()).eval();
         ACTS_VERBOSE(" - particle at " << pos4.transpose());
         // `withParticleId` returns a copy because it changes the identity
-        particle = particle.withParticleId(pid).setPosition4(pos4);
+        particle = particle.withParticleId(pid);
+        particle.initialState().fourPosition() = pos4;
       };
       for (auto& vertexParticle : newParticles) {
         updateParticleInPlace(vertexParticle);
-        vertexParticle.storeInitialState();
       }
 
       auto updateVertexInPlace = [&](SimVertex& vertex) {

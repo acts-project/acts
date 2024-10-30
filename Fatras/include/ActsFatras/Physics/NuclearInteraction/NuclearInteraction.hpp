@@ -56,6 +56,8 @@ struct NuclearInteraction {
   template <typename generator_t>
   std::pair<Scalar, Scalar> generatePathLimits(generator_t& generator,
                                                const Particle& particle) const {
+    auto particleState = particle.lastState();
+
     // Fast exit: No parameterisation provided
     if (multiParticleParameterisation.empty()) {
       return std::make_pair(std::numeric_limits<Scalar>::infinity(),
@@ -72,7 +74,7 @@ struct NuclearInteraction {
         const detail::NuclearInteractionParameters& parametrisation =
             findParameters(uniformDistribution(generator),
                            singleParticleParametrisation,
-                           particle.absoluteMomentum());
+                           particleState.absoluteMomentum());
 
         // Set the L0 limit if not done already
         const auto& distribution =
@@ -99,6 +101,8 @@ struct NuclearInteraction {
   template <typename generator_t>
   bool run(generator_t& generator, Particle& particle,
            std::vector<Particle>& generated) const {
+    auto particleState = particle.lastState();
+
     // Fast exit: No paramtrization provided
     if (multiParticleParameterisation.empty()) {
       return false;
@@ -115,7 +119,7 @@ struct NuclearInteraction {
         const detail::NuclearInteractionParameters& parametrisation =
             findParameters(uniformDistribution(generator),
                            singleParticleParametrisation,
-                           particle.absoluteMomentum());
+                           particleState.absoluteMomentum());
 
         std::normal_distribution<double> normalDistribution{0., 1.};
         // Dice the interaction type
@@ -161,7 +165,7 @@ struct NuclearInteraction {
 
         // Kill the particle in a hard process
         if (!interactSoft) {
-          particle.setAbsoluteMomentum(0);
+          particleState.setAbsoluteMomentum(0);
         }
 
         generated.insert(generated.end(), particles.begin(), particles.end());
@@ -501,8 +505,10 @@ std::vector<Particle> NuclearInteraction::convertParametersToParticles(
     const Acts::ActsDynamicVector& momenta,
     const Acts::ActsDynamicVector& invariantMasses, Particle& initialParticle,
     float parametrizedMomentum, bool soft) const {
+  auto initialParticleState = initialParticle.lastState();
+
   std::uniform_real_distribution<double> uniformDistribution{0., 1.};
-  const auto& initialDirection = initialParticle.direction();
+  const auto& initialDirection = initialParticleState.direction();
   const double phi = Acts::VectorHelpers::phi(initialDirection);
   const double theta = Acts::VectorHelpers::theta(initialDirection);
   const unsigned int size = momenta.size();
@@ -525,11 +531,12 @@ std::vector<Particle> NuclearInteraction::convertParametersToParticles(
 
     Particle p = Particle(initialParticle.particleId().makeDescendant(i),
                           static_cast<Acts::PdgParticle>(pdgId[i]));
-    p.setProcess(ProcessType::eNuclearInteraction)
-        .setPosition4(initialParticle.fourPosition())
+    p.setProcess(ProcessType::eNuclearInteraction);
+    p.initialState()
+        .setPosition4(initialParticleState.fourPosition())
         .setAbsoluteMomentum(momentum)
         .setDirection(direction)
-        .setReferenceSurface(initialParticle.referenceSurface());
+        .setReferenceSurface(initialParticleState.referenceSurface());
 
     // Store the particle
     if (i == 0 && soft) {

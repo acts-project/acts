@@ -99,9 +99,9 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
 
     // construct the particle;
     ActsFatras::Particle particle(pid, pdg, q, m_mass);
-    particle.setDirection(dir);
+    particle.initialState().setDirection(dir);
     p *= m_cfg.pTransverse ? 1. / sinTheta : 1.;
-    particle.setAbsoluteMomentum(p);
+    particle.initialState().setAbsoluteMomentum(p);
 
     // generated particle ids are already ordered and should end up at the end
     particles.insert(particles.end(), std::move(particle));

@@ -18,60 +18,64 @@ namespace ActsFatras::Casts {
 /// Retrieve the transverse absolute distance of the position to the origin.
 struct Vrho {
   double operator()(const Particle& particle) const {
-    return std::hypot(particle.position().x(), particle.position().y());
+    auto particleState = particle.lastState();
+    return Acts::VectorHelpers::perp(particleState.position());
   }
 };
 
 /// Retrieve the longitudinal distance of the position to the origin.
 struct Vz {
   double operator()(const Particle& particle) const {
-    return particle.position().z();
+    auto particleState = particle.lastState();
+    return particleState.position().z();
   }
 };
 
 /// Retrieve the longitudinal absolute distance of the position to the origin.
 struct AbsVz {
   double operator()(const Particle& particle) const {
-    return std::abs(particle.position().z());
+    auto particleState = particle.lastState();
+    return std::abs(particleState.position().z());
   }
 };
 
 /// Retrieve the direction pseudo-rapidity.
 struct Eta {
   double operator()(const Particle& particle) const {
-    // particle direction is always normalized, i.e. dz = pz / p
-    return std::atanh(particle.direction().z());
+    auto particleState = particle.lastState();
+    return particleState.eta();
   }
 };
 
 /// Retrieve the direction absolute pseudo-rapidity.
 struct AbsEta {
   double operator()(const Particle& particle) const {
-    // particle direction is always normalized, i.e. dz = pz / p
-    return std::atanh(std::abs(particle.direction().z()));
+    auto particleState = particle.lastState();
+    return std::abs(particleState.eta());
   }
 };
 
 /// Retrieve the transverse momentum.
 struct Pt {
   double operator()(const Particle& particle) const {
-    // particle direction is always normalized, i.e. dt²+dz²=1 w/ dt²=dx²+dy²
-    return particle.absoluteMomentum() *
-           Acts::VectorHelpers::perp(particle.direction());
+    auto particleState = particle.lastState();
+    return particleState.transverseMomentum();
   }
 };
 
 /// Retrieve the absolute momentum.
 struct P {
   double operator()(const Particle& particle) const {
-    return particle.absoluteMomentum();
+    auto particleState = particle.lastState();
+    return particleState.absoluteMomentum();
   }
 };
 
 /// Retrieve the total energy.
 struct E {
   double operator()(const Particle& particle) const {
-    return particle.energy();
+    auto particleState = particle.lastState();
+    return particleState.energy();
   }
 };
 

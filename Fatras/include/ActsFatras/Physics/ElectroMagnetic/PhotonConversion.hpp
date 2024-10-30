@@ -128,9 +128,11 @@ PhotonConversion::generatePathLimits(generator_t& generator,
                                      const Particle& particle) const {
   /// This method is based upon the Athena class PhotonConversionTool
 
+  auto particleState = particle.lastState();
+
   // Fast exit if not a photon or the energy is too low
   if (particle.pdg() != Acts::PdgParticle::eGamma ||
-      particle.absoluteMomentum() < (2 * kElectronMass)) {
+      particleState.absoluteMomentum() < (2 * kElectronMass)) {
     return std::make_pair(std::numeric_limits<Scalar>::infinity(),
                           std::numeric_limits<Scalar>::infinity());
   }
@@ -153,7 +155,7 @@ PhotonConversion::generatePathLimits(generator_t& generator,
   constexpr Scalar p2 = -6.07682e-01;
 
   // Calculate xi
-  const Scalar xi = p0 + p1 * std::pow(particle.absoluteMomentum(), p2);
+  const Scalar xi = p0 + p1 * std::pow(particleState.absoluteMomentum(), p2);
 
   std::uniform_real_distribution<Scalar> uniformDistribution{0., 1.};
   // This is a transformation of eq. 3.75
@@ -227,9 +229,11 @@ Particle::Vector3 PhotonConversion::generateChildDirection(
     generator_t& generator, const Particle& particle) const {
   /// This method is based upon the Athena class PhotonConversionTool
 
+  auto particleState = particle.lastState();
+
   // Following the Geant4 approximation from L. Urban
   // the azimutal angle
-  Scalar theta = kElectronMass / particle.energy();
+  Scalar theta = kElectronMass / particleState.energy();
 
   std::uniform_real_distribution<Scalar> uniformDistribution{0., 1.};
   const Scalar u = -std::log(uniformDistribution(generator) *
@@ -244,7 +248,7 @@ Particle::Vector3 PhotonConversion::generateChildDirection(
   const auto psi =
       std::uniform_real_distribution<double>(-M_PI, M_PI)(generator);
 
-  Acts::Vector3 direction = particle.direction();
+  Acts::Vector3 direction = particleState.direction();
   // construct the combined rotation to the scattered direction
   Acts::RotationMatrix3 rotation(
       // rotation of the scattering deflector axis relative to the reference
@@ -260,6 +264,8 @@ inline std::array<Particle, 2> PhotonConversion::generateChildren(
     const Particle::Vector3& childDirection) const {
   using namespace Acts::UnitLiterals;
 
+  auto photonState = photon.lastState();
+
   // Calculate the child momentum
   const Scalar massChild = kElectronMass;
   const Scalar momentum1 =
@@ -267,7 +273,7 @@ inline std::array<Particle, 2> PhotonConversion::generateChildren(
 
   // Use energy-momentum conservation for the other child
   const Particle::Vector3 vtmp =
-      photon.fourMomentum().template segment<3>(Acts::eMom0) -
+      photonState.fourMomentum().template segment<3>(Acts::eMom0) -
       momentum1 * childDirection;
   const Scalar momentum2 = vtmp.norm();
 
@@ -278,18 +284,22 @@ inline std::array<Particle, 2> PhotonConversion::generateChildren(
   std::array<Particle, 2> children = {
       Particle(photon.particleId().makeDescendant(0), Acts::eElectron, -1_e,
                kElectronMass)
-          .setPosition4(photon.fourPosition())
-          .setDirection(childDirection)
-          .setAbsoluteMomentum(momentum1)
           .setProcess(ProcessType::ePhotonConversion)
-          .setReferenceSurface(photon.referenceSurface()),
+          .initialState([&](Particle::StateProxy state) {
+            state.setPosition4(photonState.fourPosition())
+                .setDirection(childDirection)
+                .setAbsoluteMomentum(momentum1)
+                .setReferenceSurface(photonState.referenceSurface());
+          }),
       Particle(photon.particleId().makeDescendant(1), Acts::ePositron, 1_e,
                kElectronMass)
-          .setPosition4(photon.fourPosition())
-          .setDirection(childDirection)
-          .setAbsoluteMomentum(momentum2)
           .setProcess(ProcessType::ePhotonConversion)
-          .setReferenceSurface(photon.referenceSurface()),
+          .initialState([&](Particle::StateProxy state) {
+            state.setPosition4(photonState.fourPosition())
+                .setDirection(childDirection)
+                .setAbsoluteMomentum(momentum2)
+                .setReferenceSurface(photonState.referenceSurface());
+          }),
   };
   return children;
 }
@@ -297,13 +307,15 @@ inline std::array<Particle, 2> PhotonConversion::generateChildren(
 template <typename generator_t>
 bool PhotonConversion::run(generator_t& generator, Particle& particle,
                            std::vector<Particle>& generated) const {
+  auto particleState = particle.lastState();
+
   // Fast exit if particle is not a photon
   if (particle.pdg() != Acts::PdgParticle::eGamma) {
     return false;
   }
 
   // Fast exit if momentum is too low
-  const Scalar p = particle.absoluteMomentum();
+  const Scalar p = particleState.absoluteMomentum();
   if (p < (2 * kElectronMass)) {
     return false;
   }

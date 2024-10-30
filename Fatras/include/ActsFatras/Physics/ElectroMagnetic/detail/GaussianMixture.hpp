@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Material/Interactions.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 #include <random>
 
@@ -39,9 +40,11 @@ struct GaussianMixture {
   template <typename generator_t>
   double operator()(generator_t &generator, const Acts::MaterialSlab &slab,
                     Particle &particle) const {
+    auto particleState = particle.lastState();
+
     /// Calculate the highland formula first
     double sigma = Acts::computeMultipleScatteringTheta0(
-        slab, particle.absolutePdg(), particle.mass(), particle.qOverP(),
+        slab, particle.absolutePdg(), particle.mass(), particleState.qOverP(),
         particle.absoluteCharge());
     double sigma2 = sigma * sigma;
 
@@ -54,7 +57,7 @@ struct GaussianMixture {
     // d_0'
     // beta² = (p/E)² = p²/(p² + m²) = 1/(1 + (m/p)²)
     // 1/beta² = 1 + (m/p)²
-    double mOverP = particle.mass() / particle.absoluteMomentum();
+    double mOverP = particle.mass() / particleState.absoluteMomentum();
     double beta2inv = 1 + mOverP * mOverP;
     double dprime = slab.thicknessInX0() * beta2inv;
     double log_dprime = std::log(dprime);
@@ -76,8 +79,9 @@ struct GaussianMixture {
 
     // G4 optimised / native double Gaussian model
     if (optGaussianMixtureG4) {
-      sigma2 = 225. * dprime /
-               (particle.absoluteMomentum() * particle.absoluteMomentum());
+      sigma2 =
+          225. * dprime /
+          (particleState.absoluteMomentum() * particleState.absoluteMomentum());
     }
     // throw the random number core/tail
     if (uniformDist(generator) < epsilon) {
