@@ -49,7 +49,7 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
     /// Low, high (exclusive) for absolute/transverse momentum.
     double pMin = 1 * Acts::UnitConstants::GeV;
     double pMax = 10 * Acts::UnitConstants::GeV;
-    /// Indicate if the momentum referse to transverse momentum.
+    /// Indicate if the momentum refers to transverse momentum.
     bool pTransverse = false;
     /// Indicate if the momentum should be uniformly distributed in log space.
     bool pLogUniform = false;
