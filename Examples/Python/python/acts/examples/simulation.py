@@ -478,9 +478,8 @@ def addFatras(
             pMin=pMin,
         )
     )
-
-    # Sequencer
     s.addAlgorithm(alg)
+    s.addWhiteboardAlias("particles", outputParticles)
 
     # Selector
     if postSelectParticles is not None:
@@ -488,20 +487,18 @@ def addFatras(
         addParticleSelection(
             s,
             postSelectParticles,
-            inputParticles=particlesSimulated,
+            inputParticles=outputParticles,
             outputParticles=particlesPostSelected,
         )
         s.addWhiteboardAlias("particles_selected", particlesPostSelected)
     else:
-        particlesSimulated = particlesPostSelected
-
-    s.addWhiteboardAlias("particles", particlesPostSelected)
+        particlesPostSelected = particlesPostSelected
 
     # Output
     addSimWriters(
         s,
         alg.config.outputSimHits,
-        particlesPostSelected,
+        outputParticles,
         outputDirCsv,
         outputDirRoot,
         logLevel,
@@ -703,11 +700,9 @@ def addGeant4(
         recordHitsOfSecondaries=recordHitsOfSecondaries,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
-
     __geant4Handle = alg.geant4Handle
-
-    # Sequencer
     s.addAlgorithm(alg)
+    s.addWhiteboardAlias("particles", outputParticles)
 
     # Selector
     if postSelectParticles is not None:
@@ -722,13 +717,11 @@ def addGeant4(
     else:
         particlesPostSelected = outputParticles
 
-    s.addWhiteboardAlias("particles", particlesPostSelected)
-
     # Output
     addSimWriters(
         s,
         alg.config.outputSimHits,
-        particlesPostSelected,
+        outputParticles,
         outputDirCsv,
         outputDirRoot,
         logLevel=logLevel,
