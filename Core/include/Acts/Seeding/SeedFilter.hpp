@@ -43,6 +43,10 @@ class SeedFilter final {
   SeedFilter(SeedFilterConfig config,
              std::unique_ptr<const Acts::Logger> logger,
              IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
+  SeedFilter(const SeedFilter<external_spacepoint_t>&) = delete;
+  SeedFilter& operator=(const SeedFilter<external_spacepoint_t>&) = delete;
+  SeedFilter(SeedFilter<external_spacepoint_t>&&) = default;
+  SeedFilter& operator=(SeedFilter<external_spacepoint_t>&&) noexcept = default;
 
   SeedFilter() = delete;
   ~SeedFilter() = default;
