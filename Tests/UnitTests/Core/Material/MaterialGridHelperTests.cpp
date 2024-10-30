@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -60,10 +60,8 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   BOOST_CHECK_EQUAL(Grid.minPosition()[0], bd[0].min);
   BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
 
-  float max1 =
-      bd[0].max + std::fabs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
-  float max2 =
-      bd[1].max + std::fabs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
+  float max1 = bd[0].max + std::abs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
+  float max2 = bd[1].max + std::abs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
 
   BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
   BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max2);
@@ -152,10 +150,8 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   BOOST_CHECK_EQUAL(Grid.minPosition()[0], bd[0].min);
   BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
 
-  float max1 =
-      bd[0].max + std::fabs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
-  float max2 =
-      bd[1].max + std::fabs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
+  float max1 = bd[0].max + std::abs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
+  float max2 = bd[1].max + std::abs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
 
   BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
   BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max2);
@@ -244,12 +240,9 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
   BOOST_CHECK_EQUAL(Grid.minPosition()[2], bd[2].min);
 
-  float max1 =
-      bd[0].max + std::fabs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
-  float max2 =
-      bd[1].max + std::fabs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
-  float max3 =
-      bd[2].max + std::fabs(bd[2].max - bd[2].min) / (bd[2].bins() - 1);
+  float max1 = bd[0].max + std::abs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
+  float max2 = bd[1].max + std::abs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
+  float max3 = bd[2].max + std::abs(bd[2].max - bd[2].min) / (bd[2].bins() - 1);
 
   BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
   BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max2);
@@ -341,12 +334,9 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
   BOOST_CHECK_EQUAL(Grid.minPosition()[2], bd[2].min);
 
-  float max1 =
-      bd[0].max + std::fabs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
-  float max2 =
-      bd[1].max + std::fabs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
-  float max3 =
-      bd[2].max + std::fabs(bd[2].max - bd[2].min) / (bd[2].bins() - 1);
+  float max1 = bd[0].max + std::abs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
+  float max2 = bd[1].max + std::abs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
+  float max3 = bd[2].max + std::abs(bd[2].max - bd[2].min) / (bd[2].bins() - 1);
 
   BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
   BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max2);

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -92,7 +92,7 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   /// track number
   int m_trackNr = 0;
 
-  // initial trajectory parameters
+  /// initial trajectory parameters
   float m_d0 = 0;
   float m_z0 = 0;
   float m_phi = 0;
@@ -100,10 +100,15 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   float m_qOverP = 0;
   float m_t = 0;
 
-  // derived initial trajectory parameters
+  /// derived initial trajectory parameters
   float m_eta = 0;
   float m_pt = 0;
   float m_p = 0;
+
+  /// Propagation summary statstics
+  int m_nSensitives = 0;
+  int m_nMaterials = 0;
+  int m_nPortals = 0;
 
   // steper statistics
   int m_nSteps = 0;

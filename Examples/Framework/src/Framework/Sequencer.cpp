@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Framework/Sequencer.hpp"
 
@@ -118,6 +118,13 @@ Sequencer::Sequencer(const Sequencer::Config& cfg)
         "ACTS_SEQUENCER_DISABLE_FPEMON");
     m_cfg.trackFpes = false;
   }
+
+  if (m_cfg.trackFpes && !m_cfg.fpeMasks.empty() &&
+      !Acts::FpeMonitor::canSymbolize()) {
+    ACTS_ERROR("FPE monitoring is enabled but symbolization is not available");
+    throw std::runtime_error(
+        "FPE monitoring is enabled but symbolization is not available");
+  }
 }
 
 void Sequencer::addContextDecorator(
@@ -163,10 +170,6 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
   std::string elementTypeCapitalized = elementType;
   elementTypeCapitalized[0] = std::toupper(elementTypeCapitalized[0]);
   ACTS_INFO("Add " << elementType << " '" << element->name() << "'");
-
-  if (!m_cfg.runDataFlowChecks) {
-    return;
-  }
 
   auto symbol = [&](const char* in) {
     std::string s = demangleAndShorten(in);
@@ -356,7 +359,7 @@ struct StopWatch {
   Timepoint start;
   Duration& store;
 
-  StopWatch(Duration& s) : start(Clock::now()), store(s) {}
+  explicit StopWatch(Duration& s) : start(Clock::now()), store(s) {}
   ~StopWatch() { store += Clock::now() - start; }
 };
 
@@ -600,7 +603,7 @@ void Sequencer::fpeReport() const {
     auto merged = std::accumulate(
         fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
         [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); });
-    if (!merged) {
+    if (!merged.hasStackTraces()) {
       // no FPEs to report
       continue;
     }
@@ -614,9 +617,8 @@ void Sequencer::fpeReport() const {
     std::transform(merged.stackTraces().begin(), merged.stackTraces().end(),
                    std::back_inserter(sorted),
                    [](const auto& f) -> const auto& { return f; });
-    std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) {
-      return a.get().count > b.get().count;
-    });
+    std::ranges::sort(sorted, std::greater{},
+                      [](const auto& s) { return s.get().count; });
 
     std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
         remaining;

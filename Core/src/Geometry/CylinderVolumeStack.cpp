@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 
@@ -15,6 +15,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <sstream>
 
@@ -66,7 +67,7 @@ struct CylinderVolumeStack::VolumeTuple {
     transformDirty = true;
   }
 
-  void commit() {
+  void commit(const Logger& logger) {
     // make a copy so we can't accidentally modify in-place
     auto copy = std::make_shared<CylinderVolumeBounds>(*updatedBounds);
 
@@ -75,7 +76,7 @@ struct CylinderVolumeStack::VolumeTuple {
       transform = globalTransform;
     }
 
-    volume->update(std::move(updatedBounds), transform);
+    volume->update(std::move(updatedBounds), transform, logger);
     bounds = copy.get();
     updatedBounds = std::move(copy);
     transformDirty = false;
@@ -150,7 +151,9 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     const auto* cylBounds = dynamic_cast<const CylinderVolumeBounds*>(
         &m_volumes.front()->volumeBounds());
     assert(cylBounds != nullptr && "Volume bounds are not cylinder bounds");
-    m_volumeBounds = std::make_shared<CylinderVolumeBounds>(*cylBounds);
+    Volume::update(std::make_shared<CylinderVolumeBounds>(*cylBounds),
+                   std::nullopt, logger);
+    ACTS_VERBOSE("Transform is now: " << m_transform.matrix());
     return;
   }
 
@@ -159,11 +162,9 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
   if (direction == Acts::BinningValue::binZ) {
     ACTS_VERBOSE("Sorting by volume z position");
-    std::sort(volumeTuples.begin(), volumeTuples.end(),
-              [](const auto& a, const auto& b) {
-                return a.localTransform.translation()[eZ] <
-                       b.localTransform.translation()[eZ];
-              });
+    std::ranges::sort(volumeTuples, {}, [](const auto& v) {
+      return v.localTransform.translation()[eZ];
+    });
 
     ACTS_VERBOSE("Checking for overlaps and attaching volumes in z");
     std::vector<VolumeTuple> gapVolumes =
@@ -186,14 +187,13 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
                    << vt.localTransform.translation()[eZ]);
       ACTS_VERBOSE(*vt.updatedBounds);
 
-      vt.commit();
+      vt.commit(logger);
     }
 
     ACTS_VERBOSE("*** Volume configuration after r synchronization:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
 
-    std::sort(volumeTuples.begin(), volumeTuples.end(),
-              [](const auto& a, const auto& b) { return a.midZ() < b.midZ(); });
+    std::ranges::sort(volumeTuples, {}, [](const auto& v) { return v.midZ(); });
 
     m_volumes.clear();
     for (const auto& vt : volumeTuples) {
@@ -211,8 +211,9 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
     m_transform = m_groupTransform * Translation3{0, 0, midZ};
 
-    m_volumeBounds = std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ);
-    ACTS_DEBUG("Outer bounds are:\n" << *m_volumeBounds);
+    Volume::update(std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ),
+                   std::nullopt, logger);
+    ACTS_DEBUG("Outer bounds are:\n" << volumeBounds());
     ACTS_DEBUG("Outer transform / new group transform is:\n"
                << m_transform.matrix());
 
@@ -222,8 +223,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
   } else if (direction == Acts::BinningValue::binR) {
     ACTS_VERBOSE("Sorting by volume r middle point");
-    std::sort(volumeTuples.begin(), volumeTuples.end(),
-              [](const auto& a, const auto& b) { return a.midR() < b.midR(); });
+    std::ranges::sort(volumeTuples, {}, [](const auto& v) { return v.midR(); });
 
     ACTS_VERBOSE("Checking for overlaps and attaching volumes in r");
     std::vector<VolumeTuple> gapVolumes =
@@ -244,14 +244,13 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     for (auto& vt : volumeTuples) {
       ACTS_VERBOSE("Updated bounds for volume at r: " << vt.midR());
       ACTS_VERBOSE(*vt.updatedBounds);
-      vt.commit();
+      vt.commit(logger);
     }
 
     ACTS_VERBOSE("*** Volume configuration after z synchronization:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
 
-    std::sort(volumeTuples.begin(), volumeTuples.end(),
-              [](const auto& a, const auto& b) { return a.midR() < b.midR(); });
+    std::ranges::sort(volumeTuples, {}, [](const auto& v) { return v.midR(); });
 
     m_volumes.clear();
     for (const auto& vt : volumeTuples) {
@@ -269,9 +268,10 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 
     m_transform = m_groupTransform * Translation3{0, 0, midZ};
 
-    m_volumeBounds = std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ);
+    Volume::update(std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ),
+                   std::nullopt, logger);
 
-    ACTS_DEBUG("Outer bounds are:\n" << *m_volumeBounds);
+    ACTS_DEBUG("Outer bounds are:\n" << volumeBounds());
     ACTS_DEBUG("Outer transform is:\n" << m_transform.matrix());
 
     // Update group transform to the new center
@@ -287,25 +287,40 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
 }
 
 void CylinderVolumeStack::overlapPrint(
-    const CylinderVolumeStack::VolumeTuple& a,
+    BinningValue direction, const CylinderVolumeStack::VolumeTuple& a,
     const CylinderVolumeStack::VolumeTuple& b, const Logger& logger) {
   if (logger().doPrint(Acts::Logging::DEBUG)) {
     std::stringstream ss;
     ss << std::fixed;
     ss << std::setprecision(3);
     ss << std::setfill(' ');
-    ACTS_VERBOSE("Checking overlap between");
-    int w = 9;
-    ss << " - "
-       << " z: [ " << std::setw(w) << a.minZ() << " <- " << std::setw(w)
-       << a.midZ() << " -> " << std::setw(w) << a.maxZ() << " ]";
-    ACTS_VERBOSE(ss.str());
 
-    ss.str("");
-    ss << " - "
-       << " z: [ " << std::setw(w) << b.minZ() << " <- " << std::setw(w)
-       << b.midZ() << " -> " << std::setw(w) << b.maxZ() << " ]";
-    ACTS_VERBOSE(ss.str());
+    int w = 9;
+
+    ACTS_VERBOSE("Checking overlap between");
+    if (direction == BinningValue::binZ) {
+      ss << " - "
+         << " z: [ " << std::setw(w) << a.minZ() << " <- " << std::setw(w)
+         << a.midZ() << " -> " << std::setw(w) << a.maxZ() << " ]";
+      ACTS_VERBOSE(ss.str());
+
+      ss.str("");
+      ss << " - "
+         << " z: [ " << std::setw(w) << b.minZ() << " <- " << std::setw(w)
+         << b.midZ() << " -> " << std::setw(w) << b.maxZ() << " ]";
+      ACTS_VERBOSE(ss.str());
+    } else {
+      ss << " - "
+         << " r: [ " << std::setw(w) << a.minR() << " <-> " << std::setw(w)
+         << a.maxR() << " ]";
+      ACTS_VERBOSE(ss.str());
+
+      ss.str("");
+      ss << " - "
+         << " r: [ " << std::setw(w) << b.minR() << " <-> " << std::setw(w)
+         << b.maxR() << " ]";
+      ACTS_VERBOSE(ss.str());
+    }
   }
 }
 
@@ -320,7 +335,7 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
     auto& a = volumes.at(i);
     auto& b = volumes.at(j);
 
-    overlapPrint(a, b, logger);
+    overlapPrint(BinningValue::binZ, a, b, logger);
 
     if (a.maxZ() > b.minZ()) {
       ACTS_ERROR(" -> Overlap in z");
@@ -348,8 +363,9 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
                        << (aZMidNew - aHlZNew) << " <- " << aZMidNew << " -> "
                        << (aZMidNew + aHlZNew) << "]");
 
-          assert(a.minZ() == aZMidNew - aHlZNew && "Volume shrunk");
-          assert(a.maxZ() <= aZMidNew + aHlZNew && "Volume shrunk");
+          assert(std::abs(a.minZ() - (aZMidNew - aHlZNew)) < 1e-9 &&
+                 "Volume shrunk");
+          assert(aHlZNew >= a.halfLengthZ() && "Volume shrunk");
 
           ActsScalar bZMidNew = (b.minZ() + b.maxZ()) / 2.0 - gapWidth / 4.0;
           ActsScalar bHlZNew = b.halfLengthZ() + gapWidth / 4.0;
@@ -358,15 +374,16 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
                        << (bZMidNew - bHlZNew) << " <- " << bZMidNew << " -> "
                        << (bZMidNew + bHlZNew) << "]");
 
-          assert(b.minZ() >= bZMidNew - bHlZNew && "Volume shrunk");
-          assert(b.maxZ() == bZMidNew + bHlZNew && "Volume shrunk");
+          assert(bHlZNew >= b.halfLengthZ() && "Volume shrunk");
+          assert(std::abs(b.maxZ() - (bZMidNew + bHlZNew)) < 1e-9 &&
+                 "Volume shrunk");
 
-          a.localTransform = Translation3{0, 0, aZMidNew};
-          a.volume->setTransform(m_groupTransform * a.localTransform);
+          a.setLocalTransform(Transform3{Translation3{0, 0, aZMidNew}},
+                              m_groupTransform);
           a.updatedBounds->set(CylinderVolumeBounds::eHalfLengthZ, aHlZNew);
 
-          b.localTransform = Translation3{0, 0, bZMidNew};
-          b.volume->setTransform(m_groupTransform * b.localTransform);
+          b.setLocalTransform(Transform3{Translation3{0, 0, bZMidNew}},
+                              m_groupTransform);
           b.updatedBounds->set(CylinderVolumeBounds::eHalfLengthZ, bHlZNew);
 
           break;
@@ -380,11 +397,12 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
                        << (aZMidNew - aHlZNew) << " <- " << aZMidNew << " -> "
                        << (aZMidNew + aHlZNew) << "]");
 
-          assert(a.minZ() == aZMidNew - aHlZNew && "Volume shrunk");
-          assert(a.maxZ() <= aZMidNew + aHlZNew && "Volume shrunk");
+          assert(std::abs(a.minZ() - (aZMidNew - aHlZNew)) < 1e-9 &&
+                 "Volume shrunk");
+          assert(aHlZNew >= a.halfLengthZ() && "Volume shrunk");
 
-          a.localTransform = Translation3{0, 0, aZMidNew};
-          a.volume->setTransform(m_groupTransform * a.localTransform);
+          a.setLocalTransform(Transform3{Translation3{0, 0, aZMidNew}},
+                              m_groupTransform);
           a.updatedBounds->set(CylinderVolumeBounds::eHalfLengthZ, aHlZNew);
 
           break;
@@ -398,11 +416,12 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
                        << (bZMidNew - bHlZNew) << " <- " << bZMidNew << " -> "
                        << (bZMidNew + bHlZNew) << "]");
 
-          assert(b.minZ() >= bZMidNew - bHlZNew && "Volume shrunk");
-          assert(b.maxZ() == bZMidNew + bHlZNew && "Volume shrunk");
+          assert(bHlZNew >= b.halfLengthZ() && "Volume shrunk");
+          assert(std::abs(b.maxZ() - (bZMidNew + bHlZNew)) < 1e-9 &&
+                 "Volume shrunk");
 
-          b.localTransform = Translation3{0, 0, bZMidNew};
-          b.volume->setTransform(m_groupTransform * b.localTransform);
+          b.setLocalTransform(Transform3{Translation3{0, 0, bZMidNew}},
+                              m_groupTransform);
           b.updatedBounds->set(CylinderVolumeBounds::eHalfLengthZ, bHlZNew);
           break;
         }
@@ -414,10 +433,13 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
           ACTS_VERBOSE("  - Gap half length: " << gapHlZ
                                                << " at z: " << gapMidZ);
 
+          ActsScalar minR = std::min(a.minR(), b.minR());
+          ActsScalar maxR = std::max(a.maxR(), b.maxR());
+
           Transform3 gapLocalTransform{Translation3{0, 0, gapMidZ}};
           Transform3 gapGlobalTransform = m_groupTransform * gapLocalTransform;
-          auto gapBounds = std::make_shared<CylinderVolumeBounds>(
-              a.minR(), b.maxR(), gapHlZ);
+          auto gapBounds =
+              std::make_shared<CylinderVolumeBounds>(minR, maxR, gapHlZ);
 
           auto gap = addGapVolume(gapGlobalTransform, gapBounds);
           gapVolumes.emplace_back(*gap, m_groupTransform);
@@ -447,7 +469,7 @@ CylinderVolumeStack::checkOverlapAndAttachInR(
     auto& a = volumes.at(i);
     auto& b = volumes.at(j);
 
-    overlapPrint(a, b, logger);
+    overlapPrint(BinningValue::binR, a, b, logger);
 
     if (a.maxR() > b.minR()) {
       ACTS_ERROR(" -> Overlap in r");
@@ -625,46 +647,46 @@ std::pair<ActsScalar, ActsScalar> CylinderVolumeStack::synchronizeZBounds(
   return {minZ, maxZ};
 }
 
-void CylinderVolumeStack::update(std::shared_ptr<const VolumeBounds> volbounds,
-                                 std::optional<Transform3> transform) {
-  if (volbounds == nullptr) {
-    throw std::invalid_argument("New bounds are nullptr");
+void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
+                                 std::optional<Transform3> transform,
+                                 const Logger& logger) {
+  ACTS_DEBUG(
+      "Resizing CylinderVolumeStack with strategy: " << m_resizeStrategy);
+  ACTS_DEBUG("Currently have " << m_volumes.size() << " children");
+  ACTS_DEBUG(m_gaps.size() << " gaps");
+  for (const auto& v : m_volumes) {
+    ACTS_DEBUG(" - volume bounds: \n" << v->volumeBounds());
+    ACTS_DEBUG("          transform: \n" << v->transform().matrix());
   }
-  auto cylBounds =
-      std::dynamic_pointer_cast<const CylinderVolumeBounds>(volbounds);
+
+  ACTS_DEBUG("New bounds are: \n" << *volbounds);
+
+  auto cylBounds = std::dynamic_pointer_cast<CylinderVolumeBounds>(volbounds);
   if (cylBounds == nullptr) {
     throw std::invalid_argument(
         "CylinderVolumeStack requires CylinderVolumeBounds");
   }
-  update(std::move(cylBounds), transform,
-         *Acts::getDefaultLogger("CYLSTACK", Logging::VERBOSE));
-}
 
-void CylinderVolumeStack::update(
-    std::shared_ptr<const CylinderVolumeBounds> newBounds,
-    std::optional<Transform3> transform, const Logger& logger) {
-  ACTS_DEBUG(
-      "Resizing CylinderVolumeStack with strategy: " << m_resizeStrategy);
-
-  if (newBounds == nullptr) {
+  if (cylBounds == nullptr) {
     throw std::invalid_argument("New bounds are nullptr");
   }
 
-  if (*newBounds == volumeBounds()) {
+  if (*cylBounds == volumeBounds()) {
     ACTS_VERBOSE("Bounds are the same, no resize needed");
     return;
   }
 
+  ACTS_VERBOSE("Group transform is:\n" << m_groupTransform.matrix());
+  ACTS_VERBOSE("Current transform is:\n" << m_transform.matrix());
   if (transform.has_value()) {
-    ACTS_VERBOSE(transform.value().matrix());
+    ACTS_VERBOSE("Input transform:\n" << transform.value().matrix());
   }
 
   VolumeTuple oldVolume{*this, m_transform};
   VolumeTuple newVolume{*this, m_transform};
-  newVolume.updatedBounds = std::make_shared<CylinderVolumeBounds>(*newBounds);
+  newVolume.updatedBounds = std::make_shared<CylinderVolumeBounds>(*cylBounds);
   newVolume.globalTransform = transform.value_or(m_transform);
-  newVolume.localTransform =
-      m_groupTransform.inverse() * newVolume.globalTransform;
+  newVolume.localTransform = m_transform.inverse() * newVolume.globalTransform;
 
   if (!transform.has_value()) {
     ACTS_VERBOSE("Local transform does not change");
@@ -678,7 +700,7 @@ void CylinderVolumeStack::update(
     checkVolumeAlignment(volTemp, logger);
   }
 
-  checkNoPhiOrBevel(*newBounds, logger);
+  checkNoPhiOrBevel(*cylBounds, logger);
 
   const ActsScalar newMinR = newVolume.minR();
   const ActsScalar newMaxR = newVolume.maxR();
@@ -695,31 +717,47 @@ void CylinderVolumeStack::update(
   const ActsScalar oldHlZ = oldVolume.halfLengthZ();
 
   ACTS_VERBOSE("Previous bounds are: z: [ "
-               << oldMinZ << " <- " << oldMidZ << " -> " << oldMaxZ
-               << " ], r: [ " << oldMinR << " <-> " << oldMaxR << " ]");
+               << oldMinZ << " <- " << oldMidZ << " -> " << oldMaxZ << " ] ("
+               << oldHlZ << "), r: [ " << oldMinR << " <-> " << oldMaxR
+               << " ]");
   ACTS_VERBOSE("New bounds are: z:      [ "
-               << newMinZ << " <- " << newMidZ << " -> " << newMaxZ
-               << " ], r: [ " << newMinR << " <-> " << newMaxR << " ]");
+               << newMinZ << " <- " << newMidZ << " -> " << newMaxZ << " ] ("
+               << newHlZ << "), r: [ " << newMinR << " <-> " << newMaxR
+               << " ]");
 
-  if (newMinZ > oldMinZ) {
-    ACTS_ERROR("Shrinking the stack size in z is not supported");
-    throw std::invalid_argument("Shrinking the stack is not supported");
+  constexpr auto tolerance = s_onSurfaceTolerance;
+  auto same = [](ActsScalar a, ActsScalar b) {
+    return std::abs(a - b) < tolerance;
+  };
+
+  if (!same(newMinZ, oldMinZ) && newMinZ > oldMinZ) {
+    ACTS_ERROR("Shrinking the stack size in z is not supported: "
+               << newMinZ << " -> " << oldMinZ);
+    throw std::invalid_argument("Shrinking the stack in z is not supported");
   }
 
-  if (newMaxZ < oldMaxZ) {
-    ACTS_ERROR("Shrinking the stack size in z is not supported");
-    throw std::invalid_argument("Shrinking the stack is not supported");
+  if (!same(newMaxZ, oldMaxZ) && newMaxZ < oldMaxZ) {
+    ACTS_ERROR("Shrinking the stack size in z is not supported: "
+               << newMaxZ << " -> " << oldMaxZ);
+    throw std::invalid_argument("Shrinking the stack in z is not supported");
   }
 
-  if (newMinR > oldMinR) {
-    ACTS_ERROR("Shrinking the stack size in r is not supported");
-    throw std::invalid_argument("Shrinking the stack is not supported");
+  if (!same(newMinR, oldMinR) && newMinR > oldMinR) {
+    ACTS_ERROR("Shrinking the stack size in r is not supported: "
+               << newMinR << " -> " << oldMinR);
+    throw std::invalid_argument("Shrinking the stack in r is not supported");
   }
 
-  if (newMaxR < oldMaxR) {
-    ACTS_ERROR("Shrinking the stack size in r is not supported");
-    throw std::invalid_argument("Shrinking the stack is not supported");
+  if (!same(newMaxR, oldMaxR) && newMaxR < oldMaxR) {
+    ACTS_ERROR("Shrinking the stack size in r is not supported: "
+               << newMaxR << " -> " << oldMaxR);
+    throw std::invalid_argument("Shrinking the stack is r in not supported");
   }
+
+  auto isGap = [this](const Volume* vol) {
+    return std::ranges::any_of(
+        m_gaps, [&](const auto& gap) { return vol == gap.get(); });
+  };
 
   if (m_direction == BinningValue::binZ) {
     ACTS_VERBOSE("Stack direction is z");
@@ -735,7 +773,7 @@ void CylinderVolumeStack::update(
     ACTS_VERBOSE("*** Initial volume configuration:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
-    if (newMinR != oldMinR || newMaxR != oldMaxR) {
+    if (!same(newMinR, oldMinR) || !same(newMaxR, oldMaxR)) {
       ACTS_VERBOSE("Resize all volumes to new r bounds");
       for (auto& volume : volumeTuples) {
         volume.set({
@@ -749,7 +787,7 @@ void CylinderVolumeStack::update(
       ACTS_VERBOSE("R bounds are the same, no r resize needed");
     }
 
-    if (newHlZ == oldHlZ) {
+    if (same(newHlZ, oldHlZ)) {
       ACTS_VERBOSE("Halflength z is the same, no z resize needed");
     } else {
       if (m_resizeStrategy == ResizeStrategy::Expand) {
@@ -789,43 +827,86 @@ void CylinderVolumeStack::update(
       } else if (m_resizeStrategy == ResizeStrategy::Gap) {
         ACTS_VERBOSE("Creating gap volumes to fill the new z bounds");
 
-        if (newMinZ < oldMinZ) {
-          ACTS_VERBOSE("Adding gap volume at negative z");
+        auto printGapDimensions = [&](const VolumeTuple& gap,
+                                      const std::string& prefix = "") {
+          ACTS_VERBOSE(" -> gap" << prefix << ": [ " << gap.minZ() << " <- "
+                                 << gap.midZ() << " -> " << gap.maxZ()
+                                 << " ], r: [ " << gap.minR() << " <-> "
+                                 << gap.maxR() << " ]");
+        };
 
+        if (!same(newMinZ, oldMinZ) && newMinZ < oldMinZ) {
           ActsScalar gap1MinZ = newVolume.minZ();
           ActsScalar gap1MaxZ = oldVolume.minZ();
           ActsScalar gap1HlZ = (gap1MaxZ - gap1MinZ) / 2.0;
           ActsScalar gap1PZ = (gap1MaxZ + gap1MinZ) / 2.0;
 
-          ACTS_VERBOSE(" -> gap1 z: [ " << gap1MinZ << " <- " << gap1PZ
-                                        << " -> " << gap1MaxZ
-                                        << " ] (hl: " << gap1HlZ << ")");
+          // // check if we need a new gap volume or reuse an existing one
+          auto& candidate = volumeTuples.front();
+          if (isGap(candidate.volume)) {
+            ACTS_VERBOSE("~> Reusing existing gap volume at negative z");
 
-          auto gap1Bounds =
-              std::make_shared<CylinderVolumeBounds>(newMinR, newMaxR, gap1HlZ);
-          auto gap1Transform = m_groupTransform * Translation3{0, 0, gap1PZ};
-          auto gap1 = addGapVolume(gap1Transform, std::move(gap1Bounds));
-          volumeTuples.insert(volumeTuples.begin(),
-                              VolumeTuple{*gap1, m_groupTransform});
+            gap1HlZ =
+                candidate.bounds->get(CylinderVolumeBounds::eHalfLengthZ) +
+                gap1HlZ;
+            gap1MaxZ = gap1MinZ + gap1HlZ * 2;
+            gap1PZ = (gap1MaxZ + gap1MinZ) / 2.0;
+
+            printGapDimensions(candidate, " before");
+            auto gap1Bounds = std::make_shared<CylinderVolumeBounds>(
+                newMinR, newMaxR, gap1HlZ);
+            auto gap1Transform = m_groupTransform * Translation3{0, 0, gap1PZ};
+            candidate.volume->update(std::move(gap1Bounds), gap1Transform);
+            candidate = VolumeTuple{*candidate.volume, m_groupTransform};
+            ACTS_VERBOSE("After:");
+            printGapDimensions(candidate, " after ");
+
+          } else {
+            ACTS_VERBOSE("~> Creating new gap volume at negative z");
+            auto gap1Bounds = std::make_shared<CylinderVolumeBounds>(
+                newMinR, newMaxR, gap1HlZ);
+            auto gap1Transform = m_groupTransform * Translation3{0, 0, gap1PZ};
+            auto gap1 = addGapVolume(gap1Transform, std::move(gap1Bounds));
+            volumeTuples.insert(volumeTuples.begin(),
+                                VolumeTuple{*gap1, m_groupTransform});
+            printGapDimensions(volumeTuples.front());
+          }
         }
 
-        if (newMaxZ > oldMaxZ) {
-          ACTS_VERBOSE("Adding gap volume at positive z");
-
+        if (!same(newMaxZ, oldMaxZ) && newMaxZ > oldMaxZ) {
           ActsScalar gap2MinZ = oldVolume.maxZ();
           ActsScalar gap2MaxZ = newVolume.maxZ();
           ActsScalar gap2HlZ = (gap2MaxZ - gap2MinZ) / 2.0;
           ActsScalar gap2PZ = (gap2MaxZ + gap2MinZ) / 2.0;
 
-          ACTS_VERBOSE(" -> gap2 z: [ " << gap2MinZ << " <- " << gap2PZ
-                                        << " -> " << gap2MaxZ
-                                        << " ] (hl: " << gap2HlZ << ")");
+          // check if we need a new gap volume or reuse an existing one
+          auto& candidate = volumeTuples.back();
+          if (isGap(candidate.volume)) {
+            ACTS_VERBOSE("~> Reusing existing gap volume at positive z");
 
-          auto gap2Bounds =
-              std::make_shared<CylinderVolumeBounds>(newMinR, newMaxR, gap2HlZ);
-          auto gap2Transform = m_groupTransform * Translation3{0, 0, gap2PZ};
-          auto gap2 = addGapVolume(gap2Transform, std::move(gap2Bounds));
-          volumeTuples.emplace_back(*gap2, m_groupTransform);
+            gap2HlZ =
+                candidate.bounds->get(CylinderVolumeBounds::eHalfLengthZ) +
+                gap2HlZ;
+            gap2MinZ = newVolume.maxZ() - gap2HlZ * 2;
+            gap2PZ = (gap2MaxZ + gap2MinZ) / 2.0;
+
+            printGapDimensions(candidate, " before");
+            auto gap2Bounds = std::make_shared<CylinderVolumeBounds>(
+                newMinR, newMaxR, gap2HlZ);
+            auto gap2Transform = m_groupTransform * Translation3{0, 0, gap2PZ};
+
+            candidate.volume->update(std::move(gap2Bounds), gap2Transform);
+            candidate = VolumeTuple{*candidate.volume, m_groupTransform};
+            printGapDimensions(candidate, " after ");
+          } else {
+            ACTS_VERBOSE("~> Creating new gap volume at positive z");
+            auto gap2Bounds = std::make_shared<CylinderVolumeBounds>(
+                newMinR, newMaxR, gap2HlZ);
+            auto gap2Transform = m_groupTransform * Translation3{0, 0, gap2PZ};
+            auto gap2 = addGapVolume(gap2Transform, std::move(gap2Bounds));
+            volumeTuples.emplace_back(*gap2, m_groupTransform);
+            printGapDimensions(volumeTuples.back());
+          }
         }
       }
 
@@ -836,7 +917,7 @@ void CylinderVolumeStack::update(
     ACTS_VERBOSE("Commit and update outer vector of volumes");
     m_volumes.clear();
     for (auto& vt : volumeTuples) {
-      vt.commit();
+      vt.commit(logger);
       m_volumes.push_back(vt.volume);
     }
 
@@ -892,32 +973,56 @@ void CylinderVolumeStack::update(
                                    << " ]");
         }
       } else if (m_resizeStrategy == ResizeStrategy::Gap) {
+        auto printGapDimensions = [&](const VolumeTuple& gap,
+                                      const std::string& prefix = "") {
+          ACTS_VERBOSE(" -> gap" << prefix << ": [ " << gap.minZ() << " <- "
+                                 << gap.midZ() << " -> " << gap.maxZ()
+                                 << " ], r: [ " << gap.minR() << " <-> "
+                                 << gap.maxR() << " ]");
+        };
+
         if (oldMinR > newMinR) {
-          ACTS_VERBOSE("Creating gap volume at the innermost end");
-          auto gapBounds =
-              std::make_shared<CylinderVolumeBounds>(newMinR, oldMinR, newHlZ);
-          auto gapTransform = m_groupTransform;
-          auto gapVolume = addGapVolume(gapTransform, gapBounds);
-          volumeTuples.insert(volumeTuples.begin(),
-                              VolumeTuple{*gapVolume, m_groupTransform});
-          auto gap = volumeTuples.front();
-          ACTS_VERBOSE(" -> gap inner: [ "
-                       << gap.minZ() << " <- " << gap.midZ() << " -> "
-                       << gap.maxZ() << " ], r: [ " << gap.minR() << " <-> "
-                       << gap.maxR() << " ]");
+          auto& candidate = volumeTuples.front();
+          if (isGap(candidate.volume)) {
+            ACTS_VERBOSE("~> Reusing existing gap volume at inner r");
+            auto& candidateCylBounds = dynamic_cast<CylinderVolumeBounds&>(
+                candidate.volume->volumeBounds());
+            printGapDimensions(candidate, " before");
+            candidateCylBounds.set(CylinderVolumeBounds::eMinR, newMinR);
+            candidate = VolumeTuple{*candidate.volume, m_groupTransform};
+            printGapDimensions(candidate, " after ");
+          } else {
+            ACTS_VERBOSE("~> Creating new gap volume at inner r");
+            auto gapBounds = std::make_shared<CylinderVolumeBounds>(
+                newMinR, oldMinR, newHlZ);
+            auto gapTransform = m_groupTransform;
+            auto gapVolume = addGapVolume(gapTransform, gapBounds);
+            volumeTuples.insert(volumeTuples.begin(),
+                                VolumeTuple{*gapVolume, m_groupTransform});
+            auto gap = volumeTuples.front();
+            printGapDimensions(gap);
+          }
         }
         if (oldMaxR < newMaxR) {
-          ACTS_VERBOSE("Creating gap volume at the outermost end");
-          auto gapBounds =
-              std::make_shared<CylinderVolumeBounds>(oldMaxR, newMaxR, newHlZ);
-          auto gapTransform = m_groupTransform;
-          auto gapVolume = addGapVolume(gapTransform, gapBounds);
-          volumeTuples.emplace_back(*gapVolume, m_groupTransform);
-          auto gap = volumeTuples.back();
-          ACTS_VERBOSE(" -> gap outer: [ "
-                       << gap.minZ() << " <- " << gap.midZ() << " -> "
-                       << gap.maxZ() << " ], r: [ " << gap.minR() << " <-> "
-                       << gap.maxR() << " ]");
+          auto& candidate = volumeTuples.back();
+          if (isGap(candidate.volume)) {
+            ACTS_VERBOSE("~> Reusing existing gap volume at outer r");
+            auto& candidateCylBounds = dynamic_cast<CylinderVolumeBounds&>(
+                candidate.volume->volumeBounds());
+            printGapDimensions(candidate, " before");
+            candidateCylBounds.set(CylinderVolumeBounds::eMaxR, newMaxR);
+            candidate = VolumeTuple{*candidate.volume, m_groupTransform};
+            printGapDimensions(candidate, " after ");
+          } else {
+            ACTS_VERBOSE("~> Creating new gap volume at outer r");
+            auto gapBounds = std::make_shared<CylinderVolumeBounds>(
+                oldMaxR, newMaxR, newHlZ);
+            auto gapTransform = m_groupTransform;
+            auto gapVolume = addGapVolume(gapTransform, gapBounds);
+            volumeTuples.emplace_back(*gapVolume, m_groupTransform);
+            auto gap = volumeTuples.back();
+            printGapDimensions(gap);
+          }
         }
       }
 
@@ -928,13 +1033,15 @@ void CylinderVolumeStack::update(
     ACTS_VERBOSE("Commit and update outer vector of volumes");
     m_volumes.clear();
     for (auto& vt : volumeTuples) {
-      vt.commit();
+      vt.commit(logger);
       m_volumes.push_back(vt.volume);
     }
   }
 
   m_transform = newVolume.globalTransform;
-  m_volumeBounds = std::move(newBounds);
+  // @TODO: We probably can reuse m_transform
+  m_groupTransform = m_transform;
+  Volume::update(std::move(cylBounds), std::nullopt, logger);
 }
 
 void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,

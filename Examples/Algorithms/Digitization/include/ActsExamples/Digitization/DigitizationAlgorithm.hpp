@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -18,7 +18,6 @@
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -96,13 +95,15 @@ class DigitizationAlgorithm final : public IAlgorithm {
   /// Geometric digtizer
   ActsFatras::Channelizer m_channelizer;
 
+  using CellsMap =
+      std::map<Acts::GeometryIdentifier, std::vector<Cluster::Cell>>;
+
   ReadDataHandle<SimHitContainer> m_simContainerReadHandle{this,
                                                            "SimHitContainer"};
 
-  WriteDataHandle<IndexSourceLinkContainer> m_sourceLinkWriteHandle{
-      this, "SourceLinks"};
   WriteDataHandle<MeasurementContainer> m_measurementWriteHandle{
       this, "Measurements"};
+  WriteDataHandle<CellsMap> m_cellsWriteHandle{this, "Cells"};
   WriteDataHandle<ClusterContainer> m_clusterWriteHandle{this, "Clusters"};
   WriteDataHandle<IndexMultimap<ActsFatras::Barcode>>
       m_measurementParticlesMapWriteHandle{this, "MeasurementParticlesMap"};

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // SeedFinderGbts.ipp
 // TODO: update to C++17 style
@@ -17,6 +17,7 @@
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <functional>
@@ -158,7 +159,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                     .m_phiSliceWidth;  // the default sliding window along phi
 
             if (m_config.m_useEtaBinning) {
-              deltaPhi = 0.001f + m_maxCurv * std::fabs(rb2 - rb1);
+              deltaPhi = 0.001f + m_maxCurv * std::abs(rb2 - rb1);
             }
 
             unsigned int first_it = 0;
@@ -218,7 +219,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
                 float dz = z2 - z1;
                 float tau = dz / dr;
-                float ftau = std::fabs(tau);
+                float ftau = std::abs(tau);
                 if (ftau > 36.0) {
                   continue;
                 }
@@ -287,17 +288,18 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                     float tau2 = edgeStorage.at(n2_in_idx).m_p[0];
                     float tau_ratio = tau2 * uat_1 - 1.0f;
 
-                    if (std::fabs(tau_ratio) >
-                        m_config.cut_tau_ratio_max) {  // bad
-                                                       // match
+                    // bad match
+                    if (std::abs(tau_ratio) > m_config.cut_tau_ratio_max) {
                       continue;
                     }
-                    isGood = true;  // good match found
+
+                    // good match found
+                    isGood = true;
                     break;
                   }
                 }
                 if (!isGood) {
-                  continue;  // no moatch found, skip creating [n1 <- n2] edge
+                  continue;  // no match found, skip creating [n1 <- n2] edge
                 }
 
                 float curv = D * std::sqrt(L2);  // signed curvature
@@ -352,8 +354,8 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
       out_sort[outIdx].first = pS->m_p[0];
     }
 
-    std::sort(in_sort.begin(), in_sort.end());
-    std::sort(out_sort.begin(), out_sort.end());
+    std::ranges::sort(in_sort);
+    std::ranges::sort(out_sort);
 
     unsigned int last_out = 0;
 
@@ -495,8 +497,8 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
   m_triplets.clear();
 
-  std::sort(vSeeds.begin(), vSeeds.end(),
-            typename Acts::GbtsEdge<external_spacepoint_t>::CompareLevel());
+  std::ranges::sort(
+      vSeeds, typename Acts::GbtsEdge<external_spacepoint_t>::CompareLevel());
 
   if (vSeeds.empty()) {
     return;
@@ -700,7 +702,9 @@ void SeedFinderGbts<external_spacepoint_t>::createSeeds(
     float Vertex = 0;
     float Quality = triplet.Q();
     // make a new seed, add to vector of seeds
-    out_cont.emplace_back(*S1, *S2, *S3, Vertex, Quality);
+    out_cont.emplace_back(*S1, *S2, *S3);
+    out_cont.back().setVertexZ(Vertex);
+    out_cont.back().setQuality(Quality);
   }
 }
 

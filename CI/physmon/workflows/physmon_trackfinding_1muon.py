@@ -11,13 +11,13 @@ from acts.examples.simulation import (
     EtaConfig,
     PhiConfig,
     ParticleConfig,
+    ParticleSelectorConfig,
     addFatras,
     addDigitization,
 )
 
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
     ParticleSmearingSigmas,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
@@ -72,6 +72,11 @@ def run_ckf_tracking(label, seeding):
             setup.field,
             enableInteractions=True,
             rnd=rnd,
+            postSelectParticles=ParticleSelectorConfig(
+                pt=(0.9 * u.GeV, None),
+                measurements=(9, None),
+                removeNeutral=True,
+            ),
         )
 
         addDigitization(
@@ -86,7 +91,6 @@ def run_ckf_tracking(label, seeding):
             s,
             setup.trackingGeometry,
             setup.field,
-            TruthSeedRanges(pt=(500 * u.MeV, None), nHits=(9, None)),
             ParticleSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
                 # zero eveything so the CKF has a chance to find the measurements
                 d0=0,
@@ -108,7 +112,7 @@ def run_ckf_tracking(label, seeding):
                 maxSeedsPerSpM=1,
                 sigmaScattering=5,
                 radLengthPerSeed=0.1,
-                minPt=500 * u.MeV,
+                minPt=0.5 * u.GeV,
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=2 * u.T),
@@ -134,13 +138,16 @@ def run_ckf_tracking(label, seeding):
             setup.trackingGeometry,
             setup.field,
             TrackSelectorConfig(
-                pt=(500 * u.MeV, None),
+                pt=(0.9 * u.GeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 nMeasurementsMin=6,
                 maxHoles=2,
                 maxOutliers=2,
             ),
             CkfConfig(
+                chi2CutOffMeasurement=15.0,
+                chi2CutOffOutlier=25.0,
+                numMeasurementsCutOff=10,
                 seedDeduplication=(
                     True if seeding != SeedingAlgorithm.TruthSmeared else False
                 ),
@@ -156,8 +163,9 @@ def run_ckf_tracking(label, seeding):
             if seeding != SeedingAlgorithm.TruthSmeared
             else []
         ) + [
-            "performance_ckf.root",
             "tracksummary_ckf.root",
+            "performance_finding_ckf.root",
+            "performance_fitting_ckf.root",
         ]:
             perf_file = tp / file
             assert perf_file.exists(), f"Performance file not found {perf_file}"

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -29,9 +29,9 @@ class MaterialPhysicsList final : public G4VUserPhysicsList {
   ///
   /// @param cfg the configuration struct for this Stepping action
   /// @param logger is an Acts::Logger for unique logging
-  MaterialPhysicsList(std::unique_ptr<const Acts::Logger> logger =
-                          Acts::getDefaultLogger("MaterialPhysicsList",
-                                                 Acts::Logging::INFO));
+  explicit MaterialPhysicsList(std::unique_ptr<const Acts::Logger> logger =
+                                   Acts::getDefaultLogger("MaterialPhysicsList",
+                                                          Acts::Logging::INFO));
   ~MaterialPhysicsList() override = default;
 
   /// @brief Interface particle construction method

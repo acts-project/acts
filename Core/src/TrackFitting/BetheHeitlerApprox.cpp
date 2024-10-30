@@ -1,14 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 
-Acts::AtlasBetheHeitlerApprox<6, 5> Acts::makeDefaultBetheHeitlerApprox() {
+Acts::AtlasBetheHeitlerApprox<6, 5> Acts::makeDefaultBetheHeitlerApprox(
+    bool clampToRange) {
   // Tracking/TrkFitter/TrkGaussianSumFilterUtils/Data/BetheHeitler_cdf_nC6_O5.par
   // clang-format off
   constexpr static AtlasBetheHeitlerApprox<6, 5>::Data cdf_cmps6_order5_data = {{
@@ -51,6 +52,7 @@ Acts::AtlasBetheHeitlerApprox<6, 5> Acts::makeDefaultBetheHeitlerApprox() {
   }};
   // clang-format on
 
-  return AtlasBetheHeitlerApprox<6, 5>(
-      cdf_cmps6_order5_data, cdf_cmps6_order5_data, true, true, 0.2, 0.2);
+  return AtlasBetheHeitlerApprox<6, 5>(cdf_cmps6_order5_data,
+                                       cdf_cmps6_order5_data, true, true, 0.2,
+                                       0.2, clampToRange);
 }

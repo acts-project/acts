@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -29,10 +29,14 @@ class ParticleSelector final : public IAlgorithm {
   struct Config {
     /// The input particles collection.
     std::string inputParticles;
-    /// Input measurement particles map (Optional)
-    std::string inputMeasurementParticlesMap;
+    /// Optional. The input final state particles collection.
+    /// If provided, this will be used to access the number of measurements.
+    std::string inputParticlesFinal;
     /// The output particles collection.
     std::string outputParticles;
+    /// Optional. The output final state particles collection.
+    std::string outputParticlesFinal;
+
     // Minimum/maximum distance from the origin in the transverse plane.
     double rhoMin = 0;
     double rhoMax = std::numeric_limits<double>::infinity();
@@ -79,11 +83,13 @@ class ParticleSelector final : public IAlgorithm {
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<IndexMultimap<ActsFatras::Barcode>> m_inputMap{
-      this, "InputMeasurementParticlesMap"};
+  ReadDataHandle<SimParticleContainer> m_inputParticlesFinal{
+      this, "InputParticlesFinal"};
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
+  WriteDataHandle<SimParticleContainer> m_outputParticlesFinal{
+      this, "OutputParticlesFinal"};
 };
 
 }  // namespace ActsExamples

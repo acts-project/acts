@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 
@@ -176,8 +176,8 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
 Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
     const Acts::TrackingVolume* volume) {
   Acts::BinUtility bUtility;
-  if (volume->volumeMaterialSharedPtr() != nullptr) {
-    return {volume, volume->volumeMaterialSharedPtr()};
+  if (volume->volumeMaterialPtr() != nullptr) {
+    return {volume, volume->volumeMaterialPtr()};
   }
   // Check which type of bound is associated to the volume
   auto cyBounds = dynamic_cast<const Acts::CylinderVolumeBounds*>(
@@ -253,8 +253,8 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   VolumeMaterialMap volumeMap = maps.second;
   std::vector<std::pair<GeometryIdentifier, const IVolumeMaterial*>>
       mapVolumeInit;
-  for (auto it = volumeMap.begin(); it != volumeMap.end(); it++) {
-    mapVolumeInit.push_back({it->first, it->second.get()});
+  for (const auto& [key, value] : volumeMap) {
+    mapVolumeInit.push_back({key, value.get()});
   }
   GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap(
       mapVolumeInit);
@@ -263,8 +263,8 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   SurfaceMaterialMap surfaceMap = maps.first;
   std::vector<std::pair<GeometryIdentifier, const ISurfaceMaterial*>>
       mapSurfaceInit;
-  for (auto it = surfaceMap.begin(); it != surfaceMap.end(); it++) {
-    mapSurfaceInit.push_back({it->first, it->second.get()});
+  for (const auto& [key, value] : surfaceMap) {
+    mapSurfaceInit.push_back({key, value.get()});
   }
   GeometryHierarchyMap<const ISurfaceMaterial*> hierarchySurfaceMap(
       mapSurfaceInit);
@@ -336,12 +336,10 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
         std::pair<GeometryIdentifier, Acts::SurfaceAndMaterialWithContext>>&
         surfaceHierarchy,
     const Acts::TrackingVolume* tVolume) {
-  auto sameId =
-      [tVolume](
-          const std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>&
-              pair) { return (tVolume->geometryId() == pair.first); };
-  if (std::find_if(volumeHierarchy.begin(), volumeHierarchy.end(), sameId) !=
-      volumeHierarchy.end()) {
+  auto sameId = [tVolume](const auto& pair) {
+    return (tVolume->geometryId() == pair.first);
+  };
+  if (std::ranges::any_of(volumeHierarchy, sameId)) {
     // this volume was already visited
     return;
   }

@@ -24,6 +24,11 @@ else()
 
         set(_backtrace_setup_complete FALSE)
 
+        find_path(
+            boost_stacktrace_include
+            NAMES "boost/stacktrace.hpp"
+            REQUIRED
+        )
         if(Backtrace_FOUND)
             # check if we need to link against bracktrace or not
             set(backtrace_include "")
@@ -44,6 +49,7 @@ else()
                 "${CMAKE_BINARY_DIR}"
                 "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                 LINK_LIBRARIES ${dl_LIBRARY}
+                CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
                 COMPILE_DEFINITIONS -DBOOST_STACKTRACE_USE_BACKTRACE
                 OUTPUT_VARIABLE __OUTPUT
             )
@@ -54,9 +60,9 @@ else()
                 message(CHECK_FAIL "no")
 
                 file(GLOB hints "/usr/lib/gcc/*/*/include")
-                find_file(backtrace_header "backtrace.h" HINTS ${hints})
+                find_file(backtrace_header NAMES "backtrace.h" HINTS ${hints})
 
-                if(${backtrace_header} STREQUAL "backtrcae_header-NOTFOUND")
+                if(${backtrace_header} STREQUAL "backtrace_header-NOTFOUND")
                     message(STATUS "Could not find backtrace header file")
                 else()
                     set(backtrace_include
@@ -82,6 +88,8 @@ else()
                         "${CMAKE_BINARY_DIR}"
                         "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                         LINK_LIBRARIES ${dl_LIBRARY}
+                        CMAKE_FLAGS
+                            "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
                         COMPILE_DEFINITIONS
                             -DBOOST_STACKTRACE_USE_BACKTRACE
                             ${backtrace_include}
@@ -111,6 +119,7 @@ else()
                 "${CMAKE_BINARY_DIR}"
                 "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                 LINK_LIBRARIES ${dl_LIBRARY}
+                CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
                 COMPILE_DEFINITIONS
                     -DBOOST_STACKTRACE_USE_BACKTRACE
                     ${backtrace_include}
@@ -137,6 +146,8 @@ else()
                     "${CMAKE_BINARY_DIR}"
                     "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                     LINK_LIBRARIES backtrace ${dl_LIBRARY}
+                    CMAKE_FLAGS
+                        "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
                     COMPILE_DEFINITIONS
                         -DBOOST_STACKTRACE_USE_BACKTRACE
                         ${backtrace_include}
@@ -155,23 +166,6 @@ else()
                 else()
                     message(CHECK_FAIL "no")
                 endif()
-            endif()
-        endif()
-
-        if(NOT _backtrace_setup_complete)
-            message(CHECK_START "Is addr2line available")
-            if(addr2line_EXECUTABLE)
-                list(APPEND _fpe_options -DBOOST_STACKTRACE_USE_ADDR2LINE)
-                list(
-                    APPEND
-                    _fpe_options
-                    -DBOOST_STACKTRACE_ADDR2LINE_LOCATION=${addr2line_EXECUTABLE}
-                )
-                message(CHECK_PASS "yes")
-
-                set(_backtrace_setup_complete TRUE)
-            else()
-                message(CHECK_FAIL "no")
             endif()
         endif()
 

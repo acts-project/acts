@@ -1,18 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
-#include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <iostream>
 #include <stdexcept>
 #include <typeinfo>
 
@@ -54,14 +52,33 @@ class DataHandleBase {
   std::optional<std::string> m_key{};
 };
 
-template <typename T>
-class ReadDataHandle;
+class WriteDataHandleBase : public DataHandleBase {
+ protected:
+  WriteDataHandleBase(SequenceElement* parent, const std::string& name)
+      : DataHandleBase{parent, name} {}
+
+ public:
+  void initialize(const std::string& key);
+
+  bool isCompatible(const DataHandleBase& other) const final;
+};
+
+class ReadDataHandleBase : public DataHandleBase {
+ protected:
+  ReadDataHandleBase(SequenceElement* parent, const std::string& name)
+      : DataHandleBase{parent, name} {}
+
+ public:
+  void initialize(const std::string& key);
+
+  bool isCompatible(const DataHandleBase& other) const final;
+};
 
 template <typename T>
-class WriteDataHandle final : public DataHandleBase {
+class WriteDataHandle final : public WriteDataHandleBase {
  public:
   WriteDataHandle(SequenceElement* parent, const std::string& name)
-      : DataHandleBase{parent, name} {
+      : WriteDataHandleBase{parent, name} {
     m_parent->registerWriteHandle(*this);
   }
 
@@ -77,35 +94,15 @@ class WriteDataHandle final : public DataHandleBase {
     wb.add(m_key.value(), std::move(value));
   }
 
-  void initialize(const std::string& key) {
-    if (key.empty()) {
-      throw std::invalid_argument{"Write handle '" + fullName() +
-                                  "' cannot receive empty key"};
-    }
-    m_key = key;
-  }
-
-  bool isCompatible(const DataHandleBase& other) const override {
-    return dynamic_cast<const ReadDataHandle<T>*>(&other) != nullptr;
-  }
-
   const std::type_info& typeInfo() const override { return typeid(T); };
 };
 
 template <typename T>
-class ReadDataHandle final : public DataHandleBase {
+class ReadDataHandle final : public ReadDataHandleBase {
  public:
   ReadDataHandle(SequenceElement* parent, const std::string& name)
-      : DataHandleBase{parent, name} {
+      : ReadDataHandleBase{parent, name} {
     m_parent->registerReadHandle(*this);
-  }
-
-  void initialize(const std::string& key) {
-    if (key.empty()) {
-      throw std::invalid_argument{"Read handle '" + fullName() +
-                                  "' cannot receive empty key"};
-    }
-    m_key = key;
   }
 
   const T& operator()(const AlgorithmContext& ctx) const {
@@ -118,10 +115,6 @@ class ReadDataHandle final : public DataHandleBase {
                                "' not initialized"};
     }
     return wb.get<T>(m_key.value());
-  }
-
-  bool isCompatible(const DataHandleBase& other) const override {
-    return dynamic_cast<const WriteDataHandle<T>*>(&other) != nullptr;
   }
 
   const std::type_info& typeInfo() const override { return typeid(T); };

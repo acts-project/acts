@@ -355,7 +355,8 @@ def addParticleSelection(
     config: ParticleSelectorConfig,
     inputParticles: str,
     outputParticles: str,
-    inputMeasurementParticlesMap: str = "",
+    inputParticlesFinal: Optional[str] = None,
+    outputParticlesFinal: Optional[str] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """
@@ -371,12 +372,18 @@ def addParticleSelection(
         the identifier for the input particles to be selected
     outputParticles: str
         the identifier for the final selected particle collection
+    inputParticlesFinal: str, None
+        the identifier for the input final particles to be selected
+    outputParticlesFinal: str, None
+        the identifier for the final selected final particle collection
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     s.addAlgorithm(
         acts.examples.ParticleSelector(
             **acts.examples.defaultKWArgs(
+                inputParticlesFinal=inputParticlesFinal,
+                outputParticlesFinal=outputParticlesFinal,
                 rhoMin=config.rho[0],
                 rhoMax=config.rho[1],
                 absZMin=config.absZ[0],
@@ -402,7 +409,6 @@ def addParticleSelection(
             level=customLogLevel(),
             inputParticles=inputParticles,
             outputParticles=outputParticles,
-            inputMeasurementParticlesMap=inputMeasurementParticlesMap,
         )
     )
 
@@ -489,27 +495,22 @@ def addFatras(
     # Selector
     if postSelectParticles is not None:
         particlesInitial = "fatras_particles_initial_selected"
-        addParticleSelection(
-            s,
-            postSelectParticles,
-            inputParticles=alg.config.outputParticlesInitial,
-            outputParticles=particlesInitial,
-        )
-
         particlesFinal = "fatras_particles_final_selected"
         addParticleSelection(
             s,
             postSelectParticles,
-            inputParticles=alg.config.outputParticlesFinal,
-            outputParticles=particlesFinal,
+            inputParticles=outputParticlesInitial,
+            inputParticlesFinal=outputParticlesFinal,
+            outputParticles=particlesInitial,
+            outputParticlesFinal=particlesFinal,
         )
-        s.addWhiteboardAlias("particles_selected", particlesFinal)
+        s.addWhiteboardAlias("particles_selected", particlesInitial)
     else:
-        particlesInitial = alg.config.outputParticlesInitial
-        particlesFinal = alg.config.outputParticlesFinal
+        particlesInitial = outputParticlesInitial
+        particlesFinal = outputParticlesFinal
 
     # Only add alias for 'particles_initial' as this is the one we use most
-    s.addWhiteboardAlias("particles", particlesInitial)
+    s.addWhiteboardAlias("particles", outputParticlesInitial)
 
     # Output
     addSimWriters(
@@ -573,7 +574,7 @@ def addSimWriters(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
                 inputParticles=particlesInitial,
-                inputFinalParticles=particlesFinal,
+                inputParticlesFinal=particlesFinal,
                 filePath=str(outputDirRoot / "particles_simulation.root"),
             )
         )
@@ -605,6 +606,15 @@ def getG4DetectorConstructionFactory(
 
         if type(detector) is DD4hepDetector:
             return DDG4DetectorConstructionFactory(detector, regionList)
+    except Exception as e:
+        print(e)
+
+    try:
+        from acts import geomodel as gm
+        from acts.examples.geant4.geomodel import GeoModelDetectorConstructionFactory
+
+        if type(detector) is gm.GeoModelTree:
+            return GeoModelDetectorConstructionFactory(detector, regionList)
     except Exception as e:
         print(e)
 
@@ -699,7 +709,7 @@ def addGeant4(
     smmConfig.volumeMappings = volumeMappings
     smmConfig.materialMappings = materialMappings
     sensitiveMapper = SensitiveSurfaceMapper.create(
-        smmConfig, acts.logging.INFO, trackingGeometry
+        smmConfig, customLogLevel(), trackingGeometry
     )
 
     # Simulation
@@ -715,8 +725,6 @@ def addGeant4(
         sensitiveSurfaceMapper=sensitiveMapper,
         magneticField=field,
         physicsList=physicsList,
-        volumeMappings=volumeMappings,
-        materialMappings=materialMappings,
         killVolume=killVolume,
         killAfterTime=killAfterTime,
         killSecondaries=killSecondaries,
@@ -732,27 +740,22 @@ def addGeant4(
     # Selector
     if postSelectParticles is not None:
         particlesInitial = "geant4_particles_initial_postselected"
-        addParticleSelection(
-            s,
-            postSelectParticles,
-            inputParticles=alg.config.outputParticlesInitial,
-            outputParticles=particlesInitial,
-        )
-
         particlesFinal = "geant4_particles_final_postselected"
         addParticleSelection(
             s,
             postSelectParticles,
-            inputParticles=alg.config.outputParticlesFinal,
-            outputParticles=particlesFinal,
+            inputParticles=outputParticlesInitial,
+            inputParticlesFinal=outputParticlesFinal,
+            outputParticles=particlesInitial,
+            outputParticlesFinal=particlesFinal,
         )
-        s.addWhiteboardAlias("particles_selected", particlesFinal)
+        s.addWhiteboardAlias("particles_selected", particlesInitial)
     else:
-        particlesInitial = alg.config.outputParticlesInitial
-        particlesFinal = alg.config.outputParticlesFinal
+        particlesInitial = outputParticlesInitial
+        particlesFinal = outputParticlesFinal
 
     # Only add alias for 'particles_initial' as this is the one we use most
-    s.addWhiteboardAlias("particles", particlesInitial)
+    s.addWhiteboardAlias("particles", outputParticlesInitial)
 
     # Output
     addSimWriters(
@@ -811,7 +814,6 @@ def addDigitization(
         surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         randomNumbers=rnd,
         inputSimHits="simhits",
-        outputSourceLinks="sourcelinks",
         outputMeasurements="measurements",
         outputMeasurementParticlesMap="measurement_particles_map",
         outputMeasurementSimHitsMap="measurement_simhits_map",

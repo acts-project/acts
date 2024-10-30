@@ -1,17 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Generators/ParametricParticleGenerator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/ParticleData.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
@@ -35,8 +35,8 @@ ParametricParticleGenerator::ParametricParticleGenerator(const Config& cfg)
       m_cosThetaMax(std::nextafter(std::cos(m_cfg.thetaMax),
                                    std::numeric_limits<double>::max())),
       // in case we force uniform eta generation
-      m_etaMin(-std::log(std::tan(0.5 * m_cfg.thetaMin))),
-      m_etaMax(-std::log(std::tan(0.5 * m_cfg.thetaMax))) {}
+      m_etaMin(Acts::AngleHelpers::etaFromTheta(m_cfg.thetaMin)),
+      m_etaMax(Acts::AngleHelpers::etaFromTheta(m_cfg.thetaMax)) {}
 
 std::pair<SimVertexContainer, SimParticleContainer>
 ParametricParticleGenerator::operator()(RandomEngine& rng) {
@@ -64,8 +64,8 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
   SimParticleContainer::sequence_type particles;
 
   // create the primary vertex
-  auto& primaryVertex =
-      vertices.emplace_back(0, SimVertex::Vector4(0., 0., 0., 0.));
+  auto& primaryVertex = vertices.emplace_back(
+      SimVertexBarcode{0}, SimVertex::Vector4(0., 0., 0., 0.));
 
   // counter will be reused as barcode particle number which must be non-zero.
   for (std::size_t ip = 1; ip <= m_cfg.numParticles; ++ip) {
@@ -89,7 +89,7 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
       sinTheta = std::sqrt(1 - cosTheta * cosTheta);
     } else {
       const double eta = etaDist(rng);
-      const double theta = 2 * std::atan(std::exp(-eta));
+      const double theta = Acts::AngleHelpers::thetaFromEta(eta);
       sinTheta = std::sin(theta);
       cosTheta = std::cos(theta);
     }

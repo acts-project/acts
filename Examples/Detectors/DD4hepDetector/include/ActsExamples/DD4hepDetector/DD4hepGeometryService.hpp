@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -52,7 +52,7 @@ class DD4hepGeometryService {
     /// Log level for the geometry service.
     Acts::Logging::Level logLevel = Acts::Logging::Level::INFO;
     /// Log level for DD4hep itself
-    Acts::Logging::Level dd4hepLogLevel = Acts::Logging::Level::INFO;
+    Acts::Logging::Level dd4hepLogLevel = Acts::Logging::Level::WARNING;
     /// XML-file with the detector description
     std::vector<std::string> xmlFileNames;
     /// The name of the service
@@ -87,7 +87,7 @@ class DD4hepGeometryService {
         std::make_shared<const Acts::GeometryIdentifierHook>();
   };
 
-  DD4hepGeometryService(const Config& cfg);
+  explicit DD4hepGeometryService(const Config& cfg);
   DD4hepGeometryService(const DD4hepGeometryService&) = delete;
   DD4hepGeometryService(DD4hepGeometryService&&) = delete;
   ~DD4hepGeometryService();

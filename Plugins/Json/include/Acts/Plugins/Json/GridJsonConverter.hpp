@@ -1,14 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Plugins/Json/TrackParametersJsonConverter.hpp"
 #include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -266,15 +267,17 @@ auto fromJson(const nlohmann::json& jGrid,
   if constexpr (GridType::DIM == 1u) {
     for (const auto& jd : jData) {
       std::array<std::size_t, 1u> lbin = jd[0u];
-      value_type values = jd[1u];
-      grid.atLocalBins(lbin) = values;
+      if (!jd[1u].is_null()) {
+        grid.atLocalBins(lbin) = jd[1u].get<value_type>();
+      }
     }
   }
   if constexpr (GridType::DIM == 2u) {
     for (const auto& jd : jData) {
       std::array<std::size_t, 2u> lbin = jd[0u];
-      value_type values = jd[1u];
-      grid.atLocalBins(lbin) = values;
+      if (!jd[1u].is_null()) {
+        grid.atLocalBins(lbin) = jd[1u].get<value_type>();
+      }
     }
   }
   return grid;

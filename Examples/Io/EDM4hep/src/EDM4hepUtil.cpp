@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
@@ -18,6 +18,7 @@
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
@@ -144,15 +145,12 @@ void EDM4hepUtil::writeSimHit(const ActsFatras::Hit& from,
   to.setEDep(-delta4[Acts::eEnergy] / Acts::UnitConstants::GeV);
 }
 
-Measurement EDM4hepUtil::readMeasurement(
-    const edm4hep::TrackerHitPlane& from,
+VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
+    MeasurementContainer& container, const edm4hep::TrackerHitPlane& from,
     const edm4hep::TrackerHitCollection* fromClusters, Cluster* toCluster,
     const MapGeometryIdFrom& geometryMapper) {
   // no need for digitization as we only want to identify the sensor
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
-
-  IndexSourceLink sourceLink{
-      geometryId, static_cast<Index>(podioObjectIDToInteger(from.id()))};
 
   auto pos = from.getPosition();
   auto cov = from.getCovMatrix();
@@ -172,7 +170,7 @@ Measurement EDM4hepUtil::readMeasurement(
   dParameters.values.push_back(pos.z);
   dParameters.variances.push_back(cov[5]);
 
-  auto to = createMeasurement(dParameters, sourceLink);
+  auto to = createMeasurement(container, geometryId, dParameters);
 
   if (fromClusters != nullptr) {
     for (const auto objectId : from.getRawHits()) {
@@ -196,13 +194,12 @@ Measurement EDM4hepUtil::readMeasurement(
   return to;
 }
 
-void EDM4hepUtil::writeMeasurement(const Measurement& from,
-                                   edm4hep::MutableTrackerHitPlane to,
-                                   const Cluster* fromCluster,
-                                   edm4hep::TrackerHitCollection& toClusters,
-                                   const MapGeometryIdTo& geometryMapper) {
-  Acts::GeometryIdentifier geoId =
-      from.sourceLink().template get<IndexSourceLink>().geometryId();
+void EDM4hepUtil::writeMeasurement(
+    const ConstVariableBoundMeasurementProxy& from,
+    edm4hep::MutableTrackerHitPlane to, const Cluster* fromCluster,
+    edm4hep::TrackerHitCollection& toClusters,
+    const MapGeometryIdTo& geometryMapper) {
+  Acts::GeometryIdentifier geoId = from.geometryId();
 
   if (geometryMapper) {
     // no need for digitization as we only want to identify the sensor

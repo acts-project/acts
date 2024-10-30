@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootVertexReader.hpp"
 
@@ -114,7 +114,7 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
   for (unsigned int i = 0; i < nVertices; i++) {
     SimVertex v;
 
-    v.id = (*m_vertexId)[i];
+    v.id = SimVertexBarcode{(*m_vertexId)[i]};
     v.process = static_cast<ActsFatras::ProcessType>((*m_process)[i]);
     v.position4 = Acts::Vector4((*m_vx)[i] * Acts::UnitConstants::mm,
                                 (*m_vy)[i] * Acts::UnitConstants::mm,

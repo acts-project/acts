@@ -206,7 +206,6 @@ def test_csv_meas_reader(tmp_path, fatras, trk_geo, conf_const):
             level=acts.logging.WARNING,
             outputMeasurements="measurements",
             outputMeasurementSimHitsMap="simhitsmap",
-            outputSourceLinks="sourcelinks",
             outputMeasurementParticlesMap="meas_ptcl_map",
             inputSimHits=simAlg.config.outputSimHits,
             inputDir=str(out),
@@ -215,7 +214,7 @@ def test_csv_meas_reader(tmp_path, fatras, trk_geo, conf_const):
 
     algs = [
         AssertCollectionExistsAlg(k, f"check_alg_{k}", acts.logging.WARNING)
-        for k in ("measurements", "simhitsmap", "sourcelinks", "meas_ptcl_map")
+        for k in ("measurements", "simhitsmap", "meas_ptcl_map")
     ]
     for alg in algs:
         s.addAlgorithm(alg)
@@ -291,8 +290,11 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
     tmp_file = str(tmp_path / "output_edm4hep.root")
     odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
 
-    with multiprocessing.get_context("spawn").Pool() as pool:
-        pool.apply(generate_input_test_edm4hep_simhit_reader, (odd_xml_file, tmp_file))
+    p = multiprocessing.Process(
+        target=generate_input_test_edm4hep_simhit_reader, args=(odd_xml_file, tmp_file)
+    )
+    p.start()
+    p.join()
 
     assert os.path.exists(tmp_file)
 
@@ -363,14 +365,13 @@ def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
             level=acts.logging.WARNING,
             outputMeasurements="measurements",
             outputMeasurementSimHitsMap="simhitsmap",
-            outputSourceLinks="sourcelinks",
             inputPath=str(out),
         )
     )
 
     algs = [
         AssertCollectionExistsAlg(k, f"check_alg_{k}", acts.logging.WARNING)
-        for k in ("measurements", "simhitsmap", "sourcelinks")
+        for k in ("measurements", "simhitsmap")
     ]
     for alg in algs:
         s.addAlgorithm(alg)

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -22,6 +22,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
@@ -76,7 +77,7 @@ struct TestReverseFilteringLogic {
   template <typename traj_t>
   bool operator()(typename traj_t::ConstTrackStateProxy state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
-    auto momentum = fabs(1 / state.filtered()[Acts::eBoundQOverP]);
+    auto momentum = std::abs(1 / state.filtered()[Acts::eBoundQOverP]);
     std::cout << "momentum : " << momentum << std::endl;
     return (momentum <= momentumMax);
   }
@@ -89,7 +90,7 @@ auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(
-      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
+      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::INFO));
   Acts::StraightLineStepper stepper;
   return Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>(
       stepper, std::move(navigator));
@@ -104,7 +105,7 @@ auto makeConstantFieldPropagator(
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(
-      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
+      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::INFO));
   auto field =
       std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, bz));
   stepper_t stepper(std::move(field));
@@ -340,7 +341,7 @@ struct FitterTester {
     Acts::Vector3 center(3._m, 0., 0.);
     Acts::Vector3 normal(1., 0., 0.);
     auto targetSurface =
-        Acts::Surface::makeShared<Acts::PlaneSurface>(center, normal);
+        Acts::CurvilinearSurface(center, normal).planeSurface();
 
     options.referenceSurface = targetSurface.get();
 
@@ -561,7 +562,7 @@ struct FitterTester {
     Acts::Vector3 center(-3._m, 0., 0.);
     Acts::Vector3 normal(1., 0., 0.);
     auto targetSurface =
-        Acts::Surface::makeShared<Acts::PlaneSurface>(center, normal);
+        Acts::CurvilinearSurface(center, normal).planeSurface();
 
     options.referenceSurface = targetSurface.get();
 

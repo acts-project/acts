@@ -15,11 +15,13 @@ pybind11_add_module(ActsPythonBindings
   src/Digitization.cpp
   src/Material.cpp
   src/Geometry.cpp
+  src/GeometryBuildingGen1.cpp
   src/ExampleAlgorithms.cpp
   src/MagneticField.cpp
   src/Output.cpp
   src/Input.cpp
   src/Propagation.cpp
+  src/Navigation.cpp
   src/Generators.cpp
   src/Obj.cpp
   src/TruthTracking.cpp
@@ -53,11 +55,9 @@ target_link_libraries(
         ActsExamplesDetectorTGeo
         ActsExamplesMagneticField
         ActsExamplesIoRoot
-        ActsExamplesIoNuclearInteractions
         ActsExamplesIoCsv
         ActsExamplesIoObj
         ActsExamplesIoJson
-        ActsExamplesIoPerformance
         ActsExamplesGenerators
         ActsExamplesPrinters
         ActsExamplesTrackFinding
@@ -67,6 +67,10 @@ target_link_libraries(
         ActsExamplesDetectorTelescope
         ActsExamplesUtilities
         ActsExamplesAmbiguityResolution
+        ActsExamplesTruthTracking
+        ActsExamplesDigitization
+        ActsExamplesPropagation
+        ActsExamplesMaterialMapping
 )
 
 set(py_files
@@ -96,8 +100,14 @@ endif()
 if(ACTS_BUILD_PLUGIN_TRACCC)
     target_link_libraries(ActsPythonBindings PUBLIC ActsPluginDetray)
     target_sources(ActsPythonBindings PRIVATE src/Detray.cpp)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginCovfie)
+    target_sources(ActsPythonBindings PRIVATE src/Covfie.cpp)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTraccc)
+    target_sources(ActsPythonBindings PRIVATE src/Traccc.cpp)
 else()
     target_sources(ActsPythonBindings PRIVATE src/DetrayStub.cpp)
+    target_sources(ActsPythonBindings PRIVATE src/CovfieStub.cpp)
+    target_sources(ActsPythonBindings PRIVATE src/TracccStub.cpp)
 endif()
 
 if(ACTS_BUILD_PLUGIN_ACTSVG)
@@ -275,6 +285,14 @@ if(ACTS_BUILD_PLUGIN_ONNX)
 else()
     target_sources(ActsPythonBindings PRIVATE src/OnnxStub.cpp)
     target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
+endif()
+
+if(ACTS_BUILD_EXAMPLES_HASHING)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginHashing)
+    target_sources(ActsPythonBindings PRIVATE src/Hashing.cpp)
+    list(APPEND py_files examples/hashing.py)
+else()
+    target_sources(ActsPythonBindings PRIVATE src/HashingStub.cpp)
 endif()
 
 configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)

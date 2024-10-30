@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -331,7 +331,7 @@ class MultiTrajectoryTestsCommon {
     auto tsb = traj.getTrackState(index);
     // then modify one and check that the other was modified as well
     {
-      auto [par, cov] = generateBoundParametersCovariance(rng);
+      auto [par, cov] = generateBoundParametersCovariance(rng, {});
       tsb.predicted() = par;
       tsb.predictedCovariance() = cov;
       BOOST_CHECK_EQUAL(tsa.predicted(), par);
@@ -340,7 +340,7 @@ class MultiTrajectoryTestsCommon {
       BOOST_CHECK_EQUAL(tsb.predictedCovariance(), cov);
     }
     {
-      auto [par, cov] = generateBoundParametersCovariance(rng);
+      auto [par, cov] = generateBoundParametersCovariance(rng, {});
       tsb.filtered() = par;
       tsb.filteredCovariance() = cov;
       BOOST_CHECK_EQUAL(tsa.filtered(), par);
@@ -349,7 +349,7 @@ class MultiTrajectoryTestsCommon {
       BOOST_CHECK_EQUAL(tsb.filteredCovariance(), cov);
     }
     {
-      auto [par, cov] = generateBoundParametersCovariance(rng);
+      auto [par, cov] = generateBoundParametersCovariance(rng, {});
       tsb.smoothed() = par;
       tsb.smoothedCovariance() = cov;
       BOOST_CHECK_EQUAL(tsa.smoothed(), par);
@@ -377,7 +377,7 @@ class MultiTrajectoryTestsCommon {
     }
     {
       // reset measurements w/ full parameters
-      auto [measPar, measCov] = generateBoundParametersCovariance(rng);
+      auto [measPar, measCov] = generateBoundParametersCovariance(rng, {});
       tsb.allocateCalibrated(eBoundSize);
       tsb.template calibrated<eBoundSize>() = measPar;
       tsb.template calibratedCovariance<eBoundSize>() = measCov;
@@ -390,7 +390,7 @@ class MultiTrajectoryTestsCommon {
     }
     {
       // reset only the effective measurements
-      auto [measPar, measCov] = generateBoundParametersCovariance(rng);
+      auto [measPar, measCov] = generateBoundParametersCovariance(rng, {});
       std::size_t nMeasurements = tsb.effectiveCalibrated().rows();
       auto effPar = measPar.head(nMeasurements);
       auto effCov = measCov.topLeftCorner(nMeasurements, nMeasurements);

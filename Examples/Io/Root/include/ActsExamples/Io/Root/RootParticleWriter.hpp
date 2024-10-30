@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -39,7 +39,7 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
     std::string inputParticles;
     /// Optional. If given, the the energy loss and traversed material is
     /// computed and written.
-    std::string inputFinalParticles;
+    std::string inputParticlesFinal;
     /// Path to the output file.
     std::string filePath;
     /// Output file access mode.
@@ -74,8 +74,8 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SimParticleContainer> m_inputFinalParticles{
-      this, "InputFinalParticles"};
+  ReadDataHandle<SimParticleContainer> m_inputParticlesFinal{
+      this, "InputParticlesFinal"};
 
   std::mutex m_writeMutex;
 

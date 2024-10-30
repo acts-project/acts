@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
@@ -19,7 +19,6 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -29,8 +28,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
@@ -178,13 +175,13 @@ class BranchStopper {
   using BranchStopperResult =
       Acts::CombinatorialKalmanFilterBranchStopperResult;
 
-  struct BrachState {
+  struct BranchState {
     std::size_t nPixelHoles = 0;
     std::size_t nStripHoles = 0;
   };
 
-  static constexpr Acts::ProxyAccessor<BrachState> branchStateAccessor =
-      Acts::ProxyAccessor<BrachState>(Acts::hashString("MyBranchState"));
+  static constexpr Acts::ProxyAccessor<BranchState> branchStateAccessor =
+      Acts::ProxyAccessor<BranchState>(Acts::hashString("MyBranchState"));
 
   mutable std::atomic<std::size_t> m_nStoppedBranches{0};
 
@@ -206,7 +203,7 @@ class BranchStopper {
           } else if constexpr (std::is_same_v<
                                    T, Acts::TrackSelector::EtaBinnedConfig>) {
             double theta = trackState.parameters()[Acts::eBoundTheta];
-            double eta = -std::log(std::tan(0.5 * theta));
+            double eta = Acts::AngleHelpers::etaFromTheta(theta);
             return config.hasCuts(eta) ? &config.getCuts(eta) : nullptr;
           }
         },
@@ -218,17 +215,18 @@ class BranchStopper {
     }
 
     bool tooManyHolesPS = false;
-    if (!(m_cfg.pixelVolumes.empty() && m_cfg.stripVolumes.empty())) {
+    if (!(m_cfg.pixelVolumeIds.empty() && m_cfg.stripVolumeIds.empty())) {
       auto& branchState = branchStateAccessor(track);
       // count both holes and outliers as holes for pixel/strip counts
       if (trackState.typeFlags().test(Acts::TrackStateFlag::HoleFlag) ||
           trackState.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
-        if (m_cfg.pixelVolumes.count(
-                trackState.referenceSurface().geometryId().volume()) >= 1) {
+        auto volumeId = trackState.referenceSurface().geometryId().volume();
+        if (std::find(m_cfg.pixelVolumeIds.begin(), m_cfg.pixelVolumeIds.end(),
+                      volumeId) != m_cfg.pixelVolumeIds.end()) {
           ++branchState.nPixelHoles;
-        } else if (m_cfg.stripVolumes.count(
-                       trackState.referenceSurface().geometryId().volume()) >=
-                   1) {
+        } else if (std::find(m_cfg.stripVolumeIds.begin(),
+                             m_cfg.stripVolumeIds.end(),
+                             volumeId) != m_cfg.stripVolumeIds.end()) {
           ++branchState.nStripHoles;
         }
       }
@@ -241,8 +239,10 @@ class BranchStopper {
     bool tooManyHoles =
         track.nHoles() > singleConfig->maxHoles || tooManyHolesPS;
     bool tooManyOutliers = track.nOutliers() > singleConfig->maxOutliers;
+    bool tooManyHolesAndOutliers = (track.nHoles() + track.nOutliers()) >
+                                   singleConfig->maxHolesAndOutliers;
 
-    if (tooManyHoles || tooManyOutliers) {
+    if (tooManyHoles || tooManyOutliers || tooManyHolesAndOutliers) {
       ++m_nStoppedBranches;
       return enoughMeasurements ? BranchStopperResult::StopAndKeep
                                 : BranchStopperResult::StopAndDrop;
@@ -262,9 +262,6 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
     : IAlgorithm("TrackFindingAlgorithm", level), m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
-  }
-  if (m_cfg.inputSourceLinks.empty()) {
-    throw std::invalid_argument("Missing source links input collection");
   }
   if (m_cfg.inputInitialTrackParameters.empty()) {
     throw std::invalid_argument(
@@ -294,7 +291,6 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
   }
 
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
-  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
   m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
   m_inputSeeds.maybeInitialize(m_cfg.inputSeeds);
   m_outputTracks.initialize(m_cfg.outputTracks);
@@ -303,7 +299,6 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
 ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
-  const auto& sourceLinks = m_inputSourceLinks(ctx);
   const auto& initialParameters = m_inputInitialTrackParameters(ctx);
   const SimSeedContainer* seeds = nullptr;
 
@@ -340,7 +335,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
 
   IndexSourceLinkAccessor slAccessor;
-  slAccessor.container = &sourceLinks;
+  slAccessor.container = &measurements.orderedIndices();
   Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
       slAccessorDelegate;
   slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
@@ -350,11 +345,15 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   firstPropOptions.maxSteps = m_cfg.maxSteps;
   firstPropOptions.direction = m_cfg.reverseSearch ? Acts::Direction::Backward
                                                    : Acts::Direction::Forward;
+  firstPropOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
+  firstPropOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
   Acts::PropagatorPlainOptions secondPropOptions(ctx.geoContext,
                                                  ctx.magFieldContext);
   secondPropOptions.maxSteps = m_cfg.maxSteps;
   secondPropOptions.direction = firstPropOptions.direction.invert();
+  secondPropOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
+  secondPropOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
   // Set the CombinatorialKalmanFilter options
   TrackFinderOptions firstOptions(ctx.geoContext, ctx.magFieldContext,
@@ -366,11 +365,11 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                    ctx.calibContext, slAccessorDelegate,
                                    extensions, secondPropOptions);
   secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
+  secondOptions.skipPrePropagationUpdate = true;
 
   using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
-  using ExtrapolatorOptions =
-      Extrapolator::template Options<Acts::ActionList<Acts::MaterialInteractor>,
-                                     Acts::AbortList<Acts::EndOfWorldReached>>;
+  using ExtrapolatorOptions = Extrapolator::template Options<
+      Acts::ActorList<Acts::MaterialInteractor, Acts::EndOfWorldReached>>;
 
   Extrapolator extrapolator(
       Acts::SympyStepper(m_cfg.magneticField),
@@ -379,6 +378,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       logger().cloneWithSuffix("Propagator"));
 
   ExtrapolatorOptions extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
+  extrapolationOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
+  extrapolationOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
@@ -395,8 +396,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   TrackContainer tracksTemp(trackContainerTemp, trackStateContainerTemp);
 
   // Note that not all backends support PODs as column types
-  tracks.addColumn<BranchStopper::BrachState>("MyBranchState");
-  tracksTemp.addColumn<BranchStopper::BrachState>("MyBranchState");
+  tracks.addColumn<BranchStopper::BranchState>("MyBranchState");
+  tracksTemp.addColumn<BranchStopper::BranchState>("MyBranchState");
 
   tracks.addColumn<unsigned int>("trackGroup");
   tracksTemp.addColumn<unsigned int>("trackGroup");
@@ -417,6 +418,12 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
         it->second = true;
       }
     });
+
+    // trim the track if requested
+    if (m_cfg.trimTracks) {
+      Acts::trimTrack(track, true, true, true);
+    }
+    Acts::calculateTrackQuantities(track);
 
     if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
       return;
@@ -465,8 +472,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     const Acts::BoundTrackParameters& firstInitialParameters =
         initialParameters.at(iSeed);
 
-    auto firstResult =
-        (*m_cfg.findTracks)(firstInitialParameters, firstOptions, tracksTemp);
+    auto firstRootBranch = tracksTemp.makeTrack();
+    auto firstResult = (*m_cfg.findTracks)(firstInitialParameters, firstOptions,
+                                           tracksTemp, firstRootBranch);
     nSeed++;
 
     if (!firstResult.ok()) {
@@ -504,7 +512,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
       if (m_cfg.twoWay) {
         std::optional<Acts::VectorMultiTrajectory::TrackStateProxy>
-            firstMeasurement;
+            firstMeasurementOpt;
         for (auto trackState : trackCandidate.trackStatesReversed()) {
           bool isMeasurement = trackState.typeFlags().test(
               Acts::TrackStateFlag::MeasurementFlag);
@@ -514,36 +522,40 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
           // decrease resolution because only the smoothing corrected the very
           // first prediction as filtering is not possible.
           if (isMeasurement && !isOutlier) {
-            firstMeasurement = trackState;
+            firstMeasurementOpt = trackState;
           }
         }
 
-        if (firstMeasurement.has_value()) {
-          Acts::BoundTrackParameters secondInitialParameters =
-              trackCandidate.createParametersFromState(*firstMeasurement);
+        if (firstMeasurementOpt.has_value()) {
+          auto& firstMeasurement = firstMeasurementOpt.value();
 
-          auto secondResult = (*m_cfg.findTracks)(secondInitialParameters,
-                                                  secondOptions, tracksTemp);
+          Acts::BoundTrackParameters secondInitialParameters =
+              trackCandidate.createParametersFromState(firstMeasurement);
+
+          if (!secondInitialParameters.referenceSurface().insideBounds(
+                  secondInitialParameters.localPosition())) {
+            m_nSkippedSecondPass++;
+            ACTS_DEBUG(
+                "Smoothing of first pass fit produced out-of-bounds parameters "
+                "relative to the surface. Skipping second pass.");
+            continue;
+          }
+
+          auto secondRootBranch = tracksTemp.makeTrack();
+          secondRootBranch.copyFrom(trackCandidate, false);
+          auto secondResult =
+              (*m_cfg.findTracks)(secondInitialParameters, secondOptions,
+                                  tracksTemp, secondRootBranch);
 
           if (!secondResult.ok()) {
             ACTS_WARNING("Second track finding failed for seed "
                          << iSeed << " with error" << secondResult.error());
           } else {
-            auto firstState =
-                *std::next(trackCandidate.trackStatesReversed().begin(),
-                           trackCandidate.nTrackStates() - 1);
-            assert(firstState.previous() == Acts::kTrackIndexInvalid);
+            // store the original previous state to restore it later
+            auto originalFirstMeasurementPrevious = firstMeasurement.previous();
 
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
-              if (!secondTrack.hasReferenceSurface()) {
-                ACTS_WARNING("Second track has no reference surface.");
-                continue;
-              }
-              if (secondTrack.nMeasurements() <= 1) {
-                continue;
-              }
-
               // TODO a copy of the track should not be necessary but is the
               //      safest way with the current EDM
               // TODO a lightweight copy without copying all the track state
@@ -556,21 +568,22 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               // processed
               secondTrackCopy.reverseTrackStates(true);
 
-              firstState.previous() =
-                  (*std::next(secondTrackCopy.trackStatesReversed().begin()))
-                      .index();
+              firstMeasurement.previous() =
+                  secondTrackCopy.outermostTrackState().index();
+
+              trackCandidate.copyFrom(secondTrackCopy, false);
 
               // finalize the track candidate
+
+              bool doExtrapolate = true;
 
               if (!m_cfg.reverseSearch) {
                 // these parameters are already extrapolated by the CKF and have
                 // the optimal resolution. note that we did not smooth all the
                 // states.
 
-                trackCandidate.parameters() = secondTrackCopy.parameters();
-                trackCandidate.covariance() = secondTrackCopy.covariance();
-                trackCandidate.setReferenceSurface(
-                    secondTrackCopy.referenceSurface().getSharedPtr());
+                // only extrapolate if we did not do it already
+                doExtrapolate = !trackCandidate.hasReferenceSurface();
               } else {
                 // smooth the full track and extrapolate to the reference
 
@@ -586,7 +599,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 }
 
                 trackCandidate.reverseTrackStates(true);
+              }
 
+              if (doExtrapolate) {
                 auto secondExtrapolationResult =
                     Acts::extrapolateTrackToReferenceSurface(
                         trackCandidate, *pSurface, extrapolator,
@@ -602,23 +617,22 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 }
               }
 
-              Acts::calculateTrackQuantities(trackCandidate);
-
               addTrack(trackCandidate);
 
               ++nSecond;
             }
 
-            // restore `trackCandidate` to its original state in case we need it
-            // again
-            firstState.previous() = Acts::kTrackIndexInvalid;
-            Acts::calculateTrackQuantities(trackCandidate);
+            // restore the original previous state
+            firstMeasurement.previous() = originalFirstMeasurementPrevious;
           }
         }
       }
 
       // if no second track was found, we will use only the first track
       if (nSecond == 0) {
+        // restore the track to the original state
+        trackCandidate.copyFrom(firstTrack, false);
+
         auto firstExtrapolationResult =
             Acts::extrapolateTrackToReferenceSurface(
                 trackCandidate, *pSurface, extrapolator, extrapolationOptions,
@@ -639,7 +653,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   // Compute shared hits from all the reconstructed tracks
   if (m_cfg.computeSharedHits) {
-    computeSharedHits(sourceLinks, tracks);
+    computeSharedHits(tracks, measurements);
   }
 
   ACTS_DEBUG("Finalized track finding with " << tracks.size()
@@ -676,6 +690,7 @@ ProcessCode TrackFindingAlgorithm::finalize() {
   ACTS_INFO("- found tracks: " << m_nFoundTracks);
   ACTS_INFO("- selected tracks: " << m_nSelectedTracks);
   ACTS_INFO("- stopped branches: " << m_nStoppedBranches);
+  ACTS_INFO("- skipped second pass: " << m_nSkippedSecondPass);
 
   auto memoryStatistics =
       m_memoryStatistics.combine([](const auto& a, const auto& b) {
@@ -687,6 +702,56 @@ ProcessCode TrackFindingAlgorithm::finalize() {
   memoryStatistics.toStream(ss);
   ACTS_DEBUG("Track State memory statistics (averaged):\n" << ss.str());
   return ProcessCode::SUCCESS;
+}
+
+// TODO this is somewhat duplicated in AmbiguityResolutionAlgorithm.cpp
+// TODO we should make a common implementation in the core at some point
+void TrackFindingAlgorithm::computeSharedHits(
+    TrackContainer& tracks, const MeasurementContainer& measurements) const {
+  // Compute shared hits from all the reconstructed tracks
+  // Compute nSharedhits and Update ckf results
+  // hit index -> list of multi traj indexes [traj, meas]
+
+  std::vector<std::size_t> firstTrackOnTheHit(
+      measurements.size(), std::numeric_limits<std::size_t>::max());
+  std::vector<std::size_t> firstStateOnTheHit(
+      measurements.size(), std::numeric_limits<std::size_t>::max());
+
+  for (auto track : tracks) {
+    for (auto state : track.trackStatesReversed()) {
+      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        continue;
+      }
+
+      std::size_t hitIndex = state.getUncalibratedSourceLink()
+                                 .template get<IndexSourceLink>()
+                                 .index();
+
+      // Check if hit not already used
+      if (firstTrackOnTheHit.at(hitIndex) ==
+          std::numeric_limits<std::size_t>::max()) {
+        firstTrackOnTheHit.at(hitIndex) = track.index();
+        firstStateOnTheHit.at(hitIndex) = state.index();
+        continue;
+      }
+
+      // if already used, control if first track state has been marked
+      // as shared
+      int indexFirstTrack = firstTrackOnTheHit.at(hitIndex);
+      int indexFirstState = firstStateOnTheHit.at(hitIndex);
+
+      auto firstState = tracks.getTrack(indexFirstTrack)
+                            .container()
+                            .trackStateContainer()
+                            .getTrackState(indexFirstState);
+      if (!firstState.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
+        firstState.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+      }
+
+      // Decorate this track state
+      state.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+    }
+  }
 }
 
 }  // namespace ActsExamples
