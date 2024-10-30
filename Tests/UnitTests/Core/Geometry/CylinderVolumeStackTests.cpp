@@ -813,6 +813,165 @@ BOOST_DATA_TEST_CASE(
   }
 }
 
+BOOST_AUTO_TEST_CASE(ResizeReproduction1) {
+  Transform3 trf1 =
+      Transform3::Identity() * Translation3{Vector3::UnitZ() * -2000};
+  auto bounds1 = std::make_shared<CylinderVolumeBounds>(70, 100, 100.0);
+  Volume vol1{trf1, bounds1};
+
+  std::vector<Volume*> volumes = {&vol1};
+  CylinderVolumeStack stack(volumes, BinningValue::binZ,
+                            CylinderVolumeStack::AttachmentStrategy::Gap,
+                            CylinderVolumeStack::ResizeStrategy::Gap, *logger);
+
+  Transform3 trf2 =
+      Transform3::Identity() * Translation3{Vector3::UnitZ() * -1500};
+  stack.update(std::make_shared<CylinderVolumeBounds>(30.0, 100, 600), trf2,
+               *logger);
+
+  std::cout << stack.volumeBounds() << std::endl;
+  std::cout << stack.transform().matrix() << std::endl;
+
+  Transform3 trf3 =
+      Transform3::Identity() * Translation3{Vector3::UnitZ() * -1600};
+  stack.update(std::make_shared<CylinderVolumeBounds>(30.0, 100, 700), trf3,
+               *logger);
+}
+
+BOOST_AUTO_TEST_CASE(ResizeReproduction2) {
+  // The numbers are tuned a bit to reproduce the faulty behavior
+  Transform3 trf1 =
+      Transform3::Identity() * Translation3{Vector3::UnitZ() * 263};
+  auto bounds1 = std::make_shared<CylinderVolumeBounds>(30, 100, 4.075);
+  Volume vol1{trf1, bounds1};
+
+  std::vector<Volume*> volumes = {&vol1};
+  CylinderVolumeStack stack(volumes, BinningValue::binZ,
+                            CylinderVolumeStack::AttachmentStrategy::Gap,
+                            CylinderVolumeStack::ResizeStrategy::Gap, *logger);
+
+  Transform3 trf2 =
+      Transform3::Identity() * Translation3{Vector3::UnitZ() * 260.843};
+  stack.update(std::make_shared<CylinderVolumeBounds>(30.0, 100, 6.232), trf2,
+               *logger);
+
+  std::cout << stack.volumeBounds() << std::endl;
+  std::cout << stack.transform().matrix() << std::endl;
+
+  Transform3 trf3 =
+      Transform3::Identity() * Translation3{Vector3::UnitZ() * 1627.31};
+  stack.update(std::make_shared<CylinderVolumeBounds>(30.0, 100, 1372.699),
+               trf3, *logger);
+}
+
+//   original size
+// <--------------->
+// +---------------+
+// |               |
+// |               |
+// |   Volume 1    |
+// |               |
+// |               |
+// +---------------+
+//         first resize
+// <-------------------------->
+// +---------------+----------+
+// |               |          |
+// |               |          |
+// |   Volume 1    |   Gap    |
+// |               |          |      Gap is
+// |               |          |      reused!--+
+// +---------------+----------+               |
+//             second resize                  |
+// <----------------------------------->      |
+// +---------------+-------------------+      |
+// |               |                   |      |
+// |               |                   |      |
+// |   Volume 1    |        Gap        |<-----+
+// |               |                   |
+// |               |                   |
+// +---------------+-------------------+
+//
+BOOST_AUTO_TEST_CASE(ResizeGapMultiple) {
+  Transform3 trf = Transform3::Identity();
+  auto bounds = std::make_shared<CylinderVolumeBounds>(70, 100, 100.0);
+  Volume vol{trf, bounds};
+
+  BOOST_TEST_CONTEXT("Positive") {
+    std::vector<Volume*> volumes = {&vol};
+    CylinderVolumeStack stack(volumes, BinningValue::binZ,
+                              CylinderVolumeStack::AttachmentStrategy::Gap,
+                              CylinderVolumeStack::ResizeStrategy::Gap,
+                              *logger);
+
+    BOOST_CHECK_EQUAL(volumes.size(), 1);
+    BOOST_CHECK(stack.gaps().empty());
+
+    stack.update(std::make_shared<CylinderVolumeBounds>(30.0, 100, 200),
+                 trf * Translation3{Vector3::UnitZ() * 100}, *logger);
+    BOOST_CHECK_EQUAL(volumes.size(), 2);
+    BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
+
+    BOOST_CHECK_EQUAL(stack.gaps().front()->center()[eZ], 200.0);
+    const auto* cylBounds = dynamic_cast<const CylinderVolumeBounds*>(
+        &stack.gaps().front()->volumeBounds());
+    BOOST_REQUIRE_NE(cylBounds, nullptr);
+    BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eHalfLengthZ),
+                      100.0);
+
+    stack.update(std::make_shared<CylinderVolumeBounds>(30.0, 100, 300),
+                 trf * Translation3{Vector3::UnitZ() * 200}, *logger);
+
+    BOOST_CHECK_EQUAL(volumes.size(), 2);
+    // No additional gap volume was added!
+    BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
+
+    BOOST_CHECK_EQUAL(stack.gaps().front()->center()[eZ], 300.0);
+    cylBounds = dynamic_cast<const CylinderVolumeBounds*>(
+        &stack.gaps().front()->volumeBounds());
+    BOOST_REQUIRE_NE(cylBounds, nullptr);
+    BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eHalfLengthZ),
+                      200.0);
+  }
+
+  BOOST_TEST_CONTEXT("Negative") {
+    std::vector<Volume*> volumes = {&vol};
+    CylinderVolumeStack stack(volumes, BinningValue::binZ,
+                              CylinderVolumeStack::AttachmentStrategy::Gap,
+                              CylinderVolumeStack::ResizeStrategy::Gap,
+                              *logger);
+
+    BOOST_CHECK_EQUAL(volumes.size(), 1);
+    BOOST_CHECK(stack.gaps().empty());
+
+    stack.update(std::make_shared<CylinderVolumeBounds>(30.0, 100, 200),
+                 trf * Translation3{Vector3::UnitZ() * -100}, *logger);
+    BOOST_CHECK_EQUAL(volumes.size(), 2);
+    BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
+
+    BOOST_CHECK_EQUAL(stack.gaps().front()->center()[eZ], -200.0);
+    const auto* cylBounds = dynamic_cast<const CylinderVolumeBounds*>(
+        &stack.gaps().front()->volumeBounds());
+    BOOST_REQUIRE_NE(cylBounds, nullptr);
+    BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eHalfLengthZ),
+                      100.0);
+
+    stack.update(std::make_shared<CylinderVolumeBounds>(30.0, 100, 300),
+                 trf * Translation3{Vector3::UnitZ() * -200}, *logger);
+
+    BOOST_CHECK_EQUAL(volumes.size(), 2);
+    // No additional gap volume was added!
+    BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
+
+    BOOST_CHECK_EQUAL(stack.gaps().front()->center()[eZ], -300.0);
+    cylBounds = dynamic_cast<const CylinderVolumeBounds*>(
+        &stack.gaps().front()->volumeBounds());
+    BOOST_REQUIRE_NE(cylBounds, nullptr);
+    BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eHalfLengthZ),
+                      200.0);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(RDirection)
@@ -1500,6 +1659,82 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK_EQUAL(vol->transform().matrix(), trf.matrix());
     BOOST_CHECK_EQUAL(volBounds->get(CylinderVolumeBounds::eHalfLengthZ),
                       450_mm);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ResizeGapMultiple) {
+  Transform3 trf = Transform3::Identity();
+  auto bounds = std::make_shared<CylinderVolumeBounds>(100, 200, 100);
+  Volume vol{trf, bounds};
+
+  BOOST_TEST_CONTEXT("Outer") {
+    std::vector<Volume*> volumes = {&vol};
+    CylinderVolumeStack stack(volumes, BinningValue::binR,
+                              CylinderVolumeStack::AttachmentStrategy::Gap,
+                              CylinderVolumeStack::ResizeStrategy::Gap,
+                              *logger);
+
+    BOOST_CHECK_EQUAL(volumes.size(), 1);
+    BOOST_CHECK(stack.gaps().empty());
+
+    stack.update(std::make_shared<CylinderVolumeBounds>(100, 250, 100), trf,
+                 *logger);
+    BOOST_CHECK_EQUAL(volumes.size(), 2);
+    BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
+
+    const auto* cylBounds = dynamic_cast<const CylinderVolumeBounds*>(
+        &stack.gaps().front()->volumeBounds());
+    BOOST_REQUIRE_NE(cylBounds, nullptr);
+    BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eMinR), 200);
+    BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eMaxR), 250);
+
+    stack.update(std::make_shared<CylinderVolumeBounds>(100, 300, 100), trf,
+                 *logger);
+
+    BOOST_CHECK_EQUAL(volumes.size(), 2);
+    // No additional gap volume was added!
+    BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
+
+    cylBounds = dynamic_cast<const CylinderVolumeBounds*>(
+        &stack.gaps().front()->volumeBounds());
+    BOOST_REQUIRE_NE(cylBounds, nullptr);
+    BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eMinR), 200);
+    BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eMaxR), 300);
+  }
+
+  BOOST_TEST_CONTEXT("Inner") {
+    std::vector<Volume*> volumes = {&vol};
+    CylinderVolumeStack stack(volumes, BinningValue::binR,
+                              CylinderVolumeStack::AttachmentStrategy::Gap,
+                              CylinderVolumeStack::ResizeStrategy::Gap,
+                              *logger);
+
+    BOOST_CHECK_EQUAL(volumes.size(), 1);
+    BOOST_CHECK(stack.gaps().empty());
+
+    stack.update(std::make_shared<CylinderVolumeBounds>(50, 200, 100), trf,
+                 *logger);
+    BOOST_CHECK_EQUAL(volumes.size(), 2);
+    BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
+
+    const auto* cylBounds = dynamic_cast<const CylinderVolumeBounds*>(
+        &stack.gaps().front()->volumeBounds());
+    BOOST_REQUIRE_NE(cylBounds, nullptr);
+    BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eMinR), 50);
+    BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eMaxR), 100);
+
+    stack.update(std::make_shared<CylinderVolumeBounds>(0, 200, 100), trf,
+                 *logger);
+
+    BOOST_CHECK_EQUAL(volumes.size(), 2);
+    // No additional gap volume was added!
+    BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
+
+    cylBounds = dynamic_cast<const CylinderVolumeBounds*>(
+        &stack.gaps().front()->volumeBounds());
+    BOOST_REQUIRE_NE(cylBounds, nullptr);
+    BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eMinR), 0);
+    BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eMaxR), 100);
   }
 }
 

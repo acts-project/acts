@@ -367,7 +367,7 @@ std::string CylinderStackPortalShell::label() const {
 
 std::ostream& operator<<(std::ostream& os, CylinderPortalShell::Face face) {
   switch (face) {
-    using enum CylinderPortalShell::Face;
+    using enum CylinderVolumeBounds::Face;
     case PositiveDisc:
       return os << "PositiveDisc";
     case NegativeDisc:

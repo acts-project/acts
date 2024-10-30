@@ -29,6 +29,11 @@ MeasurementSelector::MeasurementSelector(const MeasurementSelectorCuts& cuts)
     : MeasurementSelector({{GeometryIdentifier(), cuts}}) {}
 
 MeasurementSelector::MeasurementSelector(const Config& config) {
+  if (config.empty()) {
+    throw std::invalid_argument(
+        "MeasurementSelector: Configuration must not be empty");
+  }
+
   std::vector<InternalConfig::InputElement> tmp;
   tmp.reserve(config.size());
   for (std::size_t i = 0; i < config.size(); ++i) {

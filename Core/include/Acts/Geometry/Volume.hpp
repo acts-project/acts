@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <iosfwd>
 #include <memory>
@@ -83,8 +84,10 @@ class Volume : public GeometryObject {
   /// Set the volume bounds and optionally also update the volume transform
   /// @param volbounds The volume bounds to be assigned
   /// @param transform The transform to be assigned, can be optional
+  /// @param logger A logger object to log messages
   virtual void update(std::shared_ptr<VolumeBounds> volbounds,
-                      std::optional<Transform3> transform = std::nullopt);
+                      std::optional<Transform3> transform = std::nullopt,
+                      const Logger& logger = Acts::getDummyLogger());
 
   /// Construct bounding box for this shape
   /// @param envelope Optional envelope to add / subtract from min/max

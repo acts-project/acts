@@ -79,7 +79,8 @@ void Volume::assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds) {
 }
 
 void Volume::update(std::shared_ptr<VolumeBounds> volbounds,
-                    std::optional<Transform3> transform) {
+                    std::optional<Transform3> transform,
+                    const Logger& /*logger*/) {
   if (volbounds) {
     m_volumeBounds = std::move(volbounds);
   }

@@ -29,7 +29,6 @@ using namespace ActsExamples;
 using namespace Acts::Test;
 
 BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
-  IndexSourceLinkContainer sourceLinksOriginal;
   MeasurementContainer measOriginal;
   ClusterContainer clusterOriginal;
   IndexMultimap<Index> mapOriginal;
@@ -45,14 +44,11 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
   std::uniform_real_distribution<double> distf(0.0, 1.0);
 
   for (auto i = 0ul; i < nMeasurements; ++i) {
-    IndexSourceLink sl(someGeoId, static_cast<Index>(i));
-    sourceLinksOriginal.insert(sl);
-
     Acts::Vector2 p = Acts::Vector2::Random();
     Acts::SquareMatrix2 c = Acts::SquareMatrix2::Random();
 
-    FixedBoundMeasurementProxy<2> m = measOriginal.makeMeasurement<2>();
-    m.setSourceLink(Acts::SourceLink(sl));
+    FixedBoundMeasurementProxy<2> m =
+        measOriginal.makeMeasurement<2>(someGeoId);
     m.setSubspaceIndices(std::array{Acts::eBoundLoc0, Acts::eBoundLoc1});
     m.parameters() = p;
     m.covariance() = c;
@@ -118,14 +114,12 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
   readerConfig.outputMeasurementSimHitsMap =
       writerConfig.inputMeasurementSimHitsMap;
   readerConfig.outputClusters = writerConfig.inputClusters;
-  readerConfig.outputSourceLinks = "sourcelinks";
 
   CsvMeasurementReader reader(readerConfig, Acts::Logging::WARNING);
 
-  auto readTool =
-      writeTool.add(readerConfig.outputSourceLinks, sourceLinksOriginal);
+  auto readTool = writeTool.add(readerConfig.outputMeasurements, measOriginal);
 
-  const auto [measRead, clusterRead, mapRead, sourceLinksRead] =
+  const auto [measRead, clusterRead, mapRead, measRead2] =
       readTool.read(reader);
 
   ///////////
@@ -164,10 +158,10 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
     BOOST_REQUIRE(a == b);
   }
 
-  static_assert(std::is_same_v<std::decay_t<decltype(sourceLinksRead)>,
-                               decltype(sourceLinksOriginal)>);
-  BOOST_REQUIRE(sourceLinksRead.size() == sourceLinksOriginal.size());
-  for (const auto &[a, b] : Acts::zip(sourceLinksRead, sourceLinksOriginal)) {
+  static_assert(
+      std::is_same_v<std::decay_t<decltype(measRead)>, decltype(measOriginal)>);
+  BOOST_REQUIRE(measRead.size() == measOriginal.size());
+  for (const auto &[a, b] : Acts::zip(measRead, measOriginal)) {
     BOOST_REQUIRE(a.geometryId() == b.geometryId());
     BOOST_REQUIRE(a.index() == b.index());
   }

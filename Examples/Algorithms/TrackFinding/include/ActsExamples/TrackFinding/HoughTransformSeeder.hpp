@@ -76,7 +76,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -168,8 +167,6 @@ class HoughTransformSeeder final : public IAlgorithm {
     std::string outputSeeds;
     /// Output hough track collection.
     std::string outputProtoTracks;
-    /// Input source links collection.
-    std::string inputSourceLinks;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// For which part of the detector geometry should space points be created.
@@ -280,9 +277,6 @@ class HoughTransformSeeder final : public IAlgorithm {
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
-
-  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
-      this, "InputSourceLinks"};
 
   ////////////////////////////////////////////////////////////////////////
   /// Convenience

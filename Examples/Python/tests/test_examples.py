@@ -407,6 +407,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         EtaConfig,
         MomentumConfig,
         ParticleConfig,
+        ParticleSelectorConfig,
         addFatras,
         addDigitization,
     )
@@ -428,6 +429,12 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         outputDirCsv=tmp_path / "csv",
         outputDirRoot=str(tmp_path),
         rnd=rnd,
+        postSelectParticles=ParticleSelectorConfig(
+            pt=(0.9 * u.GeV, None),
+            eta=(-4, 4),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
@@ -442,7 +449,6 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
 
     from acts.examples.reconstruction import (
         addSeeding,
-        TruthSeedRanges,
     )
     from acts.examples.itk import itkSeedingAlgConfig, InputSpacePointsType
 
@@ -450,7 +456,6 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         seq,
         trk_geo,
         field,
-        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4, 4), nHits=(9, None)),
         *itkSeedingAlgConfig(InputSpacePointsType.PixelSpacePoints),
         acts.logging.VERBOSE,
         geoSelectionConfigFile=srcdir
@@ -699,6 +704,7 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
         runRefittingGsf(
             trackingGeometry=trackingGeometry,
             field=field,
+            digiConfigFile=detector_config.digiConfigFile,
             outputDir=tmp_path,
             s=seq,
         ).run()
@@ -1005,6 +1011,40 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
     [
         DIGI_SHARE_DIR / "default-smearing-config-generic.json",
         DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+        pytest.param(
+            (
+                getOpenDataDetectorDirectory()
+                / "config"
+                / "odd-digi-smearing-config.json"
+            ),
+            marks=[
+                pytest.mark.odd,
+            ],
+        ),
+        pytest.param(
+            (
+                getOpenDataDetectorDirectory()
+                / "config"
+                / "odd-digi-geometric-config.json"
+            ),
+            marks=[
+                pytest.mark.odd,
+            ],
+        ),
+    ],
+    ids=["smeared", "geometric", "odd-smeared", "odd-geometric"],
+)
+def test_digitization_example_input_parsing(digi_config_file):
+    from acts.examples import readDigiConfigFromJson
+
+    acts.examples.readDigiConfigFromJson(str(digi_config_file))
+
+
+@pytest.mark.parametrize(
+    "digi_config_file",
+    [
+        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
+        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
     ],
     ids=["smeared", "geometric"],
 )
@@ -1106,7 +1146,7 @@ def test_ckf_tracks_example(
 
     root_files = [
         (
-            "performance_ckf.root",
+            "performance_finding_ckf.root",
             None,
         ),
         (
@@ -1250,7 +1290,7 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
 def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     # This test literally only ensures that the full chain example can run without erroring out
 
-    root_file = "performance_ambiML.root"
+    root_file = "performance_finding_ambiML.root"
     output_dir = "odd_output"
     assert not (tmp_path / root_file).exists()
 

@@ -8,6 +8,8 @@
 
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 
+#include "Acts/EventData/TrackParameterHelpers.hpp"
+
 namespace Acts {
 
 void MbfSmoother::calculateSmoothed(InternalTrackState& ts,
@@ -17,6 +19,8 @@ void MbfSmoother::calculateSmoothed(InternalTrackState& ts,
                                                       bigLambdaHat *
                                                       ts.filteredCovariance;
   ts.smoothed = ts.filtered - ts.filteredCovariance * smallLambdaHat;
+  // Normalize phi and theta
+  ts.smoothed = normalizeBoundParameters(ts.smoothed);
 }
 
 void MbfSmoother::visitNonMeasurement(const InternalTrackState& ts,

@@ -111,6 +111,14 @@ class GenericCurvilinearTrackParameters
   Vector3 position() const {
     return GenericBoundTrackParameters<ParticleHypothesis>::position({});
   }
+
+  /// Reflect the parameters.
+  /// @return Reflected parameters.
+  GenericCurvilinearTrackParameters<ParticleHypothesis> reflect() const {
+    GenericCurvilinearTrackParameters<ParticleHypothesis> reflected = *this;
+    reflected.reflectInPlace();
+    return reflected;
+  }
 };
 
 }  // namespace Acts

@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/context.hpp>
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
@@ -2135,7 +2136,161 @@ BOOST_AUTO_TEST_CASE(CompositeConstruction) {
 
 BOOST_AUTO_TEST_SUITE(PortalMerging)
 
-BOOST_AUTO_TEST_CASE(TrivialTrivial) {}
+BOOST_DATA_TEST_CASE(TrivialTrivial,
+                     (boost::unit_test::data::make(0, -135, 180, 45) *
+                      boost::unit_test::data::make(Vector3{0_mm, 0_mm, 0_mm},
+                                                   Vector3{20_mm, 0_mm, 0_mm},
+                                                   Vector3{0_mm, 20_mm, 0_mm},
+                                                   Vector3{20_mm, 20_mm, 0_mm},
+                                                   Vector3{0_mm, 0_mm, 20_mm})),
+                     angle, offset) {
+  Transform3 base =
+      AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
+
+  BOOST_TEST_CONTEXT("RDirection") {
+    auto vol1 = std::make_shared<TrackingVolume>(
+        base, std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+    auto vol2 = std::make_shared<TrackingVolume>(
+        base, std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+    auto vol3 = std::make_shared<TrackingVolume>(
+        base, std::make_shared<CylinderVolumeBounds>(40_mm, 50_mm, 100_mm));
+
+    auto disc1 =
+        Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 60_mm);
+
+    auto disc2 =
+        Surface::makeShared<DiscSurface>(Transform3::Identity(), 60_mm, 90_mm);
+
+    auto disc3 =
+        Surface::makeShared<DiscSurface>(Transform3::Identity(), 90_mm, 120_mm);
+
+    auto trivial1 = std::make_unique<TrivialPortalLink>(disc1, *vol1);
+    BOOST_REQUIRE(trivial1);
+    auto trivial2 = std::make_unique<TrivialPortalLink>(disc2, *vol2);
+    BOOST_REQUIRE(trivial2);
+    auto trivial3 = std::make_unique<TrivialPortalLink>(disc3, *vol3);
+    BOOST_REQUIRE(trivial3);
+
+    auto grid1 = trivial1->makeGrid(BinningValue::binR);
+    auto compGridTrivial = PortalLinkBase::merge(
+        std::move(grid1), std::make_unique<TrivialPortalLink>(*trivial2),
+        BinningValue::binR, *logger);
+    BOOST_REQUIRE(compGridTrivial);
+    BOOST_CHECK_EQUAL(dynamic_cast<CompositePortalLink&>(*compGridTrivial)
+                          .makeGrid(gctx, *logger),
+                      nullptr);
+
+    auto composite = PortalLinkBase::merge(
+        std::move(trivial1), std::move(trivial2), BinningValue::binR, *logger);
+    BOOST_REQUIRE(composite);
+
+    auto grid12 =
+        dynamic_cast<CompositePortalLink&>(*composite).makeGrid(gctx, *logger);
+    BOOST_REQUIRE(grid12);
+
+    BOOST_CHECK_EQUAL(
+        grid12->resolveVolume(gctx, Vector2{40_mm, 0_degree}).value(),
+        vol1.get());
+
+    BOOST_CHECK_EQUAL(
+        grid12->resolveVolume(gctx, Vector2{70_mm, 0_degree}).value(),
+        vol2.get());
+
+    composite = PortalLinkBase::merge(std::move(composite), std::move(trivial3),
+                                      BinningValue::binR, *logger);
+    BOOST_REQUIRE(composite);
+
+    auto grid123 =
+        dynamic_cast<CompositePortalLink&>(*composite).makeGrid(gctx, *logger);
+    BOOST_REQUIRE(grid123);
+
+    BOOST_CHECK_EQUAL(
+        grid123->resolveVolume(gctx, Vector2{40_mm, 0_degree}).value(),
+        vol1.get());
+
+    BOOST_CHECK_EQUAL(
+        grid123->resolveVolume(gctx, Vector2{70_mm, 0_degree}).value(),
+        vol2.get());
+
+    BOOST_CHECK_EQUAL(
+        grid123->resolveVolume(gctx, Vector2{100_mm, 0_degree}).value(),
+        vol3.get());
+  }
+
+  BOOST_TEST_CONTEXT("ZDirection") {
+    auto vol1 = std::make_shared<TrackingVolume>(
+        base, std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+    auto vol2 = std::make_shared<TrackingVolume>(
+        base * Translation3{Vector3::UnitZ() * 200},
+        std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+    auto vol3 = std::make_shared<TrackingVolume>(
+        base * Translation3{Vector3::UnitZ() * 400},
+        std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+    auto cyl1 = Surface::makeShared<CylinderSurface>(base, 40_mm, 100_mm);
+
+    auto cyl2 = Surface::makeShared<CylinderSurface>(
+        base * Translation3{Vector3::UnitZ() * 200}, 40_mm, 100_mm);
+
+    auto cyl3 = Surface::makeShared<CylinderSurface>(
+        base * Translation3{Vector3::UnitZ() * 400}, 40_mm, 100_mm);
+
+    auto trivial1 = std::make_unique<TrivialPortalLink>(cyl1, *vol1);
+    BOOST_REQUIRE(trivial1);
+    auto trivial2 = std::make_unique<TrivialPortalLink>(cyl2, *vol2);
+    BOOST_REQUIRE(trivial2);
+    auto trivial3 = std::make_unique<TrivialPortalLink>(cyl3, *vol3);
+    BOOST_REQUIRE(trivial3);
+
+    auto grid1 = trivial1->makeGrid(BinningValue::binZ);
+    auto compGridTrivial = PortalLinkBase::merge(
+        std::move(grid1), std::make_unique<TrivialPortalLink>(*trivial2),
+        BinningValue::binZ, *logger);
+    BOOST_REQUIRE(compGridTrivial);
+    BOOST_CHECK_EQUAL(dynamic_cast<CompositePortalLink&>(*compGridTrivial)
+                          .makeGrid(gctx, *logger),
+                      nullptr);
+
+    auto composite = PortalLinkBase::merge(
+        std::move(trivial1), std::move(trivial2), BinningValue::binZ, *logger);
+    BOOST_REQUIRE(composite);
+
+    auto grid12 =
+        dynamic_cast<CompositePortalLink&>(*composite).makeGrid(gctx, *logger);
+    BOOST_REQUIRE(grid12);
+
+    BOOST_CHECK_EQUAL(
+        grid12->resolveVolume(gctx, Vector2{40_mm, -40_mm}).value(),
+        vol1.get());
+
+    BOOST_CHECK_EQUAL(
+        grid12->resolveVolume(gctx, Vector2{40_mm, 40_mm}).value(), vol2.get());
+
+    composite = PortalLinkBase::merge(std::move(composite), std::move(trivial3),
+                                      BinningValue::binZ, *logger);
+    BOOST_REQUIRE(composite);
+
+    auto grid123 =
+        dynamic_cast<CompositePortalLink&>(*composite).makeGrid(gctx, *logger);
+    BOOST_REQUIRE(grid123);
+
+    BOOST_CHECK_EQUAL(
+        grid123->resolveVolume(gctx, Vector2{40_mm, -110_mm}).value(),
+        vol1.get());
+
+    BOOST_CHECK_EQUAL(
+        grid123->resolveVolume(gctx, Vector2{40_mm, -10_mm}).value(),
+        vol2.get());
+
+    BOOST_CHECK_EQUAL(
+        grid123->resolveVolume(gctx, Vector2{40_mm, 190_mm}).value(),
+        vol3.get());
+  }
+}
 
 BOOST_AUTO_TEST_CASE(TrivialGridR) {
   auto vol1 = std::make_shared<TrackingVolume>(
@@ -2167,32 +2322,14 @@ BOOST_AUTO_TEST_CASE(TrivialGridR) {
     auto merged = PortalLinkBase::merge(copy(trivial), copy(gridR),
                                         BinningValue::binR, *logger);
     BOOST_REQUIRE(merged);
-
-    auto* mergedGrid = dynamic_cast<const GridPortalLink*>(merged.get());
-    BOOST_REQUIRE(mergedGrid);
-
-    mergedGrid->printContents(std::cout);
-
-    BOOST_CHECK_EQUAL(mergedGrid->grid().axes().size(), 1);
-    Axis axisExpected{AxisBound, {30_mm, 45_mm, 60_mm, 90_mm}};
-    BOOST_CHECK_EQUAL(*mergedGrid->grid().axes().front(), axisExpected);
+    BOOST_CHECK_NE(dynamic_cast<CompositePortalLink*>(merged.get()), nullptr);
   }
 
   BOOST_TEST_CONTEXT("Orthogonal") {
     auto merged = PortalLinkBase::merge(copy(gridPhi), copy(trivial),
                                         BinningValue::binR, *logger);
     BOOST_REQUIRE(merged);
-
-    auto* mergedGrid = dynamic_cast<const GridPortalLink*>(merged.get());
-    BOOST_REQUIRE(mergedGrid);
-
-    mergedGrid->printContents(std::cout);
-
-    BOOST_CHECK_EQUAL(mergedGrid->grid().axes().size(), 2);
-    Axis axis1Expected{AxisBound, 30_mm, 90_mm, 2};
-    Axis axis2Expected{AxisClosed, -M_PI, M_PI, 2};
-    BOOST_CHECK_EQUAL(*mergedGrid->grid().axes().front(), axis1Expected);
-    BOOST_CHECK_EQUAL(*mergedGrid->grid().axes().back(), axis2Expected);
+    BOOST_CHECK_NE(dynamic_cast<CompositePortalLink*>(merged.get()), nullptr);
   }
 }
 
@@ -2227,38 +2364,14 @@ BOOST_AUTO_TEST_CASE(TrivialGridPhi) {
     auto merged = PortalLinkBase::merge(copy(trivial), copy(gridPhi),
                                         BinningValue::binPhi, *logger);
     BOOST_REQUIRE(merged);
-
-    auto* mergedGrid = dynamic_cast<const GridPortalLink*>(merged.get());
-    BOOST_REQUIRE(mergedGrid);
-
-    mergedGrid->printContents(std::cout);
-
-    BOOST_CHECK_EQUAL(mergedGrid->grid().axes().size(), 1);
-    const auto& axis = *mergedGrid->grid().axes().front();
-    BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
-    BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
-    std::vector<ActsScalar> expectedBins{-90_degree, 30_degree, 60_degree,
-                                         90_degree};
-    CHECK_CLOSE_REL(axis.getBinEdges(), expectedBins, 1e-6);
+    BOOST_CHECK_NE(dynamic_cast<CompositePortalLink*>(merged.get()), nullptr);
   }
 
   BOOST_TEST_CONTEXT("Orthogonal") {
     auto merged = PortalLinkBase::merge(copy(gridR), copy(trivial),
                                         BinningValue::binPhi, *logger);
     BOOST_REQUIRE(merged);
-
-    auto* mergedGrid = dynamic_cast<const GridPortalLink*>(merged.get());
-    BOOST_REQUIRE(mergedGrid);
-
-    mergedGrid->printContents(std::cout);
-
-    BOOST_CHECK_EQUAL(mergedGrid->grid().axes().size(), 2);
-    const auto& axis1 = *mergedGrid->grid().axes().front();
-    const auto& axis2 = *mergedGrid->grid().axes().back();
-    Axis axis1Expected{AxisBound, 30_mm, 100_mm, 2};
-    BOOST_CHECK_EQUAL(axis1, axis1Expected);
-    std::vector<ActsScalar> expectedBins{-90_degree, 30_degree, 90_degree};
-    CHECK_CLOSE_REL(axis2.getBinEdges(), expectedBins, 1e-6);
+    BOOST_CHECK_NE(dynamic_cast<CompositePortalLink*>(merged.get()), nullptr);
   }
 }
 

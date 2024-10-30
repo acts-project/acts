@@ -11,9 +11,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/detail/GenerateParameters.hpp"
-#include "Acts/EventData/detail/TestSourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
@@ -30,15 +29,13 @@
 using namespace Acts;
 using namespace Acts::detail::Test;
 using namespace ActsExamples;
-using SourceLink = Acts::detail::Test::TestSourceLink;
 namespace bd = boost::unit_test::data;
 
 namespace {
 constexpr BoundIndices boundIndices[] = {
     eBoundLoc0, eBoundLoc1, eBoundTime, eBoundPhi, eBoundTheta, eBoundQOverP,
 };
-const TestSourceLink sourceOrig;
-const Acts::SourceLink source{sourceOrig};
+constexpr Acts::GeometryIdentifier geoId = 1;
 // fix seed for reproducible tests
 std::default_random_engine rng(123);
 }  // namespace
@@ -54,8 +51,7 @@ BOOST_DATA_TEST_CASE(VariableBoundOne, bd::make(boundIndices), index) {
 
   auto [params, cov] = generateParametersCovariance<ActsScalar, 1u>(rng);
 
-  FixedBoundMeasurementProxy<1> meas = container.makeMeasurement<1>();
-  meas.setSourceLink(source);
+  FixedBoundMeasurementProxy<1> meas = container.makeMeasurement<1>(geoId);
   meas.setSubspaceIndices(std::array{index});
   meas.parameters() = params;
   meas.covariance() = cov;
@@ -66,8 +62,7 @@ BOOST_DATA_TEST_CASE(VariableBoundOne, bd::make(boundIndices), index) {
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(meas.sourceLink().template get<TestSourceLink>(),
-                    sourceOrig);
+  BOOST_CHECK_EQUAL(meas.geometryId(), geoId);
 }
 
 BOOST_DATA_TEST_CASE(VariableBoundOneEmplace, bd::make(boundIndices), index) {
@@ -76,7 +71,7 @@ BOOST_DATA_TEST_CASE(VariableBoundOneEmplace, bd::make(boundIndices), index) {
   auto [params, cov] = generateParametersCovariance<ActsScalar, 1u>(rng);
 
   FixedBoundMeasurementProxy<1> meas =
-      container.emplaceMeasurement<1>(source, std::array{index}, params, cov);
+      container.emplaceMeasurement<1>(geoId, std::array{index}, params, cov);
 
   BOOST_CHECK_EQUAL(meas.size(), 1);
   for (auto i : boundIndices) {
@@ -84,18 +79,17 @@ BOOST_DATA_TEST_CASE(VariableBoundOneEmplace, bd::make(boundIndices), index) {
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(meas.sourceLink().template get<TestSourceLink>(),
-                    sourceOrig);
+  BOOST_CHECK_EQUAL(meas.geometryId(), geoId);
 }
 
 BOOST_AUTO_TEST_CASE(VariableBoundAll) {
   MeasurementContainer container;
 
-  auto [params, cov] = generateBoundParametersCovariance(rng);
+  auto [params, cov] =
+      generateParametersCovariance<ActsScalar, eBoundSize>(rng);
 
   FixedBoundMeasurementProxy<eBoundSize> meas =
-      container.makeMeasurement<eBoundSize>();
-  meas.setSourceLink(source);
+      container.makeMeasurement<eBoundSize>(geoId);
   meas.setSubspaceIndices(std::array{eBoundLoc0, eBoundLoc1, eBoundTime,
                                      eBoundPhi, eBoundTheta, eBoundQOverP});
   meas.parameters() = params;
@@ -107,17 +101,18 @@ BOOST_AUTO_TEST_CASE(VariableBoundAll) {
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
+  BOOST_CHECK_EQUAL(meas.geometryId(), geoId);
 }
 
 BOOST_AUTO_TEST_CASE(VariableBoundAllEmplace) {
   MeasurementContainer container;
 
-  auto [params, cov] = generateBoundParametersCovariance(rng);
+  auto [params, cov] =
+      generateParametersCovariance<ActsScalar, eBoundSize>(rng);
 
   FixedBoundMeasurementProxy<eBoundSize> meas =
       container.emplaceMeasurement<eBoundSize>(
-          source,
+          geoId,
           std::array{eBoundLoc0, eBoundLoc1, eBoundTime, eBoundPhi, eBoundTheta,
                      eBoundQOverP},
           params, cov);
@@ -128,7 +123,7 @@ BOOST_AUTO_TEST_CASE(VariableBoundAllEmplace) {
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
+  BOOST_CHECK_EQUAL(meas.geometryId(), geoId);
 }
 
 BOOST_AUTO_TEST_CASE(VariableBoundReassign) {
@@ -137,8 +132,7 @@ BOOST_AUTO_TEST_CASE(VariableBoundReassign) {
   // generate w/ two parameter
   auto [params1, cov1] = generateParametersCovariance<ActsScalar, 2u>(rng);
 
-  VariableBoundMeasurementProxy meas = container.makeMeasurement(2);
-  meas.setSourceLink(source);
+  VariableBoundMeasurementProxy meas = container.makeMeasurement(2, geoId);
   meas.setSubspaceIndices(std::array{eBoundPhi, eBoundTheta});
   meas.parameters() = params1;
   meas.covariance() = cov1;
@@ -152,10 +146,10 @@ BOOST_AUTO_TEST_CASE(VariableBoundReassign) {
   BOOST_CHECK(!meas.contains(eBoundQOverP));
 
   // reassign w/ all parameters
-  auto [paramsN, covN] = generateBoundParametersCovariance(rng);
+  auto [paramsN, covN] =
+      generateParametersCovariance<ActsScalar, eBoundSize>(rng);
 
-  meas = container.makeMeasurement(eBoundSize);
-  meas.setSourceLink(source);
+  meas = container.makeMeasurement(eBoundSize, geoId);
   meas.setSubspaceIndices(std::array{eBoundLoc0, eBoundLoc1, eBoundTime,
                                      eBoundPhi, eBoundTheta, eBoundQOverP});
   meas.parameters() = paramsN;

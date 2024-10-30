@@ -35,7 +35,7 @@ struct TrackFinderFunctionImpl
     : public ActsExamples::TrackFindingAlgorithm::TrackFinderFunction {
   CKF trackFinder;
 
-  TrackFinderFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
+  explicit TrackFinderFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
       const ActsExamples::TrackParameters& initialParameters,

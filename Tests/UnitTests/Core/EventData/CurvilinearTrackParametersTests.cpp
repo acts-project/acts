@@ -72,6 +72,15 @@ void checkParameters(const CurvilinearTrackParameters& params, double phi,
   // curvilinear reference surface
   CHECK_CLOSE_OR_SMALL(referenceSurface->center(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(referenceSurface->normal(geoCtx), unitDir, eps, eps);
+
+  // reflection
+  CurvilinearTrackParameters reflectedParams = params;
+  reflectedParams.reflectInPlace();
+  CHECK_CLOSE_OR_SMALL(params.reflect().parameters(),
+                       reflectedParams.parameters(), eps, eps);
+  CHECK_CLOSE_OR_SMALL(reflectedParams.reflect().parameters(),
+                       params.parameters(), eps, eps);
+
   // TODO verify reference frame
 }
 

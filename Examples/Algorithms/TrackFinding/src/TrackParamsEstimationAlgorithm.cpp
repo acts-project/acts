@@ -32,48 +32,6 @@
 
 namespace ActsExamples {
 
-namespace {
-
-Acts::BoundSquareMatrix makeInitialCovariance(
-    const TrackParamsEstimationAlgorithm::Config& config,
-    const Acts::BoundVector& params, const SimSpacePoint& sp) {
-  Acts::BoundSquareMatrix result = Acts::BoundSquareMatrix::Zero();
-
-  for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
-    double sigma = config.initialSigmas[i];
-    double variance = sigma * sigma;
-
-    if (i == Acts::eBoundQOverP) {
-      // note that we rely on the fact that sigma theta is already computed
-      double varianceTheta = result(Acts::eBoundTheta, Acts::eBoundTheta);
-
-      // transverse momentum contribution
-      variance +=
-          std::pow(config.initialSigmaPtRel * params[Acts::eBoundQOverP], 2);
-
-      // theta contribution
-      variance +=
-          varianceTheta * std::pow(params[Acts::eBoundQOverP] /
-                                       std::tan(params[Acts::eBoundTheta]),
-                                   2);
-    }
-
-    // Inflate the time uncertainty if no time measurement is available
-    if (i == Acts::eBoundTime && !sp.t().has_value()) {
-      variance *= config.noTimeVarInflation;
-    }
-
-    // Inflate the initial covariance
-    variance *= config.initialVarInflation[i];
-
-    result(i, i) = variance;
-  }
-
-  return result;
-}
-
-}  // namespace
-
 TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
     TrackParamsEstimationAlgorithm::Config cfg, Acts::Logging::Level lvl)
     : IAlgorithm("TrackParamsEstimationAlgorithm", lvl), m_cfg(std::move(cfg)) {
@@ -166,8 +124,15 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
 
     const auto& params = optParams.value();
 
-    Acts::BoundSquareMatrix cov =
-        makeInitialCovariance(m_cfg, params, *bottomSP);
+    Acts::EstimateTrackParamCovarianceConfig config{
+        .initialSigmas =
+            Eigen::Map<const Acts::BoundVector>{m_cfg.initialSigmas.data()},
+        .initialSigmaPtRel = m_cfg.initialSigmaPtRel,
+        .initialVarInflation = Eigen::Map<const Acts::BoundVector>{
+            m_cfg.initialVarInflation.data()}};
+
+    Acts::BoundSquareMatrix cov = Acts::estimateTrackParamCovariance(
+        config, params, bottomSP->t().has_value());
 
     trackParameters.emplace_back(surface->getSharedPtr(), params, cov,
                                  m_cfg.particleHypothesis);

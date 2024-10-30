@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -18,7 +19,6 @@
 #include <cassert>
 #include <cmath>
 #include <memory>
-#include <type_traits>
 
 namespace Acts {
 
@@ -61,7 +61,10 @@ class GenericBoundTrackParameters {
         m_cov(std::move(cov)),
         m_surface(std::move(surface)),
         m_particleHypothesis(std::move(particleHypothesis)) {
-    assert(m_surface);
+    // TODO set `validateAngleRange` to `true` after fixing caller code
+    assert(isBoundVectorValid(m_params, false) &&
+           "Invalid bound parameters vector");
+    assert(m_surface != nullptr && "Reference surface must not be null");
     normalizePhiTheta();
   }
 
@@ -248,6 +251,17 @@ class GenericBoundTrackParameters {
   /// rotation matrix of the tangential plane at the track position.
   RotationMatrix3 referenceFrame(const GeometryContext& geoCtx) const {
     return m_surface->referenceFrame(geoCtx, position(geoCtx), momentum());
+  }
+
+  /// Reflect the parameters in place.
+  void reflectInPlace() { m_params = reflectBoundParameters(m_params); }
+
+  /// Reflect the parameters.
+  /// @return Reflected parameters.
+  GenericBoundTrackParameters<ParticleHypothesis> reflect() const {
+    GenericBoundTrackParameters<ParticleHypothesis> reflected = *this;
+    reflected.reflectInPlace();
+    return reflected;
   }
 
  private:

@@ -76,6 +76,14 @@ void checkParameters(const BoundTrackParameters& params, double l0, double l1,
                        eps);
   CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
   BOOST_CHECK_EQUAL(params.charge(), q);
+
+  // reflection
+  BoundTrackParameters reflectedParams = params;
+  reflectedParams.reflectInPlace();
+  CHECK_CLOSE_OR_SMALL(params.reflect().parameters(),
+                       reflectedParams.parameters(), eps, eps);
+  CHECK_CLOSE_OR_SMALL(reflectedParams.reflect().parameters(),
+                       params.parameters(), eps, eps);
 }
 
 void runTest(const std::shared_ptr<const Surface>& surface, double l0,

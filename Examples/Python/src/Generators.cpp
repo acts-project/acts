@@ -7,25 +7,21 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Generators/MultiplicityGenerators.hpp"
 #include "ActsExamples/Generators/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Generators/VertexGenerators.hpp"
 
-#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -35,16 +31,6 @@ class IReader;
 }  // namespace ActsExamples
 
 namespace py = pybind11;
-
-namespace {
-double thetaToEta(double theta) {
-  assert(theta != 0);
-  return -1 * std::log(std::tan(theta / 2.));
-}
-double etaToTheta(double eta) {
-  return 2 * std::atan(std::exp(-eta));
-}
-}  // namespace
 
 namespace Acts::Python {
 
@@ -218,12 +204,12 @@ void addGenerators(Context& ctx) {
         .def_property(
             "eta",
             [](Config& cfg) {
-              return std::pair{thetaToEta(cfg.thetaMin),
-                               thetaToEta(cfg.thetaMax)};
+              return std::pair{Acts::AngleHelpers::etaFromTheta(cfg.thetaMin),
+                               Acts::AngleHelpers::etaFromTheta(cfg.thetaMax)};
             },
             [](Config& cfg, std::pair<double, double> value) {
-              cfg.thetaMin = etaToTheta(value.first);
-              cfg.thetaMax = etaToTheta(value.second);
+              cfg.thetaMin = Acts::AngleHelpers::thetaFromEta(value.first);
+              cfg.thetaMax = Acts::AngleHelpers::thetaFromEta(value.second);
             });
   }
 
