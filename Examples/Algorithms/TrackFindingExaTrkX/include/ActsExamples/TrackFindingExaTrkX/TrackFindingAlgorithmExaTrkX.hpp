@@ -120,7 +120,7 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     std::vector<float> featureScales = {1.f, 1.f, 1.f};
 
     /// Remove track candidates with 2 or less hits
-    bool filterShortTracks = false;
+    std::size_t minMeasurementsPerTrack = 3;
 
     /// Optionally remap the geometry Ids that are put into the chain
     std::shared_ptr<GeometryIdMapActsAthena> geometryIdMap;
@@ -153,8 +153,10 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   mutable std::mutex m_mutex;
 
   using Accumulator = boost::accumulators::accumulator_set<
-      float, boost::accumulators::features<boost::accumulators::tag::mean,
-                                           boost::accumulators::tag::variance>>;
+      float,
+      boost::accumulators::features<
+          boost::accumulators::tag::mean, boost::accumulators::tag::variance,
+          boost::accumulators::tag::max, boost::accumulators::tag::min>>;
 
   mutable struct {
     Accumulator graphBuildingTime;

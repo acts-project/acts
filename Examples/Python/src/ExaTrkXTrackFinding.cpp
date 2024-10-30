@@ -341,7 +341,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
       "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputClusters,
       inputTruthGraph, outputProtoTracks, outputGraph, graphConstructor,
       edgeClassifiers, trackBuilder, nodeFeatures, featureScales,
-      filterShortTracks, geometryIdMap);
+      minMeasurementsPerTrack, geometryIdMap);
 
   {
     auto cls =

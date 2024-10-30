@@ -288,7 +288,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
       }
     }
 
-    if (m_cfg.filterShortTracks && onetrack.size() < 3) {
+    if (onetrack.size() < m_cfg.minMeasurementsPerTrack) {
       nShortTracks++;
       continue;
     }
@@ -296,7 +296,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     protoTracks.push_back(std::move(onetrack));
   }
 
-  ACTS_INFO("Removed " << nShortTracks << " with less then 3 hits");
+  ACTS_INFO("Removed " << nShortTracks << " with less then "
+                       << m_cfg.minMeasurementsPerTrack << " hits");
   ACTS_INFO("Created " << protoTracks.size() << " proto tracks");
   m_outputProtoTracks(ctx, std::move(protoTracks));
 
@@ -314,20 +315,24 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 ActsExamples::ProcessCode TrackFindingAlgorithmExaTrkX::finalize() {
   namespace ba = boost::accumulators;
 
+  auto print = [](const auto& t) {
+    std::stringstream ss;
+    ss << ba::mean(t) << " +- " << std::sqrt(ba::variance(t)) << " ";
+    ss << "[" << ba::min(t) << ", " << ba::max(t) << "]";
+    return ss.str();
+  };
+
   ACTS_INFO("Exa.TrkX timing info");
   {
     const auto& t = m_timing.graphBuildingTime;
-    ACTS_INFO("- graph building: " << ba::mean(t) << " +- "
-                                   << std::sqrt(ba::variance(t)));
+    ACTS_INFO("- graph building: " << print(t));
   }
   for (const auto& t : m_timing.classifierTimes) {
-    ACTS_INFO("- classifier:     " << ba::mean(t) << " +- "
-                                   << std::sqrt(ba::variance(t)));
+    ACTS_INFO("- classifier:     " << print(t));
   }
   {
     const auto& t = m_timing.trackBuildingTime;
-    ACTS_INFO("- track building: " << ba::mean(t) << " +- "
-                                   << std::sqrt(ba::variance(t)));
+    ACTS_INFO("- track building: " << print(t));
   }
 
   return {};
