@@ -20,6 +20,8 @@
 #include <TTree_hits>
 #include <graph>
 
+#include "oldApiHelper.hpp"
+
 namespace Acts::detail {
 
 GraphCreatorWrapperCuda::GraphCreatorWrapperCuda(const std::string &path,
@@ -31,7 +33,9 @@ GraphCreatorWrapperCuda::GraphCreatorWrapperCuda(const std::string &path,
 
 GraphCreatorWrapperCuda::~GraphCreatorWrapperCuda() {}
 
-graph<float> GraphCreatorWrapperCuda::build() {
+std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
+    const std::vector<float> &features,
+    const std::vector<std::uint64_t> &moduleIds, const Acts::Logger &logger) {
   auto builder = [&](auto &hits, bool print) {
     CUDA_graph_creator<float>::graph_building_stats stats;
     return m_graphCreator->build_impl(hits, stats, print);

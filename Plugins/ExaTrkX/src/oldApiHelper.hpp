@@ -12,6 +12,7 @@
 #include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <graph_creator>
 #include <vector>
 
 #include <torch/torch.h>
@@ -132,13 +133,14 @@ std::pair<at::Tensor, at::Tensor> oldApiBuild(
   const auto t3 = std::chrono::high_resolution_clock::now();
   // Build final tensors
   ACTS_DEBUG("Construct final tensors...");
-  assert(edgeIndexVector.size() % numEdges == 0);
+  assert(edgeIndexVector.empty() || edgeIndexVector.size() % numEdges == 0);
   auto edgeIndex = Acts::detail::vectorToTensor2D(edgeIndexVector, 2)
                        .t()
                        .contiguous()
                        .to(torch::kInt64);
 
-  assert(edgeFeatureVector.size() % numEdgeFeatures == 0);
+  assert(edgeIndexVector.empty() ||
+         edgeFeatureVector.size() % numEdgeFeatures == 0);
   auto edgeFeatures =
       Acts::detail::vectorToTensor2D(edgeFeatureVector, numEdgeFeatures)
           .clone();

@@ -50,6 +50,10 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
         "Module Ids do not match number of graph nodes");
   }
 
+  if (inputValues.empty()) {
+    throw NoEdgesError{};
+  }
+
   const auto numFeatures = inputValues.size() / numNodes;
 
   assert(inputValues.size() % numFeatures == 0);
@@ -60,7 +64,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   auto [edgeIndex, edgeFeatures] =
       m_graphCreator->build(inputValues, moduleIds, logger());
 
-  if (edgeIndex.numel() == 0) {
+  if (edgeIndex.numel() == 0 || (edgeIndex == 0).all().item<bool>()) {
     throw Acts::NoEdgesError{};
   }
 
