@@ -399,7 +399,7 @@ class CombinatorialKalmanFilter {
               measurementSelector(trackStateCandidates, isOutlier, logger);
       if (!selectorResult.ok()) {
         ACTS_ERROR("Selection of calibrated measurements failed: "
-                   << selectorResult.error());
+                   << selectorResult.error().message());
         resultTrackStateList =
             ResultTrackStateList::failure(selectorResult.error());
       } else {
