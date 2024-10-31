@@ -11,6 +11,7 @@
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <numbers>
 #include <vector>
@@ -158,7 +159,8 @@ class CylindricalSpacePointGridCreator {
   template <typename external_spacepoint_t>
   static Acts::CylindricalSpacePointGrid<external_spacepoint_t> createGrid(
       const Acts::CylindricalSpacePointGridConfig& _config,
-      const Acts::CylindricalSpacePointGridOptions& _options);
+      const Acts::CylindricalSpacePointGridOptions& _options,
+      const Acts::Logger& logger = Acts::getDummyLogger());
 
   template <typename external_spacepoint_t,
             typename external_spacepoint_iterator_t>
@@ -167,7 +169,8 @@ class CylindricalSpacePointGridCreator {
       const Acts::SeedFinderOptions& options,
       Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
       external_spacepoint_iterator_t spBegin,
-      external_spacepoint_iterator_t spEnd);
+      external_spacepoint_iterator_t spEnd,
+      const Acts::Logger& logger = Acts::getDummyLogger());
 
   template <typename external_spacepoint_t, typename external_collection_t>
     requires std::ranges::range<external_collection_t> &&
@@ -177,7 +180,8 @@ class CylindricalSpacePointGridCreator {
       const Acts::SeedFinderConfig<external_spacepoint_t>& config,
       const Acts::SeedFinderOptions& options,
       Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
-      const external_collection_t& collection);
+      const external_collection_t& collection,
+      const Acts::Logger& logger = Acts::getDummyLogger());
 };
 
 }  // namespace Acts

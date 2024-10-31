@@ -84,6 +84,11 @@ RootAthenaDumpReader::RootAthenaDumpReader(
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
   }
 
+  if (m_inputchain->GetBranch("SPtopStripDirection") == nullptr) {
+    ACTS_WARNING("Additional SP strip features not available");
+    m_haveStripFeatures = false;
+  }
+
   // Set the branches
 
   // Set object pointer
@@ -192,13 +197,13 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("SPcovz", SPcovz);
   m_inputchain->SetBranchAddress("SPhl_topstrip", SPhl_topstrip);
   m_inputchain->SetBranchAddress("SPhl_botstrip", SPhl_botstrip);
-  m_inputchain->SetBranchAddress("SPtopStripDirection", SPtopStripDirection);
+  m_inputchain->SetBranchAddress("SPtopStripDirection", &SPtopStripDirection);
   m_inputchain->SetBranchAddress("SPbottomStripDirection",
-                                 SPbottomStripDirection);
+                                 &SPbottomStripDirection);
   m_inputchain->SetBranchAddress("SPstripCenterDistance",
-                                 SPstripCenterDistance);
+                                 &SPstripCenterDistance);
   m_inputchain->SetBranchAddress("SPtopStripCenterPosition",
-                                 SPtopStripCenterPosition);
+                                 &SPtopStripCenterPosition);
 
   m_inputchain->SetBranchAddress("nTRK", &nTRK);
   m_inputchain->SetBranchAddress("TRKindex", TRKindex);
@@ -578,21 +583,25 @@ RootAthenaDumpReader::readSpacepoints(
       sLinks.emplace_back(second);
 
       using Vector3f = Eigen::Matrix<float, 3, 1>;
-      const Vector3f topStripDirection{SPtopStripDirection->at(isp).at(0),
-                                       SPtopStripDirection->at(isp).at(1),
-                                       SPtopStripDirection->at(isp).at(2)};
-      const Vector3f bottomStripDirection{
-          SPbottomStripDirection->at(isp).at(0),
-          SPbottomStripDirection->at(isp).at(1),
-          SPbottomStripDirection->at(isp).at(2)};
-      const Vector3f stripCenterDistance{SPstripCenterDistance->at(isp).at(0),
-                                         SPstripCenterDistance->at(isp).at(1),
-                                         SPstripCenterDistance->at(isp).at(2)};
-      const Vector3f topStripCenterPosition{
-          SPtopStripCenterPosition->at(isp).at(0),
-          SPtopStripCenterPosition->at(isp).at(1),
-          SPtopStripCenterPosition->at(isp).at(2)};
+      Vector3f topStripDirection = Vector3f::Zero();
+      Vector3f bottomStripDirection = Vector3f::Zero();
+      Vector3f stripCenterDistance = Vector3f::Zero();
+      Vector3f topStripCenterPosition = Vector3f::Zero();
 
+      if (m_haveStripFeatures) {
+        topStripDirection = {SPtopStripDirection->at(isp).at(0),
+                             SPtopStripDirection->at(isp).at(1),
+                             SPtopStripDirection->at(isp).at(2)};
+        bottomStripDirection = {SPbottomStripDirection->at(isp).at(0),
+                                SPbottomStripDirection->at(isp).at(1),
+                                SPbottomStripDirection->at(isp).at(2)};
+        stripCenterDistance = {SPstripCenterDistance->at(isp).at(0),
+                               SPstripCenterDistance->at(isp).at(1),
+                               SPstripCenterDistance->at(isp).at(2)};
+        topStripCenterPosition = {SPtopStripCenterPosition->at(isp).at(0),
+                                  SPtopStripCenterPosition->at(isp).at(1),
+                                  SPtopStripCenterPosition->at(isp).at(2)};
+      }
       sp = SimSpacePoint(globalPos, std::nullopt, spCovr, spCovz, std::nullopt,
                          sLinks, SPhl_topstrip[isp], SPhl_botstrip[isp],
                          topStripDirection.cast<double>(),

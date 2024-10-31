@@ -64,7 +64,7 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
     std::optional<double> mass;
   };
 
-  ParametricParticleGenerator(const Config& cfg);
+  explicit ParametricParticleGenerator(const Config& cfg);
 
   /// Generate a single primary vertex with the given number of particles.
   std::pair<SimVertexContainer, SimParticleContainer> operator()(

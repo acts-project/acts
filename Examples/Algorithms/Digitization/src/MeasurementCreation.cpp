@@ -30,6 +30,7 @@ ActsExamples::VariableBoundMeasurementProxy ActsExamples::createMeasurement(
   return Acts::visit_measurement(
       dParams.indices.size(), [&](auto dim) -> VariableBoundMeasurementProxy {
         auto [indices, par, cov] = measurementConstituents<dim>(dParams);
-        return container.emplaceMeasurement<dim>(geometryId, indices, par, cov);
+        return VariableBoundMeasurementProxy{
+            container.emplaceMeasurement<dim>(geometryId, indices, par, cov)};
       });
 }
