@@ -990,6 +990,17 @@ class Gx2Fitter {
               "and/or material.");
         }
 
+        // We only create track states here if there is already a measurement
+        // detected (no holes before the first measurement) or if we encounter
+        // material
+        const bool precedingMeasurementExists = (result.measurementStates > 0);
+        if (!precedingMeasurementExists && !surfaceHasMaterial) {
+          ACTS_DEBUG(
+              "    Ignoring hole, because there are no preceding "
+              "measurements.");
+          return;
+        }
+
         auto& fittedStates = *result.fittedStates;
 
         // Add a <trackStateMask> TrackState entry multi trajectory. This
