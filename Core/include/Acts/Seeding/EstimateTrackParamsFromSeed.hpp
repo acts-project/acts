@@ -10,7 +10,15 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -19,6 +27,7 @@
 #include <cmath>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <optional>
 
 namespace Acts {
@@ -249,33 +258,77 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Transform it back to the original frame
   Vector3 direction = rotation * transDirection.normalized();
 
+  // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
+  // momentum on the transverse plane of the new frame)
+  ActsScalar qOverPt = sign * (UnitConstants::m) / (0.3 * bFieldInTesla * R);
+
+  Vector4 parameterOrigin(spGlobalPositions[0].x(), spGlobalPositions[0].y(),
+                          spGlobalPositions[0].z(),
+                          spGlobalTimes[0].value_or(0.));
+
+  // Transform the bottom space point to local coordinates of the provided
+  // surface
+  auto lpResult =
+      surface.globalToLocal(gctx, parameterOrigin.head<3>(), direction);
+  if (!lpResult.ok()) {
+    // no cov transport matrix is needed here
+    // particle hypothesis does not matter here
+    CurvilinearTrackParameters estimatedParams(parameterOrigin, direction,
+                                               qOverPt, std::nullopt,
+                                               ParticleHypothesis::pion());
+
+    auto surfaceIntersection =
+        surface.intersect(gctx, parameterOrigin.head<3>(), direction).closest();
+
+    if (!surfaceIntersection.isValid()) {
+      ACTS_INFO(
+          "The surface does not intersect with the origin and estimated "
+          "direction.");
+      return std::nullopt;
+    }
+
+    Direction propagatorDirection =
+        Direction::fromScalarZeroAsPositive(surfaceIntersection.pathLength());
+
+    Propagator propagator(
+        EigenStepper<>(std::make_shared<ConstantBField>(bField)),
+        VoidNavigator(), logger().cloneWithSuffix("Propagator"));
+    MagneticFieldContext mctx;
+    auto propagatorOptions = decltype(propagator)::Options<>(gctx, mctx);
+    propagatorOptions.direction = propagatorDirection;
+
+    auto result =
+        propagator.propagate(estimatedParams, surface, propagatorOptions);
+
+    if (!result.ok()) {
+      ACTS_INFO("The propagation failed.");
+      return std::nullopt;
+    }
+    if (!result.value().endParameters.has_value()) {
+      ACTS_INFO("The propagation did not reach the surface.");
+      return std::nullopt;
+    }
+
+    return result.value().endParameters.value().parameters();
+  }
+
+  Vector2 bottomLocalPos = lpResult.value();
+
   // Initialize the bound parameters vector
   BoundVector params = BoundVector::Zero();
+
+  // The estimated loc0 and loc1
+  params[eBoundLoc0] = bottomLocalPos.x();
+  params[eBoundLoc1] = bottomLocalPos.y();
 
   // The estimated phi and theta
   params[eBoundPhi] = VectorHelpers::phi(direction);
   params[eBoundTheta] = VectorHelpers::theta(direction);
 
-  // Transform the bottom space point to local coordinates of the provided
-  // surface
-  auto lpResult = surface.globalToLocal(gctx, spGlobalPositions[0], direction);
-  if (!lpResult.ok()) {
-    ACTS_ERROR(
-        "Global to local transformation did not succeed. Please make sure the "
-        "bottom space point lies on the provided surface.");
-    return std::nullopt;
-  }
-  Vector2 bottomLocalPos = lpResult.value();
-  // The estimated loc0 and loc1
-  params[eBoundLoc0] = bottomLocalPos.x();
-  params[eBoundLoc1] = bottomLocalPos.y();
-  params[eBoundTime] = spGlobalTimes[0].value_or(0.);
-
-  // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
-  // momentum on the transverse plane of the new frame)
-  ActsScalar qOverPt = sign * (UnitConstants::m) / (0.3 * bFieldInTesla * R);
   // The estimated q/p in [GeV/c]^-1
   params[eBoundQOverP] = qOverPt / fastHypot(1., invTanTheta);
+
+  params[eBoundTime] = spGlobalTimes[0].value_or(0.);
 
   if (params.hasNaN()) {
     ACTS_ERROR(
