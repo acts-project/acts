@@ -128,11 +128,12 @@ TrackSelectorConfig = namedtuple(
     defaults=[(None, None)] * 7 + [None] * 8,
 )
 
+
 def convertPyTrackSelectorConfig(c, absEtaMaxLambda=lambda etaMax: etaMax):
-    '''
+    """
     Encapsulate this boilerplate code into a function so different uses do not get out of sync
     Gets an additional lambda for the etaMax, because we might want to use this with eta binning
-    '''
+    """
     return acts.TrackSelector.Config(
         **acts.examples.defaultKWArgs(
             loc0Min=c.loc0[0],
@@ -146,7 +147,7 @@ def convertPyTrackSelectorConfig(c, absEtaMaxLambda=lambda etaMax: etaMax):
             etaMin=c.eta[0],
             etaMax=c.eta[1],
             absEtaMin=c.absEta[0],
-            absEtaMax= absEtaMaxLambda(c.absEta[1]),
+            absEtaMax=absEtaMaxLambda(c.absEta[1]),
             ptMin=c.pt[0],
             ptMax=c.pt[1],
             minMeasurements=c.nMeasurementsMin,

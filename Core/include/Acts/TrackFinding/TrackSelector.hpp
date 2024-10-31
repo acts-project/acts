@@ -445,8 +445,9 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
 
   auto parameterCuts = [&]() {
     return within(track.transverseMomentum(), cuts.ptMin, cuts.ptMax) &&
-         (!m_isUnbinned || (within(absEta(), cuts.absEtaMin, cuts.absEtaMax) &&
-                            within(_eta, cuts.etaMin, cuts.etaMax))) &&
+           (!m_isUnbinned ||
+            (within(absEta(), cuts.absEtaMin, cuts.absEtaMax) &&
+             within(_eta, cuts.etaMin, cuts.etaMax))) &&
            within(track.phi(), cuts.phiMin, cuts.phiMax) &&
            within(track.loc0(), cuts.loc0Min, cuts.loc0Max) &&
            within(track.loc1(), cuts.loc1Min, cuts.loc1Max) &&
