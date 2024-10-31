@@ -20,11 +20,11 @@
 #include "G4DecayProducts.hh"
 #include "G4DecayTable.hh"
 
-ActsFatras::Geant4Decay::Geant4Decay()
-    : m_g4RunManager(ensureGeant4RunManager()) {}
+namespace ActsFatras {
 
-std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
-    const ActsFatras::Particle& parent) const {
+Geant4Decay::Geant4Decay() : m_g4RunManager(ensureGeant4RunManager()) {}
+
+std::vector<Particle> Geant4Decay::decayParticle(const Particle& parent) const {
   std::vector<Particle> children;
 
   // Find the particle type that will decay
@@ -50,7 +50,7 @@ std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
   }
 
   // Boost the decay products using the parents four-momentum
-  const Particle::Vector4 mom4 = parent.fourMomentum();
+  const Particle::Vector4 mom4 = parent.lastState().fourMomentum();
   products->Boost(mom4[Acts::eMom0] / mom4[Acts::eEnergy],
                   mom4[Acts::eMom1] / mom4[Acts::eEnergy],
                   mom4[Acts::eMom2] / mom4[Acts::eEnergy]);
@@ -71,13 +71,16 @@ std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
 
     Particle childParticle(parent.particleId().makeDescendant(i),
                            static_cast<Acts::PdgParticle>(pdg));
-    childParticle.setPosition4(parent.fourPosition())
+    childParticle.setProcess(ProcessType::eDecay);
+    childParticle.initialState()
+        .setPosition4(parent.lastState().fourPosition())
         .setAbsoluteMomentum(amgMom.norm())
-        .setDirection(amgMom)
-        .setProcess(ProcessType::eDecay);
+        .setDirection(amgMom);
 
     // Store the particle
     children.push_back(std::move(childParticle));
   }
   return children;
 }
+
+}  // namespace ActsFatras

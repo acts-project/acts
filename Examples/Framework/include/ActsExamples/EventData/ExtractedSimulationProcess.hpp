@@ -17,11 +17,11 @@ namespace ActsExamples {
 /// Stores the initial properties of a particle, the properties before the
 /// interaction and the particle properties after the interaction
 struct ExtractedSimulationProcess {
-  SimParticle initial;
   SimParticle before;
   std::vector<SimParticle> after;
 };
 
 using ExtractedSimulationProcessContainer =
     std::vector<ExtractedSimulationProcess>;
+
 }  // namespace ActsExamples

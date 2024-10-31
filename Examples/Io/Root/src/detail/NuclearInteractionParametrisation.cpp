@@ -12,10 +12,8 @@
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <cmath>
-#include <complex>
 #include <iterator>
 #include <limits>
-#include <memory>
 
 #include <Eigen/Eigenvalues>
 #include <TMath.h>
@@ -23,6 +21,7 @@
 #include <TVectorT.h>
 
 namespace ActsExamples::detail::NuclearInteractionParametrisation {
+
 namespace {
 
 /// @brief Evaluate the location in a standard normal distribution for a value
@@ -52,14 +51,14 @@ float gaussianValue(TH1F const* histo, const float mom) {
 /// @param [in] fourVector2 The other four vector
 ///
 /// @return The invariant mass
-float invariantMass(const ActsExamples::SimParticle::Vector4& fourVector1,
-                    const ActsExamples::SimParticle::Vector4& fourVector2) {
-  ActsExamples::SimParticle::Vector4 sum = fourVector1 + fourVector2;
-  const ActsExamples::SimParticle::Scalar energy = sum[Acts::eEnergy];
-  ActsExamples::SimParticle::Scalar momentum =
-      sum.template segment<3>(Acts::eMom0).norm();
+float invariantMass(const SimParticle::Vector4& fourVector1,
+                    const SimParticle::Vector4& fourVector2) {
+  SimParticle::Vector4 sum = fourVector1 + fourVector2;
+  const SimParticle::Scalar energy = sum[Acts::eEnergy];
+  SimParticle::Scalar momentum = sum.template segment<3>(Acts::eMom0).norm();
   return std::sqrt(energy * energy - momentum * momentum);
 }
+
 }  // namespace
 
 std::pair<Vector, Matrix> calculateMeanAndCovariance(
@@ -122,21 +121,21 @@ Parametrisation buildMomentumParameters(const EventCollection& events,
   return std::make_pair(eigenspaceElements, histos);
 }
 
+// TODO: build enum instead of bool
 EventProperties prepareMomenta(const EventCollection& events,
-                               unsigned int multiplicity,
-                               bool soft)  // TODO: build enum instead of bool
-{
+                               unsigned int multiplicity, bool soft) {
   EventProperties result;
   // Loop over all events
   for (const EventFraction& event : events) {
     // Test the multiplicity and type of the event
     if (event.multiplicity == multiplicity && event.soft == soft) {
-      const float initialMomentum = event.initialParticle.absoluteMomentum();
+      const float initialMomentum =
+          event.interactingParticle.initialState().absoluteMomentum();
       float sum = 0.;
       std::vector<float> momenta;
       momenta.reserve(multiplicity + 1);
       // Fill the vector with the scaled momenta
-      for (const ActsExamples::SimParticle& p : event.finalParticles) {
+      for (const SimParticle& p : event.finalParticles) {
         sum += p.absoluteMomentum();
         momenta.push_back(p.absoluteMomentum() / initialMomentum);
       }
@@ -221,7 +220,7 @@ EventProperties prepareInvariantMasses(const EventCollection& events,
       std::vector<float> invariantMasses;
       invariantMasses.reserve(multiplicity);
       // Fill the vector with the invariant masses
-      for (const ActsExamples::SimParticle& p : event.finalParticles) {
+      for (const SimParticle& p : event.finalParticles) {
         const auto fourVector = p.fourMomentum();
         invariantMasses.push_back(invariantMass(fourVectorBefore, fourVector));
       }
@@ -377,4 +376,5 @@ CumulativeDistribution cumulativeNuclearInteractionProbability(
   return histo;  // TODO: in this case the normalisation is not taking into
                  // account
 }
+
 }  // namespace ActsExamples::detail::NuclearInteractionParametrisation

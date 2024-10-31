@@ -139,13 +139,13 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
     p.setCharge((*m_q)[i] * Acts::UnitConstants::e);
     p.setMass((*m_m)[i] * Acts::UnitConstants::GeV);
     p.setParticleId((*m_particleId)[i]);
-    p.setPosition4((*m_vx)[i] * Acts::UnitConstants::mm,
-                   (*m_vy)[i] * Acts::UnitConstants::mm,
-                   (*m_vz)[i] * Acts::UnitConstants::mm,
-                   (*m_vt)[i] * Acts::UnitConstants::mm);
+    p.initialState().setPosition4((*m_vx)[i] * Acts::UnitConstants::mm,
+                                  (*m_vy)[i] * Acts::UnitConstants::mm,
+                                  (*m_vz)[i] * Acts::UnitConstants::mm,
+                                  (*m_vt)[i] * Acts::UnitConstants::mm);
     // NOTE: direction is normalized inside `setDirection`
-    p.setDirection((*m_px)[i], (*m_py)[i], (*m_pz)[i]);
-    p.setAbsoluteMomentum((*m_p)[i] * Acts::UnitConstants::GeV);
+    p.initialState().setDirection((*m_px)[i], (*m_py)[i], (*m_pz)[i]);
+    p.initialState().setAbsoluteMomentum((*m_p)[i] * Acts::UnitConstants::GeV);
 
     particles.insert(p);
   }

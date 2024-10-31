@@ -445,6 +445,13 @@ class Particle {
     return *this;
   }
 
+  Scalar energyLoss() const {
+    return initialState().energy() - lastState().energy();
+  }
+  Scalar pathInX0() const { return lastState().pathInX0(); }
+  Scalar pathInL0() const { return lastState().pathInL0(); }
+  std::uint32_t numberOfHits() const { return lastState().numberOfHits(); }
+
  private:
   // identity, i.e. things that do not change over the particle lifetime.
   /// Particle identifier within the event.

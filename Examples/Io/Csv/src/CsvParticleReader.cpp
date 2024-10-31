@@ -19,16 +19,16 @@
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
-#include <array>
 #include <cmath>
 #include <stdexcept>
 #include <string>
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvParticleReader::CsvParticleReader(
-    const ActsExamples::CsvParticleReader::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+CsvParticleReader::CsvParticleReader(const CsvParticleReader::Config& config,
+                                     Acts::Logging::Level level)
     : m_cfg(config),
       m_eventsRange(
           determineEventFilesRange(m_cfg.inputDir, m_cfg.inputStem + ".csv")),
@@ -43,23 +43,21 @@ ActsExamples::CsvParticleReader::CsvParticleReader(
   m_outputParticles.initialize(m_cfg.outputParticles);
 }
 
-std::string ActsExamples::CsvParticleReader::CsvParticleReader::name() const {
+std::string CsvParticleReader::CsvParticleReader::name() const {
   return "CsvParticleReader";
 }
 
-std::pair<std::size_t, std::size_t>
-ActsExamples::CsvParticleReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> CsvParticleReader::availableEvents() const {
   return m_eventsRange;
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
-    const ActsExamples::AlgorithmContext& ctx) {
+ProcessCode CsvParticleReader::read(const AlgorithmContext& ctx) {
   SimParticleContainer::sequence_type unordered;
 
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
   // vt and m are an optional columns
-  ActsExamples::NamedTupleCsvReader<ParticleData> reader(path, {"vt", "m"});
+  NamedTupleCsvReader<ParticleData> reader(path, {"vt", "m"});
   ParticleData data;
 
   while (reader.read(data)) {
@@ -68,13 +66,13 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
                                   data.q * Acts::UnitConstants::e,
                                   data.m * Acts::UnitConstants::GeV);
     particle.setProcess(static_cast<ActsFatras::ProcessType>(data.process));
-    particle.setPosition4(
+    particle.initialState().setPosition4(
         data.vx * Acts::UnitConstants::mm, data.vy * Acts::UnitConstants::mm,
         data.vz * Acts::UnitConstants::mm, data.vt * Acts::UnitConstants::mm);
     // Only used for direction; normalization/units do not matter
-    particle.setDirection(data.px, data.py, data.pz);
-    particle.setAbsoluteMomentum(std::hypot(data.px, data.py, data.pz) *
-                                 Acts::UnitConstants::GeV);
+    particle.initialState().setDirection(data.px, data.py, data.pz);
+    particle.initialState().setAbsoluteMomentum(
+        std::hypot(data.px, data.py, data.pz) * Acts::UnitConstants::GeV);
     unordered.push_back(std::move(particle));
   }
 
@@ -85,3 +83,5 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

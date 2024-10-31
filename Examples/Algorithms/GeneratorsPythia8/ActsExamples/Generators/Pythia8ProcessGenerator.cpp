@@ -182,10 +182,11 @@ Pythia8Generator::operator()(RandomEngine& rng) {
     const auto charge = genParticle.charge() * 1_e;
     const auto mass = genParticle.m0() * 1_GeV;
     ActsFatras::Particle particle(particleId, pdg, charge, mass);
-    particle.setPosition4(pos4);
+    particle.initialState().setPosition4(pos4);
     // normalization/ units are not import for the direction
-    particle.setDirection(genParticle.px(), genParticle.py(), genParticle.pz());
-    particle.setAbsoluteMomentum(
+    particle.initialState().setDirection(genParticle.px(), genParticle.py(),
+                                         genParticle.pz());
+    particle.initialState().setAbsoluteMomentum(
         Acts::fastHypot(genParticle.px(), genParticle.py(), genParticle.pz()) *
         1_GeV);
 

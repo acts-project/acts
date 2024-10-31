@@ -10,17 +10,16 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
 #include <ostream>
 #include <stdexcept>
-#include <utility>
 
-ActsExamples::ParticlesPrinter::ParticlesPrinter(const Config& cfg,
-                                                 Acts::Logging::Level lvl)
+namespace ActsExamples {
+
+ParticlesPrinter::ParticlesPrinter(const Config& cfg, Acts::Logging::Level lvl)
     : IAlgorithm("ParticlesPrinter", lvl), m_cfg(cfg) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Input particles collection is not configured");
@@ -29,8 +28,7 @@ ActsExamples::ParticlesPrinter::ParticlesPrinter(const Config& cfg,
   m_inputParticles.initialize(m_cfg.inputParticles);
 }
 
-ActsExamples::ProcessCode ActsExamples::ParticlesPrinter::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode ParticlesPrinter::execute(const AlgorithmContext& ctx) const {
   using namespace Acts::UnitLiterals;
 
   const auto& particles = m_inputParticles(ctx);
@@ -41,12 +39,18 @@ ActsExamples::ProcessCode ActsExamples::ParticlesPrinter::execute(
   for (const auto& particle : particles) {
     ACTS_INFO("  particle " << particle);
     ACTS_INFO("    process_type: " << particle.process());
-    ACTS_INFO("    position:     " << particle.position().transpose() / 1_mm
-                                   << " mm");
-    ACTS_INFO("    direction:    " << particle.direction().transpose());
-    ACTS_INFO("    time:         " << particle.time() / 1_ns << " ns");
-    ACTS_INFO("    |p|:          " << particle.absoluteMomentum() / 1_GeV
-                                   << " GeV");
+    ACTS_INFO("    initial state:");
+    ACTS_INFO("      position:     "
+              << particle.initialState().position().transpose() / 1_mm
+              << " mm");
+    ACTS_INFO("      direction:    "
+              << particle.initialState().direction().transpose());
+    ACTS_INFO("      time:         " << particle.initialState().time() / 1_ns
+                                     << " ns");
+    ACTS_INFO("      |p|:          "
+              << particle.initialState().absoluteMomentum() / 1_GeV << " GeV");
   }
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

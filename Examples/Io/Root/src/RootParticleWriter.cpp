@@ -105,32 +105,35 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_particleType.push_back(particle.pdg());
     m_process.push_back(static_cast<std::uint32_t>(particle.process()));
     // position
-    m_vx.push_back(Acts::clampValue<float>(particle.fourPosition().x() /
-                                           Acts::UnitConstants::mm));
-    m_vy.push_back(Acts::clampValue<float>(particle.fourPosition().y() /
-                                           Acts::UnitConstants::mm));
-    m_vz.push_back(Acts::clampValue<float>(particle.fourPosition().z() /
-                                           Acts::UnitConstants::mm));
-    m_vt.push_back(Acts::clampValue<float>(particle.fourPosition().w() /
-                                           Acts::UnitConstants::mm));
+    m_vx.push_back(Acts::clampValue<float>(
+        particle.initialState().fourPosition().x() / Acts::UnitConstants::mm));
+    m_vy.push_back(Acts::clampValue<float>(
+        particle.initialState().fourPosition().y() / Acts::UnitConstants::mm));
+    m_vz.push_back(Acts::clampValue<float>(
+        particle.initialState().fourPosition().z() / Acts::UnitConstants::mm));
+    m_vt.push_back(Acts::clampValue<float>(
+        particle.initialState().fourPosition().w() / Acts::UnitConstants::mm));
     // momentum
-    const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
+    const auto p =
+        particle.initialState().absoluteMomentum() / Acts::UnitConstants::GeV;
     m_p.push_back(Acts::clampValue<float>(p));
-    m_px.push_back(Acts::clampValue<float>(p * particle.direction().x()));
-    m_py.push_back(Acts::clampValue<float>(p * particle.direction().y()));
-    m_pz.push_back(Acts::clampValue<float>(p * particle.direction().z()));
+    m_px.push_back(
+        Acts::clampValue<float>(p * particle.initialState().direction().x()));
+    m_py.push_back(
+        Acts::clampValue<float>(p * particle.initialState().direction().y()));
+    m_pz.push_back(
+        Acts::clampValue<float>(p * particle.initialState().direction().z()));
     // particle constants
     m_m.push_back(
         Acts::clampValue<float>(particle.mass() / Acts::UnitConstants::GeV));
     m_q.push_back(
         Acts::clampValue<float>(particle.charge() / Acts::UnitConstants::e));
     // derived kinematic quantities
-    m_eta.push_back(Acts::clampValue<float>(
-        Acts::VectorHelpers::eta(particle.direction())));
-    m_phi.push_back(Acts::clampValue<float>(
-        Acts::VectorHelpers::phi(particle.direction())));
-    m_pt.push_back(Acts::clampValue<float>(
-        p * Acts::VectorHelpers::perp(particle.direction())));
+    m_eta.push_back(Acts::clampValue<float>(particle.initialState().eta()));
+    m_phi.push_back(Acts::clampValue<float>(particle.initialState().phi()));
+    m_pt.push_back(
+        Acts::clampValue<float>(particle.initialState().transverseMomentum() /
+                                Acts::UnitConstants::GeV));
     // decoded barcode components
     m_vertexPrimary.push_back(particle.particleId().vertexPrimary());
     m_vertexSecondary.push_back(particle.particleId().vertexSecondary());
@@ -142,13 +145,13 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_eLoss.push_back(Acts::clampValue<float>(
         (particle.energyLoss() / Acts::UnitConstants::GeV)));
     // get the path in X0
-    m_pathInX0.push_back(Acts::clampValue<float>(particle.finalPathInX0() /
-                                                 Acts::UnitConstants::mm));
+    m_pathInX0.push_back(
+        Acts::clampValue<float>(particle.pathInX0() / Acts::UnitConstants::mm));
     // get the path in L0
-    m_pathInL0.push_back(Acts::clampValue<float>(particle.finalPathInL0() /
-                                                 Acts::UnitConstants::mm));
+    m_pathInL0.push_back(
+        Acts::clampValue<float>(particle.pathInL0() / Acts::UnitConstants::mm));
     // get the number of hits
-    m_numberOfHits.push_back(particle.finalNumberOfHits());
+    m_numberOfHits.push_back(particle.numberOfHits());
     // get the particle outcome
     m_outcome.push_back(static_cast<std::uint32_t>(particle.outcome()));
   }

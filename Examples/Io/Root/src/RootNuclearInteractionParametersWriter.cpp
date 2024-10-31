@@ -11,16 +11,13 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <algorithm>
 #include <cstdint>
 #include <iterator>
 #include <limits>
-#include <memory>
 #include <stdexcept>
 #include <tuple>
-#include <unordered_map>
 #include <utility>
 
 #include <TAxis.h>
@@ -53,16 +50,17 @@ void labelEvents(
     for (const ActsExamples::SimParticle& p : event.finalParticles) {
       // Search for the maximum in particles with the same PDG ID as the
       // interacting one
-      if (p.pdg() == event.initialParticle.pdg()) {
-        maxMom = std::max(p.absoluteMomentum(), maxMom);
+      if (p.pdg() == event.interactingParticle.pdg()) {
+        maxMom = std::max(p.lastState().absoluteMomentum(), maxMom);
         // And the maximum among the others
       } else {
-        maxMomOthers = std::max(p.absoluteMomentum(), maxMomOthers);
+        maxMomOthers = std::max(p.lastState().absoluteMomentum(), maxMomOthers);
       }
     }
 
     // Label the initial momentum
-    event.initialMomentum = event.initialParticle.absoluteMomentum();
+    event.initialMomentum =
+        event.interactingParticle.initialState().absoluteMomentum();
 
     // Label the indication that the interacting particle carries most of the
     // momentum
@@ -73,14 +71,15 @@ void labelEvents(
     Acts::Vector2 ptVec(0., 0.);
     for (const ActsExamples::SimParticle& p : event.finalParticles) {
       Acts::Vector2 particlePt =
-          p.fourMomentum().template segment<2>(Acts::eMom0);
+          p.lastState().fourMomentum().template segment<2>(Acts::eMom0);
       ptVec[0] += particlePt[0];
       ptVec[1] += particlePt[1];
     }
     pt = ptVec.norm();
 
     // Use the final state p_T as veto for the soft label
-    if (event.soft && pt <= event.interactingParticle.transverseMomentum()) {
+    if (event.soft &&
+        pt <= event.interactingParticle.lastState().transverseMomentum()) {
       event.soft = false;
     }
 
@@ -382,10 +381,10 @@ ActsExamples::RootNuclearInteractionParametersWriter::finalize() {
   TFile* tf = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   gDirectory->cd();
   gDirectory->mkdir(
-      std::to_string(m_eventFractionCollection[0].initialParticle.pdg())
+      std::to_string(m_eventFractionCollection[0].interactingParticle.pdg())
           .c_str());
   gDirectory->cd(
-      std::to_string(m_eventFractionCollection[0].initialParticle.pdg())
+      std::to_string(m_eventFractionCollection[0].interactingParticle.pdg())
           .c_str());
   gDirectory->mkdir(
       std::to_string(m_eventFractionCollection[0].initialMomentum).c_str());
