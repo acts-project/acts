@@ -19,7 +19,7 @@ void Acts::Experimental::updateGx2fCovarianceParams(
     }
   }
 
-  visit_measurement(extendedSystem.findNdf(), [&](auto N) {
+  visit_measurement(extendedSystem.findRequiredNdf(), [&](auto N) {
     fullCovariancePredicted.topLeftCorner<N, N>() =
         extendedSystem.aMatrix().inverse().topLeftCorner<N, N>();
   });

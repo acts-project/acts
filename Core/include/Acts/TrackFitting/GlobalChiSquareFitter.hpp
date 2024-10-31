@@ -294,7 +294,8 @@ struct Gx2fSystem {
       : m_nDims(nDims),
         m_chi2(0.),
         m_aMatrix(Eigen::MatrixXd::Zero(nDims, nDims)),
-        m_bVector(Eigen::VectorXd::Zero(nDims)) {}
+        m_bVector(Eigen::VectorXd::Zero(nDims)),
+        m_ndf(0u) {}
 
   // Accessor for nDims (const reference).
   std::size_t nDims() const { return m_nDims; }
@@ -317,12 +318,18 @@ struct Gx2fSystem {
   // Accessor for a modifiable reference to the vector.
   Eigen::VectorXd& bVector() { return m_bVector; }
 
+  // Accessor for NDF
+  std::size_t ndf() const { return m_ndf; }
+
+  // Modifier for NDF
+  std::size_t& ndf() { return m_ndf; }
+
   //  It automatically deduces if we want to fit e.g. q/p and adjusts itself
   //  later. We have only 3 cases, because we always have l0, l1, phi, theta:
   // - 4: no magnetic field -> q/p is empty
   // - 5: no time measurement -> time not fittable
   // - 6: full fit
-  std::size_t findNdf() {
+  std::size_t findRequiredNdf() {
     std::size_t ndfSystem;
     if (m_aMatrix(4, 4) == 0) {
       ndfSystem = 4;
@@ -334,6 +341,8 @@ struct Gx2fSystem {
 
     return ndfSystem;
   }
+
+  bool isWellDefined() { return m_ndf > findRequiredNdf(); }
 
  private:
   /// Number of dimensions of the (extended) system
@@ -347,6 +356,9 @@ struct Gx2fSystem {
 
   /// Extended vector for accumulation.
   Eigen::VectorXd m_bVector;
+
+  /// Number of degrees of freedom of the system
+  std::size_t m_ndf;
 };
 
 /// @brief Process measurements and fill the aMatrix and bVector
@@ -556,7 +568,6 @@ void addMaterialToGx2fSums(
 ///
 /// @param track A mutable track proxy to operate on
 /// @param extendedSystem All parameters of the current equation system
-/// @param countNdf The number of degrees of freedom counted so far
 /// @param multipleScattering Flag to consider multiple scattering in the calculation
 /// @param scatteringMap Map of geometry identifiers to scattering properties, containing all scattering angles and covariances
 /// @param geoIdVector A vector to store geometry identifiers for tracking processed elements
@@ -564,7 +575,7 @@ void addMaterialToGx2fSums(
 template <TrackProxyConcept track_proxy_t>
 void fillGx2fSystem(
     const track_proxy_t track, Gx2fSystem& extendedSystem,
-    std::size_t& countNdf, const bool multipleScattering,
+    const bool multipleScattering,
     const std::unordered_map<GeometryIdentifier, ScatteringProperties>&
         scatteringMap,
     std::vector<GeometryIdentifier>& geoIdVector, const Logger& logger) {
@@ -616,7 +627,7 @@ void fillGx2fSystem(
             "Found measurement with less than 1 or more than 6 dimension(s).");
       }
 
-      countNdf += measDim;
+      extendedSystem.ndf() += measDim;
 
       visit_measurement(measDim, [&](auto N) {
         addMeasurementToGx2fSums<N>(extendedSystem, jacobianFromStart,
@@ -1290,9 +1301,6 @@ class Gx2Fitter {
       track.tipIndex() = tipIndex;
       track.linkForward();
 
-      // This goes up for each measurement (for each dimension)
-      std::size_t countNdf = 0;
-
       // Count the material surfaces, to set up the system. In the multiple
       // scattering case, we need to extend our system.
       std::size_t nMaterialSurfaces = 0;
@@ -1336,8 +1344,8 @@ class Gx2Fitter {
       // all stored material in each propagation.
       std::vector<GeometryIdentifier> geoIdVector;
 
-      fillGx2fSystem(track, extendedSystem, countNdf, multipleScattering,
-                     scatteringMap, geoIdVector, *m_addToSumLogger);
+      fillGx2fSystem(track, extendedSystem, multipleScattering, scatteringMap,
+                     geoIdVector, *m_addToSumLogger);
 
       chi2sum = extendedSystem.chi2();
 
@@ -1350,10 +1358,10 @@ class Gx2Fitter {
       // We skip the check during the first iteration, since we cannot guarantee
       // to hit all/enough measurement surfaces with the initial parameter
       // guess.
-      if ((nUpdate > 0) && (extendedSystem.findNdf() + 1 > countNdf)) {
+      if ((nUpdate > 0) && !extendedSystem.isWellDefined()) {
         ACTS_INFO("Not enough measurements. Require "
-                  << extendedSystem.findNdf() + 1 << ", but only " << countNdf
-                  << " could be used.");
+                  << extendedSystem.findRequiredNdf() + 1 << ", but only "
+                  << extendedSystem.ndf() << " could be used.");
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
