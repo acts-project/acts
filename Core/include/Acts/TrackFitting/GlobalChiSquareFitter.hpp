@@ -372,30 +372,30 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
 
   ACTS_VERBOSE(
       "Contributions in addMeasurementToGx2fSums:\n"
-      << "kMeasDim: " << kMeasDim << "\n"
-      << "predicted" << predicted.transpose() << "\n"
-      << "measurement: " << measurement.transpose() << "\n"
-      << "covarianceMeasurement:\n"
+      << "    kMeasDim: " << kMeasDim << "\n"
+      << "    predicted" << predicted.transpose() << "\n"
+      << "    measurement: " << measurement.transpose() << "\n"
+      << "    covarianceMeasurement:\n"
       << covarianceMeasurement << "\n"
-      << "projector:\n"
+      << "    projector:\n"
       << projector.eval() << "\n"
-      << "projJacobian:\n"
+      << "    projJacobian:\n"
       << projJacobian.eval() << "\n"
-      << "projPredicted: " << (projPredicted.transpose()).eval() << "\n"
-      << "residual: " << (residual.transpose()).eval() << "\n"
-      << "extendedJacobian:\n"
+      << "    projPredicted: " << (projPredicted.transpose()).eval() << "\n"
+      << "    residual: " << (residual.transpose()).eval() << "\n"
+      << "    extendedJacobian:\n"
       << extendedJacobian << "\n"
-      << "aMatrixMeas:\n"
+      << "    aMatrix contribution:\n"
       << (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
              .eval()
       << "\n"
-      << "bVectorMeas: "
+      << "    bVector contribution: "
       << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).eval()
       << "\n"
-      << "chi2sumMeas: "
+      << "    chi2sumMeas: "
       << (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0)
       << "\n"
-      << "safeInvCovMeasurement:\n"
+      << "    safeInvCovMeasurement:\n"
       << (*safeInvCovMeasurement));
 
   return;
@@ -727,13 +727,14 @@ class Gx2Fitter {
           if (doMaterial) {
             ACTS_DEBUG("    Update parameters with scattering angles.");
             const auto scatteringMapId = scatteringMap->find(geoId);
-            ACTS_VERBOSE("    scatteringAngles:\n"
+            ACTS_VERBOSE("        scatteringAngles:\n"
                          << scatteringMapId->second.scatteringAngles()
-                         << "\n    boundParams before the update:\n"
-                         << boundParams);
+                         << "\n        boundParams before the update: "
+                         << boundParams.parameters().transpose());
             boundParams.parameters() +=
                 scatteringMapId->second.scatteringAngles();
-            ACTS_VERBOSE("    boundParams after the update:\n" << boundParams);
+            ACTS_VERBOSE("        boundParams after the update: "
+                         << boundParams.parameters().transpose());
           }
 
           // Fill the track state
@@ -829,13 +830,14 @@ class Gx2Fitter {
           // multipleScattering and have material
           ACTS_DEBUG("    Update parameters with scattering angles.");
           const auto scatteringMapId = scatteringMap->find(geoId);
-          ACTS_VERBOSE("    scatteringAngles:\n"
+          ACTS_VERBOSE("        scatteringAngles:\n"
                        << scatteringMapId->second.scatteringAngles()
-                       << "\n    boundParams before the update:\n"
-                       << boundParams);
+                       << "\n        boundParams before the update: "
+                       << boundParams.parameters().transpose());
           boundParams.parameters() +=
               scatteringMapId->second.scatteringAngles();
-          ACTS_VERBOSE("    boundParams after the update:\n" << boundParams);
+          ACTS_VERBOSE("        boundParams after the update: "
+                       << boundParams.parameters().transpose());
 
           // Fill the track state
           trackStateProxy.smoothed() = boundParams.parameters();
