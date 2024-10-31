@@ -46,30 +46,15 @@ target_compile_definitions(
     PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED
 )
 
-if(ACTS_USE_EXAMPLES_TBB)
-    # newer DD4hep version require TBB and search internally for TBB in
-    # config-only mode. to avoid mismatches we explicitly search using
-    # config-only mode first to be sure that we find the same version.
-    find_package(TBB ${_acts_tbb_version} CONFIG)
-    if(NOT TBB_FOUND)
-        # no version check possible when using the find module
-        find_package(TBB ${_acts_tbb_version} MODULE)
-    endif()
-else()
-    set(TBB_FOUND FALSE)
+# newer DD4hep version require TBB and search internally for TBB in
+# config-only mode. to avoid mismatches we explicitly search using
+# config-only mode first to be sure that we find the same version.
+find_package(TBB ${_acts_tbb_version} CONFIG)
+if(NOT TBB_FOUND)
+    # no version check possible when using the find module
+    find_package(TBB ${_acts_tbb_version} MODULE REQUIRED)
 endif()
-if(TBB_FOUND)
-    target_link_libraries(ActsExamplesFramework PUBLIC TBB::tbb)
-else()
-    message(
-        STATUS
-        "disable TBB for Examples/Framework - only single-threaded running will be supported"
-    )
-    target_compile_definitions(
-        ActsExamplesFramework
-        PUBLIC -DACTS_EXAMPLES_NO_TBB
-    )
-endif()
+target_link_libraries(ActsExamplesFramework PUBLIC TBB::tbb)
 
 install(
     TARGETS ActsExamplesFramework

@@ -427,8 +427,9 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
 
   const Config* cutsPtr{nullptr};
   if (!m_isUnbinned) {
-    if (absEta() < m_cfg.absEtaEdges.front() ||
-        _absEta >= m_cfg.absEtaEdges.back()) {
+    // return false if |eta| is outside its range, or nan.
+    if (!(absEta() >= m_cfg.absEtaEdges.front() &&
+          _absEta < m_cfg.absEtaEdges.back())) {
       return false;
     }
     cutsPtr = &m_cfg.getCuts(_eta);
