@@ -295,7 +295,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
         VoidNavigator(), logger().cloneWithSuffix("Propagator"));
     MagneticFieldContext mctx;
     auto propagatorOptions =
-        decltype(propagator)::template Options<>(gctx, mctx);
+        typename decltype(propagator)::template Options<>(gctx, mctx);
     propagatorOptions.direction = propagatorDirection;
 
     auto result =
