@@ -317,6 +317,24 @@ struct Gx2fSystem {
   // Accessor for a modifiable reference to the vector.
   Eigen::VectorXd& bVector() { return m_bVector; }
 
+  //  It automatically deduces if we want to fit e.g. q/p and adjusts itself
+  //  later. We have only 3 cases, because we always have l0, l1, phi, theta:
+  // - 4: no magnetic field -> q/p is empty
+  // - 5: no time measurement -> time not fittable
+  // - 6: full fit
+  std::size_t findNdf() {
+    std::size_t ndfSystem;
+    if (m_aMatrix(4, 4) == 0) {
+      ndfSystem = 4;
+    } else if (m_aMatrix(5, 5) == 0) {
+      ndfSystem = 5;
+    } else {
+      ndfSystem = 6;
+    }
+
+    return ndfSystem;
+  }
+
  private:
   /// Number of dimensions of the (extended) system
   std::size_t m_nDims;
@@ -537,9 +555,7 @@ void addMaterialToGx2fSums(
 /// @tparam track_proxy_t The type of the track proxy
 ///
 /// @param track A mutable track proxy to operate on
-/// @param aMatrixExtended The aMatrix, summing over second derivatives for the fitting system
-/// @param bVectorExtended The bVector, summing over first derivatives for the fitting system
-/// @param chi2sum Accumulated chi2 value of the system
+/// @param extendedSystem All parameters of the current equation system
 /// @param countNdf The number of degrees of freedom counted so far
 /// @param multipleScattering Flag to consider multiple scattering in the calculation
 /// @param scatteringMap Map of geometry identifiers to scattering properties, containing all scattering angles and covariances
@@ -632,13 +648,11 @@ void fillGx2fSystem(
 /// no qop/time fit)
 ///
 /// @param fullCovariancePredicted The covariance matrix to update
-/// @param aMatrixExtended The matrix containing the coefficients of the linear system.
-/// @param ndfSystem The number of degrees of freedom, determining the size of meaning full block
+/// @param extendedSystem All parameters of the current equation system
 ///
 /// @return deltaParams The calculated delta parameters.
 void updateGx2fCovarianceParams(BoundMatrix& fullCovariancePredicted,
-                                Eigen::MatrixXd& aMatrixExtended,
-                                const std::size_t ndfSystem);
+                                Gx2fSystem& extendedSystem);
 
 /// Global Chi Square fitter (GX2F) implementation.
 ///
@@ -1183,10 +1197,6 @@ class Gx2Fitter {
     // and used for the final track
     std::size_t tipIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
-    // Here we will store, the ndf of the system. It automatically deduces if we
-    // want to fit e.g. q/p and adjusts itself later.
-    std::size_t ndfSystem = std::numeric_limits<std::size_t>::max();
-
     // The scatteringMap stores for each visited surface their scattering
     // properties
     std::unordered_map<GeometryIdentifier, ScatteringProperties> scatteringMap;
@@ -1331,19 +1341,6 @@ class Gx2Fitter {
 
       chi2sum = extendedSystem.chi2();
 
-      // Get required number of degrees of freedom ndfSystem.
-      // We have only 3 cases, because we always have l0, l1, phi, theta
-      // 4: no magnetic field -> q/p is empty
-      // 5: no time measurement -> time not fittable
-      // 6: full fit
-      if (extendedSystem.aMatrix()(4, 4) == 0) {
-        ndfSystem = 4;
-      } else if (extendedSystem.aMatrix()(5, 5) == 0) {
-        ndfSystem = 5;
-      } else {
-        ndfSystem = 6;
-      }
-
       // This check takes into account the evaluated dimensions of the
       // measurements. To fit, we need at least NDF+1 measurements. However, we
       // count n-dimensional measurements for n measurements, reducing the
@@ -1353,9 +1350,9 @@ class Gx2Fitter {
       // We skip the check during the first iteration, since we cannot guarantee
       // to hit all/enough measurement surfaces with the initial parameter
       // guess.
-      if ((nUpdate > 0) && (ndfSystem + 1 > countNdf)) {
+      if ((nUpdate > 0) && (extendedSystem.findNdf() + 1 > countNdf)) {
         ACTS_INFO("Not enough measurements. Require "
-                  << ndfSystem + 1 << ", but only " << countNdf
+                  << extendedSystem.findNdf() + 1 << ", but only " << countNdf
                   << " could be used.");
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
@@ -1384,16 +1381,14 @@ class Gx2Fitter {
         ACTS_INFO("Abort with relChi2changeCutOff after "
                   << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
                   << " iterations.");
-        updateGx2fCovarianceParams(fullCovariancePredicted,
-                                   extendedSystem.aMatrix(), ndfSystem);
+        updateGx2fCovarianceParams(fullCovariancePredicted, extendedSystem);
         break;
       }
 
       if (extendedSystem.chi2() > oldChi2sum + 1e-5) {
         ACTS_DEBUG("chi2 not converging monotonically");
 
-        updateGx2fCovarianceParams(fullCovariancePredicted,
-                                   extendedSystem.aMatrix(), ndfSystem);
+        updateGx2fCovarianceParams(fullCovariancePredicted, extendedSystem);
         break;
       }
 
@@ -1411,8 +1406,7 @@ class Gx2Fitter {
           return Experimental::GlobalChiSquareFitterError::DidNotConverge;
         }
 
-        updateGx2fCovarianceParams(fullCovariancePredicted,
-                                   extendedSystem.aMatrix(), ndfSystem);
+        updateGx2fCovarianceParams(fullCovariancePredicted, extendedSystem);
         break;
       }
 

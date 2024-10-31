@@ -11,18 +11,17 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 
 void Acts::Experimental::updateGx2fCovarianceParams(
-    BoundMatrix& fullCovariancePredicted, Eigen::MatrixXd& aMatrixExtended,
-    const std::size_t ndfSystem) {
+    BoundMatrix& fullCovariancePredicted, Gx2fSystem& extendedSystem) {
   // make invertible
-  for (int i = 0; i < aMatrixExtended.rows(); ++i) {
-    if (aMatrixExtended(i, i) == 0.) {
-      aMatrixExtended(i, i) = 1.;
+  for (std::size_t i = 0; i < extendedSystem.nDims(); ++i) {
+    if (extendedSystem.aMatrix()(i, i) == 0.) {
+      extendedSystem.aMatrix()(i, i) = 1.;
     }
   }
 
-  visit_measurement(ndfSystem, [&](auto N) {
+  visit_measurement(extendedSystem.findNdf(), [&](auto N) {
     fullCovariancePredicted.topLeftCorner<N, N>() =
-        aMatrixExtended.inverse().topLeftCorner<N, N>();
+        extendedSystem.aMatrix().inverse().topLeftCorner<N, N>();
   });
 
   return;
