@@ -283,13 +283,19 @@ struct ScatteringProperties {
   bool m_materialIsValid;
 };
 
-// TODO write description - All parameters of the current equation system
-// TODO maybe template on nDims?
+/// @brief A container to manage all properties of a gx2f system
+///
+/// This struct manages the mathematical infrastructure for the gx2f. It
+/// initializes and maintains the extended aMatrix and extended bVector).
+///
+/// @param nDims The dimensionality of the matrix and vector
+///
+/// TODO maybe template on nDims?
 struct Gx2fSystem {
  public:
-  /// @brief Constructor to initialize the accumulator.
+  /// @brief Constructor to initialize matrices and vectors to zero based on specified dimensions.
   ///
-  /// @param dimsExtendedParams The dimension for the extended matrix and vector.
+  /// @param nDims Number of dimensions for the extended matrix and vector.
   Gx2fSystem(std::size_t nDims)
       : m_nDims(nDims),
         m_chi2(0.),
@@ -300,10 +306,10 @@ struct Gx2fSystem {
   // Accessor for nDims (const reference).
   std::size_t nDims() const { return m_nDims; }
 
-  // Accessor for chi2sum
+  // Accessor for chi2
   double chi2() const { return m_chi2; }
 
-  // Modifier for chi2sum
+  // Modifier for chi2
   double& chi2() { return m_chi2; }
 
   // Accessor for the matrix.
@@ -327,7 +333,7 @@ struct Gx2fSystem {
   //  It automatically deduces if we want to fit e.g. q/p and adjusts itself
   //  later. We have only 3 cases, because we always have l0, l1, phi, theta:
   // - 4: no magnetic field -> q/p is empty
-  // - 5: no time measurement -> time not fittable
+  // - 5: no time measurement -> time is not fittable
   // - 6: full fit
   std::size_t findRequiredNdf() {
     std::size_t ndfSystem;
