@@ -283,6 +283,54 @@ struct ScatteringProperties {
   bool m_materialIsValid;
 };
 
+// TODO write description - All parameters of the current equation system
+// TODO maybe template on nDims?
+struct Gx2fSystem {
+ public:
+  /// @brief Constructor to initialize the accumulator.
+  ///
+  /// @param dimsExtendedParams The dimension for the extended matrix and vector.
+  Gx2fSystem(std::size_t nDims)
+      : m_nDims(nDims),
+        m_chi2(0.),
+        m_aMatrix(Eigen::MatrixXd::Zero(nDims, nDims)),
+        m_bVector(Eigen::VectorXd::Zero(nDims)) {}
+
+  // Accessor for nDims (const reference).
+  std::size_t nDims() const { return m_nDims; }
+
+  // Accessor for chi2sum
+  double chi2() const { return m_chi2; }
+
+  // Modifier for chi2sum
+  double& chi2() { return m_chi2; }
+
+  // Accessor for the matrix.
+  const Eigen::MatrixXd& aMatrix() const { return m_aMatrix; }
+
+  // Accessor for a modifiable reference to the matrix.
+  Eigen::MatrixXd& aMatrix() { return m_aMatrix; }
+
+  // Accessor for the vector.
+  const Eigen::VectorXd& bVector() const { return m_bVector; }
+
+  // Accessor for a modifiable reference to the vector.
+  Eigen::VectorXd& bVector() { return m_bVector; }
+
+ private:
+  /// Number of dimensions of the (extended) system
+  std::size_t m_nDims;
+
+  /// Sum of chi-squared values.
+  double m_chi2;
+
+  /// Extended matrix for accumulation.
+  Eigen::MatrixXd m_aMatrix;
+
+  /// Extended vector for accumulation.
+  Eigen::VectorXd m_bVector;
+};
+
 /// @brief Process measurements and fill the aMatrix and bVector
 ///
 /// The function processes each measurement for the GX2F Actor fitting process.
@@ -292,15 +340,12 @@ struct ScatteringProperties {
 /// @tparam kMeasDim Number of dimensions of the measurement
 /// @tparam track_state_t The type of the track state
 ///
-/// @param aMatrixExtended The aMatrix sums over the second derivatives
-/// @param bVectorExtended The bVector sums over the first derivatives
-/// @param chi2sum The total chi2 of the system
+/// @param extendedSystem All parameters of the current equation system
 /// @param jacobianFromStart The Jacobian matrix from start to the current state
 /// @param trackState The track state to analyse
 /// @param logger A logger instance
 template <std::size_t kMeasDim, typename track_state_t>
-void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
-                              Eigen::VectorXd& bVectorExtended, double& chi2sum,
+void addMeasurementToGx2fSums(Gx2fSystem& extendedSystem,
                               const std::vector<BoundMatrix>& jacobianFromStart,
                               const track_state_t& trackState,
                               const Logger& logger) {
@@ -317,13 +362,12 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
   }
 
   // Create an extended Jacobian. This one contains only eBoundSize rows,
-  // because the rest is irrelevant
+  // because the rest is irrelevant. We fill it in the next steps
   // TODO make dimsExtendedParams template with unrolling
-  const std::size_t dimsExtendedParams = aMatrixExtended.rows();
 
   // We create an empty Jacobian and fill it in the next steps
   Eigen::MatrixXd extendedJacobian =
-      Eigen::MatrixXd::Zero(eBoundSize, dimsExtendedParams);
+      Eigen::MatrixXd::Zero(eBoundSize, extendedSystem.nDims());
 
   // This part of the Jacobian comes from the material-less propagation
   extendedJacobian.topLeftCorner<eBoundSize, eBoundSize>() =
@@ -360,13 +404,14 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
   const ActsVector<kMeasDim> residual = measurement - projPredicted;
 
   // Finally contribute to chi2sum, aMatrix, and bVector
-  chi2sum += (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
+  extendedSystem.chi2() +=
+      (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
 
-  aMatrixExtended +=
+  extendedSystem.aMatrix() +=
       (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
           .eval();
 
-  bVectorExtended +=
+  extendedSystem.bVector() +=
       (residual.transpose() * (*safeInvCovMeasurement) * projJacobian)
           .eval()
           .transpose();
@@ -410,17 +455,14 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
 ///
 /// @tparam track_state_t The type of the track state
 ///
-/// @param aMatrixExtended The aMatrix sums over the second derivatives
-/// @param bVectorExtended The bVector sums over the first derivatives
-/// @param chi2sum The total chi2 of the system
+/// @param extendedSystem All parameters of the current equation system
 /// @param nMaterialsHandled How many materials we already handled. Used for the offset.
 /// @param scatteringMap The scattering map, containing all scattering angles and covariances
 /// @param trackState The track state to analyse
 /// @param logger A logger instance
 template <typename track_state_t>
 void addMaterialToGx2fSums(
-    Eigen::MatrixXd& aMatrixExtended, Eigen::VectorXd& bVectorExtended,
-    double& chi2sum, const std::size_t nMaterialsHandled,
+    Gx2fSystem& extendedSystem, const std::size_t nMaterialsHandled,
     const std::unordered_map<GeometryIdentifier, ScatteringProperties>&
         scatteringMap,
     const track_state_t& trackState, const Logger& logger) {
@@ -444,18 +486,18 @@ void addMaterialToGx2fSums(
   const ActsScalar invCov = scatteringMapId->second.invCovarianceMaterial();
 
   // Phi contribution
-  aMatrixExtended(deltaPosition, deltaPosition) +=
+  extendedSystem.aMatrix()(deltaPosition, deltaPosition) +=
       invCov * sinThetaLoc * sinThetaLoc;
-  bVectorExtended(deltaPosition, 0) -=
+  extendedSystem.bVector()(deltaPosition, 0) -=
       invCov * scatteringAngles[eBoundPhi] * sinThetaLoc;
-  chi2sum += invCov * scatteringAngles[eBoundPhi] * sinThetaLoc *
-             scatteringAngles[eBoundPhi] * sinThetaLoc;
+  extendedSystem.chi2() += invCov * scatteringAngles[eBoundPhi] * sinThetaLoc *
+                           scatteringAngles[eBoundPhi] * sinThetaLoc;
 
   // Theta Contribution
-  aMatrixExtended(deltaPosition + 1, deltaPosition + 1) += invCov;
-  bVectorExtended(deltaPosition + 1, 0) -=
+  extendedSystem.aMatrix()(deltaPosition + 1, deltaPosition + 1) += invCov;
+  extendedSystem.bVector()(deltaPosition + 1, 0) -=
       invCov * scatteringAngles[eBoundTheta];
-  chi2sum +=
+  extendedSystem.chi2() +=
       invCov * scatteringAngles[eBoundTheta] * scatteringAngles[eBoundTheta];
 
   ACTS_VERBOSE(
@@ -505,9 +547,8 @@ void addMaterialToGx2fSums(
 /// @param logger A logger instance
 template <TrackProxyConcept track_proxy_t>
 void fillGx2fSystem(
-    const track_proxy_t track, Eigen::MatrixXd& aMatrixExtended,
-    Eigen::VectorXd& bVectorExtended, double& chi2sum, std::size_t& countNdf,
-    const bool multipleScattering,
+    const track_proxy_t track, Gx2fSystem& extendedSystem,
+    std::size_t& countNdf, const bool multipleScattering,
     const std::unordered_map<GeometryIdentifier, ScatteringProperties>&
         scatteringMap,
     std::vector<GeometryIdentifier>& geoIdVector, const Logger& logger) {
@@ -562,8 +603,8 @@ void fillGx2fSystem(
       countNdf += measDim;
 
       visit_measurement(measDim, [&](auto N) {
-        addMeasurementToGx2fSums<N>(aMatrixExtended, bVectorExtended, chi2sum,
-                                    jacobianFromStart, trackState, logger);
+        addMeasurementToGx2fSums<N>(extendedSystem, jacobianFromStart,
+                                    trackState, logger);
       });
     }
 
@@ -574,9 +615,8 @@ void fillGx2fSystem(
       jacobianFromStart.emplace_back(BoundMatrix::Identity());
 
       // Add the material contribution to the system
-      addMaterialToGx2fSums(aMatrixExtended, bVectorExtended, chi2sum,
-                            geoIdVector.size(), scatteringMap, trackState,
-                            logger);
+      addMaterialToGx2fSums(extendedSystem, geoIdVector.size(), scatteringMap,
+                            trackState, logger);
 
       geoIdVector.emplace_back(geoId);
     }
@@ -1128,8 +1168,6 @@ class Gx2Fitter {
     BoundVector deltaParams = BoundVector::Zero();
     double chi2sum = 0;
     double oldChi2sum = std::numeric_limits<double>::max();
-    BoundMatrix aMatrix = BoundMatrix::Zero();
-    BoundVector bVector = BoundVector::Zero();
 
     // We need to create a temporary track container. We create several times a
     // new track and delete it after updating the parameters. However, if we
@@ -1278,12 +1316,9 @@ class Gx2Fitter {
       // dimensions for the scattering angles.
       const std::size_t dimsExtendedParams = eBoundSize + 2 * nMaterialSurfaces;
 
-      // Set to zero before filling
-      chi2sum = 0;
-      Eigen::MatrixXd aMatrixExtended =
-          Eigen::MatrixXd::Zero(dimsExtendedParams, dimsExtendedParams);
-      Eigen::VectorXd bVectorExtended =
-          Eigen::VectorXd::Zero(dimsExtendedParams);
+      // System that we fill with the information gathered by the actor and
+      // evaluate later
+      Gx2fSystem extendedSystem{dimsExtendedParams};
 
       // This vector stores the IDs for each visited material in order. We use
       // it later for updating the scattering angles. We cannot use
@@ -1291,18 +1326,19 @@ class Gx2Fitter {
       // all stored material in each propagation.
       std::vector<GeometryIdentifier> geoIdVector;
 
-      fillGx2fSystem(track, aMatrixExtended, bVectorExtended, chi2sum, countNdf,
-                     multipleScattering, scatteringMap, geoIdVector,
-                     *m_addToSumLogger);
+      fillGx2fSystem(track, extendedSystem, countNdf, multipleScattering,
+                     scatteringMap, geoIdVector, *m_addToSumLogger);
+
+      chi2sum = extendedSystem.chi2();
 
       // Get required number of degrees of freedom ndfSystem.
       // We have only 3 cases, because we always have l0, l1, phi, theta
       // 4: no magnetic field -> q/p is empty
       // 5: no time measurement -> time not fittable
       // 6: full fit
-      if (aMatrixExtended(4, 4) == 0) {
+      if (extendedSystem.aMatrix()(4, 4) == 0) {
         ndfSystem = 4;
-      } else if (aMatrixExtended(5, 5) == 0) {
+      } else if (extendedSystem.aMatrix()(5, 5) == 0) {
         ndfSystem = 5;
       } else {
         ndfSystem = 6;
@@ -1324,43 +1360,40 @@ class Gx2Fitter {
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
-      // get back the Bound vector components
-      aMatrix = aMatrixExtended.topLeftCorner<eBoundSize, eBoundSize>().eval();
-      bVector = bVectorExtended.topLeftCorner<eBoundSize, 1>().eval();
-
       // calculate delta params [a] * delta = b
       Eigen::VectorXd deltaParamsExtended =
-          aMatrixExtended.colPivHouseholderQr().solve(bVectorExtended);
+          extendedSystem.aMatrix().colPivHouseholderQr().solve(
+              extendedSystem.bVector());
 
       deltaParams = deltaParamsExtended.topLeftCorner<eBoundSize, 1>().eval();
 
       ACTS_VERBOSE("aMatrix:\n"
-                   << aMatrix << "\n"
+                   << extendedSystem.aMatrix() << "\n"
                    << "bVector:\n"
-                   << bVector << "\n"
+                   << extendedSystem.bVector() << "\n"
                    << "deltaParams:\n"
                    << deltaParams << "\n"
                    << "deltaParamsExtended:\n"
                    << deltaParamsExtended << "\n"
                    << "oldChi2sum = " << oldChi2sum << "\n"
-                   << "chi2sum = " << chi2sum);
+                   << "chi2sum = " << extendedSystem.chi2());
 
       if ((gx2fOptions.relChi2changeCutOff != 0) && (nUpdate > 0) &&
-          (std::abs(chi2sum / oldChi2sum - 1) <
+          (std::abs(extendedSystem.chi2() / oldChi2sum - 1) <
            gx2fOptions.relChi2changeCutOff)) {
         ACTS_INFO("Abort with relChi2changeCutOff after "
                   << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
                   << " iterations.");
-        updateGx2fCovarianceParams(fullCovariancePredicted, aMatrixExtended,
-                                   ndfSystem);
+        updateGx2fCovarianceParams(fullCovariancePredicted,
+                                   extendedSystem.aMatrix(), ndfSystem);
         break;
       }
 
-      if (chi2sum > oldChi2sum + 1e-5) {
+      if (extendedSystem.chi2() > oldChi2sum + 1e-5) {
         ACTS_DEBUG("chi2 not converging monotonically");
 
-        updateGx2fCovarianceParams(fullCovariancePredicted, aMatrixExtended,
-                                   ndfSystem);
+        updateGx2fCovarianceParams(fullCovariancePredicted,
+                                   extendedSystem.aMatrix(), ndfSystem);
         break;
       }
 
@@ -1378,8 +1411,8 @@ class Gx2Fitter {
           return Experimental::GlobalChiSquareFitterError::DidNotConverge;
         }
 
-        updateGx2fCovarianceParams(fullCovariancePredicted, aMatrixExtended,
-                                   ndfSystem);
+        updateGx2fCovarianceParams(fullCovariancePredicted,
+                                   extendedSystem.aMatrix(), ndfSystem);
         break;
       }
 
@@ -1397,7 +1430,7 @@ class Gx2Fitter {
         }
       }
 
-      oldChi2sum = chi2sum;
+      oldChi2sum = extendedSystem.chi2();
     }
     ACTS_DEBUG("Finished to iterate");
     ACTS_VERBOSE("Final parameters: " << params.parameters().transpose());
