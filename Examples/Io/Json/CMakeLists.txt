@@ -6,6 +6,7 @@ add_library(
     src/JsonSurfacesWriter.cpp
     src/JsonSurfacesReader.cpp
     src/JsonDigitizationConfig.cpp
+    src/JsonTrackWriter.cpp
 )
 target_include_directories(
     ActsExamplesIoJson
