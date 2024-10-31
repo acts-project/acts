@@ -141,44 +141,43 @@ std::ostream& operator<<(std::ostream& os, const SimParticle& particle);
 namespace detail {
 struct CompareParticleId {
   using is_transparent = void;
-  constexpr bool operator()(const SimParticleState& lhs,
-                            const SimParticleState& rhs) const {
+  bool operator()(const SimParticleState& lhs,
+                  const SimParticleState& rhs) const {
     return lhs.particleId() < rhs.particleId();
   }
-  constexpr bool operator()(const SimParticle& lhs,
-                            const SimParticle& rhs) const {
+  bool operator()(const SimParticle& lhs, const SimParticle& rhs) const {
     return lhs.particleId() < rhs.particleId();
   }
-  constexpr bool operator()(SimBarcode lhs, const SimParticleState& rhs) const {
+  bool operator()(SimBarcode lhs, const SimParticleState& rhs) const {
     return lhs < rhs.particleId();
   }
-  constexpr bool operator()(SimBarcode lhs, const SimParticle& rhs) const {
+  bool operator()(SimBarcode lhs, const SimParticle& rhs) const {
     return lhs < rhs.particleId();
   }
-  constexpr bool operator()(const SimParticleState& lhs, SimBarcode rhs) const {
+  bool operator()(const SimParticleState& lhs, SimBarcode rhs) const {
     return lhs.particleId() < rhs;
   }
-  constexpr bool operator()(const SimParticle& lhs, SimBarcode rhs) const {
+  bool operator()(const SimParticle& lhs, SimBarcode rhs) const {
     return lhs.particleId() < rhs;
   }
 };
 struct PrimaryVertexIdGetter {
-  constexpr SimBarcode operator()(const SimParticleState& particle) const {
+  SimBarcode operator()(const SimParticleState& particle) const {
     return SimBarcode(0u).setVertexPrimary(
         particle.particleId().vertexPrimary());
   }
-  constexpr SimBarcode operator()(const SimParticle& particle) const {
+  SimBarcode operator()(const SimParticle& particle) const {
     return SimBarcode(0u).setVertexPrimary(
         particle.particleId().vertexPrimary());
   }
 };
 struct SecondaryVertexIdGetter {
-  constexpr SimBarcode operator()(const SimParticleState& particle) const {
+  SimBarcode operator()(const SimParticleState& particle) const {
     return SimBarcode(0u)
         .setVertexPrimary(particle.particleId().vertexPrimary())
         .setVertexSecondary(particle.particleId().vertexSecondary());
   }
-  constexpr SimBarcode operator()(const SimParticle& particle) const {
+  SimBarcode operator()(const SimParticle& particle) const {
     return SimBarcode(0u)
         .setVertexPrimary(particle.particleId().vertexPrimary())
         .setVertexSecondary(particle.particleId().vertexSecondary());
