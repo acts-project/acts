@@ -11,6 +11,7 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -50,7 +51,8 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
     return;
   }
 
-  auto particle = convert(*aTrack, *barcode);
+  auto fatrasParticle = convert(*aTrack, *barcode);
+  SimParticle particle(fatrasParticle, fatrasParticle);
   auto [it, success] = eventStore().particlesInitial.insert(particle);
 
   // Only register particle at the initial state AND if there is no particle ID
@@ -81,14 +83,22 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
                  eventStore().particleHitCount.at(barcode) > 0;
 
   if (!m_cfg.keepParticlesWithoutHits && !hasHits) {
-    [[maybe_unused]] auto n = eventStore().particlesInitial.erase(
+    [[maybe_unused]] auto n = eventStore().particlesSimulated.erase(
         ActsExamples::SimParticle{barcode, Acts::PdgParticle::eInvalid});
     assert(n == 1);
     return;
   }
 
-  auto particle = convert(*aTrack, barcode);
-  auto [it, success] = eventStore().particlesFinal.insert(particle);
+  auto particleIt = eventStore().particlesInitial.find(barcode);
+  if (particleIt == eventStore().particlesInitial.end()) {
+    ACTS_WARNING("Particle ID " << barcode
+                                << " not found in simulated particles");
+    return;
+  }
+  SimParticle particle = *particleIt;
+  particle.final() = convert(*aTrack, barcode);
+
+  auto [it, success] = eventStore().particlesSimulated.insert(particle);
 
   if (!success) {
     eventStore().particleIdCollisionsFinal++;
@@ -98,7 +108,7 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
   }
 }
 
-ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
+ActsExamples::SimParticleState ActsExamples::ParticleTrackingAction::convert(
     const G4Track& aTrack, SimBarcode particleId) const {
   // Unit conversions G4->::ACTS
   constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
@@ -129,8 +139,7 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
   }
 
   // Now create the Particle
-  ActsExamples::SimParticle aParticle(particleId, Acts::PdgParticle{pdg},
-                                      charge, mass);
+  SimParticleState aParticle(particleId, Acts::PdgParticle{pdg}, charge, mass);
   aParticle.setPosition4(pPosition[0], pPosition[1], pPosition[2], pTime);
   aParticle.setDirection(pDirection[0], pDirection[1], pDirection[2]);
   aParticle.setAbsoluteMomentum(p);

@@ -153,33 +153,33 @@ class Particle {
   }
 
   /// Particle identifier within an event.
-  constexpr Barcode particleId() const { return m_particleId; }
+  Barcode particleId() const { return m_particleId; }
   /// Which type of process generated this particle.
-  constexpr ProcessType process() const { return m_process; }
+  ProcessType process() const { return m_process; }
   /// PDG particle number that identifies the type.
-  constexpr Acts::PdgParticle pdg() const { return m_pdg; }
+  Acts::PdgParticle pdg() const { return m_pdg; }
   /// Absolute PDG particle number that identifies the type.
-  constexpr Acts::PdgParticle absolutePdg() const {
+  Acts::PdgParticle absolutePdg() const {
     return Acts::makeAbsolutePdgParticle(pdg());
   }
   /// Particle charge.
-  constexpr Scalar charge() const { return m_charge; }
+  Scalar charge() const { return m_charge; }
   /// Particle absolute charge.
-  constexpr Scalar absoluteCharge() const { return std::abs(m_charge); }
+  Scalar absoluteCharge() const { return std::abs(m_charge); }
   /// Particle mass.
-  constexpr Scalar mass() const { return m_mass; }
+  Scalar mass() const { return m_mass; }
 
   /// Particle hypothesis.
-  constexpr Acts::ParticleHypothesis hypothesis() const {
+  Acts::ParticleHypothesis hypothesis() const {
     return Acts::ParticleHypothesis(absolutePdg(), mass(), absoluteCharge());
   }
   /// Particl qOverP.
-  constexpr Scalar qOverP() const {
+  Scalar qOverP() const {
     return hypothesis().qOverP(absoluteMomentum(), charge());
   }
 
   /// Space-time position four-vector.
-  constexpr const Vector4 &fourPosition() const { return m_position4; }
+  const Vector4 &fourPosition() const { return m_position4; }
   /// Three-position, i.e. spatial coordinates without the time.
   auto position() const { return m_position4.segment<3>(Acts::ePos0); }
   /// Time coordinate.
@@ -205,16 +205,16 @@ class Particle {
     return m_absMomentum * m_direction.segment<2>(Acts::eMom0).norm();
   }
   /// Absolute momentum.
-  constexpr Scalar absoluteMomentum() const { return m_absMomentum; }
+  Scalar absoluteMomentum() const { return m_absMomentum; }
   /// Absolute momentum.
   Vector3 momentum() const { return absoluteMomentum() * direction(); }
   /// Total energy, i.e. norm of the four-momentum.
   Scalar energy() const { return std::hypot(m_mass, m_absMomentum); }
 
   /// Check if the particle is alive, i.e. is not at rest.
-  constexpr bool isAlive() const { return Scalar{0} < m_absMomentum; }
+  bool isAlive() const { return Scalar{0} < m_absMomentum; }
 
-  constexpr bool isSecondary() const {
+  bool isSecondary() const {
     return particleId().vertexSecondary() != 0 ||
            particleId().generation() != 0 || particleId().subParticle() != 0;
   }
@@ -224,26 +224,26 @@ class Particle {
   /// Set the proper time in the particle rest frame.
   ///
   /// @param properTime passed proper time in the rest frame
-  constexpr Particle &setProperTime(Scalar properTime) {
+  Particle &setProperTime(Scalar properTime) {
     m_properTime = properTime;
     return *this;
   }
   /// Proper time in the particle rest frame.
-  constexpr Scalar properTime() const { return m_properTime; }
+  Scalar properTime() const { return m_properTime; }
 
   /// Set the accumulated material measured in radiation/interaction lengths.
   ///
   /// @param pathInX0 accumulated material measured in radiation lengths
   /// @param pathInL0 accumulated material measured in interaction lengths
-  constexpr Particle &setMaterialPassed(Scalar pathInX0, Scalar pathInL0) {
+  Particle &setMaterialPassed(Scalar pathInX0, Scalar pathInL0) {
     m_pathInX0 = pathInX0;
     m_pathInL0 = pathInL0;
     return *this;
   }
   /// Accumulated path within material measured in radiation lengths.
-  constexpr Scalar pathInX0() const { return m_pathInX0; }
+  Scalar pathInX0() const { return m_pathInX0; }
   /// Accumulated path within material measured in interaction lengths.
-  constexpr Scalar pathInL0() const { return m_pathInL0; }
+  Scalar pathInL0() const { return m_pathInL0; }
 
   /// Set the reference surface.
   ///
@@ -285,24 +285,24 @@ class Particle {
   /// Set the number of hits.
   ///
   /// @param nHits number of hits
-  constexpr Particle &setNumberOfHits(std::uint32_t nHits) {
+  Particle &setNumberOfHits(std::uint32_t nHits) {
     m_numberOfHits = nHits;
     return *this;
   }
 
   /// Number of hits.
-  constexpr std::uint32_t numberOfHits() const { return m_numberOfHits; }
+  std::uint32_t numberOfHits() const { return m_numberOfHits; }
 
   /// Set the outcome of particle.
   ///
   /// @param outcome outcome code
-  constexpr Particle &setOutcome(ParticleOutcome outcome) {
+  Particle &setOutcome(ParticleOutcome outcome) {
     m_outcome = outcome;
     return *this;
   }
 
   /// Particle outcome.
-  constexpr ParticleOutcome outcome() const { return m_outcome; }
+  ParticleOutcome outcome() const { return m_outcome; }
 
  private:
   // identity, i.e. things that do not change over the particle lifetime.

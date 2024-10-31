@@ -77,7 +77,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     return (min <= x) && (x < max);
   };
 
-  auto isValidParticle = [&](const ActsFatras::Particle& p) {
+  auto isValidParticle = [&](const SimParticle& p) {
     const auto eta = Acts::VectorHelpers::eta(p.direction());
     const auto phi = Acts::VectorHelpers::phi(p.direction());
     const auto rho = Acts::VectorHelpers::perp(p.position());

@@ -134,7 +134,7 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
   unsigned int nParticles = m_particleId->size();
 
   for (unsigned int i = 0; i < nParticles; i++) {
-    SimParticle p;
+    SimParticleState p;
 
     p.setProcess(static_cast<ActsFatras::ProcessType>((*m_process)[i]));
     p.setPdg(static_cast<Acts::PdgParticle>((*m_particleType)[i]));
@@ -149,7 +149,7 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
     p.setDirection((*m_px)[i], (*m_py)[i], (*m_pz)[i]);
     p.setAbsoluteMomentum((*m_p)[i] * Acts::UnitConstants::GeV);
 
-    particles.insert(p);
+    particles.insert(SimParticle(p, p));
   }
 
   ACTS_DEBUG("Read " << particles.size() << " particles for event "

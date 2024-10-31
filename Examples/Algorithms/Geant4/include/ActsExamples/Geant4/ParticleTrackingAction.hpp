@@ -66,7 +66,7 @@ class ParticleTrackingAction : public G4UserTrackingAction {
   ///
   /// @param aTrack the current Geant4 track
   /// @param particleId the particle ID the particle will have
-  SimParticle convert(const G4Track& aTrack, SimBarcode particleId) const;
+  SimParticleState convert(const G4Track& aTrack, SimBarcode particleId) const;
 
   /// Make the particle id
   std::optional<SimBarcode> makeParticleId(G4int trackId, G4int parentId) const;

@@ -28,14 +28,13 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-ActsFatras::Particle EDM4hepUtil::readParticle(
+SimParticleState EDM4hepUtil::readParticle(
     const edm4hep::MCParticle& from, const MapParticleIdFrom& particleMapper) {
   ActsFatras::Barcode particleId = particleMapper(from);
 
-  ActsFatras::Particle to(particleId,
-                          static_cast<Acts::PdgParticle>(from.getPDG()),
-                          from.getCharge() * Acts::UnitConstants::e,
-                          from.getMass() * Acts::UnitConstants::GeV);
+  SimParticleState to(particleId, static_cast<Acts::PdgParticle>(from.getPDG()),
+                      from.getCharge() * Acts::UnitConstants::e,
+                      from.getMass() * Acts::UnitConstants::GeV);
 
   // TODO do we have that in EDM4hep?
   // particle.setProcess(static_cast<ActsFatras::ProcessType>(data.process));
@@ -55,7 +54,7 @@ ActsFatras::Particle EDM4hepUtil::readParticle(
   return to;
 }
 
-void EDM4hepUtil::writeParticle(const ActsFatras::Particle& from,
+void EDM4hepUtil::writeParticle(const SimParticleState& from,
                                 edm4hep::MutableMCParticle to) {
   // TODO what about particleId?
 

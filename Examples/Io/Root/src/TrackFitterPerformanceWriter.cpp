@@ -148,7 +148,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     // Record this majority particle ID of this trajectory
     reconParticleIds.push_back(ip->particleId());
     // Fill the residual plots
-    m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, *ip, fittedParameters);
+    m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, ip->initial(),
+                       fittedParameters);
     // Fill the trajectory summary info
     m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
                                 track.nTrackStates(), track.nMeasurements(),
@@ -181,7 +182,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
         minDeltaR = distance;
       }
     }
-    m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR, isReconstructed);
+    m_effPlotTool.fill(m_effPlotCache, particle.initial(), minDeltaR,
+                       isReconstructed);
   }
 
   return ProcessCode::SUCCESS;
