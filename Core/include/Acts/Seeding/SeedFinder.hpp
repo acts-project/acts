@@ -38,12 +38,6 @@ concept GridBinCollection =
     std::ranges::random_access_range<Coll> &&
     std::same_as<typename Coll::value_type, std::size_t>;
 
-template <typename collection_t, typename external_t, std::size_t N = 3ul>
-concept CollectionStoresSeedsTo =
-    requires(collection_t coll, Acts::Seed<external_t, N> seed) {
-      Acts::detail::pushBackOrInsertAtEnd(coll, seed);
-    };
-
 enum class SpacePointCandidateType : short { eBottom, eTop };
 
 enum class DetectorMeasurementInfo : short { eDefault, eDetailed };
