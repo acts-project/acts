@@ -23,10 +23,10 @@
 #include <vector>
 
 namespace Acts {
-template <typename Coll, typename external_t, std::size_t N = 3ul>
-concept CollectionStoresSeedsTo = requires(Coll coll, external_t sp) {
-  Acts::detail::pushBackOrInsertAtEnd(coll,
-                                      Acts::Seed<external_t, N>(sp, sp, sp));
+template <typename collection_t, typename external_t, std::size_t N = 3ul>
+concept CollectionStoresSeedsTo =
+  requires(collection_t coll, Acts::Seed<external_t, N> seed) {
+  Acts::detail::pushBackOrInsertAtEnd(coll, seed);
 };
 
 template <typename Coll, typename external_t, std::size_t N = 3ul>
