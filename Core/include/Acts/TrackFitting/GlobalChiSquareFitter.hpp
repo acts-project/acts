@@ -373,8 +373,8 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
 
   ACTS_VERBOSE(
       "Contributions in addMeasurementToGx2fSums:\n"
-      << "    kMeasDim: " << kMeasDim << "\n"
-      << "    predicted" << predicted.transpose() << "\n"
+      << "    kMeasDim:    " << kMeasDim << "\n"
+      << "    predicted:   " << predicted.transpose() << "\n"
       << "    measurement: " << measurement.transpose() << "\n"
       << "    covarianceMeasurement:\n"
       << covarianceMeasurement << "\n"
@@ -393,7 +393,7 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
       << "    bVector contribution: "
       << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).eval()
       << "\n"
-      << "    chi2sumMeas: "
+      << "    chi2sum contribution: "
       << (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0)
       << "\n"
       << "    safeInvCovMeasurement:\n"
@@ -460,8 +460,8 @@ void addMaterialToGx2fSums(
 
   ACTS_VERBOSE(
       "Contributions in addMaterialToGx2fSums:\n"
-      << "    invCov: " << invCov << "\n"
-      << "    sinThetaLoc: " << sinThetaLoc << "\n"
+      << "    invCov:        " << invCov << "\n"
+      << "    sinThetaLoc:   " << sinThetaLoc << "\n"
       << "    deltaPosition: " << deltaPosition << "\n"
       << "    Phi:\n"
       << "        scattering angle:     " << scatteringAngles[eBoundPhi] << "\n"
@@ -825,9 +825,10 @@ class Gx2Fitter {
           if (doMaterial) {
             ACTS_DEBUG("    Update parameters with scattering angles.");
             const auto scatteringMapId = scatteringMap->find(geoId);
-            ACTS_VERBOSE("        scatteringAngles:\n"
-                         << scatteringMapId->second.scatteringAngles()
-                         << "\n        boundParams before the update: "
+            ACTS_VERBOSE(
+                "        scatteringAngles: "
+                << scatteringMapId->second.scatteringAngles().transpose());
+            ACTS_VERBOSE("        boundParams before the update: "
                          << boundParams.parameters().transpose());
             boundParams.parameters() +=
                 scatteringMapId->second.scatteringAngles();
@@ -928,9 +929,10 @@ class Gx2Fitter {
           // multipleScattering and have material
           ACTS_DEBUG("    Update parameters with scattering angles.");
           const auto scatteringMapId = scatteringMap->find(geoId);
-          ACTS_VERBOSE("        scatteringAngles:\n"
-                       << scatteringMapId->second.scatteringAngles()
-                       << "\n        boundParams before the update: "
+          ACTS_VERBOSE(
+              "        scatteringAngles: "
+              << scatteringMapId->second.scatteringAngles().transpose());
+          ACTS_VERBOSE("        boundParams before the update: "
                        << boundParams.parameters().transpose());
           boundParams.parameters() +=
               scatteringMapId->second.scatteringAngles();
@@ -986,17 +988,6 @@ class Gx2Fitter {
           ACTS_DEBUG(
               "    The surface contains no measurement, but maybe a hole "
               "and/or material.");
-        }
-
-        // We only create track states here if there is already a measurement
-        // detected (no holes before the first measurement) or if we encounter
-        // material
-        const bool precedingMeasurementExists = (result.measurementStates > 0);
-        if (!precedingMeasurementExists && !surfaceHasMaterial) {
-          ACTS_DEBUG(
-              "    Ignoring hole, because there are no preceding "
-              "measurements.");
-          return;
         }
 
         auto& fittedStates = *result.fittedStates;
@@ -1098,7 +1089,7 @@ class Gx2Fitter {
     requires(!isDirectNavigator)
   {
     // Preprocess Measurements (SourceLinks -> map)
-    // To be able to find measurements later, we put them into a map
+    // To be able to find measurements later, we put them into a map.
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
@@ -1109,7 +1100,6 @@ class Gx2Fitter {
       auto geoId = gx2fOptions.extensions.surfaceAccessor(sl)->geometryId();
       inputMeasurements.emplace(geoId, std::move(sl));
     }
-    ACTS_VERBOSE("inputMeasurements.size() = " << inputMeasurements.size());
 
     // Store, if we want to do multiple scattering. We still need to pass this
     // option to the Actor.
@@ -1156,21 +1146,21 @@ class Gx2Fitter {
     // track parameters.
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
 
-    ACTS_VERBOSE("params:\n" << params);
+    ACTS_VERBOSE("Initial parameters: " << params.parameters().transpose());
 
     /// Actual Fitting /////////////////////////////////////////////////////////
     ACTS_DEBUG("Start to iterate");
 
     // Iterate the fit and improve result. Abort after n steps or after
-    // convergence
-    // nUpdate is initialized outside to save its state for the track
+    // convergence.
+    // nUpdate is initialized outside to save its state for the track.
     std::size_t nUpdate = 0;
     for (nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
       ACTS_DEBUG("nUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
 
       // update params
       params.parameters() += deltaParams;
-      ACTS_VERBOSE("updated params:\n" << params);
+      ACTS_VERBOSE("Updated parameters: " << params.parameters().transpose());
 
       // set up propagator and co
       Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
@@ -1230,9 +1220,8 @@ class Gx2Fitter {
       tipIndex = gx2fResult.lastMeasurementIndex;
 
       // It could happen, that no measurements were found. Then the track would
-      // be empty and the following operations would be invalid.
-      // Usually, this only happens during the first iteration, due to bad
-      // initial parameters.
+      // be empty and the following operations would be invalid. Usually, this
+      // only happens during the first iteration, due to bad initial parameters.
       if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
         ACTS_INFO("Did not find any measurements in nUpdate "
                   << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
@@ -1309,12 +1298,11 @@ class Gx2Fitter {
       }
 
       // This check takes into account the evaluated dimensions of the
-      // measurements. To fit, we need at least NDF+1 measurements. However,
-      // we count n-dimensional measurements for n measurements, reducing the
-      // effective number of needed measurements.
-      // We might encounter the case, where we cannot use some (parts of a)
-      // measurements, maybe if we do not support that kind of measurement. This
-      // is also taken into account here.
+      // measurements. To fit, we need at least NDF+1 measurements. However, we
+      // count n-dimensional measurements for n measurements, reducing the
+      // effective number of needed measurements. We might encounter the case,
+      // where we cannot use some (parts of a) measurements, maybe if we do not
+      // support that kind of measurement. This is also taken into account here.
       // We skip the check during the first iteration, since we cannot guarantee
       // to hit all/enough measurement surfaces with the initial parameter
       // guess.
@@ -1401,7 +1389,7 @@ class Gx2Fitter {
       oldChi2sum = chi2sum;
     }
     ACTS_DEBUG("Finished to iterate");
-    ACTS_VERBOSE("final params:\n" << params);
+    ACTS_VERBOSE("Final parameters: " << params.parameters().transpose());
     /// Finish Fitting /////////////////////////////////////////////////////////
 
     ACTS_VERBOSE("Final scattering angles:");
@@ -1414,7 +1402,7 @@ class Gx2Fitter {
                             << " )");
     }
 
-    ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
+    ACTS_VERBOSE("Final covariance:\n" << fullCovariancePredicted);
 
     // Propagate again with the final covariance matrix. This is necessary to
     // obtain the propagated covariance for each state.
@@ -1422,7 +1410,7 @@ class Gx2Fitter {
     // step, we will not ignore the boundary checks for measurement surfaces. We
     // want to create trackstates only on surfaces, that we actually hit.
     if (gx2fOptions.nUpdateMax > 0) {
-      ACTS_VERBOSE("final deltaParams:\n" << deltaParams);
+      ACTS_VERBOSE("Final delta parameters: " << deltaParams.transpose());
       ACTS_VERBOSE("Propagate with the final covariance.");
       // update covariance
       params.covariance() = fullCovariancePredicted;
