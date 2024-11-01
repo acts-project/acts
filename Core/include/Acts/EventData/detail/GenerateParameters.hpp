@@ -160,17 +160,17 @@ inline double generateQoverP(generator_t& rng,
   using UniformIndex = std::uniform_int_distribution<std::uint8_t>;
   using UniformReal = std::uniform_real_distribution<double>;
 
-  auto drawP = [&options](generator_t& rng, double theta) -> double {
+  auto drawP = [&options](generator_t& rng_, double theta_) -> double {
     const double pTransverseScaling =
-        options.pTransverse ? 1. / std::sin(theta) : 1.;
+        options.pTransverse ? 1. / std::sin(theta_) : 1.;
 
     if (options.pLogUniform) {
       UniformReal pLogDist(std::log(options.pMin), std::log(options.pMax));
-      return std::exp(pLogDist(rng)) * pTransverseScaling;
+      return std::exp(pLogDist(rng_)) * pTransverseScaling;
     }
 
     UniformReal pDist(options.pMin, options.pMax);
-    return pDist(rng) * pTransverseScaling;
+    return pDist(rng_) * pTransverseScaling;
   };
 
   // choose between particle/anti-particle if requested
