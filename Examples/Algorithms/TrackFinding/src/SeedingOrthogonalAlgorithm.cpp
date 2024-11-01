@@ -69,11 +69,11 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<proxy_type>>(
           m_cfg.seedFilterConfig,
-          logger().cloneWithSuffix("Filter", Acts::Logging::VERBOSE));
+          logger().cloneWithSuffix("Filter"));
 
   m_finder = std::make_unique<Acts::SeedFinderOrthogonal<proxy_type>>(
       m_cfg.seedFinderConfig,
-      logger().cloneWithSuffix("Finder", Acts::Logging::VERBOSE));
+      logger().cloneWithSuffix("Finder"));
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
