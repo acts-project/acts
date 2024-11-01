@@ -68,7 +68,7 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
   // construct seed filter
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<proxy_type>>(
-	  m_cfg.seedFilterConfig, logger().cloneWithSuffix("Filter"));
+	   m_cfg.seedFilterConfig, logger().cloneWithSuffix("Filter"));
 
   m_finder = std::make_unique<Acts::SeedFinderOrthogonal<proxy_type>>(
       m_cfg.seedFinderConfig, logger().cloneWithSuffix("Finder"));
