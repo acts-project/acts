@@ -83,14 +83,6 @@ ParametricParticleGenerator::ParametricParticleGenerator(const Config& cfg)
       return dist(rng);
     };
   }
-
-  if (m_cfg.pTransverse) {
-    m_somePConverter = [](double someP, double sinTheta) -> double {
-      return someP / sinTheta;
-    };
-  } else {
-    m_somePConverter = [](double someP, double) -> double { return someP; };
-  }
 }
 
 std::pair<SimVertexContainer, SimParticleContainer>
@@ -120,7 +112,7 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
     const Acts::Vector3 dir = {sinTheta * std::cos(phi),
                                sinTheta * std::sin(phi), cosTheta};
 
-    const double p = m_somePConverter(someP, sinTheta);
+    const double p = someP * (m_cfg.pTransverse ? 1. / sinTheta : 1.);
 
     // construct the particle;
     ActsFatras::Particle particle(pid, pdg, q, m_mass);

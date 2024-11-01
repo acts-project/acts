@@ -90,7 +90,6 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
   UniformReal m_phiDist;
   std::function<std::pair<double, double>(RandomEngine& rng)> m_sinCosThetaDist;
   std::function<double(RandomEngine& rng)> m_somePDist;
-  std::function<double(double someP, double sinTheta)> m_somePConverter;
 };
 
 }  // namespace ActsExamples
