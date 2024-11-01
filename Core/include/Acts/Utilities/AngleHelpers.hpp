@@ -36,10 +36,10 @@ struct EtaThetaConversionTraits<double> {
 
 template <typename Scalar>
 struct ClampedEtaThetaConversionTraits {
-  // computed from minEta
-  static constexpr Scalar minTheta =
-      static_cast<Scalar>(3.6097027756908306e-35);
   // computed from maxEta
+  static constexpr Scalar minTheta =
+      static_cast<Scalar>(3.6097027756908303447e-35L);
+  // computed from minEta
   static constexpr Scalar maxTheta = static_cast<Scalar>(3.141592653589793);
 
   static constexpr Scalar minEta = static_cast<Scalar>(-80.0);
