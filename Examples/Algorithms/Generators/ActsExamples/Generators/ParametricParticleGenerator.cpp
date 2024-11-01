@@ -72,16 +72,24 @@ ParametricParticleGenerator::ParametricParticleGenerator(const Config& cfg)
     // distributes p or pt uniformly in log space
     UniformReal dist(std::log(m_cfg.pMin), std::log(m_cfg.pMax));
 
-    m_pDist = [=](RandomEngine& rng, double sinTheta) mutable -> double {
-      return std::exp(dist(rng)) / sinTheta;
+    m_somePDist = [=](RandomEngine& rng) mutable -> double {
+      return std::exp(dist(rng));
     };
   } else {
     // distributes p or pt uniformly
     UniformReal dist(m_cfg.pMin, m_cfg.pMax);
 
-    m_pDist = [=](RandomEngine& rng, double sinTheta) mutable -> double {
-      return dist(rng) / sinTheta;
+    m_somePDist = [=](RandomEngine& rng) mutable -> double {
+      return dist(rng);
     };
+  }
+
+  if (m_cfg.pTransverse) {
+    m_somePConverter = [](double someP, double sinTheta) -> double {
+      return someP / sinTheta;
+    };
+  } else {
+    m_somePConverter = [](double someP, double) -> double { return someP; };
   }
 }
 
@@ -104,6 +112,7 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
     const unsigned int type = m_particleTypeChoice(rng);
     const Acts::PdgParticle pdg = m_pdgChoices[type];
     const double q = m_qChoices[type];
+    const double someP = m_somePDist(rng);
 
     const double phi = m_phiDist(rng);
     const auto [sinTheta, cosTheta] = m_sinCosThetaDist(rng);
@@ -111,7 +120,7 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
     const Acts::Vector3 dir = {sinTheta * std::cos(phi),
                                sinTheta * std::sin(phi), cosTheta};
 
-    const double p = m_pDist(rng, sinTheta);
+    const double p = m_somePConverter(someP, sinTheta);
 
     // construct the particle;
     ActsFatras::Particle particle(pid, pdg, q, m_mass);
