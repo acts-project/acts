@@ -1453,11 +1453,9 @@ def addCKFTracks(
         )
     )
 
-    overrideAbsEtaMax = dict() if len(tslist) == 1 else dict(absEtaMax=None)
+    overwriteArgs = dict() if len(tslist) == 1 else dict(absEtaMax=None)
     cutSets = [
-        acts.TrackSelector.Config(
-            trackSelectorDefaultKWArgs(c).update(overrideAbsEtaMax)
-        )
+        acts.TrackSelector.Config(trackSelectorDefaultKWArgs(c).update(overwriteArgs))
         for c in tslist
     ]
     if len(tslist) == 0:
