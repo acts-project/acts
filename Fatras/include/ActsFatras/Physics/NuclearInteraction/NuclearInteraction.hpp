@@ -41,7 +41,7 @@ struct NuclearInteraction {
   /// The storage of the parameterisation
   detail::MultiParticleNuclearInteractionParametrisation
       multiParticleParameterisation;
-  /// The number of trials to match momenta and inveriant masses
+  /// The number of trials to match momenta and invariant masses
   //~ unsigned int nMatchingTrials = std::numeric_limits<unsigned int>::max();
   unsigned int nMatchingTrials = 100;
   unsigned int nMatchingTrialsTotal = 1000;
@@ -56,7 +56,7 @@ struct NuclearInteraction {
   template <typename generator_t>
   std::pair<Scalar, Scalar> generatePathLimits(generator_t& generator,
                                                const Particle& particle) const {
-    // Fast exit: No paramtrization provided
+    // Fast exit: No parameterisation provided
     if (multiParticleParameterisation.empty()) {
       return std::make_pair(std::numeric_limits<Scalar>::infinity(),
                             std::numeric_limits<Scalar>::infinity());
@@ -416,7 +416,7 @@ Acts::ActsDynamicVector NuclearInteraction::sampleInvariantMasses(
   for (unsigned int i = 0; i < size; i++) {
     float variance = parametrisation.eigenvaluesInvariantMass[i];
     std::normal_distribution<Acts::ActsScalar> dist{
-        parametrisation.meanInvariantMass[i], sqrtf(variance)};
+        parametrisation.meanInvariantMass[i], std::sqrt(variance)};
     parameters[i] = dist(generator);
   }
   // Transform to multivariate normal distribution
@@ -446,7 +446,7 @@ Acts::ActsDynamicVector NuclearInteraction::sampleMomenta(
   for (unsigned int i = 0; i < size; i++) {
     float variance = parametrisation.eigenvaluesMomentum[i];
     std::normal_distribution<Acts::ActsScalar> dist{
-        parametrisation.meanMomentum[i], sqrtf(variance)};
+        parametrisation.meanMomentum[i], std::sqrt(variance)};
     parameters[i] = dist(generator);
   }
 
