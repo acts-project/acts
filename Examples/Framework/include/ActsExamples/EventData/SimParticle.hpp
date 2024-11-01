@@ -23,6 +23,10 @@ using SimParticleState = ::ActsFatras::Particle;
 
 class SimParticle final {
  public:
+  using Scalar = Acts::ActsScalar;
+  using Vector3 = Acts::ActsVector<3>;
+  using Vector4 = Acts::ActsVector<4>;
+
   /// Construct a default particle with invalid identity.
   SimParticle() = default;
 
@@ -35,8 +39,8 @@ class SimParticle final {
   ///
   /// @warning It is the users responsibility that charge and mass match
   ///          the PDG particle number.
-  SimParticle(SimBarcode particleId, Acts::PdgParticle pdg, double charge,
-              double mass)
+  SimParticle(SimBarcode particleId, Acts::PdgParticle pdg, Scalar charge,
+              Scalar mass)
       : m_initial(particleId, pdg, charge, mass),
         m_final(particleId, pdg, charge, mass) {}
 
@@ -69,6 +73,37 @@ class SimParticle final {
   SimParticle withParticleId(SimBarcode particleId) const {
     return SimParticle(initial().withParticleId(particleId),
                        final().withParticleId(particleId));
+  }
+
+  /// Set the process type that generated this particle.
+  SimParticle& setProcess(ActsFatras::ProcessType proc) {
+    initial().setProcess(proc);
+    final().setProcess(proc);
+    return *this;
+  }
+  /// Set the pdg.
+  SimParticle setPdg(Acts::PdgParticle pdg) {
+    initial().setPdg(pdg);
+    final().setPdg(pdg);
+    return *this;
+  }
+  /// Set the charge.
+  SimParticle setCharge(Scalar charge) {
+    initial().setCharge(charge);
+    final().setCharge(charge);
+    return *this;
+  }
+  /// Set the mass.
+  SimParticle setMass(Scalar mass) {
+    initial().setMass(mass);
+    final().setMass(mass);
+    return *this;
+  }
+  /// Set the particle ID.
+  SimParticle& setParticleId(SimBarcode barcode) {
+    initial().setParticleId(barcode);
+    final().setParticleId(barcode);
+    return *this;
   }
 
   /// Particle identifier within an event.

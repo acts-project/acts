@@ -10,16 +10,12 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include "edm4hep/TrackState.h"
@@ -28,33 +24,33 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-SimParticleState EDM4hepUtil::readParticle(
-    const edm4hep::MCParticle& from, const MapParticleIdFrom& particleMapper) {
+SimParticle EDM4hepUtil::readParticle(const edm4hep::MCParticle& from,
+                                      const MapParticleIdFrom& particleMapper) {
   ActsFatras::Barcode particleId = particleMapper(from);
 
-  SimParticleState to(particleId, static_cast<Acts::PdgParticle>(from.getPDG()),
-                      from.getCharge() * Acts::UnitConstants::e,
-                      from.getMass() * Acts::UnitConstants::GeV);
+  SimParticle to(particleId, static_cast<Acts::PdgParticle>(from.getPDG()),
+                 from.getCharge() * Acts::UnitConstants::e,
+                 from.getMass() * Acts::UnitConstants::GeV);
 
   // TODO do we have that in EDM4hep?
   // particle.setProcess(static_cast<ActsFatras::ProcessType>(data.process));
 
-  to.setPosition4(from.getVertex()[0] * Acts::UnitConstants::mm,
-                  from.getVertex()[1] * Acts::UnitConstants::mm,
-                  from.getVertex()[2] * Acts::UnitConstants::mm,
-                  from.getTime() * Acts::UnitConstants::ns);
+  to.initial().setPosition4(from.getVertex()[0] * Acts::UnitConstants::mm,
+                            from.getVertex()[1] * Acts::UnitConstants::mm,
+                            from.getVertex()[2] * Acts::UnitConstants::mm,
+                            from.getTime() * Acts::UnitConstants::ns);
 
   // Only used for direction; normalization/units do not matter
   Acts::Vector3 momentum = {from.getMomentum()[0], from.getMomentum()[1],
                             from.getMomentum()[2]};
-  to.setDirection(momentum.normalized());
+  to.initial().setDirection(momentum.normalized());
 
-  to.setAbsoluteMomentum(momentum.norm() * 1_GeV);
+  to.initial().setAbsoluteMomentum(momentum.norm() * 1_GeV);
 
   return to;
 }
 
-void EDM4hepUtil::writeParticle(const SimParticleState& from,
+void EDM4hepUtil::writeParticle(const SimParticle& from,
                                 edm4hep::MutableMCParticle to) {
   // TODO what about particleId?
 
@@ -65,6 +61,10 @@ void EDM4hepUtil::writeParticle(const SimParticleState& from,
   to.setMomentum({static_cast<float>(from.fourMomentum().x()),
                   static_cast<float>(from.fourMomentum().y()),
                   static_cast<float>(from.fourMomentum().z())});
+  to.setMomentumAtEndpoint(
+      {static_cast<float>(from.final().fourMomentum().x()),
+       static_cast<float>(from.final().fourMomentum().y()),
+       static_cast<float>(from.final().fourMomentum().z())});
 }
 
 ActsFatras::Hit EDM4hepUtil::readSimHit(
