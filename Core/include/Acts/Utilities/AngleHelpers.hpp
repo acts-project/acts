@@ -34,17 +34,32 @@ struct EtaThetaConversionTraits<double> {
   static constexpr double maxEta = 700.0;
 };
 
+template <typename Scalar>
+struct ClampedEtaThetaConversionTraits {
+  // computed from minEta
+  static constexpr Scalar minTheta =
+      static_cast<Scalar>(3.6097027756908306e-35);
+  // computed from maxEta
+  static constexpr Scalar maxTheta = static_cast<Scalar>(3.141592653589793);
+
+  static constexpr Scalar minEta = static_cast<Scalar>(-80.0);
+  static constexpr Scalar maxEta = static_cast<Scalar>(80.0);
+};
+
 /// Calculate the pseudorapidity from the polar angle theta.
+///
+/// This function aims to be FPE safe and returns infinity for theta values
+/// outside the floating point precision range.
 ///
 /// @param theta is the polar angle in radian towards the z-axis.
 ///
 /// @return the pseudorapidity towards the z-axis.
 template <typename Scalar>
 Scalar etaFromTheta(Scalar theta) {
-  if (theta < EtaThetaConversionTraits<Scalar>::minTheta) {
+  if (theta <= EtaThetaConversionTraits<Scalar>::minTheta) {
     return std::numeric_limits<Scalar>::infinity();
   }
-  if (theta > EtaThetaConversionTraits<Scalar>::maxTheta) {
+  if (theta >= EtaThetaConversionTraits<Scalar>::maxTheta) {
     return -std::numeric_limits<Scalar>::infinity();
   }
 
@@ -53,16 +68,59 @@ Scalar etaFromTheta(Scalar theta) {
 
 /// Calculate the polar angle theta from the pseudorapidity.
 ///
+/// This function aims to be FPE safe and returns 0/pi for eta values outside
+/// the floating point precision range.
+///
 /// @param eta is the pseudorapidity towards the z-axis.
 ///
 /// @return the polar angle in radian towards the z-axis.
-template <std::floating_point Scalar>
+template <typename Scalar>
 Scalar thetaFromEta(Scalar eta) {
-  if (eta < EtaThetaConversionTraits<Scalar>::minEta) {
+  if (eta <= EtaThetaConversionTraits<Scalar>::minEta) {
     return std::numbers::pi_v<Scalar>;
   }
-  if (eta > EtaThetaConversionTraits<Scalar>::maxEta) {
+  if (eta >= EtaThetaConversionTraits<Scalar>::maxEta) {
     return 0;
+  }
+
+  return 2 * std::atan(std::exp(-eta));
+}
+
+/// Calculate the pseudorapidity from the polar angle theta.
+///
+/// This function aims to be FPE safe and returns clamed eta values for theta
+/// values outside the defined range.
+///
+/// @param theta is the polar angle in radian towards the z-axis.
+///
+/// @return the pseudorapidity towards the z-axis.
+template <typename Scalar>
+Scalar etaFromThetaClamped(Scalar theta) {
+  if (theta <= ClampedEtaThetaConversionTraits<Scalar>::minTheta) {
+    return ClampedEtaThetaConversionTraits<Scalar>::maxEta;
+  }
+  if (theta >= ClampedEtaThetaConversionTraits<Scalar>::maxTheta) {
+    return ClampedEtaThetaConversionTraits<Scalar>::minEta;
+  }
+
+  return -std::log(std::tan(theta / 2));
+}
+
+/// Calculate the polar angle theta from the pseudorapidity.
+///
+/// This function aims to be FPE safe and returns clamed theta values for eta
+/// values outside the defined range.
+///
+/// @param eta is the pseudorapidity towards the z-axis.
+///
+/// @return the polar angle in radian towards the z-axis.
+template <typename Scalar>
+Scalar thetaFromEtaClamped(Scalar eta) {
+  if (eta <= ClampedEtaThetaConversionTraits<Scalar>::minEta) {
+    return ClampedEtaThetaConversionTraits<Scalar>::maxTheta;
+  }
+  if (eta >= ClampedEtaThetaConversionTraits<Scalar>::maxEta) {
+    return ClampedEtaThetaConversionTraits<Scalar>::minTheta;
   }
 
   return 2 * std::atan(std::exp(-eta));
