@@ -112,9 +112,9 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
     const unsigned int type = m_particleTypeChoice(rng);
     const Acts::PdgParticle pdg = m_pdgChoices[type];
     const double q = m_qChoices[type];
+    const double phi = m_phiDist(rng);
     const double someP = m_somePDist(rng);
 
-    const double phi = m_phiDist(rng);
     const auto [sinTheta, cosTheta] = m_sinCosThetaDist(rng);
     // we already have sin/cos theta. they can be used directly
     const Acts::Vector3 dir = {sinTheta * std::cos(phi),
