@@ -22,6 +22,8 @@ using Acts::AngleHelpers::etaFromThetaClamped;
 using Acts::AngleHelpers::thetaFromEta;
 using Acts::AngleHelpers::thetaFromEtaClamped;
 
+using Acts::AngleHelpers::ClampedEtaThetaConversionTraits;
+
 BOOST_AUTO_TEST_SUITE(AngleHelpers)
 
 BOOST_AUTO_TEST_CASE(EtaThetaConversion) {
@@ -32,6 +34,44 @@ BOOST_AUTO_TEST_CASE(EtaThetaConversion) {
   CHECK_CLOSE_ABS(0.0, etaFromThetaClamped(std::numbers::pi / 2), 1e-6);
   CHECK_CLOSE_ABS(1.0, etaFromThetaClamped(thetaFromEta(1.0)), 1e-6);
   CHECK_CLOSE_ABS(1.0, thetaFromEtaClamped(etaFromTheta(1.0)), 1e-6);
+
+  // test clamped limits
+
+  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<double>::maxTheta,
+                  thetaFromEtaClamped<double>(
+                      ClampedEtaThetaConversionTraits<double>::minEta),
+                  1e-6);
+  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<double>::minTheta,
+                  thetaFromEtaClamped<double>(
+                      ClampedEtaThetaConversionTraits<double>::maxEta),
+                  1e-6);
+
+  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<double>::minEta,
+                  etaFromThetaClamped<double>(
+                      ClampedEtaThetaConversionTraits<double>::maxTheta),
+                  1e-6);
+  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<double>::maxEta,
+                  etaFromThetaClamped<double>(
+                      ClampedEtaThetaConversionTraits<double>::minTheta),
+                  1e-6);
+
+  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<float>::maxTheta,
+                  thetaFromEtaClamped<float>(
+                      ClampedEtaThetaConversionTraits<float>::minEta),
+                  1e-6f);
+  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<float>::minTheta,
+                  thetaFromEtaClamped<float>(
+                      ClampedEtaThetaConversionTraits<float>::maxEta),
+                  1e-6f);
+
+  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<float>::minEta,
+                  etaFromThetaClamped<float>(
+                      ClampedEtaThetaConversionTraits<float>::maxTheta),
+                  1e-6f);
+  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<float>::maxEta,
+                  etaFromThetaClamped<float>(
+                      ClampedEtaThetaConversionTraits<float>::minTheta),
+                  1e-6f);
 }
 
 BOOST_DATA_TEST_CASE(EtaFromThetaRobustness, bd::xrange(0, 1000, 1), exponent) {
