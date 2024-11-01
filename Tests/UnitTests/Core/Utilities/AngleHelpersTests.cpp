@@ -18,11 +18,8 @@
 namespace bd = boost::unit_test::data;
 
 using Acts::AngleHelpers::etaFromTheta;
-using Acts::AngleHelpers::etaFromThetaClamped;
+using Acts::AngleHelpers::EtaThetaConversionTraits;
 using Acts::AngleHelpers::thetaFromEta;
-using Acts::AngleHelpers::thetaFromEtaClamped;
-
-using Acts::AngleHelpers::ClampedEtaThetaConversionTraits;
 
 BOOST_AUTO_TEST_SUITE(AngleHelpers)
 
@@ -31,39 +28,35 @@ BOOST_AUTO_TEST_CASE(EtaThetaConversion) {
   CHECK_CLOSE_ABS(1.0, etaFromTheta(thetaFromEta(1.0)), 1e-6);
   CHECK_CLOSE_ABS(1.0, thetaFromEta(etaFromTheta(1.0)), 1e-6);
 
-  CHECK_CLOSE_ABS(0.0, etaFromThetaClamped(std::numbers::pi / 2), 1e-6);
-  CHECK_CLOSE_ABS(1.0, etaFromThetaClamped(thetaFromEta(1.0)), 1e-6);
-  CHECK_CLOSE_ABS(1.0, thetaFromEtaClamped(etaFromTheta(1.0)), 1e-6);
+  // test limits
 
-  // test clamped limits
+  CHECK_CLOSE_ABS(
+      EtaThetaConversionTraits<double>::maxTheta,
+      thetaFromEta<double>(EtaThetaConversionTraits<double>::minEta), 1e-6);
+  CHECK_CLOSE_ABS(
+      EtaThetaConversionTraits<double>::minTheta,
+      thetaFromEta<double>(EtaThetaConversionTraits<double>::maxEta), 1e-6);
 
-  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<double>::maxTheta,
-                    thetaFromEtaClamped<double>(
-                        ClampedEtaThetaConversionTraits<double>::minEta));
-  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<double>::minTheta,
-                    thetaFromEtaClamped<double>(
-                        ClampedEtaThetaConversionTraits<double>::maxEta));
+  CHECK_CLOSE_ABS(
+      EtaThetaConversionTraits<double>::minEta,
+      etaFromTheta<double>(EtaThetaConversionTraits<double>::maxTheta), 1e-6);
+  CHECK_CLOSE_ABS(
+      EtaThetaConversionTraits<double>::maxEta,
+      etaFromTheta<double>(EtaThetaConversionTraits<double>::minTheta), 1e-6);
 
-  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<double>::minEta,
-                    etaFromThetaClamped<double>(
-                        ClampedEtaThetaConversionTraits<double>::maxTheta));
-  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<double>::maxEta,
-                    etaFromThetaClamped<double>(
-                        ClampedEtaThetaConversionTraits<double>::minTheta));
+  CHECK_CLOSE_ABS(EtaThetaConversionTraits<float>::maxTheta,
+                  thetaFromEta<float>(EtaThetaConversionTraits<float>::minEta),
+                  1e-6f);
+  CHECK_CLOSE_ABS(EtaThetaConversionTraits<float>::minTheta,
+                  thetaFromEta<float>(EtaThetaConversionTraits<float>::maxEta),
+                  1e-6f);
 
-  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<float>::maxTheta,
-                    thetaFromEtaClamped<float>(
-                        ClampedEtaThetaConversionTraits<float>::minEta));
-  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<float>::minTheta,
-                    thetaFromEtaClamped<float>(
-                        ClampedEtaThetaConversionTraits<float>::maxEta));
-
-  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<float>::minEta,
-                    etaFromThetaClamped<float>(
-                        ClampedEtaThetaConversionTraits<float>::maxTheta));
-  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<float>::maxEta,
-                    etaFromThetaClamped<float>(
-                        ClampedEtaThetaConversionTraits<float>::minTheta));
+  CHECK_CLOSE_ABS(
+      EtaThetaConversionTraits<float>::minEta,
+      etaFromTheta<float>(EtaThetaConversionTraits<float>::maxTheta), 1e-6f);
+  CHECK_CLOSE_ABS(
+      EtaThetaConversionTraits<float>::maxEta,
+      etaFromTheta<float>(EtaThetaConversionTraits<float>::minTheta), 1e-6f);
 }
 
 BOOST_DATA_TEST_CASE(EtaFromThetaRobustness, bd::xrange(0, 1000, 1), exponent) {
@@ -75,18 +68,12 @@ BOOST_DATA_TEST_CASE(EtaFromThetaRobustness, bd::xrange(0, 1000, 1), exponent) {
     float etaRight = etaFromTheta<float>(thetaRight);
     BOOST_CHECK(!std::isnan(etaRight));
 
-    float etaRightClamped = etaFromThetaClamped<float>(thetaRight);
-    BOOST_CHECK(!std::isnan(etaRightClamped));
-
     // check left
 
     float thetaLeft = std::numbers::pi_v<float> - thetaRight;
 
     float etaLeft = etaFromTheta<float>(thetaLeft);
     BOOST_CHECK(!std::isnan(etaLeft));
-
-    float etaLeftClamped = etaFromThetaClamped<float>(thetaLeft);
-    BOOST_CHECK(!std::isnan(etaLeftClamped));
   }
 
   {
@@ -97,18 +84,12 @@ BOOST_DATA_TEST_CASE(EtaFromThetaRobustness, bd::xrange(0, 1000, 1), exponent) {
     double etaRight = etaFromTheta<double>(thetaRight);
     BOOST_CHECK(!std::isnan(etaRight));
 
-    double etaRightClamped = etaFromThetaClamped<double>(thetaRight);
-    BOOST_CHECK(!std::isnan(etaRightClamped));
-
     // check left
 
     double thetaLeft = std::numbers::pi - thetaRight;
 
     double etaLeft = etaFromTheta<double>(thetaLeft);
     BOOST_CHECK(!std::isnan(etaLeft));
-
-    double etaLeftClamped = etaFromThetaClamped<double>(thetaLeft);
-    BOOST_CHECK(!std::isnan(etaLeftClamped));
   }
 }
 
@@ -120,18 +101,12 @@ BOOST_DATA_TEST_CASE(ThetaFromEtaRobustness, bd::xrange(1.0, 1000.0, 1.0),
     float thetaRight = thetaFromEta<float>(etaRight);
     BOOST_CHECK(!std::isnan(thetaRight));
 
-    float thetaRightClamped = thetaFromEtaClamped<float>(etaRight);
-    BOOST_CHECK(!std::isnan(thetaRightClamped));
-
     // check left
 
     float etaLeft = -etaRight;
 
     float thetaLeft = thetaFromEta<float>(etaLeft);
     BOOST_CHECK(!std::isnan(thetaLeft));
-
-    float thetaLeftClamped = thetaFromEtaClamped<float>(etaLeft);
-    BOOST_CHECK(!std::isnan(thetaLeftClamped));
   }
 
   {
@@ -140,18 +115,12 @@ BOOST_DATA_TEST_CASE(ThetaFromEtaRobustness, bd::xrange(1.0, 1000.0, 1.0),
     double thetaRight = thetaFromEta<double>(etaRight);
     BOOST_CHECK(!std::isnan(thetaRight));
 
-    double thetaRightClamped = thetaFromEtaClamped<double>(etaRight);
-    BOOST_CHECK(!std::isnan(thetaRightClamped));
-
     // check left
 
     double etaLeft = -etaRight;
 
     double thetaLeft = thetaFromEta<double>(etaLeft);
     BOOST_CHECK(!std::isnan(thetaLeft));
-
-    double thetaLeftClamped = thetaFromEtaClamped<double>(etaLeft);
-    BOOST_CHECK(!std::isnan(thetaLeftClamped));
   }
 }
 
