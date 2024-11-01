@@ -113,8 +113,8 @@ class SeedFinder {
   /// @note Ranges must return pointers.
   /// @note Ranges must be separate objects for each parallel call.
   template <typename container_t, Acts::GridBinCollection sp_range_t>
-    requires Acts::CollectionStoresSeedsTo<container_t, external_spacepoint_t,
-                                           3ul>
+  // requires Acts::CollectionStoresSeedsTo<container_t, external_spacepoint_t,
+  //                                        3ul>
   void createSeedsForGroup(const Acts::SeedFinderOptions& options,
                            SeedingState& state, const grid_t& grid,
                            container_t& outputCollection,

@@ -25,17 +25,16 @@
 namespace Acts {
 template <typename collection_t, typename external_t, std::size_t N = 3ul>
 concept CollectionStoresSeedsTo =
-  requires(collection_t coll, Acts::Seed<external_t, N> seed) {
-  Acts::detail::pushBackOrInsertAtEnd(coll, seed);
-};
+    requires(collection_t coll, Acts::Seed<external_t, N> seed) {
+      Acts::detail::pushBackOrInsertAtEnd(coll, seed);
+    };
 
-template <typename Coll, typename external_t, std::size_t N = 3ul>
-concept CollectionStoresSeedsToProxied =  // (!CollectionStoresSeedsTo<Coll,
-                                          // external_t, N>) &&
+template <typename collection_t, typename external_t, std::size_t N = 3ul>
+concept CollectionStoresSeedsToProxied =
     requires(external_t sp) {
       typename external_t::ValueType;
       sp.externalSpacePoint();
-    } && CollectionStoresSeedsTo<Coll,
+    } && CollectionStoresSeedsTo<collection_t,
                                  std::remove_const_t<std::remove_pointer_t<
                                      typename external_t::ValueType> >,
                                  N>;

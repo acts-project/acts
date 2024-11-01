@@ -6,6 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+// -*- C++ -*-
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -38,8 +47,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
 template <typename container_t, Acts::GridBinCollection sp_range_t>
-  requires Acts::CollectionStoresSeedsTo<container_t, external_spacepoint_t,
-                                         3ul>
+// requires Acts::CollectionStoresSeedsTo<container_t, external_spacepoint_t,
+//                                        3ul>
 void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
     const grid_t& grid, container_t& outputCollection,
@@ -111,7 +120,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   auto [minRadiusRangeForMiddle, maxRadiusRangeForMiddle] =
       retrieveRadiusRangeForMiddle(middleSPs.front(), rMiddleSPRange);
   ACTS_VERBOSE("Current global bin: " << middleSPsIdx << ", z value of "
-                                      << middleSPs.front()->z());
+                                      << middleSPs.front().z());
   ACTS_VERBOSE("Validity range (radius) for the middle space point is ["
                << minRadiusRangeForMiddle << ", " << maxRadiusRangeForMiddle
                << "]");
@@ -187,7 +196,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     ACTS_VERBOSE("Candidates: " << state.compatBottomSP.size()
                                 << " bottoms and " << state.compatTopSP.size()
                                 << " tops for middle candidate indexed "
-                                << spM->index());
+                                << spM.index());
     // filter candidates
     if (m_config.useDetailedDoubleMeasurementInfo) {
       filterCandidates<Acts::DetectorMeasurementInfo::eDetailed>(
