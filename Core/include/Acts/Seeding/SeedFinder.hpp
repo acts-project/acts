@@ -18,6 +18,7 @@
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <array>
 #include <limits>
@@ -37,11 +38,11 @@ concept GridBinCollection =
     std::ranges::random_access_range<Coll> &&
     std::same_as<typename Coll::value_type, std::size_t>;
 
-template <typename Coll, typename external_t, std::size_t N = 3ul>
-concept CollectionStoresSeedsTo = requires(Coll coll, external_t sp) {
-  Acts::detail::pushBackOrInsertAtEnd(coll,
-                                      Acts::Seed<external_t, N>(sp, sp, sp));
-};
+template <typename collection_t, typename external_t, std::size_t N = 3ul>
+concept CollectionStoresSeedsTo =
+    requires(collection_t coll, Acts::Seed<external_t, N> seed) {
+      Acts::detail::pushBackOrInsertAtEnd(coll, seed);
+    };
 
 enum class SpacePointCandidateType : short { eBottom, eTop };
 
@@ -87,7 +88,14 @@ class SeedFinder {
 
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the SeedFinder
-  SeedFinder(const Acts::SeedFinderConfig<external_spacepoint_t>& config);
+  /// @param logger the ACTS logger
+  SeedFinder(const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+             std::unique_ptr<const Acts::Logger> logger =
+                 getDefaultLogger("SeedFinder", Logging::Level::INFO));
+  SeedFinder(SeedFinder<external_spacepoint_t, grid_t, platform_t>&&) noexcept =
+      default;
+  SeedFinder& operator=(SeedFinder<external_spacepoint_t, grid_t,
+                                   platform_t>&&) noexcept = default;
   ~SeedFinder() = default;
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
@@ -95,7 +103,7 @@ class SeedFinder {
   SeedFinder(const SeedFinder<external_spacepoint_t, grid_t, platform_t>&) =
       delete;
   SeedFinder<external_spacepoint_t, grid_t, platform_t>& operator=(
-      const SeedFinder<external_spacepoint_t, grid_t, platform_t>&) = default;
+      const SeedFinder<external_spacepoint_t, grid_t, platform_t>&) = delete;
   //@}
 
   /// Create all seeds from the space points in the three iterators.
@@ -172,7 +180,10 @@ class SeedFinder {
                         SeedingState& state) const;
 
  private:
+  const Logger& logger() const { return *m_logger; }
+
   Acts::SeedFinderConfig<external_spacepoint_t> m_config;
+  std::unique_ptr<const Acts::Logger> m_logger{nullptr};
 };
 
 }  // namespace Acts

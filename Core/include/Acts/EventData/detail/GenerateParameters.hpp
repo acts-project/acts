@@ -209,6 +209,10 @@ struct GenerateBoundParametersOptions {
   GenerateQoverPOptions qOverP;
 };
 
+inline BoundVector someBoundParametersA() {
+  return {0.0, 0.0, 0.0, std::numbers::pi / 2, 1.0, 0.0};
+}
+
 template <typename generator_t>
 inline BoundVector generateBoundParameters(
     generator_t& rng, const GenerateBoundParametersOptions& options) {
@@ -255,6 +259,10 @@ struct GenerateFreeParametersOptions {
 
   GenerateQoverPOptions qOverP;
 };
+
+inline FreeVector someFreeParametersA() {
+  return {0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
+}
 
 template <typename generator_t>
 inline FreeVector generateFreeParameters(
