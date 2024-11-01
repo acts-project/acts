@@ -88,15 +88,14 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
       MakeGbtsSpacePoints(ctx, m_cfg.ActsGbtsMap);
 
   for (auto sp : GbtsSpacePoints) {
-    ACTS_DEBUG("Gbts space points: "
-               << " Gbts_id: " << sp.gbtsID << " z: " << sp.SP->z()
-               << " r: " << sp.SP->r() << " ACTS volume:  "
+    ACTS_DEBUG("Gbts space points:  Gbts_id: "
+               << sp.gbtsID << " z: " << sp.SP->z() << " r: " << sp.SP->r()
+               << " ACTS volume:  "
                << sp.SP->sourceLinks()
                       .front()
                       .get<IndexSourceLink>()
                       .geometryId()
-                      .volume()
-               << "\n");
+                      .volume());
   }
 
   // this is now calling on a core algorithm
