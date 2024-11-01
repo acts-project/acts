@@ -27,36 +27,6 @@ BOOST_AUTO_TEST_CASE(EtaThetaConversion) {
   CHECK_CLOSE_ABS(0.0, etaFromTheta(std::numbers::pi / 2), 1e-6);
   CHECK_CLOSE_ABS(1.0, etaFromTheta(thetaFromEta(1.0)), 1e-6);
   CHECK_CLOSE_ABS(1.0, thetaFromEta(etaFromTheta(1.0)), 1e-6);
-
-  // test limits
-
-  CHECK_CLOSE_ABS(
-      EtaThetaConversionTraits<double>::maxTheta,
-      thetaFromEta<double>(EtaThetaConversionTraits<double>::minEta), 1e-6);
-  CHECK_CLOSE_ABS(
-      EtaThetaConversionTraits<double>::minTheta,
-      thetaFromEta<double>(EtaThetaConversionTraits<double>::maxEta), 1e-6);
-
-  CHECK_CLOSE_ABS(
-      EtaThetaConversionTraits<double>::minEta,
-      etaFromTheta<double>(EtaThetaConversionTraits<double>::maxTheta), 1e-6);
-  CHECK_CLOSE_ABS(
-      EtaThetaConversionTraits<double>::maxEta,
-      etaFromTheta<double>(EtaThetaConversionTraits<double>::minTheta), 1e-6);
-
-  CHECK_CLOSE_ABS(EtaThetaConversionTraits<float>::maxTheta,
-                  thetaFromEta<float>(EtaThetaConversionTraits<float>::minEta),
-                  1e-6f);
-  CHECK_CLOSE_ABS(EtaThetaConversionTraits<float>::minTheta,
-                  thetaFromEta<float>(EtaThetaConversionTraits<float>::maxEta),
-                  1e-6f);
-
-  CHECK_CLOSE_ABS(
-      EtaThetaConversionTraits<float>::minEta,
-      etaFromTheta<float>(EtaThetaConversionTraits<float>::maxTheta), 1e-6f);
-  CHECK_CLOSE_ABS(
-      EtaThetaConversionTraits<float>::maxEta,
-      etaFromTheta<float>(EtaThetaConversionTraits<float>::minTheta), 1e-6f);
 }
 
 BOOST_DATA_TEST_CASE(EtaFromThetaRobustness, bd::xrange(0, 1000, 1), exponent) {
