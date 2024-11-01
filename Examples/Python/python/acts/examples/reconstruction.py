@@ -129,12 +129,11 @@ TrackSelectorConfig = namedtuple(
 )
 
 
-def convertPyTrackSelectorConfig(c, absEtaMaxLambda=lambda etaMax: etaMax):
+def trackSelectorDefaultKWArgs(c):
     """
     Encapsulate this boilerplate code into a function so different uses do not get out of sync
-    Gets an additional lambda for the etaMax, because we might want to use this with eta binning
     """
-    return acts.TrackSelector.Config(
+    return {
         **acts.examples.defaultKWArgs(
             loc0Min=c.loc0[0],
             loc0Max=c.loc0[1],
@@ -159,7 +158,7 @@ def convertPyTrackSelectorConfig(c, absEtaMaxLambda=lambda etaMax: etaMax):
             measurementCounter=c.nMeasurementsGroupMin,
             requireReferenceSurface=c.requireReferenceSurface,
         )
-    )
+    }
 
 
 CkfConfig = namedtuple(
@@ -1453,9 +1452,11 @@ def addCKFTracks(
             else trackSelectorConfig
         )
     )
+
+    overrideAbsEtaMax = dict() if len(tslist) == 1 else dict(absEtaMax=None)
     cutSets = [
-        convertPyTrackSelectorConfig(
-            c, lambda etaMax: etaMax if len(tslist) == 1 else None
+        acts.TrackSelector.Config(
+            trackSelectorDefaultKWArgs(c).update(overrideAbsEtaMax)
         )
         for c in tslist
     ]
@@ -1708,7 +1709,9 @@ def addTrackSelection(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # single cut config for implicit single bin eta configuration
-    selectorConfig = convertPyTrackSelectorConfig(trackSelectorConfig)
+    selectorConfig = acts.TrackSelector.Config(
+        trackSelectorDefaultKWArgs(trackSelectorConfig)
+    )
 
     trackSelector = acts.examples.TrackSelectorAlgorithm(
         level=customLogLevel(),
