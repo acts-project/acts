@@ -160,6 +160,19 @@ inline double generateQoverP(generator_t& rng,
   using UniformIndex = std::uniform_int_distribution<std::uint8_t>;
   using UniformReal = std::uniform_real_distribution<double>;
 
+  auto drawP = [&options](generator_t& rng, double theta) -> double {
+    const double pTransverseScaling =
+        options.pTransverse ? 1. / std::sin(theta) : 1.;
+
+    if (options.pLogUniform) {
+      UniformReal pLogDist(std::log(options.pMin), std::log(options.pMax));
+      return std::exp(pLogDist(rng)) * pTransverseScaling;
+    }
+
+    UniformReal pDist(options.pMin, options.pMax);
+    return pDist(rng) * pTransverseScaling;
+  };
+
   // choose between particle/anti-particle if requested
   // the upper limit of the distribution is inclusive
   UniformIndex particleTypeChoice(0u, options.randomizeCharge ? 1u : 0u);
@@ -168,17 +181,12 @@ inline double generateQoverP(generator_t& rng,
       options.charge,
       -options.charge,
   };
-  UniformReal pDist(
-      options.pLogUniform ? std::log(options.pMin) : options.pMin,
-      options.pLogUniform ? std::log(options.pMax) : options.pMax);
 
   // draw parameters
   const std::uint8_t type = particleTypeChoice(rng);
   const double q = qChoices[type];
 
-  double p = pDist(rng);
-  p = options.pLogUniform ? std::exp(p) : p;
-  p = p * (options.pTransverse ? 1. / std::sin(theta) : 1.);
+  const double p = drawP(rng, theta);
   const double qOverP = (q != 0) ? q / p : 1 / p;
 
   return qOverP;
