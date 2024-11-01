@@ -190,8 +190,8 @@ class SeedFinderOrthogonal {
    *
    * @return A k-d tree containing the given spacepoints.
    */
-  tree_t createTree(
-      const std::vector<const external_spacepoint_t *> &spacePoints) const;
+  template <typename input_container_t>
+  tree_t createTree(const input_container_t &spacePoints) const;
 
   /**
    * @brief Filter potential candidate pairs, and output seeds into an
