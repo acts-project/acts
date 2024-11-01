@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
@@ -18,10 +19,8 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <cassert>
 #include <cmath>
 #include <optional>
-#include <type_traits>
 
 namespace Acts {
 
@@ -55,7 +54,9 @@ class GenericFreeTrackParameters {
                              ParticleHypothesis particleHypothesis)
       : m_params(params),
         m_cov(std::move(cov)),
-        m_particleHypothesis(std::move(particleHypothesis)) {}
+        m_particleHypothesis(std::move(particleHypothesis)) {
+    assert(isFreeVectorValid(m_params) && "Invalid free parameters vector");
+  }
 
   /// Construct from four-position, direction, absolute momentum, and charge.
   ///
@@ -78,6 +79,8 @@ class GenericFreeTrackParameters {
     m_params[eFreeDir1] = dir[eMom1];
     m_params[eFreeDir2] = dir[eMom2];
     m_params[eFreeQOverP] = qOverP;
+
+    assert(isFreeVectorValid(m_params) && "Invalid free parameters vector");
   }
 
   /// Construct from four-position, angles, absolute momentum, and charge.
@@ -103,6 +106,8 @@ class GenericFreeTrackParameters {
     m_params[eFreeDir1] = dir[eMom1];
     m_params[eFreeDir2] = dir[eMom2];
     m_params[eFreeQOverP] = qOverP;
+
+    assert(isFreeVectorValid(m_params) && "Invalid free parameters vector");
   }
 
   /// Converts a free track parameter with a different hypothesis.

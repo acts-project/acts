@@ -38,11 +38,11 @@ struct TestTrackState {
       : surface(
             CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).surface()),
         // set bogus parameters first since they are not default-constructible
-        predicted(surface, BoundVector::Zero(), std::nullopt,
+        predicted(surface, someBoundParametersA(), std::nullopt,
                   ParticleHypothesis::pion()),
-        filtered(surface, BoundVector::Zero(), std::nullopt,
+        filtered(surface, someBoundParametersA(), std::nullopt,
                  ParticleHypothesis::pion()),
-        smoothed(surface, BoundVector::Zero(), std::nullopt,
+        smoothed(surface, someBoundParametersA(), std::nullopt,
                  ParticleHypothesis::pion()),
         jacobian(BoundMatrix::Identity()),
         chi2(std::chi_squared_distribution<double>(measdim)(rng)),
@@ -65,7 +65,7 @@ struct TestTrackState {
     }
 
     // create track parameters
-    auto [trkPar, trkCov] = generateBoundParametersCovariance(rng);
+    auto [trkPar, trkCov] = generateBoundParametersCovariance(rng, {});
     // trkPar[eBoundPhi] = 45_degree;
     // trkPar[eBoundTheta] = 90_degree;
     // trkPar[eBoundQOverP] = 5.;

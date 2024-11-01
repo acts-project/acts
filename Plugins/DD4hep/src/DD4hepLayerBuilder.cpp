@@ -208,8 +208,8 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
         // create the share disc bounds
         auto dBounds = std::make_shared<const RadialBounds>(
             pl.min(Acts::BinningValue::binR), pl.max(Acts::BinningValue::binR));
-        double thickness = std::fabs(pl.max(Acts::BinningValue::binZ) -
-                                     pl.min(Acts::BinningValue::binZ));
+        double thickness = std::abs(pl.max(Acts::BinningValue::binZ) -
+                                    pl.min(Acts::BinningValue::binZ));
         // Create the layer containing the sensitive surface
         endcapLayer = DiscLayer::create(transform, dBounds, std::move(sArray),
                                         thickness, nullptr, Acts::active);
@@ -357,8 +357,8 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
         double layerR = (pl.min(Acts::BinningValue::binR) +
                          pl.max(Acts::BinningValue::binR)) *
                         0.5;
-        double thickness = std::fabs(pl.max(Acts::BinningValue::binR) -
-                                     pl.min(Acts::BinningValue::binR));
+        double thickness = std::abs(pl.max(Acts::BinningValue::binR) -
+                                    pl.min(Acts::BinningValue::binR));
         auto cBounds = std::make_shared<CylinderBounds>(layerR, halfZ);
         // Create the layer containing the sensitive surface
         centralLayer =

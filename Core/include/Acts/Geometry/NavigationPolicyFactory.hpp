@@ -54,17 +54,12 @@ class NavigationPolicyFactory {
 namespace detail {
 
 template <typename F, typename... Args>
-concept NavigationPolicyIsolatedFactoryConcept = requires(F f) {
-  {
-    f(std::declval<const GeometryContext&>(),
-      std::declval<const TrackingVolume&>(), std::declval<const Logger&>(),
-      std::declval<Args>()...)
-  } -> std::derived_from<INavigationPolicy>;
+concept NavigationPolicyIsolatedFactoryConcept = requires(
+    F f, const GeometryContext& gctx, const TrackingVolume& volume,
+    const Logger& logger, Args&&... args) {
+  { f(gctx, volume, logger, args...) } -> std::derived_from<INavigationPolicy>;
 
-  requires NavigationPolicyConcept<decltype(f(
-      std::declval<const GeometryContext&>(),
-      std::declval<const TrackingVolume&>(), std::declval<const Logger&>(),
-      std::declval<Args>()...))>;
+  requires NavigationPolicyConcept<decltype(f(gctx, volume, logger, args...))>;
 
   requires(std::is_copy_constructible_v<Args> && ...);
 };
@@ -205,7 +200,7 @@ class NavigationPolicyFactoryImpl<F, Fs...> : public NavigationPolicyFactory {
   template <typename...>
   friend class NavigationPolicyFactoryImpl;
 
-  NavigationPolicyFactoryImpl(std::tuple<F, Fs...>&& factories)
+  explicit NavigationPolicyFactoryImpl(std::tuple<F, Fs...>&& factories)
       : m_factories(std::move(factories)) {}
 
   std::tuple<F, Fs...> m_factories;
