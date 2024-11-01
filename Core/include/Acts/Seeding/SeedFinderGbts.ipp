@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the ACTS project.
 //
 // Copyright (C) 2016 CERN for the benefit of the ACTS project
@@ -34,22 +35,25 @@ namespace Acts {
 template <typename external_spacepoint_t>
 SeedFinderGbts<external_spacepoint_t>::SeedFinderGbts(
     const SeedFinderGbtsConfig<external_spacepoint_t>& config,
-    const GbtsGeometry<external_spacepoint_t>& gbtsGeo)
-    : m_config(config) {
-  m_storage = new GbtsDataStorage(gbtsGeo);
-}
+    const GbtsGeometry<external_spacepoint_t>& gbtsGeo,
+    std::unique_ptr<const Acts::Logger> logger)
+    : m_config(config),
+      m_storage(new GbtsDataStorage(gbtsGeo)),
+      m_logger(std::move(logger)) {}
 
 template <typename external_spacepoint_t>
 SeedFinderGbts<external_spacepoint_t>::~SeedFinderGbts() {
-  delete m_storage;
-
-  m_storage = nullptr;
+  if (m_storage) {
+    delete m_storage;
+    m_storage = nullptr;
+  }
 }
 
 // define loadspace points function
 template <typename external_spacepoint_t>
 void SeedFinderGbts<external_spacepoint_t>::loadSpacePoints(
     const std::vector<GbtsSP<external_spacepoint_t>>& gbtsSPvect) {
+  ACTS_VERBOSE("Loading space points");
   for (const auto& gbtssp : gbtsSPvect) {
     bool is_Pixel = gbtssp.isPixel();
     if (!is_Pixel) {
@@ -70,6 +74,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
     std::vector<GbtsTrigTracklet<external_spacepoint_t>>& vTracks,
     const Acts::RoiDescriptor& roi,
     const Acts::GbtsGeometry<external_spacepoint_t>& gbtsGeo) {
+  ACTS_VERBOSE("Running GBTS Track Finder");
   const float min_z0 = roi.zedMinus();
   const float max_z0 = roi.zedPlus();
   const float cut_zMinU = min_z0 + m_config.maxOuterRadius * roi.dzdrMinus();
@@ -316,18 +321,19 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                   nEdges++;
                 }
               }  // loop over n2 (outer) nodes
-            }  // loop over n1 (inner) nodes
-          }  // loop over source eta bins
-        }  // loop over dst eta bins
-      }  // loop over L2(L1) layers
-    }  // loop over dst layers
-  }  // loop over the stages of doublet making
+            }    // loop over n1 (inner) nodes
+          }      // loop over source eta bins
+        }        // loop over dst eta bins
+      }          // loop over L2(L1) layers
+    }            // loop over dst layers
+  }              // loop over the stages of doublet making
 
   std::vector<const GbtsNode<external_spacepoint_t>*> vNodes;
 
   m_storage->getConnectingNodes(vNodes);
 
   if (vNodes.empty()) {
+    ACTS_VERBOSE("No nodes");
     return;
   }
 
@@ -506,8 +512,9 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
   // backtracking
 
-  GbtsTrackingFilter<external_spacepoint_t> tFilter(m_config.m_layerGeometry,
-                                                    edgeStorage);
+  GbtsTrackingFilter<external_spacepoint_t> tFilter(
+      m_config.m_layerGeometry, edgeStorage,
+      logger().cloneWithSuffix("GbtsFilter"));
 
   for (auto pS : vSeeds) {
     if (pS->m_level == -1) {
@@ -651,6 +658,7 @@ void SeedFinderGbts<external_spacepoint_t>::createSeeds(
     const Acts::RoiDescriptor& roi,
     const Acts::GbtsGeometry<external_spacepoint_t>& gbtsGeo,
     output_container_t& out_cont) {
+  ACTS_VERBOSE("Creating seeds");
   std::vector<GbtsTrigTracklet<external_spacepoint_t>>
       vTracks;  // make empty vector
 
