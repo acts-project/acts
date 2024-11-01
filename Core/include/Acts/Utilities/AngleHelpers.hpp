@@ -38,12 +38,22 @@ template <typename Scalar>
 struct ClampedEtaThetaConversionTraits {
   // computed from minEta
   static constexpr Scalar minTheta =
-      static_cast<Scalar>(3.6097027756908306e-35);
+      static_cast<Scalar>(9.0799859462585550026e-05L);
   // computed from maxEta
-  static constexpr Scalar maxTheta = static_cast<Scalar>(3.141592653589793);
+  static constexpr Scalar maxTheta =
+      static_cast<Scalar>(3.1415018537303306529L);
 
-  static constexpr Scalar minEta = static_cast<Scalar>(-80.0);
-  static constexpr Scalar maxEta = static_cast<Scalar>(80.0);
+  static constexpr Scalar minEta = static_cast<Scalar>(-10.0);
+  static constexpr Scalar maxEta = static_cast<Scalar>(10.0);
+
+  static_assert(minTheta > static_cast<Scalar>(0),
+                "minTheta must be bigger than 0");
+  static_assert(maxTheta < std::numbers::pi_v<Scalar>,
+                "maxTheta must be smaller than pi");
+  static_assert(minEta > -std::numeric_limits<Scalar>::infinity(),
+                "minEta must be bigger than -inf");
+  static_assert(maxEta < std::numeric_limits<Scalar>::infinity(),
+                "maxEta must be smaller than inf");
 };
 
 /// Calculate the pseudorapidity from the polar angle theta.

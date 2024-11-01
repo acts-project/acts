@@ -37,41 +37,33 @@ BOOST_AUTO_TEST_CASE(EtaThetaConversion) {
 
   // test clamped limits
 
-  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<double>::maxTheta,
-                  thetaFromEtaClamped<double>(
-                      ClampedEtaThetaConversionTraits<double>::minEta),
-                  1e-6);
-  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<double>::minTheta,
-                  thetaFromEtaClamped<double>(
-                      ClampedEtaThetaConversionTraits<double>::maxEta),
-                  1e-6);
+  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<double>::maxTheta,
+                    thetaFromEtaClamped<double>(
+                        ClampedEtaThetaConversionTraits<double>::minEta));
+  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<double>::minTheta,
+                    thetaFromEtaClamped<double>(
+                        ClampedEtaThetaConversionTraits<double>::maxEta));
 
-  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<double>::minEta,
-                  etaFromThetaClamped<double>(
-                      ClampedEtaThetaConversionTraits<double>::maxTheta),
-                  1e-6);
-  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<double>::maxEta,
-                  etaFromThetaClamped<double>(
-                      ClampedEtaThetaConversionTraits<double>::minTheta),
-                  1e-6);
+  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<double>::minEta,
+                    etaFromThetaClamped<double>(
+                        ClampedEtaThetaConversionTraits<double>::maxTheta));
+  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<double>::maxEta,
+                    etaFromThetaClamped<double>(
+                        ClampedEtaThetaConversionTraits<double>::minTheta));
 
-  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<float>::maxTheta,
-                  thetaFromEtaClamped<float>(
-                      ClampedEtaThetaConversionTraits<float>::minEta),
-                  1e-6f);
-  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<float>::minTheta,
-                  thetaFromEtaClamped<float>(
-                      ClampedEtaThetaConversionTraits<float>::maxEta),
-                  1e-6f);
+  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<float>::maxTheta,
+                    thetaFromEtaClamped<float>(
+                        ClampedEtaThetaConversionTraits<float>::minEta));
+  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<float>::minTheta,
+                    thetaFromEtaClamped<float>(
+                        ClampedEtaThetaConversionTraits<float>::maxEta));
 
-  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<float>::minEta,
-                  etaFromThetaClamped<float>(
-                      ClampedEtaThetaConversionTraits<float>::maxTheta),
-                  1e-6f);
-  CHECK_CLOSE_ABS(ClampedEtaThetaConversionTraits<float>::maxEta,
-                  etaFromThetaClamped<float>(
-                      ClampedEtaThetaConversionTraits<float>::minTheta),
-                  1e-6f);
+  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<float>::minEta,
+                    etaFromThetaClamped<float>(
+                        ClampedEtaThetaConversionTraits<float>::maxTheta));
+  BOOST_CHECK_EQUAL(ClampedEtaThetaConversionTraits<float>::maxEta,
+                    etaFromThetaClamped<float>(
+                        ClampedEtaThetaConversionTraits<float>::minTheta));
 }
 
 BOOST_DATA_TEST_CASE(EtaFromThetaRobustness, bd::xrange(0, 1000, 1), exponent) {
