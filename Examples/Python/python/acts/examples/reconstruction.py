@@ -133,8 +133,7 @@ def trackSelectorDefaultKWArgs(c):
     """
     Encapsulate this boilerplate code into a function so different uses do not get out of sync
     """
-    return {
-        **acts.examples.defaultKWArgs(
+    return acts.examples.defaultKWArgs(
             loc0Min=c.loc0[0],
             loc0Max=c.loc0[1],
             loc1Min=c.loc1[0],
