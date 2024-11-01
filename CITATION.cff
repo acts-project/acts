@@ -89,7 +89,7 @@ authors:
   family-names: Russo
   affiliation: CERN / TU Wien
   orcid: https://orcid.org/0009-0005-8975-2245
-version: v37.2.0
+version: v37.3.0
 date-released: 2021-07-28
 repository-code: https://github.com/acts-project/acts
 license: MPL-2.0
