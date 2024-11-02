@@ -692,7 +692,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
    * linearly pass to the k-d tree constructor. That constructor will take
    * care of sorting the pairs and splitting the space.
    */
-  for (const external_spacepoint_t &sp : spacePoints) {
+  for (const external_spacepoint_t sp : spacePoints) {
     typename tree_t::coordinate_t point;
 
     point[DimPhi] = sp.phi();
