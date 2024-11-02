@@ -22,8 +22,9 @@
 #include <stdexcept>
 #include <unordered_map>
 
-ActsExamples::EventGenerator::EventGenerator(const Config& cfg,
-                                             Acts::Logging::Level lvl)
+namespace ActsExamples {
+
+EventGenerator::EventGenerator(const Config& cfg, Acts::Logging::Level lvl)
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("EventGenerator", lvl)) {
   if (m_cfg.outputParticles.empty()) {
     throw std::invalid_argument("Missing output particles collection");
@@ -40,20 +41,17 @@ ActsExamples::EventGenerator::EventGenerator(const Config& cfg,
 
   m_outputParticles.initialize(m_cfg.outputParticles);
   m_outputVertices.initialize(m_cfg.outputVertices);
-  m_outputTrackParameters.maybeInitialize(m_cfg.outputTrackParameters);
 }
 
-std::string ActsExamples::EventGenerator::name() const {
+std::string EventGenerator::name() const {
   return "EventGenerator";
 }
 
-std::pair<std::size_t, std::size_t>
-ActsExamples::EventGenerator::availableEvents() const {
+std::pair<std::size_t, std::size_t> EventGenerator::availableEvents() const {
   return {0u, std::numeric_limits<std::size_t>::max()};
 }
 
-ActsExamples::ProcessCode ActsExamples::EventGenerator::read(
-    const AlgorithmContext& ctx) {
+ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
   SimParticleContainer particles;
   SimVertexContainer vertices;
 
@@ -121,40 +119,11 @@ ActsExamples::ProcessCode ActsExamples::EventGenerator::read(
                       << " n_primary_vertices=" << nPrimaryVertices
                       << " n_particles=" << particles.size());
 
-  if (m_outputTrackParameters.isInitialized()) {
-    std::unordered_map<SimBarcode, std::shared_ptr<Acts::PerigeeSurface>>
-        perigeeSurfaces;
-
-    for (auto&& [vtxId, vtxParticles] : groupBySecondaryVertex(particles)) {
-      // a group contains at least one particle by construction. assume that all
-      // particles within the group originate from the same position and use it
-      // to as the reference position for the perigee frame.
-      auto perigee = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-          vtxParticles.begin()->position());
-      perigeeSurfaces[vtxId] = perigee;
-    }
-
-    // create track parameters from the particles
-    TrackParametersContainer trackParameters;
-    for (const auto& particle : particles) {
-      const auto vtxId = particle.particleId().vertexId();
-      const auto particleHypothesis = particle.hypothesis();
-      const auto phi = Acts::VectorHelpers::phi(particle.direction());
-      const auto theta = Acts::VectorHelpers::theta(particle.direction());
-      const auto qOverP = particle.qOverP();
-      const auto time = particle.time();
-
-      trackParameters.emplace_back(
-          perigeeSurfaces.at(vtxId),
-          Acts::BoundVector{0, 0, phi, theta, qOverP, time}, std::nullopt,
-          particleHypothesis);
-    }
-    m_outputTrackParameters(ctx, std::move(trackParameters));
-  }
-
   // move generated event to the store
   m_outputParticles(ctx, std::move(particles));
   m_outputVertices(ctx, std::move(vertices));
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

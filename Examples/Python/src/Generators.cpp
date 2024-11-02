@@ -16,8 +16,6 @@
 #include "ActsExamples/Generators/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Generators/VertexGenerators.hpp"
 
-#include <cassert>
-#include <cmath>
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -79,7 +77,6 @@ void addGenerators(Context& ctx) {
         .def(py::init<>())
         .def_readwrite("outputParticles", &Config::outputParticles)
         .def_readwrite("outputVertices", &Config::outputVertices)
-        .def_readwrite("outputTrackParameters", &Config::outputTrackParameters)
         .def_readwrite("generators", &Config::generators)
         .def_readwrite("randomNumbers", &Config::randomNumbers);
   }

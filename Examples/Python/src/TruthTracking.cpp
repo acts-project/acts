@@ -9,6 +9,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
+#include "ActsExamples/TruthTracking/ParticleTrackParamExtractor.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
 #include "ActsExamples/TruthTracking/TrackParameterSmearing.hpp"
@@ -83,6 +84,10 @@ void addTruthTracking(Context& ctx) {
     pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
     pythonRangeProperty(c, "nHits", &Config::nHitsMin, &Config::nHitsMax);
   }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticleTrackParamExtractor, mex,
+                                "ParticleTrackParamExtractor", inputParticles,
+                                outputTrackParameters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParameterSmearing, mex, "TrackParameterSmearing",

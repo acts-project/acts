@@ -132,7 +132,6 @@ def addParticleGun(
         ],
         outputParticles="particles_input",
         outputVertices="vertices_input",
-        outputTrackParameters="particle_track_parameters",
         randomNumbers=rnd,
     )
 

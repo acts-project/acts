@@ -500,7 +500,6 @@ def addTruthSmearedSeeding(
     s: acts.examples.Sequencer,
     rnd: Optional[acts.examples.RandomNumbers],
     selectedParticles: str,
-    inputTrackParameters: str,
     trackSmearingSigmas: TrackSmearingSigmas,
     initialSigmas: Optional[List[float]],
     initialSigmaPtRel: Optional[float],
@@ -515,11 +514,17 @@ def addTruthSmearedSeeding(
     rnd = rnd or acts.examples.RandomNumbers(seed=42)
 
     # TODO do param extraction
+    trkParamExtractor = acts.examples.ParticleTrackParametersExtractor(
+        level=logLevel,
+        inputParticles=selectedParticles,
+        outputTrackParameters="trueparameters",
+    )
+    s.addAlgorithm(trkParamExtractor)
 
     # Smearing track parameters
     trkSmear = acts.examples.TrackParameterSmearing(
         level=logLevel,
-        inputTrackParameters=inputTrackParameters,
+        inputTrackParameters=trkParamExtractor.config.outputTrackParameters,
         outputTrackParameters="estimatedparameters",
         randomNumbers=rnd,
         # gaussian sigmas to smear particle parameters
