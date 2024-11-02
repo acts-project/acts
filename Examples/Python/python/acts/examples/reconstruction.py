@@ -513,7 +513,10 @@ def addTruthSmearedSeeding(
     """
 
     rnd = rnd or acts.examples.RandomNumbers(seed=42)
-    # Run particle smearing
+
+    # TODO do param extraction
+
+    # Smearing track parameters
     trkSmear = acts.examples.TrackParameterSmearing(
         level=logLevel,
         inputTrackParameters=inputTrackParameters,
