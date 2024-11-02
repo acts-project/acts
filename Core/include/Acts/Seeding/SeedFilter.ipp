@@ -317,19 +317,6 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
 
 template <typename external_spacepoint_t>
 template <typename collection_t>
-void SeedFilter<external_spacepoint_t>::createAndStoreSeeds(
-    collection_t& outputCollection, const external_spacepoint_t& bottom,
-    const external_spacepoint_t& middle, const external_spacepoint_t& top,
-    float zOrigin, float bestSeedQuality) const {
-  Acts::Seed<external_spacepoint_t, 3ul> seed(bottom, middle, top);
-  seed.setVertexZ(zOrigin);
-  seed.setQuality(bestSeedQuality);
-
-  Acts::detail::pushBackOrInsertAtEnd(outputCollection, std::move(seed));
-}
-
-template <typename external_spacepoint_t>
-template <typename collection_t>
   requires Acts::CollectionStoresSeedsToProxied<collection_t,
                                                 external_spacepoint_t, 3ul>
 void SeedFilter<external_spacepoint_t>::createAndStoreSeeds(

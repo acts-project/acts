@@ -123,13 +123,6 @@ class SeedFilter final {
   const Logger& logger() const { return *m_logger; }
 
   template <typename collection_t>
-  void createAndStoreSeeds(collection_t& outputCollection,
-                           const external_spacepoint_t& bottom,
-                           const external_spacepoint_t& middle,
-                           const external_spacepoint_t& top, float zOrigin,
-                           float bestSeedQuality) const;
-
-  template <typename collection_t>
     requires Acts::CollectionStoresSeedsToProxied<collection_t,
                                                   external_spacepoint_t, 3ul>
   void createAndStoreSeeds(collection_t& outputCollection,
