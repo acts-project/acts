@@ -13,8 +13,8 @@
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/IExperimentCuts.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <mutex>
