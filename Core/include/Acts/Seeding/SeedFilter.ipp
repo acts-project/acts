@@ -307,6 +307,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
                                     << medium->index() << ", t=" << top->index()
                                     << "], quality=" << bestSeedQuality
                                     << ", vertexZ=" << zOrigin);
+
+    createAndStoreSeeds(outputCollection, *bottom, *medium, *top,
+                        bestSeedQuality, zOrigin);
     ++numTotalSeeds;
   }
   ACTS_VERBOSE("Identified " << numTotalSeeds << " seeds");

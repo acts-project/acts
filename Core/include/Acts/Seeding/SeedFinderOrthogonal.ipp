@@ -692,7 +692,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
    * linearly pass to the k-d tree constructor. That constructor will take
    * care of sorting the pairs and splitting the space.
    */
-  for (const external_spacepoint_t sp : spacePoints) {
+  for (const external_spacepoint_t &sp : spacePoints) {
     typename tree_t::coordinate_t point;
 
     point[DimPhi] = sp.phi();
@@ -729,30 +729,23 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
                                external_spacepoint_t>,
                 "Input container must contain external spacepoints.");
 
-  /*
-   * Sadly, for the time being, we will need to construct our internal space
-   * points on the heap. This adds some additional overhead and work. Here we
-   * take each external spacepoint, allocate a corresponding internal space
-   * point, and save it in a vector.
-   */
-  Acts::Extent rRangeSPExtent;
   std::vector<external_spacepoint_t> internal_sps;
   internal_sps.reserve(spacePoints.size());
 
   Acts::SpacePointMutableData mutableData;
   mutableData.resize(spacePoints.size());
 
-  for (const external_spacepoint_t &p : spacePoints) {
-    // store x,y,z values in extent
-    rRangeSPExtent.extend({p.x(), p.y(), p.z()});
+  float minRange = std::numeric_limits<float>::max();
+  float maxRange = std::numeric_limits<float>::lowest();
+  for (external_spacepoint_t p : spacePoints) {
+    minRange = std::min(minRange, p.radius());
+    maxRange = std::max(maxRange, p.radius());
     internal_sps.push_back(std::move(p));
   }
   // variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
-      std::floor(rRangeSPExtent.min(Acts::BinningValue::binR) / 2) * 2 +
-          m_config.deltaRMiddleMinSPRange,
-      std::floor(rRangeSPExtent.max(Acts::BinningValue::binR) / 2) * 2 -
-          m_config.deltaRMiddleMaxSPRange);
+      std::floor(minRange / 2) * 2 + m_config.deltaRMiddleMinSPRange,
+      std::floor(maxRange / 2) * 2 - m_config.deltaRMiddleMaxSPRange);
 
   /*
    * Construct the k-d tree from these points. Note that this not consume or
