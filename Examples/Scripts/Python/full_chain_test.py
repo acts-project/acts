@@ -57,7 +57,7 @@ parser.add_argument(
     help="The output log level. Please set the wished number (0 = VERBOSE, 1 = DEBUG, 2 = INFO (default), 3 = WARNING, 4 = ERROR, 5 = FATAL).",
 )
 parser.add_argument(
-    "-parser",
+    "-p",
     "--gen-mom-gev",
     help="pT - transverse momentum generation range in GeV (default 1:10 or 1: with -t)",
 )
