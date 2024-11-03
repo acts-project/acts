@@ -126,7 +126,7 @@ parser.add_argument(
     "-g",
     "--geant4",
     action="store_true",
-    help="Use Geant4 instead of Fatras for dectector simulation",
+    help="Use Geant4 instead of Fatras for detector simulation",
 )
 parser.add_argument(
     "-d",
