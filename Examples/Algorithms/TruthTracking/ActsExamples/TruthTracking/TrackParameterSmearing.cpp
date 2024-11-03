@@ -39,11 +39,40 @@ TrackParameterSmearing::TrackParameterSmearing(const Config& config,
 
   m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
+
+  ACTS_DEBUG("smearing track param loc0 " << m_cfg.sigmaLoc0 << " A "
+                                          << m_cfg.sigmaLoc0PtA << " B "
+                                          << m_cfg.sigmaLoc0PtB);
+  ACTS_DEBUG("smearing track param loc1 " << m_cfg.sigmaLoc1 << " A "
+                                          << m_cfg.sigmaLoc1PtA << " B "
+                                          << m_cfg.sigmaLoc1PtB);
+  ACTS_DEBUG("smearing track param time " << m_cfg.sigmaTime);
+  ACTS_DEBUG("smearing track param phi " << m_cfg.sigmaPhi);
+  ACTS_DEBUG("smearing track param theta " << m_cfg.sigmaTheta);
+  ACTS_DEBUG("smearing track param q/p " << m_cfg.sigmaPtRel);
+  ACTS_DEBUG(
+      "initial sigmas "
+      << Acts::BoundVector(
+             m_cfg.initialSigmas.value_or(std::array<double, 6>()).data())
+             .transpose());
+  ACTS_DEBUG("initial sigma pt rel " << m_cfg.initialSigmaPtRel);
+  ACTS_DEBUG(
+      "initial var inflation "
+      << Acts::BoundVector(m_cfg.initialVarInflation.data()).transpose());
+  if (m_cfg.particleHypothesis) {
+    ACTS_DEBUG("particle hypothesis " << *m_cfg.particleHypothesis);
+  } else {
+    ACTS_DEBUG("particle hypothesis truth");
+  }
 }
 
 ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
   // setup input and output containers
   const auto& inputTrackParametersContainer = m_inputTrackParameters(ctx);
+
+  ACTS_VERBOSE("Smearing " << inputTrackParametersContainer.size()
+                           << " track parameters");
+
   TrackParametersContainer outputTrackParametersContainer;
   outputTrackParametersContainer.reserve(inputTrackParametersContainer.size());
 
