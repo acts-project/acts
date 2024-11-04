@@ -210,6 +210,8 @@ def parse_args():
 
 
 def full_chain(args):
+    import acts
+
     # keep these in memory after we return the sequence
     global detector, trackingGeometry, decorators, field, rnd
 
@@ -237,7 +239,7 @@ def full_chain(args):
     u = acts.UnitConstants
     pt = [float(p) * u.GeV if p != "" else None for p in args.gen_mom_gev.split(":")]
     if len(pt) == 1:
-        pt.append(pt[0])
+        pt.append(pt[0])  # 100 -> 100:100
     if len(pt) != 2:
         logger.fatal(f"bad option value: --gen-mom-gev {args.gen_mom_gev}")
         sys.exit(2)
@@ -252,8 +254,8 @@ def full_chain(args):
 
     outputDirRoot = outputDir if args.output_csv != 1 else None
     outputDirFullRoot = outputDirFull if args.output_csv != 1 else None
-    outputDirCsv = outputDir if args.output_csv == 1 else None
-    outputDirFullCsv = outputDirFull if args.output_csv == 1 else None
+    outputDirCsv = outputDir if args.output_csv != 0 else None
+    outputDirFullCsv = outputDirFull if args.output_csv != 0 else None
 
     if args.disable_fpemon:
         os.environ["ACTS_SEQUENCER_DISABLE_FPEMON"] = "1"
@@ -327,7 +329,7 @@ def full_chain(args):
     s = acts.examples.Sequencer(
         events=args.events,
         skip=args.skip,
-        numThreads=args.jobs if not (args.geant4 and args.jobs == -1) else 1,
+        numThreads=args.threads if not (args.geant4 and args.threads == -1) else 1,
         logLevel=acts.logging.Level(args.loglevel),
         outputDir="" if outputDirFull is None else str(outputDirFull),
     )
@@ -406,9 +408,9 @@ def full_chain(args):
                 ),
                 multiplicity=args.gen_nvertices,
                 rnd=rnd,
-                # disable output if -o not specified, to match full_chain_itk.py behaviour
+                # disable output if -o not specified, to match full_chain_odd.py behaviour
                 outputDirRoot=outputDirRoot if args.output_dir is not None else None,
-                outputDirCsv=outputDirCsv,
+                outputDirCsv=outputDirCsv if args.output_dir is not None else None,
             )
         else:
             from acts.examples.simulation import addPythia8
