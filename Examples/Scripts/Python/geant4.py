@@ -25,7 +25,7 @@ def runGeant4(
     rnd = acts.examples.RandomNumbers()
     addParticleGun(
         s,
-        EtaConfig(-4.0, 4.0),
+        EtaConfig(-2.0, 2.0),
         rnd=rnd,
     )
     outputDir = Path(outputDir)
