@@ -209,13 +209,18 @@ void WalkthroughAlgorithm::refineSubgraph(
   ACTS_VERBOSE("Found " << paths.size() << " paths, longest path has length "
                         << finalPath.size());
 
+  finalCandidates.emplace_back(transformCandidate(finalPath, subgraph));
+
+  if (finalPath.size() == boost::num_vertices(subgraph)) {
+    ACTS_VERBOSE("Done with subgraph, no nodes left");
+    return;
+  }
+
   std::vector<Vertex> remainingNodes(boost::num_vertices(subgraph) -
                                      finalPath.size());
   auto [vbegin, vend] = boost::vertices(subgraph);
   std::set_difference(vbegin, vend, finalPath.begin(), finalPath.end(),
                       remainingNodes.begin());
-
-  finalCandidates.emplace_back(transformCandidate(finalPath, subgraph));
 
   // Do connected components and recurse
   auto nextGraph =

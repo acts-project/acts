@@ -18,8 +18,6 @@
 #include <boost/graph/filtered_graph.hpp>
 #include <boost/graph/topological_sort.hpp>
 
-#include "Stages.hpp"
-
 namespace Acts {
 
 class WalkthroughAlgorithm {
@@ -80,23 +78,6 @@ class WalkthroughAlgorithm {
 
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
-};
-
-class BoostWalkthrough final : public Acts::TrackBuildingBase {
- public:
-  BoostWalkthrough(std::unique_ptr<const Logger> logger)
-      : m_logger(std::move(logger)), m_device(torch::Device(torch::kCPU)) {}
-
-  std::vector<std::vector<int>> operator()(
-      std::any nodes, std::any edges, std::any edge_weights,
-      std::vector<int> &spacepointIDs,
-      torch::Device device = torch::Device(torch::kCPU)) override;
-  torch::Device device() const override { return m_device; };
-
- private:
-  std::unique_ptr<const Acts::Logger> m_logger;
-  torch::Device m_device;
-  const auto &logger() const { return *m_logger; }
 };
 
 }  // namespace Acts
