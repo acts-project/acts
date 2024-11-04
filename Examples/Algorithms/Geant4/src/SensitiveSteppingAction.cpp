@@ -206,7 +206,7 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
   const auto particleId = eventStore().trackIdMapping.at(track->GetTrackID());
   if (!m_cfg.stepLogging && surface != nullptr) {
     ACTS_VERBOSE("Step of " << particleId << " in sensitive volume " << geoId);
-  } else {
+  } else if (m_cfg.stepLogging) {
     if (!eventStore().propagationRecords.contains(track->GetTrackID())) {
       // Create the propagation summary
       double xVtx = track->GetVertexPosition().x();
