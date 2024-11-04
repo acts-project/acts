@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <map>
+#include <span>
 
 #include <boost/beast/core/span.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -21,9 +22,9 @@
 namespace {
 template <typename vertex_t, typename weight_t>
 auto weaklyConnectedComponents(vertex_t numNodes,
-                               boost::beast::span<vertex_t>& rowIndices,
-                               boost::beast::span<vertex_t>& colIndices,
-                               boost::beast::span<weight_t>& edgeWeights,
+                               std::span<vertex_t>& rowIndices,
+                               std::span<vertex_t>& colIndices,
+                               std::span<weight_t>& edgeWeights,
                                std::vector<vertex_t>& trackLabels) {
   using Graph =
       boost::adjacency_list<boost::vecS,         // edge list
@@ -68,13 +69,17 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
   using vertex_t = std::int64_t;
   using weight_t = float;
 
-  boost::beast::span<vertex_t> rowIndices(edgeTensor.data_ptr<vertex_t>(),
-                                          numEdges);
-  boost::beast::span<vertex_t> colIndices(
-      edgeTensor.data_ptr<vertex_t>() + numEdges, numEdges);
-  boost::beast::span<weight_t> edgeWeights(edgeWeightTensor.data_ptr<float>(),
-                                           numEdges);
+  std::span<vertex_t> rowIndices(edgeTensor.data_ptr<vertex_t>(), numEdges);
+  std::span<vertex_t> colIndices(edgeTensor.data_ptr<vertex_t>() + numEdges,
+                                 numEdges);
+  std::span<weight_t> edgeWeights(edgeWeightTensor.data_ptr<float>(), numEdges);
 
+  if (m_cfg.doWalkthrough) {
+    ACTS_DEBUG("Do walkthrough algorithm");
+    return m_walkthrough(rowIndices, colIndices, edgeWeights, numSpacepoints);
+  }
+
+  ACTS_DEBUG("Do simple connected components");
   std::vector<vertex_t> trackLabels(numSpacepoints);
 
   auto numberLabels = weaklyConnectedComponents<vertex_t, weight_t>(

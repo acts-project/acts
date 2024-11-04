@@ -34,6 +34,7 @@ namespace py = pybind11;
 
 using namespace ActsExamples;
 using namespace Acts;
+using namespace py::literals;
 
 namespace Acts::Python {
 
@@ -158,14 +159,20 @@ void addExaTrkXTrackFinding(Context &ctx) {
 #endif
   {
     using Alg = Acts::BoostTrackBuilding;
+    using Config = Alg::Config;
 
     auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
                    mex, "BoostTrackBuilding")
-                   .def(py::init([](Logging::Level lvl) {
+                   .def(py::init([](const Config &c, Logging::Level lvl) {
                           return std::make_shared<Alg>(
-                              getDefaultLogger("TrackBuilding", lvl));
+                              c, getDefaultLogger("TrackBuilding", lvl));
                         }),
-                        py::arg("level"));
+                        "config"_a, "level"_a);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(doWalkthrough);
+    ACTS_PYTHON_STRUCT_END();
   }
   /*
   {
