@@ -5,442 +5,479 @@ import sys, os
 # needed if this script is a symlink to another directory
 sys.path.insert(0, os.path.dirname(__file__))
 
-import pathlib, argparse, acts, acts.examples, seeding, acts.examples.reconstruction
 
-parser = argparse.ArgumentParser(
-    description="Script to test full chain ACTS simulation and reconstruction",
-)
-parser.add_argument(
-    "-n",
-    "--events",
-    type=int,
-    default=100,
-    help="The number of events to process (default=100).",
-)
-parser.add_argument(
-    "-s",
-    "--skip",
-    type=int,
-    default=0,
-    help="Number of events to skip (default=0)",
-)
-parser.add_argument(
-    "-N",
-    "--gen-nparticles",
-    type=int,
-    help="Number of generated particles per event (default=2) or number of pileup events (default=200).",
-)
-parser.add_argument(
-    "--gen-multiplicity",
-    type=int,
-    default=1,  # full_chain_odd.py has 200
-    help="Multiplicity (no. of vertices) of the particle gun",
-)
-parser.add_argument(
-    "-j",
-    "--jobs",
-    type=int,
-    default=-1,
-    help="Number of parallel jobs, negative for automatic (default).",
-)
-parser.add_argument(
-    "-t",
-    "--ttbar-pu200",
-    action="store_true",
-    help="Generate ttbar + mu=200 pile-up using Pythia8",
-)
-parser.add_argument(
-    "-l",
-    "--loglevel",
-    type=int,
-    default=2,
-    help="The output log level. Please set the wished number (0 = VERBOSE, 1 = DEBUG, 2 = INFO (default), 3 = WARNING, 4 = ERROR, 5 = FATAL).",
-)
-parser.add_argument(
-    "-p",
-    "--gen-mom-gev",
-    help="pT - transverse momentum generation range in GeV (default 1:10 or 1: with -t)",
-)
-parser.add_argument(
-    "--digi-config",
-    type=pathlib.Path,
-    help="Digitization configuration file",
-)
-parser.add_argument(
-    "--material-config",
-    type=pathlib.Path,
-    help="Material map configuration file",
-)
-parser.add_argument(
-    "--output-dir",
-    "--output",
-    "-o",
-    default=None,
-    type=pathlib.Path,
-    help="Directory to write outputs to",
-)
-parser.add_argument(
-    "-a",
-    "--algorithm",
-    action=seeding.EnumAction,
-    enum=acts.examples.reconstruction.SeedingAlgorithm,
-    default=acts.examples.reconstruction.SeedingAlgorithm.Default,
-    help="Select the seeding algorithm to use",
-)
-parser.add_argument(
-    "-e",
-    "--gen-cos-theta",
-    action="store_true",
-    help="Sample eta as cos(theta) and not uniform",
-)
-parser.add_argument(
-    "-b",
-    "--bf-constant",
-    action="store_true",
-    help="Use constant 2T B-field also for ITk; and don't include material map",
-)
-parser.add_argument(
-    "-G",
-    "--generic-detector",
-    action="store_true",
-    help="Use generic detector geometry and config",
-)
-parser.add_argument(
-    "--odd",
-    default=True,
-    action=argparse.BooleanOptionalAction,
-    help="Use Open Data Detector geometry and config (default unless overridden by -G or -A)",
-)
-parser.add_argument(
-    "-A",
-    "--itk",
-    action="store_true",
-    help="Use ATLAS ITk geometry and config",
-)
-parser.add_argument(
-    "--edm4hep",
-    type=pathlib.Path,
-    help="Use edm4hep inputs",
-)
-parser.add_argument(
-    "-g",
-    "--geant4",
-    action="store_true",
-    help="Use Geant4 instead of Fatras for detector simulation",
-)
-parser.add_argument(
-    "-d",
-    "--dump-args-calls",
-    action="store_true",
-    help="Show pybind function call details",
-)
-parser.add_argument(
-    "-O",
-    "--reduce-output",
-    action="count",
-    default=0,
-    help="don't write intermediate results. Use -OO to disable all output.",
-)
-parser.add_argument(
-    "-F",
-    "--disable-fpemon",
-    action="store_true",
-    help="sets ACTS_SEQUENCER_DISABLE_FPEMON=1",
-)
-parser.add_argument(
-    "--reco",
-    default=True,
-    action=argparse.BooleanOptionalAction,
-    help="Switch reco on/off",
-)
-parser.add_argument(
-    "--vertexing",
-    default=True,
-    action=argparse.BooleanOptionalAction,
-    help="Switch vertexing on/off",
-)
-parser.add_argument(
-    "--MLSeedFilter",
-    action="store_true",
-    help="Use the Ml seed filter to select seed after the seeding step",
-)
-parser.add_argument(
-    "-C",
-    "--simple-ckf",
-    action="store_true",
-    help="Turn off CKF features: seed deduplication, two-way CKF, stick on the seed measurements during track finding, max pixel/strip holes",
-)
-parser.add_argument(
-    "--ambi-solver",
-    type=str,
-    choices=["greedy", "scoring", "ML", "none"],
-    default="greedy",
-    help="Set which ambiguity solver to use (default=greedy)",
-)
-parser.add_argument(
-    "--ambi-config",
-    type=pathlib.Path,
-    default=pathlib.Path.cwd() / "ambi_config.json",
-    help="Set the configuration file for the Score Based ambiguity resolution",
-)
-parser.add_argument(
-    "--output-csv",
-    action="store_true",
-    help="Use CSV output instead of ROOT",
-)
-args = parser.parse_args()
+def parse_args():
+    import argparse, pathlib
+    import seeding
+    from acts.examples.reconstruction import SeedingAlgorithm
 
-if args.disable_fpemon:
-    os.environ["ACTS_SEQUENCER_DISABLE_FPEMON"] = "1"
-
-u = acts.UnitConstants
-if args.itk or not (args.odd or args.generic_detector):
-    detname = "itk"
-    args.odd = False
-    args.generic_detector = False
-if args.generic_detector:
-    detname = "gen"
-    args.odd = False
-if args.odd:
-    detname = "odd"
-if args.gen_mom_gev is None:
-    # didn't need to do this, because max pT isn't used for ttbar
-    args.gen_mom_gev = "1:" if args.ttbar_pu200 else "1:10"
-pt = [float(p) * u.GeV if p != "" else None for p in args.gen_mom_gev.split(":")]
-if args.gen_nparticles is None:
-    args.gen_nparticles = 200 if args.ttbar_pu200 else 2
-
-if args.dump_args_calls:
-    acts.examples.dump_args_calls(locals())
-
-logger = acts.logging.getLogger("full_chain_test")
-
-if args.reduce_output >= 2:
-    outputDirFinal = None
-elif args.output_dir is None:
-    outputDirFinal = pathlib.Path.cwd() / f"{detname}_output"
-else:
-    outputDirFinal = args.output_dir
-outputDir = None if args.reduce_output >= 1 else outputDirFinal
-
-outputDirRoot = outputDir if not args.output_csv else None
-outputDirFinalRoot = outputDirFinal if not args.output_csv else None
-outputDirCsv = outputDir if args.output_csv else None
-outputDirFinalCsv = outputDirFinal if args.output_csv else None
-
-# fmt: off
-if args.generic_detector:
-    etaRange = (-2.0, 2.0)
-    rhoMax = 24.0 * u.mm
-    geo_dir = pathlib.Path(acts.__file__).resolve().parent.parent.parent.parent.parent
-    if args.digi_config is None:
-        args.digi_config = geo_dir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-    seedingConfigFile = geo_dir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
-    args.bf_constant = True
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
-elif args.odd:
-    import acts.examples.odd
-    etaRange = (-3.0, 3.0)
-    rhoMax = 24.0 * u.mm
-    beamTime = 1.0 * u.ns
-    geo_dir = acts.examples.odd.getOpenDataDetectorDirectory()
-    if args.digi_config is None:
-        args.digi_config = geo_dir / "config/odd-digi-smearing-config.json"
-    seedingConfigFile = geo_dir / "config/odd-seeding-config.json"
-    if args.material_config is None:
-        args.material_config = geo_dir / "data/odd-material-maps.root"
-    args.bf_constant = True
-    detector, trackingGeometry, decorators = acts.examples.odd.getOpenDataDetector(
-        odd_dir=geo_dir,
-        mdecorator=acts.IMaterialDecorator.fromFile(args.material_config)
-        if not args.bf_constant
-        else None,
+    parser = argparse.ArgumentParser(
+        description="Script to test full chain ACTS simulation and reconstruction",
     )
-elif args.itk:
-    import acts.examples.itk as itk
-    etaRange = (-4.0, 4.0)
-    rhoMax = 28.0 * u.mm
-    beamTime = 5.0 * u.ns
-    geo_dir = pathlib.Path("acts-itk")
-    if args.digi_config is None:
-        args.digi_config = geo_dir / "itk-hgtd/itk-smearing-config.json"
-    seedingConfigFile = geo_dir / "itk-hgtd/geoSelection-ITk.json"
-    # args.material_config defaulted in itk.buildITkGeometry: geo_dir / "itk-hgtd/material-maps-ITk-HGTD.json"
-    bFieldFile = geo_dir / "bfield/ATLAS-BField-xyz.root"
-    detector, trackingGeometry, decorators = itk.buildITkGeometry(
-        geo_dir,
-        customMaterialFile=args.material_config,
-        material=not args.bf_constant,
+    parser.add_argument(
+        "-G",
+        "--generic-detector",
+        action="store_true",
+        help="Use generic detector geometry and config",
+    )
+    parser.add_argument(
+        "--odd",
+        default=True,
+        action=argparse.BooleanOptionalAction,
+        help="Use Open Data Detector geometry and config (default unless overridden by -G or -A). Requires ACTS_BUILD_ODD.",
+    )
+    parser.add_argument(
+        "-A",
+        "--itk",
+        action="store_true",
+        help="Use ATLAS ITk geometry and config. Requires acts-itk/ in current directory.",
+    )
+    parser.add_argument(
+        "-n",
+        "--events",
+        type=int,
+        default=100,
+        help="The number of events to process (default=100).",
+    )
+    parser.add_argument(
+        "-s",
+        "--skip",
+        type=int,
+        default=0,
+        help="Number of events to skip (default=0)",
+    )
+    parser.add_argument(
+        "-N",
+        "--gen-nparticles",
+        type=int,
+        default=4,
+        help="Number of generated particles per vertex from the particle gun (default=4).",
+    )
+    parser.add_argument(
+        "-M",
+        "--gen-nvertices",
+        type=int,
+        default=200,
+        help="Number of vertices per event (multiplicity) from the particle gun; or number of pileup events (default=200)",
+    )
+    parser.add_argument(
+        "-j",
+        "--jobs",
+        type=int,
+        default=-1,
+        help="Number of parallel jobs, negative for automatic (default).",
+    )
+    parser.add_argument(
+        "-t",
+        "--ttbar-pu200",
+        action="store_true",
+        help="Generate ttbar + mu=200 pile-up using Pythia8",
+    )
+    parser.add_argument(
+        "-l",
+        "--loglevel",
+        type=int,
+        default=2,
+        help="The output log level. Please set the wished number (0 = VERBOSE, 1 = DEBUG, 2 = INFO (default), 3 = WARNING, 4 = ERROR, 5 = FATAL).",
+    )
+    parser.add_argument(
+        "-p",
+        "--gen-mom-gev",
+        default="1:10",
+        help="pT - transverse momentum generation range in GeV (min:max pT for particle gun; min pT for -t) (default 1:10, except max Pt not used with -t)",
+    )
+    parser.add_argument(
+        "--digi-config",
+        type=pathlib.Path,
+        help="Digitization configuration file",
+    )
+    parser.add_argument(
+        "--material-config",
+        type=pathlib.Path,
+        help="Material map configuration file",
+    )
+    parser.add_argument(
+        "--output-dir",
+        "--output",
+        "-o",
+        default=None,
+        type=pathlib.Path,
+        help="Directory to write outputs to",
+    )
+    parser.add_argument(
+        "-a",
+        "--algorithm",
+        action=seeding.EnumAction,
+        enum=SeedingAlgorithm,
+        default=SeedingAlgorithm.Default,
+        help="Select the seeding algorithm to use",
+    )
+    parser.add_argument(
+        "-e",
+        "--gen-cos-theta",
+        action="store_true",
+        help="Sample eta as cos(theta) and not uniform",
+    )
+    parser.add_argument(
+        "-b",
+        "--bf-constant",
+        action="store_true",
+        help="Use constant 2T B-field also for ITk; and don't include material map",
+    )
+    parser.add_argument(
+        "--edm4hep",
+        type=pathlib.Path,
+        help="Use edm4hep inputs",
+    )
+    parser.add_argument(
+        "-g",
+        "--geant4",
+        action="store_true",
+        help="Use Geant4 instead of Fatras for detector simulation",
+    )
+    parser.add_argument(
+        "-d",
+        "--dump-args-calls",
+        action="store_true",
+        help="Show pybind function call details",
+    )
+    parser.add_argument(
+        "-O",
+        "--reduce-output",
+        action="count",
+        default=0,
+        help="don't write intermediate results. Use -OO to disable all output.",
+    )
+    parser.add_argument(
+        "-F",
+        "--disable-fpemon",
+        action="store_true",
+        help="sets ACTS_SEQUENCER_DISABLE_FPEMON=1",
+    )
+    parser.add_argument(
+        "--ckf",
+        default=True,
+        action=argparse.BooleanOptionalAction,
+        help="Switch CKF on/off",
+    )
+    parser.add_argument(
+        "--reco",
+        default=True,
+        action=argparse.BooleanOptionalAction,
+        help="Switch reco on/off",
+    )
+    parser.add_argument(
+        "--vertexing",
+        default=True,
+        action=argparse.BooleanOptionalAction,
+        help="Switch vertexing on/off",
+    )
+    parser.add_argument(
+        "--MLSeedFilter",
+        action="store_true",
+        help="Use the Ml seed filter to select seed after the seeding step",
+    )
+    parser.add_argument(
+        "-C",
+        "--simple-ckf",
+        action="store_true",
+        help="Turn off CKF features: seed deduplication, two-way CKF, stick on the seed measurements during track finding, max pixel/strip holes",
+    )
+    parser.add_argument(
+        "--ambi-solver",
+        type=str,
+        choices=["greedy", "scoring", "ML", "none"],
+        default="greedy",
+        help="Set which ambiguity solver to use (default=greedy)",
+    )
+    parser.add_argument(
+        "--ambi-config",
+        type=pathlib.Path,
+        default=pathlib.Path.cwd() / "ambi_config.json",
+        help="Set the configuration file for the Score Based ambiguity resolution",
+    )
+    parser.add_argument(
+        "-c",
+        "--output-csv",
+        action="count",
+        default=0,
+        help="Use CSV output instead of ROOT. Specify -cc to output both.",
+    )
+    return parser.parse_args()
+
+
+def full_chain(args):
+    # keep these in memory after we return the sequence
+    global detector, trackingGeometry, decorators, field, rnd
+    import pathlib
+    import acts, acts.examples
+
+    if args.dump_args_calls:
+        acts.examples.dump_args_calls(locals())
+
+    logger = acts.logging.getLogger("full_chain_test")
+
+    nDetArgs = [args.generic_detector, args.odd, args.itk].count(True)
+    if nDetArgs == 0:
+        args.generic_detector = True
+    elif nDetArgs == 2:
+        args.odd = False
+    nDetArgs = [args.generic_detector, args.odd, args.itk].count(True)
+    if nDetArgs != 1:
+        logger.fatal("require exactly one of: --generic-detector --odd --itk")
+        sys.exit(2)
+    if args.generic_detector:
+        detname = "gen"
+    elif args.itk:
+        detname = "itk"
+    elif args.odd:
+        detname = "odd"
+
+    u = acts.UnitConstants
+    pt = [float(p) * u.GeV if p != "" else None for p in args.gen_mom_gev.split(":")]
+    if len(pt) == 1:
+        pt.append(pt[0])
+    if len(pt) != 2:
+        logger.fatal(f"bad option value: --gen-mom-gev {args.gen_mom_gev}")
+        sys.exit(2)
+
+    if args.reduce_output >= 2:
+        outputDirFull = None
+    elif args.output_dir is None:
+        outputDirFull = pathlib.Path.cwd() / f"{detname}_output"
+    else:
+        outputDirFull = args.output_dir
+    outputDir = None if args.reduce_output >= 1 else outputDirFull
+
+    outputDirRoot = outputDir if args.output_csv != 1 else None
+    outputDirFullRoot = outputDirFull if args.output_csv != 1 else None
+    outputDirCsv = outputDir if args.output_csv == 1 else None
+    outputDirFullCsv = outputDirFull if args.output_csv == 1 else None
+
+    if args.disable_fpemon:
+        os.environ["ACTS_SEQUENCER_DISABLE_FPEMON"] = "1"
+
+    # fmt: off
+    if args.generic_detector:
+        etaRange = (-2.0, 2.0)
+        rhoMax = 24.0 * u.mm
+        geo_dir = pathlib.Path(acts.__file__).resolve().parent.parent.parent.parent.parent
+        logger.info(f"Load Generic Detector from {geo_dir}")
+        if args.digi_config is None:
+            args.digi_config = geo_dir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+        seedingConfigFile = geo_dir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+        args.bf_constant = True
+        detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    elif args.odd:
+        import acts.examples.odd
+        etaRange = (-3.0, 3.0)
+        rhoMax = 24.0 * u.mm
+        beamTime = 1.0 * u.ns
+        geo_dir = acts.examples.odd.getOpenDataDetectorDirectory()
+        logger.info(f"Load Open Data Detector from {geo_dir.resolve()}")
+        if args.digi_config is None:
+            args.digi_config = geo_dir / "config/odd-digi-smearing-config.json"
+        seedingConfigFile = geo_dir / "config/odd-seeding-config.json"
+        if args.material_config is None:
+            args.material_config = geo_dir / "data/odd-material-maps.root"
+        args.bf_constant = True
+        detector, trackingGeometry, decorators = acts.examples.odd.getOpenDataDetector(
+            odd_dir=geo_dir,
+            mdecorator=acts.IMaterialDecorator.fromFile(args.material_config)
+            if not args.bf_constant
+            else None,
+        )
+    elif args.itk:
+        import acts.examples.itk as itk
+        etaRange = (-4.0, 4.0)
+        rhoMax = 28.0 * u.mm
+        beamTime = 5.0 * u.ns
+        geo_dir = pathlib.Path("acts-itk")
+        logger.info(f"Load ATLAS ITk from {geo_dir.resolve()}")
+        if args.digi_config is None:
+            args.digi_config = geo_dir / "itk-hgtd/itk-smearing-config.json"
+        seedingConfigFile = geo_dir / "itk-hgtd/geoSelection-ITk.json"
+        # args.material_config defaulted in itk.buildITkGeometry: geo_dir / "itk-hgtd/material-maps-ITk-HGTD.json"
+        bFieldFile = geo_dir / "bfield/ATLAS-BField-xyz.root"
+        detector, trackingGeometry, decorators = itk.buildITkGeometry(
+            geo_dir,
+            customMaterialFile=args.material_config,
+            material=not args.bf_constant,
+            logLevel=acts.logging.Level(args.loglevel),
+        )
+    # fmt: on
+
+    if args.bf_constant:
+        field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
+    else:
+        logger.info("Create magnetic field map from %s" % str(bFieldFile))
+        field = acts.examples.MagneticFieldMapXyz(str(bFieldFile))
+    rnd = acts.examples.RandomNumbers(seed=42)
+
+    from acts.examples.simulation import (
+        MomentumConfig,
+        EtaConfig,
+        ParticleConfig,
+        ParticleSelectorConfig,
+        addDigitization,
+        addParticleSelection,
+    )
+
+    s = acts.examples.Sequencer(
+        events=args.events,
+        skip=args.skip,
+        numThreads=args.jobs if not (args.geant4 and args.jobs == -1) else 1,
         logLevel=acts.logging.Level(args.loglevel),
-    )
-# fmt: on
-
-if args.bf_constant:
-    field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
-else:
-    logger.info("Create magnetic field map from %s" % str(bFieldFile))
-    field = acts.examples.MagneticFieldMapXyz(str(bFieldFile))
-rnd = acts.examples.RandomNumbers(seed=42)
-
-
-from acts.examples.simulation import (
-    MomentumConfig,
-    EtaConfig,
-    ParticleConfig,
-    ParticleSelectorConfig,
-    addDigitization,
-    addParticleSelection,
-)
-
-s = acts.examples.Sequencer(
-    events=args.events,
-    skip=args.skip,
-    numThreads=args.jobs if not (args.geant4 and args.jobs == -1) else 1,
-    logLevel=acts.logging.Level(args.loglevel),
-    outputDir="" if outputDirFinal is None else str(outputDirFinal),
-)
-
-preSelectParticles = (
-    ParticleSelectorConfig(
-        rho=(0.0 * u.mm, rhoMax),
-        absZ=(0.0 * u.mm, 1.0 * u.m),
-        eta=etaRange,
-        pt=(150 * u.MeV, None),
-        removeNeutral=True,
-    )
-    if args.edm4hep or args.geant4 or args.ttbar_pu200
-    else ParticleSelectorConfig()
-)
-
-postSelectParticles = (
-    ParticleSelectorConfig(
-        pt=(pt[0], None),
-        eta=etaRange,
-        measurements=(9, None),
-        removeNeutral=True,
-    )
-    if args.ttbar_pu200
-    else ParticleSelectorConfig()
-)
-
-if args.edm4hep:
-    import acts.examples.edm4hep
-
-    edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
-        inputPath=str(args.edm4hep),
-        inputSimHits=[
-            "PixelBarrelReadout",
-            "PixelEndcapReadout",
-            "ShortStripBarrelReadout",
-            "ShortStripEndcapReadout",
-            "LongStripBarrelReadout",
-            "LongStripEndcapReadout",
-        ],
-        outputParticlesGenerator="particles_input",
-        outputParticlesInitial="particles_initial",
-        outputParticlesFinal="particles_final",
-        outputSimHits="simhits",
-        graphvizOutput="graphviz",
-        dd4hepDetector=detector,
-        trackingGeometry=trackingGeometry,
-        sortSimHitsInTime=True,
-        level=acts.logging.INFO,
-    )
-    s.addReader(edm4hepReader)
-    s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)
-
-    addParticleSelection(
-        s,
-        config=preSelectParticles,
-        inputParticles="particles",
-        outputParticles="particles_selected",
+        outputDir="" if outputDirFull is None else str(outputDirFull),
     )
 
-else:
+    # is this needed?
+    for d in decorators:
+        s.addContextDecorator(d)
 
-    if not args.ttbar_pu200:
-        from acts.examples.simulation import addParticleGun
-
-        addParticleGun(
-            s,
-            MomentumConfig(*pt, transverse=True),
-            EtaConfig(*etaRange, uniform=not args.gen_cos_theta),
-            ParticleConfig(
-                args.gen_nparticles, acts.PdgParticle.eMuon, randomizeCharge=True
-            ),
-            multiplicity=args.gen_multiplicity,
-            rnd=rnd,
-            # disable output if -o not specified, to match full_chain_itk.py behaviour
-            outputDirRoot=outputDirRoot if args.output_dir is not None else None,
-            outputDirCsv=outputDirCsv,
+    preSelectParticles = (
+        ParticleSelectorConfig(
+            rho=(0.0 * u.mm, rhoMax),
+            absZ=(0.0 * u.mm, 1.0 * u.m),
+            eta=etaRange,
+            pt=(150 * u.MeV, None),
+            removeNeutral=True,
         )
-    else:
-        from acts.examples.simulation import addPythia8
+        if args.edm4hep or args.geant4 or args.ttbar_pu200
+        else ParticleSelectorConfig()
+    )
 
-        addPythia8(
+    postSelectParticles = (
+        ParticleSelectorConfig(
+            pt=(pt[0], None),
+            eta=etaRange,
+            measurements=(9, None),
+            removeNeutral=True,
+        )
+        if args.ttbar_pu200
+        else ParticleSelectorConfig()
+    )
+
+    if args.edm4hep:
+        import acts.examples.edm4hep
+
+        edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
+            inputPath=str(args.edm4hep),
+            inputSimHits=[
+                "PixelBarrelReadout",
+                "PixelEndcapReadout",
+                "ShortStripBarrelReadout",
+                "ShortStripEndcapReadout",
+                "LongStripBarrelReadout",
+                "LongStripEndcapReadout",
+            ],
+            outputParticlesGenerator="particles_input",
+            outputParticlesInitial="particles_initial",
+            outputParticlesFinal="particles_final",
+            outputSimHits="simhits",
+            graphvizOutput="graphviz",
+            dd4hepDetector=detector,
+            trackingGeometry=trackingGeometry,
+            sortSimHitsInTime=True,
+            level=acts.logging.INFO,
+        )
+        s.addReader(edm4hepReader)
+        s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)
+
+        addParticleSelection(
             s,
-            hardProcess=["Top:qqbar2ttbar=on"],
-            npileup=args.gen_nparticles,
-            vtxGen=acts.examples.GaussianVertexGenerator(
-                stddev=acts.Vector4(
-                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
+            config=preSelectParticles,
+            inputParticles="particles",
+            outputParticles="particles_selected",
+        )
+
+    else:
+
+        if not args.ttbar_pu200:
+            from acts.examples.simulation import addParticleGun
+
+            addParticleGun(
+                s,
+                MomentumConfig(*pt, transverse=True),
+                EtaConfig(*etaRange, uniform=not args.gen_cos_theta),
+                ParticleConfig(
+                    args.gen_nparticles, acts.PdgParticle.eMuon, randomizeCharge=True
                 ),
-                mean=acts.Vector4(0, 0, 0, 0),
-            ),
-            rnd=rnd,
-            outputDirRoot=outputDirRoot,
-            outputDirCsv=outputDirCsv,
-        )
+                multiplicity=args.gen_nvertices,
+                rnd=rnd,
+                # disable output if -o not specified, to match full_chain_itk.py behaviour
+                outputDirRoot=outputDirRoot if args.output_dir is not None else None,
+                outputDirCsv=outputDirCsv,
+            )
+        else:
+            from acts.examples.simulation import addPythia8
 
-    if not args.geant4:
-        from acts.examples.simulation import addFatras
-
-        addFatras(
-            s,
-            trackingGeometry,
-            field,
-            rnd=rnd,
-            preSelectParticles=preSelectParticles,
-            postSelectParticles=postSelectParticles,
-            outputDirRoot=outputDirRoot,
-            outputDirCsv=outputDirCsv,
-        )
-    else:
-        if s.config.numThreads != 1:
-            logger.error(
-                f"****** Geant 4 simulation does not support multi-threading (threads={s.config.numThreads}) ******"
+            addPythia8(
+                s,
+                hardProcess=["Top:qqbar2ttbar=on"],
+                npileup=args.gen_nvertices,
+                vtxGen=acts.examples.GaussianVertexGenerator(
+                    stddev=acts.Vector4(
+                        0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
+                    ),
+                    mean=acts.Vector4(0, 0, 0, 0),
+                ),
+                rnd=rnd,
+                outputDirRoot=outputDirRoot,
+                outputDirCsv=outputDirCsv,
             )
 
-        from acts.examples.simulation import addGeant4
+        if not args.geant4:
+            from acts.examples.simulation import addFatras
 
-        # Pythia can sometime simulate particles outside the world volume, a cut on the Z of the track help mitigate this effect
-        # Older version of G4 might not work, this as has been tested on version `geant4-11-00-patch-03`
-        # For more detail see issue #1578
-        addGeant4(
-            s,
-            detector,
-            trackingGeometry,
-            field,
-            rnd=rnd,
-            preSelectParticles=preSelectParticles,
-            postSelectParticles=postSelectParticles,
-            killVolume=trackingGeometry.highestTrackingVolume,
-            killAfterTime=25 * u.ns,
-            outputDirRoot=outputDirRoot,
-            outputDirCsv=outputDirCsv,
-        )
+            addFatras(
+                s,
+                trackingGeometry,
+                field,
+                rnd=rnd,
+                preSelectParticles=preSelectParticles,
+                postSelectParticles=postSelectParticles,
+                outputDirRoot=outputDirRoot,
+                outputDirCsv=outputDirCsv,
+            )
+        else:
+            if s.config.numThreads != 1:
+                logger.fatal(
+                    f"Geant 4 simulation does not support multi-threading (threads={s.config.numThreads})"
+                )
+                sys.exit(2)
 
-addDigitization(
-    s,
-    trackingGeometry,
-    field,
-    digiConfigFile=args.digi_config,
-    rnd=rnd,
-    outputDirRoot=outputDirRoot,
-    outputDirCsv=outputDirCsv,
-)
+            from acts.examples.simulation import addGeant4
 
-if args.reco:
+            # Pythia can sometime simulate particles outside the world volume, a cut on the Z of the track help mitigate this effect
+            # Older version of G4 might not work, this as has been tested on version `geant4-11-00-patch-03`
+            # For more detail see issue #1578
+            addGeant4(
+                s,
+                detector,
+                trackingGeometry,
+                field,
+                rnd=rnd,
+                preSelectParticles=preSelectParticles,
+                postSelectParticles=postSelectParticles,
+                killVolume=trackingGeometry.highestTrackingVolume,
+                killAfterTime=25 * u.ns,
+                outputDirRoot=outputDirRoot,
+                outputDirCsv=outputDirCsv,
+            )
+
+    addDigitization(
+        s,
+        trackingGeometry,
+        field,
+        digiConfigFile=args.digi_config,
+        rnd=rnd,
+        outputDirRoot=outputDirRoot,
+        outputDirCsv=outputDirCsv,
+    )
+
+    if not args.reco:
+        return s
 
     from acts.examples.reconstruction import (
         addSeeding,
@@ -483,8 +520,8 @@ if args.reco:
         initialSigmaPtRel=0.1,
         initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=seedingConfigFile,
-        outputDirRoot=outputDirFinalRoot,
-        outputDirCsv=outputDirFinalCsv,
+        outputDirRoot=outputDirFullRoot,
+        outputDirCsv=outputDirFullCsv,
     )
 
     if args.MLSeedFilter:
@@ -502,9 +539,12 @@ if args.reco:
                 geo_dir
                 / "Examples/Scripts/Python/MLAmbiguityResolution/seedDuplicateClassifier.onnx"
             ),
-            outputDirRoot=outputDirFinalRoot,
-            outputDirCsv=outputDirFinalCsv,
+            outputDirRoot=outputDirFullRoot,
+            outputDirCsv=outputDirFullCsv,
         )
+
+    if not args.ckf:
+        return s
 
     if not args.itk:
 
@@ -579,8 +619,8 @@ if args.reco:
         ckfConfig=ckfConfig,
         **(dict(twoWay=False) if not args.simple_ckf else {}),
         **(dict(writeTrackSummary=False) if args.reduce_output >= 1 else {}),
-        outputDirRoot=outputDirFinalRoot,
-        outputDirCsv=outputDirFinalCsv,
+        outputDirRoot=outputDirFullRoot,
+        outputDirCsv=outputDirFullCsv,
     )
 
     if args.ambi_solver == "ML":
@@ -638,8 +678,8 @@ if args.reco:
             s,
             AmbiguityResolutionConfig(
                 maximumSharedHits=3,
-                maximumIterations=10000,
-                nMeasurementsMin=6,
+                maximumIterations=10000 if args.itk else 1000000,
+                nMeasurementsMin=6 if args.itk else 7,
             ),
             **(dict(writeTrackSummary=False) if args.reduce_output >= 1 else {}),
             outputDirRoot=outputDirRoot,
@@ -654,4 +694,7 @@ if args.reco:
             outputDirRoot=outputDir,
         )
 
-s.run()
+    return s
+
+
+full_chain(parse_args()).run()
