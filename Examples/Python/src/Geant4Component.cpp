@@ -195,6 +195,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_STRUCT_BEGIN(c1, Config);
     ACTS_PYTHON_MEMBER(outputSimHits);
     ACTS_PYTHON_MEMBER(outputParticles);
+    ACTS_PYTHON_MEMBER(outputPropagationSummaries);
     ACTS_PYTHON_MEMBER(sensitiveSurfaceMapper);
     ACTS_PYTHON_MEMBER(magneticField);
     ACTS_PYTHON_MEMBER(physicsList);
