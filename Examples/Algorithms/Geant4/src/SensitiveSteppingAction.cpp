@@ -238,12 +238,20 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
 
     // Create a new step for the step logging
     Acts::detail::Step pStep = stepFromG4Step(step);
-    // Record the propagation state
-    pStep.stepSize = Acts::ConstrainedStep(currentStepLength);
     pStep.geoID = geoId;
     pStep.surface = surface != nullptr ? surface->getSharedPtr() : nullptr;
-    pSummary.steps.emplace_back(std::move(pStep));
-
+    // Check if last step was on same surface
+    if (!pSummary.steps.empty() && pSummary.steps.back().geoID == geoId &&
+        pSummary.steps.back().surface != nullptr) {
+      auto& lastStep = pSummary.steps.back();
+      lastStep.stepSize = Acts::ConstrainedStep(currentStepLength);
+      lastStep.position = 0.5 * (pStep.position + lastStep.position);
+      lastStep.momentum = 0.5 * (pStep.momentum + lastStep.momentum);
+    } else {
+      // Record the propagation state
+      pStep.stepSize = Acts::ConstrainedStep(currentStepLength);
+      pSummary.steps.emplace_back(std::move(pStep));
+    }
     // You have nothing to do from here
     return;
   }
