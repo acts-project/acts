@@ -55,6 +55,7 @@ namespace {
 std::array<Acts::Vector4, 4u> kinematicsOfStep(const G4Step* step) {
   static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
   static constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
+  static constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
 
   const G4StepPoint* preStepPoint = step->GetPreStepPoint();
   const G4StepPoint* postStepPoint = step->GetPostStepPoint();
@@ -62,7 +63,7 @@ std::array<Acts::Vector4, 4u> kinematicsOfStep(const G4Step* step) {
   Acts::Vector4 preStepPosition(convertLength * preStepPoint->GetPosition().x(),
                                 convertLength * preStepPoint->GetPosition().y(),
                                 convertLength * preStepPoint->GetPosition().z(),
-                                convertLength * preStepPoint->GetGlobalTime());
+                                convertTime * preStepPoint->GetGlobalTime());
   Acts::Vector4 preStepMomentum(convertEnergy * preStepPoint->GetMomentum().x(),
                                 convertEnergy * preStepPoint->GetMomentum().y(),
                                 convertEnergy * preStepPoint->GetMomentum().z(),
@@ -71,7 +72,7 @@ std::array<Acts::Vector4, 4u> kinematicsOfStep(const G4Step* step) {
       convertLength * postStepPoint->GetPosition().x(),
       convertLength * postStepPoint->GetPosition().y(),
       convertLength * postStepPoint->GetPosition().z(),
-      convertLength * postStepPoint->GetGlobalTime());
+      convertTime * postStepPoint->GetGlobalTime());
   Acts::Vector4 postStepMomentum(
       convertEnergy * postStepPoint->GetMomentum().x(),
       convertEnergy * postStepPoint->GetMomentum().y(),
