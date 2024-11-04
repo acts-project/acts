@@ -100,12 +100,25 @@ def parse_args():
         help="Material map configuration file",
     )
     parser.add_argument(
+        "-o",
         "--output-dir",
         "--output",
-        "-o",
         default=None,
         type=pathlib.Path,
         help="Directory to write outputs to",
+    )
+    parser.add_argument(
+        "-O",
+        "--output-detail",
+        action="count",
+        default=0,
+        help="fewer output files. Use -OO for more output files. Use -OOO to disable all output.",
+    )
+    parser.add_argument(
+        "-d",
+        "--dump-args-calls",
+        action="store_true",
+        help="Show pybind function call details",
     )
     parser.add_argument(
         "-S",
@@ -137,19 +150,6 @@ def parse_args():
         "--geant4",
         action="store_true",
         help="Use Geant4 instead of Fatras for detector simulation",
-    )
-    parser.add_argument(
-        "-d",
-        "--dump-args-calls",
-        action="store_true",
-        help="Show pybind function call details",
-    )
-    parser.add_argument(
-        "-O",
-        "--reduce-output",
-        action="count",
-        default=0,
-        help="don't write intermediate results. Use -OO to disable all output.",
     )
     parser.add_argument(
         "-F",
@@ -244,18 +244,22 @@ def full_chain(args):
         logger.fatal(f"bad option value: --gen-mom-gev {args.gen_mom_gev}")
         sys.exit(2)
 
-    if args.reduce_output >= 2:
-        outputDirFull = None
+    if args.output_detail == 3:
+        outputDirLess = None
     elif args.output_dir is None:
-        outputDirFull = pathlib.Path.cwd() / f"{detname}_output"
+        outputDirLess = pathlib.Path.cwd() / f"{detname}_output"
     else:
-        outputDirFull = args.output_dir
-    outputDir = None if args.reduce_output >= 1 else outputDirFull
+        outputDirLess = args.output_dir
+
+    outputDir = None if args.output_detail == 1 else outputDirLess
+    outputDirMore = None if args.output_detail in (0, 1) else outputDirLess
 
     outputDirRoot = outputDir if args.output_csv != 1 else None
-    outputDirFullRoot = outputDirFull if args.output_csv != 1 else None
+    outputDirLessRoot = outputDirLess if args.output_csv != 1 else None
+    outputDirMoreRoot = outputDirMore if args.output_csv != 1 else None
     outputDirCsv = outputDir if args.output_csv != 0 else None
-    outputDirFullCsv = outputDirFull if args.output_csv != 0 else None
+    outputDirLessCsv = outputDirLess if args.output_csv != 0 else None
+    outputDirMoreCsv = outputDirMore if args.output_csv != 0 else None
 
     if args.disable_fpemon:
         os.environ["ACTS_SEQUENCER_DISABLE_FPEMON"] = "1"
@@ -265,7 +269,7 @@ def full_chain(args):
         etaRange = (-2.0, 2.0)
         rhoMax = 24.0 * u.mm
         geo_dir = pathlib.Path(acts.__file__).resolve().parent.parent.parent.parent.parent
-        logger.info(f"Load Generic Detector from {geo_dir}")
+        if args.loglevel <= 2: logger.info(f"Load Generic Detector from {geo_dir}")
         if args.digi_config is None:
             args.digi_config = geo_dir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
         seedingConfigFile = geo_dir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
@@ -277,7 +281,7 @@ def full_chain(args):
         rhoMax = 24.0 * u.mm
         beamTime = 1.0 * u.ns
         geo_dir = acts.examples.odd.getOpenDataDetectorDirectory()
-        logger.info(f"Load Open Data Detector from {geo_dir.resolve()}")
+        if args.loglevel <= 2: logger.info(f"Load Open Data Detector from {geo_dir.resolve()}")
         if args.digi_config is None:
             args.digi_config = geo_dir / "config/odd-digi-smearing-config.json"
         seedingConfigFile = geo_dir / "config/odd-seeding-config.json"
@@ -296,7 +300,7 @@ def full_chain(args):
         rhoMax = 28.0 * u.mm
         beamTime = 5.0 * u.ns
         geo_dir = pathlib.Path("acts-itk")
-        logger.info(f"Load ATLAS ITk from {geo_dir.resolve()}")
+        if args.loglevel <= 2: logger.info(f"Load ATLAS ITk from {geo_dir.resolve()}")
         if args.digi_config is None:
             args.digi_config = geo_dir / "itk-hgtd/itk-smearing-config.json"
         seedingConfigFile = geo_dir / "itk-hgtd/geoSelection-ITk.json"
@@ -331,7 +335,7 @@ def full_chain(args):
         skip=args.skip,
         numThreads=args.threads if not (args.geant4 and args.threads == -1) else 1,
         logLevel=acts.logging.Level(args.loglevel),
-        outputDir="" if outputDirFull is None else str(outputDirFull),
+        outputDir="" if outputDir is None else str(outputDir),
     )
 
     # is this needed?
@@ -408,9 +412,8 @@ def full_chain(args):
                 ),
                 multiplicity=args.gen_nvertices,
                 rnd=rnd,
-                # disable output if -o not specified, to match full_chain_odd.py behaviour
-                outputDirRoot=outputDirRoot if args.output_dir is not None else None,
-                outputDirCsv=outputDirCsv if args.output_dir is not None else None,
+                outputDirRoot=outputDirMoreRoot,
+                outputDirCsv=outputDirMoreCsv,
             )
         else:
             from acts.examples.simulation import addPythia8
@@ -426,8 +429,8 @@ def full_chain(args):
                     mean=acts.Vector4(0, 0, 0, 0),
                 ),
                 rnd=rnd,
-                outputDirRoot=outputDirRoot,
-                outputDirCsv=outputDirCsv,
+                outputDirRoot=outputDirLessRoot,
+                outputDirCsv=outputDirLessCsv,
             )
 
         if not args.geant4:
@@ -440,8 +443,8 @@ def full_chain(args):
                 rnd=rnd,
                 preSelectParticles=preSelectParticles,
                 postSelectParticles=postSelectParticles,
-                outputDirRoot=outputDirRoot,
-                outputDirCsv=outputDirCsv,
+                outputDirRoot=outputDirLessRoot,
+                outputDirCsv=outputDirLessCsv,
             )
         else:
             if s.config.numThreads != 1:
@@ -465,8 +468,8 @@ def full_chain(args):
                 postSelectParticles=postSelectParticles,
                 killVolume=trackingGeometry.highestTrackingVolume,
                 killAfterTime=25 * u.ns,
-                outputDirRoot=outputDirRoot,
-                outputDirCsv=outputDirCsv,
+                outputDirRoot=outputDirLessRoot,
+                outputDirCsv=outputDirLessCsv,
             )
 
     addDigitization(
@@ -475,8 +478,8 @@ def full_chain(args):
         field,
         digiConfigFile=args.digi_config,
         rnd=rnd,
-        outputDirRoot=outputDirRoot,
-        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirLessRoot,
+        outputDirCsv=outputDirLessCsv,
     )
 
     if not args.reco:
@@ -523,8 +526,8 @@ def full_chain(args):
         initialSigmaPtRel=0.1,
         initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=seedingConfigFile,
-        outputDirRoot=outputDirFullRoot,
-        outputDirCsv=outputDirFullCsv,
+        outputDirRoot=outputDirRoot,
+        outputDirCsv=outputDirCsv,
     )
 
     if args.MLSeedFilter:
@@ -542,8 +545,8 @@ def full_chain(args):
                 geo_dir
                 / "Examples/Scripts/Python/MLAmbiguityResolution/seedDuplicateClassifier.onnx"
             ),
-            outputDirRoot=outputDirFullRoot,
-            outputDirCsv=outputDirFullCsv,
+            outputDirRoot=outputDirRoot,
+            outputDirCsv=outputDirCsv,
         )
 
     if not args.ckf:
@@ -614,6 +617,13 @@ def full_chain(args):
         ) if not args.simple_ckf else CkfConfig()
         # fmt: on
 
+    if args.output_detail == 1:
+        writeDetail = dict(writeTrackSummary=False)
+    elif args.output_detail == 2:
+        writeDetail = dict(writeTrackStates=True)
+    else:
+        writeDetail = {}
+
     addCKFTracks(
         s,
         trackingGeometry,
@@ -621,9 +631,9 @@ def full_chain(args):
         trackSelectorConfig=trackSelectorConfig,
         ckfConfig=ckfConfig,
         **(dict(twoWay=False) if not args.simple_ckf else {}),
-        **(dict(writeTrackSummary=False) if args.reduce_output >= 1 else {}),
-        outputDirRoot=outputDirFullRoot,
-        outputDirCsv=outputDirFullCsv,
+        **writeDetail,
+        outputDirRoot=outputDirRoot,
+        outputDirCsv=outputDirCsv,
     )
 
     if args.ambi_solver == "ML":
@@ -642,8 +652,8 @@ def full_chain(args):
                 geo_dir
                 / "Examples/Scripts/Python/MLAmbiguityResolution/duplicateClassifier.onnx"
             ),
-            outputDirRoot=outputDirRoot,
-            outputDirCsv=outputDirCsv,
+            outputDirRoot=outputDirLessRoot,
+            outputDirCsv=outputDirLessCsv,
         )
 
     elif args.ambi_solver == "scoring":
@@ -670,9 +680,9 @@ def full_chain(args):
                 useAmbiguityFunction=False,
             ),
             ambiVolumeFile=args.ambi_config,
-            writeCovMat=True,
-            outputDirRoot=outputDirRoot,
-            outputDirCsv=outputDirCsv,
+            **(dict(writeCovMat=True) if args.output_detail != 1 else {}),
+            outputDirRoot=outputDirLessRoot,
+            outputDirCsv=outputDirLessCsv,
         )
 
     elif args.ambi_solver == "greedy":
@@ -684,9 +694,9 @@ def full_chain(args):
                 maximumIterations=10000 if args.itk else 1000000,
                 nMeasurementsMin=6 if args.itk else 7,
             ),
-            **(dict(writeTrackSummary=False) if args.reduce_output >= 1 else {}),
-            outputDirRoot=outputDirRoot,
-            outputDirCsv=outputDirCsv,
+            **writeDetail,
+            outputDirRoot=outputDirLessRoot,
+            outputDirCsv=outputDirLessCsv,
         )
 
     if args.vertexing:
@@ -694,7 +704,7 @@ def full_chain(args):
             s,
             field,
             vertexFinder=VertexFinder.AMVF,
-            outputDirRoot=outputDir,
+            outputDirRoot=outputDirLess,
         )
 
     return s
@@ -733,6 +743,10 @@ class EnumAction(argparse.Action):
         else:
             raise ValueError("%s is not a validly enumerated algorithm." % values)
 
+
+# use modules to prevent Fluke unused import warning
+dir(acts)
+dir(acts.examples)
 
 # main program: parse arguments, setup sequence, and run the full chain
 full_chain(parse_args()).run()
