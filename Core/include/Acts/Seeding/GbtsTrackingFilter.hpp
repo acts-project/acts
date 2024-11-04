@@ -237,11 +237,15 @@ class GbtsTrackingFilter {
     const float add_hit = 14.0;
 
     if (ts.m_Cx[2][2] < 0.0 || ts.m_Cx[1][1] < 0.0 || ts.m_Cx[0][0] < 0.0) {
-      ACTS_VERBOSE("Negative cov_x");
+      ACTS_WARNING("Negative covariance detected in X components: "
+                   << "cov[2][2]=" << ts.m_Cx[2][2] << " cov[1][1]="
+                   << ts.m_Cx[1][1] << " cov[0][0]=" << ts.m_Cx[0][0]);
     }
 
     if (ts.m_Cy[1][1] < 0.0 || ts.m_Cy[0][0] < 0.0) {
-      ACTS_VERBOSE("Negative cov_y");
+      ACTS_WARNING("Negative covariance detected in Y components: "
+                   << "cov[1][1]=" << ts.m_Cy[1][1]
+                   << " cov[0][0]=" << ts.m_Cy[0][0]);
     }
 
     // add ms.

@@ -51,10 +51,10 @@ class SeedFinderGbts {
   SeedFinderGbts(const SeedFinderGbtsConfig<external_spacepoint_t> &config,
                  const GbtsGeometry<external_spacepoint_t> &gbtsgeo,
                  std::unique_ptr<const Acts::Logger> logger =
-                     Acts::getDefaultLogger("GbtsFinder",
+                     Acts::getDefaultLogger("Finder",
                                             Acts::Logging::Level::INFO));
 
-  ~SeedFinderGbts();  //!!! is it dangerous not to use default? got def in ipp
+  ~SeedFinderGbts() = default;
   SeedFinderGbts() = default;
   SeedFinderGbts(const SeedFinderGbts<external_spacepoint_t> &) = delete;
   SeedFinderGbts<external_spacepoint_t> &operator=(
@@ -86,14 +86,14 @@ class SeedFinderGbts {
       const Acts::GbtsGeometry<external_spacepoint_t> &gbtsgeo);
 
   // needs to be member of class so can accessed by all member functions
-  GbtsDataStorage<external_spacepoint_t> *m_storage;
+  std::unique_ptr<GbtsDataStorage<external_spacepoint_t>> m_storage{nullptr};
 
   // for create seeds:
   std::vector<TrigInDetTriplet<external_spacepoint_t>> m_triplets;
 
   const Acts::Logger &logger() const { return *m_logger; }
   std::unique_ptr<const Acts::Logger> m_logger =
-      Acts::getDefaultLogger("GbtsFinder", Acts::Logging::Level::INFO);
+      Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
 };
 
 }  // namespace Acts

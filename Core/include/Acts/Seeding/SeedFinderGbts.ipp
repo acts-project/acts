@@ -37,16 +37,9 @@ SeedFinderGbts<external_spacepoint_t>::SeedFinderGbts(
     const GbtsGeometry<external_spacepoint_t>& gbtsGeo,
     std::unique_ptr<const Acts::Logger> logger)
     : m_config(config),
-      m_storage(new GbtsDataStorage(gbtsGeo)),
+      m_storage(
+          std::make_unique<GbtsDataStorage<external_spacepoint_t>>(gbtsGeo)),
       m_logger(std::move(logger)) {}
-
-template <typename external_spacepoint_t>
-SeedFinderGbts<external_spacepoint_t>::~SeedFinderGbts() {
-  if (m_storage) {
-    delete m_storage;
-    m_storage = nullptr;
-  }
-}
 
 // define loadspace points function
 template <typename external_spacepoint_t>
