@@ -335,7 +335,7 @@ def full_chain(args):
         skip=args.skip,
         numThreads=args.threads if not (args.geant4 and args.threads == -1) else 1,
         logLevel=acts.logging.Level(args.loglevel),
-        outputDir="" if outputDir is None else str(outputDir),
+        outputDir="" if outputDirLess is None else str(outputDirLess),
     )
 
     # is this needed?
@@ -429,8 +429,8 @@ def full_chain(args):
                     mean=acts.Vector4(0, 0, 0, 0),
                 ),
                 rnd=rnd,
-                outputDirRoot=outputDirLessRoot,
-                outputDirCsv=outputDirLessCsv,
+                outputDirRoot=outputDirRoot,
+                outputDirCsv=outputDirCsv,
             )
 
         if not args.geant4:
@@ -443,8 +443,8 @@ def full_chain(args):
                 rnd=rnd,
                 preSelectParticles=preSelectParticles,
                 postSelectParticles=postSelectParticles,
-                outputDirRoot=outputDirLessRoot,
-                outputDirCsv=outputDirLessCsv,
+                outputDirRoot=outputDirRoot,
+                outputDirCsv=outputDirCsv,
             )
         else:
             if s.config.numThreads != 1:
@@ -468,8 +468,8 @@ def full_chain(args):
                 postSelectParticles=postSelectParticles,
                 killVolume=trackingGeometry.highestTrackingVolume,
                 killAfterTime=25 * u.ns,
-                outputDirRoot=outputDirLessRoot,
-                outputDirCsv=outputDirLessCsv,
+                outputDirRoot=outputDirRoot,
+                outputDirCsv=outputDirCsv,
             )
 
     addDigitization(
@@ -478,8 +478,8 @@ def full_chain(args):
         field,
         digiConfigFile=args.digi_config,
         rnd=rnd,
-        outputDirRoot=outputDirLessRoot,
-        outputDirCsv=outputDirLessCsv,
+        outputDirRoot=outputDirRoot,
+        outputDirCsv=outputDirCsv,
     )
 
     if not args.reco:
@@ -526,8 +526,8 @@ def full_chain(args):
         initialSigmaPtRel=0.1,
         initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=seedingConfigFile,
-        outputDirRoot=outputDirRoot,
-        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirLessRoot,
+        outputDirCsv=outputDirLessCsv,
     )
 
     if args.MLSeedFilter:
@@ -545,8 +545,8 @@ def full_chain(args):
                 geo_dir
                 / "Examples/Scripts/Python/MLAmbiguityResolution/seedDuplicateClassifier.onnx"
             ),
-            outputDirRoot=outputDirRoot,
-            outputDirCsv=outputDirCsv,
+            outputDirRoot=outputDirLessRoot,
+            outputDirCsv=outputDirLessCsv,
         )
 
     if not args.ckf:
@@ -632,8 +632,8 @@ def full_chain(args):
         ckfConfig=ckfConfig,
         **(dict(twoWay=False) if not args.simple_ckf else {}),
         **writeDetail,
-        outputDirRoot=outputDirRoot,
-        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirLessRoot,
+        outputDirCsv=outputDirLessCsv,
     )
 
     if args.ambi_solver == "ML":
@@ -704,7 +704,7 @@ def full_chain(args):
             s,
             field,
             vertexFinder=VertexFinder.AMVF,
-            outputDirRoot=outputDirLess,
+            outputDirRoot=outputDirLessRoot,
         )
 
     return s
