@@ -27,7 +27,6 @@ using namespace ActsExamples;
 namespace Acts::Python {
 void addPythia8(Context& ctx) {
   auto mex = ctx.get("examples");
-
   auto p8 = mex.def_submodule("pythia8");
   ctx.modules["pythia8"] = p8;
 

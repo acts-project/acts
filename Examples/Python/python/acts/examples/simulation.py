@@ -704,7 +704,11 @@ def addGeant4(
         killVolume=killVolume,
         killAfterTime=killAfterTime,
         killSecondaries=killSecondaries,
+        recordHitsOfCharged=True,
+        recordHitsOfNeutrals=False,
+        recordHitsOfPrimaries=True,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
+        recordPropagationSummaries=True,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
 
