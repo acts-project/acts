@@ -155,7 +155,7 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
   std::string volumeName = volume->GetName();
 
   if (volumeName.find(SensitiveSurfaceMapper::mappingPrefix) ==
-          std::string_view::npos &&
+          std::string::npos &&
       !m_cfg.stepLogging) {
     return;
   }
