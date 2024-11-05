@@ -1747,21 +1747,6 @@ def addExaTrkX(
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    # Run the particle selection
-    # The pre-selection will select truth particles satisfying provided criteria
-    # from all particles read in by particle reader for further processing. It
-    # has no impact on the truth hits themselves
-    s.addAlgorithm(
-        acts.examples.TruthSeedSelector(
-            level=customLogLevel(),
-            ptMin=500 * u.MeV,
-            nHitsMin=9,
-            inputParticles="particles_initial",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            outputParticles="particles_seed_selected",
-        )
-    )
-
     # Create space points
     s.addAlgorithm(
         acts.examples.SpacePointMaker(
