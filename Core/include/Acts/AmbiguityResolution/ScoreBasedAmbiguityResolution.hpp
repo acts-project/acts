@@ -81,17 +81,17 @@ class ScoreBasedAmbiguityResolution {
     std::size_t nSharedHits = 0;
   };
 
-  enum class TrackStateTypes : int {
+  enum class TrackStateTypes : std::uint8_t {
     // A measurement not yet used in any other track
-    UnsharedHit = 1,
+    UnsharedHit,
     // A measurement shared with another track
-    SharedHit = 2,
+    SharedHit,
     // A hit that needs to be removed from the track
-    RejectedHit = 3,
+    RejectedHit,
     // An outlier, to be copied in case
-    Outlier = 4,
+    Outlier,
     // Other trackstate types to be copied in case
-    OtherTrackStateType = 5
+    OtherTrackStateType
   };
 
   /// @brief Configuration struct : contains the configuration for the ambiguity resolution.

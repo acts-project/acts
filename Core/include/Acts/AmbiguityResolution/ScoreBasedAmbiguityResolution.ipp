@@ -26,7 +26,8 @@ std::vector<std::vector<ScoreBasedAmbiguityResolution::TrackFeatures>>
 ScoreBasedAmbiguityResolution::computeInitialState(
     const track_container_t& tracks) const {
   ACTS_VERBOSE("Starting to compute initial state");
-  std::vector<std::vector<TrackFeatures>> trackFeaturesVectors = {};
+  std::vector<std::vector<TrackFeatures>> trackFeaturesVectors;
+  trackFeaturesVectors.reserve(tracks.size());
 
   for (const auto& track : tracks) {
     int numberOfDetectors = m_cfg.detectorConfigs.size();
@@ -419,7 +420,6 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     for (const auto& ts : track.trackStatesReversed()) {
       if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
           ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-        ACTS_DEBUG("Track state type is OutlierFlag");
         Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
         // assign a new measurement index if the source link was not seen yet
         auto emplace = MeasurementIndexMap.try_emplace(
@@ -485,7 +485,7 @@ template <TrackProxyConcept track_proxy_t>
 bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     const track_proxy_t& track, const double& trackScore,
     const std::vector<std::size_t>& measurementsPerTrack,
-    const std::map<std::size_t, std::size_t> nTracksPerMeasurement,
+    const std::map<std::size_t, std::size_t>& nTracksPerMeasurement,
     const std::vector<
         std::function<void(const track_proxy_t&,
                            const typename track_proxy_t::ConstTrackStateProxy&,
@@ -495,7 +495,7 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
   std::vector<TrackStateTypes> trackStateTypes;
   // Loop over all measurements of the track and for each hit a
   // trackStateTypes is assigned.
-  for (std::size_t index = 0; auto ts : track.trackStatesReversed()) {
+  for (std::size_t index = 0;const auto& ts : track.trackStatesReversed()) {
     if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
         ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
       auto iMeasurement = measurementsPerTrack[index];
