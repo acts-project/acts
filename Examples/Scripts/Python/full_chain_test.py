@@ -405,16 +405,24 @@ def full_chain(args):
                 s,
                 MomentumConfig(*pt, transverse=True),
                 EtaConfig(*etaRange, uniform=False if args.gen_cos_theta else None),
-                acts.examples.simulation.PhiConfig(0.0, 360.0 * u.degree) if args.odd else None,
+                (
+                    acts.examples.simulation.PhiConfig(0.0, 360.0 * u.degree)
+                    if args.odd
+                    else None
+                ),
                 ParticleConfig(
                     args.gen_nparticles, acts.PdgParticle.eMuon, randomizeCharge=True
                 ),
-                vtxGen=acts.examples.GaussianVertexGenerator(
-                    mean=acts.Vector4(0, 0, 0, 0),
-                    stddev=acts.Vector4(
-                        0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
-                    ),
-                ) if args.odd else None,
+                vtxGen=(
+                    acts.examples.GaussianVertexGenerator(
+                        mean=acts.Vector4(0, 0, 0, 0),
+                        stddev=acts.Vector4(
+                            0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
+                        ),
+                    )
+                    if args.odd
+                    else None
+                ),
                 multiplicity=args.gen_nvertices,
                 rnd=rnd,
                 outputDirRoot=outputDirMoreRoot,
