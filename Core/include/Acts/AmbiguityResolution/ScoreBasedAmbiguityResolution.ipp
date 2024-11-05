@@ -424,7 +424,7 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
         // assign a new measurement index if the source link was not seen yet
         auto emplace = MeasurementIndexMap.try_emplace(
             sourceLink, MeasurementIndexMap.size());
-        auto iMeasurement = emplace.first->second;
+        std::size_t iMeasurement = emplace.first->second;
         measurementsPerTrack.push_back(iMeasurement);
         if (nTracksPerMeasurement.find(iMeasurement) ==
             nTracksPerMeasurement.end()) {
