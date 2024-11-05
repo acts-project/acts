@@ -170,7 +170,7 @@ void WalkthroughAlgorithm::refineSubgraph(
 
   // Make a graph that only retains the edge with the largest score, or edges
   // with a score above highScoreCut
-  filterEdges(subgraph);
+  // filterEdges(subgraph);
 
   ACTS_VERBOSE("rec " << recursion << " | Refine subgraph with "
                       << boost::num_vertices(subgraph) << " vertices and "
@@ -218,15 +218,30 @@ void WalkthroughAlgorithm::refineSubgraph(
         continue;
       }
 
-      // Extend the current path with the first outgoing edge
-      path.push_back(boost::target(*begin, subgraph));
+      float maxScore = 0.f;
+      for (auto it = begin; it != end; ++it) {
+        maxScore = std::max(graph[*it], maxScore);
+      }
 
-      // Loop over the remaining edges and create new path candidates
-      for (auto it = std::next(begin); it != end; ++it) {
-        std::vector<Vertex> newPath(path.begin(), std::prev(path.end()));
-        newPath.push_back(boost::target(*it, subgraph));
+      if (maxScore < m_cfg.candidateLowThreshold) {
+        finishedPaths++;
+        finished = true;
+        continue;
+      }
 
-        newPaths.emplace_back(false, std::move(newPath));
+      std::size_t accepted = 0;
+      for (auto it = begin; it != end; ++it) {
+        if (graph[*it] == maxScore ||
+            graph[*it] > m_cfg.candidateHighThreshold) {
+          if (accepted == 0) {
+            path.push_back(boost::target(*it, subgraph));
+          } else {
+            std::vector<Vertex> newPath(path.begin(), std::prev(path.end()));
+            newPath.push_back(boost::target(*it, subgraph));
+            newPaths.emplace_back(false, std::move(newPath));
+          }
+          accepted++;
+        }
       }
     }
 
@@ -278,28 +293,28 @@ void WalkthroughAlgorithm::refineSubgraph(
   ACTS_VERBOSE("rec " << recursion << " | return from refineSubgraph()");
 }
 
-void Acts::WalkthroughAlgorithm::filterEdges(DirectedGraph &graph) const {
-  auto nEdges = boost::num_edges(graph);
-
-  auto [vbegin, vend] = boost::vertices(graph);
-  for (auto vit = vbegin; vit != vend; ++vit) {
-    auto [begin, end] = boost::out_edges(*vit, graph);
-    float maxScore = 0.f;
-
-    for (auto it = begin; it != end; ++it) {
-      maxScore = std::max(graph[*it], maxScore);
-    }
-
-    for (auto it = begin; it != end; ++it) {
-      if (!(graph[*it] == maxScore || graph[*it] > m_cfg.highScoreCut)) {
-        graph[*it] = 0.f;
-      }
-    }
-  }
-
-  boost::remove_edge_if([&](auto e) { return graph[e] == 0.f; }, graph);
-  ACTS_VERBOSE("Removed " << nEdges - boost::num_edges(graph)
-                          << " in filter step");
-}
+// void Acts::WalkthroughAlgorithm::filterEdges(DirectedGraph &graph) const {
+//   auto nEdges = boost::num_edges(graph);
+//
+//   auto [vbegin, vend] = boost::vertices(graph);
+//   for (auto vit = vbegin; vit != vend; ++vit) {
+//     auto [begin, end] = boost::out_edges(*vit, graph);
+//     float maxScore = 0.f;
+//
+//     for (auto it = begin; it != end; ++it) {
+//       maxScore = std::max(graph[*it], maxScore);
+//     }
+//
+//     for (auto it = begin; it != end; ++it) {
+//       if (!(graph[*it] == maxScore || graph[*it] > m_cfg.highScoreCut)) {
+//         graph[*it] = 0.f;
+//       }
+//     }
+//   }
+//
+//   boost::remove_edge_if([&](auto e) { return graph[e] == 0.f; }, graph);
+//   ACTS_VERBOSE("Removed " << nEdges - boost::num_edges(graph)
+//                           << " in filter step");
+// }
 
 }  // namespace Acts

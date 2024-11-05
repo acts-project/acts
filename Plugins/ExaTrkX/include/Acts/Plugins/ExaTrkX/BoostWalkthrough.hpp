@@ -24,7 +24,8 @@ class WalkthroughAlgorithm {
  public:
   struct Config {
     float ccScoreCut = 0.01;
-    float highScoreCut = 0.6;
+    float candidateLowThreshold = 0.1;
+    float candidateHighThreshold = 0.6;
     std::size_t minCandidateSize = 3;
   };
 
@@ -96,7 +97,7 @@ class WalkthroughAlgorithm {
                       std::span<Vertex> subgraphNodes,
                       std::vector<std::vector<int>> &finalCandidates,
                       int recursion) const;
-  void filterEdges(DirectedGraph &graph) const;
+  // void filterEdges(DirectedGraph &graph) const;
 
   const Acts::Logger &logger() const { return *m_logger; }
 
