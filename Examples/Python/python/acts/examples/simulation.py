@@ -336,7 +336,7 @@ def addPythia8(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
                 inputParticles=evGen.config.outputParticles,
-                filePath=str(outputDirRoot / "pythia8_particles.root"),
+                filePath=str(outputDirRoot / "particles.root"),
             )
         )
 
@@ -344,7 +344,7 @@ def addPythia8(
             acts.examples.RootVertexWriter(
                 level=customLogLevel(),
                 inputVertices=evGen.config.outputVertices,
-                filePath=str(outputDirRoot / "pythia8_vertices.root"),
+                filePath=str(outputDirRoot / "vertices.root"),
             )
         )
 
