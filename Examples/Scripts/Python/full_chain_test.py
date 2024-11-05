@@ -401,7 +401,14 @@ def full_chain(args):
             addParticleGun(
                 s,
                 MomentumConfig(*pt, transverse=True),
-                EtaConfig(*etaRange, uniform=not args.gen_cos_theta if args.gen_cos_theta or args.itk else None),
+                EtaConfig(
+                    *etaRange,
+                    uniform=(
+                        not args.gen_cos_theta
+                        if args.gen_cos_theta or args.itk
+                        else None
+                    ),
+                ),
                 PhiConfig(0.0, 360.0 * u.degree) if args.odd else PhiConfig(),
                 ParticleConfig(
                     args.gen_nparticles, acts.PdgParticle.eMuon, randomizeCharge=True
