@@ -322,6 +322,7 @@ def full_chain(args):
     from acts.examples.simulation import (
         MomentumConfig,
         EtaConfig,
+        PhiConfig,
         ParticleConfig,
         ParticleSelectorConfig,
         addDigitization,
@@ -352,15 +353,11 @@ def full_chain(args):
         else ParticleSelectorConfig()
     )
 
-    postSelectParticles = (
-        ParticleSelectorConfig(
-            pt=(pt[0], None),
-            eta=etaRange,
-            measurements=(9, None),
-            removeNeutral=True,
-        )
-        if args.ttbar_pu200 or args.odd
-        else ParticleSelectorConfig()
+    postSelectParticles = ParticleSelectorConfig(
+        pt=(pt[0], None),
+        eta=etaRange,
+        measurements=(9, None),
+        removeNeutral=True,
     )
 
     if args.edm4hep:
@@ -404,12 +401,8 @@ def full_chain(args):
             addParticleGun(
                 s,
                 MomentumConfig(*pt, transverse=True),
-                EtaConfig(*etaRange, uniform=False if args.gen_cos_theta else None),
-                (
-                    acts.examples.simulation.PhiConfig(0.0, 360.0 * u.degree)
-                    if args.odd
-                    else None
-                ),
+                EtaConfig(*etaRange, uniform=not args.gen_cos_theta if args.gen_cos_theta or args.itk else None),
+                PhiConfig(0.0, 360.0 * u.degree) if args.odd else PhiConfig(),
                 ParticleConfig(
                     args.gen_nparticles, acts.PdgParticle.eMuon, randomizeCharge=True
                 ),
@@ -643,7 +636,7 @@ def full_chain(args):
         field,
         trackSelectorConfig=trackSelectorConfig,
         ckfConfig=ckfConfig,
-        **(dict(twoWay=False) if args.itk and not args.simple_ckf else {}),
+        **(dict(twoWay=False) if args.simple_ckf else {}),
         **writeDetail,
         **(dict(writeCovMat=True) if args.output_detail != 1 else {}),
         outputDirRoot=outputDirLessRoot,
