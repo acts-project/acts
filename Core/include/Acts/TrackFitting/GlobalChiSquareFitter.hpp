@@ -18,6 +18,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -372,30 +373,30 @@ void addMeasurementToGx2fSums(Eigen::MatrixXd& aMatrixExtended,
 
   ACTS_VERBOSE(
       "Contributions in addMeasurementToGx2fSums:\n"
-      << "kMeasDim: " << kMeasDim << "\n"
-      << "predicted" << predicted.transpose() << "\n"
-      << "measurement: " << measurement.transpose() << "\n"
-      << "covarianceMeasurement:\n"
+      << "    kMeasDim:    " << kMeasDim << "\n"
+      << "    predicted:   " << predicted.transpose() << "\n"
+      << "    measurement: " << measurement.transpose() << "\n"
+      << "    covarianceMeasurement:\n"
       << covarianceMeasurement << "\n"
-      << "projector:\n"
+      << "    projector:\n"
       << projector.eval() << "\n"
-      << "projJacobian:\n"
+      << "    projJacobian:\n"
       << projJacobian.eval() << "\n"
-      << "projPredicted: " << (projPredicted.transpose()).eval() << "\n"
-      << "residual: " << (residual.transpose()).eval() << "\n"
-      << "extendedJacobian:\n"
+      << "    projPredicted: " << (projPredicted.transpose()).eval() << "\n"
+      << "    residual: " << (residual.transpose()).eval() << "\n"
+      << "    extendedJacobian:\n"
       << extendedJacobian << "\n"
-      << "aMatrixMeas:\n"
+      << "    aMatrix contribution:\n"
       << (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
              .eval()
       << "\n"
-      << "bVectorMeas: "
+      << "    bVector contribution: "
       << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).eval()
       << "\n"
-      << "chi2sumMeas: "
+      << "    chi2sum contribution: "
       << (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0)
       << "\n"
-      << "safeInvCovMeasurement:\n"
+      << "    safeInvCovMeasurement:\n"
       << (*safeInvCovMeasurement));
 
   return;
@@ -459,8 +460,8 @@ void addMaterialToGx2fSums(
 
   ACTS_VERBOSE(
       "Contributions in addMaterialToGx2fSums:\n"
-      << "    invCov: " << invCov << "\n"
-      << "    sinThetaLoc: " << sinThetaLoc << "\n"
+      << "    invCov:        " << invCov << "\n"
+      << "    sinThetaLoc:   " << sinThetaLoc << "\n"
       << "    deltaPosition: " << deltaPosition << "\n"
       << "    Phi:\n"
       << "        scattering angle:     " << scatteringAngles[eBoundPhi] << "\n"
@@ -483,6 +484,103 @@ void addMaterialToGx2fSums(
       << "\n");
 
   return;
+}
+
+/// @brief Fill the GX2F system with data from a track
+///
+/// This function processes a track proxy and updates the aMatrix, bVector, and
+/// chi2 values for the GX2F fitting system. It considers material only if
+/// multiple scattering is enabled.
+///
+/// @tparam track_proxy_t The type of the track proxy
+///
+/// @param track A mutable track proxy to operate on
+/// @param aMatrixExtended The aMatrix, summing over second derivatives for the fitting system
+/// @param bVectorExtended The bVector, summing over first derivatives for the fitting system
+/// @param chi2sum Accumulated chi2 value of the system
+/// @param countNdf The number of degrees of freedom counted so far
+/// @param multipleScattering Flag to consider multiple scattering in the calculation
+/// @param scatteringMap Map of geometry identifiers to scattering properties, containing all scattering angles and covariances
+/// @param geoIdVector A vector to store geometry identifiers for tracking processed elements
+/// @param logger A logger instance
+template <TrackProxyConcept track_proxy_t>
+void fillGx2fSystem(
+    const track_proxy_t track, Eigen::MatrixXd& aMatrixExtended,
+    Eigen::VectorXd& bVectorExtended, double& chi2sum, std::size_t& countNdf,
+    const bool multipleScattering,
+    const std::unordered_map<GeometryIdentifier, ScatteringProperties>&
+        scatteringMap,
+    std::vector<GeometryIdentifier>& geoIdVector, const Logger& logger) {
+  std::vector<BoundMatrix> jacobianFromStart;
+  jacobianFromStart.emplace_back(BoundMatrix::Identity());
+
+  for (const auto& trackState : track.trackStates()) {
+    // Get and store geoId for the current surface
+    const GeometryIdentifier geoId = trackState.referenceSurface().geometryId();
+    ACTS_DEBUG("Start to investigate trackState on surface " << geoId);
+    const auto typeFlags = trackState.typeFlags();
+    const bool stateHasMeasurement =
+        typeFlags.test(TrackStateFlag::MeasurementFlag);
+    const bool stateHasMaterial = typeFlags.test(TrackStateFlag::MaterialFlag);
+
+    // First we figure out, if we would need to look into material
+    // surfaces at all. Later, we also check, if the material slab is
+    // valid, otherwise we modify this flag to ignore the material
+    // completely.
+    bool doMaterial = multipleScattering && stateHasMaterial;
+    if (doMaterial) {
+      const auto scatteringMapId = scatteringMap.find(geoId);
+      assert(scatteringMapId != scatteringMap.end() &&
+             "No scattering angles found for material surface.");
+      doMaterial = doMaterial && scatteringMapId->second.materialIsValid();
+    }
+
+    // We only consider states with a measurement (and/or material)
+    if (!stateHasMeasurement && !doMaterial) {
+      ACTS_DEBUG("    Skip state.");
+      continue;
+    }
+
+    // update all Jacobians from start
+    for (auto& jac : jacobianFromStart) {
+      jac = trackState.jacobian() * jac;
+    }
+
+    // Handle measurement
+    if (stateHasMeasurement) {
+      ACTS_DEBUG("    Handle measurement.");
+
+      const auto measDim = trackState.calibratedSize();
+
+      if (measDim < 1 || 6 < measDim) {
+        ACTS_ERROR("Can not process state with measurement with "
+                   << measDim << " dimensions.");
+        throw std::domain_error(
+            "Found measurement with less than 1 or more than 6 dimension(s).");
+      }
+
+      countNdf += measDim;
+
+      visit_measurement(measDim, [&](auto N) {
+        addMeasurementToGx2fSums<N>(aMatrixExtended, bVectorExtended, chi2sum,
+                                    jacobianFromStart, trackState, logger);
+      });
+    }
+
+    // Handle material
+    if (doMaterial) {
+      ACTS_DEBUG("    Handle material");
+      // Add for this material a new Jacobian, starting from this surface.
+      jacobianFromStart.emplace_back(BoundMatrix::Identity());
+
+      // Add the material contribution to the system
+      addMaterialToGx2fSums(aMatrixExtended, bVectorExtended, chi2sum,
+                            geoIdVector.size(), scatteringMap, trackState,
+                            logger);
+
+      geoIdVector.emplace_back(geoId);
+    }
+  }
 }
 
 /// @brief Calculate and update the covariance of the fitted parameters
@@ -727,13 +825,15 @@ class Gx2Fitter {
           if (doMaterial) {
             ACTS_DEBUG("    Update parameters with scattering angles.");
             const auto scatteringMapId = scatteringMap->find(geoId);
-            ACTS_VERBOSE("    scatteringAngles:\n"
-                         << scatteringMapId->second.scatteringAngles()
-                         << "\n    boundParams before the update:\n"
-                         << boundParams);
+            ACTS_VERBOSE(
+                "        scatteringAngles: "
+                << scatteringMapId->second.scatteringAngles().transpose());
+            ACTS_VERBOSE("        boundParams before the update: "
+                         << boundParams.parameters().transpose());
             boundParams.parameters() +=
                 scatteringMapId->second.scatteringAngles();
-            ACTS_VERBOSE("    boundParams after the update:\n" << boundParams);
+            ACTS_VERBOSE("        boundParams after the update: "
+                         << boundParams.parameters().transpose());
           }
 
           // Fill the track state
@@ -829,13 +929,15 @@ class Gx2Fitter {
           // multipleScattering and have material
           ACTS_DEBUG("    Update parameters with scattering angles.");
           const auto scatteringMapId = scatteringMap->find(geoId);
-          ACTS_VERBOSE("    scatteringAngles:\n"
-                       << scatteringMapId->second.scatteringAngles()
-                       << "\n    boundParams before the update:\n"
-                       << boundParams);
+          ACTS_VERBOSE(
+              "        scatteringAngles: "
+              << scatteringMapId->second.scatteringAngles().transpose());
+          ACTS_VERBOSE("        boundParams before the update: "
+                       << boundParams.parameters().transpose());
           boundParams.parameters() +=
               scatteringMapId->second.scatteringAngles();
-          ACTS_VERBOSE("    boundParams after the update:\n" << boundParams);
+          ACTS_VERBOSE("        boundParams after the update: "
+                       << boundParams.parameters().transpose());
 
           // Fill the track state
           trackStateProxy.smoothed() = boundParams.parameters();
@@ -998,7 +1100,7 @@ class Gx2Fitter {
     requires(!isDirectNavigator)
   {
     // Preprocess Measurements (SourceLinks -> map)
-    // To be able to find measurements later, we put them into a map
+    // To be able to find measurements later, we put them into a map.
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
@@ -1009,7 +1111,6 @@ class Gx2Fitter {
       auto geoId = gx2fOptions.extensions.surfaceAccessor(sl)->geometryId();
       inputMeasurements.emplace(geoId, std::move(sl));
     }
-    ACTS_VERBOSE("inputMeasurements.size() = " << inputMeasurements.size());
 
     // Store, if we want to do multiple scattering. We still need to pass this
     // option to the Actor.
@@ -1056,21 +1157,21 @@ class Gx2Fitter {
     // track parameters.
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
 
-    ACTS_VERBOSE("params:\n" << params);
+    ACTS_VERBOSE("Initial parameters: " << params.parameters().transpose());
 
     /// Actual Fitting /////////////////////////////////////////////////////////
     ACTS_DEBUG("Start to iterate");
 
     // Iterate the fit and improve result. Abort after n steps or after
-    // convergence
-    // nUpdate is initialized outside to save its state for the track
+    // convergence.
+    // nUpdate is initialized outside to save its state for the track.
     std::size_t nUpdate = 0;
     for (nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
       ACTS_DEBUG("nUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
 
       // update params
       params.parameters() += deltaParams;
-      ACTS_VERBOSE("updated params:\n" << params);
+      ACTS_VERBOSE("Updated parameters: " << params.parameters().transpose());
 
       // set up propagator and co
       Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
@@ -1130,9 +1231,8 @@ class Gx2Fitter {
       tipIndex = gx2fResult.lastMeasurementIndex;
 
       // It could happen, that no measurements were found. Then the track would
-      // be empty and the following operations would be invalid.
-      // Usually, this only happens during the first iteration, due to bad
-      // initial parameters.
+      // be empty and the following operations would be invalid. Usually, this
+      // only happens during the first iteration, due to bad initial parameters.
       if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
         ACTS_INFO("Did not find any measurements in nUpdate "
                   << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
@@ -1185,85 +1285,15 @@ class Gx2Fitter {
       Eigen::VectorXd bVectorExtended =
           Eigen::VectorXd::Zero(dimsExtendedParams);
 
-      std::vector<BoundMatrix> jacobianFromStart;
-      jacobianFromStart.emplace_back(BoundMatrix::Identity());
-
       // This vector stores the IDs for each visited material in order. We use
       // it later for updating the scattering angles. We cannot use
       // scatteringMap directly, since we cannot guarantee, that we will visit
       // all stored material in each propagation.
       std::vector<GeometryIdentifier> geoIdVector;
 
-      for (const auto& trackState : track.trackStates()) {
-        // Get and store geoId for the current surface
-        const GeometryIdentifier geoId =
-            trackState.referenceSurface().geometryId();
-        ACTS_DEBUG("Start to investigate trackState on surface " << geoId);
-        const auto typeFlags = trackState.typeFlags();
-        const bool stateHasMeasurement =
-            typeFlags.test(TrackStateFlag::MeasurementFlag);
-        const bool stateHasMaterial =
-            typeFlags.test(TrackStateFlag::MaterialFlag);
-
-        // First we figure out, if we would need to look into material surfaces
-        // at all. Later, we also check, if the material slab is valid,
-        // otherwise we modify this flag to ignore the material completely.
-        bool doMaterial = multipleScattering && stateHasMaterial;
-        if (doMaterial) {
-          const auto scatteringMapId = scatteringMap.find(geoId);
-          assert(scatteringMapId != scatteringMap.end() &&
-                 "No scattering angles found for material surface.");
-          doMaterial = doMaterial && scatteringMapId->second.materialIsValid();
-        }
-
-        // We only consider states with a measurement (and/or material)
-        if (!stateHasMeasurement && !doMaterial) {
-          ACTS_DEBUG("    Skip state.");
-          continue;
-        }
-
-        // update all Jacobians from start
-        for (auto& jac : jacobianFromStart) {
-          jac = trackState.jacobian() * jac;
-        }
-
-        // Handle measurement
-        if (stateHasMeasurement) {
-          ACTS_DEBUG("    Handle measurement.");
-
-          const auto measDim = trackState.calibratedSize();
-
-          if (measDim < 1 || 6 < measDim) {
-            ACTS_ERROR("Can not process state with measurement with "
-                       << measDim << " dimensions.");
-            throw std::domain_error(
-                "Found measurement with less than 1 or more than 6 "
-                "dimension(s).");
-          }
-
-          countNdf += measDim;
-
-          visit_measurement(measDim, [&](auto N) {
-            addMeasurementToGx2fSums<N>(aMatrixExtended, bVectorExtended,
-                                        chi2sum, jacobianFromStart, trackState,
-                                        *m_addToSumLogger);
-          });
-        }
-
-        // Handle material
-        if (doMaterial) {
-          ACTS_DEBUG("    Handle material");
-          // Add for this material a new Jacobian, starting from this surface.
-          jacobianFromStart.emplace_back(BoundMatrix::Identity());
-
-          // Add the material contribution to the system
-          addMaterialToGx2fSums(aMatrixExtended, bVectorExtended, chi2sum,
-                                geoIdVector.size(), scatteringMap, trackState,
-                                *m_addToSumLogger);
-
-          geoIdVector.emplace_back(geoId);
-        }
-      }
+      fillGx2fSystem(track, aMatrixExtended, bVectorExtended, chi2sum, countNdf,
+                     multipleScattering, scatteringMap, geoIdVector,
+                     *m_addToSumLogger);
 
       // Get required number of degrees of freedom ndfSystem.
       // We have only 3 cases, because we always have l0, l1, phi, theta
@@ -1279,12 +1309,11 @@ class Gx2Fitter {
       }
 
       // This check takes into account the evaluated dimensions of the
-      // measurements. To fit, we need at least NDF+1 measurements. However,
-      // we count n-dimensional measurements for n measurements, reducing the
-      // effective number of needed measurements.
-      // We might encounter the case, where we cannot use some (parts of a)
-      // measurements, maybe if we do not support that kind of measurement. This
-      // is also taken into account here.
+      // measurements. To fit, we need at least NDF+1 measurements. However, we
+      // count n-dimensional measurements for n measurements, reducing the
+      // effective number of needed measurements. We might encounter the case,
+      // where we cannot use some (parts of a) measurements, maybe if we do not
+      // support that kind of measurement. This is also taken into account here.
       // We skip the check during the first iteration, since we cannot guarantee
       // to hit all/enough measurement surfaces with the initial parameter
       // guess.
@@ -1371,7 +1400,7 @@ class Gx2Fitter {
       oldChi2sum = chi2sum;
     }
     ACTS_DEBUG("Finished to iterate");
-    ACTS_VERBOSE("final params:\n" << params);
+    ACTS_VERBOSE("Final parameters: " << params.parameters().transpose());
     /// Finish Fitting /////////////////////////////////////////////////////////
 
     ACTS_VERBOSE("Final scattering angles:");
@@ -1384,7 +1413,7 @@ class Gx2Fitter {
                             << " )");
     }
 
-    ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
+    ACTS_VERBOSE("Final covariance:\n" << fullCovariancePredicted);
 
     // Propagate again with the final covariance matrix. This is necessary to
     // obtain the propagated covariance for each state.
@@ -1392,7 +1421,7 @@ class Gx2Fitter {
     // step, we will not ignore the boundary checks for measurement surfaces. We
     // want to create trackstates only on surfaces, that we actually hit.
     if (gx2fOptions.nUpdateMax > 0) {
-      ACTS_VERBOSE("final deltaParams:\n" << deltaParams);
+      ACTS_VERBOSE("Final delta parameters: " << deltaParams.transpose());
       ACTS_VERBOSE("Propagate with the final covariance.");
       // update covariance
       params.covariance() = fullCovariancePredicted;

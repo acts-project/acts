@@ -42,15 +42,11 @@
 #include <string_view>
 #include <typeinfo>
 
-#include <boost/stacktrace/stacktrace.hpp>
-
-#ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
-#endif
-
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/core/demangle.hpp>
+#include <boost/stacktrace/stacktrace.hpp>
 
 namespace ActsExamples {
 
@@ -108,16 +104,12 @@ Sequencer::Sequencer(const Sequencer::Config& cfg)
       m_taskArena((m_cfg.numThreads < 0) ? tbb::task_arena::automatic
                                          : m_cfg.numThreads),
       m_logger(Acts::getDefaultLogger("Sequencer", m_cfg.logLevel)) {
-#ifndef ACTS_EXAMPLES_NO_TBB
   if (m_cfg.numThreads == 1) {
-#endif
     ACTS_INFO("Create Sequencer (single-threaded)");
-#ifndef ACTS_EXAMPLES_NO_TBB
   } else {
     ROOT::EnableThreadSafety();
     ACTS_INFO("Create Sequencer with " << m_cfg.numThreads << " threads");
   }
-#endif
 
   const char* envvar = std::getenv("ACTS_SEQUENCER_DISABLE_FPEMON");
   if (envvar != nullptr) {
@@ -267,9 +259,12 @@ void Sequencer::addWhiteboardAlias(const std::string& aliasName,
   auto [it, success] =
       m_whiteboardObjectAliases.insert({objectName, aliasName});
   if (!success) {
-    throw std::invalid_argument("Alias to '" + aliasName + "' -> '" +
-                                objectName + "' already set");
+    ACTS_INFO("Key '" << objectName << "' aliased to '" << aliasName
+                      << "' already set");
+    return;
   }
+
+  ACTS_INFO("Key '" << objectName << "' aliased to '" << aliasName << "'");
 
   if (auto oit = m_whiteBoardState.find(objectName);
       oit != m_whiteBoardState.end()) {
