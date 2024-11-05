@@ -22,11 +22,17 @@ class BoostTrackBuilding final : public Acts::TrackBuildingBase {
  public:
   struct Config {
     bool doWalkthrough = false;
+    float walkthroughLowCut = 0.01;
+    float walkthroughHighCut = 0.6;
   };
 
   BoostTrackBuilding(const Config &cfg, std::unique_ptr<const Logger> logger)
       : m_cfg(cfg),
-        m_walkthrough({}, logger->clone()),
+        m_walkthrough(
+            Acts::WalkthroughAlgorithm::Config{
+                .ccScoreCut = cfg.walkthroughLowCut,
+                .highScoreCut = cfg.walkthroughHighCut},
+            logger->clone()),
         m_logger(std::move(logger)),
         m_device(torch::Device(torch::kCPU)) {}
 

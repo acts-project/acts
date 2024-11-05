@@ -172,6 +172,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(doWalkthrough);
+    ACTS_PYTHON_MEMBER(walkthroughLowCut);
+    ACTS_PYTHON_MEMBER(walkthroughHighCut);
     ACTS_PYTHON_STRUCT_END();
   }
   /*

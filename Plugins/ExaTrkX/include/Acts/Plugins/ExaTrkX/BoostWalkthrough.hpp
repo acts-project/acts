@@ -28,15 +28,29 @@ class WalkthroughAlgorithm {
     std::size_t minCandidateSize = 3;
   };
 
-  using Graph = boost::adjacency_list<boost::vecS,       // edge list
-                                      boost::vecS,       // vertex list
-                                      boost::directedS,  // directedness
-                                      int,               // property of vertices
-                                      float              // property of edges
-                                      >;
+  using UndirectedGraph =
+      boost::adjacency_list<boost::vecS,         // edge list
+                            boost::vecS,         // vertex list
+                            boost::undirectedS,  // directedness
+                            int,                 // property of vertices
+                            float                // property of edges
+                            // GraphProperty // graph property
+                            >;
 
-  using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
-  using Edge = boost::graph_traits<Graph>::edge_descriptor;
+  using DirectedGraph = boost::adjacency_list<boost::vecS,       // edge list
+                                              boost::vecS,       // vertex list
+                                              boost::directedS,  // directedness
+                                              int,   // property of vertices
+                                              float  // property of edges
+                                              // GraphProperty // graph property
+                                              >;
+
+  using Vertex = boost::graph_traits<UndirectedGraph>::vertex_descriptor;
+  static_assert(std::is_same_v<
+                Vertex, boost::graph_traits<DirectedGraph>::vertex_descriptor>);
+
+  using UEdge = boost::graph_traits<UndirectedGraph>::edge_descriptor;
+  using DEdge = boost::graph_traits<DirectedGraph>::edge_descriptor;
 
   WalkthroughAlgorithm(const Config &cfg,
                        std::unique_ptr<const Acts::Logger> logger)
@@ -47,7 +61,7 @@ class WalkthroughAlgorithm {
                                            std::span<T> edgeIndexTarget,
                                            std::span<float> edgeScores,
                                            std::size_t numNodes) const {
-    Graph g(numNodes);
+    DirectedGraph g(numNodes);
 
     for (const auto [source, target, weight] :
          Acts::zip(edgeIndexSource, edgeIndexTarget, edgeScores)) {
@@ -62,17 +76,27 @@ class WalkthroughAlgorithm {
 
     std::vector<std::vector<int>> finalCandidates;
 
-    connectedComponents(g, finalCandidates);
+    ACTS_VERBOSE("start walkthrough with " << numNodes << " nodes and "
+                                           << edgeIndexSource.size()
+                                           << " edges");
+    connectedComponents(g, finalCandidates, 0);
+    ACTS_VERBOSE("Done with walkthrough algorithm, return "
+                 << finalCandidates.size() << " candidates");
 
     return finalCandidates;
   }
 
  private:
-  void connectedComponents(
-      const Graph &g, std::vector<std::vector<int>> &finalCandidates) const;
-  void refineSubgraph(const Graph &graph, std::span<Vertex> subgraphNodes,
-                      std::vector<std::vector<int>> &finalCandidates) const;
-  void filterEdges(Graph &graph) const;
+  std::size_t weaklyConnectedComponents(
+      const DirectedGraph &g, std::vector<std::size_t> &components) const;
+  void connectedComponents(const DirectedGraph &g,
+                           std::vector<std::vector<int>> &finalCandidates,
+                           int recursion) const;
+  void refineSubgraph(const DirectedGraph &graph,
+                      std::span<Vertex> subgraphNodes,
+                      std::vector<std::vector<int>> &finalCandidates,
+                      int recursion) const;
+  void filterEdges(DirectedGraph &graph) const;
 
   const Acts::Logger &logger() const { return *m_logger; }
 
