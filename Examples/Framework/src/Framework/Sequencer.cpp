@@ -259,9 +259,12 @@ void Sequencer::addWhiteboardAlias(const std::string& aliasName,
   auto [it, success] =
       m_whiteboardObjectAliases.insert({objectName, aliasName});
   if (!success) {
-    throw std::invalid_argument("Alias to '" + aliasName + "' -> '" +
-                                objectName + "' already set");
+    ACTS_INFO("Key '" << objectName << "' aliased to '" << aliasName
+                      << "' already set");
+    return;
   }
+
+  ACTS_INFO("Key '" << objectName << "' aliased to '" << aliasName << "'");
 
   if (auto oit = m_whiteBoardState.find(objectName);
       oit != m_whiteBoardState.end()) {
