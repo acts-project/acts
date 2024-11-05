@@ -316,13 +316,13 @@ inline std::ostream& operator<<(std::ostream& os,
   auto printMax = [&](const char* name, const auto& max) {
     os << " - " << name << " <= " << max << "\n";
   };
-  print("loc0", cuts.loc0Min, cuts.loc0Max);
-  print("loc1", cuts.loc1Min, cuts.loc1Max);
-  print("time", cuts.timeMin, cuts.timeMax);
-  print("phi", cuts.phiMin, cuts.phiMax);
-  print("eta", cuts.etaMin, cuts.etaMax);
-  print("absEta", cuts.absEtaMin, cuts.absEtaMax);
-  print("pt", cuts.ptMin, cuts.ptMax);
+  printMinMax("loc0", cuts.loc0Min, cuts.loc0Max);
+  printMinMax("loc1", cuts.loc1Min, cuts.loc1Max);
+  printMinMax("time", cuts.timeMin, cuts.timeMax);
+  printMinMax("phi", cuts.phiMin, cuts.phiMax);
+  printMinMax("eta", cuts.etaMin, cuts.etaMax);
+  printMinMax("absEta", cuts.absEtaMin, cuts.absEtaMax);
+  printMinMax("pt", cuts.ptMin, cuts.ptMax);
   printMax("nHoles", cuts.maxHoles);
   printMax("nOutliers", cuts.maxOutliers);
   printMax("nHoles + nOutliers", cuts.maxHolesAndOutliers);
