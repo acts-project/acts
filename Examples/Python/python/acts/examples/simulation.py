@@ -18,8 +18,8 @@ from acts.examples import (
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
 MomentumConfig = namedtuple(
     "MomentumConfig",
-    ["min", "max", "transverse"],
-    defaults=[None, None, None],
+    ["min", "max", "transverse", "logUniform"],
+    defaults=[None, None, None, None],
 )
 EtaConfig = namedtuple(
     "EtaConfig", ["min", "max", "uniform"], defaults=[None, None, None]
@@ -80,8 +80,8 @@ def addParticleGun(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    momentumConfig : MomentumConfig(min, max, transverse)
-        momentum configuration: minimum momentum, maximum momentum, transverse
+    momentumConfig : MomentumConfig(min, max, transverse, logUniform)
+        momentum configuration: minimum momentum, maximum momentum, transverse, log-uniform
     etaConfig : EtaConfig(min, max, uniform)
         pseudorapidity configuration: eta min, eta max, uniform
     phiConfig : PhiConfig(min, max)
@@ -118,6 +118,7 @@ def addParticleGun(
                     **acts.examples.defaultKWArgs(
                         p=(momentumConfig.min, momentumConfig.max),
                         pTransverse=momentumConfig.transverse,
+                        pLogUniform=momentumConfig.logUniform,
                         eta=(etaConfig.min, etaConfig.max),
                         phi=(phiConfig.min, phiConfig.max),
                         etaUniform=etaConfig.uniform,
