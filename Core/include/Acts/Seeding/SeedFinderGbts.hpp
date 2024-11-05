@@ -15,7 +15,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/TrackFinding/RoiDescriptor.hpp"
-#include "Acts/Utilities/KDTree.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <array>
 #include <iostream>
@@ -46,14 +46,15 @@ class SeedFinderGbts {
   static constexpr std::size_t NDims = 3;
 
   using seed_t = Seed<external_spacepoint_t>;
-  //   using internal_sp_t = InternalSpacePoint<external_spacepoint_t>;
-  //   using tree_t = KDTree<NDims, internal_sp_t *, ActsScalar, std::array, 4>;
 
   // constructors
   SeedFinderGbts(const SeedFinderGbtsConfig<external_spacepoint_t> &config,
-                 const GbtsGeometry<external_spacepoint_t> &gbtsgeo);
+                 const GbtsGeometry<external_spacepoint_t> &gbtsgeo,
+                 std::unique_ptr<const Acts::Logger> logger =
+                     Acts::getDefaultLogger("Finder",
+                                            Acts::Logging::Level::INFO));
 
-  ~SeedFinderGbts();  //!!! is it dangerous not to use default? got def in ipp
+  ~SeedFinderGbts() = default;
   SeedFinderGbts() = default;
   SeedFinderGbts(const SeedFinderGbts<external_spacepoint_t> &) = delete;
   SeedFinderGbts<external_spacepoint_t> &operator=(
@@ -85,10 +86,14 @@ class SeedFinderGbts {
       const Acts::GbtsGeometry<external_spacepoint_t> &gbtsgeo);
 
   // needs to be member of class so can accessed by all member functions
-  GbtsDataStorage<external_spacepoint_t> *m_storage;
+  std::unique_ptr<GbtsDataStorage<external_spacepoint_t>> m_storage{nullptr};
 
   // for create seeds:
   std::vector<TrigInDetTriplet<external_spacepoint_t>> m_triplets;
+
+  const Acts::Logger &logger() const { return *m_logger; }
+  std::unique_ptr<const Acts::Logger> m_logger =
+      Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
 };
 
 }  // namespace Acts
