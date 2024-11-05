@@ -263,7 +263,7 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    inputParticlePath = Path(Inputdir) / "pythia8_particles.root"
+    inputParticlePath = Path(Inputdir) / "particles.root"
     if not inputParticlePath.exists():
         inputParticlePath = None
 
