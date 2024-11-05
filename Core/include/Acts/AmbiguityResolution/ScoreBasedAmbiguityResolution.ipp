@@ -520,7 +520,7 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
         trackStateTypes.push_back(TrackStateTypes::UnsharedHit);
         continue;
       }
-      if (nTracksShared > 1) {
+      else if (nTracksShared > 1) {
         ACTS_VERBOSE("Measurement is shared, copy it over");
         trackStateTypes.push_back(TrackStateTypes::SharedHit);
         continue;
