@@ -418,20 +418,21 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
   for (const auto& track : tracks) {
     std::vector<std::size_t> measurementsPerTrack;
     for (const auto& ts : track.trackStatesReversed()) {
-      if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
-          ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-        Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
-        // assign a new measurement index if the source link was not seen yet
-        auto emplace = MeasurementIndexMap.try_emplace(
-            sourceLink, MeasurementIndexMap.size());
-        std::size_t iMeasurement = emplace.first->second;
-        measurementsPerTrack.push_back(iMeasurement);
-        if (nTracksPerMeasurement.find(iMeasurement) ==
-            nTracksPerMeasurement.end()) {
-          nTracksPerMeasurement[iMeasurement] = 0;
-        }
-        nTracksPerMeasurement[iMeasurement]++;
+      if (!ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) &&
+          !ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        continue;
       }
+      Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
+      // assign a new measurement index if the source link was not seen yet
+      auto emplace = MeasurementIndexMap.try_emplace(
+          sourceLink, MeasurementIndexMap.size());
+      std::size_t iMeasurement = emplace.first->second;
+      measurementsPerTrack.push_back(iMeasurement);
+      if (nTracksPerMeasurement.find(iMeasurement) ==
+          nTracksPerMeasurement.end()) {
+        nTracksPerMeasurement[iMeasurement] = 0;
+      }
+      nTracksPerMeasurement[iMeasurement]++;
     }
     measurementsPerTrackVector.push_back(std::move(measurementsPerTrack));
   }
@@ -495,7 +496,7 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
   std::vector<TrackStateTypes> trackStateTypes;
   // Loop over all measurements of the track and for each hit a
   // trackStateTypes is assigned.
-  for (std::size_t index = 0;const auto& ts : track.trackStatesReversed()) {
+  for (std::size_t index = 0; const auto& ts : track.trackStatesReversed()) {
     if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
         ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
       auto iMeasurement = measurementsPerTrack[index];
@@ -519,8 +520,7 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
 
         trackStateTypes.push_back(TrackStateTypes::UnsharedHit);
         continue;
-      }
-      else if (nTracksShared > 1) {
+      } else if (nTracksShared > 1) {
         ACTS_VERBOSE("Measurement is shared, copy it over");
         trackStateTypes.push_back(TrackStateTypes::SharedHit);
         continue;
