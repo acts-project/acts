@@ -291,8 +291,6 @@ def full_chain(args):
         detector, trackingGeometry, decorators = acts.examples.odd.getOpenDataDetector(
             odd_dir=geo_dir,
             mdecorator=acts.IMaterialDecorator.fromFile(args.material_config)
-            if not args.bf_constant
-            else None,
         )
     elif args.itk:
         import acts.examples.itk as itk
@@ -361,7 +359,7 @@ def full_chain(args):
             measurements=(9, None),
             removeNeutral=True,
         )
-        if args.ttbar_pu200
+        if args.ttbar_pu200 or args.odd
         else ParticleSelectorConfig()
     )
 
@@ -406,10 +404,17 @@ def full_chain(args):
             addParticleGun(
                 s,
                 MomentumConfig(*pt, transverse=True),
-                EtaConfig(*etaRange, uniform=not args.gen_cos_theta),
+                EtaConfig(*etaRange, uniform=False if args.gen_cos_theta else None),
+                acts.examples.simulation.PhiConfig(0.0, 360.0 * u.degree) if args.odd else None,
                 ParticleConfig(
                     args.gen_nparticles, acts.PdgParticle.eMuon, randomizeCharge=True
                 ),
+                vtxGen=acts.examples.GaussianVertexGenerator(
+                    mean=acts.Vector4(0, 0, 0, 0),
+                    stddev=acts.Vector4(
+                        0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
+                    ),
+                ) if args.odd else None,
                 multiplicity=args.gen_nvertices,
                 rnd=rnd,
                 outputDirRoot=outputDirMoreRoot,
@@ -555,7 +560,7 @@ def full_chain(args):
     if not args.itk:
 
         trackSelectorConfig = TrackSelectorConfig(
-            pt=(500 * u.MeV, None),
+            pt=(1.0 * u.GeV if args.ttbar_pu200 else 0.0, None),
             absEta=(None, 3.0),
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
             nMeasurementsMin=7,
@@ -630,8 +635,9 @@ def full_chain(args):
         field,
         trackSelectorConfig=trackSelectorConfig,
         ckfConfig=ckfConfig,
-        **(dict(twoWay=False) if not args.simple_ckf else {}),
+        **(dict(twoWay=False) if args.itk and not args.simple_ckf else {}),
         **writeDetail,
+        **(dict(writeCovMat=True) if args.output_detail != 1 else {}),
         outputDirRoot=outputDirLessRoot,
         outputDirCsv=outputDirLessCsv,
     )
@@ -695,6 +701,7 @@ def full_chain(args):
                 nMeasurementsMin=6 if args.itk else 7,
             ),
             **writeDetail,
+            **(dict(writeCovMat=True) if args.output_detail != 1 else {}),
             outputDirRoot=outputDirLessRoot,
             outputDirCsv=outputDirLessCsv,
         )
