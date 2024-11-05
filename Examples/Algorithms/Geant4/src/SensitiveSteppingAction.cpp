@@ -230,10 +230,8 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
     // Increase the step counter
     pSummary.nSteps += 1;
 
-    double currentTrackLength =
-        track->GetTrackLength() * convertLength;
-    double currentStepLength =
-        pSummary.pathLength - currentTrackLength;
+    double currentTrackLength = track->GetTrackLength() * convertLength;
+    double currentStepLength = currentTrackLength - pSummary.pathLength;
     pSummary.pathLength = currentTrackLength;
 
     // Create a new step for the step logging
