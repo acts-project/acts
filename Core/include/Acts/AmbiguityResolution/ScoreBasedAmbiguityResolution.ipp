@@ -499,7 +499,7 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
   for (std::size_t index = 0; const auto& ts : track.trackStatesReversed()) {
     if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
         ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-      auto iMeasurement = measurementsPerTrack[index];
+      std::size_t iMeasurement = measurementsPerTrack[index];
       auto it = nTracksPerMeasurement.find(iMeasurement);
       if (it == nTracksPerMeasurement.end()) {
         trackStateTypes.push_back(TrackStateTypes::OtherTrackStateType);
@@ -507,7 +507,7 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
         continue;
       }
 
-      auto nTracksShared = it->second;
+      std::size_t nTracksShared = it->second;
       auto isoutliner = ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
 
       if (isoutliner) {
