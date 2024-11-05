@@ -316,6 +316,7 @@ inline std::ostream& operator<<(std::ostream& os,
   auto printMax = [&](const char* name, const auto& max) {
     os << " - " << name << " <= " << max << "\n";
   };
+
   printMinMax("loc0", cuts.loc0Min, cuts.loc0Max);
   printMinMax("loc1", cuts.loc1Min, cuts.loc1Max);
   printMinMax("time", cuts.timeMin, cuts.timeMax);
