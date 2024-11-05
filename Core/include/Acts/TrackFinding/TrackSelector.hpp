@@ -331,7 +331,6 @@ inline std::ostream& operator<<(std::ostream& os,
   printMax("nSharedHits", cuts.maxSharedHits);
   printMax("chi2", cuts.maxChi2);
   printMin("nMeasurements", cuts.minMeasurements);
-  
   return os;
 }
 
