@@ -305,7 +305,7 @@ inline TrackSelector::Config& TrackSelector::Config::pt(double min,
 inline std::ostream& operator<<(std::ostream& os,
                                 const TrackSelector::Config& cuts) {
   // for printing cuts set up with `within`
-  auto print = [&](const char* name, const auto& min, const auto& max) {
+  auto printMinMax = [&](const char* name, const auto& min, const auto& max) {
     os << " - " << min << " <= " << name << " < " << max << "\n";
   };
   // for printing cuts set up with `checkMin`
