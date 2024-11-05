@@ -308,7 +308,6 @@ inline std::ostream& operator<<(std::ostream& os,
   auto print = [&](const char* name, const auto& min, const auto& max) {
     os << " - " << min << " <= " << name << " < " << max << "\n";
   };
-
   // for printing cuts set up with `checkMin`
   auto printMin = [&](const char* name, const auto& min) {
     os << " - " << min << " <= " << name << "\n";
