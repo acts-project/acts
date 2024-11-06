@@ -15,6 +15,7 @@ from acts.examples.simulation import (
 
 u = acts.UnitConstants
 
+
 def estimateLookup(trackingGeometry, numEvents, outputPath):
 
     # Set up the dipole magnetic field
