@@ -40,8 +40,7 @@ if not ttbar_pu200:
         s,
         MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
         EtaConfig(-4.0, 4.0, uniform=True),
-        ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
-        multiplicity=200,
+        ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
         rnd=rnd,
     )
 else:
