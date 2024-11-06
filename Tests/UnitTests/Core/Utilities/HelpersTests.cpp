@@ -26,6 +26,7 @@
 #include <string>
 #include <tuple>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using namespace Acts::VectorHelpers;
