@@ -159,6 +159,7 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
 
     SimParticleState& finalState = p.final();
 
+    // TODO eloss cannot be read since we need the final momentum
     finalState.setMaterialPassed((*m_pathInX0).at(i) * Acts::UnitConstants::mm,
                                  (*m_pathInL0).at(i) * Acts::UnitConstants::mm);
     finalState.setNumberOfHits((*m_numberOfHits).at(i));
