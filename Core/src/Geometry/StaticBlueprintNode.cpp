@@ -52,7 +52,7 @@ PortalShellBase& StaticBlueprintNode::connect(const Options& options,
   for (auto& child : children()) {
     auto& shell = child.connect(options, gctx, logger);
     // Register ourselves on the outside of the shell
-    shell.connectOuter(*m_volume);
+    shell.fill(*m_volume);
   }
 
   VolumeBounds::BoundsType type = m_volume->volumeBounds().type();

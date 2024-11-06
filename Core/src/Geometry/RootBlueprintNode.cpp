@@ -127,7 +127,7 @@ std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
 
   auto &shell = child.connect(options, gctx, logger);
 
-  shell.connectOuter(*world);
+  shell.fill(*world);
 
   child.finalize(options, gctx, *world, logger);
 
