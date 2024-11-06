@@ -146,7 +146,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     // Add the primary to the vertex
     pVertex->SetPrimary(particle);
 
-    eventStore().particlesSimulated.insert(part);
+    eventStore().particlesInitial.insert(part);
     eventStore().trackIdMapping[particle->GetTrackID()] = part.particleId();
 
     ++pCounter;
