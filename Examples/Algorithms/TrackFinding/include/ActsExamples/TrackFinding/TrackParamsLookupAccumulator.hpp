@@ -18,48 +18,47 @@ namespace ActsExamples {
 /// reference layer grids and average them to create a lookup
 /// table for track parameter estimation in seeding
 class TrackParamsLookupAccumulator {
-    public:
-        /// @brief Nested configuration struct
-        struct Config {
-            /// Axis generator
-            LookupAxisGen axisGen;
-        };
+ public:
+  /// @brief Nested configuration struct
+  struct Config {
+    /// Axis generator
+    LookupAxisGen axisGen;
+  };
 
-        /// @brief Constructor
-        TrackParamsLookupAccumulator(const Config& config)
-            : m_cfg(std::move(config)),
-            m_ipGrid(m_cfg.axisGen()),
-            m_refGrid(m_cfg.axisGen()) {}
+  /// @brief Constructor
+  TrackParamsLookupAccumulator(const Config& config)
+      : m_cfg(std::move(config)),
+        m_ipGrid(m_cfg.axisGen()),
+        m_refGrid(m_cfg.axisGen()) {}
 
-        /// @brief Add track parameters to the accumulator
-        ///
-        /// @param ipTrackParameters the track parameters at the IP
-        /// @param refTrackParameters the track parameters at the reference layer
-        /// @param position local position of the track hit on the reference layer
-        void addTrack(
-            const Acts::CurvilinearTrackParameters& ipTrackParameters,
-            const Acts::CurvilinearTrackParameters& refTrackParameters,
-            const Acts::Vector2& position);
+  /// @brief Add track parameters to the accumulator
+  ///
+  /// @param ipTrackParameters the track parameters at the IP
+  /// @param refTrackParameters the track parameters at the reference layer
+  /// @param position local position of the track hit on the reference layer
+  void addTrack(const Acts::CurvilinearTrackParameters& ipTrackParameters,
+                const Acts::CurvilinearTrackParameters& refTrackParameters,
+                const Acts::Vector2& position);
 
-        /// @brief Finalize the lookup table
-        ///
-        /// Return the grid with the bin track parameters averaged 
-        LookupGrid finalizeLookup();
+  /// @brief Finalize the lookup table
+  ///
+  /// Return the grid with the bin track parameters averaged
+  LookupGrid finalizeLookup();
 
-        /// Get readonly access to the config parameters
-        const Config& config() const { return m_cfg; }
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
-    private:
-        /// Configuration
-        Config m_cfg;
+ private:
+  /// Configuration
+  Config m_cfg;
 
-        /// Mutex for modifying the grid
-        std::mutex m_writeMutex;
+  /// Mutex for modifying the grid
+  std::mutex m_writeMutex;
 
-        /// Grids to accumulate IP and reference 
-        /// layer track parameters
-        LookupAccumGrid m_ipGrid;
-        LookupAccumGrid m_refGrid;
+  /// Grids to accumulate IP and reference
+  /// layer track parameters
+  LookupAccumGrid m_ipGrid;
+  LookupAccumGrid m_refGrid;
 };
 
 }  // namespace ActsExamples

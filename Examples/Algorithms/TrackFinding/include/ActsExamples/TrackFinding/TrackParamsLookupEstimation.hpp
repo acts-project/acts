@@ -10,8 +10,8 @@
 
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupWriter.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsLookupAccumulator.hpp"
 
@@ -25,52 +25,50 @@ namespace ActsExamples {
 /// parameters in the grid bins. The track parameters are then averaged
 /// to create a lookup table for track parameter estimation in seeding.
 class TrackParamsLookupEstimation : public IAlgorithm {
-    public:
-        /// @brief Nested configuration struct
-        struct Config {
-            /// Reference tracking layers
-            std::unordered_map<
-                Acts::GeometryIdentifier, 
-                const Acts::Surface*> refLayers;
-            /// Binning of the grid to be emposed
-            /// onto the reference layers
-            std::pair<std::size_t, std::size_t> bins;
-            /// Input SimHit container
-            std::string inputHits = "InputHits";
-            /// Input SimParticle container
-            std::string inputParticles = "InputParticles";
-            /// Track lookup writers
-            std::vector<std::shared_ptr<ITrackParamsLookupWriter>>
-                trackLookupGridWriters{};
-        };
-        
-        /// @brief Constructor
-        TrackParamsLookupEstimation(
-            const Config& config, Acts::Logging::Level level);
+ public:
+  /// @brief Nested configuration struct
+  struct Config {
+    /// Reference tracking layers
+    std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
+        refLayers;
+    /// Binning of the grid to be emposed
+    /// onto the reference layers
+    std::pair<std::size_t, std::size_t> bins;
+    /// Input SimHit container
+    std::string inputHits = "InputHits";
+    /// Input SimParticle container
+    std::string inputParticles = "InputParticles";
+    /// Track lookup writers
+    std::vector<std::shared_ptr<ITrackParamsLookupWriter>>
+        trackLookupGridWriters{};
+  };
 
-        /// @brief Destructor
-        ~TrackParamsLookupEstimation();
+  /// @brief Constructor
+  TrackParamsLookupEstimation(const Config& config, Acts::Logging::Level level);
 
-        /// @brief The execute method
-        ProcessCode execute(const AlgorithmContext& ctx) const override;
+  /// @brief Destructor
+  ~TrackParamsLookupEstimation();
 
-        /// Get readonly access to the config parameters
-        const Config& config() const { return m_cfg; }
+  /// @brief The execute method
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
-    private:
-        /// Configuration
-        Config m_cfg;
-        
-        /// Input data handles
-        ReadDataHandle<SimParticleContainer> m_inputParticles{
-            this,
-            "InputSimParticles"};
-        
-        ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
-        /// Accumulators for the track parameters
-        std::unordered_map<Acts::GeometryIdentifier, 
-           std::unique_ptr<TrackParamsLookupAccumulator>> m_accumulators;
+ private:
+  /// Configuration
+  Config m_cfg;
+
+  /// Input data handles
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this,
+                                                        "InputSimParticles"};
+
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+
+  /// Accumulators for the track parameters
+  std::unordered_map<Acts::GeometryIdentifier,
+                     std::unique_ptr<TrackParamsLookupAccumulator>>
+      m_accumulators;
 };
 
 }  // namespace ActsExamples

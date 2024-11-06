@@ -14,14 +14,14 @@ namespace ActsExamples {
 
 /// @brief Interface for reading track parameter lookup tables
 class ITrackParamsLookupReader {
-    public:
-        /// Virtual Destructor
-        virtual ~ITrackParamsLookupReader() = default;
-        
-        /// Reader method
-        ///
-        /// @param path the path to the file to read
-        virtual Lookup readLookup(const std::string& path) = 0;
+ public:
+  /// Virtual Destructor
+  virtual ~ITrackParamsLookupReader() = default;
+
+  /// Reader method
+  ///
+  /// @param path the path to the file to read
+  virtual Lookup readLookup(const std::string& path) = 0;
 };
 
 }  // namespace ActsExamples

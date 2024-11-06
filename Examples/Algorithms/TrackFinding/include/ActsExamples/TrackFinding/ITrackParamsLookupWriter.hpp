@@ -14,15 +14,14 @@ namespace ActsExamples {
 
 /// @brief Interface for writing track parameter lookup tables
 class ITrackParamsLookupWriter {
-    public:
-        /// Virtual Destructor
-        virtual ~ITrackParamsLookupWriter() = default;
-        
-        /// Writer method
-        ///
-        /// @param lookup track lookup to write
-        virtual void writeLookup(
-            const Lookup& lookup) = 0;
+ public:
+  /// Virtual Destructor
+  virtual ~ITrackParamsLookupWriter() = default;
+
+  /// Writer method
+  ///
+  /// @param lookup track lookup to write
+  virtual void writeLookup(const Lookup& lookup) = 0;
 };
 
 }  // namespace ActsExamples

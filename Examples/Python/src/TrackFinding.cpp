@@ -294,10 +294,10 @@ void addTrackFinding(Context& ctx) {
       magneticField, bFieldMin, initialSigmas, initialSigmaPtRel,
       initialVarInflation, noTimeVarInflation, particleHypothesis);
 
-    ACTS_PYTHON_DECLARE_ALGORITHM(
-        ActsExamples::TrackParamsLookupEstimation, mex,
-        "TrackParamsLookupEstimation", refLayers, bins, 
-        inputHits, inputParticles, trackLookupGridWriters);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParamsLookupEstimation, mex,
+                                "TrackParamsLookupEstimation", refLayers, bins,
+                                inputHits, inputParticles,
+                                trackLookupGridWriters);
 
   {
     using Alg = ActsExamples::TrackFindingAlgorithm;

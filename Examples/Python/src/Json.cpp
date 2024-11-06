@@ -19,8 +19,8 @@
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesReader.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
-#include "ActsExamples/Io/Json/JsonTrackParamsLookupWriter.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupReader.hpp"
+#include "ActsExamples/Io/Json/JsonTrackParamsLookupWriter.hpp"
 
 #include <fstream>
 #include <initializer_list>
@@ -41,11 +41,10 @@ class IMaterialWriter;
 class IWriter;
 
 namespace Experimental {
-    class ITrackParamsLookupWriter;
+class ITrackParamsLookupWriter;
 }  // namespace Experimental
 
 }  // namespace ActsExamples
-
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -124,17 +123,15 @@ void addJson(Context& ctx) {
     using Writer = ActsExamples::JsonTrackParamsLookupWriter;
     using Config = Writer::Config;
 
-    auto cls =
-        py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
-            mex, "JsonTrackParamsLookupWriter")
-            .def(py::init<const Config&>(), py::arg("config"))
-            .def("writeLookup", &Writer::writeLookup)
-            .def_property_readonly("config", &Writer::config);
+    auto cls = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
+                   mex, "JsonTrackParamsLookupWriter")
+                   .def(py::init<const Config&>(), py::arg("config"))
+                   .def("writeLookup", &Writer::writeLookup)
+                   .def_property_readonly("config", &Writer::config);
 
-    auto c =
-        py::class_<Config>(cls, "Config")
-            .def(py::init<>())
-            .def(py::init<const std::string&>(), py::arg("path"));
+    auto c = py::class_<Config>(cls, "Config")
+                 .def(py::init<>())
+                 .def(py::init<const std::string&>(), py::arg("path"));
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(path);
@@ -146,23 +143,19 @@ void addJson(Context& ctx) {
     using Reader = ActsExamples::JsonTrackParamsLookupReader;
     using Config = Reader::Config;
 
-    auto cls =
-        py::class_<Reader, IReader, std::shared_ptr<Reader>>(
-            mex, "JsonTrackParamsLookupReader")
-            .def(py::init<const Config&>(), py::arg("config"))
-            .def("readLookup", &Reader::readLookup)
-            .def_property_readonly("config", &Reader::config);
+    auto cls = py::class_<Reader, IReader, std::shared_ptr<Reader>>(
+                   mex, "JsonTrackParamsLookupReader")
+                   .def(py::init<const Config&>(), py::arg("config"))
+                   .def("readLookup", &Reader::readLookup)
+                   .def_property_readonly("config", &Reader::config);
 
-    auto c =
-        py::class_<Config>(cls, "Config")
-            .def(py::init<>())
-            .def(py::init<
-                std::unordered_map<
-                    Acts::GeometryIdentifier, 
-                    const Acts::Surface*>,
-                std::pair<Acts::ActsScalar, Acts::ActsScalar>>(),
-                py::arg("refLayers"), py::arg("bins"));
-                
+    auto c = py::class_<Config>(cls, "Config")
+                 .def(py::init<>())
+                 .def(py::init<std::unordered_map<Acts::GeometryIdentifier,
+                                                  const Acts::Surface*>,
+                               std::pair<Acts::ActsScalar, Acts::ActsScalar>>(),
+                      py::arg("refLayers"), py::arg("bins"));
+
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(refLayers);
     ACTS_PYTHON_MEMBER(bins);
@@ -281,17 +274,18 @@ void addJson(Context& ctx) {
   }
 
   {
-    mex.def("readDetectorFromJson",
-            [](const Acts::GeometryContext& gctx,
-               const std::string& fileName) -> auto {
-              auto in = std::ifstream(
-                  fileName, std::ifstream::in | std::ifstream::binary);
-              nlohmann::json jDetectorIn;
-              in >> jDetectorIn;
-              in.close();
+    mex.def(
+        "readDetectorFromJson",
+        [](const Acts::GeometryContext& gctx,
+           const std::string& fileName) -> auto{
+          auto in = std::ifstream(fileName,
+                                  std::ifstream::in | std::ifstream::binary);
+          nlohmann::json jDetectorIn;
+          in >> jDetectorIn;
+          in.close();
 
-              return Acts::DetectorJsonConverter::fromJson(gctx, jDetectorIn);
-            });
+          return Acts::DetectorJsonConverter::fromJson(gctx, jDetectorIn);
+        });
   }
 }
 }  // namespace Acts::Python
