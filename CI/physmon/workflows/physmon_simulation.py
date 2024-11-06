@@ -64,6 +64,14 @@ with tempfile.TemporaryDirectory() as temp:
         )
     )
 
+    s.addWriter(
+        acts.examples.RootParticleWriter(
+            level=acts.logging.INFO,
+            inputParticles="particles_input",
+            filePath=tp / "particles.root",
+        )
+    )
+
     addFatras(
         s,
         setup.trackingGeometry,
@@ -98,6 +106,7 @@ with tempfile.TemporaryDirectory() as temp:
     s.run()
 
     for file, name in [
+        (tp / "particles.root", "particles_gun.root"),
         (tp / "fatras" / "particles_simulation.root", "particles_fatras.root"),
         (tp / "geant4" / "particles_simulation.root", "particles_geant4.root"),
     ]:
@@ -133,8 +142,8 @@ with tempfile.TemporaryDirectory() as temp:
     s.run()
 
     for file, name in [
-        (tp / "pythia8_particles.root", "particles_ttbar.root"),
-        (tp / "pythia8_vertices.root", "vertices_ttbar.root"),
+        (tp / "particles.root", "particles_ttbar.root"),
+        (tp / "vertices.root", "vertices_ttbar.root"),
     ]:
         assert file.exists(), "file not found"
         shutil.copy(file, setup.outdir / name)
