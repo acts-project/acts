@@ -1424,8 +1424,14 @@ def addCKFTracks(
         TrackSelector configuration. Each range is specified as a tuple of (min,max).
         Specify as a list(TrackSelectorConfig) for eta-dependent cuts, with binning specified by absEta[1].
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
-    writeTrajectories : bool, True
-        write trackstates_ckf.root and tracksummary_ckf.root ntuples? These can be quite large.
+    writeTrackSummary : bool, True
+        write tracksummary_ckf.root ntuple?
+    writeTrackStates : bool, False
+        write trackstates_ckf.root ntuple? This can be quite large.
+    writePerformance : bool, True
+        write performance_fitting_ckf.root and performance_finding_ckf.root ntuples?
+    writeCovMat : bool, False
+        write covaraiance matrices to tracksummary_ckf.root ntuple?
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -1762,21 +1768,6 @@ def addExaTrkX(
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    # Run the particle selection
-    # The pre-selection will select truth particles satisfying provided criteria
-    # from all particles read in by particle reader for further processing. It
-    # has no impact on the truth hits themselves
-    s.addAlgorithm(
-        acts.examples.TruthSeedSelector(
-            level=customLogLevel(),
-            ptMin=500 * u.MeV,
-            nHitsMin=9,
-            inputParticles="particles_initial",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            outputParticles="particles_seed_selected",
-        )
-    )
-
     # Create space points
     s.addAlgorithm(
         acts.examples.SpacePointMaker(
@@ -1938,8 +1929,8 @@ def addAmbiguityResolution(
         tracks=alg.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
-        writeSummary=writeTrackStates,
-        writeStates=writeTrackSummary,
+        writeSummary=writeTrackSummary,
+        writeStates=writeTrackStates,
         writeFitterPerformance=writePerformance,
         writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
