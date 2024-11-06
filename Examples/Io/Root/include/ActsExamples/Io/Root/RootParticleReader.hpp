@@ -47,6 +47,9 @@ class RootParticleReader : public IReader {
   /// @param config The Configuration struct
   RootParticleReader(const Config& config, Acts::Logging::Level level);
 
+  /// Destructor
+  ~RootParticleReader() override;
+
   /// Framework name() method
   std::string name() const override { return "RootParticleReader"; }
 
@@ -87,40 +90,36 @@ class RootParticleReader : public IReader {
 
   /// The entry numbers for accessing events in increased order (there could be
   /// multiple entries corresponding to one event number)
-  std::vector<long long> m_entryNumbers;
+  std::vector<long long> m_entryNumbers = {};
 
-  std::vector<std::uint64_t> *m_particleId = nullptr;
-  std::vector<std::int32_t> *m_particleType = nullptr;
-  std::vector<std::uint32_t> *m_process = nullptr;
-  std::vector<float> *m_vx = nullptr;
-  std::vector<float> *m_vy = nullptr;
-  std::vector<float> *m_vz = nullptr;
-  std::vector<float> *m_vt = nullptr;
-  std::vector<float> *m_px = nullptr;
-  std::vector<float> *m_py = nullptr;
-  std::vector<float> *m_pz = nullptr;
-  std::vector<float> *m_m = nullptr;
-  std::vector<float> *m_q = nullptr;
-  std::vector<float> *m_eta = nullptr;
-  std::vector<float> *m_phi = nullptr;
-  std::vector<float> *m_pt = nullptr;
-  std::vector<float> *m_p = nullptr;
-  std::vector<std::uint32_t> *m_vertexPrimary = nullptr;
-  std::vector<std::uint32_t> *m_vertexSecondary = nullptr;
-  std::vector<std::uint32_t> *m_particle = nullptr;
-  std::vector<std::uint32_t> *m_generation = nullptr;
-  std::vector<std::uint32_t> *m_subParticle = nullptr;
+  std::vector<std::uint64_t>* m_particleId = new std::vector<std::uint64_t>;
+  std::vector<std::int32_t>* m_particleType = new std::vector<std::int32_t>;
+  std::vector<std::uint32_t>* m_process = new std::vector<std::uint32_t>;
+  std::vector<float>* m_vx = new std::vector<float>;
+  std::vector<float>* m_vy = new std::vector<float>;
+  std::vector<float>* m_vz = new std::vector<float>;
+  std::vector<float>* m_vt = new std::vector<float>;
+  std::vector<float>* m_px = new std::vector<float>;
+  std::vector<float>* m_py = new std::vector<float>;
+  std::vector<float>* m_pz = new std::vector<float>;
+  std::vector<float>* m_m = new std::vector<float>;
+  std::vector<float>* m_q = new std::vector<float>;
+  std::vector<float>* m_eta = new std::vector<float>;
+  std::vector<float>* m_phi = new std::vector<float>;
+  std::vector<float>* m_pt = new std::vector<float>;
+  std::vector<float>* m_p = new std::vector<float>;
+  std::vector<std::uint32_t>* m_vertexPrimary = new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* m_vertexSecondary =
+      new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* m_particle = new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* m_generation = new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* m_subParticle = new std::vector<std::uint32_t>;
 
-  /// Total energy loss in GeV.
-  std::vector<float> *m_eLoss = nullptr;
-  /// Accumulated material
-  std::vector<float> *m_pathInX0 = nullptr;
-  /// Accumulated material
-  std::vector<float> *m_pathInL0 = nullptr;
-  /// Number of hits.
-  std::vector<std::int32_t> *m_numberOfHits = nullptr;
-  /// Particle outcome
-  std::vector<std::uint32_t> *m_outcome = nullptr;
+  std::vector<float>* m_eLoss = new std::vector<float>;
+  std::vector<float>* m_pathInX0 = new std::vector<float>;
+  std::vector<float>* m_pathInL0 = new std::vector<float>;
+  std::vector<std::int32_t>* m_numberOfHits = new std::vector<std::int32_t>;
+  std::vector<std::uint32_t>* m_outcome = new std::vector<std::uint32_t>;
 };
 
 }  // namespace ActsExamples

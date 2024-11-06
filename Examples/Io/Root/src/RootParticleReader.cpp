@@ -63,12 +63,6 @@ RootParticleReader::RootParticleReader(const RootParticleReader::Config& config,
   m_inputChain->SetBranchAddress("generation", &m_generation);
   m_inputChain->SetBranchAddress("sub_particle", &m_subParticle);
 
-  m_inputChain->SetBranchAddress("e_loss", &m_eLoss);
-  m_inputChain->SetBranchAddress("total_x0", &m_pathInX0);
-  m_inputChain->SetBranchAddress("total_l0", &m_pathInL0);
-  m_inputChain->SetBranchAddress("number_of_hits", &m_numberOfHits);
-  m_inputChain->SetBranchAddress("outcome", &m_outcome);
-
   auto path = m_cfg.filePath;
 
   // add file to the input chain
@@ -90,6 +84,36 @@ RootParticleReader::RootParticleReader(const RootParticleReader::Config& config,
 std::pair<std::size_t, std::size_t> RootParticleReader::availableEvents()
     const {
   return {0u, m_events};
+}
+
+RootParticleReader::~RootParticleReader() {
+  delete m_particleId;
+  delete m_particleType;
+  delete m_process;
+  delete m_vx;
+  delete m_vy;
+  delete m_vz;
+  delete m_vt;
+  delete m_p;
+  delete m_px;
+  delete m_py;
+  delete m_pz;
+  delete m_m;
+  delete m_q;
+  delete m_eta;
+  delete m_phi;
+  delete m_pt;
+  delete m_vertexPrimary;
+  delete m_vertexSecondary;
+  delete m_particle;
+  delete m_generation;
+  delete m_subParticle;
+
+  delete m_eLoss;
+  delete m_pathInX0;
+  delete m_pathInL0;
+  delete m_numberOfHits;
+  delete m_outcome;
 }
 
 ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
@@ -117,25 +141,29 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
   for (unsigned int i = 0; i < nParticles; i++) {
     SimParticle p;
 
-    p.setProcess(static_cast<ActsFatras::ProcessType>(m_process->at(i)));
-    p.setPdg(static_cast<Acts::PdgParticle>(m_particleType->at(i)));
-    p.setCharge(m_q->at(i) * Acts::UnitConstants::e);
-    p.setMass(m_m->at(i) * Acts::UnitConstants::GeV);
-    p.setParticleId(m_particleId->at(i));
+    p.setProcess(static_cast<ActsFatras::ProcessType>((*m_process).at(i)));
+    p.setPdg(static_cast<Acts::PdgParticle>((*m_particleType).at(i)));
+    p.setCharge((*m_q).at(i) * Acts::UnitConstants::e);
+    p.setMass((*m_m).at(i) * Acts::UnitConstants::GeV);
+    p.setParticleId((*m_particleId).at(i));
 
-    p.initial().setPosition4(m_vx->at(i) * Acts::UnitConstants::mm,
-                             m_vy->at(i) * Acts::UnitConstants::mm,
-                             m_vz->at(i) * Acts::UnitConstants::mm,
-                             m_vt->at(i) * Acts::UnitConstants::mm);
+    SimParticleState& initialState = p.initial();
+
+    initialState.setPosition4((*m_vx).at(i) * Acts::UnitConstants::mm,
+                              (*m_vy).at(i) * Acts::UnitConstants::mm,
+                              (*m_vz).at(i) * Acts::UnitConstants::mm,
+                              (*m_vt).at(i) * Acts::UnitConstants::mm);
     // NOTE: direction is normalized inside `setDirection`
-    p.initial().setDirection(m_px->at(i), m_py->at(i), m_pz->at(i));
-    p.initial().setAbsoluteMomentum(m_p->at(i) * Acts::UnitConstants::GeV);
+    initialState.setDirection((*m_px).at(i), (*m_py).at(i), (*m_pz).at(i));
+    initialState.setAbsoluteMomentum((*m_p).at(i) * Acts::UnitConstants::GeV);
 
-    // TODO energy loss cannot be set without final momentum
-    p.final().setMaterialPassed(m_pathInX0->at(i), m_pathInL0->at(i));
-    p.final().setNumberOfHits(m_numberOfHits->at(i));
-    p.final().setOutcome(
-        static_cast<ActsFatras::ParticleOutcome>(m_outcome->at(i)));
+    SimParticleState& finalState = p.final();
+
+    finalState.setMaterialPassed((*m_pathInX0).at(i) * Acts::UnitConstants::mm,
+                                 (*m_pathInL0).at(i) * Acts::UnitConstants::mm);
+    finalState.setNumberOfHits((*m_numberOfHits).at(i));
+    finalState.setOutcome(
+        static_cast<ActsFatras::ParticleOutcome>((*m_outcome).at(i)));
 
     particles.insert(p);
   }
