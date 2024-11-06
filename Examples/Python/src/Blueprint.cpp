@@ -39,6 +39,7 @@ using std::uniform_real_distribution;
 void pseudoNavigation(const TrackingGeometry& trackingGeometry,
                       const GeometryContext& gctx, std::filesystem::path& path,
                       std::size_t runs, std::size_t substepsPerCm,
+                      std::pair<double, double> etaRange,
                       Logging::Level logLevel) {
   using namespace Acts::UnitLiterals;
 
@@ -52,9 +53,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   std::uniform_real_distribution<> dist{-1, 1};
   std::uniform_real_distribution<> subStepDist{0.01, 0.99};
 
-  double etaWidth = 4.5;
-  double thetaMin = 2 * std::atan(std::exp(-etaWidth));
-  double thetaMax = 2 * std::atan(std::exp(etaWidth));
+  double thetaMin = 2 * std::atan(std::exp(-etaRange.first));
+  double thetaMax = 2 * std::atan(std::exp(-etaRange.second));
   std::uniform_real_distribution<> thetaDist{thetaMin, thetaMax};
 
   using namespace Acts::UnitLiterals;
@@ -372,15 +372,21 @@ void addBlueprint(Context& ctx) {
       py::class_<Acts::MaterialDesignatorBlueprintNode, Acts::BlueprintNode,
                  std::shared_ptr<Acts::MaterialDesignatorBlueprintNode>>(
           m, "MaterialDesignatorBlueprintNode")
-          .def(py::init<>());
+          .def(py::init<const std::string&, Experimental::ProtoBinning>(),
+               "name"_a, "binning"_a);
 
   addContextManagerProtocol(matNode);
 
-  addNodeMethods("Material", [](BlueprintNode& self) {
-    auto child = std::make_shared<MaterialDesignatorBlueprintNode>();
-    self.addChild(child);
-    return child;
-  });
+  addNodeMethods(
+      "Material",
+      [](BlueprintNode& self, const std::string& name,
+         const Experimental::ProtoBinning& binning) {
+        auto child =
+            std::make_shared<MaterialDesignatorBlueprintNode>(name, binning);
+        self.addChild(child);
+        return child;
+      },
+      "name"_a, "binning"_a);
 
   auto layerNode =
       py::class_<Acts::LayerBlueprintNode, Acts::BlueprintNode,
@@ -416,7 +422,7 @@ void addBlueprint(Context& ctx) {
   // TEMPORARY
   m.def("pseudoNavigation", &pseudoNavigation, "trackingGeometry"_a, "gctx"_a,
         "path"_a, "runs"_a, "substepsPerCm"_a = 2,
-        "logLevel"_a = Logging::INFO);
+        "etaRange"_a = std::pair{-4.5, 4.5}, "logLevel"_a = Logging::INFO);
 }
 
 }  // namespace Acts::Python
