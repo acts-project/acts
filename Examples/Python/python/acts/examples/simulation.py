@@ -491,9 +491,19 @@ def addFatras(
     # Sequencer
     s.addAlgorithm(alg)
 
+    # Output
+    addSimWriters(
+        s,
+        alg.config.outputSimHits,
+        alg.config.outputParticles,
+        outputDirCsv,
+        outputDirRoot,
+        logLevel,
+    )
+
     # Selector
     if postSelectParticles is not None:
-        particlesPostSelected = "fatras_particles_selected"
+        particlesPostSelected = "fatras_particles_postselected"
         addParticleSelection(
             s,
             postSelectParticles,
@@ -504,18 +514,7 @@ def addFatras(
     else:
         particlesPostSelected = outputParticles
 
-    # Only add alias for 'particles_initial' as this is the one we use most
     s.addWhiteboardAlias("particles", outputParticles)
-
-    # Output
-    addSimWriters(
-        s,
-        alg.config.outputSimHits,
-        outputParticles,
-        outputDirCsv,
-        outputDirRoot,
-        logLevel,
-    )
 
     return s
 
@@ -719,6 +718,16 @@ def addGeant4(
     # Sequencer
     s.addAlgorithm(alg)
 
+    # Output
+    addSimWriters(
+        s,
+        alg.config.outputSimHits,
+        alg.config.outputParticles,
+        outputDirCsv,
+        outputDirRoot,
+        logLevel,
+    )
+
     # Selector
     if postSelectParticles is not None:
         particlesPostSelected = "geant4_particles_postselected"
@@ -732,18 +741,7 @@ def addGeant4(
     else:
         particlesPostSelected = outputParticles
 
-    # Only add alias for 'particles_initial' as this is the one we use most
     s.addWhiteboardAlias("particles", outputParticles)
-
-    # Output
-    addSimWriters(
-        s,
-        alg.config.outputSimHits,
-        outputParticles,
-        outputDirCsv,
-        outputDirRoot,
-        logLevel=logLevel,
-    )
 
     return s
 

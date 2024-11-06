@@ -14,7 +14,6 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <cassert>
 #include <ostream>
@@ -69,7 +68,7 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
 
 void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
     const G4Track* aTrack) {
-  // The initial particle maybe was not registered because a particle ID
+  // The initial particle maybe was not registered because of a particle ID
   // collision
   if (!eventStore().trackIdMapping.contains(aTrack->GetTrackID())) {
     ACTS_WARNING("Particle ID for track ID " << aTrack->GetTrackID()
@@ -84,7 +83,7 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
 
   if (!m_cfg.keepParticlesWithoutHits && !hasHits) {
     [[maybe_unused]] auto n = eventStore().particlesSimulated.erase(
-        ActsExamples::SimParticle{barcode, Acts::PdgParticle::eInvalid});
+        ActsExamples::SimParticle(barcode, Acts::PdgParticle::eInvalid));
     assert(n == 1);
     return;
   }
@@ -92,7 +91,7 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
   auto particleIt = eventStore().particlesInitial.find(barcode);
   if (particleIt == eventStore().particlesInitial.end()) {
     ACTS_WARNING("Particle ID " << barcode
-                                << " not found in simulated particles");
+                                << " not found in initial particles");
     return;
   }
   SimParticle particle = *particleIt;
