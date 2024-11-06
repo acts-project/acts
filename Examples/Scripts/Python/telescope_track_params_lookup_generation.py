@@ -26,11 +26,12 @@ def estimateLookup(
     # Fatras simulation of muons
     rnd = acts.examples.RandomNumbers(seed=42)
 
-    s = acts.examples.Sequencer(events=numEvents, numThreads=1, logLevel=acts.logging.INFO)
+    s = acts.examples.Sequencer(
+        events=numEvents, numThreads=1, logLevel=acts.logging.INFO
+    )
 
     vertexGen=acts.examples.GaussianVertexGenerator(
-        stddev=acts.Vector4(0, 0, 0, 0),
-        mean=acts.Vector4(0, 9, 0, 0)
+        stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 9, 0, 0)
     )
 
     addParticleGun(
@@ -41,7 +42,7 @@ def estimateLookup(
         particleConfig=ParticleConfig(1, acts.PdgParticle.eMuon, False),
         multiplicity=1,
         rnd=rnd,
-        vtxGen = vertexGen
+        vtxGen=vertexGen,
     )
 
     addFatras(
@@ -51,13 +52,11 @@ def estimateLookup(
         inputParticles="particles_input",
         outputSimHits="sim_hits",
         rnd=rnd,
-        preSelectParticles=None
+        preSelectParticles=None,
     )
 
     # Set up the track lookup grid writer
-    jsonWriterConfig = acts.examples.JsonTrackParamsLookupWriter.Config(
-        path=outputPath
-    )
+    jsonWriterConfig = acts.examples.JsonTrackParamsLookupWriter.Config(path=outputPath)
     jsonWriter = acts.examples.JsonTrackParamsLookupWriter(jsonWriterConfig)
 
     # Set up the track estimation algorithm
@@ -66,26 +65,37 @@ def estimateLookup(
     refGeometryId = refSurface.geometryId()
 
     trackEstConfig = acts.examples.TrackParamsLookupEstimation.Config(
-        refLayers={refGeometryId : refSurface},
+        refLayers={refGeometryId: refSurface},
         bins=(1, 1000),
         inputHits="sim_hits",
         inputParticles="particles_input",
-        trackLookupGridWriters = [jsonWriter]
+        trackLookupGridWriters = [jsonWriter],
     )
-    trackEstAlg = acts.examples.TrackParamsLookupEstimation(trackEstConfig, acts.logging.INFO)
+    trackEstAlg = acts.examples.TrackParamsLookupEstimation(
+        trackEstConfig, acts.logging.INFO
+    )
 
     s.addAlgorithm(trackEstAlg)
 
     s.run()
 
+
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
 
     p.add_argument(
-        "-n", "--events", type=int, default=100000, help="Number of events for lookup estimation"
+        "-n", 
+        "--events", 
+        type=int, 
+        default=100000, 
+        help="Number of events for lookup estimation",
     )
     p.add_argument(
-        "-o", "--output", type=str, default="lookup.json", help="Output lookup file name"
+        "-o", 
+        "--output", 
+        type=str, 
+        default="lookup.json", 
+        help="Output lookup file name",
     )
 
     args = p.parse_args()
@@ -96,12 +106,9 @@ if __name__ == "__main__":
         positions=[30, 60, 90],
         stereos=[0, 0, 0],
         binValue=2,
-        surfaceType=0
+        surfaceType=0,
     )
 
     # Estimate the lookup
-    estimateLookup(
-        trackingGeometry,
-        args.events,
-        args.output)
+    estimateLookup(trackingGeometry, args.events, args.output)
     

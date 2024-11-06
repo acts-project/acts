@@ -40,7 +40,7 @@ class JsonTrackParamsLookupReader final : public ITrackParamsLookupReader {
     std::pair<std::size_t, std::size_t> bins;
   };
 
-  JsonTrackParamsLookupReader(const Config& config) : m_cfg(config){};
+  JsonTrackParamsLookupReader(const Config& config) : m_cfg(config) {};
 
   ~JsonTrackParamsLookupReader() override = default;
 

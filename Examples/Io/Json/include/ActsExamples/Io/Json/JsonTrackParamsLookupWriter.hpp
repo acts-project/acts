@@ -37,7 +37,7 @@ class JsonTrackParamsLookupWriter final : public ITrackParamsLookupWriter {
   /// Constructor
   ///
   /// @param config The configuration struct of the writer
-  JsonTrackParamsLookupWriter(const Config& config) : m_cfg(config){};
+  JsonTrackParamsLookupWriter(const Config& config) : m_cfg(config) {};
 
   /// Virtual destructor
   ~JsonTrackParamsLookupWriter() override = default;
