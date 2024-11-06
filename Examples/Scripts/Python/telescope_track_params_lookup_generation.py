@@ -15,10 +15,7 @@ from acts.examples.simulation import (
 
 u = acts.UnitConstants
 
-def estimateLookup(
-    trackingGeometry,
-    numEvents,
-    outputPath):
+def estimateLookup(trackingGeometry, numEvents, outputPath):
 
     # Set up the dipole magnetic field
     field = acts.ConstantBField(acts.Vector3(50 * u.T, 0, 0))
@@ -30,7 +27,7 @@ def estimateLookup(
         events=numEvents, numThreads=1, logLevel=acts.logging.INFO
     )
 
-    vertexGen=acts.examples.GaussianVertexGenerator(
+    vertexGen = acts.examples.GaussianVertexGenerator(
         stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 9, 0, 0)
     )
 
@@ -69,7 +66,7 @@ def estimateLookup(
         bins=(1, 1000),
         inputHits="sim_hits",
         inputParticles="particles_input",
-        trackLookupGridWriters = [jsonWriter],
+        trackLookupGridWriters=[jsonWriter],
     )
     trackEstAlg = acts.examples.TrackParamsLookupEstimation(
         trackEstConfig, acts.logging.INFO
@@ -84,17 +81,17 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
 
     p.add_argument(
-        "-n", 
-        "--events", 
-        type=int, 
-        default=100000, 
+        "-n",
+        "--events",
+        type=int,
+        default=100000,
         help="Number of events for lookup estimation",
     )
     p.add_argument(
-        "-o", 
-        "--output", 
-        type=str, 
-        default="lookup.json", 
+        "-o",
+        "--output",
+        type=str,
+        default="lookup.json",
         help="Output lookup file name",
     )
 
@@ -111,4 +108,3 @@ if __name__ == "__main__":
 
     # Estimate the lookup
     estimateLookup(trackingGeometry, args.events, args.output)
-    
