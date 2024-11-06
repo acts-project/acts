@@ -11,9 +11,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <cstdint>
 #include <ios>
@@ -35,8 +34,6 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
-
-  m_inputParticlesFinal.maybeInitialize(m_cfg.inputParticlesFinal);
 
   // open root file and create the tree
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
@@ -73,13 +70,11 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("generation", &m_generation);
   m_outputTree->Branch("sub_particle", &m_subParticle);
 
-  if (m_inputParticlesFinal.isInitialized()) {
-    m_outputTree->Branch("e_loss", &m_eLoss);
-    m_outputTree->Branch("total_x0", &m_pathInX0);
-    m_outputTree->Branch("total_l0", &m_pathInL0);
-    m_outputTree->Branch("number_of_hits", &m_numberOfHits);
-    m_outputTree->Branch("outcome", &m_outcome);
-  }
+  m_outputTree->Branch("e_loss", &m_eLoss);
+  m_outputTree->Branch("total_x0", &m_pathInX0);
+  m_outputTree->Branch("total_l0", &m_pathInL0);
+  m_outputTree->Branch("number_of_hits", &m_numberOfHits);
+  m_outputTree->Branch("outcome", &m_outcome);
 }
 
 ActsExamples::RootParticleWriter::~RootParticleWriter() {
@@ -101,15 +96,8 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::finalize() {
 
 ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     const AlgorithmContext& ctx, const SimParticleContainer& particles) {
-  const SimParticleContainer* finalParticles = nullptr;
-  if (m_inputParticlesFinal.isInitialized()) {
-    finalParticles = &m_inputParticlesFinal(ctx);
-  }
-
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
-
-  auto nan = std::numeric_limits<float>::quiet_NaN();
 
   m_eventId = ctx.eventNumber;
   for (const auto& particle : particles) {
@@ -150,41 +138,14 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_generation.push_back(particle.particleId().generation());
     m_subParticle.push_back(particle.particleId().subParticle());
 
-    bool wroteFinalParticle = false;
-    if (finalParticles != nullptr) {
-      // get the final particle
-      auto it = finalParticles->find(particle);
-      if (it == finalParticles->end()) {
-        ACTS_ERROR("Could not find final particle for "
-                   << particle.particleId() << " in event " << ctx.eventNumber);
-      } else {
-        const auto& finalParticle = *it;
-        // get the energy loss
-        m_eLoss.push_back(Acts::clampValue<float>(
-            (particle.energy() - finalParticle.energy()) /
-            Acts::UnitConstants::GeV));
-        // get the path in X0
-        m_pathInX0.push_back(Acts::clampValue<float>(finalParticle.pathInX0() /
-                                                     Acts::UnitConstants::mm));
-        // get the path in L0
-        m_pathInL0.push_back(Acts::clampValue<float>(finalParticle.pathInL0() /
-                                                     Acts::UnitConstants::mm));
-        // get the number of hits
-        m_numberOfHits.push_back(finalParticle.numberOfHits());
-        // get the particle outcome
-        m_outcome.push_back(
-            static_cast<std::uint32_t>(finalParticle.outcome()));
-
-        wroteFinalParticle = true;
-      }
-    }
-    if (!wroteFinalParticle) {
-      m_eLoss.push_back(nan);
-      m_pathInX0.push_back(nan);
-      m_pathInL0.push_back(nan);
-      m_numberOfHits.push_back(-1);
-      m_outcome.push_back(0);
-    }
+    m_eLoss.push_back(Acts::clampValue<float>(particle.energyLoss() /
+                                              Acts::UnitConstants::GeV));
+    m_pathInX0.push_back(
+        Acts::clampValue<float>(particle.pathInX0() / Acts::UnitConstants::mm));
+    m_pathInL0.push_back(
+        Acts::clampValue<float>(particle.pathInL0() / Acts::UnitConstants::mm));
+    m_numberOfHits.push_back(particle.numberOfHits());
+    m_outcome.push_back(static_cast<std::uint32_t>(particle.outcome()));
   }
 
   m_outputTree->Fill();

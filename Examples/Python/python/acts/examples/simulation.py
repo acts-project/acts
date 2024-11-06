@@ -356,8 +356,6 @@ def addParticleSelection(
     config: ParticleSelectorConfig,
     inputParticles: str,
     outputParticles: str,
-    inputParticlesFinal: Optional[str] = None,
-    outputParticlesFinal: Optional[str] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """
@@ -372,19 +370,13 @@ def addParticleSelection(
     inputParticles: str
         the identifier for the input particles to be selected
     outputParticles: str
-        the identifier for the final selected particle collection
-    inputParticlesFinal: str, None
-        the identifier for the input final particles to be selected
-    outputParticlesFinal: str, None
-        the identifier for the final selected final particle collection
+        the identifier for the selected particle collection
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     s.addAlgorithm(
         acts.examples.ParticleSelector(
             **acts.examples.defaultKWArgs(
-                inputParticlesFinal=inputParticlesFinal,
-                outputParticlesFinal=outputParticlesFinal,
                 rhoMin=config.rho[0],
                 rhoMax=config.rho[1],
                 absZMin=config.absZ[0],
