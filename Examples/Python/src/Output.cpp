@@ -49,6 +49,8 @@
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
+#include "ActsExamples/TrackFinding/ITrackParamsLookupWriter.hpp"
+#include "ActsExamples/TrackFinding/ITrackParamsLookupReader.hpp"
 
 #include <array>
 #include <memory>
@@ -289,6 +291,16 @@ void addOutput(Context& ctx) {
 
   py::class_<IMaterialWriter, std::shared_ptr<IMaterialWriter>>(
       mex, "IMaterialWriter");
+
+  py::class_<
+    ActsExamples::ITrackParamsLookupWriter, 
+    std::shared_ptr<ActsExamples::ITrackParamsLookupWriter>>(
+        mex, "ITrackParamsLookupWriter");
+
+  py::class_<
+    ActsExamples::ITrackParamsLookupReader, 
+    std::shared_ptr<ActsExamples::ITrackParamsLookupReader>>(
+        mex, "ITrackParamsLookupReader");
 
   {
     using Writer = ActsExamples::RootMaterialWriter;
