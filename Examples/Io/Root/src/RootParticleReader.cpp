@@ -63,6 +63,12 @@ RootParticleReader::RootParticleReader(const RootParticleReader::Config& config,
   m_inputChain->SetBranchAddress("generation", &m_generation);
   m_inputChain->SetBranchAddress("sub_particle", &m_subParticle);
 
+  m_inputChain->SetBranchAddress("e_loss", &m_eLoss);
+  m_inputChain->SetBranchAddress("path_in_x0", &m_pathInX0);
+  m_inputChain->SetBranchAddress("path_in_l0", &m_pathInL0);
+  m_inputChain->SetBranchAddress("number_of_hits", &m_numberOfHits);
+  m_inputChain->SetBranchAddress("outcome", &m_outcome);
+
   auto path = m_cfg.filePath;
 
   // add file to the input chain
