@@ -87,40 +87,40 @@ class RootParticleReader : public IReader {
 
   /// The entry numbers for accessing events in increased order (there could be
   /// multiple entries corresponding to one event number)
-  std::vector<long long> m_entryNumbers = {};
+  std::vector<long long> m_entryNumbers;
 
-  std::vector<std::uint64_t> m_particleId;
-  std::vector<std::int32_t> m_particleType;
-  std::vector<std::uint32_t> m_process;
-  std::vector<float> m_vx;
-  std::vector<float> m_vy;
-  std::vector<float> m_vz;
-  std::vector<float> m_vt;
-  std::vector<float> m_px;
-  std::vector<float> m_py;
-  std::vector<float> m_pz;
-  std::vector<float> m_m;
-  std::vector<float> m_q;
-  std::vector<float> m_eta;
-  std::vector<float> m_phi;
-  std::vector<float> m_pt;
-  std::vector<float> m_p;
-  std::vector<std::uint32_t> m_vertexPrimary;
-  std::vector<std::uint32_t> m_vertexSecondary;
-  std::vector<std::uint32_t> m_particle;
-  std::vector<std::uint32_t> m_generation;
-  std::vector<std::uint32_t> m_subParticle;
+  std::vector<std::uint64_t> *m_particleId = nullptr;
+  std::vector<std::int32_t> *m_particleType = nullptr;
+  std::vector<std::uint32_t> *m_process = nullptr;
+  std::vector<float> *m_vx = nullptr;
+  std::vector<float> *m_vy = nullptr;
+  std::vector<float> *m_vz = nullptr;
+  std::vector<float> *m_vt = nullptr;
+  std::vector<float> *m_px = nullptr;
+  std::vector<float> *m_py = nullptr;
+  std::vector<float> *m_pz = nullptr;
+  std::vector<float> *m_m = nullptr;
+  std::vector<float> *m_q = nullptr;
+  std::vector<float> *m_eta = nullptr;
+  std::vector<float> *m_phi = nullptr;
+  std::vector<float> *m_pt = nullptr;
+  std::vector<float> *m_p = nullptr;
+  std::vector<std::uint32_t> *m_vertexPrimary = nullptr;
+  std::vector<std::uint32_t> *m_vertexSecondary = nullptr;
+  std::vector<std::uint32_t> *m_particle = nullptr;
+  std::vector<std::uint32_t> *m_generation = nullptr;
+  std::vector<std::uint32_t> *m_subParticle = nullptr;
 
   /// Total energy loss in GeV.
-  std::vector<float> m_eLoss;
+  std::vector<float> *m_eLoss = nullptr;
   /// Accumulated material
-  std::vector<float> m_pathInX0;
+  std::vector<float> *m_pathInX0 = nullptr;
   /// Accumulated material
-  std::vector<float> m_pathInL0;
+  std::vector<float> *m_pathInL0 = nullptr;
   /// Number of hits.
-  std::vector<std::int32_t> m_numberOfHits;
+  std::vector<std::int32_t> *m_numberOfHits = nullptr;
   /// Particle outcome
-  std::vector<std::uint32_t> m_outcome;
+  std::vector<std::uint32_t> *m_outcome = nullptr;
 };
 
 }  // namespace ActsExamples

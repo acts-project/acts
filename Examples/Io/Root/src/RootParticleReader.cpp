@@ -112,30 +112,30 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
   ACTS_DEBUG("Reading event: " << context.eventNumber
                                << " stored as entry: " << entry);
 
-  unsigned int nParticles = m_particleId.size();
+  unsigned int nParticles = m_particleId->size();
 
   for (unsigned int i = 0; i < nParticles; i++) {
     SimParticle p;
 
-    p.setProcess(static_cast<ActsFatras::ProcessType>(m_process.at(i)));
-    p.setPdg(static_cast<Acts::PdgParticle>(m_particleType.at(i)));
-    p.setCharge(m_q.at(i) * Acts::UnitConstants::e);
-    p.setMass(m_m.at(i) * Acts::UnitConstants::GeV);
-    p.setParticleId(m_particleId.at(i));
+    p.setProcess(static_cast<ActsFatras::ProcessType>(m_process->at(i)));
+    p.setPdg(static_cast<Acts::PdgParticle>(m_particleType->at(i)));
+    p.setCharge(m_q->at(i) * Acts::UnitConstants::e);
+    p.setMass(m_m->at(i) * Acts::UnitConstants::GeV);
+    p.setParticleId(m_particleId->at(i));
 
-    p.initial().setPosition4(m_vx.at(i) * Acts::UnitConstants::mm,
-                             m_vy.at(i) * Acts::UnitConstants::mm,
-                             m_vz.at(i) * Acts::UnitConstants::mm,
-                             m_vt.at(i) * Acts::UnitConstants::mm);
+    p.initial().setPosition4(m_vx->at(i) * Acts::UnitConstants::mm,
+                             m_vy->at(i) * Acts::UnitConstants::mm,
+                             m_vz->at(i) * Acts::UnitConstants::mm,
+                             m_vt->at(i) * Acts::UnitConstants::mm);
     // NOTE: direction is normalized inside `setDirection`
-    p.initial().setDirection(m_px.at(i), m_py.at(i), m_pz.at(i));
-    p.initial().setAbsoluteMomentum(m_p.at(i) * Acts::UnitConstants::GeV);
+    p.initial().setDirection(m_px->at(i), m_py->at(i), m_pz->at(i));
+    p.initial().setAbsoluteMomentum(m_p->at(i) * Acts::UnitConstants::GeV);
 
     // TODO energy loss cannot be set without final momentum
-    p.final().setMaterialPassed(m_pathInX0.at(i), m_pathInL0.at(i));
-    p.final().setNumberOfHits(m_numberOfHits.at(i));
+    p.final().setMaterialPassed(m_pathInX0->at(i), m_pathInL0->at(i));
+    p.final().setNumberOfHits(m_numberOfHits->at(i));
     p.final().setOutcome(
-        static_cast<ActsFatras::ParticleOutcome>(m_outcome.at(i)));
+        static_cast<ActsFatras::ParticleOutcome>(m_outcome->at(i)));
 
     particles.insert(p);
   }
