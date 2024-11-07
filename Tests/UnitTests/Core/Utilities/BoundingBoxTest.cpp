@@ -442,15 +442,15 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
   for (const auto& vtx_ : vertices) {
     Vector3 vtx = trf * vtx_;
 
-    // this ray goes straight to the actual vertex, this should
-    // definitely intersect the OBB
+    // this ray goes straight to the actual vertex, this should definitely
+    // intersect the OBB
     Ray ray(origin, (vtx - origin).normalized());
     ray = ray.transformed(trf.inverse());
     BOOST_CHECK(obb.intersect(ray));
     ray.draw(ply, (vtx - origin).norm());
 
-    // now shift the target point away from the centroid
-    // this should definitely NOT intersect the OBB
+    // now shift the target point away from the centroid this should definitely
+    // NOT intersect the OBB
     vtx += (vtx - centroid);
     ray = Ray(origin, (vtx - origin).normalized());
     ray = ray.transformed(trf.inverse());
@@ -473,8 +473,8 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     std::ofstream os;
 
-    std::size_t w = 1000;
-    std::size_t n = 10;
+    const std::size_t w = 1000;
+    const std::size_t n = 10;
 
     // BEGIN VISUAL PARAMETER TEST
 
@@ -498,14 +498,12 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     // END VISUAL PARAMETER TEST
 
-    w = 1000;
-    BoundingBoxScalar unit = 20;
+    const BoundingBoxScalar unit = 20;
 
     using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 2>;
     Object o;
     Box::Size size(Eigen::Matrix<BoundingBoxScalar, 2, 1>(2, 2));
 
-    n = 10;
     BoundingBoxScalar minx = -20;
     BoundingBoxScalar miny = -20;
     BoundingBoxScalar maxx = 20;
