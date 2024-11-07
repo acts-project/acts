@@ -150,12 +150,12 @@ Extent in space :
   - value :      AxisX | range = [-6.66104, 6.66104]
   - value :      AxisY | range = [-4.85241, 4.85241]
   - value :      AxisZ | range = [-6, 6]
-  - value :      binR | range = [3, 6.7082]
-  - value :    binPhi | range = [-3.02295, 2.33295]
-  - value :   binRPhi | range = [-20.2785, 15.6499]
-  - value :      binH | range = [0.61548, 2.52611]
-  - value :    binEta | range = [-1.14622, 1.14622]
-  - value :    binMag | range = [7.34847, 7.34847]
+  - value :      AxisR | range = [3, 6.7082]
+  - value :    AxisPhi | range = [-3.02295, 2.33295]
+  - value :   AxisRPhi | range = [-20.2785, 15.6499]
+  - value :  AxisTheta | range = [0.61548, 2.52611]
+  - value :    AxisEta | range = [-1.14622, 1.14622]
+  - value :    AxisMag | range = [7.34847, 7.34847]
 )";
   BOOST_CHECK_EQUAL(sstream.str(), oString);
 }
