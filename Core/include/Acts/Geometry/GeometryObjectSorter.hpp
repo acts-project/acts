@@ -103,8 +103,8 @@ class DistanceSorterT {
     using Acts::VectorHelpers::eta;
     using Acts::VectorHelpers::perp;
     using Acts::VectorHelpers::phi;
-    // switch the binning value
-    // - binX, binY, AxisZ, binR, binPhi, binRPhi, binH, binEta
+    // switch the possible sorting values are
+    // - AxisX, AxisY, AxisZ, AxisR, AxisPhi, AxisRPhi, AxisTheta, AxisEta
     switch (m_binningValue) {
       // compare on diff x
       case AxisDirection::AxisX: {

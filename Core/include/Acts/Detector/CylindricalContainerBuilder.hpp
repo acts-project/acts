@@ -40,8 +40,8 @@ class IGeometryIdGenerator;
 /// that will be executed in a chain
 ///
 /// @note allowed AxisDirection(s) for the cylindrical container builder are
-/// {binZ}, {binR}, {binPhi}, {binZ, binR}, whereas the last option indicates
-/// a wrapping setup.
+/// {AxisZ}, {AxisR}, {AxisPhi}, {AxisZ, AxisR}, whereas the last option
+/// indicates a wrapping setup.
 class CylindricalContainerBuilder : public IDetectorComponentBuilder {
  public:
   /// Nested configuration object

@@ -51,7 +51,7 @@ void addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
 
 /// Helper method to be called for Cylinder and Disc Proto material
 ///
-/// For both, cylinder and disc, the closed binning value is "binPhi"
+/// For both, cylinder and disc, the closed binning value is "AxisPhi"
 ///
 /// @param params An instance of @c DD4hep::VariantParameters
 /// @param layer the Layer to assign the proto material

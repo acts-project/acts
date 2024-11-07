@@ -37,7 +37,7 @@ class IGeometryIdGenerator;
 /// that will be executed in a chain
 ///
 /// @note allowed AxisDirection(s) for the cuboid container builder are
-/// {binX}, {binY}, {binZ}.
+/// {AxisX}, {AxisY}, {AxisZ}.
 ///
 /// @note Connecting containers isn't functional yet due to the underlying
 /// issues in the CuboidDetectorHelper

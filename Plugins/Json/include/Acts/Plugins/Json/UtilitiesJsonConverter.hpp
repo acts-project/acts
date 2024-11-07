@@ -43,14 +43,14 @@ void from_json(const nlohmann::json& j, Range1D<Type>& r) {
 }
 
 NLOHMANN_JSON_SERIALIZE_ENUM(AxisDirection,
-                             {{AxisDirection::AxisX, "binX"},
-                              {AxisDirection::AxisY, "binY"},
-                              {AxisDirection::AxisZ, "binZ"},
-                              {AxisDirection::AxisR, "binR"},
-                              {AxisDirection::AxisPhi, "binPhi"},
-                              {AxisDirection::AxisRPhi, "binRPhi"},
-                              {AxisDirection::AxisTheta, "binH"},
-                              {AxisDirection::AxisEta, "binEta"},
-                              {AxisDirection::AxisMag, "binMag"}})
+                             {{AxisDirection::AxisX, "AxisX"},
+                              {AxisDirection::AxisY, "AxisY"},
+                              {AxisDirection::AxisZ, "AxisZ"},
+                              {AxisDirection::AxisR, "AxisR"},
+                              {AxisDirection::AxisPhi, "AxisPhi"},
+                              {AxisDirection::AxisRPhi, "AxisRPhi"},
+                              {AxisDirection::AxisTheta, "AxisTheta"},
+                              {AxisDirection::AxisEta, "AxisEta"},
+                              {AxisDirection::AxisMag, "AxisMag"}})
 
 }  // namespace Acts

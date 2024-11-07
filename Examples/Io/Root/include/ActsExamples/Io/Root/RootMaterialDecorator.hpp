@@ -64,9 +64,10 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
     std::string sentag = "_sen";
     /// The bin number tag
     std::string ntag = "n";
-    /// The value tag -> binning values: AxisZ, binR, binPhi, etc.
+    /// The value tag -> binning values: AxisZ, AxisR, AxisPhi, etc.
     std::string vtag = "v";
-    /// The option tag -> binning options: open, AxisBoundaryType::Closed
+    /// The option tag -> binning options: AxisBoundaryType::Bound,
+    /// AxisBoundaryType::Closed
     std::string otag = "o";
     /// The range min tag: min value
     std::string mintag = "min";

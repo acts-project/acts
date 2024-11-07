@@ -320,7 +320,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
   assert(dim() == 1);
   if (direction() == AxisDirection::AxisRPhi) {
     const auto& axisRPhi = *grid().axes().front();
-    // 1D direction is binRPhi, so add a Z axis
+    // 1D direction is AxisRPhi, so add a Z axis
     double hlZ = surface->bounds().get(CylinderBounds::eHalfLengthZ);
 
     auto grid = axisRPhi.visit([&](const auto& axis0) {
@@ -401,7 +401,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
     }
   } else {
     const auto& axisPhi = *grid().axes().front();
-    // 1D direction is binPhi, so add an R axis
+    // 1D direction is AxisPhi, so add an R axis
     double rMin = bounds->get(RadialBounds::eMinR);
     double rMax = bounds->get(RadialBounds::eMaxR);
 

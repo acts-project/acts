@@ -312,7 +312,7 @@ class SurfaceArrayCreator {
   /// @param [in] gctx the geometry context for this call
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the AxisDirection in which direction should be binned
-  /// (currently possible: binPhi, binR, AxisZ)
+  /// (currently possible: AxisPhi, AixisR, AxisZ)
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
   /// @return Instance of @c ProtoAxis containing determined properties
@@ -339,7 +339,7 @@ class SurfaceArrayCreator {
   /// @param [in] gctx the geometry context for this call
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the AxisDirection in which direction should be binned
-  /// (currently possible: binPhi, binR, AxisZ)
+  /// (currently possible: AxisPhi, AxisR, AxisZ)
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
   /// @param nBins Number of bins to use, 0 means determine automatically

@@ -336,7 +336,7 @@ class DiscSurface : public RegularSurface {
   /// @note The surfaces need to be *compatible*, i.e. have disc bounds
   ///       that align
   /// @param other The other disc surface to merge with
-  /// @param direction The binning direction: either @c binR or @c binPhi
+  /// @param direction The binning direction: either @c AxisR or @c AxisPhi
   /// @param externalRotation If true, any phi rotation is done in the transform
   /// @param logger The logger to use
   /// @return The merged disc surface and a boolean indicating if surfaces are reversed

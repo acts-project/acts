@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(ContainerConnection) {
   Acts::GeometryView3D::drawDetectorVolume(obj, *volumeC, tContext);
   Acts::GeometryView3D::drawDetectorVolume(obj, *volumeD, tContext);
 
-  obj.write("ConnectContainers_binX.obj");
+  obj.write("ConnectContainers_AxisX.obj");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

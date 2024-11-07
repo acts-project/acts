@@ -360,15 +360,15 @@ void addBinning(Context& ctx) {
   auto& m = ctx.get("main");
 
   auto binningValue = py::enum_<AxisDirection>(m, "AxisDirection")
-                          .value("binX", AxisDirection::AxisX)
-                          .value("binY", AxisDirection::AxisY)
-                          .value("binZ", AxisDirection::AxisZ)
-                          .value("binR", AxisDirection::AxisR)
-                          .value("binPhi", AxisDirection::AxisPhi)
-                          .value("binRPhi", AxisDirection::AxisRPhi)
-                          .value("binH", AxisDirection::AxisTheta)
-                          .value("binEta", AxisDirection::AxisEta)
-                          .value("binMag", AxisDirection::AxisMag);
+                          .value("AxisX", AxisDirection::AxisX)
+                          .value("AxisY", AxisDirection::AxisY)
+                          .value("AxisZ", AxisDirection::AxisZ)
+                          .value("AxisR", AxisDirection::AxisR)
+                          .value("AxisPhi", AxisDirection::AxisPhi)
+                          .value("AxisRPhi", AxisDirection::AxisRPhi)
+                          .value("AxisTheta", AxisDirection::AxisTheta)
+                          .value("AxisEta", AxisDirection::AxisEta)
+                          .value("AxisMag", AxisDirection::AxisMag);
 
   auto axisBoundaryType = py::enum_<AxisBoundaryType>(m, "AxisBoundaryType")
                               .value("Bound", AxisBoundaryType::Bound)
