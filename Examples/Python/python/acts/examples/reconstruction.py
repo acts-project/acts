@@ -1403,8 +1403,14 @@ def addCKFTracks(
         TrackSelector configuration. Each range is specified as a tuple of (min,max).
         Specify as a list(TrackSelectorConfig) for eta-dependent cuts, with binning specified by absEta[1].
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
-    writeTrajectories : bool, True
-        write trackstates_ckf.root and tracksummary_ckf.root ntuples? These can be quite large.
+    writeTrackSummary : bool, True
+        write tracksummary_ckf.root ntuple?
+    writeTrackStates : bool, False
+        write trackstates_ckf.root ntuple? This can be quite large.
+    writePerformance : bool, True
+        write performance_fitting_ckf.root and performance_finding_ckf.root ntuples?
+    writeCovMat : bool, False
+        write covaraiance matrices to tracksummary_ckf.root ntuple?
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -1902,8 +1908,8 @@ def addAmbiguityResolution(
         tracks=alg.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
-        writeSummary=writeTrackStates,
-        writeStates=writeTrackSummary,
+        writeSummary=writeTrackSummary,
+        writeStates=writeTrackStates,
         writeFitterPerformance=writePerformance,
         writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,

@@ -15,11 +15,11 @@
 #include "ActsExamples/Generators/EventGenerator.hpp"
 
 #include <array>
-#include <cmath>
 #include <cstddef>
 #include <limits>
 #include <numbers>
 #include <optional>
+#include <random>
 
 namespace ActsExamples {
 
@@ -50,8 +50,10 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
     /// Low, high (exclusive) for absolute/transverse momentum.
     double pMin = 1 * Acts::UnitConstants::GeV;
     double pMax = 10 * Acts::UnitConstants::GeV;
-    /// Indicate if the momentum referse to transverse momentum
+    /// Indicate if the momentum refers to transverse momentum.
     bool pTransverse = false;
+    /// Indicate if the momentum should be uniformly distributed in log space.
+    bool pLogUniform = false;
     /// (Absolute) PDG particle number to identify the particle type.
     Acts::PdgParticle pdg = Acts::PdgParticle::eMuon;
     /// Randomize the charge and flip the PDG particle number sign accordingly.
@@ -72,14 +74,23 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
       RandomEngine& rng) override;
 
  private:
+  using UniformIndex = std::uniform_int_distribution<std::uint8_t>;
+  using UniformReal = std::uniform_real_distribution<double>;
+
   Config m_cfg;
+
   // will be automatically set from PDG data tables
-  double m_charge;
-  double m_mass;
-  double m_cosThetaMin;
-  double m_cosThetaMax;
-  double m_etaMin;
-  double m_etaMax;
+  double m_charge{};
+  double m_mass{};
+
+  // (anti-)particle choice is one random draw but defines two properties
+  std::array<Acts::PdgParticle, 2> m_pdgChoices{};
+  std::array<double, 2> m_qChoices{};
+
+  UniformIndex m_particleTypeChoice;
+  UniformReal m_phiDist;
+  std::function<std::pair<double, double>(RandomEngine& rng)> m_sinCosThetaDist;
+  std::function<double(RandomEngine& rng)> m_somePDist;
 };
 
 }  // namespace ActsExamples
