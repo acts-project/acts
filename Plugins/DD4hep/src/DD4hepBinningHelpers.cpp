@@ -21,7 +21,7 @@ Acts::DD4hepBinningHelpers::convertBinning(
         getParamOr<std::string>(bname + "_" + ab + "_type", dd4hepElement, "");
     if (!type.empty()) {
       // Default binning is bound
-      auto bType = Acts::AxisBoundaryType::Bound;
+      auto bType = AxisBoundaryType::Bound;
       // Equidistant or variable binning
       AxisType aType =
           type == "equidistant" ? AxisType::Equidistant : AxisType::Variable;
@@ -38,18 +38,20 @@ Acts::DD4hepBinningHelpers::convertBinning(
               Experimental::ProtoBinning(bVal, bType, nBins, nExpansion));
         } else {
           // Equidistant binning
-          double minDefault =
-              bVal == BinningValue::binPhi ? -std::numbers::pi : 0.;
-          double maxDefault =
-              bVal == BinningValue::binPhi ? std::numbers::pi : 0.;
+          double minDefault = bVal == AxisDirection::AxisPhi
+                                      ? -std::numbers::pi_v<double>
+                                      : 0.;
+          double maxDefault = bVal == AxisDirection::AxisPhi
+                                      ? std::numbers::pi_v<double>
+                                      : 0.;
           auto min = getParamOr<double>(bname + "_" + ab + "_min",
-                                        dd4hepElement, minDefault);
+                                            dd4hepElement, minDefault);
           auto max = getParamOr<double>(bname + "_" + ab + "_max",
-                                        dd4hepElement, maxDefault);
+                                            dd4hepElement, maxDefault);
           // Check for closed phi binning
-          if (bVal == BinningValue::binPhi &&
+          if (bVal == AxisDirection::AxisPhi &&
               (max - min) > 1.9 * std::numbers::pi) {
-            bType = Acts::AxisBoundaryType::Closed;
+            bType = AxisBoundaryType::Closed;
           }
           protoBinnings.push_back(Experimental::ProtoBinning(
               bVal, bType, min, max, nBins, nExpansion));
@@ -62,9 +64,9 @@ Acts::DD4hepBinningHelpers::convertBinning(
               bname + "_" + ab + "_b" + std::to_string(ib), dd4hepElement, 0.));
         }
         // Check for closed phi binning
-        if (bVal == BinningValue::binPhi &&
+        if (bVal == AxisDirection::AxisPhi &&
             (edges.back() - edges.front()) > 1.9 * std::numbers::pi) {
-          bType = Acts::AxisBoundaryType::Closed;
+          bType = AxisBoundaryType::Closed;
         }
         protoBinnings.push_back(
             Experimental::ProtoBinning(bVal, bType, edges, nExpansion));

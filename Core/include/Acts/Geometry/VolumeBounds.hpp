@@ -12,7 +12,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -129,9 +129,8 @@ class VolumeBounds {
   /// @note This is the default implementation that
   /// returns the bounding box binning. Individual shapes
   /// should override this method
-  virtual std::vector<Acts::BinningValue> canonicalBinning() const {
-    return {Acts::BinningValue::binX, Acts::BinningValue::binY,
-            Acts::BinningValue::binZ};
+  virtual std::vector<AxisDirection> canonicalAxisDirections() const {
+    return {AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ};
   };
 
   /// Binning offset - overloaded for some R-binning types
@@ -139,14 +138,14 @@ class VolumeBounds {
   /// @param bValue is the binning schema used
   ///
   /// @return vector 3D to be used for the binning
-  virtual Vector3 binningOffset(BinningValue bValue) const;
+  virtual Vector3 binningOffset(AxisDirection bValue) const;
 
   /// Binning borders in double
   ///
   /// @param bValue is the binning schema used
   ///
   /// @return float offset to be used for the binning
-  virtual double binningBorder(BinningValue bValue) const;
+  virtual double binningBorder(AxisDirection bValue) const;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
@@ -156,11 +155,11 @@ class VolumeBounds {
 
 /// Binning offset - overloaded for some R-binning types
 inline Vector3 VolumeBounds::binningOffset(
-    BinningValue /*bValue*/) const {  // standard offset is 0.,0.,0.
+    AxisDirection /*bValue*/) const {  // standard offset is 0.,0.,0.
   return Vector3(0., 0., 0.);
 }
 
-inline double VolumeBounds::binningBorder(BinningValue /*bValue*/) const {
+inline double VolumeBounds::binningBorder(AxisDirection /*bValue*/) const {
   return 0.;
 }
 

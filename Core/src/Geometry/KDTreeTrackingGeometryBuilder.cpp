@@ -25,7 +25,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <cstddef>
@@ -51,10 +51,10 @@ Acts::KDTreeTrackingGeometryBuilder::trackingGeometry(
   surfacesMeasured.reserve(m_cfg.surfaces.size());
   for (auto& s : m_cfg.surfaces) {
     auto ext = s->polyhedronRepresentation(gctx, 1u).extent();
-    surfacesMeasured.push_back(
-        MeasuredSurface{std::array<double, 2u>{ext.medium(BinningValue::binZ),
-                                               ext.medium(BinningValue::binR)},
-                        s});
+    surfacesMeasured.push_back(MeasuredSurface{
+        std::array<double, 2u>{ext.medium(AxisDirection::AxisZ),
+                                   ext.medium(AxisDirection::AxisR)},
+        s});
   }
 
   // Create the KDTree
@@ -84,8 +84,8 @@ Acts::KDTreeTrackingGeometryBuilder::translateVolume(
   std::vector<std::shared_ptr<const TrackingVolume>> translatedVolumes = {};
 
   // Volume extent
-  auto rangeR = ptVolume.extent.range(Acts::BinningValue::binR);
-  auto rangeZ = ptVolume.extent.range(Acts::BinningValue::binZ);
+  auto rangeR = ptVolume.extent.range(AxisDirection::AxisR);
+  auto rangeZ = ptVolume.extent.range(AxisDirection::AxisZ);
 
   // Simple gap volume
   if (!ptVolume.container.has_value()) {
@@ -158,8 +158,8 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
 
   // Try to pull from the kd tree
   RangeXD<2u, double> zrRange;
-  zrRange[0u] = plVolume.extent.range(Acts::BinningValue::binZ);
-  zrRange[1u] = plVolume.extent.range(Acts::BinningValue::binR);
+  zrRange[0u] = plVolume.extent.range(AxisDirection::AxisZ);
+  zrRange[1u] = plVolume.extent.range(AxisDirection::AxisR);
 
   auto layerSurfaces = kdt.rangeSearchWithKey(zrRange);
   ACTS_VERBOSE(indent + ">> looking z/r range = " << zrRange.toString());
@@ -210,16 +210,16 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
       cLayerSurfaces.push_back(s.second);
     }
 
-    Acts::BinningType bType0 = Acts::equidistant;
-    Acts::BinningType bType1 = Acts::equidistant;
+    AxisType bType0 = AxisType::Equidistant;
+    AxisType bType1 = AxisType::Equidistant;
     std::size_t bins0 = 0;
     std::size_t bins1 = 0;
     // In case explicit binning is given
     if (its.surfaceBinning.size() == 2u) {
-      bType0 = its.surfaceBinning[0u].type;
-      bType1 = its.surfaceBinning[1u].type;
+      bType0 = its.surfaceBinning[0u].axisType;
+      bType1 = its.surfaceBinning[1u].axisType;
       // In case explicit bin numbers are given in addition
-      if (bType0 == Acts::equidistant && bType1 == Acts::equidistant &&
+      if (bType0 == AxisType::Equidistant && bType1 == AxisType::Equidistant &&
           its.surfaceBinning[0u].bins() > 1u &&
           its.surfaceBinning[1u].bins() > 1u) {
         bins0 = its.surfaceBinning[0u].bins();

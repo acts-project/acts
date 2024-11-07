@@ -135,7 +135,6 @@ Acts::fieldMapXYZ(
     zMin = -zPos[nBinsZ - 1];
     nBinsZ = 2 * nBinsZ - 1;
   }
-
   Axis xAxis(xMin * lengthUnit, xMax * lengthUnit, nBinsX);
   Axis yAxis(yMin * lengthUnit, yMax * lengthUnit, nBinsY);
   Axis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);

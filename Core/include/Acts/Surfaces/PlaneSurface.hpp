@@ -18,7 +18,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
@@ -115,8 +115,8 @@ class PlaneSurface : public RegularSurface {
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
-  Vector3 binningPosition(const GeometryContext& gctx,
-                          BinningValue bValue) const final;
+  Vector3 referencePosition(const GeometryContext& gctx,
+                            AxisDirection bValue) const final;
 
   /// Return the surface type
   SurfaceType type() const override;

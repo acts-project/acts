@@ -127,8 +127,8 @@ double Acts::LineSurface::pathCorrection(const GeometryContext& /*gctx*/,
   return 1.;
 }
 
-Acts::Vector3 Acts::LineSurface::binningPosition(
-    const GeometryContext& gctx, BinningValue /*bValue*/) const {
+Acts::Vector3 Acts::LineSurface::referencePosition(
+    const GeometryContext& gctx, AxisDirection /*bValue*/) const {
   return center(gctx);
 }
 

@@ -10,8 +10,8 @@
 
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
@@ -117,7 +117,7 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
     // The phi boundaries
     if (bstart[1] != bend[1]) {
       double referenceR =
-          surface.binningPositionValue(geoCtx, Acts::BinningValue::binR);
+          surface.referencePositionValue(geoCtx, Acts::AxisDirection::AxisR);
       Acts::Vector2 origin = {0., 0.};
       const auto& phiboundaries = segmentation.binningData()[1].boundaries();
       std::vector<double> phibbounds = {

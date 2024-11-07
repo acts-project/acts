@@ -36,12 +36,12 @@ void Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
     const GeometryContext& gctx, Portal& portal,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     const Direction& direction, const std::vector<double>& boundaries,
-    const BinningValue& binning) {
+    const AxisDirection& axisDirection) {
   // Check if the boundaries need a transform
   const auto pTransform = portal.surface().transform(gctx);
   // Creating a link to the mother
   auto volumes1D = std::make_unique<const BoundVolumesGrid1Navigation>(
-      boundaries, binning, unpack_shared_const_vector(volumes),
+      boundaries, axisDirection, unpack_shared_const_vector(volumes),
       pTransform.inverse());
   ExternalNavigationDelegate dVolumeUpdater;
   dVolumeUpdater.connect<&BoundVolumesGrid1Navigation::update>(
@@ -57,13 +57,13 @@ void Acts::Experimental::detail::PortalHelper::
   // Unpack to navigation bare points
   auto cVolumes = unpack_shared_const_vector(volumes);
   // Set to the constructed portals (p), at index (i), in direction (d)
-  // using boundaries and binning
-  for (auto& [p, i, dir, boundaries, binning] : pReplacements) {
+  // using boundaries and axisDirection
+  for (auto& [p, i, dir, boundaries, axisDirection] : pReplacements) {
     // Check if the boundaries need a transform
     const auto pTransform = p->surface().transform(gctx);
     // Creating a link to the mother
     auto volumes1D = std::make_unique<const BoundVolumesGrid1Navigation>(
-        boundaries, binning, cVolumes, pTransform.inverse());
+        boundaries, axisDirection, cVolumes, pTransform.inverse());
     ExternalNavigationDelegate dVolumeUpdater;
     dVolumeUpdater.connect<&BoundVolumesGrid1Navigation::update>(
         std::move(volumes1D));

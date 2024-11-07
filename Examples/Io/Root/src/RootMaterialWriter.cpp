@@ -131,8 +131,9 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
       for (auto bData : binningData) {
         // Fill: nbins, value, option, min, max
         n->SetBinContent(b, static_cast<int>(binningData[b - 1].bins()));
-        v->SetBinContent(b, static_cast<int>(binningData[b - 1].binvalue));
-        o->SetBinContent(b, static_cast<int>(binningData[b - 1].option));
+        v->SetBinContent(b, static_cast<int>(binningData[b - 1].axisDirection));
+        o->SetBinContent(b,
+                         static_cast<int>(binningData[b - 1].axisBoundaryType));
         min->SetBinContent(b, binningData[b - 1].min);
         max->SetBinContent(b, binningData[b - 1].max);
         ++b;
@@ -260,8 +261,9 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
       for (auto bData : binningData) {
         // Fill: nbins, value, option, min, max
         n->SetBinContent(b, static_cast<int>(binningData[b - 1].bins()));
-        v->SetBinContent(b, static_cast<int>(binningData[b - 1].binvalue));
-        o->SetBinContent(b, static_cast<int>(binningData[b - 1].option));
+        v->SetBinContent(b, static_cast<int>(binningData[b - 1].axisDirection));
+        o->SetBinContent(b,
+                         static_cast<int>(binningData[b - 1].axisBoundaryType));
         min->SetBinContent(b, binningData[b - 1].min);
         max->SetBinContent(b, binningData[b - 1].max);
         ++b;

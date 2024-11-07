@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_SUITE(PathSeeder)
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-using Axis = Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
+using Axis = Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
 using Grid = Acts::Grid<std::vector<SourceLink>, Axis, Axis>;
 
 using TrackParameters = CurvilinearTrackParameters;
@@ -265,7 +265,7 @@ std::shared_ptr<Experimental::Detector> constructTelescopeDetector() {
 
   // Connect the volumes
   auto portalContainer = Experimental::detail::CuboidalDetectorHelper::connect(
-      gctx, volumes, BinningValue::binX, {}, Logging::INFO);
+      gctx, volumes, AxisDirection::AxisX, {}, Logging::INFO);
 
   // Make sure that the geometry ids are
   // independent of the potential Id generation

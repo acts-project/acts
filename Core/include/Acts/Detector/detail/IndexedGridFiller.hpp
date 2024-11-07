@@ -42,7 +42,7 @@ namespace Acts::Experimental::detail {
 /// @return a vector of bins to be filled
 std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
                                      std::size_t expand, std::size_t nBins,
-                                     Acts::AxisBoundaryType type);
+                                     AxisBoundaryType type);
 
 /// @brief Helper method to fill local bins given a set of query points
 /// bin in between the extra points are filled, and a possible expansion
@@ -74,7 +74,7 @@ std::set<typename grid_type::index_t> localIndices(
   }
 
   /// These are the axis bounds type parameters - for correct bin sequences
-  std::array<Acts::AxisBoundaryType, grid_type::DIM> axisTypes{};
+  std::array<AxisBoundaryType, grid_type::DIM> axisTypes{};
   std::array<std::size_t, grid_type::DIM> axisBins{};
   // Fill the axis types
   for (auto [ia, a] : enumerate(grid.axes())) {

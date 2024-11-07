@@ -60,10 +60,7 @@ class Detector;
 /// object ownership is done by shared/unique pointers.
 class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
  public:
-  using BoundingBox =
-      Acts::AxisAlignedBoundingBox<Acts::Experimental::DetectorVolume, double,
-                                   3>;
-
+  using BoundingBox = AxisAlignedBoundingBox<DetectorVolume, double, 3>;
   friend class DetectorVolumeFactory;
 
   /// Nested object store that holds the internal (non-const),

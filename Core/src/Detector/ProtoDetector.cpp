@@ -24,20 +24,20 @@ void Acts::ProtoVolume::extendUp(Acts::ProtoVolume& ptVolume) {
   }
 }
 
-void Acts::ProtoVolume::propagateMinDown(BinningValue bValue) {
+void Acts::ProtoVolume::propagateMinDown(AxisDirection aDir) {
   if (container.has_value()) {
     for (auto& cv : container.value().constituentVolumes) {
-      cv.extent.set(bValue, extent.min(bValue), cv.extent.max(bValue));
-      cv.propagateMinDown(bValue);
+      cv.extent.set(aDir, extent.min(aDir), cv.extent.max(aDir));
+      cv.propagateMinDown(aDir);
     }
   }
 }
 
-void Acts::ProtoVolume::propagateMaxDown(BinningValue bValue) {
+void Acts::ProtoVolume::propagateMaxDown(AxisDirection aDir) {
   if (container.has_value()) {
     for (auto& cv : container.value().constituentVolumes) {
-      cv.extent.set(bValue, cv.extent.min(bValue), extent.max(bValue));
-      cv.propagateMaxDown(bValue);
+      cv.extent.set(aDir, cv.extent.min(aDir), extent.max(aDir));
+      cv.propagateMaxDown(aDir);
     }
   }
 }
@@ -52,7 +52,7 @@ void Acts::ProtoVolume::constrainDown(const Acts::ProtoVolume& ptVolume) {
 }
 
 void Acts::ProtoVolume::harmonize(bool legacy) {
-  std::vector<BinningValue> otherConstrains;
+  std::vector<AxisDirection> otherConstrains;
 
   // Deal with the constituents
   if (container.has_value() && !container.value().constituentVolumes.empty()) {
@@ -74,7 +74,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
     }
 
     // If layers are present, it can't be a container in the legacy style
-    auto binValue = cts.constituentBinning[0].binvalue;
+    auto binValue = cts.constituentBinning[0].axisDirection;
     // Set the first last
     auto& fVolume = cts.constituentVolumes.front();
     auto& lVolume = cts.constituentVolumes.back();
@@ -82,9 +82,9 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
     std::vector<float> borders = {};
 
     // The volumes should be harmonized in all other constraining values
-    for (auto obValue : allBinningValues()) {
-      if (obValue != binValue && extent.constrains(obValue)) {
-        otherConstrains.push_back(obValue);
+    for (auto oaDir : allAxisDirections()) {
+      if (oaDir != binValue && extent.constrains(oaDir)) {
+        otherConstrains.push_back(oaDir);
       }
     }
 
@@ -160,8 +160,8 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
     } else if (legacy && layersPresent) {
       borders = {0., 1.};
     }
-    cts.constituentBinning = {
-        BinningData(cts.constituentBinning[0].option, binValue, borders)};
+    cts.constituentBinning = {BinningData(
+        cts.constituentBinning[0].axisBoundaryType, binValue, borders)};
 
     // Harmonize downwards
     for (auto& cv : cts.constituentVolumes) {

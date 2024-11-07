@@ -33,11 +33,11 @@ Volume::Volume(const Volume& vol, const Transform3& shift)
       m_center(m_transform.translation()),
       m_volumeBounds(vol.m_volumeBounds) {}
 
-Vector3 Volume::binningPosition(const GeometryContext& /*gctx*/,
-                                BinningValue bValue) const {
+Vector3 Volume::referencePosition(const GeometryContext& /*gctx*/,
+                                  AxisDirection bValue) const {
   // for most of the binning types it is actually the center,
   // just for R-binning types the
-  if (bValue == BinningValue::binR || bValue == BinningValue::binRPhi) {
+  if (bValue == AxisDirection::AxisR || bValue == AxisDirection::AxisRPhi) {
     // the binning Position for R-type may have an offset
     return (center() + m_volumeBounds->binningOffset(bValue));
   }

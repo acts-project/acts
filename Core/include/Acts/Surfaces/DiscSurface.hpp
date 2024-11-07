@@ -19,7 +19,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
@@ -154,8 +154,8 @@ class DiscSurface : public RegularSurface {
   /// @param bValue The binning type to be used
   ///
   /// @return position that can beused for this binning
-  Vector3 binningPosition(const GeometryContext& gctx,
-                          BinningValue bValue) const final;
+  Vector3 referencePosition(const GeometryContext& gctx,
+                            AxisDirection bValue) const final;
 
   /// This method returns the bounds by reference
   const SurfaceBounds& bounds() const final;
@@ -304,8 +304,8 @@ class DiscSurface : public RegularSurface {
   /// @note This calls the parent method except for binR
   ///
   /// @return float to be used for the binning schema
-  double binningPositionValue(const GeometryContext& gctx,
-                              BinningValue bValue) const final;
+  double referencePositionValue(const GeometryContext& gctx,
+                                AxisDirection bValue) const final;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;
@@ -343,7 +343,7 @@ class DiscSurface : public RegularSurface {
   /// @note The returned boolean is `false` if `this` is *left* or
   ///       *counter-clockwise* of @p other, and `true` if not.
   std::pair<std::shared_ptr<DiscSurface>, bool> mergedWith(
-      const DiscSurface& other, BinningValue direction, bool externalRotation,
+      const DiscSurface& other, AxisDirection direction, bool externalRotation,
       const Logger& logger = getDummyLogger()) const;
 
  protected:

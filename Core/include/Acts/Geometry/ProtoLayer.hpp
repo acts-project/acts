@@ -10,7 +10,7 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <iostream>
 #include <memory>
@@ -80,22 +80,22 @@ struct ProtoLayer {
   /// Get the parameters : min
   /// @param bval The accessed binning value
   /// @param addenv The steering if enevlope is added or not
-  double min(BinningValue bval, bool addenv = true) const;
+  double min(AxisDirection bval, bool addenv = true) const;
 
   // Get the  parameters : max
   /// @param bval The accessed binning value
   /// @param addenv The steering if enevlope is added or not
-  double max(BinningValue bval, bool addenv = true) const;
+  double max(AxisDirection bval, bool addenv = true) const;
 
   // Get the  parameters : max
   /// @param bval The accessed binning value
   /// @param addenv The steering if enevlope is added or not
-  double medium(BinningValue bval, bool addenv = true) const;
+  double medium(AxisDirection bval, bool addenv = true) const;
 
   // Get the  parameters : max
   /// @param bval The accessed binning value
   /// @param addenv The steering if enevlope is added or not
-  double range(BinningValue bval, bool addenv = true) const;
+  double range(AxisDirection bval, bool addenv = true) const;
 
   /// Output to ostream
   /// @param sl the input ostream

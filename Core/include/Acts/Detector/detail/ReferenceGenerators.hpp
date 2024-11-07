@@ -12,7 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <vector>
 
@@ -37,12 +37,12 @@ struct CenterReferenceGenerator {
 
 /// A struct to access reference positions based on bin values
 ///
-/// @tparam bVAL the binning value to be used for the binning position call
+/// @tparam aDIR the binning value to be used for the binning position call
 ///
 /// This generator will provide only one filling point and hence
 /// only a single bin in the indexed grid.
-template <BinningValue bVAL>
-struct BinningValueReferenceGenerator {
+template <AxisDirection aDIR>
+struct AxisDirectionReferenceGenerator {
   /// Helper to access a reference position based on binning value
   ///
   /// @param gctx the geometry context of this operation
@@ -51,7 +51,7 @@ struct BinningValueReferenceGenerator {
   /// @return a vector of reference points for filling
   const std::vector<Vector3> references(const GeometryContext& gctx,
                                         const Surface& surface) const {
-    return {surface.binningPosition(gctx, bVAL)};
+    return {surface.referencePosition(gctx, aDIR)};
   }
 };
 

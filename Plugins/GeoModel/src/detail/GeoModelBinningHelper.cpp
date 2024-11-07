@@ -17,7 +17,7 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
     const std::string& binning, const std::optional<Extent>& extent) {
   std::vector<std::string> binningTokens;
   boost::split(binningTokens, binning, boost::is_any_of(","));
-  BinningValue bValue = toBinningValue(binningTokens[0]);
+  AxisDirection bValue = toAxisDirection(binningTokens[0]);
 
   std::vector<std::string> binningDetails = {binningTokens.begin() + 1,
                                              binningTokens.end()};
@@ -26,10 +26,10 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
         "GeoModelBinningHelper: Invalid number of binning details, at least "
         "the axis boundary type and the number of bins are needed.");
   }
-  AxisBoundaryType boundaryType = AxisBoundaryType::Bound;
+  AxisBoundaryType axisBoundaryType = AxisBoundaryType::Bound;
   std::string axisBoundaryToken = binningDetails[0];
   if (axisBoundaryToken == "closed") {
-    boundaryType = AxisBoundaryType::Closed;
+    axisBoundaryType = AxisBoundaryType::Closed;
   } else if (axisBoundaryToken != "bound") {
     throw std::invalid_argument(
         "GeoModelBinningHelper: Axis boundary type needs to be closed or "
@@ -47,10 +47,10 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
   // The Range
   double rangeMin = 0.;
   double rangeMax = 0.;
-  if (bValue == BinningValue::binPhi &&
-      boundaryType == AxisBoundaryType::Closed) {
-    rangeMin = -std::numbers::pi;
-    rangeMax = std::numbers::pi;
+  if (bValue == AxisDirection::AxisPhi &&
+      axisBoundaryType == AxisBoundaryType::Closed) {
+    rangeMin = -std::numbers::pi_v<double>;
+    rangeMax = std::numbers::pi_v<double>;
   } else {
     if (binningDetails.size() > 3u && binningDetails[3] != "*") {
       autoRange = false;
@@ -75,8 +75,9 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
     }
   }
 
-  return autoRange ? Experimental::ProtoBinning(bValue, boundaryType, nBins,
-                                                nExpansion)
-                   : Experimental::ProtoBinning(bValue, boundaryType, rangeMin,
-                                                rangeMax, nBins, nExpansion);
+  return autoRange
+             ? Experimental::ProtoBinning(bValue, axisBoundaryType, nBins,
+                                          nExpansion)
+             : Experimental::ProtoBinning(bValue, axisBoundaryType, rangeMin,
+                                          rangeMax, nBins, nExpansion);
 }

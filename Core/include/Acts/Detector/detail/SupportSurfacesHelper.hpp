@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <array>
 #include <functional>
@@ -95,7 +96,7 @@ struct DiscSupport {
 /// @brief Helper method to build planar support structure
 struct RectangularSupport {
   /// Placement - the remaining loc0, loc1 are then cyclic
-  BinningValue pPlacement = BinningValue::binZ;
+  AxisDirection pPlacement = AxisDirection::AxisZ;
 
   /// Offset in position placement
   double pOffset = 0.;

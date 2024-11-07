@@ -14,8 +14,7 @@
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -36,8 +35,9 @@ namespace Test {
 struct SurfaceArrayCreatorFixture;
 }
 
-using SurfaceMatcher = std::function<bool(
-    const GeometryContext& gctx, BinningValue, const Surface*, const Surface*)>;
+using SurfaceMatcher =
+    std::function<bool(const GeometryContext& gctx, AxisDirection,
+                       const Surface*, const Surface*)>;
 
 using SurfaceVector = std::vector<const Surface*>;
 using SurfaceMatrix = std::vector<SurfaceVector>;
@@ -58,8 +58,8 @@ class SurfaceArrayCreator {
   friend class Acts::SurfaceArray;
 
   struct ProtoAxis {
-    BinningType bType = BinningType::equidistant;
-    BinningValue bValue = BinningValue::binX;
+    AxisType bType = AxisType::Equidistant;
+    AxisDirection bValue = AxisDirection::AxisX;
     std::size_t nBins = 0;
     AxisScalar min = 0;
     AxisScalar max = 0;
@@ -151,7 +151,8 @@ class SurfaceArrayCreator {
   std::unique_ptr<Acts::SurfaceArray> surfaceArrayOnCylinder(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces,
-      BinningType bTypePhi = equidistant, BinningType bTypeZ = equidistant,
+      AxisType bTypePhi = AxisType::Equidistant,
+      AxisType bTypeZ = AxisType::Equidistant,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
 
@@ -200,9 +201,8 @@ class SurfaceArrayCreator {
   ///       This ignores bTypePhi and produces equidistant binning in phi
   std::unique_ptr<Acts::SurfaceArray> surfaceArrayOnDisc(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
-      BinningType bTypePhi,
-      std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
+      std::vector<std::shared_ptr<const Surface>> surfaces, AxisType bTypeR,
+      AxisType bTypePhi, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
 
   /// SurfaceArrayCreator interface method
@@ -227,7 +227,7 @@ class SurfaceArrayCreator {
   std::unique_ptr<SurfaceArray> surfaceArrayOnPlane(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
-      std::size_t bins2, BinningValue bValue,
+      std::size_t bins2, AxisDirection bValue,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
 
@@ -238,15 +238,15 @@ class SurfaceArrayCreator {
   /// @param a first surface for checking
   /// @param b second surface for checking
   static bool isSurfaceEquivalent(const GeometryContext& gctx,
-                                  BinningValue bValue, const Surface* a,
+                                  AxisDirection bValue, const Surface* a,
                                   const Surface* b) {
     using namespace UnitLiterals;
     using VectorHelpers::perp;
 
-    if (bValue == Acts::BinningValue::binPhi) {
+    if (bValue == AxisDirection::AxisPhi) {
       // Take the two binning positions
-      auto pos1 = a->binningPosition(gctx, BinningValue::binR),
-           pos2 = b->binningPosition(gctx, BinningValue::binR);
+      auto pos1 = a->referencePosition(gctx, AxisDirection::AxisR),
+           pos2 = b->referencePosition(gctx, AxisDirection::AxisR);
 
       // Project them on the (x, y) plane, where Phi angles are calculated
       auto proj1 = pos1.head<2>(), proj2 = pos2.head<2>();
@@ -261,15 +261,15 @@ class SurfaceArrayCreator {
       return std::abs(dPhi) < std::numbers::pi / 180.;
     }
 
-    if (bValue == Acts::BinningValue::binZ) {
-      return (std::abs(a->binningPosition(gctx, BinningValue::binR).z() -
-                       b->binningPosition(gctx, BinningValue::binR).z()) <
+    if (bValue == AxisDirection::AxisZ) {
+      return (std::abs(a->referencePosition(gctx, AxisDirection::AxisR).z() -
+                       b->referencePosition(gctx, AxisDirection::AxisR).z()) <
               1_um);
     }
 
-    if (bValue == Acts::BinningValue::binR) {
-      return (std::abs(perp(a->binningPosition(gctx, BinningValue::binR)) -
-                       perp(b->binningPosition(gctx, BinningValue::binR))) <
+    if (bValue == AxisDirection::AxisR) {
+      return (std::abs(perp(a->referencePosition(gctx, AxisDirection::AxisR)) -
+                       perp(b->referencePosition(gctx, AxisDirection::AxisR))) <
               1_um);
     }
 
@@ -295,7 +295,7 @@ class SurfaceArrayCreator {
 
   std::size_t determineBinCount(const GeometryContext& gctx,
                                 const std::vector<const Surface*>& surfaces,
-                                BinningValue bValue) const;
+                                AxisDirection bValue) const;
 
   /// SurfaceArrayCreator internal method
   /// Creates a variable @c ProtoAxis from a vector of (unsorted) surfaces with
@@ -311,8 +311,8 @@ class SurfaceArrayCreator {
   /// @todo implement for x,y binning
   /// @param [in] gctx the geometry context for this call
   /// @param surfaces are the sensitive surfaces to be
-  /// @param bValue the BinningValue in which direction should be binned
-  /// (currently possible: binPhi, binR, binZ)
+  /// @param bValue the AxisDirection in which direction should be binned
+  /// (currently possible: binPhi, binR, AxisZ)
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
   /// @return Instance of @c ProtoAxis containing determined properties
@@ -320,7 +320,7 @@ class SurfaceArrayCreator {
   ///       into an actual @c Axis object to be used
   ProtoAxis createVariableAxis(const GeometryContext& gctx,
                                const std::vector<const Surface*>& surfaces,
-                               BinningValue bValue,
+                               AxisDirection bValue,
                                const ProtoLayer& protoLayer,
                                Transform3& transform) const;
 
@@ -338,8 +338,8 @@ class SurfaceArrayCreator {
   /// @todo implement for x,y binning
   /// @param [in] gctx the geometry context for this call
   /// @param surfaces are the sensitive surfaces to be
-  /// @param bValue the BinningValue in which direction should be binned
-  /// (currently possible: binPhi, binR, binZ)
+  /// @param bValue the AxisDirection in which direction should be binned
+  /// (currently possible: binPhi, binR, AxisZ)
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
   /// @param nBins Number of bins to use, 0 means determine automatically
@@ -348,7 +348,7 @@ class SurfaceArrayCreator {
   ///       into an actual @c Axis object to be used
   ProtoAxis createEquidistantAxis(const GeometryContext& gctx,
                                   const std::vector<const Surface*>& surfaces,
-                                  BinningValue bValue,
+                                  AxisDirection bValue,
                                   const ProtoLayer& protoLayer,
                                   Transform3& transform,
                                   std::size_t nBins = 0) const;
@@ -375,7 +375,7 @@ class SurfaceArrayCreator {
 
     // this becomes completely unreadable otherwise
     // clang-format off
-    if (pAxisA.bType == equidistant && pAxisB.bType == equidistant) {
+    if (pAxisA.bType == AxisType::Equidistant && pAxisB.bType == AxisType::Equidistant) {
 
       Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
       Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
@@ -384,7 +384,7 @@ class SurfaceArrayCreator {
       ptr = std::make_unique<SGL>(
             globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
 
-    } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
+    } else if (pAxisA.bType == AxisType::Equidistant && pAxisB.bType == AxisType::Variable) {
 
       Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
@@ -393,7 +393,7 @@ class SurfaceArrayCreator {
       ptr = std::make_unique<SGL>(
             globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
 
-    } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
+    } else if (pAxisA.bType == AxisType::Variable && pAxisB.bType == AxisType::Equidistant) {
 
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
       Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
@@ -402,7 +402,7 @@ class SurfaceArrayCreator {
       ptr = std::make_unique<SGL>(
             globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
 
-    } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
+    } else /*if (pAxisA.bType == AxisType::Variable && pAxisB.bType == AxisType::Variable)*/ {
 
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);

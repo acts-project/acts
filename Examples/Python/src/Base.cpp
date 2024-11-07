@@ -13,7 +13,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Any.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -359,25 +359,25 @@ void addAlgebra(Acts::Python::Context& ctx) {
 void addBinning(Context& ctx) {
   auto& m = ctx.get("main");
 
-  auto binningValue = py::enum_<Acts::BinningValue>(m, "BinningValue")
-                          .value("binX", Acts::BinningValue::binX)
-                          .value("binY", Acts::BinningValue::binY)
-                          .value("binZ", Acts::BinningValue::binZ)
-                          .value("binR", Acts::BinningValue::binR)
-                          .value("binPhi", Acts::BinningValue::binPhi)
-                          .value("binRPhi", Acts::BinningValue::binRPhi)
-                          .value("binH", Acts::BinningValue::binH)
-                          .value("binEta", Acts::BinningValue::binEta)
-                          .value("binMag", Acts::BinningValue::binMag);
+  auto binningValue = py::enum_<AxisDirection>(m, "AxisDirection")
+                          .value("binX", AxisDirection::AxisX)
+                          .value("binY", AxisDirection::AxisY)
+                          .value("binZ", AxisDirection::AxisZ)
+                          .value("binR", AxisDirection::AxisR)
+                          .value("binPhi", AxisDirection::AxisPhi)
+                          .value("binRPhi", AxisDirection::AxisRPhi)
+                          .value("binH", AxisDirection::AxisTheta)
+                          .value("binEta", AxisDirection::AxisEta)
+                          .value("binMag", AxisDirection::AxisMag);
 
-  auto boundaryType = py::enum_<Acts::AxisBoundaryType>(m, "AxisBoundaryType")
-                          .value("Bound", Acts::AxisBoundaryType::Bound)
-                          .value("Closed", Acts::AxisBoundaryType::Closed)
-                          .value("Open", Acts::AxisBoundaryType::Open);
+  auto axisBoundaryType = py::enum_<AxisBoundaryType>(m, "AxisBoundaryType")
+                              .value("Bound", AxisBoundaryType::Bound)
+                              .value("Closed", AxisBoundaryType::Closed)
+                              .value("Open", AxisBoundaryType::Open);
 
-  auto axisType = py::enum_<Acts::AxisType>(m, "AxisType")
-                      .value("equidistant", Acts::AxisType::Equidistant)
-                      .value("variable", Acts::AxisType::Variable);
+  auto axisType = py::enum_<AxisType>(m, "AxisType")
+                      .value("equidistant", AxisType::Equidistant)
+                      .value("variable", AxisType::Variable);
 }
 
 }  // namespace Acts::Python

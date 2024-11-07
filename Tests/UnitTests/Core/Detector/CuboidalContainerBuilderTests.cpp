@@ -24,7 +24,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -125,15 +125,15 @@ BOOST_AUTO_TEST_CASE(CuboidalContainerBuilder_Misconfiguration) {
                     std::invalid_argument);
   // misconfiguration - 1D binning not in x, y, z
   misCfg.builders = {nullptr};
-  misCfg.binning = Acts::BinningValue::binR;
+  misCfg.axisDirection = Acts::AxisDirection::AxisR;
   BOOST_CHECK_THROW(auto b = CuboidalContainerBuilder(misCfg),
                     std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(CuboidalContainerBuildingXYZVolumes) {
-  std::array<Acts::BinningValue, 3> binningValues = {Acts::BinningValue::binX,
-                                                     Acts::BinningValue::binY,
-                                                     Acts::BinningValue::binZ};
+  std::array<Acts::AxisDirection, 3> binningValues = {
+      Acts::AxisDirection::AxisX, Acts::AxisDirection::AxisY,
+      Acts::AxisDirection::AxisZ};
   for (auto bVal : binningValues) {
     // A perfect box shape
     auto box = Acts::CuboidVolumeBounds(10, 10, 10);
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(CuboidalContainerBuildingXYZVolumes) {
     CuboidalContainerBuilder::Config ccbCfg;
     ccbCfg.auxiliary = "*** Build simple connection ***";
     ccbCfg.builders = {builderA, builderB};
-    ccbCfg.binning = bVal;
+    ccbCfg.axisDirection = bVal;
     ccbCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
 
     auto ccBuilder = std::make_shared<CuboidalContainerBuilder>(

@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <array>
@@ -31,8 +31,8 @@ namespace Acts {
 /// transform,
 /// however, optionally a transform can be provided, e.g. for binning on shifted
 /// object, the transform is usually shared with the geometric object the Array
-/// is
-/// defined on, for performance reasons, also the inverse transform is stored.
+/// is defined on, for performance reasons, also the inverse transform is
+/// stored.
 ///
 class BinUtility {
  public:
@@ -68,29 +68,29 @@ class BinUtility {
   /// @param bins is the number of bins
   /// @param min in the minimal value
   /// @param max is the maximal value
-  /// @param opt is the binning option : open, closed
-  /// @param value is the binninb value : binX, binY, binZ, etc.
+  /// @param abType is the axis boundary type: (Open), Bound, Closed
+  /// @param value is the binninb value : AxisX, AxisY, AxisZ, etc.
   /// @param tForm is the (optional) transform
-  BinUtility(std::size_t bins, float min, float max, BinningOption opt = open,
-             BinningValue value = BinningValue::binX,
+  BinUtility(std::size_t bins, float min, float max, AxisBoundaryType abType,
+             AxisDirection value,
              const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
-    m_binningData.push_back(BinningData(opt, value, bins, min, max));
+    m_binningData.push_back(BinningData(abType, value, bins, min, max));
   }
 
-  /// Constructor for arbitrary
+  /// Constructor for variable binning
   ///
   /// @param bValues is the boundary values of the binning
-  /// @param opt is the binning option : open, closed
-  /// @param value is the binninb value : binX, binY, binZ, etc.
+  /// @param abType is the axis boundary type: (Open), Bound, Closed
+  /// @param value is the binninb value : AxisX, AxisY, AxisZ, etc.
   /// @param tForm is the (optional) transform
-  BinUtility(std::vector<float>& bValues, BinningOption opt = open,
-             BinningValue value = BinningValue::binPhi,
+  BinUtility(std::vector<float>& bValues, AxisBoundaryType abType,
+             AxisDirection value,
              const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
-    m_binningData.push_back(BinningData(opt, value, bValues));
+    m_binningData.push_back(BinningData(abType, value, bValues));
   }
 
   /// Copy constructor
@@ -267,11 +267,11 @@ class BinUtility {
   /// @param ba is the binaccessor
   ///
   /// @return the binning value of the accessor entry
-  BinningValue binningValue(std::size_t ba = 0) const {
+  AxisDirection binningValue(std::size_t ba = 0) const {
     if (ba >= m_binningData.size()) {
       throw std::runtime_error{"Dimension out of bounds"};
     }
-    return (m_binningData[ba].binvalue);
+    return (m_binningData[ba].axisDirection);
   }
 
   /// Serialize the bin triple

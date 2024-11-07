@@ -20,7 +20,8 @@ namespace Acts {
 struct SurfaceBinningMatcher {
   /// The binning tolerance parameters
   using Range = std::pair<double, double>;
-  std::vector<Range> tolerances{static_cast<int>(numBinningValues()), {0., 0.}};
+  std::vector<Range> tolerances{static_cast<int>(numAxisDirections()),
+                                {0., 0.}};
 
   SurfaceBinningMatcher() = default;
 
@@ -33,7 +34,7 @@ struct SurfaceBinningMatcher {
   /// @param bValue the binning value for the binning
   /// @param one first surface for checking
   /// @param other second surface for checking
-  bool operator()(const Acts::GeometryContext& gctx, Acts::BinningValue bValue,
+  bool operator()(const Acts::GeometryContext& gctx, AxisDirection bValue,
                   const Acts::Surface* one, const Acts::Surface* other) const {
     // Fast exit
     if (one == other) {

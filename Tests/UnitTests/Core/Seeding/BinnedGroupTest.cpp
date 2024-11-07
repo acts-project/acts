@@ -21,9 +21,9 @@
 namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(binned_group_constructor) {
-  Acts::Axis xAxis(0, 100, 10);
-  Acts::Axis yAxis(0, 100, 10);
-  Acts::Axis zAxis(0, 100, 10);
+  Axis xAxis(0, 100, 10);
+  Axis yAxis(0, 100, 10);
+  Axis zAxis(0, 100, 10);
 
   constexpr auto data_type = Type<std::vector<std::size_t>>;
   Grid grid_1d(data_type, xAxis);
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(binned_group_constructor) {
 BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_emptyGrid) {
   using binfinder_t = Acts::GridBinFinder<1ul>;
 
-  Acts::Axis xAxis(0, 100, 10);
+  Axis xAxis(0, 100, 10);
   Grid grid(Type<std::vector<std::size_t>>, std::move(xAxis));
   using grid_t = decltype(grid);
   binfinder_t binfinder(0);
@@ -84,8 +84,8 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_emptyGrid) {
 BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_emptyGrid) {
   using binfinder_t = Acts::GridBinFinder<2ul>;
 
-  Acts::Axis xAxis(0, 100, 10);
-  Acts::Axis yAxis(0, 100, 10);
+  Axis xAxis(0, 100, 10);
+  Axis yAxis(0, 100, 10);
   Grid grid(Type<std::vector<std::size_t>>, std::move(xAxis), std::move(yAxis));
   using grid_t = decltype(grid);
   binfinder_t binfinder(0, 0);
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_emptyGrid) {
 BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_perFilledGrid) {
   using binfinder_t = Acts::GridBinFinder<1ul>;
 
-  Acts::Axis xAxis(0, 100, 10);
+  Axis xAxis(0, 100, 10);
   Grid grid(Type<std::vector<std::size_t>>, xAxis);
   using grid_t = decltype(grid);
   /// Add some entries to the grid
@@ -131,8 +131,8 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_perFilledGrid) {
 BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_perFilledGrid) {
   using binfinder_t = Acts::GridBinFinder<2ul>;
 
-  Acts::Axis xAxis(0, 100, 10);
-  Acts::Axis yAxis(0, 100, 10);
+  Axis xAxis(0, 100, 10);
+  Axis yAxis(0, 100, 10);
   Grid grid(Type<std::vector<std::size_t>>, xAxis, yAxis);
   using grid_t = decltype(grid);
   /// Add some entries to the grid
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(binned_group_fill_2d) {
 
 BOOST_AUTO_TEST_CASE(binned_group_fill_3d) {
   using value_t = std::size_t;
-  using phiAxis_t = Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
+  using phiAxis_t = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
   using zAxis_t = Axis<AxisType::Equidistant, AxisBoundaryType::Bound>;
   using rAxis_t = Axis<AxisType::Equidistant, AxisBoundaryType::Bound>;
   using grid_t = Acts::Grid<std::vector<value_t>, phiAxis_t, zAxis_t, rAxis_t>;

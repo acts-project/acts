@@ -48,31 +48,31 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   // Loop over the binning data and adjust the dimensions
   for (auto& bd : bData) {
     // The binning value
-    BinningValue bval = bd.binvalue;
+    AxisDirection bval = bd.axisDirection;
     // Throw exceptions is stuff doesn't make sense:
     // - not the right binning value
     // - not equidistant
-    if (bd.type == arbitrary) {
+    if (bd.axisType == AxisType::Variable) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != BinningValue::binR && bval != BinningValue::binPhi &&
-               bval != BinningValue::binZ) {
+    } else if (bval != AxisDirection::AxisR && bval != AxisDirection::AxisPhi &&
+               bval != AxisDirection::AxisZ) {
       throw std::invalid_argument("Cylinder volume binning must be: phi, r, z");
     }
     float min = 0;
     float max = 0;
     // Perform the value adjustment
-    if (bval == BinningValue::binPhi) {
+    if (bval == AxisDirection::AxisPhi) {
       min = minPhi;
       max = maxPhi;
-    } else if (bval == BinningValue::binR) {
+    } else if (bval == AxisDirection::AxisR) {
       min = minR;
       max = maxR;
-    } else if (bval == BinningValue::binZ) {
+    } else if (bval == AxisDirection::AxisZ) {
       min = minZ;
       max = maxZ;
     }
     // Create the updated BinningData
-    BinningData uBinData(bd.option, bval, bd.bins(), min, max);
+    BinningData uBinData(bd.axisBoundaryType, bval, bd.bins(), min, max);
     uBinUtil += BinUtility(uBinData);
   }
 
@@ -104,32 +104,32 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   // Loop over the binning data and adjust the dimensions
   for (auto& bd : bData) {
     // The binning value
-    BinningValue bval = bd.binvalue;
+    AxisDirection bval = bd.axisDirection;
     // Throw exceptions is stuff doesn't make sense:
     // - not the right binning value
     // - not equidistant
-    if (bd.type == arbitrary) {
+    if (bd.axisType == AxisType::Variable) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != BinningValue::binR && bval != BinningValue::binPhi &&
-               bval != BinningValue::binZ) {
+    } else if (bval != AxisDirection::AxisR && bval != AxisDirection::AxisPhi &&
+               bval != AxisDirection::AxisZ) {
       throw std::invalid_argument(
           "Cutout cylinder volume binning must be: phi, r, z");
     }
     float min = 0;
     float max = 0;
     // Perform the value adjustment
-    if (bval == BinningValue::binPhi) {
+    if (bval == AxisDirection::AxisPhi) {
       min = minPhi;
       max = maxPhi;
-    } else if (bval == BinningValue::binR) {
+    } else if (bval == AxisDirection::AxisR) {
       min = minR;
       max = maxR;
-    } else if (bval == BinningValue::binZ) {
+    } else if (bval == AxisDirection::AxisZ) {
       min = minZ;
       max = maxZ;
     }
     // Create the updated BinningData
-    BinningData uBinData(bd.option, bval, bd.bins(), min, max);
+    BinningData uBinData(bd.axisBoundaryType, bval, bd.bins(), min, max);
     uBinUtil += BinUtility(uBinData);
   }
 
@@ -160,31 +160,31 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   // Loop over the binning data and adjust the dimensions
   for (auto& bd : bData) {
     // The binning value
-    BinningValue bval = bd.binvalue;
+    AxisDirection bval = bd.axisDirection;
     // Throw exceptions is stuff doesn't make sense:
     // - not the right binning value
     // - not equidistant
-    if (bd.type == arbitrary) {
+    if (bd.axisType == AxisType::Variable) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != BinningValue::binX && bval != BinningValue::binY &&
-               bval != BinningValue::binZ) {
+    } else if (bval != AxisDirection::AxisX && bval != AxisDirection::AxisY &&
+               bval != AxisDirection::AxisZ) {
       throw std::invalid_argument("Cylinder volume binning must be: x, y, z");
     }
     float min = 0;
     float max = 0;
     // Perform the value adjustment
-    if (bval == BinningValue::binX) {
+    if (bval == AxisDirection::AxisX) {
       min = minX;
       max = maxX;
-    } else if (bval == BinningValue::binY) {
+    } else if (bval == AxisDirection::AxisY) {
       min = minY;
       max = maxY;
-    } else if (bval == BinningValue::binZ) {
+    } else if (bval == AxisDirection::AxisZ) {
       min = minZ;
       max = maxZ;
     }
     // Create the updated BinningData
-    BinningData uBinData(bd.option, bval, bd.bins(), min, max);
+    BinningData uBinData(bd.axisBoundaryType, bval, bd.bins(), min, max);
     uBinUtil += BinUtility(uBinData);
   }
   return uBinUtil;

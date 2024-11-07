@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <map>
 
@@ -70,21 +70,21 @@ struct Cache {
 /// @param bOption the binning option
 ///
 /// @return a detray binning option
-detray::axis::bounds convertBinningOption(BinningOption bOption);
+detray::axis::bounds convertAxisBoundaryType(AxisBoundaryType bOption);
 
 /// Convert the binning value
 ///
 /// @param bValue the binning value
 ///
 /// @return a detray binning value
-detray::axis::label convertBinningValue(BinningValue bValue);
+detray::axis::label convertAxisDirection(AxisDirection bValue);
 
 /// Convert the binning type
 ///
 /// @param bType the binning type
 ///
 /// @return a detray binning type
-detray::axis::binning convertBinningType(BinningType bType);
+detray::axis::binning convertAxisType(AxisType bType);
 
 /// Convert the binning data to an axis
 ///

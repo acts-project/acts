@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <array>
 #include <cmath>
@@ -27,12 +27,16 @@ BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
   Vector3 edgePosition(0.5, 0.5, 0.5);
 
   // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-  BinUtility xUtil_eq(10, 0., 10., open, BinningValue::binX);
-  BinUtility yUtil_eq(10, 0., 10., open, BinningValue::binY);
-  BinUtility zUtil_eq(10, 0., 10., open, BinningValue::binZ);
+  BinUtility xUtil_eq(10, 0., 10., AxisBoundaryType::Bound,
+                      AxisDirection::AxisX);
+  BinUtility yUtil_eq(10, 0., 10., AxisBoundaryType::Bound,
+                      AxisDirection::AxisY);
+  BinUtility zUtil_eq(10, 0., 10., AxisBoundaryType::Bound,
+                      AxisDirection::AxisZ);
   BOOST_CHECK_EQUAL(xUtil_eq.bins(), std::size_t{10});
   // make it 2-dim
-  BinUtility xyUtil_eq(10, 0., 10., open, BinningValue::binX);
+  BinUtility xyUtil_eq(10, 0., 10., AxisBoundaryType::Bound,
+                       AxisDirection::AxisX);
   xyUtil_eq += yUtil_eq;
   BOOST_CHECK_EQUAL(xyUtil_eq.bins(), 100u);
   // make it 3-dim
@@ -45,7 +49,8 @@ BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
   BOOST_CHECK_EQUAL(xyzUtil_eq.dimensions(), 3u);
 
   // check equality operator
-  BinUtility xUtil_eq_copy(10, 0., 10., open, BinningValue::binX);
+  BinUtility xUtil_eq_copy(10, 0., 10., AxisBoundaryType::Bound,
+                           AxisDirection::AxisX);
   BOOST_CHECK_EQUAL(xUtil_eq_copy, xUtil_eq);
   BOOST_CHECK_NE(yUtil_eq, xUtil_eq);
 
@@ -70,7 +75,8 @@ BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
 // OPEN - equidistant binning tests
 BOOST_AUTO_TEST_CASE(BinUtility_arbitrary_binning) {
   std::vector<float> bvalues = {-5., 0., 1., 1.1, 8.};
-  BinUtility xUtil(bvalues, Acts::open, Acts::BinningValue::binX);
+  BinUtility xUtil(bvalues, Acts::AxisBoundaryType::Bound,
+                   AxisDirection::AxisX);
 
   // Underflow
   BOOST_CHECK_EQUAL(xUtil.bin(Vector3(-6., 0., 0.)), 0u);
@@ -94,11 +100,11 @@ BOOST_AUTO_TEST_CASE(BinUtility_transform) {
       transform_LtoG * AngleAxis3(std::numbers::pi / 4., Vector3(0, 0, 1));
 
   Transform3 transform_GtoL = transform_LtoG.inverse();
-
-  BinUtility rUtil(10, 0., 100., open, BinningValue::binR);
-  BinUtility phiUtil(10, -std::numbers::pi, std::numbers::pi, closed,
-                     BinningValue::binPhi);
-  BinUtility zUtil(10, -100., 100., open, BinningValue::binZ);
+  BinUtility rUtil(10, 0., 100., AxisBoundaryType::Bound, AxisDirection::AxisR);
+  BinUtility phiUtil(10, -std::numbers::pi, std::numbers::pi,
+                     AxisBoundaryType::Closed, AxisDirection::AxisPhi);
+  BinUtility zUtil(10, -100., 100., AxisBoundaryType::Bound,
+                   AxisDirection::AxisZ);
 
   BinUtility noTranform;
   noTranform += rUtil;

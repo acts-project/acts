@@ -157,12 +157,12 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
   nlohmann::json jGrid = jMaterialAccessor["grid"];
   nlohmann::json jGridAxes = jGrid["axes"];
 
-  Acts::AxisBoundaryType boundaryType0 = jGridAxes[0]["boundary_type"];
+  Acts::AxisBoundaryType axisBoundaryType0 = jGridAxes[0]["boundary_type"];
 
   // 1-dimensional case
   if (jGridAxes.size() == 1u) {
     // Bound case
-    if (boundaryType0 == Acts::AxisBoundaryType::Bound) {
+    if (axisBoundaryType0 == Acts::AxisBoundaryType::Bound) {
       Acts::GridAxisGenerators::EqBound eqBound{jGridAxes[0]["range"],
                                                 jGridAxes[0]["bins"]};
       auto grid =
@@ -182,7 +182,7 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
           std::move(boundToGridLocal), std::move(globalToGridLocal));
     }
     // Closed case
-    if (boundaryType0 == Acts::AxisBoundaryType::Closed) {
+    if (axisBoundaryType0 == Acts::AxisBoundaryType::Closed) {
       Acts::GridAxisGenerators::EqClosed eqClosed{jGridAxes[0]["range"],
                                                   jGridAxes[0]["bins"]};
       auto grid =
@@ -206,11 +206,11 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
   // 2-dimensional case
   if (jGridAxes.size() == 2u) {
     // Second boundary type
-    Acts::AxisBoundaryType boundaryType1 = jGridAxes[1]["boundary_type"];
+    Acts::AxisBoundaryType axisBoundaryType1 = jGridAxes[1]["boundary_type"];
 
     // Bound-bound setup
-    if (boundaryType0 == Acts::AxisBoundaryType::Bound &&
-        boundaryType1 == Acts::AxisBoundaryType::Bound) {
+    if (axisBoundaryType0 == Acts::AxisBoundaryType::Bound &&
+        axisBoundaryType1 == Acts::AxisBoundaryType::Bound) {
       Acts::GridAxisGenerators::EqBoundEqBound eqBoundEqBound{
           jGridAxes[0]["range"], jGridAxes[0]["bins"], jGridAxes[1]["range"],
           jGridAxes[1]["bins"]};
@@ -232,8 +232,8 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
     }
 
     // Bound-closed setup
-    if (boundaryType0 == Acts::AxisBoundaryType::Bound &&
-        boundaryType1 == Acts::AxisBoundaryType::Closed) {
+    if (axisBoundaryType0 == Acts::AxisBoundaryType::Bound &&
+        axisBoundaryType1 == Acts::AxisBoundaryType::Closed) {
       Acts::GridAxisGenerators::EqBoundEqClosed eqBoundEqClosed{
           jGridAxes[0]["range"], jGridAxes[0]["bins"], jGridAxes[1]["range"],
           jGridAxes[1]["bins"]};
@@ -255,8 +255,8 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
     }
 
     // Closed-bound setup
-    if (boundaryType0 == Acts::AxisBoundaryType::Closed &&
-        boundaryType1 == Acts::AxisBoundaryType::Bound) {
+    if (axisBoundaryType0 == Acts::AxisBoundaryType::Closed &&
+        axisBoundaryType1 == Acts::AxisBoundaryType::Bound) {
       Acts::GridAxisGenerators::EqClosedEqBound eqClosedEqBound{
           jGridAxes[0]["range"], jGridAxes[0]["bins"], jGridAxes[1]["range"],
           jGridAxes[1]["bins"]};
@@ -686,14 +686,16 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
     BinUtility bUtility = binnedMaterial->binUtility();
     // Turn the bin value into a 2D grid
     if (bUtility.dimensions() == 1u) {
-      if (bUtility.binningData()[0u].binvalue == BinningValue::binR) {
+      if (bUtility.binningData()[0u].axisDirection == AxisDirection::AxisR) {
         // Turn to R-Phi
-        bUtility += BinUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
-                               BinningValue::binPhi);
-      } else if (bUtility.binningData()[0u].binvalue == BinningValue::binZ) {
+        bUtility +=
+            BinUtility(1u, -std::numbers::pi, std::numbers::pi,
+                       AxisBoundaryType::Closed, AxisDirection::AxisPhi);
+      } else if (bUtility.binningData()[0u].axisDirection ==
+                 AxisDirection::AxisZ) {
         // Turn to Phi-Z - swap needed
-        BinUtility nbUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
-                             BinningValue::binPhi);
+        BinUtility nbUtility(1u, -std::numbers::pi, std::numbers::pi,
+                             AxisBoundaryType::Closed, AxisDirection::AxisPhi);
         nbUtility += bUtility;
         bUtility = std::move(nbUtility);
         swapped = true;
@@ -701,24 +703,27 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
         std::runtime_error("Unsupported binning for Detray");
       }
     } else if (bUtility.dimensions() == 2u &&
-               bUtility.binningData()[0u].binvalue == BinningValue::binZ &&
-               bUtility.binningData()[1u].binvalue == BinningValue::binPhi) {
+               bUtility.binningData()[0u].axisDirection ==
+                   AxisDirection::AxisZ &&
+               bUtility.binningData()[1u].axisDirection ==
+                   AxisDirection::AxisPhi) {
       BinUtility nbUtility(bUtility.binningData()[1u]);
       nbUtility += bUtility.binningData()[0u];
       bUtility = std::move(nbUtility);
       swapped = true;
     }
 
-    BinningValue bVal0 = bUtility.binningData()[0u].binvalue;
-    BinningValue bVal1 = bUtility.binningData()[1u].binvalue;
+    AxisDirection bVal0 = bUtility.binningData()[0u].axisDirection;
+    AxisDirection bVal1 = bUtility.binningData()[1u].axisDirection;
 
     // Translate into grid index type
     int gridIndexType = 0;
-    if (bVal0 == BinningValue::binR && bVal1 == BinningValue::binPhi) {
+    if (bVal0 == AxisDirection::AxisR && bVal1 == AxisDirection::AxisPhi) {
       gridIndexType = 0;
-    } else if (bVal0 == BinningValue::binPhi && bVal1 == BinningValue::binZ) {
+    } else if (bVal0 == AxisDirection::AxisPhi &&
+               bVal1 == AxisDirection::AxisZ) {
       gridIndexType = 3;
-    } else if (bVal0 == BinningValue::binX && bVal1 == BinningValue::binY) {
+    } else if (bVal0 == AxisDirection::AxisX && bVal1 == AxisDirection::AxisY) {
       gridIndexType = 2;
     } else {
       std::runtime_error("Unsupported binning for Detray");
@@ -796,12 +801,13 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
   nlohmann::json jAxes;
   for (const auto [ib, bData] : enumerate(binUtility.binningData())) {
     nlohmann::json jAxis;
-    jAxis["bounds"] = bData.option == closed ? 2 : 1;
+    jAxis["bounds"] =
+        bData.axisBoundaryType == AxisBoundaryType::Closed ? 2 : 1;
     jAxis["binning"] = 0u;
     jAxis["label"] = ib;
     jAxis["bins"] = bData.bins();
     double offset = 0;
-    if (bData.binvalue == BinningValue::binZ) {
+    if (bData.axisDirection == AxisDirection::AxisZ) {
       offset = surface.center(Acts::GeometryContext{}).z();
     }
     jAxis["edges"] =

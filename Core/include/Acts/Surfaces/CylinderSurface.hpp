@@ -19,7 +19,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
@@ -104,8 +104,8 @@ class CylinderSurface : public RegularSurface {
   /// @param bValue is the type of global binning to be done
   ///
   /// @return is the global position to be used for binning
-  Vector3 binningPosition(const GeometryContext& gctx,
-                          BinningValue bValue) const final;
+  Vector3 referencePosition(const GeometryContext& gctx,
+                            AxisDirection bValue) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   /// The measurement frame of a cylinder is the tangential plane at a given
@@ -260,14 +260,14 @@ class CylinderSurface : public RegularSurface {
   /// @note The surfaces need to be *compatible*, i.e. have cylinder bounds
   ///       that align, and have the same radius
   /// @param other The other cylinder surface to merge with
-  /// @param direction The binning direction: either @c binZ or @c binRPhi
+  /// @param direction The binning direction: either @c AxisZ or @c binRPhi
   /// @param externalRotation If true, any phi rotation is done in the transform
   /// @param logger The logger to use
   /// @return The merged cylinder surface and a boolean indicating if surfaces are reversed
   /// @note The returned boolean is `false` if `this` is *left* or
   ///       *counter-clockwise* of @p other, and `true` if not.
   std::pair<std::shared_ptr<CylinderSurface>, bool> mergedWith(
-      const CylinderSurface& other, BinningValue direction,
+      const CylinderSurface& other, AxisDirection direction,
       bool externalRotation, const Logger& logger = getDummyLogger()) const;
 
  protected:

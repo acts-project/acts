@@ -22,7 +22,7 @@
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -344,9 +344,9 @@ Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx) const {
   return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
-                                                 BinningValue bValue) const {
-  if (bValue == BinningValue::binR || bValue == BinningValue::binPhi) {
+Acts::Vector3 Acts::DiscSurface::referencePosition(const GeometryContext& gctx,
+                                                   AxisDirection bValue) const {
+  if (bValue == AxisDirection::AxisR || bValue == AxisDirection::AxisPhi) {
     double r = m_bounds->binningValueR();
     double phi = m_bounds->binningValuePhi();
     return localToGlobal(gctx, Vector2{r, phi}, Vector3{});
@@ -354,16 +354,16 @@ Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
   return center(gctx);
 }
 
-double Acts::DiscSurface::binningPositionValue(const GeometryContext& gctx,
-                                               BinningValue bValue) const {
-  if (bValue == BinningValue::binR) {
-    return VectorHelpers::perp(binningPosition(gctx, bValue));
+double Acts::DiscSurface::referencePositionValue(const GeometryContext& gctx,
+                                                 AxisDirection bValue) const {
+  if (bValue == AxisDirection::AxisR) {
+    return VectorHelpers::perp(referencePosition(gctx, bValue));
   }
-  if (bValue == BinningValue::binPhi) {
-    return VectorHelpers::phi(binningPosition(gctx, bValue));
+  if (bValue == AxisDirection::AxisPhi) {
+    return VectorHelpers::phi(referencePosition(gctx, bValue));
   }
 
-  return GeometryObject::binningPositionValue(gctx, bValue);
+  return GeometryObject::referencePositionValue(gctx, bValue);
 }
 
 double Acts::DiscSurface::pathCorrection(const GeometryContext& gctx,
@@ -374,7 +374,7 @@ double Acts::DiscSurface::pathCorrection(const GeometryContext& gctx,
 }
 
 std::pair<std::shared_ptr<Acts::DiscSurface>, bool>
-Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
+Acts::DiscSurface::mergedWith(const DiscSurface& other, AxisDirection direction,
                               bool externalRotation,
                               const Logger& logger) const {
   using namespace Acts::UnitLiterals;
@@ -451,7 +451,7 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
                                 << otherAvgPhi / 1_degree << " +- "
                                 << otherHlPhi / 1_degree);
 
-  if (direction == Acts::BinningValue::binR) {
+  if (direction == AxisDirection::AxisR) {
     if (std::abs(otherLocal.linear().col(eY)[eX]) >= tolerance &&
         (!bounds->coversFullAzimuth() || !otherBounds->coversFullAzimuth())) {
       throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
@@ -491,7 +491,7 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
     return {Surface::makeShared<DiscSurface>(*m_transform, newBounds),
             minR > otherMinR};
 
-  } else if (direction == Acts::BinningValue::binPhi) {
+  } else if (direction == AxisDirection::AxisPhi) {
     if (std::abs(maxR - otherMaxR) > tolerance ||
         std::abs(minR - otherMinR) > tolerance) {
       ACTS_ERROR("DiscSurface::merge: surfaces don't have same r bounds");
@@ -543,8 +543,8 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
   } else {
     ACTS_ERROR("DiscSurface::merge: invalid direction " << direction);
 
-    throw SurfaceMergingException(
-        getSharedPtr(), other.getSharedPtr(),
-        "DiscSurface::merge: invalid direction " + binningValueName(direction));
+    throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+                                  "DiscSurface::merge: invalid direction " +
+                                      axisDirectionToString(direction));
   }
 }

@@ -44,25 +44,25 @@ ProtoLayer::ProtoLayer(const GeometryContext& gctx,
   measure(gctx, m_surfaces);
 }
 
-double ProtoLayer::min(BinningValue bval, bool addenv) const {
+double ProtoLayer::min(AxisDirection bval, bool addenv) const {
   if (addenv) {
     return extent.min(bval) - envelope[bval][0u];
   }
   return extent.min(bval);
 }
 
-double ProtoLayer::max(BinningValue bval, bool addenv) const {
+double ProtoLayer::max(AxisDirection bval, bool addenv) const {
   if (addenv) {
     return extent.max(bval) + envelope[bval][1u];
   }
   return extent.max(bval);
 }
 
-double ProtoLayer::medium(BinningValue bval, bool addenv) const {
+double ProtoLayer::medium(AxisDirection bval, bool addenv) const {
   return 0.5 * (min(bval, addenv) + max(bval, addenv));
 }
 
-double ProtoLayer::range(BinningValue bval, bool addenv) const {
+double ProtoLayer::range(AxisDirection bval, bool addenv) const {
   return std::abs(max(bval, addenv) - min(bval, addenv));
 }
 

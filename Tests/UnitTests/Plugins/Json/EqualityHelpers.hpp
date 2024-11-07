@@ -28,8 +28,10 @@ namespace Acts {
 /// @return a boolean
 inline static bool isEqual(const BinningData& ba, const BinningData& bb,
                            float tolerance) {
-  bool equalBool = (ba.type == bb.type) && (ba.option == bb.option) &&
-                   (ba.binvalue == bb.binvalue) && (ba.zdim == bb.zdim) &&
+  bool equalBool = (ba.axisType == bb.axisType) &&
+                   (ba.axisBoundaryType == bb.axisBoundaryType) &&
+                   (ba.axisDirection == bb.axisDirection) &&
+                   (ba.zdim == bb.zdim) &&
                    (ba.subBinningAdditive == bb.subBinningAdditive);
 
   BOOST_CHECK(equalBool);
@@ -91,7 +93,7 @@ inline static bool isEqual(const Acts::Extent& ea, const Acts::Extent& eb,
                            double tolerance = 0.) {
   bool equalConstrains = true;
   bool equalRange = true;
-  for (auto& bVal : allBinningValues()) {
+  for (auto& bVal : allAxisDirections()) {
     equalConstrains =
         equalConstrains && (ea.constrains(bVal) == eb.constrains(bVal));
     BOOST_CHECK(equalConstrains);

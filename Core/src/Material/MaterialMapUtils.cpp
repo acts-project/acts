@@ -33,8 +33,8 @@ auto Acts::materialMapperRZ(
     std::vector<double> rPos, std::vector<double> zPos,
     const std::vector<Acts::Material>& material, double lengthUnit)
     -> MaterialMapper<
-        Grid<Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
-             Axis<Acts::AxisType::Equidistant>>> {
+        Grid<Material::ParametersVector, Axis<AxisType::Equidistant>,
+             Axis<AxisType::Equidistant>>> {
   // [1] Decompose material
   std::vector<Material::ParametersVector> materialVector;
   materialVector.reserve(material.size());
@@ -89,9 +89,9 @@ auto Acts::materialMapperXYZ(
     std::vector<double> xPos, std::vector<double> yPos,
     std::vector<double> zPos, const std::vector<Material>& material,
     double lengthUnit)
-    -> MaterialMapper<Grid<
-        Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
-        Axis<Acts::AxisType::Equidistant>, Axis<Acts::AxisType::Equidistant>>> {
+    -> MaterialMapper<
+        Grid<Material::ParametersVector, Axis<AxisType::Equidistant>,
+             Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>> {
   // [1] Decompose material
   std::vector<Material::ParametersVector> materialVector;
   materialVector.reserve(material.size());

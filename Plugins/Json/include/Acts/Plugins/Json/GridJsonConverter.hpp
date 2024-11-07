@@ -10,7 +10,7 @@
 
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/TrackParametersJsonConverter.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
@@ -20,14 +20,13 @@
 namespace Acts {
 
 /// @cond
-NLOHMANN_JSON_SERIALIZE_ENUM(Acts::AxisBoundaryType,
-                             {{Acts::AxisBoundaryType::Bound, "Bound"},
-                              {Acts::AxisBoundaryType::Open, "Open"},
-                              {Acts::AxisBoundaryType::Closed, "Closed"}})
+NLOHMANN_JSON_SERIALIZE_ENUM(AxisBoundaryType,
+                             {{AxisBoundaryType::Bound, "Bound"},
+                              {AxisBoundaryType::Open, "Open"},
+                              {AxisBoundaryType::Closed, "Closed"}})
 
-NLOHMANN_JSON_SERIALIZE_ENUM(Acts::AxisType,
-                             {{Acts::AxisType::Equidistant, "Equidistant"},
-                              {Acts::AxisType::Variable, "Variable"}})
+NLOHMANN_JSON_SERIALIZE_ENUM(AxisType, {{AxisType::Equidistant, "Equidistant"},
+                                        {AxisType::Variable, "Variable"}})
 
 /// @endcond
 

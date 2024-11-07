@@ -27,7 +27,7 @@
 
 std::vector<std::size_t> Acts::Experimental::detail::binSequence(
     std::array<std::size_t, 2u> minMaxBins, std::size_t expand,
-    std::size_t nBins, Acts::AxisBoundaryType type) {
+    std::size_t nBins, AxisBoundaryType type) {
   // Return vector for iterations
   std::vector<std::size_t> rBins;
   /// Helper method to fill a range
@@ -43,15 +43,15 @@ std::vector<std::size_t> Acts::Experimental::detail::binSequence(
   std::size_t bmax = minMaxBins[1u];
 
   // Open/Bound cases
-  if (type != Acts::AxisBoundaryType::Closed) {
+  if (type != AxisBoundaryType::Closed) {
     rBins.reserve(bmax - bmin + 1u + 2 * expand);
     // handle bmin:/max expand it down (for bound, don't fill underflow)
-    if (type == Acts::AxisBoundaryType::Bound) {
+    if (type == AxisBoundaryType::Bound) {
       bmin = (static_cast<int>(bmin) - static_cast<int>(expand) > 0)
                  ? bmin - expand
                  : 1u;
       bmax = (bmax + expand <= nBins) ? bmax + expand : nBins;
-    } else if (type == Acts::AxisBoundaryType::Open) {
+    } else if (type == AxisBoundaryType::Open) {
       bmin = (static_cast<int>(bmin) - static_cast<int>(expand) >= 0)
                  ? bmin - expand
                  : 0u;
@@ -64,8 +64,7 @@ std::vector<std::size_t> Acts::Experimental::detail::binSequence(
     // Safe with respect to the closure point, treat as bound
     if (2 * span < nBins && (bmax + expand <= nBins) &&
         (static_cast<int>(bmin) - static_cast<int>(expand) > 0)) {
-      return binSequence({bmin, bmax}, expand, nBins,
-                         Acts::AxisBoundaryType::Bound);
+      return binSequence({bmin, bmax}, expand, nBins, AxisBoundaryType::Bound);
     } else if (2 * span < nBins) {
       bmin = static_cast<int>(bmin) - static_cast<int>(expand) > 0
                  ? bmin - expand

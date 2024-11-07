@@ -10,7 +10,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
 #include <array>
@@ -68,9 +68,8 @@ class SolenoidBField;
 ///       axis. If the flag is set to true the r-axis grid values will be set to
 ///       {-1,0,1} and the BFieldValues will be set to {3,2,3}.
 /// @return A field map instance for use in interpolation.
-Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
-               Acts::Axis<Acts::AxisType::Equidistant>>>
+Acts::InterpolatedBFieldMap<Acts::Grid<
+    Acts::Vector2, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>>
 fieldMapRZ(const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                            std::array<std::size_t, 2> nBinsRZ)>&
                localToGlobalBin,
@@ -129,9 +128,8 @@ fieldMapRZ(const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
 ///       be set to {3,2,3}.
 /// @return A field map instance for use in interpolation.
 Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector3, Acts::Axis<Acts::AxisType::Equidistant>,
-               Acts::Axis<Acts::AxisType::Equidistant>,
-               Acts::Axis<Acts::AxisType::Equidistant>>>
+    Acts::Grid<Acts::Vector3, Axis<AxisType::Equidistant>,
+               Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>>
 fieldMapXYZ(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
@@ -151,12 +149,10 @@ fieldMapXYZ(
 /// @param field the solenoid field instance
 ///
 /// @return A field map instance for use in interpolation.
-Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
-               Acts::Axis<Acts::AxisType::Equidistant>>>
-solenoidFieldMap(const std::pair<double, double>& rLim,
-                 const std::pair<double, double>& zLim,
-                 const std::pair<std::size_t, std::size_t>& nBins,
+InterpolatedBFieldMap<Grid<
+    Vector2, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>>
+solenoidFieldMap(const std::pair<double, double>& rlim, const std::pair<double, double>& zlim,
+                 const std::pair<std::size_t, std::size_t>& nbins,
                  const SolenoidBField& field);
 
 }  // namespace Acts

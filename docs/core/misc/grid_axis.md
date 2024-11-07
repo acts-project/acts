@@ -69,7 +69,7 @@ The local bin indices are always defined from 1 to $N_\text{bins}$ for the respe
 
 ## Finding neighbors
 
-The `Grid` can determine the number of neighbors around a given bin. This done by first converting the global bin index to local bin indices, and then varying the local bin indices in each dimension. At this stage, each Axis gets to decide, which indices are considered neighbors, which differs depending on `AxisBinningType`. `Open` considers the underflow and overflow bins, while `Bound` does not. `Closed` considers bins on the other side of the axis.
+The `Grid` can determine the number of neighbors around a given bin. This done by first converting the global bin index to local bin indices, and then varying the local bin indices in each dimension. At this stage, each Axis gets to decide, which indices are considered neighbors, which differs depending on `AxisAxisType`. `Open` considers the underflow and overflow bins, while `Bound` does not. `Closed` considers bins on the other side of the axis.
 The resulting neighbor combination around bin *B* might look like
 
 | b x b | 1     | 2    | 3     |

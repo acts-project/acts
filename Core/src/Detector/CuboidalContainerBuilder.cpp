@@ -34,14 +34,14 @@ Acts::Experimental::CuboidalContainerBuilder::CuboidalContainerBuilder(
     throw std::invalid_argument(
         "CuboidalContainerBuilder: no sub builders provided.");
   }
-  // Check if binning value is correctly chosen
-  if (m_cfg.binning != Acts::BinningValue::binX &&
-      m_cfg.binning != Acts::BinningValue::binY &&
-      m_cfg.binning != Acts::BinningValue::binZ) {
+  // Check if axis direction for the attachment is correctly chosen
+  if (m_cfg.axisDirection != AxisDirection::AxisX &&
+      m_cfg.axisDirection != AxisDirection::AxisY &&
+      m_cfg.axisDirection != AxisDirection::AxisZ) {
     throw std::invalid_argument(
-        "CuboidalContainerBuilder: Invalid binning value. Only "
-        "Acts::BinningValue::binX, "
-        "Acts::BinningValue::binY, Acts::BinningValue::binZ are supported.");
+        "CuboidalContainerBuilder: Invalid axisDirection value. Only "
+        "AxisDirection::AxisX, "
+        "AxisDirection::AxisY, AxisDirection::AxisZ are supported.");
   }
 }
 
@@ -87,20 +87,21 @@ Acts::Experimental::CuboidalContainerBuilder::CuboidalContainerBuilder(
     throw std::invalid_argument(
         "CuboidalContainerBuilder: no sub builders provided.");
   }
-  if (bpNode.binning.size() != 1) {
+  if (bpNode.axisDirections.size() != 1) {
     throw std::invalid_argument(
-        "CuboidalContainerBuilder: >1D binning is not supported for cuboid "
+        "CuboidalContainerBuilder: >1D axisDirection is not supported for "
+        "cuboid "
         "containers.");
   }
-  m_cfg.binning = bpNode.binning.at(0);
-  // Check if binning value is correctly chosen
-  if (m_cfg.binning != Acts::BinningValue::binX &&
-      m_cfg.binning != Acts::BinningValue::binY &&
-      m_cfg.binning != Acts::BinningValue::binZ) {
+  m_cfg.axisDirection = bpNode.axisDirections.at(0);
+  // Check if axisDirection value is correctly chosen
+  if (m_cfg.axisDirection != AxisDirection::AxisX &&
+      m_cfg.axisDirection != AxisDirection::AxisY &&
+      m_cfg.axisDirection != AxisDirection::AxisZ) {
     throw std::invalid_argument(
-        "CuboidalContainerBuilder: Invalid binning value. Only "
-        "Acts::BinningValue::binX, "
-        "Acts::BinningValue::binY, Acts::BinningValue::binZ are supported.");
+        "CuboidalContainerBuilder: Invalid axisDirection value. Only "
+        "AxisDirection::AxisX, "
+        "AxisDirection::AxisY, AxisDirection::AxisZ are supported.");
   }
 
   m_cfg.auxiliary = "*** acts auto-generated from proxy ***";
@@ -144,13 +145,13 @@ Acts::Experimental::CuboidalContainerBuilder::construct(
         "Component volumes are at navigation level: connecting volumes.");
     // Connect volumes
     rContainer = Acts::Experimental::detail::CuboidalDetectorHelper::connect(
-        gctx, volumes, m_cfg.binning, {}, logger().level());
+        gctx, volumes, m_cfg.axisDirection, {}, logger().level());
 
   } else {
     ACTS_VERBOSE("Components contain sub containers: connect containers.");
     // Connect containers
     rContainer = Acts::Experimental::detail::CuboidalDetectorHelper::connect(
-        gctx, containers, m_cfg.binning, {}, logger().level());
+        gctx, containers, m_cfg.axisDirection, {}, logger().level());
   }
   ACTS_VERBOSE("Number of root volumes: " << rootVolumes.size());
 

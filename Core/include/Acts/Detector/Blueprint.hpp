@@ -13,7 +13,7 @@
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <map>
@@ -47,18 +47,19 @@ struct Node final {
   /// @param t the transform
   /// @param bt the boundary type
   /// @param bv the boundary values
-  /// @param bss the binning values
+  /// @param adrs the axis direction values
   /// @param cs the children of the node
   /// @param e the estimated extent of the node (optional)
   Node(const std::string& n, const Transform3& t, VolumeBounds::BoundsType bt,
-       const std::vector<double>& bv, const std::vector<BinningValue>& bss,
+       const std::vector<double>& bv,
+       const std::vector<AxisDirection>& adrs,
        std::vector<std::unique_ptr<Node>> cs = {}, const Extent& e = Extent())
       : name(n),
         transform(t),
         boundsType(bt),
         boundaryValues(bv),
         children(std::move(cs)),
-        binning(bss),
+        axisDirections(adrs),
         extent(e) {
     for_each(children.begin(), children.end(),
              [this](std::unique_ptr<Node>& c) { c->parent = this; });
@@ -95,10 +96,10 @@ struct Node final {
   const Node* parent = nullptr;
   /// Branch definitions: children
   std::vector<std::unique_ptr<Node>> children = {};
-  /// Branch definition binning
-  std::vector<BinningValue> binning = {};
+  /// Branch definitions: direction of binning axes
+  std::vector<AxisDirection> axisDirections = {};
 
-  /// Portal proto material binning
+  /// Portal proto material: proto binnig of material
   std::map<unsigned int, BinningDescription> portalMaterialBinning = {};
 
   /// Auxiliary information

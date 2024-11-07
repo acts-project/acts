@@ -23,8 +23,9 @@ DigitizedParameters makeDigitizationParameters(const Vector2 &position,
                                                const BinUtility &binUtility) {
   auto [binX, binY, _] =
       binUtility.binTriple((Vector3() << position, 0).finished());
-  Segmentizer::Bin2D bin = {static_cast<Segmentizer::Bin2D::value_type>(binX),
-                            static_cast<Segmentizer::Bin2D::value_type>(binY)};
+  Segmentizer::Bin2D bin = {
+      static_cast<Segmentizer::Bin2D::value_type>(AxisDirection::AxisX),
+      static_cast<Segmentizer::Bin2D::value_type>(AxisDirection::AxisY)};
   Segmentizer::Segment2D segment = {position, position};
   double activation = 1;
   Cluster::Cell cell = {bin, segment, activation};
@@ -46,10 +47,10 @@ DigitizedParameters makeDigitizationParameters(const Vector2 &position,
 auto testDigitizedParametersWithTwoClusters(bool merge, const Vector2 &firstHit,
                                             const Vector2 &secondHit) {
   BinUtility binUtility;
-  binUtility +=
-      BinningData(BinningOption::open, BinningValue::binX, 20, -10.0f, 10.0f);
-  binUtility +=
-      BinningData(BinningOption::open, BinningValue::binY, 20, -10.0f, 10.0f);
+  binUtility += BinningData(AxisBoundaryType::Bound, AxisDirection::AxisX, 20,
+                            -10.0f, 10.0f);
+  binUtility += BinningData(AxisBoundaryType::Bound, AxisDirection::AxisY, 20,
+                            -10.0f, 10.0f);
   std::vector<Acts::BoundIndices> boundIndices = {eBoundLoc0, eBoundLoc1};
   double nsigma = 1;
   bool commonCorner = true;

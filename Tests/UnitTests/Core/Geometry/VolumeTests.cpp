@@ -14,7 +14,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <cmath>
 #include <limits>
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
 
   // Binning test
   GeometryContext gctx;
-  BOOST_CHECK_EQUAL(volume.binningPosition(gctx, BinningValue::binX),
+  BOOST_CHECK_EQUAL(volume.referencePosition(gctx, AxisDirection::AxisX),
                     volume.center());
 }
 

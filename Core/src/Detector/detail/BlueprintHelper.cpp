@@ -18,16 +18,16 @@
 namespace {
 
 std::array<Acts::Vector3, 2u> endPointsXYZ(
-    const Acts::Experimental::Blueprint::Node& node, Acts::BinningValue bVal) {
+    const Acts::Experimental::Blueprint::Node& node, Acts::AxisDirection aDir) {
   unsigned int bIdx = 0;
-  switch (bVal) {
-    case Acts::BinningValue::binX:
+  switch (aDir) {
+    case Acts::AxisDirection::AxisX:
       bIdx = 0;
       break;
-    case Acts::BinningValue::binY:
+    case Acts::AxisDirection::AxisY:
       bIdx = 1;
       break;
-    case Acts::BinningValue::binZ:
+    case Acts::AxisDirection::AxisZ:
       bIdx = 2;
       break;
     default:
@@ -49,17 +49,17 @@ void Acts::Experimental::detail::BlueprintHelper::sort(Blueprint::Node& node,
     return;
   }
   // Sort along x, y, z
-  if (node.binning.size() == 1) {
-    auto bVal = node.binning.front();
+  if (node.axisDirections.size() == 1) {
+    auto aDir = node.axisDirections.front();
     // x,y,z binning along the axis
-    if (bVal == BinningValue::binX || bVal == BinningValue::binY ||
-        bVal == BinningValue::binZ) {
+    if (aDir == AxisDirection::AxisX || aDir == AxisDirection::AxisY ||
+        aDir == AxisDirection::AxisZ) {
       Vector3 nodeCenter = node.transform.translation();
-      Vector3 nodeSortAxis = node.transform.rotation().col(toUnderlying(bVal));
+      Vector3 nodeSortAxis = node.transform.rotation().col(toUnderlying(aDir));
       std::ranges::sort(node.children, {}, [&](const auto& c) {
         return (c->transform.translation() - nodeCenter).dot(nodeSortAxis);
       });
-    } else if (bVal == BinningValue::binR &&
+    } else if (aDir == AxisDirection::AxisR &&
                node.boundsType == VolumeBounds::eCylinder) {
       std::ranges::sort(node.children, {}, [](const auto& c) {
         return c->boundaryValues[0] + c->boundaryValues[1];
@@ -81,10 +81,11 @@ void Acts::Experimental::detail::BlueprintHelper::fillGaps(
   if (node.isLeaf()) {
     return;
   }
-  if (node.boundsType == VolumeBounds::eCylinder && node.binning.size() == 1) {
+  if (node.boundsType == VolumeBounds::eCylinder &&
+      node.axisDirections.size() == 1) {
     fillGapsCylindrical(node, adjustToParent);
   } else if (node.boundsType == VolumeBounds::eCuboid &&
-             node.binning.size() == 1) {
+             node.axisDirections.size() == 1) {
     // Doesn't look like NOT adjusting to parent
     // makes sense. The gaps are not going
     // to be filled in non-binned directions
@@ -108,7 +109,8 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
 
   std::vector<std::unique_ptr<Blueprint::Node>> gaps;
   // Only 1D binning implemented for the moment
-  if (BinningValue bVal = node.binning.front(); bVal == BinningValue::binZ) {
+  if (AxisDirection aDir = node.axisDirections.front();
+      aDir == AxisDirection::AxisZ) {
     // adjust inner/outer radius
     if (adjustToParent) {
       std::for_each(node.children.begin(), node.children.end(),
@@ -117,11 +119,11 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
                       child->boundaryValues[1] = cOuterR;
                     });
     }
-    auto [negC, posC] = endPointsXYZ(node, bVal);
+    auto [negC, posC] = endPointsXYZ(node, aDir);
     // Assume sorted along the local z axis
     unsigned int igap = 0;
     for (auto& child : node.children) {
-      auto [neg, pos] = endPointsXYZ(*child, bVal);
+      auto [neg, pos] = endPointsXYZ(*child, aDir);
       double gapSpan = (neg - negC).norm();
       if (gapSpan > s_onSurfaceTolerance) {
         // Fill a gap node
@@ -152,7 +154,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
       gaps.push_back(std::move(gap));
     }
 
-  } else if (bVal == BinningValue::binR) {
+  } else if (aDir == AxisDirection::AxisR) {
     // We have binning in R present
     if (adjustToParent) {
       std::for_each(node.children.begin(), node.children.end(),
@@ -208,11 +210,11 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCuboidal(
   sort(node, false);
 
   // Cuboidal detector binnings
-  std::array<Acts::BinningValue, 3u> allowedBinVals = {
-      BinningValue::binX, BinningValue::binY, BinningValue::binZ};
+  std::array<AxisDirection, 3u> allowedBinVals = {
+      AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ};
 
   std::vector<std::unique_ptr<Blueprint::Node>> gaps;
-  auto binVal = node.binning.front();
+  auto binVal = node.axisDirections.front();
 
   // adjust non-binned directions
   if (adjustToParent) {

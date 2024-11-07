@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/detail/IndexedGridFiller.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <algorithm>
@@ -37,8 +38,8 @@ struct IndexedSurfacesGenerator {
   surface_container surfaces = {};
   // Indices of surfaces that are to be assigned to all bins
   std::vector<std::size_t> assignToAll = {};
-  /// The binning for the indexing
-  std::vector<BinningValue> bValues = {};
+  /// The axis directions for the binning
+  std::vector<AxisDirection> axisDirections = {};
   // Bin expansion
   std::vector<std::size_t> binExpansion = {};
   /// The transform into the local binning schema
@@ -68,12 +69,12 @@ struct IndexedSurfacesGenerator {
         typename axis_generator::template grid_type<std::vector<std::size_t>>;
     GridType grid(std::move(aGenerator()));
 
-    std::array<BinningValue, decltype(grid)::DIM> bvArray = {};
-    for (auto [ibv, bv] : enumerate(bValues)) {
-      bvArray[ibv] = bv;
+    std::array<AxisDirection, decltype(grid)::DIM> adArray = {};
+    for (auto [iadv, ad] : enumerate(adArray)) {
+      adArray[iadv] = ad;
     }
 
-    indexed_updator<GridType> indexedSurfaces(std::move(grid), bvArray,
+    indexed_updator<GridType> indexedSurfaces(std::move(grid), adArray,
                                               transform);
     // Fill the bin indices
     IndexedGridFiller filler{binExpansion};

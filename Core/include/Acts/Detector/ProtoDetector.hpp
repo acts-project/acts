@@ -11,8 +11,8 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <functional>
@@ -98,12 +98,12 @@ struct ProtoVolume {
   void extendUp(ProtoVolume& ptVolume);
 
   /// Extend the tracking volume with its own constituents
-  /// @param bValue the binning value that is propagated
-  void propagateMinDown(BinningValue bValue);
+  /// @param aDir the binning value that is propagated
+  void propagateMinDown(AxisDirection aDir);
 
   /// Extend the tracking volume with its own constituents
-  /// @param bValue the binning value that is propagated
-  void propagateMaxDown(BinningValue bValue);
+  /// @param aDir the binning value that is propagated
+  void propagateMaxDown(AxisDirection aDir);
 
   /// Constrain the daughter volumes with this volume
   ///

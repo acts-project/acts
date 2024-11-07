@@ -12,9 +12,8 @@
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/Axis.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
 #include <array>
@@ -28,7 +27,7 @@ namespace Acts {
 
 class MaterialSlab;
 
-using EAxis = Acts::Axis<AxisType::Equidistant>;
+using EAxis = Axis<AxisType::Equidistant>;
 using Grid2D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
 using Grid3D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
 using MaterialGrid2D =
@@ -70,8 +69,7 @@ Grid3D createGrid(MaterialGridAxisData gridAxis1,
 /// @param [in] type Type of bin
 ///
 /// @return a coordinate transform function
-std::function<double(Acts::Vector3)> globalToLocalFromBin(
-    Acts::BinningValue& type);
+std::function<double(Acts::Vector3)> globalToLocalFromBin(AxisDirection& type);
 
 /// @brief Create a 2DGrid using a BinUtility.
 /// Also determine the corresponding global to local transform and grid mapping

@@ -90,7 +90,7 @@ def _makeLayerTriplet(*args, **kwargs):
             all(
                 (isinstance(v, tuple) or isinstance(v, list))
                 and isinstance(v[0], int)
-                and isinstance(v[1], inspect.unwrap(TGeoDetector.Config.BinningType))
+                and isinstance(v[1], inspect.unwrap(TGeoDetector.Config.AxisType))
                 for v in vv
             )
             for vv in (negative, central, positive)

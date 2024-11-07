@@ -25,8 +25,8 @@ Acts::Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
     ProtoBinning fBinning = b;
     // Check if the binning needs to be fixed
     if (fBinning.autorange) {
-      auto range = sExtent.range(b.binValue);
-      fBinning = ProtoBinning(b.binValue, b.boundaryType, range.min(),
+      auto range = sExtent.range(b.axisDirection);
+      fBinning = ProtoBinning(b.axisDirection, b.axisBoundaryType, range.min(),
                               range.max(), b.bins(), b.expansion);
     }
     fbDescription.binning.push_back(fBinning);

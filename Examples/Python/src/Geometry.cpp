@@ -37,7 +37,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -257,14 +257,14 @@ void addGeometry(Context& ctx) {
            py::arg("mag") = zeroEnvelope)
       .def_static("Zero", &ExtentEnvelope::Zero)
       .def("__getitem__", [](ExtentEnvelope& self,
-                             BinningValue bValue) { return self[bValue]; })
-      .def("__setitem__", [](ExtentEnvelope& self, BinningValue bValue,
+                             AxisDirection bValue) { return self[bValue]; })
+      .def("__setitem__", [](ExtentEnvelope& self, AxisDirection bValue,
                              const Envelope& value) { self[bValue] = value; })
       .def("__str__", [](const ExtentEnvelope& self) {
-        std::array<std::string, numBinningValues()> values;
+        std::array<std::string, numAxisDirections()> values;
 
         std::stringstream ss;
-        for (BinningValue val : allBinningValues()) {
+        for (AxisDirection val : allAxisDirections()) {
           ss << val << "=(" << self[val][0] << ", " << self[val][1] << ")";
           values.at(toUnderlying(val)) = ss.str();
           ss.str("");
@@ -282,7 +282,7 @@ void addGeometry(Context& ctx) {
            py::arg("envelope") = ExtentEnvelope::Zero())
       .def("range",
            [](const Acts::Extent& self,
-              Acts::BinningValue bval) -> std::array<double, 2> {
+              AxisDirection bval) -> std::array<double, 2> {
              return {self.min(bval), self.max(bval)};
            })
       .def("__str__", &Extent::toString);
@@ -340,8 +340,8 @@ void addExperimentalGeometry(Context& ctx) {
                extent.extend(volume->extent(gctx));
              }
              auto bounds = std::make_shared<Acts::CylinderVolumeBounds>(
-                 0., extent.max(Acts::BinningValue::binR),
-                 extent.max(Acts::BinningValue::binZ));
+                 0., extent.max(AxisDirection::AxisR),
+                 extent.max(AxisDirection::AxisZ));
 
              return std::make_shared<Acts::Volume>(Transform3::Identity(),
                                                    std::move(bounds));
@@ -381,13 +381,13 @@ void addExperimentalGeometry(Context& ctx) {
   {
     // Be able to construct a proto binning
     py::class_<ProtoBinning>(m, "ProtoBinning")
-        .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType,
+        .def(py::init<AxisDirection, AxisBoundaryType,
                       const std::vector<double>&, std::size_t>(),
              "bValue"_a, "bType"_a, "e"_a, "exp"_a = 0u)
-        .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType, double,
+        .def(py::init<AxisDirection, AxisBoundaryType, double,
                       double, std::size_t, std::size_t>(),
              "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a, "exp"_a = 0u)
-        .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType, std::size_t,
+        .def(py::init<AxisDirection, AxisBoundaryType, std::size_t,
                       std::size_t>(),
              "bValue"_a, "bType"_a, "nbins"_a, "exp"_a = 0u);
   }
@@ -451,7 +451,7 @@ void addExperimentalGeometry(Context& ctx) {
         m, "KdtSurfacesDim1Bin100")
         .def(py::init<const GeometryContext&,
                       const std::vector<std::shared_ptr<Acts::Surface>>&,
-                      const std::array<Acts::BinningValue, 1u>&>())
+                      const std::array<AxisDirection, 1u>&>())
         .def("surfaces", py::overload_cast<const RangeXDDim1&>(
                              &KdtSurfacesDim1Bin100::surfaces, py::const_));
 
@@ -481,7 +481,7 @@ void addExperimentalGeometry(Context& ctx) {
         m, "KdtSurfacesDim2Bin100")
         .def(py::init<const GeometryContext&,
                       const std::vector<std::shared_ptr<Acts::Surface>>&,
-                      const std::array<Acts::BinningValue, 2u>&>())
+                      const std::array<AxisDirection, 2u>&>())
         .def("surfaces", py::overload_cast<const RangeXDDim2&>(
                              &KdtSurfacesDim2Bin100::surfaces, py::const_));
 
@@ -598,7 +598,7 @@ void addExperimentalGeometry(Context& ctx) {
                    std::shared_ptr<
                        Acts::Experimental::IndexedRootVolumeFinderBuilder>>(
             m, "IndexedRootVolumeFinderBuilder")
-            .def(py::init<std::vector<Acts::BinningValue>>());
+            .def(py::init<std::vector<AxisDirection>>());
   }
 
   {
@@ -622,7 +622,7 @@ void addExperimentalGeometry(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(ccConfig, CylindricalContainerBuilder::Config);
     ACTS_PYTHON_MEMBER(builders);
-    ACTS_PYTHON_MEMBER(binning);
+    ACTS_PYTHON_MEMBER(axisDirections);
     ACTS_PYTHON_MEMBER(rootVolumeFinderBuilder);
     ACTS_PYTHON_MEMBER(geoIdGenerator);
     ACTS_PYTHON_MEMBER(geoIdReverseGen);
@@ -651,7 +651,7 @@ void addExperimentalGeometry(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(ccConfig, CuboidalContainerBuilder::Config);
     ACTS_PYTHON_MEMBER(builders);
-    ACTS_PYTHON_MEMBER(binning);
+    ACTS_PYTHON_MEMBER(axisDirection);
     ACTS_PYTHON_MEMBER(rootVolumeFinderBuilder);
     ACTS_PYTHON_MEMBER(geoIdGenerator);
     ACTS_PYTHON_MEMBER(geoIdReverseGen);

@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <array>
 #include <cstddef>
@@ -82,7 +82,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     // An optional rotation for this
     std::optional<RotationMatrix3> rotation{std::nullopt};
     // Dimension for the binning
-    Acts::BinningValue binningDimension = Acts::BinningValue::binX;
+    AxisDirection orderingDirection = AxisDirection::AxisX;
   };
 
   /// @brief This struct stores the data for the construction of a cuboid
@@ -104,8 +104,8 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     std::string name = "Volume";
     // Material
     std::shared_ptr<const IVolumeMaterial> volumeMaterial = nullptr;
-    // Dimension for the binning
-    Acts::BinningValue binningDimension = Acts::BinningValue::binX;
+    // Direction for the layer ordering within this volume
+    AxisDirection orderingDirection = AxisDirection::AxisX;
   };
 
   /// @brief This struct stores the configuration of the tracking geometry
@@ -176,7 +176,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
                                          const VolumeConfig& cfg) const;
 
   void sortVolumes(std::vector<std::pair<TrackingVolumePtr, Vector3>>& tapVec,
-                   BinningValue bValue) const;
+                   AxisDirection bValue) const;
 
   /// @brief This function builds a world TrackingVolume based on a given
   /// configuration

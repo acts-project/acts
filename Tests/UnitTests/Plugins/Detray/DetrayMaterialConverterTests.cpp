@@ -91,8 +91,8 @@ BOOST_AUTO_TEST_CASE(DetrayHomogeneousMaterialConversion) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionX) {
   // Create a binned material in 4 bins in x direction
-  Acts::BinUtility binUtility(4u, -2., 2., Acts::BinningOption::open,
-                              Acts::BinningValue::binX);
+  Acts::BinUtility binUtility(4u, -2., 2., Acts::AxisBoundaryType::Bound,
+                              Acts::AxisDirection::AxisX);
 
   std::vector<Acts::MaterialSlab> materialSlabs = {
       materialSlab12345, materialSlab678910, materialSlab54321,
@@ -151,8 +151,8 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionX) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionY) {
   // Create a binned material in 4 bins in y direction
-  Acts::BinUtility binUtility(4u, -2., 2., Acts::BinningOption::open,
-                              Acts::BinningValue::binY);
+  Acts::BinUtility binUtility(4u, -2., 2., Acts::AxisBoundaryType::Bound,
+                              Acts::AxisDirection::AxisY);
 
   std::vector<Acts::MaterialSlab> materialSlabs = {
       materialSlab12345, materialSlab678910, materialSlab54321,
@@ -211,10 +211,10 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionY) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionXY) {
   // Create a binned material in 2 x2  bins in x-y direction
-  Acts::BinUtility binUtility(2u, -1., 1., Acts::BinningOption::open,
-                              Acts::BinningValue::binX);
-  binUtility += Acts::BinUtility(2u, -2., 2., Acts::BinningOption::open,
-                                 Acts::BinningValue::binY);
+  Acts::BinUtility binUtility(2u, -1., 1., Acts::AxisBoundaryType::Bound,
+                              Acts::AxisDirection::AxisX);
+  binUtility += Acts::BinUtility(2u, -2., 2., Acts::AxisBoundaryType::Bound,
+                                 Acts::AxisDirection::AxisY);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};
@@ -268,8 +268,8 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionXY) {
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionR) {
   // Create a binned material in 4 bins (irregularly) in r direction
   std::vector<float> binEdges = {0., 5., 10., 15., 20.};
-  Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open,
-                              Acts::BinningValue::binR);
+  Acts::BinUtility binUtility(binEdges, Acts::AxisBoundaryType::Bound,
+                              Acts::AxisDirection::AxisR);
 
   std::vector<Acts::MaterialSlab> materialSlabs = {
       materialSlab12345, materialSlab678910, materialSlab54321,
@@ -307,11 +307,12 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionR) {
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionRPhi) {
   // Create a binned material in 2 bins - irregularly in r, 2 bins in phi
   std::vector<float> binEdges = {0., 5., 20.};
-  Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open,
-                              Acts::BinningValue::binR);
-  binUtility +=
-      Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
-                       Acts::BinningOption::closed, Acts::BinningValue::binPhi);
+
+  Acts::BinUtility binUtility(binEdges, Acts::AxisBoundaryType::Bound,
+                              Acts::AxisDirection::AxisR);
+  binUtility += Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
+                                 Acts::AxisBoundaryType::Closed,
+                                 Acts::AxisDirection::AxisPhi);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};
@@ -346,8 +347,8 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionRPhi) {
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZ) {
   // Create a binned material in 4 bins in x direction
   std::vector<float> binEdges = {-20, 0, 25, 50, 100};
-  Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open,
-                              Acts::BinningValue::binZ);
+  Acts::BinUtility binUtility(binEdges, Acts::AxisBoundaryType::Bound,
+                              Acts::AxisDirection::AxisZ);
 
   std::vector<Acts::MaterialSlab> materialSlabs = {
       materialSlab12345, materialSlab678910, materialSlab54321,
@@ -385,11 +386,11 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZ) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZPhi) {
   // Create a binned material in 2 x2  bins in x-y direction
-  Acts::BinUtility binUtility(2u, -1., 1., Acts::BinningOption::open,
-                              Acts::BinningValue::binZ);
-  binUtility +=
-      Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
-                       Acts::BinningOption::closed, Acts::BinningValue::binPhi);
+  Acts::BinUtility binUtility(2u, -1., 1., Acts::AxisBoundaryType::Bound,
+                              Acts::AxisDirection::AxisZ);
+  binUtility += Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
+                                 Acts::AxisBoundaryType::Closed,
+                                 Acts::AxisDirection::AxisPhi);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};
@@ -417,10 +418,10 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZPhi) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionInvalid) {
   // Create a binned material in 4 bins in x direction
-  Acts::BinUtility binUtility(2u, -1., 1., Acts::BinningOption::open,
-                              Acts::BinningValue::binR);
-  binUtility += Acts::BinUtility(2u, -2., 2., Acts::BinningOption::open,
-                                 Acts::BinningValue::binEta);
+  Acts::BinUtility binUtility(2u, -1., 1., Acts::AxisBoundaryType::Bound,
+                              Acts::AxisDirection::AxisR);
+  binUtility += Acts::BinUtility(2u, -2., 2., Acts::AxisBoundaryType::Bound,
+                                 Acts::AxisDirection::AxisEta);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};

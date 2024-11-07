@@ -12,7 +12,7 @@
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <iosfwd>
@@ -71,7 +71,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// @param mtvVector (optional) Vector of confined TrackingVolumes
   /// @param transform (optional) placement of this TrackingVolume
   /// @param volumeName  volume name to be given
-  /// @param bType (optional) BinningType - arbitrary(default) or equidistant
+  /// @param bType (optional) AxisType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr createTrackingVolume(
@@ -81,7 +81,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
       MutableTrackingVolumeVector mtvVector = {},
       const Transform3& transform = Transform3::Identity(),
       const std::string& volumeName = "UndefinedVolume",
-      BinningType bType = arbitrary) const override;
+      AxisType bType = AxisType::Variable) const override;
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
@@ -96,7 +96,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// @param zMin minimum z
   /// @param zMax maximum z
   /// @param volumeName  volume name to be given
-  /// @param bType (optional) BinningType - arbitrary(default) or equidistant
+  /// @param bType (optional) AxisType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr createTrackingVolume(
@@ -105,7 +105,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
       std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
       double rMax, double zMin, double zMax,
       const std::string& volumeName = "UndefinedVolume",
-      BinningType bType = arbitrary) const override;
+      AxisType bType = AxisType::Variable) const override;
 
   /// Create a gap volume from dimensions and
   /// @note this TrackingVolume is restricted to Translation only
@@ -141,7 +141,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// @param layerPositions custom layer positions
   /// @param cylinder type of layers
   /// @param volumeName  : volume name to be given
-  /// @param bType (optional) BinningType - arbitrary(default) or equidistant
+  /// @param bType (optional) AxisType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr createGapTrackingVolume(
@@ -150,7 +150,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
       double rMax, double zMin, double zMax,
       const std::vector<double>& layerPositions, bool cylinder = true,
       const std::string& volumeName = "UndefinedVolume",
-      BinningType bType = arbitrary) const override;
+      AxisType bType = AxisType::Variable) const override;
 
   /// Create a container volumes from sub volumes, input volumes are ordered in
   /// R or Z by convention
@@ -205,8 +205,8 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
       const GeometryContext& gctx, const LayerVector& layers,
       std::shared_ptr<CylinderVolumeBounds>& cylinderVolumeBounds,
       const Transform3& transform, double& rMinClean, double& rMaxClean,
-      double& zMinClean, double& zMaxClean, BinningValue& bValue,
-      BinningType bType = arbitrary) const;
+      double& zMinClean, double& zMaxClean, AxisDirection& bValue,
+      AxisType bType = AxisType::Variable) const;
 
   /// Private method - interglue all volumes contained by a TrackingVolume
   /// and set the outside glue volumes in the descriptor

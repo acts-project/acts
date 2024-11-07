@@ -9,7 +9,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
@@ -151,9 +151,9 @@ void addDetector(Context& ctx) {
         .value("Central", Config::SubVolume::Central)
         .value("Positive", Config::SubVolume::Positive);
 
-    py::enum_<Acts::BinningType>(c, "BinningType")
-        .value("equidistant", Acts::BinningType::equidistant)
-        .value("arbitrary", Acts::BinningType::arbitrary);
+    py::enum_<AxisType>(c, "AxisType")
+        .value("equidistant", AxisType::Equidistant)
+        .value("arbitrary", AxisType::Variable);
 
     auto volume = py::class_<Config::Volume>(c, "Volume").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(volume, Config::Volume);
@@ -202,7 +202,7 @@ void addDetector(Context& ctx) {
     regTriplet("LayerTripletInterval", Options::Interval{});
     regTriplet("LayerTripletDouble", double{5.5});
     regTriplet("LayerTripletVectorBinning",
-               std::vector<std::pair<int, Acts::BinningType>>{});
+               std::vector<std::pair<int, AxisType>>{});
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(surfaceLogLevel);

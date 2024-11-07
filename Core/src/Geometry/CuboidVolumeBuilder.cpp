@@ -93,11 +93,11 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
   lCfg.surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>();
   LayerCreator layerCreator(lCfg);
   ProtoLayer pl{gctx, cfg.surfaces};
-  pl.envelope[BinningValue::binX] = cfg.envelopeX;
-  pl.envelope[BinningValue::binY] = cfg.envelopeY;
-  pl.envelope[BinningValue::binZ] = cfg.envelopeZ;
+  pl.envelope[AxisDirection::AxisX] = cfg.envelopeX;
+  pl.envelope[AxisDirection::AxisY] = cfg.envelopeY;
+  pl.envelope[AxisDirection::AxisZ] = cfg.envelopeZ;
   return layerCreator.planeLayer(gctx, cfg.surfaces, cfg.binsY, cfg.binsZ,
-                                 cfg.binningDimension, pl, trafo);
+                                 cfg.orderingDirection, pl, trafo);
 }
 
 std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
@@ -121,10 +121,10 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
   for (const auto& layercfg : cfg.layerCfg) {
     // recreating the protolayer for each layer => slow, but only few sensors
     ProtoLayer pl{gctx, layercfg.surfaces};
-    pl.envelope[cfg.binningDimension] = layercfg.envelopeX;
+    pl.envelope[cfg.orderingDirection] = layercfg.envelopeX;
 
-    double surfacePosMin = pl.min(cfg.binningDimension);
-    double surfacePosMax = pl.max(cfg.binningDimension);
+    double surfacePosMin = pl.min(cfg.orderingDirection);
+    double surfacePosMax = pl.max(cfg.orderingDirection);
 
     // Test if new extreme is found and set it
     if (surfacePosMin < minMax.first) {
@@ -137,9 +137,9 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
 
   // Use the volume boundaries as limits for the binning
   minMax.first = std::min(
-      minMax.first, minVolumeBoundaries(toUnderlying(cfg.binningDimension)));
+      minMax.first, minVolumeBoundaries(toUnderlying(cfg.orderingDirection)));
   minMax.second = std::max(
-      minMax.second, maxVolumeBoundaries(toUnderlying(cfg.binningDimension)));
+      minMax.second, maxVolumeBoundaries(toUnderlying(cfg.orderingDirection)));
 
   return minMax;
 }
@@ -176,7 +176,7 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
       lacCnf, getDefaultLogger("LayerArrayCreator", Logging::INFO));
   std::unique_ptr<const LayerArray> layArr(
       layArrCreator.layerArray(gctx, layVec, minMax.first, minMax.second,
-                               BinningType::arbitrary, cfg.binningDimension));
+                               AxisType::Variable, cfg.orderingDirection));
 
   // Build confined volumes
   if (cfg.trackingVolumes.empty()) {
@@ -249,7 +249,8 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
   }
 
   // Build binning
-  BinningData binData(BinningOption::open, BinningValue::binX, binBoundaries);
+  BinningData binData(AxisBoundaryType::Bound, AxisDirection::AxisX,
+                      binBoundaries);
   auto bu = std::make_unique<const BinUtility>(binData);
 
   // Build TrackingVolume array

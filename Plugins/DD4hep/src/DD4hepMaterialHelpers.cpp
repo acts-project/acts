@@ -12,8 +12,8 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -27,8 +27,7 @@
 
 std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
-    const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-        binning,
+    const std::vector<std::pair<const std::string, AxisBoundaryType> >& binning,
     const Logger& logger) {
   using namespace std::string_literals;
 
@@ -36,11 +35,11 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
   Acts::BinUtility bu;
   // Loop over the bins
   for (auto& bin : binning) {
-    BinningValue bval = binningValueFromName(bin.first);
-    Acts::BinningOption bopt = bin.second;
+    AxisDirection bval = axisDirectionFromName(bin.first);
+    AxisBoundaryType bopt = bin.second;
     double min = 0.;
     double max = 0.;
-    if (bopt == Acts::closed) {
+    if (bopt == Acts::AxisBoundaryType::Closed) {
       min = -std::numbers::pi;
       max = std::numbers::pi;
     }
@@ -56,8 +55,7 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
 
 void Acts::addLayerProtoMaterial(
     const dd4hep::rec::VariantParameters& params, Layer& layer,
-    const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-        binning,
+    const std::vector<std::pair<const std::string, AxisBoundaryType> >& binning,
     const Logger& logger) {
   ACTS_VERBOSE("addLayerProtoMaterial");
   // Start with the representing surface
@@ -106,7 +104,8 @@ void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
   }
   if (getParamOr<bool>("layer_material", detElement, false)) {
     addLayerProtoMaterial(getParams(detElement), cylinderLayer,
-                          {{"binPhi", Acts::closed}, {"binZ", Acts::open}},
+                          {{"binPhi", Acts::AxisBoundaryType::Closed},
+                           {"binZ", Acts::AxisBoundaryType::Bound}},
                           logger);
   }
 }
@@ -123,7 +122,8 @@ void Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
   }
   if (getParamOr<bool>("layer_material", detElement, false)) {
     addLayerProtoMaterial(getParams(detElement), discLayer,
-                          {{"binPhi", Acts::closed}, {"binR", Acts::open}},
+                          {{"binPhi", Acts::AxisBoundaryType::Closed},
+                           {"binR", Acts::AxisBoundaryType::Bound}},
                           logger);
   }
 }

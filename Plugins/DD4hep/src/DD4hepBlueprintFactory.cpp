@@ -32,10 +32,10 @@ Acts::Experimental::DD4hepBlueprintFactory::create(
 
   // Create the root node
   std::vector<double> bValues = {0., 150., 1000.};
-  std::vector<BinningValue> binning = {Acts::BinningValue::binR};
+  std::vector<AxisDirection> axisDirections = {AxisDirection::AxisR};
   auto root = std::make_unique<Acts::Experimental::Blueprint::Node>(
       dd4hepElement.name(), Acts::Transform3::Identity(),
-      Acts::VolumeBounds::eCylinder, bValues, binning);
+      Acts::VolumeBounds::eCylinder, bValues, axisDirections);
 
   // Recursively parse the tree
   recursiveParse(cache, *root, gctx, dd4hepElement);
@@ -66,8 +66,8 @@ void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
       auto [internalsBuilder, rootsFinderBuilder, geoIdGenerator, auxInt,
             extOpt] =
           extractInternals(cache.dd4hepStore, gctx, dd4hepElement, nType);
-      // Extract the bounds type, values and binning
-      auto [transform, bValueType, bValues, binning, auxExt] =
+      // Extract the bounds type, values and axis directions
+      auto [transform, bValueType, bValues, axisDirections, auxExt] =
           extractExternals(gctx, dd4hepElement, nType, extOpt);
       // Screen output of position and shape
       ACTS_DEBUG(ofs << " - translation  : "
@@ -79,12 +79,13 @@ void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
         mother.transform = transform;
         mother.boundsType = bValueType;
         mother.boundaryValues = bValues;
-        mother.binning = binning;
+        mother.axisDirections = axisDirections;
 
       } else if (nType == "acts_container") {
         // Creating the branch node
         auto branch = std::make_unique<Acts::Experimental::Blueprint::Node>(
-            dd4hepElement.name(), transform, bValueType, bValues, binning);
+            dd4hepElement.name(), transform, bValueType, bValues,
+            axisDirections);
         current = branch.get();
         mother.add(std::move(branch));
 
@@ -150,7 +151,8 @@ void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
 }
 
 std::tuple<Acts::Transform3, Acts::VolumeBounds::BoundsType,
-           std::vector<double>, std::vector<Acts::BinningValue>, std::string>
+           std::vector<double>, std::vector<Acts::AxisDirection>,
+           std::string>
 Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
     [[maybe_unused]] const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const std::string& baseName,
@@ -172,17 +174,17 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
     // Set as defaults
     bValues = {0., 0., 0.};
     auto parsedExtent = extOpt.value();
-    if (parsedExtent.constrains(BinningValue::binR)) {
-      bValues[0u] = std::floor(parsedExtent.min(BinningValue::binR));
-      bValues[1u] = std::ceil(parsedExtent.max(BinningValue::binR));
+    if (parsedExtent.constrains(AxisDirection::AxisR)) {
+      bValues[0u] = std::floor(parsedExtent.min(AxisDirection::AxisR));
+      bValues[1u] = std::ceil(parsedExtent.max(AxisDirection::AxisR));
     }
-    if (parsedExtent.constrains(BinningValue::binZ)) {
-      double minZ = parsedExtent.min(BinningValue::binZ) > 0.
-                        ? std::floor(parsedExtent.min(BinningValue::binZ))
-                        : std::ceil(parsedExtent.min(BinningValue::binZ));
-      double maxZ = parsedExtent.max(BinningValue::binZ) > 0.
-                        ? std::floor(parsedExtent.max(BinningValue::binZ))
-                        : std::ceil(parsedExtent.max(BinningValue::binZ));
+    if (parsedExtent.constrains(AxisDirection::AxisZ)) {
+      double minZ = parsedExtent.min(AxisDirection::AxisZ) > 0.
+                            ? std::floor(parsedExtent.min(AxisDirection::AxisZ))
+                            : std::ceil(parsedExtent.min(AxisDirection::AxisZ));
+      double maxZ = parsedExtent.max(AxisDirection::AxisZ) > 0.
+                            ? std::floor(parsedExtent.max(AxisDirection::AxisZ))
+                            : std::ceil(parsedExtent.max(AxisDirection::AxisZ));
       bValues[2u] = 0.5 * (maxZ - minZ);
       transform.translation().z() = 0.5 * (maxZ + minZ);
     }
@@ -199,15 +201,15 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
   }
 
   // Get the binning values
-  auto binningString =
+  auto axisDirString =
       getParamOr<std::string>(baseName + "_binning", dd4hepElement, "");
-  std::vector<BinningValue> bBinning =
-      Acts::stringToBinningValues(binningString);
-  if (!binningString.empty()) {
-    aux += "vol. binning : " + binningString;
+  std::vector<AxisDirection> axisDirections =
+      Acts::stringToAxisDirections(axisDirString);
+  if (!axisDirString.empty()) {
+    aux += "vol. axis directions : " + axisDirString;
   }
   // Return the tuple
-  return std::make_tuple(transform, bValueType, bValues, bBinning, aux);
+  return std::make_tuple(transform, bValueType, bValues, axisDirections, aux);
 }
 
 std::tuple<std::shared_ptr<const Acts::Experimental::IInternalStructureBuilder>,
@@ -252,20 +254,20 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
       auto internalsClearance =
           unitLength *
           Acts::getParamOr<double>(baseName + "_internals_clearance",
-                                   dd4hepElement, 0.);
-      auto internalBinningValues = stringToBinningValues(interenalsMeasure);
-      if (!internalBinningValues.empty()) {
+                                       dd4hepElement, 0.);
+      auto internalAxisDirections = stringToAxisDirections(interenalsMeasure);
+      if (!internalAxisDirections.empty()) {
         ACTS_VERBOSE(" - internals extent measurement requested");
         Extent internalsExtent;
         ExtentEnvelope clearance = ExtentEnvelope::Zero();
-        for (const auto& bv : internalBinningValues) {
-          ACTS_VERBOSE("   -> measuring extent for " << binningValueName(bv));
+        for (const auto& bv : internalAxisDirections) {
+          ACTS_VERBOSE("   -> measuring extent for " << bv);
           ACTS_VERBOSE("   -> with clearance :" << internalsClearance);
           clearance[bv] = {internalsClearance, internalsClearance};
         }
         internalsExtent.setEnvelope(clearance);
         lOptions.extent = internalsExtent;
-        lOptions.extentConstraints = internalBinningValues;
+        lOptions.extentConstraints = internalAxisDirections;
       }
       // Create the builder from the dd4hep element
       auto [ib, extOpt] = m_cfg.layerStructure->builder(
@@ -284,11 +286,11 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
       baseName + "_root_volume_finder", dd4hepElement, "");
   if (rootFinder == "indexed") {
     aux[1u] = "root finder : indexed";
-    std::vector<BinningValue> binning = {BinningValue::binZ,
-                                         BinningValue::binR};
+    std::vector<AxisDirection> axisDirections = {AxisDirection::AxisZ,
+                                                 AxisDirection::AxisR};
     rootsFinderBuilder =
         std::make_shared<Acts::Experimental::IndexedRootVolumeFinderBuilder>(
-            binning);
+            axisDirections);
   }
 
   // Check for geo Id generator

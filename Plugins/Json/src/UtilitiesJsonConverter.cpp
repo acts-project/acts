@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -23,8 +23,10 @@ void Acts::to_json(nlohmann::json& j, const Acts::BinningData& bd) {
   // Common to all bin utilities
   j["min"] = bd.min;
   j["max"] = bd.max;
-  j["option"] = (bd.option == Acts::open ? "open" : "closed");
-  j["value"] = bd.binvalue;
+  j["option"] =
+      (bd.axisBoundaryType == Acts::AxisBoundaryType::Bound ? "open"
+                                                            : "closed");
+  j["value"] = bd.axisDirection;
   int bins = bd.bins();
   // Write sub bin data if present
   if (bd.subBinningData != nullptr) {
@@ -40,9 +42,9 @@ void Acts::to_json(nlohmann::json& j, const Acts::BinningData& bd) {
     }
   }
   // Now distinguish between equidistant / arbitrary
-  if (bd.type == Acts::equidistant) {
+  if (bd.axisType == AxisType::Equidistant) {
     j["type"] = "equidistant";
-  } else if (bd.type == Acts::arbitrary) {
+  } else if (bd.axisType == AxisType::Variable) {
     j["type"] = "arbitrary";
     j["boundaries"] = bd.boundaries();
   }
@@ -54,14 +56,15 @@ void Acts::from_json(const nlohmann::json& j, BinningData& bd) {
   float min = j["min"];
   float max = j["max"];
   int bins = j["bins"];
-  auto bValue = j["value"].get<BinningValue>();
+  auto bValue = j["value"].get<AxisDirection>();
   if (bins == 1 && !(j["type"] == "arbitrary")) {
     bd = BinningData(bValue, min, max);
     return;
   }
-  Acts::BinningOption bOption = (j["option"] == "open") ? open : closed;
-  Acts::BinningType bType =
-      (j["type"] == "equidistant") ? equidistant : arbitrary;
+  AxisBoundaryType bOption = (j["option"] == "open") ? AxisBoundaryType::Bound
+                                                     : AxisBoundaryType::Closed;
+  AxisType bType =
+      (j["type"] == "equidistant") ? AxisType::Equidistant : AxisType::Variable;
 
   std::unique_ptr<BinningData> subBinning = nullptr;
   bool subBinningAdditive = false;
@@ -69,7 +72,7 @@ void Acts::from_json(const nlohmann::json& j, BinningData& bd) {
     subBinningAdditive = j["subadditive"];
   }
 
-  if (bType == equidistant) {
+  if (bType == AxisType::Equidistant) {
     bd = BinningData(bOption, bValue, bins, min, max, std::move(subBinning),
                      subBinningAdditive);
   } else {

@@ -14,7 +14,7 @@
 #include <Acts/Definitions/Units.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/Material/IMaterialDecorator.hpp>
-#include <Acts/Utilities/BinningType.hpp>
+#include <Acts/Utilities/AxisDefinitions.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
 #include <functional>
@@ -58,16 +58,15 @@ class DD4hepGeometryService {
     /// The name of the service
     std::string name = "default";
     /// Binningtype in phi
-    Acts::BinningType bTypePhi = Acts::equidistant;
+    Acts::AxisType bTypePhi = Acts::AxisType::Equidistant;
     /// Binningtype in r
-    Acts::BinningType bTypeR = Acts::arbitrary;
+    Acts::AxisType bTypeR = Acts::AxisType::Variable;
     /// Binningtype in z
-    Acts::BinningType bTypeZ = Acts::equidistant;
+    Acts::AxisType bTypeZ = Acts::AxisType::Equidistant;
     /// The tolerance added to the geometrical extension in r
     /// of the layers contained to build the volume envelope around
     /// @note this parameter only needs to be set if the volumes containing
-    /// the
-    /// layers (e.g. barrel, endcap volumes) have no specific shape
+    /// the layers (e.g. barrel, endcap volumes) have no specific shape
     /// (assemblies)
     double envelopeR = 1 * Acts::UnitConstants::mm;
     /// The tolerance added to the geometrical extension in z

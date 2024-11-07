@@ -231,20 +231,19 @@ bool CylinderVolumeBounds::inside(const Vector3& pos, double tol) const {
   return (insideZ && insideR && insidePhi);
 }
 
-Vector3 CylinderVolumeBounds::binningOffset(BinningValue bValue)
+Vector3 CylinderVolumeBounds::binningOffset(AxisDirection bValue)
     const {  // the medium radius is taken for r-type binning
-  if (bValue == Acts::BinningValue::binR ||
-      bValue == Acts::BinningValue::binRPhi) {
+  if (bValue == AxisDirection::AxisR || bValue == AxisDirection::AxisRPhi) {
     return Vector3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.);
   }
   return VolumeBounds::binningOffset(bValue);
 }
 
-double CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
-  if (bValue == Acts::BinningValue::binR) {
+double CylinderVolumeBounds::binningBorder(AxisDirection bValue) const {
+  if (bValue == AxisDirection::AxisR) {
     return 0.5 * (get(eMaxR) - get(eMinR));
   }
-  if (bValue == Acts::BinningValue::binZ) {
+  if (bValue == AxisDirection::AxisZ) {
     return get(eHalfLengthZ);
   }
   return VolumeBounds::binningBorder(bValue);

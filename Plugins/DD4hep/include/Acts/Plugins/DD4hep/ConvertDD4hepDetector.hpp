@@ -15,7 +15,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -102,8 +102,10 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 
 std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     dd4hep::DetElement worldDetElement, const Logger& logger,
-    BinningType bTypePhi = equidistant, BinningType bTypeR = equidistant,
-    BinningType bTypeZ = equidistant, double layerEnvelopeR = UnitConstants::mm,
+    AxisType bTypePhi = AxisType::Equidistant,
+    AxisType bTypeR = AxisType::Equidistant,
+    AxisType bTypeZ = AxisType::Equidistant,
+    double layerEnvelopeR = UnitConstants::mm,
     double layerEnvelopeZ = UnitConstants::mm,
     double defaultLayerThickness = UnitConstants::fm,
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
@@ -153,8 +155,10 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 /// build the full tracking geometry
 std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     dd4hep::DetElement subDetector, const Logger& logger,
-    BinningType bTypePhi = equidistant, BinningType bTypeR = equidistant,
-    BinningType bTypeZ = equidistant, double layerEnvelopeR = UnitConstants::mm,
+    AxisType bTypePhi = AxisType::Equidistant,
+    AxisType bTypeR = AxisType::Equidistant,
+    AxisType bTypeZ = AxisType::Equidistant,
+    double layerEnvelopeR = UnitConstants::mm,
     double layerEnvelopeZ = UnitConstants::mm,
     double defaultLayerThickness = UnitConstants::fm);
 

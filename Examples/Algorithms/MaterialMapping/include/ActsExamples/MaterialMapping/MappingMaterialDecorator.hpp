@@ -217,48 +217,49 @@ class MappingMaterialDecorator : public IMaterialDecorator {
                 cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector),
             (cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector) -
              std::numbers::pi) < Acts::s_epsilon
-                ? Acts::closed
-                : Acts::open,
-            Acts::BinningValue::binPhi);
+                ? Acts::AxisBoundaryType::Closed
+                : Acts::AxisBoundaryType::Bound,
+            AxisDirection::AxisPhi);
+
         bUtility += Acts::BinUtility(
             binning.second,
             -1 * cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ),
-            cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ), Acts::open,
-            Acts::BinningValue::binZ);
+            cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ),
+            Acts::AxisBoundaryType::Bound, AxisDirection::AxisZ);
       }
       if (annulusBounds != nullptr) {
         bUtility += Acts::BinUtility(
             binning.first, annulusBounds->get(Acts::AnnulusBounds::eMinPhiRel),
-            annulusBounds->get(Acts::AnnulusBounds::eMaxPhiRel), Acts::open,
-            Acts::BinningValue::binPhi);
-        bUtility += Acts::BinUtility(binning.second,
-                                     static_cast<float>(annulusBounds->rMin()),
-                                     static_cast<float>(annulusBounds->rMax()),
-                                     Acts::open, Acts::BinningValue::binR);
+            annulusBounds->get(Acts::AnnulusBounds::eMaxPhiRel),
+            Acts::AxisBoundaryType::Bound, AxisDirection::AxisPhi);
+        bUtility += Acts::BinUtility(
+            binning.second, static_cast<float>(annulusBounds->rMin()),
+            static_cast<float>(annulusBounds->rMax()),
+            Acts::AxisBoundaryType::Bound, AxisDirection::AxisR);
       }
       if (rectangleBounds != nullptr) {
         bUtility += Acts::BinUtility(
             binning.first, rectangleBounds->get(Acts::RectangleBounds::eMinX),
-            rectangleBounds->get(Acts::RectangleBounds::eMaxX), Acts::open,
-            Acts::BinningValue::binX);
+            rectangleBounds->get(Acts::RectangleBounds::eMaxX),
+            Acts::AxisBoundaryType::Bound, AxisDirection::AxisX);
         bUtility += Acts::BinUtility(
             binning.second, rectangleBounds->get(Acts::RectangleBounds::eMinY),
-            rectangleBounds->get(Acts::RectangleBounds::eMaxY), Acts::open,
-            Acts::BinningValue::binY);
+            rectangleBounds->get(Acts::RectangleBounds::eMaxY),
+            Acts::AxisBoundaryType::Bound, AxisDirection::AxisY);
       }
       if (trapezoidBounds != nullptr) {
         double halfLengthX = std::max(
             trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXnegY),
             trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXposY));
-        bUtility += Acts::BinUtility(binning.first,
-                                     static_cast<float>(-1 * halfLengthX),
-                                     static_cast<float>(halfLengthX),
-                                     Acts::open, Acts::BinningValue::binX);
+        bUtility += Acts::BinUtility(
+            binning.first, static_cast<float>(-1 * halfLengthX),
+            static_cast<float>(halfLengthX), Acts::AxisBoundaryType::Bound,
+            AxisDirection::AxisX);
         bUtility += Acts::BinUtility(
             binning.second,
             -1 * trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY),
             trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY),
-            Acts::open, Acts::BinningValue::binY);
+            Acts::AxisBoundaryType::Bound, AxisDirection::AxisY);
       }
     }
     return std::make_shared<Acts::ProtoSurfaceMaterial>(bUtility);

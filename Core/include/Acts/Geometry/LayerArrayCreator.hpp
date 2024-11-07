@@ -10,7 +10,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerArrayCreator.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -22,15 +22,14 @@ class Surface;
 class Layer;
 
 /// @class LayerArrayCreator
-///  The LayerArrayCreator is a simple Tool that helps to construct
-///  LayerArrays from std::vector of Acts::CylinderLayer, Acts::DiscLayer,
+///
+/// The LayerArrayCreator is a simple Tool that helps to construct
+/// LayerArrays from std::vector of Acts::CylinderLayer, Acts::DiscLayer,
 /// Acts::PlaneLayer.
 ///
-///  It fills the gaps automatically with Acts::NavigationLayer to be processed
-/// easily in the
-///  Navigation of the Extrapolation process.
+/// It fills the gaps automatically with Acts::NavigationLayer to be processed
+/// easily in the Navigation of the Extrapolation process.
 ///
-
 class LayerArrayCreator : public ILayerArrayCreator {
  public:
   /// @brief This struct stores the configuration of the tracking geometry
@@ -59,8 +58,8 @@ class LayerArrayCreator : public ILayerArrayCreator {
   /// @return unique pointer to a newly created LayerArray
   std::unique_ptr<const LayerArray> layerArray(
       const GeometryContext& gctx, const LayerVector& layersInput, double min,
-      double max, BinningType bType = arbitrary,
-      BinningValue bValue = BinningValue::binX) const override;
+      double max, AxisType bType = AxisType::Variable,
+      AxisDirection bValue = AxisDirection::AxisX) const override;
 
   /// set logging instance
   void setLogger(std::unique_ptr<const Logger> logger) {
@@ -83,7 +82,7 @@ class LayerArrayCreator : public ILayerArrayCreator {
   /// @param offset is the sift for the navigation layer
   std::shared_ptr<Surface> createNavigationSurface(const GeometryContext& gctx,
                                                    const Layer& layer,
-                                                   BinningValue bValue,
+                                                   AxisDirection bValue,
                                                    double offset) const;
 };
 

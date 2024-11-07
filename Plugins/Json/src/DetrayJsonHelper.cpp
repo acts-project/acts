@@ -57,29 +57,31 @@ void addVolumeLink(nlohmann::json& jSurface, int vLink) {
   jSurface["volume_link"] = vLink;
 }
 
-std::size_t accelerationLink(std::span<const BinningValue> casts) {
+std::size_t accelerationLink(std::span<const AxisDirection> casts) {
   // Default is `brute_force`
   std::size_t accLink = 0u;
   if (casts.size() == 2u) {
-    if (casts[0u] == BinningValue::binX && casts[1u] == BinningValue::binY) {
+    if (casts[0u] == AxisDirection::AxisX &&
+        casts[1u] == AxisDirection::AxisY) {
       accLink = 1u;
-    } else if (casts[0u] == BinningValue::binR &&
-               casts[1u] == BinningValue::binPhi) {
+    } else if (casts[0u] == AxisDirection::AxisR &&
+               casts[1u] == AxisDirection::AxisPhi) {
       accLink = 3u;
-    } else if (casts[0u] == BinningValue::binZ &&
-               casts[1u] == BinningValue::binPhi) {
+    } else if (casts[0u] == AxisDirection::AxisZ &&
+               casts[1u] == AxisDirection::AxisPhi) {
       accLink = 4u;
-    } else if (casts[0u] == BinningValue::binZ &&
-               casts[1u] == BinningValue::binR) {
+    } else if (casts[0u] == AxisDirection::AxisZ &&
+               casts[1u] == AxisDirection::AxisR) {
       accLink = 5u;
     }
   } else if (casts.size() == 3u) {
-    if (casts[0u] == BinningValue::binX && casts[1u] == BinningValue::binY &&
-        casts[2u] == BinningValue::binZ) {
+    if (casts[0u] == AxisDirection::AxisX &&
+        casts[1u] == AxisDirection::AxisY &&
+        casts[2u] == AxisDirection::AxisZ) {
       accLink = 2u;
-    } else if (casts[0u] == BinningValue::binZ &&
-               casts[1u] == BinningValue::binPhi &&
-               casts[2u] == BinningValue::binR) {
+    } else if (casts[0u] == AxisDirection::AxisZ &&
+               casts[1u] == AxisDirection::AxisPhi &&
+               casts[2u] == AxisDirection::AxisR) {
       accLink = 5u;
     }
   }

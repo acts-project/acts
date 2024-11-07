@@ -50,14 +50,16 @@ int main(int argc, char* argv[]) {
   for (unsigned int ib = 0; ib < 6; ++ib) {
     fewBins.push_back(ib * 6. / 5.);
   }
-  Acts::BinUtility small(fewBins, Acts::open, Acts::BinningValue::binX);
+  Acts::BinUtility small(fewBins, Acts::AxisBoundaryType::Bound,
+                         AxisDirection::AxisX);
 
   std::vector<float> mediumBins;
   mediumBins.reserve(21);
   for (unsigned int ib = 0; ib < 21; ++ib) {
     mediumBins.push_back(ib * 6. / 20.);
   }
-  Acts::BinUtility medium(mediumBins, Acts::open, Acts::BinningValue::binX);
+  Acts::BinUtility medium(mediumBins, Acts::AxisBoundaryType::Bound,
+                          AxisDirection::AxisX);
 
   std::vector<float> manyBins;
   manyBins.reserve(101);
@@ -65,7 +67,8 @@ int main(int argc, char* argv[]) {
     manyBins.push_back(ib * 6. / 100.);
   }
 
-  Acts::BinUtility many(manyBins, Acts::open, Acts::BinningValue::binX);
+  Acts::BinUtility many(manyBins, Acts::AxisBoundaryType::Bound,
+                        AxisDirection::AxisX);
 
   Acts::Vector3 low = Acts::Vector3(1.5, 0., 0.);
   Acts::Vector3 high = Acts::Vector3(4.5, 0., 0.);
@@ -124,8 +127,8 @@ int main(int argc, char* argv[]) {
   ACTS_INFO("Execution stats many: " << bin_utility_benchmark_many);
   ACTS_INFO("Fraction is: " << st << " vs. " << gt);
 
-  Acts::BinUtility equidistant(100, 0., 6., Acts::open,
-                               Acts::BinningValue::binX);
+  Acts::BinUtility equidistant(100, 0., 6., Acts::AxisBoundaryType::Bound,
+                               AxisDirection::AxisX);
   st = 0;
   gt = 0;
   num_iters = 0;

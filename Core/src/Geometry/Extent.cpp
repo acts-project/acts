@@ -19,18 +19,18 @@
 
 Acts::Extent::Extent(const ExtentEnvelope& envelope)
     : m_constrains(0), m_envelope(envelope) {
-  m_range[toUnderlying(BinningValue::binR)] =
+  m_range[toUnderlying(AxisDirection::AxisR)] =
       Range1D<double>(0., std::numeric_limits<double>::max());
-  m_range[toUnderlying(BinningValue::binPhi)] =
-      Range1D<double>(-std::numbers::pi, std::numbers::pi);
-  m_range[toUnderlying(BinningValue::binRPhi)] =
+  m_range[toUnderlying(AxisDirection::AxisPhi)] = Range1D<double>(
+      -std::numbers::pi_v<double>, std::numbers::pi_v<double>);
+  m_range[toUnderlying(AxisDirection::AxisRPhi)] =
       Range1D<double>(0., std::numeric_limits<double>::max());
-  m_range[toUnderlying(BinningValue::binMag)] =
+  m_range[toUnderlying(AxisDirection::AxisMag)] =
       Range1D<double>(0., std::numeric_limits<double>::max());
 }
 
 void Acts::Extent::extend(const Vector3& vtx,
-                          const std::vector<BinningValue>& bValues,
+                          const std::vector<AxisDirection>& bValues,
                           bool applyEnv, bool fillHistograms) {
   for (auto bValue : bValues) {
     // Get the casted value given the binning value description
@@ -43,7 +43,7 @@ void Acts::Extent::extend(const Vector3& vtx,
     double hEnv = applyEnv ? m_envelope[bValue][1] : 0.;
     double mValue = cValue - lEnv;
     // Special protection for radial value
-    if (bValue == BinningValue::binR && mValue < 0.) {
+    if (bValue == AxisDirection::AxisR && mValue < 0.) {
       mValue = std::max(mValue, 0.);
     }
     if (constrains(bValue)) {
@@ -56,7 +56,7 @@ void Acts::Extent::extend(const Vector3& vtx,
 }
 
 void Acts::Extent::extend(const Extent& rhs,
-                          const std::vector<BinningValue>& bValues,
+                          const std::vector<AxisDirection>& bValues,
                           bool applyEnv) {
   for (auto bValue : bValues) {
     // The value is constraint, envelope can be optional
@@ -85,7 +85,7 @@ void Acts::Extent::extend(const Extent& rhs,
 
 void Acts::Extent::addConstrain(const Acts::Extent& rhs,
                                 const ExtentEnvelope& envelope) {
-  for (const auto& bValue : allBinningValues()) {
+  for (const auto& bValue : allAxisDirections()) {
     if (rhs.constrains(bValue) && !constrains(bValue)) {
       const auto& cRange = rhs.range(bValue);
       m_range[toUnderlying(bValue)].setMin(cRange.min() - envelope[bValue][0u]);
@@ -95,25 +95,25 @@ void Acts::Extent::addConstrain(const Acts::Extent& rhs,
   }
 }
 
-void Acts::Extent::set(BinningValue bValue, double min, double max) {
+void Acts::Extent::set(AxisDirection bValue, double min, double max) {
   double minval = min;
-  if (bValue == BinningValue::binR && minval < 0.) {
+  if (bValue == AxisDirection::AxisR && minval < 0.) {
     minval = 0.;
   }
   m_range[toUnderlying(bValue)] = Range1D<double>{minval, max};
   m_constrains.set(toUnderlying(bValue));
 }
 
-void Acts::Extent::setMin(BinningValue bValue, double min) {
+void Acts::Extent::setMin(AxisDirection bValue, double min) {
   double minval = min;
-  if (bValue == BinningValue::binR && minval < 0.) {
+  if (bValue == AxisDirection::AxisR && minval < 0.) {
     minval = 0.;
   }
   m_range[toUnderlying(bValue)].setMin(0u, minval);
   m_constrains.set(toUnderlying(bValue));
 }
 
-void Acts::Extent::setMax(BinningValue bValue, double max) {
+void Acts::Extent::setMax(AxisDirection bValue, double max) {
   m_range[toUnderlying(bValue)].setMax(0u, max);
   m_constrains.set(toUnderlying(bValue));
 }
@@ -124,7 +124,7 @@ void Acts::Extent::setEnvelope(const ExtentEnvelope& envelope) {
 
 bool Acts::Extent::contains(const Vector3& vtx) const {
   Extent checkExtent;
-  for (const auto& bv : allBinningValues()) {
+  for (const auto& bv : allAxisDirections()) {
     if (constrains(bv)) {
       double vtxVal = VectorHelpers::cast(vtx, bv);
       checkExtent.set(bv, vtxVal, vtxVal);
@@ -134,9 +134,9 @@ bool Acts::Extent::contains(const Vector3& vtx) const {
 }
 
 bool Acts::Extent::contains(const Extent& rhs,
-                            std::optional<BinningValue> bValue) const {
+                            std::optional<AxisDirection> bValue) const {
   // Helper to check including a constraint bit set check
-  auto checkContainment = [&](BinningValue bvc) -> bool {
+  auto checkContainment = [&](AxisDirection bvc) -> bool {
     if (!constrains(bvc)) {
       return true;
     }
@@ -145,16 +145,16 @@ bool Acts::Extent::contains(const Extent& rhs,
 
   // Check all
   if (!bValue.has_value()) {
-    return std::ranges::all_of(allBinningValues(), checkContainment);
+    return std::ranges::all_of(allAxisDirections(), checkContainment);
   }
   // Check specific
   return checkContainment(bValue.value());
 }
 
 bool Acts::Extent::intersects(const Extent& rhs,
-                              std::optional<BinningValue> bValue) const {
+                              std::optional<AxisDirection> bValue) const {
   // Helper to check including a constraint bit set check
-  auto checkIntersect = [&](BinningValue bvc) -> bool {
+  auto checkIntersect = [&](AxisDirection bvc) -> bool {
     if (!constrains(bvc) || !rhs.constrains(bvc)) {
       return false;
     }
@@ -163,13 +163,13 @@ bool Acts::Extent::intersects(const Extent& rhs,
 
   // Check all
   if (!bValue.has_value()) {
-    return std::ranges::any_of(allBinningValues(), checkIntersect);
+    return std::ranges::any_of(allAxisDirections(), checkIntersect);
   }
   // Check specific
   return checkIntersect(bValue.value());
 }
 
-bool Acts::Extent::constrains(BinningValue bValue) const {
+bool Acts::Extent::constrains(AxisDirection bValue) const {
   return m_constrains.test(static_cast<std::size_t>(bValue));
 }
 
@@ -196,10 +196,10 @@ bool Acts::Extent::operator==(const Extent& e) const {
 std::string Acts::Extent::toString(const std::string& indent) const {
   std::stringstream sl;
   sl << indent << "Extent in space :" << std::endl;
-  for (const auto& bv : allBinningValues()) {
+  for (const auto& bv : allAxisDirections()) {
     if (constrains(bv)) {
-      sl << indent << "  - value :" << std::setw(10) << binningValueName(bv)
-         << " | range = [" << m_range[toUnderlying(bv)].min() << ", "
+      sl << indent << "  - value :" << std::setw(10) << bv << " | range = ["
+         << m_range[toUnderlying(bv)].min() << ", "
          << m_range[toUnderlying(bv)].max() << "]" << std::endl;
     }
   }

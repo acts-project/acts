@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <utility>
 
@@ -18,9 +18,12 @@ namespace Acts::Test {
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(ProtoVolumeMaterial_construction_test) {
-  BinUtility vmpBU(10, -10., 10., open, BinningValue::binX);
-  vmpBU += BinUtility(10, -10., 10., open, BinningValue::binY);
-  vmpBU += BinUtility(10, -10., 10., open, BinningValue::binZ);
+  BinUtility vmpBU(10, -10., 10., AxisBoundaryType::Bound,
+                   AxisDirection::AxisX);
+  vmpBU +=
+      BinUtility(10, -10., 10., AxisBoundaryType::Bound, AxisDirection::AxisY);
+  vmpBU +=
+      BinUtility(10, -10., 10., AxisBoundaryType::Bound, AxisDirection::AxisZ);
 
   // Constructor from arguments
   ProtoVolumeMaterial vmp(vmpBU);

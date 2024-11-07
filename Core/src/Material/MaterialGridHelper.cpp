@@ -84,44 +84,44 @@ Acts::Grid3D Acts::createGrid(Acts::MaterialGridAxisData gridAxis1,
 }
 
 std::function<double(Acts::Vector3)> Acts::globalToLocalFromBin(
-    Acts::BinningValue& type) {
+    AxisDirection& type) {
   std::function<double(Acts::Vector3)> transfoGlobalToLocal;
 
   switch (type) {
-    case Acts::BinningValue::binX:
+    case AxisDirection::AxisX:
       transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (pos.x());
       };
       break;
 
-    case Acts::BinningValue::binY:
+    case AxisDirection::AxisY:
       transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (pos.y());
       };
       break;
 
-    case Acts::BinningValue::binR:
+    case AxisDirection::AxisR:
       transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (Acts::VectorHelpers::perp(pos));
       };
       break;
 
-    case Acts::BinningValue::binPhi:
+    case AxisDirection::AxisPhi:
       transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (Acts::VectorHelpers::phi(pos));
       };
       break;
 
-    case Acts::BinningValue::binZ:
+    case AxisDirection::AxisZ:
       transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (pos.z());
       };
       break;
 
-      // case Acts::BinningValue::binRPhi:
-      // case Acts::BinningValue::binEta:
-      // case Acts::BinningValue::binH:
-      // case Acts::BinningValue::binMag:
+      // case AxisDirection::AxisRPhi:
+      // case AxisDirection::AxisEta:
+      // case AxisDirection::AxisTheta:
+      // case AxisDirection::AxisMag:
     default:
       throw std::invalid_argument("Incorrect bin, should be x,y,z,r,phi");
   }
@@ -137,12 +137,12 @@ Acts::Grid2D Acts::createGrid2D(
   bool isCylindrical = false;
 
   for (std::size_t b = 0; b < bu.size(); b++) {
-    if (bu[b].binvalue == Acts::BinningValue::binX ||
-        bu[b].binvalue == Acts::BinningValue::binY) {
+    if (bu[b].axisDirection == AxisDirection::AxisX ||
+        bu[b].axisDirection == AxisDirection::AxisY) {
       isCartesian = true;
     }
-    if (bu[b].binvalue == Acts::BinningValue::binR ||
-        bu[b].binvalue == Acts::BinningValue::binPhi) {
+    if (bu[b].axisDirection == AxisDirection::AxisR ||
+        bu[b].axisDirection == AxisDirection::AxisPhi) {
       isCylindrical = true;
     }
   }
@@ -155,9 +155,9 @@ Acts::Grid2D Acts::createGrid2D(
   MaterialGridAxisData gridAxis2{bu[1].min, bu[1].max, bu[1].bins()};
 
   std::function<double(Acts::Vector3)> coord1 =
-      globalToLocalFromBin(bu[0].binvalue);
+      globalToLocalFromBin(bu[0].axisDirection);
   std::function<double(Acts::Vector3)> coord2 =
-      globalToLocalFromBin(bu[1].binvalue);
+      globalToLocalFromBin(bu[1].axisDirection);
   Transform3 transfo = bins.transform().inverse();
   transfoGlobalToLocal = [coord1, coord2,
                           transfo](Acts::Vector3 pos) -> Acts::Vector2 {
@@ -177,12 +177,12 @@ Acts::Grid3D Acts::createGrid3D(
   bool isCylindrical = false;
 
   for (std::size_t b = 0; b < bu.size(); b++) {
-    if (bu[b].binvalue == Acts::BinningValue::binX ||
-        bu[b].binvalue == Acts::BinningValue::binY) {
+    if (bu[b].axisDirection == AxisDirection::AxisX ||
+        bu[b].axisDirection == AxisDirection::AxisY) {
       isCartesian = true;
     }
-    if (bu[b].binvalue == Acts::BinningValue::binR ||
-        bu[b].binvalue == Acts::BinningValue::binPhi) {
+    if (bu[b].axisDirection == AxisDirection::AxisR ||
+        bu[b].axisDirection == AxisDirection::AxisPhi) {
       isCylindrical = true;
     }
   }
@@ -197,11 +197,11 @@ Acts::Grid3D Acts::createGrid3D(
   MaterialGridAxisData gridAxis3{bu[2].min, bu[2].max, bu[2].bins()};
 
   std::function<double(Acts::Vector3)> coord1 =
-      globalToLocalFromBin(bu[0].binvalue);
+      globalToLocalFromBin(bu[0].axisDirection);
   std::function<double(Acts::Vector3)> coord2 =
-      globalToLocalFromBin(bu[1].binvalue);
+      globalToLocalFromBin(bu[1].axisDirection);
   std::function<double(Acts::Vector3)> coord3 =
-      globalToLocalFromBin(bu[2].binvalue);
+      globalToLocalFromBin(bu[2].axisDirection);
   Transform3 transfo = bins.transform().inverse();
 
   transfoGlobalToLocal = [coord1, coord2, coord3,

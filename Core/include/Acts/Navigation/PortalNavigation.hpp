@@ -42,8 +42,7 @@ using SingleDetectorVolumeNavigation =
 
 using SingleIndex = std::size_t;
 
-using VariableBoundAxis =
-    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>;
+using VariableBoundAxis = Axis<AxisType::Variable, AxisBoundaryType::Bound>;
 using VariableBoundIndexGrid1 = Acts::Grid<SingleIndex, VariableBoundAxis>;
 
 /// @brief This holds and extracts a collection of detector
@@ -86,7 +85,7 @@ struct BoundVolumesGrid1Navigation : public IExternalNavigation {
   /// @param cVolumes the contained volumes
   /// @param bTransform is the optional transform
   BoundVolumesGrid1Navigation(
-      const std::vector<double>& gBoundaries, BinningValue bValue,
+      const std::vector<double>& gBoundaries, AxisDirection bValue,
       const std::vector<const DetectorVolume*>& cVolumes,
       const Transform3& bTransform = Transform3::Identity()) noexcept(false)
       : indexedUpdater(IndexedUpdater(VariableBoundIndexGrid1(std::make_tuple(

@@ -16,7 +16,7 @@
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <cstdlib>
@@ -182,7 +182,7 @@ RegularSurface& Portal::surface() {
 }
 
 Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
-                     Portal& bPortal, BinningValue direction,
+                     Portal& bPortal, AxisDirection direction,
                      const Logger& logger) {
   ACTS_VERBOSE("Merging two portals along " << direction);
 

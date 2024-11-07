@@ -17,8 +17,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Axis.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
@@ -211,7 +210,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   sa.toStream(tgContext, std::cout);
 
   for (const auto& srf : brl) {
-    Vector3 ctr = srf->binningPosition(tgContext, BinningValue::binR);
+    Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
     std::vector<const Surface*> binContent = sa.at(ctr);
 
     BOOST_CHECK_EQUAL(binContent.size(), 1u);
@@ -231,7 +230,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   SurfaceArray sa2(std::move(sl2), brl);
   sa.toStream(tgContext, std::cout);
   for (const auto& srf : brl) {
-    Vector3 ctr = srf->binningPosition(tgContext, BinningValue::binR);
+    Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
     std::vector<const Surface*> binContent = sa2.at(ctr);
 
     BOOST_CHECK_EQUAL(binContent.size(), 1u);

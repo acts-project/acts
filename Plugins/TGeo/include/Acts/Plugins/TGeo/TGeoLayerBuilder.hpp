@@ -16,7 +16,7 @@
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Geometry/SurfaceBinningMatcher.hpp"
 #include "Acts/Plugins/TGeo/ITGeoIdentifierProvider.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -58,9 +58,9 @@ class TGeoLayerBuilder : public ILayerBuilder {
   ///  Helper config structs for volume parsing
   struct LayerConfig {
    public:
-    using RangeConfig = std::pair<BinningValue, std::pair<double, double>>;
+    using RangeConfig = std::pair<AxisDirection, std::pair<double, double>>;
 
-    using SplitConfig = std::pair<BinningValue, double>;
+    using SplitConfig = std::pair<AxisDirection, double>;
 
     /// Identify the search volume by name
     std::string volumeName = "";
@@ -76,9 +76,11 @@ class TGeoLayerBuilder : public ILayerBuilder {
     std::pair<double, double> envelope = {1 * UnitConstants::mm,
                                           1 * UnitConstants::mm};
     /// Binning setup in l0: nbins (-1 -> automated), axis binning type
-    std::vector<std::pair<int, BinningType>> binning0 = {{-1, equidistant}};
+    std::vector<std::pair<int, AxisType>> binning0 = {
+        {-1, AxisType::Equidistant}};
     /// Binning setup in l1: nbins (-1 -> automated), axis binning type
-    std::vector<std::pair<int, BinningType>> binning1 = {{-1, equidistant}};
+    std::vector<std::pair<int, AxisType>> binning1 = {
+        {-1, AxisType::Equidistant}};
 
     // Default constructor
     LayerConfig()

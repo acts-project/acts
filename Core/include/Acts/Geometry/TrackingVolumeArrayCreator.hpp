@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeArrayCreator.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -50,7 +50,7 @@ class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator {
   /// @return new created volume array
   std::shared_ptr<const TrackingVolumeArray> trackingVolumeArray(
       const GeometryContext& gctx, const TrackingVolumeVector& tVolumes,
-      BinningValue bValue) const override;
+      AxisDirection bValue) const override;
 
   /// Set logging instance
   ///

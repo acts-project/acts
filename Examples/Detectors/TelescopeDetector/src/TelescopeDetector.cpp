@@ -10,7 +10,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
@@ -51,14 +51,13 @@ auto TelescopeDetector::finalize(
   std::vector<double> stereos = cfg.stereos;
   std::ranges::sort(positions);
 
-  Acts::GeometryContext geometryContext(nominalContext);
-
-  // Return the telescope detector
-  TrackingGeometryPtr gGeometry =
-      buildTelescopeDetector(geometryContext, detectorStore, positions, stereos,
-                             cfg.offsets, cfg.bounds, cfg.thickness,
-                             static_cast<TelescopeSurfaceType>(cfg.surfaceType),
-                             static_cast<Acts::BinningValue>(cfg.binValue));
+  /// Return the telescope detector
+  TrackingGeometryPtr gGeometry = ActsExamples::buildTelescopeDetector(
+      nominalContext, detectorStore, positions, stereos, cfg.offsets,
+      cfg.bounds, cfg.thickness,
+      static_cast<ActsExamples::TelescopeSurfaceType>(
+          cfg.surfaceType),
+      static_cast<Acts::AxisDirection>(cfg.binValue));
   ContextDecorators gContextDecorators = {};
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(

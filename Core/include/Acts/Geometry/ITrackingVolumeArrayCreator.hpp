@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <memory>
 #include <vector>
@@ -55,6 +55,6 @@ class ITrackingVolumeArrayCreator {
   /// @return shared pointer to a new TrackingVolumeArray
   virtual std::shared_ptr<const TrackingVolumeArray> trackingVolumeArray(
       const GeometryContext& gctx, const TrackingVolumeVector& vols,
-      BinningValue bVal) const = 0;
+      AxisDirection bVal) const = 0;
 };
 }  // namespace Acts

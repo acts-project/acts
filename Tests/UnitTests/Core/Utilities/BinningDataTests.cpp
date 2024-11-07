@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -37,36 +37,43 @@ Vector2 rphiPosition(3.5, std::numbers::pi / 8.);
 // x/y/zData
 // bin boundaries
 // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-BinningData xData_eq(open, BinningValue::binX, 10, 0., 10.);
-BinningData yData_eq(open, BinningValue::binY, 10, 0., 10.);
-BinningData zData_eq(open, BinningValue::binZ, 10, 0., 10.);
+BinningData xData_eq(AxisBoundaryType::Bound, AxisDirection::AxisX, 10, 0.,
+                     10.);
+BinningData yData_eq(AxisBoundaryType::Bound, AxisDirection::AxisY, 10, 0.,
+                     10.);
+BinningData zData_eq(AxisBoundaryType::Bound, AxisDirection::AxisZ, 10, 0.,
+                     10.);
 // r/phi/rphiData
 // bin boundaries
 // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-BinningData rData_eq(open, BinningValue::binR, 10, 0., 10.);
+BinningData rData_eq(AxisBoundaryType::Bound, AxisDirection::AxisR, 10, 0.,
+                     10.);
 // bin boundaries
-// > -PI | -3/5 PI | -1/5 PI | 1/5 PI | 3/5 PI | PI <
-BinningData phiData_eq(closed, BinningValue::binPhi, 5, -std::numbers::pi,
-                       std::numbers::pi);
-// BinningData rPhiData_eq(closed, BinningValue::binRPhi, 5, -std::numbers::pi,
-// std::numbers::pi); h/etaData bin boundaries | 0 | 2 | 4 | 6 | 8 | 10 |
-// BinningData hData_eq(open, BinningValue::binH, 5, 0., 10.);
-// | -2.5 | -1.5 | -0.5 | 0.5 | 1.5 | 2.5 |
-BinningData etaData_eq(open, BinningValue::binEta, 5, -2.5, 2.5);
+// > -M_PI | -3/5 M_PI | -1/5 M_PI | 1/5 M_PI | 3/5 M_PI | M_PI <
+BinningData phiData_eq(AxisBoundaryType::Closed, AxisDirection::AxisPhi, 5,
+                       -std::numbers::pi, std::numbers::pi);
+// BinningData rPhiData_eq(AxisBoundaryType::Closed, AxisDirection::AxisRPhi, 5,
+// -M_PI, M_PI); h/etaData bin boundaries | 0 | 2 | 4 | 6 | 8 | 10 | BinningData
+// hData_eq(AxisBoundaryType::Bound, AxisDirection::AxisTheta, 5, 0., 10.); |
+// -2.5 | -1.5 | -0.5 | 0.5 | 1.5 | 2.5 |
+BinningData etaData_eq(AxisBoundaryType::Bound, AxisDirection::AxisEta, 5, -2.5,
+                       2.5);
 
 // Fest equality operator
-BinningData xData_eq_copy(open, BinningValue::binX, 10, 0., 10.);
+BinningData xData_eq_copy(AxisBoundaryType::Bound, AxisDirection::AxisX, 10, 0.,
+                          10.);
 
 // the binnings - arbitrary
 std::vector<float> values = {0., 1., 2., 3., 4., 10.};
 // bin boundaries
 // | 0 | 1 | 2 | 3 | 4 | 10 |
-BinningData xData_arb(open, BinningValue::binX, values);
-BinningData yData_arb(open, BinningValue::binY, values);
-// | -PI |  -2 |  -1 |  1 |  2 |  PI |
+BinningData xData_arb(AxisBoundaryType::Bound, AxisDirection::AxisX, values);
+BinningData yData_arb(AxisBoundaryType::Bound, AxisDirection::AxisY, values);
+// | -M_PI |  -2 |  -1 |  1 |  2 |  M_PI |
 std::vector<float> phiValues = {-std::numbers::pi, -2., -1., 1., 2.,
                                 std::numbers::pi};
-BinningData phiData_arb(closed, BinningValue::binPhi, phiValues);
+BinningData phiData_arb(AxisBoundaryType::Closed, AxisDirection::AxisPhi,
+                        phiValues);
 
 // the binnings - arbitrary when switching to binary search - for boundary
 // sizes >= 50
@@ -79,25 +86,25 @@ double phiDelta = 0.1064;
 // the binning - substructure
 std::vector<float> sstr = {0., 1., 1.5, 2., 3.};
 // multiplicative
-auto xData_sstr_mult =
-    std::make_unique<const BinningData>(open, BinningValue::binX, sstr);
+auto xData_sstr_mult = std::make_unique<const BinningData>(
+    AxisBoundaryType::Bound, AxisDirection::AxisX, sstr);
 // | 0 | 1 | 1.5 | 2 |  3 | 4 | 4.5 | 5 | 6 | 7 | 7.5 | 8 | 9 |
-BinningData xData_mult(open, BinningValue::binX, 3, 0., 9.,
+BinningData xData_mult(AxisBoundaryType::Bound, AxisDirection::AxisX, 3, 0., 9.,
                        std::move(xData_sstr_mult));
 /// additive
 // | 0 | 1 | 1.5 | 2 |  3 | 4 | 5 |
 std::vector<float> main_sstr = {0., 3., 4., 5.};
-auto xData_sstr_add =
-    std::make_unique<const BinningData>(open, BinningValue::binX, sstr);
-BinningData xData_add(open, BinningValue::binX, main_sstr,
+auto xData_sstr_add = std::make_unique<const BinningData>(
+    AxisBoundaryType::Bound, AxisDirection::AxisX, sstr);
+BinningData xData_add(AxisBoundaryType::Bound, AxisDirection::AxisX, main_sstr,
                       std::move(xData_sstr_add));
 
-// enum BinningValue { BinningValue::binX, BinningValue::binY,
-// BinningValue::binZ, BinningValue::binR, BinningValue::binPhi,
-// BinningValue::binRPhi, BinningValue::binH, BinningValue::binEta }
+// enum AxisDirection { AxisDirection::AxisX, AxisDirection::AxisY,
+// AxisDirection::AxisZ, AxisDirection::AxisR, AxisDirection::AxisPhi,
+// AxisDirection::AxisRPhi, AxisDirection::AxisTheta, AxisDirection::AxisEta }
 //
 // test the different binning values
-BOOST_AUTO_TEST_CASE(BinningData_BinningValue) {
+BOOST_AUTO_TEST_CASE(BinningData_AxisDirection) {
   // the binnings - arbitrary when switching to binary search - for boundary
   // sizes >= 50
   std::vector<float> values_binary;
@@ -107,9 +114,10 @@ BOOST_AUTO_TEST_CASE(BinningData_BinningValue) {
     phiValues_binary.push_back(phiMin + i * phiDelta);
   }
   // bin boundaries when switching to binary search - for boundary sizes >= 50
-  BinningData xData_arb_binary(open, BinningValue::binX, values_binary);
-  BinningData phiData_arb_binary(closed, BinningValue::binPhi,
-                                 phiValues_binary);
+  BinningData xData_arb_binary(AxisBoundaryType::Bound, AxisDirection::AxisX,
+                               values_binary);
+  BinningData phiData_arb_binary(AxisBoundaryType::Closed,
+                                 AxisDirection::AxisPhi, phiValues_binary);
   /// x/y/zData
   /// check the global position requests
   // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
@@ -170,9 +178,10 @@ BOOST_AUTO_TEST_CASE(BinningData_bins) {
     phiValues_binary.push_back(phiMin + i * phiDelta);
   }
   // bin boundaries when switching to binary search - for boundary sizes >= 50
-  BinningData xData_arb_binary(open, BinningValue::binX, values_binary);
-  BinningData phiData_arb_binary(closed, BinningValue::binPhi,
-                                 phiValues_binary);
+  BinningData xData_arb_binary(AxisBoundaryType::Bound, AxisDirection::AxisX,
+                               values_binary);
+  BinningData phiData_arb_binary(AxisBoundaryType::Closed,
+                                 AxisDirection::AxisPhi, phiValues_binary);
   /// x/y/zData
   /// check the global position requests
   // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
@@ -239,9 +248,10 @@ BOOST_AUTO_TEST_CASE(BinningData_inside_outside) {
     phiValues_binary.push_back(phiMin + i * phiDelta);
   }
   // bin boundaries when switching to binary search - for boundary sizes >= 50
-  BinningData xData_arb_binary(open, BinningValue::binX, values_binary);
-  BinningData phiData_arb_binary(closed, BinningValue::binPhi,
-                                 phiValues_binary);
+  BinningData xData_arb_binary(AxisBoundaryType::Bound, AxisDirection::AxisX,
+                               values_binary);
+  BinningData phiData_arb_binary(AxisBoundaryType::Closed,
+                                 AxisDirection::AxisPhi, phiValues_binary);
   // check the global inside
   BOOST_CHECK_EQUAL(xData_eq.inside(xyzPosition), true);
   BOOST_CHECK_EQUAL(yData_eq.inside(xyzPosition), true);
@@ -272,8 +282,8 @@ BOOST_AUTO_TEST_CASE(BinningData_inside_outside) {
   BOOST_CHECK_EQUAL(etaData_eq.inside(eta0Position), true);
 }
 
-// test open/close
-BOOST_AUTO_TEST_CASE(BinningData_open_close) {
+// test AxisBoundaryType::Bound/close
+BOOST_AUTO_TEST_CASE(BinningData_AxisBoundaryType_Bound_Closed) {
   // the binnings - arbitrary when switching to binary search - for boundary
   // sizes >= 50
   std::vector<float> values_binary;
@@ -283,10 +293,11 @@ BOOST_AUTO_TEST_CASE(BinningData_open_close) {
     phiValues_binary.push_back(phiMin + i * phiDelta);
   }
   // bin boundaries when switching to binary search - for boundary sizes >= 50
-  BinningData xData_arb_binary(open, BinningValue::binX, values_binary);
-  BinningData phiData_arb_binary(closed, BinningValue::binPhi,
-                                 phiValues_binary);
-  // open values
+  BinningData xData_arb_binary(AxisBoundaryType::Bound, AxisDirection::AxisX,
+                               values_binary);
+  BinningData phiData_arb_binary(AxisBoundaryType::Closed,
+                                 AxisDirection::AxisPhi, phiValues_binary);
+  // AxisBoundaryType::Bound values
   BOOST_CHECK_EQUAL(xData_eq.searchGlobal(xyzPositionOutside), std::size_t{9});
   BOOST_CHECK_EQUAL(yData_eq.searchGlobal(xyzPositionOutside), std::size_t{0});
   BOOST_CHECK_EQUAL(zData_eq.searchGlobal(xyzPositionOutside), std::size_t{9});
@@ -296,7 +307,7 @@ BOOST_AUTO_TEST_CASE(BinningData_open_close) {
                     xData_arb_binary.bins());
   BOOST_CHECK_EQUAL(yData_arb.searchGlobal(xyzPositionOutside), std::size_t{0});
 
-  // closed values
+  // AxisBoundaryType::Closed values
   BOOST_CHECK_EQUAL(phiData_eq.search(-4.), std::size_t{4});
   BOOST_CHECK_EQUAL(phiData_eq.search(4.), std::size_t{0});
   BOOST_CHECK_EQUAL(phiData_arb.search(-4.), std::size_t{4});
@@ -307,7 +318,7 @@ BOOST_AUTO_TEST_CASE(BinningData_open_close) {
 
 // test boundaries
 BOOST_AUTO_TEST_CASE(BinningData_boundaries) {
-  // open values
+  // AxisBoundaryType::Bound values
   std::vector<float> boundaries = {0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.};
   BOOST_CHECK_EQUAL_COLLECTIONS(xData_eq.boundaries().begin(),
                                 xData_eq.boundaries().end(), boundaries.begin(),
@@ -336,9 +347,10 @@ BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
     phiValues_binary.push_back(phiMin + i * phiDelta);
   }
   // bin boundaries when switching to binary search - for boundary sizes >= 50
-  BinningData xData_arb_binary(open, BinningValue::binX, values_binary);
-  BinningData phiData_arb_binary(closed, BinningValue::binPhi,
-                                 phiValues_binary);
+  BinningData xData_arb_binary(AxisBoundaryType::Bound, AxisDirection::AxisX,
+                               values_binary);
+  BinningData phiData_arb_binary(AxisBoundaryType::Closed,
+                                 AxisDirection::AxisPhi, phiValues_binary);
   /// check the global position requests
   // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
   BOOST_CHECK_EQUAL(xData_eq.center(3), 3.5);
@@ -357,7 +369,7 @@ BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
 
   BOOST_CHECK_EQUAL(xData_arb_binary.center(0), 0.5 * delta);
 
-  // open values
+  // AxisBoundaryType::Bound values
   std::vector<float> center = {0.5, 1.5, 2.5, 3.5, 4.5,
                                5.5, 6.5, 7.5, 8.5, 9.5};
   for (std::size_t ib = 0; ib < center.size(); ++ib) {
@@ -380,13 +392,12 @@ BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
 
 // special test for phi binning
 BOOST_AUTO_TEST_CASE(BinningData_phi_modules) {
-  // n phi modules with phi boundary at -pi/+pi are checked above one module
-  // expands over -pi/+pi
-  const float deltaPhi = 0.1;
-  BinningData phiData_mod(closed, BinningValue::binPhi, 5,
+  // n phi modules with phi boundary at -M_Pi/+M_PI are checked above
+  // one module expands over -M_Pi/+M_PI
+  float deltaPhi = 0.1;
+  BinningData phiData_mod(AxisBoundaryType::Closed, AxisDirection::AxisPhi, 5,
                           -std::numbers::pi + deltaPhi,
                           std::numbers::pi + deltaPhi);
-
   const float phiStep = std::numbers::pi * 2. / 5.;
   std::vector<float> phiBoundaries_mod;
 
@@ -394,7 +405,6 @@ BOOST_AUTO_TEST_CASE(BinningData_phi_modules) {
     phiBoundaries_mod.push_back(
         static_cast<float>(-std::numbers::pi + i * phiStep) + deltaPhi);
   }
-
   // this is the boundary test
   CHECK_CLOSE_REL(phiData_mod.boundaries(), phiBoundaries_mod, 1e-5);
 

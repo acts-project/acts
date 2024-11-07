@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <nlohmann/json.hpp>
@@ -42,14 +42,15 @@ void from_json(const nlohmann::json& j, Range1D<Type>& r) {
   r.setMax(static_cast<Type>(j["max"]));
 }
 
-NLOHMANN_JSON_SERIALIZE_ENUM(BinningValue, {{BinningValue::binX, "binX"},
-                                            {BinningValue::binY, "binY"},
-                                            {BinningValue::binZ, "binZ"},
-                                            {BinningValue::binR, "binR"},
-                                            {BinningValue::binPhi, "binPhi"},
-                                            {BinningValue::binRPhi, "binRPhi"},
-                                            {BinningValue::binH, "binH"},
-                                            {BinningValue::binEta, "binEta"},
-                                            {BinningValue::binMag, "binMag"}})
+NLOHMANN_JSON_SERIALIZE_ENUM(AxisDirection,
+                             {{AxisDirection::AxisX, "binX"},
+                              {AxisDirection::AxisY, "binY"},
+                              {AxisDirection::AxisZ, "binZ"},
+                              {AxisDirection::AxisR, "binR"},
+                              {AxisDirection::AxisPhi, "binPhi"},
+                              {AxisDirection::AxisRPhi, "binRPhi"},
+                              {AxisDirection::AxisTheta, "binH"},
+                              {AxisDirection::AxisEta, "binEta"},
+                              {AxisDirection::AxisMag, "binMag"}})
 
 }  // namespace Acts
