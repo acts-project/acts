@@ -19,10 +19,10 @@ struct EtaThetaConversionTraits {};
 template <>
 struct EtaThetaConversionTraits<float> {
   static constexpr float minTheta = 1e-6f;
-  static constexpr float maxTheta = std::numbers::pi_v<float> - 1e-6f;
+  static constexpr float maxTheta = std::numbers::pi_v<float> - minTheta;
 
-  static constexpr float minEta = -80.0f;
   static constexpr float maxEta = 80.0f;
+  static constexpr float minEta = -maxEta;
 };
 
 template <>
