@@ -128,11 +128,11 @@ auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
 
   // note that we are using the default random device
   std::mt19937 gen;
-  std::uniform_real_distribution<> locDis(-10.0, 10.0);
-  std::uniform_real_distribution<> phiDis(-M_PI, M_PI);
-  std::uniform_real_distribution<> thetaDis(0, M_PI);
-  std::uniform_real_distribution<> qOverPDis(-10.0, 10.0);
-  std::uniform_real_distribution<> timeDis(0.0, 100.0);
+  std::uniform_real_distribution<> locDis(-10., 10.);
+  std::uniform_real_distribution<> phiDis(-std::numbers::pi, std::numbers::pi);
+  std::uniform_real_distribution<> thetaDis(0., std::numbers::pi);
+  std::uniform_real_distribution<> qOverPDis(-10., 10.);
+  std::uniform_real_distribution<> timeDis(0., 100.);
 
   for (auto i = 0ul; i < n; ++i) {
     BoundVector params = BoundVector::Zero();
