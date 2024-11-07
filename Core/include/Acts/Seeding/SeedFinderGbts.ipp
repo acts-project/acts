@@ -160,12 +160,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
             }
 
             unsigned int first_it = 0;
-            for (typename std::vector<
-                     GbtsNode<external_spacepoint_t>*>::const_iterator n1It =
-                     B1.m_vn.begin();
-                 n1It != B1.m_vn.end(); ++n1It) {  // loop over nodes in Layer 1
-
-              GbtsNode<external_spacepoint_t>* n1 = (*n1It);
+            for (const auto& n1 : B1.m_vn) {  // loop over nodes in Layer 1
 
               if (n1->m_in.size() >= MAX_SEG_PER_NODE) {
                 continue;
@@ -195,7 +190,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                 }
 
                 GbtsNode<external_spacepoint_t>* n2 =
-                    B2.m_vn.at(B2.m_vPhiNodes.at(n2PhiIdx).second);
+                    B2.m_vn.at(B2.m_vPhiNodes.at(n2PhiIdx).second).get();
 
                 if (n2->m_out.size() >= MAX_SEG_PER_NODE) {
                   continue;
@@ -304,8 +299,8 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                 float dPhi1 = std::asin(curv * r1);
 
                 if (nEdges < m_config.MaxEdges) {
-                  edgeStorage.emplace_back(n1, n2, exp_eta, curv, phi1 + dPhi1,
-                                           phi2 + dPhi2);
+                  edgeStorage.emplace_back(n1.get(), n2, exp_eta, curv,
+                                           phi1 + dPhi1, phi2 + dPhi2);
 
                   n1->addIn(nEdges);
                   n2->addOut(nEdges);
@@ -332,21 +327,20 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
   int nNodes = vNodes.size();
 
   for (int nodeIdx = 0; nodeIdx < nNodes; nodeIdx++) {
-    const GbtsNode<external_spacepoint_t>* pN = vNodes.at(nodeIdx);
+    const GbtsNode<external_spacepoint_t>& pN = *vNodes.at(nodeIdx);
 
     std::vector<std::pair<float, int>> in_sort, out_sort;
-    in_sort.resize(pN->m_in.size());
-    out_sort.resize(pN->m_out.size());
+    in_sort.resize(pN.m_in.size());
+    out_sort.resize(pN.m_out.size());
 
-    for (int inIdx = 0; inIdx < static_cast<int>(pN->m_in.size()); inIdx++) {
-      int inEdgeIdx = pN->m_in.at(inIdx);
+    for (int inIdx = 0; inIdx < static_cast<int>(pN.m_in.size()); inIdx++) {
+      int inEdgeIdx = pN.m_in.at(inIdx);
       Acts::GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(inEdgeIdx));
       in_sort[inIdx].second = inEdgeIdx;
       in_sort[inIdx].first = pS->m_p[0];
     }
-    for (int outIdx = 0; outIdx < static_cast<int>(pN->m_out.size());
-         outIdx++) {
-      int outEdgeIdx = pN->m_out.at(outIdx);
+    for (int outIdx = 0; outIdx < static_cast<int>(pN.m_out.size()); outIdx++) {
+      int outEdgeIdx = pN.m_out.at(outIdx);
       Acts::GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(outEdgeIdx));
       out_sort[outIdx].second = outEdgeIdx;
       out_sort[outIdx].first = pS->m_p[0];

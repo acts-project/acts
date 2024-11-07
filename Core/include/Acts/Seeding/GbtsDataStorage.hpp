@@ -46,13 +46,6 @@ struct GbtsSP {
 template <typename space_point_t>
 class GbtsNode {
  public:
-  struct CompareByPhi {
-    bool operator()(const GbtsNode<space_point_t> *n1,
-                    const GbtsNode<space_point_t> *n2) {
-      return (n1->m_spGbts.phi() < n2->m_spGbts.phi());
-    }
-  };
-
   GbtsNode(const GbtsSP<space_point_t> &spGbts, float minT = -100.0,
            float maxT = 100.0)
       : m_spGbts(spGbts), m_minCutOnTau(minT), m_maxCutOnTau(maxT) {}
@@ -96,27 +89,20 @@ class GbtsEtaBin {
  public:
   GbtsEtaBin() { m_vn.clear(); }
 
-  ~GbtsEtaBin() {
-    for (typename std::vector<GbtsNode<space_point_t> *>::iterator it =
-             m_vn.begin();
-         it != m_vn.end(); ++it) {
-      delete (*it);
-    }
-  }
-
   void sortByPhi() {
-    std::ranges::sort(m_vn,
-                      typename Acts::GbtsNode<space_point_t>::CompareByPhi());
+    std::ranges::sort(m_vn, [](const auto &n1, const auto &n2) {
+      return (n1->m_spGbts.phi() < n2->m_spGbts.phi());
+    });
   }
 
   bool empty() const { return m_vn.empty(); }
 
   void generatePhiIndexing(float dphi) {
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
-      GbtsNode<space_point_t> *pN = m_vn.at(nIdx);
+      GbtsNode<space_point_t> &pN = *m_vn.at(nIdx);
       // float phi = pN->m_sp.phi();
       // float phi = (std::atan(pN->m_sp.x() / pN->m_sp.y()));
-      float phi = pN->m_spGbts.phi();
+      float phi = pN.m_spGbts.phi();
       if (phi <= M_PI - dphi) {
         continue;
       }
@@ -126,14 +112,14 @@ class GbtsEtaBin {
     }
 
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
-      GbtsNode<space_point_t> *pN = m_vn.at(nIdx);
-      float phi = pN->m_spGbts.phi();
+      GbtsNode<space_point_t> &pN = *m_vn.at(nIdx);
+      float phi = pN.m_spGbts.phi();
       m_vPhiNodes.push_back(std::pair<float, unsigned int>(phi, nIdx));
     }
 
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
-      GbtsNode<space_point_t> *pN = m_vn.at(nIdx);
-      float phi = pN->m_spGbts.phi();
+      GbtsNode<space_point_t> &pN = *m_vn.at(nIdx);
+      float phi = pN.m_spGbts.phi();
       if (phi >= -M_PI + dphi) {
         break;
       }
@@ -142,9 +128,7 @@ class GbtsEtaBin {
     }
   }
 
-  std::vector<GbtsNode<space_point_t> *> m_vn;
-  // TODO change to
-  // std::vector<std::unique_ptr<GbtsNode<space_point_t>>> m_vn;
+  std::vector<std::unique_ptr<GbtsNode<space_point_t>>> m_vn;
   std::vector<std::pair<float, unsigned int>> m_vPhiNodes;
 };
 
@@ -185,8 +169,9 @@ class GbtsDataStorage {
             1.6 + 0.15 / (cluster_width + 0.2) + 6.1 * (cluster_width - 0.2);
       }
 
-      m_etaBins.at(binIndex).m_vn.push_back(new GbtsNode<space_point_t>(
-          sp, min_tau, max_tau));  // adding ftf member to nodes
+      m_etaBins.at(binIndex).m_vn.push_back(
+          std::make_unique<GbtsNode<space_point_t>>(
+              sp, min_tau, max_tau));  // adding ftf member to nodes
     } else {
       if (useClusterWidth) {
         float cluster_width = 1;  // temporary while cluster width not available
@@ -194,7 +179,8 @@ class GbtsDataStorage {
           return -3;
         }
       }
-      m_etaBins.at(binIndex).m_vn.push_back(new GbtsNode<space_point_t>(sp));
+      m_etaBins.at(binIndex).m_vn.push_back(
+          std::make_unique<GbtsNode<space_point_t>>(sp));
     }
 
     return 0;
@@ -217,16 +203,14 @@ class GbtsDataStorage {
     vn.clear();
     vn.reserve(numberOfNodes());
     for (const auto &b : m_etaBins) {
-      for (typename std::vector<GbtsNode<space_point_t> *>::const_iterator nIt =
-               b.m_vn.begin();
-           nIt != b.m_vn.end(); ++nIt) {
-        if ((*nIt)->m_in.empty()) {
+      for (const auto &n : b.m_vn) {
+        if (n->m_in.empty()) {
           continue;
         }
-        if ((*nIt)->m_out.empty()) {
+        if (n->m_out.empty()) {
           continue;
         }
-        vn.push_back(*nIt);
+        vn.push_back(n.get());
       }
     }
   }

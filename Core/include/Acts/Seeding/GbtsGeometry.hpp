@@ -277,15 +277,10 @@ class GbtsGeometry {
 
     // calculating bin tables in the connector...
 
-    for (std::map<int, std::vector<GbtsConnection *>>::const_iterator it =
-             m_connector->m_connMap.begin();
-         it != m_connector->m_connMap.end(); ++it) {
-      const std::vector<GbtsConnection *> &vConn = (*it).second;
-
-      for (std::vector<GbtsConnection *>::const_iterator cIt = vConn.begin();
-           cIt != vConn.end(); ++cIt) {
-        unsigned int src = (*cIt)->m_src;  // n2 : the new connectors
-        unsigned int dst = (*cIt)->m_dst;  // n1
+    for (auto &[_, vConn] : m_connector->m_connMap) {
+      for (auto &c : vConn) {
+        unsigned int src = c->m_src;  // n2 : the new connectors
+        unsigned int dst = c->m_dst;  // n1
 
         const GbtsLayer<space_point_t> *pL1 = getGbtsLayerByKey(dst);
         const GbtsLayer<space_point_t> *pL2 = getGbtsLayerByKey(src);
@@ -301,7 +296,7 @@ class GbtsGeometry {
         int nSrcBins = pL2->m_bins.size();
         int nDstBins = pL1->m_bins.size();
 
-        (*cIt)->m_binTable.resize(nSrcBins * nDstBins, 0);
+        c->m_binTable.resize(nSrcBins * nDstBins, 0);
 
         for (int b1 = 0; b1 < nDstBins; b1++) {    // loop over bins in Layer 1
           for (int b2 = 0; b2 < nSrcBins; b2++) {  // loop over bins in Layer 2
@@ -309,7 +304,7 @@ class GbtsGeometry {
               continue;
             }
             int address = b1 + b2 * nDstBins;
-            (*cIt)->m_binTable.at(address) = 1;
+            c->m_binTable.at(address) = 1;
           }
         }
       }
@@ -322,17 +317,6 @@ class GbtsGeometry {
   GbtsGeometry(const GbtsGeometry &) = delete;
   GbtsGeometry &operator=(const GbtsGeometry &) = delete;
 
-  ~GbtsGeometry() {
-    for (typename std::vector<GbtsLayer<space_point_t> *>::iterator it =
-             m_layArray.begin();
-         it != m_layArray.end(); ++it) {
-      delete (*it);
-    }
-
-    m_layMap.clear();
-    m_layArray.clear();
-  }
-
   const GbtsLayer<space_point_t> *getGbtsLayerByKey(unsigned int key) const {
     typename std::map<unsigned int, GbtsLayer<space_point_t> *>::const_iterator
         it = m_layMap.find(key);
@@ -344,7 +328,7 @@ class GbtsGeometry {
   }
 
   const GbtsLayer<space_point_t> *getGbtsLayerByIndex(int idx) const {
-    return m_layArray.at(idx);
+    return m_layArray.at(idx).get();
   }
 
   int num_bins() const { return m_nEtaBins; }
@@ -357,18 +341,19 @@ class GbtsGeometry {
     unsigned int layerKey = l.m_subdet;  // this should be combined ID
     float ew = m_etaBinWidth;
 
-    GbtsLayer<space_point_t> *pHL = new GbtsLayer<space_point_t>(l, ew, bin0);
+    auto upHL = std::make_unique<GbtsLayer<space_point_t>>(l, ew, bin0);
+    auto *pHL = upHL.get();
 
     m_layMap.insert(
         std::pair<unsigned int, GbtsLayer<space_point_t> *>(layerKey, pHL));
-    m_layArray.push_back(pHL);
+    m_layArray.push_back(std::move(upHL));
     return pHL;
   }
 
   float m_etaBinWidth{};
 
   std::map<unsigned int, GbtsLayer<space_point_t> *> m_layMap;
-  std::vector<GbtsLayer<space_point_t> *> m_layArray;
+  std::vector<std::unique_ptr<GbtsLayer<space_point_t>>> m_layArray;
 
   int m_nEtaBins{0};
 
