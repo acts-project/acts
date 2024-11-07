@@ -28,7 +28,7 @@ struct EtaThetaConversionTraits<float> {
 template <>
 struct EtaThetaConversionTraits<double> {
   static constexpr double minTheta = 1e-12;
-  static constexpr double maxTheta = std::numbers::pi - 1e-12;
+  static constexpr double maxTheta = std::numbers::pi - minTheta;
 
   static constexpr double maxEta = 700.0;
   static constexpr double minEta = -maxEta;
