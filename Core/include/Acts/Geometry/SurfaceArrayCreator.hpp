@@ -130,23 +130,7 @@ class SurfaceArrayCreator {
       std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
 
-  /// SurfaceArrayCreator interface method
-  ///
-  /// - create an array in a cylinder, binned in phi, z when extremas and bin
-  /// numbers are unknown - this method goes through the surfaces and finds out
-  /// the needed information
-  /// @warning This function requires the cylinder aligned with the z-axis
-  /// @param surfaces is the vector of pointers to sensitive surfaces
-  /// to be ordered on the cylinder
-  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
-  /// need to be valid, since no check is performed
-  /// @param [in] gctx The gometry context for this building call
-  /// @param protoLayerOpt The proto layer containing the layer size
-  /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
-  /// @param bTypeZ the binning type in z direction (equidistant/arbitrary)
-  /// @param transform is the (optional) additional transform applied
-  ///
-  /// @return a unique pointer a new SurfaceArray
+  /// SurfaceArrayCreator interface methonew SurfaceArray
   std::unique_ptr<Acts::SurfaceArray> surfaceArrayOnCylinder(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces,
@@ -380,8 +364,8 @@ class SurfaceArrayCreator {
       Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.bValue, pAxisB.bValue})));
+      ptr = std::make_unique<SGL>(
+            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
 
@@ -389,8 +373,8 @@ class SurfaceArrayCreator {
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.bValue, pAxisB.bValue})));
+      ptr = std::make_unique<SGL>(
+            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
 
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
 
@@ -398,8 +382,8 @@ class SurfaceArrayCreator {
       Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.bValue, pAxisB.bValue})));
+      ptr = std::make_unique<SGL>(
+            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
 
@@ -407,8 +391,8 @@ class SurfaceArrayCreator {
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.bValue, pAxisB.bValue})));
+      ptr = std::make_unique<SGL>(
+            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
     }
     // clang-format on
 
