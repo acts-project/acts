@@ -82,7 +82,7 @@ inline std::pair<T, T> normalizePhiTheta(T phi, T theta) {
   // moving it first to the periodic range simplifies further steps as the
   // possible range of theta becomes fixed.
   theta = radian_pos(theta);
-  if (std::numbers::pi < theta) {
+  if (std::numbers::pi_v<T> < theta) {
     // theta is in the second half of the great circle and outside its nominal
     // range. need to change both phi and theta to be within range.
     phi += std::numbers::pi_v<T>;

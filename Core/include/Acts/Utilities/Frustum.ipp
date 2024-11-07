@@ -50,7 +50,7 @@ Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
 
   m_normals[0] = ldir;
 
-  const value_type phi_sep = 2 * std::numbers::pi / sides;
+  const value_type phi_sep = 2. * std::numbers::pi_v<value_type> / sides;
   transform_type rot;
   rot = angle_axis_t(phi_sep, ldir);
 

@@ -193,7 +193,8 @@ Acts::Experimental::detail::SupportSurfacesHelper::cylindricalSupport(
     // Now create the Trapezoids
     for (unsigned int iphi = 0; iphi < splits; ++iphi) {
       // Get the moduleTransform
-      ActsScalar phi = -std::numbers::pi + (iphi + 0.5) * 2 * dHalfPhi;
+      ActsScalar phi =
+          -std::numbers::pi_v<ActsScalar> + (2 * iphi + 1) * dHalfPhi;
       ActsScalar cosPhi = std::cos(phi);
       ActsScalar sinPhi = std::sin(phi);
       ActsScalar planeX = planeR * cosPhi;
@@ -272,10 +273,12 @@ Acts::Experimental::detail::SupportSurfacesHelper::discSupport(
     // Now create the Trapezoids
     for (unsigned int iphi = 0; iphi < splits; ++iphi) {
       // Create the split module transform
-      ActsScalar phi = -std::numbers::pi + (iphi + 0.5) * 2 * dHalfPhi;
+      ActsScalar phi =
+          -std::numbers::pi_v<ActsScalar> + (2 * iphi + 1) * dHalfPhi;
       auto sTransform = Transform3(
           Translation3(hR * std::cos(phi), hR * std::sin(phi), zPosition) *
-          AngleAxis3(phi - std::numbers::pi / 2., zAxis));
+          AngleAxis3(phi - static_cast<ActsScalar>(std::numbers::pi / 2.),
+                     zAxis));
       // Place it
       dSupport.push_back(
           Surface::makeShared<PlaneSurface>(sTransform, sTrapezoid));
