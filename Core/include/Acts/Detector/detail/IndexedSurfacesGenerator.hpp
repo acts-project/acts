@@ -70,7 +70,7 @@ struct IndexedSurfacesGenerator {
     GridType grid(std::move(aGenerator()));
 
     std::array<AxisDirection, decltype(grid)::DIM> adArray = {};
-    for (auto [iadv, ad] : enumerate(adArray)) {
+    for (auto [iadv, ad] : enumerate(axisDirections)) {
       adArray[iadv] = ad;
     }
 

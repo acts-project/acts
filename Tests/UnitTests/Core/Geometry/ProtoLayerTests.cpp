@@ -179,7 +179,6 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
     std::vector<std::shared_ptr<const Surface>> surfaces;
     for (std::size_t i = 0; i < nSensors; i++) {
       // Create a fan of sensors
-
       Transform3 trf = base * AngleAxis3{yrot, Vector3::UnitY()} *
                        AngleAxis3{deltaPhi * i, Vector3::UnitZ()} *
                        Translation3(Vector3::UnitX() * r);
