@@ -82,8 +82,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
 
   BOOST_CHECK(grid.atPosition(p) == reference);
 
-  // Check that surfaces 0, 1, 21 build the bins at phi == -std::numbers::pi +
-  // epsilon
+  // Check that surfaces 0, 1, 21 build the bins at phi == -pi + epsilon
   reference = {0, 1, 21};
   p = {-std::numbers::pi + 0.05};
   BOOST_CHECK(grid.atPosition(p) == reference);
@@ -130,8 +129,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
   GridType::point_t p = {0.05};
   BOOST_CHECK(grid.atPosition(p) == reference);
 
-  // Check that surfaces 0, 1, 21 build the bins at phi == -std::numbers::pi +
-  // epsilon
+  // Check that surfaces 0, 1, 21 build the bins at phi == -pi + epsilon
   reference = {0, 1, 21, 22};
   p = {-std::numbers::pi + 0.05};
   BOOST_CHECK(grid.atPosition(p) == reference);

@@ -71,10 +71,10 @@ struct CylindricalSpacePointGridConfig {
   // maximum phi value for phiAxis construction
   float phiMax = std::numbers::pi_v<float>;
   // Multiplicator for the number of phi-bins. The minimum number of phi-bins
-  // depends on min_pt, magnetic field: 2*std::numbers::pi/(minPT particle
-  // phi-deflection). phiBinDeflectionCoverage is a multiplier for this number.
-  // If numPhiNeighbors (in the configuration of the BinFinders) is configured
-  // to return 1 neighbor on either side of the current phi-bin (and you want to
+  // depends on min_pt, magnetic field: 2*pi/(minPT particle phi-deflection).
+  // phiBinDeflectionCoverage is a multiplier for this number. If
+  // numPhiNeighbors (in the configuration of the BinFinders) is configured to
+  // return 1 neighbor on either side of the current phi-bin (and you want to
   // cover the full phi-range of minPT), leave this at 1.
   int phiBinDeflectionCoverage = 1;
   // maximum number of phi bins

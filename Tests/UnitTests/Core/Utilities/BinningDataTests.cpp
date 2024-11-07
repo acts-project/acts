@@ -380,8 +380,8 @@ BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
 
 // special test for phi binning
 BOOST_AUTO_TEST_CASE(BinningData_phi_modules) {
-  // n phi modules with phi boundary at -M_Pi/+std::numbers::pi are checked
-  // above one module expands over -M_Pi/+std::numbers::pi
+  // n phi modules with phi boundary at -pi/+pi are checked above one module
+  // expands over -pi/+pi
   const float deltaPhi = 0.1;
   BinningData phiData_mod(closed, BinningValue::binPhi, 5,
                           -std::numbers::pi + deltaPhi,
