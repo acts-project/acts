@@ -65,7 +65,7 @@ class SeedFinderOrthogonal {
    */
   ~SeedFinderOrthogonal() = default;
 
-  SeedFinderOrthogonal() = delete;
+  SeedFinderOrthogonal() = default;
   SeedFinderOrthogonal(const SeedFinderOrthogonal<external_spacepoint_t> &) =
       delete;
   SeedFinderOrthogonal<external_spacepoint_t> &operator=(
@@ -254,7 +254,7 @@ class SeedFinderOrthogonal {
   /**
    * @brief The logger
    */
-  std::unique_ptr<const Acts::Logger> m_logger{nullptr};
+  std::unique_ptr<const Acts::Logger> m_logger{getDummyLogger().clone()};
 };
 }  // namespace Acts
 
