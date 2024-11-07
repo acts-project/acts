@@ -30,8 +30,8 @@ struct EtaThetaConversionTraits<double> {
   static constexpr double minTheta = 1e-12;
   static constexpr double maxTheta = std::numbers::pi - 1e-12;
 
-  static constexpr double minEta = -700.0;
   static constexpr double maxEta = 700.0;
+  static constexpr double minEta = -maxEta;
 };
 
 /// Calculate the pseudorapidity from the polar angle theta.
