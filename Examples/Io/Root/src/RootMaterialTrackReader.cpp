@@ -34,7 +34,7 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
     throw std::invalid_argument{"No input files given"};
   }
 
-  m_inputChain = new TChain(m_cfg.treeName.c_str());
+  m_inputChain = std::make_unique<TChain>(m_cfg.treeName.c_str());
 
   // loop over the input files
   for (const auto& inputFile : m_cfg.fileList) {
@@ -99,8 +99,6 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
 }
 
 RootMaterialTrackReader::~RootMaterialTrackReader() {
-  delete m_inputChain;
-
   delete m_step_x;
   delete m_step_y;
   delete m_step_z;
