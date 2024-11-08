@@ -96,7 +96,7 @@ struct Fixture {
 
     // generate random track parameters
     auto [par, cov] =
-        Acts::detail::Test::generateBoundParametersCovariance(rng);
+        Acts::detail::Test::generateBoundParametersCovariance(rng, {});
     boundParams = par;
 
     freeParams =

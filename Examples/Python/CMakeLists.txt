@@ -21,6 +21,7 @@ pybind11_add_module(ActsPythonBindings
   src/Output.cpp
   src/Input.cpp
   src/Propagation.cpp
+  src/Navigation.cpp
   src/Generators.cpp
   src/Obj.cpp
   src/TruthTracking.cpp

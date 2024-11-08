@@ -1,4 +1,5 @@
 import pytest
+from pathlib import Path
 
 from helpers import dd4hepEnabled
 
@@ -157,3 +158,34 @@ def test_tgeo_config_volume(monkeypatch):
 
         v = Volume(**{key: (4, None)})
         assert getattr(v, key) == Interval(4, None)
+
+
+def test_coordinate_converter(trk_geo):
+    digiCfg = acts.examples.DigitizationConfig(
+        acts.examples.readDigiConfigFromJson(
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
+        ),
+        surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),
+    )
+    converter = acts.examples.DigitizationCoordinatesConverter(digiCfg)
+
+    def test_surface(surface):
+        gctx = acts.GeometryContext()
+        geo_id = surface.geometryId().value()
+        geo_center = surface.center(gctx)
+        x, y, z = geo_center[0], geo_center[1], geo_center[2]
+
+        # test if surface center can be reproduced
+        assert converter.globalToLocal(geo_id, x, y, z) == (0, 0)
+        assert converter.localToGlobal(geo_id, 0, 0) == (x, y, z)
+
+        # test if we can get back to the same local coordinates
+        global_shifted = converter.localToGlobal(geo_id, 5, 5)
+        local_shifted = converter.globalToLocal(geo_id, *global_shifted)
+        assert abs(local_shifted[0] - 5) / 5 < 1e-6
+        assert abs(local_shifted[1] - 5) / 5 < 1e-6
+
+    trk_geo.visitSurfaces(test_surface)

@@ -16,5 +16,6 @@ add_unittest(MultiTrajectoryHelpers MultiTrajectoryHelpersTests.cpp)
 add_unittest(SubspaceHelpers SubspaceHelpersTests.cpp)
 add_unittest(SeedEdm SeedEdmTests.cpp)
 add_unittest(SpacePointContainerEdm SpacePointContainerEdmTests.cpp)
+add_unittest(TrackParameterHelpers TrackParameterHelpersTests.cpp)
 
 add_non_compile_test(MultiTrajectory TrackContainerComplianceTests.cpp)
