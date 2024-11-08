@@ -1342,8 +1342,8 @@ class Gx2Fitter {
       // all stored material in each propagation.
       std::vector<GeometryIdentifier> geoIdVector;
 
-      fillGx2fSystem(track, extendedSystem, false, scatteringMap,
-                     geoIdVector, *m_addToSumLogger);
+      fillGx2fSystem(track, extendedSystem, false, scatteringMap, geoIdVector,
+                     *m_addToSumLogger);
 
       chi2sum = extendedSystem.chi2();
 
@@ -1392,7 +1392,7 @@ class Gx2Fitter {
       }
 
       if (extendedSystem.chi2() > oldChi2sum + 1e-5) {
-        ACTS_INFO("chi2 not converging monotonically in update " << nUpdate);
+        ACTS_DEBUG("chi2 not converging monotonically in update " << nUpdate);
       }
 
       // If this is the final iteration, update the covariance and break.
@@ -1602,7 +1602,8 @@ class Gx2Fitter {
       }
     }
     ACTS_DEBUG("Finished to evaluate material");
-    ACTS_VERBOSE("Final parameters after material: " << params.parameters().transpose());
+    ACTS_VERBOSE(
+        "Final parameters after material: " << params.parameters().transpose());
     /// Finish MATERIAL Fitting ////////////////////////////////////////////////
 
     ACTS_VERBOSE("Final scattering angles:");
