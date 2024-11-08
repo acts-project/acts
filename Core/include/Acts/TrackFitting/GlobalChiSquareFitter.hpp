@@ -286,11 +286,7 @@ struct ScatteringProperties {
 /// @brief A container to manage all properties of a gx2f system
 ///
 /// This struct manages the mathematical infrastructure for the gx2f. It
-/// initializes and maintains the extended aMatrix and extended bVector).
-///
-/// @param nDims The dimensionality of the matrix and vector
-///
-/// TODO maybe template on nDims?
+/// initializes and maintains the extended aMatrix and extended bVector.
 struct Gx2fSystem {
  public:
   /// @brief Constructor to initialize matrices and vectors to zero based on specified dimensions.
