@@ -298,10 +298,10 @@ struct Gx2fSystem {
   /// @param nDims Number of dimensions for the extended matrix and vector.
   Gx2fSystem(std::size_t nDims)
       : m_nDims(nDims),
-        m_chi2(0.),
-        m_aMatrix(Eigen::MatrixXd::Zero(nDims, nDims)),
-        m_bVector(Eigen::VectorXd::Zero(nDims)),
-        m_ndf(0u) {}
+        m_chi2{0.},
+        m_aMatrix{Eigen::MatrixXd::Zero(nDims, nDims)},
+        m_bVector{Eigen::VectorXd::Zero(nDims)},
+        m_ndf{0u} {}
 
   // Accessor for nDims (const reference).
   std::size_t nDims() const { return m_nDims; }
@@ -336,7 +336,7 @@ struct Gx2fSystem {
   // - 5: no time measurement -> time is not fittable
   // - 6: full fit
   std::size_t findRequiredNdf() {
-    std::size_t ndfSystem;
+    std::size_t ndfSystem = 0;
     if (m_aMatrix(4, 4) == 0) {
       ndfSystem = 4;
     } else if (m_aMatrix(5, 5) == 0) {
