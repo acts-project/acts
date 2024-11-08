@@ -1380,18 +1380,12 @@ class Gx2Fitter {
       // We skip the check during the first iteration, since we cannot guarantee
       // to hit all/enough measurement surfaces with the initial parameter
       // guess.
-      if ((nUpdate > 1) && (ndfSystem + 1 > countNdf)) {
+      if ((nUpdate > 0) && !extendedSystem.isWellDefined()) {
         ACTS_INFO("Not enough measurements. Require "
-                  << ndfSystem + 1 << ", but only " << countNdf
-                  << " could be used.");
+                  << extendedSystem.findRequiredNdf() + 1 << ", but only "
+                  << extendedSystem.ndf() << " could be used.");
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
-
-      // get back the Bound vector components
-      aMatrix = extendedSystem.aMatrix()
-                    .topLeftCorner<eBoundSize, eBoundSize>()
-                    .eval();
-      bVector = extendedSystem.bVector().topLeftCorner<eBoundSize, 1>().eval();
 
       // calculate delta params [a] * delta = b
       Eigen::VectorXd deltaParamsExtended =
@@ -1417,8 +1411,7 @@ class Gx2Fitter {
         ACTS_INFO("Abort with relChi2changeCutOff after "
                   << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
                   << " iterations.");
-        updateGx2fCovarianceParams(fullCovariancePredicted,
-                                   extendedSystem.aMatrix(), ndfSystem);
+        updateGx2fCovarianceParams(fullCovariancePredicted, extendedSystem);
         break;
       }
 
@@ -1440,8 +1433,7 @@ class Gx2Fitter {
           return Experimental::GlobalChiSquareFitterError::DidNotConverge;
         }
 
-        updateGx2fCovarianceParams(fullCovariancePredicted,
-                                   extendedSystem.aMatrix(), ndfSystem);
+        updateGx2fCovarianceParams(fullCovariancePredicted, extendedSystem);
         break;
       }
 
