@@ -1600,6 +1600,9 @@ class Gx2Fitter {
               deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
         }
       }
+
+      // update params
+      params.parameters() += deltaParams;
     }
     ACTS_DEBUG("Finished to evaluate material");
     ACTS_VERBOSE(
