@@ -297,11 +297,9 @@ struct Gx2fSystem {
   ///
   /// @param nDims Number of dimensions for the extended matrix and vector.
   explicit Gx2fSystem(std::size_t nDims)
-      : m_nDims(nDims),
-        m_chi2{0.},
+      : m_nDims{nDims},
         m_aMatrix{Eigen::MatrixXd::Zero(nDims, nDims)},
-        m_bVector{Eigen::VectorXd::Zero(nDims)},
-        m_ndf{0u} {}
+        m_bVector{Eigen::VectorXd::Zero(nDims)} {}
 
   // Accessor for nDims (const reference).
   std::size_t nDims() const { return m_nDims; }
@@ -355,7 +353,7 @@ struct Gx2fSystem {
   std::size_t m_nDims;
 
   /// Sum of chi-squared values.
-  double m_chi2;
+  double m_chi2 = 0.;
 
   /// Extended matrix for accumulation.
   Eigen::MatrixXd m_aMatrix;
@@ -364,7 +362,7 @@ struct Gx2fSystem {
   Eigen::VectorXd m_bVector;
 
   /// Number of degrees of freedom of the system
-  std::size_t m_ndf;
+  std::size_t m_ndf = 0u;
 };
 
 /// @brief Process measurements and fill the aMatrix and bVector
