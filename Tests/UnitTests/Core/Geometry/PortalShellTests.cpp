@@ -720,7 +720,7 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
                     nullptr);
 }
 
-BOOST_AUTO_TEST_CASE(ConnectOuter) {
+BOOST_AUTO_TEST_CASE(Fill) {
   auto cyl1 = makeVolume(30_mm, 40_mm, 100_mm);
   auto cyl2 = makeVolume(0_mm, 50_mm, 110_mm);
 
@@ -736,7 +736,7 @@ BOOST_AUTO_TEST_CASE(ConnectOuter) {
   BOOST_CHECK_EQUAL(
       shell.portal(NegativeDisc)->getLink(Direction::OppositeNormal), nullptr);
 
-  shell.connectOuter(cyl2);
+  shell.fill(cyl2);
 
   BOOST_CHECK_NE(shell.portal(OuterCylinder)->getLink(Direction::AlongNormal),
                  nullptr);
