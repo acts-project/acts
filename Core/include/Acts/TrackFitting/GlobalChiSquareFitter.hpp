@@ -296,7 +296,7 @@ struct Gx2fSystem {
   /// @brief Constructor to initialize matrices and vectors to zero based on specified dimensions.
   ///
   /// @param nDims Number of dimensions for the extended matrix and vector.
-  Gx2fSystem(std::size_t nDims)
+  explicit Gx2fSystem(std::size_t nDims)
       : m_nDims(nDims),
         m_chi2{0.},
         m_aMatrix{Eigen::MatrixXd::Zero(nDims, nDims)},
