@@ -46,7 +46,7 @@ class EDM4hepReader final : public IReader {
     /// Particles from the generator
     std::string outputParticlesGenerator;
     /// Particles from the simulation
-    std::string outputParticlesSimulated;
+    std::string outputParticlesSimulation;
     /// Output simulated (truth) hits collection.
     std::string outputSimHits;
 
@@ -90,8 +90,8 @@ class EDM4hepReader final : public IReader {
                        std::size_t& nSecondaryVertices,
                        std::size_t& maxGen) const;
 
-  static void setSubParticleIds(const std::vector<SimParticle>::iterator& begin,
-                                const std::vector<SimParticle>::iterator& end);
+  static void setSubParticleIds(std::vector<SimParticle>::iterator begin,
+                                std::vector<SimParticle>::iterator end);
 
  private:
   const Acts::Logger& logger() const { return *m_logger; }
@@ -108,8 +108,8 @@ class EDM4hepReader final : public IReader {
 
   WriteDataHandle<SimParticleContainer> m_outputParticlesGenerator{
       this, "OutputParticlesGenerator"};
-  WriteDataHandle<SimParticleContainer> m_outputParticlesSimulated{
-      this, "OutputParticlesSimulated"};
+  WriteDataHandle<SimParticleContainer> m_outputParticlesSimulation{
+      this, "OutputParticlesSimulation"};
 
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
 

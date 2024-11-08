@@ -214,6 +214,7 @@ class Particle {
   /// Check if the particle is alive, i.e. is not at rest.
   bool isAlive() const { return Scalar{0} < m_absMomentum; }
 
+  /// Check if this is a secondary particle.
   bool isSecondary() const {
     return particleId().vertexSecondary() != 0 ||
            particleId().generation() != 0 || particleId().subParticle() != 0;

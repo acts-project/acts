@@ -314,7 +314,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
                     "LongStripEndcapReadout",
                 ],
                 outputParticlesGenerator="particles_input",
-                outputParticlesSimulated="particles_simulated",
+                outputParticlesSimulation="particles_simulated",
                 outputSimHits="simhits",
                 dd4hepDetector=detector,
                 trackingGeometry=trackingGeometry,

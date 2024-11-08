@@ -189,7 +189,7 @@ if args.edm4hep:
             "LongStripEndcapReadout",
         ],
         outputParticlesGenerator="particles_input",
-        outputParticlesSimulations="particles_simulated",
+        outputParticlesSimulation="particles_simulated",
         outputSimHits="simhits",
         graphvizOutput="graphviz",
         dd4hepDetector=detector,

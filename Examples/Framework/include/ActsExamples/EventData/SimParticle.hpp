@@ -55,8 +55,9 @@ class SimParticle final {
 
   SimParticle(const SimParticleState& initial, const SimParticleState& final)
       : m_initial(initial), m_final(final) {
-    assert(m_initial.particleId() == m_final.particleId() &&
-           "Particle id mismatch");
+    if (m_initial.particleId() != m_final.particleId()) {
+      throw std::invalid_argument("Particle id mismatch");
+    }
   }
 
   const SimParticleState& initial() const { return m_initial; }
@@ -82,19 +83,19 @@ class SimParticle final {
     return *this;
   }
   /// Set the pdg.
-  SimParticle setPdg(Acts::PdgParticle pdg) {
+  SimParticle& setPdg(Acts::PdgParticle pdg) {
     initial().setPdg(pdg);
     final().setPdg(pdg);
     return *this;
   }
   /// Set the charge.
-  SimParticle setCharge(Scalar charge) {
+  SimParticle& setCharge(Scalar charge) {
     initial().setCharge(charge);
     final().setCharge(charge);
     return *this;
   }
   /// Set the mass.
-  SimParticle setMass(Scalar mass) {
+  SimParticle& setMass(Scalar mass) {
     initial().setMass(mass);
     final().setMass(mass);
     return *this;
@@ -121,7 +122,7 @@ class SimParticle final {
   /// Particle mass.
   double mass() const { return initial().mass(); }
 
-  /// Is this a primary particle.
+  /// Check if this is a secondary particle.
   bool isSecondary() const { return initial().isSecondary(); }
 
   /// Particle hypothesis.

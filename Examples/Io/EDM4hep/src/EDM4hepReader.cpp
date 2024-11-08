@@ -39,7 +39,7 @@ EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
     throw std::invalid_argument(
         "Missing output collection generator particles");
   }
-  if (m_cfg.outputParticlesSimulated.empty()) {
+  if (m_cfg.outputParticlesSimulation.empty()) {
     throw std::invalid_argument(
         "Missing output collection simulated particles");
   }
@@ -50,7 +50,7 @@ EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
   m_eventsRange = std::make_pair(0, reader().getEntries("events"));
 
   m_outputParticlesGenerator.initialize(m_cfg.outputParticlesGenerator);
-  m_outputParticlesSimulated.initialize(m_cfg.outputParticlesSimulated);
+  m_outputParticlesSimulation.initialize(m_cfg.outputParticlesSimulation);
   m_outputSimHits.initialize(m_cfg.outputSimHits);
 
   m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
@@ -411,7 +411,7 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
   }
 
   m_outputParticlesGenerator(ctx, std::move(particlesGenerator));
-  m_outputParticlesSimulated(ctx, std::move(particlesSimulated));
+  m_outputParticlesSimulation(ctx, std::move(particlesSimulated));
 
   m_outputSimHits(ctx, std::move(simHits));
 
@@ -492,9 +492,8 @@ void EDM4hepReader::processChildren(
   }
 }
 
-void EDM4hepReader::setSubParticleIds(
-    const std::vector<SimParticle>::iterator& begin,
-    const std::vector<SimParticle>::iterator& end) {
+void EDM4hepReader::setSubParticleIds(std::vector<SimParticle>::iterator begin,
+                                      std::vector<SimParticle>::iterator end) {
   std::vector<std::size_t> numByGeneration;
   numByGeneration.reserve(10);
 
