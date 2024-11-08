@@ -457,9 +457,10 @@ def addFatras(
             inputParticles=inputParticles,
             outputParticles=particlesPreSelected,
         )
-        s.addWhiteboardAlias("particles_selected", particlesPreSelected)
     else:
         particlesPreSelected = inputParticles
+
+    s.addWhiteboardAlias("particles_selected", particlesPreSelected)
 
     # Simulation
     alg = acts.examples.FatrasSimulation(
@@ -483,15 +484,7 @@ def addFatras(
     # Sequencer
     s.addAlgorithm(alg)
 
-    # Output
-    addSimWriters(
-        s,
-        alg.config.outputSimHits,
-        alg.config.outputParticles,
-        outputDirCsv,
-        outputDirRoot,
-        logLevel,
-    )
+    s.addWhiteboardAlias("particles", outputParticles)
 
     # Selector
     if postSelectParticles is not None:
@@ -502,19 +495,28 @@ def addFatras(
             inputParticles=outputParticles,
             outputParticles=particlesPostSelected,
         )
-        s.addWhiteboardAlias("particles_selected", particlesPostSelected)
     else:
         particlesPostSelected = outputParticles
 
-    s.addWhiteboardAlias("particles", outputParticles)
+    s.addWhiteboardAlias("particles_selected", particlesPostSelected)
+
+    # Output
+    addSimWriters(
+        s,
+        alg.config.outputSimHits,
+        particlesPostSelected,
+        outputDirCsv,
+        outputDirRoot,
+        logLevel,
+    )
 
     return s
 
 
 def addSimWriters(
     s: acts.examples.Sequencer,
-    simHits: Optional[str] = None,
-    particlesSimulated="particles_simulated",
+    simHits: str = "simhits",
+    particlesSimulated: str = "particles_simulated",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -666,9 +668,10 @@ def addGeant4(
             inputParticles=inputParticles,
             outputParticles=particlesPreSelected,
         )
-        s.addWhiteboardAlias("particles_selected", particlesPreSelected)
     else:
         particlesPreSelected = inputParticles
+
+    s.addWhiteboardAlias("particles_selected", particlesPreSelected)
 
     if g4DetectorConstructionFactory is None:
         if detector is None:
@@ -710,15 +713,7 @@ def addGeant4(
     # Sequencer
     s.addAlgorithm(alg)
 
-    # Output
-    addSimWriters(
-        s,
-        alg.config.outputSimHits,
-        alg.config.outputParticles,
-        outputDirCsv,
-        outputDirRoot,
-        logLevel,
-    )
+    s.addWhiteboardAlias("particles", outputParticles)
 
     # Selector
     if postSelectParticles is not None:
@@ -729,11 +724,20 @@ def addGeant4(
             inputParticles=outputParticles,
             outputParticles=particlesPostSelected,
         )
-        s.addWhiteboardAlias("particles_selected", particlesPostSelected)
     else:
         particlesPostSelected = outputParticles
 
-    s.addWhiteboardAlias("particles", outputParticles)
+    s.addWhiteboardAlias("particles_selected", particlesPostSelected)
+
+    # Output
+    addSimWriters(
+        s,
+        alg.config.outputSimHits,
+        particlesPostSelected,
+        outputDirCsv,
+        outputDirRoot,
+        logLevel,
+    )
 
     return s
 
