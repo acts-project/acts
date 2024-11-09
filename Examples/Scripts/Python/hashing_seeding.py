@@ -211,7 +211,6 @@ def runHashingSeeding(
         preSelectParticles=ParticleSelectorConfig(
             eta=(-eta, eta),
             pt=(150 * u.MeV, None),
-            removeNeutral=True,
         ),
         postSelectParticles=ParticleSelectorConfig(
             pt=(1.0 * u.GeV, None),

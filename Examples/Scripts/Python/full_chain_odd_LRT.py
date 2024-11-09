@@ -270,7 +270,6 @@ else:
                 absZ=(0.0, 1.0 * u.m),
                 eta=(-3.0, 3.0),
                 pt=(150 * u.MeV, None),
-                removeNeutral=True,
             ),
             postSelectParticles=ParticleSelectorConfig(
                 pt=(1.0 * u.GeV, None),
@@ -295,7 +294,6 @@ else:
                     absZ=(0.0, 1.0 * u.m),
                     eta=(-3.0, 3.0),
                     pt=(150 * u.MeV, None),
-                    removeNeutral=True,
                 )
                 if args.ttbar
                 else ParticleSelectorConfig()
