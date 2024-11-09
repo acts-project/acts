@@ -8,7 +8,15 @@ def parse_args():
     from acts.examples.reconstruction import SeedingAlgorithm
 
     parser = argparse.ArgumentParser(
-        description="Script to test full chain ACTS simulation and reconstruction",
+        description=""""Script to test full chain ACTS simulation and reconstruction.
+
+This script is provided for interactive developer testing only.
+It is not intended (and not supported) for end user use, automated testing,
+and certainly should never be called in production. The Python API is the
+proper way to access the ActsExamples from scripts. The other Examples/Scripts
+are much better examples of how to do that. physmon in the CI is the proper
+way to do automated integration tests. This script is only for the case of
+interactive testing with one-off configuration specified by command-line options.""",
     )
     parser.add_argument(
         "-G",
@@ -29,32 +37,21 @@ def parse_args():
         help="Use ATLAS ITk geometry and config. Requires acts-itk/ in current directory.",
     )
     parser.add_argument(
-        "-n",
-        "--events",
-        type=int,
-        default=100,
-        help="The number of events to process (default=%(default)d).",
+        "-g",
+        "--geant4",
+        action="store_true",
+        help="Use Geant4 instead of Fatras for detector simulation",
     )
     parser.add_argument(
-        "-s",
-        "--skip",
-        type=int,
-        default=0,
-        help="Number of events to skip (default=%(default)d)",
+        "--edm4hep",
+        type=pathlib.Path,
+        help="Use edm4hep inputs",
     )
     parser.add_argument(
-        "-N",
-        "--gen-nparticles",
-        type=int,
-        default=4,
-        help="Number of generated particles per vertex from the particle gun (default=%(default)d).",
-    )
-    parser.add_argument(
-        "-M",
-        "--gen-nvertices",
-        type=int,
-        default=200,
-        help="Number of vertices per event (multiplicity) from the particle gun; or number of pileup events (default=%(default)d)",
+        "-b",
+        "--bf-constant",
+        action="store_true",
+        help="Use constant 2T B-field also for ITk; and don't include material map",
     )
     parser.add_argument(
         "-j",
@@ -62,42 +59,6 @@ def parse_args():
         type=int,
         default=-1,
         help="Number of parallel threads, negative for automatic (default).",
-    )
-    parser.add_argument(
-        "-t",
-        "--ttbar-pu200",
-        action="store_true",
-        help="Generate ttbar + mu=200 pile-up using Pythia8",
-    )
-    parser.add_argument(
-        "-r",
-        "--random-seed",
-        type=int,
-        default=42,
-        help="Random number seed (default=%(default)d)",
-    )
-    parser.add_argument(
-        "-l",
-        "--loglevel",
-        type=int,
-        default=2,
-        help="The output log level. Please set the wished number (0 = VERBOSE, 1 = DEBUG, 2 = INFO (default), 3 = WARNING, 4 = ERROR, 5 = FATAL).",
-    )
-    parser.add_argument(
-        "-p",
-        "--gen-mom-gev",
-        default="1:10",
-        help="pT - transverse momentum generation range in GeV (min:max pT for particle gun; min pT for -t) (default 1:10, except max Pt not used with -t)",
-    )
-    parser.add_argument(
-        "--digi-config",
-        type=pathlib.Path,
-        help="Digitization configuration file",
-    )
-    parser.add_argument(
-        "--material-config",
-        type=pathlib.Path,
-        help="Material map configuration file",
     )
     parser.add_argument(
         "-o",
@@ -115,10 +76,104 @@ def parse_args():
         help="fewer output files. Use -OO for more output files. Use -OOO to disable all output.",
     )
     parser.add_argument(
+        "-c",
+        "--output-csv",
+        action="count",
+        default=0,
+        help="Use CSV output instead of ROOT. Specify -cc to output both.",
+    )
+    parser.add_argument(
+        "-n",
+        "--events",
+        type=int,
+        default=100,
+        help="The number of events to process (default=%(default)d).",
+    )
+    parser.add_argument(
+        "-s",
+        "--skip",
+        type=int,
+        default=0,
+        help="Number of events to skip (default=%(default)d)",
+    )
+    # Many of the following option names were inherited from the old examples binaries and full_chain_odd.py.
+    # To maintain compatibility, both option names are supported.
+    parser.add_argument(
+        "-N",
+        "--gen-nparticles",
+        "--gun-particles",
+        type=int,
+        default=4,
+        help="Number of generated particles per vertex from the particle gun (default=%(default)d).",
+    )
+    parser.add_argument(
+        "-M",
+        "--gen-nvertices",
+        "--gun-multiplicity",
+        "--ttbar-pu",
+        type=int,
+        default=200,
+        help="Number of vertices per event (multiplicity) from the particle gun; or number of pileup events (default=%(default)d)",
+    )
+    parser.add_argument(
+        "-t",
+        "--ttbar-pu200",
+        "--ttbar",
+        action="store_true",
+        help="Generate ttbar + mu=200 pile-up using Pythia8",
+    )
+    parser.add_argument(
+        "-p",
+        "--gen-pt-range",
+        "--gun-pt-range",
+        default="1:10",
+        help="pT - transverse momentum generation range in GeV (min:max pT for particle gun; min pT for -t) (default 1:10, except max Pt not used with -t)",
+    )
+    parser.add_argument(
+        "--gen-eta-range",
+        "--gun-eta-range",
+        help="Eta range (min:max) of the particle gun (default -2:2 (Generic), -3:3 (ODD), -4:4 (ITk))",
+    )
+    parser.add_argument(
+        "--gen-cos-theta",
+        action="store_true",
+        help="Sample eta as cos(theta) and not uniform",
+    )
+    parser.add_argument(
+        "-r",
+        "--random-seed",
+        type=int,
+        default=42,
+        help="Random number seed (default=%(default)d)",
+    )
+    parser.add_argument(
+        "-F",
+        "--disable-fpemon",
+        action="store_true",
+        help="sets ACTS_SEQUENCER_DISABLE_FPEMON=1",
+    )
+    parser.add_argument(
+        "-l",
+        "--loglevel",
+        type=int,
+        default=2,
+        help="The output log level. Please set the wished number (0 = VERBOSE, 1 = DEBUG, 2 = INFO (default), 3 = WARNING, 4 = ERROR, 5 = FATAL).",
+    )
+    parser.add_argument(
         "-d",
         "--dump-args-calls",
         action="store_true",
         help="Show pybind function call details",
+    )
+    parser.add_argument(
+        "--digi-config",
+        type=pathlib.Path,
+        help="Digitization configuration file",
+    )
+    parser.add_argument(
+        "--material-config",
+        type=pathlib.Path,
+        help="Material map configuration file",
     )
     parser.add_argument(
         "-S",
@@ -127,35 +182,6 @@ def parse_args():
         enum=SeedingAlgorithm,
         default=SeedingAlgorithm.Default,
         help="Select the seeding algorithm to use",
-    )
-    parser.add_argument(
-        "-e",
-        "--gen-cos-theta",
-        action="store_true",
-        help="Sample eta as cos(theta) and not uniform",
-    )
-    parser.add_argument(
-        "-b",
-        "--bf-constant",
-        action="store_true",
-        help="Use constant 2T B-field also for ITk; and don't include material map",
-    )
-    parser.add_argument(
-        "--edm4hep",
-        type=pathlib.Path,
-        help="Use edm4hep inputs",
-    )
-    parser.add_argument(
-        "-g",
-        "--geant4",
-        action="store_true",
-        help="Use Geant4 instead of Fatras for detector simulation",
-    )
-    parser.add_argument(
-        "-F",
-        "--disable-fpemon",
-        action="store_true",
-        help="sets ACTS_SEQUENCER_DISABLE_FPEMON=1",
     )
     parser.add_argument(
         "--ckf",
@@ -178,13 +204,7 @@ def parse_args():
     parser.add_argument(
         "--MLSeedFilter",
         action="store_true",
-        help="Use the Ml seed filter to select seed after the seeding step",
-    )
-    parser.add_argument(
-        "-C",
-        "--simple-ckf",
-        action="store_true",
-        help="Turn off CKF features: seed deduplication, two-way CKF, stick on the seed measurements during track finding, max pixel/strip holes",
+        help="Use the ML seed filter to select seed after the seeding step",
     )
     parser.add_argument(
         "--ambi-solver",
@@ -197,14 +217,7 @@ def parse_args():
         "--ambi-config",
         type=pathlib.Path,
         default=pathlib.Path.cwd() / "ambi_config.json",
-        help="Set the configuration file for the Score Based ambiguity resolution",
-    )
-    parser.add_argument(
-        "-c",
-        "--output-csv",
-        action="count",
-        default=0,
-        help="Use CSV output instead of ROOT. Specify -cc to output both.",
+        help="Set the configuration file for the Score Based ambiguity resolution (default=%(default)s)",
     )
     return parser.parse_args()
 
@@ -214,6 +227,7 @@ def full_chain(args):
 
     # keep these in memory after we return the sequence
     global detector, trackingGeometry, decorators, field, rnd
+    global logger
 
     if args.dump_args_calls:
         acts.examples.dump_args_calls(locals())
@@ -237,12 +251,7 @@ def full_chain(args):
         detname = "odd"
 
     u = acts.UnitConstants
-    pt = [float(p) * u.GeV if p != "" else None for p in args.gen_mom_gev.split(":")]
-    if len(pt) == 1:
-        pt.append(pt[0])  # 100 -> 100:100
-    if len(pt) != 2:
-        logger.fatal(f"bad option value: --gen-mom-gev {args.gen_mom_gev}")
-        sys.exit(2)
+    pt = strToRange(args.gen_pt_range, "--gen-pt-range", u.GeV)
 
     if args.output_detail == 3:
         outputDirLess = None
@@ -266,7 +275,7 @@ def full_chain(args):
 
     # fmt: off
     if args.generic_detector:
-        etaRange = (-2.0, 2.0)
+        etaRange = strToRange(args.gen_eta_range, "--gen-eta-range") if args.gen_eta_range else (-2.0, 2.0)
         rhoMax = 24.0 * u.mm
         geo_dir = pathlib.Path(acts.__file__).resolve().parent.parent.parent.parent.parent
         if args.loglevel <= 2: logger.info(f"Load Generic Detector from {geo_dir}")
@@ -277,7 +286,7 @@ def full_chain(args):
         detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
     elif args.odd:
         import acts.examples.odd
-        etaRange = (-3.0, 3.0)
+        etaRange = strToRange(args.gen_eta_range, "--gen-eta-range") if args.gen_eta_range else (-3.0, 3.0)
         rhoMax = 24.0 * u.mm
         beamTime = 1.0 * u.ns
         geo_dir = acts.examples.odd.getOpenDataDetectorDirectory()
@@ -294,7 +303,7 @@ def full_chain(args):
         )
     elif args.itk:
         import acts.examples.itk as itk
-        etaRange = (-4.0, 4.0)
+        etaRange = strToRange(args.gen_eta_range, "--gen-eta-range") if args.gen_eta_range else (-4.0, 4.0)
         rhoMax = 28.0 * u.mm
         beamTime = 5.0 * u.ns
         geo_dir = pathlib.Path("acts-itk")
@@ -583,7 +592,7 @@ def full_chain(args):
             **(dict(
                 seedDeduplication=True,
                 stayOnSeed=True,
-            ) if not args.simple_ckf and args.seeding_algorithm != SeedingAlgorithm.TruthSmeared else {}),
+            ) if args.seeding_algorithm != SeedingAlgorithm.TruthSmeared else {}),
             **(dict(
                 pixelVolumes=[16, 17, 18],
                 stripVolumes=[23, 24, 25],
@@ -606,7 +615,7 @@ def full_chain(args):
                     29,
                     30,  # long strip
                 ],
-            ) if args.odd and not args.simple_ckf else {})
+            ) if args.odd else {})
         )
         # fmt: on
 
@@ -627,7 +636,7 @@ def full_chain(args):
             stripVolumes=[22, 23, 24],
             maxPixelHoles=1,
             maxStripHoles=2,
-        ) if not args.simple_ckf else CkfConfig()
+        )
         # fmt: on
 
     if args.output_detail == 1:
@@ -643,7 +652,6 @@ def full_chain(args):
         field,
         trackSelectorConfig=trackSelectorConfig,
         ckfConfig=ckfConfig,
-        **(dict(twoWay=False) if args.simple_ckf else {}),
         **writeDetail,
         **(dict(writeCovMat=True) if args.output_detail != 1 else {}),
         outputDirRoot=outputDirLessRoot,
@@ -724,6 +732,19 @@ def full_chain(args):
 
     return s
 
+
+def strToRange(s: str, optName: str, unit: float = 1.0):
+    global logger
+    try:
+        range = [float(e) * unit if e != "" else None for e in s.split(":")]
+    except ValueError:
+        range = []
+    if len(range) == 1:
+        range.append(range[0])  # 100 -> 100:100
+    if len(range) != 2:
+        logger.fatal(f"bad option value: {optName} {s}")
+        sys.exit(2)
+    return range
 
 # Graciously taken from https://stackoverflow.com/a/60750535/4280680 (via seeding.py)
 class EnumAction(argparse.Action):
