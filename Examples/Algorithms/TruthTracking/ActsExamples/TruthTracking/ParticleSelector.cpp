@@ -10,8 +10,6 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -56,9 +54,17 @@ ActsExamples::ParticleSelector::ParticleSelector(const Config& config,
                                        << ")");
   ACTS_DEBUG("selection particle m [" << m_cfg.mMin << "," << m_cfg.mMax
                                       << ")");
+  ACTS_DEBUG("selection particle measurements ["
+             << m_cfg.measurementsMin << "," << m_cfg.measurementsMax << ")");
   ACTS_DEBUG("remove charged particles " << m_cfg.removeCharged);
   ACTS_DEBUG("remove neutral particles " << m_cfg.removeNeutral);
   ACTS_DEBUG("remove secondary particles " << m_cfg.removeSecondaries);
+  ACTS_DEBUG("exclude pdgs: ");
+  for (auto pdg : m_cfg.excludeAbsPdgs) {
+    ACTS_DEBUG("  " << pdg);
+  }
+  ACTS_DEBUG("primary vertex ID [" << m_cfg.minPrimaryVertexId << ","
+                                   << m_cfg.maxPrimaryVertexId << ")");
 }
 
 ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
@@ -86,6 +92,9 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     const bool validCharged = (p.charge() != 0) && !m_cfg.removeCharged;
     const bool validCharge = validNeutral || validCharged;
     const bool validSecondary = !m_cfg.removeSecondaries || !p.isSecondary();
+    const bool validPrimaryVertexId =
+        within(p.particleId().vertexPrimary(), m_cfg.minPrimaryVertexId,
+               m_cfg.maxPrimaryVertexId);
 
     nInvalidCharge += static_cast<std::size_t>(!validCharge);
 
@@ -111,7 +120,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
       }
     }
 
-    return validPdg && validCharge && validSecondary && validMeasurementCount &&
+    return validPdg && validCharge && validSecondary && validPrimaryVertexId &&
+           validMeasurementCount &&
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
            within(eta, m_cfg.etaMin, m_cfg.etaMax) &&

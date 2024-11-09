@@ -1,0 +1,84 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#include "ActsExamples/TruthTracking/HitSelector.hpp"
+
+#include "Acts/Utilities/MathHelpers.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+
+ActsExamples::HitSelector::HitSelector(const Config& config,
+                                       Acts::Logging::Level level)
+    : IAlgorithm("HitSelector", level), m_cfg(config) {
+  m_inputHits.initialize(m_cfg.inputHits);
+  m_inputParticlesSelected.maybeInitialize(m_cfg.inputParticlesSelected);
+  m_outputHits.initialize(m_cfg.outputHits);
+
+  ACTS_DEBUG("selection particles " << m_cfg.inputParticlesSelected);
+  ACTS_DEBUG("selection hit x [" << m_cfg.minX << "," << m_cfg.maxX << ")");
+  ACTS_DEBUG("selection hit y [" << m_cfg.minY << "," << m_cfg.maxY << ")");
+  ACTS_DEBUG("selection hit z [" << m_cfg.minZ << "," << m_cfg.maxZ << ")");
+  ACTS_DEBUG("selection hit r [" << m_cfg.minR << "," << m_cfg.maxR << ")");
+  ACTS_DEBUG("selection hit time [" << m_cfg.minTime << "," << m_cfg.maxTime
+                                    << ")");
+  ACTS_DEBUG("selection hit energy loss [" << m_cfg.minEnergyLoss << ","
+                                           << m_cfg.maxEnergyLoss << ")");
+  ACTS_DEBUG("selection primary vertex ID [" << m_cfg.minPrimaryVertexId << ","
+                                             << m_cfg.maxPrimaryVertexId
+                                             << ")");
+}
+
+ActsExamples::ProcessCode ActsExamples::HitSelector::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
+  const SimHitContainer& hits = m_inputHits(ctx);
+  const SimParticleContainer* particlesSelected =
+      m_inputParticlesSelected.isInitialized() ? &m_inputParticlesSelected(ctx)
+                                               : nullptr;
+
+  std::vector<SimHit> unorderedHits;
+  unorderedHits.reserve(hits.size());
+
+  for (const auto& hit : hits) {
+    const double r = Acts::fastHypot(hit.position().x(), hit.position().y());
+    const std::uint64_t primaryVertexId = hit.particleId().vertexPrimary();
+
+    const bool validParticle = (particlesSelected == nullptr) ||
+                               particlesSelected->contains(hit.particleId());
+    const bool validX =
+        (m_cfg.minX <= hit.position().x()) && (hit.position().x() < m_cfg.maxX);
+    const bool validY =
+        (m_cfg.minY <= hit.position().y()) && (hit.position().y() < m_cfg.maxY);
+    const bool validZ =
+        (m_cfg.minZ <= hit.position().z()) && (hit.position().z() < m_cfg.maxZ);
+    const bool validR = (m_cfg.minR <= r) && (r < m_cfg.maxR);
+    const bool validTime =
+        (m_cfg.minTime <= hit.time()) && (hit.time() < m_cfg.maxTime);
+    const bool validEnergyLoss =
+        (m_cfg.minEnergyLoss <= hit.depositedEnergy()) &&
+        (hit.depositedEnergy() < m_cfg.maxEnergyLoss);
+    const bool validPrimaryVertexId =
+        (m_cfg.minPrimaryVertexId <= primaryVertexId) &&
+        (primaryVertexId < m_cfg.maxPrimaryVertexId);
+
+    const bool validHit = validParticle && validX && validY && validZ &&
+                          validR && validTime && validEnergyLoss &&
+                          validPrimaryVertexId;
+    if (validHit) {
+      unorderedHits.push_back(hit);
+    }
+  }
+
+  SimHitContainer selectedHits(unorderedHits.begin(), unorderedHits.end());
+
+  ACTS_DEBUG("selected " << selectedHits.size() << " from " << hits.size()
+                         << " hits");
+
+  m_outputHits(ctx, std::move(selectedHits));
+
+  return ProcessCode::SUCCESS;
+}
