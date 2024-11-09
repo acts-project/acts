@@ -746,6 +746,7 @@ def strToRange(s: str, optName: str, unit: float = 1.0):
         sys.exit(2)
     return range
 
+
 # Graciously taken from https://stackoverflow.com/a/60750535/4280680 (via seeding.py)
 class EnumAction(argparse.Action):
     """
