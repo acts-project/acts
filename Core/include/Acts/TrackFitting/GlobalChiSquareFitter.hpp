@@ -1299,38 +1299,8 @@ class Gx2Fitter {
       track.tipIndex() = tipIndex;
       track.linkForward();
 
-      // Count the material surfaces, to set up the system. In the multiple
-      // scattering case, we need to extend our system.
-      std::size_t nMaterialSurfaces = 0;
-      if (false) {
-        ACTS_DEBUG("Count the valid material surfaces.");
-        for (const auto& trackState : track.trackStates()) {
-          const auto typeFlags = trackState.typeFlags();
-          const bool stateHasMaterial =
-              typeFlags.test(TrackStateFlag::MaterialFlag);
-
-          if (!stateHasMaterial) {
-            continue;
-          }
-
-          // Get and store geoId for the current material surface
-          const GeometryIdentifier geoId =
-              trackState.referenceSurface().geometryId();
-
-          const auto scatteringMapId = scatteringMap.find(geoId);
-          assert(scatteringMapId != scatteringMap.end() &&
-                 "No scattering angles found for material surface.");
-          if (!scatteringMapId->second.materialIsValid()) {
-            continue;
-          }
-
-          nMaterialSurfaces++;
-        }
-      }
-
-      // We need 6 dimensions for the bound parameters and 2 * nMaterialSurfaces
-      // dimensions for the scattering angles.
-      const std::size_t dimsExtendedParams = eBoundSize + 2 * nMaterialSurfaces;
+      // We need 6 dimensions for the bound parameters.
+      const std::size_t dimsExtendedParams = eBoundSize;
 
       // System that we fill with the information gathered by the actor and
       // evaluate later
@@ -1413,20 +1383,6 @@ class Gx2Fitter {
         break;
       }
 
-      if (false) {
-        // update the scattering angles
-        for (std::size_t matSurface = 0; matSurface < nMaterialSurfaces;
-             matSurface++) {
-          const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
-          const GeometryIdentifier geoId = geoIdVector[matSurface];
-          const auto scatteringMapId = scatteringMap.find(geoId);
-          assert(scatteringMapId != scatteringMap.end() &&
-                 "No scattering angles found for material surface.");
-          scatteringMapId->second.scatteringAngles().block<2, 1>(2, 0) +=
-              deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
-        }
-      }
-
       oldChi2sum = extendedSystem.chi2();
     }
     ACTS_DEBUG("Finished to iterate");
@@ -1450,7 +1406,7 @@ class Gx2Fitter {
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
-      gx2fActor.multipleScattering = multipleScattering;
+      gx2fActor.multipleScattering = true;
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
@@ -1508,30 +1464,28 @@ class Gx2Fitter {
       // Count the material surfaces, to set up the system. In the multiple
       // scattering case, we need to extend our system.
       std::size_t nMaterialSurfaces = 0;
-      if (multipleScattering) {
-        ACTS_DEBUG("Count the valid material surfaces.");
-        for (const auto& trackState : track.trackStates()) {
-          const auto typeFlags = trackState.typeFlags();
-          const bool stateHasMaterial =
-              typeFlags.test(TrackStateFlag::MaterialFlag);
+      ACTS_DEBUG("Count the valid material surfaces.");
+      for (const auto& trackState : track.trackStates()) {
+        const auto typeFlags = trackState.typeFlags();
+        const bool stateHasMaterial =
+            typeFlags.test(TrackStateFlag::MaterialFlag);
 
-          if (!stateHasMaterial) {
-            continue;
-          }
-
-          // Get and store geoId for the current material surface
-          const GeometryIdentifier geoId =
-              trackState.referenceSurface().geometryId();
-
-          const auto scatteringMapId = scatteringMap.find(geoId);
-          assert(scatteringMapId != scatteringMap.end() &&
-                 "No scattering angles found for material surface.");
-          if (!scatteringMapId->second.materialIsValid()) {
-            continue;
-          }
-
-          nMaterialSurfaces++;
+        if (!stateHasMaterial) {
+          continue;
         }
+
+        // Get and store geoId for the current material surface
+        const GeometryIdentifier geoId =
+            trackState.referenceSurface().geometryId();
+
+        const auto scatteringMapId = scatteringMap.find(geoId);
+        assert(scatteringMapId != scatteringMap.end() &&
+               "No scattering angles found for material surface.");
+        if (!scatteringMapId->second.materialIsValid()) {
+          continue;
+        }
+
+        nMaterialSurfaces++;
       }
 
       // We need 6 dimensions for the bound parameters and 2 * nMaterialSurfaces
@@ -1548,8 +1502,8 @@ class Gx2Fitter {
       // all stored material in each propagation.
       std::vector<GeometryIdentifier> geoIdVector;
 
-      fillGx2fSystem(track, extendedSystem, multipleScattering, scatteringMap,
-                     geoIdVector, *m_addToSumLogger);
+      fillGx2fSystem(track, extendedSystem, true, scatteringMap, geoIdVector,
+                     *m_addToSumLogger);
 
       chi2sum = extendedSystem.chi2();
 
@@ -1587,22 +1541,24 @@ class Gx2Fitter {
                    << "oldChi2sum = " << oldChi2sum << "\n"
                    << "chi2sum = " << extendedSystem.chi2());
 
-      if (multipleScattering) {
-        // update the scattering angles
-        for (std::size_t matSurface = 0; matSurface < nMaterialSurfaces;
-             matSurface++) {
-          const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
-          const GeometryIdentifier geoId = geoIdVector[matSurface];
-          const auto scatteringMapId = scatteringMap.find(geoId);
-          assert(scatteringMapId != scatteringMap.end() &&
-                 "No scattering angles found for material surface.");
-          scatteringMapId->second.scatteringAngles().block<2, 1>(2, 0) +=
-              deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
-        }
+      // update the scattering angles
+      for (std::size_t matSurface = 0; matSurface < nMaterialSurfaces;
+           matSurface++) {
+        const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
+        const GeometryIdentifier geoId = geoIdVector[matSurface];
+        const auto scatteringMapId = scatteringMap.find(geoId);
+        assert(scatteringMapId != scatteringMap.end() &&
+               "No scattering angles found for material surface.");
+        scatteringMapId->second.scatteringAngles().block<2, 1>(2, 0) +=
+            deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
       }
+
+      chi2sum = extendedSystem.chi2();
 
       // update params
       params.parameters() += deltaParams;
+
+      updateGx2fCovarianceParams(fullCovariancePredicted, extendedSystem);
     }
     ACTS_DEBUG("Finished to evaluate material");
     ACTS_VERBOSE(
