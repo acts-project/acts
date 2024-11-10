@@ -48,9 +48,20 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
     if (m_cfg.outputClusters.empty()) {
       throw std::invalid_argument("Missing cluster output collection");
     }
+    if (m_cfg.outputMeasurementParticlesMap.empty()) {
+      throw std::invalid_argument(
+          "Missing hit-to-particles map output collection");
+    }
+    if (m_cfg.outputMeasurementSimHitsMap.empty()) {
+      throw std::invalid_argument(
+          "Missing hit-to-simulated-hits map output collection");
+    }
 
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
     m_outputClusters.initialize(m_cfg.outputClusters);
+    m_outputMeasurementParticlesMap.initialize(
+        m_cfg.outputMeasurementParticlesMap);
+    m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
   }
 
   if (m_cfg.doOutputCells) {
@@ -125,6 +136,12 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   // need list here for stable addresses
   MeasurementContainer measurements;
   ClusterContainer clusters;
+
+  IndexMultimap<ActsFatras::Barcode> measurementParticlesMap;
+  IndexMultimap<Index> measurementSimHitsMap;
+  measurements.reserve(simHits.size());
+  measurementParticlesMap.reserve(simHits.size());
+  measurementSimHitsMap.reserve(simHits.size());
 
   // Setup random number generator
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
@@ -263,6 +280,13 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
                 measurement.hitIndices()[i] = simHitIdx;
                 measurement.particleIds()[i] =
                     simHits.nth(simHitIdx)->particleId();
+
+                measurementParticlesMap.emplace_hint(
+                    measurementParticlesMap.end(), measurement.index(),
+                    simHits.nth(simHitIdx)->particleId());
+                measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
+                                                   measurement.index(),
+                                                   simHitIdx);
               }
             }
           }
@@ -279,6 +303,9 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   if (m_cfg.doClusterization) {
     m_outputMeasurements(ctx, std::move(measurements));
     m_outputClusters(ctx, std::move(clusters));
+
+    m_outputMeasurementParticlesMap(ctx, std::move(measurementParticlesMap));
+    m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
   }
 
   if (m_cfg.doOutputCells) {

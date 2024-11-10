@@ -136,6 +136,10 @@ class DigitizationConfig {
   std::string outputCells = "cells";
   /// Output cluster collection.
   std::string outputClusters = "clusters";
+  /// Output collection to map measured hits to contributing particles.
+  std::string outputMeasurementParticlesMap = "measurement_particles_map";
+  /// Output collection to map measured hits to simulated hits.
+  std::string outputMeasurementSimHitsMap = "measurement_simhits_map";
 
   /// Map of surface by identifier to allow local - to global
   std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface *>
