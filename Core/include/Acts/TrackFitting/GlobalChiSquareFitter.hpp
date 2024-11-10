@@ -392,10 +392,8 @@ void addMeasurementToGx2fSums(Gx2fSystem& extendedSystem,
   }
 
   // Create an extended Jacobian. This one contains only eBoundSize rows,
-  // because the rest is irrelevant. We fill it in the next steps
+  // because the rest is irrelevant. We fill it in the next steps.
   // TODO make dimsExtendedParams template with unrolling
-
-  // We create an empty Jacobian and fill it in the next steps
   Eigen::MatrixXd extendedJacobian =
       Eigen::MatrixXd::Zero(eBoundSize, extendedSystem.nDims());
 
@@ -566,10 +564,11 @@ void addMaterialToGx2fSums(
 ///
 /// @tparam track_proxy_t The type of the track proxy
 ///
-/// @param track A mutable track proxy to operate on
+/// @param track A constant track proxy to inspect
 /// @param extendedSystem All parameters of the current equation system
 /// @param multipleScattering Flag to consider multiple scattering in the calculation
-/// @param scatteringMap Map of geometry identifiers to scattering properties, containing all scattering angles and covariances
+/// @param scatteringMap Map of geometry identifiers to scattering properties,
+///        containing scattering angles and validation status
 /// @param geoIdVector A vector to store geometry identifiers for tracking processed elements
 /// @param logger A logger instance
 template <TrackProxyConcept track_proxy_t>
