@@ -9,7 +9,7 @@
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <TEfficiency.h>
 
@@ -66,7 +66,7 @@ void ActsExamples::EffPlotTool::write(
 }
 
 void ActsExamples::EffPlotTool::fill(EffPlotTool::EffPlotCache& effPlotCache,
-                                     const ActsFatras::Particle& truthParticle,
+                                     const SimParticleState& truthParticle,
                                      double deltaR, bool status) const {
   const auto t_phi = phi(truthParticle.direction());
   const auto t_eta = eta(truthParticle.direction());

@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
@@ -28,12 +27,8 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4/SteppingActionList.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
 
-#include <cassert>
-#include <cstddef>
 #include <iostream>
-#include <map>
 #include <stdexcept>
 #include <utility>
 
@@ -134,14 +129,6 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
     // Start simulation. each track is simulated as a separate Geant4 event.
     runManager().BeamOn(1);
   }
-
-  // Since these are std::set, this ensures that each particle is in both sets
-  throw_assert(
-      eventStore().particlesInitial.size() ==
-          eventStore().particlesFinal.size(),
-      "initial and final particle collections does not have the same size: "
-          << eventStore().particlesInitial.size() << " vs "
-          << eventStore().particlesFinal.size());
 
   // Print out warnings about possible particle collision if happened
   if (eventStore().particleIdCollisionsInitial > 0 ||
@@ -298,8 +285,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
 
   m_inputParticles.initialize(cfg.inputParticles);
   m_outputSimHits.initialize(cfg.outputSimHits);
-  m_outputParticlesInitial.initialize(cfg.outputParticlesInitial);
-  m_outputParticlesFinal.initialize(cfg.outputParticlesFinal);
+  m_outputParticles.initialize(cfg.outputParticles);
 }
 
 ActsExamples::Geant4Simulation::~Geant4Simulation() = default;
@@ -312,12 +298,9 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
   }
 
   // Output handling: Simulation
-  m_outputParticlesInitial(
-      ctx, SimParticleContainer(eventStore().particlesInitial.begin(),
-                                eventStore().particlesInitial.end()));
-  m_outputParticlesFinal(
-      ctx, SimParticleContainer(eventStore().particlesFinal.begin(),
-                                eventStore().particlesFinal.end()));
+  m_outputParticles(
+      ctx, SimParticleContainer(eventStore().particlesSimulated.begin(),
+                                eventStore().particlesSimulated.end()));
 
 #if BOOST_VERSION < 107800
   SimHitContainer container;
