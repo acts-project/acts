@@ -87,14 +87,14 @@ def test_pythia8(tmp_path, seq, assert_root_hash):
 
     (tmp_path / "csv").mkdir()
 
-    assert not (tmp_path / "pythia8_particles.root").exists()
+    assert not (tmp_path / "particles.root").exists()
     assert len(list((tmp_path / "csv").iterdir())) == 0
 
     events = seq.config.events
 
     runPythia8(str(tmp_path), outputRoot=True, outputCsv=True, s=seq).run()
 
-    fp = tmp_path / "pythia8_particles.root"
+    fp = tmp_path / "particles.root"
     assert fp.exists()
     assert fp.stat().st_size > 2**10 * 50
     assert_entries(fp, "particles", events)
@@ -1146,7 +1146,7 @@ def test_ckf_tracks_example(
 
     root_files = [
         (
-            "performance_ckf.root",
+            "performance_finding_ckf.root",
             None,
         ),
         (
@@ -1290,7 +1290,7 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
 def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     # This test literally only ensures that the full chain example can run without erroring out
 
-    root_file = "performance_ambiML.root"
+    root_file = "performance_finding_ambiML.root"
     output_dir = "odd_output"
     assert not (tmp_path / root_file).exists()
 

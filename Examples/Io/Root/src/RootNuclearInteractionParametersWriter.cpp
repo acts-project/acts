@@ -227,7 +227,7 @@ std::pair<std::vector<float>, std::vector<std::uint32_t>> buildMap(
 }
 
 /// @brief This method builds decomposed cumulative probability distributions
-/// out of a vector of proability distributions
+/// out of a vector of probability distributions
 ///
 /// @param [in] histos Vector of probability distributions
 ///
@@ -410,27 +410,27 @@ ActsExamples::RootNuclearInteractionParametersWriter::finalize() {
   gDirectory->WriteObject(&mapNIprob.second, "NuclearInteractionBinContents");
   ACTS_DEBUG("Nuclear interaction probability parametrised");
 
-  ACTS_DEBUG("Starting calulcation of probability of interaction type");
-  // Write the interaction type proability
+  ACTS_DEBUG("Starting calculation of probability of interaction type");
+  // Write the interaction type probability
   const auto softProbability =
       Parametrisation::softProbability(m_eventFractionCollection);
 
   gDirectory->WriteObject(&softProbability, "SoftInteraction");
-  ACTS_DEBUG("Calulcation of probability of interaction type finished");
+  ACTS_DEBUG("Calculation of probability of interaction type finished");
 
   // Write the PDG id production distribution
   ACTS_DEBUG(
-      "Starting calulcation of transition probabilities between PDG IDs");
+      "Starting calculation of transition probabilities between PDG IDs");
   const auto pdgIdMap =
       Parametrisation::cumulativePDGprobability(m_eventFractionCollection);
   std::vector<int> branchingPdgIds;
   std::vector<int> targetPdgIds;
   std::vector<float> targetPdgProbability;
-  for (const auto& targetPdgIdMap : pdgIdMap) {
-    for (const auto& producedPdgIdMap : targetPdgIdMap.second) {
-      branchingPdgIds.push_back(targetPdgIdMap.first);
-      targetPdgIds.push_back(producedPdgIdMap.first);
-      targetPdgProbability.push_back(producedPdgIdMap.second);
+  for (const auto& [targetKey, targetValue] : pdgIdMap) {
+    for (const auto& [producedKey, producedValue] : targetValue) {
+      branchingPdgIds.push_back(targetKey);
+      targetPdgIds.push_back(producedKey);
+      targetPdgProbability.push_back(producedValue);
     }
   }
 
@@ -438,7 +438,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::finalize() {
   gDirectory->WriteObject(&targetPdgIds, "TargetPdgIds");
   gDirectory->WriteObject(&targetPdgProbability, "TargetPdgProbability");
   ACTS_DEBUG(
-      "Calulcation of transition probabilities between PDG IDs finished");
+      "Calculation of transition probabilities between PDG IDs finished");
 
   // Write the multiplicity and kinematics distribution
   ACTS_DEBUG("Starting parametrisation of multiplicity probabilities");

@@ -12,11 +12,11 @@
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
 
 #include <cmath>
 #include <functional>
 #include <limits>
-#include <numeric>
 #include <ostream>
 #include <vector>
 
@@ -419,7 +419,7 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
 
   auto absEta = [&]() {
     if (_absEta == kUnset) {
-      _eta = -std::log(std::tan(theta / 2));
+      _eta = AngleHelpers::etaFromTheta(theta);
       _absEta = std::abs(_eta);
     }
     return _absEta;
@@ -427,8 +427,9 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
 
   const Config* cutsPtr{nullptr};
   if (!m_isUnbinned) {
-    if (absEta() < m_cfg.absEtaEdges.front() ||
-        _absEta >= m_cfg.absEtaEdges.back()) {
+    // return false if |eta| is outside its range, or nan.
+    if (!(absEta() >= m_cfg.absEtaEdges.front() &&
+          _absEta < m_cfg.absEtaEdges.back())) {
       return false;
     }
     cutsPtr = &m_cfg.getCuts(_eta);

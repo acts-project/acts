@@ -253,8 +253,8 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   VolumeMaterialMap volumeMap = maps.second;
   std::vector<std::pair<GeometryIdentifier, const IVolumeMaterial*>>
       mapVolumeInit;
-  for (auto it = volumeMap.begin(); it != volumeMap.end(); it++) {
-    mapVolumeInit.push_back({it->first, it->second.get()});
+  for (const auto& [key, value] : volumeMap) {
+    mapVolumeInit.push_back({key, value.get()});
   }
   GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap(
       mapVolumeInit);
@@ -263,8 +263,8 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   SurfaceMaterialMap surfaceMap = maps.first;
   std::vector<std::pair<GeometryIdentifier, const ISurfaceMaterial*>>
       mapSurfaceInit;
-  for (auto it = surfaceMap.begin(); it != surfaceMap.end(); it++) {
-    mapSurfaceInit.push_back({it->first, it->second.get()});
+  for (const auto& [key, value] : surfaceMap) {
+    mapSurfaceInit.push_back({key, value.get()});
   }
   GeometryHierarchyMap<const ISurfaceMaterial*> hierarchySurfaceMap(
       mapSurfaceInit);

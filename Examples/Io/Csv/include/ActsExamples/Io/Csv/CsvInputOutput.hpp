@@ -236,7 +236,7 @@ class DsvReader {
   /// Open a file at the given path.
   ///
   /// \param path Path to the input file
-  DsvReader(const std::string& path);
+  explicit DsvReader(const std::string& path);
 
   /// Read the next line from the file.
   ///

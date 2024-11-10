@@ -44,7 +44,7 @@ class RandomNumbers {
     std::uint64_t seed = 1234567890u;  ///< random seed
   };
 
-  RandomNumbers(const Config& cfg);
+  explicit RandomNumbers(const Config& cfg);
 
   /// Spawn an algorithm-local random number generator. To avoid inefficiencies
   /// and multiple uses of a given RNG seed, this should only be done once per
