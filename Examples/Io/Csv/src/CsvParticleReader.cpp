@@ -63,10 +63,10 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
   ParticleData data;
 
   while (reader.read(data)) {
-    ActsFatras::Particle particle(ActsFatras::Barcode(data.particle_id),
-                                  Acts::PdgParticle{data.particle_type},
-                                  data.q * Acts::UnitConstants::e,
-                                  data.m * Acts::UnitConstants::GeV);
+    SimParticleState particle(ActsFatras::Barcode(data.particle_id),
+                              Acts::PdgParticle{data.particle_type},
+                              data.q * Acts::UnitConstants::e,
+                              data.m * Acts::UnitConstants::GeV);
     particle.setProcess(static_cast<ActsFatras::ProcessType>(data.process));
     particle.setPosition4(
         data.vx * Acts::UnitConstants::mm, data.vy * Acts::UnitConstants::mm,
@@ -75,7 +75,7 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
     particle.setDirection(data.px, data.py, data.pz);
     particle.setAbsoluteMomentum(std::hypot(data.px, data.py, data.pz) *
                                  Acts::UnitConstants::GeV);
-    unordered.push_back(std::move(particle));
+    unordered.push_back(SimParticle(particle, particle));
   }
 
   // Write ordered particles container to the EventStore
