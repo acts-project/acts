@@ -1453,8 +1453,7 @@ class Gx2Fitter {
       // be empty and the following operations would be invalid. Usually, this
       // only happens during the first iteration, due to bad initial parameters.
       if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
-        ACTS_INFO("Did not find any measurements in nUpdate "
-                  << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
+        ACTS_INFO("Did not find any measurements in material fit.");
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
@@ -1541,6 +1540,11 @@ class Gx2Fitter {
                    << "oldChi2sum = " << oldChi2sum << "\n"
                    << "chi2sum = " << extendedSystem.chi2());
 
+      chi2sum = extendedSystem.chi2();
+
+      // update params
+      params.parameters() += deltaParams;
+
       // update the scattering angles
       for (std::size_t matSurface = 0; matSurface < nMaterialSurfaces;
            matSurface++) {
@@ -1552,11 +1556,6 @@ class Gx2Fitter {
         scatteringMapId->second.scatteringAngles().block<2, 1>(2, 0) +=
             deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
       }
-
-      chi2sum = extendedSystem.chi2();
-
-      // update params
-      params.parameters() += deltaParams;
 
       updateGx2fCovarianceParams(fullCovariancePredicted, extendedSystem);
     }
