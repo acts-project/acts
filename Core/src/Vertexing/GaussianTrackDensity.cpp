@@ -10,7 +10,8 @@
 
 #include "Acts/Vertexing/VertexingError.hpp"
 
-#include <math.h>
+#include <cmath>
+#include <numbers>
 
 namespace Acts {
 
@@ -124,7 +125,7 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
     discriminant = std::sqrt(discriminant);
     const double zMax = (-linearTerm - discriminant) / (2. * quadraticTerm);
     const double zMin = (-linearTerm + discriminant) / (2. * quadraticTerm);
-    constantTerm -= std::log(2. * M_PI * std::sqrt(covDeterminant));
+    constantTerm -= std::log(2. * std::numbers::pi * std::sqrt(covDeterminant));
 
     state.trackEntries.emplace_back(z0, constantTerm, linearTerm, quadraticTerm,
                                     zMin, zMax);

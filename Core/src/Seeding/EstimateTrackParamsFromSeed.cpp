@@ -10,10 +10,12 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 
+#include <numbers>
+
 Acts::BoundMatrix Acts::estimateTrackParamCovariance(
     const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
     bool hasTime) {
-  assert((params[eBoundTheta] > 0 && params[eBoundTheta] < M_PI) &&
+  assert((params[eBoundTheta] > 0 && params[eBoundTheta] < std::numbers::pi) &&
          "Theta must be in the range (0, pi)");
 
   BoundSquareMatrix result = BoundSquareMatrix::Zero();

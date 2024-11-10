@@ -19,6 +19,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <numbers>
 #include <utility>
 
 Acts::TGeoCylinderDiscSplitter::TGeoCylinderDiscSplitter(
@@ -54,7 +55,7 @@ Acts::TGeoCylinderDiscSplitter::split(
       ActsScalar discMinR = boundValues[Acts::RadialBounds::eMinR];
       ActsScalar discMaxR = boundValues[Acts::RadialBounds::eMaxR];
 
-      ActsScalar phiStep = 2 * M_PI / m_cfg.discPhiSegments;
+      ActsScalar phiStep = 2 * std::numbers::pi / m_cfg.discPhiSegments;
       ActsScalar cosPhiHalf = std::cos(0.5 * phiStep);
       ActsScalar sinPhiHalf = std::sin(0.5 * phiStep);
 
@@ -86,11 +87,11 @@ Acts::TGeoCylinderDiscSplitter::split(
 
         for (int im = 0; im < m_cfg.discPhiSegments; ++im) {
           // Get the moduleTransform
-          ActsScalar phi = -M_PI + im * phiStep;
-          auto tgTransform =
-              Transform3(Translation3(hR * std::cos(phi), hR * std::sin(phi),
-                                      discCenter.z()) *
-                         AngleAxis3(phi - 0.5 * M_PI, Vector3::UnitZ()));
+          ActsScalar phi = -std::numbers::pi + im * phiStep;
+          auto tgTransform = Transform3(
+              Translation3(hR * std::cos(phi), hR * std::sin(phi),
+                           discCenter.z()) *
+              AngleAxis3(phi - std::numbers::pi / 2., Vector3::UnitZ()));
 
           // Create a new detector element per split
           auto tgDetectorElement = std::make_shared<Acts::TGeoDetectorElement>(
@@ -120,7 +121,7 @@ Acts::TGeoCylinderDiscSplitter::split(
       ActsScalar cylinderHalfZ =
           boundValues[Acts::CylinderBounds::eHalfLengthZ];
 
-      ActsScalar phiStep = 2 * M_PI / m_cfg.cylinderPhiSegments;
+      ActsScalar phiStep = 2 * std::numbers::pi / m_cfg.cylinderPhiSegments;
       ActsScalar cosPhiHalf = std::cos(0.5 * phiStep);
       ActsScalar sinPhiHalf = std::sin(0.5 * phiStep);
 
@@ -151,7 +152,7 @@ Acts::TGeoCylinderDiscSplitter::split(
 
         for (int im = 0; im < m_cfg.cylinderPhiSegments; ++im) {
           // Get the moduleTransform
-          ActsScalar phi = -M_PI + im * phiStep;
+          ActsScalar phi = -std::numbers::pi + im * phiStep;
           ActsScalar cosPhi = std::cos(phi);
           ActsScalar sinPhi = std::sin(phi);
           ActsScalar planeX = planeR * cosPhi;
