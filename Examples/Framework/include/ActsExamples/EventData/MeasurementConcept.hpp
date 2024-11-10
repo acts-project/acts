@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <concepts>
@@ -22,5 +21,10 @@ concept MeasurementConcept = requires(const T& m) {
   { m.subspaceIndexVector() };
   { m.parameters() };
   { m.covariance() };
+  { m.hasHitIndices() } -> std::same_as<bool>;
+  { m.hitIndices() };
+  { m.hasParticleIds() } -> std::same_as<bool>;
+  { m.particleIds() };
 };
+
 }  // namespace ActsExamples

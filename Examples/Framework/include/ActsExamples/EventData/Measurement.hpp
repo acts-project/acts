@@ -10,26 +10,17 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/EventData/detail/CalculateResiduals.hpp"
-#include "Acts/EventData/detail/ParameterTraits.hpp"
-#include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Iterator.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementConcept.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
-#include <array>
-#include <compare>
-#include <concepts>
 #include <cstddef>
-#include <iosfwd>
-#include <iterator>
 #include <type_traits>
-#include <variant>
 #include <vector>
 
 #include <boost/container/static_vector.hpp>
@@ -168,6 +159,8 @@ class MeasurementContainer {
     std::size_t subspaceIndexOffset{};
     std::size_t parameterOffset{};
     std::size_t covarianceOffset{};
+    std::pair<std::size_t, std::size_t> hitIndexRange{};
+    std::pair<std::size_t, std::size_t> particleIdRange{};
     std::uint8_t size{};
   };
 
@@ -177,6 +170,8 @@ class MeasurementContainer {
   std::vector<std::uint8_t> m_subspaceIndices;
   std::vector<double> m_parameters;
   std::vector<double> m_covariances;
+  std::vector<std::size_t> m_hitIndices;
+  std::vector<SimBarcode> m_particleIds;
 
   OrderedIndices m_orderedIndices;
 };
@@ -268,6 +263,90 @@ class MeasurementProxyBase {
     return self().subspaceHelper().expandMatrix(self().covariance());
   }
 
+  bool hasHitIndices() const {
+    const auto& entry = container().m_entries.at(m_index);
+    return entry.hitIndexRange.first != entry.hitIndexRange.second;
+  }
+
+  std::span<std::size_t> allocateHitIndices(std::size_t size)
+    requires(!ReadOnly)
+  {
+    if (hasHitIndices()) {
+      throw std::runtime_error("Hit indices already allocated");
+    }
+
+    auto& entry = container().m_entries.at(m_index);
+    entry.hitIndexRange.first = container().m_hitIndices.size();
+    entry.hitIndexRange.second = size;
+    container().m_hitIndices.resize(entry.hitIndexRange.first + size);
+
+    return hitIndices();
+  }
+
+  std::span<std::size_t> hitIndices()
+    requires(!ReadOnly)
+  {
+    if (!hasHitIndices()) {
+      throw std::runtime_error("Hit indices not allocated");
+    }
+
+    const auto& entry = container().m_entries.at(m_index);
+    return {container().m_hitIndices.data() + entry.hitIndexRange.first,
+            entry.hitIndexRange.second};
+  }
+
+  std::span<const std::size_t> hitIndices() const {
+    if (!hasHitIndices()) {
+      throw std::runtime_error("Hit indices not allocated");
+    }
+
+    const auto& entry = container().m_entries.at(m_index);
+    return {container().m_hitIndices.data() + entry.hitIndexRange.first,
+            entry.hitIndexRange.second};
+  }
+
+  bool hasParticleIds() const {
+    const auto& entry = container().m_entries.at(m_index);
+    return entry.particleIdRange.first != entry.particleIdRange.second;
+  }
+
+  std::span<SimBarcode> allocateParticleIds(std::size_t size)
+    requires(!ReadOnly)
+  {
+    if (hasParticleIds()) {
+      throw std::runtime_error("Particle IDs already allocated");
+    }
+
+    auto& entry = container().m_entries.at(m_index);
+    entry.particleIdRange.first = container().m_particleIds.size();
+    entry.particleIdRange.second = size;
+    container().m_particleIds.resize(entry.particleIdRange.first + size);
+
+    return particleIds();
+  }
+
+  std::span<SimBarcode> particleIds()
+    requires(!ReadOnly)
+  {
+    if (!hasParticleIds()) {
+      throw std::runtime_error("Particle IDs not allocated");
+    }
+
+    const auto& entry = container().m_entries.at(m_index);
+    return {container().m_particleIds.data() + entry.particleIdRange.first,
+            entry.particleIdRange.second};
+  }
+
+  std::span<const SimBarcode> particleIds() const {
+    if (!hasParticleIds()) {
+      throw std::runtime_error("Particle IDs not allocated");
+    }
+
+    const auto& entry = container().m_entries.at(m_index);
+    return {container().m_particleIds.data() + entry.particleIdRange.first,
+            entry.particleIdRange.second};
+  }
+
   /// @brief Construct the measurement from a subspace vector,
   /// parameters, and covariance.
   ///
@@ -292,6 +371,16 @@ class MeasurementProxyBase {
   {
     assert(size() == other.size() && "Size mismatch");
     fill(other.subspaceIndexVector(), other.parameters(), other.covariance());
+    if (other.hasHitIndices()) {
+      allocateHitIndices(other.hitIndices().size());
+      std::copy(other.hitIndices().begin(), other.hitIndices().end(),
+                hitIndices().begin());
+    }
+    if (other.hasParticleIds()) {
+      allocateParticleIds(other.particleIds().size());
+      std::copy(other.particleIds().begin(), other.particleIds().end(),
+                particleIds().begin());
+    }
   }
 
   /// @brief Copy the data from another measurement

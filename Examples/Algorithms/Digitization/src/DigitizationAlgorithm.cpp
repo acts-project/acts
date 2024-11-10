@@ -11,27 +11,15 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsExamples/Utilities/GroupBy.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Hit.hpp"
 
 #include <algorithm>
 #include <array>
-#include <cmath>
-#include <cstdint>
 #include <limits>
 #include <ostream>
-#include <set>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -60,21 +48,9 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
     if (m_cfg.outputClusters.empty()) {
       throw std::invalid_argument("Missing cluster output collection");
     }
-    if (m_cfg.outputMeasurementParticlesMap.empty()) {
-      throw std::invalid_argument(
-          "Missing hit-to-particles map output collection");
-    }
-    if (m_cfg.outputMeasurementSimHitsMap.empty()) {
-      throw std::invalid_argument(
-          "Missing hit-to-simulated-hits map output collection");
-    }
 
-    m_measurementWriteHandle.initialize(m_cfg.outputMeasurements);
-    m_clusterWriteHandle.initialize(m_cfg.outputClusters);
-    m_measurementParticlesMapWriteHandle.initialize(
-        m_cfg.outputMeasurementParticlesMap);
-    m_measurementSimHitsMapWriteHandle.initialize(
-        m_cfg.outputMeasurementSimHitsMap);
+    m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+    m_outputClusters.initialize(m_cfg.outputClusters);
   }
 
   if (m_cfg.doOutputCells) {
@@ -82,10 +58,10 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
       throw std::invalid_argument("Missing cell output collection");
     }
 
-    m_cellsWriteHandle.initialize(m_cfg.outputCells);
+    m_outputCells.initialize(m_cfg.outputCells);
   }
 
-  m_simContainerReadHandle.initialize(m_cfg.inputSimHits);
+  m_inputHits.initialize(m_cfg.inputSimHits);
 
   // Create the digitizers from the configuration
   std::vector<std::pair<Acts::GeometryIdentifier, Digitizer>> digitizerInput;
@@ -142,18 +118,13 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
 ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Retrieve input
-  const auto& simHits = m_simContainerReadHandle(ctx);
+  const auto& simHits = m_inputHits(ctx);
   ACTS_DEBUG("Loaded " << simHits.size() << " sim hits");
 
   // Prepare output containers
   // need list here for stable addresses
   MeasurementContainer measurements;
   ClusterContainer clusters;
-  IndexMultimap<ActsFatras::Barcode> measurementParticlesMap;
-  IndexMultimap<Index> measurementSimHitsMap;
-  measurements.reserve(simHits.size());
-  measurementParticlesMap.reserve(simHits.size());
-  measurementSimHitsMap.reserve(simHits.size());
 
   // Setup random number generator
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
@@ -271,7 +242,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
           // Store the cell data into a map.
           if (m_cfg.doOutputCells) {
             std::vector<Cluster::Cell> cells;
-            for (const auto& [dParameters, simhits] :
+            for (const auto& [dParameters, simHitsIdxs] :
                  digitizeParametersResult) {
               for (const auto& cell : dParameters.cluster.channels) {
                 cells.push_back(cell);
@@ -281,21 +252,17 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
           }
 
           if (m_cfg.doClusterization) {
-            for (auto& [dParameters, simhits] : digitizeParametersResult) {
-              // The measurement container is unordered and the index under
-              // which the measurement will be stored is known before adding it.
-              Index measurementIdx = measurements.size();
-
-              createMeasurement(measurements, moduleGeoId, dParameters);
+            for (auto& [dParameters, simHitsIdxs] : digitizeParametersResult) {
+              auto measurement =
+                  createMeasurement(measurements, moduleGeoId, dParameters);
               clusters.emplace_back(std::move(dParameters.cluster));
-              // this digitization does hit merging so there can be more than
-              // one mapping entry for each digitized hit.
-              for (auto simHitIdx : simhits) {
-                measurementParticlesMap.emplace_hint(
-                    measurementParticlesMap.end(), measurementIdx,
-                    simHits.nth(simHitIdx)->particleId());
-                measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
-                                                   measurementIdx, simHitIdx);
+
+              measurement.allocateHitIndices(simHitsIdxs.size());
+              measurement.allocateParticleIds(simHitsIdxs.size());
+              for (auto [i, simHitIdx] : Acts::enumerate(simHitsIdxs)) {
+                measurement.hitIndices()[i] = simHitIdx;
+                measurement.particleIds()[i] =
+                    simHits.nth(simHitIdx)->particleId();
               }
             }
           }
@@ -309,16 +276,13 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
         << " skipped in Digitization. Enable DEBUG mode to see more details.");
   }
 
-  if (m_cfg.doOutputCells) {
-    m_cellsWriteHandle(ctx, std::move(cellsMap));
+  if (m_cfg.doClusterization) {
+    m_outputMeasurements(ctx, std::move(measurements));
+    m_outputClusters(ctx, std::move(clusters));
   }
 
-  if (m_cfg.doClusterization) {
-    m_measurementWriteHandle(ctx, std::move(measurements));
-    m_clusterWriteHandle(ctx, std::move(clusters));
-    m_measurementParticlesMapWriteHandle(ctx,
-                                         std::move(measurementParticlesMap));
-    m_measurementSimHitsMapWriteHandle(ctx, std::move(measurementSimHitsMap));
+  if (m_cfg.doOutputCells) {
+    m_outputCells(ctx, std::move(cellsMap));
   }
 
   return ProcessCode::SUCCESS;

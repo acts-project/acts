@@ -8,16 +8,12 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -29,16 +25,9 @@
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <cstddef>
-#include <memory>
 #include <string>
-#include <tuple>
-#include <utility>
 #include <variant>
 #include <vector>
-
-namespace ActsFatras {
-class Barcode;
-}  // namespace ActsFatras
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -98,17 +87,12 @@ class DigitizationAlgorithm final : public IAlgorithm {
   using CellsMap =
       std::map<Acts::GeometryIdentifier, std::vector<Cluster::Cell>>;
 
-  ReadDataHandle<SimHitContainer> m_simContainerReadHandle{this,
-                                                           "SimHitContainer"};
+  ReadDataHandle<SimHitContainer> m_inputHits{this, "InputHits"};
 
-  WriteDataHandle<MeasurementContainer> m_measurementWriteHandle{
-      this, "Measurements"};
-  WriteDataHandle<CellsMap> m_cellsWriteHandle{this, "Cells"};
-  WriteDataHandle<ClusterContainer> m_clusterWriteHandle{this, "Clusters"};
-  WriteDataHandle<IndexMultimap<ActsFatras::Barcode>>
-      m_measurementParticlesMapWriteHandle{this, "MeasurementParticlesMap"};
-  WriteDataHandle<IndexMultimap<Index>> m_measurementSimHitsMapWriteHandle{
-      this, "MeasurementSimHitsMap"};
+  WriteDataHandle<MeasurementContainer> m_outputMeasurements{
+      this, "OutputMeasurements"};
+  WriteDataHandle<CellsMap> m_outputCells{this, "OutputCells"};
+  WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
 
   /// Construct a fixed-size smearer from a configuration.
   ///

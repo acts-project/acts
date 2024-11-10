@@ -28,8 +28,12 @@ void MeasurementContainer::reserve(std::size_t size) {
 
 std::size_t MeasurementContainer::addMeasurement(
     std::uint8_t size, Acts::GeometryIdentifier geometryId) {
-  m_entries.push_back({m_subspaceIndices.size(), m_parameters.size(),
-                       m_covariances.size(), size});
+  m_entries.push_back({m_subspaceIndices.size(),
+                       m_parameters.size(),
+                       m_covariances.size(),
+                       {},
+                       {},
+                       size});
   m_geometryIds.emplace_back(geometryId);
   m_subspaceIndices.resize(m_subspaceIndices.size() + size);
   m_parameters.resize(m_parameters.size() + size);
