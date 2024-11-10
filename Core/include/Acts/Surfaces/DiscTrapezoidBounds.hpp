@@ -18,6 +18,7 @@
 #include <array>
 #include <cmath>
 #include <iosfwd>
+#include <numbers>
 #include <stdexcept>
 #include <vector>
 
@@ -52,7 +53,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @param avgPhi average phi value
   /// @param stereo optional stero angle applied
   DiscTrapezoidBounds(double halfXminR, double halfXmaxR, double minR,
-                      double maxR, double avgPhi = M_PI_2,
+                      double maxR, double avgPhi = std::numbers::pi / 2.,
                       double stereo = 0.) noexcept(false);
 
   /// Constructor - from fixed size array

@@ -20,6 +20,7 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 using namespace Acts::Experimental;
@@ -103,7 +104,7 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   testDetectorVolumeUpdate(*cTubePortals[3], innerPos, -innerDir, nullptr);
 
   // Sectoral tube cylinder
-  Acts::ActsScalar alpha = 0.25 * M_PI;
+  Acts::ActsScalar alpha = std::numbers::pi / 4.;
   Acts::ActsScalar r = 50;
 
   Acts::Vector3 negPhiSecPos(r * std::cos(-alpha), r * std::sin(-alpha), 0.);
