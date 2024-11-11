@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numbers>
 #include <utility>
 
 void Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
@@ -62,7 +63,8 @@ Acts::Extent Acts::Polyhedron::extent(const Transform3& transform) const {
       }
       if (detail::VerticesHelper::isInsidePolygon(origin, tface)) {
         extent.range(BinningValue::binR).setMin(0.);
-        extent.range(BinningValue::binPhi).set(-M_PI, M_PI);
+        extent.range(BinningValue::binPhi)
+            .set(-std::numbers::pi, std::numbers::pi);
         break;
       }
     }

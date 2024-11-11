@@ -7,12 +7,14 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <concepts>
+#include <numbers>
 
 template <typename external_spacepoint_t>
 Acts::CylindricalSpacePointGrid<external_spacepoint_t>
 Acts::CylindricalSpacePointGridCreator::createGrid(
     const Acts::CylindricalSpacePointGridConfig& config,
-    const Acts::CylindricalSpacePointGridOptions& options) {
+    const Acts::CylindricalSpacePointGridOptions& options,
+    const Acts::Logger& logger) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "CylindricalSpacePointGridConfig not in ACTS internal units in "
@@ -30,6 +32,9 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
   // for no magnetic field, create 100 phi-bins
   if (options.bFieldInZ == 0) {
     phiBins = 100;
+    ACTS_VERBOSE(
+        "B-Field is 0 (z-coordinate), setting the number of bins in phi to "
+        << phiBins);
   } else {
     // calculate circle intersections of helix and max detector radius
     float minHelixRadius =
@@ -39,7 +44,7 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
                               // = pT[MeV] / (300 *Bz[kT])
 
     // sanity check: if yOuter takes the square root of a negative number
-    if (minHelixRadius < config.rMax / 2) {
+    if (minHelixRadius < config.rMax * 0.5) {
       throw std::domain_error(
           "The value of minHelixRadius cannot be smaller than rMax / 2. Please "
           "check the configuration of bFieldInZ and minPt");
@@ -87,16 +92,14 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
 
     // divide 2pi by angle delta to get number of phi-bins
     // size is always 2pi even for regions of interest
-    phiBins = static_cast<int>(std::ceil(2 * M_PI / deltaPhi));
+    phiBins = static_cast<int>(std::ceil(2 * std::numbers::pi / deltaPhi));
     // need to scale the number of phi bins accordingly to the number of
     // consecutive phi bins in the seed making step.
     // Each individual bin should be approximately a fraction (depending on this
     // number) of the maximum expected azimutal deflection.
 
     // set protection for large number of bins, by default it is large
-    if (phiBins > config.maxPhiBins) {
-      phiBins = config.maxPhiBins;
-    }
+    phiBins = std::min(phiBins, config.maxPhiBins);
   }
 
   Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
@@ -141,6 +144,12 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
 
   Axis<AxisType::Variable, AxisBoundaryType::Open> zAxis(std::move(zValues));
   Axis<AxisType::Variable, AxisBoundaryType::Open> rAxis(std::move(rValues));
+
+  ACTS_VERBOSE("Defining Grid:");
+  ACTS_VERBOSE("- Phi Axis: " << phiAxis);
+  ACTS_VERBOSE("- Z axis  : " << zAxis);
+  ACTS_VERBOSE("- R axis  : " << rAxis);
+
   return Acts::CylindricalSpacePointGrid<external_spacepoint_t>(
       std::make_tuple(std::move(phiAxis), std::move(zAxis), std::move(rAxis)));
 }
@@ -152,7 +161,7 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     const Acts::SeedFinderOptions& options,
     Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
     external_spacepoint_iterator_t spBegin,
-    external_spacepoint_iterator_t spEnd) {
+    external_spacepoint_iterator_t spEnd, const Acts::Logger& logger) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
@@ -180,9 +189,10 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
   std::vector<std::size_t> rBinsIndex;
   rBinsIndex.reserve(grid.size());
 
+  ACTS_VERBOSE("Fetching " << std::distance(spBegin, spEnd)
+                           << " space points to the grid");
   std::size_t counter = 0ul;
-  for (external_spacepoint_iterator_t it = spBegin; it != spEnd;
-       it++, ++counter) {
+  for (external_spacepoint_iterator_t it = spBegin; it != spEnd; ++it) {
     const external_spacepoint_t& sp = *it;
 
     // remove SPs according to experiment specific cuts
@@ -199,6 +209,7 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     std::size_t globIndex = grid.globalBinFromPosition(position);
     auto& rbin = grid.at(globIndex);
     rbin.push_back(&sp);
+    ++counter;
 
     // keep track of the bins we modify so that we can later sort the SPs in
     // those bins only
@@ -213,6 +224,9 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     auto& rbin = grid.atPosition(binIndex);
     std::ranges::sort(rbin, {}, [](const auto& rb) { return rb->radius(); });
   }
+
+  ACTS_VERBOSE(
+      "Number of space points inserted (within grid range): " << counter);
 }
 
 template <typename external_spacepoint_t, typename external_collection_t>
@@ -223,8 +237,8 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
     const Acts::SeedFinderOptions& options,
     Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
-    const external_collection_t& collection) {
+    const external_collection_t& collection, const Acts::Logger& logger) {
   Acts::CylindricalSpacePointGridCreator::fillGrid<external_spacepoint_t>(
       config, options, grid, std::ranges::begin(collection),
-      std::ranges::end(collection));
+      std::ranges::end(collection), logger);
 }

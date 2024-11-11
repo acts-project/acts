@@ -42,7 +42,7 @@ struct AnyNavigationPolicyFactory : public Acts::NavigationPolicyFactory {
 template <typename Factory = detail::NavigationPolicyFactoryImpl<>,
           typename... Policies>
 struct NavigationPolicyFactoryT : public AnyNavigationPolicyFactory {
-  NavigationPolicyFactoryT(Factory impl)
+  explicit NavigationPolicyFactoryT(Factory impl)
     requires(sizeof...(Policies) > 0)
       : m_impl(std::move(impl)) {}
 
@@ -74,7 +74,7 @@ struct NavigationPolicyFactoryT : public AnyNavigationPolicyFactory {
  private:
   template <typename T, typename... Args>
   std::unique_ptr<AnyNavigationPolicyFactory> add(Args&&... args) {
-    if constexpr (!((std::is_same_v<T, Policies> || ...))) {
+    if constexpr (!(std::is_same_v<T, Policies> || ...)) {
       auto impl =
           std::move(m_impl).template add<T>(std::forward<Args>(args)...);
       return std::make_unique<

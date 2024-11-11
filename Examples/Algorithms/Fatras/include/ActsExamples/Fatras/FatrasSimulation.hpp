@@ -43,10 +43,8 @@ class FatrasSimulation final : public IAlgorithm {
   struct Config {
     /// The particles input collection.
     std::string inputParticles;
-    /// The simulated particles initial state collection.
-    std::string outputParticlesInitial;
-    /// The simulated particles final state collection.
-    std::string outputParticlesFinal;
+    /// The simulated particles collection.
+    std::string outputParticles;
     /// The simulated hits output collection.
     std::string outputSimHits;
     /// Parametrisation of nuclear interaction
@@ -110,10 +108,8 @@ class FatrasSimulation final : public IAlgorithm {
 
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
 
-  WriteDataHandle<SimParticleContainer> m_outputParticlesInitial{
-      this, "OutputParticlesInitial"};
-  WriteDataHandle<SimParticleContainer> m_outputParticlesFinal{
-      this, "OutputParticlesFinal"};
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 
  private:
   Config m_cfg;
