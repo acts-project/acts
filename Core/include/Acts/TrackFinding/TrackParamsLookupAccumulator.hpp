@@ -15,6 +15,7 @@
 #include <concepts>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
@@ -31,23 +32,30 @@ concept IsGenericBound =
     std::same_as<parameters_t, Acts::GenericBoundTrackParameters<
                                    typename parameters_t::ParticleHypothesis>>;
 
+template <typename T>
+using removeShared = std::remove_reference_t<decltype(*std::declval<T>())>;
+
 /// @brief Concept that restricts the type of the
 /// accumulation grid cell
 template <typename grid_t>
 concept TrackParamsGrid = requires {
-  std::same_as<typename grid_t::value_type,
-               std::pair<std::shared_ptr<std::remove_pointer_t<
-                             typename grid_t::value_type::first_type>>,
-                         std::shared_ptr<std::remove_pointer_t<
-                             typename grid_t::value_type::second_type>>>>;
+  typename grid_t::value_type::first_type;
+  typename grid_t::value_type::second_type;
 
-  std::same_as<typename grid_t::value_type::first_type,
-               typename grid_t::value_type::second_type>;
+  requires TrackParameters<
+      removeShared<typename grid_t::value_type::first_type>>;
+  requires TrackParameters<
+      removeShared<typename grid_t::value_type::first_type>>;
 
-  TrackParameters<
-      std::remove_pointer_t<typename grid_t::value_type::first_type>>;
-  TrackParameters<
-      std::remove_pointer_t<typename grid_t::value_type::first_type>>;
+  requires requires(grid_t::value_type val) {
+    {
+      val.first
+    } -> std::same_as<std::shared_ptr<removeShared<decltype(val.first)>>&>;
+    {
+      val.second
+    } -> std::same_as<std::shared_ptr<removeShared<decltype(val.first)>>&>;
+    { val.second } -> std::same_as<decltype(val.first)&>;
+  };
 };
 
 }  // namespace
@@ -187,7 +195,7 @@ class TrackParamsLookupAccumulator {
           a.particleHypothesis());
 
       if (!res.ok()) {
-        throw std::invalid_argument("Invalid bound track parameters");
+        throw std::runtime_error("Invalid bound track parameters");
       }
       return res.value();
     } else {
