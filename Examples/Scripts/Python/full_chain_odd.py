@@ -189,8 +189,7 @@ if args.edm4hep:
             "LongStripEndcapReadout",
         ],
         outputParticlesGenerator="particles_input",
-        outputParticlesInitial="particles_initial",
-        outputParticlesFinal="particles_final",
+        outputParticlesSimulation="particles_simulated",
         outputSimHits="simhits",
         graphvizOutput="graphviz",
         dd4hepDetector=detector,
@@ -269,7 +268,6 @@ else:
                 absZ=(0.0, 1.0 * u.m),
                 eta=(-3.0, 3.0),
                 pt=(150 * u.MeV, None),
-                removeNeutral=True,
             ),
             postSelectParticles=ParticleSelectorConfig(
                 pt=(1.0 * u.GeV, None),
@@ -294,7 +292,6 @@ else:
                     absZ=(0.0, 1.0 * u.m),
                     eta=(-3.0, 3.0),
                     pt=(150 * u.MeV, None),
-                    removeNeutral=True,
                 )
                 if args.ttbar
                 else ParticleSelectorConfig()

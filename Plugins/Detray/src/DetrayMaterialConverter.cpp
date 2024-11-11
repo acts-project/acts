@@ -18,6 +18,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <numbers>
 #include <stdexcept>
 
 namespace {
@@ -157,10 +158,12 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
         swapped = true;
       } else if (bUtility.binningData()[0u].binvalue == BinningValue::binR) {
         // Turn to R-Phi
-        bUtility += BinUtility(1u, -M_PI, M_PI, closed, BinningValue::binPhi);
+        bUtility += BinUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
+                               BinningValue::binPhi);
       } else if (bUtility.binningData()[0u].binvalue == BinningValue::binZ) {
         // Turn to Phi-Z - swap needed
-        BinUtility nbUtility(1u, -M_PI, M_PI, closed, BinningValue::binPhi);
+        BinUtility nbUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
+                             BinningValue::binPhi);
         nbUtility += bUtility;
         bUtility = std::move(nbUtility);
         swapped = true;

@@ -107,7 +107,7 @@ class SeedFilter final {
 
   const SeedFilterConfig m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger =
-      Acts::getDefaultLogger("SeedFilter", Logging::Level::INFO);
+      Acts::getDefaultLogger("Filter", Logging::Level::INFO);
   const IExperimentCuts<external_spacepoint_t>* m_experimentCuts;
 };
 }  // namespace Acts

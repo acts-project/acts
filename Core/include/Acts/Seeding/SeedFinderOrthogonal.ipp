@@ -244,8 +244,9 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
 
 template <typename external_spacepoint_t>
 SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
-    const SeedFinderOrthogonalConfig<external_spacepoint_t> &config)
-    : m_config(config) {
+    const SeedFinderOrthogonalConfig<external_spacepoint_t> &config,
+    std::unique_ptr<const Acts::Logger> logger)
+    : m_config(config), m_logger(std::move(logger)) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderOrthogonalConfig not in ACTS internal units in "
@@ -687,6 +688,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
     const std::vector<const external_spacepoint_t *> &spacePoints) const
     -> tree_t {
   std::vector<typename tree_t::pair_t> points;
+  points.reserve(spacePoints.size());
 
   /*
    * For every input point, we create a coordinate-pointer pair, which we then
@@ -703,6 +705,8 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
     points.emplace_back(point, sp);
   }
 
+  ACTS_VERBOSE("Created k-d tree populated with " << points.size()
+                                                  << " space points");
   return tree_t(std::move(points));
 }
 
@@ -711,6 +715,7 @@ template <typename input_container_t, typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     const Acts::SeedFinderOptions &options,
     const input_container_t &spacePoints, output_container_t &out_cont) const {
+  ACTS_VERBOSE("Creating seeds with Orthogonal strategy");
   if (!options.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderOptions not in ACTS internal units in "
@@ -734,6 +739,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * take each external spacepoint, allocate a corresponding internal space
    * point, and save it in a vector.
    */
+  ACTS_VERBOSE("Running on " << spacePoints.size() << " input space points");
   Acts::Extent rRangeSPExtent;
   std::vector<const external_spacepoint_t *> internal_sps;
   internal_sps.reserve(spacePoints.size());
@@ -746,6 +752,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     rRangeSPExtent.extend({p.x(), p.y(), p.z()});
     internal_sps.push_back(&p);
   }
+  ACTS_VERBOSE(rRangeSPExtent);
+
   // variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
       std::floor(rRangeSPExtent.min(Acts::BinningValue::binR) / 2) * 2 +
