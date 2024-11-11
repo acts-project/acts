@@ -8,8 +8,8 @@
 
 #include "ActsExamples/TrackFinding/TrackParamsLookupEstimation.hpp"
 
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 ActsExamples::TrackParamsLookupEstimation::TrackParamsLookupEstimation(
     const Config& config, Acts::Logging::Level level)
@@ -30,29 +30,30 @@ ActsExamples::TrackParamsLookupEstimation::TrackParamsLookupEstimation(
     auto halfX = bounds->halfLengthX();
     auto halfY = bounds->halfLengthY();
 
-    LookupAxisGen axisGen{
+    TrackParamsLookupAxisGen axisGen{
         {-halfX, halfX}, m_cfg.bins.first, {-halfY, halfY}, m_cfg.bins.second};
 
-    TrackParamsLookupAccumulator::Config accConfig{axisGen};
-
     // Each reference layer has its own accumulator
-    m_accumulators[geoId] =
-        std::make_unique<TrackParamsLookupAccumulator>(accConfig);
+    m_accumulators[geoId] = std::make_unique<TrackParamsLookupAccumulator>(
+        TrackParamsLookupGrid(axisGen()));
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputSimHits.initialize(m_cfg.inputHits);
 }
 
-ActsExamples::TrackParamsLookupEstimation::~TrackParamsLookupEstimation() {
+ActsExamples::ProcessCode
+ActsExamples::TrackParamsLookupEstimation::finalize() {
   // Finiliaze the lookup tables and write them
-  ActsExamples::Lookup lookup;
+  ActsExamples::TrackParamsLookup lookup;
   for (auto& [id, acc] : m_accumulators) {
     lookup.insert({id, acc->finalizeLookup()});
   }
   for (auto& writer : m_cfg.trackLookupGridWriters) {
     writer->writeLookup(lookup);
   }
+
+  return ActsExamples::ProcessCode::SUCCESS;
 };
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsLookupEstimation::execute(
