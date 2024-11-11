@@ -35,6 +35,7 @@
 #include <cmath>
 #include <iterator>
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -131,8 +132,8 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   // Create a materialBinning
   tripleZCfg.portalMaterialBinning[2u] = BinningDescription{
       {ProtoBinning(BinningValue::binZ, Acts::AxisBoundaryType::Bound, 50),
-       ProtoBinning(BinningValue::binPhi, Acts::AxisBoundaryType::Closed, -M_PI,
-                    M_PI, 12)}};
+       ProtoBinning(BinningValue::binPhi, Acts::AxisBoundaryType::Closed,
+                    -std::numbers::pi, std::numbers::pi, 12)}};
 
   // Let's test the reverse generation
   tripleZCfg.geoIdReverseGen = true;
@@ -201,16 +202,18 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
   barrelPhiCfg.binning = {BinningValue::binPhi};
 
   unsigned int phiSectors = 5;
-  Acts::ActsScalar phiHalfSector = M_PI / phiSectors;
+  Acts::ActsScalar phiHalfSector = std::numbers::pi / phiSectors;
 
   std::vector<std::shared_ptr<DetectorVolume>> phiVolumes = {};
   for (unsigned int i = 0; i < phiSectors; ++i) {
     // The volume bounds
     Acts::CylinderVolumeBounds volumeBounds(
-        10., 100., 100., phiHalfSector, -M_PI + (2u * i + 1u) * phiHalfSector);
-    // The surface boudns
-    Acts::CylinderBounds surfaceBounds(50., 90., 0.99 * phiHalfSector,
-                                       -M_PI + (2u * i + 1u) * phiHalfSector);
+        10., 100., 100., phiHalfSector,
+        -std::numbers::pi + (2u * i + 1u) * phiHalfSector);
+    // The surface bounds
+    Acts::CylinderBounds surfaceBounds(
+        50., 90., 0.99 * phiHalfSector,
+        -std::numbers::pi + (2u * i + 1u) * phiHalfSector);
 
     auto builder = std::make_shared<
         CylindricalVolumeBuilder<CylinderSurface, CylinderBounds>>(

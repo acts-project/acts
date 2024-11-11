@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <limits>
+#include <numbers>
 
 namespace Acts {
 
@@ -121,7 +122,7 @@ MeasurementSelector::Cuts MeasurementSelector::getCutsByTheta(
     const InternalCutBins& config, double theta) {
   // since theta is in [0, pi] and we have a symmetric cut in eta, we can just
   // look at the positive half of the Z axis
-  const double constrainedTheta = std::min(theta, M_PI - theta);
+  const double constrainedTheta = std::min(theta, std::numbers::pi - theta);
 
   auto it = std::ranges::find_if(
       config, [constrainedTheta](const InternalCutBin& cuts) {

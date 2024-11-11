@@ -29,9 +29,7 @@
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
-#include <array>
 #include <memory>
-#include <optional>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -206,8 +204,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                   .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c1, Config);
     ACTS_PYTHON_MEMBER(outputSimHits);
-    ACTS_PYTHON_MEMBER(outputParticlesInitial);
-    ACTS_PYTHON_MEMBER(outputParticlesFinal);
+    ACTS_PYTHON_MEMBER(outputParticles);
     ACTS_PYTHON_MEMBER(sensitiveSurfaceMapper);
     ACTS_PYTHON_MEMBER(magneticField);
     ACTS_PYTHON_MEMBER(physicsList);
