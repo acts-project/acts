@@ -282,6 +282,10 @@ if(ACTS_SETUP_BOOST)
         find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
     endif()
 
+    set(_severity WARNING)
+    if(ACTS_BUILD_EXAMPLES)
+        set(_severity FATAL_ERROR)
+    endif()
     if(Boost_VERSION VERSION_LESS _acts_boost_recommended_version)
         message(
             WARNING
@@ -291,7 +295,7 @@ if(ACTS_SETUP_BOOST)
 
     if(Boost_VERSION VERSION_EQUAL "1.85.0")
         message(
-            WARNING
+            ${_severity}
             "Boost 1.85.0 is known to be broken (https://github.com/boostorg/container/issues/273). Please use a different version."
         )
     endif()
