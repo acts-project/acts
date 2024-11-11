@@ -92,9 +92,8 @@ struct PlanarSurfaceTestBeds {
     Acts::BinUtility stripsPhi(1, rmin, rmax, Acts::AxisBoundaryType::Bound,
                                Acts::AxisDirection::AxisR);
     stripsPhi += Acts::BinUtility(
-        25, std::numbers::pi / 2. - alpha,
-        std::numbers::pi / 2. + alpha Acts::AxisBoundaryType::Bound,
-        Acts::AxisDirection::AxisPhi);
+        25, std::numbers::pi / 2. - alpha, std::numbers::pi / 2. + alpha,
+        Acts::AxisBoundaryType::Bound, Acts::AxisDirection::AxisPhi);
 
     TrapezoidRandom dtRandom(xmin * rScale, xmax * rScale, rmin * irScale,
                              ymax * rScale);

@@ -200,13 +200,13 @@ class MappingMaterialDecorator : public IMaterialDecorator {
                 radialBounds->get(Acts::RadialBounds::eHalfPhiSector),
             (radialBounds->get(Acts::RadialBounds::eHalfPhiSector) -
              std::numbers::pi) < Acts::s_epsilon
-                ? Acts::closed
-                : Acts::open,
-            Acts::BinningValue::binPhi);
-        bUtility += Acts::BinUtility(binning.second,
-                                     static_cast<float>(radialBounds->rMin()),
-                                     static_cast<float>(radialBounds->rMax()),
-                                     Acts::open, Acts::BinningValue::binR);
+                ? Acts::AxisBoundaryType::Closed
+                : Acts::AxisBoundaryType::Bound,
+            Acts::AxisDirection::AxisPhi);
+        bUtility += Acts::BinUtility(
+            binning.second, static_cast<float>(radialBounds->rMin()),
+            static_cast<float>(radialBounds->rMax()),
+            Acts::AxisBoundaryType::Bound, Acts::AxisDirection::AxisR);
       }
       if (cylinderBounds != nullptr) {
         bUtility += Acts::BinUtility(
