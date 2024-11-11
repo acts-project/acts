@@ -616,7 +616,8 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     double step = (max - min) / nSteps;
 
     // Visualise the parameters
-    auto make = [&](double angle, Vector3F origin, std::ofstream& osTmp) {
+    auto make = [&](double angle, const Vector3F& origin,
+                    std::ofstream& osTmp) {
       helper.clear();
       BoundingBoxScalar far = 1;
       Frustum3 fr(origin, {0, 0, 1}, angle);
