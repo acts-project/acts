@@ -22,6 +22,7 @@
 #include "Acts/Utilities/AngleHelpers.hpp"
 
 #include <limits>
+#include <numbers>
 
 using namespace Acts;
 namespace bdata = boost::unit_test::data;
@@ -639,7 +640,8 @@ BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
     auto track = tc.makeTrack();
 
     using namespace Acts::UnitLiterals;
-    track.parameters() << 0, 0, M_PI / 2, M_PI / 2, 1 / 1_GeV, 0;
+    track.parameters() << 0, 0, std::numbers::pi / 2., std::numbers::pi / 2.,
+        1 / 1_GeV, 0;
     auto perigee = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
     track.setReferenceSurface(perigee);
     return track;

@@ -11,6 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <numbers>
+
 namespace Acts::detail {
 
 /// Estimate the loop protection limit
@@ -46,7 +48,8 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
   // Transverse component at start is taken for the loop protection
   const double p = stepper.absoluteMomentum(state.stepping);
   // Calculate the full helix path
-  const double helixPath = state.options.direction * 2 * M_PI * p / B;
+  const double helixPath =
+      state.options.direction * 2 * std::numbers::pi * p / B;
   // And set it as the loop limit if it overwrites the internal limit
   const double loopLimit = state.options.loopFraction * helixPath;
   const double previousLimit = pathAborter.internalLimit;

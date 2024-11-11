@@ -9,6 +9,7 @@
 #include <cmath>
 #include <iostream>
 #include <map>
+#include <numbers>
 #include <string>
 #include <tuple>
 
@@ -56,9 +57,9 @@ struct MaterialHistograms {
                   : name + std::string("_l0_vs_phi_A") + std::to_string(iA);
 
     x0_vs_phi =
-        new TProfile(x0NamePhi.c_str(), "X_{0} vs. #phi", bins, -M_PI, M_PI);
+        new TProfile(x0NamePhi.c_str(), "X_{0} vs. #phi", bins, -std::numbers::pi, std::numbers::pi);
     l0_vs_phi =
-        new TProfile(l0NamePhi.c_str(), "L_{0} vs. #phi", bins, -M_PI, M_PI);
+        new TProfile(l0NamePhi.c_str(), "L_{0} vs. #phi", bins, -std::numbers::pi, std::numbers::pi);
   }
 
   /// This fills the event into the histograms

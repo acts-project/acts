@@ -19,6 +19,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iterator>
+#include <numbers>
 #include <ostream>
 
 #include <boost/foreach.hpp>
@@ -40,8 +41,8 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
     double min = 0.;
     double max = 0.;
     if (bopt == Acts::closed) {
-      min = -M_PI;
-      max = M_PI;
+      min = -std::numbers::pi;
+      max = std::numbers::pi;
     }
     int bins = params.get<int>(valueTag + "_"s + bin.first);
     ACTS_VERBOSE("  - material binning for " << bin.first << " on " << valueTag

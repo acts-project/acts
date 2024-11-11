@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -119,7 +120,7 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
       double mphi = boundsSegment->get(CylinderBounds::eAveragePhi);
       CHECK_CLOSE_ABS(bR, 10.5, s_epsilon);
       CHECK_CLOSE_ABS(bhZ, hz, s_epsilon);
-      CHECK_CLOSE_ABS(hphi, 0.25 * M_PI, s_epsilon);
+      CHECK_CLOSE_ABS(hphi, std::numbers::pi / 4., s_epsilon);
       CHECK_CLOSE_ABS(mphi, 0., s_epsilon);
       GeometryView3D::drawSurface(objVis, *cylinderSegment, tgContext);
       GeometryView3D::drawArrowForward(
@@ -215,7 +216,7 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
       double mphi = boundsSegment->get(RadialBounds::eAveragePhi);
       CHECK_CLOSE_ABS(bminr, rmin, s_epsilon);
       CHECK_CLOSE_ABS(bmaxr, rmax, s_epsilon);
-      CHECK_CLOSE_ABS(hphi, 0.25 * M_PI, s_epsilon);
+      CHECK_CLOSE_ABS(hphi, std::numbers::pi / 4., s_epsilon);
       CHECK_CLOSE_ABS(mphi, 0., s_epsilon);
       GeometryView3D::drawSurface(objVis, *discSegment, tgContext);
       GeometryView3D::drawArrowForward(objVis, center,
