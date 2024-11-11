@@ -9,43 +9,36 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
+#include <memory>
+#include <unordered_map>
+
 namespace ActsExamples {
+
+using TrackParamsLookupPair =
+    std::pair<std::shared_ptr<Acts::CurvilinearTrackParameters>,
+              std::shared_ptr<Acts::CurvilinearTrackParameters>>;
 
 /// @brief Track parameters lookup table axis used
 /// in the track estimation algorithm
-using LookupAxis =
+using TrackParamsLookupAxis =
     Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Open>;
 
 /// @brief Track parameters lookup table axis generator
 /// used in the track estimation algorithm
-using LookupAxisGen = Acts::GridAxisGenerators::EqOpenEqOpen;
-
-/// @brief Grid used to accumulate IP track parameters and
-/// reference layer track parameters for a given position
-/// in the track estimation algorithm
-using LookupAccumGrid =
-    Acts::Grid<std::vector<Acts::CurvilinearTrackParameters>, LookupAxis,
-               LookupAxis>;
-
-/// @brief Container for the lookup accumulation grids to
-/// handle multiple reference layers in the track estimation
-using LookupAccumGridContainer =
-    std::unordered_map<Acts::GeometryIdentifier, LookupAccumGrid>;
-
-/// @brief IP-reference layer track parameters lookup pair
-using LookupPair = std::pair<std::shared_ptr<Acts::CurvilinearTrackParameters>,
-                             std::shared_ptr<Acts::CurvilinearTrackParameters>>;
+using TrackParamsLookupAxisGen = Acts::GridAxisGenerators::EqOpenEqOpen;
 
 /// @brief Lookup grid for track parameters estimation
 /// in a given layer
-using LookupGrid = Acts::Grid<LookupPair, LookupAxis, LookupAxis>;
+using TrackParamsLookupGrid =
+    Acts::Grid<TrackParamsLookupPair, TrackParamsLookupAxis,
+               TrackParamsLookupAxis>;
 
 /// @brief Lookup table for track parameters estimation
 /// in the track estimation algorithm
-using Lookup = std::unordered_map<Acts::GeometryIdentifier, LookupGrid>;
+using TrackParamsLookup =
+    std::unordered_map<Acts::GeometryIdentifier, TrackParamsLookupGrid>;
 
 }  // namespace ActsExamples

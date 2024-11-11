@@ -8,14 +8,10 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
-#include "Acts/Plugins/Json/TrackParametersJsonConverter.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupWriter.hpp"
 
 #include <fstream>
-#include <memory>
 
 #include <nlohmann/json.hpp>
 
@@ -42,10 +38,10 @@ class JsonTrackParamsLookupWriter final : public ITrackParamsLookupWriter {
   /// Virtual destructor
   ~JsonTrackParamsLookupWriter() override = default;
 
-  /// Write out the material map
+  /// Write out track parameters lookup table
   ///
   /// @param lookup The lookup to write
-  void writeLookup(const Lookup& lookup) final {
+  void writeLookup(const TrackParamsLookup& lookup) const final {
     nlohmann::json jLookup;
 
     // Iterate over the lookup and serialize the grids

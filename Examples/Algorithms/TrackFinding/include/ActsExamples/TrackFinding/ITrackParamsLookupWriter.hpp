@@ -21,7 +21,7 @@ class ITrackParamsLookupWriter {
   /// Writer method
   ///
   /// @param lookup track lookup to write
-  virtual void writeLookup(const Lookup& lookup) = 0;
+  virtual void writeLookup(const TrackParamsLookup& lookup) const = 0;
 };
 
 }  // namespace ActsExamples

@@ -8,12 +8,14 @@
 
 #pragma once
 
+#include "Acts/TrackFinding/TrackParamsLookupAccumulator.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupWriter.hpp"
-#include "ActsExamples/TrackFinding/TrackParamsLookupAccumulator.hpp"
+
+#include <memory>
 
 namespace ActsExamples {
 
@@ -26,6 +28,9 @@ namespace ActsExamples {
 /// to create a lookup table for track parameter estimation in seeding.
 class TrackParamsLookupEstimation : public IAlgorithm {
  public:
+  using TrackParamsLookupAccumulator =
+      Acts::TrackParamsLookupAccumulator<TrackParamsLookupGrid>;
+
   /// @brief Nested configuration struct
   struct Config {
     /// Reference tracking layers
@@ -51,6 +56,8 @@ class TrackParamsLookupEstimation : public IAlgorithm {
 
   /// @brief The execute method
   ProcessCode execute(const AlgorithmContext& ctx) const override;
+
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

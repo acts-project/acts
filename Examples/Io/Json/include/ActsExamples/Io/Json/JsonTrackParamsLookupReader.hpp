@@ -8,16 +8,11 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
-#include "Acts/Plugins/Json/TrackParametersJsonConverter.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupReader.hpp"
 
 #include <fstream>
-#include <memory>
 
 #include <nlohmann/json.hpp>
 
@@ -40,17 +35,22 @@ class JsonTrackParamsLookupReader final : public ITrackParamsLookupReader {
     std::pair<std::size_t, std::size_t> bins;
   };
 
-  JsonTrackParamsLookupReader(const Config& config) : m_cfg(config) {};
+  JsonTrackParamsLookupReader(const Config& config) : m_cfg(config){};
 
   ~JsonTrackParamsLookupReader() override = default;
 
-  Lookup readLookup(const std::string& path) final {
+  /// @brief Read the lookup from a json file
+  ///
+  /// @param path path to the json file
+  ///
+  /// @return lookup table for track parameter estimation
+  TrackParamsLookup readLookup(const std::string& path) final {
     // Read the json file
     std::ifstream ifj(path);
     nlohmann::json jLookup;
     ifj >> jLookup;
 
-    Lookup lookup;
+    TrackParamsLookup lookup;
     // Iterate over the json and deserialize the grids
     for (const auto& jGrid : jLookup) {
       Acts::GeometryIdentifier id(jGrid["geo_id"]);
@@ -73,17 +73,18 @@ class JsonTrackParamsLookupReader final : public ITrackParamsLookupReader {
       auto halfX = bounds->halfLengthX();
       auto halfY = bounds->halfLengthY();
 
-      LookupAxisGen axisGen{{-halfX, halfX},
-                            m_cfg.bins.first,
-                            {-halfY, halfY},
-                            m_cfg.bins.second};
+      TrackParamsLookupAxisGen axisGen{{-halfX, halfX},
+                                       m_cfg.bins.first,
+                                       {-halfY, halfY},
+                                       m_cfg.bins.second};
 
       // Deserialize the grid
-      LookupGrid grid =
-          Acts::GridJsonConverter::fromJson<LookupAxisGen, LookupPair>(
+      TrackParamsLookupGrid grid =
+          Acts::GridJsonConverter::fromJson<TrackParamsLookupAxisGen,
+                                            TrackParamsLookupPair>(
               jGrid["grid"], axisGen);
 
-      lookup.insert({id, grid});
+      lookup.insert({id, std::move(grid)});
     }
 
     return lookup;

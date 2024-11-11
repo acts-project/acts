@@ -10,7 +10,6 @@ add_library(
     src/TrackParamsEstimationAlgorithm.cpp
     src/MuonHoughSeeder.cpp
     src/GbtsSeedingAlgorithm.cpp
-    src/TrackParamsLookupAccumulator.cpp
     src/TrackParamsLookupEstimation.cpp
 )
 
