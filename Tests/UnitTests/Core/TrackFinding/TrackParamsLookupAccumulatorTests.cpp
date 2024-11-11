@@ -25,6 +25,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 #include <optional>
 #include <stdexcept>
 #include <vector>
@@ -64,15 +65,17 @@ BOOST_AUTO_TEST_CASE(Exceptions) {
   AccBound acc(grid);
 
   // Create a reference surface for bound parameters
-  auto tranform = Acts::Transform3::Identity();
+  auto transform = Acts::Transform3::Identity();
   auto bounds1 = std::make_shared<Acts::RectangleBounds>(1, 1);
   auto bounds2 = std::make_shared<Acts::RectangleBounds>(2, 2);
 
-  auto surf1 = Acts::Surface::makeShared<Acts::PlaneSurface>(tranform, bounds1);
+  auto surf1 =
+      Acts::Surface::makeShared<Acts::PlaneSurface>(transform, bounds1);
 
-  auto surf2 = Acts::Surface::makeShared<Acts::PlaneSurface>(tranform, bounds2);
+  auto surf2 =
+      Acts::Surface::makeShared<Acts::PlaneSurface>(transform, bounds2);
 
-  // Create paramters to accumulate
+  // Create parameters to accumulate
   Acts::Vector4 pos{1, 2, 0, 4};
   Acts::Vector3 dir{1, 0, 0};
   Acts::ActsScalar P = 1;
@@ -126,16 +129,16 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
   AccFree accFree(gridFree);
 
   // Create a reference surface for bound parameters
-  auto tranform = Acts::Transform3::Identity();
+  auto transform = Acts::Transform3::Identity();
   auto bounds = std::make_shared<Acts::RectangleBounds>(1, 1);
-  auto surf = Acts::Surface::makeShared<Acts::PlaneSurface>(tranform, bounds);
+  auto surf = Acts::Surface::makeShared<Acts::PlaneSurface>(transform, bounds);
 
   auto hypothesis = Acts::ParticleHypothesis::electron();
 
   std::vector<Acts::Vector4> avgPoss;
   std::vector<Acts::Vector3> avgMoms;
   for (std::size_t i = 0; i < gridBound.size(); i++) {
-    // Create paramters to accumulate
+    // Create parameters to accumulate
     Acts::Vector4 pos{1, 2, 0, 4};
     std::array<Acts::Vector4, 4> fourPositions = {
         pos * (i + 1),
@@ -144,12 +147,13 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
         pos * (i + 4),
     };
 
-    std::array<Acts::ActsScalar, 4> thetas = {M_PI / (i + 1), M_PI / (i + 2),
-                                              M_PI / (i + 3), M_PI / (i + 4)};
+    std::array<Acts::ActsScalar, 4> thetas = {
+        std::numbers::pi / (i + 1), std::numbers::pi / (i + 2),
+        std::numbers::pi / (i + 3), std::numbers::pi / (i + 4)};
 
     std::array<Acts::ActsScalar, 4> phis = {
-        2 * M_PI / (i + 1), 2 * M_PI / (i + 2), 2 * M_PI / (i + 3),
-        2 * M_PI / (i + 4)};
+        2 * std::numbers::pi / (i + 1), 2 * std::numbers::pi / (i + 2),
+        2 * std::numbers::pi / (i + 3), 2 * std::numbers::pi / (i + 4)};
 
     Acts::ActsScalar P = 1.5 * (i + 1);
 
@@ -189,6 +193,7 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
     avgMoms.push_back(avgMom / fourPositions.size());
   }
 
+  // Finalize and compare
   GridBound avgGridBound = accBound.finalizeLookup();
   GridCurvilinear avgGridCurvilinear = accCurvilinear.finalizeLookup();
   GridFree avgGridFree = accFree.finalizeLookup();
