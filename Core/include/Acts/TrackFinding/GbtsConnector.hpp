@@ -11,8 +11,8 @@
 // TODO: update to C++17 style
 // Consider to moving to detail subdirectory
 #include <fstream>
-#include <iostream>
 #include <map>
+#include <memory>
 #include <vector>
 
 namespace Acts {

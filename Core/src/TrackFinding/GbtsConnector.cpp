@@ -9,7 +9,6 @@
 // TODO: update to C++17 style
 #include "Acts/TrackFinding/GbtsConnector.hpp"
 
-#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <list>
