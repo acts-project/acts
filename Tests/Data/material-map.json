@@ -1,139 +1,4 @@
 {
-    "Volumes": {
-        "acts-geometry-hierarchy-map": {
-            "format-version": 0,
-            "value-identifier": "Material Volume Map"
-        },
-        "entries": [
-            {
-                "volume": 2,
-                "value": {
-                    "material": {
-                        "binUtility": {
-                            "binningdata": [
-                                {
-                                 "bins": 2,
-                                    "max": 27.0,
-                                    "min": 0.0,
-                                    "option": "open",
-                                    "type": "equidistant",
-                                    "value": "binR"
-                                },
-                                {
-                                    "bins": 2,
-                                    "max": 3.1415927410125732,
-                                    "min": -3.1415927410125732,
-                                    "option": "closed",
-                                    "type": "equidistant",
-                                    "value": "binPhi"
-                                },
-                                {
-                                    "bins": 2,
-                                    "max": 4002.0,
-                                    "min": -4002.0,
-                                    "option": "open",
-                                    "type": "equidistant",
-                                    "value": "binZ"
-                                }
-                            ]
-                        },
-                        "data": [
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            [
-                                352.5578308105469,
-                                394.21875,
-                                9.01218032836914,
-                                4.0,
-                                0.0002050558105111122
-                            ],
-                            [
-                                352.5503845214844,
-                                394.2163391113281,
-                                9.01218032836914,
-                                4.0,
-                                0.0002050558105111122
-                            ],
-                            null,
-                            null,
-                            [
-                                352.54583740234375,
-                                394.2211608886719,
-                                9.01218032836914,
-                                4.0,
-                                0.0002050558105111122
-                            ],
-                            [
-                                352.54339599609375,
-                                394.2159729003906,
-                                9.01218032836914,
-                                4.0,
-                                0.0002050558105111122
-                            ],
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null
-                        ],
-                        "mapMaterial": true,
-                        "type": "interpolated3D"
-                    }
-                }
-            }
-        ]
-    },
     "Surfaces": {
         "acts-geometry-hierarchy-map": {
             "format-version": 0,
@@ -141,9 +6,8 @@
         },
         "entries": [
             {
-                "volume": 13,
-                "layer": 2,
                 "approach": 2,
+                "layer": 2,
                 "value": {
                     "material": {
                         "binUtility": {
@@ -154,7 +18,7 @@
                                     "min": -3.1415927410125732,
                                     "option": "open",
                                     "type": "equidistant",
-                                    "value": "binPhi"
+                                    "value": "AxisPhi"
                                 },
                                 {
                                     "bins": 2,
@@ -162,7 +26,7 @@
                                     "min": -524.0,
                                     "option": "open",
                                     "type": "equidistant",
-                                    "value": "binZ"
+                                    "value": "AxisZ"
                                 }
                             ]
                         },
@@ -196,12 +60,12 @@
                         "mappingType": "Default",
                         "type": "binned"
                     }
-                }
+                },
+                "volume": 13
             },
             {
-                "volume": 13,
-                "layer": 4,
                 "approach": 2,
+                "layer": 4,
                 "value": {
                     "material": {
                         "binUtility": {
@@ -212,7 +76,7 @@
                                     "min": -3.1415927410125732,
                                     "option": "open",
                                     "type": "equidistant",
-                                    "value": "binPhi"
+                                    "value": "AxisPhi"
                                 },
                                 {
                                     "bins": 2,
@@ -220,7 +84,7 @@
                                     "min": -524.0,
                                     "option": "open",
                                     "type": "equidistant",
-                                    "value": "binZ"
+                                    "value": "AxisZ"
                                 }
                             ]
                         },
@@ -254,10 +118,10 @@
                         "mappingType": "Default",
                         "type": "binned"
                     }
-                }
+                },
+                "volume": 13
             },
             {
-                "volume": 14,
                 "boundary": 1,
                 "value": {
                     "material": {
@@ -269,7 +133,7 @@
                                     "min": -3.1415927410125732,
                                     "option": "open",
                                     "type": "equidistant",
-                                    "value": "binPhi"
+                                    "value": "AxisPhi"
                                 },
                                 {
                                     "bins": 3,
@@ -277,7 +141,7 @@
                                     "min": 27.0,
                                     "option": "open",
                                     "type": "equidistant",
-                                    "value": "binR"
+                                    "value": "AxisR"
                                 }
                             ]
                         },
@@ -323,10 +187,10 @@
                         "mappingType": "Default",
                         "type": "binned"
                     }
-                }
+                },
+                "volume": 14
             },
             {
-                "volume": 18,
                 "layer": 2,
                 "value": {
                     "material": {
@@ -338,7 +202,7 @@
                                     "min": -3.1415927410125732,
                                     "option": "closed",
                                     "type": "equidistant",
-                                    "value": "binPhi"
+                                    "value": "AxisPhi"
                                 },
                                 {
                                     "bins": 3,
@@ -346,7 +210,7 @@
                                     "min": -1154.0,
                                     "option": "open",
                                     "type": "equidistant",
-                                    "value": "binZ"
+                                    "value": "AxisZ"
                                 }
                             ]
                         },
@@ -452,7 +316,143 @@
                         "mappingType": "Default",
                         "type": "binned"
                     }
-                }
+                },
+                "volume": 18
+            }
+        ]
+    },
+    "Volumes": {
+        "acts-geometry-hierarchy-map": {
+            "format-version": 0,
+            "value-identifier": "Material Volume Map"
+        },
+        "entries": [
+            {
+                "value": {
+                    "material": {
+                        "binUtility": {
+                            "binningdata": [
+                                {
+                                    "bins": 2,
+                                    "max": 27.0,
+                                    "min": 0.0,
+                                    "option": "open",
+                                    "type": "equidistant",
+                                    "value": "AxisR"
+                                },
+                                {
+                                    "bins": 2,
+                                    "max": 3.1415927410125732,
+                                    "min": -3.1415927410125732,
+                                    "option": "closed",
+                                    "type": "equidistant",
+                                    "value": "AxisPhi"
+                                },
+                                {
+                                    "bins": 2,
+                                    "max": 4002.0,
+                                    "min": -4002.0,
+                                    "option": "open",
+                                    "type": "equidistant",
+                                    "value": "AxisZ"
+                                }
+                            ]
+                        },
+                        "data": [
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            [
+                                352.5578308105469,
+                                394.21875,
+                                9.01218032836914,
+                                4.0,
+                                0.0002050558105111122
+                            ],
+                            [
+                                352.5503845214844,
+                                394.2163391113281,
+                                9.01218032836914,
+                                4.0,
+                                0.0002050558105111122
+                            ],
+                            null,
+                            null,
+                            [
+                                352.54583740234375,
+                                394.2211608886719,
+                                9.01218032836914,
+                                4.0,
+                                0.0002050558105111122
+                            ],
+                            [
+                                352.54339599609375,
+                                394.2159729003906,
+                                9.01218032836914,
+                                4.0,
+                                0.0002050558105111122
+                            ],
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "mapMaterial": true,
+                        "type": "interpolated3D"
+                    }
+                },
+                "volume": 2
             }
         ]
     }

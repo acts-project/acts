@@ -54,7 +54,7 @@ void encodeSubspace(
   const Subspace* subspace = dynamic_cast<const Subspace*>(&globalToGridLocal);
   if (subspace != nullptr) {
     jGlobalToGridLocal["type"] = "subspace";
-    jGlobalToGridLocal["accessors"] = subspace->bValues;
+    jGlobalToGridLocal["accessors"] = subspace->axisDirections;
   }
 }
 

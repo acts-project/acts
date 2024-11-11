@@ -158,7 +158,7 @@ class GlobalSubspace final : public IGlobalToGridLocal {
   GlobalSubspace() = default;
 
   /// The binning values
-  static constexpr std::array<AxisDirection, sizeof...(Args)> bValues = {
+  static constexpr std::array<AxisDirection, sizeof...(Args)> axisDirections = {
       Args...};
 
   /// Transform in to the local frame, then the grid local position
@@ -170,7 +170,7 @@ class GlobalSubspace final : public IGlobalToGridLocal {
     // Fill the grid point from global
     grid_local_t glocal{};
     GridAccessHelpers::fillCasts(
-        position, bValues, glocal,
+        position, axisDirections, glocal,
         std::make_integer_sequence<std::size_t, sizeof...(Args)>{});
     return glocal;
   }
