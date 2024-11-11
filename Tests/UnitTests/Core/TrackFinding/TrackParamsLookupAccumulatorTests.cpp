@@ -191,6 +191,9 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
     }
     avgPoss.push_back(avgPos / fourPositions.size());
     avgMoms.push_back(avgMom / fourPositions.size());
+
+    std::cout << "STORING " << i << ":\n";
+    std::cout << avgPoss.back().transpose() << std::endl;
   }
 
   // Finalize and compare
@@ -207,6 +210,9 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
     Acts::Vector3 avgMom = avgMoms.at(i);
     Acts::Vector3 avgDir = avgMom.normalized();
     Acts::ActsScalar avgP = avgMom.norm();
+
+    std::cout << ipBound->fourPosition(gctx).transpose() << " vs "
+              << avgPos.transpose() << "\n";
 
     CHECK_CLOSE_ABS(ipBound->fourPosition(gctx), avgPos, 1e-3);
     CHECK_CLOSE_ABS(ipBound->direction(), avgDir, 1e-3);
