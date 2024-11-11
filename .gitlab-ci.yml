@@ -37,8 +37,6 @@ clang_tidy:
         -DCMAKE_CXX_COMPILER=clang++
         -DCMAKE_C_COMPILER=clang
         -DPython_EXECUTABLE=$(which python3)
-        -DACTS_RUN_CLANG_TIDY=ON
-        -DACTS_BUILD_ODD=OFF
 
     # Main clang-tidy run during cmake compilation
     - CI/clang_tidy/run_clang_tidy.sh clang-tidy build
