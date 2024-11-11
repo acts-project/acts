@@ -392,10 +392,8 @@ void addMeasurementToGx2fSums(Gx2fSystem& extendedSystem,
   }
 
   // Create an extended Jacobian. This one contains only eBoundSize rows,
-  // because the rest is irrelevant. We fill it in the next steps
+  // because the rest is irrelevant. We fill it in the next steps.
   // TODO make dimsExtendedParams template with unrolling
-
-  // We create an empty Jacobian and fill it in the next steps
   Eigen::MatrixXd extendedJacobian =
       Eigen::MatrixXd::Zero(eBoundSize, extendedSystem.nDims());
 
@@ -566,10 +564,11 @@ void addMaterialToGx2fSums(
 ///
 /// @tparam track_proxy_t The type of the track proxy
 ///
-/// @param track A mutable track proxy to operate on
+/// @param track A constant track proxy to inspect
 /// @param extendedSystem All parameters of the current equation system
 /// @param multipleScattering Flag to consider multiple scattering in the calculation
-/// @param scatteringMap Map of geometry identifiers to scattering properties, containing all scattering angles and covariances
+/// @param scatteringMap Map of geometry identifiers to scattering properties,
+///        containing scattering angles and validation status
 /// @param geoIdVector A vector to store geometry identifiers for tracking processed elements
 /// @param logger A logger instance
 template <TrackProxyConcept track_proxy_t>
@@ -648,6 +647,51 @@ void fillGx2fSystem(
       geoIdVector.emplace_back(geoId);
     }
   }
+}
+
+/// @brief Count the valid material states in a track for scattering calculations.
+///
+/// This function counts the valid material surfaces encountered in a track
+/// by examining each track state. The count is based on the presence of
+/// material flags and the availability of scattering information for each
+/// surface.
+///
+/// @tparam track_proxy_t The type of the track proxy
+///
+/// @param track A constant track proxy to inspect
+/// @param scatteringMap Map of geometry identifiers to scattering properties,
+///        containing scattering angles and validation status
+/// @param logger A logger instance
+template <TrackProxyConcept track_proxy_t>
+std::size_t countMaterialStates(
+    const track_proxy_t track,
+    const std::unordered_map<GeometryIdentifier, ScatteringProperties>&
+        scatteringMap,
+    const Logger& logger) {
+  std::size_t nMaterialSurfaces = 0;
+  ACTS_DEBUG("Count the valid material surfaces.");
+  for (const auto& trackState : track.trackStates()) {
+    const auto typeFlags = trackState.typeFlags();
+    const bool stateHasMaterial = typeFlags.test(TrackStateFlag::MaterialFlag);
+
+    if (!stateHasMaterial) {
+      continue;
+    }
+
+    // Get and store geoId for the current material surface
+    const GeometryIdentifier geoId = trackState.referenceSurface().geometryId();
+
+    const auto scatteringMapId = scatteringMap.find(geoId);
+    assert(scatteringMapId != scatteringMap.end() &&
+           "No scattering angles found for material surface.");
+    if (!scatteringMapId->second.materialIsValid()) {
+      continue;
+    }
+
+    nMaterialSurfaces++;
+  }
+
+  return nMaterialSurfaces;
 }
 
 /// @brief Calculate and update the covariance of the fitted parameters
@@ -1303,32 +1347,10 @@ class Gx2Fitter {
 
       // Count the material surfaces, to set up the system. In the multiple
       // scattering case, we need to extend our system.
-      std::size_t nMaterialSurfaces = 0;
-      if (multipleScattering) {
-        ACTS_DEBUG("Count the valid material surfaces.");
-        for (const auto& trackState : track.trackStates()) {
-          const auto typeFlags = trackState.typeFlags();
-          const bool stateHasMaterial =
-              typeFlags.test(TrackStateFlag::MaterialFlag);
-
-          if (!stateHasMaterial) {
-            continue;
-          }
-
-          // Get and store geoId for the current material surface
-          const GeometryIdentifier geoId =
-              trackState.referenceSurface().geometryId();
-
-          const auto scatteringMapId = scatteringMap.find(geoId);
-          assert(scatteringMapId != scatteringMap.end() &&
-                 "No scattering angles found for material surface.");
-          if (!scatteringMapId->second.materialIsValid()) {
-            continue;
-          }
-
-          nMaterialSurfaces++;
-        }
-      }
+      const std::size_t nMaterialSurfaces =
+          multipleScattering
+              ? countMaterialStates(track, scatteringMap, *m_addToSumLogger)
+              : 0u;
 
       // We need 6 dimensions for the bound parameters and 2 * nMaterialSurfaces
       // dimensions for the scattering angles.
