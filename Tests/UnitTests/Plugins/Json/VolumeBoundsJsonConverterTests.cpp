@@ -23,6 +23,7 @@
 #include <cmath>
 #include <fstream>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <vector>
 
@@ -56,8 +57,8 @@ BOOST_AUTO_TEST_CASE(Cuboid) {
 BOOST_AUTO_TEST_CASE(Cylinder) {
   std::ofstream out("CylinderVolumeBounds.json");
 
-  auto cylinderRef =
-      std::make_shared<const CylinderVolumeBounds>(10., 20., 30., M_PI / 4, 0);
+  auto cylinderRef = std::make_shared<const CylinderVolumeBounds>(
+      10., 20., 30., std::numbers::pi / 4., 0);
   nlohmann::json cylinderOut = VolumeBoundsJsonConverter::toJson(*cylinderRef);
   out << cylinderOut.dump(2);
   out.close();
@@ -78,8 +79,8 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
 BOOST_AUTO_TEST_CASE(Cone) {
   std::ofstream out("ConeVolumeBounds.json");
 
-  auto coneRef = std::make_shared<const ConeVolumeBounds>(0., 0., 0.45, 0.050,
-                                                          0.050, 0., M_PI);
+  auto coneRef = std::make_shared<const ConeVolumeBounds>(
+      0., 0., 0.45, 0.050, 0.050, 0., std::numbers::pi);
   nlohmann::json coneOut = VolumeBoundsJsonConverter::toJson(*coneRef);
   out << coneOut.dump(2);
   out.close();

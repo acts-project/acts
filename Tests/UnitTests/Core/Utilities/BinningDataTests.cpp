@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -30,7 +31,7 @@ Vector3 eta0Position(0.5, 1.5, 0.);
 // the test positions in 2D
 Vector2 xyPosition(0.5, 1.5);
 Vector2 rphizPosition(0.1, 2.5);
-Vector2 rphiPosition(3.5, M_PI / 8.);
+Vector2 rphiPosition(3.5, std::numbers::pi / 8.);
 
 // the binnings - equidistant
 // x/y/zData
@@ -44,12 +45,11 @@ BinningData zData_eq(open, BinningValue::binZ, 10, 0., 10.);
 // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
 BinningData rData_eq(open, BinningValue::binR, 10, 0., 10.);
 // bin boundaries
-// > -M_PI | -3/5 M_PI | -1/5 M_PI | 1/5 M_PI | 3/5 M_PI | M_PI <
-BinningData phiData_eq(closed, BinningValue::binPhi, 5, -M_PI, M_PI);
-// BinningData rPhiData_eq(closed, BinningValue::binRPhi, 5, -M_PI, M_PI);
-// h/etaData
-// bin boundaries
-// | 0 | 2 | 4 | 6 | 8 | 10 |
+// > -PI | -3/5 PI | -1/5 PI | 1/5 PI | 3/5 PI | PI <
+BinningData phiData_eq(closed, BinningValue::binPhi, 5, -std::numbers::pi,
+                       std::numbers::pi);
+// BinningData rPhiData_eq(closed, BinningValue::binRPhi, 5, -std::numbers::pi,
+// std::numbers::pi); h/etaData bin boundaries | 0 | 2 | 4 | 6 | 8 | 10 |
 // BinningData hData_eq(open, BinningValue::binH, 5, 0., 10.);
 // | -2.5 | -1.5 | -0.5 | 0.5 | 1.5 | 2.5 |
 BinningData etaData_eq(open, BinningValue::binEta, 5, -2.5, 2.5);
@@ -63,15 +63,16 @@ std::vector<float> values = {0., 1., 2., 3., 4., 10.};
 // | 0 | 1 | 2 | 3 | 4 | 10 |
 BinningData xData_arb(open, BinningValue::binX, values);
 BinningData yData_arb(open, BinningValue::binY, values);
-// | -M_PI |  -2 |  -1 |  1 |  2 |  M_PI |
-std::vector<float> phiValues = {-M_PI, -2., -1., 1., 2., M_PI};
+// | -PI |  -2 |  -1 |  1 |  2 |  PI |
+std::vector<float> phiValues = {-std::numbers::pi, -2., -1., 1., 2.,
+                                std::numbers::pi};
 BinningData phiData_arb(closed, BinningValue::binPhi, phiValues);
 
 // the binnings - arbitrary when switching to binary search - for boundary
 // sizes >= 50
 std::size_t nBins_binary = 59;
 double valueMin = 0.;
-double phiMin = -M_PI;
+double phiMin = -std::numbers::pi;
 double delta = 0.5;
 double phiDelta = 0.1064;
 
@@ -146,8 +147,9 @@ BOOST_AUTO_TEST_CASE(BinningData_BinningValue) {
   CHECK_CLOSE_REL(rData_eq.value(xyzPosition), std::hypot(0.5, 1.5), 1e-5);
   BOOST_CHECK_EQUAL(rData_eq.value(rphiPosition), 3.5);
 
-  CHECK_SMALL(phiData_eq.value(phi0Position), 1e-6 * M_PI);
-  CHECK_CLOSE_REL(phiData_eq.value(phiPihPosition), M_PI / 2, 1e-5);
+  CHECK_SMALL(phiData_eq.value(phi0Position), 1e-6 * std::numbers::pi);
+  CHECK_CLOSE_REL(phiData_eq.value(phiPihPosition), std::numbers::pi / 2.,
+                  1e-5);
 
   BOOST_CHECK_EQUAL(phiData_eq.bins(), std::size_t{5});
   BOOST_CHECK_EQUAL(phiData_arb.bins(), std::size_t{5});
@@ -219,7 +221,8 @@ BOOST_AUTO_TEST_CASE(BinningData_bins) {
   BOOST_CHECK_EQUAL(rData_eq.searchLocal(rphiPosition), std::size_t{3});
   BOOST_CHECK_EQUAL(phiData_eq.searchGlobal(phi0Position), std::size_t{2});
   BOOST_CHECK_EQUAL(phiData_eq.searchGlobal(phiPihPosition), std::size_t{3});
-  BOOST_CHECK_EQUAL(phiData_arb_binary.search(M_PI), std::size_t{0});
+  BOOST_CHECK_EQUAL(phiData_arb_binary.search(std::numbers::pi),
+                    std::size_t{0});
 
   // h/etaData
   BOOST_CHECK_EQUAL(etaData_eq.searchGlobal(eta0Position), std::size_t{2});
@@ -310,14 +313,14 @@ BOOST_AUTO_TEST_CASE(BinningData_boundaries) {
                                 xData_eq.boundaries().end(), boundaries.begin(),
                                 boundaries.end());
 
-  float phiStep = M_PI * 2. / 5.;
-  std::vector<float> phiBoundaries_eq = {
-      -M_PI,
-      static_cast<float>(-M_PI + 1 * phiStep),
-      static_cast<float>(-M_PI + 2 * phiStep),
-      static_cast<float>(-M_PI + 3 * phiStep),
-      static_cast<float>(-M_PI + 4 * phiStep),
-      static_cast<float>(-M_PI + 5 * phiStep)};
+  const float phiStep = std::numbers::pi * 2. / 5.;
+  std::vector<float> phiBoundaries_eq;
+
+  for (int i = 0; i <= 5; ++i) {
+    phiBoundaries_eq.push_back(
+        static_cast<float>(-std::numbers::pi + i * phiStep));
+  }
+
   CHECK_CLOSE_REL(phiData_eq.boundaries(), phiBoundaries_eq, 1e-5);
 }
 
@@ -362,13 +365,13 @@ BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
   }
 
   // running into rounding errors here
-  float phiStep = M_PI * 2. / 5.;
-  std::vector<float> phiCenters_eq = {
-      static_cast<float>(-M_PI + 0.5 * phiStep),
-      static_cast<float>(-M_PI + 1.5 * phiStep),
-      static_cast<float>(-M_PI + 2.5 * phiStep),
-      static_cast<float>(-M_PI + 3.5 * phiStep),
-      static_cast<float>(-M_PI + 4.5 * phiStep)};
+  const float phiStep = std::numbers::pi * 2. / 5.;
+  std::vector<float> phiCenters_eq;
+
+  for (int i = 0; i < 5; ++i) {
+    phiCenters_eq.push_back(
+        static_cast<float>(-std::numbers::pi + (i + 0.5) * phiStep));
+  }
 
   for (std::size_t ib = 0; ib < phiCenters_eq.size(); ++ib) {
     CHECK_CLOSE_ABS(phiData_eq.center(ib), phiCenters_eq[ib], 1e-3);
@@ -377,41 +380,43 @@ BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
 
 // special test for phi binning
 BOOST_AUTO_TEST_CASE(BinningData_phi_modules) {
-  // n phi modules with phi boundary at -M_Pi/+M_PI are checked above
-  // one module expands over -M_Pi/+M_PI
-  float deltaPhi = 0.1;
-  BinningData phiData_mod(closed, BinningValue::binPhi, 5, -M_PI + deltaPhi,
-                          M_PI + deltaPhi);
-  float phiStep = M_PI * 2. / 5.;
-  std::vector<float> phiBoundaries_mod = {
-      static_cast<float>(-M_PI + deltaPhi),
-      static_cast<float>(-M_PI + 1 * phiStep) + deltaPhi,
-      static_cast<float>(-M_PI + 2 * phiStep) + deltaPhi,
-      static_cast<float>(-M_PI + 3 * phiStep) + deltaPhi,
-      static_cast<float>(-M_PI + 4 * phiStep) + deltaPhi,
-      static_cast<float>(-M_PI + 5 * phiStep) + deltaPhi};
+  // n phi modules with phi boundary at -pi/+pi are checked above one module
+  // expands over -pi/+pi
+  const float deltaPhi = 0.1;
+  BinningData phiData_mod(closed, BinningValue::binPhi, 5,
+                          -std::numbers::pi + deltaPhi,
+                          std::numbers::pi + deltaPhi);
+
+  const float phiStep = std::numbers::pi * 2. / 5.;
+  std::vector<float> phiBoundaries_mod;
+
+  for (int i = 0; i <= 5; ++i) {
+    phiBoundaries_mod.push_back(
+        static_cast<float>(-std::numbers::pi + i * phiStep) + deltaPhi);
+  }
+
   // this is the boundary test
   CHECK_CLOSE_REL(phiData_mod.boundaries(), phiBoundaries_mod, 1e-5);
 
   // now test the bin jump 0/maxbin
 
-  float firstAngle = (-M_PI + 1.5 * deltaPhi);
+  float firstAngle = (-std::numbers::pi + 1.5 * deltaPhi);
   Vector3 firstBin(cos(firstAngle), sin(firstAngle), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(firstAngle), std::size_t{0});
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(firstBin), std::size_t{0});
 
-  float firstAngleNeg = (-M_PI + 0.5 * deltaPhi);
+  float firstAngleNeg = (-std::numbers::pi + 0.5 * deltaPhi);
   Vector3 lastBinNeg(cos(firstAngleNeg), sin(firstAngleNeg), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(firstAngleNeg), std::size_t{4});
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(lastBinNeg), std::size_t{4});
 
-  float lastAnglePos = (M_PI + 0.5 * deltaPhi);
+  float lastAnglePos = (std::numbers::pi + 0.5 * deltaPhi);
   Vector3 lastBinPos(cos(lastAnglePos), sin(lastAnglePos), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(lastAnglePos), std::size_t{4});
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(lastBinPos), std::size_t{4});
 
   // now test the (remaining) phi scaling
-  float underscaledAngle = -M_PI - 0.5 * deltaPhi;
+  float underscaledAngle = -std::numbers::pi - 0.5 * deltaPhi;
   Vector3 underscaledPos(cos(underscaledAngle), sin(underscaledAngle), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(underscaledAngle), std::size_t{4});
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(underscaledPos), std::size_t{4});

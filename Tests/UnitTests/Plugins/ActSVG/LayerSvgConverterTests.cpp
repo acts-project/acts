@@ -24,6 +24,7 @@
 
 #include <fstream>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(ActSvg)
@@ -52,7 +53,7 @@ std::shared_ptr<Acts::Layer> generateDiscLayer(Acts::ActsScalar rInner,
   setupTools();
   unsigned int fullSegments = 4 * quarterSegments;
   std::vector<std::shared_ptr<const Acts::Surface>> moduleSurfaces;
-  Acts::ActsScalar phiStep = 2 * M_PI / fullSegments;
+  Acts::ActsScalar phiStep = 2 * std::numbers::pi / fullSegments;
   Acts::ActsScalar rStep = (rOuter - rInner) / nRings;
   // Reserve & fill
   moduleSurfaces.reserve(fullSegments * nRings);
@@ -83,16 +84,16 @@ std::shared_ptr<Acts::Layer> generateDiscLayer(Acts::ActsScalar rInner,
       Acts::ActsScalar yHalf = rStep * 0.5125;
 
       Acts::ActsScalar xHalfMin =
-          1.15 * (rInner + ir * rStep) * M_PI / fullSegments;
+          1.15 * (rInner + ir * rStep) * std::numbers::pi / fullSegments;
       Acts::ActsScalar xHalfMax =
-          1.15 * (rInner + (ir + 1) * rStep) * M_PI / fullSegments;
+          1.15 * (rInner + (ir + 1) * rStep) * std::numbers::pi / fullSegments;
 
       std::shared_ptr<const Acts::TrapezoidBounds> tBounds =
           std::make_shared<const Acts::TrapezoidBounds>(xHalfMin, xHalfMax,
                                                         yHalf);
       for (unsigned int is = 0; is < fullSegments; ++is) {
         // Setting the phi
-        Acts::ActsScalar cphi = -M_PI + is * phiStep;
+        Acts::ActsScalar cphi = -std::numbers::pi + is * phiStep;
         Acts::Vector3 center(radius * std::cos(cphi), radius * std::sin(cphi),
                              (is % 2) * 2 + (ir % 2) * 5);
         // Local axis system
