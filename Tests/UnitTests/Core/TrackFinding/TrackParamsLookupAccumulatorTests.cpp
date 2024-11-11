@@ -137,15 +137,11 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
 
   std::vector<Acts::Vector4> avgPoss;
   std::vector<Acts::Vector3> avgMoms;
+  Acts::Vector4 pos{1, 2, 0, 4};
   for (std::size_t i = 0; i < gridBound.size(); i++) {
     // Create parameters to accumulate
-    Acts::Vector4 pos{1, 2, 0, 4};
-    std::array<Acts::Vector4, 4> fourPositions = {
-        pos * (i + 1),
-        pos * (i + 2),
-        pos * (i + 3),
-        pos * (i + 4),
-    };
+    std::array<Acts::Vector4, 4> fourPositions = {pos * (i + 1), pos * (i + 2),
+                                                  pos * (i + 3), pos * (i + 4)};
 
     std::array<Acts::ActsScalar, 4> thetas = {
         std::numbers::pi / (i + 1), std::numbers::pi / (i + 2),
@@ -163,9 +159,9 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
     Acts::Vector2 loc{center.at(0), center.at(1)};
 
     // Accumulate
-    Acts::Vector4 avgPos;
-    Acts::Vector3 avgMom;
-    for (std::size_t j = 0; j < fourPositions.size(); j++) {
+    Acts::Vector4 avgPos{0, 0, 0, 0};
+    Acts::Vector3 avgMom{0, 0, 0};
+    for (std::size_t j = 0; j < 4; j++) {
       Acts::Vector3 direction{std::sin(thetas.at(j)) * std::cos(phis.at(j)),
                               std::sin(thetas.at(j)) * std::sin(phis.at(j)),
                               std::cos(thetas.at(j))};
@@ -191,9 +187,6 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
     }
     avgPoss.push_back(avgPos / fourPositions.size());
     avgMoms.push_back(avgMom / fourPositions.size());
-
-    std::cout << "STORING " << i << ":\n";
-    std::cout << avgPoss.back().transpose() << std::endl;
   }
 
   // Finalize and compare
@@ -210,9 +203,6 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
     Acts::Vector3 avgMom = avgMoms.at(i);
     Acts::Vector3 avgDir = avgMom.normalized();
     Acts::ActsScalar avgP = avgMom.norm();
-
-    std::cout << ipBound->fourPosition(gctx).transpose() << " vs "
-              << avgPos.transpose() << "\n";
 
     CHECK_CLOSE_ABS(ipBound->fourPosition(gctx), avgPos, 1e-3);
     CHECK_CLOSE_ABS(ipBound->direction(), avgDir, 1e-3);
