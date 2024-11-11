@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
@@ -115,12 +116,12 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
     const double p = someP * (m_cfg.pTransverse ? 1. / sinTheta : 1.);
 
     // construct the particle;
-    ActsFatras::Particle particle(pid, pdg, q, m_mass);
+    SimParticleState particle(pid, pdg, q, m_mass);
     particle.setDirection(dir);
     particle.setAbsoluteMomentum(p);
 
     // generated particle ids are already ordered and should end up at the end
-    particles.insert(particles.end(), std::move(particle));
+    particles.insert(particles.end(), SimParticle(particle, particle));
   }
 
   std::pair<SimVertexContainer, SimParticleContainer> out;

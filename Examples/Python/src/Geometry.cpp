@@ -45,6 +45,7 @@
 
 #include <array>
 #include <memory>
+#include <numbers>
 #include <unordered_map>
 #include <vector>
 
@@ -200,7 +201,7 @@ void addGeometry(Context& ctx) {
                    Acts::VolumeBounds>(m, "CylinderVolumeBounds")
             .def(py::init<ActsScalar, ActsScalar, ActsScalar, ActsScalar,
                           ActsScalar, ActsScalar, ActsScalar>(),
-                 "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = M_PI,
+                 "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = std::numbers::pi,
                  "avgphi"_a = 0., "bevelMinZ"_a = 0., "bevelMaxZ"_a = 0.);
 
     py::enum_<CylinderVolumeBounds::Face>(cvb, "Face")
