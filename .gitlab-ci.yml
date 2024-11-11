@@ -40,11 +40,18 @@ clang_tidy:
         -DACTS_RUN_CLANG_TIDY=ON
         -DACTS_BUILD_ODD=OFF
 
-    # Main clang-tidy run during cmake compilation
-    - CI/clang_tidy/run_clang_tidy.sh clang-tidy build
-
     # Install dependencies for processing scripts
     - python3 -m pip install -r CI/clang_tidy/requirements.txt
+
+    # Main clang-tidy run during cmake compilation
+    - >
+        CI/clang_tidy/run_clang_tidy.py
+        --clang-tidy clang-tidy
+        --jobs 8
+        # --exclude ".*thirdparty.*"
+        # --exclude ".*ActsPodioEdm.*"
+        # --exclude ".*build/_deps/.*"
+        build clang-tidy
 
     # Parse the main clang-tidy run
     - >
