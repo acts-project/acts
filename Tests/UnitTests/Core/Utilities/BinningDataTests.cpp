@@ -49,11 +49,11 @@ BinningData zData_eq(AxisBoundaryType::Bound, AxisDirection::AxisZ, 10, 0.,
 BinningData rData_eq(AxisBoundaryType::Bound, AxisDirection::AxisR, 10, 0.,
                      10.);
 // bin boundaries
-// > -M_PI | -3/5 M_PI | -1/5 M_PI | 1/5 M_PI | 3/5 M_PI | M_PI <
+// > -pi | -3/5 pi | -1/5 pi | 1/5 pi | 3/5 pi | pi <
 BinningData phiData_eq(AxisBoundaryType::Closed, AxisDirection::AxisPhi, 5,
                        -std::numbers::pi, std::numbers::pi);
 // BinningData rPhiData_eq(AxisBoundaryType::Closed, AxisDirection::AxisRPhi, 5,
-// -M_PI, M_PI); h/etaData bin boundaries | 0 | 2 | 4 | 6 | 8 | 10 | BinningData
+// -pi, pi); h/etaData bin boundaries | 0 | 2 | 4 | 6 | 8 | 10 | BinningData
 // hData_eq(AxisBoundaryType::Bound, AxisDirection::AxisTheta, 5, 0., 10.); |
 // -2.5 | -1.5 | -0.5 | 0.5 | 1.5 | 2.5 |
 BinningData etaData_eq(AxisBoundaryType::Bound, AxisDirection::AxisEta, 5, -2.5,
@@ -69,7 +69,7 @@ std::vector<float> values = {0., 1., 2., 3., 4., 10.};
 // | 0 | 1 | 2 | 3 | 4 | 10 |
 BinningData xData_arb(AxisBoundaryType::Bound, AxisDirection::AxisX, values);
 BinningData yData_arb(AxisBoundaryType::Bound, AxisDirection::AxisY, values);
-// | -M_PI |  -2 |  -1 |  1 |  2 |  M_PI |
+// | -pi |  -2 |  -1 |  1 |  2 |  pi |
 std::vector<float> phiValues = {-std::numbers::pi, -2., -1., 1., 2.,
                                 std::numbers::pi};
 BinningData phiData_arb(AxisBoundaryType::Closed, AxisDirection::AxisPhi,
@@ -392,8 +392,8 @@ BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
 
 // special test for phi binning
 BOOST_AUTO_TEST_CASE(BinningData_phi_modules) {
-  // n phi modules with phi boundary at -M_Pi/+M_PI are checked above
-  // one module expands over -M_Pi/+M_PI
+  // n phi modules with phi boundary at -M_Pi/+pi are checked above
+  // one module expands over -M_Pi/+pi
   float deltaPhi = 0.1;
   BinningData phiData_mod(AxisBoundaryType::Closed, AxisDirection::AxisPhi, 5,
                           -std::numbers::pi + deltaPhi,
