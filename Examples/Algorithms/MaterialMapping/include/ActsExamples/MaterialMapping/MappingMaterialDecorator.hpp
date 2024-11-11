@@ -24,6 +24,7 @@
 #include <fstream>
 #include <map>
 #include <mutex>
+#include <numbers>
 
 // Convenience shorthand
 
@@ -197,8 +198,8 @@ class MappingMaterialDecorator : public IMaterialDecorator {
                 radialBounds->get(Acts::RadialBounds::eHalfPhiSector),
             radialBounds->get(Acts::RadialBounds::eAveragePhi) +
                 radialBounds->get(Acts::RadialBounds::eHalfPhiSector),
-            (radialBounds->get(Acts::RadialBounds::eHalfPhiSector) - M_PI) <
-                    Acts::s_epsilon
+            (radialBounds->get(Acts::RadialBounds::eHalfPhiSector) -
+             std::numbers::pi) < Acts::s_epsilon
                 ? Acts::closed
                 : Acts::open,
             Acts::BinningValue::binPhi);
@@ -214,8 +215,8 @@ class MappingMaterialDecorator : public IMaterialDecorator {
                 cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector),
             cylinderBounds->get(Acts::CylinderBounds::eAveragePhi) +
                 cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector),
-            (cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector) - M_PI) <
-                    Acts::s_epsilon
+            (cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector) -
+             std::numbers::pi) < Acts::s_epsilon
                 ? Acts::closed
                 : Acts::open,
             Acts::BinningValue::binPhi);

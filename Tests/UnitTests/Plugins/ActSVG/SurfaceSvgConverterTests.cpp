@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <fstream>
+#include <numbers>
 
 BOOST_AUTO_TEST_SUITE(ActSvg)
 
@@ -92,7 +93,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   runPlanarTests(*trapeozidPlane, planarStyle, "trapezoid");
 
   // Trapezoid case shifted and rotated
-  Acts::ActsScalar phi = 0.125 * M_PI;
+  Acts::ActsScalar phi = std::numbers::pi / 8.;
   Acts::ActsScalar radius = 150.;
   Acts::Vector3 center(radius * std::cos(phi), radius * std::sin(phi), 0.);
 
@@ -187,8 +188,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaces) {
   runPlanarTests(*fullRing, discStyle, "full_ring");
 
   // Sectorial disc case
-  auto sectoralDiscBounds =
-      std::make_shared<Acts::RadialBounds>(0., 64., 0.25 * M_PI, 0.5 * M_PI);
+  auto sectoralDiscBounds = std::make_shared<Acts::RadialBounds>(
+      0., 64., std::numbers::pi / 4., std::numbers::pi / 2.);
   auto sectoralDisc = Acts::Surface::makeShared<Acts::DiscSurface>(
       transform, sectoralDiscBounds);
   runPlanarTests(*sectoralDisc, discStyle, "full_disc");

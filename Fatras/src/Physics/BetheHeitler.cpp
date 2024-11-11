@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <utility>
 
 ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
@@ -30,7 +31,7 @@ ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
   // later
   //      the azimutal angle
 
-  Scalar psi = 2. * M_PI * rndPsi;
+  Scalar psi = 2. * std::numbers::pi * rndPsi;
 
   // the start of the equation
   Scalar theta = 0.;
