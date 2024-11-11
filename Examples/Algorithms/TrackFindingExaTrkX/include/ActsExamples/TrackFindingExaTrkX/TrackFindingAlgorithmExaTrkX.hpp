@@ -159,9 +159,11 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
           boost::accumulators::tag::max, boost::accumulators::tag::min>>;
 
   mutable struct {
+    Accumulator preprocessingTime;
     Accumulator graphBuildingTime;
     std::vector<Accumulator> classifierTimes;
     Accumulator trackBuildingTime;
+    Accumulator postprocessingTime;
   } m_timing;
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,

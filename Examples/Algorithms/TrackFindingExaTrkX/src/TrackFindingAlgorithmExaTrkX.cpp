@@ -20,6 +20,7 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <numeric>
 
 using namespace ActsExamples;
@@ -117,6 +118,10 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  using Clock = std::chrono::high_resolution_clock;
+  using Duration = std::chrono::duration<double, std::milli>;
+  auto t0 = Clock::now();
+
   // Setup hooks
   LoopHook hook;
 
@@ -246,6 +251,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 #undef MAKE_CLUSTER_FEATURES
   }
 
+  auto t1 = Clock::now();
+
   // Run the pipeline
   const auto trackCandidates = [&]() {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -266,6 +273,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
     return res;
   }();
+
+  auto t2 = Clock::now();
 
   ACTS_DEBUG("Done with pipeline, received " << trackCandidates.size()
                                              << " candidates");
@@ -309,6 +318,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     m_outputGraph(ctx, {graph.first, graph.second});
   }
 
+  auto t3 = Clock::now();
+  m_timing.preprocessingTime(Duration(t1 - t0).count());
+  m_timing.postprocessingTime(Duration(t3 - t2).count());
+
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
@@ -323,17 +336,15 @@ ActsExamples::ProcessCode TrackFindingAlgorithmExaTrkX::finalize() {
   };
 
   ACTS_INFO("Exa.TrkX timing info");
-  {
-    const auto& t = m_timing.graphBuildingTime;
-    ACTS_INFO("- graph building: " << print(t));
-  }
+  ACTS_INFO("- preprocessing:  " << print(m_timing.preprocessingTime));
+  ACTS_INFO("- graph building: " << print(m_timing.graphBuildingTime));
+  // clang-format off
   for (const auto& t : m_timing.classifierTimes) {
-    ACTS_INFO("- classifier:     " << print(t));
+  ACTS_INFO("- classifier:     " << print(t));
   }
-  {
-    const auto& t = m_timing.trackBuildingTime;
-    ACTS_INFO("- track building: " << print(t));
-  }
+  // clang-format on
+  ACTS_INFO("- track building: " << print(m_timing.trackBuildingTime));
+  ACTS_INFO("- postprocessing: " << print(m_timing.postprocessingTime));
 
   return {};
 }
