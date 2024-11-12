@@ -18,7 +18,8 @@ BOOST_AUTO_TEST_SUITE(ContextTypeTests)
 BOOST_AUTO_TEST_CASE(PackUnpack) {
   ContextType ctx;
 
-  ctx = int(42);
+  int v = 42;
+  ctx = v;
 
   BOOST_CHECK_EQUAL(ctx.get<int>(), 42);
   BOOST_CHECK_THROW(ctx.get<double>(), std::bad_any_cast);
@@ -27,7 +28,8 @@ BOOST_AUTO_TEST_CASE(PackUnpack) {
 BOOST_AUTO_TEST_CASE(MaybeUnpack) {
   ContextType ctx;
 
-  ctx = int(42);
+  int v = 42;
+  ctx = v;
 
   BOOST_CHECK_EQUAL(*ctx.maybeGet<int>(), 42);
   BOOST_CHECK_EQUAL(ctx.maybeGet<double>(), nullptr);
