@@ -33,6 +33,7 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
+#include <numbers>
 #include <vector>
 
 #include "FitterTestsCommon.hpp"
@@ -122,7 +123,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
   const double halfSizeSurface = 1_m;
 
   // Rotation of the surfaces around the y-axis
-  const double rotationAngle = M_PI * 0.5;
+  const double rotationAngle = std::numbers::pi / 2.;
   const Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
   const Vector3 yPos(0., 1., 0.);
   const Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
@@ -394,7 +395,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
+                    1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -499,7 +501,8 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
+                    1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -596,7 +599,8 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 8e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-4, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
+                    1e-3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundQOverP], 0.5, 2e-1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -693,7 +697,8 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
+                    1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -955,7 +960,8 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
+                    1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -1105,7 +1111,8 @@ BOOST_AUTO_TEST_CASE(Material) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
+                    1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);

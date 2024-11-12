@@ -10,11 +10,9 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <optional>
 #include <ostream>
@@ -146,7 +144,7 @@ void ActsExamples::ResPlotTool::write(
 
 void ActsExamples::ResPlotTool::fill(
     ResPlotTool::ResPlotCache& resPlotCache, const Acts::GeometryContext& gctx,
-    const ActsFatras::Particle& truthParticle,
+    const SimParticleState& truthParticle,
     const Acts::BoundTrackParameters& fittedParamters) const {
   using ParametersVector = Acts::BoundTrackParameters::ParametersVector;
   using Acts::VectorHelpers::eta;
