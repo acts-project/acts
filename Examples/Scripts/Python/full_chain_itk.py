@@ -67,7 +67,6 @@ addFatras(
             absZ=(0.0 * u.mm, 1.0 * u.m),
             eta=(-4.0, 4.0),
             pt=(150 * u.MeV, None),
-            removeNeutral=True,
         )
         if ttbar_pu200
         else ParticleSelectorConfig()

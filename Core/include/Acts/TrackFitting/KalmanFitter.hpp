@@ -1233,7 +1233,7 @@ class KalmanFitter {
                 track_container_t& trackContainer) const
       -> Result<typename track_container_t::TrackProxy> {
     auto propagatorState =
-        m_propagator.template makeState(sParameters, propagatorOptions);
+        m_propagator.makeState(sParameters, propagatorOptions);
 
     auto& kalmanResult =
         propagatorState.template get<KalmanFitterResult<traj_t>>();

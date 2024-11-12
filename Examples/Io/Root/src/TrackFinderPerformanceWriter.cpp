@@ -260,14 +260,15 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
     }
 
     // Fill efficiency plots
-    m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR, isReconstructed);
+    m_effPlotTool.fill(m_effPlotCache, particle.initial(), minDeltaR,
+                       isReconstructed);
     // Fill number of duplicated tracks for this particle
-    m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
+    m_duplicationPlotTool.fill(m_duplicationPlotCache, particle.initial(),
                                nMatchedTracks - 1);
 
     // Fill number of reconstructed/truth-matched/fake tracks for this particle
-    m_fakeRatePlotTool.fill(m_fakeRatePlotCache, particle, nMatchedTracks,
-                            nFakeTracks);
+    m_fakeRatePlotTool.fill(m_fakeRatePlotCache, particle.initial(),
+                            nMatchedTracks, nFakeTracks);
 
     m_nTotalParticles += 1;
   }

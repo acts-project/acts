@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
   BOOST_CHECK_THROW(ConeBounds(-alpha, zMin, zMax, halfPhi, averagePhi),
                     std::logic_error);
 
-  // Exception for opening angle bigger std::numbers::pi
+  // Exception for opening angle bigger pi
   BOOST_CHECK_THROW(
       ConeBounds(std::numbers::pi, zMin, zMax, halfPhi, averagePhi),
       std::logic_error);

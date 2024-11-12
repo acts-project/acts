@@ -38,11 +38,11 @@ concept GridBinCollection =
     std::ranges::random_access_range<Coll> &&
     std::same_as<typename Coll::value_type, std::size_t>;
 
-template <typename Coll, typename external_t, std::size_t N = 3ul>
-concept CollectionStoresSeedsTo = requires(Coll coll, external_t sp) {
-  Acts::detail::pushBackOrInsertAtEnd(coll,
-                                      Acts::Seed<external_t, N>(sp, sp, sp));
-};
+template <typename collection_t, typename external_t, std::size_t N = 3ul>
+concept CollectionStoresSeedsTo =
+    requires(collection_t coll, Acts::Seed<external_t, N> seed) {
+      Acts::detail::pushBackOrInsertAtEnd(coll, seed);
+    };
 
 enum class SpacePointCandidateType : short { eBottom, eTop };
 
@@ -91,7 +91,7 @@ class SeedFinder {
   /// @param logger the ACTS logger
   SeedFinder(const Acts::SeedFinderConfig<external_spacepoint_t>& config,
              std::unique_ptr<const Acts::Logger> logger =
-                 getDefaultLogger("SeedFinder", Logging::Level::INFO));
+                 getDefaultLogger("Finder", Logging::Level::INFO));
   SeedFinder(SeedFinder<external_spacepoint_t, grid_t, platform_t>&&) noexcept =
       default;
   SeedFinder& operator=(SeedFinder<external_spacepoint_t, grid_t,

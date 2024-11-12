@@ -22,7 +22,7 @@
 
 namespace Acts {
 
-void CylinderPortalShell::connectOuter(TrackingVolume& volume) {
+void CylinderPortalShell::fill(TrackingVolume& volume) {
   for (Face face : {PositiveDisc, NegativeDisc, OuterCylinder, InnerCylinder,
                     NegativePhiPlane, PositivePhiPlane}) {
     const auto& portalAtFace = portalPtr(face);
