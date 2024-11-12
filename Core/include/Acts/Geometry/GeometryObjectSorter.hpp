@@ -27,7 +27,7 @@ class ObjectSorterT {
  public:
   /// Constructor from a binning value
   ///
-  /// @param bValue is the value in which the binning is done
+  /// @param aDir is the axis direction offset
   ObjectSorterT(AxisDirection bValue) : m_binningValue(bValue) {}
 
   /// Comparison operator

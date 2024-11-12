@@ -239,14 +239,9 @@ Vector3 CylinderVolumeBounds::referenceOffset(AxisDirection aDir)
   return VolumeBounds::referenceOffset(aDir);
 }
 
-<<<<<<< HEAD
-double CylinderVolumeBounds::binningBorder(AxisDirection bValue) const {
-  if (bValue == AxisDirection::AxisR) {
-=======
-ActsScalar CylinderVolumeBounds::referenceOffsetValue(
+double CylinderVolumeBounds::referenceOffsetValue(
     AxisDirection aDir) const {
   if (aDir == AxisDirection::AxisR) {
->>>>>>> f9553b4f6 (rename binningPosition())
     return 0.5 * (get(eMaxR) - get(eMinR));
   }
   if (aDir == AxisDirection::AxisZ) {

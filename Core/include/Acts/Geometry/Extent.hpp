@@ -28,20 +28,21 @@ using Envelope = std::array<double, 2>;
 
 constexpr Envelope zeroEnvelope = {0, 0};
 
-/// This struct models a multi-dimensional enveloper along the binning values
+/// This struct models a multi-dimensional enveloper along
+/// the predefined axis drections
 struct ExtentEnvelope {
   /// Access a single envelope configuration
-  /// @param bValue the binning value
+  /// @param aDir the axis direction
   /// @return the envelope
-  Envelope& operator[](AxisDirection bValue) {
-    return m_values.at(toUnderlying(bValue));
+  Envelope& operator[](AxisDirection aDir) {
+    return m_values.at(toUnderlying(aDir));
   }
 
   /// Access a single envelope configuration
-  /// @param bValue the binning value
+  /// @param aDir the axis direction
   /// @return the envelope
-  const Envelope& operator[](AxisDirection bValue) const {
-    return m_values.at(toUnderlying(bValue));
+  const Envelope& operator[](AxisDirection aDir) const {
+    return m_values.at(toUnderlying(aDir));
   }
 
   /// Constructor from a single envelope that is assigned to all values
@@ -124,28 +125,28 @@ class Extent {
   /// Extend with a position vertex
   ///
   /// @param vtx the vertex to be used for extending
-  /// @param bValues the binning values
+  /// @param aDirs the axis directions
   /// @param applyEnv boolean to steer if envelope should be applied
   /// @param fillHistograms is a boolean flag to steer whether the values
   ///        to fill this extent should be stored
   void extend(const Vector3& vtx,
-              const std::vector<AxisDirection>& bValues = allAxisDirections(),
+              const std::vector<AxisDirection>& aDirs = allAxisDirections(),
               bool applyEnv = true, bool fillHistograms = false);
 
   /// Extend with a set of vectors by iterators
   ///
   /// @param start the start iterator of the loop
   /// @param end the end iterator of the loop
-  /// @param bValues the binning values
+  /// @param aDirs the axis directions
   /// @param applyEnv boolean to steer if envelope should be applied
   /// @param fillHistograms is a boolean flag to steer whether the values
   ///        to fill this extent should be stored
   template <typename vector_iterator_t>
   void extend(const vector_iterator_t& start, const vector_iterator_t& end,
-              const std::vector<AxisDirection>& bValues = allAxisDirections(),
+              const std::vector<AxisDirection>& aDirs = allAxisDirections(),
               bool applyEnv = true, bool fillHistograms = false) {
     for (vector_iterator_t vIt = start; vIt < end; ++vIt) {
-      extend(*vIt, bValues, applyEnv, fillHistograms);
+      extend(*vIt, aDirs, applyEnv, fillHistograms);
     }
   }
 
@@ -157,14 +158,14 @@ class Extent {
   /// which then is applied to the current one
   ///
   /// @param rhs is the other source Extent
-  /// @param bValues the binning values
+  /// @param aDirs the axis directions
   /// @param applyEnv boolean to steer if envelope should be applied
   ///        on the constraint values, if only an envelope is given
   ///        but the value not constraint, then it is always applied
   ///
   /// @note that the histogram values can not be filled in this call
   void extend(const Extent& rhs,
-              const std::vector<AxisDirection>& bValues = allAxisDirections(),
+              const std::vector<AxisDirection>& aDirs = allAxisDirections(),
               bool applyEnv = true);
 
   /// Constrain an extent by another one, this is

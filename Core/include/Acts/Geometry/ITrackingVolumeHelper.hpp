@@ -57,7 +57,7 @@ class ITrackingVolumeHelper {
   /// @param mtvVector (optional) Vector of confined TrackingVolumes
   /// @param transform (optional) placement of this TrackingVolume
   /// @param volumeName  volume name to be given
-  /// @param btype (optional) AxisType - arbitrary(default) or equidistant
+  /// @param aType (optional) AxisType - Variable (default) or Equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr createTrackingVolume(
@@ -67,7 +67,7 @@ class ITrackingVolumeHelper {
       MutableTrackingVolumeVector mtvVector = {},
       const Transform3& transform = Transform3::Identity(),
       const std::string& volumeName = "UndefinedVolume",
-      AxisType btype = AxisType::Variable) const = 0;
+      AxisType aType = AxisType::Variable) const = 0;
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
@@ -80,7 +80,7 @@ class ITrackingVolumeHelper {
   /// @param loc0Min, loc0Max, loc1Min, loc1Max : local position in space,
   /// this TrackingVolume is restricted to Translation only
   /// @param volumeName  volume name to be given
-  /// @param btype (optional) AxisType - arbitrary(default) or equidistant
+  /// @param aType (optional) AxisType - Variable (default) or Equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr createTrackingVolume(
@@ -89,7 +89,7 @@ class ITrackingVolumeHelper {
       std::shared_ptr<const IVolumeMaterial> volumeMaterial, double loc0Min,
       double loc0Max, double loc1Min, double loc1Max,
       const std::string& volumeName = "UndefinedVolume",
-      AxisType btype = AxisType::Variable) const = 0;
+      AxisType aType = AxisType::Variable) const = 0;
 
   /// Create a gap volume from dimensions and
   ///
@@ -119,7 +119,7 @@ class ITrackingVolumeHelper {
   /// @param layerPositions custom layer positions
   /// @param cylinder type of layers
   /// @param volumeName  : volume name to be given
-  /// @param btype (optional) AxisType - arbitrary(default) or equidistant
+  /// @param aType (optional) AxisType - Variable (default) or Equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr createGapTrackingVolume(
@@ -128,7 +128,7 @@ class ITrackingVolumeHelper {
       double loc0Max, double loc1Min, double loc1Max,
       const std::vector<double>& layerPositions, bool cylinder = true,
       const std::string& volumeName = "UndefinedVolume",
-      AxisType btype = AxisType::Variable) const = 0;
+      AxisType aType = AxisType::Variable) const = 0;
 
   /// Create a one level higher TrackingVolue
   ///

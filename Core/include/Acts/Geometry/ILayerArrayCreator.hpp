@@ -27,8 +27,6 @@ using LayerVector = std::vector<LayerPtr>;
 
 /// @class ILayerArrayCreator
 ///
-/// Interface class ILayerArrayCreators.
-///
 /// It receives the LayerVector and creaets an array with NaivgationLayer
 /// objects filled in between.
 class ILayerArrayCreator {
@@ -42,13 +40,13 @@ class ILayerArrayCreator {
   /// @param layers are the layers to be moved into an array
   /// @param min is the minimul value for binning
   /// @param max is the maximum value for binning
-  /// @param bType is the type of the ordering: Equidistant, Variable
-  /// @param bValue is the value in which the layer ordering is done
+  /// @param aType is the axis type: Equidistant, Variable
+  /// @param aDir is the axis direction in which the ordering is done
   ///
   /// @return unique pointer to a new LayerArray
   virtual std::unique_ptr<const LayerArray> layerArray(
       const GeometryContext& gctx, const LayerVector& layers, double min,
       double max, AxisType bType = AxisType::Variable,
-      AxisDirection bValue = AxisDirection::AxisX) const = 0;
+      AxisDirection aDir = AxisDirection::AxisX) const = 0;
 };
 }  // namespace Acts

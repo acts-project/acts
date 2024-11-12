@@ -46,20 +46,11 @@ class LayerArrayCreator : public ILayerArrayCreator {
   /// Destructor
   ~LayerArrayCreator() override = default;
 
-  /// LayerArrayCreator interface method
-  ///
-  /// @param gctx is the geometry context for witch the array is built
-  /// @param layersInput are the layers to be moved into an array
-  /// @param min is the minimum value for binning
-  /// @param max is the maximum value for binning
-  /// @param bType is the binning type
-  /// @param bValue is the value in which the binning should be done
-  ///
-  /// @return unique pointer to a newly created LayerArray
+  /// @copydoc ILayerArrayCreator::layerArray
   std::unique_ptr<const LayerArray> layerArray(
       const GeometryContext& gctx, const LayerVector& layersInput, double min,
-      double max, AxisType bType = AxisType::Variable,
-      AxisDirection bValue = AxisDirection::AxisX) const override;
+      double max, AxisType aType = AxisType::Variable,
+      AxisDirection aDir = AxisDirection::AxisX) const override;
 
   /// set logging instance
   void setLogger(std::unique_ptr<const Logger> logger) {
@@ -77,12 +68,11 @@ class LayerArrayCreator : public ILayerArrayCreator {
   /// the NavigationLayer, it clones the
   /// @param layer object and thus needs the
   /// @param gctx geometry context.
-  ///
-  /// @param bValue is the Binning value for the layer array
+  /// @param aDir is the axis direction for the ordering
   /// @param offset is the sift for the navigation layer
   std::shared_ptr<Surface> createNavigationSurface(const GeometryContext& gctx,
                                                    const Layer& layer,
-                                                   AxisDirection bValue,
+                                                   AxisDirection aDir,
                                                    double offset) const;
 };
 

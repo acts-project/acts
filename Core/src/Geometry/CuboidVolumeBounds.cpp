@@ -100,15 +100,9 @@ void CuboidVolumeBounds::buildSurfaceBounds() {
                                                        get(eHalfLengthX));
 }
 
-<<<<<<< HEAD
-double CuboidVolumeBounds::binningBorder(AxisDirection bValue) const {
-  if (bValue <= AxisDirection::AxisZ) {
-    return m_values[toUnderlying(bValue)];
-=======
-ActsScalar CuboidVolumeBounds::referenceOffsetValue(AxisDirection aDir) const {
+double CuboidVolumeBounds::referenceOffsetValue(AxisDirection aDir) const {
   if (aDir <= AxisDirection::AxisZ) {
     return m_values[toUnderlying(aDir)];
->>>>>>> f9553b4f6 (rename binningPosition())
   }
   if (aDir == AxisDirection::AxisR) {
     return std::sqrt(m_values[toUnderlying(AxisDirection::AxisX)] *

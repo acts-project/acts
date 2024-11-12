@@ -71,7 +71,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// @param mtvVector (optional) Vector of confined TrackingVolumes
   /// @param transform (optional) placement of this TrackingVolume
   /// @param volumeName  volume name to be given
-  /// @param bType (optional) AxisType - arbitrary(default) or equidistant
+  /// @param bType (optional) AxisType - Variable (default) or Equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr createTrackingVolume(
@@ -96,7 +96,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// @param zMin minimum z
   /// @param zMax maximum z
   /// @param volumeName  volume name to be given
-  /// @param bType (optional) AxisType - arbitrary(default) or equidistant
+  /// @param bType (optional) AxisType - Variable (default) or Equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr createTrackingVolume(
@@ -141,7 +141,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// @param layerPositions custom layer positions
   /// @param cylinder type of layers
   /// @param volumeName  : volume name to be given
-  /// @param bType (optional) AxisType - arbitrary(default) or equidistant
+  /// @param bType (optional) AxisType - Variable (default) or Equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr createGapTrackingVolume(

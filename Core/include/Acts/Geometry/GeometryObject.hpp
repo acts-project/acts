@@ -53,20 +53,20 @@ class GeometryObject {
   /// Force a binning position method
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the value in which you want to bin
+  /// @param aDir is the axis direction for the reference position
   ///
   /// @return vector 3D used for the binning schema
   virtual Vector3 referencePosition(const GeometryContext& gctx,
-                                    AxisDirection bValue) const = 0;
+                                    AxisDirection aDir) const = 0;
 
   /// Implement the binningValue
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the dobule in which you want to bin
+  /// @param aDir is the reference position value offset
   ///
   /// @return float to be used for the binning schema
   virtual double referencePositionValue(const GeometryContext& gctx,
-                                        AxisDirection bValue) const;
+                                        AxisDirection aDir) const;
 
   /// Set the value
   ///
