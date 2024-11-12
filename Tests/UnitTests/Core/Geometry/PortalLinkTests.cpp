@@ -29,6 +29,7 @@
 #include <cstdio>
 #include <iostream>
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 
 using namespace Acts::UnitLiterals;
@@ -152,7 +153,8 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
     const auto* axis1 = grid2dCyl1->grid().axes().front();
     const auto* axis2 = grid2dCyl1->grid().axes().back();
 
-    Axis axis1Expected{AxisClosed, -M_PI * 30_mm, M_PI * 30_mm, 1};
+    Axis axis1Expected{AxisClosed, -std::numbers::pi * 30_mm,
+                       std::numbers::pi * 30_mm, 1};
     BOOST_CHECK_EQUAL(*axis1, axis1Expected);
     Axis axis2Expected{AxisBound, -100_mm, 100_mm, 10};
     BOOST_CHECK_EQUAL(*axis2, axis2Expected);
@@ -163,7 +165,8 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
 
     checkAllBins(concrete);
 
-    Axis axis1Explicit{AxisClosed, -M_PI * 30_mm, M_PI * 30_mm, 13};
+    Axis axis1Explicit{AxisClosed, -std::numbers::pi * 30_mm,
+                       std::numbers::pi * 30_mm, 13};
     auto grid2dCyl1Explicit = grid1dCyl->extendTo2d(&axis1Explicit);
     BOOST_REQUIRE(grid2dCyl1Explicit);
     BOOST_CHECK_EQUAL(grid2dCyl1Explicit->grid().axes().size(), 2);
@@ -497,7 +500,8 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
 
     BOOST_CHECK_EQUAL(gridRPhi->grid().axes().size(), 1);
     BOOST_CHECK_EQUAL(gridRPhi->surface().bounds(), cyl->bounds());
-    Axis axisRPhiExpected{AxisClosed, -M_PI * 30_mm, M_PI * 30_mm, 1};
+    Axis axisRPhiExpected{AxisClosed, -std::numbers::pi * 30_mm,
+                          std::numbers::pi * 30_mm, 1};
     BOOST_CHECK_EQUAL(*gridRPhi->grid().axes().front(), axisRPhiExpected);
 
     auto cylPhi = Surface::makeShared<CylinderSurface>(
@@ -556,7 +560,7 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
 
     BOOST_CHECK_EQUAL(gridPhi->grid().axes().size(), 1);
     BOOST_CHECK_EQUAL(gridPhi->surface().bounds(), disc->bounds());
-    Axis axisPhiExpected{AxisClosed, -M_PI, M_PI, 1};
+    Axis axisPhiExpected{AxisClosed, -std::numbers::pi, std::numbers::pi, 1};
     BOOST_CHECK_EQUAL(*gridPhi->grid().axes().front(), axisPhiExpected);
 
     BOOST_CHECK_EQUAL(
@@ -2310,8 +2314,9 @@ BOOST_AUTO_TEST_CASE(TrivialGridR) {
   auto trivial = std::make_unique<TrivialPortalLink>(disc2, *vol2);
   BOOST_REQUIRE(trivial);
 
-  auto gridPhi = GridPortalLink::make(disc1, BinningValue::binPhi,
-                                      Axis{AxisClosed, -M_PI, M_PI, 2});
+  auto gridPhi = GridPortalLink::make(
+      disc1, BinningValue::binPhi,
+      Axis{AxisClosed, -std::numbers::pi, std::numbers::pi, 2});
   gridPhi->setVolume(vol1.get());
 
   auto gridR = GridPortalLink::make(disc1, BinningValue::binR,
