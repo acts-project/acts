@@ -11,5 +11,6 @@
 
 const Acts::Transform3& Acts::DD4hepGeometryContext::contextualTransform(
     const Acts::DD4hepDetectorElement& dElement) const {
+  // Use inactive context as the base transformation state
   return dElement.transform(DD4hepGeometryContext::inactive());
 }
