@@ -29,7 +29,6 @@ class DD4hepGeometryContext : public GeometryContext{
 
     /// The transform of this detector element within the given context
     ///
-    /// @param gctx is the geometry context
     /// @param dElement The detector element
     ///
     /// @return The transform of the detector element
