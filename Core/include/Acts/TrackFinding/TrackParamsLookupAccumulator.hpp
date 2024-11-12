@@ -211,8 +211,8 @@ class TrackParamsLookupAccumulator {
   /// layer track parameters
   LookupGrid m_grid;
 
-    /// Mutex for protecting grid access
-    std::mutex m_gridMutex;
+  /// Mutex for protecting grid access
+  std::mutex m_gridMutex;
 
   /// Map to keep the accumulation count
   /// in the occupied grid bins
