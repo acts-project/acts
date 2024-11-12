@@ -9,7 +9,6 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/TruthTracking/HitSelector.hpp"
-#include "ActsExamples/TruthTracking/MeasurementSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
@@ -168,11 +167,6 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::TrackTruthMatcher, mex, "TrackTruthMatcher", inputTracks,
       inputParticles, inputMeasurementParticlesMap, outputTrackParticleMatching,
       outputParticleTrackMatching, matchingRatio, doubleMatching);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::MeasurementSelector, mex, "MeasurementSelector",
-      inputMeasurements, inputMeasurementParticlesMap, inputParticlesSelected,
-      outputMeasurements, minPrimaryVertexId, maxPrimaryVertexId);
 }
 
 }  // namespace Acts::Python
