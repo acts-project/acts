@@ -29,6 +29,8 @@ class DD4hepDetectorElement;
 class DD4hepGeometryContext : public GeometryContext{
     public:
     /// Explicit inactive constructor
+    /// Creates an inactive geometry context that skips alignment corrections
+    /// @return DD4hepGeometryContext instance with inactive state
     static DD4hepGeometryContext inactive() { return DD4hepGeometryContext(false); }
 
     /// The transform of this detector element within the given context
