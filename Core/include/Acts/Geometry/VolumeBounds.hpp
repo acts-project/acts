@@ -133,19 +133,19 @@ class VolumeBounds {
     return {AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ};
   };
 
-  /// Binning offset - overloaded for some R-binning types
+  /// Reference offset in a specific axis direction
   ///
-  /// @param bValue is the binning schema used
+  /// @param aDir is the axis derection for the offset
   ///
-  /// @return vector 3D to be used for the binning
-  virtual Vector3 binningOffset(AxisDirection bValue) const;
+  /// @return vector 3D to be used for sorting, binning
+  virtual Vector3 referenceOffset(AxisDirection aDir) const;
 
-  /// Binning borders in double
+  /// The reference offset value in a specific axis direction
   ///
-  /// @param bValue is the binning schema used
+  /// @param aDir is the binning schema used
   ///
-  /// @return float offset to be used for the binning
-  virtual double binningBorder(AxisDirection bValue) const;
+  /// @return value offset to be used for sorting, binning
+  virtual double referenceOffsetValue(AxisDirection aDir) const;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
@@ -154,12 +154,12 @@ class VolumeBounds {
 };
 
 /// Binning offset - overloaded for some R-binning types
-inline Vector3 VolumeBounds::binningOffset(
-    AxisDirection /*bValue*/) const {  // standard offset is 0.,0.,0.
+inline Vector3 VolumeBounds::referenceOffset(
+    AxisDirection /*aDir*/) const {  // standard offset is 0.,0.,0.
   return Vector3(0., 0., 0.);
 }
 
-inline double VolumeBounds::binningBorder(AxisDirection /*bValue*/) const {
+inline double VolumeBounds::referenceOffsetValue(AxisDirection /*aDir*/) const {
   return 0.;
 }
 

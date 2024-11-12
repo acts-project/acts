@@ -45,12 +45,12 @@ class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator {
   ///
   /// @param [in] gctx the geometry context for this building
   /// @param [in] tVolumes is the vector of TrackingVolumes to be
-  /// @param [in] bValue is the binning value
+  /// @param [in] aDir is the ordering axis direction
   ///
   /// @return new created volume array
   std::shared_ptr<const TrackingVolumeArray> trackingVolumeArray(
       const GeometryContext& gctx, const TrackingVolumeVector& tVolumes,
-      AxisDirection bValue) const override;
+      AxisDirection aDir) const override;
 
   /// Set logging instance
   ///

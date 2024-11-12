@@ -35,7 +35,7 @@ struct CenterReferenceGenerator {
   }
 };
 
-/// A struct to access reference positions based on reference positions 
+/// A struct to access reference positions based on reference positions
 /// along a chosen axis direction.
 ///
 /// @tparam aDIR the axis direction for generating the reference position

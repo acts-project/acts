@@ -126,12 +126,21 @@ class CuboidVolumeBounds : public VolumeBounds {
     return {AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ};
   };
 
+<<<<<<< HEAD
   /// Binning borders in double
+=======
+  /// Reference offset value along a given axis direction
+>>>>>>> f9553b4f6 (rename binningPosition())
   ///
-  /// @param bValue is the binning schema used
+  /// @param adir is the binning schema used
   ///
+<<<<<<< HEAD
   /// @return float offset to be used for the binning
   double binningBorder(AxisDirection bValue) const final;
+=======
+  /// @return value offset to be used for the binning
+  ActsScalar referenceOffsetValue(AxisDirection aDir) const final;
+>>>>>>> f9553b4f6 (rename binningPosition())
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access

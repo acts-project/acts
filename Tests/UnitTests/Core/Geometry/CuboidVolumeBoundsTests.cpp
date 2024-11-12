@@ -104,10 +104,13 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {
   }
 
   // Check the binning value positions
-  CHECK_CLOSE_ABS(box.binningBorder(AxisDirection::AxisX), hx, s_epsilon);
-  CHECK_CLOSE_ABS(box.binningBorder(AxisDirection::AxisY), hy, s_epsilon);
-  CHECK_CLOSE_ABS(box.binningBorder(AxisDirection::AxisZ), hz, s_epsilon);
-  CHECK_CLOSE_ABS(box.binningBorder(AxisDirection::AxisR),
+  CHECK_CLOSE_ABS(box.referenceOffsetValue(AxisDirection::AxisX), hx,
+                  s_epsilon);
+  CHECK_CLOSE_ABS(box.referenceOffsetValue(AxisDirection::AxisY), hy,
+                  s_epsilon);
+  CHECK_CLOSE_ABS(box.referenceOffsetValue(AxisDirection::AxisZ), hz,
+                  s_epsilon);
+  CHECK_CLOSE_ABS(box.referenceOffsetValue(AxisDirection::AxisR),
                   std::sqrt(hx * hx + hy * hy), s_epsilon);
 }
 

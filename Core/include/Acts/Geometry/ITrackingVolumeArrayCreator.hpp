@@ -50,11 +50,11 @@ class ITrackingVolumeArrayCreator {
   ///
   /// @param [in] gctx the geometry context for this building
   /// @param vols are the TrackingVolumes ordered in a tracker
-  /// @param bVal is the binning value for the volume binning
+  /// @param aDir is the ordering axis direction
   ///
   /// @return shared pointer to a new TrackingVolumeArray
   virtual std::shared_ptr<const TrackingVolumeArray> trackingVolumeArray(
       const GeometryContext& gctx, const TrackingVolumeVector& vols,
-      AxisDirection bVal) const = 0;
+      AxisDirection aDir) const = 0;
 };
 }  // namespace Acts

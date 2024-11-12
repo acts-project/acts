@@ -39,7 +39,7 @@ Vector3 Volume::referencePosition(const GeometryContext& /*gctx*/,
   // just for R-binning types the
   if (bValue == AxisDirection::AxisR || bValue == AxisDirection::AxisRPhi) {
     // the binning Position for R-type may have an offset
-    return (center() + m_volumeBounds->binningOffset(bValue));
+    return (center() + m_volumeBounds->referenceOffset(bValue));
   }
   // return the center
   return center();
