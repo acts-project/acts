@@ -145,7 +145,7 @@ def trackSelectorDefaultKWArgs(c):
         etaMin=c.eta[0],
         etaMax=c.eta[1],
         absEtaMin=c.absEta[0],
-        absEtaMax=absEtaMaxLambda(c.absEta[1]),
+        absEtaMax=c.absEta[1],
         ptMin=c.pt[0],
         ptMax=c.pt[1],
         minMeasurements=c.nMeasurementsMin,
