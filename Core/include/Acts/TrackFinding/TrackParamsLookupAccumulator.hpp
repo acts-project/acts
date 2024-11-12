@@ -33,7 +33,7 @@ concept IsGenericBound =
                                    typename parameters_t::ParticleHypothesis>>;
 
 template <typename T>
-using removeShared = std::remove_reference_t<decltype(*std::declval<T>())>;
+using remove_shared = std::remove_reference_t<decltype(*std::declval<T>())>;
 
 /// @brief Concept that restricts the type of the
 /// accumulation grid cell
@@ -43,17 +43,17 @@ concept TrackParamsGrid = requires {
   typename grid_t::value_type::second_type;
 
   requires TrackParameters<
-      removeShared<typename grid_t::value_type::first_type>>;
+      remove_shared<typename grid_t::value_type::first_type>>;
   requires TrackParameters<
-      removeShared<typename grid_t::value_type::first_type>>;
+      remove_shared<typename grid_t::value_type::first_type>>;
 
-  requires requires(grid_t::value_type val) {
+  requires requires(typename grid_t::value_type val) {
     {
       val.first
-    } -> std::same_as<std::shared_ptr<removeShared<decltype(val.first)>>&>;
+    } -> std::same_as<std::shared_ptr<remove_shared<decltype(val.first)>>&>;
     {
       val.second
-    } -> std::same_as<std::shared_ptr<removeShared<decltype(val.first)>>&>;
+    } -> std::same_as<std::shared_ptr<remove_shared<decltype(val.first)>>&>;
     { val.second } -> std::same_as<decltype(val.first)&>;
   };
 };
@@ -76,7 +76,7 @@ template <TrackParamsGrid grid_t>
 class TrackParamsLookupAccumulator {
  public:
   using LookupGrid = grid_t;
-  using TrackParameters = std::pointer_traits<
+  using TrackParameters = typename std::pointer_traits<
       typename grid_t::value_type::first_type>::element_type;
 
   /// @brief Constructor
@@ -84,7 +84,6 @@ class TrackParamsLookupAccumulator {
 
   /// @brief Add track parameters to the accumulator
   ///
-  /// @param gctx Geometry context
   /// @param ipTrackParameters Track parameters at the IP
   /// @param refTrackParameters Track parameters at the reference layer
   /// @param position Local position of the track hit on the reference layer
@@ -152,7 +151,6 @@ class TrackParamsLookupAccumulator {
  private:
   /// @brief Add two track parameters
   ///
-  /// @param gctx Geometry context
   /// @param a First track parameter in the sum
   /// @param b Second track parameter in the sum
   ///

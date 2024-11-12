@@ -52,7 +52,7 @@ class TrackParamsLookupEstimation : public IAlgorithm {
   TrackParamsLookupEstimation(const Config& config, Acts::Logging::Level level);
 
   /// @brief Destructor
-  ~TrackParamsLookupEstimation();
+  ~TrackParamsLookupEstimation() = default;
 
   /// @brief The execute method
   ProcessCode execute(const AlgorithmContext& ctx) const override;
