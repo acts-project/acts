@@ -81,7 +81,8 @@ class TrackParamsLookupAccumulator {
       typename grid_t::value_type::first_type>::element_type;
 
   /// @brief Constructor
-  TrackParamsLookupAccumulator(grid_t grid) : m_grid(std::move(grid)) {}
+  explicit TrackParamsLookupAccumulator(grid_t grid)
+      : m_grid(std::move(grid)) {}
 
   /// @brief Add track parameters to the accumulator
   ///

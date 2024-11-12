@@ -35,7 +35,7 @@ class JsonTrackParamsLookupReader final : public ITrackParamsLookupReader {
     std::pair<std::size_t, std::size_t> bins;
   };
 
-  JsonTrackParamsLookupReader(const Config& config) : m_cfg(config) {};
+  explicit JsonTrackParamsLookupReader(const Config& config) : m_cfg(config) {};
 
   ~JsonTrackParamsLookupReader() override = default;
 
@@ -44,7 +44,7 @@ class JsonTrackParamsLookupReader final : public ITrackParamsLookupReader {
   /// @param path path to the json file
   ///
   /// @return lookup table for track parameter estimation
-  TrackParamsLookup readLookup(const std::string& path) final {
+  TrackParamsLookup readLookup(const std::string& path) override {
     // Read the json file
     std::ifstream ifj(path);
     nlohmann::json jLookup;
@@ -55,7 +55,7 @@ class JsonTrackParamsLookupReader final : public ITrackParamsLookupReader {
     for (const auto& jGrid : jLookup) {
       Acts::GeometryIdentifier id(jGrid["geo_id"]);
 
-      if (m_cfg.refLayers.find(id) == m_cfg.refLayers.end()) {
+      if (m_cfg.refLayers.contains(id)) {
         throw std::invalid_argument("Geometry identifier not found");
       }
 
@@ -84,7 +84,7 @@ class JsonTrackParamsLookupReader final : public ITrackParamsLookupReader {
                                             TrackParamsLookupPair>(
               jGrid["grid"], axisGen);
 
-      lookup.insert({id, std::move(grid)});
+      lookup.try_emplace(id, std::move(grid));
     }
 
     return lookup;

@@ -13,8 +13,7 @@
 
 ActsExamples::TrackParamsLookupEstimation::TrackParamsLookupEstimation(
     const Config& config, Acts::Logging::Level level)
-    : IAlgorithm("TrackParamsLookupEstimation", level),
-      m_cfg(std::move(config)) {
+    : IAlgorithm("TrackParamsLookupEstimation", level), m_cfg(config) {
   // Iterate over the reference layers and create
   // track parameter accumulators
   for (const auto& [geoId, refSurface] : m_cfg.refLayers) {
@@ -52,7 +51,7 @@ ActsExamples::TrackParamsLookupEstimation::finalize() {
   for (auto& [id, acc] : m_accumulators) {
     lookup.insert({id, acc->finalizeLookup()});
   }
-  for (auto& writer : m_cfg.trackLookupGridWriters) {
+  for (const auto& writer : m_cfg.trackLookupGridWriters) {
     writer->writeLookup(lookup);
   }
 

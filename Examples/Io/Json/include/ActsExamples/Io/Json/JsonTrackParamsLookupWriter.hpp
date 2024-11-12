@@ -33,7 +33,7 @@ class JsonTrackParamsLookupWriter final : public ITrackParamsLookupWriter {
   /// Constructor
   ///
   /// @param config The configuration struct of the writer
-  JsonTrackParamsLookupWriter(const Config& config) : m_cfg(config) {};
+  explicit JsonTrackParamsLookupWriter(const Config& config) : m_cfg(config) {};
 
   /// Virtual destructor
   ~JsonTrackParamsLookupWriter() override = default;
@@ -41,7 +41,7 @@ class JsonTrackParamsLookupWriter final : public ITrackParamsLookupWriter {
   /// Write out track parameters lookup table
   ///
   /// @param lookup The lookup to write
-  void writeLookup(const TrackParamsLookup& lookup) const final {
+  void writeLookup(const TrackParamsLookup& lookup) const override {
     nlohmann::json jLookup;
 
     // Iterate over the lookup and serialize the grids
