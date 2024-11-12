@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <concepts>
+#include <numbers>
 
 template <typename external_spacepoint_t>
 Acts::CylindricalSpacePointGrid<external_spacepoint_t>
@@ -91,16 +92,14 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
 
     // divide 2pi by angle delta to get number of phi-bins
     // size is always 2pi even for regions of interest
-    phiBins = static_cast<int>(std::ceil(2 * M_PI / deltaPhi));
+    phiBins = static_cast<int>(std::ceil(2 * std::numbers::pi / deltaPhi));
     // need to scale the number of phi bins accordingly to the number of
     // consecutive phi bins in the seed making step.
     // Each individual bin should be approximately a fraction (depending on this
     // number) of the maximum expected azimutal deflection.
 
     // set protection for large number of bins, by default it is large
-    if (phiBins > config.maxPhiBins) {
-      phiBins = config.maxPhiBins;
-    }
+    phiBins = std::min(phiBins, config.maxPhiBins);
   }
 
   Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(

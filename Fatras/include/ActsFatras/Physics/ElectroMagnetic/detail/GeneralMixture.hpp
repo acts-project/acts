@@ -11,6 +11,7 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Material/Interactions.hpp"
 
+#include <numbers>
 #include <random>
 
 namespace ActsFatras::detail {
@@ -87,7 +88,7 @@ struct GeneralMixture {
       theta = std::normal_distribution<double>(0.0, theta0)(generator);
     }
     // scale from planar to 3d angle
-    return M_SQRT2 * theta;
+    return std::numbers::sqrt2 * theta;
   }
 
   // helper methods for getting parameters and simulating

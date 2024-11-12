@@ -39,6 +39,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <ostream>
 #include <set>
@@ -847,7 +848,7 @@ ProcessCode VertexNTupleWriter::writeT(
           // Accounting for the periodicity of phi. We overwrite the
           // previously computed value for better readability.
           diffMom[0] = Acts::detail::difference_periodic(recoMom(0), trueMom(0),
-                                                         2 * M_PI);
+                                                         2 * std::numbers::pi);
           innerResPhi.push_back(diffMom[0]);
           innerResTheta.push_back(diffMom[1]);
           innerResQOverP.push_back(diffMom[2]);
@@ -900,7 +901,7 @@ ProcessCode VertexNTupleWriter::writeT(
           // Accounting for the periodicity of phi. We overwrite the
           // previously computed value for better readability.
           diffMomFitted[0] = Acts::detail::difference_periodic(
-              recoMomFitted(0), trueMom(0), 2 * M_PI);
+              recoMomFitted(0), trueMom(0), 2 * std::numbers::pi);
           innerResPhiFitted.push_back(diffMomFitted[0]);
           innerResThetaFitted.push_back(diffMomFitted[1]);
           innerResQOverPFitted.push_back(diffMomFitted[2]);

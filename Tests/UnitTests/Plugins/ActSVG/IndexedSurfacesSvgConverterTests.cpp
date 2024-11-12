@@ -20,6 +20,7 @@
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
+#include <numbers>
 #include <tuple>
 
 using namespace Acts;
@@ -77,7 +78,8 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
   IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
       irSurfaces{rSurfaces, {}, {BinningValue::binPhi}};
 
-  GridAxisGenerators::EqClosed aGenerator{{-M_PI, M_PI}, 44u};
+  GridAxisGenerators::EqClosed aGenerator{{-std::numbers::pi, std::numbers::pi},
+                                          44u};
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
@@ -102,7 +104,8 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
   IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
       irSurfaces{rSurfaces, {rSurfaces.size() - 1u}, {BinningValue::binPhi}};
 
-  GridAxisGenerators::EqClosed aGenerator{{-M_PI, M_PI}, 44u};
+  GridAxisGenerators::EqClosed aGenerator{{-std::numbers::pi, std::numbers::pi},
+                                          44u};
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
@@ -129,7 +132,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
       irSurfaces{rSurfaces, {}, {BinningValue::binR, BinningValue::binPhi}};
 
   GridAxisGenerators::VarBoundEqClosed aGenerator{
-      {24., 74., 110.}, {-M_PI, M_PI}, 44u};
+      {24., 74., 110.}, {-std::numbers::pi, std::numbers::pi}, 44u};
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
@@ -161,7 +164,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
       irSurfaces{rSurfaces, {}, {BinningValue::binR, BinningValue::binPhi}};
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
-      {24., 152}, 8u, {-M_PI, M_PI}, 88u};
+      {24., 152}, 8u, {-std::numbers::pi, std::numbers::pi}, 88u};
 
   PolyhedronReferenceGenerator<1u, true> rGenerator;
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
@@ -194,7 +197,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
           rSurfaces, {}, {BinningValue::binR, BinningValue::binPhi}, {2u, 4u}};
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
-      {24., 152}, 8u, {-M_PI, M_PI}, 88u};
+      {24., 152}, 8u, {-std::numbers::pi, std::numbers::pi}, 88u};
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
@@ -216,7 +219,7 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
           surfaces, {}, {BinningValue::binZ, BinningValue::binPhi}, {1u, 1u}};
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
-      {-500., 500}, 28, {-M_PI, M_PI}, 52u};
+      {-500., 500}, 28, {-std::numbers::pi, std::numbers::pi}, 52u};
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
   auto indexedCylinder = icSurfaces(tContext, aGenerator, rGenerator);
