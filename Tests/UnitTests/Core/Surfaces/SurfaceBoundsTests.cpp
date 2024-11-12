@@ -27,13 +27,15 @@ class SurfaceBoundsStub : public SurfaceBounds {
     std::iota(m_values.begin(), m_values.end(), 0);
   }
 
-#if defined(__GNUC__) && __GNUC__ == 13 && !defined(__clang__)
+#if defined(__GNUC__) && (__GNUC__ == 13 || __GNUC__ == 14) && \
+    !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #pragma GCC diagnostic ignored "-Wstringop-overflow"
 #endif
   SurfaceBoundsStub(const SurfaceBoundsStub& other) = default;
-#if defined(__GNUC__) && __GNUC__ == 13 && !defined(__clang__)
+#if defined(__GNUC__) && (__GNUC__ == 13 || __GNUC__ == 14) && \
+    !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
 

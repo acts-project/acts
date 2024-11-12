@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include <algorithm>
+#include <numbers>
 
 ///////////////////////////////////////////////////////////////////
 // Constructor
@@ -247,7 +248,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::buildFrameWork() {
 
   // Build radius-azimuthal sorted containers
   //
-  const float pi2 = 2. * M_PI;
+  const float pi2 = 2. * std::numbers::pi;
   const int NFmax = 53;
   const float sFmax = static_cast<float>(NFmax) / pi2;
   const float m_sFmin = 100. / 60.;
@@ -413,7 +414,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::convertToBeamFrameWork(
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillLists() {
-  const float pi2 = 2. * M_PI;
+  const float pi2 = 2. * std::numbers::pi;
   typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator r, re;
 
   int ir0 = 0;
