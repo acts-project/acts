@@ -8,6 +8,8 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 
+#include "Acts/Plugins/DD4hep/DD4hepGeometryContext.hpp"
+
 #include <utility>
 
 #include <DD4hep/Alignments.h>
@@ -23,3 +25,13 @@ Acts::DD4hepDetectorElement::DD4hepDetectorElement(
           detElement.nominal().worldTransformation(), axes, scalor,
           std::move(material)),
       m_detElement(detElement) {}
+
+const Acts::Transform3& Acts::DD4hepDetectorElement::transform(
+    const GeometryContext& gctx) const {
+  const Acts::DD4hepGeometryContext* dd4hepGtx =
+      gctx.maybeGet<DD4hepGeometryContext>();
+  if (dd4hepGtx != nullptr && dd4hepGtx->isActive()) {
+    return dd4hepGtx->contextualTransform(*this);
+  }
+  return TGeoDetectorElement::m_transform;
+}

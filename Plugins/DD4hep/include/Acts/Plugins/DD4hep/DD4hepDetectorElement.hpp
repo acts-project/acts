@@ -87,6 +87,11 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   // Give access to the DD4hep detector element
   const dd4hep::DetElement& sourceElement() const { return m_detElement; }
 
+  /// Return the transform for the Element proxy mechanism
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  const Transform3& transform(const GeometryContext& gctx) const final;
+
  private:
   /// DD4hep detector element
   dd4hep::DetElement m_detElement;

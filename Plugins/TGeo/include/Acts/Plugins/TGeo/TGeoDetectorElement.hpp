@@ -133,7 +133,7 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
   /// Return the TGeoNode for back navigation
   const TGeoNode& tgeoNode() const { return *m_detElement; }
 
- private:
+ protected:
   /// Pointer to TGeoNode (not owned)
   const TGeoNode* m_detElement{nullptr};
   /// Transformation of the detector element
