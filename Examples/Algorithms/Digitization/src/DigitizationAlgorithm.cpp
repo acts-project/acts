@@ -18,6 +18,7 @@
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
@@ -149,7 +150,6 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   measurementParticlesMap.reserve(simHits.size());
   measurementSimHitsMap.reserve(simHits.size());
 
-  // Setup random number generator
   auto eventSeed = m_cfg.randomNumbers->generateSeed(ctx);
 
   // Some statistics
@@ -188,19 +188,6 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
       ACTS_VERBOSE("Digitizer found for module " << moduleGeoId);
     }
 
-    auto moduleSeed = eventSeed + moduleGeoId.value();
-    RandomEngine rng(moduleSeed);
-
-    // Sort simhits by particle id to make sure we can iterate over them in
-    // a deterministic order.
-    std::vector<std::size_t> sortedSimHitOrdering(moduleSimHits.size());
-    std::iota(sortedSimHitOrdering.begin(), sortedSimHitOrdering.end(), 0);
-    std::sort(sortedSimHitOrdering.begin(), sortedSimHitOrdering.end(),
-              [&](std::size_t i, std::size_t j) {
-                return (moduleSimHits.begin() + i)->particleId() <
-                       (moduleSimHits.begin() + j)->particleId();
-              });
-
     // Run the digitizer. Iterate over the hits for this surface inside the
     // visitor so we do not need to lookup the variant object per-hit.
     std::visit(
@@ -209,8 +196,13 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               digitizer.geometric.segmentation, digitizer.geometric.indices,
               m_cfg.doMerge, m_cfg.mergeNsigma, m_cfg.mergeCommonCorner);
 
-          for (std::size_t simHitIdx : sortedSimHitOrdering) {
-            const auto& simHit = *(moduleSimHits.begin() + simHitIdx);
+          for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
+            const auto& simHit = *h;
+            const auto simHitIdx = simHits.index_of(h);
+
+            auto particleSeed =
+                eventSeed + simHit.particleId().value() + simHit.index();
+            RandomEngine rng(particleSeed);
 
             DigitizedParameters dParameters;
 
