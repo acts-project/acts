@@ -1306,12 +1306,12 @@ class Gx2Fitter {
       // existing states, but this needs some more thinking.
       trackContainerTemp.clear();
 
-      auto propagationResult = m_propagator.template propagate(propagatorState);
+      auto propagationResult = m_propagator.propagate(propagatorState);
 
       // Run the fitter
-      auto result = m_propagator.template makeResult(std::move(propagatorState),
-                                                     propagationResult,
-                                                     propagatorOptions, false);
+      auto result =
+          m_propagator.makeResult(std::move(propagatorState), propagationResult,
+                                  propagatorOptions, false);
 
       if (!result.ok()) {
         ACTS_ERROR("Propagation failed: " << result.error());
@@ -1502,12 +1502,12 @@ class Gx2Fitter {
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trackContainer.trackStateContainer();
 
-      auto propagationResult = m_propagator.template propagate(propagatorState);
+      auto propagationResult = m_propagator.propagate(propagatorState);
 
       // Run the fitter
-      auto result = m_propagator.template makeResult(std::move(propagatorState),
-                                                     propagationResult,
-                                                     propagatorOptions, false);
+      auto result =
+          m_propagator.makeResult(std::move(propagatorState), propagationResult,
+                                  propagatorOptions, false);
 
       if (!result.ok()) {
         ACTS_ERROR("Propagation failed: " << result.error());
