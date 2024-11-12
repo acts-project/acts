@@ -21,7 +21,7 @@ class ITrackParamsLookupReader {
   /// Reader method
   ///
   /// @param path the path to the file to read
-  virtual TrackParamsLookup readLookup(const std::string& path) = 0;
+  virtual TrackParamsLookup readLookup(const std::string& path) const = 0;
 };
 
 }  // namespace ActsExamples

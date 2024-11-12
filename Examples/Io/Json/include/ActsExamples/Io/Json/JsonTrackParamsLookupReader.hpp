@@ -44,7 +44,7 @@ class JsonTrackParamsLookupReader final : public ITrackParamsLookupReader {
   /// @param path path to the json file
   ///
   /// @return lookup table for track parameter estimation
-  TrackParamsLookup readLookup(const std::string& path) override {
+  TrackParamsLookup readLookup(const std::string& path) const override {
     // Read the json file
     std::ifstream ifj(path);
     nlohmann::json jLookup;
