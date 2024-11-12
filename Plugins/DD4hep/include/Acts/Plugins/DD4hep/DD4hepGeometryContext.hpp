@@ -17,10 +17,14 @@ class DD4hepDetectorElement;
 
 /// @class GeometryContext
 ///
-/// @brief The context for the geometry
+/// @brief DD4hep specific geometry context for alignment handling
 ///
-/// The context for the geometry is a simple struct that contains the
-/// alignment information.
+/// Extends the base GeometryContext to provide DD4hep-specific alignment
+/// capabilities. The context can be active or inactive, controlling whether
+/// alignment corrections should be applied.
+///
+/// @note This context is specifically designed to work with DD4hepDetectorElement
+/// and provides contextual transformations for alignment purposes.
 ///
 class DD4hepGeometryContext : public GeometryContext{
     public:
