@@ -39,7 +39,7 @@ class IGeometryIdGenerator;
 /// @note the builder expects a fully consistent set of sub volume builders
 /// that will be executed in a chain
 ///
-/// @note allowed AxisDirection(s) for the cylindrical container builder are
+/// @note allowed axis directions for the cylindrical container builder are
 /// {AxisZ}, {AxisR}, {AxisPhi}, {AxisZ, AxisR}, whereas the last option
 /// indicates a wrapping setup.
 class CylindricalContainerBuilder : public IDetectorComponentBuilder {
@@ -55,7 +55,7 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
         nullptr;
     /// The geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
-    /// Material axisDirections to be assigned to portals
+    /// Material axis binning directions to be assigned to portals
     std::map<unsigned int, BinningDescription> portalMaterialBinning = {};
     /// An eventual reverse geometry id generation
     bool geoIdReverseGen = false;
