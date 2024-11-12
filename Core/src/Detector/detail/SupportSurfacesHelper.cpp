@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <stdexcept>
 #include <utility>
 
@@ -39,7 +40,7 @@ operator()(const Extent& lExtent) const {
   ActsScalar maxZ = lExtent.max(BinningValue::binZ) - std::abs(zClearance[1u]);
 
   // Phi sector
-  ActsScalar hPhiSector = M_PI;
+  ActsScalar hPhiSector = std::numbers::pi_v<ActsScalar>;
   ActsScalar avgPhi = 0.;
   if (lExtent.constrains(BinningValue::binPhi)) {
     // Min / Max phi  with clearances adapted
@@ -83,7 +84,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::DiscSupport::operator()(
   ActsScalar maxR = lExtent.max(BinningValue::binR) - std::abs(rClearance[1u]);
 
   // Phi sector
-  ActsScalar hPhiSector = M_PI;
+  ActsScalar hPhiSector = std::numbers::pi_v<ActsScalar>;
   ActsScalar avgPhi = 0.;
   if (lExtent.constrains(BinningValue::binPhi)) {
     // Min / Max phi  with clearances adapted
@@ -192,7 +193,8 @@ Acts::Experimental::detail::SupportSurfacesHelper::cylindricalSupport(
     // Now create the Trapezoids
     for (unsigned int iphi = 0; iphi < splits; ++iphi) {
       // Get the moduleTransform
-      ActsScalar phi = -M_PI + (iphi + 0.5) * 2 * dHalfPhi;
+      ActsScalar phi =
+          -std::numbers::pi_v<ActsScalar> + (2 * iphi + 1) * dHalfPhi;
       ActsScalar cosPhi = std::cos(phi);
       ActsScalar sinPhi = std::sin(phi);
       ActsScalar planeX = planeR * cosPhi;
@@ -271,10 +273,12 @@ Acts::Experimental::detail::SupportSurfacesHelper::discSupport(
     // Now create the Trapezoids
     for (unsigned int iphi = 0; iphi < splits; ++iphi) {
       // Create the split module transform
-      ActsScalar phi = -M_PI + (iphi + 0.5) * 2 * dHalfPhi;
+      ActsScalar phi =
+          -std::numbers::pi_v<ActsScalar> + (2 * iphi + 1) * dHalfPhi;
       auto sTransform = Transform3(
           Translation3(hR * std::cos(phi), hR * std::sin(phi), zPosition) *
-          AngleAxis3(phi - 0.5 * M_PI, zAxis));
+          AngleAxis3(phi - static_cast<ActsScalar>(std::numbers::pi / 2.),
+                     zAxis));
       // Place it
       dSupport.push_back(
           Surface::makeShared<PlaneSurface>(sTransform, sTrapezoid));

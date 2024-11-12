@@ -177,8 +177,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
         minDeltaR = distance;
       }
     }
-    m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR, isMatched);
-    m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
+    m_effPlotTool.fill(m_effPlotCache, particle.initial(), minDeltaR,
+                       isMatched);
+    m_duplicationPlotTool.fill(m_duplicationPlotCache, particle.initial(),
                                nMatchedSeedsForParticle - 1);
   }
   ACTS_DEBUG("Number of seeds: " << nSeeds);

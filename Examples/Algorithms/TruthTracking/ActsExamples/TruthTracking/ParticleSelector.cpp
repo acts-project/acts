@@ -10,11 +10,8 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <ostream>
 #include <stdexcept>
@@ -29,16 +26,9 @@ ActsExamples::ParticleSelector::ParticleSelector(const Config& config,
   if (m_cfg.outputParticles.empty()) {
     throw std::invalid_argument("Missing output particles collection");
   }
-  if (!m_cfg.outputParticlesFinal.empty() &&
-      m_cfg.inputParticlesFinal.empty()) {
-    throw std::invalid_argument(
-        "Output final particles collection requires input final particles");
-  }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
-  m_inputParticlesFinal.maybeInitialize(m_cfg.inputParticlesFinal);
   m_outputParticles.initialize(m_cfg.outputParticles);
-  m_outputParticlesFinal.maybeInitialize(m_cfg.outputParticlesFinal);
 
   ACTS_DEBUG("selection particle rho [" << m_cfg.rhoMin << "," << m_cfg.rhoMax
                                         << ")");
@@ -65,9 +55,6 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     const AlgorithmContext& ctx) const {
   // prepare input/ output types
   const SimParticleContainer& inputParticles = m_inputParticles(ctx);
-  const SimParticleContainer& inputParticlesFinal =
-      (m_inputParticlesFinal.isInitialized()) ? m_inputParticlesFinal(ctx)
-                                              : inputParticles;
 
   std::size_t nInvalidCharge = 0;
   std::size_t nInvalidMeasurementCount = 0;
@@ -77,7 +64,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     return (min <= x) && (x < max);
   };
 
-  auto isValidParticle = [&](const ActsFatras::Particle& p) {
+  auto isValidParticle = [&](const SimParticle& p) {
     const auto eta = Acts::VectorHelpers::eta(p.direction());
     const auto phi = Acts::VectorHelpers::phi(p.direction());
     const auto rho = Acts::VectorHelpers::perp(p.position());
@@ -89,15 +76,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
 
     nInvalidCharge += static_cast<std::size_t>(!validCharge);
 
-    bool validMeasurementCount = true;
-    if (auto finalParticleIt = inputParticlesFinal.find(p.particleId());
-        finalParticleIt != inputParticlesFinal.end()) {
-      validMeasurementCount =
-          within(finalParticleIt->numberOfHits(), m_cfg.measurementsMin,
-                 m_cfg.measurementsMax);
-    } else {
-      ACTS_WARNING("No final particle found for " << p.particleId());
-    }
+    bool validMeasurementCount =
+        within(p.numberOfHits(), m_cfg.measurementsMin, m_cfg.measurementsMax);
 
     nInvalidMeasurementCount +=
         static_cast<std::size_t>(!validMeasurementCount);
@@ -126,11 +106,6 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
   SimParticleContainer outputParticles;
   outputParticles.reserve(inputParticles.size());
 
-  SimParticleContainer outputParticlesFinal;
-  if (m_outputParticlesFinal.isInitialized()) {
-    outputParticlesFinal.reserve(inputParticles.size());
-  }
-
   // copy selected particles
   for (const auto& inputParticle : inputParticles) {
     if (!isValidParticle(inputParticle)) {
@@ -138,18 +113,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     }
 
     outputParticles.insert(outputParticles.end(), inputParticle);
-
-    if (m_outputParticlesFinal.isInitialized()) {
-      if (auto particleFinalIt =
-              inputParticlesFinal.find(inputParticle.particleId());
-          particleFinalIt != inputParticlesFinal.end()) {
-        outputParticlesFinal.insert(outputParticlesFinal.end(),
-                                    *particleFinalIt);
-      }
-    }
   }
   outputParticles.shrink_to_fit();
-  outputParticlesFinal.shrink_to_fit();
 
   ACTS_DEBUG("event " << ctx.eventNumber << " selected "
                       << outputParticles.size() << " from "
@@ -159,9 +124,6 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
              << nInvalidMeasurementCount);
 
   m_outputParticles(ctx, std::move(outputParticles));
-  if (m_outputParticlesFinal.isInitialized()) {
-    m_outputParticlesFinal(ctx, std::move(outputParticlesFinal));
-  }
 
   return ProcessCode::SUCCESS;
 }

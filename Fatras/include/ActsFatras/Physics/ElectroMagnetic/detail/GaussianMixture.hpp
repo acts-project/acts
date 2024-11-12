@@ -10,6 +10,7 @@
 
 #include "Acts/Material/Interactions.hpp"
 
+#include <numbers>
 #include <random>
 
 namespace ActsFatras::detail {
@@ -84,7 +85,7 @@ struct GaussianMixture {
       sigma2 *= (1. - (1. - epsilon) * sigma1square) / epsilon;
     }
     // return back to the
-    return M_SQRT2 * std::sqrt(sigma2) * gaussDist(generator);
+    return std::numbers::sqrt2 * std::sqrt(sigma2) * gaussDist(generator);
   }
 };
 

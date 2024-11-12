@@ -14,6 +14,8 @@
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
+#include <numbers>
+
 namespace Acts {
 
 class Layer;
@@ -26,7 +28,9 @@ static std::array<ActsScalar, 2> noLimitZ = {
     std::numeric_limits<Acts::ActsScalar>::lowest(),
     std::numeric_limits<Acts::ActsScalar>::max()};
 
-static std::array<ActsScalar, 2> noLimitPhi = {-M_PI, M_PI};
+static std::array<ActsScalar, 2> noLimitPhi = {
+    -std::numbers::pi_v<Acts::ActsScalar>,
+    std::numbers::pi_v<Acts::ActsScalar>};
 
 namespace LayerConverter {
 

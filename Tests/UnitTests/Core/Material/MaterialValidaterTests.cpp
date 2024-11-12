@@ -22,6 +22,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
+#include <numbers>
 
 namespace Acts::Test {
 
@@ -125,7 +126,7 @@ BOOST_AUTO_TEST_CASE(MaterialValidaterFlowTest) {
       tContext, MagneticFieldContext(), Vector3(0, 0, 0),
       Vector3(1, 0, 1).normalized());
 
-  ActsScalar pathCorrection = std::sqrt(2.);
+  ActsScalar pathCorrection = std::numbers::sqrt2;
   CHECK_CLOSE_ABS(rMaterial2.materialInX0,
                   pathCorrection * (2. / 21. + 4. / 41. + 6. / 61.), 1e-6);
   CHECK_CLOSE_ABS(rMaterial2.materialInL0,
