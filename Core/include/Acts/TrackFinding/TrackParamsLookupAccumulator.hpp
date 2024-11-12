@@ -15,6 +15,7 @@
 #include <concepts>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -90,6 +91,8 @@ class TrackParamsLookupAccumulator {
   void addTrack(const TrackParameters& ipTrackParameters,
                 const TrackParameters& refTrackParameters,
                 const Vector2& position) {
+    std::lock_guard<std::mutex> lock(m_gridMutex);
+
     auto bin = m_grid.localBinsFromPosition(position);
 
     if (m_countGrid[bin] == 0) {
@@ -207,6 +210,9 @@ class TrackParamsLookupAccumulator {
   /// Grids to accumulate IP and reference
   /// layer track parameters
   LookupGrid m_grid;
+
+    /// Mutex for protecting grid access
+    std::mutex m_gridMutex;
 
   /// Map to keep the accumulation count
   /// in the occupied grid bins
