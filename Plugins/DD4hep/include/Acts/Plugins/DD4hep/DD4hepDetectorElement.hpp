@@ -90,6 +90,8 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// Return the transform for the Element proxy mechanism
   ///
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The contextual transform matrix that may include misalignment
+  /// @note This method enables dynamic geometry updates through the context
   const Transform3& transform(const GeometryContext& gctx) const final;
 
  private:
