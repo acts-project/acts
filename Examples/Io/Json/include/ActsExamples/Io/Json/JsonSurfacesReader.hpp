@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Plugins/Json/JsonDetectorElement.hpp"
 
 #include <memory>
 #include <string>
@@ -42,5 +43,14 @@ Acts::GeometryHierarchyMap<std::shared_ptr<Acts::Surface>> readHierarchyMap(
 ///
 /// @return  a vector of surfaces
 std::vector<std::shared_ptr<Acts::Surface>> readVector(const Options& options);
+
+/// @brief Read the surfaces from the input file and create
+/// detector elements
+///
+/// @param inputFile is the input file to read from
+///
+/// @return  a vector of surfaces
+std::vector<std::shared_ptr<Acts::JsonDetectorElement>> readDetectorElements(
+    const Options& options, double thickness);
 
 }  // namespace ActsExamples::JsonSurfacesReader
