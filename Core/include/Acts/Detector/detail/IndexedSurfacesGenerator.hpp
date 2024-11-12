@@ -38,7 +38,7 @@ struct IndexedSurfacesGenerator {
   surface_container surfaces = {};
   // Indices of surfaces that are to be assigned to all bins
   std::vector<std::size_t> assignToAll = {};
-  /// The axis directions for the binning
+  /// The axis directions for the indexing
   std::vector<AxisDirection> axisDirections = {};
   // Bin expansion
   std::vector<std::size_t> binExpansion = {};
