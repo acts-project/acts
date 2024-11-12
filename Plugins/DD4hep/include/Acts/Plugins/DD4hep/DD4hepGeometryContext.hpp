@@ -26,33 +26,33 @@ class DD4hepDetectorElement;
 /// @note This context is specifically designed to work with DD4hepDetectorElement
 /// and provides contextual transformations for alignment purposes.
 ///
-class DD4hepGeometryContext : public GeometryContext{
-    public:
-    /// Explicit inactive constructor
-    /// Creates an inactive geometry context that skips alignment corrections
-    /// @return DD4hepGeometryContext instance with inactive state
-    static DD4hepGeometryContext inactive() { return DD4hepGeometryContext(false); }
+class DD4hepGeometryContext : public GeometryContext {
+ public:
+  /// Explicit inactive constructor
+  /// Creates an inactive geometry context that skips alignment corrections
+  /// @return DD4hepGeometryContext instance with inactive state
+  static DD4hepGeometryContext inactive() {
+    return DD4hepGeometryContext(false);
+  }
 
-    /// The transform of this detector element within the given context
-    ///
-    /// @param dElement The detector element
-    ///
-    /// @return The transform of the detector element
-    const Transform3& contextualTransform( const DD4hepDetectorElement& dElement) const;
+  /// The transform of this detector element within the given context
+  ///
+  /// @param dElement The detector element
+  ///
+  /// @return The transform of the detector element
+  const Transform3& contextualTransform(
+      const DD4hepDetectorElement& dElement) const;
 
-    /// @brief  Return the active status of the context
-    /// @return boolean that indicates if the context is active
-    bool isActive() const { return m_active; }
+  /// @brief  Return the active status of the context
+  /// @return boolean that indicates if the context is active
+  bool isActive() const { return m_active; }
 
-    private :
-    /// Constructor
-    explicit DD4hepGeometryContext(bool isContextActive) : m_active(isContextActive) {}
+ private:
+  /// Constructor
+  explicit DD4hepGeometryContext(bool isContextActive)
+      : m_active(isContextActive) {}
 
-    const bool m_active = true;
-
+  const bool m_active = true;
 };
 
-
 }  // namespace Acts
-
-

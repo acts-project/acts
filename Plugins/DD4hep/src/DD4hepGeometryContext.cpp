@@ -6,8 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepGeometryContext.hpp"
+
+#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 
 const Acts::Transform3& Acts::DD4hepGeometryContext::contextualTransform(
     const Acts::DD4hepDetectorElement& dElement) const {
