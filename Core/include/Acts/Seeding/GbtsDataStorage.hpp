@@ -120,7 +120,7 @@ class GbtsEtaBin {
 
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
       GbtsNode<space_point_t> &pN = *m_vn.at(nIdx);
-      float phi = pN->m_spGbts.phi();
+      float phi = pN.m_spGbts.phi();
       if (phi >= -std::numbers::pi_v<float> + dphi) {
         break;
       }
