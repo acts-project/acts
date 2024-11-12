@@ -40,9 +40,9 @@ class DD4hepGeometryContext : public GeometryContext{
 
     private :
     /// Constructor
-    explicit DD4hepGeometryContext(bool active) : m_active(active) {}
+    explicit DD4hepGeometryContext(bool isContextActive) : m_active(isContextActive) {}
 
-    bool m_active = true;
+    const bool m_active = true;
 
 };
 
