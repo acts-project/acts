@@ -9,7 +9,6 @@
 // SeedFinderGbts.ipp
 // TODO: update to C++17 style
 
-#include "Acts/Definitions/Algebra.hpp"  //for M_PI
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
@@ -23,6 +22,7 @@
 #include <functional>
 #include <iostream>
 #include <list>
+#include <numbers>
 #include <numeric>
 #include <type_traits>
 #include <vector>
@@ -54,7 +54,7 @@ void SeedFinderGbts<external_spacepoint_t>::loadSpacePoints(
     m_storage->addSpacePoint(gbtssp, (m_config.m_useClusterWidth > 0));
   }
 
-  m_config.m_phiSliceWidth = 2 * M_PI / m_config.m_nMaxPhiSlice;
+  m_config.m_phiSliceWidth = 2 * std::numbers::pi / m_config.m_nMaxPhiSlice;
 
   m_storage->sortByPhi();
 
@@ -384,10 +384,10 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
         float dPhi = pNS->m_p[3] - Phi1;
 
-        if (dPhi < -M_PI) {
-          dPhi += 2 * M_PI;
-        } else if (dPhi > M_PI) {
-          dPhi -= 2 * M_PI;
+        if (dPhi < -std::numbers::pi_v<float>) {
+          dPhi += static_cast<float>(2 * std::numbers::pi);
+        } else if (dPhi > std::numbers::pi_v<float>) {
+          dPhi -= static_cast<float>(2 * std::numbers::pi);
         }
 
         if (dPhi < -m_config.cut_dphi_max || dPhi > m_config.cut_dphi_max) {

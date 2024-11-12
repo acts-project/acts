@@ -114,6 +114,12 @@ class RootParticleReader : public IReader {
   std::vector<std::uint32_t>* m_particle = new std::vector<std::uint32_t>;
   std::vector<std::uint32_t>* m_generation = new std::vector<std::uint32_t>;
   std::vector<std::uint32_t>* m_subParticle = new std::vector<std::uint32_t>;
+
+  std::vector<float>* m_eLoss = new std::vector<float>;
+  std::vector<float>* m_pathInX0 = new std::vector<float>;
+  std::vector<float>* m_pathInL0 = new std::vector<float>;
+  std::vector<std::int32_t>* m_numberOfHits = new std::vector<std::int32_t>;
+  std::vector<std::uint32_t>* m_outcome = new std::vector<std::uint32_t>;
 };
 
 }  // namespace ActsExamples

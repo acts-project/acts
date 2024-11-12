@@ -9,13 +9,10 @@
 #include "ActsExamples/Io/Root/detail/NuclearInteractionParametrisation.hpp"
 
 #include "Acts/Definitions/Common.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <cmath>
-#include <complex>
 #include <iterator>
 #include <limits>
-#include <memory>
 
 #include <Eigen/Eigenvalues>
 #include <TMath.h>
@@ -23,6 +20,7 @@
 #include <TVectorT.h>
 
 namespace ActsExamples::detail::NuclearInteractionParametrisation {
+
 namespace {
 
 /// @brief Evaluate the location in a standard normal distribution for a value
@@ -57,14 +55,14 @@ float gaussianValue(TH1F const* histo, const float mom) {
 /// @param [in] fourVector2 The other four vector
 ///
 /// @return The invariant mass
-float invariantMass(const ActsExamples::SimParticle::Vector4& fourVector1,
-                    const ActsExamples::SimParticle::Vector4& fourVector2) {
-  ActsExamples::SimParticle::Vector4 sum = fourVector1 + fourVector2;
-  const ActsExamples::SimParticle::Scalar energy = sum[Acts::eEnergy];
-  ActsExamples::SimParticle::Scalar momentum =
-      sum.template segment<3>(Acts::eMom0).norm();
+float invariantMass(const Acts::Vector4& fourVector1,
+                    const Acts::Vector4& fourVector2) {
+  Acts::Vector4 sum = fourVector1 + fourVector2;
+  const Acts::ActsScalar energy = sum[Acts::eEnergy];
+  Acts::ActsScalar momentum = sum.template segment<3>(Acts::eMom0).norm();
   return std::sqrt(energy * energy - momentum * momentum);
 }
+
 }  // namespace
 
 std::pair<Vector, Matrix> calculateMeanAndCovariance(
@@ -382,4 +380,5 @@ CumulativeDistribution cumulativeNuclearInteractionProbability(
   return histo;  // TODO: in this case the normalisation is not taking into
                  // account
 }
+
 }  // namespace ActsExamples::detail::NuclearInteractionParametrisation
