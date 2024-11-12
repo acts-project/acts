@@ -17,6 +17,7 @@
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -159,6 +160,10 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   // Thus we need to store the cell data from the simulation.
   CellsMap cellsMap;
 
+  // Count the number of hits per particle and module. Cleared before each
+  // module.
+  std::map<SimBarcode, int> particleOnModuleHitCount;
+
   ACTS_DEBUG("Starting loop over modules ...");
   for (const auto& simHitsGroup : groupByModule(simHits)) {
     // Manual pair unpacking instead of using
@@ -188,6 +193,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
       ACTS_VERBOSE("Digitizer found for module " << moduleGeoId);
     }
 
+    particleOnModuleHitCount.clear();
+
     // Run the digitizer. Iterate over the hits for this surface inside the
     // visitor so we do not need to lookup the variant object per-hit.
     std::visit(
@@ -200,9 +207,18 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             const auto& simHit = *h;
             const auto simHitIdx = simHits.index_of(h);
 
-            auto particleSeed =
-                eventSeed + simHit.particleId().value() + simHit.index();
-            RandomEngine rng(particleSeed);
+            const auto hitIndex =
+                particleOnModuleHitCount[simHit.particleId()]++;
+
+            if (hitIndex > 0) {
+              ACTS_DEBUG("more than one hit for particle "
+                         << simHit.particleId() << " on module " << moduleGeoId
+                         << " - still forwarding it to the digitizer");
+            }
+
+            auto hitSeed = eventSeed + moduleGeoId.value() +
+                           simHit.particleId().value() + hitIndex;
+            RandomEngine rng(hitSeed);
 
             DigitizedParameters dParameters;
 
