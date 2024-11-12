@@ -25,6 +25,9 @@ ActsExamples::TrackParamsLookupEstimation::TrackParamsLookupEstimation(
     if (bounds == nullptr) {
       throw std::invalid_argument("Only rectangle bounds supported");
     }
+    if (refSurface->type() != Acts::Surface::SurfaceType::Plane) {
+      throw std::invalid_argument("Only plane surfaces supported");
+    }
 
     // Initialize the accumulator grid
     auto halfX = bounds->halfLengthX();
