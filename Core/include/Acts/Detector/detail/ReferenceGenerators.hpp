@@ -35,15 +35,16 @@ struct CenterReferenceGenerator {
   }
 };
 
-/// A struct to access reference positions based on bin values
+/// A struct to access reference positions based on reference positions 
+/// along a chosen axis direction.
 ///
-/// @tparam aDIR the binning value to be used for the binning position call
+/// @tparam aDIR the axis direction for generating the reference position
 ///
-/// This generator will provide only one filling point and hence
+/// This generator will provide only one reference point and hence
 /// only a single bin in the indexed grid.
 template <AxisDirection aDIR>
 struct AxisDirectionReferenceGenerator {
-  /// Helper to access a reference position based on binning value
+  /// Helper to access a reference position based on a reference axis direction
   ///
   /// @param gctx the geometry context of this operation
   /// @param surface the surface for which the reference point is to be accessed
@@ -67,7 +68,7 @@ struct AxisDirectionReferenceGenerator {
 /// expands if necessary.
 template <std::size_t nSEGS = 1u, bool aBARY = true>
 struct PolyhedronReferenceGenerator {
-  /// Helper to access the Center point of for filling the grid
+  /// Generate the reference positions for a polyhedron
   ///
   /// @param gctx the geometry context of this operation
   /// @param surface the surface for which the reference point is to be accessed
