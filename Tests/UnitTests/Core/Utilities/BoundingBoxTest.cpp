@@ -46,10 +46,10 @@ using Vector3F = Eigen::Matrix<BoundingBoxScalar, 3, 1>;
 using AngleAxis3F = Eigen::AngleAxis<BoundingBoxScalar>;
 
 std::filesystem::path tmp_path = []() {
-  auto p = std::filesystem::temp_directory_path() / "acts_unit_tests";
-  std::filesystem::create_directory(p);
-  std::cout << "Writing test output to: " << p << std::endl;
-  return p;
+  auto tmpPath = std::filesystem::temp_directory_path() / "acts_unit_tests";
+  std::filesystem::create_directory(tmpPath);
+  std::cout << "Writing test output to: " << tmpPath << std::endl;
+  return tmpPath;
 }();
 
 std::ofstream tmp(const std::string& path) {
@@ -140,7 +140,6 @@ BOOST_AUTO_TEST_CASE(intersect_points) {
 }
 
 BOOST_AUTO_TEST_CASE(intersect_rays) {
-  /* temporarily removed, fails with double precision
   BOOST_TEST_CONTEXT("2D") {
     using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 2>;
 
@@ -158,9 +157,9 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     ray = {{-2, -2}, {1, 0}};
     BOOST_CHECK(!bb.intersect(ray));
 
-    // upper bound is exclusive
-    ray = {{-2, 1}, {1, 0}};
-    BOOST_CHECK(!bb.intersect(ray));
+    // upper bound is exclusive - temporarily removed, fails macOS ci
+    // ray = {{-2, 1}, {1, 0}};
+    // BOOST_CHECK(!bb.intersect(ray));
 
     // lower bound is inclusive
     ray = {{-2, -1}, {1, 0}};
@@ -181,9 +180,9 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     ray = {{2, -2}, {-1, 0}};
     BOOST_CHECK(!bb.intersect(ray));
 
-    // upper bound is exclusive
-    ray = {{2, 1}, {-1, 0}};
-    BOOST_CHECK(!bb.intersect(ray));
+    // upper bound is exclusive - temporarily removed, fails macOS ci
+    // ray = {{2, 1}, {-1, 0}};
+    // BOOST_CHECK(!bb.intersect(ray));
 
     // lower bound is inclusive
     ray = {{2, -1}, {-1, 0}};
@@ -204,8 +203,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     ray = {{1, -2}, {0, 1}};
     BOOST_CHECK(!bb.intersect(ray));
 
-    // lower bound is not inclusive,
-    // due to Eigen's NaN handling.
+    // lower bound is not inclusive, due to Eigen's NaN handling.
     ray = {{-1, -2}, {0, 1}};
     BOOST_CHECK(!bb.intersect(ray));
 
@@ -228,8 +226,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     ray = {{1, 2}, {0, -1}};
     BOOST_CHECK(!bb.intersect(ray));
 
-    // lower bound is not inclusive,
-    // due to Eigen's NaN handling.
+    // lower bound is not inclusive, due to Eigen's NaN handling.
     ray = {{-1, 2}, {0, -1}};
     BOOST_CHECK(!bb.intersect(ray));
 
@@ -261,31 +258,15 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     BOOST_CHECK(!bb.intersect(ray));
 
     // starting point inside
-    ray = {{
-               0,
-               0,
-           },
-           {-1, 0}};
+    ray = {{0, 0}, {-1, 0}};
     BOOST_CHECK(bb.intersect(ray));
-    ray = {{
-               0,
-               0,
-           },
-           {1, 0}};
+    ray = {{0, 0}, {1, 0}};
     BOOST_CHECK(bb.intersect(ray));
-    ray = {{
-               0,
-               0,
-           },
-           {0, -1}};
+    ray = {{0, 0}, {0, -1}};
     BOOST_CHECK(bb.intersect(ray));
-    ray = {{
-               0,
-               0,
-           },
-           {0, 1}};
+    ray = {{0, 0}, {0, 1}};
     BOOST_CHECK(bb.intersect(ray));
-  } */
+  }
 
   BOOST_TEST_CONTEXT("3D visualize") {
     Object o;
@@ -322,21 +303,21 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     ray3 = {{0, -2, -2}, {0, 0, 1}};
     BOOST_CHECK(!bb3.intersect(ray3));
 
-    // right on slab - temporarily removed, fails with double precision
+    // right on slab - temporarily removed, fails macOS ci
     // ray3 = {{0, 1, -2}, {0, 0, 1}};
     // BOOST_CHECK(!bb3.intersect(ray3));
 
-    // right on slab - temporarily removed, fails with double precision
-    // ray3 = {{0, -1, -2}, {0, 0, 1}};
-    // BOOST_CHECK(bb3.intersect(ray3));
+    // right on slab
+    ray3 = {{0, -1, -2}, {0, 0, 1}};
+    BOOST_CHECK(bb3.intersect(ray3));
 
     // right on slab
     ray3 = {{-1, 0, -2}, {0, 0, 1}};
     BOOST_CHECK(!bb3.intersect(ray3));
 
-    // right on slab - temporarily removed, fails with double precision
-    // ray3 = {{1, 0, -2}, {0, 0, 1}};
-    // BOOST_CHECK(!bb3.intersect(ray3));
+    // right on slab
+    ray3 = {{1, 0, -2}, {0, 0, 1}};
+    BOOST_CHECK(!bb3.intersect(ray3));
 
     ray3 = {{-0.95, 0, -2}, {0, 0, 1}};
     BOOST_CHECK(bb3.intersect(ray3));
@@ -461,10 +442,11 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
 
 BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("2D") {
-    auto make_svg = [](const std::string& fname, std::size_t w, std::size_t h) {
+    auto make_svg = [](const std::string& fname, std::size_t width,
+                       std::size_t height) {
       auto os = tmp(fname);
       os << "<?xml version=\"1.0\" standalone=\"no\"?>\n";
-      os << "<svg width=\"" << w << "\" height=\"" << h
+      os << "<svg width=\"" << width << "\" height=\"" << height
          << "\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n";
       return os;
     };
@@ -473,30 +455,31 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     std::ofstream os;
 
-    const std::size_t w = 1000;
-    const std::size_t n = 10;
+    const std::size_t svgWidth = 1000;
+    const std::size_t svgHeight = svgWidth;
+    const std::size_t nSteps = 10;
 
-    // BEGIN VISUAL PARAMETER TEST
+    // Visualise the parameters
+    const BoundingBoxScalar min = -20;
+    const BoundingBoxScalar max = 20;
+    os = make_svg("frust2d_parameters.svg", svgWidth, svgHeight);
 
-    // BoundingBoxScalar  min = -20, max = 20;
-    // os = make_svg("frust2d.svg", w, w);
+    const BoundingBoxScalar step = (max - min) / nSteps;
+    for (std::size_t i = 0; i <= nSteps; i++) {
+      for (std::size_t j = 0; j <= nSteps; j++) {
+        Vector2F dir(1, 0);
+        Vector2F origin(min + step * i, min + step * j);
+        origin.x() *= 1.10;
+        Eigen::Rotation2D<BoundingBoxScalar> rot(2 * std::numbers::pi / nSteps *
+                                                 i);
+        BoundingBoxScalar angle = std::numbers::pi / 2. / nSteps * j;
+        Frustum2 fr(origin, rot * dir, angle);
+        fr.svg(os, svgWidth, svgHeight, 2);
+      }
+    }
 
-    // BoundingBoxScalar  step = (max - min) /
-    // static_cast<BoundingBoxScalar>(n); for (std::size_t i = 0; i <= n; i++) {
-    // for (std::size_t j = 0; j <= n; j++) {
-    // ActsVector<BoundingBoxScalar,2> dir    = {1, 0};
-    // ActsVector<BoundingBoxScalar,2> origin = {min + step * i, min + step *
-    // j}; origin.x() *= 1.10;  // visual Eigen::Rotation2D<BoundingBoxScalar>
-    // rot(2 * std::numbers::pi / static_cast<BoundingBoxScalar>(n) * i);
-    // BoundingBoxScalar angle = std::numbers::pi / 2. / n * j; Frustum2
-    // fr(origin, rot * dir, angle); fr.svg(os, w, w, 2);
-    //}
-    //}
-
-    // os << "</svg>";
-    // os.close();
-
-    // END VISUAL PARAMETER TEST
+    os << "</svg>";
+    os.close();
 
     const BoundingBoxScalar unit = 20;
 
@@ -504,18 +487,18 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     Object o;
     Box::Size size(Eigen::Matrix<BoundingBoxScalar, 2, 1>(2, 2));
 
-    BoundingBoxScalar minx = -20;
-    BoundingBoxScalar miny = -20;
-    BoundingBoxScalar maxx = 20;
-    BoundingBoxScalar maxy = 20;
-    BoundingBoxScalar stepx = (maxx - minx) / static_cast<BoundingBoxScalar>(n);
-    BoundingBoxScalar stepy = (maxy - miny) / static_cast<BoundingBoxScalar>(n);
+    const BoundingBoxScalar minX = -20;
+    const BoundingBoxScalar minY = -20;
+    const BoundingBoxScalar maxX = 20;
+    const BoundingBoxScalar maxY = 20;
+    const BoundingBoxScalar stepX = (maxX - minX) / nSteps;
+    const BoundingBoxScalar stepY = (maxY - minY) / nSteps;
 
-    std::set<std::size_t> act_idxs;
+    std::set<std::size_t> idxsAct;
 
     // clang-format off
-    std::vector<std::pair<Frustum2, std::set<std::size_t>>> fr_exp;
-    fr_exp = {
+    std::vector<std::pair<Frustum2, std::set<std::size_t>>> frExp;
+    frExp = {
         {Frustum2({0, 0}, {1, 0}, std::numbers::pi / 2.),
          {60,  70,  71,  72,  80,  81,  82,  83,  84,  90,  91,  92,
           93,  94,  95,  96,  100, 101, 102, 103, 104, 105, 106, 107,
@@ -583,22 +566,22 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     };
     // clang-format on
 
-    for (std::size_t l = 0; l < fr_exp.size(); l++) {
-      const Frustum2& fr = fr_exp.at(l).first;
-      const std::set<std::size_t>& exp_idxs = fr_exp.at(l).second;
+    for (std::size_t l = 0; l < frExp.size(); l++) {
+      const Frustum2& fr = frExp.at(l).first;
+      const std::set<std::size_t>& idxsExp = frExp.at(l).second;
       std::stringstream ss;
       ss << "frust2d_test_" << l << ".svg";
-      os = make_svg(ss.str(), w, w);
+      os = make_svg(ss.str(), svgWidth, svgHeight);
 
-      act_idxs.clear();
+      idxsAct.clear();
 
       std::vector<Box> boxes;
-      boxes.reserve((n + 1) * (n + 1));
-      for (std::size_t i = 0; i <= n; i++) {
-        for (std::size_t j = 0; j <= n; j++) {
+      boxes.reserve((nSteps + 1) * (nSteps + 1));
+      for (std::size_t i = 0; i <= nSteps; i++) {
+        for (std::size_t j = 0; j <= nSteps; j++) {
           boxes.emplace_back(&o,
                              Eigen::Matrix<BoundingBoxScalar, 2, 1>{
-                                 minx + i * stepx, miny + j * stepy},
+                                 minX + i * stepX, minY + j * stepY},
                              size);
           std::stringstream st;
           st << boxes.size() - 1;
@@ -606,16 +589,16 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
           std::string color = "red";
           if (boxes.back().intersect(fr)) {
             color = "green";
-            act_idxs.insert(boxes.size() - 1);
+            idxsAct.insert(boxes.size() - 1);
           }
 
-          boxes.back().svg(os, w, w, unit, st.str(), color);
+          boxes.back().svg(os, svgWidth, svgHeight, unit, st.str(), color);
         }
       }
 
-      BOOST_CHECK(act_idxs == exp_idxs);
+      BOOST_CHECK(idxsAct == idxsExp);
 
-      fr.svg(os, w, w, maxx, unit);
+      fr.svg(os, svgWidth, svgHeight, maxX, unit);
       os << "</svg>";
 
       os.close();
@@ -627,73 +610,64 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     using Frustum3 = Frustum<BoundingBoxScalar, 3, 3>;
     std::ofstream os;
     std::size_t n = 10;
-    std::size_t s = 5;
-    double min = -10, max = 10;
-    double step = (max - min) / s;
+    const std::size_t nSteps = 5;
+    double min = -10;
+    double max = 10;
+    double step = (max - min) / nSteps;
 
-    // BEGIN VISUAL PARAMETER TEST
+    // Visualise the parameters
+    auto make = [&](double angle, const Vector3F& origin,
+                    std::ofstream& osTmp) {
+      helper.clear();
+      BoundingBoxScalar far = 1;
+      Frustum3 fr(origin, {0, 0, 1}, angle);
+      fr.draw(helper, far);
+      fr = Frustum3(origin, {0, 0, -1}, angle);
+      fr.draw(helper, far);
+      fr = Frustum3(origin, {1, 0, 0}, angle);
+      fr.draw(helper, far);
+      fr = Frustum3(origin, {-1, 0, 0}, angle);
+      fr.draw(helper, far);
 
-    // std::size_t n_vtx   = 1;
-    // auto make = [&](double angle, ActsVector<BoundingBoxScalar,3> origin,
-    // std::ofstream& os)
-    // {
-    // helper.clear();
-    // BoundingBoxScalar    far = 1;
-    // Frustum3 fr(origin, {0, 0, 1}, angle);
-    // fr.draw(helper, far);
-    // fr = Frustum3(origin, {0, 0, -1}, angle);
-    // fr.draw(helper, far);
-    // fr = Frustum3(origin, {1, 0, 0}, angle);
-    // fr.draw(helper, far);
-    // fr = Frustum3(origin, {-1, 0, 0}, angle);
-    // fr.draw(helper, far);
+      fr = Frustum3(origin, {0, 1, 0}, angle);
+      fr.draw(helper, far);
+      fr = Frustum3(origin, {0, -1, 0}, angle);
+      fr.draw(helper, far);
 
-    // fr = Frustum3(origin, {0, 1, 0}, angle);
-    // fr.draw(helper, far);
-    // fr = Frustum3(origin, {0, -1, 0}, angle);
-    // fr.draw(helper, far);
+      osTmp << helper << std::flush;
 
-    // os << helper << std::flush;
+      helper.clear();
+    };
 
-    // helper.clear();
-    //};
+    os = std::ofstream("frust3d_dir.ply");
+    for (std::size_t i = 0; i <= nSteps; i++) {
+      for (std::size_t j = 0; j <= nSteps; j++) {
+        for (std::size_t k = 0; k <= nSteps; k++) {
+          Vector3F origin(min + i * step, min + j * step, min + k * step);
+          make(std::numbers::pi / 4., origin, os);
+        }
+      }
+    }
+    os.close();
 
-    // os = std::ofstreams("frust3d_dir.ply");
-    // for (std::size_t i = 0; i <= s; i++) {
-    // for (std::size_t j = 0; j <= s; j++) {
-    // for (std::size_t k = 0; k <= s; k++) {
-    // ActsVector<BoundingBoxScalar,3> origin(
-    // min + i * step, min + j * step, min + k * step);
-    //// std::cout << origin.transpose() << std::endl;
-    // make(std::numbers::pi / 4., origin, os);
-    //}
-    //}
-    //}
-    // os.close();
+    os = tmp("frust3D_angle.ply");
+    helper.clear();
+    for (std::size_t i = 0; i <= n; i++) {
+      Vector3F origin(i * 4, 0, 0);
+      AngleAxis3F rot(std::numbers::pi / n * i, Vector3F::UnitY());
+      BoundingBoxScalar angle = (std::numbers::pi / 2.) / n * (1 + i);
+      Vector3F dir(1, 0, 0);
+      Frustum3 fr(origin, rot * dir, angle);
+      fr.draw(helper, 2);
+    }
 
-    // os = tmp("frust3D_angle.ply");
-    // helper.clear();
-    // n_vtx             = 1;
-    // Eigen::Affine3f rot;
-    // for (std::size_t i = 0; i <= n; i++) {
-    // ActsVector<BoundingBoxScalar,3> origin(i * 4, 0, 0);
-    // rot = Eigen::AngleAxisf(std::numbers::pi /
-    // static_cast<BoundingBoxScalar>(n) * i,
-    // ActsVector<BoundingBoxScalar,3>::UnitY()); BoundingBoxScalar angle =
-    // (std::numbers::pi / 2.) / static_cast<BoundingBoxScalar>(n) * (1 + i);
-    // ActsVector<BoundingBoxScalar,3> dir(1, 0, 0); Frustum3 fr(origin, rot *
-    // dir, angle); fr.draw(helper, 2);
-    //}
+    os << helper << std::flush;
+    os.close();
 
-    // os << helper << std::flush;
-    // os.close();
+    std::set<std::size_t> idxsAct;
 
-    //// END VISUAL PARAMETER TEST
-
-    std::set<std::size_t> act_idxs;
-
-    std::vector<std::pair<Frustum3, std::set<std::size_t>>> fr_exp;
-    fr_exp = {
+    std::vector<std::pair<Frustum3, std::set<std::size_t>>> frExp;
+    frExp = {
         {Frustum3({0, 0, 0}, {1, 0, 0}, std::numbers::pi / 2.),
          {
              665,  763,  774,  775,  785,  786,  787,  788,  796,  797,  807,
@@ -856,9 +830,9 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
           1088, 1143, 1154, 1165, 1175, 1176, 1186, 1187, 1197, 1198, 1207,
           1208, 1209, 1308, 1319, 1330}}};
 
-    for (std::size_t l = 0; l < fr_exp.size(); l++) {
-      const Frustum3& fr = fr_exp.at(l).first;
-      const std::set<std::size_t>& exp_idxs = fr_exp.at(l).second;
+    for (std::size_t l = 0; l < frExp.size(); l++) {
+      const Frustum3& fr = frExp.at(l).first;
+      const std::set<std::size_t>& idxsExp = frExp.at(l).second;
       std::stringstream ss;
       ss << "frust3d-3s_test_" << l << ".ply";
 
@@ -866,14 +840,14 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
       helper.clear();
 
-      act_idxs.clear();
+      idxsAct.clear();
 
       fr.draw(helper, 50);
 
       n = 10;
       min = -33;
       max = 33;
-      step = (max - min) / static_cast<BoundingBoxScalar>(n);
+      step = (max - min) / n;
 
       Object o;
       using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
@@ -892,7 +866,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
             if (bb.intersect(fr)) {
               color = {0, 255, 0};
-              act_idxs.insert(idx);
+              idxsAct.insert(idx);
             }
 
             bb.draw(helper, color);
@@ -904,76 +878,64 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       os << helper << std::flush;
       os.close();
 
-      BOOST_CHECK(act_idxs == exp_idxs);
+      BOOST_CHECK(idxsAct == idxsExp);
     }
   }
 
   BOOST_TEST_CONTEXT("3D - 4 Sides") {
     using Frustum34 = Frustum<BoundingBoxScalar, 3, 4>;
-    std::size_t n = 10;
-    double min = -10, max = 10;
-    std::size_t s = 5;
+    const std::size_t n = 10;
+    double min = -10;
+    double max = 10;
+    const std::size_t s = 5;
     double step = (max - min) / s;
     std::ofstream os;
 
-    // BEGIN VISUAL PARAMETER TEST
+    // Visualise the parameters
+    helper.clear();
+    os = tmp("frust3d-4s_dir.ply");
 
-    // std::size_t n_vtx    = 1;
+    const double constAngle = std::numbers::pi / 4.;
+    for (std::size_t i = 0; i <= s; i++) {
+      for (std::size_t j = 0; j <= s; j++) {
+        for (std::size_t k = 0; k <= s; k++) {
+          Vector3F origin(min + i * step, min + j * step, min + k * step);
+          Vector3F dir(1, 0, 0);
 
-    // helper.clear();
-    // os = tmp("frust3d-4s_dir.ply");
+          BoundingBoxScalar piOverS = std::numbers::pi_v<BoundingBoxScalar> / s;
+          AngleAxis3F rot;
+          rot = AngleAxis3F(piOverS * i, Vector3F::UnitX()) *
+                AngleAxis3F(piOverS * j, Vector3F::UnitY()) *
+                AngleAxis3F(piOverS * k, Vector3F::UnitZ());
 
-    // double angle = std::numbers::pi / 4.;
-    // for (std::size_t i = 0; i <= s; i++) {
-    // for (std::size_t j = 0; j <= s; j++) {
-    // for (std::size_t k = 0; k <= s; k++) {
-    // ActsVector<BoundingBoxScalar,3> origin(
-    // min + i * step, min + j * step, min + k * step);
-    // ActsVector<BoundingBoxScalar,3> dir(1, 0, 0);
+          Frustum34 fr(origin, rot * dir, constAngle);
+          fr.draw(helper, 1);
+        }
+      }
+    }
 
-    // Eigen::Affine3f rot;
-    // rot = Eigen::AngleAxisf(std::numbers::pi /
-    // static_cast<BoundingBoxScalar>(s) * i,
-    // ActsVector<BoundingBoxScalar,3>::UnitX())
-    //* Eigen::AngleAxisf(std::numbers::pi / static_cast<BoundingBoxScalar>(s) *
-    // j,
-    // ActsVector<BoundingBoxScalar,3>::UnitY())
-    //* Eigen::AngleAxisf(std::numbers::pi / static_cast<BoundingBoxScalar>(s) *
-    // k,
-    // ActsVector<BoundingBoxScalar,3>::UnitZ());
+    os << helper << std::flush;
+    os.close();
 
-    // Frustum34 fr(origin, rot * dir, angle);
-    // fr.draw(helper, 1);
-    //}
-    //}
-    //}
+    os = tmp("frust3d-4s_angle.ply");
+    helper.clear();
 
-    // os << helper << std::flush;
-    // os.close();
-    // os = tmp("frust3d-4s_angle.ply");
-    // helper.clear();
+    for (std::size_t i = 0; i <= n; i++) {
+      Vector3F origin(i * 4, 0, 0);
+      AngleAxis3F rot(std::numbers::pi / n * i, Vector3F::UnitY());
+      const double angle = (std::numbers::pi / 2.) / n * (1 + i);
+      Vector3F dir(1, 0, 0);
+      Frustum34 fr(origin, rot * dir, angle);
+      fr.draw(helper, 2);
+    }
 
-    // n_vtx    = 1;
-    // for (std::size_t i = 0; i <= n; i++) {
-    // ActsVector<BoundingBoxScalar,3>  origin(i * 4, 0, 0);
-    // Eigen::Affine3f rot;
-    // rot   = Eigen::AngleAxisf(std::numbers::pi /
-    // static_cast<BoundingBoxScalar>(n) * i,
-    // ActsVector<BoundingBoxScalar,3>::UnitY());
-    // angle = (std::numbers::pi / 2.) / static_cast<BoundingBoxScalar>(n) * (1
-    // + i); ActsVector<BoundingBoxScalar,3> dir(1, 0, 0); Frustum34 fr(origin,
-    // rot * dir, angle); fr.draw(helper, 2);
-    //}
+    os << helper << std::flush;
+    os.close();
 
-    // os << helper << std::flush;
-    // os.close();
+    std::set<std::size_t> idxsAct;
 
-    // END VISUAL PARAMETER TEST
-
-    std::set<std::size_t> act_idxs;
-
-    std::vector<std::pair<Frustum34, std::set<std::size_t>>> fr_exp;
-    fr_exp = {
+    std::vector<std::pair<Frustum34, std::set<std::size_t>>> frExp;
+    frExp = {
         {Frustum34({0, 0, 0}, {1, 0, 0}, std::numbers::pi / 2.),
          {665,  774,  775,  776,  785,  786,  787,  796,  797,  798,  883,
           884,  885,  886,  887,  894,  895,  896,  897,  898,  905,  906,
@@ -1123,9 +1085,13 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
           1088, 1143, 1154, 1165, 1175, 1176, 1186, 1187, 1197, 1198, 1209,
           1308, 1319, 1330}}};
 
-    for (std::size_t l = 0; l < fr_exp.size(); l++) {
-      const Frustum34& fr = fr_exp.at(l).first;
-      const std::set<std::size_t>& exp_idxs = fr_exp.at(l).second;
+    min = -33;
+    max = 33;
+    step = (max - min) / n;
+
+    for (std::size_t l = 0; l < frExp.size(); l++) {
+      const Frustum34& fr = frExp.at(l).first;
+      const std::set<std::size_t>& idxsExp = frExp.at(l).second;
       std::stringstream ss;
       ss << "frust3d-4s_test_" << l << ".ply";
 
@@ -1133,14 +1099,9 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
       helper.clear();
 
-      act_idxs.clear();
+      idxsAct.clear();
 
       fr.draw(helper, 50);
-
-      n = 10;
-      min = -33;
-      max = 33;
-      step = (max - min) / static_cast<BoundingBoxScalar>(n);
 
       Object o;
       using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
@@ -1158,7 +1119,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
             if (bb.intersect(fr)) {
               color = {0, 255, 0};
-              act_idxs.insert(idx);
+              idxsAct.insert(idx);
             }
 
             bb.draw(helper, color);
@@ -1170,7 +1131,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       os << helper << std::flush;
       os.close();
 
-      BOOST_CHECK(act_idxs == exp_idxs);
+      BOOST_CHECK(idxsAct == idxsExp);
     }
   }
 
@@ -1206,7 +1167,6 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     PlyVisualization3D<BoundingBoxScalar> ply;
 
-    // Frustum fr({0, 0, 0}, {0, 0, 1}, std::numbers::pi/8.);
     vec3 pos = {-12.4205, 29.3578, 44.6207};
     vec3 dir = {-0.656862, 0.48138, 0.58035};
     Frustum fr(pos, dir, 0.972419);
