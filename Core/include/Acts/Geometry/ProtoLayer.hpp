@@ -78,24 +78,24 @@ struct ProtoLayer {
   ProtoLayer() = default;
 
   /// Get the parameters : min
-  /// @param bval The accessed binning value
+  /// @param aDir The accessed axis direction
   /// @param addenv The steering if enevlope is added or not
-  double min(AxisDirection bval, bool addenv = true) const;
+  double min(AxisDirection aDir, bool addenv = true) const;
 
   // Get the  parameters : max
-  /// @param bval The accessed binning value
+  /// @param aDir The accessed axis direction
   /// @param addenv The steering if enevlope is added or not
-  double max(AxisDirection bval, bool addenv = true) const;
+  double max(AxisDirection aDir, bool addenv = true) const;
 
   // Get the  parameters : max
-  /// @param bval The accessed binning value
+  /// @param aDir The accessed axis direction
   /// @param addenv The steering if enevlope is added or not
-  double medium(AxisDirection bval, bool addenv = true) const;
+  double medium(AxisDirection aDir, bool addenv = true) const;
 
   // Get the  parameters : max
-  /// @param bval The accessed binning value
+  /// @param aDir The accessed axis direction
   /// @param addenv The steering if enevlope is added or not
-  double range(AxisDirection bval, bool addenv = true) const;
+  double range(AxisDirection aDir, bool addenv = true) const;
 
   /// Output to ostream
   /// @param sl the input ostream
