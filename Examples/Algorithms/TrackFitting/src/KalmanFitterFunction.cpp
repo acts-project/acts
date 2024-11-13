@@ -67,6 +67,60 @@ struct SimpleReverseFilteringLogic {
   }
 };
 
+template <typename PredictedPars, typename PredictedCov>
+double calculateChi2(const double* fullCalibrated,
+                     const double* fullCalibratedCovariance,
+                     PredictedPars predicted, PredictedCov predictedCovariance,
+                     Acts::BoundSubspaceIndices projector,
+                     unsigned int calibratedSize) {
+  using namespace Acts;
+  return visit_measurement(
+      calibratedSize,
+      [&fullCalibrated, &fullCalibratedCovariance, &predicted,
+       &predictedCovariance, &projector](auto N) -> double {
+        constexpr std::size_t kMeasurementSize = decltype(N)::value;
+
+        typename TrackStateTraits<kMeasurementSize, true>::Calibrated
+            calibrated{fullCalibrated};
+
+        typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
+            calibratedCovariance{fullCalibratedCovariance};
+
+        using ParametersVector = ActsVector<kMeasurementSize>;
+
+        std::span<std::uint8_t, kMeasurementSize> validSubspaceIndices(
+            projector.begin(), projector.begin() + kMeasurementSize);
+        FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
+            validSubspaceIndices);
+
+        // Get the residuals
+        ParametersVector res =
+            calibrated - subspaceHelper.projectVector(predicted);
+
+        // Get the chi2
+        return (res.transpose() *
+                (calibratedCovariance +
+                 subspaceHelper.projectMatrix(predictedCovariance))
+                    .inverse() *
+                res)
+            .eval()(0, 0);
+      });
+}
+
+struct SimpleOutlierFinder {
+  double chi2Cut = std::numeric_limits<double>::infinity();
+
+  bool isOutlier(
+      Acts::VectorMultiTrajectory::ConstTrackStateProxy trackState) const {
+    double chi2 = calculateChi2(
+        trackState.effectiveCalibrated().data(),
+        trackState.effectiveCalibratedCovariance().data(),
+        trackState.predicted(), trackState.predictedCovariance(),
+        trackState.boundSubspaceIndices(), trackState.calibratedSize());
+    return chi2 > chi2Cut;
+  }
+};
+
 using namespace ActsExamples;
 
 struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
@@ -76,6 +130,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
   SimpleReverseFilteringLogic reverseFilteringLogic;
+  SimpleOutlierFinder outlierFinder;
 
   bool multipleScattering = false;
   bool energyLoss = false;
@@ -102,6 +157,8 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     extensions.reverseFilteringLogic
         .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
             &reverseFilteringLogic);
+    extensions.outlierFinder.connect<&SimpleOutlierFinder::isOutlier>(
+        &outlierFinder);
 
     Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory> kfOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,
@@ -159,7 +216,7 @@ ActsExamples::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
     double reverseFilteringMomThreshold,
-    Acts::FreeToBoundCorrection freeToBoundCorrection,
+    Acts::FreeToBoundCorrection freeToBoundCorrection, double chi2Cut,
     const Acts::Logger& logger) {
   // Stepper should be copied into the fitters
   const Stepper stepper(std::move(magneticField));
@@ -191,6 +248,7 @@ ActsExamples::makeKalmanFitterFunction(
   fitterFunction->reverseFilteringLogic.momentumThreshold =
       reverseFilteringMomThreshold;
   fitterFunction->freeToBoundCorrection = freeToBoundCorrection;
+  fitterFunction->outlierFinder.chi2Cut = chi2Cut;
 
   return fitterFunction;
 }
