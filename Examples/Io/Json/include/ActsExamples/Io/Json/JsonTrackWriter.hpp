@@ -29,6 +29,7 @@ class JsonTrackWriter : public IWriter {
   struct Config {
     std::string inputTracks;
     std::string inputMeasurementParticlesMap;
+    std::string fileStemp;
     std::string outputDir;
   };
 
@@ -44,7 +45,7 @@ class JsonTrackWriter : public IWriter {
   ProcessCode write(const AlgorithmContext& ctx) override;
 
   /// Write geometry using the default context.
-  ProcessCode finalize() override;
+  ProcessCode finalize() override { return ProcessCode::SUCCESS; }
 
   /// Readonly access to config
   const Config& config() const { return m_cfg; }

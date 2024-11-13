@@ -35,16 +35,21 @@ ProcessCode JsonTrackWriter::write(const AlgorithmContext &ctx) {
 
   for (const auto &track : tracks) {
     nlohmann::json jTrack;
-    jTrack["reference_surface"] = track.referenceSurface().geometryId().value();
+    jTrack["reference_surface"] =
+        track.hasReferenceSurface()
+            ? track.referenceSurface().geometryId().value()
+            : -1;
     jTrack["track_states"] = nlohmann::json::array();
 
-    for (const auto &state : track.trackStates()) {
+    for (const auto &state : track.trackStatesReversed()) {
       if (!state.hasUncalibratedSourceLink()) {
         continue;
       }
       nlohmann::json jState;
       jState["reference_surface"] =
-          state.referenceSurface().geometryId().value();
+          state.hasReferenceSurface()
+              ? state.referenceSurface().geometryId().value()
+              : -1;
 
       auto idx = state.getUncalibratedSourceLink()
                      .template get<IndexSourceLink>()
@@ -64,7 +69,8 @@ ProcessCode JsonTrackWriter::write(const AlgorithmContext &ctx) {
   }
 
   std::stringstream fname;
-  fname << "event" << ctx.eventNumber << "-tracks.json";
+  fname << m_cfg.outputDir << "/event" << std::setfill('0') << std::setw(9)
+        << ctx.eventNumber << "-" << m_cfg.fileStemp << ".json";
   std::ofstream outfile(fname.str());
   outfile << json.dump(4);
 
