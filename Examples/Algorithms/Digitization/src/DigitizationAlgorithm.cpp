@@ -151,7 +151,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   measurementParticlesMap.reserve(simHits.size());
   measurementSimHitsMap.reserve(simHits.size());
 
-  auto eventSeed = m_cfg.randomNumbers->generateSeed(ctx);
+  RandomSeed eventSeed = m_cfg.randomNumbers->generateSeed(ctx);
 
   // Some statistics
   std::size_t skippedHits = 0;
@@ -216,8 +216,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
                          << " - still forwarding it to the digitizer");
             }
 
-            auto hitSeed = eventSeed + moduleGeoId.value() +
-                           simHit.particleId().value() + hitIndex;
+            RandomSeed hitSeed = eventSeed + moduleGeoId.value() +
+                                 simHit.particleId().value() + hitIndex;
             RandomEngine rng(hitSeed);
 
             DigitizedParameters dParameters;
