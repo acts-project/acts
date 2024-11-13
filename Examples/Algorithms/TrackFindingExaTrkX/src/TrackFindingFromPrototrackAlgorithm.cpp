@@ -26,6 +26,7 @@ struct ProtoTrackSourceLinkAccessor
 
   std::unique_ptr<const Acts::Logger> loggerPtr;
   Container protoTrackSourceLinks;
+  bool onlyPrototrackMeasurements = false;
 
   // get the range of elements with requested geoId
   std::pair<Iterator, Iterator> range(const Acts::Surface& surface) const {
@@ -45,7 +46,11 @@ struct ProtoTrackSourceLinkAccessor
     ACTS_VERBOSE("Select " << std::distance(begin, end)
                            << " source-links from collection on "
                            << surface.geometryId());
-    return {Iterator{begin}, Iterator{end}};
+    if (onlyPrototrackMeasurements) {
+      return {Iterator{begin}, Iterator{begin}};
+    } else {
+      return {Iterator{begin}, Iterator{end}};
+    }
   }
 };
 }  // namespace
@@ -104,6 +109,8 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   ProtoTrackSourceLinkAccessor sourceLinkAccessor;
   sourceLinkAccessor.loggerPtr = logger().clone("SourceLinkAccessor");
   sourceLinkAccessor.container = &sourceLinks;
+  sourceLinkAccessor.onlyPrototrackMeasurements =
+      m_cfg.onlyPrototrackMeasurements;
 
   Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
       slAccessorDelegate;

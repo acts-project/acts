@@ -401,7 +401,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
       ActsExamples::TrackFindingFromPrototrackAlgorithm, mex,
       "TrackFindingFromPrototrackAlgorithm", inputProtoTracks,
       inputMeasurements, inputInitialTrackParameters, outputTracks,
-      measurementSelectorCfg, trackingGeometry, magneticField, findTracks, tag);
+      measurementSelectorCfg, trackingGeometry, magneticField, findTracks, tag,
+      onlyPrototrackMeasurements);
 
   py::class_<GeometryIdMapActsAthena, std::shared_ptr<GeometryIdMapActsAthena>>(
       mex, "GeometryIdMapActsAthena")
