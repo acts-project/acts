@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 import sys, os, argparse, pathlib
-import acts, acts.examples
 
 
 def parse_args():
     from acts.examples.reconstruction import SeedingAlgorithm
 
     parser = argparse.ArgumentParser(
-        description=""""Script to test full chain ACTS simulation and reconstruction.
+        description="""
+Script to test the full chain ACTS simulation and reconstruction.
 
 This script is provided for interactive developer testing only.
 It is not intended (and not supported) for end user use, automated testing,
@@ -16,7 +16,8 @@ and certainly should never be called in production. The Python API is the
 proper way to access the ActsExamples from scripts. The other Examples/Scripts
 are much better examples of how to do that. physmon in the CI is the proper
 way to do automated integration tests. This script is only for the case of
-interactive testing with one-off configuration specified by command-line options.""",
+interactive testing with one-off configuration specified by command-line options.
+"""
     )
     parser.add_argument(
         "-G",
@@ -127,7 +128,7 @@ interactive testing with one-off configuration specified by command-line options
         "--gen-pt-range",
         "--gun-pt-range",
         default="1:10",
-        help="pT - transverse momentum generation range in GeV (min:max pT for particle gun; min pT for -t) (default 1:10, except max Pt not used with -t)",
+        help="transverse momentum (pT) range (min:max) of the particle gun in GeV (default=%(default)s)",
     )
     parser.add_argument(
         "--gen-eta-range",
@@ -229,6 +230,9 @@ def full_chain(args):
     global detector, trackingGeometry, decorators, field, rnd
     global logger
 
+    if args.disable_fpemon:
+        os.environ["ACTS_SEQUENCER_DISABLE_FPEMON"] = "1"
+
     if args.dump_args_calls:
         acts.examples.dump_args_calls(locals())
 
@@ -251,7 +255,6 @@ def full_chain(args):
         detname = "odd"
 
     u = acts.UnitConstants
-    pt = strToRange(args.gen_pt_range, "--gen-pt-range", u.GeV)
 
     if args.output_detail == 3:
         outputDirLess = None
@@ -270,15 +273,14 @@ def full_chain(args):
     outputDirLessCsv = outputDirLess if args.output_csv != 0 else None
     outputDirMoreCsv = outputDirMore if args.output_csv != 0 else None
 
-    if args.disable_fpemon:
-        os.environ["ACTS_SEQUENCER_DISABLE_FPEMON"] = "1"
-
     # fmt: off
     if args.generic_detector:
-        etaRange = strToRange(args.gen_eta_range, "--gen-eta-range") if args.gen_eta_range else (-2.0, 2.0)
+        etaRange = (-2.0, 2.0)
+        ptMin = 0.5 * u.GeV
         rhoMax = 24.0 * u.mm
         geo_dir = pathlib.Path(acts.__file__).resolve().parent.parent.parent.parent.parent
-        if args.loglevel <= 2: logger.info(f"Load Generic Detector from {geo_dir}")
+        if args.loglevel <= 2:
+            logger.info(f"Load Generic Detector from {geo_dir}")
         if args.digi_config is None:
             args.digi_config = geo_dir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
         seedingConfigFile = geo_dir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
@@ -286,11 +288,13 @@ def full_chain(args):
         detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
     elif args.odd:
         import acts.examples.odd
-        etaRange = strToRange(args.gen_eta_range, "--gen-eta-range") if args.gen_eta_range else (-3.0, 3.0)
+        etaRange = (-3.0, 3.0)
+        ptMin = 1.0 * u.GeV
         rhoMax = 24.0 * u.mm
         beamTime = 1.0 * u.ns
         geo_dir = acts.examples.odd.getOpenDataDetectorDirectory()
-        if args.loglevel <= 2: logger.info(f"Load Open Data Detector from {geo_dir.resolve()}")
+        if args.loglevel <= 2:
+            logger.info(f"Load Open Data Detector from {geo_dir.resolve()}")
         if args.digi_config is None:
             args.digi_config = geo_dir / "config/odd-digi-smearing-config.json"
         seedingConfigFile = geo_dir / "config/odd-seeding-config.json"
@@ -299,15 +303,17 @@ def full_chain(args):
         args.bf_constant = True
         detector, trackingGeometry, decorators = acts.examples.odd.getOpenDataDetector(
             odd_dir=geo_dir,
-            mdecorator=acts.IMaterialDecorator.fromFile(args.material_config)
+            mdecorator=acts.IMaterialDecorator.fromFile(args.material_config),
         )
     elif args.itk:
         import acts.examples.itk as itk
-        etaRange = strToRange(args.gen_eta_range, "--gen-eta-range") if args.gen_eta_range else (-4.0, 4.0)
+        etaRange = (-4.0, 4.0)
+        ptMin = 1.0 * u.GeV
         rhoMax = 28.0 * u.mm
         beamTime = 5.0 * u.ns
         geo_dir = pathlib.Path("acts-itk")
-        if args.loglevel <= 2: logger.info(f"Load ATLAS ITk from {geo_dir.resolve()}")
+        if args.loglevel <= 2:
+            logger.info(f"Load ATLAS ITk from {geo_dir.resolve()}")
         if args.digi_config is None:
             args.digi_config = geo_dir / "itk-hgtd/itk-smearing-config.json"
         seedingConfigFile = geo_dir / "itk-hgtd/geoSelection-ITk.json"
@@ -356,15 +362,14 @@ def full_chain(args):
             absZ=(0.0 * u.mm, 1.0 * u.m),
             eta=etaRange,
             pt=(150 * u.MeV, None),
-            removeNeutral=True,
         )
         if args.edm4hep or args.geant4 or args.ttbar_pu200
         else ParticleSelectorConfig()
     )
 
     postSelectParticles = ParticleSelectorConfig(
-        pt=(pt[0], None),
-        eta=etaRange,
+        pt=(ptMin, None),
+        eta=etaRange if not args.generic_detector else (None, None),
         measurements=(9, None),
         removeNeutral=True,
     )
@@ -409,16 +414,23 @@ def full_chain(args):
 
             addParticleGun(
                 s,
-                MomentumConfig(*pt, transverse=True),
+                MomentumConfig(
+                    *strToRange(args.gen_pt_range, "--gen-pt-range", u.GeV),
+                    transverse=True,
+                ),
                 EtaConfig(
-                    *etaRange,
+                    *(
+                        strToRange(args.gen_eta_range, "--gen-eta-range")
+                        if args.gen_eta_range
+                        else etaRange
+                    ),
                     uniform=(
                         not args.gen_cos_theta
-                        if args.gen_cos_theta or args.itk
+                        if args.gen_cos_theta or not args.odd
                         else None
                     ),
                 ),
-                PhiConfig(0.0, 360.0 * u.degree) if args.odd else PhiConfig(),
+                PhiConfig(0.0, 360.0 * u.degree) if not args.itk else PhiConfig(),
                 ParticleConfig(
                     args.gen_nparticles, acts.PdgParticle.eMuon, randomizeCharge=True
                 ),
@@ -532,11 +544,15 @@ def full_chain(args):
         trackingGeometry,
         field,
         *seedingAlgConfig,
-        ParticleSmearingSigmas(
-            ptRel=0.01
-        ),  # only needed for SeedingAlgorithm.TruthSmeared
         seedingAlgorithm=args.seeding_algorithm,
-        rnd=rnd,  # only needed for SeedingAlgorithm.TruthSmeared
+        **(
+            dict(
+                particleSmearingSigmas=ParticleSmearingSigmas(ptRel=0.01),
+                rnd=rnd,
+            )
+            if args.seeding_algorithm == SeedingAlgorithm.TruthSmeared
+            else {}
+        ),
         initialSigmas=[
             1 * u.mm,
             1 * u.mm,
@@ -574,70 +590,69 @@ def full_chain(args):
     if not args.ckf:
         return s
 
-    if not args.itk:
+    if args.seeding_algorithm != SeedingAlgorithm.TruthSmeared:
+        ckfConfig = CkfConfig(
+            seedDeduplication=True,
+            stayOnSeed=True,
+        )
+    else:
+        ckfConfig = CkfConfig()
 
+    if not args.itk:
         trackSelectorConfig = TrackSelectorConfig(
-            pt=(1.0 * u.GeV if args.ttbar_pu200 else 0.0, None),
+            pt=(ptMin if args.ttbar_pu200 else 0.0, None),
             absEta=(None, 3.0),
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
             nMeasurementsMin=7,
             maxHoles=2,
             maxOutliers=2,
         )
-        # fmt: off
-        ckfConfig = CkfConfig(
+        ckfConfig = ckfConfig._replace(
             chi2CutOffMeasurement=15.0,
             chi2CutOffOutlier=25.0,
             numMeasurementsCutOff=10,
-            **(dict(
-                seedDeduplication=True,
-                stayOnSeed=True,
-            ) if args.seeding_algorithm != SeedingAlgorithm.TruthSmeared else {}),
-            **(dict(
-                pixelVolumes=[16, 17, 18],
-                stripVolumes=[23, 24, 25],
-                maxPixelHoles=1,
-                maxStripHoles=2,
-                constrainToVolumes=[
-                    2,  # beam pipe
-                    32,
-                    4,  # beam pip gap
-                    16,
-                    17,
-                    18,  # pixel
-                    20,  # PST
-                    23,
-                    24,
-                    25,  # short strip
-                    26,
-                    8,  # long strip gap
-                    28,
-                    29,
-                    30,  # long strip
-                ],
-            ) if args.odd else {})
         )
-        # fmt: on
-
-    elif args.itk:
+    else:
         # fmt: off
         trackSelectorConfig = (
             TrackSelectorConfig(absEta=(None, 2.0), pt=(0.9 * u.GeV, None), nMeasurementsMin=9, maxHoles=2, maxOutliers=2, maxSharedHits=2),
             TrackSelectorConfig(absEta=(None, 2.6), pt=(0.4 * u.GeV, None), nMeasurementsMin=8, maxHoles=2, maxOutliers=2, maxSharedHits=2),
             TrackSelectorConfig(absEta=(None, 4.0), pt=(0.4 * u.GeV, None), nMeasurementsMin=7, maxHoles=2, maxOutliers=2, maxSharedHits=2),
         )
-        ckfConfig = CkfConfig(
-            **(dict(
-                seedDeduplication=True,
-                stayOnSeed=True,
-            ) if args.seeding_algorithm != SeedingAlgorithm.TruthSmeared else {}),
+        # fmt: on
+
+    if args.odd:
+        ckfConfig = ckfConfig._replace(
+            pixelVolumes=[16, 17, 18],
+            stripVolumes=[23, 24, 25],
+            maxPixelHoles=1,
+            maxStripHoles=2,
+            constrainToVolumes=[
+                2,  # beam pipe
+                32,
+                4,  # beam pip gap
+                16,
+                17,
+                18,  # pixel
+                20,  # PST
+                23,
+                24,
+                25,  # short strip
+                26,
+                8,  # long strip gap
+                28,
+                29,
+                30,  # long strip
+            ],
+        )
+    elif args.itk:
+        ckfConfig = ckfConfig._replace(
             # ITk volumes from Noemi's plot
             pixelVolumes=[8, 9, 10, 13, 14, 15, 16, 18, 19, 20],
             stripVolumes=[22, 23, 24],
             maxPixelHoles=1,
             maxStripHoles=2,
         )
-        # fmt: on
 
     if args.output_detail == 1:
         writeDetail = dict(writeTrackSummary=False)
@@ -646,6 +661,11 @@ def full_chain(args):
     else:
         writeDetail = {}
 
+    if args.odd and args.output_detail != 1:
+        writeCovMat = dict(writeCovMat=True)
+    else:
+        writeCovMat = {}
+
     addCKFTracks(
         s,
         trackingGeometry,
@@ -653,7 +673,7 @@ def full_chain(args):
         trackSelectorConfig=trackSelectorConfig,
         ckfConfig=ckfConfig,
         **writeDetail,
-        **(dict(writeCovMat=True) if args.output_detail != 1 else {}),
+        **writeCovMat,
         outputDirRoot=outputDirLessRoot,
         outputDirCsv=outputDirLessCsv,
     )
@@ -702,7 +722,7 @@ def full_chain(args):
                 useAmbiguityFunction=False,
             ),
             ambiVolumeFile=args.ambi_config,
-            **(dict(writeCovMat=True) if args.output_detail != 1 else {}),
+            **writeCovMat,
             outputDirRoot=outputDirLessRoot,
             outputDirCsv=outputDirLessCsv,
         )
@@ -717,7 +737,7 @@ def full_chain(args):
                 nMeasurementsMin=6 if args.itk else 7,
             ),
             **writeDetail,
-            **(dict(writeCovMat=True) if args.output_detail != 1 else {}),
+            **writeCovMat,
             outputDirRoot=outputDirLessRoot,
             outputDirCsv=outputDirLessCsv,
         )
@@ -780,10 +800,6 @@ class EnumAction(argparse.Action):
         else:
             raise ValueError("%s is not a validly enumerated algorithm." % values)
 
-
-# use modules to prevent Fluke unused import warning
-dir(acts)
-dir(acts.examples)
 
 # main program: parse arguments, setup sequence, and run the full chain
 full_chain(parse_args()).run()
