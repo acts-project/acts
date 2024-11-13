@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <algorithm>
+#include <numbers>
 
 std::tuple<std::vector<Acts::Svg::ProtoSurfaces>, Acts::Svg::ProtoGrid,
            std::vector<Acts::Svg::ProtoAssociations> >
@@ -164,7 +165,8 @@ Acts::Svg::SurfaceArrayConverter::convert(
       Vector3 localZ = sTransform.rotation().col(2);
       // Find out orientation w.r.t. global transform
       ActsScalar projZ = localZ.dot(Vector3(0., 0., 1.));
-      ActsScalar alpha = std::atan2(localA[1], localA[0]) / M_PI * 180.;
+      ActsScalar alpha =
+          std::atan2(localA[1], localA[0]) / std::numbers::pi * 180.;
       if (projZ < 0.) {
         alpha += 180.;
       }

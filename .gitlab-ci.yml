@@ -37,8 +37,6 @@ clang_tidy:
         -DCMAKE_CXX_COMPILER=clang++
         -DCMAKE_C_COMPILER=clang
         -DPython_EXECUTABLE=$(which python3)
-        -DACTS_RUN_CLANG_TIDY=ON
-        -DACTS_BUILD_ODD=OFF
 
     # Main clang-tidy run during cmake compilation
     - CI/clang_tidy/run_clang_tidy.sh clang-tidy build
@@ -168,7 +166,7 @@ build_exatrkx:
 #     - git clone $CLONE_URL src
 #     - cd src
 #     - git checkout $HEAD_SHA
-#     - pip3 install -r Examples/Python/tests/requirements_ubuntu2004.txt
+#     - pip3 install -r Examples/Python/tests/requirements.txt
 #     - nvidia-smi
 #     - pytest -rFsv -k test_exatrkx
 
