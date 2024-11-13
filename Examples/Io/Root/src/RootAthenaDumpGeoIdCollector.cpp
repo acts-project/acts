@@ -21,7 +21,7 @@ RootAthenaDumpGeoIdCollector::RootAthenaDumpGeoIdCollector(
       m_cfg(config),
       m_logger(Acts::getDefaultLogger(name(), level)) {
   if (m_cfg.inputfile.empty()) {
-    throw std::invalid_argument("Missing input filename");
+    throw std::invalid_argument("Empty input file list");
   }
   if (m_cfg.treename.empty()) {
     throw std::invalid_argument("Missing tree name");
@@ -51,9 +51,10 @@ RootAthenaDumpGeoIdCollector::RootAthenaDumpGeoIdCollector(
   setBranchAddress("CLphi_module", CLphi_module);
   setBranchAddress("CLside", CLside);
   setBranchAddress("CLmoduleID", CLmoduleID);
-  m_inputchain->Add(m_cfg.inputfile.c_str());
-  ACTS_DEBUG("Adding file " << m_cfg.inputfile << " to tree" << m_cfg.treename);
-
+  for (const auto& f : m_cfg.inputfile) {
+    m_inputchain->Add(f.c_str());
+    ACTS_DEBUG("Adding file '" << f << "' to tree " << m_cfg.treename);
+  }
   m_events = m_inputchain->GetEntries();
   ACTS_DEBUG("Found " << m_events << " to read");
 

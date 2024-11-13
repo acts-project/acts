@@ -42,7 +42,7 @@ class RootAthenaDumpGeoIdCollector : public IReader {
     /// Name of tree
     std::string treename;
     /// Name of inputfile
-    std::string inputfile;
+    std::vector<std::string> inputfile;
 
     /// The map where the algorithm reads into
     std::shared_ptr<ActsExamples::GeometryIdMapActsAthena> geometryIdMap =
