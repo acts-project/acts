@@ -175,7 +175,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
               float x1 = n1->m_spGbts.SP->x();
               float y1 = n1->m_spGbts.SP->y();
               float z1 = n1->m_spGbts.SP->z();
-              float phi1 = std::atan(x1 / y1);
+              float phi1 = n1->m_spGbts.phi();
 
               float minPhi = phi1 - deltaPhi;
               float maxPhi = phi1 + deltaPhi;

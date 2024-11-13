@@ -34,7 +34,7 @@ struct GbtsSP {
   float m_ClusterWidth ; 
   GbtsSP(const space_point_t *sp, int id, int combined_id, bool isPixel, float ClusterWidth)
       : SP(sp), gbtsID(id), combined_ID{combined_id}, m_isPixel(isPixel), m_ClusterWidth(ClusterWidth) {
-    m_phi = std::atan(SP->x() / SP->y());
+    m_phi = std::atan2(SP->y(), SP->x());
     m_r = std::sqrt((SP->x()*SP->x())+ (SP->y()*SP->y())) ;   
   };
   bool isPixel() const { return m_isPixel; }
