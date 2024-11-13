@@ -23,6 +23,8 @@
 #include <chrono>
 #include <numeric>
 
+#include "createFeatures.hpp"
+
 using namespace ActsExamples;
 using namespace Acts::UnitLiterals;
 
@@ -153,7 +155,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   ACTS_DEBUG("Received " << numSpacepoints << " spacepoints");
   ACTS_DEBUG("Construct " << numFeatures << " node features");
 
-  std::vector<float> features(numSpacepoints * numFeatures);
   std::vector<int> spacepointIDs;
   std::vector<std::uint64_t> moduleIds;
 
@@ -178,78 +179,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     } else {
       moduleIds.push_back(sl1.geometryId().value());
     }
-
-    // This should be fine, because check in constructor
-    Cluster* cl1 = clusters ? &clusters->at(sl1.index()) : nullptr;
-    Cluster* cl2 = cl1;
-
-    if (sp.sourceLinks().size() == 2) {
-      const auto& sl2 = sp.sourceLinks()[1].template get<IndexSourceLink>();
-      cl2 = clusters ? &clusters->at(sl2.index()) : nullptr;
-    }
-
-    // I would prefer to use a std::span or boost::span here once available
-    float* f = features.data() + isp * numFeatures;
-
-    using NF = NodeFeature;
-
-    auto r = [](const auto& p) {
-      return std::hypot(p[Acts::ePos0], p[Acts::ePos1]);
-    };
-    auto phi = [](const auto& p) {
-      return std::atan2(p[Acts::ePos1], p[Acts::ePos0]);
-    };
-
-    // clang-format off
-#define MAKE_CLUSTER_FEATURES(n) \
-    break; case NF::eCluster##n##X:   f[ift] = cl##n->globalPosition[Acts::ePos0]; \
-    break; case NF::eCluster##n##Y:   f[ift] = cl##n->globalPosition[Acts::ePos1]; \
-    break; case NF::eCluster##n##R:   f[ift] = r(cl##n->globalPosition); \
-    break; case NF::eCluster##n##Phi: f[ift] = phi(cl##n->globalPosition); \
-    break; case NF::eCluster##n##Z:   f[ift] = cl##n->globalPosition[Acts::ePos2]; \
-    break; case NF::eCluster##n##Eta: f[ift] = eta(r(cl##n->globalPosition), cl##n->globalPosition[Acts::ePos2]); \
-    break; case NF::eCellCount##n:    f[ift] = cl##n->channels.size(); \
-    break; case NF::eChargeSum##n:    f[ift] = cl##n->sumActivations(); \
-    break; case NF::eLocDir0##n:      f[ift] = cl##n->localDirection[0]; \
-    break; case NF::eLocDir1##n:      f[ift] = cl##n->localDirection[1]; \
-    break; case NF::eLocDir2##n:      f[ift] = cl##n->localDirection[2]; \
-    break; case NF::eLengthDir0##n:   f[ift] = cl##n->lengthDirection[0]; \
-    break; case NF::eLengthDir1##n:   f[ift] = cl##n->lengthDirection[1]; \
-    break; case NF::eLengthDir2##n:   f[ift] = cl##n->lengthDirection[2]; \
-    break; case NF::eLocEta##n:       f[ift] = cl##n->localEta; \
-    break; case NF::eLocPhi##n:       f[ift] = cl##n->localPhi; \
-    break; case NF::eGlobEta##n:      f[ift] = cl##n->globalEta; \
-    break; case NF::eGlobPhi##n:      f[ift] = cl##n->globalPhi; \
-    break; case NF::eEtaAngle##n:     f[ift] = cl##n->etaAngle; \
-    break; case NF::ePhiAngle##n:     f[ift] = cl##n->phiAngle;
-    // clang-format on
-
-    for (auto ift = 0ul; ift < numFeatures; ++ift) {
-      // clang-format off
-      switch(m_cfg.nodeFeatures[ift]) {
-        // Spacepoint features
-        break; case NF::eR:           f[ift] = std::hypot(sp.x(), sp.y());
-        break; case NF::ePhi:         f[ift] = std::atan2(sp.y(), sp.x());
-        break; case NF::eZ:           f[ift] = sp.z();
-        break; case NF::eX:           f[ift] = sp.x();
-        break; case NF::eY:           f[ift] = sp.y();
-        break; case NF::eEta:         f[ift] = eta(std::hypot(sp.x(), sp.y()), sp.z());
-        // Single cluster features
-        break; case NF::eClusterLoc0: f[ift] = cl1->sizeLoc0;
-        break; case NF::eClusterLoc1: f[ift] = cl1->sizeLoc1;
-        break; case NF::eCellCount:   f[ift] = cl1->channels.size();
-        break; case NF::eChargeSum:   f[ift] = cl1->sumActivations();
-        // Features for split clusters
-        MAKE_CLUSTER_FEATURES(1)
-        MAKE_CLUSTER_FEATURES(2)
-      }
-      // clang-format on
-
-      assert(std::isfinite(f[ift]));
-      f[ift] /= m_cfg.featureScales[ift];
-    }
-#undef MAKE_CLUSTER_FEATURES
   }
+
+  auto features = createFeatures(spacepoints, clusters, m_cfg.nodeFeatures,
+                                 m_cfg.featureScales);
 
   auto t1 = Clock::now();
 

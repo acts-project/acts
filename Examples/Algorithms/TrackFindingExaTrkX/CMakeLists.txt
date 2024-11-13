@@ -5,6 +5,8 @@ add_library(
     src/PrototracksToParameters.cpp
     src/TrackFindingFromPrototrackAlgorithm.cpp
     src/TruthGraphBuilder.cpp
+    src/GraphConstructionWithTruthClassifier.cpp
+    src/createFeatures.cpp
 )
 
 target_include_directories(
