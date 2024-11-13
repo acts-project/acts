@@ -10,9 +10,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <functional>
 
@@ -20,7 +20,6 @@
 #include "edm4hep/MutableMCParticle.h"
 #include "edm4hep/MutableSimTrackerHit.h"
 #include "edm4hep/MutableTrack.h"
-#include "edm4hep/MutableTrackerHit.h"
 #include "edm4hep/MutableTrackerHitPlane.h"
 #include "edm4hep/SimTrackerHit.h"
 #include "edm4hep/TrackerHit.h"
@@ -49,7 +48,7 @@ using MapGeometryIdTo =
 /// Inpersistent information:
 /// - particle ID
 /// - process
-ActsFatras::Particle readParticle(
+SimParticle readParticle(
     const edm4hep::MCParticle& from,
     const MapParticleIdFrom& particleMapper = zeroParticleMapper);
 
@@ -58,8 +57,7 @@ ActsFatras::Particle readParticle(
 /// Inpersistent information:
 /// - particle ID
 /// - process
-void writeParticle(const ActsFatras::Particle& from,
-                   edm4hep::MutableMCParticle to);
+void writeParticle(const SimParticle& from, edm4hep::MutableMCParticle to);
 
 /// Reads a Fatras hit from EDM4hep.
 ///

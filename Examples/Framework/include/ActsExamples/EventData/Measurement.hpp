@@ -13,7 +13,6 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/EventData/detail/CalculateResiduals.hpp"
 #include "Acts/EventData/detail/ParameterTraits.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"

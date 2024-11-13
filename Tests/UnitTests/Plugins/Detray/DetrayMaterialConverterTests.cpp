@@ -20,6 +20,8 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <numbers>
+
 #include <detray/definitions/grid_axis.hpp>
 #include <detray/io/frontend/payloads.hpp>
 
@@ -307,8 +309,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionRPhi) {
   std::vector<float> binEdges = {0., 5., 20.};
   Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open,
                               Acts::BinningValue::binR);
-  binUtility += Acts::BinUtility(2u, -M_PI, M_PI, Acts::BinningOption::closed,
-                                 Acts::BinningValue::binPhi);
+  binUtility +=
+      Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
+                       Acts::BinningOption::closed, Acts::BinningValue::binPhi);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};
@@ -384,8 +387,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZPhi) {
   // Create a binned material in 2 x2  bins in x-y direction
   Acts::BinUtility binUtility(2u, -1., 1., Acts::BinningOption::open,
                               Acts::BinningValue::binZ);
-  binUtility += Acts::BinUtility(2u, -M_PI, M_PI, Acts::BinningOption::closed,
-                                 Acts::BinningValue::binPhi);
+  binUtility +=
+      Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
+                       Acts::BinningOption::closed, Acts::BinningValue::binPhi);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};

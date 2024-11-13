@@ -30,6 +30,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <vector>
 
@@ -52,7 +53,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     cfg.position = {i * UnitConstants::m, 0., 0.};
 
     // Rotation of the surfaces
-    double rotationAngle = M_PI * 0.5;
+    double rotationAngle = std::numbers::pi / 2.;
     Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
     Vector3 yPos(0., 1., 0.);
     Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     cfg.position = {-i * UnitConstants::m, 0., 0.};
 
     // Rotation of the surfaces
-    double rotationAngle = M_PI * 0.5;
+    double rotationAngle = std::numbers::pi / 2.;
     Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
     Vector3 yPos(0., 1., 0.);
     Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));

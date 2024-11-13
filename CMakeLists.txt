@@ -290,8 +290,12 @@ if(ACTS_SETUP_BOOST)
     endif()
 
     if(Boost_VERSION VERSION_EQUAL "1.85.0")
+        set(_boost_version_severity WARNING)
+        if(ACTS_BUILD_EXAMPLES)
+            set(_boost_version_severity FATAL_ERROR)
+        endif()
         message(
-            WARNING
+            ${_boost_version_severity}
             "Boost 1.85.0 is known to be broken (https://github.com/boostorg/container/issues/273). Please use a different version."
         )
     endif()
