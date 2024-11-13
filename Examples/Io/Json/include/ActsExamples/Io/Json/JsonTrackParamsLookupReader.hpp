@@ -55,7 +55,7 @@ class JsonTrackParamsLookupReader final : public ITrackParamsLookupReader {
     for (const auto& jGrid : jLookup) {
       Acts::GeometryIdentifier id(jGrid["geo_id"]);
 
-      if (m_cfg.refLayers.contains(id)) {
+      if (!m_cfg.refLayers.contains(id)) {
         throw std::invalid_argument("Geometry identifier not found");
       }
 

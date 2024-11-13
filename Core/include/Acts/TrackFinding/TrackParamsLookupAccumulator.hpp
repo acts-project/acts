@@ -17,7 +17,6 @@
 #include <memory>
 #include <mutex>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
 
 namespace {
@@ -33,9 +32,6 @@ concept IsGenericBound =
     std::same_as<parameters_t, Acts::GenericBoundTrackParameters<
                                    typename parameters_t::ParticleHypothesis>>;
 
-template <typename T>
-using remove_shared = std::remove_reference_t<decltype(*std::declval<T>())>;
-
 /// @brief Concept that restricts the type of the
 /// accumulation grid cell
 template <typename grid_t>
@@ -44,17 +40,15 @@ concept TrackParamsGrid = requires {
   typename grid_t::value_type::second_type;
 
   requires TrackParameters<
-      remove_shared<typename grid_t::value_type::first_type>>;
+      typename grid_t::value_type::first_type::element_type>;
   requires TrackParameters<
-      remove_shared<typename grid_t::value_type::first_type>>;
+      typename grid_t::value_type::first_type::element_type>;
 
   requires requires(typename grid_t::value_type val) {
     {
       val.first
-    } -> std::same_as<std::shared_ptr<remove_shared<decltype(val.first)>>&>;
-    {
-      val.second
-    } -> std::same_as<std::shared_ptr<remove_shared<decltype(val.first)>>&>;
+    } -> std::same_as<
+          std::shared_ptr<typename decltype(val.first)::element_type>&>;
     { val.second } -> std::same_as<decltype(val.first)&>;
   };
 };
