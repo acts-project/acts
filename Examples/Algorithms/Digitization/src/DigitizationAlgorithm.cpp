@@ -162,7 +162,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
   // Count the number of hits per particle and module. Cleared before each
   // module.
-  std::map<SimBarcode, int> particleOnModuleHitCount;
+  std::map<SimBarcode, std::uint32_t> particleOnModuleHitCount;
 
   ACTS_DEBUG("Starting loop over modules ...");
   for (const auto& simHitsGroup : groupByModule(simHits)) {
