@@ -16,6 +16,8 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
+#include <set>
+
 namespace ActsExamples {
 
 /// This algorithm computes track parameters for prototracks.
@@ -55,14 +57,20 @@ class PrototracksToParameters final : public IAlgorithm {
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
     /// Initial covariance matrix diagonal.
     std::array<double, 6> initialSigmas = {
-        25 * Acts::UnitConstants::um,       100 * Acts::UnitConstants::um,
-        0.02 * Acts::UnitConstants::degree, 0.02 * Acts::UnitConstants::degree,
-        0.1 / Acts::UnitConstants::GeV,     10 * Acts::UnitConstants::ns};
+        1 * Acts::UnitConstants::mm,       1 * Acts::UnitConstants::mm,
+        1.0 * Acts::UnitConstants::degree, 1.0 * Acts::UnitConstants::degree,
+        0.1 / Acts::UnitConstants::GeV,    1 * Acts::UnitConstants::ns};
     /// Inflate initial covariance.
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Particle hypothesis.
     Acts::ParticleHypothesis particleHypothesis =
         Acts::ParticleHypothesis::pion();
+
+    /// Minimal distance between spacepoints for seed building
+    double minSpacepointDist = 0.0;
+
+    /// Currently cannot build seed if bottom SP of seed is in strips
+    std::set<int> stripVolumes;
   };
 
   /// Construct the algorithm.

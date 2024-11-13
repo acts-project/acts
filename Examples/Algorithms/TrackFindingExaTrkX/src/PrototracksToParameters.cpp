@@ -83,37 +83,22 @@ ProcessCode PrototracksToParameters::execute(
   parameters.reserve(prototracks.size());
 
   // Loop over the prototracks to make seeds
-  ProtoTrack tmpTrack;
   std::vector<const SimSpacePoint *> tmpSps;
-  std::size_t skippedTracks = 0;
-  for (auto &track : prototracks) {
+
+  // Some counters for statistics
+  std::size_t shortSeeds = 0, stripOnlySeeds = 0, estimationFailed = 0,
+              highMomentum = 0;
+
+  for (const auto &track : prototracks) {
     ACTS_VERBOSE("Try to get seed from prototrack with " << track.size()
                                                          << " hits");
-    // Make prototrack unique with respect to volume and layer
-    // so we don't get a seed where we have two spacepoints on the same layer
-
-    // Here, we want to create a seed only if the prototrack with removed unique
-    // layer-volume spacepoints has 3 or more hits. However, if this is the
-    // case, we want to keep the whole prototrack. Therefore, we operate on a
-    // tmpTrack.
-    std::ranges::sort(track, {}, [&](const auto &t) {
-      return std::make_tuple(indexToGeoId[t].volume(), indexToGeoId[t].layer());
-    });
-
-    tmpTrack.clear();
-    std::unique_copy(
-        track.begin(), track.end(), std::back_inserter(tmpTrack),
-        [&](auto a, auto b) {
-          return indexToGeoId[a].volume() == indexToGeoId[b].volume() &&
-                 indexToGeoId[a].layer() == indexToGeoId[b].layer();
-        });
 
     // in this case we cannot seed properly
-    if (tmpTrack.size() < 3) {
-      ACTS_DEBUG(
+    if (track.size() < 3) {
+      ACTS_VERBOSE(
           "Cannot seed because less then three hits with unique (layer, "
           "volume)");
-      skippedTracks++;
+      shortSeeds++;
       continue;
     }
 
@@ -126,12 +111,43 @@ ProcessCode PrototracksToParameters::execute(
                  tmpSps.end());
 
     if (tmpSps.size() < 3) {
-      ACTS_WARNING("Could not find all spacepoints, skip");
-      skippedTracks++;
+      ACTS_WARNING(
+          "Not enough matching spacepoints for measurements found, skip");
       continue;
     }
 
-    std::ranges::sort(tmpSps, {}, [](const auto &t) { return t->r(); });
+    std::ranges::sort(tmpSps, {},
+                      [](const auto &t) { return std::hypot(t->r(), t->z()); });
+
+    tmpSps.erase(std::unique(tmpSps.begin(), tmpSps.end(),
+                             [](auto &a, auto &b) { return a->r() == b->r(); }),
+                 tmpSps.end());
+
+    if (tmpSps.size() < 3) {
+      ACTS_WARNING("Not more then 3 spacepoints unique in R, skip!");
+      continue;
+    }
+
+    Acts::Vector2 prevZR{tmpSps.front()->z(), tmpSps.front()->r()};
+    tmpSps.erase(std::remove_if(std::next(tmpSps.begin()), tmpSps.end(),
+                                [&](auto &a) {
+                                  Acts::Vector2 currentZR{a->z(), a->r()};
+                                  if ((currentZR - prevZR).norm() <
+                                      m_cfg.minSpacepointDist) {
+                                    return true;
+                                  } else {
+                                    prevZR = currentZR;
+                                    return false;
+                                  }
+                                }),
+                 tmpSps.end());
+
+    if (tmpSps.size() < 3) {
+      ACTS_WARNING(
+          "Not more then 3 spacepoints remaining after minimum distance "
+          "check!");
+      continue;
+    }
 
     // Simply use r = m*z + t and solve for r=0 to find z vertex position...
     // Probably not the textbook way to do
@@ -154,6 +170,12 @@ ProcessCode PrototracksToParameters::execute(
                            .geometryId();
     const auto &surface = *m_cfg.geometry->findSurface(geoId);
 
+    if (m_cfg.stripVolumes.contains(geoId.volume())) {
+      ACTS_VERBOSE("Bottom spacepoint is in strips, skip it!");
+      stripOnlySeeds++;
+      continue;
+    }
+
     auto field = m_cfg.magneticField->getField(
         {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
     if (!field.ok()) {
@@ -163,20 +185,48 @@ ProcessCode PrototracksToParameters::execute(
 
     auto pars = Acts::estimateTrackParamsFromSeed(
         ctx.geoContext, seed.sp().begin(), seed.sp().end(), surface, *field,
-        m_cfg.bFieldMin);
+        m_cfg.bFieldMin, logger());
 
-    if (not pars) {
-      ACTS_WARNING("Skip track because of bad params");
+    auto printSeedDetails = [&]() {
+      std::stringstream ss;
+      for (const auto &ssp : seed.sp()) {
+        ss << "- r: " << ssp->r() << " z: " << ssp->z();
+        for (auto sl : ssp->sourceLinks()) {
+          ss << " gid: " << sl.get<IndexSourceLink>().geometryId() << " ";
+        }
+        ss << "\n";
+      }
+      return ss.str();
+    };
+
+    if (!pars) {
+      ACTS_DEBUG("Skip track because of bad parameters");
+      ACTS_VERBOSE("Seed detail:\n" << printSeedDetails());
+      estimationFailed++;
+      continue;
+    }
+
+    auto params = Acts::BoundTrackParameters(
+        surface.getSharedPtr(), *pars, m_covariance, m_cfg.particleHypothesis);
+
+    if (params.absoluteMomentum() > 1.e5) {
+      ACTS_WARNING("Momentum estimate is " << params.absoluteMomentum());
+      ACTS_VERBOSE("Seed detail:\n" << printSeedDetails());
+      highMomentum++;
+      continue;
     }
 
     seededTracks.push_back(track);
     seeds.emplace_back(std::move(seed));
-    parameters.push_back(Acts::BoundTrackParameters(
-        surface.getSharedPtr(), *pars, m_covariance, m_cfg.particleHypothesis));
+    parameters.push_back(std::move(params));
   }
 
-  if (skippedTracks > 0) {
-    ACTS_WARNING("Skipped seeding of " << skippedTracks);
+  if (prototracks.size() - seededTracks.size() > 0) {
+    ACTS_DEBUG("Skipped seeding of "
+               << prototracks.size() - seededTracks.size());
+    ACTS_DEBUG("- short seeds: " << shortSeeds);
+    ACTS_DEBUG("- seeds with bottom SP in strips: " << stripOnlySeeds);
+    ACTS_DEBUG("- high momentum seeds: " << highMomentum);
   }
 
   ACTS_DEBUG("Seeded " << seeds.size() << " out of " << prototracks.size()
