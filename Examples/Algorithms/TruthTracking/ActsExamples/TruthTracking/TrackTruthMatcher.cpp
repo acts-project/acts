@@ -95,11 +95,56 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
       continue;
     }
 
+    // For now only do the weighted for reco matching
+    auto weightedRecoMatching = [&]() {
+      double denominator = 0.0;
+      std::map<ActsFatras::Barcode, double> nominators;
+      std::size_t nReweighted = 0;
+      for (const auto& state : track.trackStatesReversed()) {
+        // no truth info with non-measurement state
+        if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+          continue;
+        }
+        // register all particles that generated this hit
+        IndexSourceLink sl =
+            state.getUncalibratedSourceLink().template get<IndexSourceLink>();
+        auto vol = sl.geometryId().volume();
+
+        double weight = m_cfg.reweightVolumes.contains(vol)
+                            ? m_cfg.reweightVolumes.at(vol)
+                            : 1.0;
+        denominator += weight;
+
+        nReweighted += static_cast<int>(weight == 1.0);
+
+        auto hitIndex = sl.index();
+        for (auto [_, particleId] :
+             makeRange(hitParticlesMap.equal_range(hitIndex))) {
+          nominators[particleId] += weight;
+        }
+      }
+      auto nominator =
+          std::ranges::max_element(nominators, std::less{}, [](const auto& a) {
+            return a.second;
+          })->second;
+      return nominator / denominator;
+    };
+
     // Check if the trajectory is matched with truth.
     // If not, it will be classified as 'fake'
-    const bool recoMatched =
-        static_cast<double>(nMajorityHits) / track.nMeasurements() >=
-        m_cfg.matchingRatio;
+    const double recoMatchingProb =
+        m_cfg.reweightVolumes.empty()
+            ? static_cast<double>(nMajorityHits) / track.nMeasurements()
+            : weightedRecoMatching();
+
+    /*auto p1 = weightedRecoMatching();
+    auto p2 = static_cast<double>(nMajorityHits) / track.nMeasurements();
+    if( !m_cfg.reweightVolumes.empty() && p1 != p2) {
+      ACTS_INFO("reweight prob: " << p1 << ", unweighted: " << p2);
+    }*/
+
+    const bool recoMatched = recoMatchingProb >= m_cfg.matchingRatio;
+
     const bool truthMatched =
         static_cast<double>(nMajorityHits) /
             particleTruthHitCount.at(majorityParticleId) >=
