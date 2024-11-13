@@ -46,7 +46,7 @@ class RootAthenaDumpReader : public IReader {
     // Name of tree
     std::string treename;
     // Name of inputfile
-    std::string inputfile;
+    std::vector<std::string> inputfiles;
     // name of the output measurements
     std::string outputMeasurements = "athena_measurements";
     // name of the output pixel space points

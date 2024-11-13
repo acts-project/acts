@@ -65,8 +65,8 @@ RootAthenaDumpReader::RootAthenaDumpReader(
     : IReader(),
       m_cfg(config),
       m_logger(Acts::getDefaultLogger(name(), level)) {
-  if (m_cfg.inputfile.empty()) {
-    throw std::invalid_argument("Missing input filename");
+  if (m_cfg.inputfiles.empty()) {
+    throw std::invalid_argument("Empty input file list");
   }
   if (m_cfg.treename.empty()) {
     throw std::invalid_argument("Missing tree name");
@@ -241,8 +241,10 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("DTTstCommon_subDetType",
                                  &DTTstCommon_subDetType);
 
-  m_inputchain->Add(m_cfg.inputfile.c_str());
-  ACTS_DEBUG("Adding file " << m_cfg.inputfile << " to tree" << m_cfg.treename);
+  for (const auto& file : m_cfg.inputfiles) {
+    m_inputchain->Add(file.c_str());
+    ACTS_DEBUG("Adding file '" << file << "' to tree " << m_cfg.treename);
+  }
 
   m_events = m_inputchain->GetEntries();
 
@@ -483,8 +485,8 @@ RootAthenaDumpReader::readMeasurements(
   }
 
   if (nTotalTotZero > 0) {
-    ACTS_WARNING(nTotalTotZero << " / " << nCL
-                               << " clusters have zero time-over-threshold");
+    ACTS_DEBUG(nTotalTotZero << " / " << nCL
+                             << " clusters have zero time-over-threshold");
   }
 
   return {clusters, measurements, measPartMap, imIdxMap};
@@ -622,7 +624,8 @@ RootAthenaDumpReader::readSpacepoints(
     ACTS_DEBUG("Skipped " << skippedSpacePoints
                           << " because of eta/phi overlaps");
   }
-  if (spacePoints.size() < static_cast<std::size_t>(nSP)) {
+  if (spacePoints.size() <
+      (static_cast<std::size_t>(nSP) - skippedSpacePoints)) {
     ACTS_WARNING("Could not convert " << nSP - spacePoints.size() << " of "
                                       << nSP << " spacepoints");
   }
