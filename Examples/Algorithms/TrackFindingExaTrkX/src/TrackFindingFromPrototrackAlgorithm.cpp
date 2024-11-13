@@ -9,6 +9,10 @@
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
 
 #include "Acts/EventData/ProxyAccessor.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/MaterialInteractor.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 
@@ -72,6 +76,18 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   const auto& protoTracks = m_inputProtoTracks(ctx);
   const auto& initialParameters = m_inputInitialTrackParameters(ctx);
 
+  using Extrapolator = Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator>;
+  using ExtrapolatorOptions = Extrapolator::template Options<
+      Acts::ActorList<Acts::MaterialInteractor, Acts::EndOfWorldReached>>;
+
+  Extrapolator extrapolator(
+      Acts::EigenStepper<>(m_cfg.magneticField),
+      Acts::Navigator({m_cfg.trackingGeometry},
+                      logger().cloneWithSuffix("Navigator")),
+      logger().cloneWithSuffix("Propagator"));
+
+  ExtrapolatorOptions extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
+
   if (initialParameters.size() != protoTracks.size()) {
     ACTS_FATAL("Inconsistent number of parameters and prototracks");
     return ProcessCode::ABORT;
@@ -89,7 +105,7 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
       Acts::Vector3{0., 0., 0.});
 
   Acts::PropagatorPlainOptions pOptions(ctx.geoContext, ctx.magFieldContext);
-  pOptions.maxSteps = 10000;
+  pOptions.maxSteps = 500;
 
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
@@ -137,6 +153,10 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   std::size_t nSeed = 0;
   std::size_t nFailed = 0;
 
+  std::size_t nMeasurementIncrease = 0;
+  std::size_t nMeasurementConstant = 0;
+  std::size_t nMeasurementDecrease = 0;
+
   std::vector<std::size_t> nTracksPerSeeds;
   nTracksPerSeeds.reserve(initialParameters.size());
 
@@ -171,8 +191,49 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
       // Set the seed number, this number decrease by 1 since the seed number
       // has already been updated
       seedNumber(track) = nSeed - 1;
+
+#if 1
+      track.parameters() = initialParameters.at(i).parameters();
+      if (initialParameters.at(i).covariance()) {
+        track.covariance() = *initialParameters.at(i).covariance();
+      }
+      track.setReferenceSurface(
+          initialParameters.at(i).referenceSurface().getSharedPtr());
+#else
+      auto smoothingResult = Acts::smoothTrack(ctx.geoContext, track, logger());
+      if (!smoothingResult.ok()) {
+        ACTS_ERROR("Smoothing for seed " << i << " failed with error "
+                                         << smoothingResult.error().message());
+        continue;
+      }
+
+      auto extrapolationResult = Acts::extrapolateTrackToReferenceSurface(
+          track, *pSurface, extrapolator, extrapolationOptions,
+          Acts::TrackExtrapolationStrategy::firstOrLast, logger());
+      if (!extrapolationResult.ok()) {
+        ACTS_WARNING("Extrapolation for seed "
+                     << i << " failed with error "
+                     << extrapolationResult.error().message());
+        ACTS_WARNING("Assign start parameters instead");
+        continue;
+      }
+#endif
+      ACTS_VERBOSE("Prototrack extension through fit: "
+                   << protoTracks.at(i).size() << " -> "
+                   << track.nMeasurements());
+      if (protoTracks.at(i).size() < track.nMeasurements()) {
+        nMeasurementIncrease++;
+      } else if (protoTracks.at(i).size() == track.nMeasurements()) {
+        nMeasurementConstant++;
+      } else {
+        nMeasurementDecrease++;
+      }
     }
   }
+
+  ACTS_DEBUG("Tracks with measurement increase: "
+             << nMeasurementIncrease << ", decrease: " << nMeasurementDecrease
+             << ", constant: " << nMeasurementConstant);
 
   {
     std::lock_guard<std::mutex> guard(m_mutex);
