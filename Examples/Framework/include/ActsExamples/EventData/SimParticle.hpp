@@ -161,8 +161,8 @@ class SimParticle final {
   /// Accumulated path within material measured in interaction lengths.
   double pathInL0() const { return final().pathInL0(); }
 
-  /// Number of hits.
-  std::uint32_t numberOfHits() const { return final().numberOfHits(); }
+  /// Number of simulated hits (not measurements).
+  std::uint32_t numberOfSimHits() const { return final().numberOfHits(); }
 
   /// Particle outcome.
   ActsFatras::ParticleOutcome outcome() const { return final().outcome(); }

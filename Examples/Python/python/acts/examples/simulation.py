@@ -356,6 +356,7 @@ def addParticleSelection(
     config: ParticleSelectorConfig,
     inputParticles: str,
     outputParticles: str,
+    inputMeasurementParticlesMap: str = "",
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """
@@ -401,6 +402,7 @@ def addParticleSelection(
             ),
             level=customLogLevel(),
             inputParticles=inputParticles,
+            inputMeasurementParticlesMap=inputMeasurementParticlesMap,
             outputParticles=outputParticles,
         )
     )

@@ -143,7 +143,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
         Acts::clampValue<float>(particle.pathInX0() / Acts::UnitConstants::mm));
     m_pathInL0.push_back(
         Acts::clampValue<float>(particle.pathInL0() / Acts::UnitConstants::mm));
-    m_numberOfHits.push_back(particle.numberOfHits());
+    m_numberOfHits.push_back(particle.numberOfSimHits());
     m_outcome.push_back(static_cast<std::uint32_t>(particle.outcome()));
   }
 

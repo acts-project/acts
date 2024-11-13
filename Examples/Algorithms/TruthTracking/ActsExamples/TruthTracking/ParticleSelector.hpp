@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -26,6 +27,9 @@ class ParticleSelector final : public IAlgorithm {
   struct Config {
     /// The input particles collection.
     std::string inputParticles;
+    /// The input measurement particles map (optional, required if selection
+    /// based on number of measurements is requested).
+    std::string inputMeasurementParticlesMap;
     /// The output particles collection.
     std::string outputParticles;
 
@@ -75,6 +79,8 @@ class ParticleSelector final : public IAlgorithm {
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<IndexMultimap<ActsFatras::Barcode>> m_inputMeasPartMap{
+      this, "InputMeasPartMap"};
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};

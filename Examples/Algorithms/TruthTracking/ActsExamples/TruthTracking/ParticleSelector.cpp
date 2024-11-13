@@ -28,6 +28,12 @@ ActsExamples::ParticleSelector::ParticleSelector(const Config& config,
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
+
+  Config defaults;
+  if (m_cfg.measurementsMin > defaults.measurementsMin ||
+      m_cfg.measurementsMax < defaults.measurementsMax) {
+    m_inputMeasPartMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  }
   m_outputParticles.initialize(m_cfg.outputParticles);
 
   ACTS_DEBUG("selection particle rho [" << m_cfg.rhoMin << "," << m_cfg.rhoMax
@@ -56,6 +62,21 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
   // prepare input/ output types
   const SimParticleContainer& inputParticles = m_inputParticles(ctx);
 
+  // Optionally construct a particles->measurement map
+  std::optional<boost::container::flat_multimap<ActsFatras::Barcode, Index>>
+      partMeasMap;
+  if (m_inputMeasPartMap.isInitialized()) {
+    const auto& measPartMap = m_inputMeasPartMap(ctx);
+    using InvPair = std::pair<ActsFatras::Barcode, Index>;
+    std::vector<InvPair> v(measPartMap.size());
+    std::ranges::transform(measPartMap, v.begin(), [](const auto& p) {
+      return InvPair{p.second, p.first};
+    });
+    std::ranges::sort(v, std::less{}, &InvPair::first);
+    partMeasMap.emplace(boost::container::ordered_range_t{}, v.begin(),
+                        v.end());
+  }
+
   std::size_t nInvalidCharge = 0;
   std::size_t nInvalidMeasurementCount = 0;
 
@@ -76,8 +97,13 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
 
     nInvalidCharge += static_cast<std::size_t>(!validCharge);
 
-    bool validMeasurementCount =
-        within(p.numberOfHits(), m_cfg.measurementsMin, m_cfg.measurementsMax);
+    bool validMeasurementCount = true;
+    if (partMeasMap) {
+      auto [begin, end] = partMeasMap->equal_range(p.particleId());
+      std::size_t nMeasurements = std::distance(begin, end);
+      validMeasurementCount =
+          within(nMeasurements, m_cfg.measurementsMin, m_cfg.measurementsMax);
+    }
 
     nInvalidMeasurementCount +=
         static_cast<std::size_t>(!validMeasurementCount);
