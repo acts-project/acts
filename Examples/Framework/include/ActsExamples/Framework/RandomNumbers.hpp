@@ -20,7 +20,24 @@ using RandomEngine = std::mt19937_64;  ///< Mersenne Twister
 /// The seed type used in the framework.
 using RandomSeed = std::uint64_t;
 
-/// Provide event and algorithm specific random number generator.s
+class RandomNumbers;
+
+class RandomNumberChannel {
+ public:
+  RandomNumberChannel(const RandomNumbers& randomNumbers, RandomSeed seed);
+
+  RandomSeed seed() const;
+
+  RandomEngine createEngine() const;
+
+  RandomNumberChannel createSubChannel(RandomSeed seed) const;
+
+ private:
+  const RandomNumbers* m_randomNumbers = nullptr;
+  RandomSeed m_seed = 0;
+};
+
+/// Provide an event and algorithm specific random number generator.
 ///
 /// This provides local random number generators, allowing for
 /// thread-safe, lock-free, and reproducible random number generation across
@@ -39,6 +56,11 @@ class RandomNumbers {
 
   explicit RandomNumbers(const Config& cfg);
 
+  RandomNumberChannel createChannel() const;
+
+  RandomNumberChannel createAlgorithmEventChannel(
+      const AlgorithmContext& context) const;
+
   /// Spawn an algorithm-local random number generator. To avoid inefficiencies
   /// and multiple uses of a given RNG seed, this should only be done once per
   /// Algorithm invocation, after what the generator object should be reused.
@@ -48,7 +70,7 @@ class RandomNumbers {
   /// @param context is the AlgorithmContext of the host algorithm
   RandomEngine spawnGenerator(const AlgorithmContext& context) const;
 
-  /// Generate a event and algorithm specific seed value.
+  /// Generate an event and algorithm specific seed value.
   ///
   /// This should only be used in special cases e.g. where a custom
   /// random engine is used and `spawnGenerator` can not be used.

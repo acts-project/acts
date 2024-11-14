@@ -223,7 +223,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             DigitizedParameters dParameters;
 
             if (simHit.depositedEnergy() < m_cfg.minEnergyDeposit) {
-              ACTS_VERBOSE("Skip hit because energy deposit to small");
+              ACTS_VERBOSE("Skip hit because energy deposit too small");
               continue;
             }
 

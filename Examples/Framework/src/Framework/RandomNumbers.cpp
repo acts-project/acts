@@ -14,7 +14,33 @@
 
 namespace ActsExamples {
 
+RandomNumberChannel::RandomNumberChannel(const RandomNumbers& randomNumbers,
+                                         RandomSeed seed)
+    : m_randomNumbers(&randomNumbers), m_seed(seed) {}
+
+RandomSeed RandomNumberChannel::seed() const {
+  return m_seed;
+}
+
+RandomEngine RandomNumberChannel::createEngine() const {
+  return RandomEngine(m_seed);
+}
+
+RandomNumberChannel RandomNumberChannel::createSubChannel(
+    RandomSeed seed) const {
+  return RandomNumberChannel(*m_randomNumbers, m_seed + seed);
+}
+
 RandomNumbers::RandomNumbers(const Config& cfg) : m_cfg(cfg) {}
+
+RandomNumberChannel RandomNumbers::createChannel() const {
+  return RandomNumberChannel(*this, m_cfg.seed);
+}
+
+RandomNumberChannel RandomNumbers::createAlgorithmEventChannel(
+    const AlgorithmContext& context) const {
+  return RandomNumberChannel(*this, generateSeed(context));
+}
 
 RandomEngine RandomNumbers::spawnGenerator(
     const AlgorithmContext& context) const {
