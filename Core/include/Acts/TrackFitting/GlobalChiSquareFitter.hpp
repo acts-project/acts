@@ -1297,7 +1297,7 @@ class Gx2Fitter {
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
-      gx2fActor.multipleScattering = multipleScattering;
+      gx2fActor.multipleScattering = false;
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
@@ -1354,10 +1354,7 @@ class Gx2Fitter {
 
       // Count the material surfaces, to set up the system. In the multiple
       // scattering case, we need to extend our system.
-      const std::size_t nMaterialSurfaces =
-          multipleScattering
-              ? countMaterialStates(track, scatteringMap, *m_addToSumLogger)
-              : 0u;
+      const std::size_t nMaterialSurfaces = 0u;
 
       // We need 6 dimensions for the bound parameters and 2 * nMaterialSurfaces
       // dimensions for the scattering angles.
@@ -1373,8 +1370,8 @@ class Gx2Fitter {
       // all stored material in each propagation.
       std::vector<GeometryIdentifier> geoIdVector;
 
-      fillGx2fSystem(track, extendedSystem, multipleScattering, scatteringMap,
-                     geoIdVector, *m_addToSumLogger);
+      fillGx2fSystem(track, extendedSystem, false, scatteringMap, geoIdVector,
+                     *m_addToSumLogger);
 
       chi2sum = extendedSystem.chi2();
 
@@ -1419,10 +1416,7 @@ class Gx2Fitter {
       }
 
       if (extendedSystem.chi2() > oldChi2sum + 1e-5) {
-        ACTS_DEBUG("chi2 not converging monotonically");
-
-        updateGx2fCovarianceParams(fullCovariancePredicted, extendedSystem);
-        break;
+        ACTS_DEBUG("chi2 not converging monotonically in update " << nUpdate);
       }
 
       // If this is the final iteration, update the covariance and break.
@@ -1452,6 +1446,144 @@ class Gx2Fitter {
     ACTS_DEBUG("Finished to iterate");
     ACTS_VERBOSE("Final parameters: " << params.parameters().transpose());
     /// Finish Fitting /////////////////////////////////////////////////////////
+
+    /// Actual MATERIAL Fitting ////////////////////////////////////////////////
+    ACTS_DEBUG("Start to evaluate material");
+    if (multipleScattering) {
+      // set up propagator and co
+      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
+      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
+      // Set options for propagator
+      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+
+      // Add the measurement surface as external surface to the navigator.
+      // We will try to hit those surface by ignoring boundary checks.
+      for (const auto& [surfaceId, _] : inputMeasurements) {
+        propagatorOptions.navigation.insertExternalSurface(surfaceId);
+      }
+
+      auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
+      gx2fActor.inputMeasurements = &inputMeasurements;
+      gx2fActor.multipleScattering = true;
+      gx2fActor.extensions = gx2fOptions.extensions;
+      gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
+      gx2fActor.actorLogger = m_actorLogger.get();
+      gx2fActor.scatteringMap = &scatteringMap;
+      gx2fActor.parametersWithHypothesis = &params;
+
+      auto propagatorState = m_propagator.makeState(params, propagatorOptions);
+
+      auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
+      r.fittedStates = &trajectoryTempBackend;
+
+      // Clear the track container. It could be more performant to update the
+      // existing states, but this needs some more thinking.
+      trackContainerTemp.clear();
+
+      auto propagationResult = m_propagator.propagate(propagatorState);
+
+      // Run the fitter
+      auto result =
+          m_propagator.makeResult(std::move(propagatorState), propagationResult,
+                                  propagatorOptions, false);
+
+      if (!result.ok()) {
+        ACTS_ERROR("Propagation failed: " << result.error());
+        return result.error();
+      }
+
+      // TODO Improve Propagator + Actor [allocate before loop], rewrite
+      // makeMeasurements
+      auto& propRes = *result;
+      GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
+
+      if (!gx2fResult.result.ok()) {
+        ACTS_INFO("GlobalChiSquareFitter failed in actor: "
+                  << gx2fResult.result.error() << ", "
+                  << gx2fResult.result.error().message());
+        return gx2fResult.result.error();
+      }
+
+      auto track = trackContainerTemp.makeTrack();
+      tipIndex = gx2fResult.lastMeasurementIndex;
+
+      // It could happen, that no measurements were found. Then the track would
+      // be empty and the following operations would be invalid. Usually, this
+      // only happens during the first iteration, due to bad initial parameters.
+      if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
+        ACTS_INFO("Did not find any measurements in material fit.");
+        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
+      }
+
+      track.tipIndex() = tipIndex;
+      track.linkForward();
+
+      // Count the material surfaces, to set up the system. In the multiple
+      // scattering case, we need to extend our system.
+      const std::size_t nMaterialSurfaces =
+          countMaterialStates(track, scatteringMap, *m_addToSumLogger);
+
+      // We need 6 dimensions for the bound parameters and 2 * nMaterialSurfaces
+      // dimensions for the scattering angles.
+      const std::size_t dimsExtendedParams = eBoundSize + 2 * nMaterialSurfaces;
+
+      // System that we fill with the information gathered by the actor and
+      // evaluate later
+      Gx2fSystem extendedSystem{dimsExtendedParams};
+
+      // This vector stores the IDs for each visited material in order. We use
+      // it later for updating the scattering angles. We cannot use
+      // scatteringMap directly, since we cannot guarantee, that we will visit
+      // all stored material in each propagation.
+      std::vector<GeometryIdentifier> geoIdVector;
+
+      fillGx2fSystem(track, extendedSystem, true, scatteringMap, geoIdVector,
+                     *m_addToSumLogger);
+
+      chi2sum = extendedSystem.chi2();
+
+      // This check takes into account the evaluated dimensions of the
+      // measurements. To fit, we need at least NDF+1 measurements. However, we
+      // count n-dimensional measurements for n measurements, reducing the
+      // effective number of needed measurements. We might encounter the case,
+      // where we cannot use some (parts of a) measurements, maybe if we do not
+      // support that kind of measurement. This is also taken into account here.
+      // We skip the check during the first iteration, since we cannot guarantee
+      // to hit all/enough measurement surfaces with the initial parameter
+      // guess.
+      if ((nUpdate > 0) && !extendedSystem.isWellDefined()) {
+        ACTS_INFO("Not enough measurements. Require "
+                  << extendedSystem.findRequiredNdf() + 1 << ", but only "
+                  << extendedSystem.ndf() << " could be used.");
+        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
+      }
+
+      // calculate delta params [a] * delta = b
+      Eigen::VectorXd deltaParamsExtended =
+          extendedSystem.aMatrix().colPivHouseholderQr().solve(
+              extendedSystem.bVector());
+
+      ACTS_VERBOSE("aMatrix:\n"
+                   << extendedSystem.aMatrix() << "\n"
+                   << "bVector:\n"
+                   << extendedSystem.bVector() << "\n"
+                   << "deltaParamsExtended:\n"
+                   << deltaParamsExtended << "\n"
+                   << "oldChi2sum = " << oldChi2sum << "\n"
+                   << "chi2sum = " << extendedSystem.chi2());
+
+      chi2sum = extendedSystem.chi2();
+
+      updateGx2fParams(params, deltaParamsExtended, nMaterialSurfaces,
+                       scatteringMap, geoIdVector);
+      ACTS_VERBOSE("Updated parameters: " << params.parameters().transpose());
+
+      updateGx2fCovarianceParams(fullCovariancePredicted, extendedSystem);
+    }
+    ACTS_DEBUG("Finished to evaluate material");
+    ACTS_VERBOSE(
+        "Final parameters after material: " << params.parameters().transpose());
+    /// Finish MATERIAL Fitting ////////////////////////////////////////////////
 
     ACTS_VERBOSE("Final scattering angles:");
     for (const auto& [key, value] : scatteringMap) {
