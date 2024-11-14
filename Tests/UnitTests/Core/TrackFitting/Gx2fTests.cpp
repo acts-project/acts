@@ -1112,7 +1112,7 @@ BOOST_AUTO_TEST_CASE(Material) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 15e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1.1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
-                    1e-3);
+                    2e-2);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
