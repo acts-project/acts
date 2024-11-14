@@ -694,6 +694,20 @@ std::size_t countMaterialStates(
   return nMaterialSurfaces;
 }
 
+/// @brief Update parameters (and scattering angles if applicable)
+///
+/// @param params Parameters to be updated
+/// @param deltaParamsExtended Delta parameters for bound parameter and scattering angles
+/// @param nMaterialSurfaces Number of material surfaces in the track
+/// @param scatteringMap Map of geometry identifiers to scattering properties,
+///        containing all scattering angles and covariances
+/// @param geoIdVector Vector of geometry identifiers corresponding to material surfaces
+void updateGx2fParams(
+    BoundTrackParameters& params, const Eigen::VectorXd& deltaParamsExtended,
+    const std::size_t nMaterialSurfaces,
+    std::unordered_map<GeometryIdentifier, ScatteringProperties>& scatteringMap,
+    const std::vector<GeometryIdentifier>& geoIdVector);
+
 /// @brief Calculate and update the covariance of the fitted parameters
 ///
 /// This function calculates the covariance of the fitted parameters using
@@ -704,8 +718,6 @@ std::size_t countMaterialStates(
 ///
 /// @param fullCovariancePredicted The covariance matrix to update
 /// @param extendedSystem All parameters of the current equation system
-///
-/// @return deltaParams The calculated delta parameters.
 void updateGx2fCovarianceParams(BoundMatrix& fullCovariancePredicted,
                                 Gx2fSystem& extendedSystem);
 
@@ -1234,7 +1246,6 @@ class Gx2Fitter {
     using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
     start_parameters_t params = sParameters;
-    BoundVector deltaParams = BoundVector::Zero();
     double chi2sum = 0;
     double oldChi2sum = std::numeric_limits<double>::max();
 
@@ -1272,10 +1283,6 @@ class Gx2Fitter {
     for (nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
       ACTS_DEBUG("nUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
 
-      // update params
-      params.parameters() += deltaParams;
-      ACTS_VERBOSE("Updated parameters: " << params.parameters().transpose());
-
       // set up propagator and co
       Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
       Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
@@ -1306,12 +1313,12 @@ class Gx2Fitter {
       // existing states, but this needs some more thinking.
       trackContainerTemp.clear();
 
-      auto propagationResult = m_propagator.template propagate(propagatorState);
+      auto propagationResult = m_propagator.propagate(propagatorState);
 
       // Run the fitter
-      auto result = m_propagator.template makeResult(std::move(propagatorState),
-                                                     propagationResult,
-                                                     propagatorOptions, false);
+      auto result =
+          m_propagator.makeResult(std::move(propagatorState), propagationResult,
+                                  propagatorOptions, false);
 
       if (!result.ok()) {
         ACTS_ERROR("Propagation failed: " << result.error());
@@ -1389,14 +1396,10 @@ class Gx2Fitter {
           extendedSystem.aMatrix().colPivHouseholderQr().solve(
               extendedSystem.bVector());
 
-      deltaParams = deltaParamsExtended.topLeftCorner<eBoundSize, 1>().eval();
-
       ACTS_VERBOSE("aMatrix:\n"
                    << extendedSystem.aMatrix() << "\n"
                    << "bVector:\n"
                    << extendedSystem.bVector() << "\n"
-                   << "deltaParams:\n"
-                   << deltaParams << "\n"
                    << "deltaParamsExtended:\n"
                    << deltaParamsExtended << "\n"
                    << "oldChi2sum = " << oldChi2sum << "\n"
@@ -1433,6 +1436,10 @@ class Gx2Fitter {
         updateGx2fCovarianceParams(fullCovariancePredicted, extendedSystem);
         break;
       }
+
+      updateGx2fParams(params, deltaParamsExtended, nMaterialSurfaces,
+                       scatteringMap, geoIdVector);
+      ACTS_VERBOSE("Updated parameters: " << params.parameters().transpose());
 
       oldChi2sum = extendedSystem.chi2();
     }
@@ -1473,10 +1480,10 @@ class Gx2Fitter {
       // existing states, but this needs some more thinking.
       trackContainerTemp.clear();
 
-      auto propagationResult = m_propagator.template propagate(propagatorState);
+      auto propagationResult = m_propagator.propagate(propagatorState);
 
       // Run the fitter
-      auto result = m_propagator.template makeResult(std::move(propagatorState),
+      auto result = m_propagator.makeResult(std::move(propagatorState),
                                                      propagationResult,
                                                      propagatorOptions, false);
 
@@ -1573,17 +1580,9 @@ class Gx2Fitter {
       // update params
       params.parameters() += deltaParams;
 
-      // update the scattering angles
-      for (std::size_t matSurface = 0; matSurface < nMaterialSurfaces;
-           matSurface++) {
-        const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
-        const GeometryIdentifier geoId = geoIdVector[matSurface];
-        const auto scatteringMapId = scatteringMap.find(geoId);
-        assert(scatteringMapId != scatteringMap.end() &&
-               "No scattering angles found for material surface.");
-        scatteringMapId->second.scatteringAngles().block<2, 1>(2, 0) +=
-            deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
-      }
+      updateGx2fParams(params, deltaParamsExtended, nMaterialSurfaces,
+                       scatteringMap, geoIdVector);
+      ACTS_VERBOSE("Updated parameters: " << params.parameters().transpose());
 
       updateGx2fCovarianceParams(fullCovariancePredicted, extendedSystem);
     }
@@ -1610,7 +1609,6 @@ class Gx2Fitter {
     // step, we will not ignore the boundary checks for measurement surfaces. We
     // want to create trackstates only on surfaces, that we actually hit.
     if (gx2fOptions.nUpdateMax > 0) {
-      ACTS_VERBOSE("Final delta parameters: " << deltaParams.transpose());
       ACTS_VERBOSE("Propagate with the final covariance.");
       // update covariance
       params.covariance() = fullCovariancePredicted;
@@ -1620,9 +1618,7 @@ class Gx2Fitter {
       Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
       // Set options for propagator
       PropagatorOptions propagatorOptions(geoCtx, magCtx);
-      auto& gx2fActor = propagatorOptions.actorList.
-      
-      get<GX2FActor>();
+      auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.multipleScattering = multipleScattering;
       gx2fActor.extensions = gx2fOptions.extensions;
@@ -1636,12 +1632,12 @@ class Gx2Fitter {
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trackContainer.trackStateContainer();
 
-      auto propagationResult = m_propagator.template propagate(propagatorState);
+      auto propagationResult = m_propagator.propagate(propagatorState);
 
       // Run the fitter
-      auto result = m_propagator.template makeResult(std::move(propagatorState),
-                                                     propagationResult,
-                                                     propagatorOptions, false);
+      auto result =
+          m_propagator.makeResult(std::move(propagatorState), propagationResult,
+                                  propagatorOptions, false);
 
       if (!result.ok()) {
         ACTS_ERROR("Propagation failed: " << result.error());
