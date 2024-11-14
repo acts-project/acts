@@ -1483,9 +1483,9 @@ class Gx2Fitter {
       auto propagationResult = m_propagator.propagate(propagatorState);
 
       // Run the fitter
-      auto result = m_propagator.makeResult(std::move(propagatorState),
-                                                     propagationResult,
-                                                     propagatorOptions, false);
+      auto result =
+          m_propagator.makeResult(std::move(propagatorState), propagationResult,
+                                  propagatorOptions, false);
 
       if (!result.ok()) {
         ACTS_ERROR("Propagation failed: " << result.error());
@@ -1520,7 +1520,8 @@ class Gx2Fitter {
 
       // Count the material surfaces, to set up the system. In the multiple
       // scattering case, we need to extend our system.
-      const std::size_t nMaterialSurfaces = countMaterialStates(track, scatteringMap, *m_addToSumLogger);
+      const std::size_t nMaterialSurfaces =
+          countMaterialStates(track, scatteringMap, *m_addToSumLogger);
 
       // We need 6 dimensions for the bound parameters and 2 * nMaterialSurfaces
       // dimensions for the scattering angles.
@@ -1562,23 +1563,16 @@ class Gx2Fitter {
           extendedSystem.aMatrix().colPivHouseholderQr().solve(
               extendedSystem.bVector());
 
-      deltaParams = deltaParamsExtended.topLeftCorner<eBoundSize, 1>().eval();
-
       ACTS_VERBOSE("aMatrix:\n"
                    << extendedSystem.aMatrix() << "\n"
                    << "bVector:\n"
                    << extendedSystem.bVector() << "\n"
-                   << "deltaParams:\n"
-                   << deltaParams << "\n"
                    << "deltaParamsExtended:\n"
                    << deltaParamsExtended << "\n"
                    << "oldChi2sum = " << oldChi2sum << "\n"
                    << "chi2sum = " << extendedSystem.chi2());
 
       chi2sum = extendedSystem.chi2();
-
-      // update params
-      params.parameters() += deltaParams;
 
       updateGx2fParams(params, deltaParamsExtended, nMaterialSurfaces,
                        scatteringMap, geoIdVector);
