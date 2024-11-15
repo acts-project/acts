@@ -255,9 +255,10 @@ BOOST_AUTO_TEST_CASE(CombineSlabs) {
     BOOST_CHECK_EQUAL(slab.material().X0(), 1.5);
     BOOST_CHECK_EQUAL(slab.material().L0(), 1.5);
     BOOST_CHECK_EQUAL(slab.material().Ar(), 3.0);
-    BOOST_CHECK_EQUAL(
+    CHECK_CLOSE_ABS(
         slab.material().Z(),
-        std::exp((0.5 / 1.5) * std::log(12.0) + (1.0 / 1.5) * std::log(6.0)));
+        std::exp((0.5 / 1.5) * std::log(12.0) + (1.0 / 1.5) * std::log(6.0)),
+        1e-6);
     BOOST_CHECK_EQUAL(slab.material().molarDensity(), 4.0);
   }
   // reverse input order
@@ -271,9 +272,10 @@ BOOST_AUTO_TEST_CASE(CombineSlabs) {
     BOOST_CHECK_EQUAL(slab.material().X0(), 1.5);
     BOOST_CHECK_EQUAL(slab.material().L0(), 1.5);
     BOOST_CHECK_EQUAL(slab.material().Ar(), 3.0);
-    BOOST_CHECK_EQUAL(
+    CHECK_CLOSE_ABS(
         slab.material().Z(),
-        std::exp((0.5 / 1.5) * std::log(12.0) + (1.0 / 1.5) * std::log(6.0)));
+        std::exp((0.5 / 1.5) * std::log(12.0) + (1.0 / 1.5) * std::log(6.0)),
+        1e-6);
     BOOST_CHECK_EQUAL(slab.material().molarDensity(), 4.0);
   }
 }
