@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
@@ -73,34 +72,40 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
 ///
 /// @return the free parameters
 template <std::ranges::range spacepoint_range_t>
+  requires requires(typename spacepoint_range_t::value_type sp) {
+    { sp->x() } -> std::convertible_to<Acts::ActsScalar>;
+    { sp->y() } -> std::convertible_to<Acts::ActsScalar>;
+    { sp->z() } -> std::convertible_to<Acts::ActsScalar>;
+    { sp->t() } -> std::same_as<std::optional<double>>;
+  }
 FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
                                        const Vector3& bField) {
   // Check the number of provided space points
-  std::size_t numSP = std::distance(spRange.first, spRange.second);
-  if (numSP != 3) {
+  if (spRange.size() != 3) {
     throw std::invalid_argument(
-        "There should be exactly three space points "
-        "provided.");
+        "There should be exactly three space points provided.");
   }
 
   // The global positions of the bottom, middle and space points
-  std::array<Vector3, 3> spGlobalPositions = {Vector3::Zero(), Vector3::Zero(),
-                                              Vector3::Zero()};
-  std::array<std::optional<double>, 3> spGlobalTimes = {
-      std::nullopt, std::nullopt, std::nullopt};
+  std::array<Vector3, 3> spPositions = {Vector3::Zero(), Vector3::Zero(),
+                                        Vector3::Zero()};
+  std::array<std::optional<double>, 3> spTimes = {std::nullopt, std::nullopt,
+                                                  std::nullopt};
   // The first, second and third space point are assumed to be bottom, middle
   // and top space point, respectively
-  for (auto [isp, sp] : enumerate(spRange)) {
+  for (auto [spIt, spPositionIt, spTimeIt] :
+       zip(spRange, spPositions, spTimes)) {
+    const auto* sp = *spIt;
     if (sp == nullptr) {
       throw std::invalid_argument("Empty space point found.");
     }
-    spGlobalPositions[isp] = Vector3(sp->x(), sp->y(), sp->z());
-    spGlobalTimes[isp] = sp->t();
+    *spPositionIt = Vector3(sp->x(), sp->y(), sp->z());
+    *spTimeIt = sp->t();
   }
 
   FreeVector params = estimateTrackParamsFromSeed(
-      spGlobalPositions[0], spGlobalPositions[1], spGlobalPositions[2], bField);
-  params[eFreeTime] = spGlobalTimes[0].value_or(0);
+      spPositions[0], spPositions[1], spPositions[2], bField);
+  params[eFreeTime] = spTimes[0].value_or(0);
   return params;
 }
 
