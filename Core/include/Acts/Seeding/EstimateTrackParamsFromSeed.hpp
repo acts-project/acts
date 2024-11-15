@@ -165,7 +165,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // The global positions of the bottom, middle and space points
   std::array<Vector3, 3> spGlobalPositions = {Vector3::Zero(), Vector3::Zero(),
                                               Vector3::Zero()};
-  std::array<std::optional<double>, 3> spGlobalTimes = {
+  std::array<std::optional<float>, 3> spGlobalTimes = {
       std::nullopt, std::nullopt, std::nullopt};
   // The first, second and third space point are assumed to be bottom, middle
   // and top space point, respectively
@@ -228,7 +228,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   int sign = ia > 0 ? -1 : 1;
   const ActsScalar R = circleCenter.norm();
   ActsScalar invTanTheta =
-      local2.z() / (2 * R * std::asin(local2.head<2>().norm() / (2 * R)));
+      local2.z() / (2.f * R * std::asin(local2.head<2>().norm() / (2.f * R)));
   // The momentum direction in the new frame (the center of the circle has the
   // coordinate (-1.*A/(2*B), 1./(2*B)))
   ActsScalar A = -circleCenter(0) / circleCenter(1);
