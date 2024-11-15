@@ -39,7 +39,7 @@ Acts::GeometryHierarchyMap<std::shared_ptr<Acts::Surface>> readHierarchyMap(
 
 /// @brief Read the flat surfaces from the input file
 ///
-/// @param options options to surface reading
+/// @param options options for surface reading
 ///
 /// @return  a vector of surfaces
 std::vector<std::shared_ptr<Acts::Surface>> readVector(const Options& options);
@@ -47,7 +47,8 @@ std::vector<std::shared_ptr<Acts::Surface>> readVector(const Options& options);
 /// @brief Read the surfaces from the input file and create
 /// detector elements
 ///
-/// @param inputFile options to detector lement reading
+/// @param inputFile options for surface reading
+/// @param thickness the thickness used to construct the detector element
 ///
 /// @return  a vector of surfaces
 std::vector<std::shared_ptr<Acts::JsonDetectorElement>> readDetectorElements(
