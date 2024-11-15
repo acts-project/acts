@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
@@ -44,7 +45,7 @@ namespace Acts {
 /// @param sp2 is the top space point
 /// @param bField is the magnetic field vector
 ///
-/// @return optional bound parameters
+/// @return the free parameters
 FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
                                        const Vector3& sp2,
                                        const Vector3& bField);
@@ -68,13 +69,12 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
 /// @param spEnd is the end iterator for the space points
 /// @param bField is the magnetic field vector
 ///
-/// @return optional bound parameters
-template <typename spacepoint_iterator_t>
-FreeVector estimateTrackParamsFromSeed(spacepoint_iterator_t spBegin,
-                                       spacepoint_iterator_t spEnd,
+/// @return the free parameters
+template <std::ranges::range spacepoint_range_t>
+FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
                                        const Vector3& bField) {
   // Check the number of provided space points
-  std::size_t numSP = std::distance(spBegin, spEnd);
+  std::size_t numSP = std::distance(spRange.first, spRange.second);
   if (numSP != 3) {
     throw std::invalid_argument(
         "There should be exactly three space points "
@@ -84,16 +84,14 @@ FreeVector estimateTrackParamsFromSeed(spacepoint_iterator_t spBegin,
   // The global positions of the bottom, middle and space points
   std::array<Vector3, 3> spGlobalPositions = {Vector3::Zero(), Vector3::Zero(),
                                               Vector3::Zero()};
-  std::array<std::optional<float>, 3> spGlobalTimes = {
+  std::array<std::optional<double>, 3> spGlobalTimes = {
       std::nullopt, std::nullopt, std::nullopt};
   // The first, second and third space point are assumed to be bottom, middle
   // and top space point, respectively
-  for (std::size_t isp = 0; isp < 3; ++isp) {
-    spacepoint_iterator_t it = std::next(spBegin, isp);
-    if (*it == nullptr) {
+  for (auto [isp, sp] : enumerate(spRange)) {
+    if (sp == nullptr) {
       throw std::invalid_argument("Empty space point found.");
     }
-    const auto& sp = *it;
     spGlobalPositions[isp] = Vector3(sp->x(), sp->y(), sp->z());
     spGlobalTimes[isp] = sp->t();
   }
@@ -160,7 +158,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // The global positions of the bottom, middle and space points
   std::array<Vector3, 3> spGlobalPositions = {Vector3::Zero(), Vector3::Zero(),
                                               Vector3::Zero()};
-  std::array<std::optional<float>, 3> spGlobalTimes = {
+  std::array<std::optional<double>, 3> spGlobalTimes = {
       std::nullopt, std::nullopt, std::nullopt};
   // The first, second and third space point are assumed to be bottom, middle
   // and top space point, respectively
