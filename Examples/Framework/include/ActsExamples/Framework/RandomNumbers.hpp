@@ -18,9 +18,6 @@ struct AlgorithmContext;
 using RandomEngine = std::mt19937_64;  ///< Mersenne Twister
 
 /// The seed type used in the framework.
-using RandomSeed = std::uint64_t;
-
-/// The seed type used in the framework.
 using RandomSeed = std::uint32_t;
 
 /// Provide event and algorithm specific random number generator.s

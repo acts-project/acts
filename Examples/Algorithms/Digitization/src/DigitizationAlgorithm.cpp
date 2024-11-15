@@ -216,8 +216,13 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
                          << " - still forwarding it to the digitizer");
             }
 
-            RandomSeed hitSeed = eventSeed + moduleGeoId.value() +
-                                 simHit.particleId().value() + hitIndex;
+            RandomSeed moduleSeed = (moduleGeoId.value() & 0xFFFFFFFF) ^
+                                    ((moduleGeoId.value() >> 32) & 0xFFFFFFFF);
+            RandomSeed particleSeed =
+                (simHit.particleId().value() & 0xFFFFFFFF) ^
+                ((simHit.particleId().value() >> 32) & 0xFFFFFFFF);
+            RandomSeed hitSeed =
+                eventSeed + moduleSeed + particleSeed + hitIndex;
             RandomEngine rng(hitSeed);
 
             DigitizedParameters dParameters;
