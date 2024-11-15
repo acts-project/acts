@@ -39,8 +39,9 @@ namespace Acts {
 ///
 /// @tparam spacepoint_iterator_t  The type of space point iterator
 ///
-/// @param spBegin is the begin iterator for the space points
-/// @param spEnd is the end iterator for the space points
+/// @param sp0 is the bottom space point
+/// @param sp1 is the middle space point
+/// @param sp2 is the top space point
 /// @param bField is the magnetic field vector
 ///
 /// @return optional bound parameters
