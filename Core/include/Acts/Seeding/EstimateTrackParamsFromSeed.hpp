@@ -73,12 +73,6 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
 ///
 /// @return the free parameters
 template <std::ranges::range spacepoint_range_t>
-  requires requires(typename spacepoint_range_t::value_type sp) {
-    { sp->x() } -> std::convertible_to<Acts::ActsScalar>;
-    { sp->y() } -> std::convertible_to<Acts::ActsScalar>;
-    { sp->z() } -> std::convertible_to<Acts::ActsScalar>;
-    { sp->t() } -> std::same_as<std::optional<float>>;
-  }
 FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
                                        const Vector3& bField) {
   // Check the number of provided space points
