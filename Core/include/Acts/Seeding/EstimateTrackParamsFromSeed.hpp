@@ -17,7 +17,6 @@
 
 #include <array>
 #include <cmath>
-#include <iostream>
 #include <iterator>
 #include <optional>
 
@@ -46,8 +45,6 @@ namespace Acts {
 /// @param surface is the surface of the bottom space point. The estimated bound
 /// track parameters will be represented also at this surface
 /// @param bField is the magnetic field vector
-/// @param bFieldMin is the minimum magnetic field required to trigger the
-/// estimation of q/pt
 /// @param logger A logger instance
 ///
 /// @return optional bound parameters
@@ -55,7 +52,7 @@ template <typename spacepoint_iterator_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     const GeometryContext& gctx, spacepoint_iterator_t spBegin,
     spacepoint_iterator_t spEnd, const Surface& surface, const Vector3& bField,
-    ActsScalar bFieldMin, const Acts::Logger& logger = getDummyLogger()) {
+    const Acts::Logger& logger = getDummyLogger()) {
   // Check the number of provided space points
   std::size_t numSP = std::distance(spBegin, spEnd);
   if (numSP != 3) {
@@ -65,16 +62,6 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 
   // Convert bField to Tesla
   ActsScalar bFieldInTesla = bField.norm() / UnitConstants::T;
-  ActsScalar bFieldMinInTesla = bFieldMin / UnitConstants::T;
-  // Check if magnetic field is too small
-  if (bFieldInTesla < bFieldMinInTesla) {
-    // @todo shall we use straight-line estimation and use default q/pt in such
-    // case?
-    ACTS_WARNING("The magnetic field at the bottom space point: B = "
-                 << bFieldInTesla << " T is smaller than |B|_min = "
-                 << bFieldMinInTesla << " T. Estimation is not performed.");
-    return std::nullopt;
-  }
 
   // The global positions of the bottom, middle and space points
   std::array<Vector3, 3> spGlobalPositions = {Vector3::Zero(), Vector3::Zero(),

@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           // Test the full track parameters estimator
           auto fullParamsOpt = estimateTrackParamsFromSeed(
               geoCtx, spacePointPtrs.begin(), spacePointPtrs.end(),
-              *bottomSurface, Vector3(0, 0, 2._T), 0.1_T, *logger);
+              *bottomSurface, Vector3(0, 0, 2._T), *logger);
           BOOST_REQUIRE(fullParamsOpt.has_value());
           const auto& estFullParams = fullParamsOpt.value();
           BOOST_TEST_INFO(
