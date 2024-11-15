@@ -47,7 +47,7 @@ std::vector<std::shared_ptr<Acts::Surface>> readVector(const Options& options);
 /// @brief Read the surfaces from the input file and create
 /// detector elements
 ///
-/// @param inputFile options for surface reading
+/// @param options options for surface reading
 /// @param thickness the thickness used to construct the detector element
 ///
 /// @return  a vector of surfaces
