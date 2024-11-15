@@ -169,9 +169,9 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                          [](const auto& sp) { return &sp.second; });
 
           // Test the free track parameters estimator
-          FreeVector freeParams =
+          FreeVector estFreeParams =
               estimateTrackParamsFromSeed(spacePointPtrs, bField);
-          BOOST_CHECK(!freeParams.hasNaN());
+          BOOST_CHECK(!estFreeParams.hasNaN());
 
           // Test the bound track parameters estimator
           auto fullParamsOpt = estimateTrackParamsFromSeed(
