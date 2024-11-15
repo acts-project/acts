@@ -9,10 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -29,7 +27,6 @@
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
-#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -39,7 +36,6 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <ostream>
 #include <random>
 #include <utility>
 #include <vector>
@@ -99,8 +95,8 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
       true,  // material
       false  // passive
   });
-  auto field =
-      std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, 2._T));
+  const Vector3 bField(0, 0, 2._T);
+  auto field = std::make_shared<Acts::ConstantBField>(bField);
   ConstantFieldStepper stepper(std::move(field));
 
   ConstantFieldPropagator propagator(std::move(stepper), std::move(navigator));
@@ -172,12 +168,14 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                          spacePointPtrs.begin(),
                          [](const auto& sp) { return &sp.second; });
 
-          // Test the full track parameters estimator
-          auto fullParamsOpt = estimateTrackParamsFromSeed(
-              geoCtx, spacePointPtrs.begin(), spacePointPtrs.end(),
-              *bottomSurface, Vector3(0, 0, 2._T), *logger);
-          BOOST_REQUIRE(fullParamsOpt.has_value());
-          const auto& estFullParams = fullParamsOpt.value();
+          // Test the free track parameters estimator
+          FreeVector estFreeParams =
+              estimateTrackParamsFromSeed(spacePointPtrs, bField);
+          BOOST_CHECK(!estFreeParams.hasNaN());
+
+          // Test the bound track parameters estimator
+          auto estFullParams = estimateTrackParamsFromSeed(
+              geoCtx, spacePointPtrs, *bottomSurface, bField);
           BOOST_TEST_INFO(
               "The estimated full track parameters at the bottom space point: "
               "\n"

@@ -119,16 +119,8 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     }
 
     // Estimate the track parameters from seed
-    auto optParams = Acts::estimateTrackParamsFromSeed(
-        ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
-        logger());
-    if (!optParams.has_value()) {
-      ACTS_WARNING("Estimation of track parameters for seed " << iseed
-                                                              << " failed.");
-      continue;
-    }
-
-    const auto& params = optParams.value();
+    const auto params = Acts::estimateTrackParamsFromSeed(
+        ctx.geoContext, seed.sp(), *surface, field);
 
     Acts::EstimateTrackParamCovarianceConfig config{
         .initialSigmas =
