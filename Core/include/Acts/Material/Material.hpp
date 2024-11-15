@@ -40,9 +40,17 @@ class Material {
  public:
   using ParametersVector = Eigen::Matrix<float, 5, 1>;
 
+  /// Return vacuum material parameters.
   static ParametersVector vacuumParameters() {
     return (ParametersVector() << std::numeric_limits<float>::infinity(),
             std::numeric_limits<float>::infinity(), 0., 0., 0.)
+        .finished();
+  }
+
+  /// Return almost vacuum material parameters.
+  static ParametersVector almostVacuumParameters() {
+    return (ParametersVector() << std::numeric_limits<float>::max(),
+            std::numeric_limits<float>::max(), 0., 0., 1.)
         .finished();
   }
 

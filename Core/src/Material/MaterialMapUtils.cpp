@@ -87,7 +87,9 @@ auto Acts::materialMapperRZ(
           materialVectorToGridMapper({{i - 1, j - 1}}, nIndices));
     }
   }
-  grid.setExteriorBins(Material::vacuumParameters());
+
+  // use almost vacuum so the interpolation can handle the edges correctly
+  grid.setExteriorBins(Material::almostVacuumParameters());
 
   // [4] Create the transformation for the position
   // map (x,y,z) -> (r,z)
@@ -180,7 +182,9 @@ auto Acts::materialMapperXYZ(
       }
     }
   }
-  grid.setExteriorBins(Material::vacuumParameters());
+
+  // use almost vacuum so the interpolation can handle the edges correctly
+  grid.setExteriorBins(Material::almostVacuumParameters());
 
   // [4] Create the transformation for the position
   // map (x,y,z) -> (r,z)

@@ -14,7 +14,6 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
-#include <limits>
 #include <utility>
 
 namespace {
@@ -25,7 +24,7 @@ using Acts::MaterialSlab;
 using Acts::Test::makeSilicon;
 using Acts::Test::makeUnitSlab;
 
-constexpr auto eps = std::numeric_limits<double>::epsilon();
+constexpr double eps = 1e-10;
 
 }  // namespace
 
@@ -182,19 +181,19 @@ BOOST_AUTO_TEST_CASE(MultipleDifferentTracks) {
     auto [average, trackCount] = a.totalAverage();
     BOOST_CHECK_EQUAL(trackCount, 4u);
     // average material density halved
-    CHECK_CLOSE_REL(average.material().X0(), 2 * unit.material().X0(), eps);
-    CHECK_CLOSE_REL(average.material().L0(), 2 * unit.material().L0(), eps);
-    CHECK_CLOSE_REL(average.material().molarDensity(),
+    CHECK_CLOSE_ABS(average.material().X0(), 2 * unit.material().X0(), eps);
+    CHECK_CLOSE_ABS(average.material().L0(), 2 * unit.material().L0(), eps);
+    CHECK_CLOSE_ABS(average.material().molarDensity(),
                     0.5 * unit.material().molarDensity(), eps);
     // average atom is still the same species
-    CHECK_CLOSE_REL(average.material().Ar(), unit.material().Ar(), eps);
+    CHECK_CLOSE_ABS(average.material().Ar(), unit.material().Ar(), eps);
     // average atomic number proportional to the thickness
-    CHECK_CLOSE_REL(average.material().Z(), 0.5 * unit.material().Z(), eps);
+    CHECK_CLOSE_ABS(average.material().Z(), 0.5 * unit.material().Z(), eps);
     // thickness in x0/l0 depends on density and thus halved as well
-    CHECK_CLOSE_REL(average.thicknessInX0(), 1 * unit.thicknessInX0(), eps);
-    CHECK_CLOSE_REL(average.thicknessInL0(), 1 * unit.thicknessInL0(), eps);
+    CHECK_CLOSE_ABS(average.thicknessInX0(), 1 * unit.thicknessInX0(), eps);
+    CHECK_CLOSE_ABS(average.thicknessInL0(), 1 * unit.thicknessInL0(), eps);
     // average real thickness stays the same
-    CHECK_CLOSE_REL(average.thickness(), 2 * unit.thickness(), eps);
+    CHECK_CLOSE_ABS(average.thickness(), 2 * unit.thickness(), eps);
   }
 }
 
