@@ -130,13 +130,11 @@ class DigitizationConfig {
       bool doMerge, double mergeNsigma, bool mergeCommonCorner,
       Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
-  DigitizationConfig(
+  explicit DigitizationConfig(
       Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
   /// Input collection of simulated hits.
   std::string inputSimHits = "simhits";
-  /// Output source links collection.
-  std::string outputSourceLinks = "sourcelinks";
   /// Output measurements collection.
   std::string outputMeasurements = "measurements";
   /// Output cells map (geoID -> collection of cells).

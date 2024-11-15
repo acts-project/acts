@@ -50,7 +50,7 @@ class PropagatorInterface {
 template <typename propagator_t>
 class ConcretePropagator : public PropagatorInterface {
  public:
-  ConcretePropagator(propagator_t propagator)
+  explicit ConcretePropagator(propagator_t propagator)
       : m_propagator{std::move(propagator)} {}
 
   Acts::Result<PropagationOutput> execute(

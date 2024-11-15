@@ -18,6 +18,7 @@
 #include <initializer_list>
 #include <iosfwd>
 #include <memory>
+#include <numbers>
 #include <ostream>
 #include <vector>
 
@@ -105,8 +106,9 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param bevelMinZ The bevel angle, in radians, for the negative side
   /// @param bevelMaxZ The bevel angle, in radians, for the positive side
   CylinderVolumeBounds(ActsScalar rmin, ActsScalar rmax, ActsScalar halfz,
-                       ActsScalar halfphi = M_PI, ActsScalar avgphi = 0.,
-                       ActsScalar bevelMinZ = 0., ActsScalar bevelMaxZ = 0.);
+                       ActsScalar halfphi = std::numbers::pi_v<ActsScalar>,
+                       ActsScalar avgphi = 0., ActsScalar bevelMinZ = 0.,
+                       ActsScalar bevelMaxZ = 0.);
 
   /// Constructor - from a fixed size array
   ///
@@ -128,7 +130,7 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// Copy Constructor
   ///
   /// @param cylbo is the source cylinder volume bounds for the copy
-  CylinderVolumeBounds(const CylinderVolumeBounds& cylbo) = default;
+  CylinderVolumeBounds(const CylinderVolumeBounds& cylbo);
 
   ~CylinderVolumeBounds() override = default;
   CylinderVolumeBounds& operator=(const CylinderVolumeBounds& cylbo) = default;

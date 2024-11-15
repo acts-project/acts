@@ -28,7 +28,7 @@ class PhysicsListFactoryFunction final : public PhysicsListFactory {
  public:
   using Function = std::function<std::unique_ptr<G4VUserPhysicsList>()>;
 
-  PhysicsListFactoryFunction(Function function);
+  explicit PhysicsListFactoryFunction(Function function);
 
   std::unique_ptr<G4VUserPhysicsList> factorize() const final;
 

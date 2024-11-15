@@ -58,10 +58,9 @@ namespace Acts::Python {
 void addTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SpacePointMaker, mex,
-                                "SpacePointMaker", inputSourceLinks,
-                                inputMeasurements, outputSpacePoints,
-                                trackingGeometry, geometrySelection);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::SpacePointMaker, mex, "SpacePointMaker", inputMeasurements,
+      outputSpacePoints, trackingGeometry, geometrySelection);
 
   {
     using Config = Acts::SeedFilterConfig;
@@ -274,14 +273,14 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm",
       inputSpacePoints, outputSeeds, seedFilterConfig, seedFinderConfig,
-      seedFinderOptions, layerMappingFile, geometrySelection, inputSourceLinks,
-      trackingGeometry, ActsGbtsMap, fill_module_csv, inputClusters);
+      seedFinderOptions, layerMappingFile, geometrySelection, trackingGeometry,
+      ActsGbtsMap, fill_module_csv, inputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
-      inputSpacePoints, outputProtoTracks, inputSourceLinks, trackingGeometry,
-      geometrySelection, inputMeasurements, subRegions, nLayers, xMin, xMax,
-      yMin, yMax, houghHistSize_x, houghHistSize_y, hitExtend_x, threshold,
+      inputSpacePoints, outputProtoTracks, trackingGeometry, geometrySelection,
+      inputMeasurements, subRegions, nLayers, xMin, xMax, yMin, yMax,
+      houghHistSize_x, houghHistSize_y, hitExtend_x, threshold,
       localMaxWindowSize, kA);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
@@ -323,7 +322,6 @@ void addTrackFinding(Context& ctx) {
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputMeasurements);
-    ACTS_PYTHON_MEMBER(inputSourceLinks);
     ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
     ACTS_PYTHON_MEMBER(inputSeeds);
     ACTS_PYTHON_MEMBER(outputTracks);

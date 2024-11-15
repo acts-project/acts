@@ -110,7 +110,7 @@ struct EqEq {
                                                        nBins0);
     Acts::Axis<Acts::AxisType::Equidistant, bType> bEq(range1[0u], range1[1u],
                                                        nBins1);
-    return std::tie(aEq, bEq);
+    return {aEq, bEq};
   }
 };
 
@@ -160,7 +160,7 @@ struct EqVar {
     Acts::Axis<Acts::AxisType::Equidistant, aType> eqA(range[0u], range[1u],
                                                        nBins);
     Acts::Axis<Acts::AxisType::Variable, bType> varB(edges);
-    return std::tie(eqA, varB);
+    return {eqA, varB};
   }
 };
 
@@ -210,7 +210,7 @@ struct VarEq {
     Acts::Axis<Acts::AxisType::Variable, aType> varA(edges);
     Acts::Axis<Acts::AxisType::Equidistant, bType> eqB(range[0u], range[1u],
                                                        nBins);
-    return std::tie(varA, eqB);
+    return {varA, eqB};
   }
 };
 
@@ -257,7 +257,7 @@ struct VarVar {
   return_type operator()() const {
     Acts::Axis<Acts::AxisType::Variable, aType> varA(edges0);
     Acts::Axis<Acts::AxisType::Variable, bType> varB(edges1);
-    return std::tie(varA, varB);
+    return {varA, varB};
   }
 };
 

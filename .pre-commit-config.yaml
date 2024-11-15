@@ -44,7 +44,7 @@ repos:
     - id: license
       name: license
       language: system
-      entry: CI/check_license.py
+      entry: CI/check_license.py --fix
       files: \.(cpp|hpp|ipp|cu|cuh)$
 
   - repo: local
@@ -93,3 +93,11 @@ repos:
       name: Leftover conflict markers
       language: system
       entry: git diff --staged --check
+
+  - repo: local
+    hooks:
+    - id: math_macros
+      name: math_macros
+      language: system
+      entry: CI/check_math_macros.py
+      files: \.(cpp|hpp|ipp|cu|cuh)$

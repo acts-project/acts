@@ -15,6 +15,7 @@
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
 #include <cmath>
+#include <numbers>
 #include <tuple>
 #include <utility>
 
@@ -48,7 +49,7 @@ BOOST_AUTO_TEST_CASE(Eq1D) {
 }
 
 BOOST_AUTO_TEST_CASE(EqEq2D) {
-  EqOpenEqClosed eoec{{0, 10}, 10u, {-M_PI, M_PI}, 16u};
+  EqOpenEqClosed eoec{{0, 10}, 10u, {-std::numbers::pi, std::numbers::pi}, 16u};
   auto axisTuple = eoec();
   BOOST_CHECK_EQUAL(std::tuple_size<decltype(axisTuple)>{}, 2u);
   auto axisVar = std::get<0u>(axisTuple);
@@ -76,7 +77,8 @@ BOOST_AUTO_TEST_CASE(EqVar2D) {
 }
 
 BOOST_AUTO_TEST_CASE(VarEq2D) {
-  VarBoundEqClosed vbec{{10., 20, 30, 40}, {-M_PI, M_PI}, 12u};
+  VarBoundEqClosed vbec{
+      {10., 20, 30, 40}, {-std::numbers::pi, std::numbers::pi}, 12u};
   auto axisTuple = vbec();
   BOOST_CHECK_EQUAL(std::tuple_size<decltype(axisTuple)>{}, 2u);
   auto axisVar = std::get<0u>(axisTuple);

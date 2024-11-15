@@ -34,12 +34,10 @@ class PortalShellBase {
   /// Virtusl destructor
   virtual ~PortalShellBase() = default;
 
-  /// Connect a volume to the outer side of all portal shells. Which "side" is
-  /// "outer" depends on the volume type.
-  /// This method essentially creates a @c TrivialPortalLink on the unconnected
-  /// side of each portal that is part of the chell
+  /// Fill the open slots of the shell with a @c TrivialPortalLink
+  /// to the given @p volume.
   /// @param volume The volume to connect
-  virtual void connectOuter(TrackingVolume& volume) = 0;
+  virtual void fill(TrackingVolume& volume) = 0;
 
   /// Get the number of portals in the shell. This number depends on the volume
   /// type
@@ -88,8 +86,8 @@ class CylinderPortalShell : public PortalShellBase {
   /// @param face The face to set the portal
   virtual void setPortal(std::shared_ptr<Portal> portal, Face face) = 0;
 
-  /// @copydoc PortalShellBase::connectOuter
-  void connectOuter(TrackingVolume& volume) override;
+  /// @copydoc PortalShellBase::fill
+  void fill(TrackingVolume& volume) override;
 };
 
 /// Output stream operator for the CylinderPortalShell::Face enum

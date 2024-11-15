@@ -21,6 +21,7 @@ pybind11_add_module(ActsPythonBindings
   src/Output.cpp
   src/Input.cpp
   src/Propagation.cpp
+  src/Navigation.cpp
   src/Generators.cpp
   src/Obj.cpp
   src/TruthTracking.cpp
@@ -54,11 +55,9 @@ target_link_libraries(
         ActsExamplesDetectorTGeo
         ActsExamplesMagneticField
         ActsExamplesIoRoot
-        ActsExamplesIoNuclearInteractions
         ActsExamplesIoCsv
         ActsExamplesIoObj
         ActsExamplesIoJson
-        ActsExamplesIoPerformance
         ActsExamplesGenerators
         ActsExamplesPrinters
         ActsExamplesTrackFinding
@@ -68,6 +67,10 @@ target_link_libraries(
         ActsExamplesDetectorTelescope
         ActsExamplesUtilities
         ActsExamplesAmbiguityResolution
+        ActsExamplesTruthTracking
+        ActsExamplesDigitization
+        ActsExamplesPropagation
+        ActsExamplesMaterialMapping
 )
 
 set(py_files

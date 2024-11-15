@@ -32,6 +32,7 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <numbers>
 #include <random>
 #include <tuple>
 #include <utility>
@@ -178,14 +179,14 @@ BOOST_DATA_TEST_CASE(
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
                    bdata::distribution = std::uniform_real_distribution<double>(
                        0.15_GeV, 10_GeV))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
-                       bdata::distribution =
-                           std::uniform_real_distribution<double>(-M_PI,
-                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 21,
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 22,
-             bdata::distribution =
-                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^

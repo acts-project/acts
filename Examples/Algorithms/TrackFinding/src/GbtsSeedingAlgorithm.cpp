@@ -19,6 +19,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <numbers>
 #include <random>
 #include <sstream>
 #include <vector>
@@ -61,8 +62,6 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
 
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 
-  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
-
   m_inputClusters.initialize(m_cfg.inputClusters);
 
   // map
@@ -90,31 +89,31 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
       MakeGbtsSpacePoints(ctx, m_cfg.ActsGbtsMap);
 
   for (auto sp : GbtsSpacePoints) {
-    ACTS_DEBUG("Gbts space points: " << " Gbts_id: " << sp.gbtsID << " z: "
-                                     << sp.SP->z() << " r: " << sp.SP->r()
-                                     << " ACTS volume:  "
-                                     << sp.SP->sourceLinks()
-                                            .front()
-                                            .get<IndexSourceLink>()
-                                            .geometryId()
-                                            .volume()
-                                     << "\n");
+    ACTS_DEBUG("Gbts space points:  Gbts_id: "
+               << sp.gbtsID << " z: " << sp.SP->z() << " r: " << sp.SP->r()
+               << " ACTS volume:  "
+               << sp.SP->sourceLinks()
+                      .front()
+                      .get<IndexSourceLink>()
+                      .geometryId()
+                      .volume());
   }
 
   // this is now calling on a core algorithm
-  Acts::SeedFinderGbts<SimSpacePoint> finder(m_cfg.seedFinderConfig,
-                                             *m_gbtsGeo);
+  Acts::SeedFinderGbts<SimSpacePoint> finder(
+      m_cfg.seedFinderConfig, *m_gbtsGeo,
+      logger().cloneWithSuffix("GbtdFinder"));
 
   // output of function needed for seed
 
   finder.loadSpacePoints(GbtsSpacePoints);
 
   // trigGbts file :
-  Acts::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -M_PI, M_PI, 0, -150.0,
-                                  150.0);
+  Acts::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -std::numbers::pi,
+                                  std::numbers::pi, 0, -150., 150.);
   // ROI file:
-  //  Acts::RoiDescriptor internalRoi(0, -5, 5, 0, -M_PI, M_PI, 0, -225.0,
-  //                                  225.0);
+  //  Acts::RoiDescriptor internalRoi(0, -5, 5, 0, -std::numbers::pi,
+  //  std::numbers::pi, 0, -225., 225.);
 
   // new version returns seeds
   SimSeedContainer seeds = finder.createSeeds(internalRoi, *m_gbtsGeo);

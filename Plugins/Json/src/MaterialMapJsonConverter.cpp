@@ -45,6 +45,7 @@
 #include <cmath>
 #include <cstddef>
 #include <map>
+#include <numbers>
 #include <stdexcept>
 
 namespace Acts {
@@ -114,8 +115,8 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
             radialBounds->get(Acts::RadialBounds::eHalfPhiSector),
         radialBounds->get(Acts::RadialBounds::eAveragePhi) +
             radialBounds->get(Acts::RadialBounds::eHalfPhiSector),
-        (radialBounds->get(Acts::RadialBounds::eHalfPhiSector) - M_PI) <
-                Acts::s_epsilon
+        (radialBounds->get(Acts::RadialBounds::eHalfPhiSector) -
+         std::numbers::pi) < Acts::s_epsilon
             ? Acts::closed
             : Acts::open,
         Acts::BinningValue::binPhi);
@@ -129,8 +130,8 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
             cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector),
         cylinderBounds->get(Acts::CylinderBounds::eAveragePhi) +
             cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector),
-        (cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector) - M_PI) <
-                Acts::s_epsilon
+        (cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector) -
+         std::numbers::pi) < Acts::s_epsilon
             ? Acts::closed
             : Acts::open,
         Acts::BinningValue::binPhi);
@@ -195,8 +196,8 @@ Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
     bUtility += Acts::BinUtility(
         1, -cyBounds->get(Acts::CylinderVolumeBounds::eHalfPhiSector),
         cyBounds->get(Acts::CylinderVolumeBounds::eHalfPhiSector),
-        (cyBounds->get(Acts::CylinderVolumeBounds::eHalfPhiSector) - M_PI) <
-                Acts::s_epsilon
+        (cyBounds->get(Acts::CylinderVolumeBounds::eHalfPhiSector) -
+         std::numbers::pi) < Acts::s_epsilon
             ? Acts::closed
             : Acts::open,
         Acts::BinningValue::binPhi);
@@ -210,9 +211,9 @@ Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
         1, cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eMinR),
         cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eMaxR), Acts::open,
         Acts::BinningValue::binR);
-    bUtility +=
-        Acts::BinUtility(1, -static_cast<float>(M_PI), static_cast<float>(M_PI),
-                         Acts::closed, Acts::BinningValue::binPhi);
+    bUtility += Acts::BinUtility(1, -std::numbers::pi_v<float>,
+                                 std::numbers::pi_v<float>, Acts::closed,
+                                 Acts::BinningValue::binPhi);
     bUtility += Acts::BinUtility(
         1, -cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eHalfLengthZ),
         cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eHalfLengthZ),
@@ -253,8 +254,8 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   VolumeMaterialMap volumeMap = maps.second;
   std::vector<std::pair<GeometryIdentifier, const IVolumeMaterial*>>
       mapVolumeInit;
-  for (auto it = volumeMap.begin(); it != volumeMap.end(); it++) {
-    mapVolumeInit.push_back({it->first, it->second.get()});
+  for (const auto& [key, value] : volumeMap) {
+    mapVolumeInit.push_back({key, value.get()});
   }
   GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap(
       mapVolumeInit);
@@ -263,8 +264,8 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   SurfaceMaterialMap surfaceMap = maps.first;
   std::vector<std::pair<GeometryIdentifier, const ISurfaceMaterial*>>
       mapSurfaceInit;
-  for (auto it = surfaceMap.begin(); it != surfaceMap.end(); it++) {
-    mapSurfaceInit.push_back({it->first, it->second.get()});
+  for (const auto& [key, value] : surfaceMap) {
+    mapSurfaceInit.push_back({key, value.get()});
   }
   GeometryHierarchyMap<const ISurfaceMaterial*> hierarchySurfaceMap(
       mapSurfaceInit);
