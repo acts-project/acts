@@ -33,6 +33,9 @@ namespace Acts {
 /// in the range defined by the iterators. The magnetic field (which might be
 /// along any direction) is also necessary for the momentum estimation.
 ///
+/// This is a purely spatial estimation, i.e. the time parameter will be set to
+/// 0.
+///
 /// It resembles the method used in ATLAS for the track parameters
 /// estimated from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane
 /// here:
@@ -65,8 +68,7 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
 ///
 /// @tparam spacepoint_iterator_t  The type of space point iterator
 ///
-/// @param spBegin is the begin iterator for the space points
-/// @param spEnd is the end iterator for the space points
+/// @param spRange is the range of space points
 /// @param bField is the magnetic field vector
 ///
 /// @return the free parameters
