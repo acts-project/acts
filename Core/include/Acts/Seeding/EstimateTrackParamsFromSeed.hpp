@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
 #include <array>
 #include <cmath>
@@ -76,7 +77,7 @@ template <std::ranges::range spacepoint_range_t>
     { sp->x() } -> std::convertible_to<Acts::ActsScalar>;
     { sp->y() } -> std::convertible_to<Acts::ActsScalar>;
     { sp->z() } -> std::convertible_to<Acts::ActsScalar>;
-    { sp->t() } -> std::same_as<std::optional<double>>;
+    { sp->t() } -> std::same_as<std::optional<float>>;
   }
 FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
                                        const Vector3& bField) {
@@ -93,14 +94,13 @@ FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
                                                   std::nullopt};
   // The first, second and third space point are assumed to be bottom, middle
   // and top space point, respectively
-  for (auto [spIt, spPositionIt, spTimeIt] :
-       zip(spRange, spPositions, spTimes)) {
-    const auto* sp = *spIt;
+  for (auto [sp, spPosition, spTime] :
+       Acts::zip(spRange, spPositions, spTimes)) {
     if (sp == nullptr) {
       throw std::invalid_argument("Empty space point found.");
     }
-    *spPositionIt = Vector3(sp->x(), sp->y(), sp->z());
-    *spTimeIt = sp->t();
+    spPosition = Vector3(sp->x(), sp->y(), sp->z());
+    spTime = sp->t();
   }
 
   FreeVector params = estimateTrackParamsFromSeed(
