@@ -119,8 +119,7 @@ FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
 /// @tparam spacepoint_iterator_t  The type of space point iterator
 ///
 /// @param gctx is the geometry context
-/// @param spBegin is the begin iterator for the space points
-/// @param spEnd is the end iterator for the space points
+/// @param spRange is the range of space points
 /// @param surface is the surface of the bottom space point. The estimated bound
 /// track parameters will be represented also at this surface
 /// @param bField is the magnetic field vector
