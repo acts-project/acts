@@ -19,7 +19,7 @@ class JsonDetectorElement : public DetectorElementBase {
   double m_thickness{};
 
  public:
-  JsonDetectorElement(const nlohmann::json &surfaceJson, double thickness);
+  JsonDetectorElement(const nlohmann::json &jSurface, double thickness);
 
   Surface &surface() override;
   const Surface &surface() const override;

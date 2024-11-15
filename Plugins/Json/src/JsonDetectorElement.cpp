@@ -29,7 +29,7 @@ Surface &JsonDetectorElement::surface() {
 }
 
 const Transform3 &JsonDetectorElement::transform(
-    const GeometryContext &) const {
+    const GeometryContext & /*gctx*/) const {
   return m_transform;
 }
 
