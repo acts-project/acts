@@ -16,10 +16,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <initializer_list>
 #include <limits>
-#include <set>
-#include <tuple>
 #include <utility>
 
 using Acts::VectorHelpers::perp;
@@ -90,9 +87,7 @@ auto Acts::materialMapperRZ(
           materialVectorToGridMapper({{i - 1, j - 1}}, nIndices));
     }
   }
-  Material::ParametersVector vec;
-  vec << std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
-      0., 0., 0.;
+  Material::ParametersVector vec = Material::vacuumParameters();
   grid.setExteriorBins(vec);
 
   // [4] Create the transformation for the position
@@ -186,9 +181,7 @@ auto Acts::materialMapperXYZ(
       }
     }
   }
-  Material::ParametersVector vec;
-  vec << std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
-      0., 0., 0.;
+  Material::ParametersVector vec = Material::vacuumParameters();
   grid.setExteriorBins(vec);
 
   // [4] Create the transformation for the position

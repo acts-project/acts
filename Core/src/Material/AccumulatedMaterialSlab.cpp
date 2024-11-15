@@ -11,22 +11,24 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/detail/AverageMaterials.hpp"
 
-void Acts::AccumulatedMaterialSlab::accumulate(MaterialSlab slab,
-                                               float pathCorrection) {
+namespace Acts {
+
+void AccumulatedMaterialSlab::accumulate(MaterialSlab slab,
+                                         double pathCorrection) {
   // scale the recorded material to the equivalence contribution along the
   // surface normal
   slab.scaleThickness(1 / pathCorrection);
   m_trackAverage = detail::combineSlabs(m_trackAverage, slab);
 }
 
-void Acts::AccumulatedMaterialSlab::trackVariance(MaterialSlab slabReference,
-                                                  bool useEmptyTrack) {
+void AccumulatedMaterialSlab::trackVariance(MaterialSlab slabReference,
+                                            bool useEmptyTrack) {
   // Only use real tracks or if empty tracks are allowed.
   if (useEmptyTrack || (0 < m_trackAverage.thickness())) {
-    float variance = ((1 / m_trackAverage.material().X0()) -
-                      (1 / slabReference.material().X0())) *
-                     ((1 / m_trackAverage.material().X0()) -
-                      (1 / slabReference.material().X0()));
+    double variance = ((1 / m_trackAverage.material().X0()) -
+                       (1 / slabReference.material().X0())) *
+                      ((1 / m_trackAverage.material().X0()) -
+                       (1 / slabReference.material().X0()));
     if (m_totalCount == 0u) {
       m_totalVariance = variance;
     } else {
@@ -37,7 +39,7 @@ void Acts::AccumulatedMaterialSlab::trackVariance(MaterialSlab slabReference,
   }
 }
 
-void Acts::AccumulatedMaterialSlab::trackAverage(bool useEmptyTrack) {
+void AccumulatedMaterialSlab::trackAverage(bool useEmptyTrack) {
   // average only real tracks or if empty tracks are allowed.
   if (useEmptyTrack || (0 < m_trackAverage.thickness())) {
     if (m_totalCount == 0u) {
@@ -58,12 +60,13 @@ void Acts::AccumulatedMaterialSlab::trackAverage(bool useEmptyTrack) {
   m_trackAverage = MaterialSlab();
 }
 
-std::pair<Acts::MaterialSlab, unsigned int>
-Acts::AccumulatedMaterialSlab::totalAverage() const {
+std::pair<MaterialSlab, unsigned int> AccumulatedMaterialSlab::totalAverage()
+    const {
   return {m_totalAverage, m_totalCount};
 }
 
-std::pair<float, unsigned int> Acts::AccumulatedMaterialSlab::totalVariance()
-    const {
+std::pair<double, unsigned int> AccumulatedMaterialSlab::totalVariance() const {
   return {m_totalVariance, m_totalCount};
 }
+
+}  // namespace Acts

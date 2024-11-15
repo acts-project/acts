@@ -255,13 +255,15 @@ ACTS_DEFINE_UNIT_LITERAL(mol)
 ///
 /// Unit constants are intentionally not listed.
 namespace PhysicalConstants {
-// Speed of light
+/// Speed of light
 constexpr double c = 1.0;
 /// Reduced Planck constant h/2*pi.
 ///
 /// Computed from CODATA 2018 constants to double precision.
 constexpr double hbar =
     6.582119569509066e-25 * UnitConstants::GeV * UnitConstants::s;
+/// Avogadro constant
+constexpr double kAvogadro = 6.02214076e23 / Acts::UnitConstants::mol;
 }  // namespace PhysicalConstants
 
 }  // namespace Acts

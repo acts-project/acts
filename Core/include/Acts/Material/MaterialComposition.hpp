@@ -37,7 +37,7 @@ class ElementFraction {
   ///
   /// @param e is the atomic number of the element
   /// @param f is the relative fraction and must be a value in [0,1]
-  constexpr ElementFraction(unsigned int e, float f)
+  constexpr ElementFraction(unsigned int e, double f)
       : m_element(static_cast<std::uint8_t>(e)),
         m_fraction(static_cast<std::uint8_t>(
             f * std::numeric_limits<std::uint8_t>::max())) {
@@ -55,19 +55,11 @@ class ElementFraction {
     assert((w < 256u) && "Integer weight must be in [0,256)");
   }
 
-  /// Must always be created with valid data.
-  ElementFraction() = delete;
-  ElementFraction(ElementFraction&&) = default;
-  ElementFraction(const ElementFraction&) = default;
-  ~ElementFraction() = default;
-  ElementFraction& operator=(ElementFraction&&) = default;
-  ElementFraction& operator=(const ElementFraction&) = default;
-
   /// The element atomic number.
   constexpr std::uint8_t element() const { return m_element; }
   /// The relative fraction of this element.
-  constexpr float fraction() const {
-    return static_cast<float>(m_fraction) /
+  constexpr double fraction() const {
+    return static_cast<double>(m_fraction) /
            std::numeric_limits<std::uint8_t>::max();
   }
 
@@ -107,18 +99,12 @@ class MaterialComposition {
       total += element.m_fraction;
     }
     // compute scale factor into the [0, 256) range
-    float scale = float{std::numeric_limits<std::uint8_t>::max()} / total;
+    double scale = double{std::numeric_limits<std::uint8_t>::max()} / total;
     for (auto& element : m_elements) {
       element.m_fraction =
           static_cast<std::uint8_t>(element.m_fraction * scale);
     }
   }
-
-  MaterialComposition(MaterialComposition&&) = default;
-  MaterialComposition(const MaterialComposition&) = default;
-  ~MaterialComposition() = default;
-  MaterialComposition& operator=(MaterialComposition&&) = default;
-  MaterialComposition& operator=(const MaterialComposition&) = default;
 
   // Support range-based iteration over contained elements.
   auto begin() const { return m_elements.begin(); }

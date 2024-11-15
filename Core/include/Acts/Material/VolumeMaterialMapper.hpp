@@ -20,7 +20,6 @@
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -32,7 +31,6 @@
 #include <map>
 #include <memory>
 #include <utility>
-#include <vector>
 
 namespace Acts {
 
@@ -73,7 +71,7 @@ class VolumeMaterialMapper {
   /// Nested Configuration struct for the material mapper
   struct Config {
     /// Size of the step for the step extrapolation
-    float mappingStep = 1.;
+    double mappingStep = 1;
   };
 
   /// @struct State

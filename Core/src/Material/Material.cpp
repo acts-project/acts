@@ -13,22 +13,12 @@
 #include <cmath>
 #include <ostream>
 
-namespace {
-enum MaterialClassificationNumberIndices {
-  eRadiationLength = 0,
-  eInteractionLength = 1,
-  eRelativeAtomicMass = 2,
-  eNuclearCharge = 3,
-  eMolarDensity = 4,
-};
+namespace Acts {
 
-// Avogadro constant
-constexpr double kAvogadro = 6.02214076e23 / Acts::UnitConstants::mol;
-}  // namespace
-
-Acts::Material Acts::Material::fromMassDensity(float x0, float l0, float ar,
-                                               float z, float massRho) {
-  using namespace Acts::UnitLiterals;
+Material Material::fromMassDensity(double x0, double l0, double ar, double z,
+                                   double massRho) {
+  using namespace UnitLiterals;
+  using namespace PhysicalConstants;
 
   Material mat;
   mat.m_x0 = x0;
@@ -51,8 +41,8 @@ Acts::Material Acts::Material::fromMassDensity(float x0, float l0, float ar,
   return mat;
 }
 
-Acts::Material Acts::Material::fromMolarDensity(float x0, float l0, float ar,
-                                                float z, float molarRho) {
+Material Material::fromMolarDensity(double x0, double l0, double ar, double z,
+                                    double molarRho) {
   Material mat;
   mat.m_x0 = x0;
   mat.m_l0 = l0;
@@ -62,15 +52,16 @@ Acts::Material Acts::Material::fromMolarDensity(float x0, float l0, float ar,
   return mat;
 }
 
-Acts::Material::Material(const ParametersVector& parameters)
+Material::Material(const ParametersVector& parameters)
     : m_x0(parameters[eRadiationLength]),
       m_l0(parameters[eInteractionLength]),
       m_ar(parameters[eRelativeAtomicMass]),
       m_z(parameters[eNuclearCharge]),
       m_molarRho(parameters[eMolarDensity]) {}
 
-float Acts::Material::massDensity() const {
-  using namespace Acts::UnitLiterals;
+double Material::massDensity() const {
+  using namespace UnitLiterals;
+  using namespace PhysicalConstants;
 
   // perform computations in double precision to avoid loss of precision
   const double atomicMass = static_cast<double>(m_ar) * 1_u;
@@ -78,14 +69,14 @@ float Acts::Material::massDensity() const {
   return atomicMass * numberDensity;
 }
 
-float Acts::Material::meanExcitationEnergy() const {
-  using namespace Acts::UnitLiterals;
+double Material::meanExcitationEnergy() const {
+  using namespace UnitLiterals;
 
   // use approximative computation as defined in ATL-SOFT-PUB-2008-003
   return 16_eV * std::pow(m_z, 0.9f);
 }
 
-Acts::Material::ParametersVector Acts::Material::parameters() const {
+Material::ParametersVector Material::parameters() const {
   ParametersVector parameters;
   parameters[eRadiationLength] = m_x0;
   parameters[eInteractionLength] = m_l0;
@@ -95,7 +86,7 @@ Acts::Material::ParametersVector Acts::Material::parameters() const {
   return parameters;
 }
 
-std::ostream& Acts::operator<<(std::ostream& os, const Material& material) {
+std::ostream& operator<<(std::ostream& os, const Material& material) {
   if (!material.isValid()) {
     os << "vacuum";
   } else {
@@ -107,3 +98,5 @@ std::ostream& Acts::operator<<(std::ostream& os, const Material& material) {
   }
   return os;
 }
+
+}  // namespace Acts
