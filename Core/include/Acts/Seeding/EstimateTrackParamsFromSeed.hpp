@@ -123,7 +123,6 @@ FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
 /// @param surface is the surface of the bottom space point. The estimated bound
 /// track parameters will be represented also at this surface
 /// @param bField is the magnetic field vector
-/// @param logger A logger instance
 ///
 /// @return bound parameters
 template <std::ranges::range spacepoint_range_t>
