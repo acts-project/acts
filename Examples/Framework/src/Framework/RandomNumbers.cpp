@@ -10,8 +10,6 @@
 
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
-#include <boost/functional/hash.hpp>
-
 namespace ActsExamples {
 
 RandomNumbers::RandomNumbers(const Config& cfg) : m_cfg(cfg) {}
