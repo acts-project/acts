@@ -98,6 +98,9 @@ class Material {
   /// Check if the material is valid, i.e. it is not vacuum.
   bool isValid() const { return m_ar > 0; }
 
+  /// Check if the material is valid, i.e. it is not vacuum.
+  bool isVacuum() const { return m_ar > 0; }
+
   /// Return the radiation length. Infinity in case of vacuum.
   constexpr double X0() const { return m_x0; }
   /// Return the nuclear interaction length. Infinity in case of vacuum.

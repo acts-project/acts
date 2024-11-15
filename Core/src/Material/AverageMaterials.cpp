@@ -16,6 +16,13 @@ namespace Acts {
 
 MaterialSlab detail::combineSlabs(const MaterialSlab& slab1,
                                   const MaterialSlab& slab2) {
+  if (slab1.thickness() <= 0) {
+    return slab2;
+  }
+  if (slab2.thickness() <= 0) {
+    return slab1;
+  }
+
   const auto& mat1 = slab1.material();
   const auto& mat2 = slab2.material();
 

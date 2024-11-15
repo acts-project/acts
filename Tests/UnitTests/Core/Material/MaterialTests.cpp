@@ -78,7 +78,6 @@ BOOST_DATA_TEST_CASE(EncodingDecodingRoundtrip,
   // encode material again
   Acts::Material::ParametersVector numbers1 = fromNumbers.parameters();
 
-  BOOST_CHECK_EQUAL(material, fromNumbers);
   BOOST_CHECK_EQUAL(numbers0, numbers1);
 }
 

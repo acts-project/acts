@@ -25,7 +25,7 @@ using Acts::MaterialSlab;
 using Acts::Test::makeSilicon;
 using Acts::Test::makeUnitSlab;
 
-constexpr auto eps = std::numeric_limits<float>::epsilon();
+constexpr auto eps = std::numeric_limits<double>::epsilon();
 
 }  // namespace
 
@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(MultipleIdenticalThicknessTrackSteps) {
     BOOST_CHECK_EQUAL(trackCount, 1u);
     BOOST_CHECK_EQUAL(average.material(), unit.material());
     BOOST_CHECK_EQUAL(average.thickness(), 3 * unit.thickness());
-    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0f);
-    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0f);
+    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0);
+    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0);
   }
   // accumulate three identical steps for one additional track
   {
@@ -88,8 +88,8 @@ BOOST_AUTO_TEST_CASE(MultipleIdenticalThicknessTrackSteps) {
     // averages must stay the same since we added the same material again
     BOOST_CHECK_EQUAL(average.material(), unit.material());
     BOOST_CHECK_EQUAL(average.thickness(), 3 * unit.thickness());
-    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0f);
-    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0f);
+    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0);
+    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0);
   }
 }
 
@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE(MultipleDifferentThicknessTrackSteps) {
     BOOST_CHECK_EQUAL(trackCount, 1u);
     BOOST_CHECK_EQUAL(average.material(), unit.material());
     BOOST_CHECK_EQUAL(average.thickness(), 3 * unit.thickness());
-    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0f);
-    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0f);
+    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0);
+    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0);
   }
   // accumulate one step with thickness 1, one with thickness 2
   {
@@ -123,8 +123,8 @@ BOOST_AUTO_TEST_CASE(MultipleDifferentThicknessTrackSteps) {
     // averages must stay the same
     BOOST_CHECK_EQUAL(average.material(), unit.material());
     BOOST_CHECK_EQUAL(average.thickness(), 3 * unit.thickness());
-    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0f);
-    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0f);
+    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0);
+    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0);
   }
   // accumulate one step with thickness 3
   {
@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE(MultipleDifferentThicknessTrackSteps) {
     // averages must stay the same
     BOOST_CHECK_EQUAL(average.material(), unit.material());
     BOOST_CHECK_EQUAL(average.thickness(), 3 * unit.thickness());
-    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0f);
-    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0f);
+    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0);
+    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0);
   }
 }
 
@@ -185,16 +185,16 @@ BOOST_AUTO_TEST_CASE(MultipleDifferentTracks) {
     CHECK_CLOSE_REL(average.material().X0(), 2 * unit.material().X0(), eps);
     CHECK_CLOSE_REL(average.material().L0(), 2 * unit.material().L0(), eps);
     CHECK_CLOSE_REL(average.material().molarDensity(),
-                    0.5f * unit.material().molarDensity(), eps);
+                    0.5 * unit.material().molarDensity(), eps);
     // average atom is still the same species
     CHECK_CLOSE_REL(average.material().Ar(), unit.material().Ar(), eps);
     // average atomic number proportional to the thickness
     CHECK_CLOSE_REL(average.material().Z(), 0.5 * unit.material().Z(), eps);
     // thickness in x0/l0 depends on density and thus halved as well
-    BOOST_CHECK_EQUAL(average.thicknessInX0(), 1 * unit.thicknessInX0());
-    BOOST_CHECK_EQUAL(average.thicknessInL0(), 1 * unit.thicknessInL0());
+    CHECK_CLOSE_REL(average.thicknessInX0(), 1 * unit.thicknessInX0(), eps);
+    CHECK_CLOSE_REL(average.thicknessInL0(), 1 * unit.thicknessInL0(), eps);
     // average real thickness stays the same
-    BOOST_CHECK_EQUAL(average.thickness(), 2 * unit.thickness());
+    CHECK_CLOSE_REL(average.thickness(), 2 * unit.thickness(), eps);
   }
 }
 

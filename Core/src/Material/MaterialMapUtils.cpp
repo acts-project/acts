@@ -87,8 +87,7 @@ auto Acts::materialMapperRZ(
           materialVectorToGridMapper({{i - 1, j - 1}}, nIndices));
     }
   }
-  Material::ParametersVector vec = Material::vacuumParameters();
-  grid.setExteriorBins(vec);
+  grid.setExteriorBins(Material::vacuumParameters());
 
   // [4] Create the transformation for the position
   // map (x,y,z) -> (r,z)
@@ -181,8 +180,7 @@ auto Acts::materialMapperXYZ(
       }
     }
   }
-  Material::ParametersVector vec = Material::vacuumParameters();
-  grid.setExteriorBins(vec);
+  grid.setExteriorBins(Material::vacuumParameters());
 
   // [4] Create the transformation for the position
   // map (x,y,z) -> (r,z)
