@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Json/JsonSurfacesReader.hpp"
+#include "Acts/Plugins/Json/JsonSurfacesReader.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
@@ -17,7 +17,7 @@
 #include <fstream>
 #include <iostream>
 
-namespace ActsExamples {
+namespace Acts {
 
 Acts::GeometryHierarchyMap<std::shared_ptr<Acts::Surface>>
 JsonSurfacesReader::readHierarchyMap(
@@ -96,4 +96,4 @@ JsonSurfacesReader::readDetectorElements(const Options& options,
   return elements;
 }
 
-}  // namespace ActsExamples
+}  // namespace Acts

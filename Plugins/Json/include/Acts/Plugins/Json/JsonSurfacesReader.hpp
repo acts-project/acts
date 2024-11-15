@@ -19,7 +19,7 @@ namespace Acts {
 class Surface;
 }
 
-namespace ActsExamples::JsonSurfacesReader {
+namespace Acts::JsonSurfacesReader {
 
 /// @brief Options specification for surface reading
 struct Options {
@@ -53,4 +53,4 @@ std::vector<std::shared_ptr<Acts::Surface>> readVector(const Options& options);
 std::vector<std::shared_ptr<Acts::JsonDetectorElement>> readDetectorElements(
     const Options& options, double thickness);
 
-}  // namespace ActsExamples::JsonSurfacesReader
+}  // namespace Acts::JsonSurfacesReader

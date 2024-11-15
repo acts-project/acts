@@ -14,10 +14,6 @@
 namespace Acts {
 
 class JsonDetectorElement : public DetectorElementBase {
-  std::shared_ptr<Surface> m_surface;
-  Transform3 m_transform{};
-  double m_thickness{};
-
  public:
   JsonDetectorElement(const nlohmann::json &jSurface, double thickness);
 
@@ -27,6 +23,11 @@ class JsonDetectorElement : public DetectorElementBase {
   double thickness() const override;
 
   const Transform3 &transform(const GeometryContext &gctx) const override;
+
+ private:
+  std::shared_ptr<Surface> m_surface;
+  Transform3 m_transform{};
+  double m_thickness{};
 };
 
 }  // namespace Acts
