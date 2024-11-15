@@ -10,13 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
@@ -24,7 +20,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <functional>
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -145,6 +140,7 @@ class DigitizationConfig {
   std::string outputMeasurementParticlesMap = "measurement_particles_map";
   /// Output collection to map measured hits to simulated hits.
   std::string outputMeasurementSimHitsMap = "measurement_simhits_map";
+
   /// Map of surface by identifier to allow local - to global
   std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface *>
       surfaceByIdentifier;
@@ -157,11 +153,11 @@ class DigitizationConfig {
   /// clusters, measurements, and sim-hit-maps are output.
   bool doClusterization = true;
   /// Do we merge hits or not
-  bool doMerge;
+  bool doMerge = false;
   /// How close do parameters have to be to consider merged
-  const double mergeNsigma;
+  double mergeNsigma = 3.0;
   /// Consider clusters that share a corner as merged (8-cell connectivity)
-  const bool mergeCommonCorner;
+  bool mergeCommonCorner = false;
   /// Energy deposit threshold for accepting a hit
   /// For a generic readout frontend we assume 1000 e/h pairs, in Si each
   /// e/h-pair requiers on average an energy of 3.65 eV (PDG  review 2023,
