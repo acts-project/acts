@@ -6,17 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-//
-//  RandomNumbers.hpp
-//  ActsExamples
-//
-//  Created by Andreas Salzburger on 17/05/16.
-//
-//
-
 #pragma once
-
-#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <cstdint>
 #include <random>
@@ -26,6 +16,9 @@ struct AlgorithmContext;
 
 /// The random number generator used in the framework.
 using RandomEngine = std::mt19937;  ///< Mersenne Twister
+
+/// The seed type used in the framework.
+using RandomSeed = std::uint32_t;
 
 /// Provide event and algorithm specific random number generator.s
 ///
@@ -41,7 +34,7 @@ using RandomEngine = std::mt19937;  ///< Mersenne Twister
 class RandomNumbers {
  public:
   struct Config {
-    std::uint64_t seed = 1234567890u;  ///< random seed
+    RandomSeed seed = 1234567890u;  ///< random seed
   };
 
   explicit RandomNumbers(const Config& cfg);
@@ -59,7 +52,7 @@ class RandomNumbers {
   ///
   /// This should only be used in special cases e.g. where a custom
   /// random engine is used and `spawnGenerator` can not be used.
-  std::uint64_t generateSeed(const AlgorithmContext& context) const;
+  RandomSeed generateSeed(const AlgorithmContext& context) const;
 
  private:
   Config m_cfg;

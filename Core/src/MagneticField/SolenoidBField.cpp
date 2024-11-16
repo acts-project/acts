@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 
 #define BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
 
@@ -110,7 +111,8 @@ double Acts::SolenoidBField::B_r(const Vector2& pos, double scale) const {
   double k_2 = k2(r, z);
   double k = std::sqrt(k_2);
   double constant =
-      scale * k * z / (4 * M_PI * std::sqrt(m_cfg.radius * r * r * r));
+      scale * k * z /
+      (4 * std::numbers::pi * std::sqrt(m_cfg.radius * r * r * r));
 
   double B = (2. - k_2) / (2. - 2. * k_2) * ellint_2(k_2) - ellint_1(k_2);
 
@@ -147,7 +149,8 @@ double Acts::SolenoidBField::B_z(const Vector2& pos, double scale) const {
 
   double k_2 = k2(r, z);
   double k = std::sqrt(k_2);
-  double constant = scale * k / (4 * M_PI * std::sqrt(m_cfg.radius * r));
+  double constant =
+      scale * k / (4 * std::numbers::pi * std::sqrt(m_cfg.radius * r));
   double B = ((m_cfg.radius + r) * k_2 - 2. * r) / (2. * r * (1. - k_2)) *
                  ellint_2(k_2) +
              ellint_1(k_2);

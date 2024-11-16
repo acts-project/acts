@@ -61,3 +61,4 @@ add_unittest(VectorHelpers VectorHelpersTests.cpp)
 
 add_unittest(TrackHelpers TrackHelpersTests.cpp)
 add_unittest(GraphViz GraphVizTests.cpp)
+add_unittest(ContextType ContextTypeTests.cpp)

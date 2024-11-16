@@ -81,7 +81,9 @@ void addMaterial(Context& ctx) {
   {
     py::class_<Acts::IMaterialDecorator,
                std::shared_ptr<Acts::IMaterialDecorator>>(m,
-                                                          "IMaterialDecorator");
+                                                          "IMaterialDecorator")
+        .def("decorate", py::overload_cast<Surface&>(
+                             &Acts::IMaterialDecorator::decorate, py::const_));
   }
 
   {
