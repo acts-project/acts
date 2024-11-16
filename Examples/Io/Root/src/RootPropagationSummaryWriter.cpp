@@ -70,7 +70,7 @@ RootPropagationSummaryWriter::RootPropagationSummaryWriter(
   m_outputTree->Branch("nPortals", &m_nPortals);
 
   m_outputTree->Branch("nAttemptedSteps", &m_nAttemptedSteps);
-  m_outputTree->Branch("nFailedSteps", &m_nFailedSteps);
+  m_outputTree->Branch("nRejectedSteps", &m_nRejectedSteps);
   m_outputTree->Branch("nSuccessfulSteps", &m_nSuccessfulSteps);
   m_outputTree->Branch("nReverseSteps", &m_nReverseSteps);
   m_outputTree->Branch("pathLength", &m_pathLength);
@@ -156,7 +156,7 @@ ProcessCode RootPropagationSummaryWriter::writeT(
 
     // Stepper statistics
     m_nAttemptedSteps = summary.statistics.stepping.nAttemptedSteps;
-    m_nFailedSteps = summary.statistics.stepping.nFailedSteps;
+    m_nRejectedSteps = summary.statistics.stepping.nRejectedSteps;
     m_nSuccessfulSteps = summary.statistics.stepping.nSuccessfulSteps;
     m_nReverseSteps = summary.statistics.stepping.nReverseSteps;
     m_pathLength = summary.statistics.stepping.pathLength;

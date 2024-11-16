@@ -108,7 +108,7 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
 
   // stepper statistics
   std::size_t m_nAttemptedSteps = 0;
-  std::size_t m_nFailedSteps = 0;
+  std::size_t m_nRejectedSteps = 0;
   std::size_t m_nSuccessfulSteps = 0;
   std::size_t m_nReverseSteps = 0;
   double m_pathLength = 0;

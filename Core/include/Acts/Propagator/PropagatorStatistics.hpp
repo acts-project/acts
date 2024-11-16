@@ -13,8 +13,13 @@
 
 namespace Acts {
 
+/// @struct PropagatorStatistics
+///
+/// @brief A struct to hold statistics of the propagator
 struct PropagatorStatistics {
+  /// Statistics of the stepper
   StepperStatistics stepping;
+  /// Statistics of the navigator
   NavigatorStatistics navigation;
 };
 

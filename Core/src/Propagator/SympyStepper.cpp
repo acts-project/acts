@@ -165,7 +165,7 @@ Result<double> SympyStepper::stepImpl(
       break;
     }
 
-    ++state.statistics.nFailedSteps;
+    ++state.statistics.nRejectedSteps;
 
     const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
     h *= stepSizeScaling;

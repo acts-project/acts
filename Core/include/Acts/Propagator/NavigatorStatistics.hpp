@@ -12,9 +12,14 @@
 
 namespace Acts {
 
+/// @struct NavigatorStatistics
+///
+/// @brief A struct to hold statistics of the navigator
 struct NavigatorStatistics {
+  /// Number of renavigation attempts
   std::size_t nRenavigations = 0;
 
+  /// Number of volume switches
   std::size_t nVolumeSwitches = 0;
 };
 

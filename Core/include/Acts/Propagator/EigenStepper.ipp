@@ -271,7 +271,7 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
       break;
     }
 
-    ++state.stepping.statistics.nFailedSteps;
+    ++state.stepping.statistics.nRejectedSteps;
 
     const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
     h *= stepSizeScaling;
@@ -290,18 +290,6 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
       return EigenStepperError::StepSizeAdjustmentFailed;
     }
   }
-
-  state.stepping.pathAccumulated += h;
-  ++state.stepping.nSteps;
-  state.stepping.nStepTrials += nStepTrials;
-
-  ++state.stepping.statistics.nSuccessfulSteps;
-  if (state.options.direction !=
-      Direction::fromScalarZeroAsPositive(initialH)) {
-    ++state.stepping.statistics.nReverseSteps;
-  }
-  state.stepping.statistics.pathLength += h;
-  state.stepping.statistics.absolutePathLength += std::abs(h);
 
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {
@@ -363,6 +351,18 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
         state.stepping.pars.template segment<3>(eFreeDir0);
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
+
+  state.stepping.pathAccumulated += h;
+  ++state.stepping.nSteps;
+  state.stepping.nStepTrials += nStepTrials;
+
+  ++state.stepping.statistics.nSuccessfulSteps;
+  if (state.options.direction !=
+      Direction::fromScalarZeroAsPositive(initialH)) {
+    ++state.stepping.statistics.nReverseSteps;
+  }
+  state.stepping.statistics.pathLength += h;
+  state.stepping.statistics.absolutePathLength += std::abs(h);
 
   const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
   const double nextAccuracy = std::abs(h * stepSizeScaling);
