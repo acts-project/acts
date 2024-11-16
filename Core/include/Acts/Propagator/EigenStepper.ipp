@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
@@ -259,7 +260,9 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (true) {
-    nStepTrials++;
+    ++nStepTrials;
+    ++state.stepping.statistics.nAttemptedSteps;
+
     auto res = tryRungeKuttaStep(h);
     if (!res.ok()) {
       return res.error();
@@ -267,6 +270,8 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
     if (!!res.value()) {
       break;
     }
+
+    ++state.stepping.statistics.nFailedSteps;
 
     const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
     h *= stepSizeScaling;
@@ -285,6 +290,18 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
       return EigenStepperError::StepSizeAdjustmentFailed;
     }
   }
+
+  state.stepping.pathAccumulated += h;
+  ++state.stepping.nSteps;
+  state.stepping.nStepTrials += nStepTrials;
+
+  ++state.stepping.statistics.nSuccessfulSteps;
+  if (state.options.direction !=
+      Direction::fromScalarZeroAsPositive(initialH)) {
+    ++state.stepping.statistics.nReverseSteps;
+  }
+  state.stepping.statistics.pathLength += h;
+  state.stepping.statistics.absolutePathLength += std::abs(h);
 
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {
@@ -346,10 +363,6 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
         state.stepping.pars.template segment<3>(eFreeDir0);
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
-
-  state.stepping.pathAccumulated += h;
-  ++state.stepping.nSteps;
-  state.stepping.nStepTrials += nStepTrials;
 
   const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
   const double nextAccuracy = std::abs(h * stepSizeScaling);

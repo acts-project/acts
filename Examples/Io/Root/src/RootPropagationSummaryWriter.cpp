@@ -8,19 +8,11 @@
 
 #include "ActsExamples/Io/Root/RootPropagationSummaryWriter.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
-#include <Acts/Geometry/GeometryIdentifier.hpp>
-#include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Propagator/ConstrainedStep.hpp>
-#include <Acts/Surfaces/Surface.hpp>
-#include <Acts/Utilities/Helpers.hpp>
 
 #include <ios>
-#include <memory>
 #include <ostream>
 #include <stdexcept>
 
@@ -77,9 +69,15 @@ RootPropagationSummaryWriter::RootPropagationSummaryWriter(
   m_outputTree->Branch("nMaterials", &m_nMaterials);
   m_outputTree->Branch("nPortals", &m_nPortals);
 
-  m_outputTree->Branch("nSteps", &m_nSteps);
-  m_outputTree->Branch("nStepTrials", &m_nStepTrials);
+  m_outputTree->Branch("nAttemptedSteps", &m_nAttemptedSteps);
+  m_outputTree->Branch("nFailedSteps", &m_nFailedSteps);
+  m_outputTree->Branch("nSuccessfulSteps", &m_nSuccessfulSteps);
+  m_outputTree->Branch("nReverseSteps", &m_nReverseSteps);
   m_outputTree->Branch("pathLength", &m_pathLength);
+  m_outputTree->Branch("absolutePathLength", &m_absolutePathLength);
+
+  m_outputTree->Branch("nRenavigations", &m_nRenavigations);
+  m_outputTree->Branch("nVolumeSwitches", &m_nVolumeSwitches);
 }
 
 RootPropagationSummaryWriter::~RootPropagationSummaryWriter() {
@@ -133,11 +131,6 @@ ProcessCode RootPropagationSummaryWriter::writeT(
     m_pt = static_cast<float>(startParameters.transverseMomentum());
     m_p = static_cast<float>(startParameters.absoluteMomentum());
 
-    // Stepper statistics
-    m_nSteps = static_cast<int>(summary.steps.size());
-    m_nStepTrials = static_cast<int>(summary.nStepTrials);
-    m_pathLength = static_cast<int>(summary.pathLength);
-
     m_nMaterials = 0;
     m_nSensitives = 0;
     m_nPortals = 0;
@@ -160,6 +153,19 @@ ProcessCode RootPropagationSummaryWriter::writeT(
         }
       }
     });
+
+    // Stepper statistics
+    m_nAttemptedSteps = summary.statistics.stepping.nAttemptedSteps;
+    m_nFailedSteps = summary.statistics.stepping.nFailedSteps;
+    m_nSuccessfulSteps = summary.statistics.stepping.nSuccessfulSteps;
+    m_nReverseSteps = summary.statistics.stepping.nReverseSteps;
+    m_pathLength = summary.statistics.stepping.pathLength;
+    m_absolutePathLength = summary.statistics.stepping.absolutePathLength;
+
+    // Navigator statistics
+    m_nRenavigations = summary.statistics.navigation.nRenavigations;
+    m_nVolumeSwitches = summary.statistics.navigation.nVolumeSwitches;
+
     m_outputTree->Fill();
   }
 

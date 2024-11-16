@@ -38,6 +38,7 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
   /// Signed distance over which the parameters were propagated
   double pathLength = 0.;
 
+  /// Propagator statistics
   PropagatorStatistics statistics;
 };
 
