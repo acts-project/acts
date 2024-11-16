@@ -62,7 +62,7 @@ class MaterialSlab {
   void scaleThickness(double scale);
 
   /// Check if the material is valid, i.e. it is finite and not vacuum.
-  bool isValid() const { return m_material.isValid() && (0.0f < m_thickness); }
+  bool isValid() const { return m_material.isValid() && (m_thickness > 0); }
 
   /// Access the (average) material parameters.
   constexpr const Material& material() const { return m_material; }
@@ -75,9 +75,9 @@ class MaterialSlab {
 
  private:
   Material m_material;
-  double m_thickness = 0.0f;
-  double m_thicknessInX0 = 0.0f;
-  double m_thicknessInL0 = 0.0f;
+  double m_thickness = 0;
+  double m_thicknessInX0 = 0;
+  double m_thicknessInL0 = 0;
 
   friend constexpr bool operator==(const MaterialSlab& lhs,
                                    const MaterialSlab& rhs) {
