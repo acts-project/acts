@@ -339,6 +339,9 @@ void Acts::Propagator<S, N>::moveStateToResult(propagator_state_t& state,
                                                result_t& result) const {
   result.tuple() = std::move(state.tuple());
 
+  result.steps = state.steps;
+  result.pathLength = state.pathLength;
+
   result.statistics.stepping = state.stepping.statistics;
   result.statistics.navigation = state.navigation.statistics;
 }
