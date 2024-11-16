@@ -10,8 +10,8 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Helpers.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <cstddef>
 #include <map>
@@ -80,7 +80,7 @@ class DuplicationPlotTool {
   /// @param truthParticle the truth Particle
   /// @param nDuplicatedTracks the number of duplicated tracks
   void fill(DuplicationPlotCache& duplicationPlotCache,
-            const ActsFatras::Particle& truthParticle,
+            const SimParticleState& truthParticle,
             std::size_t nDuplicatedTracks) const;
 
   /// @brief write the duplication plots to file

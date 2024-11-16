@@ -37,6 +37,7 @@
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -187,9 +188,10 @@ ActsExamples::MockupSectorBuilder::buildSector(
   // calculate the phi angles of the vectors
   auto phiA = Acts::VectorHelpers::phi(pointA);
   auto phiB = Acts::VectorHelpers::phi(pointB);
-  auto sectorAngle = M_PI;
+  Acts::ActsScalar sectorAngle = std::numbers::pi_v<Acts::ActsScalar>;
 
-  auto halfPhi = M_PI / mCfg.NumberOfSectors;
+  Acts::ActsScalar halfPhi =
+      std::numbers::pi_v<Acts::ActsScalar> / mCfg.NumberOfSectors;
 
   if (mCfg.NumberOfSectors == 1) {
     halfPhi = (phiB - phiA) / 2;
@@ -222,7 +224,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
   const Acts::Vector3 pos = {0., 0., 0.};
 
   // the transform of the cylinder volume
-  Acts::AngleAxis3 rotZ(M_PI / 2, Acts::Vector3(0., 0., 1));
+  Acts::AngleAxis3 rotZ(std::numbers::pi / 2., Acts::Vector3(0., 0., 1));
   auto transform = Acts::Transform3(Acts::Translation3(pos));
   transform *= rotZ;
 
