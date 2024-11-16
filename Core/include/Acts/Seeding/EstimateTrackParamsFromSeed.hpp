@@ -1,126 +1,27 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <array>
 #include <cmath>
 #include <iostream>
 #include <iterator>
 #include <optional>
-#include <vector>
 
 namespace Acts {
-/// @todo:
-/// 1) Implement the simple Line and Circle fit based on Taubin Circle fit
-/// 2) Implement the simple Line and Parabola fit (from HPS reconstruction by
-/// Robert Johnson)
-
-/// Estimate the track parameters on the xy plane from at least three space
-/// points. It assumes the trajectory projection on the xy plane is a circle,
-/// i.e. the magnetic field is along global z-axis.
-///
-/// The method is based on V. Karimaki NIM A305 (1991) 187-191:
-/// https://doi.org/10.1016/0168-9002(91)90533-V
-/// - no weights are used in Karimaki's fit; d0 is the distance of the point of
-/// closest approach to the origin, 1/R is the curvature, phi is the angle of
-/// the direction propagation (counter clockwise as positive) at the point of
-/// cloest approach.
-///
-/// @tparam spacepoint_iterator_t The type of space point iterator
-///
-/// @param spBegin is the begin iterator for the space points
-/// @param spEnd is the end iterator for the space points
-/// @param logger A logger instance
-///
-/// @return optional bound track parameters with the estimated d0, phi and 1/R
-/// stored with the indices, eBoundLoc0, eBoundPhi and eBoundQOverP,
-/// respectively. The bound parameters with other indices are set to zero.
-template <typename spacepoint_iterator_t>
-std::optional<BoundVector> estimateTrackParamsFromSeed(
-    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-    const Logger& logger = getDummyLogger()) {
-  // Check the number of provided space points
-  std::size_t numSP = std::distance(spBegin, spEnd);
-  if (numSP < 3) {
-    ACTS_ERROR("At least three space points are required.");
-    return std::nullopt;
-  }
-
-  ActsScalar x2m = 0., xm = 0.;
-  ActsScalar xym = 0.;
-  ActsScalar y2m = 0., ym = 0.;
-  ActsScalar r2m = 0., r4m = 0.;
-  ActsScalar xr2m = 0., yr2m = 0.;
-
-  for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
-    if (*it == nullptr) {
-      ACTS_ERROR("Empty space point found. This should not happen.");
-      return std::nullopt;
-    }
-    const auto& sp = *it;
-
-    ActsScalar x = sp->x();
-    ActsScalar y = sp->y();
-    ActsScalar r2 = x * x + y * y;
-    x2m += x * x;
-    xm += x;
-    xym += x * y;
-    y2m += y * y;
-    ym += y;
-    r2m += r2;
-    r4m += r2 * r2;
-    xr2m += x * r2;
-    yr2m += y * r2;
-    numSP++;
-  }
-  x2m = x2m / numSP;
-  xm = xm / numSP;
-  xym = xym / numSP;
-  y2m = y2m / numSP;
-  ym = ym / numSP;
-  r2m = r2m / numSP;
-  r4m = r4m / numSP;
-  xr2m = xr2m / numSP;
-  yr2m = yr2m / numSP;
-
-  ActsScalar Cxx = x2m - xm * xm;
-  ActsScalar Cxy = xym - xm * ym;
-  ActsScalar Cyy = y2m - ym * ym;
-  ActsScalar Cxr2 = xr2m - xm * r2m;
-  ActsScalar Cyr2 = yr2m - ym * r2m;
-  ActsScalar Cr2r2 = r4m - r2m * r2m;
-
-  ActsScalar q1 = Cr2r2 * Cxy - Cxr2 * Cyr2;
-  ActsScalar q2 = Cr2r2 * (Cxx - Cyy) - Cxr2 * Cxr2 + Cyr2 * Cyr2;
-
-  ActsScalar phi = 0.5 * std::atan(2 * q1 / q2);
-  ActsScalar k = (std::sin(phi) * Cxr2 - std::cos(phi) * Cyr2) * (1. / Cr2r2);
-  ActsScalar delta = -k * r2m + std::sin(phi) * xm - std::cos(phi) * ym;
-
-  ActsScalar rho = (2 * k) / (std::sqrt(1 - 4 * delta * k));
-  ActsScalar d0 = (2 * delta) / (1 + std::sqrt(1 - 4 * delta * k));
-
-  // Initialize the bound parameters vector
-  BoundVector params = BoundVector::Zero();
-  params[eBoundLoc0] = d0;
-  params[eBoundPhi] = phi;
-  params[eBoundQOverP] = rho;
-
-  return params;
-}
 
 /// Estimate the full track parameters from three space points
 ///
@@ -241,12 +142,11 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   int sign = ia > 0 ? -1 : 1;
   const ActsScalar R = circleCenter.norm();
   ActsScalar invTanTheta =
-      local2.z() /
-      (2.f * R * std::asin(std::hypot(local2.x(), local2.y()) / (2.f * R)));
+      local2.z() / (2.f * R * std::asin(local2.head<2>().norm() / (2.f * R)));
   // The momentum direction in the new frame (the center of the circle has the
   // coordinate (-1.*A/(2*B), 1./(2*B)))
   ActsScalar A = -circleCenter(0) / circleCenter(1);
-  Vector3 transDirection(1., A, std::hypot(1, A) * invTanTheta);
+  Vector3 transDirection(1., A, fastHypot(1, A) * invTanTheta);
   // Transform it back to the original frame
   Vector3 direction = rotation * transDirection.normalized();
 
@@ -276,7 +176,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // momentum on the transverse plane of the new frame)
   ActsScalar qOverPt = sign * (UnitConstants::m) / (0.3 * bFieldInTesla * R);
   // The estimated q/p in [GeV/c]^-1
-  params[eBoundQOverP] = qOverPt / std::hypot(1., invTanTheta);
+  params[eBoundQOverP] = qOverPt / fastHypot(1., invTanTheta);
 
   if (params.hasNaN()) {
     ACTS_ERROR(
@@ -287,5 +187,42 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   }
   return params;
 }
+
+/// Configuration for the estimation of the covariance matrix of the track
+/// parameters with `estimateTrackParamCovariance`.
+struct EstimateTrackParamCovarianceConfig {
+  /// The initial sigmas for the track parameters
+  BoundVector initialSigmas = {1. * UnitConstants::mm,
+                               1. * UnitConstants::mm,
+                               1. * UnitConstants::degree,
+                               1. * UnitConstants::degree,
+                               1. * UnitConstants::e / UnitConstants::GeV,
+                               1. * UnitConstants::ns};
+
+  /// The initial relative uncertainty of the q/pt
+  double initialSigmaPtRel = 0.1;
+
+  /// The inflation factors for the variances of the track parameters
+  BoundVector initialVarInflation = {1., 1., 1., 1., 1., 1.};
+  /// The inflation factor for time uncertainty if the time parameter was not
+  /// estimated
+  double noTimeVarInflation = 100.;
+};
+
+/// Estimate the covariance matrix of the given track parameters based on the
+/// provided configuration. The assumption is that we can model the uncertainty
+/// of the track parameters as a diagonal matrix with the provided initial
+/// sigmas. The inflation factors are used to inflate the initial variances
+/// based on the provided configuration. The uncertainty of q/p is estimated
+/// based on the relative uncertainty of the q/pt and the theta uncertainty.
+///
+/// @param config is the configuration for the estimation
+/// @param params is the track parameters
+/// @param hasTime is true if the track parameters have time
+///
+/// @return the covariance matrix of the track parameters
+BoundMatrix estimateTrackParamCovariance(
+    const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
+    bool hasTime);
 
 }  // namespace Acts

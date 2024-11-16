@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -30,6 +30,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <vector>
 
@@ -52,7 +53,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     cfg.position = {i * UnitConstants::m, 0., 0.};
 
     // Rotation of the surfaces
-    double rotationAngle = M_PI * 0.5;
+    double rotationAngle = std::numbers::pi / 2.;
     Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
     Vector3 yPos(0., 1., 0.);
     Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     cfg.position = {-i * UnitConstants::m, 0., 0.};
 
     // Rotation of the surfaces
-    double rotationAngle = M_PI * 0.5;
+    double rotationAngle = std::numbers::pi / 2.;
     Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
     Vector3 yPos(0., 1., 0.);
     Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
@@ -226,13 +227,16 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   std::unique_ptr<const TrackingGeometry> detector =
       tgb.trackingGeometry(tgContext);
   BOOST_CHECK_EQUAL(
-      detector->lowestTrackingVolume(tgContext, Vector3(1., 0., 0.))
+      detector->lowestTrackingVolume(tgContext, Vector3(1_mm, 0_mm, 0_mm))
           ->volumeName(),
       volumeConfig.name);
   BOOST_CHECK_EQUAL(
-      detector->lowestTrackingVolume(tgContext, Vector3(-1., 0., 0.))
+      detector->lowestTrackingVolume(tgContext, Vector3(-1_mm, 0_mm, 0_mm))
           ->volumeName(),
       volumeConfig2.name);
+  BOOST_CHECK_EQUAL(
+      detector->lowestTrackingVolume(tgContext, Vector3(1000_m, 0_m, 0_m)),
+      nullptr);
 }
 
 }  // namespace Acts::Test

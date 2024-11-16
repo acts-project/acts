@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -24,6 +24,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <vector>
 
@@ -66,9 +67,9 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
   lsConfig.surfacesProvider = endcapSurfaces;
-  lsConfig.binnings = {ProtoBinning(Acts::BinningValue::binPhi,
-                                    Acts::AxisBoundaryType::Closed, -M_PI, M_PI,
-                                    22u, 1u)};
+  lsConfig.binnings = {
+      ProtoBinning(Acts::BinningValue::binPhi, Acts::AxisBoundaryType::Closed,
+                   -std::numbers::pi, std::numbers::pi, 22u, 1u)};
 
   auto endcapBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("EndcapBuilder", Logging::VERBOSE));
@@ -189,9 +190,9 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
       Acts::Experimental::ProtoBinning{Acts::BinningValue::binZ,
                                        Acts::AxisBoundaryType::Bound, -480.,
                                        480., 14u, 1u},
-      Acts::Experimental::ProtoBinning(Acts::BinningValue::binPhi,
-                                       Acts::AxisBoundaryType::Closed, -M_PI,
-                                       M_PI, 32u, 1u)};
+      Acts::Experimental::ProtoBinning(
+          Acts::BinningValue::binPhi, Acts::AxisBoundaryType::Closed,
+          -std::numbers::pi, std::numbers::pi, 32u, 1u)};
 
   auto barrelBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("BarrelBuilder", Logging::VERBOSE));

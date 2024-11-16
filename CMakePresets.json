@@ -46,7 +46,7 @@
             "inherits": "common",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_FLAGS": "-Werror",
+                "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
                 "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_BENCHMARKS": "ON",
@@ -70,7 +70,8 @@
                 "ACTS_BUILD_EXAMPLES_EXATRKX": "OFF",
                 "ACTS_BUILD_EXAMPLES_GEANT4": "ON",
                 "ACTS_BUILD_EXAMPLES_HEPMC3": "ON",
-                "ACTS_BUILD_EXAMPLES_PYTHIA8": "ON"
+                "ACTS_BUILD_EXAMPLES_PYTHIA8": "ON",
+                "ACTS_BUILD_EXAMPLES_HASHING": "ON"
             }
         },
         {
@@ -95,7 +96,6 @@
             "displayName": "GitLab-CI",
             "inherits": "ci-common",
             "cacheVariables": {
-                "ACTS_BUILD_PLUGIN_ACTSVG": "OFF",
                 "ACTS_BUILD_ODD": "OFF",
                 "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "OFF",
                 "ACTS_RUN_CLANG_TIDY": "ON"

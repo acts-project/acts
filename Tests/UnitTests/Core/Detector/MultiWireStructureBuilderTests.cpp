@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <iterator>
 #include <memory>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -47,7 +48,7 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
   // The transform of the 1st surface
   Vector3 ipos = {-0.5 * nSurfacesX * 2 * radius + radius,
                   -0.5 * nSurfacesY * 2 * radius + radius, 0.};
-  AngleAxis3 rotation(M_PI / 2, Acts::Vector3(0., 1., 0.));
+  AngleAxis3 rotation(std::numbers::pi / 2., Acts::Vector3(0., 1., 0.));
 
   Vector3 pos = ipos;
 

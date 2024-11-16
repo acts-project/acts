@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -43,6 +43,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <tuple>
 #include <utility>
@@ -371,6 +372,9 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
   BoundVector paramVecClose = BoundVector::Zero();
   paramVecClose[eBoundLoc0] = d0;
   paramVecClose[eBoundLoc1] = l0;
+  paramVecClose[eBoundPhi] = 0;
+  paramVecClose[eBoundTheta] = std::numbers::pi / 2;
+  paramVecClose[eBoundQOverP] = 0;
   paramVecClose[eBoundTime] = vt0 + sgnClose * timeDiffClose;
 
   BoundVector paramVecFar = paramVecClose;

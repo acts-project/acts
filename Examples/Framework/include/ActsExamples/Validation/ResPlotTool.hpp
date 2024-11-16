@@ -1,18 +1,18 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Helpers.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <map>
 #include <memory>
@@ -100,7 +100,7 @@ class ResPlotTool {
   /// @param truthParticle the truth particle
   /// @param fittedParamters the fitted parameters at perigee surface
   void fill(ResPlotCache& resPlotCache, const Acts::GeometryContext& gctx,
-            const ActsFatras::Particle& truthParticle,
+            const SimParticleState& truthParticle,
             const Acts::BoundTrackParameters& fittedParamters) const;
 
   /// @brief extract the details of the residual/pull plots and fill details

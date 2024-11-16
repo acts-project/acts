@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <utility>
 
 namespace Acts::Test {
@@ -23,9 +24,9 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_CASE(alignment_helper_test) {
   // (a) Test with non-identity rotation matrix
   // Rotation angle parameters
-  const double alpha = M_PI;
-  const double beta = 0;
-  const double gamma = M_PI / 2;
+  const double alpha = std::numbers::pi;
+  const double beta = 0.;
+  const double gamma = std::numbers::pi / 2.;
   // rotation around x axis
   AngleAxis3 rotX(alpha, Vector3(1., 0., 0.));
   // rotation around y axis

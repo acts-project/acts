@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
@@ -75,6 +75,7 @@ ACTS_DOES_NOT_COMPILE_SUITE_BEGIN(BuildFromConstRef)
   (void)t;
 
   ConstProxyAccessor<unsigned int> caccNMeasuements("nMeasurements");
+  static_cast<void>(caccNMeasuements);  // suppressed unused warning
   ACTS_DOES_NOT_COMPILE_BEGIN(ConstAccessorMutate)
   caccNMeasuements(t) = 66;
   ACTS_DOES_NOT_COMPILE_END()

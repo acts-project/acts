@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 
@@ -13,10 +13,9 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Root/RootUtility.hpp"
+#include "ActsFatras/EventData/ParticleOutcome.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
-#include <algorithm>
-#include <cstdint>
 #include <iostream>
 #include <stdexcept>
 
@@ -64,6 +63,12 @@ RootParticleReader::RootParticleReader(const RootParticleReader::Config& config,
   m_inputChain->SetBranchAddress("generation", &m_generation);
   m_inputChain->SetBranchAddress("sub_particle", &m_subParticle);
 
+  m_inputChain->SetBranchAddress("e_loss", &m_eLoss);
+  m_inputChain->SetBranchAddress("total_x0", &m_pathInX0);
+  m_inputChain->SetBranchAddress("total_l0", &m_pathInL0);
+  m_inputChain->SetBranchAddress("number_of_hits", &m_numberOfHits);
+  m_inputChain->SetBranchAddress("outcome", &m_outcome);
+
   auto path = m_cfg.filePath;
 
   // add file to the input chain
@@ -109,6 +114,12 @@ RootParticleReader::~RootParticleReader() {
   delete m_particle;
   delete m_generation;
   delete m_subParticle;
+
+  delete m_eLoss;
+  delete m_pathInX0;
+  delete m_pathInL0;
+  delete m_numberOfHits;
+  delete m_outcome;
 }
 
 ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
@@ -136,18 +147,30 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
   for (unsigned int i = 0; i < nParticles; i++) {
     SimParticle p;
 
-    p.setProcess(static_cast<ActsFatras::ProcessType>((*m_process)[i]));
-    p.setPdg(static_cast<Acts::PdgParticle>((*m_particleType)[i]));
-    p.setCharge((*m_q)[i] * Acts::UnitConstants::e);
-    p.setMass((*m_m)[i] * Acts::UnitConstants::GeV);
-    p.setParticleId((*m_particleId)[i]);
-    p.setPosition4((*m_vx)[i] * Acts::UnitConstants::mm,
-                   (*m_vy)[i] * Acts::UnitConstants::mm,
-                   (*m_vz)[i] * Acts::UnitConstants::mm,
-                   (*m_vt)[i] * Acts::UnitConstants::mm);
+    p.setProcess(static_cast<ActsFatras::ProcessType>((*m_process).at(i)));
+    p.setPdg(static_cast<Acts::PdgParticle>((*m_particleType).at(i)));
+    p.setCharge((*m_q).at(i) * Acts::UnitConstants::e);
+    p.setMass((*m_m).at(i) * Acts::UnitConstants::GeV);
+    p.setParticleId((*m_particleId).at(i));
+
+    SimParticleState& initialState = p.initial();
+
+    initialState.setPosition4((*m_vx).at(i) * Acts::UnitConstants::mm,
+                              (*m_vy).at(i) * Acts::UnitConstants::mm,
+                              (*m_vz).at(i) * Acts::UnitConstants::mm,
+                              (*m_vt).at(i) * Acts::UnitConstants::mm);
     // NOTE: direction is normalized inside `setDirection`
-    p.setDirection((*m_px)[i], (*m_py)[i], (*m_pz)[i]);
-    p.setAbsoluteMomentum((*m_p)[i] * Acts::UnitConstants::GeV);
+    initialState.setDirection((*m_px).at(i), (*m_py).at(i), (*m_pz).at(i));
+    initialState.setAbsoluteMomentum((*m_p).at(i) * Acts::UnitConstants::GeV);
+
+    SimParticleState& finalState = p.final();
+
+    // TODO eloss cannot be read since we need the final momentum
+    finalState.setMaterialPassed((*m_pathInX0).at(i) * Acts::UnitConstants::mm,
+                                 (*m_pathInL0).at(i) * Acts::UnitConstants::mm);
+    finalState.setNumberOfHits((*m_numberOfHits).at(i));
+    finalState.setOutcome(
+        static_cast<ActsFatras::ParticleOutcome>((*m_outcome).at(i)));
 
     particles.insert(p);
   }

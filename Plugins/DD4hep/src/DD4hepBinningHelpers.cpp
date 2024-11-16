@@ -1,12 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
+
+#include <numbers>
 
 std::vector<Acts::Experimental::ProtoBinning>
 Acts::DD4hepBinningHelpers::convertBinning(
@@ -36,14 +38,19 @@ Acts::DD4hepBinningHelpers::convertBinning(
               Experimental::ProtoBinning(bVal, bType, nBins, nExpansion));
         } else {
           // Equidistant binning
-          ActsScalar minDefault = bVal == BinningValue::binPhi ? -M_PI : 0.;
-          ActsScalar maxDefault = bVal == BinningValue::binPhi ? M_PI : 0.;
+          ActsScalar minDefault = bVal == BinningValue::binPhi
+                                      ? -std::numbers::pi_v<ActsScalar>
+                                      : 0.;
+          ActsScalar maxDefault = bVal == BinningValue::binPhi
+                                      ? std::numbers::pi_v<ActsScalar>
+                                      : 0.;
           auto min = getParamOr<ActsScalar>(bname + "_" + ab + "_min",
                                             dd4hepElement, minDefault);
           auto max = getParamOr<ActsScalar>(bname + "_" + ab + "_max",
                                             dd4hepElement, maxDefault);
           // Check for closed phi binning
-          if (bVal == BinningValue::binPhi && (max - min) > 1.9 * M_PI) {
+          if (bVal == BinningValue::binPhi &&
+              (max - min) > 1.9 * std::numbers::pi) {
             bType = Acts::AxisBoundaryType::Closed;
           }
           protoBinnings.push_back(Experimental::ProtoBinning(
@@ -58,7 +65,7 @@ Acts::DD4hepBinningHelpers::convertBinning(
         }
         // Check for closed phi binning
         if (bVal == BinningValue::binPhi &&
-            (edges.back() - edges.front()) > 1.9 * M_PI) {
+            (edges.back() - edges.front()) > 1.9 * std::numbers::pi) {
           bType = Acts::AxisBoundaryType::Closed;
         }
         protoBinnings.push_back(

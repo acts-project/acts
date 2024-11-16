@@ -1,23 +1,25 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+
+#include <numbers>
 
 template <typename propagator_t>
 template <typename parameters_t, typename propagator_options_t>
 auto Acts::RiddersPropagator<propagator_t>::propagate(
     const parameters_t& start, const propagator_options_t& options) const
-    -> Result<action_list_t_result_t<
-        CurvilinearTrackParameters,
-        typename propagator_options_t::action_list_type>> {
+    -> Result<
+        actor_list_t_result_t<CurvilinearTrackParameters,
+                              typename propagator_options_t::actor_list_type>> {
   using ThisResult = Result<
-      action_list_t_result_t<CurvilinearTrackParameters,
-                             typename propagator_options_t::action_list_type>>;
+      actor_list_t_result_t<CurvilinearTrackParameters,
+                            typename propagator_options_t::actor_list_type>>;
 
   // Remove the covariance from our start parameters in order to skip jacobian
   // transport for the nominal propagation
@@ -55,11 +57,10 @@ template <typename parameters_t, typename propagator_options_t>
 auto Acts::RiddersPropagator<propagator_t>::propagate(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options) const
-    -> Result<action_list_t_result_t<
-        BoundTrackParameters,
-        typename propagator_options_t::action_list_type>> {
-  using ThisResult = Result<action_list_t_result_t<
-      BoundTrackParameters, typename propagator_options_t::action_list_type>>;
+    -> Result<actor_list_t_result_t<
+        BoundTrackParameters, typename propagator_options_t::actor_list_type>> {
+  using ThisResult = Result<actor_list_t_result_t<
+      BoundTrackParameters, typename propagator_options_t::actor_list_type>>;
 
   // Remove the covariance from our start parameters in order to skip jacobian
   // transport for the nominal propagation
@@ -151,8 +152,8 @@ bool Acts::RiddersPropagator<propagator_t>::inconsistentDerivativesOnDisc(
     for (unsigned int j = 0; j < derivatives.size(); j++) {
       // If there is at least one with a similar angle then it seems to work
       // properly
-      if (i != j &&
-          std::abs(derivatives[i](1) - derivatives[j](1)) < 0.5 * M_PI) {
+      if (i != j && std::abs(derivatives[i](1) - derivatives[j](1)) <
+                        std::numbers::pi / 2.) {
         jumpedAngle = false;
         break;
       }
@@ -180,8 +181,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleParameter(
     // Treatment for theta
     if (param == eBoundTheta) {
       const double current_theta = start.template get<eBoundTheta>();
-      if (current_theta + h > M_PI) {
-        h = M_PI - current_theta;
+      if (current_theta + h > std::numbers::pi) {
+        h = std::numbers::pi - current_theta;
       }
       if (current_theta + h < 0) {
         h = -current_theta;
@@ -203,10 +204,14 @@ Acts::RiddersPropagator<propagator_t>::wiggleParameter(
     if (param == eBoundPhi) {
       double phi0 = nominal(Acts::eBoundPhi);
       double phi1 = r.endParameters->parameters()(Acts::eBoundPhi);
-      if (std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0)) {
-        derivatives.back()[Acts::eBoundPhi] = (phi1 + 2. * M_PI - phi0) / h;
-      } else if (std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0)) {
-        derivatives.back()[Acts::eBoundPhi] = (phi1 - 2. * M_PI - phi0) / h;
+      if (std::abs(phi1 + 2. * std::numbers::pi - phi0) <
+          std::abs(phi1 - phi0)) {
+        derivatives.back()[Acts::eBoundPhi] =
+            (phi1 + 2. * std::numbers::pi - phi0) / h;
+      } else if (std::abs(phi1 - 2. * std::numbers::pi - phi0) <
+                 std::abs(phi1 - phi0)) {
+        derivatives.back()[Acts::eBoundPhi] =
+            (phi1 - 2. * std::numbers::pi - phi0) / h;
       }
     }
   }

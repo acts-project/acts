@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -17,6 +17,7 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -33,12 +34,14 @@ struct OrientedSurface {
 
 // Planar definitions to help construct the boundary surfaces
 static const Transform3 s_planeXY = Transform3::Identity();
-static const Transform3 s_planeYZ = AngleAxis3(0.5 * M_PI, Vector3::UnitY()) *
-                                    AngleAxis3(0.5 * M_PI, Vector3::UnitZ()) *
-                                    Transform3::Identity();
-static const Transform3 s_planeZX = AngleAxis3(-0.5 * M_PI, Vector3::UnitX()) *
-                                    AngleAxis3(-0.5 * M_PI, Vector3::UnitZ()) *
-                                    Transform3::Identity();
+static const Transform3 s_planeYZ =
+    AngleAxis3(std::numbers::pi / 2., Vector3::UnitY()) *
+    AngleAxis3(std::numbers::pi / 2., Vector3::UnitZ()) *
+    Transform3::Identity();
+static const Transform3 s_planeZX =
+    AngleAxis3(-std::numbers::pi / 2., Vector3::UnitX()) *
+    AngleAxis3(-std::numbers::pi / 2., Vector3::UnitZ()) *
+    Transform3::Identity();
 
 /// @class VolumeBounds
 ///
@@ -57,15 +60,18 @@ class VolumeBounds {
   // @enum BoundsType
   /// This is nested to the VolumeBounds, as also SurfaceBounds will have
   /// Bounds Type.
-  enum BoundsType : int {
-    eCone = 0,
-    eCuboid = 1,
-    eCutoutCylinder = 2,
-    eCylinder = 3,
-    eGenericCuboid = 4,
-    eTrapezoid = 5,
-    eOther = 6
+  enum class BoundsType {
+    eCone,
+    eCuboid,
+    eCutoutCylinder,
+    eCylinder,
+    eGenericCuboid,
+    eTrapezoid,
+    eOther,
+
   };
+
+  using enum BoundsType;
 
   /// Static member to get the name of the BoundsType
   static const std::vector<std::string> s_boundsTypeNames;
@@ -167,5 +173,7 @@ inline bool operator==(const VolumeBounds& lhs, const VolumeBounds& rhs) {
   }
   return (lhs.type() == rhs.type()) && (lhs.values() == rhs.values());
 }
+
+std::ostream& operator<<(std::ostream& sl, const VolumeBounds::BoundsType& bt);
 
 }  // namespace Acts

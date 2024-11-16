@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -18,10 +18,10 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/detail/Subspace.hpp"
 
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 
 namespace {
 
@@ -41,9 +41,7 @@ BOOST_AUTO_TEST_SUITE(TrackFittingMbfSmoother)
 BOOST_AUTO_TEST_CASE(Smooth) {
   VectorMultiTrajectory traj;
 
-  auto projector = detail::FixedSizeSubspace<eBoundSize, 2>(
-                       std::array{eBoundLoc0, eBoundLoc1})
-                       .projector<double>();
+  std::array<BoundIndices, 2> projector{eBoundLoc0, eBoundLoc1};
 
   // Make dummy track parameter
   CovarianceMatrix covTrk;
@@ -55,15 +53,15 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   auto ts = traj.getTrackState(ts_idx);
   ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
 
-  ts.predicted() << 0.3, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
+  ts.predicted() << 0.3, 0.5, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;
 
-  ts.setProjector(projector);
   ts.allocateCalibrated(2);
   ts.calibrated<2>() << 0.351, 0.473;
   ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
+  ts.setSubspaceIndices<2>(projector);
 
-  ts.filtered() << 0.301, 0.503, 0.5 * M_PI, 0., 1 / 100., 0.;
+  ts.filtered() << 0.301, 0.503, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;
   ts.pathLength() = 1.;
   ts.jacobian().setIdentity();
@@ -72,15 +70,15 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   ts = traj.getTrackState(ts_idx);
   ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
 
-  ts.predicted() << 0.2, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
+  ts.predicted() << 0.2, 0.5, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;
 
-  ts.setProjector(projector);
   ts.allocateCalibrated(2);
   ts.calibrated<2>() << 0.351, 0.473;
   ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
+  ts.setSubspaceIndices<2>(projector);
 
-  ts.filtered() << 0.27, 0.53, 0.5 * M_PI, 0., 1 / 100., 0.;
+  ts.filtered() << 0.27, 0.53, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;
   ts.pathLength() = 2.;
   ts.jacobian().setIdentity();
@@ -89,15 +87,15 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   ts = traj.getTrackState(ts_idx);
   ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
 
-  ts.predicted() << 0.35, 0.49, 0.5 * M_PI, 0., 1 / 100., 0.;
+  ts.predicted() << 0.35, 0.49, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;
 
-  ts.setProjector(projector);
   ts.allocateCalibrated(2);
   ts.calibrated<2>() << 0.351, 0.473;
   ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
+  ts.setSubspaceIndices<2>(projector);
 
-  ts.filtered() << 0.33, 0.43, 0.5 * M_PI, 0., 1 / 100., 0.;
+  ts.filtered() << 0.33, 0.43, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;
   ts.pathLength() = 3.;
   ts.jacobian().setIdentity();

@@ -1,15 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
@@ -36,28 +35,22 @@ namespace ActsExamples {
 EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
     : m_cfg(config),
       m_logger(Acts::getDefaultLogger("EDM4hepParticleReader", level)) {
-  if (m_cfg.outputParticlesInitial.empty()) {
-    throw std::invalid_argument("Missing output collection initial particles");
-  }
-
-  if (m_cfg.outputParticlesFinal.empty()) {
-    throw std::invalid_argument("Missing output collection final particles");
-  }
-
   if (m_cfg.outputParticlesGenerator.empty()) {
     throw std::invalid_argument(
         "Missing output collection generator particles");
   }
-
+  if (m_cfg.outputParticlesSimulation.empty()) {
+    throw std::invalid_argument(
+        "Missing output collection simulated particles");
+  }
   if (m_cfg.outputSimHits.empty()) {
     throw std::invalid_argument("Missing output collection sim hits");
   }
 
   m_eventsRange = std::make_pair(0, reader().getEntries("events"));
 
-  m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
-  m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
   m_outputParticlesGenerator.initialize(m_cfg.outputParticlesGenerator);
+  m_outputParticlesSimulation.initialize(m_cfg.outputParticlesSimulation);
   m_outputSimHits.initialize(m_cfg.outputSimHits);
 
   m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
@@ -119,9 +112,9 @@ std::string plabel(const SimParticle& particle) {
 
 }  // namespace
 
-void EDM4hepReader::graphviz(
-    std::ostream& os, const SimParticleContainer::sequence_type& particles,
-    const ParentRelationship& parents) const {
+void EDM4hepReader::graphviz(std::ostream& os,
+                             const std::vector<SimParticle>& particles,
+                             const ParentRelationship& parents) const {
   os << "digraph Event {\n";
 
   std::set<unsigned int> primaryVertices;
@@ -164,7 +157,7 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
 
   ACTS_DEBUG("Reading EDM4hep inputs");
 
-  SimParticleContainer::sequence_type unordered;
+  std::vector<SimParticle> unorderedParticlesInitial;
 
   // Read particles from the input file
   // Find particles without parents and group them by vtx position to find
@@ -181,11 +174,9 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     vtxPos /= Acts::UnitConstants::mm;
 
     // linear search for vector
-    auto it = std::find_if(
-        primaryVertices.begin(), primaryVertices.end(),
-        [&vtxPos](
-            const std::pair<Acts::Vector3, std::vector<edm4hep::MCParticle>>&
-                pair) { return pair.first == vtxPos; });
+    auto it = std::ranges::find_if(primaryVertices, [&vtxPos](const auto& v) {
+      return v.first == vtxPos;
+    });
 
     if (it == primaryVertices.end()) {
       ACTS_DEBUG("Found primary vertex at " << vtx.x << ", " << vtx.y << ", "
@@ -214,13 +205,14 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     std::size_t nParticles = 0;
     std::size_t nSecondaryVertices = 0;
     std::size_t maxGen = 0;
-    auto startSize = unordered.size();
+    auto startSize = unorderedParticlesInitial.size();
     for (const auto& inParticle : particles) {
       nParticles += 1;
-      SimParticle particle{EDM4hepUtil::readParticle(inParticle)};
-      particle.setParticleId(SimBarcode{}
-                                 .setParticle(nParticles)
-                                 .setVertexPrimary(nPrimaryVertices));
+      SimParticle particle =
+          EDM4hepUtil::readParticle(inParticle)
+              .withParticleId(SimBarcode{}
+                                  .setParticle(nParticles)
+                                  .setVertexPrimary(nPrimaryVertices));
       ACTS_VERBOSE("+ add particle " << particle);
       ACTS_VERBOSE("  - at " << particle.position().transpose());
       ACTS_VERBOSE("  - createdInSim: " << inParticle.isCreatedInSimulation());
@@ -231,24 +223,28 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
                                     << inParticle.getEndpoint().y << ", "
                                     << inParticle.getEndpoint().z);
       const auto pid = particle.particleId();
-      unordered.push_back(std::move(particle));
-      edm4hepParticleMap[inParticle.getObjectID().index] = unordered.size() - 1;
-      processChildren(inParticle, pid, unordered, parentRelationship,
-                      edm4hepParticleMap, nSecondaryVertices, maxGen);
+      unorderedParticlesInitial.push_back(std::move(particle));
+      edm4hepParticleMap[inParticle.getObjectID().index] =
+          unorderedParticlesInitial.size() - 1;
+      processChildren(inParticle, pid, unorderedParticlesInitial,
+                      parentRelationship, edm4hepParticleMap,
+                      nSecondaryVertices, maxGen);
     }
     ACTS_VERBOSE("Primary vertex complete, produced "
-                 << (unordered.size() - startSize) << " particles and "
-                 << nSecondaryVertices << " secondary vertices in " << maxGen
-                 << " generations");
-    setSubParticleIds(std::next(unordered.begin(), startSize), unordered.end());
+                 << (unorderedParticlesInitial.size() - startSize)
+                 << " particles and " << nSecondaryVertices
+                 << " secondary vertices in " << maxGen << " generations");
+    setSubParticleIds(std::next(unorderedParticlesInitial.begin(), startSize),
+                      unorderedParticlesInitial.end());
   }
 
-  ACTS_DEBUG("Found " << unordered.size() << " particles");
+  ACTS_DEBUG("Found " << unorderedParticlesInitial.size() << " particles");
 
   // @TODO: Order simhits by time
 
-  SimParticleContainer particlesFinal;
   SimParticleContainer particlesGenerator;
+  SimParticleContainer particlesSimulated;
+
   for (const auto& inParticle : mcParticleCollection) {
     auto particleIt = edm4hepParticleMap.find(inParticle.getObjectID().index);
     if (particleIt == edm4hepParticleMap.end()) {
@@ -257,11 +253,11 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
       continue;
     }
     const std::size_t index = particleIt->second;
-    const auto& particleInitial = unordered.at(index);
+    const auto& particleInitial = unorderedParticlesInitial.at(index);
     if (!inParticle.isCreatedInSimulation()) {
       particlesGenerator.insert(particleInitial);
     }
-    SimParticle particleFinal = particleInitial;
+    SimParticle particleSimulated = particleInitial;
 
     float time = inParticle.getTime() * Acts::UnitConstants::ns;
     for (const auto& daughter : inParticle.getDaughters()) {
@@ -271,7 +267,7 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
       }
     }
 
-    particleFinal.setPosition4(
+    particleSimulated.final().setPosition4(
         inParticle.getEndpoint()[0] * Acts::UnitConstants::mm,
         inParticle.getEndpoint()[1] * Acts::UnitConstants::mm,
         inParticle.getEndpoint()[2] * Acts::UnitConstants::mm, time);
@@ -279,28 +275,24 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     Acts::Vector3 momentumFinal = {inParticle.getMomentumAtEndpoint()[0],
                                    inParticle.getMomentumAtEndpoint()[1],
                                    inParticle.getMomentumAtEndpoint()[2]};
-    particleFinal.setDirection(momentumFinal.normalized());
-    particleFinal.setAbsoluteMomentum(momentumFinal.norm());
+    particleSimulated.final().setDirection(momentumFinal.normalized());
+    particleSimulated.final().setAbsoluteMomentum(momentumFinal.norm());
 
     ACTS_VERBOSE("- Updated particle initial -> final, position: "
                  << particleInitial.fourPosition().transpose() << " -> "
-                 << particleFinal.fourPosition().transpose());
+                 << particleSimulated.final().fourPosition().transpose());
     ACTS_VERBOSE("                                     momentum: "
                  << particleInitial.fourMomentum().transpose() << " -> "
-                 << particleFinal.fourMomentum().transpose());
+                 << particleSimulated.final().fourMomentum().transpose());
 
-    particlesFinal.insert(particleFinal);
+    particlesSimulated.insert(particleSimulated);
   }
-
-  // Write ordered particles container to the EventStore
-  SimParticleContainer particlesInitial;
-  particlesInitial.insert(unordered.begin(), unordered.end());
 
   if (!m_cfg.graphvizOutput.empty()) {
     std::string path = perEventFilepath(m_cfg.graphvizOutput, "particles.dot",
                                         ctx.eventNumber);
     std::ofstream dot(path);
-    graphviz(dot, unordered, parentRelationship);
+    graphviz(dot, unorderedParticlesInitial, parentRelationship);
   }
 
   SimHitContainer simHits;
@@ -322,7 +314,7 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
                   "SimHit has source particle that we did not see before");
               return SimBarcode{};
             }
-            const auto& particle = unordered.at(it->second);
+            const auto& particle = unorderedParticlesInitial.at(it->second);
             ACTS_VERBOSE("- " << inParticle.getObjectID().index << " -> "
                               << particle.particleId());
             return particle.particleId();
@@ -396,10 +388,9 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
         }
       }
 
-      std::sort(hitIndices.begin(), hitIndices.end(),
-                [&](std::size_t a, std::size_t b) {
-                  return simHits.nth(a)->time() < simHits.nth(b)->time();
-                });
+      std::ranges::sort(hitIndices, {}, [&simHits](std::size_t h) {
+        return simHits.nth(h)->time();
+      });
 
       for (std::size_t i = 0; i < hitIndices.size(); ++i) {
         auto& hit = *simHits.nth(hitIndices[i]);
@@ -419,9 +410,8 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     }
   }
 
-  m_outputParticlesInitial(ctx, std::move(particlesInitial));
-  m_outputParticlesFinal(ctx, std::move(particlesFinal));
   m_outputParticlesGenerator(ctx, std::move(particlesGenerator));
+  m_outputParticlesSimulation(ctx, std::move(particlesSimulated));
 
   m_outputSimHits(ctx, std::move(simHits));
 
@@ -430,8 +420,7 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
 
 void EDM4hepReader::processChildren(
     const edm4hep::MCParticle& inParticle, SimBarcode parentId,
-    SimParticleContainer::sequence_type& particles,
-    ParentRelationship& parentRelationship,
+    std::vector<SimParticle>& particles, ParentRelationship& parentRelationship,
     std::unordered_map<int, std::size_t>& particleMap,
     std::size_t& nSecondaryVertices, std::size_t& maxGen) const {
   constexpr auto indent = [&](std::size_t n) {
@@ -503,9 +492,8 @@ void EDM4hepReader::processChildren(
   }
 }
 
-void EDM4hepReader::setSubParticleIds(
-    const SimParticleContainer::sequence_type::iterator& begin,
-    const SimParticleContainer::sequence_type::iterator& end) {
+void EDM4hepReader::setSubParticleIds(std::vector<SimParticle>::iterator begin,
+                                      std::vector<SimParticle>::iterator end) {
   std::vector<std::size_t> numByGeneration;
   numByGeneration.reserve(10);
 

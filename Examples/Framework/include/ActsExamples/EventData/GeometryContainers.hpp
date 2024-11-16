@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -20,6 +20,7 @@
 #include <iostream>
 #include <utility>
 
+#include <boost/bimap.hpp>
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
 
@@ -228,5 +229,10 @@ struct GeometryIdMultisetAccessor {
   // pointer to the container
   const Container* container = nullptr;
 };
+
+/// A map that allows mapping back and forth between ACTS and Athena Geometry
+/// Ids
+using GeometryIdMapActsAthena =
+    boost::bimap<std::uint64_t, Acts::GeometryIdentifier>;
 
 }  // namespace ActsExamples

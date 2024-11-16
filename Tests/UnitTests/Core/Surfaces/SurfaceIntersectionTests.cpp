@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -23,6 +23,7 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <utility>
 
 using namespace Acts::UnitLiterals;
@@ -42,8 +43,8 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 /// This tests the intersection with cylinders
 /// and looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
-  double radius = 1_m;
-  double halfZ = 10_m;
+  const double radius = 1_m;
+  const double halfZ = 10_m;
 
   auto testCylinderIntersection = [&](const Transform3& transform) -> void {
     // A cylinder created aligned with a provided transform
@@ -68,14 +69,14 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
                                               BoundaryTolerance::None());
 
     // Check the validity of the intersection
-    BOOST_CHECK(aIntersection[0]);
+    BOOST_CHECK(aIntersection[0].isValid());
     // The status of this one should be on surface
     BOOST_CHECK_EQUAL(aIntersection[0].status(),
                       Intersection3D::Status::reachable);
     // The intersection is at 2 meter distance
     CHECK_CLOSE_ABS(aIntersection[0].pathLength(), -2_m, s_onSurfaceTolerance);
     // There MUST be a second solution
-    BOOST_CHECK(aIntersection[1]);
+    BOOST_CHECK(aIntersection[1].isValid());
     // The other intersection MUST be reachable
     BOOST_CHECK_EQUAL(aIntersection[1].status(),
                       Intersection3D::Status::onSurface);
@@ -85,12 +86,12 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
                                               BoundaryTolerance::None());
 
     // Check the validity of the intersection
-    BOOST_CHECK(cIntersection[0]);
+    BOOST_CHECK(cIntersection[0].isValid());
     // The status of this one MUST be reachable
     BOOST_CHECK_EQUAL(cIntersection[0].status(),
                       Intersection3D::Status::reachable);
     // There MUST be a second solution
-    BOOST_CHECK(cIntersection[1]);
+    BOOST_CHECK(cIntersection[1].isValid());
     // The other intersection MUST be reachable
     BOOST_CHECK_EQUAL(cIntersection[1].status(),
                       Intersection3D::Status::reachable);
@@ -103,12 +104,12 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
                                               BoundaryTolerance::None());
 
     // Check the validity of the intersection
-    BOOST_CHECK(oIntersection[0]);
+    BOOST_CHECK(oIntersection[0].isValid());
     // The status of this one MUST be reachable
     BOOST_CHECK_EQUAL(oIntersection[0].status(),
                       Intersection3D::Status::reachable);
     // There MUST be a second solution
-    BOOST_CHECK(oIntersection[1]);
+    BOOST_CHECK(oIntersection[1].isValid());
     // The other intersection MUST be reachable
     BOOST_CHECK_EQUAL(oIntersection[1].status(),
                       Intersection3D::Status::reachable);
@@ -128,14 +129,14 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
                                               BoundaryTolerance::Infinite());
 
     // Check the validity of the intersection
-    BOOST_CHECK(eIntersection[0]);
+    BOOST_CHECK(eIntersection[0].isValid());
     // This should be the positive one
     BOOST_CHECK_LT(eIntersection[0].pathLength(), 0.);
     // The status of this one should be reachable
     BOOST_CHECK_EQUAL(eIntersection[0].status(),
                       Intersection3D::Status::reachable);
     // There MUST be a second solution
-    BOOST_CHECK(eIntersection[1]);
+    BOOST_CHECK(eIntersection[1].isValid());
     // The other intersection MUST be reachable
     BOOST_CHECK_EQUAL(eIntersection[1].status(),
                       Intersection3D::Status::reachable);
@@ -169,7 +170,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
 /// This tests the intersection with cylinders
 /// and looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
-  double alpha = 0.25 * M_PI;
+  const double alpha = std::numbers::pi / 4.;
 
   auto testConeIntersection = [&](const Transform3& transform) -> void {
     // A cone surface ready to use
@@ -179,7 +180,8 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
     auto lTransform = transform.linear();
 
     // An onCylinder solution
-    Vector3 onCone = transform * Vector3(std::sqrt(2.), std::sqrt(2.), 2.);
+    Vector3 onCone =
+        transform * Vector3(std::numbers::sqrt2, std::numbers::sqrt2, 2.);
     Vector3 outCone = transform * Vector3(std::sqrt(4.), std::sqrt(4.), 2.);
     // Simply along the x axis
     Vector3 perpXY = lTransform * Vector3(1., -1., 0.).normalized();
@@ -192,14 +194,14 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
         aCone->intersect(tgContext, onCone, transXY, BoundaryTolerance::None());
 
     // Check the validity of the intersection
-    BOOST_CHECK(aIntersection[0]);
+    BOOST_CHECK(aIntersection[0].isValid());
     // The status of this one should be on surface
     BOOST_CHECK_EQUAL(aIntersection[0].status(),
                       Intersection3D::Status::reachable);
     // The intersection is at 4 mm distance
     CHECK_CLOSE_ABS(aIntersection[0].pathLength(), -4., s_onSurfaceTolerance);
     // There MUST be a second solution
-    BOOST_CHECK(aIntersection[1]);
+    BOOST_CHECK(aIntersection[1].isValid());
     // The other intersection MUST be reachable
     BOOST_CHECK_EQUAL(aIntersection[1].status(),
                       Intersection3D::Status::onSurface);
@@ -224,8 +226,8 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
 /// sufficient
 /// - it looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
-  double halfX = 1_m;
-  double halfY = 10_m;
+  const double halfX = 1_m;
+  const double halfY = 10_m;
 
   auto testPlanarIntersection = [&](const Transform3& transform) -> void {
     // A Plane created with a specific transform
@@ -250,7 +252,7 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
                                            BoundaryTolerance::None());
 
     // The intersection MUST be valid
-    BOOST_CHECK(fIntersection[0]);
+    BOOST_CHECK(fIntersection[0].isValid());
     // The intersection MUST be reachable
     BOOST_CHECK_EQUAL(fIntersection[0].status(),
                       Intersection3D::Status::reachable);
@@ -263,7 +265,7 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
     auto oIntersection = aPlane->intersect(tgContext, onit, direction,
                                            BoundaryTolerance::None());
     // The intersection MUST be valid
-    BOOST_CHECK(oIntersection[0]);
+    BOOST_CHECK(oIntersection[0].isValid());
     // The intersection MUST be reachable
     BOOST_CHECK_EQUAL(oIntersection[0].status(),
                       Intersection3D::Status::onSurface);
@@ -277,7 +279,7 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
     auto bIntersection = aPlane->intersect(tgContext, after, direction,
                                            BoundaryTolerance::None());
     // The intersection MUST be valid
-    BOOST_CHECK(bIntersection[0]);
+    BOOST_CHECK(bIntersection[0].isValid());
     // The intersection MUST be reachable
     BOOST_CHECK_EQUAL(bIntersection[0].status(),
                       Intersection3D::Status::reachable);
@@ -323,8 +325,8 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
 /// sufficient
 /// - it looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
-  double radius = 1_m;
-  double halfZ = 10_m;
+  const double radius = 1_m;
+  const double halfZ = 10_m;
 
   auto testLineAppraoch = [&](const Transform3& transform) -> void {
     // A Plane created with a specific transform
@@ -348,7 +350,7 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     auto fIntersection = aLine->intersect(tgContext, before, direction,
                                           BoundaryTolerance::None());
     // The intersection MUST be valid
-    BOOST_CHECK(fIntersection[0]);
+    BOOST_CHECK(fIntersection[0].isValid());
     // The intersection MUST be reachable
     BOOST_CHECK_EQUAL(fIntersection[0].status(),
                       Intersection3D::Status::reachable);
@@ -361,7 +363,7 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     auto oIntersection = aLine->intersect(tgContext, onit1, direction,
                                           BoundaryTolerance::None());
     // The intersection MUST be valid
-    BOOST_CHECK(oIntersection[0]);
+    BOOST_CHECK(oIntersection[0].isValid());
     // The intersection MUST be reachable
     BOOST_CHECK_EQUAL(oIntersection[0].status(),
                       Intersection3D::Status::onSurface);
@@ -375,7 +377,7 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     oIntersection =
         aLine->intersect(tgContext, onitP, normalP, BoundaryTolerance::None());
     // The intersection MUST be valid
-    BOOST_CHECK(oIntersection[0]);
+    BOOST_CHECK(oIntersection[0].isValid());
     // The intersection MUST be reachable
     BOOST_CHECK_EQUAL(oIntersection[0].status(),
                       Intersection3D::Status::onSurface);
@@ -389,7 +391,7 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     auto bIntersection = aLine->intersect(tgContext, after, direction,
                                           BoundaryTolerance::None());
     // The intersection MUST be valid
-    BOOST_CHECK(bIntersection[0]);
+    BOOST_CHECK(bIntersection[0].isValid());
     // The intersection MUST be reachable
     BOOST_CHECK_EQUAL(bIntersection[0].status(),
                       Intersection3D::Status::reachable);

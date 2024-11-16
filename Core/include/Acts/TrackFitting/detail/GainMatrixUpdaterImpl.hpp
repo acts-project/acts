@@ -1,13 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
+#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -34,9 +35,14 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
   ACTS_VERBOSE("Calibrated measurement: " << calibrated.transpose());
   ACTS_VERBOSE("Calibrated measurement covariance:\n" << calibratedCovariance);
 
-  const auto H = trackState.projector
-                     .template topLeftCorner<kMeasurementSize, eBoundSize>()
-                     .eval();
+  std::span<std::uint8_t, kMeasurementSize> validSubspaceIndices(
+      trackState.projector.begin(),
+      trackState.projector.begin() + kMeasurementSize);
+  FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
+      validSubspaceIndices);
+
+  // TODO use subspace helper for projection instead
+  const auto H = subspaceHelper.projector();
 
   ACTS_VERBOSE("Measurement projector H:\n" << H);
 
@@ -55,6 +61,8 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
 
   trackState.filtered =
       trackState.predicted + K * (calibrated - H * trackState.predicted);
+  // Normalize phi and theta
+  trackState.filtered = normalizeBoundParameters(trackState.filtered);
   trackState.filteredCovariance =
       (BoundSquareMatrix::Identity() - K * H) * trackState.predictedCovariance;
   ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());

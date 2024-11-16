@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -26,7 +26,7 @@ class ScalableBField final : public Acts::MagneticFieldProvider {
     Acts::ActsScalar scalor = 1.;
 
     /// @brief constructor with context
-    Cache(const Acts::MagneticFieldContext& mctx) {
+    explicit Cache(const Acts::MagneticFieldContext& mctx) {
       scalor = mctx.get<const ScalableBFieldContext>().scalor;
     }
   };

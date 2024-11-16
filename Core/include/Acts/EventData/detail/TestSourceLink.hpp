@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -17,7 +17,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/detail/Subspace.hpp"
 
 #include <algorithm>
 #include <array>
@@ -73,12 +72,13 @@ struct TestSourceLink final {
   TestSourceLink(TestSourceLink&&) = default;
   TestSourceLink& operator=(const TestSourceLink&) = default;
   TestSourceLink& operator=(TestSourceLink&&) = default;
+
   bool operator==(const TestSourceLink& rhs) const {
     return (m_geometryId == rhs.m_geometryId) && (sourceId == rhs.sourceId) &&
            (indices == rhs.indices) && (parameters == rhs.parameters) &&
            (covariance == rhs.covariance);
   }
-  bool operator!=(const TestSourceLink& rhs) const { return !(*this == rhs); }
+
   std::ostream& print(std::ostream& os) const {
     os << "TestsSourceLink(geometryId=" << m_geometryId
        << ",sourceId=" << sourceId;
@@ -139,22 +139,19 @@ void testSourceLinkCalibratorReturn(
     trackState.allocateCalibrated(2);
     trackState.template calibrated<2>() = sl.parameters;
     trackState.template calibratedCovariance<2>() = sl.covariance;
-    trackState.setProjector(FixedSizeSubspace<BoundIndices::eBoundSize, 2>(
-                                std::array{sl.indices[0], sl.indices[1]})
-                                .projector<double>());
+    trackState.setSubspaceIndices(std::array{sl.indices[0], sl.indices[1]});
   } else if (sl.indices[0] != Acts::eBoundSize) {
     trackState.allocateCalibrated(1);
     trackState.template calibrated<1>() = sl.parameters.head<1>();
     trackState.template calibratedCovariance<1>() =
         sl.covariance.topLeftCorner<1, 1>();
-    trackState.setProjector(FixedSizeSubspace<BoundIndices::eBoundSize, 1>(
-                                std::array{sl.indices[0]})
-                                .projector<double>());
+    trackState.setSubspaceIndices(std::array{sl.indices[0]});
   } else {
     throw std::runtime_error(
         "Tried to extract measurement from invalid TestSourceLink");
   }
 }
+
 /// Extract the measurement from a TestSourceLink.
 ///
 /// @param gctx Unused

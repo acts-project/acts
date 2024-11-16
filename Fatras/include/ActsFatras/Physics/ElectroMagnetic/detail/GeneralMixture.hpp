@@ -1,16 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Material/Interactions.hpp"
 
+#include <numbers>
 #include <random>
 
 namespace ActsFatras::detail {
@@ -87,7 +88,7 @@ struct GeneralMixture {
       theta = std::normal_distribution<double>(0.0, theta0)(generator);
     }
     // scale from planar to 3d angle
-    return M_SQRT2 * theta;
+    return std::numbers::sqrt2 * theta;
   }
 
   // helper methods for getting parameters and simulating

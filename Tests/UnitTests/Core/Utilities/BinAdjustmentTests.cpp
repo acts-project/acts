@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -19,13 +19,14 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 namespace Acts::Test {
 
 // Test Radial
 BOOST_AUTO_TEST_CASE(BinAdjustment_Radial) {
-  RadialBounds bound(50, 75, M_PI, 0);
+  RadialBounds bound(50, 75, std::numbers::pi, 0);
   BinUtility bu;
   bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binR);
   bu += BinUtility(1, 0, 1, Acts::closed, Acts::BinningValue::binPhi);
@@ -34,21 +35,23 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Radial) {
 
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, 50);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 75);
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, float{-M_PI});
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, float{M_PI});
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, -std::numbers::pi_v<float>);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, std::numbers::pi_v<float>);
 }
 
 // Test Cylinder
 BOOST_AUTO_TEST_CASE(BinAdjustment_Cylinder) {
-  CylinderBounds bound(25, 50, M_PI / 4, 0);
+  CylinderBounds bound(25, 50, std::numbers::pi / 4, 0);
   BinUtility bu;
   bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binPhi);
   bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binZ);
 
   BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, float{-M_PI / 4});
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, float{M_PI / 4});
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min,
+                    -static_cast<float>(std::numbers::pi / 4.));
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max,
+                    static_cast<float>(std::numbers::pi / 4.));
   BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, -50);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, 50);
 }

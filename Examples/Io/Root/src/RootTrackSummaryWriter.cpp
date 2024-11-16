@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 
@@ -33,6 +33,7 @@
 #include <ios>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
@@ -418,8 +419,9 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     if (foundMajorityParticle && hasFittedParams) {
       res = {param[Acts::eBoundLoc0] - t_d0,
              param[Acts::eBoundLoc1] - t_z0,
-             Acts::detail::difference_periodic(param[Acts::eBoundPhi], t_phi,
-                                               static_cast<float>(2 * M_PI)),
+             Acts::detail::difference_periodic(
+                 param[Acts::eBoundPhi], t_phi,
+                 static_cast<float>(2 * std::numbers::pi)),
              param[Acts::eBoundTheta] - t_theta,
              param[Acts::eBoundQOverP] - t_qop,
              param[Acts::eBoundTime] - t_time};

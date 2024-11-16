@@ -1,24 +1,21 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include "edm4hep/TrackState.h"
@@ -27,34 +24,33 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-ActsFatras::Particle EDM4hepUtil::readParticle(
-    const edm4hep::MCParticle& from, const MapParticleIdFrom& particleMapper) {
+SimParticle EDM4hepUtil::readParticle(const edm4hep::MCParticle& from,
+                                      const MapParticleIdFrom& particleMapper) {
   ActsFatras::Barcode particleId = particleMapper(from);
 
-  ActsFatras::Particle to(particleId,
-                          static_cast<Acts::PdgParticle>(from.getPDG()),
-                          from.getCharge() * Acts::UnitConstants::e,
-                          from.getMass() * Acts::UnitConstants::GeV);
+  SimParticle to(particleId, static_cast<Acts::PdgParticle>(from.getPDG()),
+                 from.getCharge() * Acts::UnitConstants::e,
+                 from.getMass() * Acts::UnitConstants::GeV);
 
   // TODO do we have that in EDM4hep?
   // particle.setProcess(static_cast<ActsFatras::ProcessType>(data.process));
 
-  to.setPosition4(from.getVertex()[0] * Acts::UnitConstants::mm,
-                  from.getVertex()[1] * Acts::UnitConstants::mm,
-                  from.getVertex()[2] * Acts::UnitConstants::mm,
-                  from.getTime() * Acts::UnitConstants::ns);
+  to.initial().setPosition4(from.getVertex()[0] * Acts::UnitConstants::mm,
+                            from.getVertex()[1] * Acts::UnitConstants::mm,
+                            from.getVertex()[2] * Acts::UnitConstants::mm,
+                            from.getTime() * Acts::UnitConstants::ns);
 
   // Only used for direction; normalization/units do not matter
   Acts::Vector3 momentum = {from.getMomentum()[0], from.getMomentum()[1],
                             from.getMomentum()[2]};
-  to.setDirection(momentum.normalized());
+  to.initial().setDirection(momentum.normalized());
 
-  to.setAbsoluteMomentum(momentum.norm() * 1_GeV);
+  to.initial().setAbsoluteMomentum(momentum.norm() * 1_GeV);
 
   return to;
 }
 
-void EDM4hepUtil::writeParticle(const ActsFatras::Particle& from,
+void EDM4hepUtil::writeParticle(const SimParticle& from,
                                 edm4hep::MutableMCParticle to) {
   // TODO what about particleId?
 
@@ -65,6 +61,10 @@ void EDM4hepUtil::writeParticle(const ActsFatras::Particle& from,
   to.setMomentum({static_cast<float>(from.fourMomentum().x()),
                   static_cast<float>(from.fourMomentum().y()),
                   static_cast<float>(from.fourMomentum().z())});
+  to.setMomentumAtEndpoint(
+      {static_cast<float>(from.final().fourMomentum().x()),
+       static_cast<float>(from.final().fourMomentum().y()),
+       static_cast<float>(from.final().fourMomentum().z())});
 }
 
 ActsFatras::Hit EDM4hepUtil::readSimHit(
@@ -144,15 +144,12 @@ void EDM4hepUtil::writeSimHit(const ActsFatras::Hit& from,
   to.setEDep(-delta4[Acts::eEnergy] / Acts::UnitConstants::GeV);
 }
 
-Measurement EDM4hepUtil::readMeasurement(
-    const edm4hep::TrackerHitPlane& from,
+VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
+    MeasurementContainer& container, const edm4hep::TrackerHitPlane& from,
     const edm4hep::TrackerHitCollection* fromClusters, Cluster* toCluster,
     const MapGeometryIdFrom& geometryMapper) {
   // no need for digitization as we only want to identify the sensor
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
-
-  IndexSourceLink sourceLink{
-      geometryId, static_cast<Index>(podioObjectIDToInteger(from.id()))};
 
   auto pos = from.getPosition();
   auto cov = from.getCovMatrix();
@@ -172,7 +169,7 @@ Measurement EDM4hepUtil::readMeasurement(
   dParameters.values.push_back(pos.z);
   dParameters.variances.push_back(cov[5]);
 
-  auto to = createMeasurement(dParameters, sourceLink);
+  auto to = createMeasurement(container, geometryId, dParameters);
 
   if (fromClusters != nullptr) {
     for (const auto objectId : from.getRawHits()) {
@@ -196,13 +193,12 @@ Measurement EDM4hepUtil::readMeasurement(
   return to;
 }
 
-void EDM4hepUtil::writeMeasurement(const Measurement& from,
-                                   edm4hep::MutableTrackerHitPlane to,
-                                   const Cluster* fromCluster,
-                                   edm4hep::TrackerHitCollection& toClusters,
-                                   const MapGeometryIdTo& geometryMapper) {
-  Acts::GeometryIdentifier geoId =
-      from.sourceLink().template get<IndexSourceLink>().geometryId();
+void EDM4hepUtil::writeMeasurement(
+    const ConstVariableBoundMeasurementProxy& from,
+    edm4hep::MutableTrackerHitPlane to, const Cluster* fromCluster,
+    edm4hep::TrackerHitCollection& toClusters,
+    const MapGeometryIdTo& geometryMapper) {
+  Acts::GeometryIdentifier geoId = from.geometryId();
 
   if (geometryMapper) {
     // no need for digitization as we only want to identify the sensor

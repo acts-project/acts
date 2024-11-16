@@ -17,9 +17,7 @@ CMake instructions to build [nlohmann::json](https://github.com/nlohmann/json).
 ## boost
 
 For convenience, it's possible to use the ACTS build system to build the minimum
-required version of [boost](https://www.boost.org/) (currently 1.71.0).  No source is
-bundled here, and if requested via "-DACTS_USE_SYSTEM_BOOST=OFF", only the filesystem,
-program_options, and test libraries will be built.
+required version of [boost](https://www.boost.org/) (currently 1.71.0).
 
 Warning: during installation, the built boost libraries will be installed alongside the
 ACTS libraries, with a version suffix. This location may be known to the system linker.
@@ -57,3 +55,7 @@ CMake instruction to build [detray](https://github.com/acts-project/detray), whi
 ## Traccc
 
 CMake instruction to build [traccc](https://github.com/acts-project/traccc), which is used by the traccc plugin.
+
+## Annoy
+
+CMake instructions to build [Annoy](https://github.com/spotify/annoy) which is used by the Hashing plugin.

@@ -15,13 +15,13 @@ function run() {
 
 export run
 
-
+run which python3
 shopt -s extglob
 
 
 mode=${1:-all}
-if ! [[ $mode = @(all|kf|gsf|gx2f|fullchains|simulation) ]]; then
-    echo "Usage: $0 <all|kf|gsf|gx2f|fullchains|simulation> (outdir)"
+if ! [[ $mode = @(all|kf|gsf|gx2f|refit_kf|refit_gsf|fullchains|simulation) ]]; then
+    echo "Usage: $0 <all|kf|gsf|gx2f|refit_kf|refit_gsf|fullchains|simulation> (outdir)"
     exit 1
 fi
 
@@ -83,11 +83,12 @@ elif [ "$(uname)" == "Linux" ]; then
         rec=$?
         # in kbytes
         max_rss=$(grep "Maximum resident set size (kbytes):" "$tmp" | awk '{printf $(NF)}')
-        max_rss=$(( 1000*max_rss ))
+        max_rss=$(( 1024 * max_rss ))
+        echo "Maximum resident set size: $(printf "%'d" $max_rss) bytes"
+
         wall_time=$(grep "Elapsed (wall clock)" "$tmp" | awk '{printf $(NF)}')
-        echo $max_rss
         wall_time=$(python3 -c "i='${wall_time}';p=i.split(':');p = p if len(p) == 3 else ['0', *p];t=float(p[0])*60*60 + float(p[1])*60 + float(p[2]);print(t)")
-        echo $wall_time
+        echo "Elapsed (wall clock) time: ${wall_time} seconds"
 
         of="${memory_dir}/mem_${slug}.csv"
         {
@@ -150,6 +151,12 @@ if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
 fi
 if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
     run_physmon_gen "Truth Tracking GX2F" "trackfitting_gx2f"
+fi
+if [[ "$mode" == "all" || "$mode" == "refit_kf" ]]; then
+    run_physmon_gen "Truth Tracking KF refit" "trackrefitting_kf"
+fi
+if [[ "$mode" == "all" || "$mode" == "refit_gsf" ]]; then
+    run_physmon_gen "Truth Tracking GSF refit" "trackrefitting_gsf"
 fi
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     run_physmon_gen "CKF single muon" "trackfinding_1muon"
@@ -216,12 +223,21 @@ function trackfinding() {
     fi
 
     run_histcmp \
-        $outdir/data/$path/performance_ckf.root \
-        $refdir/$path/performance_ckf.root \
-        "CKF | ${name}" \
-        $path/performance_ckf.html \
-        $path/performance_ckf_plots \
+        $outdir/data/$path/performance_finding_ckf.root \
+        $refdir/$path/performance_finding_ckf.root \
+        "CKF finding performance | ${name}" \
+        $path/performance_finding_ckf.html \
+        $path/performance_finding_ckf_plots \
         --config $default_config
+
+    run_histcmp \
+        $outdir/data/$path/performance_fitting_ckf.root \
+        $refdir/$path/performance_fitting_ckf.root \
+        "CKF fitting performance | ${name}" \
+        $path/performance_fitting_ckf.html \
+        $path/performance_fitting_ckf_plots \
+        --config $default_config
+
 
     run Examples/Scripts/generic_plotter.py \
         $outdir/data/$path/tracksummary_ckf.root \
@@ -237,17 +253,17 @@ function trackfinding() {
     run_histcmp \
         $outdir/data/$path/tracksummary_ckf_hist.root \
         $refdir/$path/tracksummary_ckf_hist.root \
-        "Track Summary CKF | ${name}" \
+        "CKF track summary | ${name}" \
         $path/tracksummary_ckf.html \
         $path/tracksummary_ckf_plots
 
-    if [ -f $refdir/$path/performance_ckf_ambi.root ]; then
+    if [ -f $refdir/$path/performance_finding_ckf_ambi.root ]; then
         run_histcmp \
-            $outdir/data/$path/performance_ckf_ambi.root \
-            $refdir/$path/performance_ckf_ambi.root \
-            "Ambisolver | ${name}" \
-            $path/performance_ckf_ambi.html \
-            $path/performance_ckf_ambi
+            $outdir/data/$path/performance_finding_ckf_ambi.root \
+            $refdir/$path/performance_finding_ckf_ambi.root \
+            "Ambisolver finding performance | ${name}" \
+            $path/performance_finding_ckf_ambi.html \
+            $path/performance_finding_ckf_ambi
     fi
 }
 
@@ -408,6 +424,26 @@ if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
         trackfitting_gx2f/performance_trackfitting.html \
         trackfitting_gx2f/performance_trackfitting_plots \
         --config CI/physmon/config/trackfitting_gx2f.yml
+fi
+
+if [[ "$mode" == "all" || "$mode" == "kf_refit" ]]; then
+    run_histcmp \
+        $outdir/data/trackrefitting_kf/performance_trackrefitting.root \
+        $refdir/trackrefitting_kf/performance_trackrefitting.root \
+        "Truth tracking (KF refit)" \
+        trackrefitting_kf/performance_trackrefitting.html \
+        trackrefitting_kf/performance_trackrefitting_plots \
+        --config CI/physmon/config/trackfitting_kf.yml
+fi
+
+if [[ "$mode" == "all" || "$mode" == "gsf_refit" ]]; then
+    run_histcmp \
+        $outdir/data/trackrefitting_gsf/performance_trackrefitting.root \
+        $refdir/trackrefitting_gsf/performance_trackrefitting.root \
+        "Truth tracking (GSF refit)" \
+        trackrefitting_gsf/performance_trackrefitting.html \
+        trackrefitting_gsf/performance_trackrefitting_plots \
+        --config CI/physmon/config/trackfitting_gsf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -254,9 +254,7 @@ void updateVertexWithTrackImpl(Vertex& vtx, TrackAtVertex& trk, int sign) {
   calculateUpdate(vtx, trk.linearizedState, trackWeight, sign, cache);
 
   // Get fit quality parameters wrt to old vertex
-  double chi2 = 0.;
-  double ndf = 0.;
-  std::tie(chi2, ndf) = vtx.fitQuality();
+  auto [chi2, ndf] = vtx.fitQuality();
 
   // Chi2 of the track parameters
   double trkChi2 = trackParametersChi2(trk.linearizedState, cache);

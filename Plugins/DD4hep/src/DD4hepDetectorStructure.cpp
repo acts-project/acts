@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
 
@@ -75,7 +75,7 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
       detail::BlueprintDrawer::dotStream(bpf, *dd4hepBlueprint);
       bpf.close();
       // Return without building
-      return std::tie(detector, detectorStore);
+      return {detector, detectorStore};
     }
 
     // Create a Cylindrical detector builder from this blueprint
@@ -100,5 +100,5 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
         "DD4hepDetectorStructure: Only cylindrical detectors are (currently) "
         "supported.");
   }
-  return std::tie(detector, detectorStore);
+  return {detector, detectorStore};
 }

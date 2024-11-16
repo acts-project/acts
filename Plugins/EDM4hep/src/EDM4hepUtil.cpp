@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 
@@ -15,6 +15,8 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
+
+#include <numbers>
 
 #include "edm4hep/TrackState.h"
 
@@ -149,7 +151,8 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
   result.values[0] = targetPars[Acts::eBoundLoc0];
   result.values[1] = targetPars[Acts::eBoundLoc1];
   result.values[2] = targetPars[Acts::eBoundPhi];
-  result.values[3] = std::tan(M_PI_2 - targetPars[Acts::eBoundTheta]);
+  result.values[3] =
+      std::tan(std::numbers::pi / 2. - targetPars[Acts::eBoundTheta]);
   result.values[4] = targetPars[Acts::eBoundQOverP] /
                      std::sin(targetPars[Acts::eBoundTheta]) * Bz;
   result.values[5] = targetPars[Acts::eBoundTime];
@@ -174,7 +177,7 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
   targetPars[eBoundLoc0] = params.values[0];
   targetPars[eBoundLoc1] = params.values[1];
   targetPars[eBoundPhi] = params.values[2];
-  targetPars[eBoundTheta] = M_PI_2 - std::atan(params.values[3]);
+  targetPars[eBoundTheta] = std::numbers::pi / 2. - std::atan(params.values[3]);
   targetPars[eBoundQOverP] =
       params.values[4] * std::sin(targetPars[eBoundTheta]) / Bz;
   targetPars[eBoundTime] = params.values[5];

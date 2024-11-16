@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
 
@@ -208,7 +208,7 @@ ProcessCode RootTrackSummaryReader::read(const AlgorithmContext& context) {
 
     unsigned int nTruthParticles = m_t_vx->size();
     for (unsigned int i = 0; i < nTruthParticles; i++) {
-      ActsFatras::Particle truthParticle;
+      SimParticleState truthParticle;
 
       truthParticle.setPosition4((*m_t_vx)[i], (*m_t_vy)[i], (*m_t_vz)[i],
                                  (*m_t_time)[i]);
@@ -216,7 +216,7 @@ ProcessCode RootTrackSummaryReader::read(const AlgorithmContext& context) {
       truthParticle.setParticleId((*m_majorityParticleId)[i]);
 
       truthParticleCollection.insert(truthParticleCollection.end(),
-                                     truthParticle);
+                                     SimParticle(truthParticle, truthParticle));
     }
     // Write the collections to the EventStore
     m_outputTrackParameters(context, std::move(trackParameterCollection));

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -38,11 +38,11 @@ struct TestTrackState {
       : surface(
             CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).surface()),
         // set bogus parameters first since they are not default-constructible
-        predicted(surface, BoundVector::Zero(), std::nullopt,
+        predicted(surface, someBoundParametersA(), std::nullopt,
                   ParticleHypothesis::pion()),
-        filtered(surface, BoundVector::Zero(), std::nullopt,
+        filtered(surface, someBoundParametersA(), std::nullopt,
                  ParticleHypothesis::pion()),
-        smoothed(surface, BoundVector::Zero(), std::nullopt,
+        smoothed(surface, someBoundParametersA(), std::nullopt,
                  ParticleHypothesis::pion()),
         jacobian(BoundMatrix::Identity()),
         chi2(std::chi_squared_distribution<double>(measdim)(rng)),
@@ -65,7 +65,7 @@ struct TestTrackState {
     }
 
     // create track parameters
-    auto [trkPar, trkCov] = generateBoundParametersCovariance(rng);
+    auto [trkPar, trkCov] = generateBoundParametersCovariance(rng, {});
     // trkPar[eBoundPhi] = 45_degree;
     // trkPar[eBoundTheta] = 90_degree;
     // trkPar[eBoundQOverP] = 5.;

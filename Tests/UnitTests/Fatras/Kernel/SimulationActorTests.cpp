@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -12,10 +12,12 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -147,6 +149,11 @@ struct MockNavigator {
     return state.currentSurface;
   }
 
+  const Acts::TrackingVolume *currentVolume(
+      const MockNavigatorState & /*state*/) const {
+    return nullptr;
+  }
+
   bool endOfWorldReached(const MockNavigatorState & /*state*/) const {
     return false;
   }
@@ -157,6 +164,10 @@ struct MockPropagatorState {
   MockStepperState stepping;
   Acts::GeometryContext geoContext;
   Acts::PropagatorStage stage = Acts::PropagatorStage::invalid;
+
+  struct {
+    std::vector<std::uint32_t> constrainToVolumeIds;
+  } options;
 };
 
 template <typename SurfaceSelector>
@@ -203,8 +214,9 @@ struct Fixture {
 
 // make a surface without material.
 std::shared_ptr<Acts::Surface> makeEmptySurface() {
-  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Vector3(1, 2, 3), Acts::Vector3(1, 0, 0));
+  auto surface =
+      Acts::CurvilinearSurface(Acts::Vector3(1, 2, 3), Acts::Vector3(1, 0, 0))
+          .planeSurface();
   return surface;
 }
 
@@ -232,8 +244,15 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
   BOOST_CHECK_EQUAL(f.actor.initialParticle.absoluteMomentum(), f.p);
   BOOST_CHECK_EQUAL(f.actor.initialParticle.energy(), f.e);
 
+  // call.actor: pre propagation
+  f.state.stage = Acts::PropagatorStage::prePropagation;
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
+
   // call.actor: surface selection -> one hit, no material -> no secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.state.stage = Acts::PropagatorStage::postStep;
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
@@ -258,7 +277,9 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
   BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // call.actor again: one more hit, still no secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.state.stage = Acts::PropagatorStage::postStep;
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
@@ -303,8 +324,15 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
   BOOST_CHECK_EQUAL(f.actor.initialParticle.absoluteMomentum(), f.p);
   BOOST_CHECK_EQUAL(f.actor.initialParticle.energy(), f.e);
 
+  // call.actor: pre propagation
+  f.state.stage = Acts::PropagatorStage::prePropagation;
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
+
   // call.actor: surface selection -> one hit, material -> one secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.state.stage = Acts::PropagatorStage::postStep;
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 125_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 1u);
@@ -331,7 +359,9 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
                   tol);
 
   // call.actor again: one more hit, one more secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.state.stage = Acts::PropagatorStage::postStep;
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 250_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 2u);
@@ -376,8 +406,15 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
   BOOST_CHECK_EQUAL(f.actor.initialParticle.absoluteMomentum(), f.p);
   BOOST_CHECK_EQUAL(f.actor.initialParticle.energy(), f.e);
 
+  // call.actor: pre propagation
+  f.state.stage = Acts::PropagatorStage::prePropagation;
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
+
   // call.actor: no surface sel. -> no hit, no material -> no secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.state.stage = Acts::PropagatorStage::postStep;
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
@@ -402,7 +439,9 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
   BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // call.actor again: no hit, still no secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.state.stage = Acts::PropagatorStage::postStep;
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
@@ -437,8 +476,15 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
 BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
   Fixture<NoSurface> f(125_MeV, makeMaterialSurface());
 
+  // call.actor: pre propagation
+  f.state.stage = Acts::PropagatorStage::prePropagation;
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
+
   // call.actor: no surface sel. -> no hit, material -> one secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.state.stage = Acts::PropagatorStage::postStep;
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 125_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 1u);
@@ -464,7 +510,9 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
                   tol);
 
   // call.actor again: still no hit, one more secondary
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.state.stage = Acts::PropagatorStage::postStep;
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 250_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 2u);
@@ -503,8 +551,15 @@ BOOST_AUTO_TEST_CASE(Decay) {
   // inverse Lorentz factor for proper time dilation: 1/gamma = m/E
   const auto gammaInv = f.m / f.e;
 
+  // call.actor: pre propagation
+  f.state.stage = Acts::PropagatorStage::prePropagation;
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
+
   // first step w/ defaults leaves particle alive
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.state.stage = Acts::PropagatorStage::postStep;
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
   BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
@@ -515,8 +570,10 @@ BOOST_AUTO_TEST_CASE(Decay) {
   BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0_ns);
 
   // second step w/ defaults increases proper time
+  f.state.stage = Acts::PropagatorStage::postStep;
   f.state.stepping.time += 1_ns;
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(f.result.isAlive);
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
   BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
@@ -527,9 +584,11 @@ BOOST_AUTO_TEST_CASE(Decay) {
   CHECK_CLOSE_REL(f.result.particle.properTime(), gammaInv * 1_ns, tol);
 
   // third step w/ proper time limit decays the particle
+  f.state.stage = Acts::PropagatorStage::postStep;
   f.state.stepping.time += 1_ns;
   f.result.properTimeLimit = f.result.particle.properTime() + gammaInv * 0.5_ns;
-  f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
+  f.actor.act(f.state, f.stepper, f.navigator, f.result,
+              Acts::getDummyLogger());
   BOOST_CHECK(!f.result.isAlive);
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
   BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);

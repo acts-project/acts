@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -88,7 +88,7 @@ class PodioTrackStateContainerBase {
       case "typeFlags"_hash:
         return true;
       default:
-        return instance.m_dynamic.find(key) != instance.m_dynamic.end();
+        return instance.m_dynamic.contains(key);
     }
 
     return false;
@@ -166,7 +166,7 @@ class PodioTrackStateContainerBase {
       case "typeFlags"_hash:
         return true;
       default:
-        return instance.m_dynamic.find(key) != instance.m_dynamic.end();
+        return instance.m_dynamic.contains(key);
     }
   }
 
@@ -224,20 +224,17 @@ class ConstPodioTrackStateContainer final
     std::string paramsKey = "trackStateParameters" + s;
     std::string jacsKey = "trackStateJacobians" + s;
 
-    if (std::find(available.begin(), available.end(), trackStatesKey) ==
-        available.end()) {
+    if (!rangeContainsValue(available, trackStatesKey)) {
       throw std::runtime_error{"Track state collection '" + trackStatesKey +
                                "' not found in frame"};
     }
 
-    if (std::find(available.begin(), available.end(), paramsKey) ==
-        available.end()) {
+    if (!rangeContainsValue(available, paramsKey)) {
       throw std::runtime_error{"Track state parameters collection '" +
                                paramsKey + "' not found in frame"};
     }
 
-    if (std::find(available.begin(), available.end(), jacsKey) ==
-        available.end()) {
+    if (!rangeContainsValue(available, jacsKey)) {
       throw std::runtime_error{"Track state jacobian collection '" + jacsKey +
                                "' not found in frame"};
     }

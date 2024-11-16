@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -14,6 +14,7 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -23,6 +24,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -41,7 +43,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   const auto loc0 = 0.0;
   const auto loc1 = 0.0;
   const auto phi = 0.0;
-  const auto theta = M_PI / 4;
+  const auto theta = std::numbers::pi / 4.;
   const auto qOverP = 1 / 1_GeV;
   const auto t = 1_ns;
 
@@ -54,8 +56,8 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // construct two parallel plane surfaces with normal in x direction
   ActsScalar distance = 10_mm;
-  auto eSurface = Surface::makeShared<PlaneSurface>(Vector3(distance, 0, 0),
-                                                    Vector3::UnitX());
+  auto eSurface = CurvilinearSurface(Vector3(distance, 0, 0), Vector3::UnitX())
+                      .planeSurface();
 
   // the bound parameters at the starting plane
   BoundVector sBoundParams = BoundVector::Zero();
@@ -80,7 +82,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   Vector3 tpos = intersection.position();
   auto s = intersection.pathLength();
 
-  BOOST_CHECK_EQUAL(s, distance * std::sqrt(2));
+  BOOST_CHECK_EQUAL(s, distance * std::numbers::sqrt2);
 
   // construct the free parameters vector
   FreeVector eFreeParams = FreeVector::Zero();

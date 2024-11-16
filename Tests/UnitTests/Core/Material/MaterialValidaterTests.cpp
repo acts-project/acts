@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -22,6 +22,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
+#include <numbers>
 
 namespace Acts::Test {
 
@@ -125,7 +126,7 @@ BOOST_AUTO_TEST_CASE(MaterialValidaterFlowTest) {
       tContext, MagneticFieldContext(), Vector3(0, 0, 0),
       Vector3(1, 0, 1).normalized());
 
-  ActsScalar pathCorrection = std::sqrt(2.);
+  ActsScalar pathCorrection = std::numbers::sqrt2;
   CHECK_CLOSE_ABS(rMaterial2.materialInX0,
                   pathCorrection * (2. / 21. + 4. / 41. + 6. / 61.), 1e-6);
   CHECK_CLOSE_ABS(rMaterial2.materialInL0,

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 #include <boost/format.hpp>
@@ -37,20 +38,22 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceMatcher) {
 
   double phiTol = 0.1;
 
-  auto oneBounds = std::make_shared<RadialBounds>(rMin, rMax, M_PI / 16, 0.);
+  auto oneBounds =
+      std::make_shared<RadialBounds>(rMin, rMax, std::numbers::pi / 16., 0.);
   auto oneSurface = Surface::makeShared<DiscSurface>(identity, oneBounds);
 
-  auto otherBounds =
-      std::make_shared<RadialBounds>(2 * rMax, 4 * rMax, M_PI / 16, 0.5 * M_PI);
+  auto otherBounds = std::make_shared<RadialBounds>(
+      2 * rMax, 4 * rMax, std::numbers::pi / 16., std::numbers::pi / 2.);
   auto otherSurface = Surface::makeShared<DiscSurface>(identity, otherBounds);
 
   auto similarRbounds = std::make_shared<RadialBounds>(
-      rMin - 0.5 * rMinTol, rMax + 0.5 * rMaxTol, M_PI / 16, 0.5 * M_PI);
+      rMin - 0.5 * rMinTol, rMax + 0.5 * rMaxTol, std::numbers::pi / 1.,
+      std::numbers::pi / 2.);
   auto similarRSurface =
       Surface::makeShared<DiscSurface>(identity, similarRbounds);
 
-  auto similarPhiBounds =
-      std::make_shared<RadialBounds>(0.25 * rMin, 0.5 * rMin, M_PI / 16, 0.);
+  auto similarPhiBounds = std::make_shared<RadialBounds>(
+      0.25 * rMin, 0.5 * rMin, std::numbers::pi / 16., 0.);
   auto similarPhiSurface =
       Surface::makeShared<DiscSurface>(identity, similarPhiBounds);
 

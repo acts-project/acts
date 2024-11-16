@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 
@@ -21,6 +21,7 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 
 #include <cmath>
+#include <numbers>
 #include <utility>
 
 namespace Acts {
@@ -142,7 +143,7 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
                    AngleAxis3(get(eAveragePhi) - get(eHalfPhiSector),
                               Vector3(0., 0., 1.)) *
                    Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
-                   AngleAxis3(M_PI / 2, Vector3(1., 0., 0.)));
+                   AngleAxis3(std::numbers::pi / 2, Vector3(1., 0., 0.)));
     auto pSurface =
         Surface::makeShared<PlaneSurface>(sp1Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(
@@ -153,7 +154,7 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
                    AngleAxis3(get(eAveragePhi) + get(eHalfPhiSector),
                               Vector3(0., 0., 1.)) *
                    Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
-                   AngleAxis3(-M_PI / 2, Vector3(1., 0., 0.)));
+                   AngleAxis3(-std::numbers::pi / 2, Vector3(1., 0., 0.)));
     pSurface =
         Surface::makeShared<PlaneSurface>(sp2Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(
@@ -174,7 +175,7 @@ void CylinderVolumeBounds::buildSurfaceBounds() {
   m_discBounds = std::make_shared<const RadialBounds>(
       get(eMinR), get(eMaxR), get(eHalfPhiSector), get(eAveragePhi));
 
-  if (std::abs(get(eHalfPhiSector) - M_PI) > s_epsilon) {
+  if (std::abs(get(eHalfPhiSector) - std::numbers::pi) > s_epsilon) {
     m_sectorPlaneBounds = std::make_shared<const RectangleBounds>(
         0.5 * (get(eMaxR) - get(eMinR)), get(eHalfLengthZ));
   }
@@ -197,7 +198,7 @@ Volume::BoundingBox CylinderVolumeBounds::boundingBox(
   ActsScalar xmax = 0, xmin = 0, ymax = 0, ymin = 0;
   xmax = get(eMaxR);
 
-  if (get(eHalfPhiSector) > M_PI / 2.) {
+  if (get(eHalfPhiSector) > std::numbers::pi / 2.) {
     // more than half
     ymax = xmax;
     ymin = -xmax;
@@ -274,7 +275,7 @@ void CylinderVolumeBounds::checkConsistency() {
         "CylinderVolumeBounds: invalid longitudinal input: hlZ (" +
         std::to_string(get(eHalfLengthZ)) + ") <= 0");
   }
-  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > std::numbers::pi) {
     throw std::invalid_argument(
         "CylinderVolumeBounds: invalid phi sector setup.");
   }
@@ -308,5 +309,8 @@ void CylinderVolumeBounds::set(
     throw e;
   }
 }
+
+CylinderVolumeBounds::CylinderVolumeBounds(const CylinderVolumeBounds& cylbo) =
+    default;
 
 }  // namespace Acts

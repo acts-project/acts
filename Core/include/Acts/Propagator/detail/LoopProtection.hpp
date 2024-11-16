@@ -1,15 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <numbers>
 
 namespace Acts::detail {
 
@@ -46,7 +48,8 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
   // Transverse component at start is taken for the loop protection
   const double p = stepper.absoluteMomentum(state.stepping);
   // Calculate the full helix path
-  const double helixPath = state.options.direction * 2 * M_PI * p / B;
+  const double helixPath =
+      state.options.direction * 2 * std::numbers::pi * p / B;
   // And set it as the loop limit if it overwrites the internal limit
   const double loopLimit = state.options.loopFraction * helixPath;
   const double previousLimit = pathAborter.internalLimit;

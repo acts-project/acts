@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -24,6 +24,7 @@
 
 #include <cmath>
 #include <limits>
+#include <numbers>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -59,7 +60,7 @@ void checkParameters(const CurvilinearTrackParameters& params, double phi,
                        detail::radian_sym(phi), eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundTheta>(), theta, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundQOverP>(), qOverP, eps, eps);
-  // convenience accessorss
+  // convenience accessors
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), pos4[eTime], eps, eps);
@@ -72,6 +73,15 @@ void checkParameters(const CurvilinearTrackParameters& params, double phi,
   // curvilinear reference surface
   CHECK_CLOSE_OR_SMALL(referenceSurface->center(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(referenceSurface->normal(geoCtx), unitDir, eps, eps);
+
+  // reflection
+  CurvilinearTrackParameters reflectedParams = params;
+  reflectedParams.reflectInPlace();
+  CHECK_CLOSE_OR_SMALL(params.reflect().parameters(),
+                       reflectedParams.parameters(), eps, eps);
+  CHECK_CLOSE_OR_SMALL(reflectedParams.reflect().parameters(),
+                       params.parameters(), eps, eps);
+
   // TODO verify reference frame
 }
 
@@ -84,7 +94,7 @@ BOOST_DATA_TEST_CASE(
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps, x, y, z,
     time, phiInput, theta, p) {
   // phi is ill-defined in forward/backward tracks
-  const auto phi = ((0 < theta) && (theta < M_PI)) ? phiInput : 0.0;
+  const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const Vector4 pos4(x, y, z, time);
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
@@ -105,7 +115,7 @@ BOOST_DATA_TEST_CASE(
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
     x, y, z, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
-  const auto phi = ((0 < theta) && (theta < M_PI)) ? phiInput : 0.0;
+  const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const Vector4 pos4(x, y, z, time);
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
@@ -126,7 +136,7 @@ BOOST_DATA_TEST_CASE(
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsAny, x, y,
     z, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
-  const auto phi = ((0 < theta) && (theta < M_PI)) ? phiInput : 0.0;
+  const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const Vector4 pos4(x, y, z, time);
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -118,11 +118,8 @@ class Geant4Simulation final : public Geant4SimulationBase {
     /// Name of the output collection : hits
     std::string outputSimHits = "simhits";
 
-    /// Name of the output collection : initial particles
-    std::string outputParticlesInitial = "particles_initial";
-
-    /// Name of the output collection : final particles
-    std::string outputParticlesFinal = "particles_final";
+    /// Name of the output collection : simulated particles
+    std::string outputParticles = "particles_simulated";
 
     /// The ACTS sensitive surfaces in a mapper, used for hit creation
     std::shared_ptr<const SensitiveSurfaceMapper> sensitiveSurfaceMapper =
@@ -134,13 +131,11 @@ class Geant4Simulation final : public Geant4SimulationBase {
     /// If a physics list has to be instantiated this one is chosen.
     std::string physicsList = "FTFP_BERT";
 
-    std::vector<std::string> volumeMappings;
-
-    std::vector<std::string> materialMappings = {"Silicon"};
-
     std::shared_ptr<const Acts::Volume> killVolume;
     double killAfterTime = std::numeric_limits<double>::infinity();
     bool killSecondaries = false;
+
+    bool recordHitsOfNeutrals = false;
 
     bool recordHitsOfSecondaries = true;
 
@@ -172,10 +167,8 @@ class Geant4Simulation final : public Geant4SimulationBase {
   std::unique_ptr<G4MagneticField> m_magneticField;
   std::unique_ptr<G4FieldManager> m_fieldManager;
 
-  WriteDataHandle<SimParticleContainer> m_outputParticlesInitial{
-      this, "OutputParticlesInitial"};
-  WriteDataHandle<SimParticleContainer> m_outputParticlesFinal{
-      this, "OutputParticlesFinal"};
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHIts"};
 };
 

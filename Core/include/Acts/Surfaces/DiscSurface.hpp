@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -25,6 +25,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <string>
 
 namespace Acts {
@@ -64,7 +65,7 @@ class DiscSurface : public RegularSurface {
   /// @param hphisec The opening angle of the disc surface and is optional
   ///        the default is a full disc
   DiscSurface(const Transform3& transform, double rmin, double rmax,
-              double hphisec = M_PI);
+              double hphisec = std::numbers::pi);
 
   /// Constructor for Discs from Transform3, \f$ r_{min}, r_{max}, hx_{min},
   /// hx_{max} \f$
@@ -312,13 +313,12 @@ class DiscSurface : public RegularSurface {
   /// Return a Polyhedron for the surfaces
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lseg Number of segments along curved lines, it represents
-  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
-  /// are given
+  /// @param quarterSegments Number of segments used to describe the
+  /// quarter of a full circle
   ///
   /// @return A list of vertices and a face/facett description of it
-  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      std::size_t lseg) const override;
+  Polyhedron polyhedronRepresentation(
+      const GeometryContext& gctx, unsigned int quarterSegments) const override;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates

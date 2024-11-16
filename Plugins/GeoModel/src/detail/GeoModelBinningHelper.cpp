@@ -1,12 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/GeoModel/detail/GeoModelBinningHelper.hpp"
+
+#include <numbers>
 
 #include <boost/algorithm/string.hpp>
 
@@ -47,8 +49,8 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
   ActsScalar rangeMax = 0.;
   if (bValue == BinningValue::binPhi &&
       boundaryType == AxisBoundaryType::Closed) {
-    rangeMin = -M_PI;
-    rangeMax = M_PI;
+    rangeMin = -std::numbers::pi_v<ActsScalar>;
+    rangeMax = std::numbers::pi_v<ActsScalar>;
   } else {
     if (binningDetails.size() > 3u && binningDetails[3] != "*") {
       autoRange = false;

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -27,6 +27,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -161,8 +162,8 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_EmptyVolume) {
   // Assign proto material to
   dvCfg.portalMaterialBinning[2u] = BinningDescription{
       {ProtoBinning(BinningValue::binZ, Acts::AxisBoundaryType::Bound, 50),
-       ProtoBinning(BinningValue::binPhi, Acts::AxisBoundaryType::Closed, -M_PI,
-                    M_PI, 12)}};
+       ProtoBinning(BinningValue::binPhi, Acts::AxisBoundaryType::Closed,
+                    -std::numbers::pi, std::numbers::pi, 12)}};
 
   auto dvBuilder = std::make_shared<DetectorVolumeBuilder>(
       dvCfg, getDefaultLogger("DetectorVolumeBuilder", Logging::VERBOSE));

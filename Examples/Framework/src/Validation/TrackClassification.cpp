@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
@@ -25,10 +25,9 @@ inline void increaseHitCount(
     std::vector<ActsExamples::ParticleHitCount>& particleHitCounts,
     ActsFatras::Barcode particleId) {
   // linear search since there is no ordering
-  auto it = std::find_if(particleHitCounts.begin(), particleHitCounts.end(),
-                         [=](const ActsExamples::ParticleHitCount& phc) {
-                           return (phc.particleId == particleId);
-                         });
+  auto it = std::ranges::find_if(particleHitCounts, [=](const auto& phc) {
+    return (phc.particleId == particleId);
+  });
   // either increase count if we saw the particle before or add it
   if (it != particleHitCounts.end()) {
     it->hitCount += 1u;
@@ -40,11 +39,8 @@ inline void increaseHitCount(
 /// Sort hit counts by decreasing values, i.e. majority particle comes first.
 inline void sortHitCount(
     std::vector<ActsExamples::ParticleHitCount>& particleHitCounts) {
-  std::sort(particleHitCounts.begin(), particleHitCounts.end(),
-            [](const ActsExamples::ParticleHitCount& lhs,
-               const ActsExamples::ParticleHitCount& rhs) {
-              return (lhs.hitCount > rhs.hitCount);
-            });
+  std::ranges::sort(particleHitCounts, std::greater{},
+                    [](const auto& p) { return p.hitCount; });
 }
 
 }  // namespace
@@ -57,8 +53,9 @@ void ActsExamples::identifyContributingParticles(
 
   for (auto hitIndex : protoTrack) {
     // register all particles that generated this hit
-    for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
-      increaseHitCount(particleHitCounts, hitParticle.second);
+    for (const auto& [_, value] :
+         makeRange(hitParticlesMap.equal_range(hitIndex))) {
+      increaseHitCount(particleHitCounts, value);
     }
   }
   sortHitCount(particleHitCounts);
@@ -83,8 +80,9 @@ void ActsExamples::identifyContributingParticles(
     IndexSourceLink sl =
         state.getUncalibratedSourceLink().template get<IndexSourceLink>();
     auto hitIndex = sl.index();
-    for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
-      increaseHitCount(particleHitCounts, hitParticle.second);
+    for (const auto& [_, value] :
+         makeRange(hitParticlesMap.equal_range(hitIndex))) {
+      increaseHitCount(particleHitCounts, value);
     }
     return true;
   });
@@ -106,8 +104,9 @@ void ActsExamples::identifyContributingParticles(
     IndexSourceLink sl =
         state.getUncalibratedSourceLink().template get<IndexSourceLink>();
     auto hitIndex = sl.index();
-    for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
-      increaseHitCount(particleHitCounts, hitParticle.second);
+    for (const auto& [_, value] :
+         makeRange(hitParticlesMap.equal_range(hitIndex))) {
+      increaseHitCount(particleHitCounts, value);
     }
   }
   sortHitCount(particleHitCounts);

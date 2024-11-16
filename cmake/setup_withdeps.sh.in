@@ -1,10 +1,10 @@
-# This file is part of the Acts project.
+# This file is part of the ACTS project.
 #
-# Copyright (C) 2024 CERN for the benefit of the Acts project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # This script sets up the ACTS Examples environment in a somewhat robust way.
 
@@ -51,6 +51,9 @@ if [[ -d "@Geant4_DIR@" ]]; then
 fi
 if [[ -d "@DD4hep_DIR@" ]]; then
   . @DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh
+  # Without this, DD4hep's Xerces-C XML parsing fails with:
+  # > Could not load a transcoding service
+  export LC_ALL=C
 fi
 if [[ -d "@podio_DIR@" ]]; then
   export LD_LIBRARY_PATH="@podio_LIBRARY_DIR@:${LD_LIBRARY_PATH}"

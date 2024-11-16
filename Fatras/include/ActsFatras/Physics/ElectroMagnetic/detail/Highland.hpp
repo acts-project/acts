@@ -1,15 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Material/Interactions.hpp"
 
+#include <numbers>
 #include <random>
 
 namespace ActsFatras::detail {
@@ -35,7 +36,8 @@ struct Highland {
         slab, particle.absolutePdg(), particle.mass(), particle.qOverP(),
         particle.absoluteCharge());
     // draw from the normal distribution representing the 3d angle distribution
-    return std::normal_distribution<double>(0.0, M_SQRT2 * theta0)(generator);
+    return std::normal_distribution<double>(
+        0., std::numbers::sqrt2 * theta0)(generator);
   }
 };
 

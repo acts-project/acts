@@ -1,13 +1,13 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/TrackParametersConcept.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/PropagatorError.hpp"
@@ -16,25 +16,36 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
-#include <type_traits>
+#include <concepts>
+
+namespace Acts::detail {
+template <typename Stepper, typename StateType, typename N>
+concept propagator_stepper_compatible_with =
+    requires(const Stepper& s, StateType& st, const N& n) {
+      { s.step(st, n) } -> std::same_as<Acts::Result<double>>;
+    };
+}  // namespace Acts::detail
 
 template <typename S, typename N>
 template <typename propagator_state_t>
 auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     -> Result<void> {
-  // Pre-stepping call to the navigator and action list
+  // Pre-stepping call to the navigator and actor list
   ACTS_VERBOSE("Entering propagation.");
 
   state.stage = PropagatorStage::prePropagation;
 
-  // Pre-Stepping call to the action list
-  state.options.actionList(state, m_stepper, m_navigator, logger());
+  // Pre-Stepping call to the actor list
+  state.options.actorList.act(state, m_stepper, m_navigator, logger());
+  // assume negative outcome, only set to true later if we actually have
+  // a positive outcome.
 
   // start at true, if we don't begin the stepping loop we're fine.
   bool terminatedNormally = true;
 
   // Pre-Stepping: abort condition check
-  if (state.options.abortList(state, m_stepper, m_navigator, logger())) {
+  if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
+                                         logger())) {
     ACTS_VERBOSE("Propagation terminated without going into stepping loop.");
   } else {
     // Stepping loop
@@ -126,9 +137,10 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
           }
         }
 
-        state.options.actionList(state, m_stepper, m_navigator, logger());
+        state.options.actorList.act(state, m_stepper, m_navigator, logger());
 
-        if (state.options.abortList(state, m_stepper, m_navigator, logger())) {
+        if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
+                                               logger())) {
           terminatedNormally = true;
           break;
         }
@@ -174,8 +186,9 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
         // navigator post step call - action list - aborter list
         state.stage = PropagatorStage::postStep;
         m_navigator.postStep(state, m_stepper);
-        state.options.actionList(state, m_stepper, m_navigator, logger());
-        if (state.options.abortList(state, m_stepper, m_navigator, logger())) {
+        state.options.actorList.act(state, m_stepper, m_navigator, logger());
+        if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
+                                               logger())) {
           terminatedNormally = true;
           break;
         }
@@ -195,9 +208,9 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     return PropagatorError::StepCountLimitReached;
   }
 
-  // Post-stepping call to the action list
+  // Post-stepping call to the actor list
   ACTS_VERBOSE("Stepping loop done.");
-  state.options.actionList(state, m_stepper, m_navigator, logger());
+  state.options.actorList.act(state, m_stepper, m_navigator, logger());
 
   // return progress flag here, decide on SUCCESS later
   return Result<void>::success();
@@ -209,12 +222,11 @@ template <typename parameters_t, typename propagator_options_t,
 auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
                                        const propagator_options_t& options,
                                        bool makeCurvilinear) const
-    -> Result<action_list_t_result_t<
-        StepperCurvilinearTrackParameters,
-        typename propagator_options_t::action_list_type>> {
-  static_assert(
-      std::is_copy_constructible<StepperCurvilinearTrackParameters>::value,
-      "return track parameter type must be copy-constructible");
+    -> Result<
+        actor_list_t_result_t<StepperCurvilinearTrackParameters,
+                              typename propagator_options_t::actor_list_type>> {
+  static_assert(std::copy_constructible<StepperCurvilinearTrackParameters>,
+                "return track parameter type must be copy-constructible");
 
   auto state = makeState(start, options);
 
@@ -231,10 +243,10 @@ template <typename parameters_t, typename propagator_options_t,
 auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options) const
-    -> Result<action_list_t_result_t<
-        StepperBoundTrackParameters,
-        typename propagator_options_t::action_list_type>> {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+    -> Result<
+        actor_list_t_result_t<StepperBoundTrackParameters,
+                              typename propagator_options_t::actor_list_type>> {
+  static_assert(BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
   auto state = makeState<parameters_t, propagator_options_t, target_aborter_t,
@@ -251,29 +263,29 @@ template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
 auto Acts::Propagator<S, N>::makeState(
     const parameters_t& start, const propagator_options_t& options) const {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+  static_assert(BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
   // Type of track parameters produced by the propagation
   using ReturnParameterType = StepperCurvilinearTrackParameters;
 
-  static_assert(std::is_copy_constructible<ReturnParameterType>::value,
+  static_assert(std::copy_constructible<ReturnParameterType>,
                 "return track parameter type must be copy-constructible");
 
   // Expand the abort list with a path aborter
   path_aborter_t pathAborter;
   pathAborter.internalLimit = options.pathLimit;
 
-  auto abortList = options.abortList.append(pathAborter);
+  auto actorList = options.actorList.append(pathAborter);
 
   // The expanded options (including path limit)
-  auto eOptions = options.extend(abortList);
+  auto eOptions = options.extend(actorList);
   eOptions.navigation.startSurface = &start.referenceSurface();
   eOptions.navigation.targetSurface = nullptr;
   using OptionsType = decltype(eOptions);
   using StateType =
-      action_list_t_state_t<OptionsType,
-                            typename propagator_options_t::action_list_type>;
+      actor_list_t_state_t<OptionsType,
+                           typename propagator_options_t::actor_list_type>;
   // Initialize the internal propagator state
   StateType state{
       eOptions,
@@ -282,8 +294,7 @@ auto Acts::Propagator<S, N>::makeState(
       m_navigator.makeState(eOptions.navigation)};
 
   static_assert(
-      Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,
-                           StateType&, const N&>,
+      detail::propagator_stepper_compatible_with<S, StateType, N>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
@@ -298,7 +309,7 @@ template <typename parameters_t, typename propagator_options_t,
 auto Acts::Propagator<S, N>::makeState(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options) const {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+  static_assert(BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
   // Type of provided options
@@ -306,18 +317,18 @@ auto Acts::Propagator<S, N>::makeState(
   targetAborter.surface = &target;
   path_aborter_t pathAborter;
   pathAborter.internalLimit = options.pathLimit;
-  auto abortList = options.abortList.append(targetAborter, pathAborter);
+  auto actorList = options.actorList.append(targetAborter, pathAborter);
 
   // Create the extended options and declare their type
-  auto eOptions = options.extend(abortList);
+  auto eOptions = options.extend(actorList);
   eOptions.navigation.startSurface = &start.referenceSurface();
   eOptions.navigation.targetSurface = &target;
   using OptionsType = decltype(eOptions);
 
   // Initialize the internal propagator state
   using StateType =
-      action_list_t_state_t<OptionsType,
-                            typename propagator_options_t::action_list_type>;
+      actor_list_t_state_t<OptionsType,
+                           typename propagator_options_t::actor_list_type>;
   StateType state{
       eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
@@ -325,8 +336,7 @@ auto Acts::Propagator<S, N>::makeState(
       m_navigator.makeState(eOptions.navigation)};
 
   static_assert(
-      Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,
-                           StateType&, const N&>,
+      detail::propagator_stepper_compatible_with<S, StateType, N>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
@@ -341,19 +351,19 @@ auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
                                         Result<void> propagationResult,
                                         const propagator_options_t& /*options*/,
                                         bool makeCurvilinear) const
-    -> Result<action_list_t_result_t<
-        StepperCurvilinearTrackParameters,
-        typename propagator_options_t::action_list_type>> {
+    -> Result<
+        actor_list_t_result_t<StepperCurvilinearTrackParameters,
+                              typename propagator_options_t::actor_list_type>> {
   // Type of track parameters produced by the propagation
   using ReturnParameterType = StepperCurvilinearTrackParameters;
 
-  static_assert(std::is_copy_constructible<ReturnParameterType>::value,
+  static_assert(std::copy_constructible<ReturnParameterType>,
                 "return track parameter type must be copy-constructible");
 
-  // Type of the full propagation result, including output from actions
+  // Type of the full propagation result, including output from actors
   using ResultType =
-      action_list_t_result_t<ReturnParameterType,
-                             typename propagator_options_t::action_list_type>;
+      actor_list_t_result_t<ReturnParameterType,
+                            typename propagator_options_t::actor_list_type>;
 
   if (!propagationResult.ok()) {
     return propagationResult.error();
@@ -386,19 +396,19 @@ template <typename propagator_state_t, typename propagator_options_t>
 auto Acts::Propagator<S, N>::makeResult(
     propagator_state_t state, Result<void> propagationResult,
     const Surface& target, const propagator_options_t& /*options*/) const
-    -> Result<action_list_t_result_t<
-        StepperBoundTrackParameters,
-        typename propagator_options_t::action_list_type>> {
+    -> Result<
+        actor_list_t_result_t<StepperBoundTrackParameters,
+                              typename propagator_options_t::actor_list_type>> {
   // Type of track parameters produced at the end of the propagation
   using ReturnParameterType = StepperBoundTrackParameters;
 
-  static_assert(std::is_copy_constructible<ReturnParameterType>::value,
+  static_assert(std::copy_constructible<ReturnParameterType>,
                 "return track parameter type must be copy-constructible");
 
-  // Type of the full propagation result, including output from actions
+  // Type of the full propagation result, including output from actors
   using ResultType =
-      action_list_t_result_t<ReturnParameterType,
-                             typename propagator_options_t::action_list_type>;
+      actor_list_t_result_t<ReturnParameterType,
+                            typename propagator_options_t::actor_list_type>;
 
   if (!propagationResult.ok()) {
     return propagationResult.error();
@@ -434,7 +444,7 @@ void Acts::Propagator<S, N>::initialize(propagator_state_t& state) const {
 
   // Apply the loop protection - it resets the internal path limit
   detail::setupLoopProtection(
-      state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
+      state, m_stepper, state.options.actorList.template get<path_aborter_t>(),
       false, logger());
 }
 
@@ -453,8 +463,8 @@ Acts::Result<Acts::BoundTrackParameters>
 Acts::detail::BasePropagatorHelper<derived_t>::propagateToSurface(
     const BoundTrackParameters& start, const Surface& target,
     const Options& options) const {
-  using ResultType = Result<typename derived_t::template action_list_t_result_t<
-      BoundTrackParameters, ActionList<>>>;
+  using ResultType = Result<typename derived_t::template actor_list_t_result_t<
+      BoundTrackParameters, ActorList<>>>;
   using DerivedOptions = typename derived_t::template Options<>;
 
   DerivedOptions derivedOptions(options);

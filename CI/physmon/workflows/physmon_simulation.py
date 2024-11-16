@@ -64,6 +64,14 @@ with tempfile.TemporaryDirectory() as temp:
         )
     )
 
+    s.addWriter(
+        acts.examples.RootParticleWriter(
+            level=acts.logging.INFO,
+            inputParticles="particles_input",
+            filePath=tp / "particles.root",
+        )
+    )
+
     addFatras(
         s,
         setup.trackingGeometry,
@@ -73,8 +81,7 @@ with tempfile.TemporaryDirectory() as temp:
         preSelectParticles=None,
         postSelectParticles=ParticleSelectorConfig(removeSecondaries=True),
         inputParticles="particles_input",
-        outputParticlesInitial="particles_initial_fatras",
-        outputParticlesFinal="particles_final_fatras",
+        outputParticles="particles_fatras",
         outputSimHits="simhits_fatras",
         outputDirRoot=tp / "fatras",
     )
@@ -87,12 +94,11 @@ with tempfile.TemporaryDirectory() as temp:
         rnd,
         preSelectParticles=None,
         postSelectParticles=ParticleSelectorConfig(removeSecondaries=True),
-        killVolume=setup.trackingGeometry.worldVolume,
+        killVolume=setup.trackingGeometry.highestTrackingVolume,
         killAfterTime=25 * u.ns,
         killSecondaries=True,
         inputParticles="particles_input",
-        outputParticlesInitial="particles_initial_geant4",
-        outputParticlesFinal="particles_final_geant4",
+        outputParticles="particles_geant4",
         outputSimHits="simhits_geant4",
         outputDirRoot=tp / "geant4",
     )
@@ -100,6 +106,7 @@ with tempfile.TemporaryDirectory() as temp:
     s.run()
 
     for file, name in [
+        (tp / "particles.root", "particles_gun.root"),
         (tp / "fatras" / "particles_simulation.root", "particles_fatras.root"),
         (tp / "geant4" / "particles_simulation.root", "particles_geant4.root"),
     ]:
@@ -135,8 +142,8 @@ with tempfile.TemporaryDirectory() as temp:
     s.run()
 
     for file, name in [
-        (tp / "pythia8_particles.root", "particles_ttbar.root"),
-        (tp / "pythia8_vertices.root", "vertices_ttbar.root"),
+        (tp / "particles.root", "particles_ttbar.root"),
+        (tp / "vertices.root", "vertices_ttbar.root"),
     ]:
         assert file.exists(), "file not found"
         shutil.copy(file, setup.outdir / name)

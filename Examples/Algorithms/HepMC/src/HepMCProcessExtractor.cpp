@@ -1,21 +1,24 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/HepMC/HepMCProcessExtractor.hpp"
 
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
+
+namespace ActsExamples {
 
 namespace {
 
@@ -46,7 +49,7 @@ HepMC3::ConstGenParticlePtr searchProcessParticleById(
 /// @param [in] id The track ID
 /// @param [in, out] particle The particle that get the passed material attached
 void setPassedMaterial(const HepMC3::ConstGenVertexPtr& vertex, const int id,
-                       ActsExamples::SimParticle& particle) {
+                       SimParticle& particle) {
   double x0 = 0.;
   double l0 = 0.;
   HepMC3::ConstGenParticlePtr currentParticle = nullptr;
@@ -73,7 +76,7 @@ void setPassedMaterial(const HepMC3::ConstGenVertexPtr& vertex, const int id,
     currentVertex = currentParticle->production_vertex();
   }
   // Assign the passed material to the particle
-  particle.setMaterialPassed(x0, l0);
+  particle.final().setMaterialPassed(x0, l0);
 }
 
 /// @brief This function collects outgoing particles from a vertex while keeping
@@ -83,9 +86,9 @@ void setPassedMaterial(const HepMC3::ConstGenVertexPtr& vertex, const int id,
 /// @param [in] trackID The track ID of the ingoing particle
 ///
 /// @return Vector containing the outgoing particles from a vertex
-std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
+std::vector<SimParticle> selectOutgoingParticles(
     const HepMC3::ConstGenVertexPtr& vertex, const int trackID) {
-  std::vector<ActsExamples::SimParticle> finalStateParticles;
+  std::vector<SimParticle> finalStateParticles;
 
   // Identify the ingoing particle in the outgoing particles
   HepMC3::ConstGenParticlePtr procPart =
@@ -98,8 +101,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
                                                std::to_string(trackID))
           ->value() != "Death") {
     // Store the particle if it survives
-    finalStateParticles.push_back(
-        ActsExamples::HepMC3Particle::particle(procPart));
+    finalStateParticles.push_back(HepMC3Particle::particle(procPart));
   } else {
     // Store the leftovers if it dies
     for (const HepMC3::ConstGenParticlePtr& procPartOut :
@@ -109,8 +111,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
           procPartOut->end_vertex()) {
         for (const HepMC3::ConstGenParticlePtr& dyingPartOut :
              procPartOut->end_vertex()->particles_out()) {
-          finalStateParticles.push_back(
-              ActsExamples::HepMC3Particle::particle(dyingPartOut));
+          finalStateParticles.push_back(HepMC3Particle::particle(dyingPartOut));
         }
       }
     }
@@ -131,14 +132,14 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
       auto pid = static_cast<Acts::PdgParticle>(genParticle->pid());
 
       // Build an Acts particle out of the data
-      ActsExamples::SimParticle simParticle(barcode, pid);
+      SimParticleState simParticle(barcode, pid);
       simParticle.setPosition4(pos4.x(), pos4.y(), pos4.z(), pos4.t());
       Acts::Vector3 mom3(mom4[0], mom4[1], mom4[2]);
       simParticle.setDirection(mom3.normalized());
       simParticle.setAbsoluteMomentum(mom3.norm());
 
       // Store the particle
-      finalStateParticles.push_back(simParticle);
+      finalStateParticles.push_back(SimParticle(simParticle, simParticle));
     }
   }
 
@@ -149,9 +150,8 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
 ///
 /// @param [in] cfg Configuration of the filtering
 /// @param [in, out] interactions The recorded interactions
-void filterAndSort(
-    const ActsExamples::HepMCProcessExtractor::Config& cfg,
-    ActsExamples::ExtractedSimulationProcessContainer& interactions) {
+void filterAndSort(const HepMCProcessExtractor::Config& cfg,
+                   ExtractedSimulationProcessContainer& interactions) {
   for (auto& interaction : interactions) {
     for (auto cit = interaction.after.cbegin();
          cit != interaction.after.cend();) {
@@ -167,21 +167,18 @@ void filterAndSort(
 
   // Sort the particles based on their momentum
   for (auto& interaction : interactions) {
-    std::sort(interaction.after.begin(), interaction.after.end(),
-              [](ActsExamples::SimParticle& a, ActsExamples::SimParticle& b) {
-                return a.absoluteMomentum() > b.absoluteMomentum();
-              });
+    std::ranges::sort(interaction.after, std::greater{},
+                      [](const auto& a) { return a.absoluteMomentum(); });
   }
 }
+
 }  // namespace
 
-ActsExamples::HepMCProcessExtractor::~HepMCProcessExtractor() = default;
+HepMCProcessExtractor::~HepMCProcessExtractor() = default;
 
-ActsExamples::HepMCProcessExtractor::HepMCProcessExtractor(
-    ActsExamples::HepMCProcessExtractor::Config config,
-    Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("HepMCProcessExtractor", level),
-      m_cfg(std::move(config)) {
+HepMCProcessExtractor::HepMCProcessExtractor(
+    HepMCProcessExtractor::Config config, Acts::Logging::Level level)
+    : IAlgorithm("HepMCProcessExtractor", level), m_cfg(std::move(config)) {
   if (m_cfg.inputEvents.empty()) {
     throw std::invalid_argument("Missing input event collection");
   }
@@ -196,12 +193,12 @@ ActsExamples::HepMCProcessExtractor::HepMCProcessExtractor(
   m_outputSimulationProcesses.initialize(m_cfg.outputSimulationProcesses);
 }
 
-ActsExamples::ProcessCode ActsExamples::HepMCProcessExtractor::execute(
-    const ActsExamples::AlgorithmContext& context) const {
+ProcessCode HepMCProcessExtractor::execute(
+    const AlgorithmContext& context) const {
   // Retrieve the initial particles
   const auto events = m_inputEvents(context);
 
-  ActsExamples::ExtractedSimulationProcessContainer fractions;
+  ExtractedSimulationProcessContainer fractions;
   for (const HepMC3::GenEvent& event : events) {
     // Fast exit
     if (event.particles().empty() || event.vertices().empty()) {
@@ -210,12 +207,11 @@ ActsExamples::ProcessCode ActsExamples::HepMCProcessExtractor::execute(
 
     // Get the initial particle
     HepMC3::ConstGenParticlePtr initialParticle = event.particles()[0];
-    ActsExamples::SimParticle simParticle =
-        HepMC3Particle::particle(initialParticle);
+    SimParticle simParticle = HepMC3Particle::particle(initialParticle);
 
     // Get the final state particles
-    ActsExamples::SimParticle particleToInteraction;
-    std::vector<ActsExamples::SimParticle> finalStateParticles;
+    SimParticle particleToInteraction;
+    std::vector<SimParticle> finalStateParticles;
     // Search the process vertex
     bool vertexFound = false;
     for (const auto& vertex : event.vertices()) {
@@ -239,7 +235,7 @@ ActsExamples::ProcessCode ActsExamples::HepMCProcessExtractor::execute(
         break;
       }
     }
-    fractions.push_back(ActsExamples::ExtractedSimulationProcess{
+    fractions.push_back(ExtractedSimulationProcess{
         simParticle, particleToInteraction, finalStateParticles});
   }
 
@@ -251,5 +247,7 @@ ActsExamples::ProcessCode ActsExamples::HepMCProcessExtractor::execute(
   // Write the recorded material to the event store
   m_outputSimulationProcesses(context, std::move(fractions));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -17,6 +17,7 @@
 
 #include <fstream>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <vector>
 
@@ -206,7 +207,7 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
 
   // z-phi Axes & Grid
   Axis axisZ(AxisBound, -200., 200., 3);
-  Axis axisPhi(AxisClosed, -M_PI, M_PI, 6);
+  Axis axisPhi(AxisClosed, -std::numbers::pi, std::numbers::pi, 6);
   Grid gridZPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisZ, axisPhi);
 
   Svg::GridConverter::Options cOptions;
@@ -285,7 +286,7 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
 
   // r-phi Axes & Grid
   Axis axisR(AxisBound, 100., 400., 3);
-  Axis axisPhi(AxisClosed, -M_PI, M_PI, 4);
+  Axis axisPhi(AxisClosed, -std::numbers::pi, std::numbers::pi, 4);
   Grid gridRPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisR, axisPhi);
 
   Svg::GridConverter::Options cOptions;

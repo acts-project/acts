@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -165,35 +165,12 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           BOOST_TEST_INFO(
               "The truth track parameters at the bottom space point: \n"
               << expParams.transpose());
-          // The curvature of track projection on the transverse plane in unit
-          // of 1/mm
-          double rho = expParams[eBoundQOverP] * 0.3 * 2. / UnitConstants::m;
 
           // The space point pointers
           std::array<const SpacePoint*, 3> spacePointPtrs{};
           std::transform(spacePoints.begin(), std::next(spacePoints.begin(), 3),
                          spacePointPtrs.begin(),
                          [](const auto& sp) { return &sp.second; });
-
-          // Test the partial track parameters estimator
-          auto partialParamsOpt = estimateTrackParamsFromSeed(
-              spacePointPtrs.begin(), spacePointPtrs.end(), *logger);
-          BOOST_REQUIRE(partialParamsOpt.has_value());
-          const auto& estPartialParams = partialParamsOpt.value();
-          BOOST_TEST_INFO(
-              "The estimated track parameters at the transverse plane: \n"
-              << estPartialParams.transpose());
-
-          // The particle starting position is (0, 0, 0). Hence, d0 is zero; the
-          // phi at the point of cloest approach is exactly the phi of the truth
-          // particle
-          CHECK_CLOSE_ABS(estPartialParams[eBoundLoc0], 0., 1e-5);
-          CHECK_CLOSE_ABS(estPartialParams[eBoundPhi], phi, 1e-5);
-          CHECK_CLOSE_ABS(estPartialParams[eBoundQOverP], rho, 1e-4);
-          // The loc1, theta and time are set to zero in the estimator
-          CHECK_CLOSE_ABS(estPartialParams[eBoundLoc1], 0., 1e-10);
-          CHECK_CLOSE_ABS(estPartialParams[eBoundTheta], 0., 1e-10);
-          CHECK_CLOSE_ABS(estPartialParams[eBoundTime], 0., 1e-10);
 
           // Test the full track parameters estimator
           auto fullParamsOpt = estimateTrackParamsFromSeed(

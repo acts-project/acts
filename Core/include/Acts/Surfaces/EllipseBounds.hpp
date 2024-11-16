@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <exception>
 #include <iosfwd>
+#include <numbers>
 #include <stdexcept>
 #include <vector>
 
@@ -57,7 +58,8 @@ class EllipseBounds : public PlanarBounds {
   /// @param halfPhi spanning phi sector (is set to pi as default)
   /// @param averagePhi average phi (is set to 0. as default)
   EllipseBounds(double innerRx, double innerRy, double outerRx, double outerRy,
-                double halfPhi = M_PI, double averagePhi = 0.) noexcept(false)
+                double halfPhi = std::numbers::pi,
+                double averagePhi = 0.) noexcept(false)
       : m_values({innerRx, innerRy, outerRx, outerRy, halfPhi, averagePhi}),
         m_boundingBox(m_values[eInnerRy], m_values[eOuterRy]) {
     checkConsistency();
@@ -92,14 +94,13 @@ class EllipseBounds : public PlanarBounds {
 
   /// Return the vertices
   ///
-  /// @param lseg the number of segments used to approximate
-  /// and eventually curved line, here it refers to the full 2PI Ellipse
-  ///
-  /// @note the number of segments to may be altered by also providing
-  /// the extremas in all direction
+  /// @param quarterSegments is the number of segments to approximate a quarter
+  /// of a circle. In order to symmetrize fully closed and sectoral cylinders,
+  /// also in the first case the two end points are given (albeit they overlap)
+  /// in -pi / pi
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg) const final;
+  std::vector<Vector2> vertices(unsigned int quarterSegments) const final;
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;
@@ -135,7 +136,7 @@ inline void EllipseBounds::checkConsistency() noexcept(false) {
       get(eOuterRy) <= 0.) {
     throw std::invalid_argument("EllipseBounds: invalid along y axis.");
   }
-  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > std::numbers::pi) {
     throw std::invalid_argument("EllipseBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {

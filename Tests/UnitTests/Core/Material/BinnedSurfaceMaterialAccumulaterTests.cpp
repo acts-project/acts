@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -22,6 +22,7 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <numbers>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -85,7 +86,8 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
       std::make_shared<HomogeneousSurfaceMaterial>(mp, 1.));
 
   // Second surface is binned Phi / Z
-  BinUtility sb1(4, -M_PI, M_PI, closed, BinningValue::binPhi);
+  BinUtility sb1(4, -std::numbers::pi, std::numbers::pi, closed,
+                 BinningValue::binPhi);
   sb1 += BinUtility(2, -100., 100., open, BinningValue::binZ);
   surfaces[1u]->assignSurfaceMaterial(
       std::make_shared<ProtoSurfaceMaterial>(sb1));

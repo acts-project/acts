@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/ConeVolumeBounds.hpp"
 
@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -179,7 +180,7 @@ void ConeVolumeBounds::checkConsistency() noexcept(false) {
     throw std::invalid_argument(
         "ConeVolumeBounds: invalid longitudinal input.");
   }
-  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > std::numbers::pi) {
     throw std::invalid_argument("ConeVolumeBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
@@ -200,7 +201,7 @@ bool ConeVolumeBounds::inside(const Vector3& pos, ActsScalar tol) const {
     return false;
   }
   ActsScalar r = VectorHelpers::perp(pos);
-  if (std::abs(get(eHalfPhiSector) - M_PI) > s_onSurfaceTolerance) {
+  if (std::abs(get(eHalfPhiSector) - std::numbers::pi) > s_onSurfaceTolerance) {
     // need to check the phi sector - approximate phi tolerance
     ActsScalar phitol = tol / r;
     ActsScalar phi = VectorHelpers::phi(pos);
@@ -280,7 +281,7 @@ void ConeVolumeBounds::buildSurfaceBounds() {
       m_innerRmax, m_outerRmax, get(eHalfPhiSector), get(eAveragePhi));
 
   // Create the sector bounds
-  if (std::abs(get(eHalfPhiSector) - M_PI) > s_epsilon) {
+  if (std::abs(get(eHalfPhiSector) - std::numbers::pi) > s_epsilon) {
     // The 4 points building the sector
     std::vector<Vector2> polyVertices = {{-get(eHalfLengthZ), m_innerRmin},
                                          {get(eHalfLengthZ), m_innerRmax},

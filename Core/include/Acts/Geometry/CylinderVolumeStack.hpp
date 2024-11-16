@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -85,23 +85,12 @@ class CylinderVolumeStack : public Volume {
   /// construction.
   /// @param volbounds is the new bounds
   /// @param transform is the new transform
-  /// @pre The volume bounds need to be of type
-  ///      @c CylinderVolumeBounds.
-  void update(std::shared_ptr<const VolumeBounds> volbounds,
-              std::optional<Transform3> transform = std::nullopt) override;
-
-  /// Update the volume bounds and transform. This
-  /// will update the bounds of all volumes in the stack
-  /// to accommodate the new bounds and optionally create
-  /// gap volumes according to the resize strategy set during
-  /// construction.
-  /// @param newBounds is the new bounds
-  /// @param transform is the new transform
   /// @param logger is the logger
   /// @pre The volume bounds need to be of type
   ///      @c CylinderVolumeBounds.
-  void update(std::shared_ptr<const CylinderVolumeBounds> newBounds,
-              std::optional<Transform3> transform, const Logger& logger);
+  void update(std::shared_ptr<VolumeBounds> volbounds,
+              std::optional<Transform3> transform = std::nullopt,
+              const Logger& logger = getDummyLogger()) override;
 
   /// Access the gap volume that were created during attachment or resizing.
   /// @return the vector of gap volumes
@@ -133,11 +122,12 @@ class CylinderVolumeStack : public Volume {
                                   Acts::Logging::Level lvl);
 
   /// Helper function that prints output helping in debugging overlaps
+  /// @param direction is the overlap check direction
   /// @param a is the first volume
   /// @param b is the second volume
   /// @param logger is the logger
-  static void overlapPrint(const VolumeTuple& a, const VolumeTuple& b,
-                           const Logger& logger);
+  static void overlapPrint(BinningValue direction, const VolumeTuple& a,
+                           const VolumeTuple& b, const Logger& logger);
 
   /// Helper function that checks if volumes are properly aligned
   /// for attachment.

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -18,6 +18,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iosfwd>
+#include <numbers>
 #include <stdexcept>
 #include <vector>
 
@@ -55,7 +56,7 @@ class ConeBounds : public SurfaceBounds {
   /// @param halfphi is the half opening angle (default is pi)
   /// @param avphi is the phi value around which the bounds are opened
   /// (default=0)
-  ConeBounds(double alpha, bool symm, double halfphi = M_PI,
+  ConeBounds(double alpha, bool symm, double halfphi = std::numbers::pi,
              double avphi = 0.) noexcept(false);
 
   /// Constructor - open cone with alpha, minz and maxz, by
@@ -67,7 +68,8 @@ class ConeBounds : public SurfaceBounds {
   /// @param halfphi is the half opening angle (default is pi)
   /// @param avphi is the phi value around which the bounds are opened
   /// (default=0)
-  ConeBounds(double alpha, double minz, double maxz, double halfphi = M_PI,
+  ConeBounds(double alpha, double minz, double maxz,
+             double halfphi = std::numbers::pi,
              double avphi = 0.) noexcept(false);
 
   /// Constructor - from parameters array
@@ -141,14 +143,14 @@ inline std::vector<double> ConeBounds::values() const {
 }
 
 inline void ConeBounds::checkConsistency() noexcept(false) {
-  if (get(eAlpha) < 0. || get(eAlpha) >= M_PI) {
+  if (get(eAlpha) < 0. || get(eAlpha) >= std::numbers::pi) {
     throw std::invalid_argument("ConeBounds: invalid open angle.");
   }
   if (get(eMinZ) > get(eMaxZ) ||
       std::abs(get(eMinZ) - get(eMaxZ)) < s_epsilon) {
     throw std::invalid_argument("ConeBounds: invalid z range setup.");
   }
-  if (get(eHalfPhiSector) < 0. || abs(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || abs(eHalfPhiSector) > std::numbers::pi) {
     throw std::invalid_argument("ConeBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {

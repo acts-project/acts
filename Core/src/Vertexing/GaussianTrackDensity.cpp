@@ -1,16 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
 
 #include "Acts/Vertexing/VertexingError.hpp"
 
-#include <math.h>
+#include <cmath>
+#include <numbers>
 
 namespace Acts {
 
@@ -124,7 +125,7 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
     discriminant = std::sqrt(discriminant);
     const double zMax = (-linearTerm - discriminant) / (2. * quadraticTerm);
     const double zMin = (-linearTerm + discriminant) / (2. * quadraticTerm);
-    constantTerm -= std::log(2. * M_PI * std::sqrt(covDeterminant));
+    constantTerm -= std::log(2. * std::numbers::pi * std::sqrt(covDeterminant));
 
     state.trackEntries.emplace_back(z0, constantTerm, linearTerm, quadraticTerm,
                                     zMin, zMax);

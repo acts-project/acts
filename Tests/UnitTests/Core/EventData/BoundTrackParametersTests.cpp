@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -34,6 +34,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -76,12 +77,20 @@ void checkParameters(const BoundTrackParameters& params, double l0, double l1,
                        eps);
   CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
   BOOST_CHECK_EQUAL(params.charge(), q);
+
+  // reflection
+  BoundTrackParameters reflectedParams = params;
+  reflectedParams.reflectInPlace();
+  CHECK_CLOSE_OR_SMALL(params.reflect().parameters(),
+                       reflectedParams.parameters(), eps, eps);
+  CHECK_CLOSE_OR_SMALL(reflectedParams.reflect().parameters(),
+                       params.parameters(), eps, eps);
 }
 
 void runTest(const std::shared_ptr<const Surface>& surface, double l0,
              double l1, double time, double phi, double theta, double p) {
   // phi is ill-defined in forward/backward tracks
-  phi = ((0 < theta) && (theta < M_PI)) ? phi : 0.0;
+  phi = ((0 < theta) && (theta < std::numbers::pi)) ? phi : 0.;
 
   // global direction for reference
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
@@ -252,9 +261,9 @@ const auto perigees = bdata::make({
     Surface::makeShared<PerigeeSurface>(Vector3(0, 0, -1.5)),
 });
 const auto planes = bdata::make({
-    Surface::makeShared<PlaneSurface>(Vector3(1, 2, 3), Vector3::UnitX()),
-    Surface::makeShared<PlaneSurface>(Vector3(-2, -3, -4), Vector3::UnitY()),
-    Surface::makeShared<PlaneSurface>(Vector3(3, -4, 5), Vector3::UnitZ()),
+    CurvilinearSurface(Vector3(1, 2, 3), Vector3::UnitX()).planeSurface(),
+    CurvilinearSurface(Vector3(-2, -3, -4), Vector3::UnitY()).planeSurface(),
+    CurvilinearSurface(Vector3(3, -4, 5), Vector3::UnitZ()).planeSurface(),
 });
 const auto straws = bdata::make({
     Surface::makeShared<StrawSurface>(Transform3::Identity(), 2.0 /* radius */,

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
 
@@ -36,6 +36,7 @@
 #include <cstddef>
 #include <iterator>
 #include <map>
+#include <numbers>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -88,12 +89,12 @@ Acts::Experimental::PortalReplacement createDiscReplacement(
                                        ? Acts::BinningValue::binR
                                        : Acts::BinningValue::binPhi;
   // Estimate ranges
-  auto [minR, maxR] = Acts::min_max(rBoundaries);
+  auto [minRit, maxRit] = std::ranges::minmax_element(rBoundaries);
   auto [sectorPhi, avgPhi] = Acts::range_medium(phiBoundaries);
 
   // Transform and bounds
-  auto bounds =
-      std::make_unique<Acts::RadialBounds>(minR, maxR, 0.5 * sectorPhi, avgPhi);
+  auto bounds = std::make_unique<Acts::RadialBounds>(*minRit, *maxRit,
+                                                     0.5 * sectorPhi, avgPhi);
   // A new surface on the negative side over the full range
   auto surface = Acts::Surface::makeShared<Acts::DiscSurface>(
       transform, std::move(bounds));
@@ -325,9 +326,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   rBoundaries.push_back(refValues[CylinderVolumeBounds::BoundValues::eMaxR]);
 
   // Connect in R ? (2u is the index of the outer cylinder)
-  bool connectR = selectedOnly.empty() ||
-                  std::find(selectedOnly.begin(), selectedOnly.end(), 2u) !=
-                      selectedOnly.end();
+  bool connectR = selectedOnly.empty() || rangeContainsValue(selectedOnly, 2u);
 
   // Get phi sector and average phi
   ActsScalar phiSector =
@@ -376,9 +375,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   std::vector<Acts::Direction> discDirs = {Acts::Direction::Forward,
                                            Acts::Direction::Backward};
   for (const auto [iu, idir] : enumerate(discDirs)) {
-    if (selectedOnly.empty() ||
-        std::find(selectedOnly.begin(), selectedOnly.end(), iu) !=
-            selectedOnly.end()) {
+    if (selectedOnly.empty() || rangeContainsValue(selectedOnly, iu)) {
       const Surface& refSurface = volumes[0u]->portals()[iu]->surface();
       const Transform3& refTransform = refSurface.transform(gctx);
       pReplacements.push_back(createDiscReplacement(
@@ -397,9 +394,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     for (const auto [iu, idir] : enumerate(sectorDirs)) {
       // (iu + 4u) corresponds to the indices of the phi-low and phi-high sector
       // planes.
-      if (selectedOnly.empty() ||
-          std::find(selectedOnly.begin(), selectedOnly.end(), iu + 4u) !=
-              selectedOnly.end()) {
+      if (selectedOnly.empty() || rangeContainsValue(selectedOnly, iu + 4u)) {
         // As it is r-wrapping, the inner tube is guaranteed
         const Surface& refSurface =
             volumes[volumes.size() - 1u]->portals()[iu + 4u]->surface();
@@ -410,7 +405,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     }
   } else {
     ACTS_VERBOSE(
-        "No sector planes present, full 2 * M_PI cylindrical geometry.");
+        "No sector planes present, full 2 * std::numbers::pi cylindrical "
+        "geometry.");
   }
 
   // Attach the new volume multi links
@@ -471,9 +467,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   // Connect in Z ?
   // - 1u corresponds to the index of the high-z disc portal for the reference
   // volume.
-  bool connectZ = selectedOnly.empty() ||
-                  std::find(selectedOnly.begin(), selectedOnly.end(), 1u) !=
-                      selectedOnly.end();
+  const bool connectZ =
+      selectedOnly.empty() || rangeContainsValue(selectedOnly, 1u);
   // Reference z axis
   const auto rotation = volumes[0u]->transform(gctx).rotation();
 
@@ -586,9 +581,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   unsigned int iSecOffset = innerPresent ? 4u : 3u;
   // Prepare the cylinder replacements
   for (const auto [iu, idir] : enumerate(cylinderDirs)) {
-    if (selectedOnly.empty() ||
-        std::find(selectedOnly.begin(), selectedOnly.end(), iu + 2u) !=
-            selectedOnly.end()) {
+    if (selectedOnly.empty() || rangeContainsValue(selectedOnly, iu + 2u)) {
       pReplacements.push_back(createCylinderReplacement(
           combinedTransform, cylinderR[iu], zBoundaries,
           {avgPhi - phiSector, avgPhi + phiSector}, iu + 2u, idir));
@@ -603,9 +596,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
                                                Acts::Direction::Backward};
     for (const auto [iu, idir] : enumerate(sectorDirs)) {
       // Access with 3u or 4u but always write 4u (to be caught later)
-      if (selectedOnly.empty() ||
-          std::find(selectedOnly.begin(), selectedOnly.end(), iu + 4u) !=
-              selectedOnly.end()) {
+      if (selectedOnly.empty() || rangeContainsValue(selectedOnly, iu + 4u)) {
         const Surface& refSurface =
             volumes[0u]->portals()[iu + iSecOffset]->surface();
         pReplacements.push_back(createSectorReplacement(
@@ -615,7 +606,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
     }
   } else {
     ACTS_VERBOSE(
-        "No sector planes present, full 2 * M_PI cylindrical geometry.");
+        "No sector planes present, full 2 * std::numbers::pi cylindrical "
+        "geometry.");
   }
 
   // Attach the new volume multi links
@@ -834,7 +826,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     std::vector<PortalReplacement> pReplacements;
     pReplacements.push_back(createCylinderReplacement(
         volumes[0u]->transform(gctx), innerR, {-HlZ, -hlZ, hlZ, HlZ},
-        {-M_PI, M_PI}, 3u, Direction::Forward));
+        {-std::numbers::pi, std::numbers::pi}, 3u, Direction::Forward));
     std::vector<std::shared_ptr<DetectorVolume>> zVolumes = {
         volumes[1u], volumes[0u], volumes[1u]};
     // Attach the new volume multi links
@@ -871,16 +863,14 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     auto& formerContainer = containers[ic - 1];
     auto& currentContainer = containers[ic];
     // Check and throw exception
-    if (formerContainer.find(2u) == formerContainer.end()) {
+    if (!formerContainer.contains(2u)) {
       throw std::invalid_argument(
-          "CylindricalDetectorHelper: proto container has no outer cover, "
-          "can "
+          "CylindricalDetectorHelper: proto container has no outer cover, can "
           "not be connected in R");
     }
-    if (currentContainer.find(3u) == currentContainer.end()) {
+    if (!currentContainer.contains(3u)) {
       throw std::invalid_argument(
-          "CylindricalDetectorHelper: proto container has no inner cover, "
-          "can "
+          "CylindricalDetectorHelper: proto container has no inner cover, can "
           "not be connected in R");
     }
 
@@ -908,7 +898,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   }
 
   // Proto container refurbishment
-  if (containers[0u].find(3u) != containers[0u].end()) {
+  if (containers[0u].contains(3u)) {
     dShell[3u] = containers[0u].find(3u)->second;
   }
   dShell[2u] = containers[containers.size() - 1u].find(2u)->second;
@@ -918,7 +908,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
 
   for (auto [s, volumes] : sideVolumes) {
     auto pR = connectInR(gctx, volumes, {s});
-    if (pR.find(s) != pR.end()) {
+    if (pR.contains(s)) {
       dShell[s] = pR.find(s)->second;
     }
   }
@@ -945,12 +935,12 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
     auto& formerContainer = containers[ic - 1];
     auto& currentContainer = containers[ic];
     // Check and throw exception
-    if (formerContainer.find(1u) == formerContainer.end()) {
+    if (!formerContainer.contains(1u)) {
       throw std::invalid_argument(
           "CylindricalDetectorHelper: proto container has no negative disc, "
           "can not be connected in Z");
     }
-    if (currentContainer.find(0u) == currentContainer.end()) {
+    if (!currentContainer.contains(0u)) {
       throw std::invalid_argument(
           "CylindricalDetectorHelper: proto container has no positive disc, "
           "can not be connected in Z");
@@ -983,7 +973,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
 
   // Check if this is a tube or a cylinder container (check done on 1st)
   std::vector<unsigned int> nominalSides = {2u, 4u, 5u};
-  if (containers[0u].find(3u) != containers[0u].end()) {
+  if (containers[0u].contains(3u)) {
     nominalSides.push_back(3u);
   }
 
@@ -996,7 +986,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   for (auto [s, volumes] : sideVolumes) {
     ACTS_VERBOSE(" - connect " << volumes.size() << " at selected side " << s);
     auto pR = connectInZ(gctx, volumes, {s}, logLevel);
-    if (pR.find(s) != pR.end()) {
+    if (pR.contains(s)) {
       dShell[s] = pR.find(s)->second;
     }
   }

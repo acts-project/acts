@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 
@@ -57,56 +57,65 @@ std::string labelStr(
 void Acts::Experimental::detail::BlueprintDrawer::dotStream(
     std::ostream& ss, const Acts::Experimental::Blueprint::Node& node,
     const Options& options) {
+  // Replace the "/" in node names
+  std::string nodeName = node.name;
+  std::replace(nodeName.begin(), nodeName.end(), '/', '_');
+
   // Root / leaf or branch
   if (node.isRoot()) {
     ss << "digraph " << options.graphName << " {" << '\n';
-    ss << node.name << " " << labelStr(options.root, node.name, node.auxiliary)
+    ss << nodeName << " " << labelStr(options.root, nodeName, node.auxiliary)
        << '\n';
-    ss << node.name << " " << shapeStr(options.root) << '\n';
+    ss << nodeName << " " << shapeStr(options.root) << '\n';
 
   } else if (node.isLeaf()) {
-    ss << node.name << " " << labelStr(options.leaf, node.name, node.auxiliary)
+    ss << nodeName << " " << labelStr(options.leaf, nodeName, node.auxiliary)
        << '\n';
-    ss << node.name << " "
+    ss << nodeName << " "
        << ((node.internalsBuilder != nullptr) ? shapeStr(options.leaf)
                                               : shapeStr(options.gap))
        << '\n';
   } else {
-    ss << node.name << " "
-       << labelStr(options.branch, node.name, node.auxiliary) << '\n';
-    ss << node.name << " " << shapeStr(options.branch) << '\n';
+    ss << nodeName << " " << labelStr(options.branch, nodeName, node.auxiliary)
+       << '\n';
+    ss << nodeName << " " << shapeStr(options.branch) << '\n';
   }
   // Recursive for children
   for (const auto& c : node.children) {
-    ss << node.name << " -> " << c->name << ";" << '\n';
+    // Replace the "/" in node names
+    std::string childName = c->name;
+    std::replace(childName.begin(), childName.end(), '/', '_');
+    ss << nodeName << " -> " << childName << ";" << '\n';
     dotStream(ss, *c, options);
   }
 
   // Shape
   Options::Node shape = node.isLeaf() ? options.shape : options.virtualShape;
-  ss << node.name + "_shape " << shapeStr(shape) << '\n';
-  ss << node.name + "_shape "
-     << labelStr(shape, VolumeBounds::s_boundsTypeNames[node.boundsType],
+  std::stringstream bts;
+  bts << node.boundsType;
+  ss << nodeName + "_shape " << shapeStr(shape) << '\n';
+  ss << nodeName + "_shape "
+     << labelStr(shape, bts.str(),
                  {"t = " + toString(node.transform.translation(), 1),
                   "b = " + toString(node.boundaryValues, 1)})
      << '\n';
-  ss << node.name << " -> " << node.name + "_shape [ arrowhead = \"none\" ];"
+  ss << nodeName << " -> " << nodeName + "_shape [ arrowhead = \"none\" ];"
      << '\n';
 
   // Sub node detection
   if (node.internalsBuilder != nullptr) {
-    ss << node.name + "_int " << shapeStr(options.internals) << '\n';
-    ss << node.name << " -> " << node.name + "_int;" << '\n';
+    ss << nodeName + "_int " << shapeStr(options.internals) << '\n';
+    ss << nodeName << " -> " << nodeName + "_int;" << '\n';
   }
 
   if (node.geoIdGenerator != nullptr) {
-    ss << node.name + "_geoID " << shapeStr(options.geoID) << '\n';
-    ss << node.name << " -> " << node.name + "_geoID;" << '\n';
+    ss << nodeName + "_geoID " << shapeStr(options.geoID) << '\n';
+    ss << nodeName << " -> " << nodeName + "_geoID;" << '\n';
   }
 
   if (node.rootVolumeFinderBuilder != nullptr) {
-    ss << node.name + "_roots " << shapeStr(options.roots) << '\n';
-    ss << node.name << " -> " << node.name + "_roots;" << '\n';
+    ss << nodeName + "_roots " << shapeStr(options.roots) << '\n';
+    ss << nodeName << " -> " << nodeName + "_roots;" << '\n';
   }
 
   if (node.isRoot()) {

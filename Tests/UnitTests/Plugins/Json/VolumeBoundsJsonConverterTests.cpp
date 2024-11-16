@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -23,6 +23,7 @@
 #include <cmath>
 #include <fstream>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <vector>
 
@@ -56,8 +57,8 @@ BOOST_AUTO_TEST_CASE(Cuboid) {
 BOOST_AUTO_TEST_CASE(Cylinder) {
   std::ofstream out("CylinderVolumeBounds.json");
 
-  auto cylinderRef =
-      std::make_shared<const CylinderVolumeBounds>(10., 20., 30., M_PI / 4, 0);
+  auto cylinderRef = std::make_shared<const CylinderVolumeBounds>(
+      10., 20., 30., std::numbers::pi / 4., 0);
   nlohmann::json cylinderOut = VolumeBoundsJsonConverter::toJson(*cylinderRef);
   out << cylinderOut.dump(2);
   out.close();
@@ -78,8 +79,8 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
 BOOST_AUTO_TEST_CASE(Cone) {
   std::ofstream out("ConeVolumeBounds.json");
 
-  auto coneRef = std::make_shared<const ConeVolumeBounds>(0., 0., 0.45, 0.050,
-                                                          0.050, 0., M_PI);
+  auto coneRef = std::make_shared<const ConeVolumeBounds>(
+      0., 0., 0.45, 0.050, 0.050, 0., std::numbers::pi);
   nlohmann::json coneOut = VolumeBoundsJsonConverter::toJson(*coneRef);
   out << coneOut.dump(2);
   out.close();

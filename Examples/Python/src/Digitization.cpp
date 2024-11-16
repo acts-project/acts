@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
@@ -13,6 +13,7 @@
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
+#include "ActsExamples/Digitization/DigitizationCoordinatesConverter.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 
@@ -62,13 +63,14 @@ void addDigitization(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputSimHits);
-    ACTS_PYTHON_MEMBER(outputSourceLinks);
     ACTS_PYTHON_MEMBER(outputMeasurements);
     ACTS_PYTHON_MEMBER(outputClusters);
     ACTS_PYTHON_MEMBER(outputMeasurementParticlesMap);
     ACTS_PYTHON_MEMBER(outputMeasurementSimHitsMap);
     ACTS_PYTHON_MEMBER(surfaceByIdentifier);
     ACTS_PYTHON_MEMBER(randomNumbers);
+    ACTS_PYTHON_MEMBER(doOutputCells);
+    ACTS_PYTHON_MEMBER(doClusterization);
     ACTS_PYTHON_MEMBER(doMerge);
     ACTS_PYTHON_MEMBER(minEnergyDeposit);
     ACTS_PYTHON_MEMBER(digitizationConfigs);
@@ -99,6 +101,19 @@ void addDigitization(Context& ctx) {
     ACTS_PYTHON_MEMBER(volumeLayerComponents);
     ACTS_PYTHON_MEMBER(outputDigiComponents);
     ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    py::class_<ActsExamples::DigitizationCoordinatesConverter,
+               std::shared_ptr<ActsExamples::DigitizationCoordinatesConverter>>(
+        mex, "DigitizationCoordinatesConverter")
+        .def(py::init<ActsExamples::DigitizationConfig&>(), py::arg("config"))
+        .def_property_readonly(
+            "config", &ActsExamples::DigitizationCoordinatesConverter::config)
+        .def("globalToLocal",
+             &ActsExamples::DigitizationCoordinatesConverter::globalToLocal)
+        .def("localToGlobal",
+             &ActsExamples::DigitizationCoordinatesConverter::localToGlobal);
   }
 }
 

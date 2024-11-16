@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/MagneticField/SolenoidBField.hpp"
 
@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 
 #define BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
 
@@ -110,7 +111,8 @@ double Acts::SolenoidBField::B_r(const Vector2& pos, double scale) const {
   double k_2 = k2(r, z);
   double k = std::sqrt(k_2);
   double constant =
-      scale * k * z / (4 * M_PI * std::sqrt(m_cfg.radius * r * r * r));
+      scale * k * z /
+      (4 * std::numbers::pi * std::sqrt(m_cfg.radius * r * r * r));
 
   double B = (2. - k_2) / (2. - 2. * k_2) * ellint_2(k_2) - ellint_1(k_2);
 
@@ -147,7 +149,8 @@ double Acts::SolenoidBField::B_z(const Vector2& pos, double scale) const {
 
   double k_2 = k2(r, z);
   double k = std::sqrt(k_2);
-  double constant = scale * k / (4 * M_PI * std::sqrt(m_cfg.radius * r));
+  double constant =
+      scale * k / (4 * std::numbers::pi * std::sqrt(m_cfg.radius * r));
   double B = ((m_cfg.radius + r) * k_2 - 2. * r) / (2. * r * (1. - k_2)) *
                  ellint_2(k_2) +
              ellint_1(k_2);

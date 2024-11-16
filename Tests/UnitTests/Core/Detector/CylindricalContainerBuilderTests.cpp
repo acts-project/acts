@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -26,6 +26,7 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Tests/CommonHelpers/CylindricalDetector.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -34,66 +35,17 @@
 #include <cmath>
 #include <iterator>
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
 using namespace Acts;
+using namespace Acts::Test;
 using namespace Acts::Experimental;
 
 GeometryContext tContext;
-
-/// @brief A mockup volume builder, it generates volumes with
-/// a single surface filled in in order to use the CylindricalContainerBuilder
-/// infrastructure.
-template <typename surface_type, typename surface_bounds_type>
-class CylindricalVolumeBuilder : public IDetectorComponentBuilder {
- public:
-  CylindricalVolumeBuilder(const Transform3& transform,
-                           const CylinderVolumeBounds& vBounds,
-                           const surface_bounds_type& sBounds,
-                           const std::string& vName)
-      : IDetectorComponentBuilder(),
-        m_transform(transform),
-        m_volumeBounds(vBounds),
-        m_surfaceBounds(sBounds),
-        m_name(vName) {}
-
-  DetectorComponent construct(
-      [[maybe_unused]] const GeometryContext& gctx) const final {
-    // The outgoing root volumes
-    std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
-
-    // Ingredients
-    auto surface = Surface::makeShared<surface_type>(
-        (m_transform), std::make_shared<surface_bounds_type>(m_surfaceBounds));
-
-    auto bounds = std::make_unique<CylinderVolumeBounds>(m_volumeBounds);
-    auto portalGenerator = defaultPortalGenerator();
-    auto volume = DetectorVolumeFactory::construct(
-        portalGenerator, tContext, m_name, m_transform, std::move(bounds),
-        {surface}, {}, tryNoVolumes(), tryAllPortalsAndSurfaces());
-
-    // Add to the roots
-    rootVolumes.push_back(volume);
-
-    DetectorComponent::PortalContainer dContainer;
-    for (auto [ip, p] : enumerate(volume->portalPtrs())) {
-      dContainer[ip] = p;
-    }
-    return DetectorComponent{
-        {volume},
-        dContainer,
-        RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
-  }
-
- private:
-  Transform3 m_transform;
-  CylinderVolumeBounds m_volumeBounds;
-  surface_bounds_type m_surfaceBounds;
-  std::string m_name;
-};
 
 class VolumeGeoIdGenerator : public IGeometryIdGenerator {
  public:
@@ -180,8 +132,8 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   // Create a materialBinning
   tripleZCfg.portalMaterialBinning[2u] = BinningDescription{
       {ProtoBinning(BinningValue::binZ, Acts::AxisBoundaryType::Bound, 50),
-       ProtoBinning(BinningValue::binPhi, Acts::AxisBoundaryType::Closed, -M_PI,
-                    M_PI, 12)}};
+       ProtoBinning(BinningValue::binPhi, Acts::AxisBoundaryType::Closed,
+                    -std::numbers::pi, std::numbers::pi, 12)}};
 
   // Let's test the reverse generation
   tripleZCfg.geoIdReverseGen = true;
@@ -250,16 +202,18 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
   barrelPhiCfg.binning = {BinningValue::binPhi};
 
   unsigned int phiSectors = 5;
-  Acts::ActsScalar phiHalfSector = M_PI / phiSectors;
+  Acts::ActsScalar phiHalfSector = std::numbers::pi / phiSectors;
 
   std::vector<std::shared_ptr<DetectorVolume>> phiVolumes = {};
   for (unsigned int i = 0; i < phiSectors; ++i) {
     // The volume bounds
     Acts::CylinderVolumeBounds volumeBounds(
-        10., 100., 100., phiHalfSector, -M_PI + (2u * i + 1u) * phiHalfSector);
-    // The surface boudns
-    Acts::CylinderBounds surfaceBounds(50., 90., 0.99 * phiHalfSector,
-                                       -M_PI + (2u * i + 1u) * phiHalfSector);
+        10., 100., 100., phiHalfSector,
+        -std::numbers::pi + (2u * i + 1u) * phiHalfSector);
+    // The surface bounds
+    Acts::CylinderBounds surfaceBounds(
+        50., 90., 0.99 * phiHalfSector,
+        -std::numbers::pi + (2u * i + 1u) * phiHalfSector);
 
     auto builder = std::make_shared<
         CylindricalVolumeBuilder<CylinderSurface, CylinderBounds>>(

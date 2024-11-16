@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 
@@ -37,6 +37,7 @@
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -167,10 +168,8 @@ ActsExamples::MockupSectorBuilder::buildSector(
 
   // sort the detector volumes by their radial distance (from
   // innermost---->outermost)
-  std::sort(detVolumes.begin(), detVolumes.end(),
-            [](const auto& detVol1, const auto& detVol2) {
-              return detVol1->center().y() < detVol2->center().y();
-            });
+  std::ranges::sort(detVolumes, {},
+                    [](const auto& detVol) { return detVol->center().y(); });
 
   auto xA = detVolumes.back()->center().x() +
             detVolumes.back()->volumeBounds().values()[0];
@@ -190,9 +189,10 @@ ActsExamples::MockupSectorBuilder::buildSector(
   // calculate the phi angles of the vectors
   auto phiA = Acts::VectorHelpers::phi(pointA);
   auto phiB = Acts::VectorHelpers::phi(pointB);
-  auto sectorAngle = M_PI;
+  Acts::ActsScalar sectorAngle = std::numbers::pi_v<Acts::ActsScalar>;
 
-  auto halfPhi = M_PI / mCfg.NumberOfSectors;
+  Acts::ActsScalar halfPhi =
+      std::numbers::pi_v<Acts::ActsScalar> / mCfg.NumberOfSectors;
 
   if (mCfg.NumberOfSectors == 1) {
     halfPhi = (phiB - phiA) / 2;
@@ -225,7 +225,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
   const Acts::Vector3 pos = {0., 0., 0.};
 
   // the transform of the cylinder volume
-  Acts::AngleAxis3 rotZ(M_PI / 2, Acts::Vector3(0., 0., 1));
+  Acts::AngleAxis3 rotZ(std::numbers::pi / 2., Acts::Vector3(0., 0., 1));
   auto transform = Acts::Transform3(Acts::Translation3(pos));
   transform *= rotZ;
 

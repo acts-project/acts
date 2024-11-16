@@ -23,13 +23,13 @@ def runTruthTrackingGx2f(
         EtaConfig,
         PhiConfig,
         MomentumConfig,
+        ParticleSelectorConfig,
         addFatras,
         addDigitization,
     )
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
-        TruthSeedRanges,
         addGx2fTracks,
     )
 
@@ -74,6 +74,12 @@ def runTruthTrackingGx2f(
         field,
         rnd=rnd,
         enableInteractions=True,
+        postSelectParticles=ParticleSelectorConfig(
+            pt=(0.9 * u.GeV, None),
+            measurements=(7, None),
+            removeNeutral=True,
+            removeSecondaries=True,
+        ),
     )
 
     addDigitization(
@@ -92,9 +98,6 @@ def runTruthTrackingGx2f(
         inputParticles="particles_input",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.muon,
-        truthSeedRanges=TruthSeedRanges(
-            nHits=(7, None),
-        ),
     )
 
     addGx2fTracks(
@@ -103,6 +106,7 @@ def runTruthTrackingGx2f(
         field,
         nUpdateMax=17,
         relChi2changeCutOff=1e-7,
+        multipleScattering=True,
     )
 
     s.addAlgorithm(
@@ -121,7 +125,7 @@ def runTruthTrackingGx2f(
         acts.examples.RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             inputSimHits="simhits",
             inputMeasurementSimHitsMap="measurement_simhits_map",
@@ -133,7 +137,7 @@ def runTruthTrackingGx2f(
         acts.examples.RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "tracksummary_gx2f.root"),
             writeGx2fSpecific=True,
@@ -144,7 +148,7 @@ def runTruthTrackingGx2f(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "performance_gx2f.root"),
         )

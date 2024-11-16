@@ -1,22 +1,12 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-//
-//  RandomNumbers.hpp
-//  ActsExamples
-//
-//  Created by Andreas Salzburger on 17/05/16.
-//
-//
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
-
-#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <cstdint>
 #include <random>
@@ -26,6 +16,9 @@ struct AlgorithmContext;
 
 /// The random number generator used in the framework.
 using RandomEngine = std::mt19937;  ///< Mersenne Twister
+
+/// The seed type used in the framework.
+using RandomSeed = std::uint32_t;
 
 /// Provide event and algorithm specific random number generator.s
 ///
@@ -41,10 +34,10 @@ using RandomEngine = std::mt19937;  ///< Mersenne Twister
 class RandomNumbers {
  public:
   struct Config {
-    std::uint64_t seed = 1234567890u;  ///< random seed
+    RandomSeed seed = 1234567890u;  ///< random seed
   };
 
-  RandomNumbers(const Config& cfg);
+  explicit RandomNumbers(const Config& cfg);
 
   /// Spawn an algorithm-local random number generator. To avoid inefficiencies
   /// and multiple uses of a given RNG seed, this should only be done once per
@@ -59,7 +52,7 @@ class RandomNumbers {
   ///
   /// This should only be used in special cases e.g. where a custom
   /// random engine is used and `spawnGenerator` can not be used.
-  std::uint64_t generateSeed(const AlgorithmContext& context) const;
+  RandomSeed generateSeed(const AlgorithmContext& context) const;
 
  private:
   Config m_cfg;

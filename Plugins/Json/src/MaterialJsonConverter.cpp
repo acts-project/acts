@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 
@@ -35,6 +35,7 @@
 #include <functional>
 #include <iosfwd>
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -283,7 +284,7 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
 }  // namespace
 
 void Acts::to_json(nlohmann::json& j, const Material& t) {
-  if (!t) {
+  if (!t.isValid()) {
     return;
   }
   for (unsigned i = 0; i < t.parameters().size(); ++i) {
@@ -687,10 +688,12 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
     if (bUtility.dimensions() == 1u) {
       if (bUtility.binningData()[0u].binvalue == BinningValue::binR) {
         // Turn to R-Phi
-        bUtility += BinUtility(1u, -M_PI, M_PI, closed, BinningValue::binR);
+        bUtility += BinUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
+                               BinningValue::binPhi);
       } else if (bUtility.binningData()[0u].binvalue == BinningValue::binZ) {
         // Turn to Phi-Z - swap needed
-        BinUtility nbUtility(1u, -M_PI, M_PI, closed, BinningValue::binPhi);
+        BinUtility nbUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
+                             BinningValue::binPhi);
         nbUtility += bUtility;
         bUtility = std::move(nbUtility);
         swapped = true;
@@ -726,7 +729,7 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
     nlohmann::json jGridLink;
     jGridLink["type"] = gridIndexType;
     std::size_t gridIndex = 0;
-    if (gridLink.find(gridIndexType) != gridLink.end()) {
+    if (gridLink.contains(gridIndexType)) {
       std::size_t& fGridIndex = gridLink[gridIndex];
       gridIndex = fGridIndex;
       fGridIndex++;

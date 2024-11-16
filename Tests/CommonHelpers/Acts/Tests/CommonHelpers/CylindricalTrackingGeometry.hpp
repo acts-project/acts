@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -36,6 +36,7 @@
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <functional>
+#include <numbers>
 #include <vector>
 
 namespace Acts::Test {
@@ -88,15 +89,15 @@ struct CylindricalTrackingGeometry {
                                                   moduleHalfXmaxY, moduleHalfY);
     }
 
-    double phiStep = 2 * M_PI / nPhi;
+    double phiStep = 2 * std::numbers::pi / nPhi;
 
     for (int im = 0; im < nPhi; ++im) {
       // Get the moduleTransform
-      double phi = -M_PI + im * phiStep;
+      double phi = -std::numbers::pi + im * phiStep;
       auto mModuleTransform = Transform3(
           Translation3(ringRadius * std::cos(phi), ringRadius * std::sin(phi),
                        ringZ + (im % 2) * zStagger) *
-          AngleAxis3(phi - 0.5 * M_PI, Vector3::UnitZ()) *
+          AngleAxis3(phi - std::numbers::pi / 2., Vector3::UnitZ()) *
           AngleAxis3(moduleTilt, Vector3::UnitY()));
 
       // Create the detector element
@@ -186,8 +187,8 @@ struct CylindricalTrackingGeometry {
     std::vector<Vector3> mPositions;
     mPositions.reserve(nPhiBins * nZbins);
     // prep work
-    double phiStep = 2 * M_PI / (nPhiBins);
-    double minPhi = -M_PI + 0.5 * phiStep;
+    double phiStep = 2 * std::numbers::pi / (nPhiBins);
+    double minPhi = -std::numbers::pi + phiStep / 2.;
     double zStart = -0.5 * (nZbins - 1) * (2 * moduleHalfLength - lOverlap);
     double zStep = 2 * std::abs(zStart) / (nZbins - 1);
     // loop over the bins

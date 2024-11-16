@@ -1,31 +1,27 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Generators/MultiplicityGenerators.hpp"
 #include "ActsExamples/Generators/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Generators/VertexGenerators.hpp"
 
-#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -35,16 +31,6 @@ class IReader;
 }  // namespace ActsExamples
 
 namespace py = pybind11;
-
-namespace {
-double thetaToEta(double theta) {
-  assert(theta != 0);
-  return -1 * std::log(std::tan(theta / 2.));
-}
-double etaToTheta(double eta) {
-  return 2 * std::atan(std::exp(-eta));
-}
-}  // namespace
 
 namespace Acts::Python {
 
@@ -115,6 +101,43 @@ void addGenerators(Context& ctx) {
           &ActsExamples::GaussianPrimaryVertexPositionGenerator::stddev)
       .def_readwrite(
           "mean", &ActsExamples::GaussianPrimaryVertexPositionGenerator::mean);
+  py::class_<
+      ActsExamples::GaussianDisplacedVertexPositionGenerator,
+      ActsExamples::EventGenerator::PrimaryVertexPositionGenerator,
+      std::shared_ptr<ActsExamples::GaussianDisplacedVertexPositionGenerator>>(
+      mex, "GaussianDisplacedVertexPositionGenerator")
+      .def(py::init<>())
+      .def(py::init([](double rMean, double rStdDev, double zMean,
+                       double zStdDev, double tMean, double tStdDev) {
+             ActsExamples::GaussianDisplacedVertexPositionGenerator g;
+             g.rMean = rMean;
+             g.rStdDev = rStdDev;
+             g.zMean = zMean;
+             g.zStdDev = zStdDev;
+             g.tMean = tMean;
+             g.tStdDev = tStdDev;
+             return g;
+           }),
+           py::arg("rMean"), py::arg("rStdDev"), py::arg("zMean"),
+           py::arg("zStdDev"), py::arg("tMean"), py::arg("tStdDev"))
+      .def_readwrite(
+          "rMean",
+          &ActsExamples::GaussianDisplacedVertexPositionGenerator::rMean)
+      .def_readwrite(
+          "rStdDev",
+          &ActsExamples::GaussianDisplacedVertexPositionGenerator::rStdDev)
+      .def_readwrite(
+          "zMean",
+          &ActsExamples::GaussianDisplacedVertexPositionGenerator::zMean)
+      .def_readwrite(
+          "zStdDev",
+          &ActsExamples::GaussianDisplacedVertexPositionGenerator::zStdDev)
+      .def_readwrite(
+          "tMean",
+          &ActsExamples::GaussianDisplacedVertexPositionGenerator::tMean)
+      .def_readwrite(
+          "tStdDev",
+          &ActsExamples::GaussianDisplacedVertexPositionGenerator::tStdDev);
 
   py::class_<
       ActsExamples::FixedPrimaryVertexPositionGenerator,
@@ -153,6 +176,7 @@ void addGenerators(Context& ctx) {
         .def_readwrite("pMin", &Config::pMin)
         .def_readwrite("pMax", &Config::pMax)
         .def_readwrite("pTransverse", &Config::pTransverse)
+        .def_readwrite("pLogUniform", &Config::pLogUniform)
         .def_readwrite("pdg", &Config::pdg)
         .def_readwrite("randomizeCharge", &Config::randomizeCharge)
         .def_readwrite("numParticles", &Config::numParticles)
@@ -181,12 +205,12 @@ void addGenerators(Context& ctx) {
         .def_property(
             "eta",
             [](Config& cfg) {
-              return std::pair{thetaToEta(cfg.thetaMin),
-                               thetaToEta(cfg.thetaMax)};
+              return std::pair{Acts::AngleHelpers::etaFromTheta(cfg.thetaMin),
+                               Acts::AngleHelpers::etaFromTheta(cfg.thetaMax)};
             },
             [](Config& cfg, std::pair<double, double> value) {
-              cfg.thetaMin = etaToTheta(value.first);
-              cfg.thetaMax = etaToTheta(value.second);
+              cfg.thetaMin = Acts::AngleHelpers::thetaFromEta(value.first);
+              cfg.thetaMax = Acts::AngleHelpers::thetaFromEta(value.second);
             });
   }
 
