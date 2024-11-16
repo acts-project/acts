@@ -85,3 +85,11 @@ const std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>&
 Acts::TrackingGeometry::geoIdSurfaceMap() const {
   return m_surfacesById;
 }
+
+void Acts::TrackingGeometry::visualize(
+    IVisualization3D& helper, const GeometryContext& gctx,
+    const ViewConfig& viewConfig, const ViewConfig& portalViewConfig,
+    const ViewConfig& sensitiveViewConfig) const {
+  highestTrackingVolume()->visualize(helper, gctx, viewConfig, portalViewConfig,
+                                     sensitiveViewConfig);
+}

@@ -16,6 +16,8 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
+#include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -27,6 +29,8 @@
 #include <ostream>
 #include <string>
 #include <utility>
+
+#include <boost/container/small_vector.hpp>
 
 namespace Acts {
 
@@ -47,6 +51,10 @@ TrackingVolume::TrackingVolume(
   createBoundarySurfaces();
   interlinkLayers();
   connectDenseBoundarySurfaces(denseVolumeVector);
+
+  DelegateChainBuilder{m_navigationDelegate}
+      .add<&INavigationPolicy::noopInitializeCandidates>()
+      .store(m_navigationDelegate);
 }
 
 TrackingVolume::TrackingVolume(Volume& volume, const std::string& volumeName)
@@ -61,6 +69,8 @@ TrackingVolume::TrackingVolume(const Transform3& transform,
                      {}, volumeName) {}
 
 TrackingVolume::~TrackingVolume() = default;
+TrackingVolume::TrackingVolume(TrackingVolume&&) noexcept = default;
+TrackingVolume& TrackingVolume::operator=(TrackingVolume&&) noexcept = default;
 
 const TrackingVolume* TrackingVolume::lowestTrackingVolume(
     const GeometryContext& gctx, const Vector3& position,
@@ -347,6 +357,22 @@ void TrackingVolume::closeGeometry(
     std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
     std::size_t& vol, const GeometryIdentifierHook& hook,
     const Logger& logger) {
+  if (m_confinedVolumes && !volumes().empty()) {
+    ACTS_ERROR(
+        "TrackingVolume::closeGeometry: Volume "
+        << volumeName()
+        << " has both confined volumes and volumes. This is not supported.");
+    throw std::invalid_argument("Volume has both confined volumes and volumes");
+  }
+
+  if (m_confinedLayers && !surfaces().empty()) {
+    ACTS_ERROR(
+        "TrackingVolume::closeGeometry: Volume "
+        << volumeName()
+        << " has both confined layers and surfaces. This is not supported.");
+    throw std::invalid_argument("Volume has both confined layers and surfaces");
+  }
+
   // we can construct the volume ID from this
   auto volumeID = GeometryIdentifier().setVolume(++vol);
   // assign the Volume ID to the volume itself
@@ -379,7 +405,8 @@ void TrackingVolume::closeGeometry(
     // get the intersection solution
     auto& bSurface = bSurfIter->surfaceRepresentation();
     // create the boundary surface id
-    auto boundaryID = GeometryIdentifier(volumeID).setBoundary(++iboundary);
+    iboundary++;
+    auto boundaryID = GeometryIdentifier(volumeID).setBoundary(iboundary);
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<RegularSurface*>(&bSurface));
     mutableBSurface.assignGeometryId(boundaryID);
@@ -397,7 +424,8 @@ void TrackingVolume::closeGeometry(
       // loop over the layers
       for (auto& layerPtr : m_confinedLayers->arrayObjects()) {
         // create the layer identification
-        auto layerID = GeometryIdentifier(volumeID).setLayer(++ilayer);
+        ilayer++;
+        auto layerID = GeometryIdentifier(volumeID).setLayer(ilayer);
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
         mutableLayerPtr->closeGeometry(materialDecorator, layerID, hook,
@@ -428,10 +456,22 @@ void TrackingVolume::closeGeometry(
 
   GeometryIdentifier::Value iportal = 0;
   for (auto& portal : portals()) {
-    auto portalId = GeometryIdentifier(volumeID).setBoundary(++iportal);
+    iportal++;
+    auto portalId = GeometryIdentifier(volumeID).setBoundary(iportal);
     assert(portal.isValid() && "Invalid portal encountered during closing");
 
     portal.surface().assignGeometryId(portalId);
+  }
+
+  GeometryIdentifier::Value isensitive = 0;
+
+  for (auto& surface : surfaces()) {
+    if (surface.associatedDetectorElement() == nullptr) {
+      continue;
+    }
+    isensitive++;
+    auto sensitiveId = GeometryIdentifier(volumeID).setSensitive(isensitive);
+    surface.assignGeometryId(sensitiveId);
   }
 
   for (auto& volume : volumes()) {
@@ -682,6 +722,43 @@ void TrackingVolume::addSurface(std::shared_ptr<Surface> surface) {
     throw std::invalid_argument("Surface is nullptr");
   }
   m_surfaces.push_back(std::move(surface));
+}
+
+void TrackingVolume::visualize(IVisualization3D& helper,
+                               const GeometryContext& gctx,
+                               const ViewConfig& viewConfig,
+                               const ViewConfig& portalViewConfig,
+                               const ViewConfig& sensitiveViewConfig) const {
+  helper.object(volumeName());
+  Volume::visualize(helper, gctx, viewConfig);
+
+  if (!surfaces().empty()) {
+    helper.object(volumeName() + "_sensitives");
+  }
+  for (const auto& surface : surfaces()) {
+    surface.visualize(helper, gctx, sensitiveViewConfig);
+  }
+
+  for (const auto& child : volumes()) {
+    child.visualize(helper, gctx, viewConfig, portalViewConfig,
+                    sensitiveViewConfig);
+  }
+}
+
+void TrackingVolume::setNavigationPolicy(
+    std::unique_ptr<INavigationPolicy> policy) {
+  if (policy == nullptr) {
+    throw std::invalid_argument("Navigation policy is nullptr");
+  }
+
+  m_navigationPolicy = std::move(policy);
+  m_navigationPolicy->connect(m_navigationDelegate);
+}
+
+void TrackingVolume::initializeNavigationCandidates(
+    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
+    const Logger& logger) const {
+  m_navigationDelegate(args, stream, logger);
 }
 
 }  // namespace Acts

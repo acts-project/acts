@@ -114,7 +114,7 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
   for (unsigned int i = 0; i < nVertices; i++) {
     SimVertex v;
 
-    v.id = (*m_vertexId)[i];
+    v.id = SimVertexBarcode{(*m_vertexId)[i]};
     v.process = static_cast<ActsFatras::ProcessType>((*m_process)[i]);
     v.position4 = Acts::Vector4((*m_vx)[i] * Acts::UnitConstants::mm,
                                 (*m_vy)[i] * Acts::UnitConstants::mm,

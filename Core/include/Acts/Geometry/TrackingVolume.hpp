@@ -13,18 +13,20 @@
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Navigation/NavigationDelegate.hpp"
+#include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -33,7 +35,7 @@
 #include <utility>
 #include <vector>
 
-#include <boost/container/small_vector.hpp>
+#include <boost/container/container_fwd.hpp>
 
 namespace Acts {
 
@@ -41,7 +43,6 @@ class GlueVolumesDescriptor;
 class VolumeBounds;
 template <typename object_t>
 struct NavigationOptions;
-class GeometryIdentifier;
 class IMaterialDecorator;
 class ISurfaceMaterial;
 class IVolumeMaterial;
@@ -49,6 +50,7 @@ class Surface;
 class TrackingVolume;
 struct GeometryIdentifierHook;
 class Portal;
+class INavigationPolicy;
 
 /// Interface types of the Gen1 geometry model
 /// @note This interface is being replaced, and is subject to removal
@@ -115,8 +117,8 @@ class TrackingVolume : public Volume {
   ~TrackingVolume() override;
   TrackingVolume(const TrackingVolume&) = delete;
   TrackingVolume& operator=(const TrackingVolume&) = delete;
-  TrackingVolume(TrackingVolume&&) = default;
-  TrackingVolume& operator=(TrackingVolume&&) = default;
+  TrackingVolume(TrackingVolume&&) noexcept;
+  TrackingVolume& operator=(TrackingVolume&&) noexcept;
 
   /// Constructor for a container Volume
   /// - vacuum filled volume either as a for other tracking volumes
@@ -153,7 +155,6 @@ class TrackingVolume : public Volume {
   /// @param volumeName is a string identifier
   TrackingVolume(Volume& volume, const std::string& volumeName = "undefined");
 
-  // @TODO: This needs to be refactored to include Gen3 volumes
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position associated with that search
@@ -180,6 +181,10 @@ class TrackingVolume : public Volume {
       // Visit the boundary surfaces
       for (const auto& bs : m_boundarySurfaces) {
         visitor(&(bs->surfaceRepresentation()));
+      }
+
+      for (const auto& portal : portals()) {
+        visitor(&portal.surface());
       }
     }
 
@@ -213,6 +218,14 @@ class TrackingVolume : public Volume {
       for (const auto& volume : m_confinedVolumes->arrayObjects()) {
         volume->visitSurfaces(visitor, restrictToSensitives);
       }
+    }
+
+    for (const auto& surface : surfaces()) {
+      visitor(&surface);
+    }
+
+    for (const auto& volume : volumes()) {
+      volume.visitSurfaces(visitor, restrictToSensitives);
     }
   }
 
@@ -473,6 +486,32 @@ class TrackingVolume : public Volume {
   ///  - positiveFaceXY
   GlueVolumesDescriptor& glueVolumesDescriptor();
 
+  /// Produces a 3D visualization of this tracking volume
+  /// @param helper The visualization helper describing the output format
+  /// @param gctx The geometry context
+  /// @param viewConfig The view configuration
+  /// @param portalViewConfig View configuration for portals
+  /// @param sensitiveViewConfig View configuration for sensitive surfaces
+  void visualize(IVisualization3D& helper, const GeometryContext& gctx,
+                 const ViewConfig& viewConfig,
+                 const ViewConfig& portalViewConfig,
+                 const ViewConfig& sensitiveViewConfig) const;
+
+  /// Register a navigation policy with this volume. The argument can not be
+  /// nullptr.
+  /// @param policy is the navigation policy to be registered
+  void setNavigationPolicy(std::unique_ptr<INavigationPolicy> policy);
+
+  /// Populate the navigation stream with navigation candidates from this
+  /// volume. Internally, this consults the registered navigation policy, where
+  /// the default is a noop.
+  /// @param args are the navigation arguments
+  /// @param stream is the navigation stream to be updated
+  /// @param logger is the logger
+  void initializeNavigationCandidates(const NavigationArguments& args,
+                                      AppendOnlyNavigationStream& stream,
+                                      const Logger& logger) const;
+
  private:
   void connectDenseBoundarySurfaces(
       MutableTrackingVolumeVector& confinedDenseVolumes);
@@ -536,6 +575,10 @@ class TrackingVolume : public Volume {
   std::vector<std::unique_ptr<TrackingVolume>> m_volumes;
   std::vector<std::shared_ptr<Portal>> m_portals;
   std::vector<std::shared_ptr<Surface>> m_surfaces;
+
+  std::unique_ptr<INavigationPolicy> m_navigationPolicy;
+
+  NavigationDelegate m_navigationDelegate{};
 };
 
 }  // namespace Acts

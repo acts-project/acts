@@ -335,6 +335,8 @@ BOOST_AUTO_TEST_CASE(ColorTests) {
   BOOST_CHECK_EQUAL(grey,
                     Color(std::array{128 / 255.0, 128 / 255.0, 128 / 255.0}));
   BOOST_CHECK_EQUAL(grey, Color(128 / 255.0, 128 / 255.0, 128 / 255.0));
+
+  static_assert(Color{"#0000ff"} == Color(0, 0, 255));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

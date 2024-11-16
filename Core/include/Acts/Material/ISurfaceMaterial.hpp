@@ -15,6 +15,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 
 #include <memory>
+#include <sstream>
 #include <vector>
 
 namespace Acts {
@@ -116,6 +117,15 @@ class ISurfaceMaterial {
 
   /// Output Method for std::ostream, to be overloaded by child classes
   virtual std::ostream& toStream(std::ostream& sl) const = 0;
+
+  /// @brief output into a string
+  ///
+  /// @return the string representation
+  std::string toString() const {
+    std::stringstream sstrm;
+    toStream(sstrm);
+    return sstrm.str();
+  }
 
  protected:
   double m_splitFactor{1.};  //!< the split factor in favour of oppositePre

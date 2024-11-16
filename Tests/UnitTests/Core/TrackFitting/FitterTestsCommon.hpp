@@ -80,7 +80,7 @@ struct TestReverseFilteringLogic {
   template <typename traj_t>
   bool operator()(typename traj_t::ConstTrackStateProxy state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
-    auto momentum = fabs(1 / state.filtered()[Acts::eBoundQOverP]);
+    auto momentum = std::abs(1 / state.filtered()[Acts::eBoundQOverP]);
     std::cout << "momentum : " << momentum << std::endl;
     return (momentum <= momentumMax);
   }
@@ -93,7 +93,7 @@ auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(
-      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
+      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::INFO));
   Acts::StraightLineStepper stepper;
   return Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>(
       stepper, std::move(navigator));
@@ -108,7 +108,7 @@ auto makeConstantFieldPropagator(
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(
-      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
+      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::INFO));
   auto field =
       std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, bz));
   stepper_t stepper(std::move(field));

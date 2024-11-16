@@ -130,18 +130,9 @@ Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
   geoId._id = std::to_string(surface.geometryId().value());
   pSurface._decorations["geo_id"] = geoId;
 
-  // Attach the style
-  pSurface._fill._fc = {
-      cOptions.style.fillColor,
-      static_cast<actsvg::scalar>(cOptions.style.fillOpacity)};
-
-  // Fill style
-  pSurface._fill._fc._hl_rgb = cOptions.style.highlightColor;
-  pSurface._fill._fc._highlight = cOptions.style.highlights;
-
-  // Stroke style
-  pSurface._stroke._sc = actsvg::style::color{cOptions.style.strokeColor};
-  pSurface._stroke._width = cOptions.style.strokeWidth;
+  auto [surfaceFill, surfaceStroke] = cOptions.style.fillAndStroke();
+  pSurface._fill = surfaceFill;
+  pSurface._stroke = surfaceStroke;
 
   return pSurface;
 }

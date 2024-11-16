@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Detector/DetectorVolume.hpp>
 #include <Acts/Geometry/GeometryContext.hpp>
@@ -19,6 +20,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -87,5 +89,8 @@ void addObj(Context& ctx) {
               obj.write(fileName);
             });
   }
+
+  py::class_<ObjVisualization3D, IVisualization3D>(m, "ObjVisualization3D")
+      .def(py::init<>());
 }
 }  // namespace Acts::Python

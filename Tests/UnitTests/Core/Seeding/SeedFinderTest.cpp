@@ -10,7 +10,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
@@ -146,6 +145,7 @@ int main(int argc, char** argv) {
   Acts::SeedFinderConfig<value_type> config;
   // silicon detector max
   config.rMax = 160._mm;
+  config.rMin = 0._mm;
   config.deltaRMin = 5._mm;
   config.deltaRMax = 160._mm;
   config.deltaRMinTopSP = config.deltaRMin;
@@ -173,24 +173,21 @@ int main(int argc, char** argv) {
 
   int numPhiNeighbors = 1;
 
-  // extent used to store r range for middle spacepoint
-  Acts::Extent rRangeSPExtent;
-
   config.useVariableMiddleSPRange = false;
   const Acts::Range1D<float> rMiddleSPRange;
 
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
-  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
-      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
-  auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
-      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
+  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<3ul>>(
+      numPhiNeighbors, zBinNeighborsBottom, 0);
+  auto topBinFinder = std::make_unique<Acts::GridBinFinder<3ul>>(
+      numPhiNeighbors, zBinNeighborsTop, 0);
   Acts::SeedFilterConfig sfconf;
 
   Acts::ATLASCuts<value_type> atlasCuts = Acts::ATLASCuts<value_type>();
-  config.seedFilter = std::make_unique<Acts::SeedFilter<value_type>>(
-      Acts::SeedFilter<value_type>(sfconf, &atlasCuts));
+  config.seedFilter =
+      std::make_unique<Acts::SeedFilter<value_type>>(sfconf, &atlasCuts);
   Acts::SeedFinder<value_type, Acts::CylindricalSpacePointGrid<value_type>>
       a;  // test creation of unconfigured finder
   a = Acts::SeedFinder<value_type, Acts::CylindricalSpacePointGrid<value_type>>(
@@ -213,8 +210,7 @@ int main(int argc, char** argv) {
       Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(gridConf,
                                                                      gridOpts);
   Acts::CylindricalSpacePointGridCreator::fillGrid(
-      config, options, grid, spContainer.begin(), spContainer.end(),
-      rRangeSPExtent);
+      config, options, grid, spContainer.begin(), spContainer.end());
 
   auto spGroup = Acts::CylindricalBinnedGroup<value_type>(
       std::move(grid), *bottomBinFinder, *topBinFinder);

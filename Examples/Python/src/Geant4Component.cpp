@@ -29,9 +29,7 @@
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
-#include <array>
 #include <memory>
-#include <optional>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -206,8 +204,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                   .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c1, Config);
     ACTS_PYTHON_MEMBER(outputSimHits);
-    ACTS_PYTHON_MEMBER(outputParticlesInitial);
-    ACTS_PYTHON_MEMBER(outputParticlesFinal);
+    ACTS_PYTHON_MEMBER(outputParticles);
     ACTS_PYTHON_MEMBER(sensitiveSurfaceMapper);
     ACTS_PYTHON_MEMBER(magneticField);
     ACTS_PYTHON_MEMBER(physicsList);
@@ -334,7 +331,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                                   const std::vector<std::string>&
                                       sensitiveMatches,
                                   const std::vector<std::string>&
-                                      passiveMatches) {
+                                      passiveMatches,
+                                  bool convertMaterial) {
       // Initiate the detector construction & retrieve world
       ActsExamples::GdmlDetectorConstruction gdmlContruction(gdmlFileName);
       const auto* world = gdmlContruction.Construct();
@@ -351,6 +349,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       Acts::Geant4DetectorSurfaceFactory::Options options;
       options.sensitiveSurfaceSelector = sensitiveSelectors;
       options.passiveSurfaceSelector = passiveSelectors;
+      options.convertMaterial = convertMaterial;
 
       G4Transform3D nominal;
       Acts::Geant4DetectorSurfaceFactory factory;

@@ -76,7 +76,7 @@ class WhiteBoard {
   struct HolderT : public IHolder {
     T value;
 
-    HolderT(T&& v) : value(std::move(v)) {}
+    explicit HolderT(T&& v) : value(std::move(v)) {}
     const std::type_info& type() const override { return typeid(T); }
   };
 

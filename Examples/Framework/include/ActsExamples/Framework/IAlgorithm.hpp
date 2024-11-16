@@ -44,7 +44,7 @@ class IAlgorithm : public SequenceElement {
   /// @param context The algorithm context
   ProcessCode internalExecute(const AlgorithmContext& context) final {
     return execute(context);
-  };
+  }
 
   /// Initialize the algorithm
   ProcessCode initialize() override { return ProcessCode::SUCCESS; }

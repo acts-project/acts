@@ -26,7 +26,6 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -36,17 +35,8 @@
 #include <cmath>
 #include <filesystem>
 #include <memory>
-#include <ostream>
 #include <utility>
 #include <vector>
-
-namespace Acts::Experimental {
-ViewConfig s_viewSensitive = {.color = {0, 180, 240}};
-ViewConfig s_viewPassive = {.color = {240, 280, 0}};
-ViewConfig s_viewVolume = {.color = {220, 220, 0}};
-ViewConfig s_viewGrid = {.color = {220, 0, 0}};
-ViewConfig s_viewLine = {.color = {0, 0, 220}};
-}  // namespace Acts::Experimental
 
 void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
                                           const Polyhedron& polyhedron,

@@ -87,6 +87,7 @@ class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
         s_pointStyle;  //!< The style of the space point to be drawn
 
     std::string infoBoxTitle = "";  //!< If an info box title is set, draw it
+    Acts::Svg::Style infoTitleStyle = s_infoStyle;
     Acts::Svg::Style infoBoxStyle = s_infoStyle;  // The style of the info box
 
     bool projectionXY = true;  ///< xy projection
@@ -170,7 +171,8 @@ ActsExamples::ProcessCode ActsExamples::SvgPointWriter<T, Acc>::writeT(
         auto xyIbox = Acts::Svg::infoBox(
             static_cast<actsvg::scalar>(point3D.x() + 10.),
             static_cast<actsvg::scalar>(point3D.y() - 10.), m_cfg.infoBoxTitle,
-            {"Position: " + Acts::toString(point3D)}, m_cfg.infoBoxStyle, p);
+            m_cfg.infoTitleStyle, {"Position: " + Acts::toString(point3D)},
+            m_cfg.infoBoxStyle, p);
         xyView.add_object(xyIbox);
       }
     }

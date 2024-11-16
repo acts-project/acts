@@ -50,6 +50,7 @@ void addBinning(Context& ctx);
 void addEventData(Context& ctx);
 
 void addPropagation(Context& ctx);
+void addNavigation(Context& ctx);
 
 void addGeometry(Context& ctx);
 void addGeometryBuildingGen1(Context& ctx);
@@ -120,15 +121,16 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addAlgebra(ctx);
   addBinning(ctx);
   addEventData(ctx);
+  addOutput(ctx);
 
   addPropagation(ctx);
+  addNavigation(ctx);
   addGeometryBuildingGen1(ctx);
   addGeometry(ctx);
   addExperimentalGeometry(ctx);
 
   addMagneticField(ctx);
   addMaterial(ctx);
-  addOutput(ctx);
   addDetector(ctx);
   addExampleAlgorithms(ctx);
   addInput(ctx);

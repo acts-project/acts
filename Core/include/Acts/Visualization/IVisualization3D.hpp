@@ -72,6 +72,12 @@ class IVisualization3D {
   /// Remove all contents of this helper
   ///
   virtual void clear() = 0;
+
+  virtual ~IVisualization3D() = default;
+
+  /// Start a new object context
+  /// @param name The name of the object
+  virtual void object(const std::string& name) = 0;
 };
 
 /// Overload of the << operator to facilitate writing to streams.

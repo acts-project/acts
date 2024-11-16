@@ -21,6 +21,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 
 namespace {
 
@@ -52,7 +53,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   auto ts = traj.getTrackState(ts_idx);
   ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
 
-  ts.predicted() << 0.3, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
+  ts.predicted() << 0.3, 0.5, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;
 
   ts.allocateCalibrated(2);
@@ -60,7 +61,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
   ts.setProjectorSubspaceIndices<2>(projector);
 
-  ts.filtered() << 0.301, 0.503, 0.5 * M_PI, 0., 1 / 100., 0.;
+  ts.filtered() << 0.301, 0.503, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;
   ts.pathLength() = 1.;
   ts.jacobian().setIdentity();
@@ -69,7 +70,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   ts = traj.getTrackState(ts_idx);
   ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
 
-  ts.predicted() << 0.2, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
+  ts.predicted() << 0.2, 0.5, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;
 
   ts.allocateCalibrated(2);
@@ -77,7 +78,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
   ts.setProjectorSubspaceIndices<2>(projector);
 
-  ts.filtered() << 0.27, 0.53, 0.5 * M_PI, 0., 1 / 100., 0.;
+  ts.filtered() << 0.27, 0.53, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;
   ts.pathLength() = 2.;
   ts.jacobian().setIdentity();
@@ -86,7 +87,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   ts = traj.getTrackState(ts_idx);
   ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
 
-  ts.predicted() << 0.35, 0.49, 0.5 * M_PI, 0., 1 / 100., 0.;
+  ts.predicted() << 0.35, 0.49, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;
 
   ts.allocateCalibrated(2);
@@ -94,7 +95,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
   ts.setProjectorSubspaceIndices<2>(projector);
 
-  ts.filtered() << 0.33, 0.43, 0.5 * M_PI, 0., 1 / 100., 0.;
+  ts.filtered() << 0.33, 0.43, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;
   ts.pathLength() = 3.;
   ts.jacobian().setIdentity();

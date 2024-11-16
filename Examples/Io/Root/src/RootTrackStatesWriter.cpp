@@ -34,6 +34,7 @@
 #include <ios>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
@@ -43,8 +44,6 @@
 #include <TTree.h>
 
 namespace ActsExamples {
-
-class IndexSourceLink;
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
@@ -622,7 +621,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         residuals = parameters - truthParams;
         residuals[Acts::eBoundPhi] = Acts::detail::difference_periodic(
             parameters[Acts::eBoundPhi], truthParams[Acts::eBoundPhi],
-            2 * M_PI);
+            2 * std::numbers::pi);
         m_res_eLOC0[ipar].push_back(
             static_cast<float>(residuals[Acts::eBoundLoc0]));
         m_res_eLOC1[ipar].push_back(
