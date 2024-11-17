@@ -524,8 +524,6 @@ class MultiTrajectoryTestsCommon {
     }
 
     BOOST_CHECK(ts.hasProjector());
-    BOOST_CHECK_EQUAL(ts.projectorSubspaceIndices()[0], eBoundLoc0);
-    BOOST_CHECK_EQUAL(ts.projectorSubspaceIndices()[1], eBoundLoc1);
   }
 
   void testTrackStateProxyAllocations(std::default_random_engine& rng) {

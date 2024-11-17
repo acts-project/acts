@@ -625,7 +625,7 @@ class TrackStateProxy {
 
   template <std::size_t measdim>
   SubspaceIndices<measdim> projectorSubspaceIndices() const {
-    BoundSubspaceIndices boundSubspace = BoundSubspaceIndices();
+    BoundSubspaceIndices boundSubspace = projectorSubspaceIndices();
     SubspaceIndices<measdim> subspace;
     std::copy(boundSubspace.begin(), boundSubspace.begin() + measdim,
               subspace.begin());
@@ -643,7 +643,7 @@ class TrackStateProxy {
   }
 
   template <std::size_t measdim, typename index_t>
-  void setProjectorSubspaceIndices(std::array<index_t, measdim> subspaceIndices)
+  void setProjectorSubspaceIndices(std::span<index_t, measdim> subspaceIndices)
     requires(!ReadOnly && measdim <= eBoundSize)
   {
     assert(has<hashString("projector")>());
@@ -652,6 +652,24 @@ class TrackStateProxy {
                    boundSubspace.begin(),
                    [](index_t i) { return static_cast<std::uint8_t>(i); });
     setProjectorSubspaceIndices(boundSubspace);
+  }
+
+  template <typename index_t>
+  void setProjectorSubspaceIndices(std::span<index_t> subspaceIndices) {
+    assert(has<hashString("projector")>());
+    assert(subspaceIndices.size() <= eBoundSize);
+    BoundSubspaceIndices boundSubspace{};
+    std::transform(subspaceIndices.begin(), subspaceIndices.end(),
+                   boundSubspace.begin(),
+                   [](index_t i) { return static_cast<std::uint8_t>(i); });
+    setProjectorSubspaceIndices(boundSubspace);
+  }
+
+  template <std::size_t measdim, typename index_t>
+  void setProjectorSubspaceIndices(std::array<index_t, measdim> subspaceIndices)
+    requires(!ReadOnly && measdim <= eBoundSize)
+  {
+    setProjectorSubspaceIndices(std::span(subspaceIndices));
   }
 
   VariableBoundSubspaceHelper projectorSubspaceHelper() const {
