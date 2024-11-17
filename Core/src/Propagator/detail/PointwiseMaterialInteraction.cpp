@@ -28,7 +28,7 @@ void PointwiseMaterialInteraction::covarianceContributions(
   // Compute contributions from interactions
   if (multipleScattering) {
     // TODO use momentum before or after energy loss in backward mode?
-    const float theta0 =
+    const double theta0 =
         computeMultipleScatteringTheta0(slab, absPdg, mass, qOverP, absQ);
     // sigmaPhi = theta0 / sin(theta)
     const auto sigmaPhi = theta0 * (dir.norm() / VectorHelpers::perp(dir));
@@ -38,7 +38,7 @@ void PointwiseMaterialInteraction::covarianceContributions(
   }
   // TODO just ionisation loss or full energy loss?
   if (energyLoss) {
-    const float sigmaQoverP =
+    const double sigmaQoverP =
         computeEnergyLossLandauSigmaQOverP(slab, mass, qOverP, absQ);
     varianceQoverP = sigmaQoverP * sigmaQoverP;
   }

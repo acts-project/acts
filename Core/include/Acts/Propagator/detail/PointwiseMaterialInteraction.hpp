@@ -14,7 +14,6 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -30,19 +29,19 @@ struct PointwiseMaterialInteraction {
   const Surface* surface = nullptr;
 
   /// The particle position at the interaction.
-  const Vector3 pos = Vector3(0., 0., 0);
+  const Vector3 pos = Vector3::Zero();
   /// The particle time at the interaction.
-  const double time = 0.0;
+  const double time = 0;
   /// The particle direction at the interaction.
-  const Vector3 dir = Vector3(0., 0., 0);
+  const Vector3 dir = Vector3::Zero();
   /// The particle q/p at the interaction
-  const float qOverP = 0.0;
+  const double qOverP = 0;
   /// The absolute particle charge
-  const float absQ = 0.0;
+  const double absQ = 0;
   /// The particle momentum at the interaction
-  const float momentum = 0.0;
+  const double momentum = 0;
   /// The particle mass
-  const float mass = 0.0;
+  const double mass = 0;
   /// The particle absolute pdg
   const PdgParticle absPdg = PdgParticle::eInvalid;
   /// The covariance transport decision at the interaction
@@ -51,19 +50,19 @@ struct PointwiseMaterialInteraction {
   const Direction navDir;
 
   /// The effective, passed material properties including the path correction.
-  MaterialSlab slab = MaterialSlab(0.);
+  MaterialSlab slab = MaterialSlab(0);
   /// The path correction factor due to non-zero incidence on the surface.
-  double pathCorrection = 0.;
+  double pathCorrection = 0;
   /// Expected phi variance due to the interactions.
-  double variancePhi = 0.;
+  double variancePhi = 0;
   /// Expected theta variance due to the interactions.
-  double varianceTheta = 0.;
+  double varianceTheta = 0;
   /// Expected q/p variance due to the interactions.
-  double varianceQoverP = 0.;
+  double varianceQoverP = 0;
   /// The energy change due to the interaction.
-  double Eloss = 0.;
+  double Eloss = 0;
   /// The momentum after the interaction
-  double nextP = 0.;
+  double nextP = 0;
 
   /// @brief Constructor
   ///
