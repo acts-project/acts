@@ -321,7 +321,9 @@ class DefaultFilterPolicy final : public OutputFilterPolicy {
       throw ThresholdFailure(
           "Requested debug level is incompatible with "
           "the ACTS_LOG_FAILURE_THRESHOLD=" +
-          std::string{levelName(getFailureThreshold())} +
+          std::string{levelName(getFailureThreshold())} + " vs " +
+          std::string{levelName(lvl)} + " = " +
+          std::to_string(static_cast<int>(lvl)) +
           " configuration. See "
           "https://acts.readthedocs.io/en/latest/core/misc/"
           "logging.html#logging-thresholds");
