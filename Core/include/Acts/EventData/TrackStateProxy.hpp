@@ -605,16 +605,8 @@ class TrackStateProxy {
   ///
   /// @{
 
-  /// Returns whether a projector is set
-  /// @return Whether it is set
-  bool hasProjector() const { return has<hashString("projector")>(); }
-
-  BoundSubspaceIndices projectorSubspaceIndices() const {
-    assert(has<hashString("projector")>());
-    return deserializeSubspaceIndices<eBoundSize>(
-        component<SerializedSubspaceIndices, hashString("projector")>());
-  }
-
+  /// Set the projector subspace indices
+  /// @param boundSubspace The projector subspace indices to set
   void setProjectorSubspaceIndices(BoundSubspaceIndices boundSubspace)
     requires(!ReadOnly)
   {
@@ -623,15 +615,8 @@ class TrackStateProxy {
         serializeSubspaceIndices(boundSubspace);
   }
 
-  template <std::size_t measdim>
-  SubspaceIndices<measdim> projectorSubspaceIndices() const {
-    BoundSubspaceIndices boundSubspace = projectorSubspaceIndices();
-    SubspaceIndices<measdim> subspace;
-    std::copy(boundSubspace.begin(), boundSubspace.begin() + measdim,
-              subspace.begin());
-    return subspace;
-  }
-
+  /// Set the projector subspace indices
+  /// @param subspace The projector subspace indices to set
   template <std::size_t measdim>
   void setProjectorSubspaceIndices(SubspaceIndices<measdim> subspace)
     requires(!ReadOnly && measdim <= eBoundSize)
@@ -642,6 +627,8 @@ class TrackStateProxy {
     setProjectorSubspaceIndices(boundSubspace);
   }
 
+  /// Set the projector subspace indices
+  /// @param subspaceIndices The projector subspace indices to set
   template <std::size_t measdim, typename index_t>
   void setProjectorSubspaceIndices(std::span<index_t, measdim> subspaceIndices)
     requires(!ReadOnly && measdim <= eBoundSize)
@@ -654,6 +641,8 @@ class TrackStateProxy {
     setProjectorSubspaceIndices(boundSubspace);
   }
 
+  /// Set the projector subspace indices
+  /// @param subspaceIndices The projector subspace indices to set
   template <typename index_t>
   void setProjectorSubspaceIndices(std::span<index_t> subspaceIndices) {
     assert(has<hashString("projector")>());
@@ -665,6 +654,8 @@ class TrackStateProxy {
     setProjectorSubspaceIndices(boundSubspace);
   }
 
+  /// Set the projector subspace indices
+  /// @param subspaceIndices The projector subspace indices to set
   template <std::size_t measdim, typename index_t>
   void setProjectorSubspaceIndices(std::array<index_t, measdim> subspaceIndices)
     requires(!ReadOnly && measdim <= eBoundSize)
@@ -672,6 +663,31 @@ class TrackStateProxy {
     setProjectorSubspaceIndices(std::span(subspaceIndices));
   }
 
+  /// Returns whether a projector is set
+  /// @return Whether it is set
+  bool hasProjector() const { return has<hashString("projector")>(); }
+
+  /// Returns the projector subspace indices
+  /// @return The projector subspace indices
+  BoundSubspaceIndices projectorSubspaceIndices() const {
+    assert(has<hashString("projector")>());
+    return deserializeSubspaceIndices<eBoundSize>(
+        component<SerializedSubspaceIndices, hashString("projector")>());
+  }
+
+  /// Returns the projector subspace indices
+  /// @return The projector subspace indices
+  template <std::size_t measdim>
+  SubspaceIndices<measdim> projectorSubspaceIndices() const {
+    BoundSubspaceIndices boundSubspace = projectorSubspaceIndices();
+    SubspaceIndices<measdim> subspace;
+    std::copy(boundSubspace.begin(), boundSubspace.begin() + measdim,
+              subspace.begin());
+    return subspace;
+  }
+
+  /// Creates a variable size subspace helper
+  /// @return The subspace helper
   VariableBoundSubspaceHelper projectorSubspaceHelper() const {
     BoundSubspaceIndices boundSubspace = projectorSubspaceIndices();
     std::span<std::uint8_t> validSubspaceIndices(
@@ -679,6 +695,8 @@ class TrackStateProxy {
     return VariableBoundSubspaceHelper(validSubspaceIndices);
   }
 
+  /// Creates a fixed size subspace helper
+  /// @return The subspace helper
   template <std::size_t measdim>
   FixedBoundSubspaceHelper<measdim> projectorSubspaceHelper() const {
     SubspaceIndices<measdim> subspace = projectorSubspaceIndices<measdim>();
