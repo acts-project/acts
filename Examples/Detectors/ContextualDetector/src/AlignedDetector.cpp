@@ -8,10 +8,7 @@
 
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/ILayerBuilder.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/ContextualDetector/AlignmentDecorator.hpp"
 #include "ActsExamples/ContextualDetector/ExternalAlignmentDecorator.hpp"
@@ -21,7 +18,6 @@
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
-#include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
 using namespace Acts::UnitLiterals;
 
@@ -29,7 +25,7 @@ namespace ActsExamples::Contextual {
 
 AlignedDetector::AlignedDetector(const Config& cfg)
     : DetectorCommons::Detector(
-          Acts::getDefaultLogger("AlignedDetector", m_cfg.logLevel)),
+          Acts::getDefaultLogger("AlignedDetector", cfg.logLevel)),
       m_cfg(cfg) {}
 
 void AlignedDetector::buildTrackingGeometry() {

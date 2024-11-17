@@ -7,11 +7,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 // STL include(s)
-#include <cassert>
 #include <ctime>
-#include <exception>
-#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -321,9 +319,7 @@ class DefaultFilterPolicy final : public OutputFilterPolicy {
       throw ThresholdFailure(
           "Requested debug level is incompatible with "
           "the ACTS_LOG_FAILURE_THRESHOLD=" +
-          std::string{levelName(getFailureThreshold())} + " vs " +
-          std::string{levelName(lvl)} + " = " +
-          std::to_string(static_cast<int>(lvl)) +
+          std::string{levelName(getFailureThreshold())} +
           " configuration. See "
           "https://acts.readthedocs.io/en/latest/core/misc/"
           "logging.html#logging-thresholds");

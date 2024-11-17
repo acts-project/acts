@@ -9,13 +9,10 @@
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
-#include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <algorithm>
-#include <memory>
 #include <stdexcept>
 
 namespace ActsExamples::Telescope {

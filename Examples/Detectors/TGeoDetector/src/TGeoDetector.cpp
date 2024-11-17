@@ -25,15 +25,11 @@
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
 
 #include <algorithm>
 #include <array>
-#include <cstdlib>
 #include <fstream>
-#include <functional>
-#include <initializer_list>
 #include <limits>
 #include <list>
 #include <optional>
@@ -368,7 +364,7 @@ void TGeoDetector::readTGeoLayerBuilderConfigsFile(const std::string& path,
 
 TGeoDetector::TGeoDetector(const Config& cfg)
     : DetectorCommons::Detector(
-          Acts::getDefaultLogger("TGeoDetector", m_cfg.logLevel)),
+          Acts::getDefaultLogger("TGeoDetector", cfg.logLevel)),
       m_cfg(cfg) {}
 
 void TGeoDetector::Config::readJson(const std::string& jsonFile) {

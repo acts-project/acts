@@ -14,7 +14,6 @@
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 
@@ -28,7 +27,7 @@ namespace ActsExamples::Geant4 {
 
 Geant4Detector::Geant4Detector(const Geant4Detector::Config& cfg)
     : DetectorCommons::Detector(
-          Acts::getDefaultLogger("Geant4Detector", m_cfg.logLevel)),
+          Acts::getDefaultLogger("Geant4Detector", cfg.logLevel)),
       m_cfg(cfg) {}
 
 const Geant4Detector::DetectorElements& Geant4Detector::detectorElements()

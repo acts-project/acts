@@ -17,7 +17,7 @@ namespace ActsExamples::Generic {
 
 GenericDetector::GenericDetector(const Config& cfg)
     : DetectorCommons::Detector(
-          Acts::getDefaultLogger("GenericDetector", m_cfg.logLevel)),
+          Acts::getDefaultLogger("GenericDetector", cfg.logLevel)),
       m_cfg(cfg) {}
 
 void GenericDetector::buildTrackingGeometry() {
