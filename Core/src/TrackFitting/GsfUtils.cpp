@@ -8,12 +8,12 @@
 
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <span>
 
 namespace Acts::detail {
@@ -27,8 +27,10 @@ ActsScalar calculateDeterminant(
     BoundSubspaceIndices projector, unsigned int calibratedSize) {
   return visit_measurement(calibratedSize, [&](auto N) {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
-    std::span s{projector.begin(), projector.begin() + kMeasurementSize};
-    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(s);
+    std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
+        projector.begin(), projector.begin() + kMeasurementSize);
+    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
+        validSubspaceIndices);
 
     typename Acts::TrackStateTraits<
         kMeasurementSize, true>::CalibratedCovariance calibratedCovariance{

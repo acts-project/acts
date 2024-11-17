@@ -10,6 +10,8 @@
 
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 
+#include <cstdint>
+
 namespace Acts {
 
 void MbfSmoother::calculateSmoothed(InternalTrackState& ts,
@@ -42,9 +44,11 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
 
   visit_measurement(measurement.calibratedSize, [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
-    std::span s{measurement.projector.begin(),
-                measurement.projector.begin() + kMeasurementSize};
-    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(s);
+    std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
+        measurement.projector.begin(),
+        measurement.projector.begin() + kMeasurementSize);
+    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
+        validSubspaceIndices);
 
     using ProjectorMatrix =
         Eigen::Matrix<ActsScalar, kMeasurementSize, eBoundSize>;

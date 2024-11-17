@@ -87,9 +87,15 @@ class MbfSmoother {
   /// Internal track state representation for the smoother.
   /// @note This allows us to move parts of the implementation into the .cpp
   struct InternalTrackState final {
-    using Jacobian = BoundMatrix;
-    using Parameters = BoundVector;
-    using Covariance = BoundMatrix;
+    using Jacobian =
+        typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                                  false>::Covariance;
+    using Parameters =
+        typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                                  false>::Parameters;
+    using Covariance =
+        typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                                  false>::Covariance;
 
     struct Measurement final {
       unsigned int calibratedSize{0};
