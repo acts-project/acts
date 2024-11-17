@@ -114,6 +114,11 @@ def _detector_create(cls, config_class=None):
             setattr(cfg, k, v)
         if hasattr(cfg, "materialDecorator"):
             setattr(cfg, "materialDecorator", mdecorator)
+        if hasattr(cfg, "logLevel"):
+            print("Setting log level to", cfg.logLevel)
+        import traceback
+
+        print("".join(traceback.format_stack()))
         det = cls(cfg)
         tg, deco, _ = det.trackingGeometry()
         Detector = namedtuple(
