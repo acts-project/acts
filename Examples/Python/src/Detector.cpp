@@ -67,6 +67,7 @@ void addDetector(Context& ctx) {
     auto c = py::class_<Config>(d, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(buildLevel);
+    ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_MEMBER(surfaceLogLevel);
     ACTS_PYTHON_MEMBER(layerLogLevel);
     ACTS_PYTHON_MEMBER(volumeLogLevel);

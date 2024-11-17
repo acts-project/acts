@@ -110,12 +110,8 @@ def _detector_create(cls, config_class=None):
             cfg = cls.Config()
         else:
             cfg = config_class()
-        _kwargs = {}
         for k, v in kwargs.items():
-            try:
-                setattr(cfg, k, v)
-            except AttributeError:
-                _kwargs[k] = v
+            setattr(cfg, k, v)
         if hasattr(cfg, "materialDecorator"):
             setattr(cfg, "materialDecorator", mdecorator)
         det = cls(cfg)

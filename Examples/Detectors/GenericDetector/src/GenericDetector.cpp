@@ -9,13 +9,9 @@
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/ILayerBuilder.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
-#include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
-#include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
 namespace ActsExamples::Generic {
 

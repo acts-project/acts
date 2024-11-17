@@ -13,7 +13,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <utility>
 #include <vector>
 
 namespace ActsExamples::Generic {
@@ -28,12 +27,12 @@ class GenericDetector : public ActsExamples::DetectorCommons::Detector {
   using DetectorElement = ActsExamples::Generic::GenericDetectorElement;
 
   struct Config {
-    std::size_t buildLevel{3};
-    Acts::Logging::Level logLevel{Acts::Logging::INFO};
-    Acts::Logging::Level surfaceLogLevel{Acts::Logging::INFO};
-    Acts::Logging::Level layerLogLevel{Acts::Logging::INFO};
-    Acts::Logging::Level volumeLogLevel{Acts::Logging::INFO};
-    bool buildProto{false};
+    std::size_t buildLevel = 3;
+    Acts::Logging::Level logLevel = Acts::Logging::INFO;
+    Acts::Logging::Level surfaceLogLevel = Acts::Logging::INFO;
+    Acts::Logging::Level layerLogLevel = Acts::Logging::INFO;
+    Acts::Logging::Level volumeLogLevel = Acts::Logging::INFO;
+    bool buildProto = false;
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
   };
 
