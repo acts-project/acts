@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(CopyTrackProxyCalibrated) {
   ts.allocateCalibrated(kMeasurementSize);
   ts.calibrated<kMeasurementSize>() = Vector3::Ones();
   ts.calibratedCovariance<kMeasurementSize>() = SquareMatrix3::Identity();
-  ts.setSubspaceIndices(BoundSubspaceIndices{});
+  ts.setProjectorSubspaceIndices(BoundSubspaceIndices{});
 
   auto tsCopy = track1.appendTrackState(TrackStatePropMask::Calibrated);
   tsCopy.copyFrom(ts, TrackStatePropMask::Calibrated, false);

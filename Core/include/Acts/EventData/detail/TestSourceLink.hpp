@@ -137,13 +137,14 @@ void testSourceLinkCalibrator(
     trackState.allocateCalibrated(2);
     trackState.template calibrated<2>() = sl.parameters;
     trackState.template calibratedCovariance<2>() = sl.covariance;
-    trackState.setSubspaceIndices(std::array{sl.indices[0], sl.indices[1]});
+    trackState.setProjectorSubspaceIndices(
+        std::array{sl.indices[0], sl.indices[1]});
   } else if (sl.indices[0] != Acts::eBoundSize) {
     trackState.allocateCalibrated(1);
     trackState.template calibrated<1>() = sl.parameters.head<1>();
     trackState.template calibratedCovariance<1>() =
         sl.covariance.topLeftCorner<1, 1>();
-    trackState.setSubspaceIndices(std::array{sl.indices[0]});
+    trackState.setProjectorSubspaceIndices(std::array{sl.indices[0]});
   } else {
     throw std::runtime_error(
         "Tried to extract measurement from invalid TestSourceLink");
