@@ -8,7 +8,6 @@
 
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 
 #include <G4VUserDetectorConstruction.hh>

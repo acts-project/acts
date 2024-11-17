@@ -9,7 +9,6 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
@@ -17,7 +16,6 @@
 #include <algorithm>
 #include <memory>
 #include <stdexcept>
-#include <utility>
 
 #include <DD4hep/Detector.h>
 #include <DD4hep/Handle.h>
@@ -45,18 +43,18 @@ dd4hep::Detector& DD4hepDetector::DD4hepDetector::dd4hepDetector() {
   return *m_detector;
 }
 
-dd4hep::DetElement& DD4hepDetector::dd4hepGeometry() {
-  if (!m_geometry) {
+dd4hep::DetElement DD4hepDetector::dd4hepGeometry() {
+  if (m_detector == nullptr) {
     buildDD4hepGeometry();
   }
-  return m_geometry;
+  return m_detector->world();
 }
 
 TGeoNode& DD4hepDetector::tgeoGeometry() {
-  if (!m_geometry) {
+  if (m_detector == nullptr) {
     buildDD4hepGeometry();
   }
-  return *m_geometry.placement().ptr();
+  return *dd4hepGeometry().placement().ptr();
 }
 
 void DD4hepDetector::buildDD4hepGeometry() {
@@ -98,7 +96,6 @@ void DD4hepDetector::buildDD4hepGeometry() {
   }
   m_detector->volumeManager();
   m_detector->apply("DD4hepVolumeManager", 0, nullptr);
-  m_geometry = m_detector->world();
 
   // restore the logging
   gErrorIgnoreLevel = old_gErrorIgnoreLevel;
@@ -113,16 +110,18 @@ void DD4hepDetector::buildTrackingGeometry() {
   Acts::GeometryContext gctx;
   auto logger = Acts::getDefaultLogger("DD4hepConversion", m_cfg.logLevel);
   m_trackingGeometry = Acts::convertDD4hepDetector(
-      m_geometry, *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
+      dd4hepGeometry(), *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
       m_cfg.envelopeR, m_cfg.envelopeZ, m_cfg.defaultLayerThickness,
       m_cfg.sortDetectors, gctx, m_cfg.materialDecorator,
       m_cfg.geometryIdentifierHook);
 }
 
 void DD4hepDetector::drop() {
+  if (m_detector == nullptr) {
+    return;
+  }
   m_detector = nullptr;
-  m_geometry = dd4hep::DetElement();
-  m_trackingGeometry.reset();
+  m_trackingGeometry = nullptr;
 }
 
 }  // namespace ActsExamples::DD4hep

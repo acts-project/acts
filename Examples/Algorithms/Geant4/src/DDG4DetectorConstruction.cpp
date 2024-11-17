@@ -33,7 +33,7 @@ DDG4DetectorConstruction::DDG4DetectorConstruction(
 // See DD4hep::Simulation::Geant4DetectorConstruction::Construct()
 G4VPhysicalVolume* DDG4DetectorConstruction::Construct() {
   if (m_world == nullptr) {
-    dd4hep::sim::Geant4Mapping& g4map = dd4hep::sim::Geant4Mapping::instance();
+    dd4hep::sim::Geant4Mapping g4map(m_detector->dd4hepDetector());
     auto conv = dd4hep::sim::Geant4Converter(m_detector->dd4hepDetector(),
                                              dd4hep::PrintLevel::VERBOSE);
     dd4hep::sim::Geant4GeometryInfo* geoInfo =

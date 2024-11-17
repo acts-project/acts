@@ -51,7 +51,7 @@ class DD4hepDetector : public DetectorCommons::Detector {
     /// XML-file with the detector description
     std::vector<std::string> xmlFileNames;
     /// The name of the service
-    std::string name;
+    std::string name = "default";
     /// Binningtype in phi
     Acts::BinningType bTypePhi = Acts::equidistant;
     /// Binningtype in r
@@ -89,7 +89,7 @@ class DD4hepDetector : public DetectorCommons::Detector {
 
   /// Interface method to access the DD4hep geometry
   /// @return The world DD4hep DetElement
-  dd4hep::DetElement& dd4hepGeometry();
+  dd4hep::DetElement dd4hepGeometry();
 
   /// Interface method to Access the TGeo geometry
   /// @return The world TGeoNode (physical volume)
@@ -107,8 +107,6 @@ class DD4hepDetector : public DetectorCommons::Detector {
   Config m_cfg;
   /// Pointer to the interface to the DD4hep geometry
   std::unique_ptr<dd4hep::Detector> m_detector;
-  /// The world DD4hep DetElement
-  dd4hep::DetElement m_geometry;
 };
 
 }  // namespace ActsExamples::DD4hep
