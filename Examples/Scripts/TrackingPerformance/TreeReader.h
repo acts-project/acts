@@ -36,7 +36,7 @@ struct ParticleInfo {
 ///
 struct TreeReader {
   // The constructor
-  TreeReader(TTree* tree_) : tree(tree_) {}
+  explicit TreeReader(TTree* tree_) : tree(tree_) {}
 
   // Get entry
   void getEntry(unsigned int i) const {
@@ -400,7 +400,7 @@ struct TrackSummaryReader : public TreeReader {
 };
 
 /// Struct used for reading particles written out by the
-/// TrackFinderPerformanceWriter
+/// TrackFinderNTupleWriter
 ///
 struct ParticleReader : public TreeReader {
   // Delete the default constructor

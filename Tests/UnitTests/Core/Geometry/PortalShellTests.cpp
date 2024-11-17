@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   SingleCylinderPortalShell shell1{cyl1};
   BOOST_CHECK_EQUAL(shell1.size(), 4);
 
-  using enum CylinderPortalShell::Face;
+  using enum CylinderVolumeBounds::Face;
 
   const auto* pDisc = shell1.portal(PositiveDisc);
   BOOST_REQUIRE_NE(pDisc, nullptr);
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
 //              inner cylinder
 
 BOOST_AUTO_TEST_CASE(PortalAssignment) {
-  using enum CylinderPortalShell::Face;
+  using enum CylinderVolumeBounds::Face;
   TrackingVolume vol(
       Transform3::Identity(),
       std::make_shared<CylinderVolumeBounds>(30_mm, 100_mm, 100_mm));
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
 
 BOOST_AUTO_TEST_SUITE(CylinderStack)
 BOOST_AUTO_TEST_CASE(ZDirection) {
-  using enum CylinderPortalShell::Face;
+  using enum CylinderVolumeBounds::Face;
   BOOST_TEST_CONTEXT("rMin>0") {
     TrackingVolume vol1(
         Transform3{Translation3{Vector3::UnitZ() * -100_mm}},
@@ -447,7 +447,7 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
 }
 
 BOOST_AUTO_TEST_CASE(RDirection) {
-  using enum CylinderPortalShell::Face;
+  using enum CylinderVolumeBounds::Face;
   BOOST_TEST_CONTEXT("rMin>0") {
     TrackingVolume vol1(
         Transform3::Identity(),
@@ -610,7 +610,7 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
       gctx, {&stack, &shell3}, BinningValue::binZ, *logger};
   BOOST_CHECK(stack2.isValid());
 
-  using enum CylinderPortalShell::Face;
+  using enum CylinderVolumeBounds::Face;
 
   auto lookup = [](auto& shell, CylinderPortalShell::Face face,
                    Vector3 position,
@@ -720,13 +720,13 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
                     nullptr);
 }
 
-BOOST_AUTO_TEST_CASE(ConnectOuter) {
+BOOST_AUTO_TEST_CASE(Fill) {
   auto cyl1 = makeVolume(30_mm, 40_mm, 100_mm);
   auto cyl2 = makeVolume(0_mm, 50_mm, 110_mm);
 
   SingleCylinderPortalShell shell{cyl1};
 
-  using enum CylinderPortalShell::Face;
+  using enum CylinderVolumeBounds::Face;
   BOOST_CHECK_EQUAL(
       shell.portal(OuterCylinder)->getLink(Direction::AlongNormal), nullptr);
   BOOST_CHECK_EQUAL(
@@ -736,7 +736,7 @@ BOOST_AUTO_TEST_CASE(ConnectOuter) {
   BOOST_CHECK_EQUAL(
       shell.portal(NegativeDisc)->getLink(Direction::OppositeNormal), nullptr);
 
-  shell.connectOuter(cyl2);
+  shell.fill(cyl2);
 
   BOOST_CHECK_NE(shell.portal(OuterCylinder)->getLink(Direction::AlongNormal),
                  nullptr);
@@ -749,7 +749,7 @@ BOOST_AUTO_TEST_CASE(ConnectOuter) {
 }
 
 BOOST_AUTO_TEST_CASE(RegisterInto) {
-  using enum CylinderPortalShell::Face;
+  using enum CylinderVolumeBounds::Face;
   TrackingVolume vol1(
       Transform3::Identity(),
       std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm));

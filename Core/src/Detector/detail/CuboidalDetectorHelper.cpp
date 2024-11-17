@@ -373,7 +373,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::xyzBoundaries(
   }
 
   for (auto [im, map] : enumerate(valueMaps)) {
-    for (auto [key, value] : map) {
+    for (auto [key, _] : map) {
       boundaries[im].push_back(key);
     }
     std::ranges::sort(boundaries[im]);

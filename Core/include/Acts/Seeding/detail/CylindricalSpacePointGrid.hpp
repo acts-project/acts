@@ -11,19 +11,30 @@
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
+#include <numbers>
 #include <vector>
 
 namespace Acts {
 
+/// Concept to check the provided external space point type
+/// can be used to fill the space point grid
+template <typename external_spacepoint_t>
+concept CylindricalGridElement = requires(external_spacepoint_t sp) {
+  { sp.phi() } -> std::same_as<float>;
+  { sp.z() } -> std::same_as<float>;
+  { sp.radius() } -> std::same_as<float>;
+};
+
 /// Cylindrical Space Point bin is a 2D grid with (phi, z) bins
 /// It stores a vector of internal space points to external space points
-template <typename external_spacepoint_t>
+template <Acts::CylindricalGridElement external_spacepoint_t>
 using CylindricalSpacePointGrid = Acts::Grid<
     std::vector<const external_spacepoint_t*>,
     Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>,
-    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>,
-    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>>;
+    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Open>,
+    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Open>>;
 
 /// Cylindrical Binned Group
 template <typename external_spacepoint_t>
@@ -56,11 +67,11 @@ struct CylindricalSpacePointGridConfig {
   // maximum impact parameter in mm
   float impactMax = 0 * Acts::UnitConstants::mm;
   // minimum phi value for phiAxis construction
-  float phiMin = -M_PI;
+  float phiMin = -std::numbers::pi_v<float>;
   // maximum phi value for phiAxis construction
-  float phiMax = M_PI;
+  float phiMax = std::numbers::pi_v<float>;
   // Multiplicator for the number of phi-bins. The minimum number of phi-bins
-  // depends on min_pt, magnetic field: 2*M_PI/(minPT particle phi-deflection).
+  // depends on min_pt, magnetic field: 2*pi/(minPT particle phi-deflection).
   // phiBinDeflectionCoverage is a multiplier for this number. If
   // numPhiNeighbors (in the configuration of the BinFinders) is configured to
   // return 1 neighbor on either side of the current phi-bin (and you want to
@@ -78,6 +89,7 @@ struct CylindricalSpacePointGridConfig {
           "Repeated conversion to internal units for "
           "CylindricalSpacePointGridConfig");
     }
+
     using namespace Acts::UnitLiterals;
     CylindricalSpacePointGridConfig config = *this;
     config.isInInternalUnits = true;
@@ -88,13 +100,43 @@ struct CylindricalSpacePointGridConfig {
     config.zMin /= 1_mm;
     config.deltaRMax /= 1_mm;
 
+    for (float& val : config.zBinEdges) {
+      val /= 1_mm;
+    }
+    for (float& val : config.rBinEdges) {
+      val /= 1_mm;
+    }
+
+    if (config.phiMin < -std::numbers::pi_v<float> ||
+        config.phiMax > std::numbers::pi_v<float>) {
+      throw std::runtime_error(
+          "CylindricalSpacePointGridConfig: phiMin (" +
+          std::to_string(config.phiMin) + ") and/or phiMax (" +
+          std::to_string(config.phiMax) +
+          ") are outside "
+          "the allowed phi range, defined as "
+          "[-std::numbers::pi_v<float>, std::numbers::pi_v<float>]");
+    }
+    if (config.phiMin > config.phiMax) {
+      throw std::runtime_error(
+          "CylindricalSpacePointGridConfig: phiMin is bigger then phiMax");
+    }
+    if (config.rMin > config.rMax) {
+      throw std::runtime_error(
+          "CylindricalSpacePointGridConfig: rMin is bigger then rMax");
+    }
+    if (config.zMin > config.zMax) {
+      throw std::runtime_error(
+          "CylindricalSpacePointGridConfig: zMin is bigger than zMax");
+    }
+
     return config;
   }
 };
 
 struct CylindricalSpacePointGridOptions {
   // magnetic field
-  float bFieldInZ = 0;
+  float bFieldInZ = 0. * Acts::UnitConstants::T;
   bool isInInternalUnits = false;
   CylindricalSpacePointGridOptions toInternalUnits() const {
     if (isInInternalUnits) {
@@ -117,7 +159,8 @@ class CylindricalSpacePointGridCreator {
   template <typename external_spacepoint_t>
   static Acts::CylindricalSpacePointGrid<external_spacepoint_t> createGrid(
       const Acts::CylindricalSpacePointGridConfig& _config,
-      const Acts::CylindricalSpacePointGridOptions& _options);
+      const Acts::CylindricalSpacePointGridOptions& _options,
+      const Acts::Logger& logger = Acts::getDummyLogger());
 
   template <typename external_spacepoint_t,
             typename external_spacepoint_iterator_t>
@@ -126,7 +169,19 @@ class CylindricalSpacePointGridCreator {
       const Acts::SeedFinderOptions& options,
       Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
       external_spacepoint_iterator_t spBegin,
-      external_spacepoint_iterator_t spEnd);
+      external_spacepoint_iterator_t spEnd,
+      const Acts::Logger& logger = Acts::getDummyLogger());
+
+  template <typename external_spacepoint_t, typename external_collection_t>
+    requires std::ranges::range<external_collection_t> &&
+             std::same_as<typename external_collection_t::value_type,
+                          external_spacepoint_t>
+  static void fillGrid(
+      const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+      const Acts::SeedFinderOptions& options,
+      Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
+      const external_collection_t& collection,
+      const Acts::Logger& logger = Acts::getDummyLogger());
 };
 
 }  // namespace Acts

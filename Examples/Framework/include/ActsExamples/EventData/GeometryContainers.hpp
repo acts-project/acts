@@ -20,6 +20,7 @@
 #include <iostream>
 #include <utility>
 
+#include <boost/bimap.hpp>
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
 
@@ -228,5 +229,10 @@ struct GeometryIdMultisetAccessor {
   // pointer to the container
   const Container* container = nullptr;
 };
+
+/// A map that allows mapping back and forth between ACTS and Athena Geometry
+/// Ids
+using GeometryIdMapActsAthena =
+    boost::bimap<std::uint64_t, Acts::GeometryIdentifier>;
 
 }  // namespace ActsExamples

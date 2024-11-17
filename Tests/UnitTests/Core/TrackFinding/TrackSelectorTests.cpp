@@ -19,8 +19,10 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
 
 #include <limits>
+#include <numbers>
 
 using namespace Acts;
 namespace bdata = boost::unit_test::data;
@@ -83,10 +85,6 @@ struct MockTrack {
   TrackStateRange trackStatesReversed() const { return {}; }
 };
 
-double thetaFromEta(double eta) {
-  return 2 * std::atan(std::exp(-eta));
-}
-
 BOOST_AUTO_TEST_SUITE(TrackSelectorTests)
 
 std::vector<double> etaValues{-5.0, -4.5, -4.0, -3.5, -3.0, -2.5, -2.0, -1.5,
@@ -97,7 +95,7 @@ BOOST_DATA_TEST_CASE(TestSingleBinCase, bdata::make(etaValues), eta) {
   TrackSelector::EtaBinnedConfig cfgBase;
 
   MockTrack baseTrack{};
-  baseTrack.m_theta = thetaFromEta(eta);
+  baseTrack.m_theta = AngleHelpers::thetaFromEta(eta);
   baseTrack.m_phi = 0.5;
   baseTrack.m_pt = 0.5;
   baseTrack.m_loc0 = 0.5;
@@ -206,9 +204,9 @@ BOOST_DATA_TEST_CASE(TestSingleBinCase, bdata::make(etaValues), eta) {
     cfg.cutSets.at(0).etaMin = {-1.0};
     TrackSelector selector{cfg};
     MockTrack track = baseTrack;
-    track.m_theta = thetaFromEta(0.5);
+    track.m_theta = AngleHelpers::thetaFromEta(0.5);
     BOOST_CHECK(selector.isValidTrack(track));
-    track.m_theta = thetaFromEta(-1.1);
+    track.m_theta = AngleHelpers::thetaFromEta(-1.1);
     BOOST_CHECK(!selector.isValidTrack(track));
   }
 
@@ -218,9 +216,9 @@ BOOST_DATA_TEST_CASE(TestSingleBinCase, bdata::make(etaValues), eta) {
     cfg.cutSets.at(0).etaMax = {1.0};
     TrackSelector selector{cfg};
     MockTrack track = baseTrack;
-    track.m_theta = thetaFromEta(0.5);
+    track.m_theta = AngleHelpers::thetaFromEta(0.5);
     BOOST_CHECK(selector.isValidTrack(track));
-    track.m_theta = thetaFromEta(1.1);
+    track.m_theta = AngleHelpers::thetaFromEta(1.1);
     BOOST_CHECK(!selector.isValidTrack(track));
   }
 
@@ -231,11 +229,11 @@ BOOST_DATA_TEST_CASE(TestSingleBinCase, bdata::make(etaValues), eta) {
     cfg.cutSets.at(0).etaMax = {1.0};
     TrackSelector selector{cfg};
     MockTrack track = baseTrack;
-    track.m_theta = thetaFromEta(0.5);
+    track.m_theta = AngleHelpers::thetaFromEta(0.5);
     BOOST_CHECK(selector.isValidTrack(track));
-    track.m_theta = thetaFromEta(-1.1);
+    track.m_theta = AngleHelpers::thetaFromEta(-1.1);
     BOOST_CHECK(!selector.isValidTrack(track));
-    track.m_theta = thetaFromEta(1.1);
+    track.m_theta = AngleHelpers::thetaFromEta(1.1);
     BOOST_CHECK(!selector.isValidTrack(track));
   }
 
@@ -245,14 +243,14 @@ BOOST_DATA_TEST_CASE(TestSingleBinCase, bdata::make(etaValues), eta) {
     cfg.cutSets.at(0).absEtaMin = {0.2};
     TrackSelector selector{cfg};
     MockTrack track = baseTrack;
-    track.m_theta = thetaFromEta(0.5);
+    track.m_theta = AngleHelpers::thetaFromEta(0.5);
     BOOST_CHECK(selector.isValidTrack(track));
-    track.m_theta = thetaFromEta(-0.5);
+    track.m_theta = AngleHelpers::thetaFromEta(-0.5);
     BOOST_CHECK(selector.isValidTrack(track));
 
-    track.m_theta = thetaFromEta(0.1);
+    track.m_theta = AngleHelpers::thetaFromEta(0.1);
     BOOST_CHECK(!selector.isValidTrack(track));
-    track.m_theta = thetaFromEta(-0.1);
+    track.m_theta = AngleHelpers::thetaFromEta(-0.1);
     BOOST_CHECK(!selector.isValidTrack(track));
   }
 
@@ -262,14 +260,14 @@ BOOST_DATA_TEST_CASE(TestSingleBinCase, bdata::make(etaValues), eta) {
     cfg.cutSets.at(0).absEtaMax = {1.0};
     TrackSelector selector{cfg};
     MockTrack track = baseTrack;
-    track.m_theta = thetaFromEta(0.5);
+    track.m_theta = AngleHelpers::thetaFromEta(0.5);
     BOOST_CHECK(selector.isValidTrack(track));
-    track.m_theta = thetaFromEta(-0.5);
+    track.m_theta = AngleHelpers::thetaFromEta(-0.5);
     BOOST_CHECK(selector.isValidTrack(track));
 
-    track.m_theta = thetaFromEta(1.1);
+    track.m_theta = AngleHelpers::thetaFromEta(1.1);
     BOOST_CHECK(!selector.isValidTrack(track));
-    track.m_theta = thetaFromEta(-1.1);
+    track.m_theta = AngleHelpers::thetaFromEta(-1.1);
     BOOST_CHECK(!selector.isValidTrack(track));
   }
 
@@ -280,19 +278,19 @@ BOOST_DATA_TEST_CASE(TestSingleBinCase, bdata::make(etaValues), eta) {
     cfg.cutSets.at(0).absEtaMax = {1.0};
     TrackSelector selector{cfg};
     MockTrack track = baseTrack;
-    track.m_theta = thetaFromEta(0.5);
+    track.m_theta = AngleHelpers::thetaFromEta(0.5);
     BOOST_CHECK(selector.isValidTrack(track));
-    track.m_theta = thetaFromEta(-0.5);
+    track.m_theta = AngleHelpers::thetaFromEta(-0.5);
     BOOST_CHECK(selector.isValidTrack(track));
 
-    track.m_theta = thetaFromEta(0.1);
+    track.m_theta = AngleHelpers::thetaFromEta(0.1);
     BOOST_CHECK(!selector.isValidTrack(track));
-    track.m_theta = thetaFromEta(-0.1);
+    track.m_theta = AngleHelpers::thetaFromEta(-0.1);
     BOOST_CHECK(!selector.isValidTrack(track));
 
-    track.m_theta = thetaFromEta(1.1);
+    track.m_theta = AngleHelpers::thetaFromEta(1.1);
     BOOST_CHECK(!selector.isValidTrack(track));
-    track.m_theta = thetaFromEta(-1.1);
+    track.m_theta = AngleHelpers::thetaFromEta(-1.1);
     BOOST_CHECK(!selector.isValidTrack(track));
   }
 
@@ -373,27 +371,27 @@ BOOST_AUTO_TEST_CASE(TestSingleBinEtaCutByBinEdge) {
   BOOST_TEST_INFO_SCOPE(selector.config());
 
   MockTrack track{};
-  track.m_theta = thetaFromEta(0.0);
+  track.m_theta = AngleHelpers::thetaFromEta(0.0);
   BOOST_CHECK(!selector.isValidTrack(track));
 
-  track.m_theta = thetaFromEta(0.5);
+  track.m_theta = AngleHelpers::thetaFromEta(0.5);
   BOOST_CHECK(!selector.isValidTrack(track));
 
   // cannot easily check on-edge behavior because of floating point arithmetic
   // (it won't be exactly 1.0 in selector)
-  track.m_theta = thetaFromEta(1.01);
+  track.m_theta = AngleHelpers::thetaFromEta(1.01);
   BOOST_CHECK(selector.isValidTrack(track));
 
-  track.m_theta = thetaFromEta(1.5);
+  track.m_theta = AngleHelpers::thetaFromEta(1.5);
   BOOST_CHECK(selector.isValidTrack(track));
 
-  track.m_theta = thetaFromEta(2.0);
+  track.m_theta = AngleHelpers::thetaFromEta(2.0);
   BOOST_CHECK(!selector.isValidTrack(track));
 }
 
 BOOST_AUTO_TEST_CASE(TestMultiBinCuts) {
   MockTrack baseTrack{};
-  baseTrack.m_theta = thetaFromEta(1.0);
+  baseTrack.m_theta = AngleHelpers::thetaFromEta(1.0);
   baseTrack.m_phi = 0.5;
   baseTrack.m_pt = 0.5;
   baseTrack.m_loc0 = 0.5;
@@ -425,7 +423,7 @@ BOOST_AUTO_TEST_CASE(TestMultiBinCuts) {
       {
         // exactly at zero
         MockTrack track = baseTrack;
-        track.m_theta = thetaFromEta(0.0);
+        track.m_theta = AngleHelpers::thetaFromEta(0.0);
 
         BOOST_CHECK(selector.isValidTrack(track));
 
@@ -439,7 +437,7 @@ BOOST_AUTO_TEST_CASE(TestMultiBinCuts) {
       {
         // first bin
         MockTrack track = baseTrack;
-        track.m_theta = thetaFromEta(1.0);
+        track.m_theta = AngleHelpers::thetaFromEta(1.0);
 
         BOOST_CHECK(selector.isValidTrack(track));
 
@@ -453,8 +451,8 @@ BOOST_AUTO_TEST_CASE(TestMultiBinCuts) {
       {
         // first bin edge
         MockTrack track = baseTrack;
-        track.m_theta =
-            thetaFromEta(2.0 - std::numeric_limits<double>::epsilon());
+        track.m_theta = AngleHelpers::thetaFromEta(
+            2.0 - std::numeric_limits<double>::epsilon());
 
         BOOST_CHECK(selector.isValidTrack(track));
 
@@ -468,7 +466,7 @@ BOOST_AUTO_TEST_CASE(TestMultiBinCuts) {
       {
         // second bin lower edge
         MockTrack track = baseTrack;
-        track.m_theta = thetaFromEta(2.0);
+        track.m_theta = AngleHelpers::thetaFromEta(2.0);
 
         BOOST_CHECK(selector.isValidTrack(track));
 
@@ -488,7 +486,7 @@ BOOST_AUTO_TEST_CASE(TestMultiBinCuts) {
       {
         // second bin
         MockTrack track = baseTrack;
-        track.m_theta = thetaFromEta(666.0);
+        track.m_theta = AngleHelpers::thetaFromEta(10.0);
 
         track.*prop = -1.1;
         BOOST_CHECK(selector.isValidTrack(track));
@@ -642,7 +640,8 @@ BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
     auto track = tc.makeTrack();
 
     using namespace Acts::UnitLiterals;
-    track.parameters() << 0, 0, M_PI / 2, M_PI / 2, 1 / 1_GeV, 0;
+    track.parameters() << 0, 0, std::numbers::pi / 2., std::numbers::pi / 2.,
+        1 / 1_GeV, 0;
     auto perigee = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
     track.setReferenceSurface(perigee);
     return track;

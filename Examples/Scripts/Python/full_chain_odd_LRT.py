@@ -21,7 +21,6 @@ from acts.examples.simulation import (
 )
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
     CkfConfig,
     addCKFTracks,
     TrackSelectorConfig,
@@ -188,8 +187,7 @@ if args.edm4hep:
             "LongStripEndcapReadout",
         ],
         outputParticlesGenerator="particles_input",
-        outputParticlesInitial="particles_initial",
-        outputParticlesFinal="particles_final",
+        outputParticlesSimulation="particles_simulated",
         outputSimHits="simhits",
         graphvizOutput="graphviz",
         dd4hepDetector=detector,
@@ -271,6 +269,11 @@ else:
                 absZ=(0.0, 1.0 * u.m),
                 eta=(-3.0, 3.0),
                 pt=(150 * u.MeV, None),
+            ),
+            postSelectParticles=ParticleSelectorConfig(
+                pt=(1.0 * u.GeV, None),
+                eta=(-3.0, 3.0),
+                measurements=(9, None),
                 removeNeutral=True,
             ),
             outputDirRoot=outputDir if args.output_root else None,
@@ -290,10 +293,15 @@ else:
                     absZ=(0.0, 1.0 * u.m),
                     eta=(-3.0, 3.0),
                     pt=(150 * u.MeV, None),
-                    removeNeutral=True,
                 )
                 if args.ttbar
                 else ParticleSelectorConfig()
+            ),
+            postSelectParticles=ParticleSelectorConfig(
+                pt=(1.0 * u.GeV, None),
+                eta=(-3.0, 3.0),
+                measurements=(9, None),
+                removeNeutral=True,
             ),
             enableInteractions=True,
             outputDirRoot=outputDir if args.output_root else None,
@@ -316,11 +324,6 @@ if args.reco:
         s,
         trackingGeometry,
         field,
-        (
-            TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
-            if args.ttbar
-            else TruthSeedRanges()
-        ),
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,

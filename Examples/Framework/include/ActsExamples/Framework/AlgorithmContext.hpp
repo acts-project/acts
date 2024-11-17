@@ -13,8 +13,6 @@
 #include <Acts/MagneticField/MagneticFieldContext.hpp>
 #include <Acts/Utilities/CalibrationContext.hpp>
 
-#include <memory>
-
 namespace ActsExamples {
 
 class WhiteBoard;

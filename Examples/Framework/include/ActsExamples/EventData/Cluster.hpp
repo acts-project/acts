@@ -25,6 +25,14 @@ struct Cluster {
 
   // TODO make this be provided by Fatras?
   Acts::Vector3 globalPosition = Acts::Vector3::Zero();
+  Acts::Vector3 localDirection = Acts::Vector3::Zero();
+  Acts::Vector3 lengthDirection = Acts::Vector3::Zero();
+  float localEta = 0.f;
+  float localPhi = 0.f;
+  float globalEta = 0.f;
+  float globalPhi = 0.f;
+  float etaAngle = 0.f;
+  float phiAngle = 0.f;
 
   double sumActivations() const {
     return std::accumulate(

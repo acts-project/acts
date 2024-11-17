@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -17,6 +18,7 @@
 #include <initializer_list>
 #include <iosfwd>
 #include <memory>
+#include <numbers>
 #include <ostream>
 #include <vector>
 
@@ -80,6 +82,18 @@ class CylinderVolumeBounds : public VolumeBounds {
     eSize
   };
 
+  /// Enum describing the possible faces of a cylinder volume
+  /// @note These values are synchronized with the BoundarySurfaceFace enum.
+  ///       Once Gen1 is removed, this can be changed.
+  enum class Face : unsigned int {
+    PositiveDisc = BoundarySurfaceFace::positiveFaceXY,
+    NegativeDisc = BoundarySurfaceFace::negativeFaceXY,
+    OuterCylinder = BoundarySurfaceFace::tubeOuterCover,
+    InnerCylinder = BoundarySurfaceFace::tubeInnerCover,
+    NegativePhiPlane = BoundarySurfaceFace::tubeSectorNegativePhi,
+    PositivePhiPlane = BoundarySurfaceFace::tubeSectorPositivePhi
+  };
+
   CylinderVolumeBounds() = delete;
 
   /// Constructor
@@ -92,8 +106,9 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param bevelMinZ The bevel angle, in radians, for the negative side
   /// @param bevelMaxZ The bevel angle, in radians, for the positive side
   CylinderVolumeBounds(ActsScalar rmin, ActsScalar rmax, ActsScalar halfz,
-                       ActsScalar halfphi = M_PI, ActsScalar avgphi = 0.,
-                       ActsScalar bevelMinZ = 0., ActsScalar bevelMaxZ = 0.);
+                       ActsScalar halfphi = std::numbers::pi_v<ActsScalar>,
+                       ActsScalar avgphi = 0., ActsScalar bevelMinZ = 0.,
+                       ActsScalar bevelMaxZ = 0.);
 
   /// Constructor - from a fixed size array
   ///
@@ -115,7 +130,7 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// Copy Constructor
   ///
   /// @param cylbo is the source cylinder volume bounds for the copy
-  CylinderVolumeBounds(const CylinderVolumeBounds& cylbo) = default;
+  CylinderVolumeBounds(const CylinderVolumeBounds& cylbo);
 
   ~CylinderVolumeBounds() override = default;
   CylinderVolumeBounds& operator=(const CylinderVolumeBounds& cylbo) = default;

@@ -18,6 +18,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <numbers>
 #include <utility>
 
 using Acts::VectorHelpers::perp;
@@ -69,8 +70,8 @@ bool Acts::CylinderBounds::inside(
   double localx =
       lposition[0] > radius ? 2 * radius - lposition[0] : lposition[0];
   Vector2 shiftedlposition = shifted(lposition);
-  if ((std::fabs(shiftedlposition[0]) <= halfPhi &&
-       std::fabs(shiftedlposition[1]) <= halfLengthZ)) {
+  if ((std::abs(shiftedlposition[0]) <= halfPhi &&
+       std::abs(shiftedlposition[1]) <= halfLengthZ)) {
     return true;
   }
 
@@ -153,16 +154,18 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::circleVertices(
 
 void Acts::CylinderBounds::checkConsistency() noexcept(false) {
   if (get(eR) <= 0.) {
-    throw std::invalid_argument("CylinderBounds: invalid radial setup.");
+    throw std::invalid_argument(
+        "CylinderBounds: invalid radial setup: radius is negative");
   }
   if (get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument("CylinderBounds: invalid length setup.");
+    throw std::invalid_argument(
+        "CylinderBounds: invalid length setup: half length is negative");
   }
-  if (get(eHalfPhiSector) <= 0. || get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) <= 0. || get(eHalfPhiSector) > std::numbers::pi) {
     throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi)) &&
-      std::abs(std::abs(get(eAveragePhi)) - M_PI) > s_epsilon) {
+      std::abs(std::abs(get(eAveragePhi)) - std::numbers::pi) > s_epsilon) {
     throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
   }
   if (get(eBevelMinZ) != detail::radian_sym(get(eBevelMinZ))) {

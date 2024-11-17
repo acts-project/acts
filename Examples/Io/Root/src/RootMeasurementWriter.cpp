@@ -12,7 +12,6 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -270,8 +269,7 @@ ProcessCode RootMeasurementWriter::writeT(
     const ConstVariableBoundMeasurementProxy meas =
         measurements.getMeasurement(hitIdx);
 
-    Acts::GeometryIdentifier geoId =
-        meas.sourceLink().template get<IndexSourceLink>().geometryId();
+    Acts::GeometryIdentifier geoId = meas.geometryId();
     // find the corresponding surface
     auto surfaceItr = m_cfg.surfaceByIdentifier.find(geoId);
     if (surfaceItr == m_cfg.surfaceByIdentifier.end()) {
