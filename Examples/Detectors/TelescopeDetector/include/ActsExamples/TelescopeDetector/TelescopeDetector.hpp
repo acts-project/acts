@@ -11,11 +11,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
 
 #include <array>
 #include <memory>
-#include <utility>
 #include <vector>
 
 namespace ActsExamples::Telescope {

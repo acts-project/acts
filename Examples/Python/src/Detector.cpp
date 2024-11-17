@@ -13,7 +13,6 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
@@ -21,12 +20,9 @@
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
-#include <array>
-#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -64,37 +60,41 @@ void addDetector(Context& ctx) {
     using Detector = Generic::GenericDetector;
     using Config = Detector::Config;
 
-    auto gd = py::class_<Detector, DetectorCommons::Detector,
-                         std::shared_ptr<Detector>>(mex, "GenericDetector")
-                  .def(py::init<const Config&>());
+    auto d = py::class_<Detector, DetectorCommons::Detector,
+                        std::shared_ptr<Detector>>(mex, "GenericDetector")
+                 .def(py::init<const Config&>());
 
-    py::class_<Config>(gd, "Config")
-        .def(py::init<>())
-        .def_readwrite("buildLevel", &Config::buildLevel)
-        .def_readwrite("surfaceLogLevel", &Config::surfaceLogLevel)
-        .def_readwrite("layerLogLevel", &Config::layerLogLevel)
-        .def_readwrite("volumeLogLevel", &Config::volumeLogLevel)
-        .def_readwrite("buildProto", &Config::buildProto)
-        .def_readwrite("materialDecorator", &Config::materialDecorator);
+    auto c = py::class_<Config>(d, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(buildLevel);
+    ACTS_PYTHON_MEMBER(surfaceLogLevel);
+    ACTS_PYTHON_MEMBER(layerLogLevel);
+    ACTS_PYTHON_MEMBER(volumeLogLevel);
+    ACTS_PYTHON_MEMBER(buildProto);
+    ACTS_PYTHON_MEMBER(materialDecorator);
+    ACTS_PYTHON_STRUCT_END();
   }
 
   {
     using Detector = Telescope::TelescopeDetector;
     using Config = Detector::Config;
 
-    auto td = py::class_<Detector, DetectorCommons::Detector,
-                         std::shared_ptr<Detector>>(mex, "TelescopeDetector")
-                  .def(py::init<const Config&>());
+    auto d = py::class_<Detector, DetectorCommons::Detector,
+                        std::shared_ptr<Detector>>(mex, "TelescopeDetector")
+                 .def(py::init<const Config&>());
 
-    py::class_<Config>(td, "Config")
-        .def(py::init<>())
-        .def_readwrite("positions", &Config::positions)
-        .def_readwrite("stereos", &Config::stereos)
-        .def_readwrite("offsets", &Config::offsets)
-        .def_readwrite("bounds", &Config::bounds)
-        .def_readwrite("thickness", &Config::thickness)
-        .def_readwrite("surfaceType", &Config::surfaceType)
-        .def_readwrite("binValue", &Config::binValue);
+    auto c = py::class_<Config>(d, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(positions);
+    ACTS_PYTHON_MEMBER(stereos);
+    ACTS_PYTHON_MEMBER(offsets);
+    ACTS_PYTHON_MEMBER(bounds);
+    ACTS_PYTHON_MEMBER(thickness);
+    ACTS_PYTHON_MEMBER(surfaceType);
+    ACTS_PYTHON_MEMBER(binValue);
+    ACTS_PYTHON_MEMBER(materialDecorator);
+    ACTS_PYTHON_MEMBER(logLevel);
+    ACTS_PYTHON_STRUCT_END();
   }
 
   {
