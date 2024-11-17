@@ -22,9 +22,9 @@ namespace Acts {
 ///
 /// Indices must be unique and within the full size of the subspace
 ///
-/// @tparam Container type of the container
+/// @tparam index_range_t the type of the container of indices
 ///
-/// @param container the container of indices
+/// @param indexRange the range of indices
 /// @param fullSize the full size of the subspace
 /// @param subspaceSize the size of the subspace
 ///
