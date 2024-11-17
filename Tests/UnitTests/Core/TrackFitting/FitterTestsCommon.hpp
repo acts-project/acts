@@ -58,8 +58,10 @@ struct TestOutlierFinder {
       return false;
     }
     auto subspaceHelper = state.projectorSubspaceHelper();
-    auto projector = subspaceHelper.fullProjector().topLeftCorner(
-        state.calibratedSize(), Acts::eBoundSize);
+    auto projector =
+        subspaceHelper.fullProjector()
+            .topLeftCorner(state.calibratedSize(), Acts::eBoundSize)
+            .eval();
     auto residuals =
         (state.effectiveCalibrated() - projector * state.predicted()).eval();
     auto distance = residuals.norm();
