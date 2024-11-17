@@ -116,7 +116,7 @@ def _detector_create(cls, config_class=None):
                 setattr(cfg, k, v)
             except AttributeError:
                 _kwargs[k] = v
-        cfg["materialDecorator"] = mdecorator
+        setattr(cfg, "materialDecorator", mdecorator)
         det = cls(cfg)
         tg, deco, _ = det.trackingGeometry()
         Detector = namedtuple(
