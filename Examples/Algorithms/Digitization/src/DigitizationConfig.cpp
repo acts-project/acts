@@ -12,34 +12,30 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 
-namespace {
+namespace ActsExamples {
 
-enum SmearingTypes : int {
-  eGauss = 0,
-  eGaussTruncated = 1,
-  eGaussClipped = 2,
-  eUniform = 3,
-  eDigital = 4,
-};
+DigitizationConfig::DigitizationConfig() = default;
 
-}  // namespace
+DigitizationConfig::DigitizationConfig(bool merge, double sigma,
+                                       bool commonCorner)
+    : DigitizationConfig(merge, sigma, commonCorner,
+                         Acts::GeometryHierarchyMap<DigiComponentsConfig>()) {}
 
-ActsExamples::DigitizationConfig::DigitizationConfig(
+DigitizationConfig::DigitizationConfig(
     bool merge, double sigma, bool commonCorner,
-    Acts::GeometryHierarchyMap<DigiComponentsConfig>&& digiCfgs)
-    : doMerge(merge), mergeNsigma(sigma), mergeCommonCorner(commonCorner) {
-  digitizationConfigs = std::move(digiCfgs);
-}
+    Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs)
+    : doMerge(merge),
+      mergeNsigma(sigma),
+      mergeCommonCorner(commonCorner),
+      digitizationConfigs(std::move(digiCfgs)) {}
 
-ActsExamples::DigitizationConfig::DigitizationConfig(
-    Acts::GeometryHierarchyMap<DigiComponentsConfig>&& digiCfgs)
-    : doMerge(false), mergeNsigma(1.0), mergeCommonCorner(false) {
-  digitizationConfigs = std::move(digiCfgs);
-}
+DigitizationConfig::DigitizationConfig(
+    Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs)
+    : digitizationConfigs(std::move(digiCfgs)) {}
 
 std::vector<
     std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-ActsExamples::DigitizationConfig::getBoundIndices() const {
+DigitizationConfig::getBoundIndices() const {
   std::vector<
       std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
       bIndexInput;
@@ -60,7 +56,7 @@ ActsExamples::DigitizationConfig::getBoundIndices() const {
   return bIndexInput;
 }
 
-std::vector<Acts::ActsScalar> ActsExamples::GeometricConfig::variances(
+std::vector<Acts::ActsScalar> GeometricConfig::variances(
     const std::array<std::size_t, 2u>& csizes,
     const std::array<std::size_t, 2u>& cmins) const {
   std::vector<Acts::ActsScalar> rVariances;
@@ -80,3 +76,5 @@ std::vector<Acts::ActsScalar> ActsExamples::GeometricConfig::variances(
   }
   return rVariances;
 }
+
+}  // namespace ActsExamples

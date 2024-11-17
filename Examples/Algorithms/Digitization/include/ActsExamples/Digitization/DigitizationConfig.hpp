@@ -116,17 +116,15 @@ struct DigiComponentsConfig {
 
 class DigitizationConfig {
  public:
-  DigitizationConfig(bool merge, double sigma, bool commonCorner)
-      : DigitizationConfig(merge, sigma, commonCorner,
-                           Acts::GeometryHierarchyMap<DigiComponentsConfig>()) {
-  }
+  DigitizationConfig();
 
-  DigitizationConfig(
-      bool doMerge, double mergeNsigma, bool mergeCommonCorner,
-      Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
+  DigitizationConfig(bool merge, double sigma, bool commonCorner);
+
+  DigitizationConfig(bool doMerge, double mergeNsigma, bool mergeCommonCorner,
+                     Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs);
 
   explicit DigitizationConfig(
-      Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
+      Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs);
 
   /// Input collection of simulated hits.
   std::string inputSimHits = "simhits";
@@ -155,7 +153,7 @@ class DigitizationConfig {
   /// Do we merge hits or not
   bool doMerge = false;
   /// How close do parameters have to be to consider merged
-  double mergeNsigma = 3.0;
+  double mergeNsigma = 1.0;
   /// Consider clusters that share a corner as merged (8-cell connectivity)
   bool mergeCommonCorner = false;
   /// Energy deposit threshold for accepting a hit
@@ -171,4 +169,5 @@ class DigitizationConfig {
       std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
   getBoundIndices() const;
 };
+
 }  // namespace ActsExamples
