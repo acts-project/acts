@@ -17,8 +17,15 @@ namespace Acts {
 
 class GeometryContext;
 
-class Blueprint : public BlueprintNode {
+class Blueprint : private BlueprintNode {
  public:
+  using BlueprintNode::addChild;
+  using BlueprintNode::addCylinderContainer;
+  using BlueprintNode::addLayer;
+  using BlueprintNode::addMaterial;
+  using BlueprintNode::graphViz;
+  using BlueprintNode::Options;
+
   struct Config {
     ExtentEnvelope envelope = ExtentEnvelope::Zero();
     GeometryIdentifierHook geometryIdentifierHook = {};

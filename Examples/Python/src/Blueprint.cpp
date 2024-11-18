@@ -284,8 +284,7 @@ void addBlueprint(Context& ctx) {
       });
 
   {
-    auto n = py::class_<Blueprint, BlueprintNode, std::shared_ptr<Blueprint>>(
-        m, "Blueprint");
+    auto n = py::class_<Blueprint, std::shared_ptr<Blueprint>>(m, "Blueprint");
 
     n.def(py::init<const Blueprint::Config&>())
         .def_property_readonly("name", &Blueprint::name)
