@@ -14,12 +14,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
-#include "Acts/Geometry/RootBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
@@ -48,7 +48,7 @@ inline std::vector<std::shared_ptr<Surface>> makeFanLayer(
     double r = 300_mm, std::size_t nSensors = 8, double thickness = 0) {
   auto recBounds = std::make_shared<RectangleBounds>(40_mm, 60_mm);
 
-  double deltaPhi = 2 * M_PI / nSensors;
+  double deltaPhi = 2 * std::numbers::pi / nSensors;
   std::vector<std::shared_ptr<Surface>> surfaces;
   for (std::size_t i = 0; i < nSensors; i++) {
     // Create a fan of sensors
@@ -77,7 +77,7 @@ inline std::vector<std::shared_ptr<Surface>> makeBarrelLayer(
     double thickness = 0, double hlPhi = 40_mm, double hlZ = 60_mm) {
   auto recBounds = std::make_shared<RectangleBounds>(hlPhi, hlZ);
 
-  double deltaPhi = 2 * M_PI / nStaves;
+  double deltaPhi = 2 * std::numbers::pi / nStaves;
   std::vector<std::shared_ptr<Surface>> surfaces;
 
   for (std::size_t istave = 0; istave < nStaves; istave++) {
@@ -106,9 +106,9 @@ BOOST_AUTO_TEST_SUITE(Geometry);
 BOOST_AUTO_TEST_SUITE(BlueprintNodeTest);
 
 BOOST_AUTO_TEST_CASE(StaticBlueprintNodeConstruction) {
-  RootBlueprintNode::Config cfg;
+  Blueprint::Config cfg;
   cfg.envelope[BinningValue::binZ] = {20_mm, 2_mm};
-  RootBlueprintNode root{cfg};
+  Blueprint root{cfg};
 
   ActsScalar hlZ = 30_mm;
   auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
@@ -160,10 +160,10 @@ BOOST_AUTO_TEST_CASE(CylinderContainerNode) {
   ActsScalar hlZ = 30_mm;
   auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
 
-  RootBlueprintNode::Config cfg;
+  Blueprint::Config cfg;
   cfg.envelope[BinningValue::binZ] = {20_mm, 20_mm};
   cfg.envelope[BinningValue::binR] = {0_mm, 20_mm};
-  auto root = std::make_unique<RootBlueprintNode>(cfg);
+  auto root = std::make_unique<Blueprint>(cfg);
 
   auto& cyl = root->addCylinderContainer("Container", BinningValue::binZ);
 
@@ -361,10 +361,10 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
     return makeFanLayer(layerBase, detectorElements, r, nSensors, thickness);
   };
 
-  RootBlueprintNode::Config cfg;
+  Blueprint::Config cfg;
   cfg.envelope[BinningValue::binZ] = {20_mm, 20_mm};
   cfg.envelope[BinningValue::binR] = {0_mm, 20_mm};
-  auto root = std::make_unique<RootBlueprintNode>(cfg);
+  auto root = std::make_unique<Blueprint>(cfg);
 
   root->addMaterial("GlobalMaterial", [&](MaterialDesignatorBlueprintNode&
                                               mat) {
@@ -498,7 +498,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
 
   for (std::size_t i = 0; i < 5000; i++) {
     double theta = thetaDist(rnd);
-    double phi = 2 * M_PI * dist(rnd);
+    double phi = 2 * std::numbers::pi * dist(rnd);
 
     Vector3 direction;
     direction[0] = std::sin(theta) * std::cos(phi);
@@ -516,10 +516,10 @@ BOOST_AUTO_TEST_CASE(NodeApiTestConfined) {
   // Transform3 base{AngleAxis3{30_degree, Vector3{1, 0, 0}}};
   Transform3 base{Transform3::Identity()};
 
-  RootBlueprintNode::Config cfg;
+  Blueprint::Config cfg;
   cfg.envelope[BinningValue::binZ] = {20_mm, 20_mm};
   cfg.envelope[BinningValue::binR] = {0_mm, 20_mm};
-  auto root = std::make_unique<RootBlueprintNode>(cfg);
+  auto root = std::make_unique<Blueprint>(cfg);
 
   root->addCylinderContainer("Detector", BinningValue::binR, [&](auto& det) {
     det.addStaticVolume(
@@ -595,10 +595,10 @@ BOOST_AUTO_TEST_CASE(LayerNodeDisk) {
 
   std::vector<std::shared_ptr<Surface>> surfaces = makeFan(2.5_mm);
 
-  RootBlueprintNode root{{.envelope = ExtentEnvelope{{
-                              .z = {2_mm, 2_mm},
-                              .r = {3_mm, 5_mm},
-                          }}}};
+  Blueprint root{{.envelope = ExtentEnvelope{{
+                      .z = {2_mm, 2_mm},
+                      .r = {3_mm, 5_mm},
+                  }}}};
 
   root.addLayer("Layer0", [&](auto& layer) {
     layer.setSurfaces(surfaces)
@@ -642,10 +642,10 @@ BOOST_AUTO_TEST_CASE(LayerNodeCylinder) {
   std::vector<std::shared_ptr<Surface>> surfaces =
       makeBarrelLayer(base, detectorElements, 300_mm, 24, 8, 2.5_mm);
 
-  RootBlueprintNode root{{.envelope = ExtentEnvelope{{
-                              .z = {2_mm, 2_mm},
-                              .r = {3_mm, 5_mm},
-                          }}}};
+  Blueprint root{{.envelope = ExtentEnvelope{{
+                      .z = {2_mm, 2_mm},
+                      .r = {3_mm, 5_mm},
+                  }}}};
 
   root.addLayer("Layer0", [&](auto& layer) {
     layer.setSurfaces(surfaces)

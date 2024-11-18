@@ -7,7 +7,7 @@ import acts
 mm = acts.UnitConstants.mm
 degree = acts.UnitConstants.degree
 
-root = acts.RootBlueprintNode(envelope=acts.ExtentEnvelope(r=[10 * mm, 10 * mm]))
+root = acts.Blueprint(envelope=acts.ExtentEnvelope(r=[10 * mm, 10 * mm]))
 
 
 pixel = root.addCylinderContainer(direction=acts.BinningValue.binZ, name="Pixel")

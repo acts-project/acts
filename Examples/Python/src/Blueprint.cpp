@@ -6,13 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/Blueprint.hpp"
+
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
-#include "Acts/Geometry/RootBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
@@ -63,7 +64,7 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
     Vector3 position = Vector3::Zero();
 
     double theta = thetaDist(rnd);
-    double phi = 2 * M_PI * dist(rnd);
+    double phi = 2 * std::numbers::pi * dist(rnd);
 
     Vector3 direction;
     direction[0] = std::sin(theta) * std::cos(phi);
@@ -283,28 +284,26 @@ void addBlueprint(Context& ctx) {
       });
 
   {
-    auto n =
-        py::class_<RootBlueprintNode, BlueprintNode,
-                   std::shared_ptr<RootBlueprintNode>>(m, "RootBlueprintNode");
+    auto n = py::class_<Blueprint, BlueprintNode, std::shared_ptr<Blueprint>>(
+        m, "Blueprint");
 
-    n.def(py::init<const RootBlueprintNode::Config&>())
-        .def_property_readonly("name", &RootBlueprintNode::name)
+    n.def(py::init<const Blueprint::Config&>())
+        .def_property_readonly("name", &Blueprint::name)
         // Return value needs to be shared pointer because python otherwise
         // can't manage the lifetime
         .def(
             "construct",
-            [](RootBlueprintNode& self,
-               const RootBlueprintNode::Options& options,
+            [](Blueprint& self, const Blueprint::Options& options,
                const GeometryContext& gctx,
                Logging::Level level) -> std::shared_ptr<TrackingGeometry> {
-              return self.construct(
-                  options, gctx, *getDefaultLogger("RootBlueprintNode", level));
+              return self.construct(options, gctx,
+                                    *getDefaultLogger("Blueprint", level));
             },
             py::arg("options"), py::arg("gctx"),
             py::arg("level") = Logging::INFO);
 
-    auto c = py::class_<RootBlueprintNode::Config>(n, "Config").def(py::init());
-    ACTS_PYTHON_STRUCT_BEGIN(c, RootBlueprintNode::Config);
+    auto c = py::class_<Blueprint::Config>(n, "Config").def(py::init());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Blueprint::Config);
     ACTS_PYTHON_MEMBER(envelope);
     ACTS_PYTHON_MEMBER(geometryIdentifierHook);
     ACTS_PYTHON_STRUCT_END();

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/RootBlueprintNode.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
 
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -18,33 +18,33 @@
 
 namespace Acts {
 
-RootBlueprintNode::RootBlueprintNode(const Config &cfg) : m_cfg(cfg) {}
+Blueprint::Blueprint(const Config &cfg) : m_cfg(cfg) {}
 
-const std::string &RootBlueprintNode::name() const {
+const std::string &Blueprint::name() const {
   static const std::string root = "root";
   return root;
 }
 
-Volume &RootBlueprintNode::build(const Options & /*options*/,
-                                 const GeometryContext & /*gctx*/,
-                                 const Logger & /*logger*/) {
+Volume &Blueprint::build(const Options & /*options*/,
+                         const GeometryContext & /*gctx*/,
+                         const Logger & /*logger*/) {
   throw std::logic_error("Root node cannot be built");
 }
 
-PortalShellBase &RootBlueprintNode::connect(const Options & /*options*/,
-                                            const GeometryContext & /*gctx*/,
-                                            const Logger & /*logger*/) {
+PortalShellBase &Blueprint::connect(const Options & /*options*/,
+                                    const GeometryContext & /*gctx*/,
+                                    const Logger & /*logger*/) {
   throw std::logic_error("Root node cannot be connected");
 }
 
-void RootBlueprintNode::finalize(const Options & /*options*/,
-                                 const GeometryContext & /*gctx*/,
-                                 TrackingVolume & /*parent*/,
-                                 const Logger & /*logger*/) {
+void Blueprint::finalize(const Options & /*options*/,
+                         const GeometryContext & /*gctx*/,
+                         TrackingVolume & /*parent*/,
+                         const Logger & /*logger*/) {
   throw std::logic_error("Root node cannot be finalized");
 }
 
-void RootBlueprintNode::addToGraphviz(std::ostream &os) const {
+void Blueprint::addToGraphviz(std::ostream &os) const {
   GraphViz::Node node{
       .id = name(), .label = "World", .shape = GraphViz::Shape::House};
 
@@ -52,7 +52,7 @@ void RootBlueprintNode::addToGraphviz(std::ostream &os) const {
   BlueprintNode::addToGraphviz(os);
 }
 
-std::unique_ptr<TrackingGeometry> RootBlueprintNode::construct(
+std::unique_ptr<TrackingGeometry> Blueprint::construct(
     const Options &options, const GeometryContext &gctx, const Logger &logger) {
   using enum BinningValue;
 

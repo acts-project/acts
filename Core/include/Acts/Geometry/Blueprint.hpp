@@ -8,20 +8,46 @@
 
 #pragma once
 
-#include <memory>
+#include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 
 namespace Acts {
 
-class TrackingVolume;
+class GeometryContext;
 
-class Blueprint {
-  std::unique_ptr<TrackingVolume> build();
+class Blueprint : public BlueprintNode {
+ public:
+  struct Config {
+    ExtentEnvelope envelope = ExtentEnvelope::Zero();
+    GeometryIdentifierHook geometryIdentifierHook = {};
+  };
 
-  // void setStaticVolume(std::unique_ptr<TrackingVolume> volume);
+  Blueprint(const Config& cfg);
 
-  // void setCylinderContainer(
-  // const std::function<std::unique_ptr<BlueprintNode>(
-  // std::unique_ptr<CylinderContainerBlueprintNode> cylinder)>& factory);
+  const std::string& name() const override;
+
+  std::unique_ptr<TrackingGeometry> construct(
+      const Options& options, const GeometryContext& gctx,
+      const Logger& logger = Acts::getDummyLogger());
+
+ protected:
+  Volume& build(const Options& options, const GeometryContext& gctx,
+                const Logger& logger = Acts::getDummyLogger()) override;
+
+  PortalShellBase& connect(
+      const Options& options, const GeometryContext& gctx,
+      const Logger& logger = Acts::getDummyLogger()) override;
+
+  void finalize(const Options& options, const GeometryContext& gctx,
+                TrackingVolume& parent,
+                const Logger& logger = Acts::getDummyLogger()) override;
+
+  void addToGraphviz(std::ostream& os) const override;
+
+ private:
+  Config m_cfg;
 };
 
 }  // namespace Acts

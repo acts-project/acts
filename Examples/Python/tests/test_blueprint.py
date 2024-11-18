@@ -22,7 +22,7 @@ def test_zdirection_container_blueprint(tmp_path):
 
     base = acts.Transform3.Identity()
 
-    root = acts.RootBlueprintNode(envelope=acts.ExtentEnvelope(r=[10 * mm, 10 * mm]))
+    root = acts.Blueprint(envelope=acts.ExtentEnvelope(r=[10 * mm, 10 * mm]))
 
     barrel = root.addCylinderContainer("Barrel", direction=bv.binR)
 
