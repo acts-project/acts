@@ -788,7 +788,9 @@ def addDigitization(
         outputMeasurements="measurements",
         outputMeasurementParticlesMap="measurement_particles_map",
         outputMeasurementSimHitsMap="measurement_simhits_map",
-        doMerge=doMerge,
+        **acts.examples.defaultKWArgs(
+            doMerge=doMerge,
+        ),
     )
 
     # Not sure how to do this in our style
