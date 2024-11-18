@@ -7,7 +7,7 @@ from acts.examples import (
     DigitizationConfigurator,
     writeDigiConfigToJson,
     GenericDetector,
-    DigiComponentsConfig,
+    GeometryHierarchyMap_DigiComponentsConfig,
 )
 
 
@@ -27,7 +27,9 @@ def runDigitizationConfig(
 
     trackingGeometry.visitSurfaces(digiConfigurator)
 
-    outputConfig = DigiComponentsConfig(digiConfigurator.outputDigiComponents)
+    outputConfig = GeometryHierarchyMap_DigiComponentsConfig(
+        digiConfigurator.outputDigiComponents
+    )
 
     writeDigiConfigToJson(outputConfig, str(output))
 
