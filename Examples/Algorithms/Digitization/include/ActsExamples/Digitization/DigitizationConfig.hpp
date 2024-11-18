@@ -108,7 +108,7 @@ struct GeometricConfig {
 /// - optional SmearingConfig
 struct DigiComponentsConfig {
   GeometricConfig geometricDigiConfig;
-  SmearingConfig smearingDigiConfig = {};
+  SmearingConfig smearingDigiConfig;
 };
 
 class DigitizationConfig {

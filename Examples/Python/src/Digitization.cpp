@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
@@ -19,7 +18,6 @@
 #include <memory>
 #include <tuple>
 #include <utility>
-#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -70,12 +68,13 @@ void addDigitization(Context& ctx) {
 
     patchKwargsConstructor(c);
 
-    py::class_<DigiComponentsConfig>(mex, "DigiComponentsConfig");
+    auto cc = py::class_<DigiComponentsConfig>(mex, "DigiComponentsConfig")
+                  .def(py::init<>());
 
-    py::class_<Acts::GeometryHierarchyMap<ActsExamples::DigiComponentsConfig>>(
-        mex, "GeometryHierarchyMap_DigiComponentsConfig")
-        .def(py::init<std::vector<
-                 std::pair<GeometryIdentifier, DigiComponentsConfig>>>());
+    ACTS_PYTHON_STRUCT_BEGIN(cc, DigiComponentsConfig);
+    ACTS_PYTHON_MEMBER(geometricDigiConfig);
+    ACTS_PYTHON_MEMBER(smearingDigiConfig);
+    ACTS_PYTHON_STRUCT_END();
   }
 
   {
