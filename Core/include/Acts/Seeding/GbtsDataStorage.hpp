@@ -13,6 +13,7 @@
 #include "Acts/Seeding/GbtsGeometry.hpp"
 
 #include <algorithm>
+#include <iostream>
 #include <map>
 #include <numbers>
 #include <vector>
