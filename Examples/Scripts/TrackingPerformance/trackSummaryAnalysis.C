@@ -12,6 +12,7 @@
 #include <limits>
 #include <map>
 #include <string>
+#include <numbers>
 #include <vector>
 
 #include <TCanvas.h>
@@ -56,7 +57,7 @@ int trackSummaryAnalysis(
     const std::string& outConfig = "", unsigned long nEntries = 0,
     unsigned int nPeakEntries = 0, float pullRange = 6.,
     unsigned int nHistBins = 61, unsigned int nPhiBins = 10,
-    const std::array<float, 2>& phiRange = {-M_PI, M_PI},
+    const std::array<float, 2>& phiRange = {-std::numbers::pi_v<float>, std::numbers::pi_v<float>},
     unsigned int nEtaBins = 10, const std::array<float, 2>& etaRange = {-3, 3},
     const std::vector<double>& ptBorders =
         {0., std::numeric_limits<double>::infinity()},

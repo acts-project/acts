@@ -11,6 +11,8 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 
+#include <numbers>
+
 namespace Acts {
 
 std::unique_ptr<GridPortalLink> GridPortalLink::make(
@@ -24,8 +26,9 @@ std::unique_ptr<GridPortalLink> GridPortalLink::make(
     if (direction == BinningValue::binRPhi) {
       ActsScalar r = cylinder->bounds().get(CylinderBounds::eR);
       if (cylinder->bounds().coversFullAzimuth()) {
-        grid = GridPortalLink::make(surface, direction,
-                                    Axis{AxisClosed, -M_PI * r, M_PI * r, 1});
+        grid = GridPortalLink::make(
+            surface, direction,
+            Axis{AxisClosed, -std::numbers::pi * r, std::numbers::pi * r, 1});
       } else {
         ActsScalar hlPhi =
             cylinder->bounds().get(CylinderBounds::eHalfPhiSector);
@@ -50,8 +53,9 @@ std::unique_ptr<GridPortalLink> GridPortalLink::make(
                                   Axis{AxisBound, minR, maxR, 1});
     } else if (direction == BinningValue::binPhi) {
       if (bounds.coversFullAzimuth()) {
-        grid = GridPortalLink::make(surface, direction,
-                                    Axis{AxisClosed, -M_PI, M_PI, 1});
+        grid = GridPortalLink::make(
+            surface, direction,
+            Axis{AxisClosed, -std::numbers::pi, std::numbers::pi, 1});
       } else {
         ActsScalar hlPhi = bounds.get(RadialBounds::eHalfPhiSector);
         grid = GridPortalLink::make(surface, direction,
@@ -106,7 +110,7 @@ void GridPortalLink::checkConsistency(const CylinderSurface& cyl) const {
     }
 
     // If full cylinder, make sure axis wraps around
-    if (same(hlPhi, M_PI)) {
+    if (same(hlPhi, std::numbers::pi)) {
       if (axis.getBoundaryType() != AxisBoundaryType::Closed) {
         throw std::invalid_argument(
             "GridPortalLink: CylinderBounds: invalid phi sector setup: "
@@ -168,7 +172,7 @@ void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
           "GridPortalLink: DiscBounds: invalid phi sector setup.");
     }
     // If full disc, make sure axis wraps around
-    if (same(hlPhi, M_PI)) {
+    if (same(hlPhi, std::numbers::pi)) {
       if (axis.getBoundaryType() != Acts::AxisBoundaryType::Closed) {
         throw std::invalid_argument(
             "GridPortalLink: DiscBounds: invalid phi sector setup: axis is "

@@ -20,6 +20,7 @@
 #include <cmath>
 #include <exception>
 #include <iosfwd>
+#include <numbers>
 #include <stdexcept>
 #include <vector>
 
@@ -231,7 +232,7 @@ inline double AnnulusBounds::phiMax() const {
 }
 
 inline bool AnnulusBounds::coversFullAzimuth() const {
-  return (std::abs((get(eMinPhiRel) - get(eMaxPhiRel)) - M_PI) <
+  return (std::abs((get(eMinPhiRel) - get(eMaxPhiRel)) - std::numbers::pi) <
           s_onSurfaceTolerance);
 }
 
