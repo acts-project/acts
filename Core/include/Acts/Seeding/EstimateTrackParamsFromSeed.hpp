@@ -64,15 +64,15 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   }
 
   // Convert bField to Tesla
-  ActsScalar bFieldInTesla = bField.norm() / UnitConstants::T;
-  ActsScalar bFieldMinInTesla = bFieldMin / UnitConstants::T;
+  ActsScalar bFieldStrength = bField.norm();
   // Check if magnetic field is too small
-  if (bFieldInTesla < bFieldMinInTesla) {
+  if (bFieldStrength < bFieldMin) {
     // @todo shall we use straight-line estimation and use default q/pt in such
     // case?
-    ACTS_WARNING("The magnetic field at the bottom space point: B = "
-                 << bFieldInTesla << " T is smaller than |B|_min = "
-                 << bFieldMinInTesla << " T. Estimation is not performed.");
+    ACTS_WARNING(
+        "The magnetic field at the bottom space point: B = "
+        << bFieldStrength / UnitConstants::T << " T is smaller than |B|_min = "
+        << bFieldMin / UnitConstants::T << " T. Estimation is not performed.");
     return std::nullopt;
   }
 
@@ -142,7 +142,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   int sign = ia > 0 ? -1 : 1;
   const ActsScalar R = circleCenter.norm();
   ActsScalar invTanTheta =
-      local2.z() / (2.f * R * std::asin(local2.head<2>().norm() / (2.f * R)));
+      local2.z() / (2 * R * std::asin(local2.head<2>().norm() / (2 * R)));
   // The momentum direction in the new frame (the center of the circle has the
   // coordinate (-1.*A/(2*B), 1./(2*B)))
   ActsScalar A = -circleCenter(0) / circleCenter(1);
@@ -174,7 +174,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 
   // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
   // momentum on the transverse plane of the new frame)
-  ActsScalar qOverPt = sign * (UnitConstants::m) / (0.3 * bFieldInTesla * R);
+  ActsScalar qOverPt = sign / (bFieldStrength * R);
   // The estimated q/p in [GeV/c]^-1
   params[eBoundQOverP] = qOverPt / fastHypot(1., invTanTheta);
 
