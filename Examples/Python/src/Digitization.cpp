@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -14,7 +13,6 @@
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 #include "ActsExamples/Digitization/DigitizationCoordinatesConverter.hpp"
-#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 
 #include <array>
@@ -25,13 +23,6 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-namespace Acts {
-class GeometryIdentifier;
-}  // namespace Acts
-namespace ActsExamples {
-class IAlgorithm;
-}  // namespace ActsExamples
 
 namespace py = pybind11;
 
@@ -57,9 +48,7 @@ void addDigitization(Context& ctx) {
         .def_property_readonly("config",
                                &ActsExamples::DigitizationAlgorithm::config);
 
-    auto c = py::class_<Config>(mex, "DigitizationConfig")
-                 .def(py::init<Acts::GeometryHierarchyMap<
-                          ActsExamples::DigiComponentsConfig>>());
+    auto c = py::class_<Config>(mex, "DigitizationConfig").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputSimHits);

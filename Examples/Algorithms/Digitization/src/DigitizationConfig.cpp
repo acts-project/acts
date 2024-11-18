@@ -14,25 +14,6 @@
 
 namespace ActsExamples {
 
-DigitizationConfig::DigitizationConfig() = default;
-
-DigitizationConfig::DigitizationConfig(bool merge, double sigma,
-                                       bool commonCorner)
-    : DigitizationConfig(merge, sigma, commonCorner,
-                         Acts::GeometryHierarchyMap<DigiComponentsConfig>()) {}
-
-DigitizationConfig::DigitizationConfig(
-    bool merge, double sigma, bool commonCorner,
-    Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs)
-    : doMerge(merge),
-      mergeNsigma(sigma),
-      mergeCommonCorner(commonCorner),
-      digitizationConfigs(std::move(digiCfgs)) {}
-
-DigitizationConfig::DigitizationConfig(
-    Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs)
-    : digitizationConfigs(std::move(digiCfgs)) {}
-
 std::vector<
     std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
 DigitizationConfig::getBoundIndices() const {

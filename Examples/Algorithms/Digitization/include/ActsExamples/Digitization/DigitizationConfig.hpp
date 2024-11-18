@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
@@ -28,10 +29,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-namespace Acts {
-class GeometryIdentifier;
-}  // namespace Acts
 
 namespace ActsExamples {
 
@@ -116,16 +113,6 @@ struct DigiComponentsConfig {
 
 class DigitizationConfig {
  public:
-  DigitizationConfig();
-
-  DigitizationConfig(bool merge, double sigma, bool commonCorner);
-
-  DigitizationConfig(bool doMerge, double mergeNsigma, bool mergeCommonCorner,
-                     Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs);
-
-  explicit DigitizationConfig(
-      Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs);
-
   /// Input collection of simulated hits.
   std::string inputSimHits = "simhits";
   /// Output measurements collection.

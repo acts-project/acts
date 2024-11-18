@@ -31,16 +31,17 @@
 #include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Algorithm that turns simulated hits into measurements by truth smearing.
 class DigitizationAlgorithm final : public IAlgorithm {
  public:
+  using Config = DigitizationConfig;
+
   /// Construct the smearing algorithm.
   ///
   /// @param config is the algorithm configuration
   /// @param level is the logging level
-  DigitizationAlgorithm(DigitizationConfig config, Acts::Logging::Level level);
+  DigitizationAlgorithm(Config config, Acts::Logging::Level level);
 
   /// Build measurement from simulation hits at input.
   ///
@@ -49,7 +50,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Get const access to the config
-  const DigitizationConfig& config() const { return m_cfg; }
+  const Config& config() const { return m_cfg; }
 
  private:
   /// Helper method for creating digitized parameters from clusters
@@ -79,7 +80,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
                                  CombinedDigitizer<4>>;
 
   /// Configuration of the Algorithm
-  DigitizationConfig m_cfg;
+  Config m_cfg;
   /// Digitizers within geometry hierarchy
   Acts::GeometryHierarchyMap<Digitizer> m_digitizers;
   /// Geometric digtizer
