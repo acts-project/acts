@@ -89,7 +89,8 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
 
   // Sort the entry numbers of the events
   {
-    // necessary to guarantee that m_inputChain->GetV1() is valid for the entire range
+    // necessary to guarantee that m_inputChain->GetV1() is valid for the
+    // entire range
     m_inputChain->SetEstimate(nentries);
 
     m_entryNumbers.resize(nentries);
