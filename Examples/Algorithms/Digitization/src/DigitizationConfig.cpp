@@ -14,6 +14,12 @@
 
 namespace ActsExamples {
 
+DigitizationConfig::DigitizationConfig() = default;
+
+DigitizationConfig::DigitizationConfig(
+    Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs)
+    : digitizationConfigs(std::move(digiCfgs)) {}
+
 std::vector<
     std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
 DigitizationConfig::getBoundIndices() const {

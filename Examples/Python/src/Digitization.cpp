@@ -46,7 +46,10 @@ void addDigitization(Context& ctx) {
         .def_property_readonly("config",
                                &ActsExamples::DigitizationAlgorithm::config);
 
-    auto c = py::class_<Config>(mex, "DigitizationConfig").def(py::init<>());
+    auto c = py::class_<Config>(mex, "DigitizationConfig")
+                 .def(py::init<>())
+                 .def(py::init<Acts::GeometryHierarchyMap<
+                          ActsExamples::DigiComponentsConfig>>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputSimHits);

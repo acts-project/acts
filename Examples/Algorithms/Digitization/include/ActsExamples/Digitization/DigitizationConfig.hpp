@@ -152,6 +152,11 @@ class DigitizationConfig {
   /// The digitizers per GeometryIdentifiers
   Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
 
+  DigitizationConfig();
+
+  explicit DigitizationConfig(
+      Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs);
+
   std::vector<
       std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
   getBoundIndices() const;
