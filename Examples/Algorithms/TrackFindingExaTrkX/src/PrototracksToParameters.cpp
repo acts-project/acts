@@ -163,8 +163,7 @@ ProcessCode PrototracksToParameters::execute(
     Acts::Vector3 field = *fieldRes;
 
     if (field.norm() < m_cfg.bFieldMin) {
-      ACTS_WARNING("Magnetic field at seed " << iseed << " is too small "
-                                             << field.norm());
+      ACTS_WARNING("Magnetic field at seed is too small " << field.norm());
       continue;
     }
 
