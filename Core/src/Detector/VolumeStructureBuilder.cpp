@@ -144,7 +144,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
       }
       // Check if phi has been constraint, otherwise fill it with full coverage
       if (boundValues.size() == 3u) {
-        boundValues.push_back(std::numbers::pi_v<ActsScalar>);
+        boundValues.push_back(std::numbers::pi);
         boundValues.push_back(0.);
       }
       ACTS_VERBOSE(" - cylindrical shape with [iR, oR, hZ, sPhi, mPhi] = "

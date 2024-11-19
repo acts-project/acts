@@ -31,8 +31,8 @@ namespace Acts::detail::VerticesHelper {
 ///
 /// @return a vector of generated phi values
 std::vector<ActsScalar> phiSegments(
-    ActsScalar phiMin = -std::numbers::pi_v<ActsScalar>,
-    ActsScalar phiMax = std::numbers::pi_v<ActsScalar>,
+    ActsScalar phiMin = -std::numbers::pi,
+    ActsScalar phiMax = std::numbers::pi,
     const std::vector<ActsScalar>& phiRefs = {},
     unsigned int quarterSegments = 2u);
 
@@ -88,7 +88,7 @@ std::vector<vertex_t> segmentVertices(
 std::vector<Vector2> ellipsoidVertices(
     ActsScalar innerRx, ActsScalar innerRy, ActsScalar outerRx,
     ActsScalar outerRy, ActsScalar avgPhi = 0.,
-    ActsScalar halfPhi = std::numbers::pi_v<ActsScalar>,
+    ActsScalar halfPhi = std::numbers::pi,
     unsigned int quarterSegments = 2u);
 
 /// Construct vertices on an disc/wheel-like bound object.
@@ -102,7 +102,7 @@ std::vector<Vector2> ellipsoidVertices(
 /// @return a vector of 2d-vectors
 std::vector<Vector2> circularVertices(
     ActsScalar innerR, ActsScalar outerR, ActsScalar avgPhi = 0.,
-    ActsScalar halfPhi = std::numbers::pi_v<ActsScalar>,
+    ActsScalar halfPhi = std::numbers::pi,
     unsigned int quarterSegments = 2u);
 
 /// Check if the point is inside the polygon w/o any tolerances.

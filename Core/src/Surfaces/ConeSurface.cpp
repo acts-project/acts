@@ -211,7 +211,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   ActsScalar hPhiSec = bounds().get(ConeBounds::eHalfPhiSector);
   ActsScalar avgPhi = bounds().get(ConeBounds::eAveragePhi);
   std::vector<ActsScalar> refPhi = {};
-  if (bool fullCone = (hPhiSec == std::numbers::pi_v<ActsScalar>); !fullCone) {
+  if (bool fullCone = (hPhiSec == std::numbers::pi); !fullCone) {
     refPhi = {avgPhi};
   }
 

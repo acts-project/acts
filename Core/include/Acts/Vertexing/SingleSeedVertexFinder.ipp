@@ -195,7 +195,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
     Acts::ActsScalar angleZfrom =
         std::atan2(rMiddle[isLessFrom], deltaZfrom) + m_cfg.maxXYZdeviation;
     std::uint32_t nearZFrom = 0;
-    if (angleZfrom < std::numbers::pi_v<Acts::ActsScalar>) {
+    if (angleZfrom < std::numbers::pi) {
       Acts::ActsScalar new_deltaZfrom =
           rMiddle[isLessFrom] / std::tan(angleZfrom) / zBinLength;
       nearZFrom = static_cast<std::uint32_t>(std::max(
@@ -227,7 +227,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
           std::atan2(rFarDelta[isMiddleLess], delta2Zfrom) +
           m_cfg.maxXYZdeviation;
       std::uint32_t farZFrom = 0;
-      if (angle2Zfrom < std::numbers::pi_v<Acts::ActsScalar>) {
+      if (angle2Zfrom < std::numbers::pi) {
         farZFrom = static_cast<std::uint32_t>(std::max(
             (rFarDelta[isMiddleLess] / std::tan(angle2Zfrom) / zBinLength) +
                 middleZ,

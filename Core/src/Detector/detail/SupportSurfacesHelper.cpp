@@ -40,7 +40,7 @@ operator()(const Extent& lExtent) const {
   ActsScalar maxZ = lExtent.max(BinningValue::binZ) - std::abs(zClearance[1u]);
 
   // Phi sector
-  ActsScalar hPhiSector = std::numbers::pi_v<ActsScalar>;
+  ActsScalar hPhiSector = std::numbers::pi;
   ActsScalar avgPhi = 0.;
   if (lExtent.constrains(BinningValue::binPhi)) {
     // Min / Max phi  with clearances adapted
@@ -84,7 +84,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::DiscSupport::operator()(
   ActsScalar maxR = lExtent.max(BinningValue::binR) - std::abs(rClearance[1u]);
 
   // Phi sector
-  ActsScalar hPhiSector = std::numbers::pi_v<ActsScalar>;
+  ActsScalar hPhiSector = std::numbers::pi;
   ActsScalar avgPhi = 0.;
   if (lExtent.constrains(BinningValue::binPhi)) {
     // Min / Max phi  with clearances adapted
@@ -194,7 +194,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::cylindricalSupport(
     for (unsigned int iphi = 0; iphi < splits; ++iphi) {
       // Get the moduleTransform
       ActsScalar phi =
-          -std::numbers::pi_v<ActsScalar> + (2 * iphi + 1) * dHalfPhi;
+          -std::numbers::pi + (2 * iphi + 1) * dHalfPhi;
       ActsScalar cosPhi = std::cos(phi);
       ActsScalar sinPhi = std::sin(phi);
       ActsScalar planeX = planeR * cosPhi;
@@ -274,7 +274,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::discSupport(
     for (unsigned int iphi = 0; iphi < splits; ++iphi) {
       // Create the split module transform
       ActsScalar phi =
-          -std::numbers::pi_v<ActsScalar> + (2 * iphi + 1) * dHalfPhi;
+          -std::numbers::pi + (2 * iphi + 1) * dHalfPhi;
       auto sTransform = Transform3(
           Translation3(hR * std::cos(phi), hR * std::sin(phi), zPosition) *
           AngleAxis3(phi - static_cast<ActsScalar>(std::numbers::pi / 2.),

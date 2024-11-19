@@ -29,8 +29,8 @@ static std::array<ActsScalar, 2> noLimitZ = {
     std::numeric_limits<Acts::ActsScalar>::max()};
 
 static std::array<ActsScalar, 2> noLimitPhi = {
-    -std::numbers::pi_v<Acts::ActsScalar>,
-    std::numbers::pi_v<Acts::ActsScalar>};
+    -std::numbers::pi,
+    std::numbers::pi};
 
 namespace LayerConverter {
 

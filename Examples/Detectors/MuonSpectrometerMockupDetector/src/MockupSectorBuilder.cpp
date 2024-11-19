@@ -189,10 +189,10 @@ ActsExamples::MockupSectorBuilder::buildSector(
   // calculate the phi angles of the vectors
   auto phiA = Acts::VectorHelpers::phi(pointA);
   auto phiB = Acts::VectorHelpers::phi(pointB);
-  Acts::ActsScalar sectorAngle = std::numbers::pi_v<Acts::ActsScalar>;
+  Acts::ActsScalar sectorAngle = std::numbers::pi;
 
   Acts::ActsScalar halfPhi =
-      std::numbers::pi_v<Acts::ActsScalar> / mCfg.NumberOfSectors;
+      std::numbers::pi / mCfg.NumberOfSectors;
 
   if (mCfg.NumberOfSectors == 1) {
     halfPhi = (phiB - phiA) / 2;

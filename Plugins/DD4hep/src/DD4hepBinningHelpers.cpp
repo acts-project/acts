@@ -39,10 +39,10 @@ Acts::DD4hepBinningHelpers::convertBinning(
         } else {
           // Equidistant binning
           ActsScalar minDefault = bVal == BinningValue::binPhi
-                                      ? -std::numbers::pi_v<ActsScalar>
+                                      ? -std::numbers::pi
                                       : 0.;
           ActsScalar maxDefault = bVal == BinningValue::binPhi
-                                      ? std::numbers::pi_v<ActsScalar>
+                                      ? std::numbers::pi
                                       : 0.;
           auto min = getParamOr<ActsScalar>(bname + "_" + ab + "_min",
                                             dd4hepElement, minDefault);

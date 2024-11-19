@@ -49,8 +49,8 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
   ActsScalar rangeMax = 0.;
   if (bValue == BinningValue::binPhi &&
       boundaryType == AxisBoundaryType::Closed) {
-    rangeMin = -std::numbers::pi_v<ActsScalar>;
-    rangeMax = std::numbers::pi_v<ActsScalar>;
+    rangeMin = -std::numbers::pi;
+    rangeMax = std::numbers::pi;
   } else {
     if (binningDetails.size() > 3u && binningDetails[3] != "*") {
       autoRange = false;

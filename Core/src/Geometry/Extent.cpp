@@ -22,7 +22,7 @@ Acts::Extent::Extent(const ExtentEnvelope& envelope)
   m_range[toUnderlying(BinningValue::binR)] =
       Range1D<ActsScalar>(0., std::numeric_limits<ActsScalar>::max());
   m_range[toUnderlying(BinningValue::binPhi)] = Range1D<ActsScalar>(
-      -std::numbers::pi_v<ActsScalar>, std::numbers::pi_v<ActsScalar>);
+      -std::numbers::pi, std::numbers::pi);
   m_range[toUnderlying(BinningValue::binRPhi)] =
       Range1D<ActsScalar>(0., std::numeric_limits<ActsScalar>::max());
   m_range[toUnderlying(BinningValue::binMag)] =
