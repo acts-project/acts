@@ -30,7 +30,7 @@ class GenericCurvilinearTrackParameters
   using Base = GenericBoundTrackParameters<particle_hypothesis_t>;
 
  public:
-  using Scalar = ActsScalar;
+  using Scalar = double;
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSquareMatrix;
   using ParticleHypothesis = particle_hypothesis_t;

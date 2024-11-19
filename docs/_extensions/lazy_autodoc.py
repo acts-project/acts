@@ -40,7 +40,7 @@ def run() -> None:
     role_instances = {k: set() for k in roles}
 
     role_instances["type"] |= {
-        "Acts::ActsScalar",
+        "double",
         "Acts::ActsVector",
         "Acts::ActsMatrix",
         "Acts::ActsSquareMatrix",

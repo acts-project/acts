@@ -20,13 +20,13 @@
 Acts::Extent::Extent(const ExtentEnvelope& envelope)
     : m_constrains(0), m_envelope(envelope) {
   m_range[toUnderlying(BinningValue::binR)] =
-      Range1D<ActsScalar>(0., std::numeric_limits<ActsScalar>::max());
-  m_range[toUnderlying(BinningValue::binPhi)] = Range1D<ActsScalar>(
-      -std::numbers::pi_v<ActsScalar>, std::numbers::pi_v<ActsScalar>);
+      Range1D<double>(0., std::numeric_limits<double>::max());
+  m_range[toUnderlying(BinningValue::binPhi)] =
+      Range1D<double>(-std::numbers::pi_v<double>, std::numbers::pi_v<double>);
   m_range[toUnderlying(BinningValue::binRPhi)] =
-      Range1D<ActsScalar>(0., std::numeric_limits<ActsScalar>::max());
+      Range1D<double>(0., std::numeric_limits<double>::max());
   m_range[toUnderlying(BinningValue::binMag)] =
-      Range1D<ActsScalar>(0., std::numeric_limits<ActsScalar>::max());
+      Range1D<double>(0., std::numeric_limits<double>::max());
 }
 
 void Acts::Extent::extend(const Vector3& vtx,
@@ -34,14 +34,14 @@ void Acts::Extent::extend(const Vector3& vtx,
                           bool applyEnv, bool fillHistograms) {
   for (auto bValue : bValues) {
     // Get the casted value given the binning value description
-    ActsScalar cValue = VectorHelpers::cast(vtx, bValue);
+    double cValue = VectorHelpers::cast(vtx, bValue);
     if (fillHistograms) {
       m_valueHistograms[toUnderlying(bValue)].push_back(cValue);
     }
     // Apply envelope as suggested
-    ActsScalar lEnv = applyEnv ? m_envelope[bValue][0] : 0.;
-    ActsScalar hEnv = applyEnv ? m_envelope[bValue][1] : 0.;
-    ActsScalar mValue = cValue - lEnv;
+    double lEnv = applyEnv ? m_envelope[bValue][0] : 0.;
+    double hEnv = applyEnv ? m_envelope[bValue][1] : 0.;
+    double mValue = cValue - lEnv;
     // Special protection for radial value
     if (bValue == BinningValue::binR && mValue < 0.) {
       mValue = std::max(mValue, 0.);
@@ -61,8 +61,8 @@ void Acts::Extent::extend(const Extent& rhs,
   for (auto bValue : bValues) {
     // The value is constraint, envelope can be optional
     if (rhs.constrains(bValue)) {
-      ActsScalar lEnv = applyEnv ? m_envelope[bValue][0] : 0.;
-      ActsScalar hEnv = applyEnv ? m_envelope[bValue][1] : 0.;
+      double lEnv = applyEnv ? m_envelope[bValue][0] : 0.;
+      double hEnv = applyEnv ? m_envelope[bValue][1] : 0.;
       if (constrains(bValue)) {
         m_range[toUnderlying(bValue)].expand(
             rhs.range()[toUnderlying(bValue)].min() - lEnv,
@@ -95,17 +95,17 @@ void Acts::Extent::addConstrain(const Acts::Extent& rhs,
   }
 }
 
-void Acts::Extent::set(BinningValue bValue, ActsScalar min, ActsScalar max) {
-  ActsScalar minval = min;
+void Acts::Extent::set(BinningValue bValue, double min, double max) {
+  double minval = min;
   if (bValue == BinningValue::binR && minval < 0.) {
     minval = 0.;
   }
-  m_range[toUnderlying(bValue)] = Range1D<ActsScalar>{minval, max};
+  m_range[toUnderlying(bValue)] = Range1D<double>{minval, max};
   m_constrains.set(toUnderlying(bValue));
 }
 
-void Acts::Extent::setMin(BinningValue bValue, ActsScalar min) {
-  ActsScalar minval = min;
+void Acts::Extent::setMin(BinningValue bValue, double min) {
+  double minval = min;
   if (bValue == BinningValue::binR && minval < 0.) {
     minval = 0.;
   }
@@ -113,7 +113,7 @@ void Acts::Extent::setMin(BinningValue bValue, ActsScalar min) {
   m_constrains.set(toUnderlying(bValue));
 }
 
-void Acts::Extent::setMax(BinningValue bValue, ActsScalar max) {
+void Acts::Extent::setMax(BinningValue bValue, double max) {
   m_range[toUnderlying(bValue)].setMax(0u, max);
   m_constrains.set(toUnderlying(bValue));
 }
@@ -126,7 +126,7 @@ bool Acts::Extent::contains(const Vector3& vtx) const {
   Extent checkExtent;
   for (const auto& bv : allBinningValues()) {
     if (constrains(bv)) {
-      ActsScalar vtxVal = VectorHelpers::cast(vtx, bv);
+      double vtxVal = VectorHelpers::cast(vtx, bv);
       checkExtent.set(bv, vtxVal, vtxVal);
     }
   }

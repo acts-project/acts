@@ -40,7 +40,7 @@ AnnoyModel HashingTrainingAlgorithm<SpacePointContainer>::execute(
 
   auto annoyModel = AnnoyModel(f);
 
-  using Scalar = Acts::ActsScalar;
+  using Scalar = double;
 
   annoyModel.set_seed(annoySeed);
 

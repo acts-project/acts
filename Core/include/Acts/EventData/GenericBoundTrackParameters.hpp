@@ -36,7 +36,7 @@ namespace Acts {
 template <class particle_hypothesis_t>
 class GenericBoundTrackParameters {
  public:
-  using Scalar = ActsScalar;
+  using Scalar = double;
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSquareMatrix;
   using ParticleHypothesis = particle_hypothesis_t;
@@ -95,7 +95,7 @@ class GenericBoundTrackParameters {
       const Vector4& pos4, const Vector3& dir, Scalar qOverP,
       std::optional<CovarianceMatrix> cov,
       ParticleHypothesis particleHypothesis,
-      ActsScalar tolerance = s_onSurfaceTolerance) {
+      double tolerance = s_onSurfaceTolerance) {
     Result<BoundVector> bound =
         transformFreeToBoundParameters(pos4.segment<3>(ePos0), pos4[eTime], dir,
                                        qOverP, *surface, geoCtx, tolerance);

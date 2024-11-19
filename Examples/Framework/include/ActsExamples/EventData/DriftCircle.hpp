@@ -23,7 +23,7 @@ namespace ActsExamples {
 
 /// representation of a drift circle measurement used for track finding
 class DriftCircle {
-  using Scalar = Acts::ActsScalar;
+  using Scalar = double;
 
  public:
   /// Construct the drift circle from the drift radius and tube location

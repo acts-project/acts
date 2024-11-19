@@ -97,7 +97,7 @@ struct MockInteractionList {
 };
 
 struct MockStepperState {
-  using Scalar = Acts::ActsScalar;
+  using Scalar = double;
   using Vector3 = Acts::ActsVector<3>;
 
   Vector3 pos = Vector3::Zero();

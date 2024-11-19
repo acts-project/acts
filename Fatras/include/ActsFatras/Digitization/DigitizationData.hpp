@@ -17,7 +17,7 @@
 namespace ActsFatras {
 
 /// A single cell definition: index, cell central value
-using Cell = std::pair<unsigned int, Acts::ActsScalar>;
+using Cell = std::pair<unsigned int, double>;
 
 /// A channel definition: Cell identification, readout word, links
 ///
@@ -51,7 +51,7 @@ struct Channel {
 /// @tparam kSize Number of cluster coordinates
 template <typename signal_t, std::size_t kSize>
 struct Cluster {
-  using Scalar = Acts::ActsScalar;
+  using Scalar = double;
   using ParametersVector = Acts::ActsVector<kSize>;
   using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
 

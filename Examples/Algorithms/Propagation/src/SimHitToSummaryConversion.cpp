@@ -29,7 +29,7 @@ Acts::detail::Step concatenateSteps(
       concatStep.position += step.position;
       concatStep.momentum += step.momentum;
     }
-    Acts::ActsScalar weight = 1.0 / static_cast<Acts::ActsScalar>(steps.size());
+    double weight = 1.0 / static_cast<double>(steps.size());
     concatStep.position *= weight;
     concatStep.momentum *= weight;
   } else {
@@ -92,9 +92,9 @@ ActsExamples::ProcessCode ActsExamples::SimHitToSummaryConversion::execute(
       if (!moduleSteps.contains(paritcleId)) {
         moduleSteps[paritcleId] = std::vector<Acts::detail::Step>();
       }
-      Acts::ActsScalar hx = simHit.fourPosition().x() / Acts::UnitConstants::mm;
-      Acts::ActsScalar hy = simHit.fourPosition().y() / Acts::UnitConstants::mm;
-      Acts::ActsScalar hz = simHit.fourPosition().z() / Acts::UnitConstants::mm;
+      double hx = simHit.fourPosition().x() / Acts::UnitConstants::mm;
+      double hy = simHit.fourPosition().y() / Acts::UnitConstants::mm;
+      double hz = simHit.fourPosition().z() / Acts::UnitConstants::mm;
       Acts::detail::Step step;
       step.position = Acts::Vector3(hx, hy, hz);
       step.momentum = simHit.direction();

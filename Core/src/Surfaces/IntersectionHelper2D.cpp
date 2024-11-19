@@ -17,11 +17,11 @@
 Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
     const Vector2& s0, const Vector2& s1, const Vector2& origin,
     const Vector2& dir, bool boundCheck) {
-  using Line = Eigen::ParametrizedLine<ActsScalar, 2>;
-  using Plane = Eigen::Hyperplane<ActsScalar, 2>;
+  using Line = Eigen::ParametrizedLine<double, 2>;
+  using Plane = Eigen::Hyperplane<double, 2>;
 
   Vector2 edge(s1 - s0);
-  ActsScalar det = edge.x() * dir.y() - edge.y() * dir.x();
+  double det = edge.x() * dir.y() - edge.y() * dir.x();
   if (std::abs(det) < s_epsilon) {
     return Intersection2D::invalid();
   }
@@ -41,8 +41,7 @@ Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
 }
 
 std::array<Acts::Intersection2D, 2>
-Acts::detail::IntersectionHelper2D::intersectEllipse(ActsScalar Rx,
-                                                     ActsScalar Ry,
+Acts::detail::IntersectionHelper2D::intersectEllipse(double Rx, double Ry,
                                                      const Vector2& origin,
                                                      const Vector2& dir) {
   auto createSolution =
@@ -51,8 +50,8 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(ActsScalar Rx,
     Vector2 toSolD(sol - origin);
     Vector2 toAltD(alt - origin);
 
-    ActsScalar solD = std::copysign(toSolD.norm(), toSolD.dot(dir));
-    ActsScalar altD = std::copysign(toAltD.norm(), toAltD.dot(dir));
+    double solD = std::copysign(toSolD.norm(), toSolD.dot(dir));
+    double altD = std::copysign(toAltD.norm(), toAltD.dot(dir));
 
     if (std::abs(solD) < std::abs(altD)) {
       return {Intersection2D(sol, solD, Intersection2D::Status::reachable),
@@ -64,10 +63,10 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(ActsScalar Rx,
 
   // Special cases first
   if (std::abs(dir.x()) < s_epsilon) {
-    ActsScalar solx = origin.x();
-    ActsScalar D = 1. - solx * solx / (Rx * Rx);
+    double solx = origin.x();
+    double D = 1. - solx * solx / (Rx * Rx);
     if (D > 0.) {
-      ActsScalar sqrtD = std::sqrt(D);
+      double sqrtD = std::sqrt(D);
       Vector2 sol(solx, Ry * sqrtD);
       Vector2 alt(solx, -Ry * sqrtD);
       return createSolution(sol, alt);
@@ -78,10 +77,10 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(ActsScalar Rx,
     }
     return {Intersection2D::invalid(), Intersection2D::invalid()};
   } else if (std::abs(dir.y()) < s_epsilon) {
-    ActsScalar soly = origin.y();
-    ActsScalar D = 1. - soly * soly / (Ry * Ry);
+    double soly = origin.y();
+    double D = 1. - soly * soly / (Ry * Ry);
     if (D > 0.) {
-      ActsScalar sqrtD = std::sqrt(D);
+      double sqrtD = std::sqrt(D);
       Vector2 sol(Rx * sqrtD, soly);
       Vector2 alt(-Rx * sqrtD, soly);
       return createSolution(sol, alt);
@@ -93,23 +92,23 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(ActsScalar Rx,
     return {Intersection2D::invalid(), Intersection2D::invalid()};
   }
   // General solution
-  ActsScalar k = dir.y() / dir.x();
-  ActsScalar d = origin.y() - k * origin.x();
-  ActsScalar Ry2 = Ry * Ry;
-  ActsScalar alpha = 1. / (Rx * Rx) + k * k / Ry2;
-  ActsScalar beta = 2. * k * d / Ry2;
-  ActsScalar gamma = d * d / Ry2 - 1;
+  double k = dir.y() / dir.x();
+  double d = origin.y() - k * origin.x();
+  double Ry2 = Ry * Ry;
+  double alpha = 1. / (Rx * Rx) + k * k / Ry2;
+  double beta = 2. * k * d / Ry2;
+  double gamma = d * d / Ry2 - 1;
   Acts::detail::RealQuadraticEquation solver(alpha, beta, gamma);
   if (solver.solutions == 1) {
-    ActsScalar x = solver.first;
+    double x = solver.first;
     Vector2 sol(x, k * x + d);
     Vector2 toSolD(sol - origin);
-    ActsScalar solD = std::copysign(toSolD.norm(), toSolD.dot(dir));
+    double solD = std::copysign(toSolD.norm(), toSolD.dot(dir));
     return {Intersection2D(sol, solD, Intersection2D::Status::reachable),
             Intersection2D::invalid()};
   } else if (solver.solutions > 1) {
-    ActsScalar x0 = solver.first;
-    ActsScalar x1 = solver.second;
+    double x0 = solver.first;
+    double x1 = solver.second;
     Vector2 sol(x0, k * x0 + d);
     Vector2 alt(x1, k * x1 + d);
     return createSolution(sol, alt);
@@ -118,12 +117,12 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(ActsScalar Rx,
 }
 
 Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectCircleSegment(
-    ActsScalar R, ActsScalar phiMin, ActsScalar phiMax, const Vector2& origin,
+    double R, double phiMin, double phiMax, const Vector2& origin,
     const Vector2& dir) {
   auto intersections = intersectCircle(R, origin, dir);
   for (const auto& candidate : intersections) {
     if (candidate.pathLength() > 0.) {
-      ActsScalar phi = Acts::VectorHelpers::phi(candidate.position());
+      double phi = Acts::VectorHelpers::phi(candidate.position());
       if (phi > phiMin && phi < phiMax) {
         return candidate;
       }

@@ -149,7 +149,7 @@ const Acts::SurfaceBounds& Acts::LineSurface::bounds() const {
 Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    ActsScalar tolerance) const {
+    double tolerance) const {
   // The nomenclature is following the header file and doxygen documentation
 
   const Vector3& ma = position;

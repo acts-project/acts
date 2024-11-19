@@ -23,7 +23,7 @@ using SimParticleState = ::ActsFatras::Particle;
 
 class SimParticle final {
  public:
-  using Scalar = Acts::ActsScalar;
+  using Scalar = double;
   using Vector3 = Acts::ActsVector<3>;
   using Vector4 = Acts::ActsVector<4>;
 

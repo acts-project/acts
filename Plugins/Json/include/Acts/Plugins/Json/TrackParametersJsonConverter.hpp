@@ -90,7 +90,7 @@ struct adl_serializer<parameters_t> {
       // parameters and serialize
       auto cov = t.covariance().value();
       constexpr unsigned int size = cov.rows();
-      std::array<Acts::ActsScalar, size * size> covData{};
+      std::array<double, size * size> covData{};
       for (std::size_t n = 0; n < size; ++n) {
         for (std::size_t m = 0; m < size; ++m) {
           covData[n * size + m] = cov(n, m);
@@ -118,13 +118,13 @@ struct adl_serializer<parameters_t> {
   /// @return Track parameters object
   static parameters_t from_json(const nlohmann::json& j) {
     // Extract common parameters
-    std::array<Acts::ActsScalar, 4> posData = j.at("position");
+    std::array<double, 4> posData = j.at("position");
     Acts::Vector4 position(posData[0], posData[1], posData[2], posData[3]);
 
-    std::array<Acts::ActsScalar, 3> dirData = j.at("direction");
+    std::array<double, 3> dirData = j.at("direction");
     Acts::Vector3 direction(dirData[0], dirData[1], dirData[2]);
 
-    Acts::ActsScalar qOverP = j.at("qOverP");
+    double qOverP = j.at("qOverP");
     Acts::PdgParticle absPdg = j.at("particleHypothesis");
 
     // Covariance is optional
@@ -136,7 +136,7 @@ struct adl_serializer<parameters_t> {
       // parameters and deserialize
       CovarianceMatrix mat;
       constexpr unsigned int size = mat.rows();
-      std::array<Acts::ActsScalar, size * size> covData = j.at("covariance");
+      std::array<double, size * size> covData = j.at("covariance");
       for (std::size_t n = 0; n < size; ++n) {
         for (std::size_t m = 0; m < size; ++m) {
           mat(n, m) = covData[n * size + m];

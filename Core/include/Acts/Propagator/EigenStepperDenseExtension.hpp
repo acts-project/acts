@@ -27,7 +27,7 @@ namespace Acts {
 /// in the propagation and the jacobian. These effects will only occur if the
 /// propagation is in a TrackingVolume with attached material.
 struct EigenStepperDenseExtension {
-  using Scalar = ActsScalar;
+  using Scalar = double;
   /// @brief Vector3 replacement for the custom scalar type
   using ThisVector3 = Eigen::Matrix<Scalar, 3, 1>;
 

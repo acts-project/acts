@@ -45,7 +45,7 @@ void checkRotationAlignment(
 /// @note throws exception if the volumes are not ordered
 ///
 /// @return a vector with position differences (ordered)
-std::vector<ActsScalar> checkCenterAlignment(
+std::vector<double> checkCenterAlignment(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<Experimental::DetectorVolume>>& volumes,
     BinningValue axisValue);

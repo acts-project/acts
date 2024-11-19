@@ -35,7 +35,7 @@ void Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
 void Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
     const GeometryContext& gctx, Portal& portal,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-    const Direction& direction, const std::vector<ActsScalar>& boundaries,
+    const Direction& direction, const std::vector<double>& boundaries,
     const BinningValue& binning) {
   // Check if the boundaries need a transform
   const auto pTransform = portal.surface().transform(gctx);

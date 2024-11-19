@@ -540,7 +540,7 @@ BOOST_DATA_TEST_CASE(IncompatibleRPhiDirection,
   Transform3 base =
       AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
 
-  auto a = [phiShift](ActsScalar v) {
+  auto a = [phiShift](double v) {
     return detail::radian_sym(v + phiShift * 1_degree);
   };
 
@@ -589,7 +589,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
   Transform3 base =
       AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
 
-  auto a = [phiShift](ActsScalar v) {
+  auto a = [phiShift](double v) {
     return detail::radian_sym(v + phiShift * 1_degree);
   };
 

@@ -19,7 +19,7 @@
 
 namespace Acts::Test {
 
-using Scalar = Acts::ActsScalar;
+using Scalar = double;
 auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 struct DriftCircle {

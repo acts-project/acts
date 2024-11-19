@@ -47,24 +47,23 @@ namespace Acts {
 ///
 /// Defaults to `double` but can be customized by the user.
 #ifdef ACTS_CUSTOM_SCALARTYPE
-using ActsScalar = ACTS_CUSTOM_SCALARTYPE;
+using double = ACTS_CUSTOM_SCALARTYPE;
 #else
-using ActsScalar = double;
+using double = double;
 #endif
 
 template <unsigned int kSize>
-using ActsVector = Eigen::Matrix<ActsScalar, kSize, 1>;
+using ActsVector = Eigen::Matrix<double, kSize, 1>;
 
 template <unsigned int kRows, unsigned int kCols>
-using ActsMatrix = Eigen::Matrix<ActsScalar, kRows, kCols>;
+using ActsMatrix = Eigen::Matrix<double, kRows, kCols>;
 
 template <unsigned int kSize>
-using ActsSquareMatrix = Eigen::Matrix<ActsScalar, kSize, kSize>;
+using ActsSquareMatrix = Eigen::Matrix<double, kSize, kSize>;
 
-using ActsDynamicVector = Eigen::Matrix<ActsScalar, Eigen::Dynamic, 1>;
+using ActsDynamicVector = Eigen::Matrix<double, Eigen::Dynamic, 1>;
 
-using ActsDynamicMatrix =
-    Eigen::Matrix<ActsScalar, Eigen::Dynamic, Eigen::Dynamic>;
+using ActsDynamicMatrix = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
 
 /// @defgroup coordinates-types Fixed-size vector/matrix types for coordinates
 ///
@@ -84,22 +83,22 @@ using SquareMatrix3 = ActsSquareMatrix<3>;
 using SquareMatrix4 = ActsSquareMatrix<4>;
 
 // pure translation transformations
-using Translation2 = Eigen::Translation<ActsScalar, 2>;
-using Translation3 = Eigen::Translation<ActsScalar, 3>;
+using Translation2 = Eigen::Translation<double, 2>;
+using Translation3 = Eigen::Translation<double, 3>;
 
 // linear (rotation) matrices
 using RotationMatrix2 = ActsMatrix<2, 2>;
 using RotationMatrix3 = ActsMatrix<3, 3>;
 
 // pure rotation defined by a rotation angle around a rotation axis
-using AngleAxis3 = Eigen::AngleAxis<ActsScalar>;
+using AngleAxis3 = Eigen::AngleAxis<double>;
 
 // combined affine transformations. types are chosen for better data alignment:
 // - 2d affine compact stored as 2x3 matrix
 // - 3d affine stored as 4x4 matrix
-using Transform2 = Eigen::Transform<ActsScalar, 2, Eigen::AffineCompact>;
-using Transform3 = Eigen::Transform<ActsScalar, 3, Eigen::Affine>;
+using Transform2 = Eigen::Transform<double, 2, Eigen::AffineCompact>;
+using Transform3 = Eigen::Transform<double, 3, Eigen::Affine>;
 
-constexpr ActsScalar s_transformEquivalentTolerance = 1e-9;
+constexpr double s_transformEquivalentTolerance = 1e-9;
 
 }  // namespace Acts

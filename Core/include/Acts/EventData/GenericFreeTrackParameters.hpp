@@ -33,7 +33,7 @@ namespace Acts {
 template <class particle_hypothesis_t>
 class GenericFreeTrackParameters {
  public:
-  using Scalar = ActsScalar;
+  using Scalar = double;
   using ParametersVector = FreeVector;
   using CovarianceMatrix = FreeSquareMatrix;
   using ParticleHypothesis = particle_hypothesis_t;

@@ -23,8 +23,7 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, const std::string& treeName,
-    Acts::ActsScalar lengthUnit, Acts::ActsScalar BFieldUnit,
-    bool firstQuadrant) {
+    double lengthUnit, double BFieldUnit, bool firstQuadrant) {
   /// [1] Read in field map file
   // Grid position points in r and z
   std::vector<double> rPos;
@@ -74,8 +73,7 @@ ActsExamples::makeMagneticFieldMapXyzFromRoot(
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, const std::string& treeName,
-    Acts::ActsScalar lengthUnit, Acts::ActsScalar BFieldUnit,
-    bool firstOctant) {
+    double lengthUnit, double BFieldUnit, bool firstOctant) {
   /// [1] Read in field map file
   // Grid position points in x, y and z
   std::vector<double> xPos;

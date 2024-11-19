@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
   barrelPhiCfg.binning = {BinningValue::binPhi};
 
   unsigned int phiSectors = 5;
-  Acts::ActsScalar phiHalfSector = std::numbers::pi / phiSectors;
+  double phiHalfSector = std::numbers::pi / phiSectors;
 
   std::vector<std::shared_ptr<DetectorVolume>> phiVolumes = {};
   for (unsigned int i = 0; i < phiSectors; ++i) {

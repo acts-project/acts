@@ -7,9 +7,9 @@ The basic scalar type can be defined via this file and is set per default to `do
 .. code-block:: cpp
 
    #ifdef ACTS_CUSTOM_SCALAR
-   using ActsScalar = ACTS_CUSTOM_SCALAR;
+   using double = ACTS_CUSTOM_SCALAR;
    #else
-   using ActsScalar = double;
+   using double = double;
    #endif
 
 It is recommended within the code to deduce the Scalar type from the Event Data object, e.g.

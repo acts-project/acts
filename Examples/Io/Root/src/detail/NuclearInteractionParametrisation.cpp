@@ -53,8 +53,8 @@ float gaussianValue(TH1F const* histo, const float mom) {
 float invariantMass(const Acts::Vector4& fourVector1,
                     const Acts::Vector4& fourVector2) {
   Acts::Vector4 sum = fourVector1 + fourVector2;
-  const Acts::ActsScalar energy = sum[Acts::eEnergy];
-  Acts::ActsScalar momentum = sum.template segment<3>(Acts::eMom0).norm();
+  const double energy = sum[Acts::eEnergy];
+  double momentum = sum.template segment<3>(Acts::eMom0).norm();
   return std::sqrt(energy * energy - momentum * momentum);
 }
 

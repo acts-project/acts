@@ -37,7 +37,7 @@ namespace Acts::Test {
 
 struct Object {};
 
-using BoundingBoxScalar = ActsScalar;
+using BoundingBoxScalar = double;
 
 using ObjectBBox = Acts::AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
 
