@@ -241,7 +241,7 @@ def addSeeding(
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
     layerMappingConfigFile: Optional[Union[Path, str]] = None,
-    connector_inputConfigFile: Optional[Union[Path, str]] = None,
+    ConnectorInputConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialSigmas: Optional[list] = None,
@@ -398,7 +398,7 @@ def addSeeding(
                 logLevel,
                 layerMappingConfigFile,
                 geoSelectionConfigFile,
-                connector_inputConfigFile,
+                ConnectorInputConfigFile,
             )
         elif seedingAlgorithm == SeedingAlgorithm.Hashing:
             logger.info("Using Hashing seeding")
@@ -1048,19 +1048,19 @@ def addGbtsSeeding(
     logLevel: acts.logging.Level = None,
     layerMappingConfigFile: Union[Path, str] = None,
     geoSelectionConfigFile: Union[Path, str] = None,
-    connector_inputConfigFile: Union[Path, str] = None,
+    ConnectorInputConfigFile: Union[Path, str] = None,
 ):
     """Gbts seeding"""
 
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
-    connector_inputFile = str(connector_inputConfigFile)
+    ConnectorInputFileStr = str(ConnectorInputConfigFile)
     seedFinderConfig = acts.SeedFinderGbtsConfig(
         **acts.examples.defaultKWArgs(
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             minPt=seedFinderConfigArg.minPt,
-            connector_input_file=connector_inputFile,
+            ConnectorInputFile=ConnectorInputFileStr,
             m_useClusterWidth=False,
         ),
     )

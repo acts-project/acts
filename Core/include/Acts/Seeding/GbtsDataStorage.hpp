@@ -181,7 +181,6 @@ class GbtsDataStorage {
       // can't do this bit yet as dont have cluster width
       if (useClusterWidth) {
         float cluster_width = sp.ClusterWidth(); 
-        // if (cluster_width == 0) {continue;} //catch for casses that dont have cluster width available 
         min_tau = 6.7 * (cluster_width - 0.2);
         max_tau =
             1.6 + 0.15 / (cluster_width + 0.2) + 6.1 * (cluster_width - 0.2);

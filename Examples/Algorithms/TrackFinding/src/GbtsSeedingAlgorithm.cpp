@@ -70,7 +70,7 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
   m_cfg.seedFinderConfig.m_layerGeometry = LayerNumbering();
 
   std::ifstream input_ifstream(
-      m_cfg.seedFinderConfig.connector_input_file.c_str(), std::ifstream::in);
+      m_cfg.seedFinderConfig.ConnectorInputFile.c_str(), std::ifstream::in);
 
   // connector
   std::unique_ptr<Acts::GbtsConnector> inputConnector =
