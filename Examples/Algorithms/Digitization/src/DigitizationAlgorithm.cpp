@@ -333,7 +333,7 @@ ActsExamples::DigitizationAlgorithm::localParameters(
 
   const auto& binningData = geoCfg.segmentation.binningData();
 
-  Acts::ActsScalar totalWeight = 0.;
+  double totalWeight = 0.;
   Acts::Vector2 m(0., 0.);
   std::size_t b0min = std::numeric_limits<std::size_t>::max();
   std::size_t b0max = 0;
@@ -342,7 +342,7 @@ ActsExamples::DigitizationAlgorithm::localParameters(
   // Combine the channels
   for (const auto& ch : channels) {
     auto bin = ch.bin;
-    Acts::ActsScalar charge =
+    double charge =
         geoCfg.digital ? 1. : geoCfg.charge(ch.activation, rng);
     if (geoCfg.digital || charge > geoCfg.threshold) {
       totalWeight += charge;

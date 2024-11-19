@@ -30,7 +30,7 @@ Acts::detail::GeoPolygonConverter::operator()(
     const PVConstLink& geoPV, const GeoSimplePolygonBrep& polygon,
     const Transform3& absTransform, bool sensitive) const {
   /// auto-calculate the unit length conversion
-  static constexpr ActsScalar unitLength =
+  static constexpr double unitLength =
       Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
   // Create the surface transform
@@ -50,7 +50,7 @@ Acts::detail::GeoPolygonConverter::operator()(
     double hlxnegy = std::abs(vertices[0][0] - vertices[1][0]) / 2;
     double hlxposy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
     double hly = std::abs(vertices[0][1] - vertices[3][1]) / 2;
-    std::vector<ActsScalar> halfLengths = {hlxnegy, hlxposy, hly};
+    std::vector<double> halfLengths = {hlxnegy, hlxposy, hly};
 
     // Create the surface
     Vector3 colX = rotation.col(0);
@@ -61,9 +61,9 @@ Acts::detail::GeoPolygonConverter::operator()(
     rotation.col(2) = colZ;
     transform.linear() = rotation;
     // Create the surface bounds
-    ActsScalar halfXnegY = unitLength * halfLengths[0];
-    ActsScalar halfXposY = unitLength * halfLengths[1];
-    ActsScalar halfY = unitLength * halfLengths[2];
+    double halfXnegY = unitLength * halfLengths[0];
+    double halfXposY = unitLength * halfLengths[1];
+    double halfY = unitLength * halfLengths[2];
     auto trapBounds =
         std::make_shared<Acts::TrapezoidBounds>(halfXnegY, halfXposY, halfY);
     if (!sensitive) {
@@ -82,7 +82,7 @@ Acts::detail::GeoPolygonConverter::operator()(
     double hlxzeroy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
     double hlxposy = std::abs(vertices[4][0] - vertices[5][0]) / 2;
     double hly = std::abs(vertices[0][1] - vertices[4][1]) / 2;
-    std::vector<ActsScalar> halfLengths = {hlxnegy, hlxzeroy, hlxposy, hly,
+    std::vector<double> halfLengths = {hlxnegy, hlxzeroy, hlxposy, hly,
                                            hly};
 
     // Create the surface
@@ -96,11 +96,11 @@ Acts::detail::GeoPolygonConverter::operator()(
     transform.linear() = rotation;
 
     // Create the surface bounds
-    ActsScalar halfXnegY = unitLength * halfLengths[0];
-    ActsScalar halfXzeroY = unitLength * halfLengths[1];
-    ActsScalar halfXposY = unitLength * halfLengths[2];
-    ActsScalar halfYnegX = unitLength * halfLengths[3];
-    ActsScalar halfYposX = unitLength * halfLengths[4];
+    double halfXnegY = unitLength * halfLengths[0];
+    double halfXzeroY = unitLength * halfLengths[1];
+    double halfXposY = unitLength * halfLengths[2];
+    double halfYnegX = unitLength * halfLengths[3];
+    double halfYposX = unitLength * halfLengths[4];
 
     auto diamondBounds = std::make_shared<Acts::DiamondBounds>(
         halfXnegY, halfXzeroY, halfXposY, halfYnegX, halfYposX);

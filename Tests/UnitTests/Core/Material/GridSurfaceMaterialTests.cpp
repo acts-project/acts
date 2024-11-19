@@ -20,25 +20,25 @@
 // this is a global access to the x coordinate
 class GlobalAccessX final : public Acts::GridAccess::IGlobalToGridLocal {
  public:
-  std::array<Acts::ActsScalar, 1u> g2X(const Acts::Vector3& global) const {
+  std::array<double, 1u> g2X(const Acts::Vector3& global) const {
     return {global.x()};
   }
 };
 
 class LocalAccessX final : public Acts::GridAccess::IBoundToGridLocal {
  public:
-  std::array<Acts::ActsScalar, 1u> l2X(const Acts::Vector2& local) const {
+  std::array<double, 1u> l2X(const Acts::Vector2& local) const {
     return {local.x()};
   }
 };
 
 class GlobalToZPhi final : public Acts::GridAccess::IGlobalToGridLocal {
  public:
-  Acts::ActsScalar zShift = 0.;
+  double zShift = 0.;
 
-  GlobalToZPhi(Acts::ActsScalar shift) : zShift(shift) {}
+  GlobalToZPhi(double shift) : zShift(shift) {}
 
-  std::array<Acts::ActsScalar, 2u> g2ZPhi(const Acts::Vector3& global) const {
+  std::array<double, 2u> g2ZPhi(const Acts::Vector3& global) const {
     return {global.z() + zShift, Acts::VectorHelpers::phi(global)};
   }
 };
@@ -46,11 +46,11 @@ class GlobalToZPhi final : public Acts::GridAccess::IGlobalToGridLocal {
 // Local on cylinder surface is rPhi, z
 class LocalToZPhi final : public Acts::GridAccess::IBoundToGridLocal {
  public:
-  Acts::ActsScalar radius = 1.;
+  double radius = 1.;
 
-  LocalToZPhi(Acts::ActsScalar r) : radius(r) {}
+  LocalToZPhi(double r) : radius(r) {}
 
-  std::array<Acts::ActsScalar, 2u> l2ZPhi(const Acts::Vector2& local) const {
+  std::array<double, 2u> l2ZPhi(const Acts::Vector2& local) const {
     return {local[1u], local[0u] / radius};
   }
 };

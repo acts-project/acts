@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   auto xVals = vHist[toUnderlying(BinningValue::binX)];
 
   BOOST_CHECK_EQUAL(xVals.size(), 6u);
-  std::vector<ActsScalar> reference = {15_mm, 18_mm, 15_mm,
+  std::vector<double> reference = {15_mm, 18_mm, 15_mm,
                                        15_mm, 18_mm, 15_mm};
   BOOST_CHECK(xVals == reference);
 

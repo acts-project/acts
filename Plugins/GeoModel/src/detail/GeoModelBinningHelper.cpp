@@ -45,8 +45,8 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
   // Bool auto_range
   bool autoRange = true;
   // The Range
-  ActsScalar rangeMin = 0.;
-  ActsScalar rangeMax = 0.;
+  double rangeMin = 0.;
+  double rangeMax = 0.;
   if (bValue == BinningValue::binPhi &&
       boundaryType == AxisBoundaryType::Closed) {
     rangeMin = -std::numbers::pi;

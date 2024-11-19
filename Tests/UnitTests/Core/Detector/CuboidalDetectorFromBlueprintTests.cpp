@@ -85,18 +85,18 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
   // Blueprint starts here ----------------
 
   // Detector dimensions
-  Acts::ActsScalar detectorX = 100.;
-  Acts::ActsScalar detectorY = 100.;
-  Acts::ActsScalar detectorZ = 100.;
+  double detectorX = 100.;
+  double detectorY = 100.;
+  double detectorZ = 100.;
 
   // Pixel system
-  Acts::ActsScalar pixelX = 20;
-  Acts::ActsScalar pixelY = 100;
-  Acts::ActsScalar pixelZ = 10;
+  double pixelX = 20;
+  double pixelY = 100;
+  double pixelZ = 10;
 
   // Create  root node
   std::vector<Acts::BinningValue> detectorBins = {Acts::BinningValue::binX};
-  std::vector<Acts::ActsScalar> detectorBounds = {detectorX, detectorY,
+  std::vector<double> detectorBounds = {detectorX, detectorY,
                                                   detectorZ};
 
   // The root node - detector
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
       detectorBounds, detectorBins);
 
   // Left arm
-  std::vector<Acts::ActsScalar> leftArmBounds = {detectorX * 0.5, detectorY,
+  std::vector<double> leftArmBounds = {detectorX * 0.5, detectorY,
                                                  detectorZ};
 
   std::vector<Acts::BinningValue> leftArmBins = {Acts::BinningValue::binZ};
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
       leftArmBins);
 
   // Pixel layer L1
-  std::vector<Acts::ActsScalar> pixelL1Boundaries = {pixelX, pixelY, pixelZ};
+  std::vector<double> pixelL1Boundaries = {pixelX, pixelY, pixelZ};
 
   Acts::Transform3 pixelL1Transform =
       Acts::Transform3::Identity() *
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
       pixelL1Boundaries, pixelL1Structure);
 
   // Pixel layer L2
-  std::vector<Acts::ActsScalar> pixelL2Boundaries = {pixelX, pixelY, pixelZ};
+  std::vector<double> pixelL2Boundaries = {pixelX, pixelY, pixelZ};
 
   Acts::Transform3 pixelL2Transform =
       Acts::Transform3::Identity() *
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
   detectorBpr->add(std::move(leftArm));
 
   // Right arm
-  std::vector<Acts::ActsScalar> rightArmBounds = {detectorX * 0.5, detectorY,
+  std::vector<double> rightArmBounds = {detectorX * 0.5, detectorY,
                                                   detectorZ};
 
   std::vector<Acts::BinningValue> rightArmBins = {Acts::BinningValue::binZ};
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
       rightArmBounds, rightArmBins);
 
   // Pixel layer R1
-  std::vector<Acts::ActsScalar> pixelR1Boundaries = {pixelX, pixelY, pixelZ};
+  std::vector<double> pixelR1Boundaries = {pixelX, pixelY, pixelZ};
 
   Acts::Transform3 pixelR1Transform =
       Acts::Transform3::Identity() *
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
       pixelR1Boundaries, pixelR1Structure);
 
   // Pixel layer R2
-  std::vector<Acts::ActsScalar> pixelR2Boundaries = {pixelX, pixelY, pixelZ};
+  std::vector<double> pixelR2Boundaries = {pixelX, pixelY, pixelZ};
 
   Acts::Transform3 pixelR2Transform =
       Acts::Transform3::Identity() *

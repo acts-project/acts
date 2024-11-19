@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(addMisconfiguredSupportCase) {
   struct InvalidCreator {
     auto operator()(const Acts::Extent& /*e*/) const {
       return std::make_tuple(Acts::Surface::SurfaceType::Perigee,
-                             std::vector<Acts::ActsScalar>{},
+                             std::vector<double>{},
                              Acts::Transform3::Identity());
     }
   };

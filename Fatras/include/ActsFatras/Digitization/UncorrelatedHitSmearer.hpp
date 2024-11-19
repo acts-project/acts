@@ -41,7 +41,7 @@ using SingleParameterSmearFunction =
 /// vector and associated covariance matrix.
 template <typename generator_t, std::size_t kSize>
 struct BoundParametersSmearer {
-  using Scalar = Acts::ActsScalar;
+  using Scalar = double;
   using ParametersVector = Acts::ActsVector<kSize>;
   using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
@@ -116,7 +116,7 @@ struct BoundParametersSmearer {
 ///   individually is not recommended
 template <typename generator_t, std::size_t kSize>
 struct FreeParametersSmearer {
-  using Scalar = Acts::ActsScalar;
+  using Scalar = double;
   using ParametersVector = Acts::ActsVector<kSize>;
   using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;

@@ -48,31 +48,31 @@ BOOST_AUTO_TEST_CASE(DetrayTransformConversion) {
       DetrayGeometryConverter::convertTransform(transform);
   // Transform is correctly translated
   CHECK_CLOSE_ABS(payload.tr[0u], 1.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.tr[1u], 2.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.tr[2u], 3.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   // Rotation is correctly translated
   RotationMatrix3 rotation = transform.rotation().transpose();
   CHECK_CLOSE_ABS(payload.rot[0u], rotation(0, 0),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[1u], rotation(0, 1),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[2u], rotation(0, 2),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[3u], rotation(1, 0),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[4u], rotation(1, 1),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[5u], rotation(1, 2),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[6u], rotation(2, 0),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[7u], rotation(2, 1),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[8u], rotation(2, 2),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 }
 
 BOOST_AUTO_TEST_CASE(DetrayMaskConversion) {

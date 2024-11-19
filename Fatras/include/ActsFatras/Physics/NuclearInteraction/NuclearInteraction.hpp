@@ -416,7 +416,7 @@ Acts::ActsDynamicVector NuclearInteraction::sampleInvariantMasses(
   // Sample in the eigenspace
   for (unsigned int i = 0; i < size; i++) {
     float variance = parametrisation.eigenvaluesInvariantMass[i];
-    std::normal_distribution<Acts::ActsScalar> dist{
+    std::normal_distribution<double> dist{
         parametrisation.meanInvariantMass[i], std::sqrt(variance)};
     parameters[i] = dist(generator);
   }
@@ -446,7 +446,7 @@ Acts::ActsDynamicVector NuclearInteraction::sampleMomenta(
   // Sample in the eigenspace
   for (unsigned int i = 0; i < size; i++) {
     float variance = parametrisation.eigenvaluesMomentum[i];
-    std::normal_distribution<Acts::ActsScalar> dist{
+    std::normal_distribution<double> dist{
         parametrisation.meanMomentum[i], std::sqrt(variance)};
     parameters[i] = dist(generator);
   }

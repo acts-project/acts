@@ -199,19 +199,19 @@ BOOST_AUTO_TEST_CASE(
   // https://acts.readthedocs.io/en/latest/white_papers/gaussian-track-densities.html
   // Analytical maximum of the Gaussian
   ActsSquareMatrix<3> ipWeights = ipCov.inverse();
-  ActsScalar denom =
+  double denom =
       ipWeights(1, 1) * ipWeights(2, 2) - ipWeights(1, 2) * ipWeights(1, 2);
 
-  ActsScalar zNom =
+  double zNom =
       ipWeights(0, 1) * ipWeights(2, 2) - ipWeights(0, 2) * ipWeights(1, 2);
-  ActsScalar correctMaxZ = zNom / denom * d0 + z0;
+  double correctMaxZ = zNom / denom * d0 + z0;
 
-  ActsScalar tNom =
+  double tNom =
       ipWeights(0, 2) * ipWeights(1, 1) - ipWeights(0, 1) * ipWeights(1, 2);
-  ActsScalar correctMaxT = tNom / denom * d0 + t0;
+  double correctMaxT = tNom / denom * d0 + t0;
 
   // Analytical FWHM of the Gaussian
-  ActsScalar correctFWHM =
+  double correctFWHM =
       2. * std::sqrt(2 * std::numbers::ln2 / ipWeights(1, 1));
 
   // Estimate maximum z position and seed width

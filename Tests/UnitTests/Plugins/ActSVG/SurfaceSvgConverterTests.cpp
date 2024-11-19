@@ -54,10 +54,10 @@ void runPlanarTests(const Acts::Surface& surface, const Acts::Svg::Style& style,
       Acts::Svg::SurfaceConverter::convert(geoCtx, surface, sOptions);
   auto xyObject = Acts::Svg::View::xy(svgObject, identification);
   auto xyAxes =
-      Acts::Svg::axesXY(static_cast<Acts::ActsScalar>(xyObject._x_range[0]),
-                        static_cast<Acts::ActsScalar>(xyObject._x_range[1]),
-                        static_cast<Acts::ActsScalar>(xyObject._y_range[0]),
-                        static_cast<Acts::ActsScalar>(xyObject._y_range[1]));
+      Acts::Svg::axesXY(static_cast<double>(xyObject._x_range[0]),
+                        static_cast<double>(xyObject._x_range[1]),
+                        static_cast<double>(xyObject._y_range[0]),
+                        static_cast<double>(xyObject._y_range[1]));
 
   Acts::Svg::toFile({xyObject, xyAxes}, xyObject._id + ".svg");
   // As sheet
@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   runPlanarTests(*trapeozidPlane, planarStyle, "trapezoid");
 
   // Trapezoid case shifted and rotated
-  Acts::ActsScalar phi = std::numbers::pi / 8.;
-  Acts::ActsScalar radius = 150.;
+  double phi = std::numbers::pi / 8.;
+  double radius = 150.;
   Acts::Vector3 center(radius * std::cos(phi), radius * std::sin(phi), 0.);
 
   Acts::Vector3 localY(std::cos(phi), std::sin(phi), 0.);

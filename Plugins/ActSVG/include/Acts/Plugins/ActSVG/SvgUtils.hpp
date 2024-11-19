@@ -23,16 +23,16 @@ namespace Acts::Svg {
 struct Style {
   // Fill parameters
   std::array<int, 3> fillColor = {255, 255, 255};
-  ActsScalar fillOpacity = 1.;
+  double fillOpacity = 1.;
 
   // Highlight parameters
   std::array<int, 3> highlightColor = {0, 0, 0};
   std::vector<std::string> highlights = {};
 
-  ActsScalar strokeWidth = 0.5;
+  double strokeWidth = 0.5;
   std::array<int, 3> strokeColor = {0, 0, 0};
 
-  ActsScalar highlightStrokeWidth = 2;
+  double highlightStrokeWidth = 2;
   std::array<int, 3> highlightStrokeColor = {0, 0, 0};
 
   std::vector<int> strokeDasharray = {};
@@ -101,10 +101,10 @@ inline static actsvg::svg::object group(
 /// @param yEnd the end position y
 ///
 /// @return a single svg object as a measure
-inline static actsvg::svg::object measure(ActsScalar xStart, ActsScalar yStart,
-                                          ActsScalar xEnd, ActsScalar yEnd,
+inline static actsvg::svg::object measure(double xStart, double yStart,
+                                          double xEnd, double yEnd,
                                           const std::string& variable = "",
-                                          ActsScalar value = 0.,
+                                          double value = 0.,
                                           const std::string& unit = "") {
   std::string mlabel = "";
   if (!variable.empty()) {
@@ -134,8 +134,8 @@ inline static actsvg::svg::object measure(ActsScalar xStart, ActsScalar yStart,
 /// @param yMax the maximum y value
 ///
 /// @return an svg object
-inline static actsvg::svg::object axesXY(ActsScalar xMin, ActsScalar xMax,
-                                         ActsScalar yMin, ActsScalar yMax) {
+inline static actsvg::svg::object axesXY(double xMin, double xMax,
+                                         double yMin, double yMax) {
   return actsvg::draw::x_y_axes(
       "x_y_axis",
       {static_cast<actsvg::scalar>(xMin), static_cast<actsvg::scalar>(xMax)},
@@ -154,7 +154,7 @@ inline static actsvg::svg::object axesXY(ActsScalar xMin, ActsScalar xMax,
 ///
 /// @return an svg object
 inline static actsvg::svg::object infoBox(
-    ActsScalar xPos, ActsScalar yPos, const std::string& title,
+    double xPos, double yPos, const std::string& title,
     const Style& titleStyle, const std::vector<std::string>& info,
     const Style& infoStyle, actsvg::svg::object& object,
     const std::vector<std::string>& highlights = {"mouseover", "mouseout"}) {

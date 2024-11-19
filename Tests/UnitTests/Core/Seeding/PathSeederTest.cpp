@@ -45,22 +45,22 @@ using TrackParameters = CurvilinearTrackParameters;
 GeometryContext gctx;
 
 // Parameters for the geometry
-const ActsScalar halfY = 10.;
-const ActsScalar halfZ = 10.;
-const ActsScalar deltaX = 10.;
-const ActsScalar deltaYZ = 1.;
+const double halfY = 10.;
+const double halfZ = 10.;
+const double deltaX = 10.;
+const double deltaYZ = 1.;
 
 const Vector4 trueVertex(-5., 0., 0., 0);
-const std::vector<ActsScalar> truePhis = {-0.15, -0.1, -0.05, 0,
+const std::vector<double> truePhis = {-0.15, -0.1, -0.05, 0,
                                           0.05,  0.1,  0.15};
-const ActsScalar trueTheta = std::numbers::pi / 2.;
-const ActsScalar trueQOverP = 1. / 1._GeV;
+const double trueTheta = std::numbers::pi / 2.;
+const double trueQOverP = 1. / 1._GeV;
 
 // Intersection finding to get the
 // region of interest for seeding
 class NoFieldIntersectionFinder {
  public:
-  ActsScalar m_tol = 1e-4;
+  double m_tol = 1e-4;
 
   std::vector<const Surface*> m_surfaces;
 
@@ -105,9 +105,9 @@ class NoFieldIntersectionFinder {
 // intersection point
 class PathWidthProvider {
  public:
-  std::pair<ActsScalar, ActsScalar> width;
+  std::pair<double, double> width;
 
-  std::pair<ActsScalar, ActsScalar> operator()(
+  std::pair<double, double> operator()(
       const GeometryContext& /*gctx*/,
       const GeometryIdentifier& /*geoId*/) const {
     return width;
@@ -131,9 +131,9 @@ class TrackEstimator {
     Vector3 direction = (pivot3 - m_ip).normalized();
 
     Vector4 ip = {m_ip.x(), m_ip.y(), m_ip.z(), 0};
-    ActsScalar qOverP = 1_e / 1._GeV;
-    ActsScalar phi = Acts::VectorHelpers::phi(direction);
-    ActsScalar theta = Acts::VectorHelpers::theta(direction);
+    double qOverP = 1_e / 1._GeV;
+    double phi = Acts::VectorHelpers::phi(direction);
+    double theta = Acts::VectorHelpers::theta(direction);
     ParticleHypothesis particle = ParticleHypothesis::electron();
 
     TrackParameters ipParams(ip, phi, theta, qOverP, std::nullopt, particle);
@@ -312,7 +312,7 @@ std::vector<SourceLink> createSourceLinks(
   }
 
   std::vector<SourceLink> sourceLinks;
-  for (ActsScalar phi : truePhis) {
+  for (double phi : truePhis) {
     TrackParameters trackParameters(trueVertex, phi, trueTheta, trueQOverP,
                                     std::nullopt,
                                     ParticleHypothesis::electron());

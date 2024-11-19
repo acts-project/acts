@@ -79,10 +79,10 @@ static void drawMeasurements(
 
 //// Construct initial track parameters.
 Acts::CurvilinearTrackParameters makeParameters(
-    const ActsScalar x = 0.0_m, const ActsScalar y = 0.0_m,
-    const ActsScalar z = 0.0_m, const ActsScalar w = 42_ns,
-    const ActsScalar phi = 0_degree, const ActsScalar theta = 90_degree,
-    const ActsScalar p = 2_GeV, const ActsScalar q = 1_e) {
+    const double x = 0.0_m, const double y = 0.0_m,
+    const double z = 0.0_m, const double w = 42_ns,
+    const double phi = 0_degree, const double theta = 90_degree,
+    const double p = 2_GeV, const double q = 1_e) {
   // create covariance matrix from reasonable standard deviations
   Acts::BoundVector stddev;
   stddev[Acts::eBoundLoc0] = 100_um;

@@ -346,7 +346,7 @@ ProcessCode VertexNTupleWriter::writeT(
 
   // Helper function for computing the pull
   auto pull =
-      [this](const Acts::ActsScalar& diff, const Acts::ActsScalar& variance,
+      [this](const double& diff, const double& variance,
              const std::string& variableStr, const bool& afterFit = true) {
         if (variance <= 0) {
           std::string tempStr;
@@ -571,13 +571,13 @@ ProcessCode VertexNTupleWriter::writeT(
     m_recoZ.push_back(vtx.fullPosition()[Acts::CoordinateIndices::eZ]);
     m_recoT.push_back(vtx.fullPosition()[Acts::CoordinateIndices::eTime]);
 
-    Acts::ActsScalar varX = vtx.fullCovariance()(Acts::CoordinateIndices::eX,
+    double varX = vtx.fullCovariance()(Acts::CoordinateIndices::eX,
                                                  Acts::CoordinateIndices::eX);
-    Acts::ActsScalar varY = vtx.fullCovariance()(Acts::CoordinateIndices::eY,
+    double varY = vtx.fullCovariance()(Acts::CoordinateIndices::eY,
                                                  Acts::CoordinateIndices::eY);
-    Acts::ActsScalar varZ = vtx.fullCovariance()(Acts::CoordinateIndices::eZ,
+    double varZ = vtx.fullCovariance()(Acts::CoordinateIndices::eZ,
                                                  Acts::CoordinateIndices::eZ);
-    Acts::ActsScalar varTime = vtx.fullCovariance()(
+    double varTime = vtx.fullCovariance()(
         Acts::CoordinateIndices::eTime, Acts::CoordinateIndices::eTime);
 
     m_covXX.push_back(varX);

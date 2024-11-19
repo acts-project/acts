@@ -28,7 +28,7 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
                               const unsigned int phiBins,
                               const double layerRMin, const double layerRMax,
                               const double layerZMin, const double layerZMax) {
-  using Scalar = Acts::ActsScalar;
+  using Scalar = double;
 
   static thread_local std::vector<std::set<external_spacepoint_t>>
       bucketsSetSPMap;

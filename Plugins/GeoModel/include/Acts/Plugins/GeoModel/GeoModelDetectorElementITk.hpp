@@ -60,7 +60,7 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
   GeoModelDetectorElementITk(const PVConstLink& geoPhysVol,
                              std::shared_ptr<Surface> surface,
                              const Transform3& sfTransform,
-                             ActsScalar thickness, int hardware,
+                             double thickness, int hardware,
                              int barrelEndcap, int layerWheel, int etaModule,
                              int phiModule, int side)
       : GeoModelDetectorElement(geoPhysVol, std::move(surface), sfTransform,

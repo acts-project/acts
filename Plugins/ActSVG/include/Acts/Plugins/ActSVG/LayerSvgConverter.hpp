@@ -24,11 +24,11 @@ namespace Svg {
 
 using ProtoVolume = actsvg::proto::volume<std::vector<Vector3>>;
 
-static std::array<ActsScalar, 2> noLimitZ = {
-    std::numeric_limits<Acts::ActsScalar>::lowest(),
-    std::numeric_limits<Acts::ActsScalar>::max()};
+static std::array<double, 2> noLimitZ = {
+    std::numeric_limits<double>::lowest(),
+    std::numeric_limits<double>::max()};
 
-static std::array<ActsScalar, 2> noLimitPhi = {
+static std::array<double, 2> noLimitPhi = {
     -std::numbers::pi,
     std::numbers::pi};
 
@@ -49,16 +49,16 @@ struct Options {
   /// The style of the surface objects
   GeometryHierarchyMap<Style> surfaceStyles;
   /// The z limit for projections
-  std::array<ActsScalar, 2> zRange = noLimitZ;
+  std::array<double, 2> zRange = noLimitZ;
   /// The phi limit for projections
-  std::array<ActsScalar, 2> phiRange = noLimitPhi;
+  std::array<double, 2> phiRange = noLimitPhi;
   /// Configuration of the views
   bool gridInfo = true;
   bool moduleInfo = true;
   bool projectionInfo = true;
   /// Label checks
   bool labelProjection = false;
-  ActsScalar labelGauge = 0.;
+  double labelGauge = 0.;
 };
 
 /// Write/create the layer sheets for a given layer
