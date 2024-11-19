@@ -299,8 +299,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
                        sortedSpacepoints.getSP(2, farPhi, farZ)) {
                     Acts::ActsScalar phiC = farSP.second;
                     Acts::ActsScalar deltaPhiBC = detail::difference_periodic(
-                        phiB, phiC,
-                        static_cast<Acts::ActsScalar>(2 * std::numbers::pi));
+                        phiB, phiC, 2 * std::numbers::pi);
                     if (std::abs(deltaPhiBC) > m_cfg.maxPhideviation) {
                       continue;
                     }
@@ -335,7 +334,7 @@ bool Acts::SingleSeedVertexFinder<spacepoint_t>::tripletValidationAndUpdate(
       std::atan2(triplet.b.y() - triplet.c.y(), triplet.b.x() - triplet.c.x());
   // these two slopes shouldn't be too different
   Acts::ActsScalar deltaAlpha = detail::difference_periodic(
-      alpha1, alpha2, static_cast<Acts::ActsScalar>(2 * std::numbers::pi));
+      alpha1, alpha2, 2 * std::numbers::pi);
   if (std::abs(deltaAlpha) > m_cfg.maxXYdeviation) {
     return false;
   }

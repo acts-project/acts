@@ -277,7 +277,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::discSupport(
           -std::numbers::pi + (2 * iphi + 1) * dHalfPhi;
       auto sTransform = Transform3(
           Translation3(hR * std::cos(phi), hR * std::sin(phi), zPosition) *
-          AngleAxis3(phi - static_cast<ActsScalar>(std::numbers::pi / 2.),
+          AngleAxis3(phi - std::numbers::pi / 2.,
                      zAxis));
       // Place it
       dSupport.push_back(

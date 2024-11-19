@@ -29,7 +29,7 @@ Acts::detail::Step concatenateSteps(
       concatStep.position += step.position;
       concatStep.momentum += step.momentum;
     }
-    Acts::ActsScalar weight = 1.0 / static_cast<Acts::ActsScalar>(steps.size());
+    Acts::ActsScalar weight = 1. / steps.size();
     concatStep.position *= weight;
     concatStep.momentum *= weight;
   } else {

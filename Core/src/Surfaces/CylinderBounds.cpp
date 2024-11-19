@@ -114,7 +114,7 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::circleVertices(
 
   std::vector<ActsScalar> phiRef = {};
   if (bool fullCylinder = coversFullAzimuth(); fullCylinder) {
-    phiRef = {static_cast<ActsScalar>(avgPhi)};
+    phiRef = {avgPhi};
   }
 
   // Write the two bows/circles on either side
