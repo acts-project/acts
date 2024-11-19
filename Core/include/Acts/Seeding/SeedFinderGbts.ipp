@@ -10,7 +10,6 @@
 // TODO: update to C++17 style
 
 #include "Acts/Geometry/Extent.hpp"
-// #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"

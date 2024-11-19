@@ -9,7 +9,6 @@
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-// #include "Acts/Seeding/SeedFilter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"

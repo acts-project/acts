@@ -36,7 +36,6 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
 
     std::string outputSeeds;
 
-    // Acts::SeedFilterConfig seedFilterConfig;
     Acts::SeedFinderGbtsConfig<SimSpacePoint> seedFinderConfig;
     Acts::SeedFinderOptions seedFinderOptions;
 

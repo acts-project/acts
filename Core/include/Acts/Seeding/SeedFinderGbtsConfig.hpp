@@ -40,7 +40,6 @@ struct SeedFinderGbtsConfig {
   float maxScatteringAngle2 = 0;
   //   bool isInInternalUnits = false;
   /// for load space points
-  // unsigned int maxSeedsPerSpM = 5;
 
   // Parameter which can loosen the tolerance of the track seed to form a
   // helix. This is useful for e.g. misaligned seeding.

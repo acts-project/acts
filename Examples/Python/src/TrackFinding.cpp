@@ -207,7 +207,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(m_nMaxPhiSlice);
     ACTS_PYTHON_MEMBER(m_useClusterWidth);
     ACTS_PYTHON_MEMBER(m_layerGeometry);
-    // ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
