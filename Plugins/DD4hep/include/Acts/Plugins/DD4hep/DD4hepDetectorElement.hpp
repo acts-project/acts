@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepGeometryContext.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
@@ -42,7 +43,7 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   using DD4hepVolumeID = dd4hep::DDSegmentation::VolumeID;
 
   /// Broadcast the context type
-  using ContextType = GeometryContext;
+  using ContextType = DD4hepGeometryContext;
 
   /// Define a string based story
   using Store = std::map<std::string,
@@ -93,6 +94,11 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// @return The contextual transform matrix that may include misalignment
   /// @note This method enables dynamic geometry updates through the context
   const Transform3& transform(const GeometryContext& gctx) const final;
+
+  /// Return the nominal transform
+  ///
+  /// @note This method returns the nominal transform without any alignment
+  const Transform3& nominalTransform() const;
 
  private:
   /// DD4hep detector element

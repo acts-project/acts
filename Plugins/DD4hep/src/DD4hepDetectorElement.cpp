@@ -28,10 +28,16 @@ Acts::DD4hepDetectorElement::DD4hepDetectorElement(
 
 const Acts::Transform3& Acts::DD4hepDetectorElement::transform(
     const GeometryContext& gctx) const {
-  const Acts::DD4hepGeometryContext* dd4hepGtx =
-      gctx.maybeGet<DD4hepGeometryContext>();
-  if (dd4hepGtx != nullptr && dd4hepGtx->isActive()) {
-    return dd4hepGtx->contextualTransform(*this);
+  if (gctx.hasValue()) {
+    const DD4hepGeometryContext* dd4hepContext =
+        gctx.maybeGet<DD4hepGeometryContext>();
+    if (dd4hepContext != nullptr && dd4hepContext->isActive()) {
+      return dd4hepContext->contextualTransform(*this);
+    }
   }
-  return TGeoDetectorElement::m_transform;
+  return nominalTransform();
 }
+
+const Acts::Transform3& Acts::DD4hepDetectorElement::nominalTransform() const {
+  return TGeoDetectorElement::m_transform;
+};

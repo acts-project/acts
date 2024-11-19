@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -19,14 +18,10 @@ class DD4hepDetectorElement;
 ///
 /// @brief DD4hep specific geometry context for alignment handling
 ///
-/// Extends the base GeometryContext to provide DD4hep-specific alignment
-/// capabilities. The context can be active or inactive, controlling whether
-/// alignment corrections should be applied.
-///
 /// @note This context is specifically designed to work with DD4hepDetectorElement
 /// and provides contextual transformations for alignment purposes.
 ///
-class DD4hepGeometryContext : public GeometryContext {
+class DD4hepGeometryContext {
  public:
   /// Explicit inactive constructor
   /// Creates an inactive geometry context that skips alignment corrections
