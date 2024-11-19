@@ -202,7 +202,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(sigmaScattering);
     ACTS_PYTHON_MEMBER(highland);
     ACTS_PYTHON_MEMBER(maxScatteringAngle2);
-    ACTS_PYTHON_MEMBER(connector_input_file);
+    ACTS_PYTHON_MEMBER(ConnectorInputFile);
     ACTS_PYTHON_MEMBER(m_phiSliceWidth);
     ACTS_PYTHON_MEMBER(m_nMaxPhiSlice);
     ACTS_PYTHON_MEMBER(m_useClusterWidth);
@@ -272,9 +272,10 @@ void addTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm",
-      inputSpacePoints, outputSeeds, seedFilterConfig, seedFinderConfig,
+      inputSpacePoints, outputSeeds, seedFinderConfig,
       seedFinderOptions, layerMappingFile, geometrySelection, trackingGeometry,
-      ActsGbtsMap, fill_module_csv, inputClusters);
+      ActsGbtsMap, fill_module_csv, inputClusters); //temp removed seedFilterConfig,
+      
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",

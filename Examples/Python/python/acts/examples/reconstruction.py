@@ -393,7 +393,7 @@ def addSeeding(
                 spacePoints,
                 seedFinderConfigArg,
                 seedFinderOptionsArg,
-                seedFilterConfigArg,
+                # seedFilterConfigArg,
                 trackingGeometry,
                 logLevel,
                 layerMappingConfigFile,
@@ -1043,7 +1043,7 @@ def addGbtsSeeding(
     spacePoints: str,
     seedFinderConfigArg: SeedFinderConfigArg,
     seedFinderOptionsArg: SeedFinderOptionsArg,
-    seedFilterConfigArg: SeedFilterConfigArg,
+    # seedFilterConfigArg: SeedFilterConfigArg,
     trackingGeometry: acts.TrackingGeometry,
     logLevel: acts.logging.Level = None,
     layerMappingConfigFile: Union[Path, str] = None,
@@ -1076,33 +1076,33 @@ def addGbtsSeeding(
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
         )
     )
-    seedFilterConfig = acts.SeedFilterConfig(
-        **acts.examples.defaultKWArgs(
-            maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
-            deltaRMin=(
-                seedFinderConfigArg.deltaR[0]
-                if seedFilterConfigArg.deltaRMin is None
-                else seedFilterConfigArg.deltaRMin
-            ),
-            impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
-            zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
-            compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
-            compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
-            numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
-            seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
-            seedConfirmation=seedFilterConfigArg.seedConfirmation,
-            # curvatureSortingInFilter=seedFilterConfigArg.curvatureSortingInFilter,
-            maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
-            maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
-            useDeltaRorTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
-        )
-    )
+    # seedFilterConfig = acts.SeedFilterConfig(
+    #     **acts.examples.defaultKWArgs(
+    #         maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
+    #         deltaRMin=(
+    #             seedFinderConfigArg.deltaR[0]
+    #             if seedFilterConfigArg.deltaRMin is None
+    #             else seedFilterConfigArg.deltaRMin
+    #         ),
+    #         impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
+    #         zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
+    #         compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
+    #         compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
+    #         numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
+    #         seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
+    #         seedConfirmation=seedFilterConfigArg.seedConfirmation,
+    #         # curvatureSortingInFilter=seedFilterConfigArg.curvatureSortingInFilter,
+    #         maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
+    #         maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
+    #         useDeltaRorTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
+    #     )
+    # )
 
     seedingAlg = acts.examples.GbtsSeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=[spacePoints],
         outputSeeds="seeds",
-        seedFilterConfig=seedFilterConfig,
+        # seedFilterConfig=seedFilterConfig,
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
         layerMappingFile=layerMappingFile,

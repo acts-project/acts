@@ -9,7 +9,7 @@
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Seeding/SeedFilter.hpp"
+// #include "Acts/Seeding/SeedFilter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -39,7 +39,7 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
   // fill config struct
   m_cfg.layerMappingFile = m_cfg.layerMappingFile;
 
-  m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
+  // m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
 
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();

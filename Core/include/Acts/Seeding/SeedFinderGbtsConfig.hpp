@@ -20,8 +20,8 @@
 // core algorithm so in acts namespace
 namespace Acts {
 
-template <typename T>
-class SeedFilter;
+// template <typename T>
+// class SeedFilter;
 
 template <typename SpacePoint>
 struct SeedFinderGbtsConfig {
@@ -32,7 +32,7 @@ struct SeedFinderGbtsConfig {
   float minPt = 400. * Acts::UnitConstants::MeV;
 
   ///////////some declared not filled in by reco: //////
-  std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
+  // std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
 
   //   //detector ROI
   //   // derived values, set on SeedFinder construction
