@@ -610,7 +610,7 @@ class MutablePodioTrackStateContainer final
 
   template <typename T>
   constexpr void addColumn_impl(std::string_view key) {
-    HashedString hashedKey = hashString(key);
+    HashedString hashedKey = hashStringDynamic(key);
     m_dynamic.insert(
         {hashedKey, std::make_unique<podio_detail::DynamicColumn<T>>(key)});
   }
