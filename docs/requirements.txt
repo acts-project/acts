@@ -105,7 +105,7 @@ shellingham==1.5.4
     # via typer
 snowballstemmer==2.2.0
     # via sphinx
-sphinx==7.4.0
+sphinx==7.3.7
     # via
     #   -r docs/requirements.in
     #   breathe
