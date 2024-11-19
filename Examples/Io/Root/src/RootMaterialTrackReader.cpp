@@ -91,7 +91,7 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
   {
     // necessary to guarantee that m_inputChain->GetV1() is valid for the
     // entire range
-    m_inputChain->SetEstimate(nentries);
+    m_inputChain->SetEstimate(nentries + 1);
 
     m_entryNumbers.resize(nentries);
     m_inputChain->Draw("event_id", "", "goff");
