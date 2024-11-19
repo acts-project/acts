@@ -23,8 +23,7 @@
 
 namespace Acts {
 
-TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
-                                             double maxhalex,
+TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex, double maxhalex,
                                              double haley, double halez)
     : VolumeBounds() {
   m_values[eHalfLengthXnegY] = minhalex;
@@ -37,9 +36,9 @@ TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
   buildSurfaceBounds();
 }
 
-TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
-                                             double haley, double halez,
-                                             double alpha, double beta)
+TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex, double haley,
+                                             double halez, double alpha,
+                                             double beta)
     : VolumeBounds() {
   m_values[eHalfLengthXnegY] = minhalex;
   m_values[eHalfLengthY] = haley;
@@ -48,7 +47,7 @@ TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
   m_values[eBeta] = beta;
   // now calculate the remaining max half X
   double gamma = (alpha > beta) ? (alpha - std::numbers::pi / 2.)
-                                    : (beta - std::numbers::pi / 2.);
+                                : (beta - std::numbers::pi / 2.);
   m_values[eHalfLengthXposY] = minhalex + (2. * haley) * tan(gamma);
 
   checkConsistency();

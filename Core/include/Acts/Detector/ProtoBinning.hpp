@@ -67,9 +67,8 @@ struct ProtoBinning {
   /// @param maxE the highest edge of the binning
   /// @param nbins the number of bins
   /// @param exp the expansion (in bins)
-  ProtoBinning(BinningValue bValue, Acts::AxisBoundaryType bType,
-               double minE, double maxE, std::size_t nbins,
-               std::size_t exp = 0u)
+  ProtoBinning(BinningValue bValue, Acts::AxisBoundaryType bType, double minE,
+               double maxE, std::size_t nbins, std::size_t exp = 0u)
       : binValue(bValue), boundaryType(bType), expansion(exp) {
     if (minE >= maxE) {
       std::string msg = "ProtoBinning: Invalid binning for value '";

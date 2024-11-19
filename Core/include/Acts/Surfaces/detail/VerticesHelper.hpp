@@ -30,11 +30,10 @@ namespace Acts::detail::VerticesHelper {
 /// @param quarterSegments number of segments used to approximate a segment quarter
 ///
 /// @return a vector of generated phi values
-std::vector<double> phiSegments(
-    double phiMin = -std::numbers::pi,
-    double phiMax = std::numbers::pi,
-    const std::vector<double>& phiRefs = {},
-    unsigned int quarterSegments = 2u);
+std::vector<double> phiSegments(double phiMin = -std::numbers::pi,
+                                double phiMax = std::numbers::pi,
+                                const std::vector<double>& phiRefs = {},
+                                unsigned int quarterSegments = 2u);
 
 /// Helper method to create a regular 2 or 3 D segment
 /// between two phi values with a given number of segments
@@ -57,8 +56,7 @@ std::vector<double> phiSegments(
 template <typename vertex_t, typename transform_t>
 std::vector<vertex_t> segmentVertices(
     std::pair<double, double> rXY, double phiMin, double phiMax,
-    const std::vector<double>& phiRefs = {},
-    unsigned int quarterSegments = 2u,
+    const std::vector<double>& phiRefs = {}, unsigned int quarterSegments = 2u,
     const vertex_t& offset = vertex_t::Zero(),
     const transform_t& transform = transform_t::Identity()) {
   std::vector<vertex_t> vertices;
@@ -85,11 +83,11 @@ std::vector<vertex_t> segmentVertices(
 /// @param quarterSegments number of segments used to approximate a segment quarter
 ///
 /// @return a vector of 2d-vectors
-std::vector<Vector2> ellipsoidVertices(
-    double innerRx, double innerRy, double outerRx,
-    double outerRy, double avgPhi = 0.,
-    double halfPhi = std::numbers::pi,
-    unsigned int quarterSegments = 2u);
+std::vector<Vector2> ellipsoidVertices(double innerRx, double innerRy,
+                                       double outerRx, double outerRy,
+                                       double avgPhi = 0.,
+                                       double halfPhi = std::numbers::pi,
+                                       unsigned int quarterSegments = 2u);
 
 /// Construct vertices on an disc/wheel-like bound object.
 ///
@@ -100,10 +98,10 @@ std::vector<Vector2> ellipsoidVertices(
 /// @param quarterSegments number of segments used to approximate a segment quarter
 ///
 /// @return a vector of 2d-vectors
-std::vector<Vector2> circularVertices(
-    double innerR, double outerR, double avgPhi = 0.,
-    double halfPhi = std::numbers::pi,
-    unsigned int quarterSegments = 2u);
+std::vector<Vector2> circularVertices(double innerR, double outerR,
+                                      double avgPhi = 0.,
+                                      double halfPhi = std::numbers::pi,
+                                      unsigned int quarterSegments = 2u);
 
 /// Check if the point is inside the polygon w/o any tolerances.
 ///

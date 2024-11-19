@@ -172,8 +172,8 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
       std::tuple<MultiComponentBoundTrackParameters, Jacobian, double>;
 
   /// @brief Define an own curvilinear state
-  using CurvilinearState = std::tuple<MultiComponentCurvilinearTrackParameters,
-                                      Jacobian, double>;
+  using CurvilinearState =
+      std::tuple<MultiComponentCurvilinearTrackParameters, Jacobian, double>;
 
   /// @brief The reducer type
   using Reducer = component_reducer_t;

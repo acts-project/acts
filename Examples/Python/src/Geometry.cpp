@@ -199,8 +199,8 @@ void addGeometry(Context& ctx) {
         py::class_<Acts::CylinderVolumeBounds,
                    std::shared_ptr<Acts::CylinderVolumeBounds>,
                    Acts::VolumeBounds>(m, "CylinderVolumeBounds")
-            .def(py::init<double, double, double, double,
-                          double, double, double>(),
+            .def(py::init<double, double, double, double, double, double,
+                          double>(),
                  "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = std::numbers::pi,
                  "avgphi"_a = 0., "bevelMinZ"_a = 0., "bevelMaxZ"_a = 0.);
 
@@ -384,9 +384,8 @@ void addExperimentalGeometry(Context& ctx) {
         .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType,
                       const std::vector<double>&, std::size_t>(),
              "bValue"_a, "bType"_a, "e"_a, "exp"_a = 0u)
-        .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType,
-                      double, double, std::size_t,
-                      std::size_t>(),
+        .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType, double,
+                      double, std::size_t, std::size_t>(),
              "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a, "exp"_a = 0u)
         .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType, std::size_t,
                       std::size_t>(),

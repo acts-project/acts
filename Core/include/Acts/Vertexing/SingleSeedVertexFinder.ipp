@@ -146,9 +146,9 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
   Acts::Vector2 posR = Acts::Vector2(-m_cfg.maxZPosition, 0.) + vecA + vecB;
   double R = vecA.norm() / std::sin(m_cfg.maxXYZdeviation);
   double constB = -2. * posR[0];
-  double constC =
-      posR[0] * posR[0] +
-      (posR[1] - m_cfg.rMaxNear) * (posR[1] - m_cfg.rMaxNear) - R * R;
+  double constC = posR[0] * posR[0] +
+                  (posR[1] - m_cfg.rMaxNear) * (posR[1] - m_cfg.rMaxNear) -
+                  R * R;
   double maxZMiddle =
       -1. * (-constB - sqrt(constB * constB - 4. * constC)) / 2.;
   if (maxZMiddle <= 0) {
@@ -161,7 +161,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
 
   // save some constant values for later
   double rNearRatio[2] = {m_cfg.rMinNear / m_cfg.rMaxMiddle,
-                                    m_cfg.rMaxNear / m_cfg.rMinMiddle};
+                          m_cfg.rMaxNear / m_cfg.rMinMiddle};
   double rMiddle[2] = {m_cfg.rMaxMiddle, m_cfg.rMinMiddle};
   double rFarDelta[2] = {
       m_cfg.rMaxFar - m_cfg.rMinMiddle,
@@ -190,8 +190,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
     // calculate limits for near spacepoints, assuming the middle spacepoints
     // are within some boundaries
     bool isLessFrom = (middleZ <= limitAbsZSliceFrom);
-    double deltaZfrom =
-        (middleZ - limitAbsZSliceFrom - 1) * zBinLength;
+    double deltaZfrom = (middleZ - limitAbsZSliceFrom - 1) * zBinLength;
     double angleZfrom =
         std::atan2(rMiddle[isLessFrom], deltaZfrom) + m_cfg.maxXYZdeviation;
     std::uint32_t nearZFrom = 0;
@@ -223,9 +222,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
       bool isMiddleLess = (middleZ <= nearZ);
 
       double delta2Zfrom = (middleZ - nearZ - 1) * zBinLength;
-      double angle2Zfrom =
-          std::atan2(rFarDelta[isMiddleLess], delta2Zfrom) +
-          m_cfg.maxXYZdeviation;
+      double angle2Zfrom = std::atan2(rFarDelta[isMiddleLess], delta2Zfrom) +
+                           m_cfg.maxXYZdeviation;
       std::uint32_t farZFrom = 0;
       if (angle2Zfrom < std::numbers::pi) {
         farZFrom = static_cast<std::uint32_t>(std::max(
@@ -239,9 +237,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
 
       isMiddleLess = (middleZ < nearZ);
       double delta2Zto = (middleZ - nearZ + 1) * zBinLength;
-      double angle2Zto =
-          std::atan2(rFarDelta[!isMiddleLess], delta2Zto) -
-          m_cfg.maxXYZdeviation;
+      double angle2Zto = std::atan2(rFarDelta[!isMiddleLess], delta2Zto) -
+                         m_cfg.maxXYZdeviation;
       std::uint32_t farZTo = m_cfg.numZSlices;
       if (angle2Zto > 0) {
         farZTo = static_cast<std::uint32_t>(std::max(
@@ -333,8 +330,8 @@ bool Acts::SingleSeedVertexFinder<spacepoint_t>::tripletValidationAndUpdate(
   double alpha2 =
       std::atan2(triplet.b.y() - triplet.c.y(), triplet.b.x() - triplet.c.x());
   // these two slopes shouldn't be too different
-  double deltaAlpha = detail::difference_periodic(
-      alpha1, alpha2, 2 * std::numbers::pi);
+  double deltaAlpha =
+      detail::difference_periodic(alpha1, alpha2, 2 * std::numbers::pi);
   if (std::abs(deltaAlpha) > m_cfg.maxXYdeviation) {
     return false;
   }
@@ -422,8 +419,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findClosestPointFromPlanes(
   Acts::Vector3 vtxPrev{m_cfg.rMaxFar, m_cfg.rMaxFar, m_cfg.maxAbsZ};
 
   // (alpha-beta-gamma, delta), distance
-  std::vector<
-      std::pair<std::pair<Acts::Vector3, double>, double>>
+  std::vector<std::pair<std::pair<Acts::Vector3, double>, double>>
       tripletsWithPlanes;
   tripletsWithPlanes.reserve(triplets.size());
 
@@ -526,8 +522,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findClosestPointFromRays(
   Acts::Vector3 vtxPrev{m_cfg.rMaxFar, m_cfg.rMaxFar, m_cfg.maxAbsZ};
 
   // (startPoint, direction), distance
-  std::vector<
-      std::pair<std::pair<Acts::Vector3, Acts::Vector3>, double>>
+  std::vector<std::pair<std::pair<Acts::Vector3, Acts::Vector3>, double>>
       tripletsWithRays;
   tripletsWithRays.reserve(triplets.size());
 

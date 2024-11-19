@@ -129,12 +129,10 @@ ActsExamples::MockupSectorBuilder::buildChamber(
 
   double hx =
       strawSurfaces.front()->bounds().values()[1] + mCfg.toleranceOverlap;
-  double hy =
-      0.5 * ((maxValues.y() + radius) - (minValues.y() - radius)) +
-      mCfg.toleranceOverlap;
-  double hz =
-      0.5 * ((maxValues.z() + radius) - (minValues.z() - radius)) +
-      mCfg.toleranceOverlap;
+  double hy = 0.5 * ((maxValues.y() + radius) - (minValues.y() - radius)) +
+              mCfg.toleranceOverlap;
+  double hz = 0.5 * ((maxValues.z() + radius) - (minValues.z() - radius)) +
+              mCfg.toleranceOverlap;
 
   auto detectorVolumeBounds =
       std::make_shared<Acts::CuboidVolumeBounds>(hx, hy, hz);
@@ -191,8 +189,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
   auto phiB = Acts::VectorHelpers::phi(pointB);
   double sectorAngle = std::numbers::pi;
 
-  double halfPhi =
-      std::numbers::pi / mCfg.NumberOfSectors;
+  double halfPhi = std::numbers::pi / mCfg.NumberOfSectors;
 
   if (mCfg.NumberOfSectors == 1) {
     halfPhi = (phiB - phiA) / 2;

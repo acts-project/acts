@@ -64,8 +64,8 @@ Acts::Experimental::VolumeStructureBuilder::construct(
             "object. It needs at least 5 parameters, while " +
             std::to_string(boundValues.size()) + " where given");
       }
-      auto bArray = toArray<ConeVolumeBounds::BoundValues::eSize, double>(
-          boundValues);
+      auto bArray =
+          toArray<ConeVolumeBounds::BoundValues::eSize, double>(boundValues);
       volumeBounds = std::make_unique<ConeVolumeBounds>(bArray);
     } break;
     case VolumeBounds::BoundsType::eCuboid: {

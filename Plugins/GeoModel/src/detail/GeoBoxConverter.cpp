@@ -36,8 +36,8 @@ Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
   auto rotation = absTransform.rotation();
   // Get the half lengths
   std::vector<double> halfLengths = {geoBox.getXHalfLength(),
-                                         geoBox.getYHalfLength(),
-                                         geoBox.getZHalfLength()};
+                                     geoBox.getYHalfLength(),
+                                     geoBox.getZHalfLength()};
   // Create the surface
   auto minElement = std::min_element(halfLengths.begin(), halfLengths.end());
   auto zIndex = std::distance(halfLengths.begin(), minElement);

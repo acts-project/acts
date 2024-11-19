@@ -80,8 +80,7 @@ namespace {
 ///
 /// @return a new portal replacement object
 Acts::Experimental::PortalReplacement createDiscReplacement(
-    const Acts::Transform3& transform,
-    const std::vector<double>& rBoundaries,
+    const Acts::Transform3& transform, const std::vector<double>& rBoundaries,
     const std::vector<double>& phiBoundaries, unsigned int index,
     Acts::Direction dir) {
   // Autodetector stitch value
@@ -155,9 +154,8 @@ Acts::Experimental::PortalReplacement createCylinderReplacement(
 /// @return a new portal replacement object
 Acts::Experimental::PortalReplacement createSectorReplacement(
     const Acts::GeometryContext& gctx, const Acts::Vector3& volumeCenter,
-    const Acts::Surface& refSurface,
-    const std::vector<double>& boundaries, Acts::BinningValue binning,
-    unsigned int index, Acts::Direction dir) {
+    const Acts::Surface& refSurface, const std::vector<double>& boundaries,
+    Acts::BinningValue binning, unsigned int index, Acts::Direction dir) {
   // Get a reference transform
   const auto& refTransform = refSurface.transform(gctx);
   auto refRotation = refTransform.rotation();
@@ -537,8 +535,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   std::vector<double> zBoundaries = {};
   for (const auto& zb3D : zBoundaries3D) {
     auto proj3D = (zb3D - combinedCenter).dot(rotation.col(2));
-    double zBoundary =
-        std::copysign((zb3D - combinedCenter).norm(), proj3D);
+    double zBoundary = std::copysign((zb3D - combinedCenter).norm(), proj3D);
     zBoundaries.push_back(zBoundary);
   }
 
@@ -820,8 +817,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
         Acts::CylinderVolumeBounds::BoundValues::eHalfLengthZ);
     double HlZ = ccylVolBounds->get(
         Acts::CutoutCylinderVolumeBounds::BoundValues::eHalfLengthZ);
-    double innerR =
-        cylVolBounds->get(CylinderVolumeBounds::BoundValues::eMinR);
+    double innerR = cylVolBounds->get(CylinderVolumeBounds::BoundValues::eMinR);
     // Create the inner replacement
     std::vector<PortalReplacement> pReplacements;
     pReplacements.push_back(createCylinderReplacement(
@@ -1117,12 +1113,10 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     // The two segments
     auto& nSegment = wrappingVolume->portalPtrs()[6u];
     auto nValues = nSegment->surface().bounds().values();
-    double nHalfLengthZ =
-        nValues[CylinderBounds::BoundValues::eHalfLengthZ];
+    double nHalfLengthZ = nValues[CylinderBounds::BoundValues::eHalfLengthZ];
     auto& pSegment = wrappingVolume->portalPtrs()[7u];
     auto pValues = pSegment->surface().bounds().values();
-    double pHalfLengthZ =
-        pValues[CylinderBounds::BoundValues::eHalfLengthZ];
+    double pHalfLengthZ = pValues[CylinderBounds::BoundValues::eHalfLengthZ];
 
     auto sideVolumes =
         PortalHelper::stripSideVolumes({innerContainer}, {3u}, {3u}, logLevel);
@@ -1131,8 +1125,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     std::vector<std::shared_ptr<DetectorVolume>> innerVolumes = {
         wrappingVolume->getSharedPtr()};
 
-    std::vector<double> zBoundaries = {
-        -centralHalfLengthZ - 2 * nHalfLengthZ, centralHalfLengthZ};
+    std::vector<double> zBoundaries = {-centralHalfLengthZ - 2 * nHalfLengthZ,
+                                       centralHalfLengthZ};
     // Loop over side volume and register the z boundaries
     for (auto& svs : sideVolumes) {
       for (auto& v : svs.second) {

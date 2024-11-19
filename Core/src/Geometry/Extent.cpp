@@ -21,8 +21,8 @@ Acts::Extent::Extent(const ExtentEnvelope& envelope)
     : m_constrains(0), m_envelope(envelope) {
   m_range[toUnderlying(BinningValue::binR)] =
       Range1D<double>(0., std::numeric_limits<double>::max());
-  m_range[toUnderlying(BinningValue::binPhi)] = Range1D<double>(
-      -std::numbers::pi, std::numbers::pi);
+  m_range[toUnderlying(BinningValue::binPhi)] =
+      Range1D<double>(-std::numbers::pi, std::numbers::pi);
   m_range[toUnderlying(BinningValue::binRPhi)] =
       Range1D<double>(0., std::numeric_limits<double>::max());
   m_range[toUnderlying(BinningValue::binMag)] =

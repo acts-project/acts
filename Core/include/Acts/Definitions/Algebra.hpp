@@ -53,8 +53,7 @@ using ActsSquareMatrix = Eigen::Matrix<double, kSize, kSize>;
 
 using ActsDynamicVector = Eigen::Matrix<double, Eigen::Dynamic, 1>;
 
-using ActsDynamicMatrix =
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
+using ActsDynamicMatrix = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
 
 /// @defgroup coordinates-types Fixed-size vector/matrix types for coordinates
 ///

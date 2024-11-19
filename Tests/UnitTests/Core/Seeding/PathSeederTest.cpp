@@ -51,8 +51,7 @@ const double deltaX = 10.;
 const double deltaYZ = 1.;
 
 const Vector4 trueVertex(-5., 0., 0., 0);
-const std::vector<double> truePhis = {-0.15, -0.1, -0.05, 0,
-                                          0.05,  0.1,  0.15};
+const std::vector<double> truePhis = {-0.15, -0.1, -0.05, 0, 0.05, 0.1, 0.15};
 const double trueTheta = std::numbers::pi / 2.;
 const double trueQOverP = 1. / 1._GeV;
 

@@ -39,8 +39,7 @@ struct TGeoMaterialConverter {
   ///
   /// @return a material slab object
   static MaterialSlab materialSlab(const TGeoMaterial& tgMaterial,
-                                   double thicknessIn,
-                                   double thicknessOut,
+                                   double thicknessIn, double thicknessOut,
                                    const Options& options);
 };
 }  // namespace Acts

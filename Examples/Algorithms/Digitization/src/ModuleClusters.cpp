@@ -254,8 +254,7 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
           mval.paramVariances.push_back(0);
         }
         double f = weights.at(i) / (tot > 0 ? tot : 1);
-        double f2 =
-            weights.at(i) * weights.at(i) / (tot2 > 0 ? tot2 : 1);
+        double f2 = weights.at(i) * weights.at(i) / (tot2 > 0 ? tot2 : 1);
         mval.paramValues.at(j) += f * other.paramValues.at(j);
         mval.paramVariances.at(j) += f2 * other.paramVariances.at(j);
       }

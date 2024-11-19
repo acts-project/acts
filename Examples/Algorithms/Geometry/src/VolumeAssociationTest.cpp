@@ -39,11 +39,10 @@ ActsExamples::ProcessCode ActsExamples::VolumeAssociationTest::execute(
 
   // Setup random number distributions for some quantities
   std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
-                                                           std::numbers::pi);
-  std::uniform_real_distribution<double> rDist(0.,
-                                                         m_cfg.randomRange[0u]);
+                                                 std::numbers::pi);
+  std::uniform_real_distribution<double> rDist(0., m_cfg.randomRange[0u]);
   std::uniform_real_distribution<double> zDist(-m_cfg.randomRange[1u],
-                                                         m_cfg.randomRange[1u]);
+                                               m_cfg.randomRange[1u]);
 
   // Lemma for vector creation
   auto testPosition = [&]() -> Acts::Vector3 {

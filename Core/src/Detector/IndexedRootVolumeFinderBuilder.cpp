@@ -74,8 +74,7 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
 
   auto casts = std::array<BinningValue, 2u>{m_casts[0u], m_casts[1u]};
 
-  auto boundaries =
-      std::array<std::vector<double>, 2u>{rzphis[1], rzphis[0]};
+  auto boundaries = std::array<std::vector<double>, 2u>{rzphis[1], rzphis[0]};
   fillGridIndices2D(gctx, grid, rootVolumes, boundaries, casts);
 
   using IndexedDetectorVolumesImpl =

@@ -355,10 +355,7 @@ Acts::Vector2 Acts::AnnulusBounds::closestOnSegment(
   // weighted scalar product of line to point and segment line
   auto u = ((p - a).transpose() * weight * n).value() / f;
   // clamp to [0, 1], convert to point
-  return std::min(std::max(u, 0.),
-                  1.) *
-             n +
-         a;
+  return std::min(std::max(u, 0.), 1.) * n + a;
 }
 
 double Acts::AnnulusBounds::squaredNorm(const Vector2& v,

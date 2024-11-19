@@ -96,8 +96,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
 
   // Create  root node
   std::vector<Acts::BinningValue> detectorBins = {Acts::BinningValue::binX};
-  std::vector<double> detectorBounds = {detectorX, detectorY,
-                                                  detectorZ};
+  std::vector<double> detectorBounds = {detectorX, detectorY, detectorZ};
 
   // The root node - detector
   auto detectorBpr = std::make_unique<Acts::Experimental::Blueprint::Node>(
@@ -105,8 +104,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
       detectorBounds, detectorBins);
 
   // Left arm
-  std::vector<double> leftArmBounds = {detectorX * 0.5, detectorY,
-                                                 detectorZ};
+  std::vector<double> leftArmBounds = {detectorX * 0.5, detectorY, detectorZ};
 
   std::vector<Acts::BinningValue> leftArmBins = {Acts::BinningValue::binZ};
 
@@ -153,8 +151,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
   detectorBpr->add(std::move(leftArm));
 
   // Right arm
-  std::vector<double> rightArmBounds = {detectorX * 0.5, detectorY,
-                                                  detectorZ};
+  std::vector<double> rightArmBounds = {detectorX * 0.5, detectorY, detectorZ};
 
   std::vector<Acts::BinningValue> rightArmBins = {Acts::BinningValue::binZ};
 

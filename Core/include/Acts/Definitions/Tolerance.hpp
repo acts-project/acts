@@ -15,8 +15,7 @@
 namespace Acts {
 
 /// Tolerance for being numerical equal for geometry building
-static constexpr double s_epsilon =
-    3 * std::numeric_limits<double>::epsilon();
+static constexpr double s_epsilon = 3 * std::numeric_limits<double>::epsilon();
 
 /// Tolerance for being on Surface
 ///

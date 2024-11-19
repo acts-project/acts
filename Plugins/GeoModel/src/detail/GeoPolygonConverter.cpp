@@ -82,8 +82,7 @@ Acts::detail::GeoPolygonConverter::operator()(
     double hlxzeroy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
     double hlxposy = std::abs(vertices[4][0] - vertices[5][0]) / 2;
     double hly = std::abs(vertices[0][1] - vertices[4][1]) / 2;
-    std::vector<double> halfLengths = {hlxnegy, hlxzeroy, hlxposy, hly,
-                                           hly};
+    std::vector<double> halfLengths = {hlxnegy, hlxzeroy, hlxposy, hly, hly};
 
     // Create the surface
 

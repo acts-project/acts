@@ -15,7 +15,7 @@ void Acts::to_json(nlohmann::json& j, const Acts::Transform3& t) {
   auto translation = t.translation();
   if (translation != Acts::Vector3(0., 0., 0)) {
     std::array<double, 3> tdata = {translation.x(), translation.y(),
-                                             translation.z()};
+                                   translation.z()};
     j["translation"] = tdata;
   } else {
     j["translation"] = nlohmann::json();
@@ -55,7 +55,7 @@ nlohmann::json Acts::Transform3JsonConverter::toJson(const Transform3& t,
   auto translation = t.translation();
   if (translation != Acts::Vector3(0., 0., 0) || options.writeIdentity) {
     std::array<double, 3> tdata = {translation.x(), translation.y(),
-                                             translation.z()};
+                                   translation.z()};
     jTransform["translation"] = tdata;
   } else {
     jTransform["translation"] = nlohmann::json();

@@ -211,8 +211,7 @@ BOOST_AUTO_TEST_CASE(
   double correctMaxT = tNom / denom * d0 + t0;
 
   // Analytical FWHM of the Gaussian
-  double correctFWHM =
-      2. * std::sqrt(2 * std::numbers::ln2 / ipWeights(1, 1));
+  double correctFWHM = 2. * std::sqrt(2 * std::numbers::ln2 / ipWeights(1, 1));
 
   // Estimate maximum z position and seed width
   auto res = grid.getMaxZTPositionAndWidth(mainDensityMap);

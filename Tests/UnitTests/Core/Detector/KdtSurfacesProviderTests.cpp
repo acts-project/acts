@@ -53,8 +53,7 @@ std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces(
   // The surfaces for the KDTree structure
   std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces;
   // Fill Discs
-  std::vector<double> pixelDiscs = {-800., -700., -600.,
-                                              600.,  700.,  800.};
+  std::vector<double> pixelDiscs = {-800., -700., -600., 600., 700., 800.};
   for (const auto& z : pixelDiscs) {
     auto rSurfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 36., 0.125, 0.,
                                             55., z, 2., 22u);

@@ -41,8 +41,7 @@ Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
 }
 
 std::array<Acts::Intersection2D, 2>
-Acts::detail::IntersectionHelper2D::intersectEllipse(double Rx,
-                                                     double Ry,
+Acts::detail::IntersectionHelper2D::intersectEllipse(double Rx, double Ry,
                                                      const Vector2& origin,
                                                      const Vector2& dir) {
   auto createSolution =

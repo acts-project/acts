@@ -150,8 +150,7 @@ void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
 }
 
 std::tuple<Acts::Transform3, Acts::VolumeBounds::BoundsType,
-           std::vector<double>, std::vector<Acts::BinningValue>,
-           std::string>
+           std::vector<double>, std::vector<Acts::BinningValue>, std::string>
 Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
     [[maybe_unused]] const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const std::string& baseName,
@@ -179,11 +178,11 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
     }
     if (parsedExtent.constrains(BinningValue::binZ)) {
       double minZ = parsedExtent.min(BinningValue::binZ) > 0.
-                            ? std::floor(parsedExtent.min(BinningValue::binZ))
-                            : std::ceil(parsedExtent.min(BinningValue::binZ));
+                        ? std::floor(parsedExtent.min(BinningValue::binZ))
+                        : std::ceil(parsedExtent.min(BinningValue::binZ));
       double maxZ = parsedExtent.max(BinningValue::binZ) > 0.
-                            ? std::floor(parsedExtent.max(BinningValue::binZ))
-                            : std::ceil(parsedExtent.max(BinningValue::binZ));
+                        ? std::floor(parsedExtent.max(BinningValue::binZ))
+                        : std::ceil(parsedExtent.max(BinningValue::binZ));
       bValues[2u] = 0.5 * (maxZ - minZ);
       transform.translation().z() = 0.5 * (maxZ + minZ);
     }
@@ -193,8 +192,8 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
 
   // Get the bounds values from the series if not found before
   if (bValues.empty()) {
-    bValues = extractSeries<double>(dd4hepElement, baseName + "_bvalues",
-                                        unitLength);
+    bValues =
+        extractSeries<double>(dd4hepElement, baseName + "_bvalues", unitLength);
     ACTS_VERBOSE(" - cylindrical determined from variant parameters as "
                  << toString(bValues));
   }
@@ -253,7 +252,7 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
       auto internalsClearance =
           unitLength *
           Acts::getParamOr<double>(baseName + "_internals_clearance",
-                                       dd4hepElement, 0.);
+                                   dd4hepElement, 0.);
       auto internalBinningValues = stringToBinningValues(interenalsMeasure);
       if (!internalBinningValues.empty()) {
         ACTS_VERBOSE(" - internals extent measurement requested");

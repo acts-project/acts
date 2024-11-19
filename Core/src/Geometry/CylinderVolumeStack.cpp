@@ -624,16 +624,16 @@ std::pair<double, double> CylinderVolumeStack::synchronizeRBounds(
 std::pair<double, double> CylinderVolumeStack::synchronizeZBounds(
     std::vector<VolumeTuple>& volumes, const Logger& logger) {
   const double minZ = std::min_element(volumes.begin(), volumes.end(),
-                                           [](const auto& a, const auto& b) {
-                                             return a.minZ() < b.minZ();
-                                           })
-                              ->minZ();
+                                       [](const auto& a, const auto& b) {
+                                         return a.minZ() < b.minZ();
+                                       })
+                          ->minZ();
 
   const double maxZ = std::max_element(volumes.begin(), volumes.end(),
-                                           [](const auto& a, const auto& b) {
-                                             return a.maxZ() < b.maxZ();
-                                           })
-                              ->maxZ();
+                                       [](const auto& a, const auto& b) {
+                                         return a.maxZ() < b.maxZ();
+                                       })
+                          ->maxZ();
   const double midZ = (minZ + maxZ) / 2.0;
   const double hlZ = (maxZ - minZ) / 2.0;
   ACTS_DEBUG("Found overall z bounds: [ " << minZ << " <- " << midZ << " -> "
@@ -727,9 +727,7 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
                << " ]");
 
   constexpr auto tolerance = s_onSurfaceTolerance;
-  auto same = [](double a, double b) {
-    return std::abs(a - b) < tolerance;
-  };
+  auto same = [](double a, double b) { return std::abs(a - b) < tolerance; };
 
   if (!same(newMinZ, oldMinZ) && newMinZ > oldMinZ) {
     ACTS_ERROR("Shrinking the stack size in z is not supported: "

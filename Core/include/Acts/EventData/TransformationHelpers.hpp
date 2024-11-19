@@ -112,9 +112,7 @@ BoundVector transformFreeToCurvilinearParameters(double time,
 /// @note The parameters are assumed to be defined at the origin of the
 ///       curvilinear frame derived from the direction angles. The local
 ///       coordinates are zero by construction.
-BoundVector transformFreeToCurvilinearParameters(double time,
-                                                 double phi,
-                                                 double theta,
-                                                 double qOverP);
+BoundVector transformFreeToCurvilinearParameters(double time, double phi,
+                                                 double theta, double qOverP);
 
 }  // namespace Acts

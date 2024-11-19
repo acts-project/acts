@@ -30,8 +30,7 @@
 template <typename surface_type>
 class SurfaceBuilder : public Acts::Experimental::IInternalStructureBuilder {
  public:
-  SurfaceBuilder(const Acts::Transform3& trf, double p0,
-                 double p1)
+  SurfaceBuilder(const Acts::Transform3& trf, double p0, double p1)
       : m_surface(Acts::Surface::makeShared<surface_type>(trf, p0, p1)) {}
   /// Conrstruct and return the internal structure creation
   ///
@@ -93,8 +92,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
 
   // Create  root node
   std::vector<Acts::BinningValue> detectorBinning = {Acts::BinningValue::binR};
-  std::vector<double> detectorBoundaries = {detectorIr, detectorOr,
-                                                      detectorHz};
+  std::vector<double> detectorBoundaries = {detectorIr, detectorOr, detectorHz};
 
   // The root node - detector
   auto detectorBpr = std::make_unique<Acts::Experimental::Blueprint::Node>(
@@ -102,8 +100,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
       detectorBoundaries, detectorBinning);
 
   // The beam pipe
-  std::vector<double> beamPipeBoundaries = {detectorIr, beamPipeOr,
-                                                      detectorHz};
+  std::vector<double> beamPipeBoundaries = {detectorIr, beamPipeOr, detectorHz};
 
   auto beamPipeStructure =
       std::make_shared<SurfaceBuilder<Acts::CylinderSurface>>(
@@ -114,16 +111,14 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   detectorBpr->add(std::move(beamPipe));
 
   // A pixel system
-  std::vector<double> pixelBoundaries = {pixelIr, pixelOr,
-                                                   detectorHz};
+  std::vector<double> pixelBoundaries = {pixelIr, pixelOr, detectorHz};
   std::vector<Acts::BinningValue> pixelBinning = {Acts::BinningValue::binZ};
   auto pixel = std::make_unique<Acts::Experimental::Blueprint::Node>(
       "pixel", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
       pixelBoundaries, pixelBinning);
 
   // Nec: Small differences to check if the adjustments are made
-  std::vector<double> pixelEcBoundaries = {pixelIr, pixelOr - 5.,
-                                                     pixelEcHz};
+  std::vector<double> pixelEcBoundaries = {pixelIr, pixelOr - 5., pixelEcHz};
   std::vector<Acts::BinningValue> pixelEcBinning = {Acts::BinningValue::binZ};
 
   Acts::Transform3 pixelNecTransform =
@@ -136,7 +131,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
 
   // Add a single encap layer
   std::vector<double> pixelNecBoundaries = {pixelIr + 2, pixelOr - 7.,
-                                                      pixelEcLayerHz};
+                                            pixelEcLayerHz};
 
   auto pixelNecLayerStructure =
       std::make_shared<SurfaceBuilder<Acts::DiscSurface>>(
@@ -149,8 +144,8 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   pixelNec->add(std::move(pixelNecLayer));
 
   // Barrel
-  std::vector<double> pixelBarrelBoundaries = {
-      pixelIr + 1, pixelOr - 1., detectorHz - 2 * pixelEcHz};
+  std::vector<double> pixelBarrelBoundaries = {pixelIr + 1, pixelOr - 1.,
+                                               detectorHz - 2 * pixelEcHz};
   std::vector<Acts::BinningValue> pixelBarrelBinning = {
       Acts::BinningValue::binR};
 
@@ -161,8 +156,8 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   auto pixelBarrelL0Structure =
       std::make_shared<SurfaceBuilder<Acts::CylinderSurface>>(
           Acts::Transform3::Identity(), 62.5, detectorHz - 2 * pixelEcHz - 10.);
-  std::vector<double> pixelBarrelL0Boundaries = {
-      60, 65., detectorHz - 2 * pixelEcHz};
+  std::vector<double> pixelBarrelL0Boundaries = {60, 65.,
+                                                 detectorHz - 2 * pixelEcHz};
   auto pixelBarrelL0 = std::make_unique<Acts::Experimental::Blueprint::Node>(
       "pixel_barrel_l0", Acts::Transform3::Identity(),
       Acts::VolumeBounds::eCylinder, pixelBarrelL0Boundaries,
@@ -173,8 +168,8 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
           Acts::Transform3::Identity(), 102.5,
           detectorHz - 2 * pixelEcHz - 10.);
 
-  std::vector<double> pixelBarrelL1Boundaries = {
-      100, 105., detectorHz - 2 * pixelEcHz};
+  std::vector<double> pixelBarrelL1Boundaries = {100, 105.,
+                                                 detectorHz - 2 * pixelEcHz};
   auto pixelBarrelL1 = std::make_unique<Acts::Experimental::Blueprint::Node>(
       "pixel_barrel_l1", Acts::Transform3::Identity(),
       Acts::VolumeBounds::eCylinder, pixelBarrelL1Boundaries,
@@ -190,8 +185,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
       "pixel_pec", pixelPecTransform, Acts::VolumeBounds::eCylinder,
       pixelEcBoundaries, pixelEcBinning);
 
-  std::vector<double> pixelPecBoundaries = {pixelIr + 2, pixelOr - 7.,
-                                                      10.};
+  std::vector<double> pixelPecBoundaries = {pixelIr + 2, pixelOr - 7., 10.};
 
   auto pixelPecLayerStructure =
       std::make_shared<SurfaceBuilder<Acts::DiscSurface>>(

@@ -30,8 +30,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::make(
             surface, direction,
             Axis{AxisClosed, -std::numbers::pi * r, std::numbers::pi * r, 1});
       } else {
-        double hlPhi =
-            cylinder->bounds().get(CylinderBounds::eHalfPhiSector);
+        double hlPhi = cylinder->bounds().get(CylinderBounds::eHalfPhiSector);
 
         grid = GridPortalLink::make(surface, direction,
                                     Axis{AxisBound, -hlPhi * r, hlPhi * r, 1});

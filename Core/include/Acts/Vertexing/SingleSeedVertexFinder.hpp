@@ -127,10 +127,10 @@ class SingleSeedVertexFinder {
   struct SortedSpacepoints {
     SortedSpacepoints(const int phiSize, const int zSize) {
       std::vector<std::pair<spacepoint_t const*, double>> helper = {};
-      std::vector<std::vector<std::pair<spacepoint_t const*, double>>>
-          helperZ(zSize, helper);
-      std::vector<std::vector<
-          std::vector<std::pair<spacepoint_t const*, double>>>>
+      std::vector<std::vector<std::pair<spacepoint_t const*, double>>> helperZ(
+          zSize, helper);
+      std::vector<
+          std::vector<std::vector<std::pair<spacepoint_t const*, double>>>>
           helperPhi(phiSize, helperZ);
       sortedSP.fill(helperPhi);
     }
@@ -140,8 +140,9 @@ class SingleSeedVertexFinder {
     /// @param phi Index of the phi slice
     /// @param z Index of the z slice
     /// @return Non-const vector of spacepoints
-    inline std::vector<std::pair<spacepoint_t const*, double>>& addSP(
-        int layer, int phi, int z) {
+    inline std::vector<std::pair<spacepoint_t const*, double>>& addSP(int layer,
+                                                                      int phi,
+                                                                      int z) {
       return sortedSP[layer][phi][z];
     }
 
@@ -150,13 +151,13 @@ class SingleSeedVertexFinder {
     /// @param phi Index of the phi slice
     /// @param z Index of the z slice
     /// @return Const vector of spacepoints
-    inline const std::vector<std::pair<spacepoint_t const*, double>>&
-    getSP(int layer, int phi, int z) const {
+    inline const std::vector<std::pair<spacepoint_t const*, double>>& getSP(
+        int layer, int phi, int z) const {
       return sortedSP[layer][phi][z];
     }
 
-    std::array<std::vector<std::vector<std::vector<
-                   std::pair<spacepoint_t const*, double>>>>,
+    std::array<std::vector<std::vector<
+                   std::vector<std::pair<spacepoint_t const*, double>>>>,
                3>
         sortedSP;
   };

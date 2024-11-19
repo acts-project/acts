@@ -63,8 +63,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// @param halex is the half length of the cube in x
   /// @param haley is the half length of the cube in y
   /// @param halez is the half length of the cube in z
-  CuboidVolumeBounds(double halex, double haley,
-                     double halez) noexcept(false);
+  CuboidVolumeBounds(double halex, double haley, double halez) noexcept(false);
 
   /// Constructor - from a fixed size array
   ///

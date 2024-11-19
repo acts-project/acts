@@ -53,11 +53,10 @@ void runPlanarTests(const Acts::Surface& surface, const Acts::Svg::Style& style,
   auto svgObject =
       Acts::Svg::SurfaceConverter::convert(geoCtx, surface, sOptions);
   auto xyObject = Acts::Svg::View::xy(svgObject, identification);
-  auto xyAxes =
-      Acts::Svg::axesXY(static_cast<double>(xyObject._x_range[0]),
-                        static_cast<double>(xyObject._x_range[1]),
-                        static_cast<double>(xyObject._y_range[0]),
-                        static_cast<double>(xyObject._y_range[1]));
+  auto xyAxes = Acts::Svg::axesXY(static_cast<double>(xyObject._x_range[0]),
+                                  static_cast<double>(xyObject._x_range[1]),
+                                  static_cast<double>(xyObject._y_range[0]),
+                                  static_cast<double>(xyObject._y_range[1]));
 
   Acts::Svg::toFile({xyObject, xyAxes}, xyObject._id + ".svg");
   // As sheet

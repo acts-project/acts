@@ -22,8 +22,8 @@ ActsExamples::makeMagneticFieldMapRzFromText(
     const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
-    const std::string& fieldMapFile, double lengthUnit,
-    double BFieldUnit, bool firstQuadrant) {
+    const std::string& fieldMapFile, double lengthUnit, double BFieldUnit,
+    bool firstQuadrant) {
   /// [1] Read in field map file
   // Grid position points in r and z
   std::vector<double> rPos;
@@ -65,8 +65,8 @@ ActsExamples::makeMagneticFieldMapXyzFromText(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
-    const std::string& fieldMapFile, double lengthUnit,
-    double BFieldUnit, bool firstOctant) {
+    const std::string& fieldMapFile, double lengthUnit, double BFieldUnit,
+    bool firstOctant) {
   /// [1] Read in field map file
   // Grid position points in x, y and z
   std::vector<double> xPos;

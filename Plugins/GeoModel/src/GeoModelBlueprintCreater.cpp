@@ -407,8 +407,8 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
   return std::make_tuple(nullptr, Extent());
 }
 
-std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent,
-           std::vector<double>, Acts::Vector3>
+std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent, std::vector<double>,
+           Acts::Vector3>
 Acts::GeoModelBlueprintCreater::parseBounds(
     const std::string& boundsEntry, const Extent& externalExtent,
     const Extent& internalExtent) const {

@@ -138,10 +138,10 @@ std::unique_ptr<GridPortalLink> mergeEquidistant(
   ACTS_VERBOSE("~> axis a: " << axisA);
   ACTS_VERBOSE("~> axis b: " << axisB);
 
-  double binsWidthA = (axisA.getMax() - axisA.getMin()) /
-                          static_cast<double>(axisA.getNBins());
-  double binsWidthB = (axisB.getMax() - axisB.getMin()) /
-                          static_cast<double>(axisB.getNBins());
+  double binsWidthA =
+      (axisA.getMax() - axisA.getMin()) / static_cast<double>(axisA.getNBins());
+  double binsWidthB =
+      (axisB.getMax() - axisB.getMin()) / static_cast<double>(axisB.getNBins());
 
   ACTS_VERBOSE("  ~> binWidths: " << binsWidthA << " vs " << binsWidthB);
 

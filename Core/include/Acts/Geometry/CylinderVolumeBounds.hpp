@@ -106,9 +106,8 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param bevelMinZ The bevel angle, in radians, for the negative side
   /// @param bevelMaxZ The bevel angle, in radians, for the positive side
   CylinderVolumeBounds(double rmin, double rmax, double halfz,
-                       double halfphi = std::numbers::pi,
-                       double avgphi = 0., double bevelMinZ = 0.,
-                       double bevelMaxZ = 0.);
+                       double halfphi = std::numbers::pi, double avgphi = 0.,
+                       double bevelMinZ = 0., double bevelMaxZ = 0.);
 
   /// Constructor - from a fixed size array
   ///

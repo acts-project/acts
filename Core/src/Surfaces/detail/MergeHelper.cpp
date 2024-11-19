@@ -12,9 +12,10 @@
 
 namespace Acts::detail {
 
-std::tuple<double, double, bool> mergedPhiSector(
-    double hlPhi1, double avgPhi1, double hlPhi2,
-    double avgPhi2, const Logger& logger, double tolerance) {
+std::tuple<double, double, bool> mergedPhiSector(double hlPhi1, double avgPhi1,
+                                                 double hlPhi2, double avgPhi2,
+                                                 const Logger& logger,
+                                                 double tolerance) {
   using namespace Acts::UnitLiterals;
 
   if (std::abs(hlPhi1 - std::numbers::pi / 2.) < tolerance &&

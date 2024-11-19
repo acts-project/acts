@@ -230,11 +230,11 @@ std::array<std::vector<double>, 3u> rzphiBoundaries(
                               << " boundaries in phi.");
 
   return {{std::vector<double>(uniqueBoundaries[0].begin(),
-                                   uniqueBoundaries[0].end()),
+                               uniqueBoundaries[0].end()),
            std::vector<double>(uniqueBoundaries[1].begin(),
-                                   uniqueBoundaries[1].end()),
+                               uniqueBoundaries[1].end()),
            std::vector<double>(uniqueBoundaries[2].begin(),
-                                   uniqueBoundaries[2].end())}};
+                               uniqueBoundaries[2].end())}};
 }
 
 }  // namespace detail::CylindricalDetectorHelper

@@ -28,8 +28,7 @@ namespace Acts {
 
 CylinderVolumeBounds::CylinderVolumeBounds(double rmin, double rmax,
                                            double halfz, double halfphi,
-                                           double avgphi,
-                                           double bevelMinZ,
+                                           double avgphi, double bevelMinZ,
                                            double bevelMaxZ)
     : m_values() {
   m_values[eMinR] = rmin;

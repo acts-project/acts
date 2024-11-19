@@ -23,8 +23,7 @@ namespace Acts::PlanarHelper {
 /// @return The intersection
 inline Intersection3D intersect(const Transform3& transform,
                                 const Vector3& position,
-                                const Vector3& direction,
-                                double tolerance) {
+                                const Vector3& direction, double tolerance) {
   // Get the matrix from the transform (faster access)
   const auto& tMatrix = transform.matrix();
   const Vector3 pnormal = tMatrix.block<3, 1>(0, 2).transpose();

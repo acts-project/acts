@@ -124,8 +124,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
                 inputSegmentation.dimensions() == 2) {
               unsigned int accessBin =
                   inputSegmentation.dimensions() == 2 ? 1 : 0;
-              double maxY =
-                  boundValues[Acts::TrapezoidBounds::eHalfLengthY];
+              double maxY = boundValues[Acts::TrapezoidBounds::eHalfLengthY];
               unsigned int nBins = static_cast<unsigned int>(
                   std::round((2 * maxY) /
                              inputSegmentation.binningData()[accessBin].step));
@@ -152,8 +151,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
                 inputSegmentation.dimensions() == 2) {
               unsigned int accessBin =
                   inputSegmentation.dimensions() == 2 ? 1 : 0;
-              double averagePhi =
-                  boundValues[Acts::AnnulusBounds::eAveragePhi];
+              double averagePhi = boundValues[Acts::AnnulusBounds::eAveragePhi];
               double minPhi =
                   averagePhi - boundValues[Acts::AnnulusBounds::eMinPhiRel];
               double maxPhi =
@@ -170,10 +168,8 @@ void ActsExamples::DigitizationConfigurator::operator()(
 
           // The module is a Disc Trapezoid
           case Acts::SurfaceBounds::eDiscTrapezoid: {
-            double minR =
-                boundValues[Acts::DiscTrapezoidBounds::eMinR];
-            double maxR =
-                boundValues[Acts::DiscTrapezoidBounds::eMaxR];
+            double minR = boundValues[Acts::DiscTrapezoidBounds::eMinR];
+            double maxR = boundValues[Acts::DiscTrapezoidBounds::eMaxR];
 
             if (inputSegmentation.binningData()[0].binvalue ==
                 Acts::BinningValue::binR) {
@@ -225,8 +221,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
               unsigned int accessBin =
                   inputSegmentation.dimensions() == 2 ? 1 : 0;
 
-              double averagePhi =
-                  boundValues[Acts::RadialBounds::eAveragePhi];
+              double averagePhi = boundValues[Acts::RadialBounds::eAveragePhi];
               double halfPhiSector =
                   boundValues[Acts::RadialBounds::eHalfPhiSector];
               double minPhi = averagePhi - halfPhiSector;

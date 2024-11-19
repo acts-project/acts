@@ -242,8 +242,8 @@ class Extent {
   /// Return the histogram store
   ///
   /// The histogram store can be used for automated binning detection
-  const std::array<std::vector<double>, numBinningValues()>&
-  valueHistograms() const;
+  const std::array<std::vector<double>, numBinningValues()>& valueHistograms()
+      const;
 
   /// Access the minimum parameter
   ///

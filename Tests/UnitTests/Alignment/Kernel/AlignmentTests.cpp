@@ -117,7 +117,7 @@ struct TelescopeDetector {
 
     unsigned int nLayers = 6;
     std::vector<double> positions = {-500_mm, -300_mm, -100_mm,
-                                         100_mm,  300_mm,  500_mm};
+                                     100_mm,  300_mm,  500_mm};
     auto length = positions.back() - positions.front();
 
     std::vector<LayerPtr> layers(nLayers);

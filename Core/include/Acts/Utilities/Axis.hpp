@@ -659,9 +659,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///
   /// @note Bin intervals have an open upper bound, i.e. the upper boundary
   ///       does @b not belong to the bin with the given bin index.
-  double getBinUpperBound(std::size_t bin) const {
-    return m_binEdges.at(bin);
-  }
+  double getBinUpperBound(std::size_t bin) const { return m_binEdges.at(bin); }
 
   /// @brief get bin center
   ///

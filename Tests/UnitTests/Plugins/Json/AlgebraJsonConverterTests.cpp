@@ -119,8 +119,8 @@ BOOST_AUTO_TEST_CASE(TransformTranspose) {
 
   std::vector<double> referenceT = {1., 2., 3.};
   std::vector<double> referenceR = {0.992946,   -0.0975562, 0.0673888,
-                                        0.0997267,  0.994574,   -0.0296247,
-                                        -0.0641331, 0.0361362,  0.997287};
+                                    0.0997267,  0.994574,   -0.0296247,
+                                    -0.0641331, 0.0361362,  0.997287};
 
   // Test standard writing
   Transform3JsonConverter::Options standardOptions{true, false};

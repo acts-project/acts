@@ -14,8 +14,8 @@
 #include <numbers>
 
 std::vector<double> Acts::detail::VerticesHelper::phiSegments(
-    double phiMin, double phiMax,
-    const std::vector<double>& phiRefs, unsigned int quarterSegments) {
+    double phiMin, double phiMax, const std::vector<double>& phiRefs,
+    unsigned int quarterSegments) {
   // Check that the phi range is valid
   if (phiMin > phiMax) {
     throw std::invalid_argument(
@@ -68,9 +68,8 @@ std::vector<double> Acts::detail::VerticesHelper::phiSegments(
 }
 
 std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
-    double innerRx, double innerRy, double outerRx,
-    double outerRy, double avgPhi, double halfPhi,
-    unsigned int quarterSegments) {
+    double innerRx, double innerRy, double outerRx, double outerRy,
+    double avgPhi, double halfPhi, unsigned int quarterSegments) {
   // List of vertices counter-clockwise starting at smallest phi w.r.t center,
   // for both inner/outer ring/segment
   std::vector<Vector2> rvertices;  // return vertices

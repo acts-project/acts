@@ -169,8 +169,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
       if (std::abs(iR - lastR) > s_onSurfaceTolerance) {
         auto gap = std::make_unique<Blueprint::Node>(
             node.name + "_gap_" + std::to_string(igap), node.transform,
-            VolumeBounds::eCylinder,
-            std::vector<double>{lastR, iR, cHalfZ});
+            VolumeBounds::eCylinder, std::vector<double>{lastR, iR, cHalfZ});
         gaps.push_back(std::move(gap));
         ++igap;
       }
@@ -181,8 +180,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
     if (std::abs(lastR - cOuterR) > s_onSurfaceTolerance) {
       auto gap = std::make_unique<Blueprint::Node>(
           node.name + "_gap_" + std::to_string(igap), node.transform,
-          VolumeBounds::eCylinder,
-          std::vector<double>{lastR, cOuterR, cHalfZ});
+          VolumeBounds::eCylinder, std::vector<double>{lastR, cOuterR, cHalfZ});
       gaps.push_back(std::move(gap));
     }
   } else {

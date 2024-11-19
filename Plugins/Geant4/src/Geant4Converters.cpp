@@ -93,9 +93,9 @@ Acts::Geant4ShapeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
   using B = Acts::CylinderBounds;
 
   std::array<double, B::eSize> tArray = {};
-  tArray[B::eR] = static_cast<double>(g4Tubs.GetInnerRadius() +
-                                          g4Tubs.GetOuterRadius()) *
-                  0.5;
+  tArray[B::eR] =
+      static_cast<double>(g4Tubs.GetInnerRadius() + g4Tubs.GetOuterRadius()) *
+      0.5;
   tArray[B::eHalfLengthZ] = static_cast<double>(g4Tubs.GetZHalfLength());
   tArray[B::eHalfPhiSector] =
       0.5 * static_cast<double>(g4Tubs.GetDeltaPhiAngle());
@@ -105,9 +105,8 @@ Acts::Geant4ShapeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
       std::numeric_limits<double>::epsilon()) {
     tArray[B::eAveragePhi] = 0.;
   } else {
-    tArray[B::eAveragePhi] =
-        static_cast<double>(g4Tubs.GetStartPhiAngle()) +
-        tArray[B::eHalfPhiSector];
+    tArray[B::eAveragePhi] = static_cast<double>(g4Tubs.GetStartPhiAngle()) +
+                             tArray[B::eHalfPhiSector];
   }
   double thickness = g4Tubs.GetOuterRadius() - g4Tubs.GetInnerRadius();
   auto cBounds = std::make_shared<CylinderBounds>(tArray);
@@ -129,9 +128,8 @@ Acts::Geant4ShapeConverter::radialBounds(const G4Tubs& g4Tubs) {
       std::numeric_limits<double>::epsilon()) {
     tArray[B::eAveragePhi] = 0.;
   } else {
-    tArray[B::eAveragePhi] =
-        static_cast<double>(g4Tubs.GetStartPhiAngle()) +
-        tArray[B::eHalfPhiSector];
+    tArray[B::eAveragePhi] = static_cast<double>(g4Tubs.GetStartPhiAngle()) +
+                             tArray[B::eHalfPhiSector];
   }
   double thickness = g4Tubs.GetZHalfLength() * 2;
   auto rBounds = std::make_shared<RadialBounds>(tArray);
@@ -145,13 +143,11 @@ std::shared_ptr<Acts::LineBounds> Acts::Geant4ShapeConverter::lineBounds(
   return std::make_shared<LineBounds>(r, hlZ);
 }
 
-std::tuple<std::shared_ptr<Acts::RectangleBounds>, std::array<int, 2u>,
-           double>
+std::tuple<std::shared_ptr<Acts::RectangleBounds>, std::array<int, 2u>, double>
 Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
-  std::vector<double> hG4XYZ = {
-      static_cast<double>(g4Box.GetXHalfLength()),
-      static_cast<double>(g4Box.GetYHalfLength()),
-      static_cast<double>(g4Box.GetZHalfLength())};
+  std::vector<double> hG4XYZ = {static_cast<double>(g4Box.GetXHalfLength()),
+                                static_cast<double>(g4Box.GetYHalfLength()),
+                                static_cast<double>(g4Box.GetZHalfLength())};
 
   auto minAt = std::min_element(hG4XYZ.begin(), hG4XYZ.end());
   std::size_t minPos = std::distance(hG4XYZ.begin(), minAt);
@@ -180,8 +176,7 @@ Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
   return std::make_tuple(std::move(rBounds), rAxes, thickness);
 }
 
-std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>,
-           double>
+std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>, double>
 Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
   // primary parameters
   double hlX0 = static_cast<double>(g4Trd.GetXHalfLength1());
@@ -190,8 +185,7 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
   double hlY1 = static_cast<double>(g4Trd.GetYHalfLength2());
   double hlZ = static_cast<double>(g4Trd.GetZHalfLength());
 
-  std::vector<double> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5,
-                                  hlZ};
+  std::vector<double> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5, hlZ};
 
   auto minAt = std::min_element(dXYZ.begin(), dXYZ.end());
   std::size_t minPos = std::distance(dXYZ.begin(), minAt);
@@ -235,8 +229,7 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
   return std::make_tuple(std::move(tBounds), rAxes, thickness);
 }
 
-std::tuple<std::shared_ptr<Acts::PlanarBounds>, std::array<int, 2u>,
-           double>
+std::tuple<std::shared_ptr<Acts::PlanarBounds>, std::array<int, 2u>, double>
 Acts::Geant4ShapeConverter::planarBounds(const G4VSolid& g4Solid) {
   const G4Box* box = dynamic_cast<const G4Box*>(&g4Solid);
   if (box != nullptr) {

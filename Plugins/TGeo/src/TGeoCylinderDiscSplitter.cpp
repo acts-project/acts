@@ -118,8 +118,7 @@ Acts::TGeoCylinderDiscSplitter::split(
 
       const auto& boundValues = sf.bounds().values();
       double cylinderR = boundValues[Acts::CylinderBounds::eR];
-      double cylinderHalfZ =
-          boundValues[Acts::CylinderBounds::eHalfLengthZ];
+      double cylinderHalfZ = boundValues[Acts::CylinderBounds::eHalfLengthZ];
 
       double phiStep = 2 * std::numbers::pi / m_cfg.cylinderPhiSegments;
       double cosPhiHalf = std::cos(0.5 * phiStep);
@@ -127,8 +126,7 @@ Acts::TGeoCylinderDiscSplitter::split(
 
       std::vector<double> zValues = {};
       if (m_cfg.cylinderLongitudinalSegments > 1) {
-        double zStep =
-            2 * cylinderHalfZ / m_cfg.cylinderLongitudinalSegments;
+        double zStep = 2 * cylinderHalfZ / m_cfg.cylinderLongitudinalSegments;
         zValues.reserve(m_cfg.cylinderLongitudinalSegments);
         for (int ir = 0; ir <= m_cfg.cylinderLongitudinalSegments; ++ir) {
           zValues.push_back(-cylinderHalfZ + ir * zStep);

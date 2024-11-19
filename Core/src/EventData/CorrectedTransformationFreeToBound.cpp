@@ -25,8 +25,7 @@
 #include <utility>
 #include <vector>
 
-Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_,
-                                                   double alpha_,
+Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_, double alpha_,
                                                    double beta_)
     : apply(apply_), alpha(alpha_), beta(beta_) {}
 

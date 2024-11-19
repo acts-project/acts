@@ -56,9 +56,8 @@ class ConeVolumeBounds : public VolumeBounds {
   /// @param halflengthZ The minimum z value of the inner and outer cones
   /// @param averagePhi The phi orientation of the sector
   /// @param halfPhiSector The opening angle phi sector
-  ConeVolumeBounds(double innerAlpha, double innerOffsetZ,
-                   double outerAlpha, double outerOffsetZ,
-                   double halflengthZ, double averagePhi,
+  ConeVolumeBounds(double innerAlpha, double innerOffsetZ, double outerAlpha,
+                   double outerOffsetZ, double halflengthZ, double averagePhi,
                    double halfPhiSector) noexcept(false);
 
   /// Constructor - for general cylidner-cone setups

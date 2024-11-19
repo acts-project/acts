@@ -111,8 +111,7 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Connect: R", logLevel));
   ACTS_INFO("*** Test: connect DetectorVolumes in R, create proto container");
   // Test with different opening angles
-  std::vector<double> testOpenings = {std::numbers::pi,
-                                          std::numbers::pi / 2.};
+  std::vector<double> testOpenings = {std::numbers::pi, std::numbers::pi / 2.};
 
   std::vector<double> radii = {0., 10., 100., 200.};
   double halfZ = 100.;
@@ -408,7 +407,7 @@ BOOST_AUTO_TEST_CASE(WrapVolumeinRZ) {
 
   // Test with different inner radii
   std::vector<std::array<double, 3u>> radii = {{0., 100., 500.},
-                                                   {20., 120., 500.}};
+                                               {20., 120., 500.}};
 
   double innerHalfZ = 150.;
   double outerHalfZ = 175.;
@@ -586,7 +585,7 @@ BOOST_AUTO_TEST_CASE(WrapContainernRZ) {
 
   // Test with different inner radii
   std::vector<std::array<double, 3u>> radii = {{0., 100., 500.},
-                                                   {20., 120., 500.}};
+                                               {20., 120., 500.}};
 
   double innerHalfZ = 150.;
   double innerBarrelHalfZ = 75.;

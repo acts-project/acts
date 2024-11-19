@@ -68,8 +68,8 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// @param maxhalex is the half length in x at maximal y
   /// @param haley is the half length in y
   /// @param halez is the half length in z
-  TrapezoidVolumeBounds(double minhalex, double maxhalex,
-                        double haley, double halez) noexcept(false);
+  TrapezoidVolumeBounds(double minhalex, double maxhalex, double haley,
+                        double halez) noexcept(false);
 
   /// Constructor - the trapezoid boundaries (arbitrary trapezoid)
   ///
@@ -84,8 +84,7 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// Constructor - from a fixed size array
   ///
   /// @param values The bound values
-  TrapezoidVolumeBounds(const std::array<double, eSize>& values) noexcept(
-      false)
+  TrapezoidVolumeBounds(const std::array<double, eSize>& values) noexcept(false)
       : m_values(values) {
     checkConsistency();
     buildSurfaceBounds();

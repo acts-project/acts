@@ -44,8 +44,7 @@ void setupTools() {
   }
 }
 
-std::shared_ptr<Acts::Layer> generateDiscLayer(double rInner,
-                                               double rOuter,
+std::shared_ptr<Acts::Layer> generateDiscLayer(double rInner, double rOuter,
                                                unsigned int quarterSegments,
                                                unsigned int nRings,
                                                bool useTrapezoids = false) {

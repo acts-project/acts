@@ -51,8 +51,7 @@ Result<double> SpacePointUtility::differenceOfMeasurementsChecked(
   return Result<double>::success(diffTheta2 + diffPhi2);
 }
 
-std::tuple<Vector3, std::optional<double>, Vector2,
-           std::optional<double>>
+std::tuple<Vector3, std::optional<double>, Vector2, std::optional<double>>
 SpacePointUtility::globalCoords(
     const GeometryContext& gctx, const SourceLink& slink,
     const SourceLinkSurfaceAccessor& surfaceAccessor, const BoundVector& par,

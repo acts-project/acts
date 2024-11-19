@@ -65,10 +65,9 @@ Acts::Result<Acts::BoundVector> Acts::transformFreeToBoundParameters(
 }
 
 Acts::Result<Acts::BoundVector> Acts::transformFreeToBoundParameters(
-    const Acts::Vector3& position, double time,
-    const Acts::Vector3& direction, double qOverP,
-    const Acts::Surface& surface, const Acts::GeometryContext& geoCtx,
-    double tolerance) {
+    const Acts::Vector3& position, double time, const Acts::Vector3& direction,
+    double qOverP, const Acts::Surface& surface,
+    const Acts::GeometryContext& geoCtx, double tolerance) {
   // initialize the bound vector
   BoundVector bp = BoundVector::Zero();
   // convert global to local position on the surface
@@ -88,8 +87,10 @@ Acts::Result<Acts::BoundVector> Acts::transformFreeToBoundParameters(
   return Result<Acts::BoundVector>::success(bp);
 }
 
-Acts::BoundVector Acts::transformFreeToCurvilinearParameters(
-    double time, double phi, double theta, double qOverP) {
+Acts::BoundVector Acts::transformFreeToCurvilinearParameters(double time,
+                                                             double phi,
+                                                             double theta,
+                                                             double qOverP) {
   BoundVector bp = BoundVector::Zero();
   // local coordinates are zero by construction
   bp[eBoundTime] = time;

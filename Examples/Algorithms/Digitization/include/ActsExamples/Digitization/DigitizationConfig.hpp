@@ -96,9 +96,8 @@ struct GeometricConfig {
   /// @param cmins is the cluster minimum in the different dimensions
   ///
   /// @return a vector of variances for the cluster
-  std::vector<double> variances(
-      const std::array<std::size_t, 2u> &csizes,
-      const std::array<std::size_t, 2u> &cmins) const;
+  std::vector<double> variances(const std::array<std::size_t, 2u> &csizes,
+                                const std::array<std::size_t, 2u> &cmins) const;
 
   /// Drift generation (currently not implemented)
   /// Takes as an argument the position, and a random engine

@@ -94,8 +94,8 @@ class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
     std::array<double, 2> zRangeXY = {
         std::numeric_limits<double>::lowest(),
         std::numeric_limits<double>::max()};  ///< View range in z of
-                                                        ///< the XY view
-    bool projectionZR = true;                           ///< zr projection
+                                              ///< the XY view
+    bool projectionZR = true;                 ///< zr projection
 
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry =
         nullptr;  ///< The tracking geometry, a set pointer will cause the

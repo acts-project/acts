@@ -1093,12 +1093,12 @@ BOOST_DATA_TEST_CASE(Baseline,
         dynamic_cast<const CylinderVolumeBounds*>(&b->volumeBounds());
 
     double aMidR = (aBounds->get(CylinderVolumeBounds::eMinR) +
-                        aBounds->get(CylinderVolumeBounds::eMaxR)) /
-                       2.0;
+                    aBounds->get(CylinderVolumeBounds::eMaxR)) /
+                   2.0;
 
     double bMidR = (bBounds->get(CylinderVolumeBounds::eMinR) +
-                        bBounds->get(CylinderVolumeBounds::eMaxR)) /
-                       2.0;
+                    bBounds->get(CylinderVolumeBounds::eMaxR)) /
+                   2.0;
 
     BOOST_CHECK_LT(aMidR, bMidR);
   }

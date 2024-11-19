@@ -18,15 +18,13 @@
 
 namespace Acts {
 
-CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley,
-                                       double halez)
+CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley, double halez)
     : VolumeBounds(), m_values({halex, haley, halez}) {
   checkConsistency();
   buildSurfaceBounds();
 }
 
-CuboidVolumeBounds::CuboidVolumeBounds(
-    const std::array<double, eSize>& values)
+CuboidVolumeBounds::CuboidVolumeBounds(const std::array<double, eSize>& values)
     : m_values(values) {
   checkConsistency();
   buildSurfaceBounds();

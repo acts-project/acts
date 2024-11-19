@@ -24,8 +24,8 @@ namespace Acts::detail {
 /// ranges need to line up, i.e. that one of the sector
 /// ends exactly where the other one starts.
 std::tuple<double, double, bool> mergedPhiSector(
-    double hlPhi1, double avgPhi1, double hlPhi2,
-    double avgPhi2, const Logger& logger = getDummyLogger(),
+    double hlPhi1, double avgPhi1, double hlPhi2, double avgPhi2,
+    const Logger& logger = getDummyLogger(),
     double tolerance = s_onSurfaceTolerance);
 
 }  // namespace Acts::detail

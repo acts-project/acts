@@ -85,8 +85,7 @@ BOOST_DATA_TEST_CASE(VariableBoundOneEmplace, bd::make(boundIndices), index) {
 BOOST_AUTO_TEST_CASE(VariableBoundAll) {
   MeasurementContainer container;
 
-  auto [params, cov] =
-      generateParametersCovariance<double, eBoundSize>(rng);
+  auto [params, cov] = generateParametersCovariance<double, eBoundSize>(rng);
 
   FixedBoundMeasurementProxy<eBoundSize> meas =
       container.makeMeasurement<eBoundSize>(geoId);
@@ -107,8 +106,7 @@ BOOST_AUTO_TEST_CASE(VariableBoundAll) {
 BOOST_AUTO_TEST_CASE(VariableBoundAllEmplace) {
   MeasurementContainer container;
 
-  auto [params, cov] =
-      generateParametersCovariance<double, eBoundSize>(rng);
+  auto [params, cov] = generateParametersCovariance<double, eBoundSize>(rng);
 
   FixedBoundMeasurementProxy<eBoundSize> meas =
       container.emplaceMeasurement<eBoundSize>(
@@ -146,8 +144,7 @@ BOOST_AUTO_TEST_CASE(VariableBoundReassign) {
   BOOST_CHECK(!meas.contains(eBoundQOverP));
 
   // reassign w/ all parameters
-  auto [paramsN, covN] =
-      generateParametersCovariance<double, eBoundSize>(rng);
+  auto [paramsN, covN] = generateParametersCovariance<double, eBoundSize>(rng);
 
   meas = container.makeMeasurement(eBoundSize, geoId);
   meas.setSubspaceIndices(std::array{eBoundLoc0, eBoundLoc1, eBoundTime,

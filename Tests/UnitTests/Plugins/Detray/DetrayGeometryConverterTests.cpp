@@ -47,12 +47,9 @@ BOOST_AUTO_TEST_CASE(DetrayTransformConversion) {
   detray::io::transform_payload payload =
       DetrayGeometryConverter::convertTransform(transform);
   // Transform is correctly translated
-  CHECK_CLOSE_ABS(payload.tr[0u], 1.,
-                  std::numeric_limits<double>::epsilon());
-  CHECK_CLOSE_ABS(payload.tr[1u], 2.,
-                  std::numeric_limits<double>::epsilon());
-  CHECK_CLOSE_ABS(payload.tr[2u], 3.,
-                  std::numeric_limits<double>::epsilon());
+  CHECK_CLOSE_ABS(payload.tr[0u], 1., std::numeric_limits<double>::epsilon());
+  CHECK_CLOSE_ABS(payload.tr[1u], 2., std::numeric_limits<double>::epsilon());
+  CHECK_CLOSE_ABS(payload.tr[2u], 3., std::numeric_limits<double>::epsilon());
   // Rotation is correctly translated
   RotationMatrix3 rotation = transform.rotation().transpose();
   CHECK_CLOSE_ABS(payload.rot[0u], rotation(0, 0),

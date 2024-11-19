@@ -30,10 +30,10 @@
 #include <utility>
 
 namespace Acts {
-ConeVolumeBounds::ConeVolumeBounds(
-    double innerAlpha, double innerOffsetZ, double outerAlpha,
-    double outerOffsetZ, double halflengthZ, double averagePhi,
-    double halfPhiSector) noexcept(false)
+ConeVolumeBounds::ConeVolumeBounds(double innerAlpha, double innerOffsetZ,
+                                   double outerAlpha, double outerOffsetZ,
+                                   double halflengthZ, double averagePhi,
+                                   double halfPhiSector) noexcept(false)
     : VolumeBounds(), m_values() {
   m_values[eInnerAlpha] = innerAlpha;
   m_values[eInnerOffsetZ] = innerOffsetZ;
@@ -220,8 +220,7 @@ bool ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
   }
   // Finally we need to check the cone
   if (m_innerConeBounds != nullptr) {
-    double innerConeR =
-        m_innerConeBounds->r(std::abs(z + get(eInnerOffsetZ)));
+    double innerConeR = m_innerConeBounds->r(std::abs(z + get(eInnerOffsetZ)));
     if (innerConeR > rmin) {
       return false;
     }
@@ -230,8 +229,7 @@ bool ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
   }
   // And the outer cone
   if (m_outerConeBounds != nullptr) {
-    double outerConeR =
-        m_outerConeBounds->r(std::abs(z + get(eOuterOffsetZ)));
+    double outerConeR = m_outerConeBounds->r(std::abs(z + get(eOuterOffsetZ)));
     if (outerConeR < rmax) {
       return false;
     }

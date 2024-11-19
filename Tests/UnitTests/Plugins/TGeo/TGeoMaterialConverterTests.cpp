@@ -41,8 +41,7 @@ BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   // Assume we describe a 10 mm thick box as a 10 mm thick slab
   double tInX0 = 10_mm / (mat->GetRadLen() * options.unitLengthScalor);
   double tInL0 = 10_mm / (mat->GetIntLen() * options.unitLengthScalor);
-  double rho =
-      2.7 * options.unitMassScalor / pow(options.unitLengthScalor, 3);
+  double rho = 2.7 * options.unitMassScalor / pow(options.unitLengthScalor, 3);
 
   Acts::MaterialSlab slab_10_10 =
       Acts::TGeoMaterialConverter::materialSlab(*mat, 10_mm, 10_mm, options);

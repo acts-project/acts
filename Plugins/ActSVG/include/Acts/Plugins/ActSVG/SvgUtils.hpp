@@ -134,8 +134,8 @@ inline static actsvg::svg::object measure(double xStart, double yStart,
 /// @param yMax the maximum y value
 ///
 /// @return an svg object
-inline static actsvg::svg::object axesXY(double xMin, double xMax,
-                                         double yMin, double yMax) {
+inline static actsvg::svg::object axesXY(double xMin, double xMax, double yMin,
+                                         double yMax) {
   return actsvg::draw::x_y_axes(
       "x_y_axis",
       {static_cast<actsvg::scalar>(xMin), static_cast<actsvg::scalar>(xMax)},
@@ -154,9 +154,9 @@ inline static actsvg::svg::object axesXY(double xMin, double xMax,
 ///
 /// @return an svg object
 inline static actsvg::svg::object infoBox(
-    double xPos, double yPos, const std::string& title,
-    const Style& titleStyle, const std::vector<std::string>& info,
-    const Style& infoStyle, actsvg::svg::object& object,
+    double xPos, double yPos, const std::string& title, const Style& titleStyle,
+    const std::vector<std::string>& info, const Style& infoStyle,
+    actsvg::svg::object& object,
     const std::vector<std::string>& highlights = {"mouseover", "mouseout"}) {
   auto [titleFill, titleStroke, titleFont] = titleStyle.fillStrokeFont();
   auto [infoFill, infoStroke, infoFont] = infoStyle.fillStrokeFont();

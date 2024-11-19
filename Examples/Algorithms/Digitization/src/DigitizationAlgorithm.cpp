@@ -342,8 +342,7 @@ ActsExamples::DigitizationAlgorithm::localParameters(
   // Combine the channels
   for (const auto& ch : channels) {
     auto bin = ch.bin;
-    double charge =
-        geoCfg.digital ? 1. : geoCfg.charge(ch.activation, rng);
+    double charge = geoCfg.digital ? 1. : geoCfg.charge(ch.activation, rng);
     if (geoCfg.digital || charge > geoCfg.threshold) {
       totalWeight += charge;
       std::size_t b0 = bin[0];

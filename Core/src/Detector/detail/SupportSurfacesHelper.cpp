@@ -59,7 +59,7 @@ operator()(const Extent& lExtent) const {
 
   // The Radius estimation
   double r = rOffset < 0 ? lExtent.min(BinningValue::binR) + rOffset
-                             : lExtent.max(BinningValue::binR) + rOffset;
+                         : lExtent.max(BinningValue::binR) + rOffset;
   if (rOffset == 0.) {
     r = lExtent.medium(BinningValue::binR);
   }
@@ -98,7 +98,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::DiscSupport::operator()(
 
   // The z position estimate
   double z = zOffset < 0 ? lExtent.min(BinningValue::binZ) + zOffset
-                             : lExtent.max(BinningValue::binZ) + zOffset;
+                         : lExtent.max(BinningValue::binZ) + zOffset;
   if (zOffset == 0.) {
     z = lExtent.medium(BinningValue::binZ);
   }
@@ -193,8 +193,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::cylindricalSupport(
     // Now create the Trapezoids
     for (unsigned int iphi = 0; iphi < splits; ++iphi) {
       // Get the moduleTransform
-      double phi =
-          -std::numbers::pi + (2 * iphi + 1) * dHalfPhi;
+      double phi = -std::numbers::pi + (2 * iphi + 1) * dHalfPhi;
       double cosPhi = std::cos(phi);
       double sinPhi = std::sin(phi);
       double planeX = planeR * cosPhi;
@@ -273,12 +272,10 @@ Acts::Experimental::detail::SupportSurfacesHelper::discSupport(
     // Now create the Trapezoids
     for (unsigned int iphi = 0; iphi < splits; ++iphi) {
       // Create the split module transform
-      double phi =
-          -std::numbers::pi + (2 * iphi + 1) * dHalfPhi;
+      double phi = -std::numbers::pi + (2 * iphi + 1) * dHalfPhi;
       auto sTransform = Transform3(
           Translation3(hR * std::cos(phi), hR * std::sin(phi), zPosition) *
-          AngleAxis3(phi - std::numbers::pi / 2.,
-                     zAxis));
+          AngleAxis3(phi - std::numbers::pi / 2., zAxis));
       // Place it
       dSupport.push_back(
           Surface::makeShared<PlaneSurface>(sTransform, sTrapezoid));

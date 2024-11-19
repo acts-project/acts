@@ -58,8 +58,8 @@ Acts::MaterialInteractionAssignment::assign(
              .norm() < cDistance)) {
       // Recalculate the new distance
       double nDistance = ((intersectedSurfaces[is + 1]).position -
-                              materialInteraction.position)
-                                 .norm();
+                          materialInteraction.position)
+                             .norm();
       ++is;
       cDistance = nDistance;
     }
@@ -68,8 +68,7 @@ Acts::MaterialInteractionAssignment::assign(
     auto [surface, position, direction] = intersectedSurfaces[is];
 
     // Calculate the path correction
-    double pathCorrection =
-        surface->pathCorrection(gctx, position, direction);
+    double pathCorrection = surface->pathCorrection(gctx, position, direction);
 
     // A local veta veto kicked in
     GeometryIdentifier intersectionID = surface->geometryId();

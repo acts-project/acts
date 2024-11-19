@@ -156,9 +156,7 @@ class ObjectIntersection {
   }
 
   /// Returns the path length to the interseciton
-  constexpr double pathLength() const {
-    return m_intersection.pathLength();
-  }
+  constexpr double pathLength() const { return m_intersection.pathLength(); }
 
   /// Returns the status of the interseciton
   constexpr Intersection3D::Status status() const {
