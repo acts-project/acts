@@ -14,14 +14,94 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
 #include <array>
 #include <cmath>
 #include <iostream>
 #include <iterator>
 #include <optional>
+#include <stdexcept>
 
 namespace Acts {
+
+/// Estimate the full track parameters from three space points
+///
+/// This method is based on the conformal map transformation. It estimates the
+/// full free track parameters, i.e. (x, y, z, t, dx, dy, dz, q/p) at the
+/// bottom space point. The bottom space is assumed to be the first element
+/// in the range defined by the iterators. The magnetic field (which might be
+/// along any direction) is also necessary for the momentum estimation.
+///
+/// This is a purely spatial estimation, i.e. the time parameter will be set to
+/// 0.
+///
+/// It resembles the method used in ATLAS for the track parameters
+/// estimated from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane
+/// here:
+/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerDetector/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
+///
+/// @tparam spacepoint_iterator_t  The type of space point iterator
+///
+/// @param sp0 is the bottom space point
+/// @param sp1 is the middle space point
+/// @param sp2 is the top space point
+/// @param bField is the magnetic field vector
+///
+/// @return the free parameters
+FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
+                                       const Vector3& sp2,
+                                       const Vector3& bField);
+
+/// Estimate the full track parameters from three space points
+///
+/// This method is based on the conformal map transformation. It estimates the
+/// full free track parameters, i.e. (x, y, z, t, dx, dy, dz, q/p) at the
+/// bottom space point. The bottom space is assumed to be the first element
+/// in the range defined by the iterators. The magnetic field (which might be
+/// along any direction) is also necessary for the momentum estimation.
+///
+/// It resembles the method used in ATLAS for the track parameters
+/// estimated from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane
+/// here:
+/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerDetector/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
+///
+/// @tparam spacepoint_iterator_t  The type of space point iterator
+///
+/// @param spRange is the range of space points
+/// @param bField is the magnetic field vector
+///
+/// @return the free parameters
+template <std::ranges::range spacepoint_range_t>
+FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
+                                       const Vector3& bField) {
+  // Check the number of provided space points
+  if (spRange.size() != 3) {
+    throw std::invalid_argument(
+        "There should be exactly three space points provided.");
+  }
+
+  // The global positions of the bottom, middle and space points
+  std::array<Vector3, 3> spPositions = {Vector3::Zero(), Vector3::Zero(),
+                                        Vector3::Zero()};
+  std::array<std::optional<double>, 3> spTimes = {std::nullopt, std::nullopt,
+                                                  std::nullopt};
+  // The first, second and third space point are assumed to be bottom, middle
+  // and top space point, respectively
+  for (auto [sp, spPosition, spTime] :
+       Acts::zip(spRange, spPositions, spTimes)) {
+    if (sp == nullptr) {
+      throw std::invalid_argument("Empty space point found.");
+    }
+    spPosition = Vector3(sp->x(), sp->y(), sp->z());
+    spTime = sp->t();
+  }
+
+  FreeVector params = estimateTrackParamsFromSeed(
+      spPositions[0], spPositions[1], spPositions[2], bField);
+  params[eFreeTime] = spTimes[0].value_or(0);
+  return params;
+}
 
 /// Estimate the full track parameters from three space points
 ///
