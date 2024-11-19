@@ -13,9 +13,9 @@
 #include <cstddef>
 #include <numbers>
 
-std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
-    ActsScalar phiMin, ActsScalar phiMax,
-    const std::vector<ActsScalar>& phiRefs, unsigned int quarterSegments) {
+std::vector<double> Acts::detail::VerticesHelper::phiSegments(
+    double phiMin, double phiMax,
+    const std::vector<double>& phiRefs, unsigned int quarterSegments) {
   // Check that the phi range is valid
   if (phiMin > phiMax) {
     throw std::invalid_argument(
@@ -24,7 +24,7 @@ std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
   }
 
   // First check that no reference phi is outside the range
-  for (ActsScalar phiRef : phiRefs) {
+  for (double phiRef : phiRefs) {
     if (phiRef < phiMin || phiRef > phiMax) {
       throw std::invalid_argument(
           "VerticesHelper::phiSegments ... Reference phi is outside the range "
@@ -36,16 +36,16 @@ std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
         "VerticesHelper::phiSegments ... Number of segments must be larger "
         "than 0.");
   }
-  std::vector<ActsScalar> phiSegments = {phiMin, phiMax};
+  std::vector<double> phiSegments = {phiMin, phiMax};
   // Minimum approximation for a circle need
   // - if the circle is closed the last point is given twice
   for (unsigned int i = 0; i < 4 * quarterSegments + 1; ++i) {
-    ActsScalar phiExt =
+    double phiExt =
         -std::numbers::pi + i * 2 * std::numbers::pi / (4 * quarterSegments);
     if (phiExt > phiMin && phiExt < phiMax &&
-        std::ranges::none_of(phiSegments, [&phiExt](ActsScalar phi) {
+        std::ranges::none_of(phiSegments, [&phiExt](double phi) {
           return std::abs(phi - phiExt) <
-                 std::numeric_limits<ActsScalar>::epsilon();
+                 std::numeric_limits<double>::epsilon();
         })) {
       phiSegments.push_back(phiExt);
     }
@@ -53,9 +53,9 @@ std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
   // Add the reference phis
   for (const auto& phiRef : phiRefs) {
     if (phiRef > phiMin && phiRef < phiMax) {
-      if (std::ranges::none_of(phiSegments, [&phiRef](ActsScalar phi) {
+      if (std::ranges::none_of(phiSegments, [&phiRef](double phi) {
             return std::abs(phi - phiRef) <
-                   std::numeric_limits<ActsScalar>::epsilon();
+                   std::numeric_limits<double>::epsilon();
           })) {
         phiSegments.push_back(phiRef);
       }
@@ -68,8 +68,8 @@ std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
 }
 
 std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
-    ActsScalar innerRx, ActsScalar innerRy, ActsScalar outerRx,
-    ActsScalar outerRy, ActsScalar avgPhi, ActsScalar halfPhi,
+    double innerRx, double innerRy, double outerRx,
+    double outerRy, double avgPhi, double halfPhi,
     unsigned int quarterSegments) {
   // List of vertices counter-clockwise starting at smallest phi w.r.t center,
   // for both inner/outer ring/segment
@@ -80,7 +80,7 @@ std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
   bool innerExists = (innerRx > 0. && innerRy > 0.);
   bool closed = std::abs(halfPhi - std::numbers::pi) < s_onSurfaceTolerance;
 
-  std::vector<ActsScalar> refPhi = {};
+  std::vector<double> refPhi = {};
   if (avgPhi != 0.) {
     refPhi.push_back(avgPhi);
   }
@@ -113,20 +113,20 @@ std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
 }
 
 std::vector<Acts::Vector2> Acts::detail::VerticesHelper::circularVertices(
-    ActsScalar innerR, ActsScalar outerR, ActsScalar avgPhi, ActsScalar halfPhi,
+    double innerR, double outerR, double avgPhi, double halfPhi,
     unsigned int quarterSegments) {
   return ellipsoidVertices(innerR, innerR, outerR, outerR, avgPhi, halfPhi,
                            quarterSegments);
 }
 
 bool Acts::detail::VerticesHelper::onHyperPlane(
-    const std::vector<Acts::Vector3>& vertices, ActsScalar tolerance) {
+    const std::vector<Acts::Vector3>& vertices, double tolerance) {
   // Obvious always on one surface
   if (vertices.size() < 4) {
     return true;
   }
   // Create the hyperplane
-  auto hyperPlane = Eigen::Hyperplane<ActsScalar, 3>::Through(
+  auto hyperPlane = Eigen::Hyperplane<double, 3>::Through(
       vertices[0], vertices[1], vertices[2]);
   for (std::size_t ip = 3; ip < vertices.size(); ++ip) {
     if (hyperPlane.absDistance(vertices[ip]) > tolerance) {

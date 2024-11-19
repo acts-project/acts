@@ -9,11 +9,11 @@
 namespace Acts::Ccl {
 
 template <Acts::Ccl::HasRetrievableTimeInfo Cell, std::size_t N>
-TimedConnect<Cell, N>::TimedConnect(Acts::ActsScalar time)
+TimedConnect<Cell, N>::TimedConnect(double time)
     : timeTolerance(time) {}
 
 template <Acts::Ccl::HasRetrievableTimeInfo Cell, std::size_t N>
-TimedConnect<Cell, N>::TimedConnect(Acts::ActsScalar time, bool commonCorner)
+TimedConnect<Cell, N>::TimedConnect(double time, bool commonCorner)
   requires(N == 2)
     : Acts::Ccl::DefaultConnect<Cell, N>(commonCorner), timeTolerance(time) {}
 

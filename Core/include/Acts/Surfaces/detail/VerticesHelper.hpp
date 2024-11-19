@@ -30,10 +30,10 @@ namespace Acts::detail::VerticesHelper {
 /// @param quarterSegments number of segments used to approximate a segment quarter
 ///
 /// @return a vector of generated phi values
-std::vector<ActsScalar> phiSegments(
-    ActsScalar phiMin = -std::numbers::pi,
-    ActsScalar phiMax = std::numbers::pi,
-    const std::vector<ActsScalar>& phiRefs = {},
+std::vector<double> phiSegments(
+    double phiMin = -std::numbers::pi,
+    double phiMax = std::numbers::pi,
+    const std::vector<double>& phiRefs = {},
     unsigned int quarterSegments = 2u);
 
 /// Helper method to create a regular 2 or 3 D segment
@@ -56,15 +56,15 @@ std::vector<ActsScalar> phiSegments(
 /// @return a vector of vertices
 template <typename vertex_t, typename transform_t>
 std::vector<vertex_t> segmentVertices(
-    std::pair<ActsScalar, ActsScalar> rXY, ActsScalar phiMin, ActsScalar phiMax,
-    const std::vector<ActsScalar>& phiRefs = {},
+    std::pair<double, double> rXY, double phiMin, double phiMax,
+    const std::vector<double>& phiRefs = {},
     unsigned int quarterSegments = 2u,
     const vertex_t& offset = vertex_t::Zero(),
     const transform_t& transform = transform_t::Identity()) {
   std::vector<vertex_t> vertices;
-  std::vector<ActsScalar> phis =
+  std::vector<double> phis =
       phiSegments(phiMin, phiMax, phiRefs, quarterSegments);
-  for (ActsScalar phi : phis) {
+  for (double phi : phis) {
     vertex_t vertex = vertex_t::Zero();
     vertex(0) = rXY.first * std::cos(phi);
     vertex(1) = rXY.second * std::sin(phi);
@@ -86,9 +86,9 @@ std::vector<vertex_t> segmentVertices(
 ///
 /// @return a vector of 2d-vectors
 std::vector<Vector2> ellipsoidVertices(
-    ActsScalar innerRx, ActsScalar innerRy, ActsScalar outerRx,
-    ActsScalar outerRy, ActsScalar avgPhi = 0.,
-    ActsScalar halfPhi = std::numbers::pi,
+    double innerRx, double innerRy, double outerRx,
+    double outerRy, double avgPhi = 0.,
+    double halfPhi = std::numbers::pi,
     unsigned int quarterSegments = 2u);
 
 /// Construct vertices on an disc/wheel-like bound object.
@@ -101,8 +101,8 @@ std::vector<Vector2> ellipsoidVertices(
 ///
 /// @return a vector of 2d-vectors
 std::vector<Vector2> circularVertices(
-    ActsScalar innerR, ActsScalar outerR, ActsScalar avgPhi = 0.,
-    ActsScalar halfPhi = std::numbers::pi,
+    double innerR, double outerR, double avgPhi = 0.,
+    double halfPhi = std::numbers::pi,
     unsigned int quarterSegments = 2u);
 
 /// Check if the point is inside the polygon w/o any tolerances.
@@ -174,7 +174,7 @@ bool isInsideRectangle(const vertex_t& point, const vertex_t& lowerLeft,
 /// @param tolerance The allowed out of plane tolerance
 /// @return boolean to indicate if all points are inside/outside
 bool onHyperPlane(const std::vector<Vector3>& vertices,
-                  ActsScalar tolerance = s_onSurfaceTolerance);
+                  double tolerance = s_onSurfaceTolerance);
 
 /// Calculate the closest point on the polygon.
 inline Vector2 computeClosestPointOnPolygon(const Vector2& point,

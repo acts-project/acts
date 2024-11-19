@@ -82,7 +82,7 @@ template <std::size_t Size, bool ReadOnlyMaps = true>
 struct FixedSizeTypes {
   constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
 
-  using Scalar = ActsScalar;
+  using Scalar = double;
 
   // single items
   using Coefficients = Eigen::Matrix<Scalar, Size, 1, Flags>;
@@ -105,7 +105,7 @@ template <bool ReadOnlyMaps = true>
 struct DynamicSizeTypes {
   constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
 
-  using Scalar = ActsScalar;
+  using Scalar = double;
 
   using Coefficients = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags>;
   using Covariance =
@@ -119,7 +119,7 @@ struct DynamicSizeTypes {
 // This is public
 template <std::size_t M, bool ReadOnly = true>
 struct TrackStateTraits {
-  using Scalar = ActsScalar;
+  using Scalar = double;
 
   using Parameters =
       typename detail_lt::FixedSizeTypes<eBoundSize, ReadOnly>::CoefficientsMap;

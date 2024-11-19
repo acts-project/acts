@@ -17,7 +17,7 @@ namespace Acts::detail {
 using TrackStateTraits =
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>;
 
-ActsScalar calculateDeterminant(
+double calculateDeterminant(
     const double* fullCalibratedCovariance,
     TrackStateTraits::Covariance predictedCovariance,
     TrackStateTraits::Projector projector, unsigned int calibratedSize) {

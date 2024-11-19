@@ -112,7 +112,7 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::circleVertices(
   double avgPhi = get(eAveragePhi);
   double halfPhi = get(eHalfPhiSector);
 
-  std::vector<ActsScalar> phiRef = {};
+  std::vector<double> phiRef = {};
   if (bool fullCylinder = coversFullAzimuth(); fullCylinder) {
     phiRef = {avgPhi};
   }
@@ -127,13 +127,13 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::circleVertices(
     vertices.insert(vertices.end(), svertices.begin(), svertices.end());
   }
 
-  ActsScalar bevelMinZ = get(eBevelMinZ);
-  ActsScalar bevelMaxZ = get(eBevelMaxZ);
+  double bevelMinZ = get(eBevelMinZ);
+  double bevelMaxZ = get(eBevelMaxZ);
 
   // Modify the vertices position if bevel is defined
   if ((bevelMinZ != 0. || bevelMaxZ != 0.) && vertices.size() % 2 == 0) {
     auto halfWay = vertices.end() - vertices.size() / 2;
-    ActsScalar mult{1};
+    double mult{1};
     auto invTransform = transform.inverse();
     auto func = [&mult, &transform, &invTransform](Vector3& v) {
       v = invTransform * v;

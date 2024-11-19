@@ -107,11 +107,11 @@ std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
   if (quarterSegments > 0u) {
     using VectorHelpers::phi;
 
-    ActsScalar phiMinInner = phi(m_inRightStripXY - m_moduleOrigin);
-    ActsScalar phiMaxInner = phi(m_inLeftStripXY - m_moduleOrigin);
+    double phiMinInner = phi(m_inRightStripXY - m_moduleOrigin);
+    double phiMaxInner = phi(m_inLeftStripXY - m_moduleOrigin);
 
-    ActsScalar phiMinOuter = phi(m_outRightStripXY - m_moduleOrigin);
-    ActsScalar phiMaxOuter = phi(m_outLeftStripXY - m_moduleOrigin);
+    double phiMinOuter = phi(m_outRightStripXY - m_moduleOrigin);
+    double phiMaxOuter = phi(m_outLeftStripXY - m_moduleOrigin);
 
     // Inner bow from phi_min -> phi_max (needs to be reversed)
     std::vector<Acts::Vector2> rvertices =
@@ -367,7 +367,7 @@ double Acts::AnnulusBounds::squaredNorm(const Vector2& v,
 }
 
 Acts::Vector2 Acts::AnnulusBounds::moduleOrigin() const {
-  return Eigen::Rotation2D<ActsScalar>(get(eAveragePhi)) * m_moduleOrigin;
+  return Eigen::Rotation2D<double>(get(eAveragePhi)) * m_moduleOrigin;
 }
 
 // Ostream operator overload

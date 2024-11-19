@@ -43,7 +43,7 @@ namespace Acts {
 /// - Step into the void with `std::numeric_limits<Scalar>::max()`
 class ConstrainedStep {
  public:
-  using Scalar = ActsScalar;
+  using Scalar = double;
 
   /// the types of constraints
   /// from actor    - this would be a typical navigation step

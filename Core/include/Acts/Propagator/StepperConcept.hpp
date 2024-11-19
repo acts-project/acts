@@ -54,7 +54,7 @@ concept CommonStepper = requires {
     };
 
     requires requires(const Surface& sf, std::uint8_t ui, Direction d,
-                      const BoundaryTolerance& bt, ActsScalar sc,
+                      const BoundaryTolerance& bt, double sc,
                       const Logger& l) {
       { s.updateSurfaceStatus(t, sf, ui, d, bt, sc, l) };
     };

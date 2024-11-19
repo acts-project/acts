@@ -68,7 +68,7 @@ auto MultiEigenStepperLoop<E, R>::curvilinearState(
   assert(!state.components.empty());
 
   std::vector<
-      std::tuple<double, Vector4, Vector3, ActsScalar, BoundSquareMatrix>>
+      std::tuple<double, Vector4, Vector3, double, BoundSquareMatrix>>
       cmps;
   cmps.reserve(numberComponents(state));
   double accumulatedPathLength = 0.0;

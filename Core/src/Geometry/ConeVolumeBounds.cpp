@@ -31,9 +31,9 @@
 
 namespace Acts {
 ConeVolumeBounds::ConeVolumeBounds(
-    ActsScalar innerAlpha, ActsScalar innerOffsetZ, ActsScalar outerAlpha,
-    ActsScalar outerOffsetZ, ActsScalar halflengthZ, ActsScalar averagePhi,
-    ActsScalar halfPhiSector) noexcept(false)
+    double innerAlpha, double innerOffsetZ, double outerAlpha,
+    double outerOffsetZ, double halflengthZ, double averagePhi,
+    double halfPhiSector) noexcept(false)
     : VolumeBounds(), m_values() {
   m_values[eInnerAlpha] = innerAlpha;
   m_values[eInnerOffsetZ] = innerOffsetZ;
@@ -46,10 +46,10 @@ ConeVolumeBounds::ConeVolumeBounds(
   checkConsistency();
 }
 
-ConeVolumeBounds::ConeVolumeBounds(ActsScalar cylinderR, ActsScalar alpha,
-                                   ActsScalar offsetZ, ActsScalar halflengthZ,
-                                   ActsScalar averagePhi,
-                                   ActsScalar halfPhiSector) noexcept(false)
+ConeVolumeBounds::ConeVolumeBounds(double cylinderR, double alpha,
+                                   double offsetZ, double halflengthZ,
+                                   double averagePhi,
+                                   double halfPhiSector) noexcept(false)
     : VolumeBounds(), m_values() {
   m_values[eInnerAlpha] = 0.;
   m_values[eInnerOffsetZ] = 0.;
@@ -60,11 +60,11 @@ ConeVolumeBounds::ConeVolumeBounds(ActsScalar cylinderR, ActsScalar alpha,
   m_values[eHalfPhiSector] = halfPhiSector;
 
   // Cone parameters
-  ActsScalar tanAlpha = std::tan(alpha);
-  ActsScalar zmin = offsetZ - halflengthZ;
-  ActsScalar zmax = offsetZ + halflengthZ;
-  ActsScalar rmin = std::abs(zmin) * tanAlpha;
-  ActsScalar rmax = std::abs(zmax) * tanAlpha;
+  double tanAlpha = std::tan(alpha);
+  double zmin = offsetZ - halflengthZ;
+  double zmax = offsetZ + halflengthZ;
+  double rmin = std::abs(zmin) * tanAlpha;
+  double rmax = std::abs(zmax) * tanAlpha;
 
   if (rmin >= cylinderR) {
     // Cylindrical cut-out of a cone
@@ -192,35 +192,35 @@ void ConeVolumeBounds::checkConsistency() noexcept(false) {
   }
 }
 
-bool ConeVolumeBounds::inside(const Vector3& pos, ActsScalar tol) const {
-  ActsScalar z = pos.z();
-  ActsScalar zmin = z + tol;
-  ActsScalar zmax = z - tol;
+bool ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
+  double z = pos.z();
+  double zmin = z + tol;
+  double zmax = z - tol;
   // Quick check outside z
   if (zmin < -get(eHalfLengthZ) || zmax > get(eHalfLengthZ)) {
     return false;
   }
-  ActsScalar r = VectorHelpers::perp(pos);
+  double r = VectorHelpers::perp(pos);
   if (std::abs(get(eHalfPhiSector) - std::numbers::pi) > s_onSurfaceTolerance) {
     // need to check the phi sector - approximate phi tolerance
-    ActsScalar phitol = tol / r;
-    ActsScalar phi = VectorHelpers::phi(pos);
-    ActsScalar phimin = phi - phitol;
-    ActsScalar phimax = phi + phitol;
+    double phitol = tol / r;
+    double phi = VectorHelpers::phi(pos);
+    double phimin = phi - phitol;
+    double phimax = phi + phitol;
     if (phimin < get(eAveragePhi) - get(eHalfPhiSector) ||
         phimax > get(eAveragePhi) + get(eHalfPhiSector)) {
       return false;
     }
   }
   // We are within phi sector check box r quickly
-  ActsScalar rmin = r + tol;
-  ActsScalar rmax = r - tol;
+  double rmin = r + tol;
+  double rmax = r - tol;
   if (rmin > innerRmax() && rmax < outerRmin()) {
     return true;
   }
   // Finally we need to check the cone
   if (m_innerConeBounds != nullptr) {
-    ActsScalar innerConeR =
+    double innerConeR =
         m_innerConeBounds->r(std::abs(z + get(eInnerOffsetZ)));
     if (innerConeR > rmin) {
       return false;
@@ -230,7 +230,7 @@ bool ConeVolumeBounds::inside(const Vector3& pos, ActsScalar tol) const {
   }
   // And the outer cone
   if (m_outerConeBounds != nullptr) {
-    ActsScalar outerConeR =
+    double outerConeR =
         m_outerConeBounds->r(std::abs(z + get(eOuterOffsetZ)));
     if (outerConeR < rmax) {
       return false;
@@ -245,8 +245,8 @@ void ConeVolumeBounds::buildSurfaceBounds() {
   // Build inner cone or inner cylinder
   if (get(eInnerAlpha) > s_epsilon) {
     m_innerTanAlpha = std::tan(get(eInnerAlpha));
-    ActsScalar innerZmin = get(eInnerOffsetZ) - get(eHalfLengthZ);
-    ActsScalar innerZmax = get(eInnerOffsetZ) + get(eHalfLengthZ);
+    double innerZmin = get(eInnerOffsetZ) - get(eHalfLengthZ);
+    double innerZmax = get(eInnerOffsetZ) + get(eHalfLengthZ);
     m_innerRmin = std::abs(innerZmin) * m_innerTanAlpha;
     m_innerRmax = std::abs(innerZmax) * m_innerTanAlpha;
     m_innerConeBounds =
@@ -259,8 +259,8 @@ void ConeVolumeBounds::buildSurfaceBounds() {
 
   if (get(eOuterAlpha) > s_epsilon) {
     m_outerTanAlpha = std::tan(get(eOuterAlpha));
-    ActsScalar outerZmin = get(eOuterOffsetZ) - get(eHalfLengthZ);
-    ActsScalar outerZmax = get(eOuterOffsetZ) + get(eHalfLengthZ);
+    double outerZmin = get(eOuterOffsetZ) - get(eHalfLengthZ);
+    double outerZmax = get(eOuterOffsetZ) + get(eHalfLengthZ);
     m_outerRmin = std::abs(outerZmin) * m_outerTanAlpha;
     m_outerRmax = std::abs(outerZmax) * m_outerTanAlpha;
     m_outerConeBounds =
@@ -312,32 +312,32 @@ Volume::BoundingBox ConeVolumeBounds::boundingBox(const Transform3* trf,
   return trf == nullptr ? box : box.transformed(*trf);
 }
 
-ActsScalar ConeVolumeBounds::innerRmin() const {
+double ConeVolumeBounds::innerRmin() const {
   return m_innerRmin;
 }
 
-ActsScalar ConeVolumeBounds::innerRmax() const {
+double ConeVolumeBounds::innerRmax() const {
   return m_innerRmax;
 }
 
-ActsScalar ConeVolumeBounds::innerTanAlpha() const {
+double ConeVolumeBounds::innerTanAlpha() const {
   return m_innerTanAlpha;
 }
 
-ActsScalar ConeVolumeBounds::outerRmin() const {
+double ConeVolumeBounds::outerRmin() const {
   return m_outerRmin;
 }
 
-ActsScalar ConeVolumeBounds::outerRmax() const {
+double ConeVolumeBounds::outerRmax() const {
   return m_outerRmax;
 }
 
-ActsScalar ConeVolumeBounds::outerTanAlpha() const {
+double ConeVolumeBounds::outerTanAlpha() const {
   return m_outerTanAlpha;
 }
 
-std::vector<ActsScalar> ConeVolumeBounds::values() const {
-  std::vector<ActsScalar> valvector;
+std::vector<double> ConeVolumeBounds::values() const {
+  std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }

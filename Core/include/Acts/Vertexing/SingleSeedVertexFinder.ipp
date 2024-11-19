@@ -85,7 +85,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::sortSpacepoints(
 
   for (const auto& sp : spacepoints) {
     // phi will be saved for later
-    Acts::ActsScalar phi = detail::radian_pos(std::atan2(sp.y(), sp.x()));
+    double phi = detail::radian_pos(std::atan2(sp.y(), sp.x()));
     std::uint32_t phislice = static_cast<std::uint32_t>(
         phi / (2 * std::numbers::pi) * m_cfg.numPhiSlices);
     if (phislice >= m_cfg.numPhiSlices) {
@@ -144,12 +144,12 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
   Acts::Vector2 vecB = {vecA[1], -vecA[0]};
   vecB /= std::tan(m_cfg.maxXYZdeviation);
   Acts::Vector2 posR = Acts::Vector2(-m_cfg.maxZPosition, 0.) + vecA + vecB;
-  Acts::ActsScalar R = vecA.norm() / std::sin(m_cfg.maxXYZdeviation);
-  Acts::ActsScalar constB = -2. * posR[0];
-  Acts::ActsScalar constC =
+  double R = vecA.norm() / std::sin(m_cfg.maxXYZdeviation);
+  double constB = -2. * posR[0];
+  double constC =
       posR[0] * posR[0] +
       (posR[1] - m_cfg.rMaxNear) * (posR[1] - m_cfg.rMaxNear) - R * R;
-  Acts::ActsScalar maxZMiddle =
+  double maxZMiddle =
       -1. * (-constB - sqrt(constB * constB - 4. * constC)) / 2.;
   if (maxZMiddle <= 0) {
     ACTS_WARNING(
@@ -160,14 +160,14 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
   }
 
   // save some constant values for later
-  Acts::ActsScalar rNearRatio[2] = {m_cfg.rMinNear / m_cfg.rMaxMiddle,
+  double rNearRatio[2] = {m_cfg.rMinNear / m_cfg.rMaxMiddle,
                                     m_cfg.rMaxNear / m_cfg.rMinMiddle};
-  Acts::ActsScalar rMiddle[2] = {m_cfg.rMaxMiddle, m_cfg.rMinMiddle};
-  Acts::ActsScalar rFarDelta[2] = {
+  double rMiddle[2] = {m_cfg.rMaxMiddle, m_cfg.rMinMiddle};
+  double rFarDelta[2] = {
       m_cfg.rMaxFar - m_cfg.rMinMiddle,
       m_cfg.rMinFar - m_cfg.rMaxMiddle,
   };
-  Acts::ActsScalar zBinLength = 2. * m_cfg.maxAbsZ / m_cfg.numZSlices;
+  double zBinLength = 2. * m_cfg.maxAbsZ / m_cfg.numZSlices;
 
   // limits in terms of slice numbers
   std::uint32_t limitMiddleSliceFrom =
@@ -190,25 +190,25 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
     // calculate limits for near spacepoints, assuming the middle spacepoints
     // are within some boundaries
     bool isLessFrom = (middleZ <= limitAbsZSliceFrom);
-    Acts::ActsScalar deltaZfrom =
+    double deltaZfrom =
         (middleZ - limitAbsZSliceFrom - 1) * zBinLength;
-    Acts::ActsScalar angleZfrom =
+    double angleZfrom =
         std::atan2(rMiddle[isLessFrom], deltaZfrom) + m_cfg.maxXYZdeviation;
     std::uint32_t nearZFrom = 0;
     if (angleZfrom < std::numbers::pi) {
-      Acts::ActsScalar new_deltaZfrom =
+      double new_deltaZfrom =
           rMiddle[isLessFrom] / std::tan(angleZfrom) / zBinLength;
       nearZFrom = static_cast<std::uint32_t>(std::max(
           new_deltaZfrom * rNearRatio[isLessFrom] + limitAbsZSliceFrom, 0.));
     }
 
     bool isLessTo = (middleZ < limitAbsZSliceTo);
-    Acts::ActsScalar deltaZto = (middleZ - limitAbsZSliceTo + 1) * zBinLength;
-    Acts::ActsScalar angleZto =
+    double deltaZto = (middleZ - limitAbsZSliceTo + 1) * zBinLength;
+    double angleZto =
         std::atan2(rMiddle[!isLessTo], deltaZto) - m_cfg.maxXYZdeviation;
     std::uint32_t nearZTo = m_cfg.numZSlices;
     if (angleZto > 0) {
-      Acts::ActsScalar new_deltaZto =
+      double new_deltaZto =
           rMiddle[!isLessTo] / std::tan(angleZto) / zBinLength;
       nearZTo = static_cast<std::uint32_t>(std::max(
           new_deltaZto * rNearRatio[!isLessTo] + limitAbsZSliceTo, 0.));
@@ -222,8 +222,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
       // spacepoints are within some boundaries
       bool isMiddleLess = (middleZ <= nearZ);
 
-      Acts::ActsScalar delta2Zfrom = (middleZ - nearZ - 1) * zBinLength;
-      Acts::ActsScalar angle2Zfrom =
+      double delta2Zfrom = (middleZ - nearZ - 1) * zBinLength;
+      double angle2Zfrom =
           std::atan2(rFarDelta[isMiddleLess], delta2Zfrom) +
           m_cfg.maxXYZdeviation;
       std::uint32_t farZFrom = 0;
@@ -238,8 +238,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
       }
 
       isMiddleLess = (middleZ < nearZ);
-      Acts::ActsScalar delta2Zto = (middleZ - nearZ + 1) * zBinLength;
-      Acts::ActsScalar angle2Zto =
+      double delta2Zto = (middleZ - nearZ + 1) * zBinLength;
+      double angle2Zto =
           std::atan2(rFarDelta[!isMiddleLess], delta2Zto) -
           m_cfg.maxXYZdeviation;
       std::uint32_t farZTo = m_cfg.numZSlices;
@@ -282,13 +282,13 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
               // for all near spacepoints in this slice
               for (const auto& nearSP :
                    sortedSpacepoints.getSP(0, nearPhi, nearZ)) {
-                Acts::ActsScalar phiA = nearSP.second;
+                double phiA = nearSP.second;
 
                 // for all middle spacepoints in this slice
                 for (const auto& middleSP :
                      sortedSpacepoints.getSP(1, middlePhi, middleZ)) {
-                  Acts::ActsScalar phiB = middleSP.second;
-                  Acts::ActsScalar deltaPhiAB = detail::difference_periodic(
+                  double phiB = middleSP.second;
+                  double deltaPhiAB = detail::difference_periodic(
                       phiA, phiB, 2 * std::numbers::pi);
                   if (std::abs(deltaPhiAB) > m_cfg.maxPhideviation) {
                     continue;
@@ -297,8 +297,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
                   // for all far spacepoints in this slice
                   for (const auto& farSP :
                        sortedSpacepoints.getSP(2, farPhi, farZ)) {
-                    Acts::ActsScalar phiC = farSP.second;
-                    Acts::ActsScalar deltaPhiBC = detail::difference_periodic(
+                    double phiC = farSP.second;
+                    double deltaPhiBC = detail::difference_periodic(
                         phiB, phiC, 2 * std::numbers::pi);
                     if (std::abs(deltaPhiBC) > m_cfg.maxPhideviation) {
                       continue;
@@ -327,13 +327,13 @@ template <typename spacepoint_t>
 bool Acts::SingleSeedVertexFinder<spacepoint_t>::tripletValidationAndUpdate(
     Acts::SingleSeedVertexFinder<spacepoint_t>::Triplet& triplet) const {
   // slope for near+middle spacepoints
-  Acts::ActsScalar alpha1 =
+  double alpha1 =
       std::atan2(triplet.a.y() - triplet.b.y(), triplet.a.x() - triplet.b.x());
   // slope for middle+far spacepoints
-  Acts::ActsScalar alpha2 =
+  double alpha2 =
       std::atan2(triplet.b.y() - triplet.c.y(), triplet.b.x() - triplet.c.x());
   // these two slopes shouldn't be too different
-  Acts::ActsScalar deltaAlpha = detail::difference_periodic(
+  double deltaAlpha = detail::difference_periodic(
       alpha1, alpha2, 2 * std::numbers::pi);
   if (std::abs(deltaAlpha) > m_cfg.maxXYdeviation) {
     return false;
@@ -346,8 +346,8 @@ bool Acts::SingleSeedVertexFinder<spacepoint_t>::tripletValidationAndUpdate(
   Acts::Vector3 bc{triplet.b.x() - triplet.c.x(), triplet.b.y() - triplet.c.y(),
                    triplet.b.z() - triplet.c.z()};
   // dot product of these two
-  Acts::ActsScalar cosTheta = (ab.dot(bc)) / (ab.norm() * bc.norm());
-  Acts::ActsScalar theta = std::acos(cosTheta);
+  double cosTheta = (ab.dot(bc)) / (ab.norm() * bc.norm());
+  double theta = std::acos(cosTheta);
   if (theta > m_cfg.maxXYZdeviation) {
     return false;
   }
@@ -358,21 +358,21 @@ bool Acts::SingleSeedVertexFinder<spacepoint_t>::tripletValidationAndUpdate(
   const Acts::Vector3& direction = ray.dir();
   // norm to z-axis and to the ray
   Acts::Vector3 norm{-1. * direction[1], 1. * direction[0], 0};
-  Acts::ActsScalar norm_size = norm.norm();
+  double norm_size = norm.norm();
 
-  Acts::ActsScalar tanTheta = norm_size / direction[2];
+  double tanTheta = norm_size / direction[2];
   if (std::abs(tanTheta) < std::tan(m_cfg.minTheta)) {
     return false;
   }
 
   // nearest distance from the ray to z-axis
-  Acts::ActsScalar dist = std::abs(startPoint.dot(norm)) / norm_size;
+  double dist = std::abs(startPoint.dot(norm)) / norm_size;
   if (dist > m_cfg.maxRPosition) {
     return false;
   }
 
   // z coordinate of the nearest distance from the ray to z-axis
-  Acts::ActsScalar zDist =
+  double zDist =
       direction.cross(norm).dot(startPoint) / (norm_size * norm_size);
   if (std::abs(zDist) > m_cfg.maxZPosition) {
     return false;
@@ -387,7 +387,7 @@ bool Acts::SingleSeedVertexFinder<spacepoint_t>::tripletValidationAndUpdate(
 }
 
 template <typename spacepoint_t>
-std::pair<Acts::Vector3, Acts::ActsScalar>
+std::pair<Acts::Vector3, double>
 Acts::SingleSeedVertexFinder<spacepoint_t>::makePlaneFromTriplet(
     const Acts::SingleSeedVertexFinder<spacepoint_t>::Triplet& triplet) {
   Acts::Vector3 a{triplet.a.x(), triplet.a.y(), triplet.a.z()};
@@ -398,7 +398,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::makePlaneFromTriplet(
 
   // vector (alpha,beta,gamma) normalized to unity for convenience
   Acts::Vector3 abg = ba.cross(ca).normalized();
-  Acts::ActsScalar delta = -1. * abg.dot(a);
+  double delta = -1. * abg.dot(a);
 
   // plane (alpha*x + beta*y + gamma*z + delta = 0), split to {{alpha, beta,
   // gamma}, delta} for convenience
@@ -423,7 +423,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findClosestPointFromPlanes(
 
   // (alpha-beta-gamma, delta), distance
   std::vector<
-      std::pair<std::pair<Acts::Vector3, Acts::ActsScalar>, Acts::ActsScalar>>
+      std::pair<std::pair<Acts::Vector3, double>, double>>
       tripletsWithPlanes;
   tripletsWithPlanes.reserve(triplets.size());
 
@@ -461,7 +461,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findClosestPointFromPlanes(
       for (auto& triplet : tripletsWithPlanes) {
         const auto& abg = triplet.first.first;
         const auto& delta = triplet.first.second;
-        Acts::ActsScalar distance = std::abs(abg.dot(vtx) + delta);
+        double distance = std::abs(abg.dot(vtx) + delta);
         triplet.second = distance;
       }
 
@@ -527,7 +527,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findClosestPointFromRays(
 
   // (startPoint, direction), distance
   std::vector<
-      std::pair<std::pair<Acts::Vector3, Acts::Vector3>, Acts::ActsScalar>>
+      std::pair<std::pair<Acts::Vector3, Acts::Vector3>, double>>
       tripletsWithRays;
   tripletsWithRays.reserve(triplets.size());
 
@@ -567,7 +567,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findClosestPointFromRays(
       for (auto& triplet : tripletsWithRays) {
         const auto& startPoint = triplet.first.first;
         const auto& direction = triplet.first.second;
-        Acts::ActsScalar distance = (vtx - startPoint).cross(direction).norm();
+        double distance = (vtx - startPoint).cross(direction).norm();
         triplet.second = distance;
       }
 

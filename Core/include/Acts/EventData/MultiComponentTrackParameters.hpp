@@ -239,7 +239,7 @@ class MultiComponentCurvilinearTrackParameters
 
  public:
   using ConstructionTuple = std::tuple<double, Acts::Vector4, Acts::Vector3,
-                                       ActsScalar, covariance_t>;
+                                       double, covariance_t>;
 
  private:
   using Base = MultiComponentBoundTrackParameters;

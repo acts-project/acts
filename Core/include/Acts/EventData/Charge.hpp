@@ -67,16 +67,16 @@ struct Neutral {
 
   constexpr float absQ() const noexcept { return 0; }
 
-  constexpr float extractCharge(ActsScalar /*qOverP*/) const noexcept {
+  constexpr float extractCharge(double /*qOverP*/) const noexcept {
     return 0.0f;
   }
 
-  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
+  constexpr double extractMomentum(double qOverP) const noexcept {
     assert(qOverP >= 0 && "qOverP cannot be negative");
     return 1.0f / qOverP;
   }
 
-  constexpr ActsScalar qOverP(ActsScalar momentum,
+  constexpr double qOverP(double momentum,
                               float signedQ) const noexcept {
     assert((signedQ != 0) && "charge must be 0");
     (void)signedQ;
@@ -110,15 +110,15 @@ struct SinglyCharged {
 
   constexpr float absQ() const noexcept { return UnitConstants::e; }
 
-  constexpr float extractCharge(ActsScalar qOverP) const noexcept {
+  constexpr float extractCharge(double qOverP) const noexcept {
     return std::copysign(UnitConstants::e, qOverP);
   }
 
-  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
+  constexpr double extractMomentum(double qOverP) const noexcept {
     return extractCharge(qOverP) / qOverP;
   }
 
-  constexpr ActsScalar qOverP(ActsScalar momentum,
+  constexpr double qOverP(double momentum,
                               float signedQ) const noexcept {
     assert((std::abs(signedQ) == UnitConstants::e) &&
            "absolute charge must be e");
@@ -151,14 +151,14 @@ class NonNeutralCharge {
 
   constexpr float absQ() const noexcept { return m_absQ; }
 
-  constexpr float extractCharge(ActsScalar qOverP) const noexcept {
+  constexpr float extractCharge(double qOverP) const noexcept {
     return std::copysign(m_absQ, qOverP);
   }
-  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
+  constexpr double extractMomentum(double qOverP) const noexcept {
     return extractCharge(qOverP) / qOverP;
   }
 
-  constexpr ActsScalar qOverP(ActsScalar momentum,
+  constexpr double qOverP(double momentum,
                               float signedQ) const noexcept {
     assert(std::abs(signedQ) == m_absQ && "inconsistent charge");
     return signedQ / momentum;
@@ -194,14 +194,14 @@ class AnyCharge {
 
   constexpr float absQ() const noexcept { return m_absQ; }
 
-  constexpr float extractCharge(ActsScalar qOverP) const noexcept {
+  constexpr float extractCharge(double qOverP) const noexcept {
     return std::copysign(m_absQ, qOverP);
   }
-  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
+  constexpr double extractMomentum(double qOverP) const noexcept {
     return (m_absQ != 0.0f) ? extractCharge(qOverP) / qOverP : 1.0f / qOverP;
   }
 
-  constexpr ActsScalar qOverP(ActsScalar momentum,
+  constexpr double qOverP(double momentum,
                               float signedQ) const noexcept {
     assert(std::abs(signedQ) == m_absQ && "inconsistent charge");
     return (m_absQ != 0.0f) ? signedQ / momentum : 1.0f / momentum;

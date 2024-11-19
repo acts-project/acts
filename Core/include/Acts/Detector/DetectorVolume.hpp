@@ -62,7 +62,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
  public:
   using BoundingBox =
       Acts::AxisAlignedBoundingBox<Acts::Experimental::DetectorVolume,
-                                   Acts::ActsScalar, 3>;
+                                   double, 3>;
 
   friend class DetectorVolumeFactory;
 

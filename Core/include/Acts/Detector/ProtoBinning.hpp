@@ -34,7 +34,7 @@ struct ProtoBinning {
   /// The axis boundary type: Open, Bound or Closed
   Acts::AxisBoundaryType boundaryType = Acts::AxisBoundaryType::Bound;
   /// The binning edges
-  std::vector<ActsScalar> edges = {};
+  std::vector<double> edges = {};
   /// An expansion for the filling (in bins)
   std::size_t expansion = 0u;
   /// Indication if this is an auto-range binning
@@ -47,7 +47,7 @@ struct ProtoBinning {
   /// @param e the bin edges (variable binning)
   /// @param exp the expansion (in bins)
   ProtoBinning(BinningValue bValue, Acts::AxisBoundaryType bType,
-               const std::vector<ActsScalar>& e, std::size_t exp = 0u)
+               const std::vector<double>& e, std::size_t exp = 0u)
       : binValue(bValue),
         axisType(Acts::AxisType::Variable),
         boundaryType(bType),
@@ -68,7 +68,7 @@ struct ProtoBinning {
   /// @param nbins the number of bins
   /// @param exp the expansion (in bins)
   ProtoBinning(BinningValue bValue, Acts::AxisBoundaryType bType,
-               ActsScalar minE, ActsScalar maxE, std::size_t nbins,
+               double minE, double maxE, std::size_t nbins,
                std::size_t exp = 0u)
       : binValue(bValue), boundaryType(bType), expansion(exp) {
     if (minE >= maxE) {
@@ -84,7 +84,7 @@ struct ProtoBinning {
           "ProtoBinning: Invalid binning, at least one bin is needed.");
     }
 
-    ActsScalar stepE = (maxE - minE) / nbins;
+    double stepE = (maxE - minE) / nbins;
     edges.reserve(nbins + 1);
     for (std::size_t i = 0; i <= nbins; i++) {
       edges.push_back(minE + i * stepE);
@@ -140,7 +140,7 @@ struct BinningDescription {
       Acts::AxisBoundaryType boundaryType =
           bData.option == open ? Acts::AxisBoundaryType::Bound
                                : Acts::AxisBoundaryType::Closed;
-      std::vector<ActsScalar> edges;
+      std::vector<double> edges;
       if (bData.type == equidistant) {
         bDesc.binning.push_back(ProtoBinning(bData.binvalue, boundaryType,
                                              bData.min, bData.max, bData.bins(),
@@ -148,7 +148,7 @@ struct BinningDescription {
 
       } else {
         std::for_each(bData.boundaries().begin(), bData.boundaries().end(),
-                      [&](ActsScalar edge) { edges.push_back(edge); });
+                      [&](double edge) { edges.push_back(edge); });
         bDesc.binning.push_back(
             ProtoBinning(bData.binvalue, boundaryType, edges, 0u));
       }
@@ -170,7 +170,7 @@ struct BinningDescription {
       } else {
         std::vector<float> edges;
         std::for_each(b.edges.begin(), b.edges.end(),
-                      [&](ActsScalar edge) { edges.push_back(edge); });
+                      [&](double edge) { edges.push_back(edge); });
         binUtility += BinUtility(edges, bOption, b.binValue);
       }
     }
