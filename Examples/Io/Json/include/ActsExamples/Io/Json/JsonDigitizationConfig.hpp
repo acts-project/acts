@@ -9,12 +9,10 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 
-#include <algorithm>
 #include <string>
 
 #include <nlohmann/json.hpp>

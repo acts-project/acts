@@ -12,8 +12,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "ActsExamples/Digitization/DigitizationConfig.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvExaTrkXGraphWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
@@ -50,10 +49,8 @@
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
 
-#include <array>
 #include <memory>
 #include <string>
-#include <tuple>
 #include <vector>
 
 #include <pybind11/pybind11.h>
@@ -268,12 +265,13 @@ void addOutput(Context& ctx) {
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
-    c.def("addBoundIndicesFromDigiConfig",
-          [](Writer::Config& self, const DigitizationConfig& digiCfg) {
-            self.boundIndices =
-                Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
-                    digiCfg.getBoundIndices());
-          });
+    c.def(
+        "addBoundIndicesFromDigiConfig",
+        [](Writer::Config& self, const DigitizationAlgorithm::Config& digiCfg) {
+          self.boundIndices =
+              Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
+                  digiCfg.getBoundIndices());
+        });
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
     ACTS_PYTHON_MEMBER(inputMeasurements);

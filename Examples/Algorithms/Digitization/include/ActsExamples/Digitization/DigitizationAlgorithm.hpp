@@ -12,7 +12,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
-#include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -35,7 +34,55 @@ namespace ActsExamples {
 /// Algorithm that turns simulated hits into measurements by truth smearing.
 class DigitizationAlgorithm final : public IAlgorithm {
  public:
-  using Config = DigitizationConfig;
+  class Config {
+   public:
+    /// Input collection of simulated hits.
+    std::string inputSimHits = "simhits";
+    /// Output measurements collection.
+    std::string outputMeasurements = "measurements";
+    /// Output cells map (geoID -> collection of cells).
+    std::string outputCells = "cells";
+    /// Output cluster collection.
+    std::string outputClusters = "clusters";
+    /// Output collection to map measured hits to contributing particles.
+    std::string outputMeasurementParticlesMap = "measurement_particles_map";
+    /// Output collection to map measured hits to simulated hits.
+    std::string outputMeasurementSimHitsMap = "measurement_simhits_map";
+
+    /// Map of surface by identifier to allow local - to global
+    std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
+        surfaceByIdentifier;
+    /// Random numbers tool.
+    std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
+    /// Flag to determine whether cell data should be written to the
+    /// `outputCells` collection; if true, writes (rather voluminous) cell data.
+    bool doOutputCells = false;
+    /// Flag to determine whether or not to run the clusterization; if true,
+    /// clusters, measurements, and sim-hit-maps are output.
+    bool doClusterization = true;
+    /// Do we merge hits or not
+    bool doMerge = false;
+    /// How close do parameters have to be to consider merged
+    double mergeNsigma = 1.0;
+    /// Consider clusters that share a corner as merged (8-cell connectivity)
+    bool mergeCommonCorner = false;
+    /// Energy deposit threshold for accepting a hit
+    /// For a generic readout frontend we assume 1000 e/h pairs, in Si each
+    /// e/h-pair requiers on average an energy of 3.65 eV (PDG  review 2023,
+    /// Table 35.10)
+    /// @NOTE The default is set to 0 because this works only well with Geant4
+    double minEnergyDeposit = 0.0;  // 1000 * 3.65 * Acts::UnitConstants::eV;
+    /// The digitizers per GeometryIdentifiers
+    Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
+
+    Config();
+
+    explicit Config(Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs);
+
+    std::vector<
+        std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+    getBoundIndices() const;
+  };
 
   /// Construct the smearing algorithm.
   ///

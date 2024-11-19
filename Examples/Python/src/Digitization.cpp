@@ -36,7 +36,7 @@ void addDigitization(Context& ctx) {
   mex.def("writeDigiConfigToJson", ActsExamples::writeDigiConfigToJson);
 
   {
-    using Config = ActsExamples::DigitizationConfig;
+    using Config = ActsExamples::DigitizationAlgorithm::Config;
 
     py::class_<ActsExamples::DigitizationAlgorithm, ActsExamples::IAlgorithm,
                std::shared_ptr<ActsExamples::DigitizationAlgorithm>>(
@@ -103,7 +103,8 @@ void addDigitization(Context& ctx) {
     py::class_<ActsExamples::DigitizationCoordinatesConverter,
                std::shared_ptr<ActsExamples::DigitizationCoordinatesConverter>>(
         mex, "DigitizationCoordinatesConverter")
-        .def(py::init<ActsExamples::DigitizationConfig&>(), py::arg("config"))
+        .def(py::init<ActsExamples::DigitizationAlgorithm::Config&>(),
+             py::arg("config"))
         .def_property_readonly(
             "config", &ActsExamples::DigitizationCoordinatesConverter::config)
         .def("globalToLocal",

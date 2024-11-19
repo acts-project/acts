@@ -24,10 +24,40 @@
 #include <string>
 #include <utility>
 
-ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
-    DigitizationConfig config, Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("DigitizationAlgorithm", level),
-      m_cfg(std::move(config)) {
+namespace ActsExamples {
+
+DigitizationAlgorithm::Config::Config() = default;
+
+DigitizationAlgorithm::Config::Config(
+    Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs)
+    : digitizationConfigs(std::move(digiCfgs)) {}
+
+std::vector<
+    std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+DigitizationAlgorithm::Config::getBoundIndices() const {
+  std::vector<
+      std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+      bIndexInput;
+
+  for (std::size_t ibi = 0; ibi < digitizationConfigs.size(); ++ibi) {
+    Acts::GeometryIdentifier geoID = digitizationConfigs.idAt(ibi);
+    const auto dCfg = digitizationConfigs.valueAt(ibi);
+    std::vector<Acts::BoundIndices> boundIndices;
+    boundIndices.insert(boundIndices.end(),
+                        dCfg.geometricDigiConfig.indices.begin(),
+                        dCfg.geometricDigiConfig.indices.end());
+    // we assume nobody will add multiple smearers to a single bound index
+    for (const auto& c : dCfg.smearingDigiConfig) {
+      boundIndices.push_back(c.index);
+    }
+    bIndexInput.push_back({geoID, boundIndices});
+  }
+  return bIndexInput;
+}
+
+DigitizationAlgorithm::DigitizationAlgorithm(Config config,
+                                             Acts::Logging::Level level)
+    : IAlgorithm("DigitizationAlgorithm", level), m_cfg(std::move(config)) {
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
@@ -126,8 +156,7 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
   m_digitizers = Acts::GeometryHierarchyMap<Digitizer>(digitizerInput);
 }
 
-ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
-    const AlgorithmContext& ctx) const {
+ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Retrieve input
   const auto& simHits = m_inputHits(ctx);
   ACTS_DEBUG("Loaded " << simHits.size() << " sim hits");
@@ -309,8 +338,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::DigitizedParameters
-ActsExamples::DigitizationAlgorithm::localParameters(
+DigitizedParameters DigitizationAlgorithm::localParameters(
     const GeometricConfig& geoCfg,
     const std::vector<ActsFatras::Segmentizer::ChannelSegment>& channels,
     RandomEngine& rng) const {
@@ -362,3 +390,5 @@ ActsExamples::DigitizationAlgorithm::localParameters(
 
   return dParameters;
 }
+
+}  // namespace ActsExamples
