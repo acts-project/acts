@@ -78,10 +78,6 @@ class DigitizationAlgorithm final : public IAlgorithm {
     Config();
 
     explicit Config(Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs);
-
-    std::vector<
-        std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-    getBoundIndices() const;
   };
 
   /// Construct the smearing algorithm.

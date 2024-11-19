@@ -32,29 +32,6 @@ DigitizationAlgorithm::Config::Config(
     Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs)
     : digitizationConfigs(std::move(digiCfgs)) {}
 
-std::vector<
-    std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-DigitizationAlgorithm::Config::getBoundIndices() const {
-  std::vector<
-      std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-      bIndexInput;
-
-  for (std::size_t ibi = 0; ibi < digitizationConfigs.size(); ++ibi) {
-    Acts::GeometryIdentifier geoID = digitizationConfigs.idAt(ibi);
-    const auto dCfg = digitizationConfigs.valueAt(ibi);
-    std::vector<Acts::BoundIndices> boundIndices;
-    boundIndices.insert(boundIndices.end(),
-                        dCfg.geometricDigiConfig.indices.begin(),
-                        dCfg.geometricDigiConfig.indices.end());
-    // we assume nobody will add multiple smearers to a single bound index
-    for (const auto& c : dCfg.smearingDigiConfig) {
-      boundIndices.push_back(c.index);
-    }
-    bIndexInput.push_back({geoID, boundIndices});
-  }
-  return bIndexInput;
-}
-
 DigitizationAlgorithm::DigitizationAlgorithm(Config config,
                                              Acts::Logging::Level level)
     : IAlgorithm("DigitizationAlgorithm", level), m_cfg(std::move(config)) {

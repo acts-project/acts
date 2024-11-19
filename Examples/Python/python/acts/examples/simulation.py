@@ -813,7 +813,6 @@ def addDigitization(
             filePath=str(outputDirRoot / f"{digiAlg.config.outputMeasurements}.root"),
             surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         )
-        rmwConfig.addBoundIndicesFromDigiConfig(digiAlg.config)
         s.addWriter(acts.examples.RootMeasurementWriter(rmwConfig, customLogLevel()))
 
     if outputDirCsv is not None:

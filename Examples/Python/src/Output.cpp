@@ -265,14 +265,6 @@ void addOutput(Context& ctx) {
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
-    c.def(
-        "addBoundIndicesFromDigiConfig",
-        [](Writer::Config& self, const DigitizationAlgorithm::Config& digiCfg) {
-          self.boundIndices =
-              Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
-                  digiCfg.getBoundIndices());
-        });
-
     ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
     ACTS_PYTHON_MEMBER(inputMeasurements);
     ACTS_PYTHON_MEMBER(inputClusters);
@@ -280,7 +272,6 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputMeasurementSimHitsMap);
     ACTS_PYTHON_MEMBER(filePath);
     ACTS_PYTHON_MEMBER(fileMode);
-    ACTS_PYTHON_MEMBER(boundIndices);
     ACTS_PYTHON_MEMBER(surfaceByIdentifier);
     ACTS_PYTHON_STRUCT_END();
   }
