@@ -14,7 +14,7 @@ namespace Acts {
 
 class DD4hepDetectorElement;
 
-/// @class GeometryContext
+/// @class DD4hepGeometryContext
 ///
 /// @brief DD4hep specific geometry context for alignment handling
 ///
