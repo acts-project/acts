@@ -1058,7 +1058,7 @@ def addGbtsSeeding(
     seedFinderConfig = acts.SeedFinderGbtsConfig(
         **acts.examples.defaultKWArgs(
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
-            maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
+            # maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             minPt=seedFinderConfigArg.minPt,
             ConnectorInputFile=ConnectorInputFileStr,
             m_useClusterWidth=False,
