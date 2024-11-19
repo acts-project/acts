@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,6 +13,7 @@
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/IExperimentCuts.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <mutex>
@@ -37,8 +38,15 @@ struct SeedFilterState {
 template <typename external_spacepoint_t>
 class SeedFilter final {
  public:
-  SeedFilter(SeedFilterConfig config,
+  SeedFilter(const SeedFilterConfig& config,
              IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
+  SeedFilter(const SeedFilterConfig& config,
+             std::unique_ptr<const Acts::Logger> logger,
+             IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
+  SeedFilter(const SeedFilter<external_spacepoint_t>&) = delete;
+  SeedFilter& operator=(const SeedFilter<external_spacepoint_t>&) = delete;
+  SeedFilter(SeedFilter<external_spacepoint_t>&&) noexcept = default;
+  SeedFilter& operator=(SeedFilter<external_spacepoint_t>&&) noexcept = default;
 
   SeedFilter() = delete;
   ~SeedFilter() = default;
@@ -95,7 +103,11 @@ class SeedFilter final {
   }
 
  private:
+  const Logger& logger() const { return *m_logger; }
+
   const SeedFilterConfig m_cfg;
+  std::unique_ptr<const Acts::Logger> m_logger =
+      Acts::getDefaultLogger("Filter", Logging::Level::INFO);
   const IExperimentCuts<external_spacepoint_t>* m_experimentCuts;
 };
 }  // namespace Acts

@@ -1,15 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 
 #include <map>
+#include <numbers>
 #include <set>
 #include <vector>
 
@@ -67,8 +68,8 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
   };
 
   auto getBinIndexPhi = [&phiBins](Scalar phi) {
-    Scalar binSize = 2 * M_PI / phiBins;
-    auto binIndex = static_cast<int>((phi + M_PI) / binSize);
+    Scalar binSize = 2 * std::numbers::pi / phiBins;
+    auto binIndex = static_cast<int>((phi + std::numbers::pi) / binSize);
     return binIndex;
   };
 

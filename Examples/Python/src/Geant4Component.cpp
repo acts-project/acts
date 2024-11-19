@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
@@ -29,9 +29,7 @@
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
-#include <array>
 #include <memory>
-#include <optional>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -206,14 +204,14 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                   .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c1, Config);
     ACTS_PYTHON_MEMBER(outputSimHits);
-    ACTS_PYTHON_MEMBER(outputParticlesInitial);
-    ACTS_PYTHON_MEMBER(outputParticlesFinal);
+    ACTS_PYTHON_MEMBER(outputParticles);
     ACTS_PYTHON_MEMBER(sensitiveSurfaceMapper);
     ACTS_PYTHON_MEMBER(magneticField);
     ACTS_PYTHON_MEMBER(physicsList);
     ACTS_PYTHON_MEMBER(killVolume);
     ACTS_PYTHON_MEMBER(killAfterTime);
     ACTS_PYTHON_MEMBER(killSecondaries);
+    ACTS_PYTHON_MEMBER(recordHitsOfNeutrals);
     ACTS_PYTHON_MEMBER(recordHitsOfSecondaries);
     ACTS_PYTHON_MEMBER(keepParticlesWithoutHits);
     ACTS_PYTHON_STRUCT_END();
@@ -333,7 +331,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                                   const std::vector<std::string>&
                                       sensitiveMatches,
                                   const std::vector<std::string>&
-                                      passiveMatches) {
+                                      passiveMatches,
+                                  bool convertMaterial) {
       // Initiate the detector construction & retrieve world
       ActsExamples::GdmlDetectorConstruction gdmlContruction(gdmlFileName);
       const auto* world = gdmlContruction.Construct();
@@ -350,6 +349,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       Acts::Geant4DetectorSurfaceFactory::Options options;
       options.sensitiveSurfaceSelector = sensitiveSelectors;
       options.passiveSurfaceSelector = passiveSelectors;
+      options.convertMaterial = convertMaterial;
 
       G4Transform3D nominal;
       Acts::Geant4DetectorSurfaceFactory factory;

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -37,6 +37,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <type_traits>
 
 namespace Acts {
 
@@ -264,7 +265,7 @@ class KalmanFitter {
 
   /// The navigator has DirectNavigator type or not
   static constexpr bool isDirectNavigator =
-      std::is_same<KalmanNavigator, DirectNavigator>::value;
+      std::is_same_v<KalmanNavigator, DirectNavigator>;
 
  public:
   KalmanFitter(propagator_t pPropagator,
@@ -483,11 +484,8 @@ class KalmanFitter {
             result.fittedStates->applyBackwards(
                 result.lastMeasurementIndex, [&](auto trackState) {
                   auto fSurface = &trackState.referenceSurface();
-                  auto surface_it = std::find_if(
-                      result.passedAgainSurfaces.begin(),
-                      result.passedAgainSurfaces.end(),
-                      [=](const Surface* s) { return s == fSurface; });
-                  if (surface_it == result.passedAgainSurfaces.end()) {
+                  if (!rangeContainsValue(result.passedAgainSurfaces,
+                                          fSurface)) {
                     // If reversed filtering missed this surface, then there is
                     // no smoothed parameter
                     trackState.unset(TrackStatePropMask::Smoothed);
@@ -1235,7 +1233,7 @@ class KalmanFitter {
                 track_container_t& trackContainer) const
       -> Result<typename track_container_t::TrackProxy> {
     auto propagatorState =
-        m_propagator.template makeState(sParameters, propagatorOptions);
+        m_propagator.makeState(sParameters, propagatorOptions);
 
     auto& kalmanResult =
         propagatorState.template get<KalmanFitterResult<traj_t>>();

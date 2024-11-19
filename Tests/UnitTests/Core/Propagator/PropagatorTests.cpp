@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -43,6 +43,7 @@
 #include <cstddef>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <random>
 #include <tuple>
@@ -165,14 +166,14 @@ BOOST_DATA_TEST_CASE(
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
                    bdata::distribution = std::uniform_real_distribution<double>(
                        0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
-                       bdata::distribution =
-                           std::uniform_real_distribution<double>(-M_PI,
-                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 1,
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 2,
-             bdata::distribution =
-                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
@@ -225,14 +226,14 @@ BOOST_DATA_TEST_CASE(
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
                    bdata::distribution = std::uniform_real_distribution<double>(
                        0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
-                       bdata::distribution =
-                           std::uniform_real_distribution<double>(-M_PI,
-                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 1,
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 2,
-             bdata::distribution =
-                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
@@ -305,14 +306,14 @@ BOOST_DATA_TEST_CASE(
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
                    bdata::distribution = std::uniform_real_distribution<double>(
                        0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
-                       bdata::distribution =
-                           std::uniform_real_distribution<double>(-M_PI,
-                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 1,
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 2,
-             bdata::distribution =
-                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
@@ -395,7 +396,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
           .planeSurface();
 
   BoundVector startPars;
-  startPars << 0, 0, 0, M_PI / 2, 1 / 1_GeV, 0;
+  startPars << 0, 0, 0, std::numbers::pi / 2., 1 / 1_GeV, 0;
 
   BoundTrackParameters startParameters{startSurface, startPars, std::nullopt,
                                        ParticleHypothesis::pion()};

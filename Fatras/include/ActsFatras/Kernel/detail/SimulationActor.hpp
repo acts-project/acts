@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -69,7 +69,17 @@ struct SimulationActor {
   void act(propagator_state_t &state, stepper_t &stepper,
            navigator_t &navigator, result_type &result,
            const Acts::Logger &logger) const {
-    assert(generator && "The generator pointer must be valid");
+    assert(generator != nullptr && "The generator pointer must be valid");
+
+    if (state.stage == Acts::PropagatorStage::prePropagation) {
+      // first step is special: there is no previous state and we need to arm
+      // the decay simulation for all future steps.
+      result.particle =
+          makeParticle(initialParticle, state, stepper, navigator);
+      result.properTimeLimit =
+          decay.generateProperTimeLimit(*generator, initialParticle);
+      return;
+    }
 
     // actors are called once more after the propagation terminated
     if (!result.isAlive) {
@@ -82,28 +92,11 @@ struct SimulationActor {
       return;
     }
 
-    // check if we are still on the start surface and skip if so
-    if ((navigator.startSurface(state.navigation) != nullptr) &&
-        (navigator.startSurface(state.navigation) ==
-         navigator.currentSurface(state.navigation))) {
-      return;
-    }
-
     // update the particle state first. this also computes the proper time which
     // needs the particle state from the previous step for reference. that means
     // this must happen for every step (not just on surface) and before
     // everything, e.g. any interactions that could modify the state.
-    if (std::isnan(result.properTimeLimit)) {
-      // first step is special: there is no previous state and we need to arm
-      // the decay simulation for all future steps.
-      result.particle =
-          makeParticle(initialParticle, state, stepper, navigator);
-      result.properTimeLimit =
-          decay.generateProperTimeLimit(*generator, initialParticle);
-    } else {
-      result.particle =
-          makeParticle(result.particle, state, stepper, navigator);
-    }
+    result.particle = makeParticle(result.particle, state, stepper, navigator);
 
     // decay check. needs to happen at every step, not just on surfaces.
     if (std::isfinite(result.properTimeLimit) &&

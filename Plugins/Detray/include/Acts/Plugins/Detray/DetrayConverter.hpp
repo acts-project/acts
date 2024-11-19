@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -38,8 +38,9 @@ class DetrayConverter {
   };
 
   /// Constructor with logger
-  DetrayConverter(std::unique_ptr<const Logger> logger =
-                      getDefaultLogger("DetrayConverter", Logging::INFO));
+  explicit DetrayConverter(
+      std::unique_ptr<const Logger> logger = getDefaultLogger("DetrayConverter",
+                                                              Logging::INFO));
 
   /// Convert an Acts::Experimental::Detector to a detray::detector object
   ///
@@ -54,7 +55,7 @@ class DetrayConverter {
                      const Experimental::Detector& detector,
                      vecmem::memory_resource& mr, const Options& options) {
     // The building cache object
-    DetrayConversionUtils::GeometryIdCache geoIdCache;
+    DetrayConversionUtils::Cache cCache(detector.volumes());
 
     typename detector_t::name_map names = {{0u, detector.name()}};
 
@@ -62,7 +63,7 @@ class DetrayConverter {
     detray::detector_builder<typename detector_t::metadata> detectorBuilder{};
     // (1) geometry
     detray::io::detector_payload detectorPayload =
-        DetrayGeometryConverter::convertDetector(geoIdCache, gctx, detector,
+        DetrayGeometryConverter::convertDetector(cCache, gctx, detector,
                                                  logger());
     detray::io::geometry_reader::convert<detector_t>(detectorBuilder, names,
                                                      detectorPayload);
@@ -72,7 +73,7 @@ class DetrayConverter {
       if (options.convertMaterial) {
         detray::io::detector_homogeneous_material_payload materialSlabsPayload =
             DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
-                geoIdCache, detector, logger());
+                cCache, detector, logger());
         detray::io::homogeneous_material_reader::convert<detector_t>(
             detectorBuilder, names, std::move(materialSlabsPayload));
       }
@@ -85,7 +86,7 @@ class DetrayConverter {
                                            detray::io::material_id>
             materialGridsPayload =
                 DetrayMaterialConverter::convertGridSurfaceMaterial(
-                    geoIdCache, detector, logger());
+                    cCache, detector, logger());
         detray::io::material_map_reader<std::integral_constant<
             std::size_t, 2>>::convert<detector_t>(detectorBuilder, names,
                                                   std::move(

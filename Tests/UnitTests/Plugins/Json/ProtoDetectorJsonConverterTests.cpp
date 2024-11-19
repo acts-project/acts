@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -22,6 +22,7 @@
 #include <cmath>
 #include <fstream>
 #include <iterator>
+#include <numbers>
 #include <optional>
 #include <string>
 #include <vector>
@@ -174,8 +175,9 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
 
   Acts::BinningData pixEcBinningR =
       Acts::BinningData(Acts::open, Acts::BinningValue::binR, 2., 0., 1.);
-  Acts::BinningData pixEcBinningPhi = Acts::BinningData(
-      Acts::closed, Acts::BinningValue::binPhi, 30., -M_PI, M_PI);
+  Acts::BinningData pixEcBinningPhi =
+      Acts::BinningData(Acts::closed, Acts::BinningValue::binPhi, 30.,
+                        -std::numbers::pi, std::numbers::pi);
 
   for (auto& cv : pixelNec.container.value().constituentVolumes) {
     cv.extent.setEnvelope(discLayerEnvelope);
@@ -278,8 +280,9 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
 
   Acts::BinningData sstripEcBinningR =
       Acts::BinningData(Acts::open, Acts::BinningValue::binR, 3., 0., 1.);
-  Acts::BinningData sstripEcBinningPhi = Acts::BinningData(
-      Acts::closed, Acts::BinningValue::binPhi, 42., -M_PI, M_PI);
+  Acts::BinningData sstripEcBinningPhi =
+      Acts::BinningData(Acts::closed, Acts::BinningValue::binPhi, 42.,
+                        -std::numbers::pi, std::numbers::pi);
 
   Acts::ProtoVolume sstripNec;
   sstripNec.name = "odd-sstrip-nec";

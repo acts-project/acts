@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
@@ -17,6 +17,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <numbers>
 #include <random>
 #include <string>
 
@@ -57,7 +58,8 @@ int main(int argc, char* argv[]) {
   std::minstd_rand rng;
   std::uniform_real_distribution<double> zDist(1.5 * (-L / 2.), 1.5 * L / 2.);
   std::uniform_real_distribution<double> rDist(0, R * 1.5);
-  std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
+  std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
+                                                 std::numbers::pi);
   auto genPos = [&]() -> Acts::Vector3 {
     const double z = zDist(rng), r = rDist(rng), phi = phiDist(rng);
     return {r * std::cos(phi), r * std::sin(phi), z};

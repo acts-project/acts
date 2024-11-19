@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -14,6 +14,7 @@
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <numbers>
 #include <vector>
 
 // this is a global access to the x coordinate
@@ -206,18 +207,20 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
   using EqEqGrid = EqBoundEqClosed::grid_type<std::size_t>;
   using Point = EqEqGrid::point_t;
 
-  EqBoundEqClosed eqeqBound{{-1., 1.}, 2, {-M_PI, M_PI}, 4};
+  EqBoundEqClosed eqeqBound{
+      {-1., 1.}, 2, {-std::numbers::pi, std::numbers::pi}, 4};
   EqEqGrid eqeqGrid{eqeqBound()};
 
-  eqeqGrid.atPosition(Point{-0.5, -M_PI * 0.75}) = 1u;  // material 1
-  eqeqGrid.atPosition(Point{-0.5, -M_PI * 0.25}) = 1u;  // material 1
-  eqeqGrid.atPosition(Point{-0.5, M_PI * 0.25}) = 0u;   // vacuum
-  eqeqGrid.atPosition(Point{-0.5, M_PI * 0.75}) = 2u;   // material 2
+  eqeqGrid.atPosition(Point{-0.5, -std::numbers::pi * 0.75}) =
+      1u;                                                          // material 1
+  eqeqGrid.atPosition(Point{-0.5, -std::numbers::pi / 4.}) = 1u;   // material 1
+  eqeqGrid.atPosition(Point{-0.5, std::numbers::pi / 4.}) = 0u;    // vacuum
+  eqeqGrid.atPosition(Point{-0.5, std::numbers::pi * 0.75}) = 2u;  // material 2
 
-  eqeqGrid.atPosition(Point{0.5, -M_PI * 0.75}) = 0u;  // vacuum
-  eqeqGrid.atPosition(Point{0.5, -M_PI * 0.25}) = 3u;  // material 3
-  eqeqGrid.atPosition(Point{0.5, M_PI * 0.25}) = 3u;   // material 3
-  eqeqGrid.atPosition(Point{0.5, M_PI * 0.75}) = 0u;   // vacuum
+  eqeqGrid.atPosition(Point{0.5, -std::numbers::pi * 0.75}) = 0u;  // vacuum
+  eqeqGrid.atPosition(Point{0.5, -std::numbers::pi / 4.}) = 3u;    // material 3
+  eqeqGrid.atPosition(Point{0.5, std::numbers::pi / 4.}) = 3u;     // material 3
+  eqeqGrid.atPosition(Point{0.5, std::numbers::pi * 0.75}) = 0u;   // vacuum
 
   // With radius 20
   auto boundToGrid = std::make_unique<const LocalToZPhi>(20.);

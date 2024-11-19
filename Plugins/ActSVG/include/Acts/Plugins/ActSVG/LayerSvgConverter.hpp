@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,6 +13,8 @@
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
+
+#include <numbers>
 
 namespace Acts {
 
@@ -26,7 +28,9 @@ static std::array<ActsScalar, 2> noLimitZ = {
     std::numeric_limits<Acts::ActsScalar>::lowest(),
     std::numeric_limits<Acts::ActsScalar>::max()};
 
-static std::array<ActsScalar, 2> noLimitPhi = {-M_PI, M_PI};
+static std::array<ActsScalar, 2> noLimitPhi = {
+    -std::numbers::pi_v<Acts::ActsScalar>,
+    std::numbers::pi_v<Acts::ActsScalar>};
 
 namespace LayerConverter {
 

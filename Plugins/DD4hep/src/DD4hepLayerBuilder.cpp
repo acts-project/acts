@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 
@@ -208,8 +208,8 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
         // create the share disc bounds
         auto dBounds = std::make_shared<const RadialBounds>(
             pl.min(Acts::BinningValue::binR), pl.max(Acts::BinningValue::binR));
-        double thickness = std::fabs(pl.max(Acts::BinningValue::binZ) -
-                                     pl.min(Acts::BinningValue::binZ));
+        double thickness = std::abs(pl.max(Acts::BinningValue::binZ) -
+                                    pl.min(Acts::BinningValue::binZ));
         // Create the layer containing the sensitive surface
         endcapLayer = DiscLayer::create(transform, dBounds, std::move(sArray),
                                         thickness, nullptr, Acts::active);
@@ -357,8 +357,8 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
         double layerR = (pl.min(Acts::BinningValue::binR) +
                          pl.max(Acts::BinningValue::binR)) *
                         0.5;
-        double thickness = std::fabs(pl.max(Acts::BinningValue::binR) -
-                                     pl.min(Acts::BinningValue::binR));
+        double thickness = std::abs(pl.max(Acts::BinningValue::binR) -
+                                    pl.min(Acts::BinningValue::binR));
         auto cBounds = std::make_shared<CylinderBounds>(layerR, halfZ);
         // Create the layer containing the sensitive surface
         centralLayer =

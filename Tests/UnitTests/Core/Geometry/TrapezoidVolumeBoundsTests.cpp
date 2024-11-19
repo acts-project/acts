@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -20,6 +20,7 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -44,7 +45,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   CHECK_CLOSE_ABS(bb.max(), Vector3(10, 38, 24), tol);
   CHECK_CLOSE_ABS(bb.min(), Vector3(-10, 22, 16), tol);
 
-  trf = AngleAxis3(M_PI / 2., Vector3(-2, 4, 5).normalized());
+  trf = AngleAxis3(std::numbers::pi / 2., Vector3(-2, 4, 5).normalized());
 
   bb = tvb.boundingBox(&trf);
   CHECK_CLOSE_ABS(bb.max(), Vector3(9.32577, 11.4906, 11.5777), tol);

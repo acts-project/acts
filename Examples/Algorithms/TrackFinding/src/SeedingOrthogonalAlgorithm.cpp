@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 
@@ -67,9 +67,11 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
 
   // construct seed filter
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<proxy_type>>(m_cfg.seedFilterConfig);
+      std::make_unique<Acts::SeedFilter<proxy_type>>(
+          m_cfg.seedFilterConfig, logger().cloneWithSuffix("Filter"));
 
-  m_finder = Acts::SeedFinderOrthogonal<proxy_type>(m_cfg.seedFinderConfig);
+  m_finder = std::make_unique<Acts::SeedFinderOrthogonal<proxy_type>>(
+      m_cfg.seedFinderConfig, logger().cloneWithSuffix("Finder"));
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
@@ -95,9 +97,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
 
   ACTS_INFO("About to process " << spContainer.size() << " space points ...");
 
-  Acts::SeedFinderOrthogonal<proxy_type> finder(m_cfg.seedFinderConfig);
   std::vector<Acts::Seed<proxy_type>> seeds =
-      finder.createSeeds(m_cfg.seedFinderOptions, spContainer);
+      m_finder->createSeeds(m_cfg.seedFinderOptions, spContainer);
 
   ACTS_INFO("Created " << seeds.size() << " track seeds from "
                        << spacePoints.size() << " space points");

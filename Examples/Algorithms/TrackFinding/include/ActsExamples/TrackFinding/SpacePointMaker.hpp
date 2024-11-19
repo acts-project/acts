@@ -1,17 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -46,8 +45,6 @@ struct AlgorithmContext;
 class SpacePointMaker final : public IAlgorithm {
  public:
   struct Config {
-    /// Input source links collection.
-    std::string inputSourceLinks;
     /// Input measurements collection.
     std::string inputMeasurements;
     /// Output space points collection.
@@ -85,9 +82,6 @@ class SpacePointMaker final : public IAlgorithm {
   std::optional<IndexSourceLink::SurfaceAccessor> m_slSurfaceAccessor;
 
   Acts::SpacePointBuilder<SimSpacePoint> m_spacePointBuilder;
-
-  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
-      this, "InputSourceLinks"};
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};

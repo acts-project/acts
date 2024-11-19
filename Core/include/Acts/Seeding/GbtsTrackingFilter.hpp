@@ -1,15 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 // TODO: update to C++17 style
 #include "Acts/Seeding/GbtsDataStorage.hpp"  //includes geo which has trigindetsilayer, may move this to trigbase
+#include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -112,8 +113,11 @@ template <typename external_spacepoint_t>
 class GbtsTrackingFilter {
  public:
   GbtsTrackingFilter(const std::vector<Acts::TrigInDetSiLayer>& g,
-                     std::vector<Acts::GbtsEdge<external_spacepoint_t>>& sb)
-      : m_geo(g), m_segStore(sb) {}
+                     std::vector<Acts::GbtsEdge<external_spacepoint_t>>& sb,
+                     std::unique_ptr<const Acts::Logger> logger =
+                         Acts::getDefaultLogger("Filter",
+                                                Acts::Logging::Level::INFO))
+      : m_geo(g), m_segStore(sb), m_logger(std::move(logger)) {}
 
   void followTrack(Acts::GbtsEdge<external_spacepoint_t>* pS,
                    GbtsEdgeState<external_spacepoint_t>& output) {
@@ -233,11 +237,15 @@ class GbtsTrackingFilter {
     const float add_hit = 14.0;
 
     if (ts.m_Cx[2][2] < 0.0 || ts.m_Cx[1][1] < 0.0 || ts.m_Cx[0][0] < 0.0) {
-      std::cout << "Negative cov_x" << std::endl;
+      ACTS_WARNING("Negative covariance detected in X components: "
+                   << "cov[2][2]=" << ts.m_Cx[2][2] << " cov[1][1]="
+                   << ts.m_Cx[1][1] << " cov[0][0]=" << ts.m_Cx[0][0]);
     }
 
     if (ts.m_Cy[1][1] < 0.0 || ts.m_Cy[0][0] < 0.0) {
-      std::cout << "Negative cov_y" << std::endl;
+      ACTS_WARNING("Negative covariance detected in Y components: "
+                   << "cov[1][1]=" << ts.m_Cy[1][1]
+                   << " cov[0][0]=" << ts.m_Cy[0][0]);
     }
 
     // add ms.
@@ -380,4 +388,7 @@ class GbtsTrackingFilter {
   GbtsEdgeState<external_spacepoint_t> m_stateStore[MAX_EDGE_STATE];
 
   int m_globalStateCounter{0};
+
+  const Acts::Logger& logger() const { return *m_logger; }
+  std::unique_ptr<const Acts::Logger> m_logger{nullptr};
 };

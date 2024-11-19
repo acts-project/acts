@@ -1,14 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
 
+#include <cmath>
 #include <cstdint>
 
 #include <annoy/annoylib.h>
@@ -49,7 +51,7 @@ AnnoyModel HashingTrainingAlgorithm<SpacePointContainer>::execute(
     Scalar y = spacePoint->y() / Acts::UnitConstants::mm;
 
     // Helix transform
-    Scalar phi = atan2(y, x);
+    Scalar phi = std::atan2(y, x);
 
     std::vector<double> vec(f);
     // Avoid potential null pointer dereference
@@ -59,9 +61,9 @@ AnnoyModel HashingTrainingAlgorithm<SpacePointContainer>::execute(
     if (f >= 2) {
       Scalar z = spacePoint->z() / Acts::UnitConstants::mm;
       Scalar r2 = x * x + y * y;
-      Scalar rho = sqrt(r2 + z * z);
-      Scalar theta = acos(z / rho);
-      Scalar eta = -log(tan(0.5 * theta));
+      Scalar rho = std::sqrt(r2 + z * z);
+      Scalar theta = std::acos(z / rho);
+      Scalar eta = Acts::AngleHelpers::etaFromTheta(theta);
       vec[1] = eta;
     }
 

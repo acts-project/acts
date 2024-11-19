@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -38,7 +38,9 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <optional>
+#include <random>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
@@ -124,9 +126,30 @@ auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
     return c;
   };
 
+  // note that we are using the default random device
+  std::mt19937 gen;
+  std::uniform_real_distribution<> locDis(-10., 10.);
+  std::uniform_real_distribution<> phiDis(-std::numbers::pi, std::numbers::pi);
+  std::uniform_real_distribution<> thetaDis(0., std::numbers::pi);
+  std::uniform_real_distribution<> qOverPDis(-10., 10.);
+  std::uniform_real_distribution<> timeDis(0., 100.);
+
   for (auto i = 0ul; i < n; ++i) {
-    cmps.push_back({1. / n, ext_pars ? *ext_pars : BoundVector::Random(),
-                    cov ? Opt{make_random_sym_matrix()} : Opt{}});
+    BoundVector params = BoundVector::Zero();
+
+    if (ext_pars) {
+      params = *ext_pars;
+    } else {
+      params[eBoundLoc0] = locDis(gen);
+      params[eBoundLoc1] = locDis(gen);
+      params[eBoundPhi] = phiDis(gen);
+      params[eBoundTheta] = thetaDis(gen);
+      params[eBoundQOverP] = qOverPDis(gen);
+      params[eBoundTime] = timeDis(gen);
+    }
+
+    cmps.push_back(
+        {1. / n, params, cov ? Opt{make_random_sym_matrix()} : Opt{}});
   }
 
   auto surface = Acts::CurvilinearSurface(Vector3::Zero(), Vector3{1., 0., 0.})
@@ -138,31 +161,6 @@ auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
 //////////////////////
 /// Test the reducers
 //////////////////////
-BOOST_AUTO_TEST_CASE(test_weighted_reducer) {
-  // Can use this multistepper since we only care about the state which is
-  // invariant
-  using MultiState = typename MultiStepperLoop::State;
-
-  constexpr std::size_t N = 4;
-  const auto multi_pars = makeDefaultBoundPars(false, N);
-
-  MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultStepSize);
-  SingleStepper singleStepper(defaultBField);
-
-  WeightedComponentReducerLoop reducer{};
-
-  Acts::Vector3 pos = Acts::Vector3::Zero();
-  Acts::Vector3 dir = Acts::Vector3::Zero();
-  for (const auto &[sstate, weight, _] : state.components) {
-    pos += weight * singleStepper.position(sstate);
-    dir += weight * singleStepper.direction(sstate);
-  }
-  dir.normalize();
-
-  BOOST_CHECK_EQUAL(reducer.position(state), pos);
-  BOOST_CHECK_EQUAL(reducer.direction(state), dir);
-}
-
 BOOST_AUTO_TEST_CASE(test_max_weight_reducer) {
   // Can use this multistepper since we only care about the state which is
   // invariant
@@ -454,8 +452,9 @@ void test_multi_stepper_surface_status_update() {
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
-  std::get<BoundVector>(cmps[0])[eBoundTheta] = M_PI_2;
-  std::get<BoundVector>(cmps[1])[eBoundTheta] = -M_PI_2;
+  std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
+  std::get<BoundVector>(cmps[1])[eBoundPhi] = std::numbers::pi;
+  std::get<BoundVector>(cmps[1])[eBoundTheta] = std::numbers::pi / 2.;
   std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
   std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
@@ -565,8 +564,9 @@ void test_component_bound_state() {
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
-  std::get<BoundVector>(cmps[0])[eBoundTheta] = M_PI_2;
-  std::get<BoundVector>(cmps[1])[eBoundTheta] = -M_PI_2;
+  std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
+  std::get<BoundVector>(cmps[1])[eBoundPhi] = std::numbers::pi;
+  std::get<BoundVector>(cmps[1])[eBoundTheta] = std::numbers::pi / 2.;
   std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
   std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
@@ -728,18 +728,7 @@ void test_single_component_interface_function() {
   using MultiState = typename multi_stepper_t::State;
   using MultiStepper = multi_stepper_t;
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
-      cmps;
-  for (int i = 0; i < 4; ++i) {
-    cmps.push_back({0.25, BoundVector::Random(), BoundSquareMatrix::Random()});
-  }
-
-  auto surface =
-      Acts::CurvilinearSurface(Vector3::Zero(), Vector3::Ones().normalized())
-          .planeSurface();
-
-  MultiComponentBoundTrackParameters multi_pars(surface, cmps,
-                                                particleHypothesis);
+  MultiComponentBoundTrackParameters multi_pars = makeDefaultBoundPars(true, 4);
 
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars,
                          defaultStepSize);

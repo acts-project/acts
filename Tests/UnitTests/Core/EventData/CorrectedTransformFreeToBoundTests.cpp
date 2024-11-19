@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -42,7 +43,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   const auto loc0 = 0.0;
   const auto loc1 = 0.0;
   const auto phi = 0.0;
-  const auto theta = M_PI / 4;
+  const auto theta = std::numbers::pi / 4.;
   const auto qOverP = 1 / 1_GeV;
   const auto t = 1_ns;
 
@@ -81,7 +82,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   Vector3 tpos = intersection.position();
   auto s = intersection.pathLength();
 
-  BOOST_CHECK_EQUAL(s, distance * std::sqrt(2));
+  BOOST_CHECK_EQUAL(s, distance * std::numbers::sqrt2);
 
   // construct the free parameters vector
   FreeVector eFreeParams = FreeVector::Zero();

@@ -69,7 +69,7 @@ set(ACTS_PYBIND11_SOURCE
 mark_as_advanced(ACTS_PYBIND11_SOURCE)
 
 set(ACTS_ANNOY_SOURCE
-    "GIT_REPOSITORY;https://github.com/spotify/annoy.git;GIT_TAG;v${_acts_annoy_version}"
+    "URL;https://github.com/spotify/annoy/archive/refs/tags/v${_acts_annoy_version}.tar.gz;URL_HASH;SHA256=c121d38cacd98f5103b24ca4e94ca097f18179eed3037e9eb93ad70ec1e6356e"
     CACHE STRING
     "Source to take Annoy from"
 )

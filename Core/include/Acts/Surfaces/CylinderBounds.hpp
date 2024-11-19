@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -18,6 +18,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iostream>
+#include <numbers>
 #include <stdexcept>
 #include <vector>
 
@@ -69,11 +70,11 @@ class CylinderBounds : public SurfaceBounds {
   /// @param avgPhi (optional) The phi value from which the opening angle spans
   /// @param bevelMinZ (optional) The bevel on the negative z side
   /// @param bevelMaxZ (optional) The bevel on the positive z sid The bevel on the positive z side
-  CylinderBounds(double r, double halfZ, double halfPhi = M_PI,
+  CylinderBounds(double r, double halfZ, double halfPhi = std::numbers::pi,
                  double avgPhi = 0., double bevelMinZ = 0.,
                  double bevelMaxZ = 0.) noexcept(false)
       : m_values({r, halfZ, halfPhi, avgPhi, bevelMinZ, bevelMaxZ}),
-        m_closed(std::abs(halfPhi - M_PI) < s_epsilon) {
+        m_closed(std::abs(halfPhi - std::numbers::pi) < s_epsilon) {
     checkConsistency();
   }
 
@@ -82,7 +83,8 @@ class CylinderBounds : public SurfaceBounds {
   /// @param values The parameter values
   CylinderBounds(const std::array<double, eSize>& values) noexcept(false)
       : m_values(values),
-        m_closed(std::abs(values[eHalfPhiSector] - M_PI) < s_epsilon) {
+        m_closed(std::abs(values[eHalfPhiSector] - std::numbers::pi) <
+                 s_epsilon) {
     checkConsistency();
   }
 
@@ -112,12 +114,18 @@ class CylinderBounds : public SurfaceBounds {
   /// Returns true for full phi coverage
   bool coversFullAzimuth() const;
 
-  /// Create the bows/circles on either side of the cylinder
+  /// Create the bow/circle vertices on either side of the cylinder
   ///
-  /// @param trans is the global transform
-  /// @param lseg  are the numbero if phi segments
-  std::vector<Vector3> createCircles(const Transform3 trans,
-                                     std::size_t lseg) const;
+  /// @param transform is the global transform
+  /// @param quarterSegments is the number of segments to approximate a quarter
+  /// of a circle. In order to symmetrize fully closed and sectoral cylinders,
+  /// also in the first case the two end points are given (albeit they overlap)
+  /// in -pi / pi
+  ///
+  /// @return a singlevector containing the vertices from one side and then
+  /// from the other side consecutively
+  std::vector<Vector3> circleVertices(const Transform3 transform,
+                                      unsigned int quarterSegments) const;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;

@@ -1,17 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Helpers.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <cstddef>
 #include <map>
@@ -80,7 +80,7 @@ class DuplicationPlotTool {
   /// @param truthParticle the truth Particle
   /// @param nDuplicatedTracks the number of duplicated tracks
   void fill(DuplicationPlotCache& duplicationPlotCache,
-            const ActsFatras::Particle& truthParticle,
+            const SimParticleState& truthParticle,
             std::size_t nDuplicatedTracks) const;
 
   /// @brief write the duplication plots to file

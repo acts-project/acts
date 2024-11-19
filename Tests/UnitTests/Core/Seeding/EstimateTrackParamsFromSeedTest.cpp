@@ -1,18 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -29,7 +27,6 @@
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
-#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -39,7 +36,6 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <ostream>
 #include <random>
 #include <utility>
 #include <vector>
@@ -99,8 +95,8 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
       true,  // material
       false  // passive
   });
-  auto field =
-      std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, 2._T));
+  const Vector3 bField(0, 0, 2._T);
+  auto field = std::make_shared<Acts::ConstantBField>(bField);
   ConstantFieldStepper stepper(std::move(field));
 
   ConstantFieldPropagator propagator(std::move(stepper), std::move(navigator));
@@ -165,9 +161,6 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           BOOST_TEST_INFO(
               "The truth track parameters at the bottom space point: \n"
               << expParams.transpose());
-          // The curvature of track projection on the transverse plane in unit
-          // of 1/mm
-          double rho = expParams[eBoundQOverP] * 0.3 * 2. / UnitConstants::m;
 
           // The space point pointers
           std::array<const SpacePoint*, 3> spacePointPtrs{};
@@ -175,30 +168,15 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                          spacePointPtrs.begin(),
                          [](const auto& sp) { return &sp.second; });
 
-          // Test the partial track parameters estimator
-          auto partialParamsOpt = estimateTrackParamsFromSeed(
-              spacePointPtrs.begin(), spacePointPtrs.end(), *logger);
-          BOOST_REQUIRE(partialParamsOpt.has_value());
-          const auto& estPartialParams = partialParamsOpt.value();
-          BOOST_TEST_INFO(
-              "The estimated track parameters at the transverse plane: \n"
-              << estPartialParams.transpose());
+          // Test the free track parameters estimator
+          FreeVector estFreeParams =
+              estimateTrackParamsFromSeed(spacePointPtrs, bField);
+          BOOST_CHECK(!estFreeParams.hasNaN());
 
-          // The particle starting position is (0, 0, 0). Hence, d0 is zero; the
-          // phi at the point of cloest approach is exactly the phi of the truth
-          // particle
-          CHECK_CLOSE_ABS(estPartialParams[eBoundLoc0], 0., 1e-5);
-          CHECK_CLOSE_ABS(estPartialParams[eBoundPhi], phi, 1e-5);
-          CHECK_CLOSE_ABS(estPartialParams[eBoundQOverP], rho, 1e-4);
-          // The loc1, theta and time are set to zero in the estimator
-          CHECK_CLOSE_ABS(estPartialParams[eBoundLoc1], 0., 1e-10);
-          CHECK_CLOSE_ABS(estPartialParams[eBoundTheta], 0., 1e-10);
-          CHECK_CLOSE_ABS(estPartialParams[eBoundTime], 0., 1e-10);
-
-          // Test the full track parameters estimator
+          // Test the bound track parameters estimator
           auto fullParamsOpt = estimateTrackParamsFromSeed(
               geoCtx, spacePointPtrs.begin(), spacePointPtrs.end(),
-              *bottomSurface, Vector3(0, 0, 2._T), 0.1_T, *logger);
+              *bottomSurface, bField, 0.1_T, *logger);
           BOOST_REQUIRE(fullParamsOpt.has_value());
           const auto& estFullParams = fullParamsOpt.value();
           BOOST_TEST_INFO(

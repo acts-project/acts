@@ -1,15 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GridPortalLink.hpp"
 
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+
+#include <numbers>
 
 namespace Acts {
 
@@ -24,8 +26,9 @@ std::unique_ptr<GridPortalLink> GridPortalLink::make(
     if (direction == BinningValue::binRPhi) {
       ActsScalar r = cylinder->bounds().get(CylinderBounds::eR);
       if (cylinder->bounds().coversFullAzimuth()) {
-        grid = GridPortalLink::make(surface, direction,
-                                    Axis{AxisClosed, -M_PI * r, M_PI * r, 1});
+        grid = GridPortalLink::make(
+            surface, direction,
+            Axis{AxisClosed, -std::numbers::pi * r, std::numbers::pi * r, 1});
       } else {
         ActsScalar hlPhi =
             cylinder->bounds().get(CylinderBounds::eHalfPhiSector);
@@ -50,8 +53,9 @@ std::unique_ptr<GridPortalLink> GridPortalLink::make(
                                   Axis{AxisBound, minR, maxR, 1});
     } else if (direction == BinningValue::binPhi) {
       if (bounds.coversFullAzimuth()) {
-        grid = GridPortalLink::make(surface, direction,
-                                    Axis{AxisClosed, -M_PI, M_PI, 1});
+        grid = GridPortalLink::make(
+            surface, direction,
+            Axis{AxisClosed, -std::numbers::pi, std::numbers::pi, 1});
       } else {
         ActsScalar hlPhi = bounds.get(RadialBounds::eHalfPhiSector);
         grid = GridPortalLink::make(surface, direction,
@@ -89,7 +93,10 @@ void GridPortalLink::checkConsistency(const CylinderSurface& cyl) const {
     ActsScalar hlZ = cyl.bounds().get(CylinderBounds::eHalfLengthZ);
     if (!same(axis.getMin(), -hlZ) || !same(axis.getMax(), hlZ)) {
       throw std::invalid_argument(
-          "GridPortalLink: CylinderBounds: invalid length setup.");
+          "GridPortalLink: CylinderBounds: invalid length setup: " +
+          std::to_string(axis.getMin()) + " != " + std::to_string(-hlZ) +
+          " or " + std::to_string(axis.getMax()) +
+          " != " + std::to_string(hlZ));
     }
   };
   auto checkRPhi = [&cyl, same](const IAxis& axis) {
@@ -103,7 +110,7 @@ void GridPortalLink::checkConsistency(const CylinderSurface& cyl) const {
     }
 
     // If full cylinder, make sure axis wraps around
-    if (same(hlPhi, M_PI)) {
+    if (same(hlPhi, std::numbers::pi)) {
       if (axis.getBoundaryType() != AxisBoundaryType::Closed) {
         throw std::invalid_argument(
             "GridPortalLink: CylinderBounds: invalid phi sector setup: "
@@ -165,7 +172,7 @@ void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
           "GridPortalLink: DiscBounds: invalid phi sector setup.");
     }
     // If full disc, make sure axis wraps around
-    if (same(hlPhi, M_PI)) {
+    if (same(hlPhi, std::numbers::pi)) {
       if (axis.getBoundaryType() != Acts::AxisBoundaryType::Closed) {
         throw std::invalid_argument(
             "GridPortalLink: DiscBounds: invalid phi sector setup: axis is "
@@ -295,7 +302,7 @@ void GridPortalLink::fillGrid1dTo2d(FillDirection dir,
   assert(locDest.size() == 2);
 
   for (std::size_t i = 0; i <= locSource[0] + 1; ++i) {
-    TrackingVolume* source = grid1d.atLocalBins({i});
+    const TrackingVolume* source = grid1d.atLocalBins({i});
 
     if (dir == FillDirection::loc1) {
       for (std::size_t j = 0; j <= locDest[1] + 1; ++j) {

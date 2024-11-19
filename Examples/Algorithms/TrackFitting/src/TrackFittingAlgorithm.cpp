@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -126,10 +127,11 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     trackSourceLinks.reserve(protoTrack.size());
 
     // Fill the source links via their indices from the container
-    for (auto hitIndex : protoTrack) {
+    for (auto measIndex : protoTrack) {
       ConstVariableBoundMeasurementProxy measurement =
-          measurements.getMeasurement(hitIndex);
-      trackSourceLinks.push_back(measurement.sourceLink());
+          measurements.getMeasurement(measIndex);
+      IndexSourceLink sourceLink(measurement.geometryId(), measIndex);
+      trackSourceLinks.push_back(Acts::SourceLink(sourceLink));
     }
 
     ACTS_DEBUG("Invoke direct fitter for track " << itrack);

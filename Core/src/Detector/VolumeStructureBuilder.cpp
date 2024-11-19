@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
 
@@ -18,6 +18,8 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+
+#include <numbers>
 
 Acts::Experimental::VolumeStructureBuilder::VolumeStructureBuilder(
     const Acts::Experimental::VolumeStructureBuilder::Config& cfg,
@@ -142,7 +144,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
       }
       // Check if phi has been constraint, otherwise fill it with full coverage
       if (boundValues.size() == 3u) {
-        boundValues.push_back(M_PI);
+        boundValues.push_back(std::numbers::pi_v<ActsScalar>);
         boundValues.push_back(0.);
       }
       ACTS_VERBOSE(" - cylindrical shape with [iR, oR, hZ, sPhi, mPhi] = "

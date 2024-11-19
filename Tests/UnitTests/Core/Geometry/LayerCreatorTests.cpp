@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -37,6 +37,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <numbers>
 #include <set>
 #include <string>
 #include <utility>
@@ -124,7 +125,7 @@ struct LayerCreatorFixture {
                                double zbase = 0, double r = 10) {
     SrfVec res;
 
-    double phiStep = 2 * M_PI / n;
+    double phiStep = 2 * std::numbers::pi / n;
     for (std::size_t i = 0; i < n; ++i) {
       double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
 
@@ -146,11 +147,11 @@ struct LayerCreatorFixture {
   }
 
   SrfVec fullPhiTestSurfacesBRL(int n = 10, double shift = 0, double zbase = 0,
-                                double incl = M_PI / 9., double w = 2,
-                                double h = 1.5) {
+                                double incl = std::numbers::pi / 9.,
+                                double w = 2, double h = 1.5) {
     SrfVec res;
 
-    double phiStep = 2 * M_PI / n;
+    double phiStep = 2 * std::numbers::pi / n;
     for (int i = 0; i < n; ++i) {
       double z = zbase;
 
@@ -159,7 +160,7 @@ struct LayerCreatorFixture {
       trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3(0, 0, 1)));
       trans.translate(Vector3(10, 0, z));
       trans.rotate(Eigen::AngleAxisd(incl, Vector3(0, 0, 1)));
-      trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3(0, 1, 0)));
+      trans.rotate(Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
       std::shared_ptr<PlaneSurface> srf =
@@ -180,7 +181,8 @@ struct LayerCreatorFixture {
     for (int i = 0; i < nZ; i++) {
       double z = i * w * 2 + z0;
       std::cout << "z=" << z << std::endl;
-      SrfVec ring = fullPhiTestSurfacesBRL(nPhi, 0, z, M_PI / 9., w, h);
+      SrfVec ring =
+          fullPhiTestSurfacesBRL(nPhi, 0, z, std::numbers::pi / 9., w, h);
       res.insert(res.end(), ring.begin(), ring.end());
     }
 
@@ -188,8 +190,9 @@ struct LayerCreatorFixture {
   }
 
   std::pair<SrfVec, std::vector<std::pair<const Surface*, const Surface*>>>
-  makeBarrelStagger(int nPhi, int nZ, double shift = 0, double incl = M_PI / 9.,
-                    double w = 2, double h = 1.5) {
+  makeBarrelStagger(int nPhi, int nZ, double shift = 0,
+                    double incl = std::numbers::pi / 9., double w = 2,
+                    double h = 1.5) {
     double z0 = -(nZ - 1) * w;
     SrfVec res;
 
@@ -198,14 +201,15 @@ struct LayerCreatorFixture {
     for (int i = 0; i < nZ; i++) {
       double z = i * w * 2 + z0;
 
-      double phiStep = 2 * M_PI / nPhi;
+      double phiStep = 2 * std::numbers::pi / nPhi;
       for (int j = 0; j < nPhi; ++j) {
         Transform3 trans;
         trans.setIdentity();
         trans.rotate(Eigen::AngleAxisd(j * phiStep + shift, Vector3(0, 0, 1)));
         trans.translate(Vector3(10, 0, z));
         trans.rotate(Eigen::AngleAxisd(incl, Vector3(0, 0, 1)));
-        trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3(0, 1, 0)));
+        trans.rotate(
+            Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
         std::shared_ptr<PlaneSurface> srfA =
@@ -258,8 +262,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   auto axes = layer->surfaceArray()->getAxes();
   BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
   BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
-  CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
-  CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
+  CHECK_CLOSE_REL(axes.at(0)->getMin(), -std::numbers::pi, 1e-3);
+  CHECK_CLOSE_REL(axes.at(0)->getMax(), std::numbers::pi, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMin(), -14, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMax(), 14, 1e-3);
 
@@ -278,8 +282,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   axes = layer->surfaceArray()->getAxes();
   BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
   BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
-  CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
-  CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
+  CHECK_CLOSE_REL(axes.at(0)->getMin(), -std::numbers::pi, 1e-3);
+  CHECK_CLOSE_REL(axes.at(0)->getMax(), std::numbers::pi, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMin(), -14, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMax(), 14, 1e-3);
 
@@ -295,8 +299,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   axes = layer->surfaceArray()->getAxes();
   BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 13u);
   BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 3u);
-  CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
-  CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
+  CHECK_CLOSE_REL(axes.at(0)->getMin(), -std::numbers::pi, 1e-3);
+  CHECK_CLOSE_REL(axes.at(0)->getMax(), std::numbers::pi, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMin(), -14, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMax(), 14, 1e-3);
 
@@ -319,8 +323,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   axes = layer->surfaceArray()->getAxes();
   BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
   BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
-  CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
-  CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
+  CHECK_CLOSE_REL(axes.at(0)->getMin(), -std::numbers::pi, 1e-3);
+  CHECK_CLOSE_REL(axes.at(0)->getMax(), std::numbers::pi, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMin(), -25, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMax(), 25, 1e-3);
 }
@@ -351,14 +355,14 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 30u);
   CHECK_CLOSE_REL(axes.at(0)->getMin(), 5, 1e-3);
   CHECK_CLOSE_REL(axes.at(0)->getMax(), 25, 1e-3);
-  CHECK_CLOSE_REL(axes.at(1)->getMin(), -M_PI, 1e-3);
-  CHECK_CLOSE_REL(axes.at(1)->getMax(), M_PI, 1e-3);
+  CHECK_CLOSE_REL(axes.at(1)->getMin(), -std::numbers::pi, 1e-3);
+  CHECK_CLOSE_REL(axes.at(1)->getMax(), std::numbers::pi, 1e-3);
   checkBinContentSize(layer->surfaceArray(), 1);
 
   // check that it's applying a rotation transform to improve phi binning
   // BOOST_CHECK_NE(bu->transform(), nullptr);
   // double actAngle = ((*bu->transform()) * Vector3(1, 0, 0)).phi();
-  // double expAngle = -2 * M_PI / 30 / 2.;
+  // double expAngle = -2 * std::numbers::pi / 30 / 2.;
   // CHECK_CLOSE_REL(actAngle, expAngle, 1e-3);
 
   double envMinR = 1, envMaxR = 1, envZ = 5;
@@ -380,14 +384,14 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), nBinsPhi);
   CHECK_CLOSE_REL(axes.at(0)->getMin(), rMin, 1e-3);
   CHECK_CLOSE_REL(axes.at(0)->getMax(), rMax, 1e-3);
-  CHECK_CLOSE_REL(axes.at(1)->getMin(), -M_PI, 1e-3);
-  CHECK_CLOSE_REL(axes.at(1)->getMax(), M_PI, 1e-3);
+  CHECK_CLOSE_REL(axes.at(1)->getMin(), -std::numbers::pi, 1e-3);
+  CHECK_CLOSE_REL(axes.at(1)->getMax(), std::numbers::pi, 1e-3);
   checkBinContentSize(layer->surfaceArray(), 1);
 
   // check that it's applying a rotation transform to improve phi binning
   // BOOST_CHECK_NE(bu->transform(), nullptr);
   // actAngle = ((*bu->transform()) * Vector3(1, 0, 0)).phi();
-  // expAngle = -2 * M_PI / 30 / 2.;
+  // expAngle = -2 * std::numbers::pi / 30 / 2.;
   // CHECK_CLOSE_REL(actAngle, expAngle, 1e-3);
 
   layer = std::dynamic_pointer_cast<DiscLayer>(
@@ -402,19 +406,19 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), nBinsPhi);
   CHECK_CLOSE_REL(axes.at(0)->getMin(), rMin, 1e-3);
   CHECK_CLOSE_REL(axes.at(0)->getMax(), rMax, 1e-3);
-  CHECK_CLOSE_REL(axes.at(1)->getMin(), -M_PI, 1e-3);
-  CHECK_CLOSE_REL(axes.at(1)->getMax(), M_PI, 1e-3);
+  CHECK_CLOSE_REL(axes.at(1)->getMin(), -std::numbers::pi, 1e-3);
+  CHECK_CLOSE_REL(axes.at(1)->getMax(), std::numbers::pi, 1e-3);
   checkBinContentSize(layer->surfaceArray(), 1);
 
   // check that it's applying a rotation transform to improve phi binning
   // BOOST_CHECK_NE(bu->transform(), nullptr);
   // actAngle = ((*bu->transform()) * Vector3(1, 0, 0)).phi();
-  // expAngle = -2 * M_PI / 30 / 2.;
+  // expAngle = -2 * std::numbers::pi / 30 / 2.;
   // CHECK_CLOSE_REL(actAngle, expAngle, 1e-3);
 }
 
 BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
-  auto barrel = makeBarrelStagger(30, 7, 0, M_PI / 9.);
+  auto barrel = makeBarrelStagger(30, 7, 0, std::numbers::pi / 9.);
   auto brl = barrel.first;
   draw_surfaces(brl, "LayerCreator_barrelStagger.obj");
 

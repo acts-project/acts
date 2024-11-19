@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
@@ -35,11 +35,11 @@ void addExampleAlgorithms(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::FatrasSimulation, mex, "FatrasSimulation", inputParticles,
-      outputParticlesInitial, outputParticlesFinal, outputSimHits,
-      imputParametrisationNuclearInteraction, randomNumbers, trackingGeometry,
-      magneticField, pMin, emScattering, emEnergyLossIonisation,
-      emEnergyLossRadiation, emPhotonConversion, generateHitsOnSensitive,
-      generateHitsOnMaterial, generateHitsOnPassive, averageHitsPerParticle);
+      outputParticles, outputSimHits, imputParametrisationNuclearInteraction,
+      randomNumbers, trackingGeometry, magneticField, pMin, emScattering,
+      emEnergyLossIonisation, emEnergyLossRadiation, emPhotonConversion,
+      generateHitsOnSensitive, generateHitsOnMaterial, generateHitsOnPassive,
+      averageHitsPerParticle);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticlesPrinter, mex,
                                 "ParticlesPrinter", inputParticles);

@@ -1,14 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 
 #include <cmath>
+#include <numbers>
 
 namespace ActsExamples::Generic {
 
@@ -22,8 +23,8 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
   std::vector<Acts::Vector3> mPositions;
   mPositions.reserve(nPhiBins * nZbins);
   // prep work
-  double phiStep = 2 * M_PI / nPhiBins;
-  double minPhi = -M_PI + 0.5 * phiStep;
+  double phiStep = 2 * std::numbers::pi / nPhiBins;
+  double minPhi = -std::numbers::pi + 0.5 * phiStep;
   double zStart = -0.5 * (nZbins - 1) * (2 * moduleHalfLength - lOverlap);
   double zStep = 2 * std::abs(zStart) / (nZbins - 1);
   // loop over the bins
@@ -102,8 +103,8 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
   std::vector<Acts::Vector3> rPositions;
   rPositions.reserve(nPhiBins);
   // prep work
-  double phiStep = 2 * M_PI / nPhiBins;
-  double minPhi = -M_PI + 0.5 * phiStep;
+  double phiStep = 2 * std::numbers::pi / nPhiBins;
+  double minPhi = -std::numbers::pi + 0.5 * phiStep;
   // phi loop
   for (std::size_t iphi = 0; iphi < static_cast<std::size_t>(nPhiBins);
        ++iphi) {

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
 // BinAdjustment.hpp, Acts project
@@ -19,6 +19,7 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
+#include <numbers>
 #include <stdexcept>
 
 namespace Acts {
@@ -94,8 +95,8 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   // The parameters from the cutout cylinder bounds
   double minR = cBounds.get(CutoutCylinderVolumeBounds::eMinR);
   double maxR = cBounds.get(CutoutCylinderVolumeBounds::eMaxR);
-  double minPhi = -M_PI;
-  double maxPhi = M_PI;
+  double minPhi = -std::numbers::pi;
+  double maxPhi = std::numbers::pi;
   double minZ = -cBounds.get(CutoutCylinderVolumeBounds::eHalfLengthZ);
   double maxZ = cBounds.get(CutoutCylinderVolumeBounds::eHalfLengthZ);
   // Retrieve the binning data

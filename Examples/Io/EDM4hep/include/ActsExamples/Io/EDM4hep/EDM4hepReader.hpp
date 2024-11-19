@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -15,7 +15,6 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <memory>
 #include <string>
@@ -44,13 +43,10 @@ class EDM4hepReader final : public IReader {
     std::string inputParticles = "MCParticles";
     /// Names of the sim hit collections
     std::vector<std::string> inputSimHits{};
-    /// Particles at creation
-    std::string outputParticlesInitial;
-    /// Particles at their endpoints
-    std::string outputParticlesFinal;
     /// Particles from the generator
     std::string outputParticlesGenerator;
-
+    /// Particles from the simulation
+    std::string outputParticlesSimulation;
     /// Output simulated (truth) hits collection.
     std::string outputSimHits;
 
@@ -88,15 +84,14 @@ class EDM4hepReader final : public IReader {
   const Config& config() const { return m_cfg; }
 
   void processChildren(const edm4hep::MCParticle& particle, SimBarcode parentId,
-                       SimParticleContainer::sequence_type& particles,
+                       std::vector<SimParticle>& particles,
                        ParentRelationship& parentRelationship,
                        std::unordered_map<int, std::size_t>& particleMap,
                        std::size_t& nSecondaryVertices,
                        std::size_t& maxGen) const;
 
-  static void setSubParticleIds(
-      const SimParticleContainer::sequence_type::iterator& begin,
-      const SimParticleContainer::sequence_type::iterator& end);
+  static void setSubParticleIds(std::vector<SimParticle>::iterator begin,
+                                std::vector<SimParticle>::iterator end);
 
  private:
   const Acts::Logger& logger() const { return *m_logger; }
@@ -111,17 +106,14 @@ class EDM4hepReader final : public IReader {
 
   Acts::PodioUtil::ROOTReader& reader();
 
-  WriteDataHandle<SimParticleContainer> m_outputParticlesInitial{
-      this, "OutputParticlesInitial"};
-  WriteDataHandle<SimParticleContainer> m_outputParticlesFinal{
-      this, "OutputParticlesFinal"};
   WriteDataHandle<SimParticleContainer> m_outputParticlesGenerator{
       this, "OutputParticlesGenerator"};
+  WriteDataHandle<SimParticleContainer> m_outputParticlesSimulation{
+      this, "OutputParticlesSimulation"};
 
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
 
-  void graphviz(std::ostream& os,
-                const SimParticleContainer::sequence_type& particles,
+  void graphviz(std::ostream& os, const std::vector<SimParticle>& particles,
                 const ParentRelationship& parents) const;
 };
 

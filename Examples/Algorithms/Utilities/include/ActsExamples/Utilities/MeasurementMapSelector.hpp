@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -17,6 +17,7 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace ActsExamples {
@@ -30,11 +31,11 @@ class MeasurementMapSelector final : public IAlgorithm {
 
  public:
   struct Config {
+    /// Input measurements
+    std::string inputMeasurements;
+
     /// Input spacepoints collection.
     std::string inputMeasurementParticleMap;
-
-    /// Input source links
-    std::string inputSourceLinks;
 
     /// Output protoTracks collection.
     std::string outputMeasurementParticleMap;
@@ -48,13 +49,11 @@ class MeasurementMapSelector final : public IAlgorithm {
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
   MeasurementMapSelector(Config cfg, Acts::Logging::Level lvl)
-      : IAlgorithm("MeasurementMapSelector", lvl), m_cfg(cfg) {
-    m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
+      : IAlgorithm("MeasurementMapSelector", lvl), m_cfg(std::move(cfg)) {
+    m_inputMeasurements.initialize(m_cfg.inputMeasurements);
     m_inputMap.initialize(m_cfg.inputMeasurementParticleMap);
     m_outputMap.initialize(m_cfg.outputMeasurementParticleMap);
   }
-
-  virtual ~MeasurementMapSelector() = default;
 
   /// Filter the measurements
   ///
@@ -62,13 +61,14 @@ class MeasurementMapSelector final : public IAlgorithm {
   /// @return a process code to steer the algorithm flow
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext& ctx) const final {
-    const auto& inputSourceLinks = m_inputSourceLinks(ctx);
+    const auto& inputMeasurements = m_inputMeasurements(ctx);
     const auto& inputMap = m_inputMap(ctx);
 
     Map outputMap;
 
     for (const auto geoId : m_cfg.geometrySelection) {
-      auto range = selectLowestNonZeroGeometryObject(inputSourceLinks, geoId);
+      auto range = selectLowestNonZeroGeometryObject(
+          inputMeasurements.orderedIndices(), geoId);
       for (const auto& sl : range) {
         const auto [begin, end] = inputMap.equal_range(sl.index());
         outputMap.insert(begin, end);
@@ -86,8 +86,8 @@ class MeasurementMapSelector final : public IAlgorithm {
   // configuration
   Config m_cfg;
 
-  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
-      this, "InputSourceLinks"};
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
   ReadDataHandle<Map> m_inputMap{this, "InputMeasurementParticleMap"};
   WriteDataHandle<Map> m_outputMap{this, "OutputMeasurementParticleMap"};
 };

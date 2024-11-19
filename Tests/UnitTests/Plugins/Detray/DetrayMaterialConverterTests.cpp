@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -19,6 +19,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <numbers>
 
 #include <detray/definitions/grid_axis.hpp>
 #include <detray/io/frontend/payloads.hpp>
@@ -307,8 +309,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionRPhi) {
   std::vector<float> binEdges = {0., 5., 20.};
   Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open,
                               Acts::BinningValue::binR);
-  binUtility += Acts::BinUtility(2u, -M_PI, M_PI, Acts::BinningOption::closed,
-                                 Acts::BinningValue::binPhi);
+  binUtility +=
+      Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
+                       Acts::BinningOption::closed, Acts::BinningValue::binPhi);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};
@@ -384,8 +387,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZPhi) {
   // Create a binned material in 2 x2  bins in x-y direction
   Acts::BinUtility binUtility(2u, -1., 1., Acts::BinningOption::open,
                               Acts::BinningValue::binZ);
-  binUtility += Acts::BinUtility(2u, -M_PI, M_PI, Acts::BinningOption::closed,
-                                 Acts::BinningValue::binPhi);
+  binUtility +=
+      Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
+                       Acts::BinningOption::closed, Acts::BinningValue::binPhi);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};

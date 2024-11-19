@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
@@ -177,7 +177,7 @@ void addLogging(Acts::Python::Context& ctx) {
   logging.def(
       "getLogger",
       [](const std::string& name) {
-        if (pythonLoggers.find(name) == pythonLoggers.end()) {
+        if (!pythonLoggers.contains(name)) {
           pythonLoggers[name] =
               std::make_shared<PythonLogger>(name, Acts::Logging::INFO);
         }
@@ -364,12 +364,16 @@ void addBinning(Context& ctx) {
                           .value("binY", Acts::BinningValue::binY)
                           .value("binZ", Acts::BinningValue::binZ)
                           .value("binR", Acts::BinningValue::binR)
-                          .value("binPhi", Acts::BinningValue::binPhi);
+                          .value("binPhi", Acts::BinningValue::binPhi)
+                          .value("binRPhi", Acts::BinningValue::binRPhi)
+                          .value("binH", Acts::BinningValue::binH)
+                          .value("binEta", Acts::BinningValue::binEta)
+                          .value("binMag", Acts::BinningValue::binMag);
 
   auto boundaryType = py::enum_<Acts::AxisBoundaryType>(m, "AxisBoundaryType")
-                          .value("bound", Acts::AxisBoundaryType::Bound)
-                          .value("closed", Acts::AxisBoundaryType::Closed)
-                          .value("open", Acts::AxisBoundaryType::Open);
+                          .value("Bound", Acts::AxisBoundaryType::Bound)
+                          .value("Closed", Acts::AxisBoundaryType::Closed)
+                          .value("Open", Acts::AxisBoundaryType::Open);
 
   auto axisType = py::enum_<Acts::AxisType>(m, "AxisType")
                       .value("equidistant", Acts::AxisType::Equidistant)

@@ -1,15 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -25,16 +26,11 @@
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
-#include "ActsExamples/Io/NuclearInteractions/RootNuclearInteractionParametersWriter.hpp"
-#include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
-#include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
-#include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
-#include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
-#include "ActsExamples/Io/Performance/VertexPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
+#include "ActsExamples/Io/Root/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationSummaryWriter.hpp"
@@ -45,6 +41,11 @@
 #include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
+#include "ActsExamples/Io/Root/SeedingPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/TrackFinderNTupleWriter.hpp"
+#include "ActsExamples/Io/Root/TrackFinderPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/TrackFitterPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
@@ -57,6 +58,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace Acts {
 class TrackingGeometry;
@@ -119,7 +121,7 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_MEMBER(offset);
     ACTS_PYTHON_MEMBER(lineThickness);
     ACTS_PYTHON_MEMBER(surfaceThickness);
-    ACTS_PYTHON_MEMBER(nSegments);
+    ACTS_PYTHON_MEMBER(quarterSegments);
     ACTS_PYTHON_MEMBER(triangulate);
     ACTS_PYTHON_MEMBER(outputName);
     ACTS_PYTHON_STRUCT_END();
@@ -130,9 +132,13 @@ void addOutput(Context& ctx) {
         .def(py::init<>())
         .def(py::init<int, int, int>())
         .def(py::init<double, double, double>())
-        .def(py::init<std::string>())
+        .def(py::init<std::string_view>())
         .def_readonly("rgb", &Color::rgb);
   }
+
+  py::class_<IVisualization3D>(m, "IVisualization3D")
+      .def("write", py::overload_cast<const std::filesystem::path&>(
+                        &IVisualization3D::write, py::const_));
 
   {
     using Writer = ActsExamples::ObjTrackingGeometryWriter;
@@ -157,7 +163,7 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
   }
 
-  // Bindings for the binning in e.g., CKFPerformanceWriter
+  // Bindings for the binning in e.g., TrackFinderPerformanceWriter
   {
     py::class_<PlotHelpers::Binning>(mex, "Binning")
         .def(py::init<std::string, int, double, double>(), "title"_a, "bins"_a,
@@ -187,15 +193,15 @@ void addOutput(Context& ctx) {
                              inputSummaryCollection, filePath, fileMode);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootParticleWriter, mex,
-                             "RootParticleWriter", inputParticles,
-                             inputFinalParticles, filePath, fileMode, treeName);
+                             "RootParticleWriter", inputParticles, filePath,
+                             fileMode, treeName);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootVertexWriter, mex,
                              "RootVertexWriter", inputVertices, filePath,
                              fileMode, treeName);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderPerformanceWriter, mex,
-                             "TrackFinderPerformanceWriter", inputTracks,
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderNTupleWriter, mex,
+                             "TrackFinderNTupleWriter", inputTracks,
                              inputParticles, inputMeasurementParticlesMap,
                              inputTrackParticleMatching, filePath, fileMode,
                              treeNameTracks, treeNameParticles);
@@ -347,7 +353,7 @@ void addOutput(Context& ctx) {
       treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific);
 
   ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::VertexPerformanceWriter, mex, "VertexPerformanceWriter",
+      ActsExamples::VertexNTupleWriter, mex, "VertexNTupleWriter",
       inputVertices, inputTracks, inputTruthVertices, inputParticles,
       inputSelectedParticles, inputTrackParticleMatching, bField, filePath,
       treeName, fileMode, vertexMatchThreshold, trackMatchThreshold, useTracks);
@@ -389,12 +395,13 @@ void addOutput(Context& ctx) {
       trackingGeometry, outputDir, outputPrecision, writeSensitive,
       writeBoundary, writeSurfaceGrid, writeLayerVolume, writePerEvent);
 
-  ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::CKFPerformanceWriter, mex, "CKFPerformanceWriter",
-      inputTracks, inputParticles, inputTrackParticleMatching,
-      inputParticleTrackMatching, filePath, fileMode, effPlotToolConfig,
-      fakeRatePlotToolConfig, duplicationPlotToolConfig,
-      trackSummaryPlotToolConfig, writeMatchingDetails);
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderPerformanceWriter, mex,
+                             "TrackFinderPerformanceWriter", inputTracks,
+                             inputParticles, inputTrackParticleMatching,
+                             inputParticleTrackMatching, filePath, fileMode,
+                             effPlotToolConfig, fakeRatePlotToolConfig,
+                             duplicationPlotToolConfig,
+                             trackSummaryPlotToolConfig, writeMatchingDetails);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootNuclearInteractionParametersWriter, mex,

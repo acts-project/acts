@@ -1,18 +1,20 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
+#include <span>
 #include <tuple>
 #include <vector>
 
@@ -22,7 +24,6 @@ namespace Acts {
 namespace Experimental {
 class Portal;
 }
-using namespace Experimental;
 
 class Surface;
 
@@ -55,6 +56,7 @@ class NavigationStream {
     ObjectIntersection<Surface> intersection =
         ObjectIntersection<Surface>::invalid();
     /// The portal
+    const Acts::Experimental::Portal* gen2Portal = nullptr;
     const Portal* portal = nullptr;
     /// The boundary tolerance
     BoundaryTolerance bTolerance = BoundaryTolerance::None();
@@ -116,25 +118,27 @@ class NavigationStream {
   ///
   /// @param surface the surface to be filled
   /// @param bTolerance the boundary tolerance used for the intersection
-  void addSurfaceCandidate(const Surface* surface,
+  void addSurfaceCandidate(const Surface& surface,
                            const BoundaryTolerance& bTolerance);
 
   /// Fill n surfaces into the candidate vector
   ///
   /// @param surfaces the surfaces that are filled in
   /// @param bTolerance the boundary tolerance used for the intersection
-  void addSurfaceCandidates(const std::vector<const Surface*>& surfaces,
+  void addSurfaceCandidates(std::span<const Surface*> surfaces,
                             const BoundaryTolerance& bTolerance);
 
   /// Fill one portal into the candidate vector
   ///
+  void addPortalCandidate(const Experimental::Portal& portal);
   /// @param portal the portals that are filled in
-  void addPortalCandidate(const Portal* portal);
+
+  void addPortalCandidate(const Portal& portal);
 
   /// Fill n portals into the candidate vector
   ///
   /// @param portals the portals that are filled in
-  void addPortalCandidates(const std::vector<const Portal*>& portals);
+  void addPortalCandidates(std::span<const Experimental::Portal*> portals);
 
   /// Initialize the stream from a query point
   ///
@@ -173,6 +177,16 @@ class NavigationStream {
 
   /// The currently active candidate
   std::size_t m_currentIndex = 0u;
+};
+
+struct AppendOnlyNavigationStream {
+  explicit AppendOnlyNavigationStream(NavigationStream& stream);
+  void addSurfaceCandidate(const Surface& surface,
+                           const BoundaryTolerance& bTolerance);
+  void addPortalCandidate(const Portal& portal);
+
+ private:
+  NavigationStream* m_stream;
 };
 
 }  // namespace Acts

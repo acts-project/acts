@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -1043,8 +1043,9 @@ class TrackStateProxy {
         jacobian() = other.jacobian();
       }
 
+      // NOTE: we should not check hasCalibrated on this, since it
+      // may be not yet allocated
       if (ACTS_CHECK_BIT(mask, PM::Calibrated) &&
-          has<hashString("calibrated")>() &&
           other.template has<hashString("calibrated")>()) {
         allocateCalibrated(other.calibratedSize());
 
@@ -1100,7 +1101,7 @@ class TrackStateProxy {
   /// @note This might hash the @p key at runtime instead of compile-time
   /// @return true if the component exists, false if not
   constexpr bool has(std::string_view key) const {
-    return has(hashString(key));
+    return has(hashStringDynamic(key));
   }
 
   /// Retrieve a mutable reference to a component
@@ -1134,7 +1135,7 @@ class TrackStateProxy {
   constexpr T& component(std::string_view key)
     requires(!ReadOnly)
   {
-    return m_traj->template component<T>(hashString(key), m_istate);
+    return m_traj->template component<T>(hashStringDynamic(key), m_istate);
   }
 
   /// Retrieve a const reference to a component
@@ -1162,7 +1163,7 @@ class TrackStateProxy {
   /// @return Const reference to the component given by @p key
   template <typename T>
   constexpr const T& component(std::string_view key) const {
-    return m_traj->template component<T>(hashString(key), m_istate);
+    return m_traj->template component<T>(hashStringDynamic(key), m_istate);
   }
 
   /// @}

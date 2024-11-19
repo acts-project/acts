@@ -1,24 +1,18 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/SimulationResult.hpp"
 #include "ActsFatras/Kernel/detail/SimulationActor.hpp"
@@ -245,6 +239,9 @@ struct Simulation {
           continue;
         }
 
+        assert(result->particle.particleId() == initialParticle.particleId() &&
+               "Particle id must not change during simulation");
+
         copyOutputs(result.value(), simulatedParticlesInitial,
                     simulatedParticlesFinal, hits);
         // since physics processes are independent, there can be particle id
@@ -255,6 +252,10 @@ struct Simulation {
         renumberTailParticleIds(simulatedParticlesInitial, iinitial);
       }
     }
+
+    assert(
+        (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) &&
+        "Inconsistent final sizes of the simulated particle containers");
 
     // the overall function call succeeded, i.e. no fatal errors occurred.
     // yet, there might have been some particle for which the propagation
@@ -284,12 +285,13 @@ struct Simulation {
     // initial particle state was already pushed to the container before
     // store final particle state at the end of the simulation
     particlesFinal.push_back(result.particle);
+    std::copy(result.hits.begin(), result.hits.end(), std::back_inserter(hits));
+
     // move generated secondaries that should be simulated to the output
     std::copy_if(
         result.generatedParticles.begin(), result.generatedParticles.end(),
         std::back_inserter(particlesInitial),
         [this](const Particle &particle) { return selectParticle(particle); });
-    std::copy(result.hits.begin(), result.hits.end(), std::back_inserter(hits));
   }
 
   /// Renumber particle ids in the tail of the container.

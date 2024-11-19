@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -15,6 +15,7 @@
 
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 namespace Acts {
@@ -33,8 +34,8 @@ struct SeedFinderConfig {
   /// Geometry Settings + Detector ROI
   /// (r, z, phi) range for limiting location of all measurements and grid
   /// creation
-  float phiMin = -M_PI;
-  float phiMax = M_PI;
+  float phiMin = -std::numbers::pi_v<float>;
+  float phiMax = std::numbers::pi_v<float>;
   float zMin = -2800 * Acts::UnitConstants::mm;
   float zMax = 2800 * Acts::UnitConstants::mm;
   float rMax = 600 * Acts::UnitConstants::mm;

@@ -1,17 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -29,10 +26,9 @@ class ParticleSelector final : public IAlgorithm {
   struct Config {
     /// The input particles collection.
     std::string inputParticles;
-    /// Input measurement particles map (Optional)
-    std::string inputMeasurementParticlesMap;
     /// The output particles collection.
     std::string outputParticles;
+
     // Minimum/maximum distance from the origin in the transverse plane.
     double rhoMin = 0;
     double rhoMax = std::numeric_limits<double>::infinity();
@@ -79,8 +75,6 @@ class ParticleSelector final : public IAlgorithm {
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<IndexMultimap<ActsFatras::Barcode>> m_inputMap{
-      this, "InputMeasurementParticlesMap"};
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};

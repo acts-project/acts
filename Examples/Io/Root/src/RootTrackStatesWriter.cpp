@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
 
@@ -34,6 +34,7 @@
 #include <ios>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
@@ -43,8 +44,6 @@
 #include <TTree.h>
 
 namespace ActsExamples {
-
-class IndexSourceLink;
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
@@ -620,7 +619,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         residuals = parameters - truthParams;
         residuals[Acts::eBoundPhi] = Acts::detail::difference_periodic(
             parameters[Acts::eBoundPhi], truthParams[Acts::eBoundPhi],
-            2 * M_PI);
+            2 * std::numbers::pi);
         m_res_eLOC0[ipar].push_back(
             static_cast<float>(residuals[Acts::eBoundLoc0]));
         m_res_eLOC1[ipar].push_back(

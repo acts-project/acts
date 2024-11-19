@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -52,7 +52,8 @@ struct DD4hepDetector {
   DD4hepDetector() = default;
   /// @brief Constructor from geometry service
   /// @param _geometryService the geometry service
-  DD4hepDetector(std::shared_ptr<DD4hepGeometryService> _geometryService);
+  explicit DD4hepDetector(
+      std::shared_ptr<DD4hepGeometryService> _geometryService);
   /// @brief  Default destructor
   ~DD4hepDetector() = default;
 

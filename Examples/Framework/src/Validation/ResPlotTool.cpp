@@ -1,20 +1,18 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Validation/ResPlotTool.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <optional>
 #include <ostream>
@@ -146,7 +144,7 @@ void ActsExamples::ResPlotTool::write(
 
 void ActsExamples::ResPlotTool::fill(
     ResPlotTool::ResPlotCache& resPlotCache, const Acts::GeometryContext& gctx,
-    const ActsFatras::Particle& truthParticle,
+    const SimParticleState& truthParticle,
     const Acts::BoundTrackParameters& fittedParamters) const {
   using ParametersVector = Acts::BoundTrackParameters::ParametersVector;
   using Acts::VectorHelpers::eta;
@@ -158,21 +156,27 @@ void ActsExamples::ResPlotTool::fill(
   auto trackParameter = fittedParamters.parameters();
 
   // get the perigee surface
-  auto pSurface = &fittedParamters.referenceSurface();
+  const auto& pSurface = fittedParamters.referenceSurface();
 
   // get the truth position and momentum
   ParametersVector truthParameter = ParametersVector::Zero();
 
   // get the truth perigee parameter
-  auto lpResult = pSurface->globalToLocal(gctx, truthParticle.position(),
-                                          truthParticle.direction());
-  if (lpResult.ok()) {
+  auto intersection =
+      pSurface
+          .intersect(gctx, truthParticle.position(), truthParticle.direction())
+          .closest();
+  if (intersection.isValid()) {
+    auto lpResult = pSurface.globalToLocal(gctx, intersection.position(),
+                                           truthParticle.direction());
+    assert(lpResult.ok());
+
     truthParameter[Acts::BoundIndices::eBoundLoc0] =
         lpResult.value()[Acts::BoundIndices::eBoundLoc0];
     truthParameter[Acts::BoundIndices::eBoundLoc1] =
         lpResult.value()[Acts::BoundIndices::eBoundLoc1];
   } else {
-    ACTS_ERROR("Global to local transformation did not succeed.");
+    ACTS_ERROR("Cannot get the truth perigee parameter");
   }
   truthParameter[Acts::BoundIndices::eBoundPhi] =
       phi(truthParticle.direction());

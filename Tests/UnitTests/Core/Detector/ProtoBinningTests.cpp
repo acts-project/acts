@@ -1,16 +1,18 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+
+#include <numbers>
 
 using namespace Acts::Experimental;
 
@@ -70,7 +72,7 @@ BOOST_AUTO_TEST_CASE(ProtoBinningVariable) {
 BOOST_AUTO_TEST_CASE(BinningDescriptionFromAndToBinUtility) {
   // A valid binning
   Acts::BinUtility bUtility(5u, 0., 10., Acts::open, Acts::BinningValue::binR);
-  std::vector<float> edges = {-M_PI, 0.1, M_PI};
+  std::vector<float> edges = {-std::numbers::pi, 0.1, std::numbers::pi};
   bUtility += Acts::BinUtility(edges, Acts::closed, Acts::BinningValue::binPhi);
 
   auto bDescription = BinningDescription::fromBinUtility(bUtility);
@@ -100,7 +102,8 @@ BOOST_AUTO_TEST_CASE(BinningDescriptionFromAndToBinUtility) {
   BOOST_CHECK_EQUAL(binUtility.binningData()[0].bins(), 5u);
   BOOST_CHECK_EQUAL(binUtility.binningData()[1].bins(), 2u);
   BOOST_CHECK_EQUAL(binUtility.binningData()[1].boundaries().size(), 3u);
-  CHECK_CLOSE_ABS(binUtility.binningData()[1].boundaries()[0], -M_PI, 1e-5);
+  CHECK_CLOSE_ABS(binUtility.binningData()[1].boundaries()[0],
+                  -std::numbers::pi, 1e-5);
   CHECK_CLOSE_ABS(binUtility.binningData()[1].boundaries()[1], 0.1, 1e-4);
 }
 

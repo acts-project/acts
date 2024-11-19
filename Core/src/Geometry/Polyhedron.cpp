@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/Polyhedron.hpp"
 
@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numbers>
 #include <utility>
 
 void Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
@@ -62,7 +63,8 @@ Acts::Extent Acts::Polyhedron::extent(const Transform3& transform) const {
       }
       if (detail::VerticesHelper::isInsidePolygon(origin, tface)) {
         extent.range(BinningValue::binR).setMin(0.);
-        extent.range(BinningValue::binPhi).set(-M_PI, M_PI);
+        extent.range(BinningValue::binPhi)
+            .set(-std::numbers::pi, std::numbers::pi);
         break;
       }
     }

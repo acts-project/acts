@@ -116,13 +116,13 @@ def runCKFTracks(
         EtaConfig,
         PhiConfig,
         ParticleConfig,
+        ParticleSelectorConfig,
         addFatras,
         addDigitization,
     )
 
     from acts.examples.reconstruction import (
         addSeeding,
-        TruthSeedRanges,
         ParticleSmearingSigmas,
         SeedFinderConfigArg,
         SeedFinderOptionsArg,
@@ -169,6 +169,11 @@ def runCKFTracks(
         trackingGeometry,
         field,
         rnd=rnd,
+        postSelectParticles=ParticleSelectorConfig(
+            pt=(0.5 * u.GeV, None),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     addDigitization(
@@ -183,7 +188,6 @@ def runCKFTracks(
         s,
         trackingGeometry,
         field,
-        TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
         ParticleSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
             # zero eveything so the CKF has a chance to find the measurements
             d0=0,
@@ -259,7 +263,7 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    inputParticlePath = Path(Inputdir) / "pythia8_particles.root"
+    inputParticlePath = Path(Inputdir) / "particles.root"
     if not inputParticlePath.exists():
         inputParticlePath = None
 

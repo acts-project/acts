@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -20,6 +20,7 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 using namespace Acts::Experimental;
@@ -103,7 +104,7 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   testDetectorVolumeUpdate(*cTubePortals[3], innerPos, -innerDir, nullptr);
 
   // Sectoral tube cylinder
-  Acts::ActsScalar alpha = 0.25 * M_PI;
+  Acts::ActsScalar alpha = std::numbers::pi / 4.;
   Acts::ActsScalar r = 50;
 
   Acts::Vector3 negPhiSecPos(r * std::cos(-alpha), r * std::sin(-alpha), 0.);

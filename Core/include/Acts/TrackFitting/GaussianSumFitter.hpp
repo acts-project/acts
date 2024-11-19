@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -123,15 +123,11 @@ struct GaussianSumFitter {
       using Actors = ActorList<GsfActor>;
       using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
-      std::vector<const Surface*> backwardSequence(
-          std::next(sSequence.rbegin()), sSequence.rend());
-      backwardSequence.push_back(opts.referenceSurface);
-
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.navigation.surfaces = backwardSequence;
+      propOptions.navigation.surfaces = sSequence;
       propOptions.actorList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
 

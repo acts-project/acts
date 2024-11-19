@@ -1,17 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SpacePointData.hpp"
-#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -46,9 +45,8 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   // internal units
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_shared<Acts::SeedFilter<SpacePointProxy_type>>(
-          m_cfg.seedFilterConfig);
-
+      std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
+          m_cfg.seedFilterConfig, logger().cloneWithSuffix("SeedFilter"));
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
   m_cfg.seedFinderOptions =
@@ -191,18 +189,15 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
       ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
       Acts::detail::RefHolder>::SpacePointProxyType;
 
-  m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
-      m_cfg.numPhiNeighbors, cfg.zBinNeighborsBottom);
-  m_topBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
-      m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop);
+  m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<3ul>>(
+      m_cfg.numPhiNeighbors, cfg.zBinNeighborsBottom, 0);
+  m_topBinFinder = std::make_unique<const Acts::GridBinFinder<3ul>>(
+      m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop, 0);
 
-  m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
-          m_cfg.seedFilterConfig);
   m_seedFinder =
       Acts::SeedFinder<SpacePointProxy_type,
                        Acts::CylindricalSpacePointGrid<SpacePointProxy_type>>(
-          m_cfg.seedFinderConfig);
+          m_cfg.seedFinderConfig, logger().cloneWithSuffix("SeedFinder"));
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
@@ -243,33 +238,42 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   using value_type = typename decltype(spContainer)::SpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;
 
-  // extent used to store r range for middle spacepoint
-  Acts::Extent rRangeSPExtent;
-
   Acts::CylindricalSpacePointGrid<value_type> grid =
       Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(
-          m_cfg.gridConfig, m_cfg.gridOptions);
+          m_cfg.gridConfig, m_cfg.gridOptions, logger());
 
-  Acts::CylindricalSpacePointGridCreator::fillGrid(
-      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid,
-      spContainer.begin(), spContainer.end(), rRangeSPExtent);
+  Acts::CylindricalSpacePointGridCreator::fillGrid<value_type>(
+      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid, spContainer,
+      logger());
 
-  std::array<std::vector<std::size_t>, 2ul> navigation;
+  // Compute radius Range
+  // we rely on the fact the grid is storing the proxies
+  // with a sorting in the radius
+  float minRange = std::numeric_limits<float>::max();
+  float maxRange = std::numeric_limits<float>::lowest();
+  for (const auto& coll : grid) {
+    if (coll.empty()) {
+      continue;
+    }
+    const auto* firstEl = coll.front();
+    const auto* lastEl = coll.back();
+    minRange = std::min(firstEl->radius(), minRange);
+    maxRange = std::max(lastEl->radius(), maxRange);
+  }
+
+  std::array<std::vector<std::size_t>, 3ul> navigation;
   navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
 
   auto spacePointsGrouping = Acts::CylindricalBinnedGroup<value_type>(
       std::move(grid), *m_bottomBinFinder, *m_topBinFinder,
       std::move(navigation));
 
-  // safely clamp double to float
-  float up = Acts::clampValue<float>(
-      std::floor(rRangeSPExtent.max(Acts::BinningValue::binR) / 2) * 2);
-
   /// variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
-      std::floor(rRangeSPExtent.min(Acts::BinningValue::binR) / 2) * 2 +
+      std::floor(minRange / 2) * 2 +
           m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
-      up - m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
+      std::floor(maxRange / 2) * 2 -
+          m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
 
   // run the seeding
   static thread_local std::vector<seed_type> seeds;

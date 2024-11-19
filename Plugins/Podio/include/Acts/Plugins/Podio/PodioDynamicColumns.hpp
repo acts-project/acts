@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -18,7 +18,7 @@
 namespace Acts::podio_detail {
 
 struct ConstDynamicColumnBase {
-  ConstDynamicColumnBase(std::string_view name) : m_name{name} {}
+  explicit ConstDynamicColumnBase(std::string_view name) : m_name{name} {}
 
   virtual ~ConstDynamicColumnBase() = default;
 
@@ -45,7 +45,8 @@ struct ConstDynamicColumn : public ConstDynamicColumnBase {
 };
 
 struct DynamicColumnBase : public ConstDynamicColumnBase {
-  DynamicColumnBase(std::string_view name) : ConstDynamicColumnBase{name} {}
+  explicit DynamicColumnBase(std::string_view name)
+      : ConstDynamicColumnBase{name} {}
 
   virtual std::any get(std::size_t i) = 0;
   std::any get(std::size_t i) const override = 0;

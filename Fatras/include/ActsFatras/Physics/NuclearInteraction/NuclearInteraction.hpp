@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -23,6 +23,7 @@
 #include <cmath>
 #include <iterator>
 #include <limits>
+#include <numbers>
 #include <optional>
 #include <random>
 #include <utility>
@@ -41,7 +42,7 @@ struct NuclearInteraction {
   /// The storage of the parameterisation
   detail::MultiParticleNuclearInteractionParametrisation
       multiParticleParameterisation;
-  /// The number of trials to match momenta and inveriant masses
+  /// The number of trials to match momenta and invariant masses
   //~ unsigned int nMatchingTrials = std::numeric_limits<unsigned int>::max();
   unsigned int nMatchingTrials = 100;
   unsigned int nMatchingTrialsTotal = 1000;
@@ -56,7 +57,7 @@ struct NuclearInteraction {
   template <typename generator_t>
   std::pair<Scalar, Scalar> generatePathLimits(generator_t& generator,
                                                const Particle& particle) const {
-    // Fast exit: No paramtrization provided
+    // Fast exit: No parameterisation provided
     if (multiParticleParameterisation.empty()) {
       return std::make_pair(std::numeric_limits<Scalar>::infinity(),
                             std::numeric_limits<Scalar>::infinity());
@@ -416,7 +417,7 @@ Acts::ActsDynamicVector NuclearInteraction::sampleInvariantMasses(
   for (unsigned int i = 0; i < size; i++) {
     float variance = parametrisation.eigenvaluesInvariantMass[i];
     std::normal_distribution<Acts::ActsScalar> dist{
-        parametrisation.meanInvariantMass[i], sqrtf(variance)};
+        parametrisation.meanInvariantMass[i], std::sqrt(variance)};
     parameters[i] = dist(generator);
   }
   // Transform to multivariate normal distribution
@@ -446,7 +447,7 @@ Acts::ActsDynamicVector NuclearInteraction::sampleMomenta(
   for (unsigned int i = 0; i < size; i++) {
     float variance = parametrisation.eigenvaluesMomentum[i];
     std::normal_distribution<Acts::ActsScalar> dist{
-        parametrisation.meanMomentum[i], sqrtf(variance)};
+        parametrisation.meanMomentum[i], std::sqrt(variance)};
     parameters[i] = dist(generator);
   }
 
@@ -517,9 +518,9 @@ std::vector<Particle> NuclearInteraction::convertParametersToParticles(
     const float p1p2 = 2. * momentum * parametrizedMomentum;
     const float costheta = 1. - invariantMass * invariantMass / p1p2;
 
-    const auto phiTheta =
-        globalAngle(phi, theta, uniformDistribution(generator) * 2. * M_PI,
-                    std::acos(costheta));
+    const auto phiTheta = globalAngle(
+        phi, theta, uniformDistribution(generator) * 2. * std::numbers::pi,
+        std::acos(costheta));
     const auto direction =
         Acts::makeDirectionFromPhiTheta(phiTheta.first, phiTheta.second);
 

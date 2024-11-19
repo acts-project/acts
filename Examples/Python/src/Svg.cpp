@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
@@ -79,8 +79,7 @@ actsvg::svg::object drawDetectorVolume(const Svg::ProtoVolume& pVolume,
 
   // Helper lambda for material selection
   auto materialSel = [&](const Svg::ProtoSurface& s) -> bool {
-    return (materials &&
-            s._decorations.find("material") != s._decorations.end());
+    return (materials && s._decorations.contains("material"));
   };
 
   // Helper lambda for view range selection
@@ -226,7 +225,11 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_MEMBER(highlights);
     ACTS_PYTHON_MEMBER(strokeWidth);
     ACTS_PYTHON_MEMBER(strokeColor);
-    ACTS_PYTHON_MEMBER(nSegments);
+    ACTS_PYTHON_MEMBER(highlightStrokeWidth);
+    ACTS_PYTHON_MEMBER(highlightStrokeColor);
+    ACTS_PYTHON_MEMBER(fontSize);
+    ACTS_PYTHON_MEMBER(fontColor);
+    ACTS_PYTHON_MEMBER(quarterSegments);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -298,6 +301,8 @@ void addSvg(Context& ctx) {
     svg.def("drawArrow", &actsvg::draw::arrow);
 
     svg.def("drawText", &actsvg::draw::text);
+
+    svg.def("drawInfoBox", &Svg::infoBox);
   }
 
   // Draw Eta Lines
@@ -329,6 +334,21 @@ void addSvg(Context& ctx) {
         });
   }
 
+  {
+    auto gco = py::class_<Svg::GridConverter::Options>(svg, "GridOptions")
+                   .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(gco, Svg::GridConverter::Options);
+    ACTS_PYTHON_MEMBER(style);
+    ACTS_PYTHON_STRUCT_END();
+
+    auto isco = py::class_<Svg::IndexedSurfacesConverter::Options>(
+                    svg, "IndexedSurfacesOptions")
+                    .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(isco, Svg::IndexedSurfacesConverter::Options);
+    ACTS_PYTHON_MEMBER(gridOptions);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
   // How detector volumes are drawn: Svg DetectorVolume options & drawning
   {
     auto c = py::class_<Svg::DetectorVolumeConverter::Options>(
@@ -339,11 +359,15 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_MEMBER(portalIndices);
     ACTS_PYTHON_MEMBER(portalOptions);
     ACTS_PYTHON_MEMBER(surfaceOptions);
+    ACTS_PYTHON_MEMBER(indexedSurfacesOptions);
     ACTS_PYTHON_STRUCT_END();
 
     // Define the proto volume & indexed surface grid
     py::class_<Svg::ProtoVolume>(svg, "ProtoVolume");
     py::class_<Svg::ProtoIndexedSurfaceGrid>(svg, "ProtoIndexedSurfaceGrid");
+
+    // Define the proto grid
+    py::class_<Svg::ProtoGrid>(svg, "ProtoGrid");
 
     // Convert an Acts::Experimental::DetectorVolume object into an
     // acts::svg::proto::volume
@@ -351,6 +375,15 @@ void addSvg(Context& ctx) {
 
     // Define the view functions
     svg.def("drawDetectorVolume", &drawDetectorVolume);
+  }
+
+  // Draw the ProtoIndexedSurfaceGrid
+  {
+    svg.def("drawIndexedSurfaces",
+            [](const Svg::ProtoIndexedSurfaceGrid& pIndexedSurfaceGrid,
+               const std::string& identification) {
+              return Svg::View::xy(pIndexedSurfaceGrid, identification);
+            });
   }
 
   // How a detector is drawn: Svg Detector options & drawning

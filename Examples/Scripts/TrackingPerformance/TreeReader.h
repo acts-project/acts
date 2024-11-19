@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -36,7 +36,7 @@ struct ParticleInfo {
 ///
 struct TreeReader {
   // The constructor
-  TreeReader(TTree* tree_) : tree(tree_) {}
+  explicit TreeReader(TTree* tree_) : tree(tree_) {}
 
   // Get entry
   void getEntry(unsigned int i) const {
@@ -145,6 +145,7 @@ struct TrackStatesReader : public TreeReader {
     // It's not necessary if you just need to read one file, but please do it to
     // synchronize events if multiple root files are read
     if (sortEvents) {
+      tree->SetEstimate(tree->GetEntries() + 1);
       entryNumbers.resize(tree->GetEntries());
       tree->Draw("event_nr", "", "goff");
       // Sort to get the entry numbers of the ordered events
@@ -338,6 +339,7 @@ struct TrackSummaryReader : public TreeReader {
     // It's not necessary if you just need to read one file, but please do it to
     // synchronize events if multiple root files are read
     if (sortEvents) {
+      tree->SetEstimate(tree->GetEntries() + 1);
       entryNumbers.resize(tree->GetEntries());
       tree->Draw("event_nr", "", "goff");
       // Sort to get the entry numbers of the ordered events
@@ -368,7 +370,8 @@ struct TrackSummaryReader : public TreeReader {
   std::vector<std::vector<double>>* outlierLayer =
       new std::vector<std::vector<double>>;
   std::vector<unsigned int>* nMajorityHits = new std::vector<unsigned int>;
-  std::vector<std::uint64_t>* majorityParticleId = new std::vector<std::uint64_t>;
+  std::vector<std::uint64_t>* majorityParticleId =
+      new std::vector<std::uint64_t>;
 
   std::vector<bool>* hasFittedParams = new std::vector<bool>;
 
@@ -400,7 +403,7 @@ struct TrackSummaryReader : public TreeReader {
 };
 
 /// Struct used for reading particles written out by the
-/// TrackFinderPerformanceWriter
+/// TrackFinderNTupleWriter
 ///
 struct ParticleReader : public TreeReader {
   // Delete the default constructor
@@ -427,6 +430,7 @@ struct ParticleReader : public TreeReader {
     // It's not necessary if you just need to read one file, but please do it to
     // synchronize events if multiple root files are read
     if (sortEvents) {
+      tree->SetEstimate(tree->GetEntries() + 1);
       entryNumbers.resize(tree->GetEntries());
       tree->Draw("event_id", "", "goff");
       // Sort to get the entry numbers of the ordered events
@@ -436,7 +440,8 @@ struct ParticleReader : public TreeReader {
   }
 
   // Get all the particles with requested event id
-  std::vector<ParticleInfo> getParticles(const std::uint32_t& eventNumber) const {
+  std::vector<ParticleInfo> getParticles(
+      const std::uint32_t& eventNumber) const {
     // Find the start entry and the batch size for this event
     std::string eventNumberStr = std::to_string(eventNumber);
     std::string findStartEntry = "event_id<" + eventNumberStr;

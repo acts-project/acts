@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -55,7 +56,7 @@ struct MyStruct {
 
 BOOST_AUTO_TEST_CASE(phi_helper_test) {
   Vector3 v(0, 1, 0);
-  CHECK_CLOSE_ABS(phi(v), M_PI / 2., 1e-9);
+  CHECK_CLOSE_ABS(phi(v), std::numbers::pi / 2., 1e-9);
 
   MyStruct s;
   BOOST_CHECK_EQUAL(phi(s), 42u);
@@ -227,7 +228,7 @@ BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
     Vector3 dir = Vector3::Zero();
     dir[i] = 1;
     std::pair<double, double> angles = incidentAngles(dir, ref);
-    double expect = (i < 2) ? 0 : M_PI_2;
+    double expect = (i < 2) ? 0 : std::numbers::pi / 2.;
     CHECK_CLOSE_ABS(angles.first, expect,
                     std::numeric_limits<ActsScalar>::epsilon());
     CHECK_CLOSE_ABS(angles.second, expect,
@@ -238,62 +239,74 @@ BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
   {
     Vector3 dir = Vector3({1, 1, 1}).normalized();
     auto [a0, a1] = incidentAngles(dir, ref);
-    CHECK_CLOSE_ABS(a0, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
-    CHECK_CLOSE_ABS(a1, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a0, std::numbers::pi / 4.,
+                    std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, std::numbers::pi / 4.,
+                    std::numeric_limits<ActsScalar>::epsilon());
   }
 
   // 45 degree on first axis
   {
     Vector3 dir = Vector3({1, 0, 1}).normalized();
     auto [a0, a1] = incidentAngles(dir, ref);
-    CHECK_CLOSE_ABS(a0, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
-    CHECK_CLOSE_ABS(a1, M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a0, std::numbers::pi / 4.,
+                    std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, std::numbers::pi / 2.,
+                    std::numeric_limits<ActsScalar>::epsilon());
   }
 
   // 45 degree on second axis
   {
     Vector3 dir = Vector3({0, 1, 1}).normalized();
     auto [a0, a1] = incidentAngles(dir, ref);
-    CHECK_CLOSE_ABS(a0, M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
-    CHECK_CLOSE_ABS(a1, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a0, std::numbers::pi / 2.,
+                    std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, std::numbers::pi / 4.,
+                    std::numeric_limits<ActsScalar>::epsilon());
   }
 
   // Reverse crossing
   {
     Vector3 dir = {0, 0, -1};
     auto [a0, a1] = incidentAngles(dir, ref);
-    CHECK_CLOSE_ABS(a0, -M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
-    CHECK_CLOSE_ABS(a1, -M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a0, -std::numbers::pi / 2.,
+                    std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, -std::numbers::pi / 2.,
+                    std::numeric_limits<ActsScalar>::epsilon());
   }
 
   // 45 degree but different quadrant
   {
     Vector3 dir = {-1, -1, 1};
     auto [a0, a1] = incidentAngles(dir, ref);
-    CHECK_CLOSE_ABS(a0, 3 * M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
-    CHECK_CLOSE_ABS(a1, 3 * M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a0, 3 * std::numbers::pi / 4.,
+                    std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, 3 * std::numbers::pi / 4.,
+                    std::numeric_limits<ActsScalar>::epsilon());
   }
 
   // 45 degree but different quadrant & other side
   {
     Vector3 dir = {-1, -1, -1};
     auto [a0, a1] = incidentAngles(dir, ref);
-    CHECK_CLOSE_ABS(a0, -3 * M_PI_4,
+    CHECK_CLOSE_ABS(a0, -3 * std::numbers::pi / 4.,
                     std::numeric_limits<ActsScalar>::epsilon());
-    CHECK_CLOSE_ABS(a1, -3 * M_PI_4,
+    CHECK_CLOSE_ABS(a1, -3 * std::numbers::pi / 4.,
                     std::numeric_limits<ActsScalar>::epsilon());
   }
 
   // Rotate the reference frame instead
   {
-    double s45 = std::sin(M_PI_4);
-    double c45 = std::cos(M_PI_4);
+    double s45 = std::sin(std::numbers::pi / 4.);
+    double c45 = std::cos(std::numbers::pi / 4.);
     RotationMatrix3 ref45;
     ref45 << c45, 0, s45, 0, 1, 0, -s45, 0, c45;
     Vector3 dir = {0, 0, 1};
     auto [a0, a1] = incidentAngles(dir, ref45);
-    CHECK_CLOSE_ABS(a0, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
-    CHECK_CLOSE_ABS(a1, M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a0, std::numbers::pi / 4.,
+                    std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, std::numbers::pi / 2.,
+                    std::numeric_limits<ActsScalar>::epsilon());
   }
 }
 

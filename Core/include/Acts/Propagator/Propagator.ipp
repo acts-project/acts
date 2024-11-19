@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Propagator/ActorList.hpp"
@@ -13,7 +13,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 
-#include <type_traits>
+#include <concepts>
 
 namespace Acts::detail {
 template <typename Stepper, typename StateType, typename N>
@@ -113,9 +113,8 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
     -> Result<
         actor_list_t_result_t<StepperCurvilinearTrackParameters,
                               typename propagator_options_t::actor_list_type>> {
-  static_assert(
-      std::is_copy_constructible<StepperCurvilinearTrackParameters>::value,
-      "return track parameter type must be copy-constructible");
+  static_assert(std::copy_constructible<StepperCurvilinearTrackParameters>,
+                "return track parameter type must be copy-constructible");
 
   auto state = makeState(start, options);
 
@@ -158,7 +157,7 @@ auto Acts::Propagator<S, N>::makeState(
   // Type of track parameters produced by the propagation
   using ReturnParameterType = StepperCurvilinearTrackParameters;
 
-  static_assert(std::is_copy_constructible<ReturnParameterType>::value,
+  static_assert(std::copy_constructible<ReturnParameterType>,
                 "return track parameter type must be copy-constructible");
 
   // Expand the abort list with a path aborter
@@ -246,7 +245,7 @@ auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
   // Type of track parameters produced by the propagation
   using ReturnParameterType = StepperCurvilinearTrackParameters;
 
-  static_assert(std::is_copy_constructible<ReturnParameterType>::value,
+  static_assert(std::copy_constructible<ReturnParameterType>,
                 "return track parameter type must be copy-constructible");
 
   // Type of the full propagation result, including output from actors
@@ -291,7 +290,7 @@ auto Acts::Propagator<S, N>::makeResult(
   // Type of track parameters produced at the end of the propagation
   using ReturnParameterType = StepperBoundTrackParameters;
 
-  static_assert(std::is_copy_constructible<ReturnParameterType>::value,
+  static_assert(std::copy_constructible<ReturnParameterType>,
                 "return track parameter type must be copy-constructible");
 
   // Type of the full propagation result, including output from actors

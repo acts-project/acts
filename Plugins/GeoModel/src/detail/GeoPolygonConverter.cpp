@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/GeoModel/detail/GeoPolygonConverter.hpp"
 
@@ -47,9 +47,9 @@ Acts::detail::GeoPolygonConverter::operator()(
   // sort based on the y-coordinate
   std::ranges::sort(vertices, {}, [](const auto& v) { return v[1]; });
   if (nVertices == 4) {
-    double hlxnegy = fabs(vertices[0][0] - vertices[1][0]) / 2;
-    double hlxposy = fabs(vertices[2][0] - vertices[3][0]) / 2;
-    double hly = fabs(vertices[0][1] - vertices[3][1]) / 2;
+    double hlxnegy = std::abs(vertices[0][0] - vertices[1][0]) / 2;
+    double hlxposy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
+    double hly = std::abs(vertices[0][1] - vertices[3][1]) / 2;
     std::vector<ActsScalar> halfLengths = {hlxnegy, hlxposy, hly};
 
     // Create the surface
@@ -78,10 +78,10 @@ Acts::detail::GeoPolygonConverter::operator()(
     // Return the detector element and surface
     return std::make_tuple(detectorElement, surface);
   } else if (nVertices == 6) {
-    double hlxnegy = fabs(vertices[0][0] - vertices[1][0]) / 2;
-    double hlxzeroy = fabs(vertices[2][0] - vertices[3][0]) / 2;
-    double hlxposy = fabs(vertices[4][0] - vertices[5][0]) / 2;
-    double hly = fabs(vertices[0][1] - vertices[4][1]) / 2;
+    double hlxnegy = std::abs(vertices[0][0] - vertices[1][0]) / 2;
+    double hlxzeroy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
+    double hlxposy = std::abs(vertices[4][0] - vertices[5][0]) / 2;
+    double hly = std::abs(vertices[0][1] - vertices[4][1]) / 2;
     std::vector<ActsScalar> halfLengths = {hlxnegy, hlxzeroy, hlxposy, hly,
                                            hly};
 

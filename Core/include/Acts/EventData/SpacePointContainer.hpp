@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -12,14 +12,12 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/EventData/SpacePointProxy.hpp"
-#include "Acts/EventData/SpacePointProxyIterator.hpp"
 #include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/Iterator.hpp"
 
 #include <any>
 #include <vector>
-
-#include <math.h>
 
 namespace Acts {
 
@@ -67,19 +65,22 @@ class SpacePointContainer {
  public:
   friend class Acts::SpacePointProxy<
       Acts::SpacePointContainer<container_t, holder_t>>;
-  friend class Acts::SpacePointProxyIterator<
-      Acts::SpacePointContainer<container_t, holder_t>>;
 
  public:
-  using iterator = Acts::SpacePointProxyIterator<
-      Acts::SpacePointContainer<container_t, holder_t>>;
-  using const_iterator = iterator;
-
   using SpacePointProxyType =
       Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>;
+
+  using iterator =
+      ContainerIndexIterator<Acts::SpacePointContainer<container_t, holder_t>,
+                             SpacePointProxyType&, false>;
+  using const_iterator =
+      ContainerIndexIterator<Acts::SpacePointContainer<container_t, holder_t>,
+                             const SpacePointProxyType&, true>;
+
   using ValueType = typename container_t::ValueType;
   using ProxyType = SpacePointProxyType;
   using value_type = ProxyType;
+  using size_type = std::size_t;
 
  public:
   // Constructors
@@ -118,9 +119,15 @@ class SpacePointContainer {
 
   std::size_t size() const;
 
-  iterator begin() const;
-  iterator end() const;
+  iterator begin();
+  iterator end();
+  const_iterator cbegin() const;
+  const_iterator cend() const;
+  const_iterator begin() const;
+  const_iterator end() const;
 
+  ProxyType& at(const std::size_t n);
+  const ProxyType& at(const std::size_t n) const;
   const ValueType& sp(const std::size_t n) const;
 
  private:
@@ -128,6 +135,7 @@ class SpacePointContainer {
 
   const container_t& container() const;
   const ProxyType& proxy(const std::size_t n) const;
+  std::vector<ProxyType>& proxies();
   const std::vector<ProxyType>& proxies() const;
 
   float x(const std::size_t n) const;

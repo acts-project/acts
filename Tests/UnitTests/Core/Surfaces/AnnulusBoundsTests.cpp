@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -23,12 +23,12 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
-double minRadius = 7.2;
-double maxRadius = 12.0;
-double minPhi = 0.74195;
-double maxPhi = 1.33970;
+const ActsScalar minRadius = 7.2;
+const ActsScalar maxRadius = 12.0;
+const ActsScalar minPhi = 0.74195;
+const ActsScalar maxPhi = 1.33970;
 
-Vector2 offset(-2., 2.);
+const Vector2 offset(-2., 2.);
 
 // Unit tests for AnnulusBounds constructors
 BOOST_AUTO_TEST_CASE(AnnulusBoundsConstruction) {
@@ -60,13 +60,13 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsExcpetion) {
   // Exception for swapped radii
   BOOST_CHECK_THROW(AnnulusBounds(maxRadius, minRadius, minPhi, maxPhi, offset),
                     std::logic_error);
-  // Exception for out of range  min phi
+  // Exception for out of range min phi
   BOOST_CHECK_THROW(AnnulusBounds(minRadius, maxRadius, -4., maxPhi, offset),
                     std::logic_error);
-  // Exception for out of range  max phi
+  // Exception for out of range max phi
   BOOST_CHECK_THROW(AnnulusBounds(minRadius, maxRadius, minPhi, 4., offset),
                     std::logic_error);
-  // Exception for out of range  max phi
+  // Exception for out of range max phi
   BOOST_CHECK_THROW(AnnulusBounds(minRadius, maxRadius, maxPhi, minPhi, offset),
                     std::logic_error);
 }
@@ -76,7 +76,6 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
   /// Test construction with radii and default sector
   AnnulusBounds aBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
 
-  //
   /// Test type() (redundant; already used in constructor confirmation)
   BOOST_CHECK_EQUAL(aBounds.type(), SurfaceBounds::eAnnulus);
 
@@ -121,6 +120,25 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
   BOOST_CHECK_EQUAL(aBounds.get(AnnulusBounds::eMinPhiRel), minPhi);
   // Test phiMax
   BOOST_CHECK_EQUAL(aBounds.get(AnnulusBounds::eMaxPhiRel), maxPhi);
+}
+
+/// Unit tests for AnnulusBounds vertices
+BOOST_AUTO_TEST_CASE(AnnulusBoundsVertices) {
+  /// Test construction with radii and default sector
+  AnnulusBounds aBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
+
+  // Retrieve the corners
+  auto corners = aBounds.corners();
+  BOOST_CHECK_EQUAL(corners.size(), 4);
+
+  // Retrieve the vertices
+  auto vertices = aBounds.vertices(0u);
+  BOOST_CHECK_EQUAL(vertices.size(), 4);
+
+  // Now generate with more segments
+  unsigned int nQuarterSegments = 12;
+  vertices = aBounds.vertices(nQuarterSegments);
+  BOOST_CHECK_EQUAL(vertices.size(), 14u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

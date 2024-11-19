@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
@@ -16,7 +16,7 @@ namespace Acts {
 // constructor
 template <typename external_spacepoint_t>
 SeedFilter<external_spacepoint_t>::SeedFilter(
-    SeedFilterConfig config,
+    const SeedFilterConfig& config,
     IExperimentCuts<external_spacepoint_t>* expCuts /* = 0*/)
     : m_cfg(config), m_experimentCuts(expCuts) {
   if (!config.isInInternalUnits) {
@@ -24,6 +24,18 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
         "SeedFilterConfig not in ACTS internal units in SeedFilter");
   }
 }
+
+template <typename external_spacepoint_t>
+SeedFilter<external_spacepoint_t>::SeedFilter(
+    const SeedFilterConfig& config, std::unique_ptr<const Acts::Logger> logger,
+    IExperimentCuts<external_spacepoint_t>* expCuts /* = 0*/)
+    : m_cfg(config), m_logger(std::move(logger)), m_experimentCuts(expCuts) {
+  if (!config.isInInternalUnits) {
+    throw std::runtime_error(
+        "SeedFilterConfig not in ACTS internal units in SeedFilter");
+  }
+}
+
 // function to filter seeds based on all seeds with same bottom- and
 // middle-spacepoint.
 // return vector must contain weight of each seed
@@ -295,10 +307,14 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     seed.setVertexZ(zOrigin);
     seed.setQuality(bestSeedQuality);
 
+    ACTS_VERBOSE("Adding seed: [b=" << bottom->index() << ", m="
+                                    << medium->index() << ", t=" << top->index()
+                                    << "], quality=" << bestSeedQuality
+                                    << ", vertexZ=" << zOrigin);
     Acts::detail::pushBackOrInsertAtEnd(outputCollection, std::move(seed));
-
     ++numTotalSeeds;
   }
+  ACTS_VERBOSE("Identified " << numTotalSeeds << " seeds");
 }
 
 }  // namespace Acts

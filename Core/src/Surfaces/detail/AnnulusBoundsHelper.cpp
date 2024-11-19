@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/detail/AnnulusBoundsHelper.hpp"
 
@@ -12,6 +12,7 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <iostream>
+#include <numbers>
 
 std::tuple<std::shared_ptr<Acts::AnnulusBounds>, Acts::Transform3>
 Acts::detail::AnnulusBoundsHelper::create(const Transform3& transform,
@@ -27,7 +28,8 @@ Acts::detail::AnnulusBoundsHelper::create(const Transform3& transform,
     Vector2 ab = b - a;
     double phi = VectorHelpers::phi(ab);
 
-    if (std::abs(phi) > 3 * M_PI / 4. || std::abs(phi) < M_PI / 4.) {
+    if (std::abs(phi) > 3 * std::numbers::pi / 4. ||
+        std::abs(phi) < std::numbers::pi / 4.) {
       if (a.norm() < b.norm()) {
         boundLines.push_back(std::make_pair(a, b));
       } else {

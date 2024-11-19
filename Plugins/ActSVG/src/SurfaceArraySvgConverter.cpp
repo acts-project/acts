@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ActSVG/SurfaceArraySvgConverter.hpp"
 
@@ -12,6 +12,9 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+
+#include <algorithm>
+#include <numbers>
 
 std::tuple<std::vector<Acts::Svg::ProtoSurfaces>, Acts::Svg::ProtoGrid,
            std::vector<Acts::Svg::ProtoAssociations> >
@@ -93,11 +96,9 @@ Acts::Svg::SurfaceArrayConverter::convert(
     auto sameBounds = [&](const SurfaceBounds* test) {
       return ((*test) == sBounds);
     };
-    // Check if you have this template object already
-    auto tBounds =
-        std::find_if(templateBounds.begin(), templateBounds.end(), sameBounds);
-    // New reference bounds and new reference object
-    if (tBounds == templateBounds.end()) {
+    // Check if you have this template object already before creating new
+    // reference bounds and new reference object
+    if (std::ranges::none_of(templateBounds, sameBounds)) {
       // Let's get the right style
       SurfaceConverter::Options sOptions;
       sOptions.templateSurface = true;
@@ -107,7 +108,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
         sOptions.style = *sfStyle;
       }
 
-      // Create a referese surface and reference object from it
+      // Create a reference surface and reference object from it
       auto referenceSurface = SurfaceConverter::convert(gctx, *sf, sOptions);
       auto referenceObject =
           View::xy(referenceSurface,
@@ -148,8 +149,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
         return ((*test) == sBounds);
       };
       // Check if you have this template object already
-      auto tBounds = std::find_if(templateBounds.begin(), templateBounds.end(),
-                                  sameBounds);
+      auto tBounds = std::ranges::find_if(templateBounds, sameBounds);
       // New reference bounds and new reference object
       if (tBounds != templateBounds.end()) {
         std::size_t tObject = std::distance(templateBounds.begin(), tBounds);
@@ -165,7 +165,8 @@ Acts::Svg::SurfaceArrayConverter::convert(
       Vector3 localZ = sTransform.rotation().col(2);
       // Find out orientation w.r.t. global transform
       ActsScalar projZ = localZ.dot(Vector3(0., 0., 1.));
-      ActsScalar alpha = std::atan2(localA[1], localA[0]) / M_PI * 180.;
+      ActsScalar alpha =
+          std::atan2(localA[1], localA[0]) / std::numbers::pi * 180.;
       if (projZ < 0.) {
         alpha += 180.;
       }
@@ -196,7 +197,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
       auto bSurfaces = surfaceArray.neighbors(bCenter);
       std::vector<std::size_t> binnAssoc;
       for (const auto& bs : bSurfaces) {
-        auto candidate = std::find(surfaces.begin(), surfaces.end(), bs);
+        auto candidate = std::ranges::find(surfaces, bs);
         if (candidate != surfaces.end()) {
           binnAssoc.push_back(std::distance(surfaces.begin(), candidate));
         }
@@ -207,5 +208,5 @@ Acts::Svg::SurfaceArrayConverter::convert(
   // Return the surfaces and the grid
   std::vector<ProtoSurfaces> pSurfaceBatches = {pSurfaces};
   std::vector<ProtoAssociations> pAssociationBatchs = {pAssociations};
-  return std::tie(pSurfaceBatches, pGrid, pAssociationBatchs);
+  return {pSurfaceBatches, pGrid, pAssociationBatchs};
 }

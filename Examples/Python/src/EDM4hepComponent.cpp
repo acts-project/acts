@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
@@ -16,8 +16,6 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackWriter.hpp"
-
-#include <memory>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -31,9 +29,9 @@ using namespace Acts::Python;
 PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
   ACTS_PYTHON_DECLARE_READER(
       ActsExamples::EDM4hepReader, m, "EDM4hepReader", inputPath,
-      inputParticles, inputSimHits, outputParticlesInitial,
-      outputParticlesFinal, outputParticlesGenerator, outputSimHits,
-      graphvizOutput, dd4hepDetector, trackingGeometry, sortSimHitsInTime);
+      inputParticles, inputSimHits, outputParticlesGenerator,
+      outputParticlesSimulation, outputSimHits, graphvizOutput, dd4hepDetector,
+      trackingGeometry, sortSimHitsInTime);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::EDM4hepSimHitWriter, m, "EDM4hepSimHitWriter", inputSimHits,
@@ -42,7 +40,7 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
   ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepMeasurementReader, m,
                              "EDM4hepMeasurementReader", inputPath,
                              outputMeasurements, outputMeasurementSimHitsMap,
-                             outputSourceLinks, outputClusters);
+                             outputClusters);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepMeasurementWriter, m,
                              "EDM4hepMeasurementWriter", inputMeasurements,

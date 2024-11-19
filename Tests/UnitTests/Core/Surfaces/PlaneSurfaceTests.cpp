@@ -1,12 +1,12 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// #include <boost/test/tools/output_test_stream.hpp>
+#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <utility>
 
@@ -44,16 +45,20 @@ GeometryContext tgContext = GeometryContext();
 BOOST_AUTO_TEST_SUITE(PlaneSurfaces)
 /// Unit test for creating compliant/non-compliant PlaneSurface object
 BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
-  // PlaneSurface default constructor is deleted
+  /// Test default construction
+  // default construction is deleted
+
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   /// Constructor with transform and bounds
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
-  // constructor with transform
+
+  /// Constructor with transform
   BOOST_CHECK_EQUAL(
       Surface::makeShared<PlaneSurface>(pTransform, rBounds)->type(),
       Surface::Plane);
+
   /// Copy constructor
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
@@ -61,7 +66,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
       Surface::makeShared<PlaneSurface>(*planeSurfaceObject);
   BOOST_CHECK_EQUAL(copiedPlaneSurface->type(), Surface::Plane);
   BOOST_CHECK(*copiedPlaneSurface == *planeSurfaceObject);
-  //
+
   /// Copied and transformed
   auto copiedTransformedPlaneSurface = Surface::makeShared<PlaneSurface>(
       tgContext, *planeSurfaceObject, pTransform);
@@ -73,11 +78,12 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
       auto nullBounds = Surface::makeShared<PlaneSurface>(nullptr, detElem),
       AssertionFailureException);
 }
-//
+
 /// Unit test for testing PlaneSurface properties
 BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
+
   /// Test clone method
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
@@ -88,17 +94,18 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   auto pTransform2 = Transform3(translation2);
   auto planeSurfaceObject2 =
       Surface::makeShared<PlaneSurface>(pTransform2, rBounds);
+
   /// Test type (redundant)
   BOOST_CHECK_EQUAL(planeSurfaceObject->type(), Surface::Plane);
-  //
+
   /// Test binningPosition
   Vector3 binningPosition{0., 1., 2.};
   BOOST_CHECK_EQUAL(
       planeSurfaceObject->binningPosition(tgContext, BinningValue::binX),
       binningPosition);
-  //
+
   /// Test referenceFrame
-  Vector3 arbitraryGlobalPosition{2.0, 2.0, 2.0};
+  Vector3 arbitraryGlobalPosition{2., 2., 2.};
   Vector3 momentum{1.e6, 1.e6, 1.e6};
   RotationMatrix3 expectedFrame;
   expectedFrame << 1., 0., 0., 0., 1., 0., 0., 0., 1.;
@@ -106,11 +113,11 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   CHECK_CLOSE_OR_SMALL(planeSurfaceObject->referenceFrame(
                            tgContext, arbitraryGlobalPosition, momentum),
                        expectedFrame, 1e-6, 1e-9);
-  //
+
   /// Test normal, given 3D position
   Vector3 normal3D(0., 0., 1.);
   BOOST_CHECK_EQUAL(planeSurfaceObject->normal(tgContext), normal3D);
-  //
+
   /// Test bounds
   BOOST_CHECK_EQUAL(planeSurfaceObject->bounds().type(),
                     SurfaceBounds::eRectangle);
@@ -119,13 +126,12 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   Vector2 localPosition{1.5, 1.7};
   Vector3 globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
-  //
   // expected position is the translated one
   Vector3 expectedPosition{1.5 + translation.x(), 1.7 + translation.y(),
                            translation.z()};
 
   CHECK_CLOSE_REL(globalPosition, expectedPosition, 1e-2);
-  //
+
   /// Testing globalToLocal
   localPosition =
       planeSurfaceObject->globalToLocal(tgContext, globalPosition, momentum)
@@ -158,8 +164,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
                                                BoundaryTolerance::None()));
   BOOST_CHECK(!planeSurfaceObject->isOnSurface(tgContext, offSurface,
                                                BoundaryTolerance::None()));
-  //
-  // Test intersection
+
+  /// Test intersection
   Vector3 direction{0., 0., 1.};
   auto sfIntersection = planeSurfaceObject
                             ->intersect(tgContext, offSurface, direction,
@@ -172,30 +178,30 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   BOOST_CHECK_EQUAL(sfIntersection.pathLength(),
                     expectedIntersect.pathLength());
   BOOST_CHECK_EQUAL(sfIntersection.object(), planeSurfaceObject.get());
-  //
 
   /// Test pathCorrection
   CHECK_CLOSE_REL(planeSurfaceObject->pathCorrection(tgContext, offSurface,
                                                      momentum.normalized()),
-                  std::sqrt(3), 0.01);
-  //
+                  std::numbers::sqrt3, 0.01);
+
   /// Test name
   BOOST_CHECK_EQUAL(planeSurfaceObject->name(),
                     std::string("Acts::PlaneSurface"));
-  //
+
   /// Test dump
-  // TODO 2017-04-12 msmk: check how to correctly check output
-  //    boost::test_tools::output_test_stream dumpOuput;
-  //    planeSurfaceObject.toStream(dumpOuput);
-  //    BOOST_CHECK(dumpOuput.is_equal(
-  //      "Acts::PlaneSurface\n"
-  //      "    Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n"
-  //      "    Rotation:             colX = (1.000000, 0.000000, 0.000000)\n"
-  //      "                          colY = (0.000000, 1.000000, 0.000000)\n"
-  //      "                          colZ = (0.000000, 0.000000, 1.000000)\n"
-  //      "    Bounds  : Acts::ConeBounds: (tanAlpha, minZ, maxZ, averagePhi,
-  //      halfPhiSector) = (0.4142136, 0.0000000, inf, 0.0000000,
-  //      3.1415927)"));
+  boost::test_tools::output_test_stream dumpOutput;
+  dumpOutput << planeSurfaceObject->toStream(tgContext);
+  BOOST_CHECK(dumpOutput.is_equal(
+      "Acts::PlaneSurface\n"
+      "     Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n"
+      "     Rotation:             colX = (1.000000, 0.000000, 0.000000)\n"
+      "                           colY = (0.000000, 1.000000, 0.000000)\n"
+      "                           colZ = (0.000000, 0.000000, 1.000000)\n"
+      "     Bounds  : Acts::RectangleBounds:  (hlX, hlY) = (3.0000000, "
+      "4.0000000)\n"
+      "(lower left, upper right):\n"
+      "-3.0000000 -4.0000000\n"
+      "3.0000000 4.0000000"));
 }
 
 BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
@@ -207,16 +213,18 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
   auto planeSurfaceObject2 =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
-  //
+
   /// Test equality operator
   BOOST_CHECK(*planeSurfaceObject == *planeSurfaceObject2);
-  //
+
   BOOST_TEST_CHECKPOINT(
       "Create and then assign a PlaneSurface object to the existing one");
+
   /// Test assignment
   auto assignedPlaneSurface =
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), nullptr);
   *assignedPlaneSurface = *planeSurfaceObject;
+
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedPlaneSurface == *planeSurfaceObject);
 }
@@ -224,9 +232,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
 /// Unit test for testing PlaneSurface extent via Polyhedron representation
 BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   // First test - non-rotated
-  static const Transform3 planeZX = AngleAxis3(-0.5 * M_PI, Vector3::UnitX()) *
-                                    AngleAxis3(-0.5 * M_PI, Vector3::UnitZ()) *
-                                    Transform3::Identity();
+  static const Transform3 planeZX =
+      AngleAxis3(-std::numbers::pi / 2., Vector3::UnitX()) *
+      AngleAxis3(-std::numbers::pi / 2., Vector3::UnitZ()) *
+      Transform3::Identity();
 
   double rHx = 2.;
   double rHy = 4.;
@@ -281,10 +290,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
 }
 
 BOOST_AUTO_TEST_CASE(RotatedTrapezoid) {
-  double shortHalfX{100.};
-  double longHalfX{200.};
-  double halfY{300.};
-  double rotAngle{45._degree};
+  const double shortHalfX = 100.;
+  const double longHalfX = 200.;
+  const double halfY = 300.;
+  const double rotAngle = 45._degree;
 
   Vector2 edgePoint{longHalfX - 10., halfY};
 
@@ -309,7 +318,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   // Test clone method
   Translation3 translation{0., 1., 2.};
-  double rotationAngle = M_PI_2;
+  const double rotationAngle = std::numbers::pi / 2.;
   AngleAxis3 rotation(rotationAngle, Vector3::UnitY());
   RotationMatrix3 rotationMat = rotation.toRotationMatrix();
 

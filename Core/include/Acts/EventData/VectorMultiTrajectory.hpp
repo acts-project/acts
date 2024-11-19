@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -220,7 +220,7 @@ class VectorMultiTrajectoryBase {
       case "typeFlags"_hash:
         return true;
       default:
-        return instance.m_dynamic.find(key) != instance.m_dynamic.end();
+        return instance.m_dynamic.contains(key);
     }
   }
 
@@ -287,7 +287,7 @@ class VectorMultiTrajectoryBase {
       case "typeFlags"_hash:
         return true;
       default:
-        return instance.m_dynamic.find(key) != instance.m_dynamic.end();
+        return instance.m_dynamic.contains(key);
     }
   }
 
@@ -456,7 +456,7 @@ class VectorMultiTrajectory final
 
   template <typename T>
   void addColumn_impl(std::string_view key) {
-    HashedString hashedKey = hashString(key);
+    HashedString hashedKey = hashStringDynamic(key);
     m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
   }
 

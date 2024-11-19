@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -23,6 +23,7 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <utility>
 
 using namespace Acts::UnitLiterals;
@@ -42,8 +43,8 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 /// This tests the intersection with cylinders
 /// and looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
-  double radius = 1_m;
-  double halfZ = 10_m;
+  const double radius = 1_m;
+  const double halfZ = 10_m;
 
   auto testCylinderIntersection = [&](const Transform3& transform) -> void {
     // A cylinder created aligned with a provided transform
@@ -169,7 +170,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
 /// This tests the intersection with cylinders
 /// and looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
-  double alpha = 0.25 * M_PI;
+  const double alpha = std::numbers::pi / 4.;
 
   auto testConeIntersection = [&](const Transform3& transform) -> void {
     // A cone surface ready to use
@@ -179,7 +180,8 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
     auto lTransform = transform.linear();
 
     // An onCylinder solution
-    Vector3 onCone = transform * Vector3(std::sqrt(2.), std::sqrt(2.), 2.);
+    Vector3 onCone =
+        transform * Vector3(std::numbers::sqrt2, std::numbers::sqrt2, 2.);
     Vector3 outCone = transform * Vector3(std::sqrt(4.), std::sqrt(4.), 2.);
     // Simply along the x axis
     Vector3 perpXY = lTransform * Vector3(1., -1., 0.).normalized();
@@ -224,8 +226,8 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
 /// sufficient
 /// - it looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
-  double halfX = 1_m;
-  double halfY = 10_m;
+  const double halfX = 1_m;
+  const double halfY = 10_m;
 
   auto testPlanarIntersection = [&](const Transform3& transform) -> void {
     // A Plane created with a specific transform
@@ -323,8 +325,8 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
 /// sufficient
 /// - it looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
-  double radius = 1_m;
-  double halfZ = 10_m;
+  const double radius = 1_m;
+  const double halfZ = 10_m;
 
   auto testLineAppraoch = [&](const Transform3& transform) -> void {
     // A Plane created with a specific transform

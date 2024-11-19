@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 
@@ -249,7 +249,8 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
       // Count the number of particles associated with each vertex
       std::size_t particleCount = 0;
       for (const auto& particle : truthParticles) {
-        if (particle.particleId().vertexId() == truthVertex.vertexId()) {
+        if (static_cast<SimVertexBarcode>(particle.particleId().vertexId()) ==
+            truthVertex.vertexId()) {
           ++particleCount;
         }
       }

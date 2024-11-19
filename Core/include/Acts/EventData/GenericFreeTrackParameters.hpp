@@ -1,24 +1,26 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <cassert>
 #include <cmath>
 #include <optional>
-#include <type_traits>
 
 namespace Acts {
 
@@ -52,7 +54,34 @@ class GenericFreeTrackParameters {
                              ParticleHypothesis particleHypothesis)
       : m_params(params),
         m_cov(std::move(cov)),
-        m_particleHypothesis(std::move(particleHypothesis)) {}
+        m_particleHypothesis(std::move(particleHypothesis)) {
+    assert(isFreeVectorValid(m_params) && "Invalid free parameters vector");
+  }
+
+  /// Construct from four-position, direction, absolute momentum, and charge.
+  ///
+  /// @param pos4 Track position/time four-vector
+  /// @param dir Track direction three-vector; normalization is ignored.
+  /// @param qOverP Charge over momentum
+  /// @param cov Free parameters covariance matrix
+  /// @param particleHypothesis Particle hypothesis
+  GenericFreeTrackParameters(const Vector4& pos4, const Vector3& dir,
+                             Scalar qOverP, std::optional<CovarianceMatrix> cov,
+                             ParticleHypothesis particleHypothesis)
+      : m_params(FreeVector::Zero()),
+        m_cov(std::move(cov)),
+        m_particleHypothesis(std::move(particleHypothesis)) {
+    m_params[eFreePos0] = pos4[ePos0];
+    m_params[eFreePos1] = pos4[ePos1];
+    m_params[eFreePos2] = pos4[ePos2];
+    m_params[eFreeTime] = pos4[eTime];
+    m_params[eFreeDir0] = dir[eMom0];
+    m_params[eFreeDir1] = dir[eMom1];
+    m_params[eFreeDir2] = dir[eMom2];
+    m_params[eFreeQOverP] = qOverP;
+
+    assert(isFreeVectorValid(m_params) && "Invalid free parameters vector");
+  }
 
   /// Construct from four-position, angles, absolute momentum, and charge.
   ///
@@ -77,6 +106,8 @@ class GenericFreeTrackParameters {
     m_params[eFreeDir1] = dir[eMom1];
     m_params[eFreeDir2] = dir[eMom2];
     m_params[eFreeQOverP] = qOverP;
+
+    assert(isFreeVectorValid(m_params) && "Invalid free parameters vector");
   }
 
   /// Converts a free track parameter with a different hypothesis.
@@ -134,9 +165,9 @@ class GenericFreeTrackParameters {
   Scalar time() const { return m_params[eFreeTime]; }
 
   /// Phi direction.
-  Scalar phi() const { return phi(direction()); }
+  Scalar phi() const { return VectorHelpers::phi(direction()); }
   /// Theta direction.
-  Scalar theta() const { return theta(direction()); }
+  Scalar theta() const { return VectorHelpers::theta(direction()); }
   /// Charge over momentum.
   Scalar qOverP() const { return m_params[eFreeQOverP]; }
 
@@ -154,12 +185,12 @@ class GenericFreeTrackParameters {
     //   [f*sin(theta)*cos(phi), f*sin(theta)*sin(phi), f*cos(theta)]
     // w/ f,sin(theta) positive, the transverse magnitude is then
     //   sqrt(f^2*sin^2(theta)) = f*sin(theta)
-    Scalar transverseMagnitude =
-        std::hypot(m_params[eFreeDir0], m_params[eFreeDir1]);
+    Scalar transverseMagnitude2 =
+        square(m_params[eFreeDir0]) + square(m_params[eFreeDir1]);
     // absolute magnitude is f by construction
-    Scalar magnitude = std::hypot(transverseMagnitude, m_params[eFreeDir2]);
+    Scalar magnitude2 = transverseMagnitude2 + square(m_params[eFreeDir2]);
     // such that we can extract sin(theta) = f*sin(theta) / f
-    return (transverseMagnitude / magnitude) * absoluteMomentum();
+    return std::sqrt(transverseMagnitude2 / magnitude2) * absoluteMomentum();
   }
   /// Momentum three-vector.
   Vector3 momentum() const { return absoluteMomentum() * direction(); }
@@ -172,6 +203,17 @@ class GenericFreeTrackParameters {
   /// Particle hypothesis.
   const ParticleHypothesis& particleHypothesis() const {
     return m_particleHypothesis;
+  }
+
+  /// Reflect the parameters in place.
+  void reflectInPlace() { m_params = reflectFreeParameters(m_params); }
+
+  /// Reflect the parameters.
+  /// @return Reflected parameters.
+  GenericFreeTrackParameters<ParticleHypothesis> reflect() const {
+    GenericFreeTrackParameters<ParticleHypothesis> reflected = *this;
+    reflected.reflectInPlace();
+    return reflected;
   }
 
  private:

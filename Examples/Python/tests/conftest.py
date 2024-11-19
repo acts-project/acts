@@ -342,8 +342,7 @@ def fatras(ptcl_gun, trk_geo, rng):
         simAlg = acts.examples.FatrasSimulation(
             level=acts.logging.INFO,
             inputParticles=evGen.config.outputParticles,
-            outputParticlesInitial="particles_initial",
-            outputParticlesFinal="particles_final",
+            outputParticles="particles_simulated",
             outputSimHits="simhits",
             randomNumbers=rng,
             trackingGeometry=trk_geo,

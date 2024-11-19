@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,10 +13,41 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
+
+#include <numbers>
 
 namespace Acts {
 
 class Surface;
+
+/// Reflect bound track parameters.
+///
+/// @param boundParams Bound track parameters vector
+/// @return Reflected bound track parameters vector
+inline BoundVector reflectBoundParameters(const BoundVector& boundParams) {
+  BoundVector reflected = boundParams;
+  auto [phi, theta] =
+      detail::normalizePhiTheta(boundParams[eBoundPhi] - std::numbers::pi,
+                                std::numbers::pi - boundParams[eBoundTheta]);
+  reflected[eBoundPhi] = phi;
+  reflected[eBoundTheta] = theta;
+  reflected[eBoundQOverP] = -boundParams[eBoundQOverP];
+  return reflected;
+}
+
+/// Reflect free track parameters.
+///
+/// @param freeParams Free track parameters vector
+/// @return Reflected free track parameters vector
+inline FreeVector reflectFreeParameters(const FreeVector& freeParams) {
+  FreeVector reflected = freeParams;
+  reflected[eFreeDir0] = -freeParams[eFreeDir0];
+  reflected[eFreeDir1] = -freeParams[eFreeDir1];
+  reflected[eFreeDir2] = -freeParams[eFreeDir2];
+  reflected[eFreeQOverP] = -freeParams[eFreeQOverP];
+  return reflected;
+}
 
 /// Transform bound track parameters into equivalent free track parameters.
 ///

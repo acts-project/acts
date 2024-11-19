@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 
@@ -45,7 +45,6 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
 
   m_outputMeasurements.initialize(m_cfg.outputMeasurements);
   m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
-  m_outputSourceLinks.initialize(m_cfg.outputSourceLinks);
   m_outputClusters.maybeInitialize(m_cfg.outputClusters);
   m_outputMeasurementParticlesMap.maybeInitialize(
       m_cfg.outputMeasurementParticlesMap);
@@ -196,15 +195,11 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   MeasurementContainer tmpMeasurements;
   GeometryIdMultimap<ConstVariableBoundMeasurementProxy> orderedMeasurements;
   IndexMultimap<Index> measurementSimHitsMap;
-  IndexSourceLinkContainer sourceLinks;
-  // need list here for stable addresses
-  std::list<IndexSourceLink> sourceLinkStorage;
 
   tmpMeasurements.reserve(measurementData.size());
   orderedMeasurements.reserve(measurementData.size());
   // Safe long as we have single particle to sim hit association
   measurementSimHitsMap.reserve(measurementData.size());
-  sourceLinks.reserve(measurementData.size());
 
   auto measurementSimHitLinkData =
       readEverything<ActsExamples::MeasurementSimHitLink>(
@@ -252,10 +247,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
     // The measurement container is unordered and the index under which
     // the measurement will be stored is known before adding it.
-    const Index index = orderedMeasurements.size();
-    IndexSourceLink& sourceLink = sourceLinkStorage.emplace_back(geoId, index);
-    auto measurement =
-        createMeasurement(tmpMeasurements, dParameters, sourceLink);
+    auto measurement = createMeasurement(tmpMeasurements, geoId, dParameters);
 
     // Due to the previous sorting of the raw hit data by geometry id, new
     // measurements should always end up at the end of the container. previous
@@ -267,13 +259,11 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
       ACTS_FATAL("Something went horribly wrong with the hit sorting");
       return ProcessCode::ABORT;
     }
-
-    sourceLinks.insert(sourceLinks.end(), std::cref(sourceLink));
   }
 
   MeasurementContainer measurements;
   for (auto& [_, meas] : orderedMeasurements) {
-    measurements.emplaceMeasurement(meas.size(), meas);
+    measurements.emplaceMeasurement(meas.size(), meas.geometryId(), meas);
   }
 
   // Generate measurement-particles-map
@@ -294,7 +284,6 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   // Write the data to the EventStore
   m_outputMeasurements(ctx, std::move(measurements));
   m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
-  m_outputSourceLinks(ctx, std::move(sourceLinks));
 
   /////////////////////////
   // Cluster information //

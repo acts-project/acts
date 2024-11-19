@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -17,6 +17,7 @@
 #include "ActsFatras/Physics/ElectroMagnetic/detail/Highland.hpp"
 
 #include <array>
+#include <numbers>
 #include <random>
 
 namespace ActsFatras {
@@ -52,8 +53,8 @@ struct GenericScattering {
     // drawn from the specific scattering model distribution.
 
     // draw the random orientation angle
-    const auto psi =
-        std::uniform_real_distribution<double>(-M_PI, M_PI)(generator);
+    const auto psi = std::uniform_real_distribution<double>(
+        -std::numbers::pi, std::numbers::pi)(generator);
     // draw the scattering angle
     const auto theta = angle(generator, slab, particle);
 

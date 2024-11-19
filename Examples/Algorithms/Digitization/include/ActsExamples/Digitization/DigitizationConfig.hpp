@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -130,13 +130,11 @@ class DigitizationConfig {
       bool doMerge, double mergeNsigma, bool mergeCommonCorner,
       Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
-  DigitizationConfig(
+  explicit DigitizationConfig(
       Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
   /// Input collection of simulated hits.
   std::string inputSimHits = "simhits";
-  /// Output source links collection.
-  std::string outputSourceLinks = "sourcelinks";
   /// Output measurements collection.
   std::string outputMeasurements = "measurements";
   /// Output cells map (geoID -> collection of cells).

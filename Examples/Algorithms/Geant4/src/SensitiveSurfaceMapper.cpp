@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
@@ -331,7 +331,7 @@ bool ActsExamples::SensitiveSurfaceMapper::checkMapping(
   if (writeMissingSurfacesAsObj) {
     Acts::ObjVisualization3D visualizer;
     Acts::ViewConfig vcfg;
-    vcfg.nSegments = 720;
+    vcfg.quarterSegments = 720;
     for (auto srf : missing) {
       Acts::GeometryView3D::drawSurface(visualizer, *srf, gctx,
                                         Acts::Transform3::Identity(), vcfg);

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -45,6 +45,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <system_error>
 #include <tuple>
@@ -85,7 +86,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
   ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
-  std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
+  std::vector<double> temperatures{
+      8., 4., 2., std::numbers::sqrt2, std::sqrt(3. / 2.), 1.};
   AnnealingUtility::Config annealingConfig;
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
@@ -243,7 +245,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
   ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
-  std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
+  std::vector<double> temperatures{
+      8., 4., 2., std::numbers::sqrt2, std::sqrt(3. / 2.), 1.};
   AnnealingUtility::Config annealingConfig;
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
@@ -386,7 +389,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   ImpactPointEstimator::Config ipEstCfg(bField, propagator);
   ImpactPointEstimator ipEst(ipEstCfg);
 
-  std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
+  std::vector<double> temperatures{
+      8., 4., 2., std::numbers::sqrt2, std::sqrt(3. / 2.), 1.};
   AnnealingUtility::Config annealingConfig;
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
@@ -535,7 +539,8 @@ BOOST_AUTO_TEST_CASE(
   ImpactPointEstimator::Config ipEstCfg(bField, propagator);
   ImpactPointEstimator ipEst(ipEstCfg);
 
-  std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
+  std::vector<double> temperatures{
+      8., 4., 2., std::numbers::sqrt2, std::sqrt(3. / 2.), 1.};
   AnnealingUtility::Config annealingConfig;
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);

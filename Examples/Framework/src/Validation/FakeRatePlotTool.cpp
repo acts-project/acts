@@ -1,16 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Validation/FakeRatePlotTool.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <TEfficiency.h>
 #include <TH2.h>
@@ -109,7 +108,7 @@ void ActsExamples::FakeRatePlotTool::fill(
 
 void ActsExamples::FakeRatePlotTool::fill(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache,
-    const ActsFatras::Particle& truthParticle, std::size_t nTruthMatchedTracks,
+    const SimParticleState& truthParticle, std::size_t nTruthMatchedTracks,
     std::size_t nFakeTracks) const {
   const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();

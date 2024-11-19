@@ -1,14 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
 
 #include "Acts/Definitions/ParticleData.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Vertex.hpp"
 
 namespace ActsExamples {
@@ -23,12 +24,12 @@ SimParticle HepMC3Particle::particle(
     const HepMC3::ConstGenParticlePtr& particle) {
   SimBarcode particleId = barcode(particle);
   Acts::PdgParticle pdg = static_cast<Acts::PdgParticle>(particle->pid());
-  SimParticle fw(particleId, pdg, Acts::findCharge(pdg).value_or(0),
-                 particle->generated_mass());
+  SimParticleState fw(particleId, pdg, Acts::findCharge(pdg).value_or(0),
+                      particle->generated_mass());
   fw.setDirection(particle->momentum().x(), particle->momentum().y(),
                   particle->momentum().z());
   fw.setAbsoluteMomentum(particle->momentum().p3mod());
-  return fw;
+  return SimParticle(fw, fw);
 }
 
 int HepMC3Particle::id(const std::shared_ptr<HepMC3::GenParticle>& particle) {

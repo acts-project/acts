@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -381,12 +381,12 @@ class GridPortalLink : public PortalLinkBase {
   /// Helper function to get grid bin content in type-eraased way.
   /// @param indices The bin indices
   /// @return The tracking volume at the bin
-  virtual TrackingVolume*& atLocalBins(IndexType indices) = 0;
+  virtual const TrackingVolume*& atLocalBins(IndexType indices) = 0;
 
   /// Helper function to get grid bin content in type-eraased way.
   /// @param indices The bin indices
   /// @return The tracking volume at the bin
-  virtual TrackingVolume* atLocalBins(IndexType indices) const = 0;
+  virtual const TrackingVolume* atLocalBins(IndexType indices) const = 0;
 
  private:
   BinningValue m_direction;
@@ -399,7 +399,7 @@ template <typename... Axes>
 class GridPortalLinkT final : public GridPortalLink {
  public:
   /// The internal grid type
-  using GridType = Grid<TrackingVolume*, Axes...>;
+  using GridType = Grid<const TrackingVolume*, Axes...>;
 
   /// The dimension of the grid
   static constexpr std::size_t DIM = sizeof...(Axes);
@@ -530,7 +530,6 @@ class GridPortalLinkT final : public GridPortalLink {
     return m_grid.atPosition(m_projection(position));
   }
 
- protected:
   /// Type erased access to the number of bins
   /// @return The number of bins in each direction
   IndexType numLocalBins() const override {
@@ -545,7 +544,7 @@ class GridPortalLinkT final : public GridPortalLink {
   /// Type erased local bin access
   /// @param indices The bin indices
   /// @return The tracking volume at the bin
-  TrackingVolume*& atLocalBins(IndexType indices) override {
+  const TrackingVolume*& atLocalBins(IndexType indices) override {
     throw_assert(indices.size() == DIM, "Invalid number of indices");
     typename GridType::index_t idx;
     for (std::size_t i = 0; i < DIM; i++) {
@@ -557,7 +556,7 @@ class GridPortalLinkT final : public GridPortalLink {
   /// Type erased local bin access
   /// @param indices The bin indices
   /// @return The tracking volume at the bin
-  TrackingVolume* atLocalBins(IndexType indices) const override {
+  const TrackingVolume* atLocalBins(IndexType indices) const override {
     throw_assert(indices.size() == DIM, "Invalid number of indices");
     typename GridType::index_t idx;
     for (std::size_t i = 0; i < DIM; i++) {

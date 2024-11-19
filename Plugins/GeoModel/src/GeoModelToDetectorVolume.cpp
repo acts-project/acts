@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/GeoModel/GeoModelToDetectorVolume.hpp"
 
@@ -17,6 +17,8 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
+
+#include <numbers>
 
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoPcon.h>
@@ -46,6 +48,13 @@ Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
     const GeoBox* box = dynamic_cast<const GeoBox*>(&shape);
     bounds = std::make_shared<CuboidVolumeBounds>(
         box->getXHalfLength(), box->getYHalfLength(), box->getZHalfLength());
+  } else if (shape.typeID() == GeoSimplePolygonBrep::getClassTypeID()) {
+    const GeoSimplePolygonBrep* brep =
+        dynamic_cast<const GeoSimplePolygonBrep*>(&shape);
+    double xmin{0}, xmax{0}, ymin{0}, ymax{0}, zmin{0}, zmax{0};
+    brep->extent(xmin, ymin, zmin, xmax, ymax, zmax);
+    bounds = std::make_shared<CuboidVolumeBounds>(
+        (xmax - xmin) / 2, (ymax - ymin) / 2, (zmax - zmin) / 2);
   } else if (shape.typeID() == GeoTrd::getClassTypeID()) {
     const GeoTrd* trd = dynamic_cast<const GeoTrd*>(&shape);
     double x1 = trd->getXHalfLength1();
@@ -58,23 +67,23 @@ Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
       if (x1 <= x2) {
         // y axis in ACTS is z axis in geomodel
         bounds = std::make_shared<TrapezoidVolumeBounds>(x1, x2, z, y1);
-        constexpr double rotationAngle = M_PI / 2;
+        constexpr double rotationAngle = std::numbers::pi / 2.;
         newTrf = trf * GeoTrf::RotateX3D(rotationAngle);
       } else {
         bounds = std::make_shared<TrapezoidVolumeBounds>(x2, x1, z, y1);
-        constexpr double rotationAngle = M_PI;
+        constexpr double rotationAngle = std::numbers::pi;
         newTrf = trf * GeoTrf::RotateY3D(rotationAngle) *
                  GeoTrf::RotateZ3D(rotationAngle);
       }
     } else if (x1 == x2) {
       if (y1 < y2) {
         bounds = std::make_shared<TrapezoidVolumeBounds>(y1, y2, z, x1);
-        auto rotationAngle = M_PI / 2;
+        auto rotationAngle = std::numbers::pi / 2.;
         newTrf = trf * GeoTrf::RotateZ3D(rotationAngle) *
                  GeoTrf::RotateX3D(rotationAngle);
       } else {
         bounds = std::make_shared<TrapezoidVolumeBounds>(y2, y1, z, x1);
-        auto rotationAngle = M_PI;
+        auto rotationAngle = std::numbers::pi;
         newTrf = trf * GeoTrf::RotateX3D(rotationAngle) *
                  GeoTrf::RotateZ3D(rotationAngle / 2) *
                  GeoTrf::RotateX3D(rotationAngle / 2);
@@ -117,9 +126,10 @@ Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
         dynamic_cast<const GeoShapeShift*>(&shape);
     const GeoShape* shapeOp = shiftShape->getOp();
     newTrf = trf * shiftShape->getX();
-    return convertVolume(trf, *shapeOp);
+    return convertVolume(newTrf, *shapeOp);
   } else {
-    throw std::runtime_error("FATAL: Unsupported GeoModel shape");
+    throw std::runtime_error("FATAL: Unsupported GeoModel shape: " +
+                             shape.type());
   }
   return Volume(newTrf, bounds);
 }

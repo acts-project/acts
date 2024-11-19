@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -43,10 +43,8 @@ class FatrasSimulation final : public IAlgorithm {
   struct Config {
     /// The particles input collection.
     std::string inputParticles;
-    /// The simulated particles initial state collection.
-    std::string outputParticlesInitial;
-    /// The simulated particles final state collection.
-    std::string outputParticlesFinal;
+    /// The simulated particles collection.
+    std::string outputParticles;
     /// The simulated hits output collection.
     std::string outputSimHits;
     /// Parametrisation of nuclear interaction
@@ -110,10 +108,8 @@ class FatrasSimulation final : public IAlgorithm {
 
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
 
-  WriteDataHandle<SimParticleContainer> m_outputParticlesInitial{
-      this, "OutputParticlesInitial"};
-  WriteDataHandle<SimParticleContainer> m_outputParticlesFinal{
-      this, "OutputParticlesFinal"};
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 
  private:
   Config m_cfg;

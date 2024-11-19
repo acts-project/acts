@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -77,6 +77,28 @@ class ContextType {
   template <typename T>
   const std::decay_t<T>& get() const {
     return std::any_cast<const std::decay_t<T>&>(m_data);
+  }
+
+  /// Retrieve a pointer to the contained type
+  ///
+  /// @note Returns `nullptr` if @p is not the contained type.
+  ///
+  /// @tparam T The type to attempt to retrieve the value as
+  /// @return Pointer to the contained value, may be null
+  template <typename T>
+  std::decay_t<T>* maybeGet() {
+    return std::any_cast<std::decay_t<T>>(&m_data);
+  }
+
+  /// Retrieve a pointer to the contained type
+  ///
+  /// @note Returns `nullptr` if @p is not the contained type.
+  ///
+  /// @tparam T The type to attempt to retrieve the value as
+  /// @return Pointer to the contained value, may be null
+  template <typename T>
+  const std::decay_t<T>* maybeGet() const {
+    return std::any_cast<const std::decay_t<T>>(&m_data);
   }
 
   /// Check if the contained type is initialized.

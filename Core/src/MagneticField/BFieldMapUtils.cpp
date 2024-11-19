@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 
@@ -58,8 +58,8 @@ Acts::fieldMapRZ(
   double zMax = zPos[nBinsZ - 1];
   // calculate maxima (add one last bin, because bin value always corresponds to
   // left boundary)
-  double stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
-  double stepR = std::fabs(rMax - rMin) / (nBinsR - 1);
+  double stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
+  double stepR = std::abs(rMax - rMin) / (nBinsR - 1);
   rMax += stepR;
   zMax += stepZ;
   if (firstQuadrant) {
@@ -172,9 +172,9 @@ Acts::fieldMapXYZ(
   double zMax = zPos[nBinsZ - 1];
   // calculate maxima (add one last bin, because bin value always corresponds to
   // left boundary)
-  double stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
-  double stepY = std::fabs(yMax - yMin) / (nBinsY - 1);
-  double stepX = std::fabs(xMax - xMin) / (nBinsX - 1);
+  double stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
+  double stepY = std::abs(yMax - yMin) / (nBinsY - 1);
+  double stepX = std::abs(xMax - xMin) / (nBinsX - 1);
   xMax += stepX;
   yMax += stepY;
   zMax += stepZ;
@@ -254,12 +254,9 @@ Acts::solenoidFieldMap(std::pair<double, double> rlim,
                        std::pair<double, double> zlim,
                        std::pair<std::size_t, std::size_t> nbins,
                        const SolenoidBField& field) {
-  double rMin = 0, rMax = 0, zMin = 0, zMax = 0;
-  std::tie(rMin, rMax) = rlim;
-  std::tie(zMin, zMax) = zlim;
-
-  std::size_t nBinsR = 0, nBinsZ = 0;
-  std::tie(nBinsR, nBinsZ) = nbins;
+  auto [rMin, rMax] = rlim;
+  auto [zMin, zMax] = zlim;
+  const auto [nBinsR, nBinsZ] = nbins;
 
   double stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
   double stepR = std::abs(rMax - rMin) / (nBinsR - 1);
