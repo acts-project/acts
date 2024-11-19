@@ -74,10 +74,6 @@ class DigitizationAlgorithm final : public IAlgorithm {
     double minEnergyDeposit = 0.0;  // 1000 * 3.65 * Acts::UnitConstants::eV;
     /// The digitizers per GeometryIdentifiers
     Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
-
-    Config();
-
-    explicit Config(Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs);
   };
 
   /// Construct the smearing algorithm.

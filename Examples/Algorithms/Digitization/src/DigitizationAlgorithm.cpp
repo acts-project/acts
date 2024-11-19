@@ -26,12 +26,6 @@
 
 namespace ActsExamples {
 
-DigitizationAlgorithm::Config::Config() = default;
-
-DigitizationAlgorithm::Config::Config(
-    Acts::GeometryHierarchyMap<DigiComponentsConfig> digiCfgs)
-    : digitizationConfigs(std::move(digiCfgs)) {}
-
 DigitizationAlgorithm::DigitizationAlgorithm(Config config,
                                              Acts::Logging::Level level)
     : IAlgorithm("DigitizationAlgorithm", level), m_cfg(std::move(config)) {

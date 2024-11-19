@@ -778,8 +778,8 @@ def addDigitization(
     rnd = rnd or acts.examples.RandomNumbers()
 
     # Digitization
-    digiCfg = acts.examples.DigitizationConfig(
-        acts.examples.readDigiConfigFromJson(
+    digiCfg = acts.examples.DigitizationAlgorithm.Config(
+        digitizationConfigs=acts.examples.readDigiConfigFromJson(
             str(digiConfigFile),
         ),
         surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),

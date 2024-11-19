@@ -38,18 +38,16 @@ void addDigitization(Context& ctx) {
   {
     using Config = ActsExamples::DigitizationAlgorithm::Config;
 
-    py::class_<ActsExamples::DigitizationAlgorithm, ActsExamples::IAlgorithm,
-               std::shared_ptr<ActsExamples::DigitizationAlgorithm>>(
-        mex, "DigitizationAlgorithm")
-        .def(py::init<Config&, Acts::Logging::Level>(), py::arg("config"),
-             py::arg("level"))
-        .def_property_readonly("config",
-                               &ActsExamples::DigitizationAlgorithm::config);
+    auto a = py::class_<ActsExamples::DigitizationAlgorithm,
+                        ActsExamples::IAlgorithm,
+                        std::shared_ptr<ActsExamples::DigitizationAlgorithm>>(
+                 mex, "DigitizationAlgorithm")
+                 .def(py::init<Config&, Acts::Logging::Level>(),
+                      py::arg("config"), py::arg("level"))
+                 .def_property_readonly(
+                     "config", &ActsExamples::DigitizationAlgorithm::config);
 
-    auto c = py::class_<Config>(mex, "DigitizationConfig")
-                 .def(py::init<>())
-                 .def(py::init<Acts::GeometryHierarchyMap<
-                          ActsExamples::DigiComponentsConfig>>());
+    auto c = py::class_<Config>(a, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputSimHits);
