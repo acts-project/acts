@@ -178,7 +178,7 @@ template <typename T>
 std::tuple<typename T::value_type, ActsScalar> range_medium(const T& tseries) {
   auto [minIt, maxIt] = std::ranges::minmax_element(tseries);
   typename T::value_type range = (*maxIt - *minIt);
-  ActsScalar medium = static_cast<ActsScalar>((*maxIt + *minIt) * 0.5);
+  ActsScalar medium = static_cast<double>((*maxIt + *minIt) * 0.5);
   return {range, medium};
 }
 

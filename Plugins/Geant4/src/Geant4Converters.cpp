@@ -93,12 +93,12 @@ Acts::Geant4ShapeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
   using B = Acts::CylinderBounds;
 
   std::array<Acts::ActsScalar, B::eSize> tArray = {};
-  tArray[B::eR] = static_cast<ActsScalar>(g4Tubs.GetInnerRadius() +
+  tArray[B::eR] = static_cast<double>(g4Tubs.GetInnerRadius() +
                                           g4Tubs.GetOuterRadius()) *
                   0.5;
-  tArray[B::eHalfLengthZ] = static_cast<ActsScalar>(g4Tubs.GetZHalfLength());
+  tArray[B::eHalfLengthZ] = static_cast<double>(g4Tubs.GetZHalfLength());
   tArray[B::eHalfPhiSector] =
-      0.5 * static_cast<ActsScalar>(g4Tubs.GetDeltaPhiAngle());
+      0.5 * static_cast<double>(g4Tubs.GetDeltaPhiAngle());
   // Geant fiddles around with user given values, i.e. it would not allow [-PI,
   // +PI) as a full segment (has to be [0, 2PI)])
   if (std::abs(tArray[B::eHalfPhiSector] - std::numbers::pi) <
@@ -106,7 +106,7 @@ Acts::Geant4ShapeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
     tArray[B::eAveragePhi] = 0.;
   } else {
     tArray[B::eAveragePhi] =
-        static_cast<ActsScalar>(g4Tubs.GetStartPhiAngle()) +
+        static_cast<double>(g4Tubs.GetStartPhiAngle()) +
         tArray[B::eHalfPhiSector];
   }
   ActsScalar thickness = g4Tubs.GetOuterRadius() - g4Tubs.GetInnerRadius();
@@ -119,10 +119,10 @@ Acts::Geant4ShapeConverter::radialBounds(const G4Tubs& g4Tubs) {
   using B = Acts::RadialBounds;
 
   std::array<ActsScalar, B::eSize> tArray = {};
-  tArray[B::eMinR] = static_cast<ActsScalar>(g4Tubs.GetInnerRadius());
-  tArray[B::eMaxR] = static_cast<ActsScalar>(g4Tubs.GetOuterRadius());
+  tArray[B::eMinR] = static_cast<double>(g4Tubs.GetInnerRadius());
+  tArray[B::eMaxR] = static_cast<double>(g4Tubs.GetOuterRadius());
   tArray[B::eHalfPhiSector] =
-      0.5 * static_cast<ActsScalar>(g4Tubs.GetDeltaPhiAngle());
+      0.5 * static_cast<double>(g4Tubs.GetDeltaPhiAngle());
   // Geant fiddles around with user given values, i.e. it would not allow [-PI,
   // +PI) as a full segment (has to be [0, 2PI)])
   if (std::abs(tArray[B::eHalfPhiSector] - std::numbers::pi) <
@@ -130,7 +130,7 @@ Acts::Geant4ShapeConverter::radialBounds(const G4Tubs& g4Tubs) {
     tArray[B::eAveragePhi] = 0.;
   } else {
     tArray[B::eAveragePhi] =
-        static_cast<ActsScalar>(g4Tubs.GetStartPhiAngle()) +
+        static_cast<double>(g4Tubs.GetStartPhiAngle()) +
         tArray[B::eHalfPhiSector];
   }
   ActsScalar thickness = g4Tubs.GetZHalfLength() * 2;
@@ -140,8 +140,8 @@ Acts::Geant4ShapeConverter::radialBounds(const G4Tubs& g4Tubs) {
 
 std::shared_ptr<Acts::LineBounds> Acts::Geant4ShapeConverter::lineBounds(
     const G4Tubs& g4Tubs) {
-  auto r = static_cast<ActsScalar>(g4Tubs.GetOuterRadius());
-  auto hlZ = static_cast<ActsScalar>(g4Tubs.GetZHalfLength());
+  auto r = static_cast<double>(g4Tubs.GetOuterRadius());
+  auto hlZ = static_cast<double>(g4Tubs.GetZHalfLength());
   return std::make_shared<LineBounds>(r, hlZ);
 }
 
@@ -149,9 +149,9 @@ std::tuple<std::shared_ptr<Acts::RectangleBounds>, std::array<int, 2u>,
            Acts::ActsScalar>
 Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
   std::vector<ActsScalar> hG4XYZ = {
-      static_cast<ActsScalar>(g4Box.GetXHalfLength()),
-      static_cast<ActsScalar>(g4Box.GetYHalfLength()),
-      static_cast<ActsScalar>(g4Box.GetZHalfLength())};
+      static_cast<double>(g4Box.GetXHalfLength()),
+      static_cast<double>(g4Box.GetYHalfLength()),
+      static_cast<double>(g4Box.GetZHalfLength())};
 
   auto minAt = std::min_element(hG4XYZ.begin(), hG4XYZ.end());
   std::size_t minPos = std::distance(hG4XYZ.begin(), minAt);
@@ -184,11 +184,11 @@ std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>,
            Acts::ActsScalar>
 Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
   // primary parameters
-  ActsScalar hlX0 = static_cast<ActsScalar>(g4Trd.GetXHalfLength1());
-  ActsScalar hlX1 = static_cast<ActsScalar>(g4Trd.GetXHalfLength2());
-  ActsScalar hlY0 = static_cast<ActsScalar>(g4Trd.GetYHalfLength1());
-  ActsScalar hlY1 = static_cast<ActsScalar>(g4Trd.GetYHalfLength2());
-  ActsScalar hlZ = static_cast<ActsScalar>(g4Trd.GetZHalfLength());
+  ActsScalar hlX0 = static_cast<double>(g4Trd.GetXHalfLength1());
+  ActsScalar hlX1 = static_cast<double>(g4Trd.GetXHalfLength2());
+  ActsScalar hlY0 = static_cast<double>(g4Trd.GetYHalfLength1());
+  ActsScalar hlY1 = static_cast<double>(g4Trd.GetYHalfLength2());
+  ActsScalar hlZ = static_cast<double>(g4Trd.GetZHalfLength());
 
   std::vector<ActsScalar> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5,
                                   hlZ};
@@ -408,12 +408,12 @@ Acts::Geant4VolumeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
   using C = Acts::CylinderVolumeBounds;
 
   std::array<Acts::ActsScalar, C::eSize> tArray = {};
-  tArray[C::eMinR] = static_cast<ActsScalar>(g4Tubs.GetInnerRadius());
-  tArray[C::eMaxR] = static_cast<ActsScalar>(g4Tubs.GetOuterRadius());
-  tArray[C::eHalfLengthZ] = static_cast<ActsScalar>(g4Tubs.GetZHalfLength());
+  tArray[C::eMinR] = static_cast<double>(g4Tubs.GetInnerRadius());
+  tArray[C::eMaxR] = static_cast<double>(g4Tubs.GetOuterRadius());
+  tArray[C::eHalfLengthZ] = static_cast<double>(g4Tubs.GetZHalfLength());
   tArray[C::eHalfPhiSector] =
-      0.5 * static_cast<ActsScalar>(g4Tubs.GetDeltaPhiAngle());
-  tArray[C::eAveragePhi] = static_cast<ActsScalar>(g4Tubs.GetStartPhiAngle());
+      0.5 * static_cast<double>(g4Tubs.GetDeltaPhiAngle());
+  tArray[C::eAveragePhi] = static_cast<double>(g4Tubs.GetStartPhiAngle());
 
   return std::make_shared<CylinderVolumeBounds>(tArray);
 }
