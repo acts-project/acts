@@ -161,9 +161,14 @@ ProcessCode PrototracksToParameters::execute(
       return ProcessCode::ABORT;
     }
 
+    if (field.norm() < m_cfg.bFieldMin) {
+      ACTS_WARNING("Magnetic field at seed " << iseed << " is too small "
+                                             << field.norm());
+      continue;
+    }
+
     auto pars = Acts::estimateTrackParamsFromSeed(
-        ctx.geoContext, seed.sp().begin(), seed.sp().end(), surface, *field,
-        m_cfg.bFieldMin);
+        ctx.geoContext, seed.sp().begin(), seed.sp().end(), surface, *field);
 
     if (not pars) {
       ACTS_WARNING("Skip track because of bad params");
