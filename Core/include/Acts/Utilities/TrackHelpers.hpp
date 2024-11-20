@@ -8,11 +8,15 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
+#include "Acts/EventData/TrackStateProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -491,6 +495,136 @@ void trimTrack(track_proxy_t track, bool trimHoles, bool trimOutliers,
 {
   trimTrackFront(track, trimHoles, trimOutliers, trimMaterial);
   trimTrackBack(track, trimHoles, trimOutliers, trimMaterial);
+}
+
+template <std::size_t nMeasurementDim,
+          TrackStateProxyConcept track_state_proxy_t>
+std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+calculatePredictedResidual(track_state_proxy_t trackState) {
+  using MeasurementVector = ActsVector<nMeasurementDim>;
+  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+
+  auto subspaceHelper =
+      trackState.template fixedBoundSubspaceHelper<nMeasurementDim>();
+
+  MeasurementVector measurement = trackState.calibrated();
+  MeasurementMatrix measurementCovariance = trackState.calibratedCovariance();
+  MeasurementVector predicted =
+      subspaceHelper.projectVector(trackState.predicted());
+  MeasurementMatrix predictedCovariance =
+      subspaceHelper.projectMatrix(trackState.predictedCovariance());
+
+  MeasurementVector residual = measurement - predicted;
+  MeasurementMatrix residualCovariance =
+      measurementCovariance + predictedCovariance;
+
+  return std::pair(residual, residualCovariance);
+}
+
+template <std::size_t nMeasurementDim,
+          TrackStateProxyConcept track_state_proxy_t>
+std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+calculateFilteredResidual(track_state_proxy_t trackState) {
+  using MeasurementVector = ActsVector<nMeasurementDim>;
+  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+
+  auto subspaceHelper =
+      trackState.template fixedBoundSubspaceHelper<nMeasurementDim>();
+
+  MeasurementVector measurement = trackState.calibrated();
+  MeasurementMatrix measurementCovariance = trackState.calibratedCovariance();
+  MeasurementVector filtered =
+      subspaceHelper.projectVector(trackState.filtered());
+  MeasurementMatrix filteredCovariance =
+      subspaceHelper.projectMatrix(trackState.filteredCovariance());
+
+  MeasurementVector residual = measurement - filtered;
+  MeasurementMatrix residualCovariance =
+      measurementCovariance + filteredCovariance;
+
+  return std::pair(residual, residualCovariance);
+}
+
+template <std::size_t nMeasurementDim,
+          TrackStateProxyConcept track_state_proxy_t>
+std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+calculateSmoothedResidual(track_state_proxy_t trackState) {
+  using MeasurementVector = ActsVector<nMeasurementDim>;
+  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+
+  auto subspaceHelper =
+      trackState.template fixedBoundSubspaceHelper<nMeasurementDim>();
+
+  MeasurementVector measurement = trackState.calibrated();
+  MeasurementMatrix measurementCovariance = trackState.calibratedCovariance();
+  MeasurementVector smoothed =
+      subspaceHelper.projectVector(trackState.smoothed());
+  MeasurementMatrix smoothedCovariance =
+      subspaceHelper.projectMatrix(trackState.smoothedCovariance());
+
+  MeasurementVector residual = measurement - smoothed;
+  MeasurementMatrix residualCovariance =
+      measurementCovariance + smoothedCovariance;
+
+  return std::pair(residual, residualCovariance);
+}
+
+template <TrackStateProxyConcept track_state_proxy_t>
+double calculatePredictedChi2(track_state_proxy_t trackState) {
+  return visit_measurement(trackState.calibratedSize(), [&](auto N) {
+    constexpr int measdim = decltype(N)::value;
+
+    auto [residual, residualCovariance] =
+        calculatePredictedResidual<measdim>(trackState);
+
+    return residual.transpose() * residualCovariance.inverse() * residual;
+  });
+}
+
+template <TrackStateProxyConcept track_state_proxy_t>
+double calculateFilteredChi2(track_state_proxy_t trackState) {
+  return visit_measurement(trackState.calibratedSize(), [&](auto N) {
+    constexpr int measdim = decltype(N)::value;
+
+    auto [residual, residualCovariance] =
+        calculateFilteredResidual<measdim>(trackState);
+
+    return residual.transpose() * residualCovariance.inverse() * residual;
+  });
+}
+
+template <TrackStateProxyConcept track_state_proxy_t>
+double calculateSmoothedChi2(track_state_proxy_t trackState) {
+  return visit_measurement(trackState.calibratedSize(), [&](auto N) {
+    constexpr int measdim = decltype(N)::value;
+
+    auto [residual, residualCovariance] =
+        calculateSmoothedResidual<measdim>(trackState);
+
+    return residual.transpose() * residualCovariance.inverse() * residual;
+  });
+}
+
+template <TrackStateProxyConcept track_state_proxy_t>
+std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
+    track_state_proxy_t trackState) {
+  // calculate the unbiased track parameters (i.e. fitted track parameters with
+  // this measurement removed) using Eq.(12a)-Eq.(12c) of NIMA 262, 444 (1987)
+
+  return visit_measurement(trackState.calibratedSize(), [&](auto N) {
+    constexpr int measdim = decltype(N)::value;
+
+    auto H =
+        trackState.projector().template topLeftCorner<measdim, eBoundSize>();
+    auto s = trackState.smoothed();
+    auto C = trackState.smoothedCovariance();
+    auto m = trackState.template calibrated<measdim>();
+    auto V = trackState.template calibratedCovariance<measdim>();
+    auto K = (C * H.transpose() * (H * C * H.transpose() - V).inverse()).eval();
+    BoundVector unbiasedParamsVec = s + K * (m - H * s);
+    BoundMatrix unbiasedParamsCov = C - K * H * C;
+    return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
+  });
 }
 
 }  // namespace Acts
