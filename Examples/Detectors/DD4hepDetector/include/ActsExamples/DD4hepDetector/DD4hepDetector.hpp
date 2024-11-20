@@ -87,7 +87,7 @@ class DD4hepDetector : public DetectorCommons::Detector {
   explicit DD4hepDetector(const Config& cfg);
   DD4hepDetector(const DD4hepDetector&) = delete;
   DD4hepDetector(DD4hepDetector&&);
-  ~DD4hepDetector() final;
+  ~DD4hepDetector() override;
   DD4hepDetector& operator=(const DD4hepDetector&) = delete;
   DD4hepDetector& operator=(DD4hepDetector&&);
 
