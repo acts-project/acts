@@ -8,13 +8,12 @@
 
 #include "ActsExamples/Io/Root/RootVertexReader.hpp"
 
-#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Root/RootUtility.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
-#include <algorithm>
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
@@ -64,11 +63,14 @@ RootVertexReader::RootVertexReader(const RootVertexReader::Config& config,
 
   // Sort the entry numbers of the events
   {
+    // necessary to guarantee that m_inputChain->GetV1() is valid for the
+    // entire range
+    m_inputChain->SetEstimate(m_events + 1);
+
     m_entryNumbers.resize(m_events);
     m_inputChain->Draw("event_id", "", "goff");
-    // Sort to get the entry numbers of the ordered events
-    TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
-                m_entryNumbers.data(), false);
+    RootUtility::stableSort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
+                            m_entryNumbers.data(), false);
   }
 }
 
