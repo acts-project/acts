@@ -136,6 +136,17 @@ with tempfile.TemporaryDirectory() as temp:
         outputDirRoot=tp,
     )
 
+    addAmbiguityResolutionML(
+        s,
+        AmbiguityResolutionMLConfig(
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=6
+        ),
+        tracks="ckf_tracks",
+        outputDirRoot=tp,
+        onnxModelFile=Path(__file__).resolve().parent.parent.parent.parent
+        / "thirdparty/OpenDataDetector/data/duplicateClassifier.onnx",
+    )
+
     addAmbiguityResolution(
         s,
         AmbiguityResolutionConfig(
@@ -143,6 +154,7 @@ with tempfile.TemporaryDirectory() as temp:
             maximumIterations=100000,
             nMeasurementsMin=6,
         ),
+        tracks="ckf_tracks",
         outputDirRoot=tp,
     )
 
@@ -177,17 +189,6 @@ with tempfile.TemporaryDirectory() as temp:
         useTime=True,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_grid_time",
-    )
-
-    addAmbiguityResolutionML(
-        s,
-        AmbiguityResolutionMLConfig(
-            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=6
-        ),
-        tracks="ckf_tracks",
-        outputDirRoot=tp,
-        onnxModelFile=Path(__file__).resolve().parent.parent.parent.parent
-        / "thirdparty/OpenDataDetector/data/duplicateClassifier.onnx",
     )
 
     s.run()
