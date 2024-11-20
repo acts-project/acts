@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include <csignal>
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 
 namespace Acts {
@@ -35,7 +37,11 @@ constexpr int length(const char* str) {
 }
 }  // namespace detail
 
-constexpr HashedString hashString(std::string_view s) {
+consteval HashedString hashString(std::string_view s) {
+  return detail::fnv1a_32(s);
+}
+
+constexpr HashedString hashStringDynamic(std::string_view s) {
   return detail::fnv1a_32(s);
 }
 
