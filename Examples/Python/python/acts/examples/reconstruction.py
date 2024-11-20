@@ -2030,6 +2030,8 @@ def addAmbiguityResolutionML(
     s.addAlgorithm(algML)
     s.addAlgorithm(algGreedy)
 
+    s.addWhiteboardAlias("tracks", algGreedy.config.outputTracks)
+
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=algGreedy.config.outputTracks,

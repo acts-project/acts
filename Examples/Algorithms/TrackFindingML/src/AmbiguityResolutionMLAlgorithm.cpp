@@ -45,10 +45,12 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Read input data
   const auto& tracks = m_inputTracks(ctx);
-  // Associate measurement to their respective tracks
+  // Associate measurement to their respective tracks to prepare the track
+  // shared hits based clustering
   std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>
       trackMap =
           m_ambiML.mapTrackHits(tracks, &sourceLinkHash, &sourceLinkEquality);
+  // Cluster the tracks based on the shared hits
   auto cluster = Acts::detail::clusterDuplicateTracks(trackMap);
   // Select the ID of the track we want to keep
   std::vector<std::size_t> goodTracks =

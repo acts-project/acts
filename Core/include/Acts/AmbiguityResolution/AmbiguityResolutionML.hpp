@@ -45,7 +45,12 @@ class AmbiguityResolutionML {
         m_duplicateClassifier(m_cfg.inputDuplicateNN.c_str()),
         m_logger{std::move(logger)} {}
 
-  /// Associated measurements ID to Tracks ID
+  /// Associate the hits to the tracks
+  ///
+  /// This algorithm performs the mapping of hits ID to track ID. Our final goal
+  /// is too loop over all the tracks (and their associated hits) by order of
+  /// decreasing number hits for this we use a multimap where the key is the
+  /// number of hits as this will automatically perform the sorting.
   ///
   /// @param tracks is the input track container
   /// @param sourceLinkHash is the hash function for the source link, will be used to associate to tracks
@@ -57,11 +62,15 @@ class AmbiguityResolutionML {
   mapTrackHits(const track_container_t& tracks,
                source_link_hash_t&& sourceLinkHash,
                source_link_equality_t&& sourceLinkEquality) const {
+    // A map to store (and generate) the measurement index for each source link
     auto measurementIndexMap =
         std::unordered_map<SourceLink, std::size_t, source_link_hash_t,
                            source_link_equality_t>(0, sourceLinkHash,
                                                    sourceLinkEquality);
 
+    // A map to store the track Id and their associated measurements ID, a
+    // multimap is used to automatically sort the tracks by the number of
+    // measurements
     std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>
         trackMap;
     std::size_t trackIndex = 0;
@@ -89,6 +98,9 @@ class AmbiguityResolutionML {
   }
 
   /// Select the track associated with each cluster
+  ///
+  /// In this algorithm the call the neural network to score the tracks and then
+  /// select the track with the highest score in each cluster
   ///
   /// @param clusters is a map of clusters, each cluster correspond to a vector of track ID
   /// @param tracks is the input track container
