@@ -13,7 +13,7 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesDetectorTelescope
-    PUBLIC ActsCore ActsExamplesFramework ActsExamplesDetectorCommons
+    PUBLIC ActsCore ActsExamplesFramework ActsExamplesDetectorsCommon
 )
 
 install(

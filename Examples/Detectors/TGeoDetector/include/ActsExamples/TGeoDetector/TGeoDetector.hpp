@@ -28,7 +28,6 @@ namespace ActsExamples::TGeo {
 
 class TGeoDetector : public DetectorCommons::Detector {
  public:
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
   using ContextDecorators =
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
 
@@ -147,7 +146,7 @@ class TGeoDetector : public DetectorCommons::Detector {
  private:
   Config m_cfg;
 
-  void buildTrackingGeometry() final;
+  void buildTrackingGeometry(const Acts::GeometryContext& gctx) final;
 };
 
 }  // namespace ActsExamples::TGeo

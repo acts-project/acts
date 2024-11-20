@@ -10,7 +10,7 @@ target_link_libraries(
         ActsCore
         ActsPluginDD4hep
         ActsExamplesFramework
-        ActsExamplesDetectorCommons
+        ActsExamplesDetectorsCommon
 )
 
 if(${DD4hep_VERSION} VERSION_LESS 1.11)

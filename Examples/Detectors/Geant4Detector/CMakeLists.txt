@@ -12,7 +12,7 @@ target_link_libraries(
         ActsExamplesFramework
         ActsExamplesGeant4
         ActsPluginGeant4
-        ActsExamplesDetectorCommons
+        ActsExamplesDetectorsCommon
 )
 
 install(

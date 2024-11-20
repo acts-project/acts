@@ -16,7 +16,7 @@ target_link_libraries(
     PUBLIC
         ActsCore
         ActsExamplesFramework
-        ActsExamplesDetectorCommons
+        ActsExamplesDetectorsCommon
         ActsExamplesDetectorGeneric
 )
 

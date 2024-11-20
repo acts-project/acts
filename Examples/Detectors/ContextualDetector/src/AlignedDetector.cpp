@@ -28,7 +28,20 @@ AlignedDetector::AlignedDetector(const Config& cfg)
           Acts::getDefaultLogger("AlignedDetector", cfg.logLevel)),
       m_cfg(cfg) {}
 
-void AlignedDetector::buildTrackingGeometry() {
+Acts::GeometryContext AlignedDetector::buildGeometryContext() const {
+  if (m_cfg.mode == Config::Mode::External) {
+    InternallyAlignedDetectorElement::ContextType nominalContext;
+    auto gctx = Acts::GeometryContext(nominalContext);
+    return gctx;
+  }
+
+  InternallyAlignedDetectorElement::ContextType nominalContext;
+  nominalContext.nominal = true;
+  auto gctx = Acts::GeometryContext(nominalContext);
+  return gctx;
+}
+
+void AlignedDetector::buildTrackingGeometry(const Acts::GeometryContext& gctx) {
   // Let's create a random number service
   ActsExamples::RandomNumbers::Config randomNumberConfig;
   randomNumberConfig.seed = m_cfg.seed;
@@ -52,9 +65,6 @@ void AlignedDetector::buildTrackingGeometry() {
   };
 
   if (m_cfg.mode == Config::Mode::External) {
-    InternallyAlignedDetectorElement::ContextType nominalContext;
-    auto gctx = Acts::GeometryContext(nominalContext);
-
     ExternalAlignmentDecorator::Config agcsConfig;
     fillDecoratorConfig(agcsConfig);
 
@@ -80,10 +90,6 @@ void AlignedDetector::buildTrackingGeometry() {
         std::move(agcsConfig),
         Acts::getDefaultLogger("AlignmentDecorator", m_cfg.decoratorLogLevel)));
   } else {
-    InternallyAlignedDetectorElement::ContextType nominalContext;
-    nominalContext.nominal = true;
-    auto gctx = Acts::GeometryContext(nominalContext);
-
     InternalAlignmentDecorator::Config agcsConfig;
     fillDecoratorConfig(agcsConfig);
 

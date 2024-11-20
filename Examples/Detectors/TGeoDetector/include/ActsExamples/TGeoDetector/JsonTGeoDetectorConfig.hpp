@@ -18,6 +18,8 @@
 #include <map>
 #include <string>
 
+#include <nlohmann/json.hpp>
+
 // Namespace of the module splitters
 namespace Acts {
 

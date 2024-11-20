@@ -18,7 +18,7 @@ target_link_libraries(
         ActsPluginJson
         ActsExamplesFramework
         ActsExamplesDetectorGeneric
-        ActsExamplesDetectorCommons
+        ActsExamplesDetectorsCommon
         ActsExamplesITkModuleSplitting
 )
 

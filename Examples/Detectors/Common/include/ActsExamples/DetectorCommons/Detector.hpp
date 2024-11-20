@@ -16,12 +16,11 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryContext.hpp"
-
 #include <memory>
 #include <vector>
 
 namespace Acts {
+class GeometryContext;
 class TrackingGeometry;
 class DetectorElementBase;
 class IMaterialDecorator;
@@ -39,8 +38,6 @@ namespace ActsExamples::DetectorCommons {
 
 class Detector {
  public:
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
-  using DetectorPtr = std::shared_ptr<Acts::Experimental::Detector>;
   using ContextDecorators =
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
 
@@ -48,18 +45,25 @@ class Detector {
   using DetectorStore = std::vector<std::shared_ptr<const DetectorElement>>;
 
   explicit Detector(std::unique_ptr<const Acts::Logger> logger);
-  virtual ~Detector() = default;
+  Detector(const Detector&) = delete;
+  Detector(Detector&&);
+  virtual ~Detector();
+  Detector& operator=(const Detector&) = delete;
+  Detector& operator=(Detector&&);
 
-  virtual std::tuple<TrackingGeometryPtr, ContextDecorators, DetectorStore>
+  virtual std::tuple<std::shared_ptr<const Acts::TrackingGeometry>,
+                     ContextDecorators, DetectorStore>
   trackingGeometry();
 
-  virtual std::tuple<DetectorPtr, ContextDecorators, DetectorStore> detector();
+  virtual std::tuple<std::shared_ptr<Acts::Experimental::Detector>,
+                     ContextDecorators, DetectorStore>
+  detector();
 
   virtual void drop();
 
  protected:
-  TrackingGeometryPtr m_trackingGeometry;
-  DetectorPtr m_detector;
+  std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
+  std::shared_ptr<Acts::Experimental::Detector> m_detector;
   ContextDecorators m_contextDecorators;
   DetectorStore m_detectorStore;
 
@@ -67,7 +71,9 @@ class Detector {
 
   const Acts::Logger& logger() const { return *m_logger; }
 
-  virtual void buildTrackingGeometry() = 0;
+  virtual Acts::GeometryContext buildGeometryContext() const;
+
+  virtual void buildTrackingGeometry(const Acts::GeometryContext& gctx) = 0;
 
   virtual void buildDetector();
 };

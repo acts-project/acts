@@ -9,7 +9,6 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -24,6 +23,7 @@
 #include <map>
 #include <stdexcept>
 
+#include <DD4hep/Detector.h>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/SimTrackerHitCollection.h>

@@ -1,14 +1,14 @@
-add_library(ActsExamplesDetectorCommons SHARED src/Detector.cpp)
+add_library(ActsExamplesDetectorsCommon SHARED src/Detector.cpp)
 target_include_directories(
-    ActsExamplesDetectorCommons
+    ActsExamplesDetectorsCommon
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 target_link_libraries(
-    ActsExamplesDetectorCommons
+    ActsExamplesDetectorsCommon
     PUBLIC ActsCore ActsExamplesFramework
 )
 
 install(
-    TARGETS ActsExamplesDetectorCommons
+    TARGETS ActsExamplesDetectorsCommon
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

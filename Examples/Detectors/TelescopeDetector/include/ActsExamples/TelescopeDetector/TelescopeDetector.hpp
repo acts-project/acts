@@ -23,7 +23,6 @@ class TelescopeG4DetectorConstruction;
 
 class TelescopeDetector : public ActsExamples::DetectorCommons::Detector {
  public:
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
   using ContextDecorators =
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
 
@@ -46,7 +45,7 @@ class TelescopeDetector : public ActsExamples::DetectorCommons::Detector {
  private:
   Config m_cfg;
 
-  void buildTrackingGeometry() final;
+  void buildTrackingGeometry(const Acts::GeometryContext& gctx) final;
 };
 
 }  // namespace ActsExamples::Telescope

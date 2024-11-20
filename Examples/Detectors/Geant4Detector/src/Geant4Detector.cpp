@@ -14,6 +14,7 @@
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 
@@ -41,7 +42,8 @@ void Geant4Detector::drop() {
   m_detectorElements.clear();
 }
 
-void Geant4Detector::buildTrackingGeometry() {
+void Geant4Detector::buildTrackingGeometry(
+    const Acts::GeometryContext& /*gctx*/) {
   std::tie(m_trackingGeometry, m_contextDecorators, m_detectorElements) =
       constructTrackingGeometry();
 }
@@ -51,8 +53,8 @@ void Geant4Detector::buildDetector() {
       constructDetector();
 }
 
-std::tuple<Geant4Detector::DetectorPtr, Geant4Detector::ContextDecorators,
-           Geant4Detector::DetectorElements>
+std::tuple<std::shared_ptr<Acts::Experimental::Detector>,
+           Geant4Detector::ContextDecorators, Geant4Detector::DetectorElements>
 Geant4Detector::constructDetector() const {
   if (m_cfg.g4World == nullptr) {
     throw std::invalid_argument(
@@ -63,7 +65,7 @@ Geant4Detector::constructDetector() const {
             << m_cfg.name << "' from the Geant4PhysVolume '"
             << m_cfg.g4World->GetName() << "'");
 
-  DetectorPtr detector = nullptr;
+  std::shared_ptr<Acts::Experimental::Detector> detector = nullptr;
   ContextDecorators decorators = {};
 
   auto [surfaces, elements] = convertGeant4Volumes();
@@ -71,7 +73,7 @@ Geant4Detector::constructDetector() const {
   return {std::move(detector), std::move(decorators), std::move(elements)};
 }
 
-std::tuple<Geant4Detector::TrackingGeometryPtr,
+std::tuple<std::shared_ptr<const Acts::TrackingGeometry>,
            Geant4Detector::ContextDecorators, Geant4Detector::DetectorElements>
 Geant4Detector::constructTrackingGeometry() const {
   if (m_cfg.g4World == nullptr) {
@@ -126,7 +128,8 @@ Geant4Detector::constructTrackingGeometry() const {
       kdtCfg, logger().clone("KDTreeTrackingGeometryBuilder"));
 
   Acts::GeometryContext tContext;
-  TrackingGeometryPtr trackingGeometry = kdtBuilder.trackingGeometry(tContext);
+  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry =
+      kdtBuilder.trackingGeometry(tContext);
 
   return {std::move(trackingGeometry), std::move(decorators),
           std::move(elements)};

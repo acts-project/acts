@@ -25,6 +25,7 @@
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
 
 #include <algorithm>
@@ -371,7 +372,8 @@ void TGeoDetector::Config::readJson(const std::string& jsonFile) {
   readTGeoLayerBuilderConfigsFile(jsonFile, *this);
 }
 
-void TGeoDetector::buildTrackingGeometry() {
+void TGeoDetector::buildTrackingGeometry(
+    const Acts::GeometryContext& /*gctx*/) {
   Acts::GeometryContext tGeoContext;
 
   m_trackingGeometry = buildTGeoDetector(m_cfg, tGeoContext, m_detectorStore,

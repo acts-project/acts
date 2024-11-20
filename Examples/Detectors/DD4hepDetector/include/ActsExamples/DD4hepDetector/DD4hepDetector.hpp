@@ -21,10 +21,12 @@
 #include <string>
 #include <vector>
 
-#include <DD4hep/DetElement.h>
-#include <DD4hep/Detector.h>
-
 class TGeoNode;
+
+namespace dd4hep {
+class Detector;
+class DetElement;
+}  // namespace dd4hep
 
 namespace ActsExamples::DD4hep {
 
@@ -83,6 +85,11 @@ class DD4hepDetector : public DetectorCommons::Detector {
   };
 
   explicit DD4hepDetector(const Config& cfg);
+  DD4hepDetector(const DD4hepDetector&) = delete;
+  DD4hepDetector(DD4hepDetector&&);
+  ~DD4hepDetector() final;
+  DD4hepDetector& operator=(const DD4hepDetector&) = delete;
+  DD4hepDetector& operator=(DD4hepDetector&&);
 
   /// Interface method to access to the DD4hep geometry
   dd4hep::Detector& dd4hepDetector();
@@ -101,7 +108,7 @@ class DD4hepDetector : public DetectorCommons::Detector {
   /// Private method to initiate building of the DD4hep geometry
   void buildDD4hepGeometry();
 
-  void buildTrackingGeometry() final;
+  void buildTrackingGeometry(const Acts::GeometryContext& gctx) final;
 
   /// The config class
   Config m_cfg;

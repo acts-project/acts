@@ -38,8 +38,6 @@ class IContextDecorator;
 namespace ActsExamples::Geant4 {
 
 struct Geant4Detector : public DetectorCommons::Detector {
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
-  using DetectorPtr = std::shared_ptr<Acts::Experimental::Detector>;
   using ContextDecorators =
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
 
@@ -79,14 +77,15 @@ struct Geant4Detector : public DetectorCommons::Detector {
 
   const Acts::Logger& logger() const { return *m_logger; }
 
-  void buildTrackingGeometry() final;
+  void buildTrackingGeometry(const Acts::GeometryContext& gctx) final;
   void buildDetector() final;
 
   /// @brief Construct an Acts::Detector from a Geant4 world volume
   /// @param cfg the configuration of the Geant4 detector
   /// @param logger a logger instance
   /// @return a tuple of an Acts::Detector object, a ContextDecorator & the created detector elements
-  std::tuple<DetectorPtr, ContextDecorators, DetectorElements>
+  std::tuple<std::shared_ptr<Acts::Experimental::Detector>, ContextDecorators,
+             DetectorElements>
   constructDetector() const;
 
   /// @brief Construct a TrackingGeometry from a Geant4 world volume using the KDTreeTrackingGeometryBuilder builder
@@ -96,7 +95,8 @@ struct Geant4Detector : public DetectorCommons::Detector {
   /// @param logger a logger instance
   ///
   /// @return a tuple of an Acts::TrackingGeometry object,  a ContextDecorator & the created detector elements
-  std::tuple<TrackingGeometryPtr, ContextDecorators, DetectorElements>
+  std::tuple<std::shared_ptr<const Acts::TrackingGeometry>, ContextDecorators,
+             DetectorElements>
   constructTrackingGeometry() const;
 
   /// @brief Convert Geant4VPhysicalVolume objects into Acts components

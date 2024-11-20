@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 
@@ -20,7 +21,6 @@ class GenericDetectorElement;
 
 class GenericDetector : public ActsExamples::DetectorCommons::Detector {
  public:
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
   using ContextDecorators =
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
 
@@ -41,7 +41,7 @@ class GenericDetector : public ActsExamples::DetectorCommons::Detector {
  private:
   Config m_cfg;
 
-  void buildTrackingGeometry() final;
+  void buildTrackingGeometry(const Acts::GeometryContext& gctx) final;
 };
 
 }  // namespace ActsExamples::Generic

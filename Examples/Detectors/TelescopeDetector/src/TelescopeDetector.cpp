@@ -22,9 +22,8 @@ TelescopeDetector::TelescopeDetector(const Config& cfg)
           Acts::getDefaultLogger("TelescopeDetector", cfg.logLevel)),
       m_cfg(cfg) {}
 
-void TelescopeDetector::buildTrackingGeometry() {
-  Acts::GeometryContext gctx;
-
+void TelescopeDetector::buildTrackingGeometry(
+    const Acts::GeometryContext& gctx) {
   if (m_cfg.surfaceType > 1) {
     throw std::invalid_argument(
         "The surface type could either be 0 for plane surface or 1 for disc "

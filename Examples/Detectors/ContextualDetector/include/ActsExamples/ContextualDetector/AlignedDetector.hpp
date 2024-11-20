@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
@@ -23,7 +24,6 @@ class InternalAlignmentDecorator;
 
 class AlignedDetector : public DetectorCommons::Detector {
  public:
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
   using ContextDecorators =
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
 
@@ -68,7 +68,9 @@ class AlignedDetector : public DetectorCommons::Detector {
   /// The Store of the detector elements (lifetime: job)
   DetectorStore m_detectorStore;
 
-  void buildTrackingGeometry() final;
+  Acts::GeometryContext buildGeometryContext() const final;
+
+  void buildTrackingGeometry(const Acts::GeometryContext& gctx) final;
 };
 
 }  // namespace ActsExamples::Contextual

@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
@@ -16,14 +15,11 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <array>
 #include <memory>
 #include <utility>
-#include <vector>
 
+#include <DD4hep/Fields.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 

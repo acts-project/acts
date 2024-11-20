@@ -20,8 +20,7 @@ GenericDetector::GenericDetector(const Config& cfg)
           Acts::getDefaultLogger("GenericDetector", cfg.logLevel)),
       m_cfg(cfg) {}
 
-void GenericDetector::buildTrackingGeometry() {
-  Acts::GeometryContext gctx;
+void GenericDetector::buildTrackingGeometry(const Acts::GeometryContext& gctx) {
   std::vector<std::vector<std::shared_ptr<DetectorElement>>> detectorStore;
   m_trackingGeometry = ActsExamples::Generic::buildDetector<DetectorElement>(
       gctx, detectorStore, m_cfg.buildLevel, m_cfg.materialDecorator,

@@ -17,6 +17,7 @@
 #include <memory>
 #include <stdexcept>
 
+#include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
 #include <DD4hep/Handle.h>
 #include <DD4hep/Volumes.h>
@@ -35,6 +36,12 @@ DD4hepDetector::DD4hepDetector(const DD4hepDetector::Config& cfg)
     throw std::invalid_argument("Missing DD4hep XML filenames");
   }
 }
+
+DD4hepDetector::DD4hepDetector(DD4hepDetector&&) = default;
+
+DD4hepDetector::~DD4hepDetector() = default;
+
+DD4hepDetector& DD4hepDetector::operator=(DD4hepDetector&&) = default;
 
 dd4hep::Detector& DD4hepDetector::DD4hepDetector::dd4hepDetector() {
   if (m_detector == nullptr) {
@@ -102,12 +109,11 @@ void DD4hepDetector::buildDD4hepGeometry() {
   std::cout.clear();
 }
 
-void DD4hepDetector::buildTrackingGeometry() {
+void DD4hepDetector::buildTrackingGeometry(const Acts::GeometryContext& gctx) {
   if (m_detector == nullptr) {
     buildDD4hepGeometry();
   }
 
-  Acts::GeometryContext gctx;
   auto logger = Acts::getDefaultLogger("DD4hepConversion", m_cfg.logLevel);
   m_trackingGeometry = Acts::convertDD4hepDetector(
       dd4hepGeometry(), *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
