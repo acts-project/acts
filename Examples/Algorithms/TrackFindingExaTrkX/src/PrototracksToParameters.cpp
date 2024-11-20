@@ -167,8 +167,8 @@ ProcessCode PrototracksToParameters::execute(
       continue;
     }
 
-    auto pars = Acts::estimateTrackParamsFromSeed(
-        ctx.geoContext, seed.sp().begin(), seed.sp().end(), surface, field);
+    auto pars = Acts::estimateTrackParamsFromSeed(ctx.geoContext, seed.sp(),
+                                                  surface, field);
 
     if (not pars) {
       ACTS_WARNING("Skip track because of bad params");
