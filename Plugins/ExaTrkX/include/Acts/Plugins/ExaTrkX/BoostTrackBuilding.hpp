@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Plugins/ExaTrkX/BoostWalkthrough.hpp"
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -20,23 +19,8 @@ namespace Acts {
 
 class BoostTrackBuilding final : public Acts::TrackBuildingBase {
  public:
-  struct Config {
-    bool doWalkthrough = false;
-    float walkthroughCCCut = 0.01;
-    float walkthroughLowCut = 0.1;
-    float walkthroughHighCut = 0.6;
-  };
-
-  BoostTrackBuilding(const Config &cfg, std::unique_ptr<const Logger> logger)
-      : m_cfg(cfg),
-        m_walkthrough(
-            Acts::WalkthroughAlgorithm::Config{
-                .ccScoreCut = cfg.walkthroughCCCut,
-                .candidateLowThreshold = cfg.walkthroughLowCut,
-                .candidateHighThreshold = cfg.walkthroughHighCut},
-            logger->clone()),
-        m_logger(std::move(logger)),
-        m_device(torch::Device(torch::kCPU)) {}
+  BoostTrackBuilding(std::unique_ptr<const Logger> logger)
+      : m_logger(std::move(logger)), m_device(torch::Device(torch::kCPU)) {}
 
   std::vector<std::vector<int>> operator()(
       std::any nodes, std::any edges, std::any edge_weights,
@@ -45,8 +29,6 @@ class BoostTrackBuilding final : public Acts::TrackBuildingBase {
   torch::Device device() const override { return m_device; };
 
  private:
-  Config m_cfg;
-  Acts::WalkthroughAlgorithm m_walkthrough;
   std::unique_ptr<const Acts::Logger> m_logger;
   torch::Device m_device;
   const auto &logger() const { return *m_logger; }
