@@ -8,52 +8,14 @@
 
 #pragma once
 
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParametersConcept.hpp"
+#include "Acts/EventData/detail/TrackParametersUtils.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 
-#include <concepts>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
 #include <utility>
-
-namespace {
-
-/// @brief Shorthand for track parameters
-template <class parameters_t>
-concept TrackParameters = Acts::FreeTrackParametersConcept<parameters_t> ||
-                          Acts::BoundTrackParametersConcept<parameters_t>;
-
-/// @brief Shorthand for GenericBoundTrackParameters
-template <class parameters_t>
-concept IsGenericBound =
-    std::same_as<parameters_t, Acts::GenericBoundTrackParameters<
-                                   typename parameters_t::ParticleHypothesis>>;
-
-/// @brief Concept that restricts the type of the
-/// accumulation grid cell
-template <typename grid_t>
-concept TrackParamsGrid = requires {
-  typename grid_t::value_type::first_type;
-  typename grid_t::value_type::second_type;
-
-  requires TrackParameters<
-      typename grid_t::value_type::first_type::element_type>;
-  requires TrackParameters<
-      typename grid_t::value_type::first_type::element_type>;
-
-  requires requires(typename grid_t::value_type val) {
-    {
-      val.first
-    } -> std::same_as<
-          std::shared_ptr<typename decltype(val.first)::element_type>&>;
-    { val.second } -> std::same_as<decltype(val.first)&>;
-  };
-};
-
-}  // namespace
 
 namespace Acts {
 
@@ -67,7 +29,7 @@ namespace Acts {
 ///
 /// @note Geometry context is left to be handled by the user
 /// outside of accumulation
-template <TrackParamsGrid grid_t>
+template <detail::TrackParamsGrid grid_t>
 class TrackParamsLookupAccumulator {
  public:
   using LookupGrid = grid_t;
@@ -112,7 +74,7 @@ class TrackParamsLookupAccumulator {
   /// @return Grid with the bin track parameters averaged
   LookupGrid finalizeLookup() {
     auto meanTrack = [&](const TrackParameters& track, std::size_t count) {
-      if constexpr (IsGenericBound<TrackParameters>) {
+      if constexpr (detail::isGenericBoundTrackParams<TrackParameters>) {
         Acts::GeometryContext gctx;
 
         auto res = TrackParameters::create(
@@ -169,7 +131,7 @@ class TrackParamsLookupAccumulator {
       throw std::invalid_argument(
           "Cannot accumulate track parameters with different charges");
     }
-    if constexpr (IsGenericBound<TrackParameters>) {
+    if constexpr (detail::isGenericBoundTrackParams<TrackParameters>) {
       if (a.referenceSurface() != b.referenceSurface()) {
         throw std::invalid_argument(
             "Cannot accumulate bound track parameters with different reference "
@@ -180,7 +142,7 @@ class TrackParamsLookupAccumulator {
     Acts::Vector3 momentum = a.momentum() + b.momentum();
 
     // Assume track parameters being i.i.d.
-    if constexpr (IsGenericBound<TrackParameters>) {
+    if constexpr (detail::isGenericBoundTrackParams<TrackParameters>) {
       Acts::GeometryContext gctx;
 
       Acts::Vector4 fourPosition = a.fourPosition(gctx) + b.fourPosition(gctx);
