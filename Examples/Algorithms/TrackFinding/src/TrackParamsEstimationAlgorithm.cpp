@@ -21,12 +21,10 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
-#include <cmath>
 #include <cstddef>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
-#include <system_error>
 #include <utility>
 #include <vector>
 

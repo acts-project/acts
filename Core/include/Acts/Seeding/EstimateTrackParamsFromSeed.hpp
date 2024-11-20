@@ -13,8 +13,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <array>
@@ -31,8 +29,8 @@ namespace Acts {
 /// in the range defined by the iterators. The magnetic field (which might be
 /// along any direction) is also necessary for the momentum estimation.
 ///
-/// This is a purely spatial estimation, i.e. the time parameter will be set to
-/// 0.
+/// This is a purely spatial estimation, i.e. the time parameter will be set
+/// to 0.
 ///
 /// It resembles the method used in ATLAS for the track parameters
 /// estimated from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane
@@ -107,9 +105,9 @@ FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
 /// full bound track parameters, i.e. (loc0, loc1, phi, theta, q/p, t) at the
 /// bottom space point. The bottom space is assumed to be the first element
 /// in the range defined by the iterators. It must lie on the surface
-/// provided for the representation of the bound track parameters. The magnetic
-/// field (which might be along any direction) is also necessary for the
-/// momentum estimation.
+/// provided for the representation of the bound track parameters. The
+/// magnetic field (which might be along any direction) is also necessary for
+/// the momentum estimation.
 ///
 /// It resembles the method used in ATLAS for the track parameters
 /// estimated from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane
@@ -180,11 +178,12 @@ struct EstimateTrackParamCovarianceConfig {
 };
 
 /// Estimate the covariance matrix of the given track parameters based on the
-/// provided configuration. The assumption is that we can model the uncertainty
-/// of the track parameters as a diagonal matrix with the provided initial
-/// sigmas. The inflation factors are used to inflate the initial variances
-/// based on the provided configuration. The uncertainty of q/p is estimated
-/// based on the relative uncertainty of the q/pt and the theta uncertainty.
+/// provided configuration. The assumption is that we can model the
+/// uncertainty of the track parameters as a diagonal matrix with the provided
+/// initial sigmas. The inflation factors are used to inflate the initial
+/// variances based on the provided configuration. The uncertainty of q/p is
+/// estimated based on the relative uncertainty of the q/pt and the theta
+/// uncertainty.
 ///
 /// @param config is the configuration for the estimation
 /// @param params is the track parameters
