@@ -29,7 +29,7 @@ template <AmbiguityNetworkConcept AmbiguityNetwork>
 class AmbiguityResolutionML {
  public:
   struct Config {
-    /// Path to the ONNX model for the duplicate neural network
+    /// Path to the model file for the duplicate neural network
     std::string inputDuplicateNN = "";
     /// Minimum number of measurement to form a track.
     std::size_t nMeasurementsMin = 7;

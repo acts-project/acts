@@ -25,6 +25,8 @@ using DummyTrackContainer =
 /// The ambiguity network correspond to the AmbiguityTrackClassifier found in
 /// the Onnx plugin. It is used to score the tracks and select the best ones.
 ///
+/// The constructor of the Ambiguity Solver network should take string as input
+/// corresponding to the path of the ONNX model.
 /// The implementation of the Ambiguity Solver network should have two methods:
 /// - inferScores: takes clusters (a list of track ID associated with a cluster
 /// ID) and the track container and return an outputTensor (list of scores for
@@ -37,8 +39,13 @@ template <typename network_t>
 concept AmbiguityNetworkConcept = requires(
     DummyTrackContainer &tracks,
     std::unordered_map<std::size_t, std::vector<std::size_t>> &clusters,
-    std::vector<std::vector<float>> &outputTensor, network_t &n) {
+    std::vector<std::vector<float>> &outputTensor, const char *modelPath,
+    network_t &n) {
   requires TrackContainerFrontend<DummyTrackContainer>;
+
+  { 
+    network_t(modelPath) 
+  } -> std::same_as<network_t>;
 
   {
     n.inferScores(clusters, tracks)

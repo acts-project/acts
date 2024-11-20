@@ -15,7 +15,7 @@
 
 namespace Acts::detail {
 
-/// Clusterise tracks based on shared hits.
+/// Cluster tracks based on shared hits.
 ///
 /// In this algorithm we will loop through all the tracks by decreasing number
 /// of measurements. Cluster are created when a new track is encountered that
