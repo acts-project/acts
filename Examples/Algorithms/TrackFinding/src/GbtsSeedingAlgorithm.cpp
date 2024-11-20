@@ -38,8 +38,6 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
   // fill config struct
   m_cfg.layerMappingFile = m_cfg.layerMappingFile;
 
-  // m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
-
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
 
