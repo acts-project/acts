@@ -54,4 +54,5 @@ struct DigitizationConfigurator {
   /// it adds an appropriate entry into the digitisation configuration
   void operator()(const Acts::Surface* surface);
 };
+
 }  // namespace ActsExamples

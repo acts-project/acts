@@ -357,7 +357,7 @@ def fatras(ptcl_gun, trk_geo, rng):
         s.addAlgorithm(simAlg)
 
         # Digitization
-        digiCfg = acts.examples.DigitizationConfig(
+        digiCfg = acts.examples.Digitization.Config(
             acts.examples.readDigiConfigFromJson(
                 str(
                     Path(__file__).parent.parent.parent.parent

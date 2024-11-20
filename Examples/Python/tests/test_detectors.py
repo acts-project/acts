@@ -161,7 +161,7 @@ def test_tgeo_config_volume(monkeypatch):
 
 
 def test_coordinate_converter(trk_geo):
-    digiCfg = acts.examples.DigitizationConfig(
+    digiCfg = acts.examples.Digitization.Config(
         acts.examples.readDigiConfigFromJson(
             str(
                 Path(__file__).parent.parent.parent.parent
