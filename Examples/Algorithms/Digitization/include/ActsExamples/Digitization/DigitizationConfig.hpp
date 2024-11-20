@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "ActsExamples/Digitization/GeometricConfig.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 
@@ -22,5 +23,7 @@ struct DigiComponentsConfig {
   GeometricConfig geometricDigiConfig;
   SmearingConfig smearingDigiConfig;
 };
+
+using DigiConfigContainer = Acts::GeometryHierarchyMap<DigiComponentsConfig>;
 
 }  // namespace ActsExamples

@@ -42,7 +42,6 @@ void writeDigiConfigToJson(
     const Acts::GeometryHierarchyMap<DigiComponentsConfig>& cfg,
     const std::string& path);
 
-using DigiConfigContainer = Acts::GeometryHierarchyMap<DigiComponentsConfig>;
 using DigiConfigConverter =
     Acts::GeometryHierarchyMapJsonConverter<DigiComponentsConfig>;
 

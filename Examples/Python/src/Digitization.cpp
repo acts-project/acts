@@ -77,8 +77,7 @@ void addDigitization(Context& ctx) {
     ACTS_PYTHON_MEMBER(smearingDigiConfig);
     ACTS_PYTHON_STRUCT_END();
 
-    py::class_<Acts::GeometryHierarchyMap<ActsExamples::DigiComponentsConfig>>(
-        mex, "GeometryHierarchyMap_DigiComponentsConfig")
+    py::class_<DigiConfigContainer>(mex, "DigiConfigContainer")
         .def(py::init<std::vector<
                  std::pair<GeometryIdentifier, DigiComponentsConfig>>>());
   }
