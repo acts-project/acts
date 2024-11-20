@@ -14,14 +14,93 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
 #include <array>
 #include <cmath>
-#include <iostream>
 #include <iterator>
 #include <optional>
+#include <stdexcept>
 
 namespace Acts {
+
+/// Estimate the full track parameters from three space points
+///
+/// This method is based on the conformal map transformation. It estimates the
+/// full free track parameters, i.e. (x, y, z, t, dx, dy, dz, q/p) at the
+/// bottom space point. The bottom space is assumed to be the first element
+/// in the range defined by the iterators. The magnetic field (which might be
+/// along any direction) is also necessary for the momentum estimation.
+///
+/// This is a purely spatial estimation, i.e. the time parameter will be set to
+/// 0.
+///
+/// It resembles the method used in ATLAS for the track parameters
+/// estimated from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane
+/// here:
+/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerDetector/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
+///
+/// @tparam spacepoint_iterator_t  The type of space point iterator
+///
+/// @param sp0 is the bottom space point
+/// @param sp1 is the middle space point
+/// @param sp2 is the top space point
+/// @param bField is the magnetic field vector
+///
+/// @return the free parameters
+FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
+                                       const Vector3& sp2,
+                                       const Vector3& bField);
+
+/// Estimate the full track parameters from three space points
+///
+/// This method is based on the conformal map transformation. It estimates the
+/// full free track parameters, i.e. (x, y, z, t, dx, dy, dz, q/p) at the
+/// bottom space point. The bottom space is assumed to be the first element
+/// in the range defined by the iterators. The magnetic field (which might be
+/// along any direction) is also necessary for the momentum estimation.
+///
+/// It resembles the method used in ATLAS for the track parameters
+/// estimated from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane
+/// here:
+/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerDetector/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
+///
+/// @tparam spacepoint_iterator_t  The type of space point iterator
+///
+/// @param spRange is the range of space points
+/// @param bField is the magnetic field vector
+///
+/// @return the free parameters
+template <std::ranges::range spacepoint_range_t>
+FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
+                                       const Vector3& bField) {
+  // Check the number of provided space points
+  if (spRange.size() != 3) {
+    throw std::invalid_argument(
+        "There should be exactly three space points provided.");
+  }
+
+  // The global positions of the bottom, middle and space points
+  std::array<Vector3, 3> spPositions = {Vector3::Zero(), Vector3::Zero(),
+                                        Vector3::Zero()};
+  std::array<std::optional<double>, 3> spTimes = {std::nullopt, std::nullopt,
+                                                  std::nullopt};
+  // The first, second and third space point are assumed to be bottom, middle
+  // and top space point, respectively
+  for (auto [sp, spPosition, spTime] :
+       Acts::zip(spRange, spPositions, spTimes)) {
+    if (sp == nullptr) {
+      throw std::invalid_argument("Empty space point found.");
+    }
+    spPosition = Vector3(sp->x(), sp->y(), sp->z());
+    spTime = sp->t();
+  }
+
+  FreeVector params = estimateTrackParamsFromSeed(
+      spPositions[0], spPositions[1], spPositions[2], bField);
+  params[eFreeTime] = spTimes[0].value_or(0);
+  return params;
+}
 
 /// Estimate the full track parameters from three space points
 ///
@@ -46,8 +125,6 @@ namespace Acts {
 /// @param surface is the surface of the bottom space point. The estimated bound
 /// track parameters will be represented also at this surface
 /// @param bField is the magnetic field vector
-/// @param bFieldMin is the minimum magnetic field required to trigger the
-/// estimation of q/pt
 /// @param logger A logger instance
 ///
 /// @return optional bound parameters
@@ -55,24 +132,11 @@ template <typename spacepoint_iterator_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     const GeometryContext& gctx, spacepoint_iterator_t spBegin,
     spacepoint_iterator_t spEnd, const Surface& surface, const Vector3& bField,
-    ActsScalar bFieldMin, const Acts::Logger& logger = getDummyLogger()) {
+    const Acts::Logger& logger = getDummyLogger()) {
   // Check the number of provided space points
   std::size_t numSP = std::distance(spBegin, spEnd);
   if (numSP != 3) {
     ACTS_ERROR("There should be exactly three space points provided.");
-    return std::nullopt;
-  }
-
-  // Convert bField to Tesla
-  ActsScalar bFieldInTesla = bField.norm() / UnitConstants::T;
-  ActsScalar bFieldMinInTesla = bFieldMin / UnitConstants::T;
-  // Check if magnetic field is too small
-  if (bFieldInTesla < bFieldMinInTesla) {
-    // @todo shall we use straight-line estimation and use default q/pt in such
-    // case?
-    ACTS_WARNING("The magnetic field at the bottom space point: B = "
-                 << bFieldInTesla << " T is smaller than |B|_min = "
-                 << bFieldMinInTesla << " T. Estimation is not performed.");
     return std::nullopt;
   }
 
@@ -142,7 +206,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   int sign = ia > 0 ? -1 : 1;
   const ActsScalar R = circleCenter.norm();
   ActsScalar invTanTheta =
-      local2.z() / (2.f * R * std::asin(local2.head<2>().norm() / (2.f * R)));
+      local2.z() / (2 * R * std::asin(local2.head<2>().norm() / (2 * R)));
   // The momentum direction in the new frame (the center of the circle has the
   // coordinate (-1.*A/(2*B), 1./(2*B)))
   ActsScalar A = -circleCenter(0) / circleCenter(1);
@@ -172,9 +236,10 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   params[eBoundLoc1] = bottomLocalPos.y();
   params[eBoundTime] = spGlobalTimes[0].value_or(0.);
 
+  ActsScalar bFieldStrength = bField.norm();
   // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
   // momentum on the transverse plane of the new frame)
-  ActsScalar qOverPt = sign * (UnitConstants::m) / (0.3 * bFieldInTesla * R);
+  ActsScalar qOverPt = sign / (bFieldStrength * R);
   // The estimated q/p in [GeV/c]^-1
   params[eBoundQOverP] = qOverPt / fastHypot(1., invTanTheta);
 
