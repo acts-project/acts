@@ -32,6 +32,8 @@ class GraphConstructionBase {
   /// @param inputValues Flattened input data
   /// @param numNodes Number of nodes. inputValues.size() / numNodes
   /// then gives the number of features
+  /// @param moduleIds Module IDs of the features (used for module-map-like
+  /// graph construction)
   /// @param device Which GPU device to pick. Not relevant for CPU-only builds
   ///
   /// @return (node_features, edge_features, edge_index)
@@ -49,8 +51,9 @@ class EdgeClassificationBase {
  public:
   /// Perform edge classification
   ///
-  /// @param nodes Node tensor with shape (n_nodes, n_node_features)
-  /// @param edges Edge-index tensor with shape (2, n_edges)
+  /// @param nodeFeatures Node tensor with shape (n_nodes, n_node_features)
+  /// @param edgeIndex Edge-index tensor with shape (2, n_edges)
+  /// @param edgeFeatures Edge-feature tensor with shape (n_edges, n_edge_features)
   /// @param device Which GPU device to pick. Not relevant for CPU-only builds
   ///
   /// @return (node_features, edge_features, edge_index, edge_scores)

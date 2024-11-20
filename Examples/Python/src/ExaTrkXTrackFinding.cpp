@@ -92,11 +92,12 @@ void addExaTrkXTrackFinding(Context &ctx) {
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(numFeatures);
+    ACTS_PYTHON_MEMBER(selectedFeatures);
     ACTS_PYTHON_MEMBER(cut);
     ACTS_PYTHON_MEMBER(nChunks);
     ACTS_PYTHON_MEMBER(undirected);
     ACTS_PYTHON_MEMBER(deviceID);
+    ACTS_PYTHON_MEMBER(useEdgeFeatures);
     ACTS_PYTHON_STRUCT_END();
   }
   {
