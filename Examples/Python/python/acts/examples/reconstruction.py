@@ -1993,6 +1993,7 @@ def addScoreBasedAmbiguityResolution(
 def addAmbiguityResolutionML(
     s,
     config: AmbiguityResolutionMLConfig = AmbiguityResolutionMLConfig(),
+    tracks: str = "tracks",
     onnxModelFile: Optional[Union[Path, str]] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -2008,7 +2009,7 @@ def addAmbiguityResolutionML(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
     algML = AmbiguityResolutionMLAlgorithm(
         level=customLogLevel(),
-        inputTracks="tracks",
+        inputTracks=tracks,
         inputDuplicateNN=onnxModelFile,
         outputTracks="ambiTracksML",
         **acts.examples.defaultKWArgs(
