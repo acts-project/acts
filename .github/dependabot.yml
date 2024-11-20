@@ -4,3 +4,33 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+
+updates:
+  - package-ecosystem: "pip"
+    directory: "/docs"
+    schedule:
+      interval: "weekly"
+
+updates:
+  - package-ecosystem: "pip"
+    directory: "/Examples/Scripts"
+    schedule:
+      interval: "weekly"
+
+updates:
+  - package-ecosystem: "pip"
+    directory: "/Examples/Python/tests"
+    schedule:
+      interval: "weekly"
+
+updates:
+  - package-ecosystem: "pip"
+    directory: "/CI/clang_tidy"
+    schedule:
+      interval: "weekly"
+
+updates:
+  - package-ecosystem: "pip"
+    directory: "/CI"
+    schedule:
+      interval: "weekly"
