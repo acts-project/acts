@@ -167,17 +167,17 @@ ProcessCode PrototracksToParameters::execute(
       continue;
     }
 
-    auto pars = Acts::estimateTrackParamsFromSeed(ctx.geoContext, seed.sp(),
-                                                  surface, field);
-
-    if (not pars) {
+    auto parsResult = Acts::estimateTrackParamsFromSeed(
+        ctx.geoContext, seed.sp(), surface, field);
+    if (!parsResult.ok()) {
       ACTS_WARNING("Skip track because of bad params");
     }
+    const auto &pars = *parsResult;
 
     seededTracks.push_back(track);
     seeds.emplace_back(std::move(seed));
     parameters.push_back(Acts::BoundTrackParameters(
-        surface.getSharedPtr(), *pars, m_covariance, m_cfg.particleHypothesis));
+        surface.getSharedPtr(), pars, m_covariance, m_cfg.particleHypothesis));
   }
 
   if (skippedTracks > 0) {

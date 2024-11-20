@@ -124,10 +124,10 @@ FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
 ///
 /// @return bound parameters
 template <std::ranges::range spacepoint_range_t>
-BoundVector estimateTrackParamsFromSeed(const GeometryContext& gctx,
-                                        spacepoint_range_t spRange,
-                                        const Surface& surface,
-                                        const Vector3& bField) {
+Result<BoundVector> estimateTrackParamsFromSeed(const GeometryContext& gctx,
+                                                spacepoint_range_t spRange,
+                                                const Surface& surface,
+                                                const Vector3& bField) {
   FreeVector freeParams = estimateTrackParamsFromSeed(spRange, bField);
 
   const auto* sp0 = *spRange.begin();
@@ -143,9 +143,7 @@ BoundVector estimateTrackParamsFromSeed(const GeometryContext& gctx,
   // surface
   auto lpResult = surface.globalToLocal(gctx, origin, direction);
   if (!lpResult.ok()) {
-    throw std::runtime_error(
-        "Failed to transform the space point to local coordinates of the "
-        "surface.");
+    return Result<BoundVector>::failure(lpResult.error());
   }
   Vector2 bottomLocalPos = lpResult.value();
   // The estimated loc0 and loc1
@@ -153,7 +151,7 @@ BoundVector estimateTrackParamsFromSeed(const GeometryContext& gctx,
   params[eBoundLoc1] = bottomLocalPos.y();
   params[eBoundTime] = sp0->t().value_or(0);
 
-  return params;
+  return Result<BoundVector>::success(params);
 }
 
 /// Configuration for the estimation of the covariance matrix of the track
