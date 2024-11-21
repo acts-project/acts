@@ -36,21 +36,23 @@ using DummyTrackContainer =
 ///
 /// @tparam N the type of the network
 template <typename network_t>
-concept AmbiguityNetworkConcept = requires(
-    DummyTrackContainer &tracks,
-    std::unordered_map<std::size_t, std::vector<std::size_t>> &clusters,
-    std::vector<std::vector<float>> &outputTensor, const char *modelPath,
-    network_t &n) {
-  requires TrackContainerFrontend<DummyTrackContainer>;
+concept AmbiguityNetworkConcept =
+    TrackContainerFrontend<DummyTrackContainer> &&
+    requires(
+        DummyTrackContainer &tracks,
+        std::unordered_map<std::size_t, std::vector<std::size_t>> &clusters,
+        std::vector<std::vector<float>> &outputTensor, const char *modelPath,
+        network_t &n) {
+      requires TrackContainerFrontend<DummyTrackContainer>;
 
-  { network_t(modelPath) } -> std::same_as<network_t>;
+      { network_t(modelPath) } -> std::same_as<network_t>;
 
-  {
-    n.inferScores(clusters, tracks)
-  } -> std::same_as<std::vector<std::vector<float>>>;
-  {
-    n.trackSelection(clusters, outputTensor)
-  } -> std::same_as<std::vector<std::size_t>>;
-};
+      {
+        n.inferScores(clusters, tracks)
+      } -> std::same_as<std::vector<std::vector<float>>>;
+      {
+        n.trackSelection(clusters, outputTensor)
+      } -> std::same_as<std::vector<std::size_t>>;
+    };
 
 }  // namespace Acts

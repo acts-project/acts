@@ -60,8 +60,8 @@ class AmbiguityResolutionML {
             typename source_link_hash_t, typename source_link_equality_t>
   std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>
   mapTrackHits(const track_container_t& tracks,
-               source_link_hash_t&& sourceLinkHash,
-               source_link_equality_t&& sourceLinkEquality) const {
+               const source_link_hash_t& sourceLinkHash,
+               const source_link_equality_t& sourceLinkEquality) const {
     // A map to store (and generate) the measurement index for each source link
     auto measurementIndexMap =
         std::unordered_map<SourceLink, std::size_t, source_link_hash_t,

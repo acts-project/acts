@@ -15,12 +15,13 @@
 #include <iterator>
 #include <map>
 
-std::size_t sourceLinkHash(const Acts::SourceLink& a) {
+static std::size_t sourceLinkHash(const Acts::SourceLink& a) {
   return static_cast<std::size_t>(
       a.get<ActsExamples::IndexSourceLink>().index());
 }
 
-bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
+static bool sourceLinkEquality(const Acts::SourceLink& a,
+                               const Acts::SourceLink& b) {
   return a.get<ActsExamples::IndexSourceLink>().index() ==
          b.get<ActsExamples::IndexSourceLink>().index();
 }
