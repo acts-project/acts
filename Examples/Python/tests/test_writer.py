@@ -206,7 +206,7 @@ def test_root_tracksummary_writer(tmp_path, fatras, conf_const):
 
     from truth_tracking_kalman import runTruthTrackingKalman
 
-    # This also runs the RootTracksummaryWriter with truth information
+    # This also runs the RootTrackSummaryWriter with truth information
     runTruthTrackingKalman(
         trackingGeometry,
         field,
@@ -223,7 +223,7 @@ def test_root_tracksummary_writer(tmp_path, fatras, conf_const):
     # Run the RootTrackSummaryWriter without the truth information
     s.addWriter(
         conf_const(
-            RootTracksummaryWriter,
+            RootTrackSummaryWriter,
             level=acts.logging.INFO,
             inputTracks="tracks",
             filePath=str(tmp_path / "track_summary_kf_no_truth.root"),

@@ -250,8 +250,6 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     m_chi2Sum.push_back(track.chi2());
     m_NDF.push_back(track.nDoF());
 
-    // IDs are stored as double (as the vector of vector of int is not known
-    // to ROOT)
     {
       std::vector<double> measurementChi2;
       std::vector<std::uint32_t> measurementVolume;
