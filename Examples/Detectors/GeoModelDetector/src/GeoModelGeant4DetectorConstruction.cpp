@@ -40,7 +40,7 @@ G4VPhysicalVolume* GeoModelGeant4DetectorConstruction::Construct() {
 
     // Create regions
     for (const auto& regionCreator : m_regionCreators) {
-      regionCreator->Construct();
+      regionCreator->construct();
     }
   }
   return m_g4World;
