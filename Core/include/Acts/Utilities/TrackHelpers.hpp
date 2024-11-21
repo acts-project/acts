@@ -497,6 +497,11 @@ void trimTrack(track_proxy_t track, bool trimHoles, bool trimOutliers,
   trimTrackBack(track, trimHoles, trimOutliers, trimMaterial);
 }
 
+/// Helper function to calculate the predicted residual and its covariance
+/// @tparam nMeasurementDim the dimension of the measurement
+/// @tparam track_state_proxy_t the track state proxy type
+/// @param trackState the track state to calculate the residual from
+/// @return a pair of the residual and its covariance
 template <std::size_t nMeasurementDim,
           TrackStateProxyConcept track_state_proxy_t>
 std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
@@ -504,11 +509,18 @@ calculatePredictedResidual(track_state_proxy_t trackState) {
   using MeasurementVector = ActsVector<nMeasurementDim>;
   using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
 
+  if (!trackState.hasPredicted()) {
+    throw std::invalid_argument("track state has no predicted parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
+
   auto subspaceHelper =
       trackState.template fixedBoundSubspaceHelper<nMeasurementDim>();
 
-  MeasurementVector measurement = trackState.calibrated();
-  MeasurementMatrix measurementCovariance = trackState.calibratedCovariance();
+  auto measurement = trackState.calibrated();
+  auto measurementCovariance = trackState.calibratedCovariance();
   MeasurementVector predicted =
       subspaceHelper.projectVector(trackState.predicted());
   MeasurementMatrix predictedCovariance =
@@ -521,6 +533,11 @@ calculatePredictedResidual(track_state_proxy_t trackState) {
   return std::pair(residual, residualCovariance);
 }
 
+/// Helper function to calculate the filtered residual and its covariance
+/// @tparam nMeasurementDim the dimension of the measurement
+/// @tparam track_state_proxy_t the track state proxy type
+/// @param trackState the track state to calculate the residual from
+/// @return a pair of the residual and its covariance
 template <std::size_t nMeasurementDim,
           TrackStateProxyConcept track_state_proxy_t>
 std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
@@ -528,11 +545,18 @@ calculateFilteredResidual(track_state_proxy_t trackState) {
   using MeasurementVector = ActsVector<nMeasurementDim>;
   using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
 
+  if (!trackState.hasFiltered()) {
+    throw std::invalid_argument("track state has no filtered parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
+
   auto subspaceHelper =
       trackState.template fixedBoundSubspaceHelper<nMeasurementDim>();
 
-  MeasurementVector measurement = trackState.calibrated();
-  MeasurementMatrix measurementCovariance = trackState.calibratedCovariance();
+  auto measurement = trackState.calibrated();
+  auto measurementCovariance = trackState.calibratedCovariance();
   MeasurementVector filtered =
       subspaceHelper.projectVector(trackState.filtered());
   MeasurementMatrix filteredCovariance =
@@ -545,6 +569,11 @@ calculateFilteredResidual(track_state_proxy_t trackState) {
   return std::pair(residual, residualCovariance);
 }
 
+/// Helper function to calculate the smoothed residual and its covariance
+/// @tparam nMeasurementDim the dimension of the measurement
+/// @tparam track_state_proxy_t the track state proxy type
+/// @param trackState the track state to calculate the residual from
+/// @return a pair of the residual and its covariance
 template <std::size_t nMeasurementDim,
           TrackStateProxyConcept track_state_proxy_t>
 std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
@@ -552,11 +581,18 @@ calculateSmoothedResidual(track_state_proxy_t trackState) {
   using MeasurementVector = ActsVector<nMeasurementDim>;
   using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
 
+  if (!trackState.hasSmoothed()) {
+    throw std::invalid_argument("track state has no smoothed parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
+
   auto subspaceHelper =
       trackState.template fixedBoundSubspaceHelper<nMeasurementDim>();
 
-  MeasurementVector measurement = trackState.calibrated();
-  MeasurementMatrix measurementCovariance = trackState.calibratedCovariance();
+  auto measurement = trackState.calibrated();
+  auto measurementCovariance = trackState.calibratedCovariance();
   MeasurementVector smoothed =
       subspaceHelper.projectVector(trackState.smoothed());
   MeasurementMatrix smoothedCovariance =
@@ -569,8 +605,19 @@ calculateSmoothedResidual(track_state_proxy_t trackState) {
   return std::pair(residual, residualCovariance);
 }
 
+/// Helper function to calculate the predicted chi2
+/// @tparam track_state_proxy_t the track state proxy type
+/// @param trackState the track state to calculate the chi2 from
+/// @return the chi2
 template <TrackStateProxyConcept track_state_proxy_t>
 double calculatePredictedChi2(track_state_proxy_t trackState) {
+  if (!trackState.hasPredicted()) {
+    throw std::invalid_argument("track state has no predicted parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
+
   return visit_measurement(trackState.calibratedSize(), [&](auto N) {
     constexpr int measdim = decltype(N)::value;
 
@@ -581,8 +628,19 @@ double calculatePredictedChi2(track_state_proxy_t trackState) {
   });
 }
 
+/// Helper function to calculate the filtered chi2
+/// @tparam track_state_proxy_t the track state proxy type
+/// @param trackState the track state to calculate the chi2 from
+/// @return the chi2
 template <TrackStateProxyConcept track_state_proxy_t>
 double calculateFilteredChi2(track_state_proxy_t trackState) {
+  if (!trackState.hasFiltered()) {
+    throw std::invalid_argument("track state has no filtered parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
+
   return visit_measurement(trackState.calibratedSize(), [&](auto N) {
     constexpr int measdim = decltype(N)::value;
 
@@ -593,8 +651,19 @@ double calculateFilteredChi2(track_state_proxy_t trackState) {
   });
 }
 
+/// Helper function to calculate the smoothed chi2
+/// @tparam track_state_proxy_t the track state proxy type
+/// @param trackState the track state to calculate the chi2 from
+/// @return the chi2
 template <TrackStateProxyConcept track_state_proxy_t>
 double calculateSmoothedChi2(track_state_proxy_t trackState) {
+  if (!trackState.hasSmoothed()) {
+    throw std::invalid_argument("track state has no smoothed parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
+
   return visit_measurement(trackState.calibratedSize(), [&](auto N) {
     constexpr int measdim = decltype(N)::value;
 
@@ -605,11 +674,21 @@ double calculateSmoothedChi2(track_state_proxy_t trackState) {
   });
 }
 
+/// Helper function to calculate the unbiased track parameters and their
+/// covariance (i.e. fitted track parameters with this measurement removed)
+/// using Eq.(12a)-Eq.(12c) of NIMA 262, 444 (1987)
+/// @tparam track_state_proxy_t the track state proxy type
+/// @param trackState the track state to calculate the unbiased parameters from
+/// @return a pair of the unbiased parameters and their covariance
 template <TrackStateProxyConcept track_state_proxy_t>
 std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
     track_state_proxy_t trackState) {
-  // calculate the unbiased track parameters (i.e. fitted track parameters with
-  // this measurement removed) using Eq.(12a)-Eq.(12c) of NIMA 262, 444 (1987)
+  if (!trackState.hasSmoothed()) {
+    throw std::invalid_argument("track state has no smoothed parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
 
   return visit_measurement(trackState.calibratedSize(), [&](auto N) {
     constexpr int measdim = decltype(N)::value;
