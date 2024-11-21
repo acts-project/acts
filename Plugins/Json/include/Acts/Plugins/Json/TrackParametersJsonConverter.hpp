@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/EventData/detail/TrackParametersUtils.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/detail/TrackParametersUtils.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 
 #include <nlohmann/json.hpp>
