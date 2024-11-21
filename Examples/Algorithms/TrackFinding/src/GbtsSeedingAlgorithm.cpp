@@ -220,7 +220,7 @@ ActsExamples::GbtsSeedingAlgorithm::MakeGbtsSpacePoints(
       int eta_mod = Find->second.second;
       int combined_id = Gbts_id * 1000 + eta_mod;
       
-      //check if SP is pixel, dependant of type of SP so must be done in examples 
+      //check if SP is pixel, dependent of type of SP so must be done in examples 
       bool isPixel = false ;
       if (sourceLink.size() == 1) {  // pixels have 1 SL
         isPixel = true;
