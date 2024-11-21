@@ -91,7 +91,10 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
-    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginGeoModel)
+    target_link_libraries(
+        ActsPythonBindings
+        PUBLIC ActsPluginGeoModel ActsExamplesDetectorGeoModel
+    )
     target_sources(ActsPythonBindings PRIVATE src/GeoModel.cpp)
 
     if(ACTS_BUILD_EXAMPLES_GEANT4)
