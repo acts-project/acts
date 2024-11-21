@@ -271,7 +271,7 @@ function trackfinding() {
             $outdir/data/$path/performance_finding_ckf_ml_solver.root \
             $refdir/$path/performance_finding_ckf_ml_solver.root \
             "ML Ambisolver | ${name}" \
-            $path/performance_finding_ckf_ml_solver.html
+            $path/performance_finding_ckf_ml_solver.html \
             $path/performance_finding_ckf_ml_solver
     fi
 }
