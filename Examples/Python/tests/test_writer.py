@@ -198,6 +198,43 @@ def test_root_simhits_writer(tmp_path, fatras, conf_const, assert_root_hash):
     assert_root_hash(out.name, out)
 
 
+@pytest.mark.root
+def test_root_tracksummary_writer(tmp_path, fatras, conf_const):
+    detector, trackingGeometry, decorators = GenericDetector.create()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    s = Sequencer(numThreads=1, events=10)
+
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    # This also runs the RootTracksummaryWriter with truth information
+    runTruthTrackingKalman(
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
+        ),
+        outputDir=tmp_path,
+        s=s,
+    )
+
+    # Run the RootTrackSummaryWriter without the truth information
+    s.addWriter(
+        conf_const(
+            RootTracksummaryWriter,
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            filePath=str(tmp_path / "track_summary_kf_no_truth.root"),
+        )
+    )
+
+    s.run()
+    assert (tmp_path / "tracksummary_kf.root").exists()
+    assert (tmp_path / "track_summary_kf_no_truth.root").exists()
+
+
 @pytest.mark.csv
 def test_csv_meas_writer(tmp_path, fatras, trk_geo, conf_const):
     s = Sequencer(numThreads=1, events=10)
