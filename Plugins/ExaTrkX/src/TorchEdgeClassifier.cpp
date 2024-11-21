@@ -138,10 +138,6 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
     } else {
       inputTensors[1] = edgeIndexTmp;
 
-      // ACTS_VERBOSE("node\n" << inputTensors[0]);
-      // ACTS_VERBOSE("edge_idx\n" << edgeIndexTmp.t());
-      // ACTS_VERBOSE("edge_att\n" << inputTensors[2]);
-
       t2 = std::chrono::high_resolution_clock::now();
       output = m_model->forward(inputTensors).toTensor().to(torch::kFloat32);
       t3 = std::chrono::high_resolution_clock::now();

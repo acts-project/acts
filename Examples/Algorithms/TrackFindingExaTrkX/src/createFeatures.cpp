@@ -8,17 +8,8 @@
 
 #include "createFeatures.hpp"
 
-namespace {
-
-// TODO do we have these function in the repo somewhere?
-float theta(float r, float z) {
-  return std::atan2(r, z);
-}
-float eta(float r, float z) {
-  return -std::log(std::tan(0.5 * theta(r, z)));
-}
-
-}  // namespace
+#include "Acts/Utilities/AngleHelpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 namespace ActsExamples {
 
@@ -55,21 +46,17 @@ std::vector<float> createFeatures(
 
     using NF = TrackFindingAlgorithmExaTrkX::NodeFeature;
 
-    auto r = [](const Acts::Vector3& p) {
-      return std::hypot(p[Acts::ePos0], p[Acts::ePos1]);
-    };
-    auto phi = [](const Acts::Vector3& p) {
-      return std::atan2(p[Acts::ePos1], p[Acts::ePos0]);
-    };
+    using namespace Acts::VectorHelpers;
+    using namespace Acts::AngleHelpers;
 
     // clang-format off
 #define MAKE_CLUSTER_FEATURES(n) \
     break; case NF::eCluster##n##X:   f[ift] = cl##n->globalPosition[Acts::ePos0]; \
     break; case NF::eCluster##n##Y:   f[ift] = cl##n->globalPosition[Acts::ePos1]; \
-    break; case NF::eCluster##n##R:   f[ift] = r(cl##n->globalPosition); \
+    break; case NF::eCluster##n##R:   f[ift] = perp(cl##n->globalPosition); \
     break; case NF::eCluster##n##Phi: f[ift] = phi(cl##n->globalPosition); \
     break; case NF::eCluster##n##Z:   f[ift] = cl##n->globalPosition[Acts::ePos2]; \
-    break; case NF::eCluster##n##Eta: f[ift] = eta(r(cl##n->globalPosition), cl##n->globalPosition[Acts::ePos2]); \
+    break; case NF::eCluster##n##Eta: f[ift] = eta(cl##n->globalPosition); \
     break; case NF::eCellCount##n:    f[ift] = cl##n->channels.size(); \
     break; case NF::eChargeSum##n:    f[ift] = cl##n->sumActivations(); \
     break; case NF::eLocDir0##n:      f[ift] = cl##n->localDirection[0]; \
@@ -86,16 +73,18 @@ std::vector<float> createFeatures(
     break; case NF::ePhiAngle##n:     f[ift] = cl##n->phiAngle;
     // clang-format on
 
+    Acts::Vector3 spPos{sp.x(), sp.y(), sp.z()};
+
     for (auto ift = 0ul; ift < nodeFeatures.size(); ++ift) {
       // clang-format off
       switch(nodeFeatures[ift]) {
         // Spacepoint features
-        break; case NF::eR:           f[ift] = std::hypot(sp.x(), sp.y());
-        break; case NF::ePhi:         f[ift] = std::atan2(sp.y(), sp.x());
+        break; case NF::eR:           f[ift] = perp(spPos);
+        break; case NF::ePhi:         f[ift] = phi(spPos);
         break; case NF::eZ:           f[ift] = sp.z();
         break; case NF::eX:           f[ift] = sp.x();
         break; case NF::eY:           f[ift] = sp.y();
-        break; case NF::eEta:         f[ift] = eta(std::hypot(sp.x(), sp.y()), sp.z());
+        break; case NF::eEta:         f[ift] = eta(spPos);
         // Single cluster features
         break; case NF::eClusterLoc0: f[ift] = cl1->sizeLoc0;
         break; case NF::eClusterLoc1: f[ift] = cl1->sizeLoc1;

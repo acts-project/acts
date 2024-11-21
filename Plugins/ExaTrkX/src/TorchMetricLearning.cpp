@@ -141,51 +141,8 @@ std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
   ACTS_VERBOSE("Slice of edgelist:\n" << edgeList.slice(1, 0, 5));
   printCudaMemInfo(logger());
 
-  // **********************
-  // Building Edge Features
-  // **********************
-
-  // TODO I think this is already somewhere in the codebase
-  const float pi = std::numbers::pi_v<float>;
-  auto resetAngle = [pi](float angle) {
-    if (angle > pi) {
-      return angle - 2.f * pi;
-    }
-    if (angle < -pi) {
-      return angle + 2.f * pi;
-    }
-    return angle;
-  };
-
-  // TODO Unify edge feature building, this is only to get it in fast
-  constexpr static std::size_t numEdgeFeatures = 4;
-  std::vector<float> edgeFeatureVector;
-  edgeFeatureVector.reserve(numEdgeFeatures * edgeList.size(1));
-  for (auto i = 0; i < edgeList.size(1); ++i) {
-    auto src = edgeList.index({0, i}).item<int>();
-    auto dst = edgeList.index({1, i}).item<int>();
-
-    // Edge features
-    // See
-    // https://gitlab.cern.ch/gnn4itkteam/acorn/-/blob/dev/acorn/utils/loading_utils.py?ref_type=heads#L288
-    const float *srcFeatures = inputValues.data() + src * numAllFeatures;
-    const float *dstFeatures = inputValues.data() + dst * numAllFeatures;
-
-    const float deltaR = dstFeatures[0] - srcFeatures[0];
-    const float deltaPhi =
-        resetAngle((dstFeatures[1] - srcFeatures[1]) * m_cfg.phiScale) /
-        m_cfg.phiScale;
-    const float deltaZ = dstFeatures[2] - srcFeatures[2];
-    const float deltaEta = dstFeatures[3] - srcFeatures[3];
-
-    for (auto f : {deltaR, deltaPhi, deltaZ, deltaEta}) {
-      edgeFeatureVector.push_back(f);
-    }
-  }
-
-  auto edgeFeatures =
-      detail::vectorToTensor2D(edgeFeatureVector, numEdgeFeatures).clone();
-
+  // TODO add real edge features for this workflow later
+  std::any edgeFeatures;
   return {std::move(inputTensors[0]).toTensor(), std::move(edgeList),
           std::move(edgeFeatures)};
 }
