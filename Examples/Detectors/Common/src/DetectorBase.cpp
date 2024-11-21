@@ -29,9 +29,8 @@ Gen2GeometryHolder DetectorBase::buildGen2Geometry() {
   throw std::runtime_error("Gen2 geometry not implemented");
 }
 
-std::unique_ptr<G4VUserDetectorConstruction>
-DetectorBase::buildGeant4DetectorConstruction(
-    std::vector<std::shared_ptr<RegionCreator>> /*regionCreators*/) {
+std::shared_ptr<Geant4DetectorConstructionFactory>
+DetectorBase::buildGeant4DetectorConstruction() {
   throw std::runtime_error("Geant4 detector construction not implemented");
 }
 

@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Detector/Detector.hpp"
+
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
@@ -45,6 +47,19 @@ void addDetector(Context& ctx) {
   {
     py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
         mex, "DetectorElementBase");
+
+    py::class_<Gen1GeometryHolder>(mex, "Gen1GeometryHolder")
+        .def_readwrite("trackingGeometry",
+                       &Gen1GeometryHolder::trackingGeometry)
+        .def_readwrite("contextDecorators",
+                       &Gen1GeometryHolder::contextDecorators)
+        .def_readwrite("detectorStore", &Gen1GeometryHolder::detectorStore);
+
+    py::class_<Gen2GeometryHolder>(mex, "Gen2GeometryHolder")
+        .def_readwrite("detector", &Gen2GeometryHolder::detector)
+        .def_readwrite("contextDecorators",
+                       &Gen2GeometryHolder::contextDecorators)
+        .def_readwrite("detectorStore", &Gen2GeometryHolder::detectorStore);
   }
 
   {

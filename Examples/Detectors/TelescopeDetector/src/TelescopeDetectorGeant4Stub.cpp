@@ -10,9 +10,8 @@
 
 namespace ActsExamples {
 
-std::unique_ptr<G4VUserDetectorConstruction>
-TelescopeDetector::buildGeant4DetectorConstruction(
-    std::vector<std::shared_ptr<RegionCreator>> /*regionCreators*/) {
+std::shared_ptr<G4VUserDetectorConstruction>
+TelescopeDetector::buildGeant4DetectorConstruction() {
   throw std::runtime_error("Not implemented");
 }
 

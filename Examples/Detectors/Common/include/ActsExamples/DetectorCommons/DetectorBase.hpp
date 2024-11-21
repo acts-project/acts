@@ -34,10 +34,8 @@ class Detector;
 
 namespace ActsExamples {
 class IContextDecorator;
-class RegionCreator;
+class Geant4DetectorConstructionFactory;
 }  // namespace ActsExamples
-
-class G4VUserDetectorConstruction;
 
 namespace ActsExamples {
 
@@ -72,9 +70,8 @@ class DetectorBase {
 
   virtual Gen2GeometryHolder buildGen2Geometry();
 
-  virtual std::unique_ptr<G4VUserDetectorConstruction>
-  buildGeant4DetectorConstruction(
-      std::vector<std::shared_ptr<RegionCreator>> regionCreators);
+  virtual std::shared_ptr<Geant4DetectorConstructionFactory>
+  buildGeant4DetectorConstruction();
 
  protected:
   std::unique_ptr<const Acts::Logger> m_logger;

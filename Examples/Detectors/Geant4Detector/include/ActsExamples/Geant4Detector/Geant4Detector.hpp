@@ -71,8 +71,8 @@ struct Geant4Detector : public DetectorBase {
 
   Gen2GeometryHolder buildGen2Geometry() override;
 
-  std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
-      std::vector<std::shared_ptr<RegionCreator>> regionCreators) override;
+  std::shared_ptr<Geant4DetectorConstructionFactory>
+  buildGeant4DetectorConstruction() override;
 
  private:
   Config m_cfg;

@@ -14,13 +14,17 @@
 
 namespace ActsExamples {
 
-/// Silly Geant4 will destroy the detector construction after the run manager is
-/// destructed. This class works around it by factorizing a factory.
-class DetectorConstructionFactory {
- public:
-  virtual ~DetectorConstructionFactory() = default;
+namespace Geant4 {
+class RegionCreator;
+}
 
-  virtual std::unique_ptr<G4VUserDetectorConstruction> factorize() const = 0;
+class Geant4DetectorConstructionFactory {
+ public:
+  virtual ~Geant4DetectorConstructionFactory() = default;
+
+  virtual std::unique_ptr<G4VUserDetectorConstruction> factorize(
+      const std::vector<std::shared_ptr<Geant4::RegionCreator>>& regionCreators)
+      const = 0;
 };
 
 }  // namespace ActsExamples

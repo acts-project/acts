@@ -22,7 +22,7 @@ namespace ActsExamples {
 
 DDG4DetectorConstruction::DDG4DetectorConstruction(
     std::shared_ptr<DD4hepDetector> detector,
-    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
     : G4VUserDetectorConstruction(),
       m_detector(std::move(detector)),
       m_regionCreators(std::move(regionCreators)) {}
@@ -47,6 +47,17 @@ G4VPhysicalVolume* DDG4DetectorConstruction::Construct() {
     }
   }
   return m_world;
+}
+
+DDG4DetectorConstructionFactory::DDG4DetectorConstructionFactory(
+    std::shared_ptr<DD4hepDetector> detector)
+    : m_detector(std::move(detector)) {}
+
+std::unique_ptr<G4VUserDetectorConstruction>
+DDG4DetectorConstructionFactory::factorize(
+    const std::vector<std::shared_ptr<Geant4::RegionCreator>>& regionCreators)
+    const {
+  return std::make_unique<DDG4DetectorConstruction>(m_detector, regionCreators);
 }
 
 }  // namespace ActsExamples

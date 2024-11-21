@@ -25,7 +25,7 @@ namespace ActsExamples {
 
 TelescopeG4DetectorConstruction::TelescopeG4DetectorConstruction(
     const TelescopeDetector::Config& cfg,
-    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
     : m_cfg(cfg), m_regionCreators(std::move(regionCreators)) {
   throw_assert(cfg.surfaceType == static_cast<int>(TelescopeSurfaceType::Plane),
                "only plan is supported right now");
@@ -163,14 +163,15 @@ G4VPhysicalVolume* TelescopeG4DetectorConstruction::Construct() {
 }
 
 TelescopeG4DetectorConstructionFactory::TelescopeG4DetectorConstructionFactory(
-    const TelescopeDetector::Config& cfg,
-    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
-    : m_cfg(cfg), m_regionCreators(std::move(regionCreators)) {}
+    const TelescopeDetector::Config& cfg)
+    : m_cfg(cfg) {}
 
 std::unique_ptr<G4VUserDetectorConstruction>
-TelescopeG4DetectorConstructionFactory::factorize() const {
+TelescopeG4DetectorConstructionFactory::factorize(
+    const std::vector<std::shared_ptr<Geant4::RegionCreator>>& regionCreators)
+    const {
   return std::make_unique<TelescopeG4DetectorConstruction>(m_cfg,
-                                                           m_regionCreators);
+                                                           regionCreators);
 }
 
 }  // namespace ActsExamples

@@ -25,12 +25,13 @@
 #include <G4Track.hh>
 #include <G4UnitsTable.hh>
 
-ActsExamples::ParticleTrackingAction::ParticleTrackingAction(
+namespace ActsExamples::Geant4 {
+
+ParticleTrackingAction::ParticleTrackingAction(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4UserTrackingAction(), m_cfg(cfg), m_logger(std::move(logger)) {}
 
-void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
-    const G4Track* aTrack) {
+void ParticleTrackingAction::PreUserTrackingAction(const G4Track* aTrack) {
   // If this is not the case, there are unhandled cases of particle stopping in
   // the SensitiveSteppingAction
   // TODO We could also merge the remaining hits to a hit here, but it would be
@@ -66,8 +67,7 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
   }
 }
 
-void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
-    const G4Track* aTrack) {
+void ParticleTrackingAction::PostUserTrackingAction(const G4Track* aTrack) {
   // The initial particle maybe was not registered because of a particle ID
   // collision
   if (!eventStore().trackIdMapping.contains(aTrack->GetTrackID())) {
@@ -83,7 +83,7 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
 
   if (!m_cfg.keepParticlesWithoutHits && !hasHits) {
     [[maybe_unused]] auto n = eventStore().particlesSimulated.erase(
-        ActsExamples::SimParticle(barcode, Acts::PdgParticle::eInvalid));
+        SimParticle(barcode, Acts::PdgParticle::eInvalid));
     assert(n == 1);
     return;
   }
@@ -107,8 +107,8 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
   }
 }
 
-ActsExamples::SimParticleState ActsExamples::ParticleTrackingAction::convert(
-    const G4Track& aTrack, SimBarcode particleId) const {
+SimParticleState ParticleTrackingAction::convert(const G4Track& aTrack,
+                                                 SimBarcode particleId) const {
   // Unit conversions G4->::ACTS
   constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
   constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
@@ -147,9 +147,8 @@ ActsExamples::SimParticleState ActsExamples::ParticleTrackingAction::convert(
   return aParticle;
 }
 
-std::optional<ActsExamples::SimBarcode>
-ActsExamples::ParticleTrackingAction::makeParticleId(G4int trackId,
-                                                     G4int parentId) const {
+std::optional<SimBarcode> ParticleTrackingAction::makeParticleId(
+    G4int trackId, G4int parentId) const {
   // We already have this particle registered (it is one of the input particles
   // or we are making a final particle state)
   if (eventStore().trackIdMapping.contains(trackId)) {
@@ -174,3 +173,5 @@ ActsExamples::ParticleTrackingAction::makeParticleId(G4int trackId,
 
   return pid;
 }
+
+}  // namespace ActsExamples::Geant4

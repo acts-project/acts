@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// Geant4 Region Creator
 ///
@@ -68,4 +68,4 @@ class RegionCreator {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

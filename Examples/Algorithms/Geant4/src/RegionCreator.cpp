@@ -13,7 +13,7 @@
 #include <G4ProductionCuts.hh>
 #include <G4Region.hh>
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 RegionCreator::RegionCreator(const Config& cfg, std::string name,
                              Acts::Logging::Level level)
@@ -68,4 +68,4 @@ void RegionCreator::construct() {
   region->SetProductionCuts(cuts);
 }
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

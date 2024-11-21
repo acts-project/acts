@@ -12,13 +12,11 @@
 
 #include <G4GDMLParser.hh>
 
-class G4VPhysicalVolume;
-
-using namespace ActsExamples;
+namespace ActsExamples {
 
 GdmlDetectorConstruction::GdmlDetectorConstruction(
     std::string path,
-    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
     : G4VUserDetectorConstruction(),
       m_path(std::move(path)),
       m_regionCreators(std::move(regionCreators)) {}
@@ -39,11 +37,14 @@ G4VPhysicalVolume* GdmlDetectorConstruction::Construct() {
 }
 
 GdmlDetectorConstructionFactory::GdmlDetectorConstructionFactory(
-    std::string path,
-    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
-    : m_path(std::move(path)), m_regionCreators(std::move(regionCreators)) {}
+    std::string path)
+    : m_path(std::move(path)) {}
 
 std::unique_ptr<G4VUserDetectorConstruction>
-GdmlDetectorConstructionFactory::factorize() const {
-  return std::make_unique<GdmlDetectorConstruction>(m_path, m_regionCreators);
+GdmlDetectorConstructionFactory::factorize(
+    const std::vector<std::shared_ptr<Geant4::RegionCreator>>& regionCreators)
+    const {
+  return std::make_unique<GdmlDetectorConstruction>(m_path, regionCreators);
 }
+
+}  // namespace ActsExamples

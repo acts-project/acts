@@ -8,19 +8,17 @@
 
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/DD4hepDetector/DDG4DetectorConstruction.hpp"
-#include "ActsExamples/Geant4/RegionCreator.hpp"
 
 namespace ActsExamples {
 
-std::unique_ptr<G4VUserDetectorConstruction>
-DD4hepDetector::buildGeant4DetectorConstruction(
-    std::vector<std::shared_ptr<RegionCreator>> regionCreators) {
+std::shared_ptr<Geant4DetectorConstructionFactory>
+DD4hepDetector::buildGeant4DetectorConstruction() {
   if (m_detector == nullptr) {
     buildDD4hepGeometry();
   }
 
-  return std::make_unique<DDG4DetectorConstruction>(shared_from_this(),
-                                                    std::move(regionCreators));
+  // TODO
+  return std::make_shared<DDG4DetectorConstructionFactory>(shared_from_this());
 }
 
 }  // namespace ActsExamples

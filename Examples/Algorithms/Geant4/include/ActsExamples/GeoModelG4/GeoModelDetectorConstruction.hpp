@@ -12,13 +12,11 @@
 #include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 
-#include <string>
-
 #include <G4VUserDetectorConstruction.hh>
 
 class G4VPhysicalVolume;
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// Construct the Geant4 detector from a GeoModel world volume
 class GeoModelDetectorConstruction final : public G4VUserDetectorConstruction {
@@ -60,4 +58,4 @@ class GeoModelDetectorConstructionFactory final
   std::vector<std::shared_ptr<RegionCreator>> m_regionCreators;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

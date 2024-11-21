@@ -117,9 +117,8 @@ Gen2GeometryHolder Geant4Detector::buildGen2Geometry() {
   return result;
 }
 
-std::unique_ptr<G4VUserDetectorConstruction>
-Geant4Detector::buildGeant4DetectorConstruction(
-    std::vector<std::shared_ptr<RegionCreator>> /*regionCreators*/) {
+std::shared_ptr<Geant4DetectorConstructionFactory>
+Geant4Detector::buildGeant4DetectorConstruction() {
   throw std::runtime_error("Not implemented");
 }
 

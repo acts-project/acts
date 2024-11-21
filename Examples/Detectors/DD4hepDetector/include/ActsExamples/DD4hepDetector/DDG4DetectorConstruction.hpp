@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/Geant4/Geant4DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 
 #include <memory>
@@ -22,9 +23,9 @@ class DD4hepDetector;
 /// Construct the Geant4 detector from a DD4hep description.
 class DDG4DetectorConstruction final : public G4VUserDetectorConstruction {
  public:
-  DDG4DetectorConstruction(
+  explicit DDG4DetectorConstruction(
       std::shared_ptr<DD4hepDetector> detector,
-      std::vector<std::shared_ptr<RegionCreator>> regionCreators = {});
+      std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators);
 
   /// Convert the stored DD4hep detector to a Geant4 description.
   ///
@@ -39,9 +40,23 @@ class DDG4DetectorConstruction final : public G4VUserDetectorConstruction {
   /// The Acts DD4hep detector instance
   std::shared_ptr<DD4hepDetector> m_detector;
   /// Region creators
-  std::vector<std::shared_ptr<RegionCreator>> m_regionCreators;
+  std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
   /// The world volume
   G4VPhysicalVolume* m_world = nullptr;
+};
+
+class DDG4DetectorConstructionFactory final
+    : public Geant4DetectorConstructionFactory {
+ public:
+  explicit DDG4DetectorConstructionFactory(
+      std::shared_ptr<DD4hepDetector> detector);
+
+  std::unique_ptr<G4VUserDetectorConstruction> factorize(
+      const std::vector<std::shared_ptr<Geant4::RegionCreator>>& regionCreators)
+      const override;
+
+ private:
+  std::shared_ptr<DD4hepDetector> m_detector;
 };
 
 }  // namespace ActsExamples

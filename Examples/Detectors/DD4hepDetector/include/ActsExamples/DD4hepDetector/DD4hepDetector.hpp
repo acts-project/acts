@@ -15,7 +15,6 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/DetectorBase.hpp"
-#include "ActsExamples/Geant4/RegionCreator.hpp"
 
 #include <functional>
 #include <memory>
@@ -106,8 +105,8 @@ class DD4hepDetector : public DetectorBase,
 
   Gen1GeometryHolder buildGen1Geometry() override;
 
-  std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
-      std::vector<std::shared_ptr<RegionCreator>> regionCreators) override;
+  std::shared_ptr<Geant4DetectorConstructionFactory>
+  buildGeant4DetectorConstruction() override;
 
  private:
   /// Private method to initiate building of the DD4hep geometry

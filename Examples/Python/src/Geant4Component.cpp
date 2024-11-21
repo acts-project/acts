@@ -16,8 +16,8 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
+#include "ActsExamples/Geant4/Geant4DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
@@ -61,7 +61,8 @@ namespace Acts::Python {
 void addGeant4HepMC3(Context& ctx);
 }
 
-struct ExperimentalSensitiveCandidates : public SensitiveCandidatesBase {
+struct ExperimentalSensitiveCandidates
+    : public Geant4::SensitiveCandidatesBase {
   std::shared_ptr<const Experimental::Detector> detector;
 
   /// Find the sensitive surfaces for a given position
@@ -93,9 +94,9 @@ struct ExperimentalSensitiveCandidates : public SensitiveCandidatesBase {
 };
 
 PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
-  py::class_<DetectorConstructionFactory,
-             std::shared_ptr<DetectorConstructionFactory>>(
-      mod, "DetectorConstructionFactory");
+  py::class_<Geant4DetectorConstructionFactory,
+             std::shared_ptr<Geant4DetectorConstructionFactory>>(
+      mod, "Geant4DetectorConstructionFactory");
 
   py::class_<Geant4Manager, std::unique_ptr<Geant4Manager, py::nodelete>>(
       mod, "Geant4Manager")
@@ -125,14 +126,14 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   }
 
   {
-    using Config = SensitiveSurfaceMapper::Config;
-    using State = SensitiveSurfaceMapper::State;
+    using Config = Geant4::SensitiveSurfaceMapper::Config;
+    using State = Geant4::SensitiveSurfaceMapper::State;
     auto sm =
-        py::class_<SensitiveSurfaceMapper,
-                   std::shared_ptr<SensitiveSurfaceMapper>>(
+        py::class_<Geant4::SensitiveSurfaceMapper,
+                   std::shared_ptr<Geant4::SensitiveSurfaceMapper>>(
             mod, "SensitiveSurfaceMapper")
             .def(py::init([](const Config& cfg, Acts::Logging::Level level) {
-              return std::make_shared<SensitiveSurfaceMapper>(
+              return std::make_shared<Geant4::SensitiveSurfaceMapper>(
                   cfg, getDefaultLogger("SensitiveSurfaceMapper", level));
             }));
 
@@ -151,10 +152,10 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
              // Set a new surface finder
              Config ccfg = cfg;
              auto candidateSurfaces =
-                 std::make_shared<ActsExamples::SensitiveCandidates>();
+                 std::make_shared<Geant4::SensitiveCandidates>();
              candidateSurfaces->trackingGeometry = tGeometry;
              ccfg.candidateSurfaces = candidateSurfaces;
-             return std::make_shared<SensitiveSurfaceMapper>(
+             return std::make_shared<Geant4::SensitiveSurfaceMapper>(
                  ccfg, getDefaultLogger("SensitiveSurfaceMapper", level));
            });
 
@@ -169,20 +170,22 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                  std::make_shared<ExperimentalSensitiveCandidates>();
              candidateSurfaces->detector = detector;
              ccfg.candidateSurfaces = candidateSurfaces;
-             return std::make_shared<SensitiveSurfaceMapper>(
+             return std::make_shared<Geant4::SensitiveSurfaceMapper>(
                  ccfg, getDefaultLogger("SensitiveSurfaceMapper", level));
            });
 
     sm.def(
         "remapSensitiveNames",
-        [](SensitiveSurfaceMapper& self, State& state, GeometryContext& gctx,
-           DetectorConstructionFactory& factory, Transform3& transform) {
+        [](Geant4::SensitiveSurfaceMapper& self, State& state,
+           GeometryContext& gctx, Geant4DetectorConstructionFactory& factory,
+           Transform3& transform) {
+          // TODO region creators
           return self.remapSensitiveNames(
-              state, gctx, factory.factorize()->Construct(), transform);
+              state, gctx, factory.factorize({})->Construct(), transform);
         },
         "state"_a, "gctx"_a, "g4physicalVolume"_a, "motherTransform"_a);
-    sm.def("checkMapping", &SensitiveSurfaceMapper::checkMapping, "state"_a,
-           "gctx"_a, "writeMappedAsObj"_a, "writeMissingAsObj"_a);
+    sm.def("checkMapping", &Geant4::SensitiveSurfaceMapper::checkMapping,
+           "state"_a, "gctx"_a, "writeMappedAsObj"_a, "writeMissingAsObj"_a);
   }
 
   {
@@ -233,14 +236,11 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   }
 
   {
-    py::class_<GdmlDetectorConstructionFactory, DetectorConstructionFactory,
+    py::class_<GdmlDetectorConstructionFactory,
+               Geant4DetectorConstructionFactory,
                std::shared_ptr<GdmlDetectorConstructionFactory>>(
         mod, "GdmlDetectorConstructionFactory")
-        .def(py::init<std::string,
-                      std::vector<std::shared_ptr<RegionCreator>>>(),
-             py::arg("path"),
-             py::arg("regionCreators") =
-                 std::vector<std::shared_ptr<RegionCreator>>());
+        .def(py::init<std::string>(), py::arg("path"));
   }
 
   {
@@ -379,7 +379,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   }
 
   {
-    using Tool = RegionCreator;
+    using Tool = Geant4::RegionCreator;
     using Config = Tool::Config;
     auto tool = py::class_<Tool, std::shared_ptr<Tool>>(mod, "RegionCreator")
                     .def(py::init<const Config&, std::string, Logging::Level>(),

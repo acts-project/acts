@@ -103,7 +103,9 @@ def getOpenDataDetector(
     )
     detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
 
-    trackingGeometry, decorators, _ = detector.trackingGeometry()
+    gen1holder = detector.buildGen1Geometry()
+    trackingGeometry = gen1holder.trackingGeometry
+    decorators = gen1holder.contextDecorators
 
     OpenDataDetector = namedtuple(
         "OpenDataDetector", ["detector", "trackingGeometry", "decorators"]

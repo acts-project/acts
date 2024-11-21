@@ -8,8 +8,6 @@
 
 #include "ActsExamples/GeoModelG4/GeoModelDetectorConstruction.hpp"
 
-#include <utility>
-
 #include <G4LogicalVolume.hh>
 #include <G4PVPlacement.hh>
 #include <G4ThreeVector.hh>
@@ -17,7 +15,7 @@
 #include <GeoModel2G4/ExtParameterisedVolumeBuilder.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
 
-using namespace ActsExamples;
+namespace ActsExamples::Geant4 {
 
 GeoModelDetectorConstruction::GeoModelDetectorConstruction(
     const Acts::GeoModelTree& geoModelTree,
@@ -59,3 +57,5 @@ GeoModelDetectorConstructionFactory::factorize() const {
   return std::make_unique<GeoModelDetectorConstruction>(m_geoModelTree,
                                                         m_regionCreators);
 }
+
+}  // namespace ActsExamples::Geant4

@@ -564,40 +564,6 @@ def addSimWriters(
         )
 
 
-def getG4DetectorConstructionFactory(
-    detector: Any,
-    regionList: List[Any] = [],
-) -> Any:
-    try:
-        from acts.examples import TelescopeDetector
-        from acts.examples.geant4 import TelescopeG4DetectorConstructionFactory
-
-        if type(detector) is TelescopeDetector:
-            return TelescopeG4DetectorConstructionFactory(detector, regionList)
-    except Exception as e:
-        print(e)
-
-    try:
-        from acts.examples.dd4hep import DD4hepDetector
-        from acts.examples.geant4.dd4hep import DDG4DetectorConstructionFactory
-
-        if type(detector) is DD4hepDetector:
-            return DDG4DetectorConstructionFactory(detector, regionList)
-    except Exception as e:
-        print(e)
-
-    try:
-        from acts import geomodel as gm
-        from acts.examples.geant4.geomodel import GeoModelDetectorConstructionFactory
-
-        if type(detector) is gm.GeoModelTree:
-            return GeoModelDetectorConstructionFactory(detector, regionList)
-    except Exception as e:
-        print(e)
-
-    raise AttributeError(f"cannot find a suitable detector construction for {detector}")
-
-
 # holds the Geant4Handle for potential reuse
 __geant4Handle = None
 
@@ -676,9 +642,7 @@ def addGeant4(
     if g4DetectorConstructionFactory is None:
         if detector is None:
             raise AttributeError("detector not given")
-        g4DetectorConstructionFactory = getG4DetectorConstructionFactory(
-            detector, regionList
-        )
+        g4DetectorConstructionFactory = detector.buildGeant4DetectorConstruction()
 
     global __geant4Handle
 

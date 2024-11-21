@@ -19,7 +19,7 @@
 
 class G4Step;
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// @class MaterialSteppingAction
 ///
@@ -66,4 +66,4 @@ class MaterialSteppingAction final : public G4UserSteppingAction {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4
