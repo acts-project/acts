@@ -7,7 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "ActsExamples/GeoModelDetector/GeoModelGeant4DetectorConstructionFactory.hpp"
+#include "ActsExamples/GeoModelDetector/GeoModelGeant4DetectorConstruction.hpp"
 
 #include <memory>
 
