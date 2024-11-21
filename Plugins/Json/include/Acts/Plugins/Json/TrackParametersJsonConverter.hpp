@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/EventData/detail/TrackParametersUtils.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 
 #include <nlohmann/json.hpp>
@@ -85,7 +86,7 @@ struct adl_serializer<parameters_t> {
     // Bound track parameters have
     // reference surface attached
     // and position takes a geometry context
-    if constexpr (Acts::detail::isBoundOrFreeTrackParams<parameters_t>) {
+    if constexpr (Acts::detail::isGenericBoundTrackParams<parameters_t>) {
       Acts::GeometryContext gctx;
       j["position"] = t.fourPosition(gctx);
 
@@ -136,7 +137,7 @@ struct adl_serializer<parameters_t> {
     // reference surface attached
     // and constructor is hidden
     // behind a factory method
-    if constexpr (Acts::detail::isBoundOrFreeTrackParams<parameters_t>) {
+    if constexpr (Acts::detail::isGenericBoundTrackParams<parameters_t>) {
       Acts::GeometryContext gctx;
       auto referenceSurface =
           Acts::SurfaceJsonConverter::fromJson(j.at("referenceSurface"));
