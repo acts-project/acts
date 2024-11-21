@@ -17,7 +17,6 @@
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
-#include "ActsExamples/Geant4/Geant4DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
@@ -94,10 +93,6 @@ struct ExperimentalSensitiveCandidates
 };
 
 PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
-  py::class_<Geant4DetectorConstructionFactory,
-             std::shared_ptr<Geant4DetectorConstructionFactory>>(
-      mod, "Geant4DetectorConstructionFactory");
-
   py::class_<Geant4Manager, std::unique_ptr<Geant4Manager, py::nodelete>>(
       mod, "Geant4Manager")
       .def_static("instance", &Geant4Manager::instance,

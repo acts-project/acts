@@ -118,7 +118,7 @@ Gen2GeometryHolder Geant4Detector::buildGen2Geometry() {
 }
 
 std::shared_ptr<Geant4DetectorConstructionFactory>
-Geant4Detector::buildGeant4DetectorConstruction() {
+Geant4Detector::buildGeant4DetectorConstructionFactory() {
   throw std::runtime_error("Not implemented");
 }
 

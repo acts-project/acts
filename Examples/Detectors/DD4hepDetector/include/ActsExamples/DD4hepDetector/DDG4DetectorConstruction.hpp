@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/Geant4/Geant4DetectorConstructionFactory.hpp"
+#include "ActsExamples/DetectorCommons/Geant4DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 
 #include <memory>

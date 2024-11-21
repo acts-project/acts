@@ -12,7 +12,7 @@
 namespace ActsExamples {
 
 std::shared_ptr<Geant4DetectorConstructionFactory>
-TelescopeDetector::buildGeant4DetectorConstruction() {
+TelescopeDetector::buildGeant4DetectorConstructionFactory() {
   return std::make_unique<TelescopeG4DetectorConstructionFactory>(m_cfg);
 }
 

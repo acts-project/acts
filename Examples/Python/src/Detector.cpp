@@ -15,6 +15,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/DetectorCommons/DetectorBase.hpp"
+#include "ActsExamples/DetectorCommons/Geant4DetectorConstructionFactory.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
@@ -60,12 +61,16 @@ void addDetector(Context& ctx) {
         .def_readwrite("contextDecorators",
                        &Gen2GeometryHolder::contextDecorators)
         .def_readwrite("detectorStore", &Gen2GeometryHolder::detectorStore);
-  }
 
-  {
     py::class_<DetectorBase, std::shared_ptr<DetectorBase>>(mex, "DetectorBase")
         .def("buildGen1Geometry", &DetectorBase::buildGen1Geometry)
-        .def("buildGen2Geometry", &DetectorBase::buildGen2Geometry);
+        .def("buildGen2Geometry", &DetectorBase::buildGen2Geometry)
+        .def("buildGeant4DetectorConstructionFactory",
+             &DetectorBase::buildGeant4DetectorConstructionFactory);
+
+    py::class_<Geant4DetectorConstructionFactory,
+               std::shared_ptr<Geant4DetectorConstructionFactory>>(
+        mex, "Geant4DetectorConstructionFactory");
   }
 
   {

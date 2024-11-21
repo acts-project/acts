@@ -30,8 +30,9 @@ Gen2GeometryHolder DetectorBase::buildGen2Geometry() {
 }
 
 std::shared_ptr<Geant4DetectorConstructionFactory>
-DetectorBase::buildGeant4DetectorConstruction() {
-  throw std::runtime_error("Geant4 detector construction not implemented");
+DetectorBase::buildGeant4DetectorConstructionFactory() {
+  throw std::runtime_error(
+      "Geant4 detector construction factory not implemented");
 }
 
 }  // namespace ActsExamples

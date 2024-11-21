@@ -9,14 +9,15 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
-#include <G4VUserDetectorConstruction.hh>
+namespace ActsExamples::Geant4 {
+class RegionCreator;
+}  // namespace ActsExamples::Geant4
+
+class G4VUserDetectorConstruction;
 
 namespace ActsExamples {
-
-namespace Geant4 {
-class RegionCreator;
-}
 
 class Geant4DetectorConstructionFactory {
  public:

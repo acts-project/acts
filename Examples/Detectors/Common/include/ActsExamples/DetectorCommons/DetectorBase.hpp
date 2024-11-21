@@ -6,14 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// This file is part of the Acts project.
-//
-// Copyright (C) 2024 CERN for the benefit of the Acts project
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -35,7 +27,12 @@ class Detector;
 namespace ActsExamples {
 class IContextDecorator;
 class Geant4DetectorConstructionFactory;
+namespace Geant4 {
+class RegionCreator;
+}  // namespace Geant4
 }  // namespace ActsExamples
+
+class G4VUserDetectorConstruction;
 
 namespace ActsExamples {
 
@@ -71,7 +68,7 @@ class DetectorBase {
   virtual Gen2GeometryHolder buildGen2Geometry();
 
   virtual std::shared_ptr<Geant4DetectorConstructionFactory>
-  buildGeant4DetectorConstruction();
+  buildGeant4DetectorConstructionFactory();
 
  protected:
   std::unique_ptr<const Acts::Logger> m_logger;

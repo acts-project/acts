@@ -11,7 +11,7 @@
 namespace ActsExamples {
 
 std::shared_ptr<G4VUserDetectorConstruction>
-TelescopeDetector::buildGeant4DetectorConstruction() {
+TelescopeDetector::buildGeant4DetectorConstructionFactory() {
   throw std::runtime_error("Not implemented");
 }
 

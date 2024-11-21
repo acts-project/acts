@@ -28,7 +28,12 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesGeant4
-    PUBLIC ActsCore ActsExamplesFramework Boost::headers ${Geant4_LIBRARIES}
+    PUBLIC
+        ActsCore
+        ActsExamplesFramework
+        ActsExamplesDetectorsCommon
+        Boost::headers
+        ${Geant4_LIBRARIES}
 )
 
 if(ACTS_BUILD_PLUGIN_GEOMODEL)

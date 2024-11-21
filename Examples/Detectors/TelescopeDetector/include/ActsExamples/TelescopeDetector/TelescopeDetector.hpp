@@ -37,7 +37,7 @@ class TelescopeDetector : public DetectorBase {
   Gen1GeometryHolder buildGen1Geometry() override;
 
   std::shared_ptr<Geant4DetectorConstructionFactory>
-  buildGeant4DetectorConstruction() override;
+  buildGeant4DetectorConstructionFactory() override;
 
  private:
   Config m_cfg;

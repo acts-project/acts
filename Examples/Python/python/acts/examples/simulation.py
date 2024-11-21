@@ -642,7 +642,9 @@ def addGeant4(
     if g4DetectorConstructionFactory is None:
         if detector is None:
             raise AttributeError("detector not given")
-        g4DetectorConstructionFactory = detector.buildGeant4DetectorConstruction()
+        g4DetectorConstructionFactory = (
+            detector.buildGeant4DetectorConstructionFactory()
+        )
 
     global __geant4Handle
 

@@ -106,7 +106,7 @@ class DD4hepDetector : public DetectorBase,
   Gen1GeometryHolder buildGen1Geometry() override;
 
   std::shared_ptr<Geant4DetectorConstructionFactory>
-  buildGeant4DetectorConstruction() override;
+  buildGeant4DetectorConstructionFactory() override;
 
  private:
   /// Private method to initiate building of the DD4hep geometry

@@ -11,7 +11,7 @@
 namespace ActsExamples {
 
 std::shared_ptr<Geant4DetectorConstructionFactory>
-DD4hepDetector::buildGeant4DetectorConstruction() {
+DD4hepDetector::buildGeant4DetectorConstructionFactory() {
   throw std::runtime_error("Not implemented");
 }
 

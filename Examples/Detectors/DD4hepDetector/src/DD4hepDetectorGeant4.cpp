@@ -12,7 +12,7 @@
 namespace ActsExamples {
 
 std::shared_ptr<Geant4DetectorConstructionFactory>
-DD4hepDetector::buildGeant4DetectorConstruction() {
+DD4hepDetector::buildGeant4DetectorConstructionFactory() {
   if (m_detector == nullptr) {
     buildDD4hepGeometry();
   }
