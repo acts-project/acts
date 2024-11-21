@@ -1,0 +1,18 @@
+name: Check PR milestone
+
+on:
+  pull_request_target:
+    types: [milestoned, demilestoned]
+    branches:
+      - main
+
+jobs:
+  check_milestone:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: |
+          echo "${{ github.context }}"
+          echo "${{ github.pull_request }}"
