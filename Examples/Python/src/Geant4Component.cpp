@@ -16,8 +16,6 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
@@ -26,8 +24,6 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
-#include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
-#include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
 #include <memory>
 #include <string>
@@ -151,7 +147,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
     sm.def("create",
            [](const Config& cfg, Acts::Logging::Level level,
-              const std::shared_ptr<const TrackingGeometry> tGeometry) {
+              const std::shared_ptr<const TrackingGeometry>& tGeometry) {
              // Set a new surface finder
              Config ccfg = cfg;
              auto candidateSurfaces =
@@ -248,19 +244,6 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   }
 
   {
-    py::class_<
-        Telescope::TelescopeG4DetectorConstructionFactory,
-        DetectorConstructionFactory,
-        std::shared_ptr<Telescope::TelescopeG4DetectorConstructionFactory>>(
-        mod, "TelescopeG4DetectorConstructionFactory")
-        .def(py::init<const Telescope::TelescopeDetector::Config&,
-                      std::vector<std::shared_ptr<RegionCreator>>>(),
-             py::arg("cfg"),
-             py::arg("regionCreators") =
-                 std::vector<std::shared_ptr<RegionCreator>>());
-  }
-
-  {
     using ISelector = Acts::IGeant4PhysicalVolumeSelector;
     auto is = py::class_<ISelector, std::shared_ptr<ISelector>>(
         mod, "IVolumeSelector");
@@ -287,7 +270,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                std::shared_ptr<Acts::Geant4DetectorElement>>(
         mod, "Geant4DetectorElement");
 
-    using Detector = Geant4::Geant4Detector;
+    using Detector = Geant4Detector;
     using Config = Detector::Config;
 
     auto g =

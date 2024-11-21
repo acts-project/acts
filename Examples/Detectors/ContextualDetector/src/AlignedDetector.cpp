@@ -8,6 +8,7 @@
 
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/ContextualDetector/AlignmentDecorator.hpp"
@@ -15,33 +16,32 @@
 #include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/ContextualDetector/InternalAlignmentDecorator.hpp"
 #include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
-#include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 
+#include <memory>
+
 using namespace Acts::UnitLiterals;
 
-namespace ActsExamples::Contextual {
+namespace ActsExamples {
 
 AlignedDetector::AlignedDetector(const Config& cfg)
-    : DetectorCommons::Detector(
-          Acts::getDefaultLogger("AlignedDetector", cfg.logLevel)),
+    : DetectorBase(Acts::getDefaultLogger("AlignedDetector", cfg.logLevel)),
       m_cfg(cfg) {}
 
-Acts::GeometryContext AlignedDetector::buildGeometryContext() const {
+Gen1GeometryHolder AlignedDetector::buildGen1Geometry() {
+  Gen1GeometryHolder result;
+
   if (m_cfg.mode == Config::Mode::External) {
     InternallyAlignedDetectorElement::ContextType nominalContext;
-    auto gctx = Acts::GeometryContext(nominalContext);
-    return gctx;
+    result.geometryContext = Acts::GeometryContext(nominalContext);
+  } else {
+    InternallyAlignedDetectorElement::ContextType nominalContext;
+    nominalContext.nominal = true;
+    result.geometryContext = Acts::GeometryContext(nominalContext);
   }
 
-  InternallyAlignedDetectorElement::ContextType nominalContext;
-  nominalContext.nominal = true;
-  auto gctx = Acts::GeometryContext(nominalContext);
-  return gctx;
-}
-
-void AlignedDetector::buildTrackingGeometry(const Acts::GeometryContext& gctx) {
   // Let's create a random number service
   ActsExamples::RandomNumbers::Config randomNumberConfig;
   randomNumberConfig.seed = m_cfg.seed;
@@ -71,46 +71,52 @@ void AlignedDetector::buildTrackingGeometry(const Acts::GeometryContext& gctx) {
     std::vector<std::vector<std::shared_ptr<ExternallyAlignedDetectorElement>>>
         detectorStore;
 
-    m_trackingGeometry =
+    result.trackingGeometry =
         ActsExamples::Generic::buildDetector<ExternallyAlignedDetectorElement>(
-            gctx, detectorStore, m_cfg.buildLevel, m_cfg.materialDecorator,
-            m_cfg.buildProto, m_cfg.surfaceLogLevel, m_cfg.layerLogLevel,
-            m_cfg.volumeLogLevel);
-    agcsConfig.trackingGeometry = m_trackingGeometry;
+            result.geometryContext, detectorStore, m_cfg.buildLevel,
+            m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
+            m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
+    agcsConfig.trackingGeometry = result.trackingGeometry;
 
     // need to upcast to store in this object as well
     for (auto& lstore : detectorStore) {
-      auto& target = m_detectorStore.emplace_back();
       for (auto& ldet : lstore) {
-        target.push_back(ldet);
+        result.detectorStore.push_back(
+            std::dynamic_pointer_cast<const Acts::DetectorElementBase>(ldet));
       }
     }
 
-    m_contextDecorators.push_back(std::make_shared<ExternalAlignmentDecorator>(
-        std::move(agcsConfig),
-        Acts::getDefaultLogger("AlignmentDecorator", m_cfg.decoratorLogLevel)));
+    result.contextDecorators.push_back(
+        std::make_shared<ExternalAlignmentDecorator>(
+            std::move(agcsConfig),
+            Acts::getDefaultLogger("AlignmentDecorator",
+                                   m_cfg.decoratorLogLevel)));
   } else {
     InternalAlignmentDecorator::Config agcsConfig;
     fillDecoratorConfig(agcsConfig);
 
-    m_trackingGeometry =
+    result.trackingGeometry =
         ActsExamples::Generic::buildDetector<InternallyAlignedDetectorElement>(
-            gctx, agcsConfig.detectorStore, m_cfg.buildLevel,
+            result.geometryContext, agcsConfig.detectorStore, m_cfg.buildLevel,
             m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
             m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
 
     // need to upcast to store in this object as well
     for (auto& lstore : agcsConfig.detectorStore) {
-      auto& target = m_detectorStore.emplace_back();
       for (auto& ldet : lstore) {
-        target.push_back(ldet);
+        result.detectorStore.push_back(
+            std::dynamic_pointer_cast<const Acts::DetectorElementBase>(ldet));
       }
     }
 
-    m_contextDecorators.push_back(std::make_shared<InternalAlignmentDecorator>(
-        std::move(agcsConfig),
-        Acts::getDefaultLogger("AlignmentDecorator", m_cfg.decoratorLogLevel)));
+    result.contextDecorators.push_back(
+        std::make_shared<InternalAlignmentDecorator>(
+            std::move(agcsConfig),
+            Acts::getDefaultLogger("AlignmentDecorator",
+                                   m_cfg.decoratorLogLevel)));
   }
+
+  return result;
 }
 
-}  // namespace ActsExamples::Contextual
+}  // namespace ActsExamples

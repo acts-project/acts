@@ -21,7 +21,7 @@
 #include <cstddef>
 #include <sstream>
 
-namespace ActsExamples::TGeo {
+namespace ActsExamples {
 
 TGeoITkModuleSplitter::TGeoITkModuleSplitter(
     const TGeoITkModuleSplitter::Config& cfg,
@@ -119,4 +119,4 @@ TGeoITkModuleSplitter::splitDiscModule(
                               logger());
 }
 
-}  // namespace ActsExamples::TGeo
+}  // namespace ActsExamples

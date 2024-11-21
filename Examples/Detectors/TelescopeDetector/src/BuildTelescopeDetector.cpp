@@ -35,14 +35,14 @@
 #include <utility>
 
 std::unique_ptr<const Acts::TrackingGeometry>
-ActsExamples::Telescope::buildDetector(
+ActsExamples::buildTelescopeDetector(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
         detectorStore,
     const std::vector<double>& positions,
     const std::vector<double>& stereoAngles,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
-    double thickness, ActsExamples::Telescope::TelescopeSurfaceType surfaceType,
+    double thickness, ActsExamples::TelescopeSurfaceType surfaceType,
     Acts::BinningValue binValue) {
   using namespace Acts::UnitLiterals;
 

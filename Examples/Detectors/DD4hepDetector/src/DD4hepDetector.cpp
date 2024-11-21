@@ -8,10 +8,9 @@
 
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -24,13 +23,10 @@
 #include <Parsers/Printout.h>
 #include <TError.h>
 
-class TGeoNode;
-
-namespace ActsExamples::DD4hep {
+namespace ActsExamples {
 
 DD4hepDetector::DD4hepDetector(const DD4hepDetector::Config& cfg)
-    : DetectorCommons::Detector(
-          Acts::getDefaultLogger("DD4hepDetector", cfg.logLevel)),
+    : DetectorBase(Acts::getDefaultLogger("DD4hepDetector", cfg.logLevel)),
       m_cfg(cfg) {
   if (m_cfg.xmlFileNames.empty()) {
     throw std::invalid_argument("Missing DD4hep XML filenames");
@@ -109,31 +105,26 @@ void DD4hepDetector::buildDD4hepGeometry() {
   std::cout.clear();
 }
 
-void DD4hepDetector::buildTrackingGeometry(const Acts::GeometryContext& gctx) {
+Gen1GeometryHolder DD4hepDetector::buildGen1Geometry() {
   if (m_detector == nullptr) {
     buildDD4hepGeometry();
   }
 
+  Gen1GeometryHolder result;
+
   auto logger = Acts::getDefaultLogger("DD4hepConversion", m_cfg.logLevel);
-  m_trackingGeometry = Acts::convertDD4hepDetector(
+  result.trackingGeometry = Acts::convertDD4hepDetector(
       dd4hepGeometry(), *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
       m_cfg.envelopeR, m_cfg.envelopeZ, m_cfg.defaultLayerThickness,
-      m_cfg.sortDetectors, gctx, m_cfg.materialDecorator,
+      m_cfg.sortDetectors, result.geometryContext, m_cfg.materialDecorator,
       m_cfg.geometryIdentifierHook);
+
+  return result;
 }
 
-void DD4hepDetector::drop() {
-  if (m_detector == nullptr) {
-    return;
-  }
-  m_detector = nullptr;
-  m_trackingGeometry = nullptr;
-}
+}  // namespace ActsExamples
 
-}  // namespace ActsExamples::DD4hep
-
-void ActsExamples::DD4hep::sortFCChhDetElements(
-    std::vector<dd4hep::DetElement>& det) {
+void ActsExamples::sortFCChhDetElements(std::vector<dd4hep::DetElement>& det) {
   std::vector<dd4hep::DetElement> tracker;
   std::vector<dd4hep::DetElement> eCal;
   std::vector<dd4hep::DetElement> hCal;

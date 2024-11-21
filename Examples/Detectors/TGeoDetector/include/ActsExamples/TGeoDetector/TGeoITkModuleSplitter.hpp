@@ -26,7 +26,7 @@ namespace Acts {
 class TGeoDetectorElement;
 }
 
-namespace ActsExamples::TGeo {
+namespace ActsExamples {
 
 /// @brief TGeoITkModuleSplitter
 ///
@@ -120,4 +120,4 @@ class TGeoITkModuleSplitter : public Acts::ITGeoDetectorElementSplitter {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples::TGeo
+}  // namespace ActsExamples

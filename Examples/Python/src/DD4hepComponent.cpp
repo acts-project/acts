@@ -14,7 +14,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
-#include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 
 #include <memory>
 #include <utility>
@@ -39,11 +39,11 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   }
 
   {
-    using Detector = DD4hep::DD4hepDetector;
+    using Detector = DD4hepDetector;
     using Config = Detector::Config;
 
-    auto s = py::class_<Detector, DetectorCommons::Detector,
-                        std::shared_ptr<Detector>>(m, "DD4hepDetector")
+    auto s = py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>(
+                 m, "DD4hepDetector")
                  .def(py::init<const Config&>());
 
     auto c = py::class_<Config>(s, "Config").def(py::init<>());

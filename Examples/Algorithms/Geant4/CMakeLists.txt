@@ -2,7 +2,6 @@ add_library(
     ActsExamplesGeant4
     SHARED
     src/GdmlDetectorConstruction.cpp
-    src/TelescopeG4DetectorConstruction.cpp
     src/Geant4Simulation.cpp
     src/MagneticFieldWrapper.cpp
     src/MaterialPhysicsList.cpp
@@ -29,33 +28,8 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesGeant4
-    PUBLIC
-        ActsCore
-        ActsExamplesFramework
-        ActsExamplesDetectorTelescope
-        Boost::headers
-        ${Geant4_LIBRARIES}
+    PUBLIC ActsCore ActsExamplesFramework Boost::headers ${Geant4_LIBRARIES}
 )
-
-if(ACTS_BUILD_EXAMPLES_DD4HEP)
-    if(${DD4hep_VERSION} VERSION_LESS 1.11)
-        target_include_directories(
-            ActsExamplesGeant4
-            PRIVATE ${DD4hep_INCLUDE_DIRS}
-        )
-        target_link_libraries(
-            ActsExamplesGeant4
-            PRIVATE ${DD4hep_DDCORE_LIBRARY} ${DD4hep_DDG4_LIBRARY}
-        )
-    else()
-        target_link_libraries(
-            ActsExamplesGeant4
-            PUBLIC ActsExamplesDetectorDD4hep DD4hep::DDCore DD4hep::DDG4
-        )
-    endif()
-
-    target_sources(ActsExamplesGeant4 PUBLIC src/DDG4DetectorConstruction.cpp)
-endif()
 
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
     target_sources(

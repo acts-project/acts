@@ -9,7 +9,6 @@
 #include "ActsExamples/ContextualDetector/InternalAlignmentDecorator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
@@ -18,13 +17,13 @@
 #include <thread>
 #include <utility>
 
-ActsExamples::Contextual::InternalAlignmentDecorator::
-    InternalAlignmentDecorator(const Config& cfg,
-                               std::unique_ptr<const Acts::Logger> logger)
+namespace ActsExamples {
+
+InternalAlignmentDecorator::InternalAlignmentDecorator(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
-ActsExamples::ProcessCode
-ActsExamples::Contextual::InternalAlignmentDecorator::decorate(
+ActsExamples::ProcessCode InternalAlignmentDecorator::decorate(
     AlgorithmContext& context) {
   // We need to lock the Decorator
   std::lock_guard<std::mutex> alignmentLock(m_alignmentMutex);
@@ -92,3 +91,5 @@ ActsExamples::Contextual::InternalAlignmentDecorator::decorate(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

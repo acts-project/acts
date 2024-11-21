@@ -49,7 +49,7 @@ class RegionCreator {
                 Acts::Logging::Level level);
 
   /// Construct the region
-  void Construct();
+  void construct();
 
   /// Readonly access to the configuration
   const Config& config() const { return m_cfg; }

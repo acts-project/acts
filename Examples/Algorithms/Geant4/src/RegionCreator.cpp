@@ -21,7 +21,7 @@ RegionCreator::RegionCreator(const Config& cfg, std::string name,
       m_cfg(cfg),
       m_logger(Acts::getDefaultLogger(m_name, level)) {}
 
-void RegionCreator::Construct() {
+void RegionCreator::construct() {
   // create a new G4Region
   G4Region* region = new G4Region(m_name);
 

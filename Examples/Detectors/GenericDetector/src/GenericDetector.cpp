@@ -8,29 +8,34 @@
 
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
+#include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 
-namespace ActsExamples::Generic {
+namespace ActsExamples {
 
 GenericDetector::GenericDetector(const Config& cfg)
-    : DetectorCommons::Detector(
-          Acts::getDefaultLogger("GenericDetector", cfg.logLevel)),
+    : DetectorBase(Acts::getDefaultLogger("GenericDetector", cfg.logLevel)),
       m_cfg(cfg) {}
 
-void GenericDetector::buildTrackingGeometry(const Acts::GeometryContext& gctx) {
-  std::vector<std::vector<std::shared_ptr<DetectorElement>>> detectorStore;
-  m_trackingGeometry = ActsExamples::Generic::buildDetector<DetectorElement>(
-      gctx, detectorStore, m_cfg.buildLevel, m_cfg.materialDecorator,
-      m_cfg.buildProto, m_cfg.surfaceLogLevel, m_cfg.layerLogLevel,
-      m_cfg.volumeLogLevel);
-  for (auto& something : detectorStore) {
-    for (auto& element : something) {
-      m_detectorStore.push_back(std::move(element));
+Gen1GeometryHolder GenericDetector::buildGen1Geometry() {
+  Gen1GeometryHolder result;
+
+  std::vector<std::vector<std::shared_ptr<GenericDetectorElement>>>
+      detectorStore;
+  result.trackingGeometry =
+      ActsExamples::Generic::buildDetector<GenericDetectorElement>(
+          result.geometryContext, detectorStore, m_cfg.buildLevel,
+          m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
+          m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
+
+  for (const auto& something : detectorStore) {
+    for (const auto& element : something) {
+      result.detectorStore.push_back(element);
     }
   }
+
+  return result;
 }
 
-}  // namespace ActsExamples::Generic
+}  // namespace ActsExamples

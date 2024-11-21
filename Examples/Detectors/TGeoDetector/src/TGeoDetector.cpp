@@ -40,7 +40,7 @@
 
 #include "TGeoManager.h"
 
-namespace ActsExamples::TGeo {
+namespace ActsExamples {
 
 namespace {
 
@@ -364,20 +364,21 @@ void TGeoDetector::readTGeoLayerBuilderConfigsFile(const std::string& path,
 }
 
 TGeoDetector::TGeoDetector(const Config& cfg)
-    : DetectorCommons::Detector(
-          Acts::getDefaultLogger("TGeoDetector", cfg.logLevel)),
+    : DetectorBase(Acts::getDefaultLogger("TGeoDetector", cfg.logLevel)),
       m_cfg(cfg) {}
 
 void TGeoDetector::Config::readJson(const std::string& jsonFile) {
   readTGeoLayerBuilderConfigsFile(jsonFile, *this);
 }
 
-void TGeoDetector::buildTrackingGeometry(
-    const Acts::GeometryContext& /*gctx*/) {
-  Acts::GeometryContext tGeoContext;
+Gen1GeometryHolder TGeoDetector::buildGen1Geometry() {
+  Gen1GeometryHolder result;
 
-  m_trackingGeometry = buildTGeoDetector(m_cfg, tGeoContext, m_detectorStore,
-                                         m_cfg.materialDecorator, logger());
+  result.trackingGeometry =
+      buildTGeoDetector(m_cfg, result.geometryContext, result.detectorStore,
+                        m_cfg.materialDecorator, logger());
+
+  return result;
 }
 
-}  // namespace ActsExamples::TGeo
+}  // namespace ActsExamples

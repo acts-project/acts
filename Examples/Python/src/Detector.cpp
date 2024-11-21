@@ -6,14 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/DetectorCommons/Detector.hpp"
-
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
+#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
@@ -49,19 +48,17 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using Detector = DetectorCommons::Detector;
-
-    py::class_<Detector, std::shared_ptr<Detector>>(mex, "Detector")
-        .def("trackingGeometry", &Detector::trackingGeometry)
-        .def("drop", &Detector::drop);
+    py::class_<DetectorBase, std::shared_ptr<DetectorBase>>(mex, "DetectorBase")
+        .def("buildGen1Geometry", &DetectorBase::buildGen1Geometry)
+        .def("buildGen2Geometry", &DetectorBase::buildGen2Geometry);
   }
 
   {
-    using Detector = Generic::GenericDetector;
+    using Detector = GenericDetector;
     using Config = Detector::Config;
 
-    auto d = py::class_<Detector, DetectorCommons::Detector,
-                        std::shared_ptr<Detector>>(mex, "GenericDetector")
+    auto d = py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>(
+                 mex, "GenericDetector")
                  .def(py::init<const Config&>());
 
     auto c = py::class_<Config>(d, "Config").def(py::init<>());
@@ -77,11 +74,11 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using Detector = Telescope::TelescopeDetector;
+    using Detector = TelescopeDetector;
     using Config = Detector::Config;
 
-    auto d = py::class_<Detector, DetectorCommons::Detector,
-                        std::shared_ptr<Detector>>(mex, "TelescopeDetector")
+    auto d = py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>(
+                 mex, "TelescopeDetector")
                  .def(py::init<const Config&>());
 
     auto c = py::class_<Config>(d, "Config").def(py::init<>());
@@ -99,14 +96,14 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using Detector = Contextual::AlignedDetector;
+    using Detector = AlignedDetector;
     using Config = Detector::Config;
 
-    auto d = py::class_<Detector, DetectorCommons::Detector,
-                        std::shared_ptr<Detector>>(mex, "AlignedDetector")
+    auto d = py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>(
+                 mex, "AlignedDetector")
                  .def(py::init<const Config&>());
 
-    auto c = py::class_<Config, Generic::GenericDetector::Config>(d, "Config")
+    auto c = py::class_<Config, GenericDetector::Config>(d, "Config")
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(seed);
@@ -128,11 +125,11 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using Detector = TGeo::TGeoDetector;
+    using Detector = TGeoDetector;
     using Config = Detector::Config;
 
-    auto d = py::class_<Detector, DetectorCommons::Detector,
-                        std::shared_ptr<Detector>>(mex, "TGeoDetector")
+    auto d = py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>(
+                 mex, "TGeoDetector")
                  .def(py::init<const Config&>());
 
     py::class_<Options::Interval>(mex, "Interval")

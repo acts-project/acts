@@ -10,24 +10,16 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 
 #include <array>
 #include <memory>
 #include <vector>
 
-namespace ActsExamples::Telescope {
+namespace ActsExamples {
 
-class TelescopeDetectorElement;
-class TelescopeG4DetectorConstruction;
-
-class TelescopeDetector : public ActsExamples::DetectorCommons::Detector {
+class TelescopeDetector : public DetectorBase {
  public:
-  using ContextDecorators =
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
-
-  using DetectorElement = ActsExamples::Telescope::TelescopeDetectorElement;
-
   struct Config {
     std::vector<double> positions{{0, 30, 60, 120, 150, 180}};
     std::vector<double> stereos{{0, 0, 0, 0, 0, 0}};
@@ -42,10 +34,13 @@ class TelescopeDetector : public ActsExamples::DetectorCommons::Detector {
 
   explicit TelescopeDetector(const Config& cfg);
 
+  Gen1GeometryHolder buildGen1Geometry() override;
+
+  std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
+      std::vector<std::shared_ptr<RegionCreator>> regionCreators) override;
+
  private:
   Config m_cfg;
-
-  void buildTrackingGeometry(const Acts::GeometryContext& gctx) final;
 };
 
-}  // namespace ActsExamples::Telescope
+}  // namespace ActsExamples

@@ -8,24 +8,17 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 
 #include <cstddef>
 #include <memory>
-#include <vector>
 
-namespace ActsExamples::Generic {
+namespace ActsExamples {
 class GenericDetectorElement;
 
-class GenericDetector : public ActsExamples::DetectorCommons::Detector {
+class GenericDetector : public DetectorBase {
  public:
-  using ContextDecorators =
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
-
-  using DetectorElement = ActsExamples::Generic::GenericDetectorElement;
-
   struct Config {
     std::size_t buildLevel = 3;
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
@@ -38,10 +31,10 @@ class GenericDetector : public ActsExamples::DetectorCommons::Detector {
 
   explicit GenericDetector(const Config& cfg);
 
+  Gen1GeometryHolder buildGen1Geometry() override;
+
  private:
   Config m_cfg;
-
-  void buildTrackingGeometry(const Acts::GeometryContext& gctx) final;
 };
 
-}  // namespace ActsExamples::Generic
+}  // namespace ActsExamples

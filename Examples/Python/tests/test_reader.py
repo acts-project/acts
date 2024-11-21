@@ -1,6 +1,7 @@
 import pytest
 import os
 from pathlib import Path
+import multiprocessing
 
 from helpers import (
     geant4Enabled,
@@ -289,7 +290,11 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
     tmp_file = str(tmp_path / "output_edm4hep.root")
     odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
 
-    generate_input_test_edm4hep_simhit_reader(odd_xml_file, tmp_file)
+    p = multiprocessing.Process(
+        target=generate_input_test_edm4hep_simhit_reader, args=(odd_xml_file, tmp_file)
+    )
+    p.start()
+    p.join()
 
     assert os.path.exists(tmp_file)
 

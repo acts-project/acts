@@ -72,7 +72,7 @@ void to_json(nlohmann::json& j, const Interval& interval) {
 
 }  // namespace ActsExamples::Options
 
-namespace ActsExamples::TGeo {
+namespace ActsExamples {
 
 void from_json(const nlohmann::json& j, TGeoITkModuleSplitter::Config& msc) {
   msc.barrelMap =
@@ -188,4 +188,4 @@ void to_json(nlohmann::json& j, const TGeoDetector::Config::Volume& vol) {
   }
 }
 
-}  // namespace ActsExamples::TGeo
+}  // namespace ActsExamples

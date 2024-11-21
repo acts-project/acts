@@ -17,7 +17,7 @@
 class G4VPhysicalVolume;
 class G4LogicalVolume;
 
-namespace ActsExamples::Telescope {
+namespace ActsExamples {
 
 class TelescopeG4DetectorConstruction final
     : public G4VUserDetectorConstruction {
@@ -53,4 +53,4 @@ class TelescopeG4DetectorConstructionFactory final
   std::vector<std::shared_ptr<RegionCreator>> m_regionCreators;
 };
 
-}  // namespace ActsExamples::Telescope
+}  // namespace ActsExamples

@@ -20,9 +20,10 @@
 #include <thread>
 #include <utility>
 
-ActsExamples::Contextual::ExternalAlignmentDecorator::
-    ExternalAlignmentDecorator(const Config& cfg,
-                               std::unique_ptr<const Acts::Logger> logger)
+namespace ActsExamples {
+
+ExternalAlignmentDecorator::ExternalAlignmentDecorator(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {
   if (m_cfg.trackingGeometry != nullptr) {
     // parse and populate
@@ -30,8 +31,7 @@ ActsExamples::Contextual::ExternalAlignmentDecorator::
   }
 }
 
-ActsExamples::ProcessCode
-ActsExamples::Contextual::ExternalAlignmentDecorator::decorate(
+ActsExamples::ProcessCode ExternalAlignmentDecorator::decorate(
     AlgorithmContext& context) {
   // Iov map access needs to be synchronized
   std::lock_guard lock{m_iovMutex};
@@ -96,7 +96,7 @@ ActsExamples::Contextual::ExternalAlignmentDecorator::decorate(
   return ProcessCode::SUCCESS;
 }
 
-void ActsExamples::Contextual::ExternalAlignmentDecorator::parseGeometry(
+void ExternalAlignmentDecorator::parseGeometry(
     const Acts::TrackingGeometry& tGeometry) {
   // Double-visit - first count
   std::size_t nTransforms = 0;
@@ -125,3 +125,5 @@ void ActsExamples::Contextual::ExternalAlignmentDecorator::parseGeometry(
   tGeometry.visitSurfaces(fillTransforms);
   m_nominalStore = std::move(aStore);
 }
+
+}  // namespace ActsExamples

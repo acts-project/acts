@@ -13,7 +13,7 @@
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <cstddef>
@@ -24,9 +24,9 @@
 #include <utility>
 #include <vector>
 
-namespace ActsExamples::TGeo {
+namespace ActsExamples {
 
-class TGeoDetector : public DetectorCommons::Detector {
+class TGeoDetector : public DetectorBase {
  public:
   using ContextDecorators =
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
@@ -143,10 +143,10 @@ class TGeoDetector : public DetectorCommons::Detector {
 
   explicit TGeoDetector(const Config& cfg);
 
+  Gen1GeometryHolder buildGen1Geometry() override;
+
  private:
   Config m_cfg;
-
-  void buildTrackingGeometry(const Acts::GeometryContext& gctx) final;
 };
 
-}  // namespace ActsExamples::TGeo
+}  // namespace ActsExamples

@@ -9,28 +9,20 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
 #include <cstddef>
 #include <memory>
-#include <vector>
 
-namespace ActsExamples::Contextual {
+namespace ActsExamples {
 class InternallyAlignedDetectorElement;
 class InternalAlignmentDecorator;
 
-class AlignedDetector : public DetectorCommons::Detector {
+class AlignedDetector : public DetectorBase {
  public:
-  using ContextDecorators =
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
-
-  using DetectorStore = std::vector<
-      std::vector<std::shared_ptr<Generic::GenericDetectorElement>>>;
-
-  struct Config : public Generic::GenericDetector::Config {
+  struct Config : public GenericDetector::Config {
     /// Seed for the decorator random numbers.
     std::size_t seed = 1324354657;
     /// Size of a valid IOV.
@@ -60,17 +52,10 @@ class AlignedDetector : public DetectorCommons::Detector {
 
   explicit AlignedDetector(const Config& cfg);
 
-  const DetectorStore& detectorStore() const { return m_detectorStore; }
+  Gen1GeometryHolder buildGen1Geometry() override;
 
  private:
   Config m_cfg;
-
-  /// The Store of the detector elements (lifetime: job)
-  DetectorStore m_detectorStore;
-
-  Acts::GeometryContext buildGeometryContext() const final;
-
-  void buildTrackingGeometry(const Acts::GeometryContext& gctx) final;
 };
 
-}  // namespace ActsExamples::Contextual
+}  // namespace ActsExamples

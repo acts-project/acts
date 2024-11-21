@@ -32,7 +32,7 @@ G4VPhysicalVolume* GdmlDetectorConstruction::Construct() {
 
     // Create regions
     for (const auto& regionCreator : m_regionCreators) {
-      regionCreator->Construct();
+      regionCreator->construct();
     }
   }
   return m_world;

@@ -21,7 +21,7 @@ namespace Acts {
 class TrackingGeometry;
 }  // namespace Acts
 
-namespace ActsExamples::Telescope {
+namespace ActsExamples {
 
 /// The telescope detector surface type
 enum class TelescopeSurfaceType {
@@ -45,7 +45,7 @@ enum class TelescopeSurfaceType {
 /// @param surfaceType is the detector surface type
 /// @param binValue indicates which axis the detector surface normals are
 /// parallel to
-std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
+std::unique_ptr<const Acts::TrackingGeometry> buildTelescopeDetector(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
         detectorStore,
@@ -55,4 +55,4 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     double thickness, TelescopeSurfaceType surfaceType,
     Acts::BinningValue binValue = Acts::BinningValue::binZ);
 
-}  // namespace ActsExamples::Telescope
+}  // namespace ActsExamples

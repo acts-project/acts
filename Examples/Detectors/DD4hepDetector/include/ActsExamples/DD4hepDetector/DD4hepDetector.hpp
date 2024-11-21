@@ -14,7 +14,8 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
+#include "ActsExamples/Geant4/RegionCreator.hpp"
 
 #include <functional>
 #include <memory>
@@ -28,7 +29,7 @@ class Detector;
 class DetElement;
 }  // namespace dd4hep
 
-namespace ActsExamples::DD4hep {
+namespace ActsExamples {
 
 void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det);
 
@@ -39,7 +40,8 @@ void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det);
 /// The DD4hepDetector creates the DD4hep, the TGeo and the ACTS
 /// TrackingGeometry from DD4hep xml input. The geometries are created only on
 /// demand.
-class DD4hepDetector : public DetectorCommons::Detector {
+class DD4hepDetector : public DetectorBase,
+                       public std::enable_shared_from_this<DD4hepDetector> {
  public:
   /// @brief The context decorators
   using ContextDecorators =
@@ -102,13 +104,14 @@ class DD4hepDetector : public DetectorCommons::Detector {
   /// @return The world TGeoNode (physical volume)
   TGeoNode& tgeoGeometry();
 
-  void drop() final;
+  Gen1GeometryHolder buildGen1Geometry() override;
+
+  std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
+      std::vector<std::shared_ptr<RegionCreator>> regionCreators) override;
 
  private:
   /// Private method to initiate building of the DD4hep geometry
   void buildDD4hepGeometry();
-
-  void buildTrackingGeometry(const Acts::GeometryContext& gctx) final;
 
   /// The config class
   Config m_cfg;
@@ -116,4 +119,4 @@ class DD4hepDetector : public DetectorCommons::Detector {
   std::unique_ptr<dd4hep::Detector> m_detector;
 };
 
-}  // namespace ActsExamples::DD4hep
+}  // namespace ActsExamples

@@ -31,11 +31,7 @@
 #include "ActsExamples/GenericDetector/LayerBuilderT.hpp"
 #include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
-#include <array>
-#include <cmath>
 #include <cstddef>
-#include <iostream>
-#include <list>
 #include <memory>
 #include <string>
 #include <utility>

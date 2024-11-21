@@ -170,31 +170,6 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
     )
     list(APPEND py_files examples/geant4/__init__.py)
 
-    if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
-        pybind11_add_module(ActsPythonBindingsDDG4 src/Geant4DD4hepComponent.cpp)
-        target_link_libraries(
-            ActsPythonBindingsDDG4
-            PUBLIC
-                ActsPythonUtilities
-                ActsExamplesGeant4
-                ActsExamplesDetectorDD4hep
-        )
-        add_dependencies(ActsPythonBindings ActsPythonBindingsDDG4)
-
-        install(
-            TARGETS ActsPythonBindingsDDG4 DESTINATION ${_python_install_dir}
-        )
-        set_target_properties(
-            ActsPythonBindingsDDG4
-            PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
-        )
-        set_target_properties(
-            ActsPythonBindingsDDG4
-            PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
-        )
-        list(APPEND py_files examples/geant4/dd4hep.py)
-    endif()
-
     if(ACTS_BUILD_PLUGIN_GEOMODEL)
         pybind11_add_module(ActsPythonBindingsGeoModelG4 src/Geant4GeoModelComponent.cpp)
         target_link_libraries(

@@ -8,22 +8,19 @@
 
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 
 #include <algorithm>
 #include <stdexcept>
 
-namespace ActsExamples::Telescope {
+namespace ActsExamples {
 
 TelescopeDetector::TelescopeDetector(const Config& cfg)
-    : DetectorCommons::Detector(
-          Acts::getDefaultLogger("TelescopeDetector", cfg.logLevel)),
+    : DetectorBase(Acts::getDefaultLogger("TelescopeDetector", cfg.logLevel)),
       m_cfg(cfg) {}
 
-void TelescopeDetector::buildTrackingGeometry(
-    const Acts::GeometryContext& gctx) {
+Gen1GeometryHolder TelescopeDetector::buildGen1Geometry() {
   if (m_cfg.surfaceType > 1) {
     throw std::invalid_argument(
         "The surface type could either be 0 for plane surface or 1 for disc "
@@ -49,11 +46,16 @@ void TelescopeDetector::buildTrackingGeometry(
   std::vector<double> stereos = m_cfg.stereos;
   std::sort(positions.begin(), positions.end());
 
+  Gen1GeometryHolder result;
+
   /// Return the telescope detector
-  m_trackingGeometry = ActsExamples::Telescope::buildDetector(
-      gctx, m_detectorStore, positions, stereos, m_cfg.offsets, m_cfg.bounds,
-      m_cfg.thickness, static_cast<TelescopeSurfaceType>(m_cfg.surfaceType),
+  result.trackingGeometry = ActsExamples::buildTelescopeDetector(
+      result.geometryContext, result.detectorStore, positions, stereos,
+      m_cfg.offsets, m_cfg.bounds, m_cfg.thickness,
+      static_cast<TelescopeSurfaceType>(m_cfg.surfaceType),
       static_cast<Acts::BinningValue>(m_cfg.binValue));
+
+  return result;
 }
 
-}  // namespace ActsExamples::Telescope
+}  // namespace ActsExamples
