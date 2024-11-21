@@ -42,7 +42,7 @@ void addTGeo(Context& ctx) {
     ///
     /// @param rootFileName is the name of the GDML file
     /// @param sensitiveMatches is a list of strings to match sensitive volumes
-    /// @param localAxes is the TGeo->ACTS axis covnersion convention
+    /// @param localAxes is the TGeo->ACTS axis conversion convention
     /// @param convertMaterial is a flag to convert the material
     tgeo.def("convertToElements",
              [](const std::string& rootFileName,
