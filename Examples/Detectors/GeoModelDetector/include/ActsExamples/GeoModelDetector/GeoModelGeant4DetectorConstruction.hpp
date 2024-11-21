@@ -56,8 +56,6 @@ class GeoModelGeant4DetectorConstructionFactory final
  private:
   /// The GeoModel tree
   Acts::GeoModelTree m_geoModelTree;
-  /// Region creators
-  std::vector<std::shared_ptr<RegionCreator>> m_regionCreators;
 };
 
 }  // namespace ActsExamples
