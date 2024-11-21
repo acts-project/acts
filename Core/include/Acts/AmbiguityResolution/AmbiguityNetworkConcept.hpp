@@ -43,9 +43,7 @@ concept AmbiguityNetworkConcept = requires(
     network_t &n) {
   requires TrackContainerFrontend<DummyTrackContainer>;
 
-  { 
-    network_t(modelPath) 
-  } -> std::same_as<network_t>;
+  { network_t(modelPath) } -> std::same_as<network_t>;
 
   {
     n.inferScores(clusters, tracks)
