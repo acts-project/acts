@@ -30,15 +30,15 @@ jobs:
                   repo: context.repo.repo,
                   state: "open"
                 });
-                for (const milestone of milestones.data) {
-                  if (milestone.title === "next") {
-                    core.notice(`No milestone set, setting default milestone: ${milestone.title}`);
+                for (const default_milestone of milestones.data) {
+                  if (default_milestone.title === "next") {
+                    core.notice(`No milestone set, setting default milestone: ${default_milestone.title}`);
 
                     await github.rest.issues.update({
                       owner: context.repo.owner,
                       repo: context.repo.repo,
                       issue_number: context.issue.number,
-                      milestone: milestone.number
+                      milestone: default_milestone.number
                     });
                     return;
                   }
