@@ -43,12 +43,11 @@ void addTGeo(Context& ctx) {
     /// @param rootFileName is the name of the GDML file
     /// @param sensitiveMatches is a list of strings to match sensitive volumes
     /// @param localAxes is the TGeo->ACTS axis conversion convention
-    /// @param convertMaterial is a flag to convert the material
+    /// @param scaleConversion is a unit scalor conversion factor
     tgeo.def("convertToElements",
              [](const std::string& rootFileName,
                 const std::vector<std::string>& sensitiveMatches,
-                const std::string& localAxes, double scaleConversion,
-                bool convertMaterial) {
+                const std::string& localAxes, double scaleConversion) {
                // Return vector
                std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
                    tgElements;
