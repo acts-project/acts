@@ -40,43 +40,44 @@ jobs:
             let output = {};
             if(milestone !== null) {
                 console.log(`Milestone is ${milestone.title}`);
-                output = {
-                    title: "Milestone is set",
-                    summary: "A milestone has been assigned"
-                };
-                conclusion = "success";
+                # output = {
+                #     title: "Milestone is set",
+                #     summary: "A milestone has been assigned"
+                # };
+                # conclusion = "success";
             } else {
                 console.log("No milestone");
-                output = {
-                    title: "A milestone has to be set",
-                    summary: `Please add a version milestone`
-                };
-                conclusion = "failure";
+                # output = {
+                #     title: "A milestone has to be set",
+                #     summary: `Please add a version milestone`
+                # };
+                # conclusion = "failure";
+                core.setFailed("Please add a version milestone");
             }
 
-            let response = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr_number
-            });
-            let pr = response.data;
+            # let response = await github.rest.pulls.get({
+            #     owner: context.repo.owner,
+            #     repo: context.repo.repo,
+            #     pull_number: pr_number
+            # });
+            # let pr = response.data;
+            #
+            # console.log(pr);
+            #
+            # let head_sha = pr.head.sha
 
-            console.log(pr);
+            # let res = await github.rest.checks.create({
+            #     owner: context.repo.owner,
+            #     repo: context.repo.repo,
+            #     name: "",
+            #     status: "completed",
+            #     conclusion: conclusion,
+            #     head_branch: '', // workaround for https://github.com/octokit/rest.js/issues/874
+            #     head_sha: head_sha,
+            #     output: {
+            #         title: "A milestone has to be set",
+            #         summary: `Please add a version milestone`
+            #     }
+            # });
 
-            let head_sha = pr.head.sha
-
-            let res = await github.rest.checks.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                name: "milestone-set",
-                status: "completed",
-                conclusion: conclusion,
-                head_branch: '', // workaround for https://github.com/octokit/rest.js/issues/874
-                head_sha: head_sha,
-                output: {
-                    title: "A milestone has to be set",
-                    summary: `Please add a version milestone`
-                }
-            });
-
-            console.log(res);
+            # console.log(res);
