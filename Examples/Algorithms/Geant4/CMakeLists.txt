@@ -36,18 +36,4 @@ target_link_libraries(
         ${Geant4_LIBRARIES}
 )
 
-if(ACTS_BUILD_PLUGIN_GEOMODEL)
-    target_sources(
-        ActsExamplesGeant4
-        PUBLIC src/GeoModelDetectorConstruction.cpp
-    )
-
-    find_library(GeoModel2G4_LIBRARY GeoModel2G4 REQUIRED)
-
-    target_link_libraries(
-        ActsExamplesGeant4
-        PUBLIC ActsPluginGeoModel ${GeoModel2G4_LIBRARY}
-    )
-endif()
-
 install(TARGETS ActsExamplesGeant4 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
