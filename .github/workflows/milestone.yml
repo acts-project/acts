@@ -22,7 +22,6 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            console.log(context);
             let milestone = context.payload.pull_request.milestone;
 
             if(context.payload.action === 'opened' || context.payload.action === 'reopened') {
