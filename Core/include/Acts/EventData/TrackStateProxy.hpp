@@ -1101,7 +1101,7 @@ class TrackStateProxy {
   /// @note This might hash the @p key at runtime instead of compile-time
   /// @return true if the component exists, false if not
   constexpr bool has(std::string_view key) const {
-    return has(hashString(key));
+    return has(hashStringDynamic(key));
   }
 
   /// Retrieve a mutable reference to a component
@@ -1135,7 +1135,7 @@ class TrackStateProxy {
   constexpr T& component(std::string_view key)
     requires(!ReadOnly)
   {
-    return m_traj->template component<T>(hashString(key), m_istate);
+    return m_traj->template component<T>(hashStringDynamic(key), m_istate);
   }
 
   /// Retrieve a const reference to a component
@@ -1163,7 +1163,7 @@ class TrackStateProxy {
   /// @return Const reference to the component given by @p key
   template <typename T>
   constexpr const T& component(std::string_view key) const {
-    return m_traj->template component<T>(hashString(key), m_istate);
+    return m_traj->template component<T>(hashStringDynamic(key), m_istate);
   }
 
   /// @}
