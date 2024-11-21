@@ -15,9 +15,11 @@ target_link_libraries(
 )
 
 if(ACTS_BUILD_EXAMPLES_GEANT4)
+    find_library(GeoModel2G4_LIBRARY GeoModel2G4 REQUIRED)
+
     target_link_libraries(
         ActsExamplesDetectorGeoModel
-        PUBLIC ActsExamplesGeant4
+        PUBLIC ActsExamplesGeant4 ${GeoModel2G4_LIBRARY}
     )
 
     target_sources(

@@ -40,6 +40,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace Acts::Python {
+
 void addGeoModel(Context& ctx) {
   auto m = ctx.get("main");
 
@@ -248,4 +249,5 @@ void addGeoModel(Context& ctx) {
       });
   gm.def("convertToItk", &GeoModelDetectorElementITk::convertFromGeomodel);
 }
+
 }  // namespace Acts::Python

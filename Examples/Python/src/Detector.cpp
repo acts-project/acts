@@ -35,6 +35,7 @@ namespace py = pybind11;
 using namespace ActsExamples;
 
 namespace Acts::Python {
+
 void addDetector(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
