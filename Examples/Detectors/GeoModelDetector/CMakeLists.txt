@@ -15,10 +15,13 @@ target_link_libraries(
 )
 
 if(ACTS_BUILD_EXAMPLES_GEANT4)
-    target_link_libraries(ActsExamplesDetectorDD4hep PUBLIC ActsExamplesGeant4)
+    target_link_libraries(
+        ActsExamplesDetectorGeoModel
+        PUBLIC ActsExamplesGeant4
+    )
 
     target_sources(
-        ActsExamplesDetectorDD4hep
+        ActsExamplesDetectorGeoModel
         PUBLIC src/GeoModelGeant4DetectorConstruction.cpp
     )
 endif()
