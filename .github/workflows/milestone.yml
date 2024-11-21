@@ -15,8 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: |
-          echo "${{ toJSON(github.event) }}"
+      # - run: |
+      #     echo "${{ toJSON(github.event) }}"
 
       - name: "Check for milestone on PR"
         uses: actions/github-script@v7
