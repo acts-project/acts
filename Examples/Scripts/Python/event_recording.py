@@ -7,7 +7,6 @@ import acts.examples
 import acts.examples.hepmc3
 import acts.examples.dd4hep
 import acts.examples.geant4
-import acts.examples.geant4.dd4hep
 import acts.examples.geant4.hepmc3
 from acts.examples.odd import getOpenDataDetector
 
@@ -78,9 +77,7 @@ def runEventRecording(detectorConstructionFactory, outputDir, s=None):
 if "__main__" == __name__:
     detector, trackingGeometry, decorators = getOpenDataDetector()
 
-    detectorConstructionFactory = (
-        acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
-    )
+    detectorConstructionFactory = detector.buildGeant4DetectorConstructionFactory()
 
     runEventRecording(
         detectorConstructionFactory=detectorConstructionFactory,

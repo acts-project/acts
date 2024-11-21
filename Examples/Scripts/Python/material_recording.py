@@ -15,7 +15,6 @@ from acts.examples import (
 
 import acts.examples.dd4hep
 import acts.examples.geant4
-import acts.examples.geant4.dd4hep
 from acts.examples.odd import getOpenDataDetector
 
 try:
@@ -112,9 +111,7 @@ def main():
     if args.input == "":
         detector, trackingGeometry, decorators = getOpenDataDetector()
 
-        detectorConstructionFactory = (
-            acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
-        )
+        detectorConstructionFactory = detector.buildGeant4DetectorConstructionFactory()
     elif args.input.endswith(".gdml"):
         detectorConstructionFactory = (
             acts.examples.geant4.GdmlDetectorConstructionFactory(args.input)
