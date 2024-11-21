@@ -27,11 +27,7 @@ void addGeoModelGeant4(Context& ctx) {
                DetectorConstructionFactory,
                std::shared_ptr<GeoModelGeant4DetectorConstructionFactory>>(
         m, "GeoModelGeant4DetectorConstructionFactory")
-        .def(py::init<const Acts::GeoModelTree&,
-                      std::vector<std::shared_ptr<RegionCreator>>>(),
-             py::arg("geoModelTree"),
-             py::arg("regionCreators") =
-                 std::vector<std::shared_ptr<RegionCreator>>());
+        .def(py::init<const Acts::GeoModelTree&>());
   }
 }
 
