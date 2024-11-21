@@ -1103,8 +1103,8 @@ class MultiTrajectoryTestsCommon {
     auto test = [&](const std::string& col, auto value) {
       using T = decltype(value);
       std::string col2 = col + "_2";
-      HashedString h{hashString(col)};
-      HashedString h2{hashString(col2)};
+      HashedString h{hashStringDynamic(col)};
+      HashedString h2{hashStringDynamic(col2)};
 
       trajectory_t traj = m_factory.create();
       BOOST_CHECK(!traj.hasColumn(h));
@@ -1188,7 +1188,7 @@ class MultiTrajectoryTestsCommon {
       }
     };
 
-    runTest([](const std::string& c) { return hashString(c.c_str()); });
+    runTest([](const std::string& c) { return hashStringDynamic(c.c_str()); });
     // runTest([](const std::string& c) { return c.c_str(); });
     // runTest([](const std::string& c) { return c; });
     // runTest([](std::string_view c) { return c; });

@@ -145,7 +145,7 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: >
-          pip install -r CI/requirements_fpe_masks.txt
+          pip install -r CI/fpe_masks/requirements.txt
       - name: Check
         run: >
           CI/check_fpe_masks.py --token ${{ secrets.GITHUB_TOKEN }}

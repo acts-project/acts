@@ -112,10 +112,16 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     }
     Acts::Vector3 field = *fieldRes;
 
+    if (field.norm() < m_cfg.bFieldMin) {
+      ACTS_WARNING("Magnetic field at seed " << iseed << " is too small "
+                                             << field.norm());
+      continue;
+    }
+
     // Estimate the track parameters from seed
     auto optParams = Acts::estimateTrackParamsFromSeed(
         ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
-        m_cfg.bFieldMin, logger());
+        logger());
     if (!optParams.has_value()) {
       ACTS_WARNING("Estimation of track parameters for seed " << iseed
                                                               << " failed.");
