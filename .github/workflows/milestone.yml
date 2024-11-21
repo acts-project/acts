@@ -25,8 +25,38 @@ jobs:
             console.log(context);
             let milestone = context.payload.pull_request.milestone;
 
-            if(milestone !== null) {
-                core.notice(`Milestone is ${milestone.title}`);
-            } else {
-                core.setFailed("No milestone: Please add a version milestone");
+            if(context.action == 'opened' || context.action == 'reopened') {
+              if(milestone !== null) {
+                  core.notice(`Milestone is ${milestone.title}`);
+              } else {
+                const milestones = await github.rest.issues.listMilestones({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  state: "open"
+                });
+                for (const milestone of milestones.data) {
+                  if (milestone.title === "next") {
+                    core.notice(`No milestone set, setting default milestone: ${default_milestone.title}`);
+
+                    await github.rest.issues.update({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: context.issue.number,
+                      milestone: milestone.number
+                    });
+                    return;
+                  }
+                }
+
+                core.warning("Could not find default milestone named 'next'");
+
+              }
+
+            }
+            else {
+              if(milestone !== null) {
+                  core.notice(`Milestone is ${milestone.title}`);
+              } else {
+                  core.setFailed("No milestone: Please add a version milestone");
+              }
             }
