@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/GeoModelG4/GeoModelDetectorConstruction.hpp"
+#include "ActsExamples/GeoModelDetector/GeoModelGeant4DetectorConstruction.hpp"
 
 #include <G4LogicalVolume.hh>
 #include <G4PVPlacement.hh>
@@ -15,7 +15,7 @@
 #include <GeoModel2G4/ExtParameterisedVolumeBuilder.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
 
-namespace ActsExamples::Geant4 {
+namespace ActsExamples {
 
 GeoModelDetectorConstruction::GeoModelDetectorConstruction(
     const Acts::GeoModelTree& geoModelTree,
@@ -47,10 +47,8 @@ G4VPhysicalVolume* GeoModelDetectorConstruction::Construct() {
 }
 
 GeoModelDetectorConstructionFactory::GeoModelDetectorConstructionFactory(
-    const Acts::GeoModelTree& geoModelTree,
-    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
-    : m_geoModelTree(geoModelTree),
-      m_regionCreators(std::move(regionCreators)) {}
+    const Acts::GeoModelTree& geoModelTree)
+    : m_geoModelTree(geoModelTree) {}
 
 std::unique_ptr<G4VUserDetectorConstruction>
 GeoModelDetectorConstructionFactory::factorize() const {
@@ -58,4 +56,4 @@ GeoModelDetectorConstructionFactory::factorize() const {
                                                         m_regionCreators);
 }
 
-}  // namespace ActsExamples::Geant4
+}  // namespace ActsExamples

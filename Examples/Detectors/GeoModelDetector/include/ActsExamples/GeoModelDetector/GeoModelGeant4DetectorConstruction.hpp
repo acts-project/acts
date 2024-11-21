@@ -9,23 +9,24 @@
 #pragma once
 
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
-#include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
+#include "ActsExamples/DetectorCommons/Geant4DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 
 #include <G4VUserDetectorConstruction.hh>
 
 class G4VPhysicalVolume;
 
-namespace ActsExamples::Geant4 {
+namespace ActsExamples {
 
 /// Construct the Geant4 detector from a GeoModel world volume
-class GeoModelDetectorConstruction final : public G4VUserDetectorConstruction {
+class GeoModelGeant4DetectorConstruction final
+    : public G4VUserDetectorConstruction {
  public:
   /// @param geoModelTree is the GeoModel tree containing the world volume
   /// @param regionCreators are the region creators
   GeoModelDetectorConstruction(
       const Acts::GeoModelTree& geoModelTree,
-      std::vector<std::shared_ptr<RegionCreator>> regionCreators = {});
+      std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators);
 
   /// Read the file and parse it to construct the Geant4 description
   ///
@@ -37,19 +38,20 @@ class GeoModelDetectorConstruction final : public G4VUserDetectorConstruction {
   /// The GeoModel tree
   Acts::GeoModelTree m_geoModelTree;
   /// Region creators
-  std::vector<std::shared_ptr<RegionCreator>> m_regionCreators;
+  std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
   /// The world volume
   G4VPhysicalVolume* m_g4World = nullptr;
 };
 
-class GeoModelDetectorConstructionFactory final
-    : public DetectorConstructionFactory {
+class GeoModelGeant4DetectorConstructionFactory final
+    : public Geant4DetectorConstructionFactory {
  public:
-  GeoModelDetectorConstructionFactory(
-      const Acts::GeoModelTree& geoModelTree,
-      std::vector<std::shared_ptr<RegionCreator>> regionCreators = {});
+  explicit GeoModelGeant4DetectorConstructionFactory(
+      const Acts::GeoModelTree& geoModelTree);
 
-  std::unique_ptr<G4VUserDetectorConstruction> factorize() const override;
+  std::unique_ptr<G4VUserDetectorConstruction> factorize(
+      const std::vector<std::shared_ptr<Geant4::RegionCreator>>& regionCreators)
+      const override;
 
  private:
   /// The GeoModel tree
@@ -58,4 +60,4 @@ class GeoModelDetectorConstructionFactory final
   std::vector<std::shared_ptr<RegionCreator>> m_regionCreators;
 };
 
-}  // namespace ActsExamples::Geant4
+}  // namespace ActsExamples
