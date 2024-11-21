@@ -16,10 +16,8 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <set>
-#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -69,4 +67,5 @@ class ModuleClusters {
   std::vector<std::vector<ModuleValue>> mergeParameters(
       std::vector<ModuleValue> values);
 };
+
 }  // namespace ActsExamples
