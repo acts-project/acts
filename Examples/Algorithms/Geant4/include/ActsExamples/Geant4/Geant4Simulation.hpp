@@ -46,6 +46,7 @@ struct Geant4Handle;
 namespace Geant4 {
 class SensitiveSurfaceMapper;
 struct EventStore;
+class RegionCreator;
 }  // namespace Geant4
 
 /// Abstracts common Geant4 Acts algorithm behaviour.
@@ -58,6 +59,9 @@ class Geant4SimulationBase : public IAlgorithm {
 
     /// Random number service.
     std::shared_ptr<const RandomNumbers> randomNumbers;
+
+    /// Geant4 region creators.
+    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators;
 
     /// Detector construction object.
     /// G4RunManager will take care of deletion

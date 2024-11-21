@@ -81,9 +81,10 @@ void Geant4SimulationBase::commonInitialization() {
       delete runManager().GetUserDetectorConstruction();
     }
     // G4RunManager will take care of deletion
-    // TODO region creators
     m_detectorConstruction =
-        config().detectorConstructionFactory->factorize({}).release();
+        config()
+            .detectorConstructionFactory->factorize(config().regionCreators)
+            .release();
     runManager().SetUserInitialization(m_detectorConstruction);
     runManager().InitializeGeometry();
   }

@@ -174,7 +174,6 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         [](Geant4::SensitiveSurfaceMapper& self, State& state,
            GeometryContext& gctx, Geant4DetectorConstructionFactory& factory,
            Transform3& transform) {
-          // TODO region creators
           return self.remapSensitiveNames(
               state, gctx, factory.factorize({})->Construct(), transform);
         },

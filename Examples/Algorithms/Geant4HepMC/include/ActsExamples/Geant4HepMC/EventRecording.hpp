@@ -24,6 +24,9 @@ class G4RunManager;
 
 namespace ActsExamples {
 class Geant4DetectorConstructionFactory;
+namespace Geant4 {
+class RegionCreator;
+}  // namespace Geant4
 
 class EventRecording final : public ActsExamples::IAlgorithm {
  public:
@@ -33,6 +36,9 @@ class EventRecording final : public ActsExamples::IAlgorithm {
     std::string inputParticles = "";
     /// The recorded events output
     std::string outputHepMcTracks = "geant-outcome-tracks";
+
+    /// Geant4 region creators.
+    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators;
 
     std::shared_ptr<Geant4DetectorConstructionFactory>
         detectorConstructionFactory;
