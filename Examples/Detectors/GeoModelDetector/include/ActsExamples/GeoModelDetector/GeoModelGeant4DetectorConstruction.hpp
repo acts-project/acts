@@ -24,7 +24,7 @@ class GeoModelGeant4DetectorConstruction final
  public:
   /// @param geoModelTree is the GeoModel tree containing the world volume
   /// @param regionCreators are the region creators
-  GeoModelDetectorConstruction(
+  GeoModelGeant4DetectorConstruction(
       const Acts::GeoModelTree& geoModelTree,
       std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators);
 

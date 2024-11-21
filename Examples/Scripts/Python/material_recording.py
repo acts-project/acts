@@ -119,7 +119,7 @@ def main():
     elif args.input.endswith(".sqlite") or args.input.endswith(".db"):
         geoModelTree = acts.geomodel.readFromDb(args.input)
         detectorConstructionFactory = (
-            acts.examples.geant4.geomodel.GeoModelDetectorConstructionFactory(
+            acts.examples.geant4.geomodel.GeoModelGeant4DetectorConstructionFactory(
                 geoModelTree
             )
         )
