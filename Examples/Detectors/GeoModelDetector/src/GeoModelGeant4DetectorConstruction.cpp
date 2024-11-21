@@ -17,20 +17,20 @@
 
 namespace ActsExamples {
 
-GeoModelDetectorConstruction::GeoModelDetectorConstruction(
+GeoModelGeant4DetectorConstruction::GeoModelGeant4DetectorConstruction(
     const Acts::GeoModelTree& geoModelTree,
-    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
     : G4VUserDetectorConstruction(),
       m_geoModelTree(geoModelTree),
       m_regionCreators(std::move(regionCreators)) {
   if (geoModelTree.worldVolume == nullptr) {
     throw std::invalid_argument(
-        "GeoModelDetectorConstruction: "
+        "GeoModelGeant4DetectorConstruction: "
         "GeoModel world volume is nullptr");
   }
 }
 
-G4VPhysicalVolume* GeoModelDetectorConstruction::Construct() {
+G4VPhysicalVolume* GeoModelGeant4DetectorConstruction::Construct() {
   if (m_g4World == nullptr) {
     ExtParameterisedVolumeBuilder builder(m_geoModelTree.worldVolumeName);
     G4LogicalVolume* g4WorldLog = builder.Build(m_geoModelTree.worldVolume);
@@ -46,14 +46,17 @@ G4VPhysicalVolume* GeoModelDetectorConstruction::Construct() {
   return m_g4World;
 }
 
-GeoModelDetectorConstructionFactory::GeoModelDetectorConstructionFactory(
-    const Acts::GeoModelTree& geoModelTree)
+GeoModelGeant4DetectorConstructionFactory::
+    GeoModelGeant4DetectorConstructionFactory(
+        const Acts::GeoModelTree& geoModelTree)
     : m_geoModelTree(geoModelTree) {}
 
 std::unique_ptr<G4VUserDetectorConstruction>
-GeoModelDetectorConstructionFactory::factorize() const {
-  return std::make_unique<GeoModelDetectorConstruction>(m_geoModelTree,
-                                                        m_regionCreators);
+GeoModelGeant4DetectorConstructionFactory::factorize(
+    const std::vector<std::shared_ptr<Geant4::RegionCreator>>& regionCreators)
+    const {
+  return std::make_unique<GeoModelGeant4DetectorConstruction>(m_geoModelTree,
+                                                              regionCreators);
 }
 
 }  // namespace ActsExamples
