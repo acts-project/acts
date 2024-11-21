@@ -36,7 +36,7 @@ jobs:
                 });
                 for (const milestone of milestones.data) {
                   if (milestone.title === "next") {
-                    core.notice(`No milestone set, setting default milestone: ${default_milestone.title}`);
+                    core.notice(`No milestone set, setting default milestone: ${milestone.title}`);
 
                     await github.rest.issues.update({
                       owner: context.repo.owner,
