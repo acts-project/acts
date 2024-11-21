@@ -220,13 +220,13 @@ ProcessCode RootTrackSummaryWriter::finalize() {
 ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
                                            const ConstTrackContainer& tracks) {
   // Read additional input collections
-  std::optional<SimParticleContainer> particles;
-  std::optional<TrackParticleMatching> trackParticleMatching;
+  const SimParticleContainer* particles = nullptr;
+  const TrackParticleMatching* trackParticleMatching = nullptr;
 
   if (m_inputParticles.isInitialized() &&
       m_inputTrackParticleMatching.isInitialized()) {
-    particles = m_inputParticles(ctx);
-    trackParticleMatching = m_inputTrackParticleMatching(ctx);
+    particles = &m_inputParticles(ctx);
+    trackParticleMatching = &m_inputTrackParticleMatching(ctx);
   }
 
   // For each particle within a track, how many hits did it contribute
@@ -320,7 +320,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
     m_hasFittedParams.push_back(hasFittedParams);
 
-    if (particles.has_value() && trackParticleMatching.has_value()) {
+    if (particles != nullptr && trackParticleMatching != nullptr) {
       // Initialize the truth particle info
       ActsFatras::Barcode majorityParticleId(
           std::numeric_limits<std::size_t>::max());
