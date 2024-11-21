@@ -15,4 +15,6 @@ jobs:
 
       - run: |
           echo "${{ toJSON(github.context) }}"
+          echo "${{ toJSON(context) }}"
+          echo "${{ toJSON(github.event) }}"
           echo "${{ toJSON(github.pull_request) }}"
