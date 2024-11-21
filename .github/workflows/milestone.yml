@@ -22,25 +22,10 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            console.log(context);
+            let milestone = context.payload.pull_request_target.milestone;
 
-
-            let milestone = null;
-            let pr_number = null;
-            if(context.eventName === "pull_request_target") {
-                pr_number = context.payload.pull_request.number;
-                milestone = context.payload.pull_request.milestone;
-                console.log(`PR TARGET Milestone ${milestone}`);
-            } else if(context.eventName === "issues" && "pull_request" in context.payload.issue) {
-                pr_number = context.payload.issue.number;
-                milestone = context.payload.issue.milestone;
-            }
-
-            let conclusion = null;
-            let output = {};
             if(milestone !== null) {
-                console.log(`Milestone is ${milestone.title}`);
+                core.notice(`Milestone is ${milestone.title}`);
             } else {
-                console.log("No milestone");
-                core.setFailed("Please add a version milestone");
+                core.setFailed("No milestone: Please add a version milestone");
             }
