@@ -25,7 +25,7 @@ jobs:
             console.log(context);
             let milestone = context.payload.pull_request.milestone;
 
-            if(context.action == 'opened' || context.action == 'reopened') {
+            if(context.payload.action === 'opened' || context.payload.action === 'reopened') {
               if(milestone !== null) {
                   core.notice(`Milestone is ${milestone.title}`);
               } else {
