@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
@@ -65,7 +65,7 @@ Result<BoundVector> estimateTrackParamsFromSeedAtSurface(
     const Surface& surface, const Vector3& sp0, const Vector3& sp1,
     const Vector3& sp2,
     const std::shared_ptr<const MagneticFieldProvider>& bField,
-    const std::shared_ptr<const BasePropagator>& propagator,
+    const std::shared_ptr<const BasePropagator>& propagator = nullptr,
     const Acts::Logger& logger = getDummyLogger());
 
 /// Estimate the full track parameters from three space points
@@ -141,11 +141,11 @@ FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
 ///
 /// @return bound parameters
 template <std::ranges::range spacepoint_range_t>
-Result<BoundVector> estimateTrackParamsFromSeed(
+Result<BoundVector> estimateTrackParamsFromSeedAtSurface(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const Surface& surface, spacepoint_range_t spRange,
     const std::shared_ptr<const MagneticFieldProvider>& bField,
-    const std::shared_ptr<const BasePropagator>& propagator,
+    const std::shared_ptr<const BasePropagator>& propagator = nullptr,
     const Acts::Logger& logger = getDummyLogger()) {
   // Check the number of provided space points
   if (spRange.size() != 3) {

@@ -8,7 +8,6 @@
 
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Seed.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -101,24 +100,10 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
       continue;
     }
 
-    // Get the magnetic field at the bottom space point
-    auto fieldRes = m_cfg.magneticField->getField(
-        {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
-    if (!fieldRes.ok()) {
-      ACTS_ERROR("Field lookup error: " << fieldRes.error());
-      return ProcessCode::ABORT;
-    }
-    Acts::Vector3 field = *fieldRes;
-
-    if (field.norm() < m_cfg.bFieldMin) {
-      ACTS_WARNING("Magnetic field at seed " << iseed << " is too small "
-                                             << field.norm());
-      continue;
-    }
-
     // Estimate the track parameters from seed
-    const auto paramsResult = Acts::estimateTrackParamsFromSeed(
-        ctx.geoContext, seed.sp(), *surface, field);
+    const auto paramsResult = Acts::estimateTrackParamsFromSeedAtSurface(
+        ctx.geoContext, ctx.magFieldContext, *surface, seed.sp(),
+        m_cfg.magneticField);
     if (!paramsResult.ok()) {
       ACTS_WARNING("Skip track because param estimation failed "
                    << paramsResult.error());

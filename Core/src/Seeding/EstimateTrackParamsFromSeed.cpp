@@ -46,7 +46,8 @@ class EstimateTrackParamsFromSeedErrorCategory : public std::error_category {
 
 }  // namespace
 
-std::error_code Acts::make_error_code(Acts::PropagatorError e) {
+std::error_code Acts::make_error_code(
+    Acts::EstimateTrackParamsFromSeedError e) {
   static EstimateTrackParamsFromSeedErrorCategory c;
   return {static_cast<int>(e), c};
 }
@@ -195,8 +196,9 @@ Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSeedAtSurface(
   if (!lpResult.ok()) {
     // no cov transport matrix is needed here
     // particle hypothesis does not matter here
-    CurvilinearTrackParameters estimatedParams(
-        origin, direction, qOverPt, std::nullopt, ParticleHypothesis::pion());
+    CurvilinearTrackParameters estimatedParams(freeParams.segment<4>(eFreePos0),
+                                               direction, qOverPt, std::nullopt,
+                                               ParticleHypothesis::pion());
 
     auto surfaceIntersection =
         surface.intersect(gctx, origin, direction).closest();
@@ -221,7 +223,9 @@ Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSeedAtSurface(
             ? propagator->propagateToSurface(estimatedParams, surface,
                                              propagatorOptions)
             : Propagator(EigenStepper<>(bField), VoidNavigator(),
-                         logger().cloneWithSuffix("Propagator"));
+                         logger().cloneWithSuffix("Propagator"))
+                  .propagateToSurface(estimatedParams, surface,
+                                      propagatorOptions);
     if (!result.ok()) {
       ACTS_INFO("The propagation failed.");
       return Result<BoundVector>::failure(

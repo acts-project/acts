@@ -174,8 +174,8 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           BOOST_CHECK(!estFreeParams.hasNaN());
 
           // Test the bound track parameters estimator
-          auto estFullParamsResult = estimateTrackParamsFromSeed(
-              geoCtx, spacePointPtrs, *bottomSurface, bField);
+          auto estFullParamsResult = estimateTrackParamsFromSeedAtSurface(
+              geoCtx, magCtx, *bottomSurface, spacePointPtrs, field);
           BOOST_CHECK(estFullParamsResult.ok());
           const auto& estFullParams = estFullParamsResult.value();
           BOOST_TEST_INFO(
