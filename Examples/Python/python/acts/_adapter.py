@@ -2,9 +2,6 @@ import inspect
 import functools
 from typing import Optional, Callable, Dict, Any
 from pathlib import Path
-from collections import namedtuple
-
-import acts
 
 
 def _make_config_adapter(fn):
@@ -99,47 +96,3 @@ def _patch_config(m):
         if hasattr(cls, "Config"):
             cls.__init__ = _make_config_adapter(cls.__init__)
             _patchKwargsConstructor(cls.Config)
-
-
-def _detector_create(cls, config_class=None):
-    def create(*args, mdecorator=None, **kwargs):
-        if mdecorator is not None:
-            if not isinstance(mdecorator, inspect.unwrap(acts.IMaterialDecorator)):
-                raise TypeError("Material decorator is not valid")
-        if config_class is None:
-            cfg = cls.Config()
-        else:
-            cfg = config_class()
-        for k, v in kwargs.items():
-            setattr(cfg, k, v)
-        if hasattr(cfg, "materialDecorator"):
-            setattr(cfg, "materialDecorator", mdecorator)
-        detector = cls(cfg)
-        gen1holder = detector.buildGen1Geometry()
-        trackingGeometry = gen1holder.trackingGeometry
-        decorators = gen1holder.contextDecorators
-        Detector = namedtuple(
-            "Detector", ["detector", "trackingGeometry", "decorators"]
-        )
-
-        class DetectorContextManager(Detector):
-            def __new__(cls, detector, trackingGeometry, decorators):
-                return super(DetectorContextManager, cls).__new__(
-                    cls, detector, trackingGeometry, decorators
-                )
-
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *args):
-                pass
-
-        return DetectorContextManager(detector, trackingGeometry, decorators)
-
-    return create
-
-
-def _patch_detectors(m):
-    for name, cls in inspect.getmembers(m, inspect.isclass):
-        if name.endswith("Detector"):
-            cls.create = _detector_create(cls)

@@ -7,7 +7,7 @@ import re
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
 import acts
-from acts._adapter import _patch_config, _patch_detectors, _patchKwargsConstructor
+from acts._adapter import _patch_config, _patchKwargsConstructor
 
 _propagators = []
 _concrete_propagators = []
@@ -33,8 +33,6 @@ def ConcretePropagator(propagator):
 
 
 _patch_config(ActsPythonBindings._examples)
-
-_patch_detectors(ActsPythonBindings._examples)
 
 # Manually patch ExaTrkX constructors
 # Need to do it this way, since they are not always present
@@ -78,25 +76,27 @@ def _makeLayerTriplet(*args, **kwargs):
         return obj
 
     if _type == bool:
-        return fill(TGeoDetector.Config.LayerTripletBool())
+        return fill(TGeoDetectorFactory.Config.LayerTripletBool())
     elif _type == list:
         if all(
             all(isinstance(v, str) for v in vv)
             for vv in (negative, central, positive)
             if vv is not None
         ):
-            return fill(TGeoDetector.Config.LayerTripletVectorString())
+            return fill(TGeoDetectorFactory.Config.LayerTripletVectorString())
         elif all(
             all(
                 (isinstance(v, tuple) or isinstance(v, list))
                 and isinstance(v[0], int)
-                and isinstance(v[1], inspect.unwrap(TGeoDetector.Config.BinningType))
+                and isinstance(
+                    v[1], inspect.unwrap(TGeoDetectorFactory.Config.BinningType)
+                )
                 for v in vv
             )
             for vv in (negative, central, positive)
             if vv is not None
         ):
-            return fill(TGeoDetector.Config.LayerTripletVectorBinning())
+            return fill(TGeoDetectorFactory.Config.LayerTripletVectorBinning())
         else:
             raise TypeError("Invalid types for list input")
     elif _type == tuple:
@@ -108,20 +108,20 @@ def _makeLayerTriplet(*args, **kwargs):
             negative = Interval(*negative) if negative is not None else None
             central = Interval(*central) if central is not None else None
             positive = Interval(*positive) if positive is not None else None
-            return fill(TGeoDetector.Config.LayerTripletInterval())
+            return fill(TGeoDetectorFactory.Config.LayerTripletInterval())
         else:
             raise TypeError("Invalid types for tuple input")
     elif _type == Interval:
-        return fill(TGeoDetector.Config.LayerTripletInterval())
+        return fill(TGeoDetectorFactory.Config.LayerTripletInterval())
     elif _type == str:
-        return fill(TGeoDetector.Config.LayerTripletString())
+        return fill(TGeoDetectorFactory.Config.LayerTripletString())
     elif _type == float:
-        return fill(TGeoDetector.Config.LayerTripletDouble())
+        return fill(TGeoDetectorFactory.Config.LayerTripletDouble())
     else:
         raise TypeError("Unknown type given")
 
 
-TGeoDetector.Config.LayerTriplet = _makeLayerTriplet
+TGeoDetectorFactory.Config.LayerTriplet = _makeLayerTriplet
 
 
 def _process_volume_intervals(kwargs):
@@ -129,8 +129,10 @@ def _process_volume_intervals(kwargs):
         return kwargs  # prevent infinite recursion
     _kwargs = kwargs.copy()
 
-    v = TGeoDetector.Config.Volume()
-    for name, value in inspect.getmembers(inspect.unwrap(TGeoDetector.Config.Volume)):
+    v = TGeoDetectorFactory.Config.Volume()
+    for name, value in inspect.getmembers(
+        inspect.unwrap(TGeoDetectorFactory.Config.Volume)
+    ):
         if not isinstance(getattr(v, name), inspect.unwrap(Interval)):
             continue
         if not name in _kwargs:
@@ -142,7 +144,9 @@ def _process_volume_intervals(kwargs):
     return _kwargs
 
 
-_patchKwargsConstructor(TGeoDetector.Config.Volume, proc=_process_volume_intervals)
+_patchKwargsConstructor(
+    TGeoDetectorFactory.Config.Volume, proc=_process_volume_intervals
+)
 
 
 def NamedTypeArgs(**namedTypeArgs):

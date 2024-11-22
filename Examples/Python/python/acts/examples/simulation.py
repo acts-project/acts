@@ -574,7 +574,6 @@ def addGeant4(
     trackingGeometry: Union[acts.TrackingGeometry, acts.Detector],
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
-    g4DetectorConstructionFactory: Optional[Any] = None,
     volumeMappings: List[str] = [],
     materialMappings: List[str] = ["Silicon"],
     inputParticles: str = "particles_input",
@@ -639,13 +638,6 @@ def addGeant4(
 
     s.addWhiteboardAlias("particles_selected", particlesPreSelected)
 
-    if g4DetectorConstructionFactory is None:
-        if detector is None:
-            raise AttributeError("detector not given")
-        g4DetectorConstructionFactory = (
-            detector.buildGeant4DetectorConstructionFactory()
-        )
-
     global __geant4Handle
 
     smmConfig = SensitiveSurfaceMapper.Config()
@@ -659,7 +651,7 @@ def addGeant4(
     alg = Geant4Simulation(
         level=customLogLevel(),
         geant4Handle=__geant4Handle,
-        detectorConstructionFactory=g4DetectorConstructionFactory,
+        detector=detector,
         randomNumbers=rnd,
         inputParticles=particlesPreSelected,
         outputParticles=outputParticles,

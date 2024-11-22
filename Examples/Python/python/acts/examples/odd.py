@@ -93,7 +93,7 @@ def getOpenDataDetector(
             level=customLogLevel(minLevel=acts.logging.WARNING),
         )
 
-    dd4hepConfig = acts.examples.dd4hep.DD4hepDetector.Config(
+    dd4hepFactoryConfig = acts.examples.dd4hep.DD4hepDetectorFactory.Config(
         xmlFileNames=[str(odd_xml)],
         name="OpenDataDetector",
         logLevel=customLogLevel(),
@@ -101,11 +101,12 @@ def getOpenDataDetector(
         geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
         materialDecorator=mdecorator,
     )
-    detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
+    detectorFactory = acts.examples.dd4hep.DD4hepDetectorFactory(dd4hepFactoryConfig)
 
-    gen1holder = detector.buildGen1Geometry()
-    trackingGeometry = gen1holder.trackingGeometry
-    decorators = gen1holder.contextDecorators
+    detector = detectorFactory.buildDetector()
+
+    trackingGeometry = detector.gen1Geometry()
+    decorators = detector.contextDecorators()
 
     OpenDataDetector = namedtuple(
         "OpenDataDetector", ["detector", "trackingGeometry", "decorators"]
