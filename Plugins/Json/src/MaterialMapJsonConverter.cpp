@@ -45,6 +45,7 @@
 #include <cmath>
 #include <cstddef>
 #include <map>
+#include <numbers>
 #include <stdexcept>
 
 namespace Acts {
@@ -114,8 +115,8 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
             radialBounds->get(Acts::RadialBounds::eHalfPhiSector),
         radialBounds->get(Acts::RadialBounds::eAveragePhi) +
             radialBounds->get(Acts::RadialBounds::eHalfPhiSector),
-        (radialBounds->get(Acts::RadialBounds::eHalfPhiSector) - M_PI) <
-                Acts::s_epsilon
+        (radialBounds->get(Acts::RadialBounds::eHalfPhiSector) -
+         std::numbers::pi) < Acts::s_epsilon
             ? Acts::closed
             : Acts::open,
         Acts::BinningValue::binPhi);
@@ -129,8 +130,8 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
             cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector),
         cylinderBounds->get(Acts::CylinderBounds::eAveragePhi) +
             cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector),
-        (cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector) - M_PI) <
-                Acts::s_epsilon
+        (cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector) -
+         std::numbers::pi) < Acts::s_epsilon
             ? Acts::closed
             : Acts::open,
         Acts::BinningValue::binPhi);
@@ -195,8 +196,8 @@ Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
     bUtility += Acts::BinUtility(
         1, -cyBounds->get(Acts::CylinderVolumeBounds::eHalfPhiSector),
         cyBounds->get(Acts::CylinderVolumeBounds::eHalfPhiSector),
-        (cyBounds->get(Acts::CylinderVolumeBounds::eHalfPhiSector) - M_PI) <
-                Acts::s_epsilon
+        (cyBounds->get(Acts::CylinderVolumeBounds::eHalfPhiSector) -
+         std::numbers::pi) < Acts::s_epsilon
             ? Acts::closed
             : Acts::open,
         Acts::BinningValue::binPhi);
@@ -210,9 +211,9 @@ Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
         1, cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eMinR),
         cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eMaxR), Acts::open,
         Acts::BinningValue::binR);
-    bUtility +=
-        Acts::BinUtility(1, -static_cast<float>(M_PI), static_cast<float>(M_PI),
-                         Acts::closed, Acts::BinningValue::binPhi);
+    bUtility += Acts::BinUtility(1, -std::numbers::pi_v<float>,
+                                 std::numbers::pi_v<float>, Acts::closed,
+                                 Acts::BinningValue::binPhi);
     bUtility += Acts::BinUtility(
         1, -cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eHalfLengthZ),
         cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eHalfLengthZ),

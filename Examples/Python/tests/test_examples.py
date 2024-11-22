@@ -87,14 +87,14 @@ def test_pythia8(tmp_path, seq, assert_root_hash):
 
     (tmp_path / "csv").mkdir()
 
-    assert not (tmp_path / "pythia8_particles.root").exists()
+    assert not (tmp_path / "particles.root").exists()
     assert len(list((tmp_path / "csv").iterdir())) == 0
 
     events = seq.config.events
 
     runPythia8(str(tmp_path), outputRoot=True, outputCsv=True, s=seq).run()
 
-    fp = tmp_path / "pythia8_particles.root"
+    fp = tmp_path / "particles.root"
     assert fp.exists()
     assert fp.stat().st_size > 2**10 * 50
     assert_entries(fp, "particles", events)
@@ -130,8 +130,7 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
     seq = Sequencer(events=nevents)
     runFatras(trk_geo, field, str(tmp_path), s=seq).run()
 
-    assert_csv_output(csv, "particles_final")
-    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "particles_simulated")
     assert_csv_output(csv, "hits")
     for f, tn in root_files:
         rfp = tmp_path / f
@@ -186,8 +185,7 @@ def test_geant4(tmp_path, assert_root_hash):
         print(e.output.decode("utf-8"))
         raise
 
-    assert_csv_output(csv, "particles_final")
-    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "particles_simulated")
     assert_csv_output(csv, "hits")
     for f in root_files:
         rfp = tmp_path / f
@@ -244,8 +242,7 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             assert_root_hash(fn, fp)
 
     assert_csv_output(csv, "particles")
-    assert_csv_output(csv, "particles_final")
-    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "particles_simulated")
 
 
 @pytest.mark.slow
@@ -304,8 +301,7 @@ def test_hashing_seeding(tmp_path, trk_geo, field, assert_root_hash):
             assert_has_entries(fp, tn)
             assert_root_hash(fn, fp)
 
-    assert_csv_output(tmp_path, "particles_final")
-    assert_csv_output(tmp_path, "particles_initial")
+    assert_csv_output(tmp_path, "particles_simulated")
     assert_csv_output(tmp_path, "buckets")
     assert_csv_output(tmp_path, "seed")
 
@@ -363,8 +359,7 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
             assert_root_hash(fn, fp)
 
     assert_csv_output(csv, "particles")
-    assert_csv_output(csv, "particles_final")
-    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "particles_simulated")
 
 
 def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
@@ -460,7 +455,6 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         acts.logging.VERBOSE,
         geoSelectionConfigFile=srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
-        inputParticles="particles_final",  # use this to reproduce the original root_file_hashes.txt - remove to fix
         outputDirRoot=str(tmp_path),
     )
 
@@ -476,8 +470,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
             assert_root_hash(fn, fp)
 
     assert_csv_output(csv, "particles")
-    assert_csv_output(csv, "particles_final")
-    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "particles_simulated")
 
 
 @pytest.mark.slow

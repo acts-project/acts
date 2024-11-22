@@ -96,6 +96,13 @@ const TrackingVolume* TrackingVolume::lowestTrackingVolume(
     }
   }
 
+  // @TODO: Abstract this into an accelerateable structure
+  for (const auto& volume : volumes()) {
+    if (volume.inside(position, tol)) {
+      return volume.lowestTrackingVolume(gctx, position, tol);
+    }
+  }
+
   // there is no lower sub structure
   return this;
 }

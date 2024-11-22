@@ -30,6 +30,8 @@
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <numbers>
+
 BOOST_AUTO_TEST_SUITE(PathSeeder)
 
 using namespace Acts;
@@ -51,7 +53,7 @@ const ActsScalar deltaYZ = 1.;
 const Vector4 trueVertex(-5., 0., 0., 0);
 const std::vector<ActsScalar> truePhis = {-0.15, -0.1, -0.05, 0,
                                           0.05,  0.1,  0.15};
-const ActsScalar trueTheta = M_PI_2;
+const ActsScalar trueTheta = std::numbers::pi / 2.;
 const ActsScalar trueQOverP = 1. / 1._GeV;
 
 // Intersection finding to get the
