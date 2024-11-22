@@ -16,6 +16,7 @@
 #include <array>
 #include <fstream>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -198,7 +199,8 @@ BOOST_AUTO_TEST_CASE(Grid2DSingleEntryBound) {
 BOOST_AUTO_TEST_CASE(Grid2DSingleEntryBoundClosed) {
   using EqBoundEqClosed = Acts::GridAxisGenerators::EqBoundEqClosed;
 
-  EqBoundEqClosed eqBoundEqClosed{{-6., 6.}, 3, {-M_PI, M_PI}, 3};
+  EqBoundEqClosed eqBoundEqClosed{
+      {-6., 6.}, 3, {-std::numbers::pi, std::numbers::pi}, 3};
   // Create the grid with the provided axis generator
   using GridTypeEQBEQC =
       typename EqBoundEqClosed::template grid_type<std::size_t>;

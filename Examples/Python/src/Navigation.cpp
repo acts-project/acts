@@ -37,6 +37,10 @@ struct AnyNavigationPolicyFactory : public Acts::NavigationPolicyFactory {
   virtual std::unique_ptr<AnyNavigationPolicyFactory> add(
       TypeTag<SurfaceArrayNavigationPolicy> /*type*/,
       SurfaceArrayNavigationPolicy::Config config) = 0;
+
+  virtual std::unique_ptr<AnyNavigationPolicyFactory> add(
+      TypeTag<TryAllNavigationPolicy> /*type*/,
+      TryAllNavigationPolicy::Config config) = 0;
 };
 
 template <typename Factory = detail::NavigationPolicyFactoryImpl<>,
@@ -59,6 +63,12 @@ struct NavigationPolicyFactoryT : public AnyNavigationPolicyFactory {
       TypeTag<SurfaceArrayNavigationPolicy> /*type*/,
       SurfaceArrayNavigationPolicy::Config config) override {
     return add<SurfaceArrayNavigationPolicy>(std::move(config));
+  }
+
+  std::unique_ptr<AnyNavigationPolicyFactory> add(
+      TypeTag<TryAllNavigationPolicy> /*type*/,
+      TryAllNavigationPolicy::Config config) override {
+    return add<TryAllNavigationPolicy>(config);
   }
 
   std::unique_ptr<INavigationPolicy> build(
@@ -108,6 +118,12 @@ class NavigationPolicyFactory : public Acts::NavigationPolicyFactory {
     return *this;
   }
 
+  NavigationPolicyFactory& addTryAll(
+      const py::object& /*cls*/, const TryAllNavigationPolicy::Config& config) {
+    m_impl = m_impl->add(Type<TryAllNavigationPolicy>, config);
+    return *this;
+  }
+
   std::unique_ptr<INavigationPolicy> build(
       const GeometryContext& gctx, const TrackingVolume& volume,
       const Logger& logger) const override {
@@ -153,7 +169,16 @@ void addNavigation(Context& ctx) {
              std::shared_ptr<Acts::NavigationPolicyFactory>>(
       m, "_NavigationPolicyFactory");
 
-  py::class_<TryAllNavigationPolicy>(m, "TryAllNavigationPolicy");
+  {
+    auto tryAll =
+        py::class_<TryAllNavigationPolicy>(m, "TryAllNavigationPolicy");
+    using Config = TryAllNavigationPolicy::Config;
+    auto c = py::class_<Config>(tryAll, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(portals);
+    ACTS_PYTHON_MEMBER(sensitives);
+    ACTS_PYTHON_STRUCT_END();
+  }
 
   py::class_<NavigationPolicyFactory, Acts::NavigationPolicyFactory,
              std::shared_ptr<NavigationPolicyFactory>>(
@@ -162,6 +187,7 @@ void addNavigation(Context& ctx) {
       .def_static("make", []() { return NavigationPolicyFactory{}; })
       .def("add", &NavigationPolicyFactory::addNoArguments)
       .def("add", &NavigationPolicyFactory::addSurfaceArray)
+      .def("add", &NavigationPolicyFactory::addTryAll)
       .def("_buildTest", [](NavigationPolicyFactory& self) {
         auto vol1 = std::make_shared<TrackingVolume>(
             Transform3::Identity(),

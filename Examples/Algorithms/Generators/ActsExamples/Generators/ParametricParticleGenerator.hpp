@@ -17,6 +17,7 @@
 #include <array>
 #include <cstddef>
 #include <limits>
+#include <numbers>
 #include <optional>
 #include <random>
 
@@ -32,8 +33,8 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
  public:
   struct Config {
     /// Low, high (exclusive) for the transverse direction angle.
-    double phiMin = -M_PI;
-    double phiMax = M_PI;
+    double phiMin = -std::numbers::pi;
+    double phiMax = std::numbers::pi;
     /// Low, high (inclusive) for  the longitudinal direction angle.
     ///
     /// This intentionally uses theta instead of eta so it can represent the
@@ -44,7 +45,7 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
     /// this can be set by the etaUniform flag;
     ///
     double thetaMin = std::numeric_limits<double>::min();
-    double thetaMax = M_PI - std::numeric_limits<double>::epsilon();
+    double thetaMax = std::numbers::pi - std::numeric_limits<double>::epsilon();
     bool etaUniform = false;
     /// Low, high (exclusive) for absolute/transverse momentum.
     double pMin = 1 * Acts::UnitConstants::GeV;

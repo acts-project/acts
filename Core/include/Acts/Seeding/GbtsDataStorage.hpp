@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <map>
+#include <numbers>
 #include <vector>
 
 namespace Acts {
@@ -117,12 +118,12 @@ class GbtsEtaBin {
       // float phi = pN->m_sp.phi();
       // float phi = (std::atan(pN->m_sp.x() / pN->m_sp.y()));
       float phi = pN->m_spGbts.phi();
-      if (phi <= M_PI - dphi) {
+      if (phi <= std::numbers::pi_v<float> - dphi) {
         continue;
       }
 
-      m_vPhiNodes.push_back(
-          std::pair<float, unsigned int>(phi - 2 * M_PI, nIdx));
+      m_vPhiNodes.push_back(std::pair<float, unsigned int>(
+          phi - static_cast<float>(2. * std::numbers::pi), nIdx));
     }
 
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
@@ -134,11 +135,11 @@ class GbtsEtaBin {
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
       GbtsNode<space_point_t> *pN = m_vn.at(nIdx);
       float phi = pN->m_spGbts.phi();
-      if (phi >= -M_PI + dphi) {
+      if (phi >= -std::numbers::pi_v<float> + dphi) {
         break;
       }
-      m_vPhiNodes.push_back(
-          std::pair<float, unsigned int>(phi + 2 * M_PI, nIdx));
+      m_vPhiNodes.push_back(std::pair<float, unsigned int>(
+          phi + static_cast<float>(2. * std::numbers::pi), nIdx));
     }
   }
 
