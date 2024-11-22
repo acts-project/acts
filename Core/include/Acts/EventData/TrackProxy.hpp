@@ -710,7 +710,7 @@ class TrackProxy {
   constexpr T& component(std::string_view key)
     requires(!ReadOnly)
   {
-    return m_container->template component<T>(hashString(key), m_index);
+    return m_container->template component<T>(hashStringDynamic(key), m_index);
   }
 
   /// Retrieve a const reference to a component
@@ -738,7 +738,7 @@ class TrackProxy {
   /// @return Const reference to the component given by @p key
   template <typename T>
   constexpr const T& component(std::string_view key) const {
-    return m_container->template component<T>(hashString(key), m_index);
+    return m_container->template component<T>(hashStringDynamic(key), m_index);
   }
 
   /// @}

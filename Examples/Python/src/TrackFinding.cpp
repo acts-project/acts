@@ -28,6 +28,7 @@
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/TrackParamsLookupEstimation.hpp"
 
 #include <array>
 #include <cstddef>
@@ -292,6 +293,11 @@ void addTrackFinding(Context& ctx) {
       outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
       magneticField, bFieldMin, initialSigmas, initialSigmaPtRel,
       initialVarInflation, noTimeVarInflation, particleHypothesis);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParamsLookupEstimation, mex,
+                                "TrackParamsLookupEstimation", refLayers, bins,
+                                inputHits, inputParticles,
+                                trackLookupGridWriters);
 
   {
     using Alg = ActsExamples::TrackFindingAlgorithm;
