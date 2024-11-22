@@ -8,31 +8,74 @@
 
 #include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 
-#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Detector/Detector.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "ActsExamples/DetectorCommons/Geant4DetectorConstructionFactory.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
 
 namespace ActsExamples {
 
-DetectorBase::DetectorBase(std::unique_ptr<const Acts::Logger> logger)
+DetectorFactoryBase::DetectorFactoryBase(
+    std::unique_ptr<const Acts::Logger> logger)
     : m_logger(std::move(logger)) {}
 
-DetectorBase::DetectorBase(DetectorBase&&) = default;
+DetectorFactoryBase::DetectorFactoryBase(DetectorFactoryBase&&) = default;
 
-DetectorBase::~DetectorBase() = default;
+DetectorFactoryBase::~DetectorFactoryBase() = default;
 
-DetectorBase& DetectorBase::operator=(DetectorBase&&) = default;
+DetectorFactoryBase& DetectorFactoryBase::operator=(DetectorFactoryBase&&) =
+    default;
 
-Gen1GeometryHolder DetectorBase::buildGen1Geometry() {
-  throw std::runtime_error("Gen1 geometry not implemented");
+const Acts::Logger& DetectorFactoryBase::logger() const {
+  return *m_logger;
 }
 
-Gen2GeometryHolder DetectorBase::buildGen2Geometry() {
-  throw std::runtime_error("Gen2 geometry not implemented");
+PreConstructedDetector::PreConstructedDetector(
+    Acts::GeometryContext geometryContext,
+    std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore,
+    std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
+    std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
+    std::vector<std::shared_ptr<IContextDecorator>> contextDecorators,
+    std::shared_ptr<Geant4DetectorConstructionFactory>
+        geant4DetectorConstructionFactory)
+    : m_geometryContext(std::move(geometryContext)),
+      m_detectorStore(std::move(detectorStore)),
+      m_gen1Geometry(std::move(gen1Geometry)),
+      m_gen2Geometry(std::move(gen2Geometry)),
+      m_contextDecorators(std::move(contextDecorators)),
+      m_geant4DetectorConstructionFactory(
+          std::move(geant4DetectorConstructionFactory)) {}
+
+PreConstructedDetector::~PreConstructedDetector() = default;
+
+const Acts::GeometryContext& PreConstructedDetector::geometryContext() const {
+  return m_geometryContext;
 }
 
-std::shared_ptr<Geant4DetectorConstructionFactory>
-DetectorBase::buildGeant4DetectorConstructionFactory() {
-  throw std::runtime_error(
-      "Geant4 detector construction factory not implemented");
+const std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
+PreConstructedDetector::detectorStore() const {
+  return m_detectorStore;
+}
+
+const std::shared_ptr<const Acts::TrackingGeometry>&
+PreConstructedDetector::gen1Geometry() const {
+  return m_gen1Geometry;
+}
+
+const std::shared_ptr<Acts::Experimental::Detector>&
+PreConstructedDetector::gen2Geometry() const {
+  return m_gen2Geometry;
+}
+
+const std::vector<std::shared_ptr<IContextDecorator>>&
+PreConstructedDetector::contextDecorators() const {
+  return m_contextDecorators;
+}
+
+const std::shared_ptr<Geant4DetectorConstructionFactory>&
+PreConstructedDetector::geant4DetectorConstructionFactory() const {
+  return m_geant4DetectorConstructionFactory;
 }
 
 }  // namespace ActsExamples

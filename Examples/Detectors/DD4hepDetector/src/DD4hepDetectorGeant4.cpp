@@ -13,11 +13,6 @@ namespace ActsExamples {
 
 std::shared_ptr<Geant4DetectorConstructionFactory>
 DD4hepDetector::buildGeant4DetectorConstructionFactory() {
-  if (m_detector == nullptr) {
-    buildDD4hepGeometry();
-  }
-
-  // TODO
   return std::make_shared<DDG4DetectorConstructionFactory>(shared_from_this());
 }
 
