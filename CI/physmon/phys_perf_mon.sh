@@ -469,7 +469,7 @@ if [[ "$mode" == "all" || "$mode" == "gx2f_vs_kf" ]]; then
         "Comparison - Truth tracking (GX2F vs KF)" \
         trackfitting_gx2f_vs_kf/performance_trackfitting.html \
         trackfitting_gx2f_vs_kf/performance_trackfitting_plots \
-        --config CI/physmon/config/trackfitting_gx2f_vs_kf.yml \
+        --config CI/physmon/config/info_only.yml \
         --label-reference=KF \
         --label-monitored=GX2F
 fi
