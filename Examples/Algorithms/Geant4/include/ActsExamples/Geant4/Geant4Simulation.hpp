@@ -10,6 +10,7 @@
 
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -63,10 +64,8 @@ class Geant4SimulationBase : public IAlgorithm {
     /// Geant4 region creators.
     std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators;
 
-    /// Detector construction object.
-    /// G4RunManager will take care of deletion
-    std::shared_ptr<Geant4DetectorConstructionFactory>
-        detectorConstructionFactory;
+    /// Detector instance to access Geant4 geometry construction.
+    std::shared_ptr<DetectorBase> detector;
 
     /// Optional Geant4 instance overwrite.
     std::shared_ptr<Geant4Handle> geant4Handle;

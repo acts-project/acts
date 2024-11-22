@@ -36,14 +36,4 @@ G4VPhysicalVolume* GdmlDetectorConstruction::Construct() {
   return m_world;
 }
 
-GdmlDetectorConstructionFactory::GdmlDetectorConstructionFactory(
-    std::string path)
-    : m_path(std::move(path)) {}
-
-std::unique_ptr<G4VUserDetectorConstruction>
-GdmlDetectorConstructionFactory::factorize(const Options& options) const {
-  return std::make_unique<GdmlDetectorConstruction>(m_path,
-                                                    options.regionCreators);
-}
-
 }  // namespace ActsExamples

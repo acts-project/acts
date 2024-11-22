@@ -162,15 +162,4 @@ G4VPhysicalVolume* TelescopeG4DetectorConstruction::Construct() {
   return m_world;
 }
 
-TelescopeG4DetectorConstructionFactory::TelescopeG4DetectorConstructionFactory(
-    const TelescopeDetector::Config& cfg)
-    : m_cfg(cfg) {}
-
-std::unique_ptr<G4VUserDetectorConstruction>
-TelescopeG4DetectorConstructionFactory::factorize(
-    const Options& options) const {
-  return std::make_unique<TelescopeG4DetectorConstruction>(
-      m_cfg, options.regionCreators);
-}
-
 }  // namespace ActsExamples

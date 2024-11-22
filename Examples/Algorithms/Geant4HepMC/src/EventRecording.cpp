@@ -8,10 +8,8 @@
 
 #include "ActsExamples/Geant4HepMC/EventRecording.hpp"
 
-#include "ActsExamples/DetectorCommons/Geant4DetectorConstructionFactory.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 
 #include <stdexcept>
 

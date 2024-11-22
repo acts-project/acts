@@ -26,31 +26,42 @@ class Detector;
 
 namespace ActsExamples {
 class IContextDecorator;
-class Geant4DetectorConstructionFactory;
+struct Geant4ConstructionOptions;
 namespace Geant4 {
 class RegionCreator;
 }  // namespace Geant4
 }  // namespace ActsExamples
 
+class G4VUserDetectorConstruction;
+
 namespace ActsExamples {
 
 class DetectorBase {
  public:
-  virtual ~DetectorBase() = default;
+  DetectorBase();
+  DetectorBase(
+      std::vector<std::shared_ptr<const Acts::DetectorElementBase>>
+          detectorStore,
+      std::vector<std::shared_ptr<IContextDecorator>> contextDecorators);
+  virtual ~DetectorBase();
 
   virtual const Acts::GeometryContext& geometryContext() const = 0;
 
-  virtual const std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
-  detectorStore() const = 0;
-  virtual const std::shared_ptr<const Acts::TrackingGeometry>& gen1Geometry()
+  virtual std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry()
       const = 0;
-  virtual const std::shared_ptr<Acts::Experimental::Detector>& gen2Geometry()
+  virtual std::shared_ptr<Acts::Experimental::Detector> gen2Geometry()
       const = 0;
-  virtual const std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>&
-  contextDecorators() const = 0;
+  virtual std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
+  contextDecorators() const;
 
-  virtual const std::shared_ptr<Geant4DetectorConstructionFactory>&
-  geant4DetectorConstructionFactory() const = 0;
+  virtual std::unique_ptr<G4VUserDetectorConstruction>
+  buildGeant4DetectorConstruction(
+      const Geant4ConstructionOptions& options) const;
+
+ protected:
+  std::vector<std::shared_ptr<const Acts::DetectorElementBase>> m_detectorStore;
+  std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
+      m_contextDecorators;
 };
 
 class DetectorFactoryBase {
@@ -79,37 +90,19 @@ class PreConstructedDetector : public DetectorBase {
       std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
       std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
-          contextDecorators,
-      std::shared_ptr<Geant4DetectorConstructionFactory>
-          geant4DetectorConstructionFactory);
+          contextDecorators);
   ~PreConstructedDetector() override;
 
   const Acts::GeometryContext& geometryContext() const override;
 
-  const std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
-  detectorStore() const override;
+  std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry() const override;
 
-  const std::shared_ptr<const Acts::TrackingGeometry>& gen1Geometry()
-      const override;
-
-  const std::shared_ptr<Acts::Experimental::Detector>& gen2Geometry()
-      const override;
-
-  const std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>&
-  contextDecorators() const override;
-
-  const std::shared_ptr<Geant4DetectorConstructionFactory>&
-  geant4DetectorConstructionFactory() const override;
+  std::shared_ptr<Acts::Experimental::Detector> gen2Geometry() const override;
 
  private:
   Acts::GeometryContext m_geometryContext;
-  std::vector<std::shared_ptr<const Acts::DetectorElementBase>> m_detectorStore;
   std::shared_ptr<const Acts::TrackingGeometry> m_gen1Geometry;
   std::shared_ptr<Acts::Experimental::Detector> m_gen2Geometry;
-  std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
-      m_contextDecorators;
-  std::shared_ptr<Geant4DetectorConstructionFactory>
-      m_geant4DetectorConstructionFactory;
 };
 
 }  // namespace ActsExamples

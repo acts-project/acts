@@ -18,7 +18,7 @@
 
 namespace ActsExamples {
 
-class TelescopeDetector : public DetectorBase {
+class TelescopeDetectorFactory : public DetectorFactoryBase {
  public:
   struct Config {
     std::vector<double> positions{{0, 30, 60, 120, 150, 180}};
@@ -32,15 +32,27 @@ class TelescopeDetector : public DetectorBase {
     Acts::Logging::Level logLevel{Acts::Logging::WARNING};
   };
 
-  explicit TelescopeDetector(const Config& cfg);
+  explicit TelescopeDetectorFactory(const Config& cfg);
 
-  Gen1GeometryHolder buildGen1Geometry() override;
-
-  std::shared_ptr<Geant4DetectorConstructionFactory>
-  buildGeant4DetectorConstructionFactory() override;
+  std::shared_ptr<DetectorBase> buildDetector() const override;
 
  private:
   Config m_cfg;
+};
+
+class TelescopeDetector : public PreConstructedDetector {
+ public:
+  TelescopeDetector(
+      Acts::GeometryContext geometryContext,
+      std::vector<std::shared_ptr<const Acts::DetectorElementBase>>
+          detectorStore,
+      std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
+      std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
+      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
+          contextDecorators);
+
+ private:
+  TelescopeDetectorFactory::Config m_cfg;
 };
 
 }  // namespace ActsExamples

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "ActsExamples/DetectorCommons/Geant4DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 
 #include <string>
@@ -41,19 +40,6 @@ class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
   std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
   /// Cached world volume
   G4VPhysicalVolume* m_world = nullptr;
-};
-
-class GdmlDetectorConstructionFactory final
-    : public Geant4DetectorConstructionFactory {
- public:
-  explicit GdmlDetectorConstructionFactory(std::string path);
-
-  std::unique_ptr<G4VUserDetectorConstruction> factorize(
-      const Options& options) const override;
-
- private:
-  /// Path to the Gdml file
-  std::string m_path;
 };
 
 }  // namespace ActsExamples

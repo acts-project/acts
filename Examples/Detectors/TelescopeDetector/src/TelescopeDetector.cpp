@@ -8,19 +8,17 @@
 
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 
-#include <algorithm>
 #include <stdexcept>
 
 namespace ActsExamples {
 
-TelescopeDetector::TelescopeDetector(const Config& cfg)
-    : DetectorBase(Acts::getDefaultLogger("TelescopeDetector", cfg.logLevel)),
-      m_cfg(cfg) {}
-
-Gen1GeometryHolder TelescopeDetector::buildGen1Geometry() {
+TelescopeDetectorFactory::TelescopeDetectorFactory(const Config& cfg)
+    : DetectorFactoryBase(
+          Acts::getDefaultLogger("TelescopeDetectorFactory", cfg.logLevel)),
+      m_cfg(cfg) {
   if (m_cfg.surfaceType > 1) {
     throw std::invalid_argument(
         "The surface type could either be 0 for plane surface or 1 for disc "
@@ -40,22 +38,28 @@ Gen1GeometryHolder TelescopeDetector::buildGen1Geometry() {
         "The number of provided positions must match the number of "
         "provided stereo angles.");
   }
+}
 
-  // Sort the provided distances
-  std::vector<double> positions = m_cfg.positions;
-  std::vector<double> stereos = m_cfg.stereos;
-  std::sort(positions.begin(), positions.end());
+std::shared_ptr<DetectorBase> TelescopeDetectorFactory::buildDetector() const {
+  Acts::GeometryContext geometryContext;
+  std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore;
+  std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry;
+  std::shared_ptr<Acts::Experimental::Detector> gen2Geometry;
+  std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
+      contextDecorators;
 
-  Gen1GeometryHolder result;
+  geometryContext = Acts::GeometryContext();
 
-  /// Return the telescope detector
-  result.trackingGeometry = ActsExamples::buildTelescopeDetector(
-      result.geometryContext, result.detectorStore, positions, stereos,
+  gen1Geometry = ActsExamples::buildTelescopeDetector(
+      geometryContext, detectorStore, m_cfg.positions, m_cfg.stereos,
       m_cfg.offsets, m_cfg.bounds, m_cfg.thickness,
       static_cast<TelescopeSurfaceType>(m_cfg.surfaceType),
       static_cast<Acts::BinningValue>(m_cfg.binValue));
 
-  return result;
+  return std::make_shared<TelescopeDetector>(
+      std::move(geometryContext), std::move(detectorStore),
+      std::move(gen1Geometry), std::move(gen2Geometry),
+      std::move(contextDecorators));
 }
 
 }  // namespace ActsExamples

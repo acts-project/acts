@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/Geant4DetectorConstructionFactory.hpp"
+#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
@@ -54,10 +54,10 @@ Geant4SimulationBase::Geant4SimulationBase(const Config& cfg, std::string name,
   if (cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particle collection");
   }
-  if (!cfg.detectorConstructionFactory) {
+  if (cfg.detector == nullptr) {
     throw std::invalid_argument("Missing detector construction factory");
   }
-  if (!cfg.randomNumbers) {
+  if (cfg.randomNumbers == nullptr) {
     throw std::invalid_argument("Missing random numbers");
   }
 
@@ -83,8 +83,9 @@ void Geant4SimulationBase::commonInitialization() {
     // G4RunManager will take care of deletion
     m_detectorConstruction =
         config()
-            .detectorConstructionFactory
-            ->factorize({.regionCreators = config().regionCreators})
+            .detector
+            ->buildGeant4DetectorConstruction(
+                {.regionCreators = config().regionCreators})
             .release();
     runManager().SetUserInitialization(m_detectorConstruction);
     runManager().InitializeGeometry();

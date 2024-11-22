@@ -11,10 +11,57 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "ActsExamples/DetectorCommons/Geant4DetectorConstructionFactory.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 
 namespace ActsExamples {
+
+DetectorBase::DetectorBase() = default;
+
+DetectorBase::DetectorBase(
+    std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore,
+    std::vector<std::shared_ptr<IContextDecorator>> contextDecorators)
+    : m_detectorStore(std::move(detectorStore)),
+      m_contextDecorators(std::move(contextDecorators)) {}
+
+DetectorBase::~DetectorBase() = default;
+
+std::vector<std::shared_ptr<IContextDecorator>>
+DetectorBase::contextDecorators() const {
+  return m_contextDecorators;
+}
+
+std::unique_ptr<G4VUserDetectorConstruction>
+DetectorBase::buildGeant4DetectorConstruction(
+    const Geant4ConstructionOptions& /*options*/) const {
+  throw std::runtime_error("Not implemented");
+}
+
+PreConstructedDetector::PreConstructedDetector(
+    Acts::GeometryContext geometryContext,
+    std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore,
+    std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
+    std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
+    std::vector<std::shared_ptr<IContextDecorator>> contextDecorators)
+    : DetectorBase(std::move(detectorStore), std::move(contextDecorators)),
+      m_geometryContext(std::move(geometryContext)),
+      m_gen1Geometry(std::move(gen1Geometry)),
+      m_gen2Geometry(std::move(gen2Geometry)) {}
+
+PreConstructedDetector::~PreConstructedDetector() = default;
+
+const Acts::GeometryContext& PreConstructedDetector::geometryContext() const {
+  return m_geometryContext;
+}
+
+std::shared_ptr<const Acts::TrackingGeometry>
+PreConstructedDetector::gen1Geometry() const {
+  return m_gen1Geometry;
+}
+
+std::shared_ptr<Acts::Experimental::Detector>
+PreConstructedDetector::gen2Geometry() const {
+  return m_gen2Geometry;
+}
 
 DetectorFactoryBase::DetectorFactoryBase(
     std::unique_ptr<const Acts::Logger> logger)
@@ -29,53 +76,6 @@ DetectorFactoryBase& DetectorFactoryBase::operator=(DetectorFactoryBase&&) =
 
 const Acts::Logger& DetectorFactoryBase::logger() const {
   return *m_logger;
-}
-
-PreConstructedDetector::PreConstructedDetector(
-    Acts::GeometryContext geometryContext,
-    std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore,
-    std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
-    std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
-    std::vector<std::shared_ptr<IContextDecorator>> contextDecorators,
-    std::shared_ptr<Geant4DetectorConstructionFactory>
-        geant4DetectorConstructionFactory)
-    : m_geometryContext(std::move(geometryContext)),
-      m_detectorStore(std::move(detectorStore)),
-      m_gen1Geometry(std::move(gen1Geometry)),
-      m_gen2Geometry(std::move(gen2Geometry)),
-      m_contextDecorators(std::move(contextDecorators)),
-      m_geant4DetectorConstructionFactory(
-          std::move(geant4DetectorConstructionFactory)) {}
-
-PreConstructedDetector::~PreConstructedDetector() = default;
-
-const Acts::GeometryContext& PreConstructedDetector::geometryContext() const {
-  return m_geometryContext;
-}
-
-const std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
-PreConstructedDetector::detectorStore() const {
-  return m_detectorStore;
-}
-
-const std::shared_ptr<const Acts::TrackingGeometry>&
-PreConstructedDetector::gen1Geometry() const {
-  return m_gen1Geometry;
-}
-
-const std::shared_ptr<Acts::Experimental::Detector>&
-PreConstructedDetector::gen2Geometry() const {
-  return m_gen2Geometry;
-}
-
-const std::vector<std::shared_ptr<IContextDecorator>>&
-PreConstructedDetector::contextDecorators() const {
-  return m_contextDecorators;
-}
-
-const std::shared_ptr<Geant4DetectorConstructionFactory>&
-PreConstructedDetector::geant4DetectorConstructionFactory() const {
-  return m_geant4DetectorConstructionFactory;
 }
 
 }  // namespace ActsExamples

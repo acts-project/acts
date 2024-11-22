@@ -37,18 +37,4 @@ class TelescopeG4DetectorConstruction final
   G4VPhysicalVolume* m_world{};
 };
 
-class TelescopeG4DetectorConstructionFactory final
-    : public Geant4DetectorConstructionFactory {
- public:
-  explicit TelescopeG4DetectorConstructionFactory(
-      const TelescopeDetector::Config& cfg);
-
-  std::unique_ptr<G4VUserDetectorConstruction> factorize(
-      const Options& options) const override;
-
- private:
-  /// The configuration of the telescope detector
-  TelescopeDetector::Config m_cfg;
-};
-
 }  // namespace ActsExamples

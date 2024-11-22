@@ -15,20 +15,10 @@ namespace ActsExamples::Geant4 {
 class RegionCreator;
 }  // namespace ActsExamples::Geant4
 
-class G4VUserDetectorConstruction;
-
 namespace ActsExamples {
 
-class Geant4DetectorConstructionFactory {
- public:
-  struct Options {
-    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators;
-  };
-
-  virtual ~Geant4DetectorConstructionFactory() = default;
-
-  virtual std::unique_ptr<G4VUserDetectorConstruction> factorize(
-      const Options& options) const = 0;
+struct Geant4ConstructionOptions {
+  std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators;
 };
 
 }  // namespace ActsExamples

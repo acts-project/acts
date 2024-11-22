@@ -32,14 +32,11 @@ DD4hepDetector::DD4hepDetector(
     std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
     std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
         contextDecorators,
-    std::shared_ptr<Geant4DetectorConstructionFactory>
-        geant4DetectorConstructionFactory,
-    std::unique_ptr<dd4hep::Detector> detector)
+    std::shared_ptr<dd4hep::Detector> detector)
     : PreConstructedDetector(std::move(geometryContext),
                              std::move(detectorStore), std::move(gen1Geometry),
                              std::move(gen2Geometry),
-                             std::move(contextDecorators),
-                             std::move(geant4DetectorConstructionFactory)),
+                             std::move(contextDecorators)),
       m_detector(std::move(detector)) {}
 
 dd4hep::Detector& DD4hepDetector::dd4hepDetector() {
@@ -126,8 +123,6 @@ std::shared_ptr<DetectorBase> DD4hepDetectorFactory::buildDetector() const {
   std::shared_ptr<Acts::Experimental::Detector> gen2Geometry;
   std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
       contextDecorators;
-  std::shared_ptr<Geant4DetectorConstructionFactory>
-      geant4DetectorConstructionFactory;
   std::unique_ptr<dd4hep::Detector> detector;
 
   geometryContext = Acts::GeometryContext();
@@ -143,8 +138,7 @@ std::shared_ptr<DetectorBase> DD4hepDetectorFactory::buildDetector() const {
 
   return std::make_shared<DD4hepDetector>(
       geometryContext, detectorStore, gen1Geometry, gen2Geometry,
-      contextDecorators, geant4DetectorConstructionFactory,
-      std::move(detector));
+      contextDecorators, std::move(detector));
 }
 
 }  // namespace ActsExamples

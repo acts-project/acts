@@ -32,8 +32,7 @@ namespace ActsExamples {
 
 void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det);
 
-class DD4hepDetector : public PreConstructedDetector,
-                       public std::enable_shared_from_this<DD4hepDetector> {
+class DD4hepDetector : public PreConstructedDetector {
  public:
   DD4hepDetector(Acts::GeometryContext geometryContext,
                  std::vector<std::shared_ptr<const Acts::DetectorElementBase>>
@@ -42,9 +41,7 @@ class DD4hepDetector : public PreConstructedDetector,
                  std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
                  std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
                      contextDecorators,
-                 std::shared_ptr<Geant4DetectorConstructionFactory>
-                     geant4DetectorConstructionFactory,
-                 std::unique_ptr<dd4hep::Detector> detector);
+                 std::shared_ptr<dd4hep::Detector> detector);
 
   /// Interface method to access to the DD4hep geometry
   dd4hep::Detector& dd4hepDetector();
@@ -57,9 +54,12 @@ class DD4hepDetector : public PreConstructedDetector,
   /// @return The world TGeoNode (physical volume)
   TGeoNode& tgeoGeometry();
 
+  std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
+      const Geant4ConstructionOptions& options) const override;
+
  private:
   /// Pointer to the interface to the DD4hep geometry
-  std::unique_ptr<dd4hep::Detector> m_detector;
+  std::shared_ptr<dd4hep::Detector> m_detector;
 };
 
 /// @class DD4hepDetectorFactory
@@ -122,9 +122,6 @@ class DD4hepDetectorFactory : public DetectorFactoryBase {
   DD4hepDetectorFactory& operator=(DD4hepDetectorFactory&&);
 
   std::unique_ptr<dd4hep::Detector> buildDD4hepGeometry() const;
-
-  std::shared_ptr<Geant4DetectorConstructionFactory>
-  buildGeant4DetectorConstructionFactory() const;
 
   std::shared_ptr<DetectorBase> buildDetector() const override;
 
