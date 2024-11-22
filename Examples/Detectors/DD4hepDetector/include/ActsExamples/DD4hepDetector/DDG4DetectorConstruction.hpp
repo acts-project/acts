@@ -52,8 +52,7 @@ class DDG4DetectorConstructionFactory final
       std::shared_ptr<DD4hepDetector> detector);
 
   std::unique_ptr<G4VUserDetectorConstruction> factorize(
-      const std::vector<std::shared_ptr<Geant4::RegionCreator>>& regionCreators)
-      const override;
+      const Options& options) const override;
 
  private:
   std::shared_ptr<DD4hepDetector> m_detector;

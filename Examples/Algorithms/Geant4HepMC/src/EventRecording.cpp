@@ -53,7 +53,8 @@ EventRecording::EventRecording(const EventRecording::Config& config,
 
   // G4RunManager deals with the lifetime of these objects
   m_runManager->SetUserInitialization(
-      m_cfg.detectorConstructionFactory->factorize(m_cfg.regionCreators)
+      m_cfg.detectorConstructionFactory
+          ->factorize({.regionCreators = m_cfg.regionCreators})
           .release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new Geant4::HepMC3::RunAction());

@@ -54,10 +54,9 @@ DDG4DetectorConstructionFactory::DDG4DetectorConstructionFactory(
     : m_detector(std::move(detector)) {}
 
 std::unique_ptr<G4VUserDetectorConstruction>
-DDG4DetectorConstructionFactory::factorize(
-    const std::vector<std::shared_ptr<Geant4::RegionCreator>>& regionCreators)
-    const {
-  return std::make_unique<DDG4DetectorConstruction>(m_detector, regionCreators);
+DDG4DetectorConstructionFactory::factorize(const Options& options) const {
+  return std::make_unique<DDG4DetectorConstruction>(m_detector,
+                                                    options.regionCreators);
 }
 
 }  // namespace ActsExamples

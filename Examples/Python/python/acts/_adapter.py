@@ -114,8 +114,10 @@ def _detector_create(cls, config_class=None):
             setattr(cfg, k, v)
         if hasattr(cfg, "materialDecorator"):
             setattr(cfg, "materialDecorator", mdecorator)
-        det = cls(cfg)
-        tg, deco, _ = det.trackingGeometry()
+        detector = cls(cfg)
+        gen1holder = detector.buildGen1Geometry()
+        trackingGeometry = gen1holder.trackingGeometry
+        decorators = gen1holder.contextDecorators
         Detector = namedtuple(
             "Detector", ["detector", "trackingGeometry", "decorators"]
         )
@@ -132,7 +134,7 @@ def _detector_create(cls, config_class=None):
             def __exit__(self, *args):
                 pass
 
-        return DetectorContextManager(det, tg, deco)
+        return DetectorContextManager(detector, trackingGeometry, decorators)
 
     return create
 

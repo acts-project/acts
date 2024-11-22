@@ -44,8 +44,7 @@ class TelescopeG4DetectorConstructionFactory final
       const TelescopeDetector::Config& cfg);
 
   std::unique_ptr<G4VUserDetectorConstruction> factorize(
-      const std::vector<std::shared_ptr<Geant4::RegionCreator>>& regionCreators)
-      const override;
+      const Options& options) const override;
 
  private:
   /// The configuration of the telescope detector

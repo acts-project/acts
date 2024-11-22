@@ -53,10 +53,9 @@ GeoModelGeant4DetectorConstructionFactory::
 
 std::unique_ptr<G4VUserDetectorConstruction>
 GeoModelGeant4DetectorConstructionFactory::factorize(
-    const std::vector<std::shared_ptr<Geant4::RegionCreator>>& regionCreators)
-    const {
-  return std::make_unique<GeoModelGeant4DetectorConstruction>(m_geoModelTree,
-                                                              regionCreators);
+    const Options& options) const {
+  return std::make_unique<GeoModelGeant4DetectorConstruction>(
+      m_geoModelTree, options.regionCreators);
 }
 
 }  // namespace ActsExamples

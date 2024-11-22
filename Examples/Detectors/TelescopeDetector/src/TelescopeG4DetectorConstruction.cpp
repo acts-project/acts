@@ -168,10 +168,9 @@ TelescopeG4DetectorConstructionFactory::TelescopeG4DetectorConstructionFactory(
 
 std::unique_ptr<G4VUserDetectorConstruction>
 TelescopeG4DetectorConstructionFactory::factorize(
-    const std::vector<std::shared_ptr<Geant4::RegionCreator>>& regionCreators)
-    const {
-  return std::make_unique<TelescopeG4DetectorConstruction>(m_cfg,
-                                                           regionCreators);
+    const Options& options) const {
+  return std::make_unique<TelescopeG4DetectorConstruction>(
+      m_cfg, options.regionCreators);
 }
 
 }  // namespace ActsExamples

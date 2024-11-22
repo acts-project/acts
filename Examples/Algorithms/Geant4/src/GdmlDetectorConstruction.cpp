@@ -41,10 +41,9 @@ GdmlDetectorConstructionFactory::GdmlDetectorConstructionFactory(
     : m_path(std::move(path)) {}
 
 std::unique_ptr<G4VUserDetectorConstruction>
-GdmlDetectorConstructionFactory::factorize(
-    const std::vector<std::shared_ptr<Geant4::RegionCreator>>& regionCreators)
-    const {
-  return std::make_unique<GdmlDetectorConstruction>(m_path, regionCreators);
+GdmlDetectorConstructionFactory::factorize(const Options& options) const {
+  return std::make_unique<GdmlDetectorConstruction>(m_path,
+                                                    options.regionCreators);
 }
 
 }  // namespace ActsExamples

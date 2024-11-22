@@ -50,8 +50,7 @@ class GeoModelGeant4DetectorConstructionFactory final
       const Acts::GeoModelTree& geoModelTree);
 
   std::unique_ptr<G4VUserDetectorConstruction> factorize(
-      const std::vector<std::shared_ptr<Geant4::RegionCreator>>& regionCreators)
-      const override;
+      const Options& options) const override;
 
  private:
   /// The GeoModel tree
