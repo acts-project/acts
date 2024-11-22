@@ -1,7 +1,6 @@
 add_library(
     ActsExamplesGeant4
     SHARED
-    src/GdmlDetectorConstruction.cpp
     src/Geant4Simulation.cpp
     src/MagneticFieldWrapper.cpp
     src/MaterialPhysicsList.cpp

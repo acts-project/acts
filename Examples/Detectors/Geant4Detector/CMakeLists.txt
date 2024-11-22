@@ -1,4 +1,10 @@
-add_library(ActsExamplesDetectorGeant4 SHARED src/Geant4Detector.cpp)
+add_library(
+    ActsExamplesDetectorGeant4
+    SHARED
+    src/Geant4Detector.cpp
+    src/GdmlDetectorConstruction.cpp
+    src/GdmlDetector.cpp
+)
 
 target_include_directories(
     ActsExamplesDetectorGeant4

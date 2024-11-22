@@ -18,11 +18,11 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 #include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
-#include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
+#include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 
@@ -291,7 +291,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                                       passiveMatches,
                                   bool convertMaterial) {
       // Initiate the detector construction & retrieve world
-      ActsExamples::GdmlDetectorConstruction gdmlContruction(gdmlFileName);
+      ActsExamples::GdmlDetectorConstruction gdmlContruction(gdmlFileName, {});
       const auto* world = gdmlContruction.Construct();
 
       // Create the selectors

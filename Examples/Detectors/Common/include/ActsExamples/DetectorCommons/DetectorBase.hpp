@@ -83,6 +83,7 @@ class DetectorFactoryBase {
 
 class PreConstructedDetector : public DetectorBase {
  public:
+  PreConstructedDetector();
   PreConstructedDetector(
       Acts::GeometryContext geometryContext,
       std::vector<std::shared_ptr<const Acts::DetectorElementBase>>

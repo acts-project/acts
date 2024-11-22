@@ -36,6 +36,8 @@ DetectorBase::buildGeant4DetectorConstruction(
   throw std::runtime_error("Not implemented");
 }
 
+PreConstructedDetector::PreConstructedDetector() = default;
+
 PreConstructedDetector::PreConstructedDetector(
     Acts::GeometryContext geometryContext,
     std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore,

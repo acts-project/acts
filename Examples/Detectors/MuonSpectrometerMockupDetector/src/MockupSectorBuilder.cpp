@@ -27,7 +27,7 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
+#include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 
 #include <algorithm>
@@ -46,7 +46,7 @@ namespace ActsExamples {
 MockupSectorBuilder::MockupSectorBuilder(
     const MockupSectorBuilder::Config& config) {
   mCfg = config;
-  GdmlDetectorConstruction geo_gdml(mCfg.gdmlPath);
+  GdmlDetectorConstruction geo_gdml(mCfg.gdmlPath, {});
   g4World = geo_gdml.Construct();
 }
 

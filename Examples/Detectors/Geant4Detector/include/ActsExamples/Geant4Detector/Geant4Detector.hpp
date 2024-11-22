@@ -71,10 +71,6 @@ struct Geant4DetectorFactory : public DetectorFactoryBase {
 
  private:
   Config m_cfg;
-
-  std::unique_ptr<const Acts::Logger> m_logger;
-
-  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples
