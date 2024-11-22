@@ -67,7 +67,7 @@ unsigned int NuclearInteraction::sampleDiscreteValues(
   return static_cast<unsigned int>(distribution.first[iBin]);
 }
 
-Particle::Scalar NuclearInteraction::sampleContinuousValues(
+double NuclearInteraction::sampleContinuousValues(
     double rnd,
     const detail::NuclearInteractionParameters::CumulativeDistribution&
         distribution,
@@ -111,10 +111,10 @@ unsigned int NuclearInteraction::finalStateMultiplicity(
   return sampleDiscreteValues(rnd, distribution);
 }
 
-std::pair<ActsFatras::Particle::Scalar, ActsFatras::Particle::Scalar>
-NuclearInteraction::globalAngle(ActsFatras::Particle::Scalar phi1,
-                                ActsFatras::Particle::Scalar theta1, float phi2,
-                                float theta2) const {
+std::pair<double, double> NuclearInteraction::globalAngle(double phi1,
+                                                          double theta1,
+                                                          float phi2,
+                                                          float theta2) const {
   // Rotation around the global y-axis
   Acts::SquareMatrix3 rotY = Acts::SquareMatrix3::Zero();
   rotY(0, 0) = std::cos(theta1);

@@ -44,15 +44,15 @@ using namespace ActsFatras;
 
 namespace {
 
-constexpr auto tol = 4 * std::numeric_limits<Particle::Scalar>::epsilon();
-constexpr auto inf = std::numeric_limits<Particle::Scalar>::infinity();
+constexpr auto tol = 4 * std::numeric_limits<double>::epsilon();
+constexpr auto inf = std::numeric_limits<double>::infinity();
 
 struct MockDecay {
-  Particle::Scalar properTimeLimit = inf;
+  double properTimeLimit = inf;
 
   template <typename generator_t>
-  constexpr Particle::Scalar generateProperTimeLimit(
-      generator_t & /*generator*/, const Particle &particle) const {
+  constexpr double generateProperTimeLimit(generator_t & /*generator*/,
+                                           const Particle &particle) const {
     return particle.properTime() + properTimeLimit;
   }
   template <typename generator_t>
@@ -181,10 +181,10 @@ struct Fixture {
   Barcode pid = Barcode().setVertexPrimary(12u).setParticle(3u);
   ProcessType proc = ProcessType::eUndefined;
   Acts::PdgParticle pdg = Acts::PdgParticle::eProton;
-  Particle::Scalar q = 1_e;
-  Particle::Scalar m = 1_GeV;
-  Particle::Scalar p = 1_GeV;
-  Particle::Scalar e;
+  double q = 1_e;
+  double m = 1_GeV;
+  double p = 1_GeV;
+  double e;
   Generator generator;
   std::shared_ptr<Acts::Surface> surface;
   Actor actor;

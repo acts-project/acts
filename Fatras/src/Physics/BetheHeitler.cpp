@@ -20,8 +20,8 @@
 #include <utility>
 
 ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
-    const Particle &particle, Scalar gammaE, Scalar rndPsi, Scalar rndTheta1,
-    Scalar rndTheta2, Scalar rndTheta3) const {
+    const Particle &particle, double gammaE, double rndPsi, double rndTheta1,
+    double rndTheta2, double rndTheta3) const {
   // ------------------------------------------------------
   // simple approach
   // (a) simulate theta uniform within the opening angle of the relativistic
@@ -31,10 +31,10 @@ ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
   // later
   //      the azimutal angle
 
-  Scalar psi = 2. * std::numbers::pi * rndPsi;
+  double psi = 2. * std::numbers::pi * rndPsi;
 
   // the start of the equation
-  Scalar theta = 0.;
+  double theta = 0.;
   if (uniformHertzDipoleAngle) {
     // the simplest simulation
     theta = particle.mass() / particle.energy() * rndTheta1;
@@ -42,8 +42,8 @@ ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
     // ----->
     theta = particle.mass() / particle.energy();
     // follow
-    constexpr Scalar a = 0.625;  // 5/8
-    Scalar u = -log(rndTheta2 * rndTheta3) / a;
+    constexpr double a = 0.625;  // 5/8
+    double u = -log(rndTheta2 * rndTheta3) / a;
     theta *= (rndTheta1 < 0.25) ? u : u / 3.;  // 9./(9.+27) = 0.25
   }
 
