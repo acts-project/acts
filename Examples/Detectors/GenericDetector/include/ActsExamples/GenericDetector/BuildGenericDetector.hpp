@@ -778,7 +778,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
           Acts::getDefaultLogger("TrackerGeometryBuilder", volumeLLevel));
   // get the geometry
   auto trackingGeometry = cylinderGeometryBuilder->trackingGeometry(gctx);
-  /// return the tracking geometry
+  // return the tracking geometry
   return trackingGeometry;
 }
 
