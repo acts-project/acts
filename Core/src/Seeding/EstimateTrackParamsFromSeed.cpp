@@ -9,6 +9,7 @@
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <numbers>
 
