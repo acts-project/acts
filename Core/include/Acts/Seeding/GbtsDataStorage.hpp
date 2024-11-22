@@ -41,7 +41,7 @@ struct GbtsSP {
   bool isSCT() const { return !m_isPixel; }
   float phi() const { return m_phi; }
   float r() const {return m_r;}
-  bool ClusterWidth() const { return m_ClusterWidth; }
+  float ClusterWidth() const { return m_ClusterWidth; }
 };
 
 template <typename space_point_t>
