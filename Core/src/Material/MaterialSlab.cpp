@@ -55,7 +55,7 @@ MaterialSlab MaterialSlab::averageLayers(
   return result;
 }
 
-void MaterialSlab::scaleThickness(float scale) {
+void MaterialSlab::scaleThickness(double scale) {
   if (scale < 0) {
     throw std::runtime_error("scale < 0");
   }

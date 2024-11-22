@@ -59,7 +59,7 @@ class MaterialSlab {
   MaterialSlab& operator=(const MaterialSlab&) = default;
 
   /// Scale the material thickness by the given factor.
-  void scaleThickness(float scale);
+  void scaleThickness(double scale);
 
   /// Check if the material is valid, i.e. it is finite and not vacuum.
   bool isValid() const { return m_material.isValid() && (0.0f < m_thickness); }
