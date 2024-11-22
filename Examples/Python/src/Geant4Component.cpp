@@ -16,6 +16,8 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
+#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
@@ -115,7 +117,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_STRUCT_BEGIN(c1, Config);
     ACTS_PYTHON_MEMBER(inputParticles);
     ACTS_PYTHON_MEMBER(randomNumbers);
-    ACTS_PYTHON_MEMBER(detectorConstructionFactory);
+    ACTS_PYTHON_MEMBER(detector);
     ACTS_PYTHON_MEMBER(geant4Handle);
     ACTS_PYTHON_STRUCT_END();
   }
@@ -172,10 +174,12 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     sm.def(
         "remapSensitiveNames",
         [](Geant4::SensitiveSurfaceMapper& self, State& state,
-           GeometryContext& gctx, Geant4DetectorConstructionFactory& factory,
+           GeometryContext& gctx, DetectorBase& detector,
            Transform3& transform) {
           return self.remapSensitiveNames(
-              state, gctx, factory.factorize({})->Construct(), transform);
+              state, gctx,
+              detector.buildGeant4DetectorConstruction({})->Construct(),
+              transform);
         },
         "state"_a, "gctx"_a, "g4physicalVolume"_a, "motherTransform"_a);
     sm.def("checkMapping", &Geant4::SensitiveSurfaceMapper::checkMapping,
@@ -230,14 +234,6 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   }
 
   {
-    py::class_<GdmlDetectorConstructionFactory,
-               Geant4DetectorConstructionFactory,
-               std::shared_ptr<GdmlDetectorConstructionFactory>>(
-        mod, "GdmlDetectorConstructionFactory")
-        .def(py::init<std::string>(), py::arg("path"));
-  }
-
-  {
     using ISelector = Acts::IGeant4PhysicalVolumeSelector;
     auto is = py::class_<ISelector, std::shared_ptr<ISelector>>(
         mod, "IVolumeSelector");
@@ -264,14 +260,14 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                std::shared_ptr<Acts::Geant4DetectorElement>>(
         mod, "Geant4DetectorElement");
 
-    using Detector = Geant4Detector;
-    using Config = Detector::Config;
+    using DetectorFactory = Geant4DetectorFactory;
+    using Config = DetectorFactory::Config;
 
-    auto g =
-        py::class_<Detector, std::shared_ptr<Detector>>(mod, "Geant4Detector")
-            .def(py::init<const Config&>());
+    auto f = py::class_<DetectorFactory, std::shared_ptr<DetectorFactory>>(
+                 mod, "Geant4DetectorFactory")
+                 .def(py::init<const Config&>());
 
-    auto c = py::class_<Config>(g, "Config").def(py::init<>());
+    auto c = py::class_<Config>(f, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(g4World);

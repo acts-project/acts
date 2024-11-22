@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "ActsExamples/DetectorCommons/Geant4DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4HepMC/EventRecording.hpp"
 
 #include <pybind11/pybind11.h>
@@ -27,8 +26,7 @@ void addGeant4HepMC3(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       EventRecording, h3, "EventRecording", inputParticles, outputHepMcTracks,
-      detectorConstructionFactory, seed1, seed2, processesCombine,
-      processSelect, processesReject);
+      detector, seed1, seed2, processesCombine, processSelect, processesReject);
 }
 
 }  // namespace Acts::Python

@@ -17,7 +17,7 @@
 namespace ActsExamples {
 class GenericDetectorElement;
 
-class GenericDetector : public DetectorBase {
+class GenericDetectorFactory : public DetectorFactoryBase {
  public:
   struct Config {
     std::size_t buildLevel = 3;
@@ -29,9 +29,9 @@ class GenericDetector : public DetectorBase {
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
   };
 
-  explicit GenericDetector(const Config& cfg);
+  explicit GenericDetectorFactory(const Config& cfg);
 
-  Gen1GeometryHolder buildGen1Geometry() override;
+  std::shared_ptr<DetectorBase> buildDetector() const override;
 
  private:
   Config m_cfg;

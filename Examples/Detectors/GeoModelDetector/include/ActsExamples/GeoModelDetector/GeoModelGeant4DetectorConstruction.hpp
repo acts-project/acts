@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
-#include "ActsExamples/DetectorCommons/Geant4DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 
 #include <G4VUserDetectorConstruction.hh>
@@ -41,20 +40,6 @@ class GeoModelGeant4DetectorConstruction final
   std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
   /// The world volume
   G4VPhysicalVolume* m_g4World = nullptr;
-};
-
-class GeoModelGeant4DetectorConstructionFactory final
-    : public Geant4DetectorConstructionFactory {
- public:
-  explicit GeoModelGeant4DetectorConstructionFactory(
-      const Acts::GeoModelTree& geoModelTree);
-
-  std::unique_ptr<G4VUserDetectorConstruction> factorize(
-      const Options& options) const override;
-
- private:
-  /// The GeoModel tree
-  Acts::GeoModelTree m_geoModelTree;
 };
 
 }  // namespace ActsExamples

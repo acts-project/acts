@@ -26,13 +26,8 @@
 
 namespace ActsExamples {
 
-class TGeoDetector : public DetectorBase {
+class TGeoDetectorFactory : public DetectorFactoryBase {
  public:
-  using ContextDecorators =
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
-
-  using DetectorElement = Acts::TGeoDetectorElement;
-
   struct Config {
     Acts::Logging::Level logLevel = Acts::Logging::WARNING;
     Acts::Logging::Level surfaceLogLevel = Acts::Logging::WARNING;
@@ -141,9 +136,9 @@ class TGeoDetector : public DetectorBase {
   static void readTGeoLayerBuilderConfigsFile(const std::string& path,
                                               Config& config);
 
-  explicit TGeoDetector(const Config& cfg);
+  explicit TGeoDetectorFactory(const Config& cfg);
 
-  Gen1GeometryHolder buildGen1Geometry() override;
+  std::shared_ptr<DetectorBase> buildDetector() const override;
 
  private:
   Config m_cfg;

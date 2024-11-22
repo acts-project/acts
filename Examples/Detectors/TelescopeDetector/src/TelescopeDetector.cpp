@@ -62,4 +62,16 @@ std::shared_ptr<DetectorBase> TelescopeDetectorFactory::buildDetector() const {
       std::move(contextDecorators));
 }
 
+TelescopeDetector::TelescopeDetector(
+    Acts::GeometryContext geometryContext,
+    std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore,
+    std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
+    std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
+    std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
+        contextDecorators)
+    : PreConstructedDetector(std::move(geometryContext),
+                             std::move(detectorStore), std::move(gen1Geometry),
+                             std::move(gen2Geometry),
+                             std::move(contextDecorators)) {}
+
 }  // namespace ActsExamples

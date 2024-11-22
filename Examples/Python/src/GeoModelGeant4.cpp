@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "ActsExamples/DetectorCommons/Geant4DetectorConstructionFactory.hpp"
 #include "ActsExamples/GeoModelDetector/GeoModelGeant4DetectorConstruction.hpp"
 
 #include <memory>
@@ -24,11 +23,9 @@ void addGeoModelGeant4(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   {
-    py::class_<GeoModelGeant4DetectorConstructionFactory,
-               Geant4DetectorConstructionFactory,
-               std::shared_ptr<GeoModelGeant4DetectorConstructionFactory>>(
-        m, "GeoModelGeant4DetectorConstructionFactory")
-        .def(py::init<const Acts::GeoModelTree&>());
+    py::class_<GeoModelGeant4DetectorConstruction,
+               std::shared_ptr<GeoModelGeant4DetectorConstruction>>(
+        m, "GeoModelGeant4DetectorConstruction");
   }
 }
 

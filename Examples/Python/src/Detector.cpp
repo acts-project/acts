@@ -15,7 +15,6 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/DetectorCommons/DetectorBase.hpp"
-#include "ActsExamples/DetectorCommons/Geant4DetectorConstructionFactory.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
@@ -50,36 +49,20 @@ void addDetector(Context& ctx) {
     py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
         mex, "DetectorElementBase");
 
-    py::class_<Gen1GeometryHolder>(mex, "Gen1GeometryHolder")
-        .def_readwrite("trackingGeometry",
-                       &Gen1GeometryHolder::trackingGeometry)
-        .def_readwrite("contextDecorators",
-                       &Gen1GeometryHolder::contextDecorators)
-        .def_readwrite("detectorStore", &Gen1GeometryHolder::detectorStore);
+    py::class_<DetectorBase, std::shared_ptr<DetectorBase>>(mex,
+                                                            "DetectorBase");
 
-    py::class_<Gen2GeometryHolder>(mex, "Gen2GeometryHolder")
-        .def_readwrite("detector", &Gen2GeometryHolder::detector)
-        .def_readwrite("contextDecorators",
-                       &Gen2GeometryHolder::contextDecorators)
-        .def_readwrite("detectorStore", &Gen2GeometryHolder::detectorStore);
-
-    py::class_<DetectorBase, std::shared_ptr<DetectorBase>>(mex, "DetectorBase")
-        .def("buildGen1Geometry", &DetectorBase::buildGen1Geometry)
-        .def("buildGen2Geometry", &DetectorBase::buildGen2Geometry)
-        .def("buildGeant4DetectorConstructionFactory",
-             &DetectorBase::buildGeant4DetectorConstructionFactory);
-
-    py::class_<Geant4DetectorConstructionFactory,
-               std::shared_ptr<Geant4DetectorConstructionFactory>>(
-        mex, "Geant4DetectorConstructionFactory");
+    py::class_<DetectorFactoryBase, std::shared_ptr<DetectorFactoryBase>>(
+        mex, "DetectorFactoryBase");
   }
 
   {
-    using Detector = GenericDetector;
-    using Config = Detector::Config;
+    using DetectorFactory = GenericDetectorFactory;
+    using Config = DetectorFactory::Config;
 
-    auto d = py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>(
-                 mex, "GenericDetector")
+    auto d = py::class_<DetectorFactory, DetectorFactoryBase,
+                        std::shared_ptr<DetectorFactory>>(
+                 mex, "GenericDetectorFactory")
                  .def(py::init<const Config&>());
 
     auto c = py::class_<Config>(d, "Config").def(py::init<>());
@@ -95,11 +78,12 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using Detector = TelescopeDetector;
-    using Config = Detector::Config;
+    using DetectorFactory = TelescopeDetectorFactory;
+    using Config = DetectorFactory::Config;
 
-    auto d = py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>(
-                 mex, "TelescopeDetector")
+    auto d = py::class_<DetectorFactory, DetectorFactoryBase,
+                        std::shared_ptr<DetectorFactory>>(
+                 mex, "TelescopeDetectorFactory")
                  .def(py::init<const Config&>());
 
     auto c = py::class_<Config>(d, "Config").def(py::init<>());
@@ -117,14 +101,15 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using Detector = AlignedDetector;
-    using Config = Detector::Config;
+    using DetectorFactory = AlignedDetectorFactory;
+    using Config = DetectorFactory::Config;
 
-    auto d = py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>(
-                 mex, "AlignedDetector")
+    auto d = py::class_<DetectorFactory, DetectorFactoryBase,
+                        std::shared_ptr<DetectorFactory>>(
+                 mex, "AlignedDetectorFactory")
                  .def(py::init<const Config&>());
 
-    auto c = py::class_<Config, GenericDetector::Config>(d, "Config")
+    auto c = py::class_<Config, GenericDetectorFactory::Config>(d, "Config")
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(seed);
@@ -146,12 +131,13 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using Detector = TGeoDetector;
-    using Config = Detector::Config;
+    using DetectorFactory = TGeoDetectorFactory;
+    using Config = DetectorFactory::Config;
 
-    auto d = py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>(
-                 mex, "TGeoDetector")
-                 .def(py::init<const Config&>());
+    auto d =
+        py::class_<DetectorFactory, DetectorFactoryBase,
+                   std::shared_ptr<DetectorFactory>>(mex, "TGeoDetectorFactory")
+            .def(py::init<const Config&>());
 
     py::class_<Options::Interval>(mex, "Interval")
         .def(py::init<>())

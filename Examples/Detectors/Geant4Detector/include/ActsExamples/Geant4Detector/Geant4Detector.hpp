@@ -37,7 +37,7 @@ class IContextDecorator;
 
 namespace ActsExamples {
 
-struct Geant4Detector : public DetectorBase {
+struct Geant4DetectorFactory : public DetectorFactoryBase {
   /// Nested configuration struct
   struct Config {
     /// The detector/geometry name
@@ -55,7 +55,7 @@ struct Geant4Detector : public DetectorBase {
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
   };
 
-  explicit Geant4Detector(const Config& cfg);
+  explicit Geant4DetectorFactory(const Config& cfg);
 
   /// @brief Convert Geant4VPhysicalVolume objects into Acts components
   ///
@@ -67,12 +67,7 @@ struct Geant4Detector : public DetectorBase {
              std::vector<std::shared_ptr<Acts::Geant4DetectorElement>>>
   buildGeant4Volumes() const;
 
-  Gen1GeometryHolder buildGen1Geometry() override;
-
-  Gen2GeometryHolder buildGen2Geometry() override;
-
-  std::shared_ptr<Geant4DetectorConstructionFactory>
-  buildGeant4DetectorConstructionFactory() override;
+  std::shared_ptr<DetectorBase> buildDetector() const override;
 
  private:
   Config m_cfg;

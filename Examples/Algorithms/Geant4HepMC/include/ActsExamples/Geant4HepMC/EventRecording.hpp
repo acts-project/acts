@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -40,8 +41,8 @@ class EventRecording final : public ActsExamples::IAlgorithm {
     /// Geant4 region creators.
     std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators;
 
-    std::shared_ptr<Geant4DetectorConstructionFactory>
-        detectorConstructionFactory;
+    /// Detector instance to access Geant4 geometry construction.
+    std::shared_ptr<DetectorBase> detector;
 
     /// random number seed 1
     int seed1 = 12345;

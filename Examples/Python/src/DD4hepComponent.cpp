@@ -39,14 +39,15 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   }
 
   {
-    using Detector = DD4hepDetector;
-    using Config = Detector::Config;
+    using DetectorFactory = DD4hepDetectorFactory;
+    using Config = DetectorFactory::Config;
 
-    auto s = py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>(
-                 m, "DD4hepDetector")
-                 .def(py::init<const Config&>());
+    auto f =
+        py::class_<DetectorFactory, DetectorFactoryBase,
+                   std::shared_ptr<DetectorFactory>>(m, "DD4hepDetectorFactory")
+            .def(py::init<const Config&>());
 
-    auto c = py::class_<Config>(s, "Config").def(py::init<>());
+    auto c = py::class_<Config>(f, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_MEMBER(dd4hepLogLevel);
@@ -63,6 +64,11 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     ACTS_PYTHON_STRUCT_END();
 
     patchKwargsConstructor(c);
+
+    using Detector = DD4hepDetector;
+
+    py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>(
+        m, "DD4hepDetector");
   }
 
   {

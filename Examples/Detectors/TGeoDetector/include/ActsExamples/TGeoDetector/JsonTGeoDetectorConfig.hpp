@@ -90,7 +90,7 @@ void to_json(nlohmann::json& j, const TGeoITkModuleSplitter::Config& msc) {
 /// Read layer configuration triplets
 template <typename T>
 void from_json(const nlohmann::json& j,
-               TGeoDetector::Config::LayerTriplet<T>& ltr) {
+               TGeoDetectorFactory::Config::LayerTriplet<T>& ltr) {
   ltr.negative = j.at("negative").get<T>();
   ltr.central = j.at("central").get<T>();
   ltr.positive = j.at("positive").get<T>();
@@ -99,14 +99,15 @@ void from_json(const nlohmann::json& j,
 /// Write layer configuration triplets
 template <typename T>
 void to_json(nlohmann::json& j,
-             const TGeoDetector::Config::LayerTriplet<T>& ltr) {
+             const TGeoDetectorFactory::Config::LayerTriplet<T>& ltr) {
   j = nlohmann::json{{"negative", ltr.negative},
                      {"central", ltr.central},
                      {"positive", ltr.positive}};
 }
 
 /// Read volume struct
-void from_json(const nlohmann::json& j, TGeoDetector::Config::Volume& vol) {
+void from_json(const nlohmann::json& j,
+               TGeoDetectorFactory::Config::Volume& vol) {
   // subdetector selection
   vol.name = j.at("geo-tgeo-volume-name");
 
@@ -152,7 +153,8 @@ void from_json(const nlohmann::json& j, TGeoDetector::Config::Volume& vol) {
 }
 
 /// Write volume struct
-void to_json(nlohmann::json& j, const TGeoDetector::Config::Volume& vol) {
+void to_json(nlohmann::json& j,
+             const TGeoDetectorFactory::Config::Volume& vol) {
   j["geo-tgeo-volume-name"] = vol.name;
 
   j["geo-tgeo-sfbin-r-tolerance"] = vol.binToleranceR;

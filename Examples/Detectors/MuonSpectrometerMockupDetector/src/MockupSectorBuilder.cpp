@@ -60,7 +60,7 @@ MockupSectorBuilder::buildChamber(
   const Acts::GeometryContext gctx;
 
   // Geant4Detector Config creator with the g4world from the gdml file
-  auto g4WorldConfig = Geant4Detector::Config();
+  auto g4WorldConfig = Geant4DetectorFactory::Config();
   g4WorldConfig.name = "Chamber";
   g4WorldConfig.g4World = g4World;
 
@@ -77,9 +77,9 @@ MockupSectorBuilder::buildChamber(
   g4SurfaceOptions.passiveSurfaceSelector = g4Passive;
   g4WorldConfig.g4SurfaceOptions = g4SurfaceOptions;
 
-  auto g4detector = Geant4Detector(g4WorldConfig);
+  auto g4DetectorFactory = Geant4DetectorFactory(g4WorldConfig);
   // Trigger the build of the detector
-  auto [surface, elements] = g4detector.buildGeant4Volumes();
+  auto [surface, elements] = g4DetectorFactory.buildGeant4Volumes();
 
   // The vector that holds the converted sensitive surfaces of the chamber
   std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces;

@@ -9,7 +9,9 @@
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "ActsExamples/Geant4/RegionCreator.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
+#include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
 #include <memory>
 #include <vector>
@@ -24,9 +26,9 @@
 namespace ActsExamples {
 
 TelescopeG4DetectorConstruction::TelescopeG4DetectorConstruction(
-    const TelescopeDetector::Config& cfg,
-    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
-    : m_cfg(cfg), m_regionCreators(std::move(regionCreators)) {
+    const TelescopeDetectorFactory::Config& cfg,
+    const Geant4ConstructionOptions& options)
+    : m_cfg(cfg), m_options(options) {
   throw_assert(cfg.surfaceType == static_cast<int>(TelescopeSurfaceType::Plane),
                "only plan is supported right now");
 }
@@ -155,7 +157,7 @@ G4VPhysicalVolume* TelescopeG4DetectorConstruction::Construct() {
   }
 
   // Create regions
-  for (const auto& regionCreator : m_regionCreators) {
+  for (const auto& regionCreator : m_options.regionCreators) {
     regionCreator->construct();
   }
 

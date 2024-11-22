@@ -51,6 +51,9 @@ class TelescopeDetector : public PreConstructedDetector {
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
           contextDecorators);
 
+  std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
+      const Geant4ConstructionOptions& options) const override;
+
  private:
   TelescopeDetectorFactory::Config m_cfg;
 };

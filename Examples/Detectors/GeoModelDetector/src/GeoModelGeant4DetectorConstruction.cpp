@@ -46,16 +46,4 @@ G4VPhysicalVolume* GeoModelGeant4DetectorConstruction::Construct() {
   return m_g4World;
 }
 
-GeoModelGeant4DetectorConstructionFactory::
-    GeoModelGeant4DetectorConstructionFactory(
-        const Acts::GeoModelTree& geoModelTree)
-    : m_geoModelTree(geoModelTree) {}
-
-std::unique_ptr<G4VUserDetectorConstruction>
-GeoModelGeant4DetectorConstructionFactory::factorize(
-    const Options& options) const {
-  return std::make_unique<GeoModelGeant4DetectorConstruction>(
-      m_geoModelTree, options.regionCreators);
-}
-
 }  // namespace ActsExamples

@@ -17,6 +17,7 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 
 #include <memory>
 #include <ostream>
@@ -27,21 +28,29 @@
 
 namespace ActsExamples {
 
-Geant4Detector::Geant4Detector(const Geant4Detector::Config& cfg)
-    : DetectorBase(Acts::getDefaultLogger("Geant4Detector", cfg.logLevel)),
-      m_cfg(cfg) {}
-
-Gen1GeometryHolder Geant4Detector::buildGen1Geometry() {
+Geant4DetectorFactory::Geant4DetectorFactory(const Config& cfg)
+    : DetectorFactoryBase(
+          Acts::getDefaultLogger("Geant4DetectorFactory", cfg.logLevel)),
+      m_cfg(cfg) {
   if (m_cfg.g4World == nullptr) {
     throw std::invalid_argument(
         "Geant4Detector: no world Geant4 volume provided");
   }
+}
 
+std::shared_ptr<DetectorBase> Geant4DetectorFactory::buildDetector() const {
   ACTS_INFO("Building an Acts::TrackingGeometry called '"
             << m_cfg.name << "' from the Geant4PhysVolume '"
             << m_cfg.g4World->GetName() << "'");
 
-  std::vector<std::shared_ptr<ActsExamples::IContextDecorator>> decorators;
+  Acts::GeometryContext geometryContext;
+  std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore;
+  std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry;
+  std::shared_ptr<Acts::Experimental::Detector> gen2Geometry;
+  std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
+      contextDecorators;
+
+  geometryContext = Acts::GeometryContext();
 
   auto [surfaces, elements] = buildGeant4Volumes();
 
@@ -83,48 +92,17 @@ Gen1GeometryHolder Geant4Detector::buildGen1Geometry() {
   auto kdtBuilder = Acts::KDTreeTrackingGeometryBuilder(
       kdtCfg, logger().clone("KDTreeTrackingGeometryBuilder"));
 
-  Gen1GeometryHolder result;
+  gen1Geometry = kdtBuilder.trackingGeometry(geometryContext);
 
-  result.trackingGeometry = kdtBuilder.trackingGeometry(result.geometryContext);
-
-  return result;
-}
-
-Gen2GeometryHolder Geant4Detector::buildGen2Geometry() {
-  if (m_cfg.g4World == nullptr) {
-    throw std::invalid_argument(
-        "Geant4Detector: no world Geant4 volume provided");
-  }
-
-  ACTS_INFO("Building an Acts::Detector called '"
-            << m_cfg.name << "' from the Geant4PhysVolume '"
-            << m_cfg.g4World->GetName() << "'");
-
-  std::shared_ptr<Acts::Experimental::Detector> detector = nullptr;
-  std::vector<std::shared_ptr<ActsExamples::IContextDecorator>> decorators;
-
-  auto [surfaces, elements] = buildGeant4Volumes();
-
-  Gen2GeometryHolder result;
-  result.detector = std::move(detector);
-  result.contextDecorators = std::move(decorators);
-
-  for (const auto& element : elements) {
-    result.detectorStore.push_back(
-        std::dynamic_pointer_cast<const Acts::DetectorElementBase>(element));
-  }
-
-  return result;
-}
-
-std::shared_ptr<Geant4DetectorConstructionFactory>
-Geant4Detector::buildGeant4DetectorConstructionFactory() {
-  throw std::runtime_error("Not implemented");
+  return std::make_shared<PreConstructedDetector>(
+      std::move(geometryContext), std::move(detectorStore),
+      std::move(gen1Geometry), std::move(gen2Geometry),
+      std::move(contextDecorators));
 }
 
 std::tuple<std::vector<std::shared_ptr<Acts::Surface>>,
            std::vector<std::shared_ptr<Acts::Geant4DetectorElement>>>
-Geant4Detector::buildGeant4Volumes() const {
+Geant4DetectorFactory::buildGeant4Volumes() const {
   // Generate the surface cache
   Acts::Geant4DetectorSurfaceFactory::Cache g4SurfaceCache;
   G4Transform3D g4ToWorld;

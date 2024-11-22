@@ -17,12 +17,13 @@
 #include <memory>
 
 namespace ActsExamples {
+
 class InternallyAlignedDetectorElement;
 class InternalAlignmentDecorator;
 
-class AlignedDetector : public DetectorBase {
+class AlignedDetectorFactory : public DetectorFactoryBase {
  public:
-  struct Config : public GenericDetector::Config {
+  struct Config : public GenericDetectorFactory::Config {
     /// Seed for the decorator random numbers.
     std::size_t seed = 1324354657;
     /// Size of a valid IOV.
@@ -50,9 +51,9 @@ class AlignedDetector : public DetectorBase {
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
   };
 
-  explicit AlignedDetector(const Config& cfg);
+  explicit AlignedDetectorFactory(const Config& cfg);
 
-  Gen1GeometryHolder buildGen1Geometry() override;
+  std::shared_ptr<DetectorBase> buildDetector() const override;
 
  private:
   Config m_cfg;
