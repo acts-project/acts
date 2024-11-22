@@ -74,7 +74,7 @@ double NuclearInteraction::sampleContinuousValues(
     bool interpolate) const {
   // Fast exit
   if (distribution.second.empty()) {
-    return std::numeric_limits<Scalar>::infinity();
+    return std::numeric_limits<double>::infinity();
   }
 
   // Find the bin
@@ -82,7 +82,7 @@ double NuclearInteraction::sampleContinuousValues(
       std::numeric_limits<std::uint32_t>::max() * rnd);
   // Fast exit for non-normalised CDFs like interaction probability
   if (int_rnd > distribution.second.back()) {
-    return std::numeric_limits<Scalar>::infinity();
+    return std::numeric_limits<double>::infinity();
   }
   const auto it = std::upper_bound(distribution.second.begin(),
                                    distribution.second.end(), int_rnd);
