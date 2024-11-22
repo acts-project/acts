@@ -67,7 +67,7 @@ struct VolumeConfig {
   ///
   /// @param [in] lConfig is the config to which it should be adapted
   void adaptZ(const VolumeConfig& lConfig) {
-    if (lConfig.isPresent()) {
+    if (lConfig.present) {
       zMin = std::min(zMin, lConfig.zMin);
       zMax = std::max(zMax, lConfig.zMax);
     }
@@ -78,7 +78,7 @@ struct VolumeConfig {
   ///
   /// @param [in] lConfig is the config to which it should be adapted
   void adaptR(const VolumeConfig& lConfig) {
-    if (lConfig.isPresent()) {
+    if (lConfig.present) {
       rMin = std::min(rMin, lConfig.rMin);
       rMax = std::max(rMax, lConfig.rMax);
     }
@@ -184,9 +184,6 @@ struct VolumeConfig {
     sl << rMin << ", " << rMax << " / " << zMin << ", " << zMax;
     return sl.str();
   }
-
-  /// Accessor for the member present
-  bool isPresent() const { return present; }
 };
 
 /// @brief The WrappingSetup that is happening here
@@ -222,40 +219,40 @@ struct WrappingConfig {
     containerVolumeConfig.present = true;
     std::string wConditionAddon = "";
     // if we have more than one config present
-    if ((nVolumeConfig.isPresent() && cVolumeConfig.isPresent()) ||
-        (cVolumeConfig.isPresent() && pVolumeConfig.isPresent()) ||
-        (nVolumeConfig.isPresent() && pVolumeConfig.isPresent())) {
+    if ((nVolumeConfig.present && cVolumeConfig.present) ||
+        (cVolumeConfig.present && pVolumeConfig.present) ||
+        (nVolumeConfig.present && pVolumeConfig.present)) {
       wCondition = Wrapping;
       wConditionScreen = "grouped to ";
     }
     // adapt the new volume config to the existing configs
-    if (nVolumeConfig.isPresent()) {
+    if (nVolumeConfig.present) {
       containerVolumeConfig.adapt(nVolumeConfig);
       wConditionScreen += "[n]";
     }
-    if (cVolumeConfig.isPresent()) {
+    if (cVolumeConfig.present) {
       containerVolumeConfig.adapt(cVolumeConfig);
       wConditionScreen += "[c]";
     }
-    if (pVolumeConfig.isPresent()) {
+    if (pVolumeConfig.present) {
       containerVolumeConfig.adapt(pVolumeConfig);
       wConditionScreen += "[p]";
     }
     // adapt the external one
-    if (externalVolumeConfig.isPresent()) {
+    if (externalVolumeConfig.present) {
       containerVolumeConfig.adapt(externalVolumeConfig);
     }
     // attach the volume configs
-    if (nVolumeConfig.isPresent() && cVolumeConfig.isPresent()) {
+    if (nVolumeConfig.present && cVolumeConfig.present) {
       nVolumeConfig.midPointAttachZ(cVolumeConfig);
     }
-    if (cVolumeConfig.isPresent() && pVolumeConfig.isPresent()) {
+    if (cVolumeConfig.present && pVolumeConfig.present) {
       cVolumeConfig.midPointAttachZ(pVolumeConfig);
     }
     // adapt r afterwards
     // - easy if no existing volume
     // - possible if no central volume
-    if (!existingVolumeConfig.isPresent() || !cVolumeConfig.isPresent()) {
+    if (!existingVolumeConfig.present || !cVolumeConfig.present) {
       nVolumeConfig.adaptR(containerVolumeConfig);
       cVolumeConfig.adaptR(containerVolumeConfig);
       pVolumeConfig.adaptR(containerVolumeConfig);
@@ -266,18 +263,18 @@ struct WrappingConfig {
   void wrapInsertAttach() {
     // action is only needed if an existing volume
     // is present
-    if (existingVolumeConfig.isPresent()) {
+    if (existingVolumeConfig.present) {
       // 0 - simple attachment case
-      if (!cVolumeConfig.isPresent()) {
+      if (!cVolumeConfig.present) {
         // check if it can be easily attached
-        if (nVolumeConfig.isPresent() &&
+        if (nVolumeConfig.present &&
             nVolumeConfig.zMax < existingVolumeConfig.zMin) {
           nVolumeConfig.attachZ(existingVolumeConfig);
           // will attach the new volume(s)
           wCondition = Attaching;
           wConditionScreen = "[n attached]";
         }
-        if (pVolumeConfig.isPresent() &&
+        if (pVolumeConfig.present &&
             pVolumeConfig.zMin > existingVolumeConfig.zMax) {
           pVolumeConfig.attachZ(existingVolumeConfig);
           // will attach the new volume(s)
@@ -388,9 +385,9 @@ struct WrappingConfig {
           fGapVolumeConfig.zMax = existingVolumeConfig.zMin;
         } else {
           // adapt lower z boundary
-          if (nVolumeConfig.isPresent()) {
+          if (nVolumeConfig.present) {
             nVolumeConfig.zMin = existingVolumeConfig.zMin;
-          } else if (cVolumeConfig.isPresent()) {
+          } else if (cVolumeConfig.present) {
             cVolumeConfig.zMin = existingVolumeConfig.zMin;
           }
         }
@@ -402,9 +399,9 @@ struct WrappingConfig {
           sGapVolumeConfig.zMax = referenceVolume.zMax;
         } else {
           // adapt higher z boundary
-          if (pVolumeConfig.isPresent()) {
+          if (pVolumeConfig.present) {
             pVolumeConfig.zMax = existingVolumeConfig.zMax;
-          } else if (cVolumeConfig.isPresent()) {
+          } else if (cVolumeConfig.present) {
             cVolumeConfig.zMax = existingVolumeConfig.zMax;
           }
         }
@@ -417,31 +414,31 @@ struct WrappingConfig {
   std::string toString() const {
     // for screen output
     std::stringstream sl;
-    if (containerVolumeConfig.isPresent()) {
+    if (containerVolumeConfig.present) {
       sl << "New container built with       configuration: "
          << containerVolumeConfig.toString() << '\n';
     }
     // go through the new ones first
-    if (nVolumeConfig.isPresent()) {
+    if (nVolumeConfig.present) {
       sl << " - n: Negative Endcap, current configuration: "
          << nVolumeConfig.toString() << '\n';
     }
-    if (cVolumeConfig.isPresent()) {
+    if (cVolumeConfig.present) {
       sl << " - c: Barrel, current          configuration: "
          << cVolumeConfig.toString() << '\n';
     }
-    if (pVolumeConfig.isPresent()) {
+    if (pVolumeConfig.present) {
       sl << " - p: Negative Endcap, current configuration: "
          << pVolumeConfig.toString() << '\n';
     }
-    if (existingVolumeConfig.isPresent()) {
+    if (existingVolumeConfig.present) {
       sl << "Existing volume with           configuration: "
          << existingVolumeConfig.toString() << '\n';
-      if (fGapVolumeConfig.isPresent()) {
+      if (fGapVolumeConfig.present) {
         sl << " - g1: First gap volume,       configuration : "
            << fGapVolumeConfig.toString() << '\n';
       }
-      if (sGapVolumeConfig.isPresent()) {
+      if (sGapVolumeConfig.present) {
         sl << " - g2: Second gap volume,      configuration : "
            << sGapVolumeConfig.toString() << '\n';
       }
