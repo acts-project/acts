@@ -97,26 +97,21 @@ struct MockInteractionList {
 };
 
 struct MockStepperState {
-  using Scalar = Acts::ActsScalar;
-  using Vector3 = Acts::ActsVector<3>;
-
-  Vector3 pos = Vector3::Zero();
-  Scalar time = 0;
-  Vector3 dir = Vector3::Zero();
-  Scalar p = 0;
+  Acts::Vector3 pos = Acts::Vector3::Zero();
+  double time = 0;
+  Acts::Vector3 dir = Acts::Vector3::Zero();
+  double p = 0;
 };
 
 struct MockStepper {
   using State = MockStepperState;
-  using Scalar = MockStepperState::Scalar;
-  using Vector3 = MockStepperState::Vector3;
 
   auto position(const State &state) const { return state.pos; }
   auto time(const State &state) const { return state.time; }
   auto direction(const State &state) const { return state.dir; }
   auto absoluteMomentum(const State &state) const { return state.p; }
-  void update(State &state, const Vector3 &pos, const Vector3 &dir, Scalar qop,
-              Scalar time) {
+  void update(State &state, const Acts::Vector3 &pos, const Acts::Vector3 &dir,
+              double qop, double time) {
     state.pos = pos;
     state.time = time;
     state.dir = dir;
