@@ -243,14 +243,13 @@ Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
 
   // Check the validity of the first solution
   Vector3 solution1 = position + qe.first * direction;
-  Intersection3D::Status status1 = std::abs(qe.first) < std::abs(tolerance)
-                                       ? Intersection3D::Status::onSurface
-                                       : Intersection3D::Status::reachable;
+  IntersectionStatus status1 = std::abs(qe.first) < std::abs(tolerance)
+                                   ? IntersectionStatus::onSurface
+                                   : IntersectionStatus::reachable;
 
   // Helper method for boundary check
-  auto boundaryCheck =
-      [&](const Vector3& solution,
-          Intersection3D::Status status) -> Intersection3D::Status {
+  auto boundaryCheck = [&](const Vector3& solution,
+                           IntersectionStatus status) -> IntersectionStatus {
     // No check to be done, return current status
     if (boundaryTolerance.isInfinite()) {
       return status;
@@ -267,11 +266,11 @@ Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
       double modifiedTolerance = tolerance + absoluteBound->tolerance1;
       double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + modifiedTolerance;
       return std::abs(cZ) < std::abs(hZ) ? status
-                                         : Intersection3D::Status::unreachable;
+                                         : IntersectionStatus::unreachable;
     }
     return isOnSurface(gctx, solution, direction, boundaryTolerance)
                ? status
-               : Intersection3D::Status::unreachable;
+               : IntersectionStatus::unreachable;
   };
   // Check first solution for boundary compatibility
   status1 = boundaryCheck(solution1, status1);
@@ -282,9 +281,9 @@ Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
   }
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.second * direction;
-  Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
-                                       ? Intersection3D::Status::onSurface
-                                       : Intersection3D::Status::reachable;
+  IntersectionStatus status2 = std::abs(qe.second) < std::abs(tolerance)
+                                   ? IntersectionStatus::onSurface
+                                   : IntersectionStatus::reachable;
   // Check first solution for boundary compatibility
   status2 = boundaryCheck(solution2, status2);
   Intersection3D second(solution2, qe.second, status2);

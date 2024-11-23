@@ -286,7 +286,7 @@ Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status() != Intersection3D::Status::unreachable &&
+  if (intersection.status() != IntersectionStatus::unreachable &&
       m_bounds != nullptr && !boundaryTolerance.isInfinite()) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
@@ -297,11 +297,11 @@ Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
       double modifiedTolerance = tolerance + absoluteBound->tolerance0;
       if (!m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
                                         modifiedTolerance)) {
-        status = Intersection3D::Status::unreachable;
+        status = IntersectionStatus::unreachable;
       }
     } else if (!insideBounds(localCartesianToPolar(lcartesian),
                              boundaryTolerance)) {
-      status = Intersection3D::Status::unreachable;
+      status = IntersectionStatus::unreachable;
     }
   }
   return {{Intersection3D(intersection.position(), intersection.pathLength(),

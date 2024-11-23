@@ -168,14 +168,14 @@ Acts::SurfaceMultiIntersection Acts::PlaneSurface::intersect(
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status() != Intersection3D::Status::unreachable) {
+  if (intersection.status() != IntersectionStatus::unreachable) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     // Create the reference vector in local
     const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
     if (!insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
                       boundaryTolerance)) {
-      status = Intersection3D::Status::unreachable;
+      status = IntersectionStatus::unreachable;
     }
   }
   return {{Intersection3D(intersection.position(), intersection.pathLength(),

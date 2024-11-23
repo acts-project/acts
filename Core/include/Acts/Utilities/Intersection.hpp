@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -46,8 +45,6 @@ class Intersection {
  public:
   /// Position type
   using Position = ActsVector<DIM>;
-  /// Status enum
-  using Status = IntersectionStatus;
 
   /// Constructor with arguments
   ///
@@ -55,11 +52,13 @@ class Intersection {
   /// @param pathLength is the path length to the intersection
   /// @param status is an enum indicating the status of the intersection
   constexpr Intersection(const Position& position, double pathLength,
-                         Status status)
+                         IntersectionStatus status)
       : m_position(position), m_pathLength(pathLength), m_status(status) {}
 
   /// Returns whether the intersection was successful or not
-  constexpr bool isValid() const { return m_status != Status::unreachable; }
+  constexpr bool isValid() const {
+    return m_status != IntersectionStatus::unreachable;
+  }
 
   /// Returns the position of the interseciton
   constexpr const Position& position() const { return m_position; }
@@ -68,7 +67,7 @@ class Intersection {
   constexpr ActsScalar pathLength() const { return m_pathLength; }
 
   /// Returns the intersection status enum
-  constexpr Status status() const { return m_status; }
+  constexpr IntersectionStatus status() const { return m_status; }
 
   /// Static factory to creae an invalid instesection
   constexpr static Intersection invalid() { return Intersection(); }
@@ -86,12 +85,12 @@ class Intersection {
   /// be first.
   constexpr static bool closestOrder(const Intersection& aIntersection,
                                      const Intersection& bIntersection) {
-    if ((aIntersection.status() == Status::unreachable) &&
-        (bIntersection.status() != Status::unreachable)) {
+    if ((aIntersection.status() == IntersectionStatus::unreachable) &&
+        (bIntersection.status() != IntersectionStatus::unreachable)) {
       return false;
     }
-    if ((aIntersection.status() != Status::unreachable) &&
-        (bIntersection.status() == Status::unreachable)) {
+    if ((aIntersection.status() != IntersectionStatus::unreachable) &&
+        (bIntersection.status() == IntersectionStatus::unreachable)) {
       return true;
     }
     // both are reachable or onSurface now
@@ -116,7 +115,7 @@ class Intersection {
   /// Signed path length to the intersection (if valid)
   ActsScalar m_pathLength = std::numeric_limits<double>::infinity();
   /// The Status of the intersection
-  Status m_status = Status::unreachable;
+  IntersectionStatus m_status = IntersectionStatus::unreachable;
 
   constexpr Intersection() = default;
 };
@@ -160,7 +159,7 @@ class ObjectIntersection {
   }
 
   /// Returns the status of the interseciton
-  constexpr Intersection3D::Status status() const {
+  constexpr IntersectionStatus status() const {
     return m_intersection.status();
   }
 
