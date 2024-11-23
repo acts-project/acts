@@ -252,7 +252,7 @@ class TrackContainer {
   /// Check if this track container has a specific dynamic column
   /// @param key the key to check for
   constexpr bool hasColumn(const std::string& key) const {
-    return m_container->hasColumn_impl(hashString(key));
+    return m_container->hasColumn_impl(hashStringDynamic(key));
   }
 
   /// Check if a this track container has a specific dynamic column
