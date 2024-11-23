@@ -266,7 +266,8 @@ class Navigator {
   }
 
   void initialize(State& state, const Vector3& position,
-                  const Vector3& direction) const {
+                  const Vector3& direction,
+                  Direction /*propagationDirection*/) const {
     // Call the navigation helper prior to actual navigation
     ACTS_VERBOSE(volInfo(state) << "Initialization.");
 
@@ -360,18 +361,14 @@ class Navigator {
     }
   }
 
-  /// Navigation call - void
-  ///
-  /// @tparam propagator_state_t is the type of Propagatgor state
-  /// @tparam stepper_t Type of the Stepper
-  ///
-  /// Empty call, compiler should optimise that
+  // TODO remove
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
     Vector3 position = stepper.position(state.stepping);
-    Vector3 direction = stepper.direction(state.stepping);
+    Vector3 direction =
+        state.options.direction * stepper.direction(state.stepping);
 
-    initialize(state.navigation, position, state.options.direction * direction);
+    initialize(state.navigation, position, direction, state.options.direction);
   }
 
   /// @brief Navigator estimateNextTarget call

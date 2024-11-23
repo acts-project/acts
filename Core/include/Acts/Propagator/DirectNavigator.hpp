@@ -152,50 +152,54 @@ class DirectNavigator {
     state.currentSurface = surface;
   }
 
-  /// @brief Initialize call - start of propagation
-  ///
-  /// @tparam propagator_state_t The state type of the propagator
-  /// @tparam stepper_t The type of stepper used for the propagation
-  ///
-  /// @param [in,out] state is the propagation state object
-  template <typename propagator_state_t, typename stepper_t>
-  void initialize(propagator_state_t& state,
-                  const stepper_t& /*stepper*/) const {
+  void initialize(State& state, const Vector3& /*position*/,
+                  const Vector3& /*direction*/,
+                  Direction propagationDirection) const {
     ACTS_VERBOSE("Initialize. Surface sequence for navigation:");
-    for (const Surface* surface : state.navigation.options.surfaces) {
+    for (const Surface* surface : state.options.surfaces) {
       ACTS_VERBOSE(surface->geometryId()
-                   << " - " << surface->center(state.geoContext).transpose());
+                   << " - "
+                   << surface->center(state.options.geoContext).transpose());
     }
 
     // We set the current surface to the start surface
-    state.navigation.currentSurface = state.navigation.options.startSurface;
-    if (state.navigation.currentSurface != nullptr) {
+    state.currentSurface = state.options.startSurface;
+    if (state.currentSurface != nullptr) {
       ACTS_VERBOSE("Current surface set to start surface "
-                   << state.navigation.currentSurface->geometryId());
+                   << state.currentSurface->geometryId());
     } else {
       ACTS_VERBOSE("Current surface set to nullptr");
     }
 
     // Reset the surface index
-    state.navigation.resetSurfaceIndex(state.options.direction);
-    for (const Surface* surface : state.navigation.options.surfaces) {
+    state.resetSurfaceIndex(propagationDirection);
+    for (const Surface* surface : state.options.surfaces) {
       // make sure we skip over the start surface
-      state.navigation.nextSurface(state.options.direction);
-      if (surface == state.navigation.currentSurface) {
+      state.nextSurface(propagationDirection);
+      if (surface == state.currentSurface) {
         break;
       }
     }
-    ACTS_VERBOSE("Start surface index set to "
-                 << state.navigation.surfaceIndex);
-    if (state.navigation.endOfSurfaces()) {
+    ACTS_VERBOSE("Start surface index set to " << state.surfaceIndex);
+    if (state.endOfSurfaces()) {
       ACTS_DEBUG(
           "Did not find the start surface in the sequence. Assuming it is not "
           "part of the sequence. Trusting the correctness of the input "
           "sequence. Resetting the surface index.");
-      state.navigation.resetSurfaceIndex(state.options.direction);
+      state.resetSurfaceIndex(propagationDirection);
     }
 
-    state.navigation.navigationBreak = false;
+    state.navigationBreak = false;
+  }
+
+  // TODO remove
+  template <typename propagator_state_t, typename stepper_t>
+  void initialize(propagator_state_t& state, const stepper_t& stepper) const {
+    Vector3 position = stepper.position(state.stepping);
+    Vector3 direction =
+        state.options.direction * stepper.direction(state.stepping);
+
+    initialize(state.navigation, position, direction, state.options.direction);
   }
 
   /// @brief Navigator pre step call

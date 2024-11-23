@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -64,7 +65,8 @@ struct VoidNavigator {
   void currentSurface(State& /*state*/, const Surface* /*surface*/) const {}
 
   void initialize(State& /*state*/, const Vector3& /*position*/,
-                  const Vector3& /*direction*/) const {}
+                  const Vector3& /*direction*/,
+                  Direction /*propagationDirection*/) const {}
 
   SurfaceIntersection estimateNextTarget(State& /*state*/,
                                          const Vector3& /*position*/,

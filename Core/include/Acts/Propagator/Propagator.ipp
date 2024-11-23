@@ -9,6 +9,7 @@
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -55,14 +56,14 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     terminatedNormally = false;
 
     if constexpr (std::is_same_v<N, Acts::Navigator> ||
-                  std::is_same_v<N, Acts::VoidNavigator>) {
+                  std::is_same_v<N, Acts::VoidNavigator> ||
+                  std::is_same_v<N, Acts::DirectNavigator>) {
       auto getNextTargetIntersection = [&]() -> Result<SurfaceIntersection> {
         // TODO max iterations?
         for (int i = 0; i < 100; ++i) {
           SurfaceIntersection nextTargetIntersection =
-              m_navigator.estimateNextTarget(
-                  state.navigation, state.position,
-                  state.options.direction * state.direction);
+              m_navigator.estimateNextTarget(state.navigation, state.position,
+                                             state.direction);
           if (!nextTargetIntersection.isValid()) {
             return SurfaceIntersection::invalid();
           }
@@ -75,8 +76,7 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
             return nextTargetIntersection;
           }
           m_navigator.registerSurfaceStatus(
-              state.navigation, state.position,
-              state.options.direction * state.direction,
+              state.navigation, state.position, state.direction,
               *nextTargetIntersection.object(), preStepSurfaceStatus);
         }
 
@@ -109,7 +109,8 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
         state.pathLength += *res;
         // Update the position and direction
         state.position = m_stepper.position(state.stepping);
-        state.direction = m_stepper.direction(state.stepping);
+        state.direction =
+            state.options.direction * m_stepper.direction(state.stepping);
 
         ACTS_VERBOSE("Step with size = "
                      << *res << " performed. We are now at: "
@@ -131,8 +132,7 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
                   nextTargetIntersection.index(), state.options.direction,
                   BoundaryTolerance::None(), s_onSurfaceTolerance, logger());
           m_navigator.registerSurfaceStatus(
-              state.navigation, state.position,
-              state.options.direction * state.direction,
+              state.navigation, state.position, state.direction,
               *nextTargetIntersection.object(), postStepSurfaceStatus);
           if (postStepSurfaceStatus != IntersectionStatus::reachable) {
             nextTargetIntersection = SurfaceIntersection::invalid();
@@ -150,7 +150,8 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
         // Update the position and direction because actors might have changed
         // it
         state.position = m_stepper.position(state.stepping);
-        state.direction = m_stepper.direction(state.stepping);
+        state.direction =
+            state.options.direction * m_stepper.direction(state.stepping);
 
         // Pre-Stepping: target setting
         state.stage = PropagatorStage::preStep;
@@ -438,13 +439,15 @@ template <typename S, typename N>
 template <typename propagator_state_t, typename path_aborter_t>
 void Acts::Propagator<S, N>::initialize(propagator_state_t& state) const {
   state.position = m_stepper.position(state.stepping);
-  state.direction = m_stepper.direction(state.stepping);
+  state.direction =
+      state.options.direction * m_stepper.direction(state.stepping);
 
   // Navigator initialize state call
   if constexpr (std::is_same_v<N, Acts::Navigator> ||
-                std::is_same_v<N, Acts::VoidNavigator>) {
-    m_navigator.initialize(state.navigation, state.position,
-                           state.options.direction * state.direction);
+                std::is_same_v<N, Acts::VoidNavigator> ||
+                std::is_same_v<N, Acts::DirectNavigator>) {
+    m_navigator.initialize(state.navigation, state.position, state.direction,
+                           state.options.direction);
   } else {
     m_navigator.initialize(state, m_stepper);
   }
