@@ -78,7 +78,7 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
           if (preStepSurfaceStatus >= Acts::IntersectionStatus::reachable) {
             return nextTargetIntersection;
           }
-          m_navigator.registerSurfaceStatus(
+          m_navigator.handleSurfaceStatus(
               state.navigation, state.position, state.direction,
               *nextTargetIntersection.object(), preStepSurfaceStatus);
         }
@@ -134,11 +134,10 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
                   state.stepping, *nextTargetIntersection.object(),
                   nextTargetIntersection.index(), state.options.direction,
                   BoundaryTolerance::None(), s_onSurfaceTolerance, logger());
-          bool continueApproach = m_navigator.registerSurfaceStatus(
+          m_navigator.handleSurfaceStatus(
               state.navigation, state.position, state.direction,
               *nextTargetIntersection.object(), postStepSurfaceStatus);
-          if (!continueApproach ||
-              postStepSurfaceStatus != IntersectionStatus::reachable) {
+          if (postStepSurfaceStatus != IntersectionStatus::reachable) {
             nextTargetIntersection = SurfaceIntersection::invalid();
           }
         }
@@ -160,8 +159,13 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
         // Pre-Stepping: target setting
         state.stage = PropagatorStage::preStep;
 
-        if (!m_navigator.navigationBreak(state.navigation) &&
-            !nextTargetIntersection.isValid()) {
+        if (nextTargetIntersection.isValid() &&
+            !m_navigator.checkTargetValid(state.navigation, state.position,
+                                          state.direction)) {
+          nextTargetIntersection = SurfaceIntersection::invalid();
+        }
+
+        if (!nextTargetIntersection.isValid()) {
           nextTargetIntersectionResult = getNextTargetIntersection();
           if (!nextTargetIntersectionResult.ok()) {
             return nextTargetIntersectionResult.error();

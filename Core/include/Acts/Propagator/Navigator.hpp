@@ -371,18 +371,6 @@ class Navigator {
     initialize(state.navigation, position, direction, state.options.direction);
   }
 
-  /// @brief Navigator estimateNextTarget call
-  ///
-  /// Call options
-  /// (a) there are still surfaces to be resolved: handle those
-  /// (b) there no surfaces but still layers to be resolved, handle those
-  /// (c) there are no surfaces nor layers to be resolved, handle boundary
-  ///
-  /// @param [in,out] state the navigation state
-  /// @param [in] position the current position
-  /// @param [in] direction the current direction
-  ///
-  /// @return the next target surface intersection
   SurfaceIntersection estimateNextTarget(State& state, const Vector3& position,
                                          const Vector3& direction) const {
     // Check if the navigator is inactive
@@ -420,23 +408,27 @@ class Navigator {
     return SurfaceIntersection::invalid();
   }
 
-  bool registerSurfaceStatus(State& state, const Vector3& position,
-                             const Vector3& direction, const Surface& surface,
-                             IntersectionStatus surfaceStatus) const {
+  bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
+                        const Vector3& /*direction*/) const {
+    return true;
+  }
+
+  void handleSurfaceStatus(State& state, const Vector3& position,
+                           const Vector3& direction, const Surface& surface,
+                           IntersectionStatus surfaceStatus) const {
     // Check if the navigator is inactive
     if (inactive(state)) {
-      return false;
+      return;
     }
 
-    ACTS_VERBOSE(volInfo(state)
-                 << "Entering Navigator::registerSurfaceStatus.");
+    ACTS_VERBOSE(volInfo(state) << "Entering Navigator::handleSurfaceStatus.");
 
     // Reset the current surface
     state.currentSurface = nullptr;
 
     if (surfaceStatus == IntersectionStatus::reachable) {
       ACTS_VERBOSE(volInfo(state) << "Stay focussed on surface.");
-      return true;
+      return;
     }
 
     if (surfaceStatus == IntersectionStatus::onSurface) {
@@ -457,7 +449,7 @@ class Navigator {
         state.navigationStage = Stage::layerTarget;
         ++state.navLayerIndex;
       }
-      return false;
+      return;
     }
 
     if (state.navigationStage <= Stage::layerTarget &&
@@ -487,7 +479,7 @@ class Navigator {
         state.navigationStage = Stage::layerTarget;
         ++state.navLayerIndex;
       }
-      return false;
+      return;
     }
 
     if (state.navigationStage <= Stage::boundaryTarget &&
@@ -525,11 +517,10 @@ class Navigator {
         state.navigationStage = Stage::boundaryTarget;
         ++state.navBoundaryIndex;
       }
-      return false;
+      return;
     }
 
     // TODO error
-    return false;
   }
 
  private:

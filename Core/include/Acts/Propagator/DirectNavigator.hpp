@@ -250,15 +250,20 @@ class DirectNavigator {
     return intersection;
   }
 
-  bool registerSurfaceStatus(State& state, const Vector3& /*position*/,
-                             const Vector3& /*direction*/,
-                             const Surface& /*surface*/,
-                             IntersectionStatus surfaceStatus) const {
+  bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
+                        const Vector3& /*direction*/) const {
+    return true;
+  }
+
+  void handleSurfaceStatus(State& state, const Vector3& /*position*/,
+                           const Vector3& /*direction*/,
+                           const Surface& /*surface*/,
+                           IntersectionStatus surfaceStatus) const {
     if (state.navigationBreak) {
-      return false;
+      return;
     }
 
-    ACTS_VERBOSE("registerSurfaceStatus");
+    ACTS_VERBOSE("handleSurfaceStatus");
 
     // Navigator post step always resets the current surface
     state.currentSurface = nullptr;
@@ -269,12 +274,12 @@ class DirectNavigator {
                  << " surfaces remain to try.");
 
     if (state.endOfSurfaces()) {
-      return false;
+      return;
     }
 
     if (surfaceStatus == IntersectionStatus::reachable) {
       ACTS_VERBOSE("Surface is reachable. Continue approach.");
-      return true;
+      return;
     }
 
     if (surfaceStatus == IntersectionStatus::onSurface) {
@@ -291,8 +296,6 @@ class DirectNavigator {
           "Next surface candidate is  "
           << state.options.surfaces.at(state.surfaceIndex)->geometryId());
     }
-
-    return false;
   }
 
  private:

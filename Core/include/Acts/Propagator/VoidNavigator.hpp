@@ -73,12 +73,15 @@ struct VoidNavigator {
     return SurfaceIntersection::invalid();
   }
 
-  bool registerSurfaceStatus(State& /*state*/, const Vector3& /*position*/,
-                             const Vector3& /*direction*/,
-                             const Surface& /*surface*/,
-                             IntersectionStatus /*surfaceStatus*/) const {
-    return false;
+  bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
+                        const Vector3& /*direction*/) const {
+    return true;
   }
+
+  void handleSurfaceStatus(State& /*state*/, const Vector3& /*position*/,
+                           const Vector3& /*direction*/,
+                           const Surface& /*surface*/,
+                           IntersectionStatus /*surfaceStatus*/) const {}
 };
 
 }  // namespace Acts

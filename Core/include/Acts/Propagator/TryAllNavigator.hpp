@@ -380,20 +380,24 @@ class TryAllNavigator : public TryAllNavigatorBase {
     return nextIntersection;
   }
 
-  bool registerSurfaceStatus(State& state, const Vector3& position,
-                             const Vector3& direction,
-                             const Surface& /*surface*/,
-                             IntersectionStatus surfaceStatus) const {
+  bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
+                        const Vector3& /*direction*/) const {
+    return true;
+  }
+
+  void handleSurfaceStatus(State& state, const Vector3& position,
+                           const Vector3& direction, const Surface& /*surface*/,
+                           IntersectionStatus surfaceStatus) const {
     // Check if the navigator is inactive
     if (state.navigationBreak) {
-      return false;
+      return;
     }
 
-    ACTS_VERBOSE(volInfo(state) << "registerSurfaceStatus");
+    ACTS_VERBOSE(volInfo(state) << "handleSurfaceStatus");
 
     if (!state.currentCandidate.has_value()) {
       ACTS_VERBOSE(volInfo(state) << "No current candidate set.");
-      return false;
+      return;
     }
 
     assert(state.currentSurface == nullptr && "Current surface must be reset.");
@@ -401,7 +405,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
     if (surfaceStatus == IntersectionStatus::missed ||
         surfaceStatus == IntersectionStatus::reachable) {
       // always reset target
-      return false;
+      return;
     }
 
     const auto candidate = state.currentCandidate.value();
@@ -436,8 +440,6 @@ class TryAllNavigator : public TryAllNavigatorBase {
     } else {
       ACTS_ERROR(volInfo(state) << "Unknown intersection type");
     }
-
-    return false;
   }
 
  private:
@@ -616,15 +618,19 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     return nextIntersection;
   }
 
-  bool registerSurfaceStatus(State& state, const Vector3& position,
-                             const Vector3& direction,
-                             const Surface& /*surface*/,
-                             IntersectionStatus /*surfaceStatus*/) const {
+  bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
+                        const Vector3& /*direction*/) const {
+    return true;
+  }
+
+  void handleSurfaceStatus(State& state, const Vector3& position,
+                           const Vector3& direction, const Surface& /*surface*/,
+                           IntersectionStatus /*surfaceStatus*/) const {
     if (state.navigationBreak) {
-      return false;
+      return;
     }
 
-    ACTS_VERBOSE(volInfo(state) << "registerSurfaceStatus");
+    ACTS_VERBOSE(volInfo(state) << "handleSurfaceStatus");
 
     assert(state.currentSurface == nullptr && "Current surface must be reset.");
 
@@ -705,7 +711,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
       if (hitCandidates.empty()) {
         ACTS_VERBOSE(volInfo(state) << "Staying focussed on surface.");
-        return false;
+        return;
       }
 
       state.lastIntersection.reset();
@@ -737,7 +743,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       if (trueHitCandidates.empty()) {
         ACTS_VERBOSE(volInfo(state)
                      << "Surface successfully hit, but outside bounds.");
-        return false;
+        return;
       }
 
       if (trueHitCandidates.size() > 1) {
@@ -779,8 +785,6 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
         ACTS_ERROR(volInfo(state) << "Unknown intersection type");
       }
     }
-
-    return false;
   }
 
  private:
