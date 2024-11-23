@@ -14,6 +14,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
 #include "Acts/Utilities/Helpers.hpp"

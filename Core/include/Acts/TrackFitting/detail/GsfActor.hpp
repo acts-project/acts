@@ -12,14 +12,9 @@
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
-#include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
@@ -28,7 +23,6 @@
 
 #include <ios>
 #include <map>
-#include <numeric>
 
 namespace Acts::detail {
 
@@ -53,8 +47,8 @@ struct GsfResult {
   std::size_t measurementHoles = 0;
   std::size_t processedStates = 0;
 
-  std::vector<const Acts::Surface*> visitedSurfaces;
-  std::vector<const Acts::Surface*> surfacesVisitedBwdAgain;
+  std::vector<const Surface*> visitedSurfaces;
+  std::vector<const Surface*> surfacesVisitedBwdAgain;
 
   /// Statistics about material encounterings
   Updatable<std::size_t> nInvalidBetheHeitler;
@@ -74,7 +68,7 @@ struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
 
-  using ComponentCache = Acts::GsfComponent;
+  using ComponentCache = GsfComponent;
 
   /// Broadcast the result_type
   using result_type = GsfResult<traj_t>;
@@ -189,7 +183,7 @@ struct GsfActor {
     // All components must have status "on surface". It is however possible,
     // that currentSurface is nullptr and all components are "on surface" (e.g.,
     // for surfaces excluded from the navigation)
-    using Status [[maybe_unused]] = Acts::IntersectionStatus;
+    using Status [[maybe_unused]] = IntersectionStatus;
     assert(std::all_of(
         stepperComponents.begin(), stepperComponents.end(),
         [](const auto& cmp) { return cmp.status() == Status::onSurface; }));
@@ -477,7 +471,7 @@ struct GsfActor {
   /// Function that updates the stepper from the MultiTrajectory
   template <typename propagator_state_t, typename stepper_t>
   void updateStepper(propagator_state_t& state, const stepper_t& stepper,
-                     coIntersectionStatusmpStates) const {
+                     const TemporaryStates& tmpStates) const {
     auto cmps = stepper.componentIterable(state.stepping);
 
     for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
@@ -534,9 +528,9 @@ struct GsfActor {
           state.geoContext, freeParams.template segment<3>(eFreePos0),
           freeParams.template segment<3>(eFreeDir0));
       cmp.pathAccumulated() = state.stepping.pathAccumulated;
-      cmp.jacobian() = Acts::BoundMatrix::Identity();
-      cmp.derivative() = Acts::FreeVector::Zero();
-      cmp.jacTransport() = Acts::FreeMatrix::Identity();
+      cmp.jacobian() = BoundMatrix::Identity();
+      cmp.derivative() = FreeVector::Zero();
+      cmp.jacTransport() = FreeMatrix::Identity();
     }
   }
 
@@ -574,8 +568,7 @@ struct GsfActor {
 
       // If at least one component is no outlier, we consider the whole thing
       // as a measurementState
-      if (trackStateProxy.typeFlags().test(
-              Acts::TrackStateFlag::MeasurementFlag)) {
+      if (trackStateProxy.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
         is_valid_measurement = true;
       }
 
@@ -621,7 +614,7 @@ struct GsfActor {
         stepper.particleHypothesis(state.stepping));
 
     // Return success
-    return Acts::Result<void>::success();
+    return Result<void>::success();
   }
 
   template <typename propagator_state_t, typename stepper_t,
@@ -790,7 +783,7 @@ struct GsfActor {
 
   /// Set the relevant options that can be set from the Options struct all in
   /// one place
-  void setOptions(const Acts::GsfOptions<traj_t>& options) {
+  void setOptions(const GsfOptions<traj_t>& options) {
     m_cfg.maxComponents = options.maxComponents;
     m_cfg.extensions = options.extensions;
     m_cfg.abortOnError = options.abortOnError;

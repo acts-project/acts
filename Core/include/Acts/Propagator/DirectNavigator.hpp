@@ -9,20 +9,18 @@
 #pragma once
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Geometry/BoundarySurfaceT.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <algorithm>
-#include <iterator>
 #include <limits>
 #include <memory>
 #include <vector>
