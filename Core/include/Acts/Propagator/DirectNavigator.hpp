@@ -9,20 +9,18 @@
 #pragma once
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Geometry/BoundarySurfaceT.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <algorithm>
-#include <iterator>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -259,7 +257,7 @@ class DirectNavigator {
         state.stepping, surface, index, state.options.direction,
         BoundaryTolerance::Infinite(), state.options.surfaceTolerance,
         *m_logger);
-    if (surfaceStatus == Intersection3D::Status::unreachable) {
+    if (surfaceStatus == IntersectionStatus::unreachable) {
       ACTS_VERBOSE(
           "Surface not reachable anymore, switching to next one in "
           "sequence");
@@ -313,7 +311,7 @@ class DirectNavigator {
         state.stepping, surface, index, state.options.direction,
         BoundaryTolerance::Infinite(), state.options.surfaceTolerance,
         *m_logger);
-    if (surfaceStatus == Intersection3D::Status::onSurface) {
+    if (surfaceStatus == IntersectionStatus::onSurface) {
       // Set the current surface
       state.navigation.currentSurface = state.navigation.navSurface();
       ACTS_VERBOSE("Current surface set to  "
@@ -326,7 +324,7 @@ class DirectNavigator {
                             .at(state.navigation.surfaceIndex)
                             ->geometryId());
       }
-    } else if (surfaceStatus == Intersection3D::Status::reachable) {
+    } else if (surfaceStatus == IntersectionStatus::reachable) {
       ACTS_VERBOSE("Next surface reachable at distance  "
                    << stepper.outputStepSize(state.stepping));
     }
