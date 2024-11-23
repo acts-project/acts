@@ -61,7 +61,7 @@ class MaterialSlab {
   /// Check if two materials are exactly equal.
   /// @note This is a strict equality check, i.e. the materials must
   /// have identical properties.
-  /// @param mat is the material to compare to
+  /// @param other is the material to compare to
   /// @return true if the materials are equal
   bool operator==(const MaterialSlab& other) const;
 

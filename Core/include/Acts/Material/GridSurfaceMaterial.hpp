@@ -195,7 +195,7 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
 
   /// Scale operator
   ///
-  /// @param scale is the scale factor applied
+  /// @param factor is the scale factor applied
   ISurfaceMaterial& scale(double factor) final {
     m_materialAccessor.scale(m_grid, factor);
     return (*this);
