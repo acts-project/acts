@@ -13,7 +13,6 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -49,11 +48,17 @@ class DirectNavigator {
     /// The Surface sequence
     SurfaceSequence surfaces;
 
+    /// The surface tolerance
+    double surfaceTolerance = s_onSurfaceTolerance;
+
     // TODO https://github.com/acts-project/acts/issues/2738
     /// Distance limit to discard intersections "behind us"
     /// @note this is only necessary because some surfaces have more than one
     ///       intersection
     double nearLimit = -100 * UnitConstants::um;
+
+    /// The far limit to resolve surfaces
+    double farLimit = std::numeric_limits<double>::max();
 
     void setPlainOptions(const NavigatorPlainOptions& options) {
       static_cast<NavigatorPlainOptions&>(*this) = options;
@@ -69,6 +74,8 @@ class DirectNavigator {
     explicit State(const Options& options_) : options(options_) {}
 
     Options options;
+
+    Direction direction = Direction::Forward;
 
     /// Index of the next surface to try
     int surfaceIndex = 0;
@@ -86,7 +93,7 @@ class DirectNavigator {
       return options.surfaces.at(surfaceIndex);
     }
 
-    void nextSurface(Direction direction) {
+    void nextSurface() {
       if (direction == Direction::Forward) {
         ++surfaceIndex;
       } else {
@@ -99,14 +106,14 @@ class DirectNavigator {
              surfaceIndex >= static_cast<int>(options.surfaces.size());
     }
 
-    int remainingSurfaces(Direction direction) const {
+    int remainingSurfaces() const {
       if (direction == Direction::Forward) {
         return options.surfaces.size() - surfaceIndex;
       }
       return surfaceIndex + 1;
     }
 
-    void resetSurfaceIndex(Direction direction) {
+    void resetSurfaceIndex() {
       surfaceIndex =
           direction == Direction::Forward ? 0 : options.surfaces.size() - 1;
     }
@@ -162,6 +169,8 @@ class DirectNavigator {
                    << surface->center(state.options.geoContext).transpose());
     }
 
+    state.direction = propagationDirection;
+
     // We set the current surface to the start surface
     state.currentSurface = state.options.startSurface;
     if (state.currentSurface != nullptr) {
@@ -172,10 +181,10 @@ class DirectNavigator {
     }
 
     // Reset the surface index
-    state.resetSurfaceIndex(propagationDirection);
+    state.resetSurfaceIndex();
     for (const Surface* surface : state.options.surfaces) {
       // make sure we skip over the start surface
-      state.nextSurface(propagationDirection);
+      state.nextSurface();
       if (surface == state.currentSurface) {
         break;
       }
@@ -186,7 +195,7 @@ class DirectNavigator {
           "Did not find the start surface in the sequence. Assuming it is not "
           "part of the sequence. Trusting the correctness of the input "
           "sequence. Resetting the surface index.");
-      state.resetSurfaceIndex(propagationDirection);
+      state.resetSurfaceIndex();
     }
 
     state.navigationBreak = false;
@@ -202,127 +211,85 @@ class DirectNavigator {
     initialize(state.navigation, position, direction, state.options.direction);
   }
 
-  /// @brief Navigator pre step call
-  ///
-  /// @tparam propagator_state_t is the type of Propagatgor state
-  /// @tparam stepper_t is the used type of the Stepper by the Propagator
-  ///
-  /// @param [in,out] state is the mutable propagator state object
-  /// @param [in] stepper Stepper in use
-  template <typename propagator_state_t, typename stepper_t>
-  void preStep(propagator_state_t& state, const stepper_t& stepper) const {
-    if (state.navigation.navigationBreak) {
-      return;
+  SurfaceIntersection estimateNextTarget(State& state, const Vector3& position,
+                                         const Vector3& direction) const {
+    if (state.navigationBreak) {
+      return SurfaceIntersection::invalid();
     }
 
-    ACTS_VERBOSE("pre step");
+    ACTS_VERBOSE("estimateNextTarget");
 
     // Navigator target always resets the current surface
-    state.navigation.currentSurface = nullptr;
+    state.currentSurface = nullptr;
 
     // Output the position in the sequence
-    ACTS_VERBOSE(state.navigation.remainingSurfaces(state.options.direction)
-                 << " out of " << state.navigation.options.surfaces.size()
+    ACTS_VERBOSE(state.remainingSurfaces()
+                 << " out of " << state.options.surfaces.size()
                  << " surfaces remain to try.");
 
-    if (state.navigation.endOfSurfaces()) {
+    if (state.endOfSurfaces()) {
       // Set the navigation break
       ACTS_VERBOSE("End of surfaces reached, navigation break.");
-      state.navigation.navigationBreak = true;
-      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
+      state.navigationBreak = true;
       // If no externally provided target is given, the target is reached
-      if (state.navigation.options.targetSurface == nullptr) {
+      if (state.options.targetSurface == nullptr) {
         // Announce it then
         ACTS_VERBOSE("No target Surface, job done.");
       }
-      return;
+      return SurfaceIntersection::invalid();
     }
 
     // Establish & update the surface status
     // TODO we do not know the intersection index - passing the closer one
-    const auto& surface = *state.navigation.navSurface();
+    const auto& surface = *state.navSurface();
     const double farLimit = std::numeric_limits<double>::max();
-    const auto index =
-        chooseIntersection(
-            state.geoContext, surface, stepper.position(state.stepping),
-            state.options.direction * stepper.direction(state.stepping),
-            BoundaryTolerance::Infinite(), state.navigation.options.nearLimit,
-            farLimit, state.options.surfaceTolerance)
-            .index();
-    auto surfaceStatus = stepper.updateSurfaceStatus(
-        state.stepping, surface, index, state.options.direction,
-        BoundaryTolerance::Infinite(), state.options.surfaceTolerance,
-        *m_logger);
-    if (surfaceStatus == Intersection3D::Status::unreachable) {
-      ACTS_VERBOSE(
-          "Surface not reachable anymore, switching to next one in "
-          "sequence");
-      // Move the sequence to the next surface
-      state.navigation.nextSurface(state.options.direction);
-    } else {
-      ACTS_VERBOSE("Navigation stepSize set to "
-                   << stepper.outputStepSize(state.stepping));
-    }
+    const auto intersection = chooseIntersection(
+        state.options.geoContext, surface, position, direction,
+        BoundaryTolerance::Infinite(), state.options.nearLimit, farLimit,
+        state.options.surfaceTolerance);
+    return intersection;
   }
 
-  /// @brief Navigator post step call
-  ///
-  /// @tparam propagator_state_t is the type of Propagatgor state
-  /// @tparam stepper_t is the used type of the Stepper by the Propagator
-  ///
-  /// @param [in,out] state is the mutable propagator state object
-  /// @param [in] stepper Stepper in use
-  template <typename propagator_state_t, typename stepper_t>
-  void postStep(propagator_state_t& state, const stepper_t& stepper) const {
-    if (state.navigation.navigationBreak) {
+  void registerSurfaceStatus(State& state, const Vector3& /*position*/,
+                             const Vector3& /*direction*/,
+                             const Surface& /*surface*/,
+                             IntersectionStatus surfaceStatus) const {
+    if (state.navigationBreak) {
       return;
     }
 
-    ACTS_VERBOSE("post step");
+    ACTS_VERBOSE("registerSurfaceStatus");
 
     // Navigator post step always resets the current surface
-    state.navigation.currentSurface = nullptr;
+    state.currentSurface = nullptr;
 
     // Output the position in the sequence
-    ACTS_VERBOSE(state.navigation.remainingSurfaces(state.options.direction)
-                 << " out of " << state.navigation.options.surfaces.size()
+    ACTS_VERBOSE(state.remainingSurfaces()
+                 << " out of " << state.options.surfaces.size()
                  << " surfaces remain to try.");
 
-    if (state.navigation.endOfSurfaces()) {
+    if (state.endOfSurfaces()) {
       return;
     }
 
-    // Establish the surface status
-    // TODO we do not know the intersection index - passing the closer one
-    const auto& surface = *state.navigation.navSurface();
-    const double farLimit = std::numeric_limits<double>::max();
-    const auto index =
-        chooseIntersection(
-            state.geoContext, surface, stepper.position(state.stepping),
-            state.options.direction * stepper.direction(state.stepping),
-            BoundaryTolerance::Infinite(), state.navigation.options.nearLimit,
-            farLimit, state.options.surfaceTolerance)
-            .index();
-    auto surfaceStatus = stepper.updateSurfaceStatus(
-        state.stepping, surface, index, state.options.direction,
-        BoundaryTolerance::Infinite(), state.options.surfaceTolerance,
-        *m_logger);
-    if (surfaceStatus == Intersection3D::Status::onSurface) {
+    if (surfaceStatus == IntersectionStatus::reachable) {
+      ACTS_VERBOSE("Surface is reachable. Continue approach.");
+      return;
+    }
+
+    if (surfaceStatus == IntersectionStatus::onSurface) {
       // Set the current surface
-      state.navigation.currentSurface = state.navigation.navSurface();
+      state.currentSurface = state.navSurface();
       ACTS_VERBOSE("Current surface set to  "
-                   << state.navigation.currentSurface->geometryId());
-      // Move the sequence to the next surface
-      state.navigation.nextSurface(state.options.direction);
-      if (!state.navigation.endOfSurfaces()) {
-        ACTS_VERBOSE("Next surface candidate is  "
-                     << state.navigation.options.surfaces
-                            .at(state.navigation.surfaceIndex)
-                            ->geometryId());
-      }
-    } else if (surfaceStatus == Intersection3D::Status::reachable) {
-      ACTS_VERBOSE("Next surface reachable at distance  "
-                   << stepper.outputStepSize(state.stepping));
+                   << state.currentSurface->geometryId());
+    }
+
+    // Move the sequence to the next surface
+    state.nextSurface();
+    if (!state.endOfSurfaces()) {
+      ACTS_VERBOSE(
+          "Next surface candidate is  "
+          << state.options.surfaces.at(state.surfaceIndex)->geometryId());
     }
   }
 
