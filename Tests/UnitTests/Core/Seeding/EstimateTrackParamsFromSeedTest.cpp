@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
   });
   const Vector3 bField(0, 0, 2._T);
   auto field = std::make_shared<Acts::ConstantBField>(bField);
-  ConstantFieldStepper stepper(std::move(field));
+  ConstantFieldStepper stepper(field);
 
   ConstantFieldPropagator propagator(std::move(stepper), std::move(navigator));
 
